@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>元素診断 — あなたの気質と強みを知る | Element Diagnosis</title>
+  <meta name="description" content="50問の設問から、あなたの内なる気質「元素」と対人様式「武器」を映し出す心理傾向診断。Big Five × エニアグラムを土台にした、原神ファンのための自己理解ツール。">
+  <meta property="og:title" content="元素診断 — あなたの気質と強みを知る">
+  <meta property="og:description" content="50問の設問から、あなたの元素と武器を映し出す心理傾向診断。">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #07070f;
+      --fg: #e0dcf0;
+      --accent: #a888d8;
+      --accent-dim: #6a4898;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ===== HERO ===== */
+    .hero {
+      position: relative;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 24px 80px;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 30%, rgba(100,60,180,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 80% at 20% 80%, rgba(40,100,160,0.10) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 50% at 80% 70%, rgba(180,80,40,0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    /* 七元素 回転リング */
+    .hero-ring {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: min(520px, 90vw);
+      height: min(520px, 90vw);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      animation: ring-spin 60s linear infinite;
+    }
+    @keyframes ring-spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
+    .hero-ring-inner {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: min(360px, 62vw);
+      height: min(360px, 62vw);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      animation: ring-spin 40s linear infinite reverse;
+    }
+    .ring-dot {
+      position: absolute;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      top: 50%; left: 50%;
+      filter: blur(0.5px);
+    }
+    .hero-content { position: relative; z-index: 2; max-width: 680px; }
+    .hero-en {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: clamp(11px, 1.8vw, 14px);
+      letter-spacing: 0.25em;
+      color: var(--accent-dim);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      display: block;
+    }
+    .hero-title {
+      font-size: clamp(32px, 8vw, 64px);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: 0.05em;
+      color: #f0e8ff;
+      margin-bottom: 10px;
+    }
+    .hero-title-sub {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: clamp(16px, 3.5vw, 26px);
+      color: #9878c0;
+      letter-spacing: 0.08em;
+      margin-bottom: 28px;
+    }
+    .hero-desc {
+      font-size: clamp(13px, 1.8vw, 15px);
+      line-height: 1.95;
+      color: #8878a8;
+      max-width: 520px;
+      margin: 0 auto 36px;
+    }
+    .hero-desc-en {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: clamp(11px, 1.5vw, 13px);
+      color: #5a4878;
+      margin-top: 10px;
+      display: block;
+    }
+    .hero-cta {
+      display: inline-block;
+      background: linear-gradient(135deg, #5a3a90, #7a50b0);
+      color: #f0e0ff;
+      text-decoration: none;
+      border: none;
+      border-radius: 6px;
+      padding: 16px 48px;
+      font-size: 15px;
+      font-family: 'Noto Serif JP', serif;
+      letter-spacing: 0.2em;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+      box-shadow: 0 0 32px rgba(120,80,200,0.25);
+    }
+    .hero-cta:hover { opacity: 0.88; transform: translateY(-1px); }
+    .hero-scroll {
+      position: absolute;
+      bottom: 28px; left: 50%;
+      transform: translateX(-50%);
+      color: #3a3058;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      animation: scroll-fade 2.5s ease-in-out infinite;
+    }
+    @keyframes scroll-fade { 0%,100%{opacity:0.3} 50%{opacity:0.8} }
+
+    /* 七元素ラベル行 */
+    .elements-strip {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+    .el-tag {
+      font-size: 12px;
+      padding: 3px 10px;
+      border-radius: 3px;
+      letter-spacing: 0.05em;
+      opacity: 0.85;
+    }
+
+    /* ===== ABOUT ===== */
+    .about {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 80px 24px;
+      border-top: 1px solid #1e1a30;
+    }
+    .section-label {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      color: var(--accent-dim);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .about-title {
+      font-size: clamp(20px, 3.5vw, 28px);
+      font-weight: 700;
+      color: #d8c8f0;
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+    .about-body {
+      font-size: 14px;
+      line-height: 2;
+      color: #8878a8;
+    }
+    .about-body + .about-body { margin-top: 16px; }
+    .about-en {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 12px;
+      color: #4a3a68;
+      margin-top: 10px;
+    }
+
+    /* ===== DIAGNOSIS ===== */
+    #diagnosis {
+      border-top: 1px solid #1e1a30;
+      padding: 60px 0 0;
+    }
+    #diagnosis-root { min-height: 100vh; }
+
+    /* ===== FOOTER ===== */
+    footer {
+      border-top: 1px solid #1e1a30;
+      padding: 48px 24px;
+      text-align: center;
+    }
+    .footer-label {
+      font-family: 'IM Fell English', serif;
+      font-style: italic;
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      color: #3a3058;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .footer-cta-text {
+      font-size: 14px;
+      color: #7868a0;
+      line-height: 1.8;
+      margin-bottom: 20px;
+    }
+    .footer-btn {
+      display: inline-block;
+      border: 1px solid #5a4490;
+      color: var(--accent);
+      text-decoration: none;
+      border-radius: 5px;
+      padding: 12px 36px;
+      font-size: 13px;
+      letter-spacing: 0.15em;
+      transition: background 0.2s;
+    }
+    .footer-btn:hover { background: rgba(100,60,180,0.15); }
+    .footer-copy {
+      margin-top: 36px;
+      font-size: 11px;
+      color: #2a2040;
+      letter-spacing: 0.1em;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hero-ring, .hero-ring-inner { animation: none; }
+    }
+    @media (max-width: 480px) {
+      .hero-cta { padding: 14px 32px; font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-bg"></div>
+
+  <!-- 七元素 回転リング -->
+  <div class="hero-ring" id="outerRing"></div>
+  <div class="hero-ring-inner" id="innerRing"></div>
+
+  <div class="hero-content">
+    <span class="hero-en">Element Diagnosis — Know Your Nature</span>
+    <h1 class="hero-title">元素診断</h1>
+    <p class="hero-title-sub">あなたの気質と強みを、元素に映す</p>
+
+    <!-- 七元素タグ -->
+    <div class="elements-strip" id="elStrip"></div>
+
+    <p class="hero-desc">
+      人の内には、7つの気質が流れている。<br>
+      50の問いに答えることで、あなたの<strong style="color:#c8a8e8">元素（内的な性質）</strong>と<strong style="color:#c8a8e8">武器（強みと関わり方）</strong>が映し出される。<br>
+      Big Five × エニアグラムを土台にした、自己理解のための診断。
+      <span class="hero-desc-en">Seven elements flow within. 50 questions to reveal your nature and strength — a self-understanding diagnosis built on Big Five × Enneagram.</span>
+    </p>
+
+    <a href="#diagnosis" class="hero-cta">診断をはじめる — Start</a>
+  </div>
+
+  <span class="hero-scroll">↓ scroll</span>
+</section>
+
+<!-- ===== ABOUT ===== -->
+<section class="about">
+  <p class="section-label">About this Diagnosis</p>
+  <h2 class="about-title">なぜ、元素で性格を測るのか</h2>
+  <p class="about-body">
+    ビッグファイブやエニアグラムといった心理尺度は、自分を知るための優れた地図だ。しかし数字や抽象的なラベルは、心に留まりにくい。そこでワタシは、原神というゲームの「元素」体系に着目した。各キャラクターのパーソナリティに割り当てられた元素を、心理傾向の軸として再解釈することで、結果が物語として記憶に残る診断を設計した。
+  </p>
+  <p class="about-body">
+    元素は内的な気質。武器は他者との関わり方。その掛け合わせが、あなたという人間の輪郭を描く。
+  </p>
+  <p class="about-en">Big Five and Enneagram provide the scientific foundation. The seven elements provide the story that makes results memorable. Designed by a writer who spent years studying both personality psychology and 120+ characters across all seven elements.</p>
+
+  <div style="margin-top:32px; display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px;">
+    <div style="background:#0e0c18; border:1px solid #1e1a30; border-radius:8px; padding:16px;">
+      <div style="color:#a888d8; font-size:12px; letter-spacing:0.1em; margin-bottom:6px;">診断形式</div>
+      <div style="color:#7868a0; font-size:13px; line-height:1.7;">50問 / 5段階回答<br><span style="font-family:'IM Fell English',serif;font-style:italic;font-size:11px;color:#4a3a68;">50 questions · 5-point scale</span></div>
+    </div>
+    <div style="background:#0e0c18; border:1px solid #1e1a30; border-radius:8px; padding:16px;">
+      <div style="color:#a888d8; font-size:12px; letter-spacing:0.1em; margin-bottom:6px;">測定軸</div>
+      <div style="color:#7868a0; font-size:13px; line-height:1.7;">7元素 × 5武器 = 35型<br><span style="font-family:'IM Fell English',serif;font-style:italic;font-size:11px;color:#4a3a68;">7 elements × 5 weapons = 35 types</span></div>
+    </div>
+    <div style="background:#0e0c18; border:1px solid #1e1a30; border-radius:8px; padding:16px;">
+      <div style="color:#a888d8; font-size:12px; letter-spacing:0.1em; margin-bottom:6px;">土台となる尺度</div>
+      <div style="color:#7868a0; font-size:13px; line-height:1.7;">Big Five / Enneagram<br><span style="font-family:'IM Fell English',serif;font-style:italic;font-size:11px;color:#4a3a68;">Academic psychology base</span></div>
+    </div>
+    <div style="background:#0e0c18; border:1px solid #1e1a30; border-radius:8px; padding:16px;">
+      <div style="color:#a888d8; font-size:12px; letter-spacing:0.1em; margin-bottom:6px;">料金</div>
+      <div style="color:#7868a0; font-size:13px; line-height:1.7;">診断：無料<br><span style="font-family:'IM Fell English',serif;font-style:italic;font-size:11px;color:#4a3a68;">Diagnosis: Free</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== DIAGNOSIS ===== -->
+<section id="diagnosis">
+  <div id="diagnosis-root"></div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <p class="footer-label">Detailed Report — 詳細レポート</p>
+  <p class="footer-cta-text">
+    診断で見えた輪郭の、さらに奥へ。<br>
+    あなたのXの言葉を読み解き、ワタシ自身が綴る詳細レポートを受け取る。<br>
+    <span style="font-family:'IM Fell English',serif;font-style:italic;font-size:12px;color:#4a3a68;display:block;margin-top:6px;">Go deeper. A personalized report written by the author, reading your X posts and this diagnosis together.</span>
+  </p>
+  <a href="https://note.com/" class="footer-btn" target="_blank" rel="noopener">詳細レポートの申込はこちら — Apply</a>
+  <p class="footer-copy">元素診断 — An original personality framework inspired by Genshin Impact. For entertainment purposes. © 倉賀大介 / @ausedik</p>
+</footer>
+
+<!-- React + ReactDOM + Babel CDN -->
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<!-- 診断アプリ本体 -->
+<script type="text/babel">
+const { useState, useMemo } = React;
+
+
+/* =========================================================================
+   元素診断 — あなたの元素×武器とキャラクター
+   ========================================================================= */
+
+const ELEMENTS = {
+  "炎": { color:"#c84a20", axis:"義務の焔",   keyword:"情熱を義務が統べる" },
+  "水": { color:"#2a7aaa", axis:"仮面の深海", keyword:"底を見せず流れる" },
+  "氷": { color:"#4a80c0", axis:"凍結の宿命", keyword:"感情を封じ宿命を負う" },
+  "雷": { color:"#9040d0", axis:"信念の放電", keyword:"信念を貫き二極を走る" },
+  "風": { color:"#3a8a60", axis:"無色の漂泊", keyword:"形なく流れ昇華する" },
+  "岩": { color:"#a07830", axis:"永続の庇護", keyword:"動かず他者を支える" },
+  "草": { color:"#4a8020", axis:"共生の循環", keyword:"知り感じ繋がり続ける" },
+};
+const WEAPONS = {
+  "片手剣": { color:"#9060d0", style:"関係依存型", principle:"関係性の中で状況に応じて流れる" },
+  "両手剣": { color:"#c07030", style:"自己駆動型", principle:"自己の重力に従い独力で突き破る" },
+  "長柄":   { color:"#608040", style:"役割献身型", principle:"集団の中で真っ直ぐ機能し守り抜く" },
+  "法器":   { color:"#5878b0", style:"媒介思考型", principle:"術式を媒介に間接的に世界と繋がる" },
+  "弓":     { color:"#c0a030", style:"距離保持型", principle:"距離という装置で精密に世界に届く" },
+};
+
+const BIG5 = {
+  O: { name:"開放性",   en:"Openness",          high:"好奇心・想像力・新規探究", low:"現実的・慣習的・安定志向" },
+  C: { name:"誠実性",   en:"Conscientiousness", high:"規律・計画性・責任感",     low:"柔軟・即興的・自由" },
+  E: { name:"外向性",   en:"Extraversion",      high:"活動的・社交的・刺激希求", low:"内省的・静穏・少人数志向" },
+  A: { name:"協調性",   en:"Agreeableness",     high:"共感・利他・調和",         low:"独立・競争・率直" },
+  N: { name:"神経症傾向", en:"Neuroticism",      high:"情動反応・不安・繊細さ",   low:"安定・冷静・楽観" },
+};
+
+const ENNEA = {
+  1:{ name:"改革者", core:"正しさへの希求", fear:"堕落・誤りへの恐れ", desire:"誠実で正しくありたい" },
+  2:{ name:"援助者", core:"愛されたい献身", fear:"必要とされぬ恐れ",   desire:"愛され必要とされたい" },
+  3:{ name:"達成者", core:"価値の証明",     fear:"無価値への恐れ",     desire:"価値ある存在でありたい" },
+  4:{ name:"個性派", core:"独自性の探求",   fear:"凡庸・喪失の恐れ",   desire:"自分らしくありたい" },
+  5:{ name:"観察者", core:"知の蓄積",       fear:"無能・侵食の恐れ",   desire:"有能で独立していたい" },
+  6:{ name:"堅実家", core:"安全の確保",     fear:"支えを失う恐れ",     desire:"安心と支えがほしい" },
+  7:{ name:"楽天家", core:"充足の追求",     fear:"苦痛・欠乏の恐れ",   desire:"満たされ自由でありたい" },
+  8:{ name:"挑戦者", core:"力の保持",       fear:"支配される恐れ",     desire:"自分の人生を統べたい" },
+  9:{ name:"調停者", core:"平和の維持",     fear:"分裂・喪失の恐れ",   desire:"内的平穏を保ちたい" },
+};
+
+// ---- 元素プロファイル ----
+const ELEMENT_PROFILE = {
+  "炎": { big5:{O:0, C:+2, E:+2, A:+1, N:0},  ennea:[1,8],  basis:"義務(C)と情熱(E)が拮抗。正しさを貫く1と力を統べる8。" },
+  "水": { big5:{O:+1, C:+1, E:0, A:+1, N:+1}, ennea:[3,9],  basis:"仮面=価値演出の3、底を見せない調和の9。演技の緊張(N)。" },
+  "氷": { big5:{O:0, C:+1, E:-2, A:-1, N:+2}, ennea:[4,5],  basis:"凍結=内向(E低)と繊細さ(N高)。独自の4、観察の5。" },
+  "雷": { big5:{O:+1, C:+1, E:+1, A:-1, N:+1}, ennea:[1,8],  basis:"信念貫徹=1の正義か8の反骨か。律法↔逸脱の二極。" },
+  "風": { big5:{O:+2, C:-1, E:0, A:+1, N:0},  ennea:[9,7],  basis:"無色・漂泊=開放(O高)と無心。平和の9、自由の7。" },
+  "岩": { big5:{O:-1, C:+2, E:0, A:+2, N:-1}, ennea:[2,6],  basis:"庇護=協調(A)と誠実(C)。援助の2、堅実な6。安定志向。" },
+  "草": { big5:{O:+2, C:+1, E:0, A:+2, N:0},  ennea:[5,2],  basis:"知性(O)と共生(A)。観察の5と援助の2の統合。" },
+};
+const WEAPON_PROFILE = {
+  "片手剣": { big5:{A:+1, N:+1, O:0, C:0, E:0}, basis:"他者のために流れる=協調と感受性。" },
+  "両手剣": { big5:{A:-2, E:+1, O:0, C:0, N:0}, basis:"独力で突破=協調性低・自己主張。" },
+  "長柄":   { big5:{C:+2, A:+1, O:0, E:0, N:0}, basis:"集団を守る=誠実と奉仕。" },
+  "法器":   { big5:{O:+2, E:-1, C:0, A:0, N:0}, basis:"術式を介す=開放的知性・内向。" },
+  "弓":     { big5:{C:+1, E:-1, O:0, A:0, N:0}, basis:"距離から精密に=慎重・観察。" },
+};
+
+/* ============================================================
+   キャラクターDB（代表122名／元素・武器・Big5傾向・エニア）
+   big5は各因子 0-100 の代表値、enneaは主タイプ
+   ============================================================ */
+const CHARACTERS = [
+  // ===== 炎 =====
+  { name:"ディルック", el:"炎", w:"両手剣", big5:{O:45,C:75,E:35,A:40,N:60}, ennea:1 },
+  { name:"マーヴィカ", el:"炎", w:"両手剣", big5:{O:55,C:80,E:80,A:60,N:35}, ennea:8 },
+  { name:"嘉明",      el:"炎", w:"両手剣", big5:{O:50,C:55,E:80,A:70,N:30}, ennea:7 },
+  { name:"ディシア",  el:"炎", w:"両手剣", big5:{O:45,C:65,E:55,A:35,N:55}, ennea:8 },
+  { name:"辛炎",      el:"炎", w:"両手剣", big5:{O:40,C:80,E:40,A:45,N:45}, ennea:1 },
+  { name:"ベネット",  el:"炎", w:"片手剣", big5:{O:55,C:70,E:75,A:85,N:40}, ennea:2 },
+  { name:"胡桃",      el:"炎", w:"長柄",   big5:{O:85,C:55,E:70,A:55,N:45}, ennea:7 },
+  { name:"香菱",      el:"炎", w:"長柄",   big5:{O:70,C:75,E:80,A:75,N:35}, ennea:7 },
+  { name:"トーマ",    el:"炎", w:"長柄",   big5:{O:55,C:75,E:70,A:85,N:35}, ennea:2 },
+  { name:"シュヴルーズ", el:"炎", w:"長柄", big5:{O:50,C:85,E:60,A:70,N:35}, ennea:1 },
+  { name:"アルレッキーノ", el:"炎", w:"長柄", big5:{O:55,C:80,E:50,A:30,N:50}, ennea:8 },
+  { name:"ニコ",      el:"炎", w:"法器",   big5:{O:55,C:75,E:65,A:85,N:35}, ennea:2 },
+  { name:"煙緋",      el:"炎", w:"法器",   big5:{O:60,C:80,E:50,A:45,N:45}, ennea:1 },
+  { name:"クレー",    el:"炎", w:"法器",   big5:{O:80,C:30,E:85,A:70,N:35}, ennea:7 },
+  { name:"リネ",      el:"炎", w:"弓",     big5:{O:60,C:65,E:55,A:55,N:45}, ennea:3 },
+  { name:"アンバー",  el:"炎", w:"弓",     big5:{O:55,C:65,E:80,A:80,N:30}, ennea:7 },
+  { name:"宵宮",      el:"炎", w:"弓",     big5:{O:75,C:55,E:85,A:75,N:30}, ennea:7 },
+  { name:"ドゥリン",  el:"炎", w:"片手剣", big5:{O:75,C:55,E:40,A:55,N:50}, ennea:5 },
+  // ===== 水 =====
+  { name:"フリーナ",  el:"水", w:"片手剣", big5:{O:75,C:55,E:65,A:60,N:75}, ennea:3 },
+  { name:"ニィロウ",  el:"水", w:"片手剣", big5:{O:70,C:55,E:65,A:80,N:40}, ennea:9 },
+  { name:"神里綾人",  el:"水", w:"片手剣", big5:{O:65,C:85,E:40,A:45,N:35}, ennea:3 },
+  { name:"行秋",      el:"水", w:"片手剣", big5:{O:70,C:75,E:50,A:60,N:35}, ennea:1 },
+  { name:"タルタリヤ", el:"水", w:"弓",    big5:{O:60,C:60,E:80,A:50,N:45}, ennea:7 },
+  { name:"夜蘭",      el:"水", w:"弓",     big5:{O:70,C:70,E:55,A:45,N:45}, ennea:5 },
+  { name:"シグウィン", el:"水", w:"弓",    big5:{O:65,C:80,E:45,A:75,N:40}, ennea:2 },
+  { name:"モナ",      el:"水", w:"法器",   big5:{O:80,C:55,E:45,A:40,N:50}, ennea:5 },
+  { name:"珊瑚宮心海", el:"水", w:"法器",  big5:{O:70,C:85,E:45,A:70,N:40}, ennea:1 },
+  { name:"ヌヴィレット", el:"水", w:"法器", big5:{O:75,C:85,E:40,A:65,N:45}, ennea:1 },
+  { name:"コロンビーナ", el:"水", w:"法器", big5:{O:70,C:55,E:50,A:45,N:50}, ennea:9 },
+  { name:"ムアラニ",  el:"水", w:"法器",   big5:{O:75,C:50,E:80,A:75,N:30}, ennea:7 },
+  { name:"バーバラ",  el:"水", w:"法器",   big5:{O:55,C:65,E:65,A:85,N:45}, ennea:2 },
+  { name:"アイノ",    el:"水", w:"両手剣", big5:{O:50,C:60,E:75,A:70,N:30}, ennea:8 },
+  { name:"ダリア",    el:"水", w:"片手剣", big5:{O:50,C:60,E:60,A:65,N:40}, ennea:6 },
+  { name:"キャンディス", el:"水", w:"長柄", big5:{O:50,C:80,E:50,A:70,N:40}, ennea:6 },
+  // ===== 氷 =====
+  { name:"神里綾華",  el:"氷", w:"片手剣", big5:{O:60,C:85,E:40,A:65,N:55}, ennea:1 },
+  { name:"スカーク",  el:"氷", w:"片手剣", big5:{O:55,C:75,E:30,A:35,N:55}, ennea:5 },
+  { name:"七七",      el:"氷", w:"片手剣", big5:{O:55,C:60,E:30,A:55,N:50}, ennea:9 },
+  { name:"レイラ",    el:"氷", w:"片手剣", big5:{O:70,C:55,E:35,A:60,N:65}, ennea:6 },
+  { name:"ガイア",    el:"氷", w:"片手剣", big5:{O:50,C:75,E:40,A:45,N:50}, ennea:6 },
+  { name:"申鶴",      el:"氷", w:"長柄",   big5:{O:55,C:70,E:25,A:40,N:60}, ennea:5 },
+  { name:"ロサリア",  el:"氷", w:"長柄",   big5:{O:55,C:70,E:35,A:35,N:50}, ennea:5 },
+  { name:"ミカ",      el:"氷", w:"長柄",   big5:{O:50,C:75,E:45,A:80,N:45}, ennea:6 },
+  { name:"エスコフィエ", el:"氷", w:"長柄", big5:{O:70,C:80,E:55,A:80,N:35}, ennea:2 },
+  { name:"ローエン",  el:"氷", w:"長柄",   big5:{O:55,C:70,E:40,A:50,N:50}, ennea:5 },
+  { name:"甘雨",      el:"氷", w:"弓",     big5:{O:60,C:85,E:30,A:70,N:60}, ennea:6 },
+  { name:"ディオナ",  el:"氷", w:"弓",     big5:{O:55,C:70,E:55,A:60,N:45}, ennea:1 },
+  { name:"アーロイ",  el:"氷", w:"弓",     big5:{O:65,C:70,E:40,A:50,N:40}, ennea:5 },
+  { name:"リオセスリ", el:"氷", w:"法器",  big5:{O:65,C:80,E:50,A:50,N:40}, ennea:8 },
+  { name:"シャルロット", el:"氷", w:"法器", big5:{O:75,C:60,E:75,A:60,N:40}, ennea:7 },
+  { name:"シトラリ",  el:"氷", w:"法器",   big5:{O:65,C:80,E:55,A:75,N:45}, ennea:2 },
+  // ===== 雷 =====
+  { name:"刻晴",      el:"雷", w:"片手剣", big5:{O:65,C:85,E:50,A:45,N:40}, ennea:1 },
+  { name:"クロリンデ", el:"雷", w:"片手剣", big5:{O:60,C:80,E:40,A:45,N:45}, ennea:1 },
+  { name:"久岐忍",    el:"雷", w:"片手剣", big5:{O:60,C:75,E:55,A:60,N:40}, ennea:6 },
+  { name:"雷電将軍",  el:"雷", w:"長柄",   big5:{O:50,C:90,E:40,A:40,N:50}, ennea:1 },
+  { name:"セノ",      el:"雷", w:"長柄",   big5:{O:55,C:85,E:45,A:50,N:40}, ennea:1 },
+  { name:"イアンサ",  el:"雷", w:"長柄",   big5:{O:55,C:70,E:75,A:70,N:30}, ennea:8 },
+  { name:"フィッシュル", el:"雷", w:"弓",  big5:{O:80,C:55,E:50,A:45,N:55}, ennea:4 },
+  { name:"九条裟羅",  el:"雷", w:"弓",     big5:{O:45,C:85,E:50,A:50,N:40}, ennea:1 },
+  { name:"オロルン",  el:"雷", w:"弓",     big5:{O:55,C:70,E:45,A:60,N:45}, ennea:6 },
+  { name:"セトス",    el:"雷", w:"弓",     big5:{O:75,C:55,E:65,A:55,N:35}, ennea:7 },
+  { name:"八重神子",  el:"雷", w:"法器",   big5:{O:80,C:60,E:60,A:45,N:35}, ennea:7 },
+  { name:"リサ",      el:"雷", w:"法器",   big5:{O:85,C:35,E:55,A:55,N:40}, ennea:5 },
+  { name:"ヴァレサ",  el:"雷", w:"法器",   big5:{O:55,C:75,E:65,A:65,N:35}, ennea:8 },
+  { name:"レザー",    el:"雷", w:"両手剣", big5:{O:45,C:55,E:45,A:55,N:45}, ennea:9 },
+  { name:"北斗",      el:"雷", w:"両手剣", big5:{O:60,C:60,E:80,A:60,N:30}, ennea:8 },
+  { name:"ドリー",    el:"雷", w:"両手剣", big5:{O:60,C:55,E:70,A:40,N:35}, ennea:3 },
+  // ===== 風 =====
+  { name:"楓原万葉",  el:"風", w:"片手剣", big5:{O:85,C:60,E:45,A:70,N:45}, ennea:4 },
+  { name:"ジン",      el:"風", w:"片手剣", big5:{O:55,C:85,E:50,A:75,N:45}, ennea:1 },
+  { name:"リネット",  el:"風", w:"片手剣", big5:{O:60,C:65,E:35,A:55,N:45}, ennea:9 },
+  { name:"ファルカ",  el:"風", w:"両手剣", big5:{O:65,C:75,E:50,A:60,N:40}, ennea:6 },
+  { name:"早柚",      el:"風", w:"両手剣", big5:{O:65,C:35,E:50,A:60,N:35}, ennea:9 },
+  { name:"ウェンティ", el:"風", w:"弓",    big5:{O:90,C:40,E:65,A:70,N:40}, ennea:7 },
+  { name:"チャスカ",  el:"風", w:"弓",     big5:{O:70,C:65,E:55,A:65,N:45}, ennea:6 },
+  { name:"ファルザン", el:"風", w:"弓",    big5:{O:80,C:70,E:60,A:60,N:35}, ennea:5 },
+  { name:"ヤフォダ",  el:"風", w:"弓",     big5:{O:65,C:55,E:55,A:80,N:35}, ennea:2 },
+  { name:"スクロース", el:"風", w:"法器",  big5:{O:90,C:65,E:35,A:60,N:45}, ennea:5 },
+  { name:"放浪者",    el:"風", w:"法器",   big5:{O:75,C:55,E:35,A:30,N:60}, ennea:4 },
+  { name:"閑雲",      el:"風", w:"法器",   big5:{O:85,C:50,E:40,A:60,N:35}, ennea:9 },
+  { name:"藍硯",      el:"風", w:"法器",   big5:{O:80,C:60,E:50,A:60,N:35}, ennea:5 },
+  { name:"鹿野院平蔵", el:"風", w:"法器",  big5:{O:80,C:40,E:60,A:55,N:40}, ennea:7 },
+  { name:"夢見月瑞希", el:"風", w:"法器",  big5:{O:65,C:60,E:45,A:80,N:40}, ennea:2 },
+  { name:"イファ",    el:"風", w:"法器",   big5:{O:60,C:50,E:65,A:80,N:35}, ennea:2 },
+  { name:"プルーネ",  el:"風", w:"法器",   big5:{O:55,C:60,E:70,A:80,N:30}, ennea:2 },
+  // ===== 岩 =====
+  { name:"鍾離",      el:"岩", w:"長柄",   big5:{O:80,C:80,E:40,A:65,N:25}, ennea:5 },
+  { name:"イルーガ",  el:"岩", w:"長柄",   big5:{O:50,C:75,E:55,A:65,N:35}, ennea:6 },
+  { name:"カチーナ",  el:"岩", w:"長柄",   big5:{O:50,C:65,E:55,A:70,N:45}, ennea:6 },
+  { name:"雲菫",      el:"岩", w:"長柄",   big5:{O:65,C:75,E:60,A:70,N:35}, ennea:3 },
+  { name:"ナヴィア",  el:"岩", w:"両手剣", big5:{O:60,C:70,E:75,A:65,N:45}, ennea:8 },
+  { name:"荒瀧一斗",  el:"岩", w:"両手剣", big5:{O:50,C:45,E:85,A:65,N:30}, ennea:8 },
+  { name:"ノエル",    el:"岩", w:"両手剣", big5:{O:45,C:85,E:55,A:85,N:40}, ennea:2 },
+  { name:"アルベド",  el:"岩", w:"片手剣", big5:{O:85,C:80,E:35,A:50,N:40}, ennea:5 },
+  { name:"茲白",      el:"岩", w:"片手剣", big5:{O:70,C:65,E:35,A:50,N:45}, ennea:5 },
+  { name:"千織",      el:"岩", w:"片手剣", big5:{O:75,C:75,E:60,A:65,N:35}, ennea:4 },
+  { name:"シロネン",  el:"岩", w:"片手剣", big5:{O:60,C:80,E:55,A:75,N:30}, ennea:6 },
+  { name:"ゴロー",    el:"岩", w:"弓",     big5:{O:50,C:75,E:60,A:75,N:40}, ennea:6 },
+  { name:"リンネア",  el:"岩", w:"弓",     big5:{O:55,C:80,E:45,A:70,N:30}, ennea:6 },
+  { name:"凝光",      el:"岩", w:"法器",   big5:{O:65,C:85,E:55,A:45,N:35}, ennea:3 },
+  // ===== 草 =====
+  { name:"ナヒーダ",  el:"草", w:"法器",   big5:{O:90,C:70,E:45,A:80,N:40}, ennea:5 },
+  { name:"白朮",      el:"草", w:"法器",   big5:{O:70,C:80,E:45,A:80,N:40}, ennea:2 },
+  { name:"ラウマ",    el:"草", w:"法器",   big5:{O:70,C:65,E:45,A:85,N:40}, ennea:2 },
+  { name:"ネフェル",  el:"草", w:"法器",   big5:{O:65,C:80,E:50,A:80,N:35}, ennea:2 },
+  { name:"ティナリ",  el:"草", w:"弓",     big5:{O:75,C:85,E:45,A:60,N:40}, ennea:1 },
+  { name:"コレイ",    el:"草", w:"弓",     big5:{O:65,C:55,E:60,A:75,N:50}, ennea:9 },
+  { name:"アルハイゼン", el:"草", w:"片手剣", big5:{O:90,C:75,E:35,A:40,N:30}, ennea:5 },
+  { name:"綺良々",    el:"草", w:"片手剣", big5:{O:70,C:50,E:65,A:75,N:35}, ennea:7 },
+  { name:"カーヴェ",  el:"草", w:"両手剣", big5:{O:85,C:50,E:60,A:75,N:60}, ennea:4 },
+  { name:"キィニチ",  el:"草", w:"両手剣", big5:{O:60,C:65,E:70,A:65,N:40}, ennea:8 },
+  { name:"エミリエ",  el:"草", w:"長柄",   big5:{O:80,C:75,E:45,A:60,N:35}, ennea:5 },
+  { name:"ヨォーヨ",  el:"草", w:"長柄",   big5:{O:65,C:60,E:65,A:75,N:35}, ennea:7 },
+];
+
+
+/* ============================================================
+   診断質問（50問）— 各Big5因子10問ずつ＋エニア識別を全問に付与
+   ============================================================ */
+const QUESTIONS = [
+  // ---- O 開放性（10問）----
+  { q:"新しい考え方や未知の世界に触れると強く心が動く", f:"O", s:+1, en:{5:1,7:1} },
+  { q:"抽象的な概念や哲学的な問いを考えるのが好きだ", f:"O", s:+1, en:{5:1,4:1} },
+  { q:"芸術・音楽・物語に深く感動することが多い", f:"O", s:+1, en:{4:2} },
+  { q:"決まったやり方や慣習に従う方が安心する", f:"O", s:-1, en:{6:1,1:1} },
+  { q:"想像や空想にふけって時間を忘れることがある", f:"O", s:+1, en:{4:1,7:1} },
+  { q:"見慣れた安定した日常の方が落ち着く", f:"O", s:-1, en:{9:1,6:1} },
+  { q:"自分は他の人とは違う特別な感受性を持っていると感じる", f:"O", s:+1, en:{4:2} },
+  { q:"行動する前に、まず十分な知識と理解を得たい", f:"O", s:+1, en:{5:2} },
+  { q:"複雑なものより、シンプルで実用的なものを好む", f:"O", s:-1, en:{1:1,3:1} },
+  { q:"既存の枠を壊して新しいやり方を試したくなる", f:"O", s:+1, en:{8:1,7:1} },
+  // ---- C 誠実性（10問）----
+  { q:"やるべきことは計画を立てて着実に進めたい", f:"C", s:+1, en:{1:1,3:1} },
+  { q:"規律や約束は何があっても守るべきだと思う", f:"C", s:+1, en:{1:2,6:1} },
+  { q:"細部まできちんと整えないと気が済まない", f:"C", s:+1, en:{1:2} },
+  { q:"気分や流れに任せて動くことが多い", f:"C", s:-1, en:{7:1,9:1} },
+  { q:"締め切りや責任は最後までやり遂げる", f:"C", s:+1, en:{3:1,6:1} },
+  { q:"片付けや整理整頓は後回しにしがちだ", f:"C", s:-1, en:{7:1,9:1} },
+  { q:"「正しくあること」が価値観の中心にある", f:"C", s:+1, en:{1:2} },
+  { q:"目標のためなら地道な努力を続けられる", f:"C", s:+1, en:{3:2} },
+  { q:"思いつきで動いて後悔することがよくある", f:"C", s:-1, en:{7:2} },
+  { q:"波風を立てず穏やかな現状が続くことを望む", f:"C", s:-1, en:{9:2} },
+  // ---- E 外向性（10問）----
+  { q:"人と関わったり活動したりすると元気が湧く", f:"E", s:+1, en:{7:1,2:1} },
+  { q:"刺激や挑戦のある状況に自分から飛び込みたい", f:"E", s:+1, en:{8:1,7:1} },
+  { q:"初対面の人とでもすぐ打ち解けられる", f:"E", s:+1, en:{7:1,2:1} },
+  { q:"一人で静かに過ごす時間が何より回復になる", f:"E", s:-1, en:{5:1,4:1} },
+  { q:"場の中心で注目されることが嫌いではない", f:"E", s:+1, en:{3:1,8:1} },
+  { q:"大人数の集まりより少人数や一人を好む", f:"E", s:-1, en:{5:2} },
+  { q:"成果や評価を得ることが強い動機になる", f:"E", s:+1, en:{3:2} },
+  { q:"退屈や制約より選択肢と楽しみが開かれている方がいい", f:"E", s:+1, en:{7:2} },
+  { q:"自分の考えは控えめにし、聞き役に回りがちだ", f:"E", s:-1, en:{9:1,5:1} },
+  { q:"勢いと行動力で物事を切り開いていきたい", f:"E", s:+1, en:{8:2} },
+  // ---- A 協調性（10問）----
+  { q:"他者の痛みや感情に自然と寄り添ってしまう", f:"A", s:+1, en:{2:1,9:1} },
+  { q:"対立を避け、場の調和を保つことを優先する", f:"A", s:+1, en:{9:2,2:1} },
+  { q:"困っている人を見ると放っておけない", f:"A", s:+1, en:{2:2} },
+  { q:"納得できなければ相手が誰でも率直に意見する", f:"A", s:-1, en:{8:1,1:1} },
+  { q:"誰かに必要とされることで自分を確かめる", f:"A", s:+1, en:{2:2} },
+  { q:"自分の領域や決定権を他人に侵されたくない", f:"A", s:-1, en:{8:2} },
+  { q:"競争より協力の方が自分には合っている", f:"A", s:+1, en:{9:1,2:1} },
+  { q:"人の頼みを断るのが苦手だ", f:"A", s:+1, en:{2:2} },
+  { q:"自分の利益を主張することにためらいがない", f:"A", s:-1, en:{8:1,3:1} },
+  { q:"相手の立場に立って考えるのが自然にできる", f:"A", s:+1, en:{2:1,9:1} },
+  // ---- N 神経症傾向（10問）----
+  { q:"小さな失敗や他人の一言を後から何度も思い返す", f:"N", s:+1, en:{4:1,6:1} },
+  { q:"先のことを考えると不安が先に立ちやすい", f:"N", s:+1, en:{6:2,4:1} },
+  { q:"感情の波が大きく、気分が変わりやすい", f:"N", s:+1, en:{4:2} },
+  { q:"困難な状況でも比較的冷静さを保てる方だ", f:"N", s:-1, en:{8:1,9:1} },
+  { q:"批判や否定に人より強く傷つきやすい", f:"N", s:+1, en:{4:1,6:1} },
+  { q:"ストレスがかかっても立ち直りが早い", f:"N", s:-1, en:{8:2} },
+  { q:"信頼できる支えや所属があると本当に安心する", f:"N", s:+1, en:{6:2} },
+  { q:"完璧でない自分を責めてしまうことがある", f:"N", s:+1, en:{1:1,4:1} },
+  { q:"たいていのことは「何とかなる」と楽観できる", f:"N", s:-1, en:{7:2,9:1} },
+  { q:"心配ごとがあると体や眠りに影響が出やすい", f:"N", s:+1, en:{6:2} },
+];
+
+const SCALE = [
+  { v:-2, label:"全く違う" },
+  { v:-1, label:"やや違う" },
+  { v:0,  label:"どちらでも" },
+  { v:+1, label:"ややそう" },
+  { v:+2, label:"とてもそう" },
+];
+
+/* ============================================================
+   スコア算出
+   ============================================================ */
+function computeResults(answers) {
+  const raw = { O:0, C:0, E:0, A:0, N:0 };
+  const cnt = { O:0, C:0, E:0, A:0, N:0 };
+  const enneaRaw = {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0};
+
+  QUESTIONS.forEach((qq, i) => {
+    const a = answers[i] ?? 0;
+    raw[qq.f] += qq.s * a;
+    cnt[qq.f] += 2;
+    if (a > 0 && qq.en) Object.entries(qq.en).forEach(([t,w]) => { enneaRaw[t] += w * a; });
+  });
+
+  const big5 = {};
+  Object.keys(raw).forEach(f => {
+    const max = cnt[f] || 1;
+    big5[f] = Math.max(0, Math.min(100, Math.round(((raw[f] + max) / (2*max)) * 100)));
+  });
+
+  const enneaSorted = Object.entries(enneaRaw)
+    .map(([t,v]) => ({ type:Number(t), score:v })).sort((a,b)=>b.score-a.score);
+  const enneaTop = enneaSorted[0];
+  const enneaWing = enneaSorted.find(e =>
+    Math.abs(e.type - enneaTop.type)===1 ||
+    (enneaTop.type===9&&e.type===1)||(enneaTop.type===1&&e.type===9));
+
+  const c = {};
+  Object.keys(big5).forEach(f => { c[f] = (big5[f]-50)/25; });
+
+  const elementScores = Object.entries(ELEMENT_PROFILE).map(([el,p]) => {
+    let d=0; Object.keys(p.big5).forEach(f => d += p.big5[f]*c[f]);
+    const eb = p.ennea.includes(enneaTop.type)?2.5:(enneaWing&&p.ennea.includes(enneaWing.type)?1.2:0);
+    return { element:el, score:d+eb };
+  }).sort((a,b)=>b.score-a.score);
+
+  const weaponScores = Object.entries(WEAPON_PROFILE).map(([w,p]) => {
+    let d=0; Object.keys(p.big5).forEach(f => d += p.big5[f]*c[f]);
+    return { weapon:w, score:d };
+  }).sort((a,b)=>b.score-a.score);
+
+  // --- キャラマッチング ---
+  // ユークリッド距離(Big5)＋エニア一致＋元素/武器一致ボーナス
+  const topEl = elementScores[0].element;
+  const topW  = weaponScores[0].weapon;
+  const charMatches = CHARACTERS.map(ch => {
+    let dist = 0;
+    Object.keys(BIG5).forEach(f => { const diff = (big5[f]-ch.big5[f])/100; dist += diff*diff; });
+    dist = Math.sqrt(dist); // 0〜~2.2
+    const big5Sim = Math.max(0, 1 - dist/1.5); // 0-1
+    const enneaSim = ch.ennea===enneaTop.type ? 1 : (enneaWing&&ch.ennea===enneaWing.type ? 0.5 : 0);
+    const elSim = ch.el===topEl ? 1 : (ch.el===elementScores[1].element ? 0.4 : 0);
+    const wSim  = ch.w===topW ? 1 : (ch.w===weaponScores[1].weapon ? 0.4 : 0);
+    // 重み付き総合（Big5を主、象徴を従）
+    const total = big5Sim*0.50 + enneaSim*0.20 + elSim*0.18 + wSim*0.12;
+    return { ...ch, match: Math.round(total*100), big5Sim:Math.round(big5Sim*100) };
+  }).sort((a,b)=>b.match-a.match);
+
+  return { big5, enneaRaw, enneaTop, enneaWing, enneaSorted, elementScores, weaponScores, charMatches };
+}
+
+/* ============================================================
+   UI
+   ============================================================ */
+function App() {
+  const [phase, setPhase] = useState("intro");
+  const [answers, setAnswers] = useState({});
+  const [idx, setIdx] = useState(0);
+
+  const answeredCount = Object.keys(answers).length;
+  const results = useMemo(() => phase==="result" ? computeResults(answers) : null, [phase, answers]);
+
+  const setAns = (v) => {
+    setAnswers(p => ({ ...p, [idx]:v }));
+    if (idx < QUESTIONS.length-1) setTimeout(()=>setIdx(idx+1), 160);
+  };
+
+  const ACCENT = "#a888d8";
+
+  return (
+    <div style={{ background:"#0a0a10", minHeight:"100vh", color:"#e0dcf0", fontFamily:"'Georgia','Hiragino Mincho ProN',serif", padding:"0 0 60px" }}>
+
+      {/* HEADER */}
+      <div style={{ background:"linear-gradient(135deg,#08080f 0%,#16121f 55%,#08080f 100%)", borderBottom:"2px solid #2e2448", padding:"36px 28px 28px", position:"relative", overflow:"hidden" }}>
+        <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse at 70% 40%,rgba(140,100,200,0.10) 0%,transparent 65%)", pointerEvents:"none" }} />
+        <svg style={{ position:"absolute", top:14, right:36, opacity:0.16, pointerEvents:"none" }} width="120" height="120" viewBox="0 0 120 120">
+          {Object.values(ELEMENTS).map((e,i)=>{ const a=(i/7)*Math.PI*2-Math.PI/2; return <circle key={i} cx={60+Math.cos(a)*42} cy={60+Math.sin(a)*42} r="7" fill="none" stroke={e.color} strokeWidth="1.5"/>; })}
+          <circle cx="60" cy="60" r="42" fill="none" stroke="#6850a0" strokeWidth="0.5"/>
+        </svg>
+        <div style={{ fontSize:"11px", letterSpacing:"4px", color:ACCENT, textTransform:"uppercase", marginBottom:"8px" }}>Element Personality Diagnosis</div>
+        <h1 style={{ margin:0, fontSize:"clamp(20px,4vw,32px)", fontWeight:"700", color:"#cdb6f0", letterSpacing:"1px", lineHeight:1.25 }}>
+          心理傾向診断ツール<br/>
+          <span style={{ fontSize:"0.6em", color:"#8870b0" }}>Big Five × エニアグラム × 元素 × 武器</span>
+        </h1>
+        <p style={{ marginTop:"10px", color:"#6a5890", fontSize:"13px", maxWidth:"620px", lineHeight:1.7 }}>
+          50問の設問から Big Five 5因子と Enneagram 9タイプを高精度に算出。7元素×5武器の人格構造に投影し、
+          {CHARACTERS.length}名のキャラクターDBから「最も近しい人物」を距離計算で導き出します。
+        </p>
+        <div style={{ display:"flex", gap:"8px", marginTop:"18px", flexWrap:"wrap" }}>
+          {[["intro","概要"],["quiz","診断"],["result","結果"],["basis","理論"]].map(([p,l])=>(
+            <button key={p} onClick={()=>setPhase(p)} disabled={p==="result"&&answeredCount<QUESTIONS.length}
+              style={{ background:phase===p?"#5a4490":"transparent", border:`1px solid ${phase===p?"#7a5cb0":"#2e2448"}`,
+                color:phase===p?"#e0c8ff":(p==="result"&&answeredCount<QUESTIONS.length?"#3a3055":"#8870b0"),
+                borderRadius:"4px", padding:"6px 16px", fontSize:"12px",
+                cursor:(p==="result"&&answeredCount<QUESTIONS.length)?"not-allowed":"pointer" }}>{l}</button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ maxWidth:"900px", margin:"0 auto", padding:"0 16px" }}>
+
+        {/* ===== 概要 ===== */}
+        {phase==="intro" && (
+          <section style={{ marginTop:"32px" }}>
+            <div style={{ background:"#100e1a", border:"1px solid #221c38", borderRadius:"10px", padding:"24px" }}>
+              <h2 style={{ color:"#b89ce0", fontSize:"15px", margin:"0 0 14px" }}>この診断について</h2>
+              <p style={{ color:"#8878a8", fontSize:"13px", lineHeight:1.9, margin:"0 0 18px" }}>
+                50問の設問から Big Five 5因子とエニアグラム9タイプを算出し、7つの元素（内的な気質）と5つの武器（あなたの強み・関わり方）に投影します。
+                その上で、あなたに最も近しいキャラクターを一人、映し出します。
+              </p>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))", gap:"12px" }}>
+                {[
+                  { t:"元素＝気質", d:"あなたの内的な性質を7元素で表す。", c:"#6a8ad0" },
+                  { t:"武器＝強み", d:"他者との関わり方を5武器で表す。", c:"#a888d8" },
+                  { t:"35の型", d:"元素×武器で35通りの人物像に。", c:"#c0a030" },
+                  { t:"推しの発見", d:"あなたに最も近いキャラを提示。", c:"#60b090" },
+                ].map(x=>(
+                  <div key={x.t} style={{ background:"#0c0a14", border:`1px solid ${x.c}30`, borderRadius:"8px", padding:"14px" }}>
+                    <div style={{ color:x.c, fontSize:"12px", fontWeight:"600", marginBottom:"6px" }}>{x.t}</div>
+                    <div style={{ color:"#6a5d85", fontSize:"11px", lineHeight:1.6 }}>{x.d}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <button onClick={()=>{ setPhase("quiz"); setIdx(0); }} style={{ marginTop:"20px", width:"100%", background:"linear-gradient(90deg,#5a4490,#7a5cb0)", border:"none", color:"#f0e0ff", borderRadius:"8px", padding:"14px", fontSize:"14px", cursor:"pointer", letterSpacing:"2px" }}>診断をはじめる（全50問）</button>
+            <p style={{ color:"#3a3055", fontSize:"11px", textAlign:"center", marginTop:"14px", lineHeight:1.6 }}>※ 本ツールは自己理解のための象徴的フレームワークであり、臨床的・医学的診断ではありません。</p>
+          </section>
+        )}
+
+        {/* ===== 診断 ===== */}
+        {phase==="quiz" && (
+          <section style={{ marginTop:"32px" }}>
+            <div style={{ marginBottom:"24px" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"8px" }}>
+                <span style={{ color:"#8870b0", fontSize:"12px" }}>Q{idx+1} / {QUESTIONS.length}</span>
+                <span style={{ color:"#5a4880", fontSize:"12px" }}>回答済 {answeredCount}</span>
+              </div>
+              <div style={{ background:"#16121f", height:"4px", borderRadius:"2px", overflow:"hidden" }}>
+                <div style={{ background:"linear-gradient(90deg,#5a4490,#a888d8)", width:`${(answeredCount/QUESTIONS.length)*100}%`, height:"100%", borderRadius:"2px", transition:"width 0.3s" }} />
+              </div>
+            </div>
+            <div style={{ background:"#100e1a", border:"1px solid #221c38", borderRadius:"12px", padding:"32px 24px", minHeight:"150px", display:"flex", flexDirection:"column", justifyContent:"center" }}>
+              <div style={{ color:"#4a3d68", fontSize:"11px", letterSpacing:"2px", marginBottom:"14px" }}>{BIG5[QUESTIONS[idx].f].name}に関する設問</div>
+              <p style={{ color:"#e0d4f8", fontSize:"17px", lineHeight:1.6, margin:0, fontWeight:"500" }}>{QUESTIONS[idx].q}</p>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:"8px", marginTop:"20px" }}>
+              {SCALE.map(s=>{ const active=answers[idx]===s.v; return (
+                <button key={s.v} onClick={()=>setAns(s.v)} style={{ background:active?"#5a4490":"#100e1a", border:`1px solid ${active?"#a888d8":"#221c38"}`, color:active?"#f0e0ff":"#7868a0", borderRadius:"8px", padding:"14px 4px", fontSize:"11px", cursor:"pointer", transition:"all 0.15s", lineHeight:1.4 }}>{s.label}</button>
+              );})}
+            </div>
+            <div style={{ display:"flex", justifyContent:"space-between", marginTop:"24px" }}>
+              <button onClick={()=>setIdx(Math.max(0,idx-1))} disabled={idx===0} style={{ background:"transparent", border:"1px solid #2e2448", color:idx===0?"#2a2440":"#8870b0", borderRadius:"6px", padding:"8px 18px", fontSize:"12px", cursor:idx===0?"not-allowed":"pointer" }}>← 戻る</button>
+              {idx<QUESTIONS.length-1 ? (
+                <button onClick={()=>setIdx(idx+1)} style={{ background:"transparent", border:"1px solid #2e2448", color:"#8870b0", borderRadius:"6px", padding:"8px 18px", fontSize:"12px", cursor:"pointer" }}>スキップ →</button>
+              ) : (
+                <button onClick={()=>setPhase("result")} disabled={answeredCount<QUESTIONS.length} style={{ background:answeredCount>=QUESTIONS.length?"linear-gradient(90deg,#5a4490,#7a5cb0)":"#1a1628", border:"none", color:answeredCount>=QUESTIONS.length?"#f0e0ff":"#3a3055", borderRadius:"6px", padding:"8px 22px", fontSize:"12px", cursor:answeredCount>=QUESTIONS.length?"pointer":"not-allowed" }}>結果を見る →</button>
+              )}
+            </div>
+            {answeredCount<QUESTIONS.length && idx===QUESTIONS.length-1 && (
+              <p style={{ color:"#6a5890", fontSize:"11px", textAlign:"center", marginTop:"12px" }}>未回答が{QUESTIONS.length-answeredCount}問あります。全問回答すると結果が表示されます。</p>
+            )}
+          </section>
+        )}
+
+        {/* ===== 結果 ===== */}
+        {phase==="result" && results && (() => {
+          const topEl2=results.elementScores[0].element, topW2=results.weaponScores[0].weapon;
+          const elC2=ELEMENTS[topEl2].color, wC2=WEAPONS[topW2].color, et2=results.enneaTop.type;
+          return (
+          <section style={{ marginTop:"32px" }}>
+            {(() => {
+              const topEl=results.elementScores[0].element, topW=results.weaponScores[0].weapon;
+              const elC=ELEMENTS[topEl].color, wC=WEAPONS[topW].color, et=results.enneaTop.type;
+              const top1=results.charMatches[0];
+              return (<>
+                {/* 土台 */}
+                <div style={{ background:`linear-gradient(135deg,${elC}14,${wC}14)`, border:`1px solid ${elC}40`, borderRadius:"12px", padding:"28px 24px", marginBottom:"18px" }}>
+                  <div style={{ fontSize:"11px", letterSpacing:"3px", color:"#8870b0", textTransform:"uppercase", marginBottom:"12px" }}>あなたの土台</div>
+                  <div style={{ display:"flex", alignItems:"baseline", gap:"12px", flexWrap:"wrap", marginBottom:"8px" }}>
+                    <span style={{ fontSize:"34px", fontWeight:"700", color:elC }}>{topEl}</span>
+                    <span style={{ fontSize:"22px", color:"#6a5d85" }}>×</span>
+                    <span style={{ fontSize:"34px", fontWeight:"700", color:wC }}>{topW}</span>
+                  </div>
+                  <div style={{ color:"#a898c8", fontSize:"14px" }}>{ELEMENTS[topEl].axis} ／ {WEAPONS[topW].principle}</div>
+                  <div style={{ color:"#7868a0", fontSize:"13px", marginTop:"14px", paddingTop:"14px", borderTop:`1px solid ${elC}25`, lineHeight:1.8 }}>
+                    内的傾向は<strong style={{color:elC}}>「{ELEMENTS[topEl].keyword}」</strong>、対人スタイルは<strong style={{color:wC}}>「{WEAPONS[topW].style}」</strong>。
+                    動機の中核はエニア{et}<strong style={{color:ACCENT}}>「{ENNEA[et].name}」</strong>——{ENNEA[et].desire}という願いが根にあります。
+                  </div>
+                </div>
+
+                {/* 最も近しいキャラ */}
+                <div style={{ background:`linear-gradient(135deg,${ELEMENTS[top1.el].color}1a,#100e1a)`, border:`1px solid ${ELEMENTS[top1.el].color}50`, borderRadius:"12px", padding:"24px", marginBottom:"18px" }}>
+                  <div style={{ fontSize:"11px", letterSpacing:"3px", color:"#8870b0", textTransform:"uppercase", marginBottom:"12px" }}>最も近しいキャラクター</div>
+                  <div style={{ display:"flex", alignItems:"center", gap:"16px", flexWrap:"wrap" }}>
+                    <div>
+                      <div style={{ fontSize:"30px", fontWeight:"700", color:ELEMENTS[top1.el].color, lineHeight:1.1 }}>{top1.name}</div>
+                      <div style={{ display:"flex", gap:"6px", marginTop:"6px" }}>
+                        <span style={{ background:ELEMENTS[top1.el].color+"22", border:`1px solid ${ELEMENTS[top1.el].color}55`, color:ELEMENTS[top1.el].color, fontSize:"11px", padding:"2px 8px", borderRadius:"3px" }}>{top1.el}</span>
+                        <span style={{ background:WEAPONS[top1.w].color+"22", border:`1px solid ${WEAPONS[top1.w].color}55`, color:WEAPONS[top1.w].color, fontSize:"11px", padding:"2px 8px", borderRadius:"3px" }}>{top1.w}</span>
+                        <span style={{ background:"#a888d822", border:"1px solid #a888d855", color:ACCENT, fontSize:"11px", padding:"2px 8px", borderRadius:"3px" }}>エニア{top1.ennea} {ENNEA[top1.ennea].name}</span>
+                      </div>
+                    </div>
+                    <div style={{ marginLeft:"auto", textAlign:"center" }}>
+                      <div style={{ fontSize:"38px", fontWeight:"700", color:"#c0a0f0", lineHeight:1 }}>{top1.match}<span style={{fontSize:"18px"}}>%</span></div>
+                      <div style={{ color:"#6a5890", fontSize:"11px" }}>一致度</div>
+                    </div>
+                  </div>
+                </div>
+              </>);
+            })()}
+
+            {/* 簡易サマリー（無料範囲）: 上位3元素のみ・数値なし */}
+            <div style={{ background:"#100e1a", border:"1px solid #221c38", borderRadius:"12px", padding:"20px 24px", marginBottom:"16px" }}>
+              <h3 style={{ color:"#c0a030", fontSize:"12px", letterSpacing:"2px", textTransform:"uppercase", margin:"0 0 4px" }}>あなたに響く元素</h3>
+              <p style={{ color:"#5a4d75", fontSize:"11px", margin:"0 0 14px" }}>強い順に並ぶ、あなたの内に流れる気質の傾向。</p>
+              {results.elementScores.slice(0,3).map((e,i)=>{ const mx=results.elementScores[0].score, mn=results.elementScores[6].score; const n=mx===mn?60:Math.round(((e.score-mn)/(mx-mn))*100); return (
+                <div key={e.element} style={{ marginBottom:"10px" }}>
+                  <span style={{ color:ELEMENTS[e.element].color, fontSize:"14px", fontWeight:i===0?"700":"500" }}>{i===0?"◆ ":i===1?"② ":"③ "}{e.element} <span style={{color:"#4a4068", fontSize:"10px"}}>{ELEMENTS[e.element].axis}</span></span>
+                  <div style={{ background:"#0a0a14", height:"6px", borderRadius:"3px", overflow:"hidden", marginTop:"4px" }}>
+                    <div style={{ background:ELEMENTS[e.element].color, width:`${n}%`, height:"100%", borderRadius:"3px", opacity:i===0?1:0.55 }} />
+                  </div>
+                </div>
+              );})}
+            </div>
+
+            {/* ===== 詳細レポート（有償）への誘導 ===== */}
+            <div style={{ background:`linear-gradient(135deg,${elC2}1c,#0e0c18)`, border:`1px solid ${elC2}45`, borderRadius:"14px", padding:"26px 24px", marginBottom:"18px", position:"relative", overflow:"hidden" }}>
+              <div style={{ position:"absolute", top:0, right:0, background:elC2+"22", color:elC2, fontSize:"10px", letterSpacing:"2px", padding:"4px 12px", borderBottomLeftRadius:"8px" }}>詳細レポート</div>
+              <h3 style={{ color:"#e0c8ff", fontSize:"17px", margin:"0 0 6px", letterSpacing:"1px" }}>「{topEl2}×{topW2}」のあなたへ</h3>
+              <p style={{ color:"#8878a8", fontSize:"13px", lineHeight:1.85, margin:"0 0 16px" }}>
+                無料診断で見えたのは、あなたという人の輪郭まで。
+                その奥にある<strong style={{color:ACCENT}}>5因子の詳しいスコア</strong>、<strong style={{color:ACCENT}}>動機の深層（エニアグラム）</strong>、
+                <strong style={{color:ACCENT}}>あなたに近い人物像</strong>、そして強みの活かし方までを、
+                あなたのX（投稿）とこの診断結果から、ワタシ自身が読み解いて綴ります。
+              </p>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))", gap:"10px", marginBottom:"18px" }}>
+                {[
+                  ["Big Five 詳細","5因子の数値と意味の読み解き"],
+                  ["動機の深層","エニアグラムが映す核と願い"],
+                  ["近しい人物像","あなたに重なるキャラクター考察"],
+                  ["強みと指針","元素×武器が示す生き方のヒント"],
+                ].map(([t,d])=>(
+                  <div key={t} style={{ background:"#0c0a16", border:"1px solid #2a2240", borderRadius:"8px", padding:"12px" }}>
+                    <div style={{ color:ACCENT, fontSize:"12px", fontWeight:"600", marginBottom:"4px" }}>◆ {t}</div>
+                    <div style={{ color:"#5a4d75", fontSize:"11px", lineHeight:1.5 }}>{d}</div>
+                  </div>
+                ))}
+              </div>
+              <button onClick={()=>alert("ここに詳細レポートの申込リンク（note等）を接続してください。\n\nあなたの結果コード: "+topEl2+topW2+"-E"+et2)}
+                style={{ width:"100%", background:`linear-gradient(90deg,${elC2},${wC2})`, border:"none", color:"#fff", borderRadius:"8px", padding:"14px", fontSize:"14px", cursor:"pointer", letterSpacing:"2px", fontWeight:"600" }}>
+                ワタシが綴る詳細レポートを受け取る
+              </button>
+              <p style={{ color:"#4a4068", fontSize:"11px", textAlign:"center", marginTop:"10px" }}>あなたの結果コード： <strong style={{color:"#8870b0"}}>{topEl2}{topW2}-E{et2}{results.enneaWing?`w${results.enneaWing.type}`:""}</strong></p>
+
+              {/* 申込用データ（回答を含む・制作側で完全再現するためのコード） */}
+              {(() => {
+                const ansSeq = QUESTIONS.map((_,i)=>(answers[i]??0)).join(",");
+                const applyData = `${topEl2}${topW2}-E${et2}${results.enneaWing?`w${results.enneaWing.type}`:""}|${ansSeq}`;
+                return (
+                  <div style={{ marginTop:"16px", paddingTop:"16px", borderTop:`1px solid ${elC2}22` }}>
+                    <p style={{ color:"#8878a8", fontSize:"12px", lineHeight:1.7, margin:"0 0 10px" }}>
+                      詳細レポートをお申し込みの際は、下の<strong style={{color:ACCENT}}>「申込データ」</strong>をコピーして、申込時に貼り付けてください。
+                      これにより、あなたの回答そのままで、より正確なレポートをお届けできます。
+                    </p>
+                    <div style={{ background:"#08080f", border:"1px solid #2a2240", borderRadius:"6px", padding:"10px 12px", marginBottom:"8px" }}>
+                      <code style={{ color:"#a0c0e0", fontSize:"11px", wordBreak:"break-all", lineHeight:1.5, fontFamily:"monospace" }}>{applyData}</code>
+                    </div>
+                    <button onClick={()=>{ navigator.clipboard?.writeText(applyData); alert("申込データをコピーしました。申込フォームに貼り付けてください。"); }}
+                      style={{ width:"100%", background:"transparent", border:`1px solid ${ACCENT}66`, color:ACCENT, borderRadius:"6px", padding:"10px", fontSize:"12px", cursor:"pointer" }}>
+                      申込データをコピー
+                    </button>
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div style={{ display:"flex", gap:"10px" }}>
+              <button onClick={()=>{ setAnswers({}); setIdx(0); setPhase("quiz"); }} style={{ flex:1, background:"transparent", border:"1px solid #2e2448", color:"#8870b0", borderRadius:"8px", padding:"12px", fontSize:"13px", cursor:"pointer" }}>もう一度診断する</button>
+              <button onClick={()=>setPhase("basis")} style={{ flex:1, background:"transparent", border:"1px solid #2e2448", color:"#8870b0", borderRadius:"8px", padding:"12px", fontSize:"13px", cursor:"pointer" }}>理論を見る</button>
+            </div>
+          </section>
+          );
+        })()}
+
+        {/* ===== 基準 ===== */}
+        {phase==="basis" && (
+          <section style={{ marginTop:"32px" }}>
+            <h2 style={{ fontSize:"13px", letterSpacing:"3px", color:ACCENT, textTransform:"uppercase", borderBottom:"1px solid #221c38", paddingBottom:"8px", marginBottom:"24px" }}>理論的背景 — マッピングと算出根拠</h2>
+            <h3 style={{ color:"#c0a030", fontSize:"13px", margin:"0 0 14px" }}>元素 7軸 → Big Five・Enneagram 対応表</h3>
+            <div style={{ overflowX:"auto", marginBottom:"28px" }}>
+              <table style={{ borderCollapse:"collapse", width:"100%", minWidth:"680px", fontSize:"12px" }}>
+                <thead><tr style={{ borderBottom:"1px solid #2e2448" }}>
+                  <th style={{ padding:"8px", textAlign:"left", color:"#8870b0" }}>元素</th>
+                  {Object.entries(BIG5).map(([f,i])=><th key={f} style={{ padding:"8px 4px", color:"#6a8ad0", minWidth:"40px" }}>{i.name.slice(0,2)}</th>)}
+                  <th style={{ padding:"8px", color:ACCENT }}>エニア</th>
+                  <th style={{ padding:"8px", textAlign:"left", color:"#8870b0", minWidth:"200px" }}>根拠</th>
+                </tr></thead>
+                <tbody>
+                  {Object.entries(ELEMENT_PROFILE).map(([el,p])=>(
+                    <tr key={el} style={{ borderBottom:"1px solid #16121f" }}>
+                      <td style={{ padding:"10px 8px", color:ELEMENTS[el].color, fontWeight:"600", fontSize:"14px" }}>{el}</td>
+                      {Object.keys(BIG5).map(f=>{ const v=p.big5[f]; return <td key={f} style={{ padding:"10px 4px", textAlign:"center", color:v>0?"#7ab07a":v<0?"#b07a7a":"#3a3055", fontWeight:v!==0?"700":"400" }}>{v>0?`+${v}`:v}</td>; })}
+                      <td style={{ padding:"10px 8px", textAlign:"center", color:ACCENT, fontWeight:"600" }}>{p.ennea.join("/")}</td>
+                      <td style={{ padding:"10px 8px", color:"#6a5d85", fontSize:"11px", lineHeight:1.5 }}>{p.basis}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <h3 style={{ color:"#8aa8e0", fontSize:"13px", margin:"0 0 14px" }}>武器 5種 → 対人スタイル補正</h3>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:"10px", marginBottom:"28px" }}>
+              {Object.entries(WEAPON_PROFILE).map(([w,p])=>(
+                <div key={w} style={{ background:"#100e1a", border:`1px solid ${WEAPONS[w].color}30`, borderRadius:"8px", padding:"14px" }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"6px" }}>
+                    <span style={{ color:WEAPONS[w].color, fontSize:"14px", fontWeight:"700" }}>{w}</span>
+                    <span style={{ color:"#6a5d85", fontSize:"11px" }}>{WEAPONS[w].style}</span>
+                  </div>
+                  <div style={{ color:"#7868a0", fontSize:"11px", marginBottom:"6px" }}>補正: {Object.entries(p.big5).filter(([,v])=>v!==0).map(([f,v])=>`${BIG5[f].name.slice(0,2)}${v>0?`+${v}`:v}`).join(" / ")}</div>
+                  <div style={{ color:"#5a4d75", fontSize:"11px", lineHeight:1.5 }}>{p.basis}</div>
+                </div>
+              ))}
+            </div>
+
+            <h3 style={{ color:ACCENT, fontSize:"13px", margin:"0 0 14px" }}>算出アルゴリズム</h3>
+            <div style={{ background:"#100e1a", border:"1px solid #221c38", borderRadius:"8px", padding:"18px", marginBottom:"18px" }}>
+              <ol style={{ margin:0, paddingLeft:"18px", color:"#7868a0", fontSize:"12px", lineHeight:1.9 }}>
+                <li>50設問への5段階回答(-2〜+2)を各Big5因子(各10問)に集計し0-100に正規化。</li>
+                <li>肯定回答にエニア動機タグを加点し9タイプ分布を算出、トップ＋ウィングを抽出。</li>
+                <li>Big5を中心0換算し、各元素・武器プロファイルとの内積＋エニア一致ボーナスで最適元素・武器を決定。</li>
+                <li>あなたに最も近しいキャラクターを、性格傾向の近さから一人、提示。</li>
+                <li>あなたに最も近しいキャラクターを一人、提示。</li>
+              </ol>
+            </div>
+
+            <div style={{ background:"#0e0c16", border:"1px solid #1e1a30", borderRadius:"8px", padding:"16px" }}>
+              <p style={{ color:"#5a4d75", fontSize:"11px", lineHeight:1.7, margin:0 }}>
+                <strong style={{color:"#8870b0"}}>設計思想：</strong>Big Fiveは「特性が何か」を測る記述的尺度、エニアグラムは「なぜそうするか」を捉える動機的尺度であり補完関係にあります。
+                この二つを土台に、原神の元素を内的な気質、武器を他者との関わり方として解釈し、あなたという人の輪郭を描きます。
+                各元素・各武器の性格傾向は、ワタシ自身が多くのキャラクターを調べ、その共通項をまとめあげて基準として落とし込んだものです。
+              </p>
+            </div>
+          </section>
+        )}
+
+        <p style={{ color:"#1a1628", fontSize:"11px", textAlign:"center", marginTop:"32px" }}>元素診断 — Big Five × エニアグラム × 元素 × 武器（エンタメ・非臨床）</p>
+      </div>
+    </div>
+  );
+}
+
+
+const container = document.getElementById('diagnosis-root');
+const root = ReactDOM.createRoot(container);
+root.render(React.createElement(App));
+</script>
+
+</body>
+</html>
