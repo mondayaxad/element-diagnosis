@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://element-diagnosis-five.vercel.app/sitemap.xml
