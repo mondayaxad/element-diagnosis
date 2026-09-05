@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>元素航路 — 元素診断 | 目標達成に必要な石をシミュレート</title>
+<meta name="description" content="今バージョンで狙うキャラ・武器から必要な石数を算出し、月パス(空月の祝福)・天空紀行の有無を比較シミュレーションできるツール。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #07070f;
+    --fg: #e0dcf0;
+    --accent: #7ab8e8;
+    --accent-dim: #2a5878;
+    --card: #08101a;
+    --card-border: #0e1e30;
+    --muted: #6a90a8;
+    --muted2: #5a80a0;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 0 20px; }
+
+  /* ===== HERO ===== */
+  .hero {
+    position: relative;
+    padding: 72px 24px 48px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 20%, rgba(100,60,180,0.16) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 60% at 20% 80%, rgba(40,100,160,0.10) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero-content { position: relative; z-index: 2; max-width: 480px; margin: 0 auto; }
+  .hero-en {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: clamp(11px, 1.8vw, 13px);
+    letter-spacing: 0.25em;
+    color: var(--accent-dim);
+    margin-bottom: 18px;
+    display: block;
+  }
+  .hero-title {
+    font-size: clamp(28px, 7vw, 42px);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.05em;
+    color: #f0e8ff;
+    margin-bottom: 10px;
+  }
+  .hero-desc {
+    font-size: 13.5px;
+    line-height: 1.95;
+    color: var(--muted);
+    max-width: 420px;
+    margin: 18px auto 0;
+  }
+
+  /* ===== TABS ===== */
+  .tabbar { display: flex; gap: 8px; margin: 28px 0 24px; }
+  .tab-btn {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--card-border);
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    padding: 12px 0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .tab-btn.active { color: var(--accent); border-color: var(--accent-dim); }
+
+  /* ===== SECTIONS ===== */
+  section.panel { padding-bottom: 64px; }
+  .section-label {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    color: var(--accent-dim);
+    margin-bottom: 10px;
+  }
+  .section-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #c8e8f8;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  label.field-label {
+    display: block;
+    font-size: 12.5px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+  input[type=text], input[type=email], input[type=number], select, textarea {
+    width: 100%;
+    background: #0a1420;
+    border: 1px solid #182838;
+    border-radius: 6px;
+    color: var(--fg);
+    font-family: inherit;
+    font-size: 14px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent-dim); }
+  select:disabled { opacity: 0.4; cursor: not-allowed; }
+  textarea { resize: vertical; }
+
+  .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .chip {
+    border: 1px solid #182838;
+    border-radius: 20px;
+    padding: 7px 14px;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+  }
+  .chip input { display: none; }
+  .chip.checked { border-color: var(--accent-dim); color: var(--accent); background: rgba(122,184,232,0.07); }
+
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .toggle-row span { font-size: 13.5px; color: var(--fg); }
+  .switch { position: relative; width: 40px; height: 22px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; cursor: pointer; inset: 0;
+    background: #182838; border-radius: 22px; transition: 0.2s;
+  }
+  .slider::before {
+    content: ""; position: absolute; height: 16px; width: 16px; left: 3px; top: 3px;
+    background: var(--muted); border-radius: 50%; transition: 0.2s;
+  }
+  .switch input:checked + .slider { background: var(--accent-dim); }
+  .switch input:checked + .slider::before { transform: translateX(18px); background: var(--accent); }
+
+  .btn-primary {
+    display: block; width: 100%;
+    background: linear-gradient(135deg, #1a4a78, #2a6a9a);
+    color: #e0f4ff;
+    border: none; border-radius: 6px;
+    padding: 14px 0;
+    font-family: inherit; font-size: 14px; letter-spacing: 0.15em;
+    cursor: pointer;
+  }
+  .btn-outline {
+    display: block; width: 100%;
+    background: transparent;
+    border: 1px solid #1a3a5a;
+    color: var(--accent);
+    border-radius: 6px;
+    padding: 12px 0;
+    font-family: inherit; font-size: 13px; letter-spacing: 0.1em;
+    cursor: pointer;
+  }
+
+  .info-note { font-size: 12px; color: var(--muted2); line-height: 1.8; margin-bottom: 16px; }
+  .banner {
+    background: rgba(122,184,232,0.07); border: 1px solid var(--accent-dim);
+    border-radius: 8px; padding: 14px 16px; font-size: 13px; color: var(--muted); line-height: 1.8; margin-bottom: 16px;
+  }
+  .banner a { color: var(--accent); }
+
+  .sim-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .sim-card {
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    background: #0a1420;
+  }
+  .sim-card.hit { border-color: #3a6a4a; background: rgba(90,180,120,0.06); }
+  .sim-card .sim-name { font-size: 12px; color: var(--muted); margin-bottom: 8px; letter-spacing: 0.03em; }
+  .sim-card .sim-pulls { font-size: 20px; color: var(--accent); font-weight: 700; margin-bottom: 4px; }
+  .sim-card .sim-sub { font-size: 11px; color: var(--muted2); line-height: 1.7; }
+  .sim-card.hit .sim-sub { color: #7ac89a; }
+
+  .divider { border-top: 1px solid var(--card-border); margin: 28px 0; }
+
+  .site-footer {
+    max-width: 560px; margin: 32px auto 0; padding: 16px 20px 40px;
+    font-size: 11.5px; color: var(--muted2); line-height: 1.9; text-align: center;
+    border-top: 1px solid var(--card-border);
+  }
+
+  /* ===== 目標ヒーロー ===== */
+  .goal-hero {
+    position: relative;
+    text-align: center;
+    padding: 28px 20px 24px;
+    margin-bottom: 20px;
+    border: 1px solid var(--accent-dim);
+    border-radius: 10px;
+    background: radial-gradient(ellipse 100% 80% at 50% 0%, rgba(122,184,232,0.10) 0%, transparent 70%);
+  }
+  .goal-hero .goal-label {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--muted2);
+    margin-bottom: 10px;
+  }
+  .goal-hero .goal-name {
+    font-size: 30px;
+    font-weight: 700;
+    color: #f0e8ff;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .goal-hero .goal-name .const { color: var(--accent); }
+  .goal-hero .goal-diff {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+  .goal-hero .goal-diff strong {
+    color: #f0c890;
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .goal-hero .goal-diff.hit strong { color: #7ac89a; }
+  .goal-progress {
+    height: 6px; background: #0a1420; border-radius: 4px; overflow: hidden; margin-top: 14px;
+  }
+  .goal-progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent-dim), var(--accent)); }
+
+  .zone-header {
+    font-size: 11px; letter-spacing: 0.15em; color: var(--muted2);
+    border-left: 3px solid var(--card-border);
+    padding: 4px 0 4px 10px;
+    margin: 0 0 18px;
+  }
+  .zone-display { border-left-color: var(--accent); }
+  .zone-input { border-left-color: #6a6a8a; }
+  .zone-extra { border-left-color: #8a5a8a; }
+
+  .element-picker { display: flex; gap: 8px; justify-content: center; margin-bottom: 14px; flex-wrap: wrap; }
+  .element-swatch {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2px solid transparent; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: #fff; opacity: 0.55;
+  }
+  .element-swatch.active { opacity: 1; border-color: #fff; }
+
+  .tips-list { list-style: none; }
+  .tips-list li {
+    font-size: 13px; color: var(--fg); line-height: 1.8;
+    padding-left: 18px; position: relative; margin-bottom: 10px;
+  }
+  .tips-list li::before {
+    content: "—"; position: absolute; left: 0; color: var(--accent-dim);
+  }
+
+  .type-badge {
+    display: block; width: fit-content; margin: 0 auto 18px;
+    border: 1px solid var(--accent-dim); border-radius: 20px;
+    padding: 7px 18px; font-size: 14px; letter-spacing: 0.08em; color: var(--accent);
+  }
+  .type-badge b { font-weight: 700; }
+
+  .goal-diff-big { text-align: center; padding: 10px 0 4px; }
+  .goal-diff-big .n { font-size: 32px; font-weight: 700; color: #f0c890; }
+  .goal-diff-big .n.hit { color: #7ac89a; }
+  .goal-diff-big .t { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .gauge-row { display: flex; align-items: center; gap: 14px; margin-top: 6px; }
+  .gauge-track { flex: 1; height: 8px; background: #0a1420; border-radius: 4px; overflow: hidden; }
+  .gauge-bar { height: 100%; background: linear-gradient(90deg,#c84a20,#d0a050,#3a8a60); }
+  .gauge-pct { font-size: 16px; font-weight: 700; color: #7ac89a; min-width: 44px; text-align: right; }
+
+  .vow-quote {
+    font-family: 'IM Fell English', serif; font-style: italic; font-size: 15px;
+    color: #d8c8f0; line-height: 1.9; text-align: center; padding: 4px 4px 10px;
+  }
+
+  .target-lines { margin-bottom: 4px; }
+  .target-line { font-size: 19px; font-weight: 700; color: #f0e8ff; margin-bottom: 3px; }
+  .target-line .const { color: var(--accent); }
+
+  .icon-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; }
+  .icon-tile {
+    background: var(--card); border: 1px solid var(--card-border); border-radius: 10px;
+    padding: 18px 8px 14px; text-align: center; cursor: pointer;
+  }
+  .icon-tile.locked { opacity: 0.4; cursor: not-allowed; }
+  .icon-tile svg { width: 42px; height: 42px; color: var(--accent); margin: 0 auto 8px; display: block; }
+  .icon-tile .icon-label { font-size: 12.5px; color: var(--fg); line-height: 1.5; margin-bottom: 6px; }
+  .icon-tile .icon-sub { font-size: 11px; color: var(--muted2); }
+
+  .pitfall-list { list-style: none; }
+  .pitfall-list li { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--fg); line-height: 1.8; margin-bottom: 16px; }
+  .pitfall-list li svg { width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px; color: var(--accent-dim); }
+  .pitfall-list li strong { color: var(--accent); }
+
+  #settings-panel { padding-top: 4px; }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <span class="hero-en">Chart Your Pulls</span>
+    <h1 class="hero-title">元素航路</h1>
+    <p class="hero-desc">
+      今バージョンで、本当に欲しいものは何か。<br>
+      石の数を可視化し、月パスと天空紀行の有無で見込みを比べ、衝動ではなく計画でガチャと向き合うための場所です。
+    </p>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="tabbar">
+    <button class="tab-btn active" id="tab-reg">登録</button>
+    <button class="tab-btn" id="tab-my">マイページ</button>
+  </div>
+
+  <!-- ===== 登録画面 ===== -->
+  <section class="panel" id="screen-reg">
+    <p class="section-label">Sign Up</p>
+    <h2 class="section-title">アカウント登録</h2>
+
+    <div class="card">
+      <label class="field-label">お名前</label>
+      <input type="text" id="reg-name" placeholder="旅人太郎">
+
+      <label class="field-label">メールアドレス</label>
+      <input type="email" id="reg-email" placeholder="name@example.com">
+
+      <label class="field-label">元素診断は受けましたか</label>
+      <div class="chip-row">
+        <label class="chip" id="diag-yes-chip"><input type="radio" name="diag">受けた</label>
+        <label class="chip" id="diag-no-chip"><input type="radio" name="diag">まだ</label>
+      </div>
+
+      <div id="diag-fields" style="display:none;">
+        <label class="field-label">元素</label>
+        <select id="diag-element"><option>炎</option><option>水</option><option selected>氷</option><option>雷</option><option>風</option><option>岩</option><option>草</option></select>
+        <label class="field-label">武器種</label>
+        <select id="diag-weapon"><option>片手剣</option><option>両手剣</option><option>長柄</option><option>弓</option><option>法器</option></select>
+        <label class="field-label">国家</label>
+        <select><option>モンド</option><option>璃月</option><option>稲妻</option><option>スメール</option><option>フォンテーヌ</option><option>ナタ</option><option>至坤</option></select>
+      </div>
+
+      <div id="diag-cta" class="banner" style="display:none;">
+        先に元素診断を受けると、性格タイプに合わせたガチャとの向き合い方が分かります。
+        <a href="https://element-diagnosis-five.vercel.app/" target="_blank" rel="noopener">元素診断を受ける →</a>
+      </div>
+
+      <button class="btn-primary" id="reg-submit-btn" type="button">メールで登録する</button>
+      <p class="info-note" id="reg-status" style="margin-top:10px;"></p>
+    </div>
+  </section>
+
+  <!-- ===== マイページ ===== -->
+  <section class="panel" id="screen-my" style="display:none;">
+
+    <div class="zone-header zone-display">見る — 現在の状況</div>
+
+    <button class="btn-outline" id="login-btn" type="button" style="margin-bottom:8px;">ログインする(ボーナス反映)</button>
+    <button class="btn-outline" id="logout-btn" type="button" style="margin-bottom:18px;">ログアウト</button>
+
+    <div class="type-badge" id="type-badge">--- <b>(---)</b></div>
+
+    <div class="goal-hero" id="goal-hero">
+      <div class="element-picker" id="element-picker"></div>
+      <div class="goal-label">Your Target (最悪ケース想定)</div>
+      <div class="target-lines" id="target-lines"></div>
+      <div class="goal-diff-big">
+        <div class="n" id="goal-diff-n">あと0回</div>
+        <div class="t">目標まで</div>
+      </div>
+      <div class="goal-progress"><div class="goal-progress-bar" id="goal-progress-bar" style="width:0%"></div></div>
+      <p class="info-note" style="margin:12px 0 0;">すり抜け(50/50はずれ)が続いた最悪ケースでも足りるように計算しています。進捗バーは、この必要回数に対する現在の見込みの割合です。</p>
+    </div>
+
+    <div class="card">
+      <p class="section-label" style="margin-bottom:6px;">我慢のカウントダウン</p>
+      <div class="goal-diff-big" style="padding:4px 0 8px;">
+        <div class="n" id="patience-days" style="color:var(--accent);">あと0日</div>
+        <div class="t">今のガチャ期間が終わるまで</div>
+      </div>
+      <div class="gauge-row">
+        <div class="gauge-track"><div class="gauge-bar" id="patience-bar" style="width:0%; background:var(--accent);"></div></div>
+      </div>
+      <p class="info-note" id="patience-note" style="margin-top:10px;"></p>
+    </div>
+
+    <div class="card">
+      <p class="section-label" style="margin-bottom:2px;">Your Vow</p>
+      <p class="vow-quote" id="vow-display">「誓いを入力すると、ここに表示されます」</p>
+      <input id="vow-input" type="text" placeholder="例：絶対にスタレ課金もバージョン7.1ではガチャも回さない">
+    </div>
+
+    <div class="icon-pair">
+      <div class="icon-tile" id="temptation-tile" role="button" tabindex="0">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 4 L41 27 L60 32 L41 37 L32 60 L23 37 L4 32 L23 27 Z" fill="currentColor"/></svg>
+        <p class="icon-label">誘惑に負けそうな<br>あなたへ</p>
+        <p class="icon-sub" id="temptation-stat">押すと警告を別タブで表示</p>
+      </div>
+      <div class="icon-tile locked" id="chest-tile" role="button" tabindex="0">
+        <svg viewBox="0 0 64 64" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3">
+          <path d="M8 30 Q32 14 56 30" />
+          <rect x="8" y="30" width="48" height="24" rx="3" />
+          <circle cx="32" cy="40" r="4" fill="currentColor" stroke="none"/>
+          <rect x="30" y="40" width="4" height="7" fill="currentColor" stroke="none"/>
+        </svg>
+        <p class="icon-label">ごほうびの<br>宝箱</p>
+        <p class="icon-sub" id="chest-stat">未開放</p>
+      </div>
+    </div>
+    <div class="toggle-row" style="margin-bottom:16px;">
+      <span style="font-size:12px; color:var(--muted2);">ピックアップ期間中(デモ用トグル)</span>
+      <label class="switch"><input type="checkbox" id="pickup-on" checked><span class="slider"></span></label>
+    </div>
+    <p id="chest-reward" class="banner" style="display:none;"></p>
+
+    <div class="banner">お知らせ：新バージョンの元素診断結果でガチャ推奨が更新されました。</div>
+
+    <div class="card">
+      <p style="font-size:13px; color:var(--fg); margin-bottom:12px;">あなたのガチャ傾向 — 陥りやすい罠</p>
+      <ul class="pitfall-list" id="persona-pitfalls"></ul>
+    </div>
+
+    <button class="btn-outline" id="settings-toggle" type="button" style="margin-bottom:24px;">設定を編集する ▾</button>
+
+    <div id="settings-panel" style="display:none;">
+      <div class="zone-header zone-input">決める — 設定</div>
+
+      <p class="section-label">This Version's Goal</p>
+      <h2 class="section-title">今回欲しいもの</h2>
+
+      <div class="card">
+        <label class="field-label">欲しいキャラ</label>
+        <div class="chip-row" id="char-chips">
+          <label class="chip checked"><input type="checkbox" checked>対象キャラA</label>
+          <label class="chip"><input type="checkbox">対象キャラB</label>
+        </div>
+        <label class="field-label">凸目標</label>
+        <select id="char-const"><option value="0">無凸(C0)</option><option value="1">C1</option><option value="2">C2</option><option value="3">C3</option><option value="4">C4</option><option value="5">C5</option><option value="6">C6</option></select>
+
+        <label class="field-label">欲しい武器</label>
+        <div class="chip-row" id="wep-chips">
+          <label class="chip checked"><input type="checkbox" checked>対象武器A</label>
+        </div>
+        <label class="field-label">精錬目標</label>
+        <select id="wep-refine"><option value="0">無凸(R1)</option><option value="1">R2</option><option value="2">R3</option><option value="3">R4</option><option value="4">R5</option></select>
+        <p class="info-note" style="margin-top:6px;">キャラ・武器はどちらもチェックを外すと、その分の必要回数から除外されます(武器だけ狙う／キャラだけ狙うにも対応)。</p>
+      </div>
+
+      <p class="section-label">Resources</p>
+      <h2 class="section-title">石の状況</h2>
+
+      <div class="card">
+        <label class="field-label">現在の石数</label>
+        <input id="stone-count" type="number" value="6000">
+
+        <label class="field-label">現在の紡がれた運命(すでに交換済みの抽選券)</label>
+        <input id="fate-count" type="number" value="0">
+
+        <div class="toggle-row">
+          <span>空月の祝福(月パス)を購入している</span>
+          <label class="switch"><input type="checkbox" id="welkin-on" checked><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <span>天空紀行を購入している</span>
+          <label class="switch"><input type="checkbox" id="bp-on"><span class="slider"></span></label>
+        </div>
+        <p class="info-note">ログインボーナスは上のトグルに応じて自動計算されます(月パスあり:1日140個／なし:1日40個)。都度入力の必要はありません。</p>
+
+        <label class="field-label" style="margin-top:16px;">このバージョンの残り日数</label>
+        <input id="days-left" type="number" value="42">
+
+        <label class="field-label">イベント・任務での配布見込み</label>
+        <input id="event-bonus" type="number" value="300">
+
+        <label class="field-label">課金の上限(円・本バージョン中は変更不可)</label>
+        <input id="budget-cap" type="number" value="10000">
+      </div>
+
+      <p class="section-label">Notifications</p>
+      <h2 class="section-title">メール配信の設定</h2>
+
+      <div class="card">
+        <div class="toggle-row" style="margin-bottom:0;">
+          <span>新機能・お知らせ・キャンペーン情報をメールで受け取る</span>
+          <label class="switch"><input type="checkbox" id="marketing-optin"><span class="slider"></span></label>
+        </div>
+        <p class="info-note" style="margin-top:10px;">オフの場合、ログインに必要な連絡以外のメールは届きません。オンにした場合も、いつでもこのトグルからオフに戻せます。</p>
+      </div>
+
+      <label class="field-label">なぜこの目標を達成したいですか</label>
+      <textarea id="motivation-text" rows="2" placeholder="例：このキャラの演出とストーリーが好きだから"></textarea>
+
+      <button class="btn-primary" id="save-btn" type="button" style="margin-bottom:8px;">保存する</button>
+      <p class="info-note" id="save-status"></p>
+
+      <div class="divider"></div>
+      <div class="zone-header zone-extra">支える — プラスアルファ</div>
+
+      <p class="section-label">Simulation</p>
+      <h2 class="section-title">月パス・天空紀行を含めた見込み比較</h2>
+      <p class="info-note">最悪ケース(すり抜け込み)で必要な回数と比較しています。空月の祝福は1日140個、天空紀行は約800個相当と概算。</p>
+
+      <div class="sim-grid" id="sim-grid"></div>
+    </div>
+  </section>
+</div>
+
+<p class="site-footer">
+  元素航路は、個人が制作した非公式のファンメイドツールです。HoYoverse/miHoYo社とは一切関係ありません。<br>
+  表示される回数・金額はすべて独自の概算であり、実際の結果を保証するものではありません。
+</p>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+// ============================================================
+// Supabase 設定 — プロジェクト作成後、この2つを差し替えてください
+// Supabaseダッシュボード → Project Settings → API から取得できます
+// ============================================================
+const SUPABASE_URL = 'https://csoivksmieguzywgxbrs.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_MsexE5hP9STHzDzXHZAVPA_ISfYVAOX';
+
+const SUPABASE_CONFIGURED = SUPABASE_URL !== 'YOUR_SUPABASE_URL' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY';
+const sb = SUPABASE_CONFIGURED ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+const FIELD_IDS = ['stone-count','fate-count','days-left','event-bonus','budget-cap','char-const','wep-refine','welkin-on','bp-on','diag-element','diag-weapon','motivation-text','marketing-optin'];
+
+function collectFormData() {
+  const data = {};
+  FIELD_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.type === 'checkbox') data[id] = el.checked;
+    else data[id] = el.value;
+  });
+  data['char-chip-0'] = document.querySelectorAll('#char-chips .chip')[0]?.classList.contains('checked') || false;
+  data['char-chip-1'] = document.querySelectorAll('#char-chips .chip')[1]?.classList.contains('checked') || false;
+  data['wep-chip-0'] = document.querySelectorAll('#wep-chips .chip')[0]?.classList.contains('checked') || false;
+  data['vow-text'] = document.getElementById('vow-input')?.value || '';
+  data['reg-name'] = document.getElementById('reg-name')?.value || '';
+  return data;
+}
+
+function applyFormData(row) {
+  if (!row) return;
+  FIELD_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el || row[id] === undefined || row[id] === null) return;
+    if (el.type === 'checkbox') el.checked = !!row[id];
+    else el.value = row[id];
+  });
+  const setChip = (selector, checked) => {
+    const chip = selector; if (!chip) return;
+    const cb = chip.querySelector('input[type=checkbox]');
+    if (cb) cb.checked = checked;
+    chip.classList.toggle('checked', checked);
+  };
+  setChip(document.querySelectorAll('#char-chips .chip')[0], !!row['char-chip-0']);
+  setChip(document.querySelectorAll('#char-chips .chip')[1], !!row['char-chip-1']);
+  setChip(document.querySelectorAll('#wep-chips .chip')[0], !!row['wep-chip-0']);
+  if (row['vow-text']) {
+    document.getElementById('vow-input').value = row['vow-text'];
+    document.getElementById('vow-display').textContent = `「${row['vow-text']}」`;
+  }
+  if (row['reg-name']) document.getElementById('reg-name').value = row['reg-name'];
+}
+
+async function loadUserData(userId) {
+  const { data, error } = await sb.from('user_plans').select('*').eq('user_id', userId).maybeSingle();
+  if (error) { console.error(error); return; }
+  if (data) applyFormData(data);
+  runSim();
+}
+
+async function saveUserData() {
+  const statusEl = document.getElementById('save-status');
+  if (!SUPABASE_CONFIGURED) {
+    statusEl.textContent = 'Supabase未設定のため、保存はデモ表示のみです(実際には保存されません)。';
+    return;
+  }
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { statusEl.textContent = 'ログインが必要です。'; return; }
+  const formData = collectFormData();
+  const payload = { user_id: session.user.id, email: session.user.email, ...formData };
+  if (formData['marketing-optin']) {
+    const { data: existing } = await sb.from('user_plans').select('marketing_optin_at').eq('user_id', session.user.id).maybeSingle();
+    if (!existing || !existing.marketing_optin_at) payload['marketing_optin_at'] = new Date().toISOString();
+  } else {
+    payload['marketing_optin_at'] = null;
+  }
+  const { error } = await sb.from('user_plans').upsert(payload, { onConflict: 'user_id' });
+  statusEl.textContent = error ? `保存に失敗しました: ${error.message}` : '保存しました。';
+}
+
+async function sendMagicLink() {
+  const statusEl = document.getElementById('reg-status');
+  const email = document.getElementById('reg-email').value.trim();
+  if (!email) { statusEl.textContent = 'メールアドレスを入力してください。'; return; }
+  if (!SUPABASE_CONFIGURED) {
+    statusEl.textContent = 'Supabase未設定のため、デモとしてマイページへ進みます。';
+    showMy();
+    return;
+  }
+  statusEl.textContent = '送信中...';
+  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
+  statusEl.textContent = error ? `送信に失敗しました: ${error.message}` : 'ログイン用のリンクをメールに送信しました。届いたリンクをクリックしてください。';
+}
+
+async function initAuth() {
+  if (!SUPABASE_CONFIGURED) { showReg(); return; }
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    showMy();
+    await loadUserData(session.user.id);
+  } else {
+    showReg();
+  }
+  sb.auth.onAuthStateChange(async (event, newSession) => {
+    if (event === 'SIGNED_IN' && newSession) {
+      showMy();
+      await loadUserData(newSession.user.id);
+    } else if (event === 'SIGNED_OUT') {
+      showReg();
+    }
+  });
+}
+
+const tabReg = document.getElementById('tab-reg');
+const tabMy = document.getElementById('tab-my');
+const screenReg = document.getElementById('screen-reg');
+const screenMy = document.getElementById('screen-my');
+function showReg() { screenReg.style.display='block'; screenMy.style.display='none'; tabReg.classList.add('active'); tabMy.classList.remove('active'); }
+function showMy() { screenReg.style.display='none'; screenMy.style.display='block'; tabMy.classList.add('active'); tabReg.classList.remove('active'); runSim(); }
+tabReg.onclick = showReg;
+tabMy.onclick = showMy;
+
+const diagYes = document.getElementById('diag-yes-chip');
+const diagNo = document.getElementById('diag-no-chip');
+diagYes.onclick = () => { document.getElementById('diag-fields').style.display='block'; document.getElementById('diag-cta').style.display='none'; diagYes.classList.add('checked'); diagNo.classList.remove('checked'); };
+diagNo.onclick = () => { document.getElementById('diag-fields').style.display='none'; document.getElementById('diag-cta').style.display='block'; diagNo.classList.add('checked'); diagYes.classList.remove('checked'); };
+
+document.querySelectorAll('.chip input[type=checkbox]').forEach(cb => {
+  cb.closest('.chip').addEventListener('click', function(e) {
+    if (e.target.tagName !== 'INPUT') cb.checked = !cb.checked;
+    this.classList.toggle('checked', cb.checked);
+  });
+});
+
+const YEN_PER_STONE = 3.24;
+const LOGIN_WITH_PASS = 140;
+const LOGIN_WITHOUT_PASS = 40;
+const BP_BONUS = 800;
+const WELKIN_COST_PER_MONTH = 1150;
+const BP_COST = 1000;
+// すり抜け(50/50はずれ)が起きた最悪ケースを想定した1体・1振りあたりの必要回数
+const CHAR_WORST_CASE_PULLS = 180;
+const WEAPON_WORST_CASE_PULLS = 160;
+
+const ELEMENT_THEME = {
+  "炎": { accent: "#e0703a", dim: "#7a3018" },
+  "水": { accent: "#4a9fd8", dim: "#1f4a68" },
+  "氷": { accent: "#7ab8e8", dim: "#2a5878" },
+  "雷": { accent: "#b070e8", dim: "#4a2878" },
+  "風": { accent: "#5ab080", dim: "#1f4a34" },
+  "岩": { accent: "#d0a050", dim: "#6a4a18" },
+  "草": { accent: "#7ab040", dim: "#305018" },
+};
+
+const ICONS = {
+  eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></svg>',
+  flame: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c2 4-3 5-3 9a3 3 0 006 0c0-2-1-3-1-3s3 2 3 6a5 5 0 01-10 0c0-5 3-7 5-12z"/></svg>',
+};
+
+const PERSONA_TIPS = {
+  "片手剣": { type: "援助者・堅実家", reward: "よくやったね、ここまで一緒に頑張ってきた甲斐があったよ。", pitfalls: [
+    { icon: 'eye', bold: '同調圧力', text: '友人が引いているのを見ると、合わせて自分も回してしまう。' },
+    { icon: 'clock', bold: '決断の先送り', text: '「みんなやってるから」を、自分の判断より優先しがち。' },
+    { icon: 'flame', bold: '義理の課金', text: '誘われて始めた課金を、途中でやめると悪いと感じてしまう。' },
+  ]},
+  "両手剣": { type: "統率者・達成者", reward: "見事だ。積み上げてきた分だけ、この結果に値する。", pitfalls: [
+    { icon: 'flame', bold: '焦りの一手', text: '「今取らないと出遅れる」という焦りで引いてしまう。' },
+    { icon: 'clock', bold: '勢い余り', text: '凸目標を達成した後も、勢いでもう少し回してしまう。' },
+    { icon: 'eye', bold: '比較の罠', text: '他人の成果と比べて、必要以上に張り合ってしまう。' },
+  ]},
+  "長柄": { type: "改革者・調停者", reward: "約束は守られた。ここまで支えてくれてありがとう。", pitfalls: [
+    { icon: 'clock', bold: '義務感の判断', text: '「一応回しておくべきか」と、義務感で判断してしまう。' },
+    { icon: 'eye', bold: 'なんとなく課金', text: '目標外のキャラにも、なんとなく手を出してしまう。' },
+    { icon: 'flame', bold: '基準のすり替え', text: '自分の基準より、みんなの基準に合わせようとしてしまう。' },
+  ]},
+  "法器": { type: "観察者・個性派", reward: "計算通り、というわけでもないけれど——ちゃんと辿り着いたね。", pitfalls: [
+    { icon: 'eye', bold: '確認の省略', text: '感覚で「足りてる気がする」と、確認せず引いてしまう。' },
+    { icon: 'clock', bold: '分析の空回り', text: '分析すること自体が目的化し、結局衝動的に決めてしまう。' },
+    { icon: 'flame', bold: '差別化欲求', text: '他人と違う結果が欲しくて、不要な追い課金をしてしまう。' },
+  ]},
+  "弓": { type: "楽天家", reward: "やったね！このまま気楽に、楽しんでいこう。", pitfalls: [
+    { icon: 'flame', bold: '歯止めの喪失', text: '「ちょっとだけ」のつもりが、歯止めが効かなくなる。' },
+    { icon: 'clock', bold: '無計画スタート', text: '上限を決めずに引き始めてしまう。' },
+    { icon: 'eye', bold: '勢いの連鎖', text: '楽しい勢いのまま、次のバナーにも手を出してしまう。' },
+  ]},
+};
+
+function constName(v) { return ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6'][v]; }
+function refineName(v) { return ['R1', 'R2', 'R3', 'R4', 'R5'][v]; }
+
+function checkedNames(containerId) {
+  return Array.from(document.querySelectorAll('#' + containerId + ' .chip.checked'))
+    .map(c => c.textContent.trim());
+}
+
+function targetLines(charOn, wepOn) {
+  const cLevel = Number(document.getElementById('char-const').value);
+  const wLevel = Number(document.getElementById('wep-refine').value);
+  const charNames = checkedNames('char-chips');
+  const wepNames = checkedNames('wep-chips');
+  const lines = [];
+  if (charOn) lines.push(`${charNames[0] || '対象キャラA'} <span class="const">${constName(cLevel)}</span>`);
+  if (wepOn) lines.push(`${wepNames[0] || '対象武器A'} <span class="const">${refineName(wLevel)}</span>`);
+  if (lines.length === 0) lines.push('目標未設定');
+  return lines;
+}
+
+function applyElementTheme(el) {
+  const theme = ELEMENT_THEME[el] || ELEMENT_THEME["氷"];
+  document.documentElement.style.setProperty('--accent', theme.accent);
+  document.documentElement.style.setProperty('--accent-dim', theme.dim);
+  document.querySelectorAll('.element-swatch').forEach(sw => {
+    sw.classList.toggle('active', sw.dataset.el === el);
+  });
+}
+
+function buildElementPicker() {
+  const picker = document.getElementById('element-picker');
+  Object.keys(ELEMENT_THEME).forEach(el => {
+    const sw = document.createElement('div');
+    sw.className = 'element-swatch';
+    sw.dataset.el = el;
+    sw.style.background = ELEMENT_THEME[el].accent;
+    sw.textContent = el;
+    sw.onclick = () => {
+      applyElementTheme(el);
+      const diagSelect = document.getElementById('diag-element');
+      if (diagSelect) diagSelect.value = el;
+    };
+    picker.appendChild(sw);
+  });
+}
+buildElementPicker();
+
+function buildTemptationHtml(state) {
+  const p = PERSONA_TIPS[state.weapon] || PERSONA_TIPS['片手剣'];
+  const top = p.pitfalls[0];
+  const lossLine = state.pullsNeeded > 0 && !state.hit
+    ? `今ここで無計画に回すと、目標まで<strong>あと${state.missingPulls}回</strong>(石 約${(state.missingPulls*160).toLocaleString()}個・約¥${state.missingCostYen.toLocaleString()})という距離が、さらに遠のきます。`
+    : `今の見込みでは目標に届いています。ここで無計画に追加課金をすると、積み上げてきた${state.pullsOwned}回分の計画が、意味のないものになってしまいます。`;
+  return `<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+<title>誘惑に負けそうなあなたへ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=IM+Fell+English:ital@1&display=swap" rel="stylesheet">
+<style>
+body{background:#07070f;color:#e0dcf0;font-family:'Noto Serif JP',serif;padding:40px 24px;max-width:480px;margin:0 auto;line-height:1.9;}
+.en{font-family:'IM Fell English',serif;font-style:italic;font-size:12px;letter-spacing:0.2em;color:#5a80a0;display:block;text-align:center;margin-bottom:14px;}
+h1{text-align:center;font-size:20px;color:#f0e8ff;margin-bottom:24px;}
+.card{background:#08101a;border:1px solid #0e1e30;border-radius:10px;padding:20px;margin-bottom:16px;font-size:14px;}
+.warn{color:#f0c890;}
+.pitfall{font-size:13px;color:#a8b8c8;margin-top:10px;}
+.close{display:block;width:100%;background:transparent;border:1px solid #1a3a5a;color:#7ab8e8;border-radius:6px;padding:12px 0;font-family:inherit;font-size:13px;margin-top:8px;}
+</style></head><body>
+<span class="en">Before You Pull</span>
+<h1>誘惑に負けそうなあなたへ</h1>
+<div class="card">
+  <p>${lossLine}</p>
+</div>
+<div class="card">
+  <p>あなたは<strong>${p.type}</strong>タイプです。とくに「<span class="warn">${top.bold}</span>」の形で判断が揺らぎやすい傾向があります。</p>
+  <p class="pitfall">${top.text}</p>
+</div>
+<div class="card">
+  <p>今すぐ決めなくても、何も失いません。24時間、このタブを閉じて様子を見てみましょう。</p>
+</div>
+<button class="close" onclick="window.close()">タブを閉じる</button>
+</body></html>`;
+}
+
+function updateChestLock(hit, pickupOn) {
+  const tile = document.getElementById('chest-tile');
+  const stat = document.getElementById('chest-stat');
+  const unlocked = hit && pickupOn;
+  tile.classList.toggle('locked', !unlocked);
+  if (!hit) stat.textContent = '未開放(目標未達成)';
+  else if (!pickupOn) stat.textContent = '未開放(ピックアップ期間外)';
+  else stat.textContent = '開けられます';
+}
+
+function runSim() {
+  const stones = Number(document.getElementById('stone-count').value) || 0;
+  const fates = Number(document.getElementById('fate-count').value) || 0;
+  const days = Number(document.getElementById('days-left').value) || 0;
+  const eventBonus = Number(document.getElementById('event-bonus').value) || 0;
+  const cap = Number(document.getElementById('budget-cap').value) || 0;
+  const cLevel = Number(document.getElementById('char-const').value);
+  const wLevel = Number(document.getElementById('wep-refine').value);
+  const welkinOn = document.getElementById('welkin-on').checked;
+  const bpOn = document.getElementById('bp-on').checked;
+
+  const charOn = checkedNames('char-chips').length > 0;
+  const wepOn = checkedNames('wep-chips').length > 0;
+  document.getElementById('char-const').disabled = !charOn;
+  document.getElementById('wep-refine').disabled = !wepOn;
+
+  const pullsNeeded = (charOn ? (cLevel + 1) * CHAR_WORST_CASE_PULLS : 0)
+                     + (wepOn ? (wLevel + 1) * WEAPON_WORST_CASE_PULLS : 0);
+  const dailyRate = welkinOn ? LOGIN_WITH_PASS : LOGIN_WITHOUT_PASS;
+  const currentPlanStones = stones + dailyRate * days + eventBonus + (bpOn ? BP_BONUS : 0);
+  const pullsOwned = Math.floor(currentPlanStones / 160) + fates;
+  const missingPulls = Math.max(0, pullsNeeded - pullsOwned);
+  const hit = pullsNeeded > 0 && missingPulls <= 0;
+  const missingCostYen = Math.round(missingPulls * 160 * YEN_PER_STONE / 100) * 100;
+
+  document.getElementById('target-lines').innerHTML = targetLines(charOn, wepOn).map(l => `<div class="target-line">${l}</div>`).join('');
+
+  const diffN = document.getElementById('goal-diff-n');
+  diffN.classList.toggle('hit', hit);
+  diffN.textContent = pullsNeeded <= 0 ? '目標未設定' : (hit ? '達成圏内' : `あと${missingPulls}回`);
+
+  const pct = pullsNeeded > 0 ? Math.min(100, Math.round((pullsOwned / pullsNeeded) * 100)) : 0;
+  document.getElementById('goal-progress-bar').style.width = pct + '%';
+
+  const VERSION_LENGTH_DAYS = 42;
+  const patiencePct = Math.max(0, Math.min(100, Math.round((days / VERSION_LENGTH_DAYS) * 100)));
+  document.getElementById('patience-days').textContent = days > 0 ? `あと${days}日` : 'まもなく終了';
+  document.getElementById('patience-bar').style.width = patiencePct + '%';
+  const extraStonesIfWait = Math.max(0, dailyRate * days);
+  const extraPullsIfWait = Math.floor(extraStonesIfWait / 160);
+  const patienceNote = document.getElementById('patience-note');
+  if (days <= 0) {
+    patienceNote.textContent = 'このガチャ期間はまもなく終わります。次のバージョンに向けて、無理のない判断をしましょう。';
+  } else {
+    patienceNote.innerHTML = `あと<strong>${days}日</strong>我慢すれば、その間だけで石が約<strong>${extraStonesIfWait.toLocaleString()}個(約${extraPullsIfWait}回分)</strong>自然に貯まります。焦らず待つほど、選べる選択肢が増えていきます。`;
+  }
+
+  const weapon = document.getElementById('diag-weapon')?.value || '片手剣';
+  const element = document.getElementById('diag-element')?.value || '氷';
+  const persona = PERSONA_TIPS[weapon] || PERSONA_TIPS['片手剣'];
+  document.getElementById('type-badge').innerHTML = `${element}×${weapon} <b>(${persona.type})</b>`;
+  document.getElementById('persona-pitfalls').innerHTML = persona.pitfalls.map(p =>
+    `<li>${ICONS[p.icon]}<span><strong>${p.bold}</strong>：${p.text}</span></li>`
+  ).join('');
+
+  window.__gachaState = { pullsNeeded, pullsOwned, missingPulls, hit, missingCostYen, weapon, element };
+  updateChestLock(hit, document.getElementById('pickup-on').checked);
+
+  const scenarios = [
+    { name: 'パスなし / 紀行なし', daily: LOGIN_WITHOUT_PASS, bp: false, cost: 0 },
+    { name: '月パスのみ', daily: LOGIN_WITH_PASS, bp: false, cost: Math.ceil(days / 30) * WELKIN_COST_PER_MONTH },
+    { name: '天空紀行のみ', daily: LOGIN_WITHOUT_PASS, bp: true, cost: BP_COST },
+    { name: '両方あり', daily: LOGIN_WITH_PASS, bp: true, cost: Math.ceil(days / 30) * WELKIN_COST_PER_MONTH + BP_COST },
+  ];
+
+  const grid = document.getElementById('sim-grid');
+  grid.innerHTML = '';
+  scenarios.forEach(s => {
+    const total = stones + s.daily * days + eventBonus + (s.bp ? BP_BONUS : 0);
+    const pulls = Math.floor(total / 160) + fates;
+    const sHit = pulls >= pullsNeeded;
+    const sMissing = Math.max(0, pullsNeeded - pulls);
+    const fillCost = Math.round(sMissing * 160 * YEN_PER_STONE / 100) * 100;
+    const totalCost = s.cost + fillCost;
+    const isCurrent = (s.daily === dailyRate) && (s.bp === bpOn);
+    const div = document.createElement('div');
+    div.className = 'sim-card' + (sHit ? ' hit' : '');
+    if (isCurrent) div.style.borderColor = 'var(--accent)';
+    div.innerHTML = `
+      <div class="sim-name">${s.name}${isCurrent ? '(現在)' : ''}</div>
+      <div class="sim-pulls">${pulls}回</div>
+      <div class="sim-sub">${sHit ? '目標達成見込み' : '不足 約' + sMissing + '回'}</div>
+      <div class="sim-sub">概算費用 ¥${totalCost.toLocaleString()}${totalCost > cap ? ' ・上限超過' : ''}</div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+['stone-count','fate-count','days-left','event-bonus','budget-cap','char-const','wep-refine','welkin-on','bp-on'].forEach(id => {
+  document.getElementById(id).addEventListener('input', runSim);
+  document.getElementById(id).addEventListener('change', runSim);
+});
+document.querySelectorAll('#screen-my .chip').forEach(chip => chip.addEventListener('click', runSim));
+
+document.getElementById('vow-input').addEventListener('input', (e) => {
+  const v = e.target.value.trim();
+  document.getElementById('vow-display').textContent = v ? `「${v}」` : '「誓いを入力すると、ここに表示されます」';
+});
+
+document.getElementById('diag-weapon')?.addEventListener('change', runSim);
+document.getElementById('diag-element')?.addEventListener('change', (e) => applyElementTheme(e.target.value));
+applyElementTheme(document.getElementById('diag-element')?.value || '氷');
+
+document.getElementById('login-btn').addEventListener('click', () => {
+  const welkinOn = document.getElementById('welkin-on').checked;
+  const bonus = welkinOn ? LOGIN_WITH_PASS : LOGIN_WITHOUT_PASS;
+  const stoneInput = document.getElementById('stone-count');
+  stoneInput.value = (Number(stoneInput.value) || 0) + bonus;
+  runSim();
+});
+
+runSim();
+initAuth();
+
+document.getElementById('reg-submit-btn').addEventListener('click', sendMagicLink);
+document.getElementById('save-btn').addEventListener('click', saveUserData);
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  if (SUPABASE_CONFIGURED) await sb.auth.signOut();
+  showReg();
+});
+
+document.getElementById('pickup-on').addEventListener('change', () => {
+  const st = window.__gachaState || {};
+  updateChestLock(!!st.hit, document.getElementById('pickup-on').checked);
+});
+
+let temptationCount = 0;
+function openTemptationTab() {
+  const st = window.__gachaState || { pullsNeeded: 0, pullsOwned: 0, missingPulls: 0, hit: true, missingCostYen: 0, weapon: '片手剣' };
+  const w = window.open('', '_blank');
+  if (!w) return;
+  w.document.write(buildTemptationHtml(st));
+  w.document.close();
+  temptationCount++;
+  document.getElementById('temptation-stat').textContent = `我慢 ${temptationCount}回 ／ ¥${(temptationCount * 3000).toLocaleString()}`;
+}
+document.getElementById('temptation-tile').addEventListener('click', openTemptationTab);
+document.getElementById('temptation-tile').addEventListener('keydown', (e) => { if (e.key === 'Enter') openTemptationTab(); });
+
+function openChest() {
+  const tile = document.getElementById('chest-tile');
+  if (tile.classList.contains('locked')) return;
+  const st = window.__gachaState || { weapon: '片手剣' };
+  const persona = PERSONA_TIPS[st.weapon] || PERSONA_TIPS['片手剣'];
+  const reward = document.getElementById('chest-reward');
+  reward.style.display = 'block';
+  reward.textContent = persona.reward;
+  document.getElementById('chest-stat').textContent = '受け取り済み';
+}
+document.getElementById('chest-tile').addEventListener('click', openChest);
+document.getElementById('chest-tile').addEventListener('keydown', (e) => { if (e.key === 'Enter') openChest(); });
+
+const settingsToggle = document.getElementById('settings-toggle');
+const settingsPanel = document.getElementById('settings-panel');
+settingsToggle.addEventListener('click', () => {
+  const open = settingsPanel.style.display !== 'none';
+  settingsPanel.style.display = open ? 'none' : 'block';
+  settingsToggle.textContent = open ? '設定を編集する ▾' : '設定を閉じる ▴';
+});
+</script>
+
+</body>
+</html>
