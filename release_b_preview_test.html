@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>【プレビュー専用・本番非公開】保存基盤テストページ</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+  body { font-family: sans-serif; max-width: 640px; margin: 24px auto; padding: 0 16px; background:#12101a; color:#e8e2f5; }
+  .banner { background:#5a1a1a; border:2px solid #ff4d4d; color:#fff; padding:12px; border-radius:8px; font-weight:bold; margin-bottom:20px; text-align:center; }
+  fieldset { border:1px solid #4a3a68; border-radius:8px; margin-bottom:16px; padding:12px; }
+  legend { padding:0 6px; color:#a888d8; }
+  button { margin:4px 4px 4px 0; padding:8px 12px; border-radius:6px; border:1px solid #4a3a68; background:#241d33; color:#e8e2f5; cursor:pointer; }
+  button:hover { background:#332a47; }
+  input[type=email] { padding:6px; border-radius:6px; border:1px solid #4a3a68; background:#1a1626; color:#e8e2f5; width:240px; }
+  #log { background:#0a0810; border:1px solid #4a3a68; border-radius:8px; padding:10px; height:280px; overflow-y:auto; font-family:monospace; font-size:12px; white-space:pre-wrap; }
+  #status { font-weight:bold; }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  【プレビュー専用テストページ】<br>
+  本番環境には配置・公開しないこと。テスト終了後は削除すること。<br>
+  このページは <code>anon key</code> とログインユーザー自身のアクセストークンのみを使用する
+  （service role keyはここでは一切使用しない）。<br><br>
+  <b>取り扱い上の注意（noindexは検索避けであり、アクセス制限ではない）：</b><br>
+  ・このURLを一般公開しない（SNS・チャット等で共有しない）<br>
+  ・テスト中だけ配置し、恒久的に置いたままにしない<br>
+  ・テスト終了直後にこのPreview Deploymentを削除する<br>
+  ・本番ブランチへは絶対にマージしない<br>
+  ・可能であればVercelのDeployment Protection（パスワード保護等）を有効にしてから使う
+</div>
+
+<h2>1. ログイン状態</h2>
+<div id="status">未確認</div>
+<div id="warning" style="display:none;background:#5a1a1a;border:2px solid #ff4d4d;color:#fff;padding:10px;border-radius:6px;margin:8px 0;font-weight:bold;"></div>
+<button id="btnCheckUser">ログイン状態を再確認</button>
+<button id="btnSignOut">ログアウト</button>
+
+<fieldset>
+  <legend>Googleログイン</legend>
+  <button id="btnGoogle">Googleでログイン</button>
+</fieldset>
+
+<fieldset>
+  <legend>Email Magic Linkテスト</legend>
+  <input type="email" id="magicEmail" placeholder="test@example.com">
+  <button id="btnMagicLink">Magic Linkを送信</button>
+</fieldset>
+
+<h2>2. サンプルデータでの保存テスト</h2>
+<p style="font-size:12px;color:#a888d8">
+  A/B/E（通常保存・再保存・他ユーザー競合）は固定UUID
+  <code>00000000-0000-4000-8000-000000000001</code> を使う。<br>
+  D（不完全セッション試験）は別の固定UUID
+  <code>00000000-0000-4000-8000-000000000002</code> を使う（専用ボタンを使うこと。
+  定数をファイル内で手作業書き換えする必要はない）。
+</p>
+<fieldset>
+  <legend>A. 新規保存 / B. 同一診断の再保存（client_session_id = …0001）</legend>
+  <button id="btnSaveNew">新規保存を実行</button>
+  <button id="btnSaveAgain">同じclient_session_idで再保存を実行</button>
+</fieldset>
+<fieldset>
+  <legend>D. 不完全セッション試験（client_session_id = …0002）</legend>
+  <p style="font-size:12px;color:#a888d8">
+    事前に<code>release_b_incomplete_session_setup.sql</code>を実行し、
+    diagnosis_sessionsだけの行を作っておくこと。
+  </p>
+  <button id="btnSaveIncomplete">末尾0002のclient_session_idで保存を実行</button>
+</fieldset>
+<fieldset>
+  <legend>履歴確認（保存したセッションが履歴に存在することだけを確認する。
+    ennea_sorted等の内容確認はSupabase側の確認SQLで行う）</legend>
+  <button id="btnLoadHistory">loadDiagnosisHistory('element') を実行</button>
+</fieldset>
+
+<h2>3. 実行ログ（errorKindを含む）</h2>
+<div id="log"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="diagnosis-save.js"></script>
+<script>
+// このページ自身は診断ロジック（computeResults()等）を持たないため、
+// サンプル結果オブジェクトを手作りする。CORE2用のennea_sortedも含める。
+function buildSampleResults() {
+  return {
+    big5: { O: 45, C: 69, E: 71, A: 70, N: 28 },
+    elementScores: [
+      { element: '炎', score: 1.567 }, { element: '岩', score: 1.427 },
+      { element: '水', score: 0.5 }, { element: '氷', score: 0.4 },
+      { element: '雷', score: 0.3 }, { element: '風', score: -0.1 },
+      { element: '草', score: -0.2 },
+    ],
+    weaponScores: [
+      { weapon: '弓', score: 0.32 }, { weapon: '法器', score: 0.29 },
+      { weapon: '両手剣', score: 0.1 }, { weapon: '片手剣', score: 0.05 },
+      { weapon: '長柄', score: 0.0 },
+    ],
+    nationScores: [
+      { nation: 'モンド', score: 0.35 }, { nation: 'ナドクライ', score: 0.31 },
+      { nation: '璃月', score: 0.1 }, { nation: '稲妻', score: 0.05 },
+      { nation: 'スメール', score: 0.0 }, { nation: 'フォンテーヌ', score: -0.1 },
+      { nation: 'ナタ', score: -0.2 }, { nation: 'スネージナヤ', score: -0.3 },
+    ],
+    charMatches: [
+      { name: 'イアンサ', match: 92, el: '炎', w: '弓', nation: 'ナタ', ennea: 8 },
+      { name: '鹿野院平蔵', match: 88, el: '炎', w: '弓', nation: '稲妻', ennea: 7 },
+      { name: 'ナヴィア', match: 85, el: '水', w: '法器', nation: 'フォンテーヌ', ennea: 2 },
+      { name: 'セノ', match: 80, el: '草', w: '法器', nation: 'スメール', ennea: 1 },
+    ],
+    enneaWing: { type: 6 },
+    // enneaSorted：9タイプ全体（テスト用のダミー値。実際はcomputeResults()が生成する）
+    enneaSorted: [
+      { type: 7, score: 0.85 }, { type: 6, score: 0.5 }, { type: 9, score: 0.3 },
+      { type: 1, score: 0.2 }, { type: 2, score: 0.15 }, { type: 3, score: 0.1 },
+      { type: 4, score: 0.05 }, { type: 5, score: 0.0 }, { type: 8, score: -0.1 },
+    ],
+  };
+}
+
+const TEST_CLIENT_SESSION_ID = '00000000-0000-4000-8000-000000000001';
+const TEST_CLIENT_SESSION_ID_INCOMPLETE = '00000000-0000-4000-8000-000000000002';
+const TEST_ANSWERS = { note: 'preview-test-dummy-answers', values: Array(100).fill(3) };
+const TEST_ENCODED_ANSWERS = 'PREVIEWTESTCODE0001';
+const TEST_DIAGNOSIS_CODE = 'PREVIEWTESTCODE0001';
+
+function log(label, obj) {
+  const el = document.getElementById('log');
+  const line = `[${new Date().toISOString()}] ${label}: ${typeof obj === 'string' ? obj : JSON.stringify(obj)}\n`;
+  el.textContent += line;
+  el.scrollTop = el.scrollHeight;
+  console.log(label, obj);
+}
+
+function showWarning(text) {
+  const w = document.getElementById('warning');
+  w.textContent = '⚠️ ' + text;
+  w.style.display = 'block';
+}
+
+function clearWarning() {
+  const w = document.getElementById('warning');
+  w.style.display = 'none';
+  w.textContent = '';
+}
+
+// 単一クライアントであることを確認するための印。
+// diagnosis-save.js は classic <script> として読み込まれており、
+// このページの <script> も classic script なので、トップレベルで const 宣言された
+// supabaseClient は同じグローバル字句スコープを共有し、このファイルからも
+// そのままの名前で参照できる（window.supabaseClient にはならないが、
+// 同一実行コンテキスト内では同じ変数を指す）。ここでは念のため、
+// window に一度だけ退避して「本当に1個しか作られていないか」を明示的に確認する。
+if (window.__DEBUG_SUPABASE_CLIENT__ && window.__DEBUG_SUPABASE_CLIENT__ !== supabaseClient) {
+  showWarning('複数のSupabaseクライアントが検出されました（想定外）。診断結果が信用できない可能性があります。');
+}
+window.__DEBUG_SUPABASE_CLIENT__ = supabaseClient;
+
+// diagnosis-save.js の getCurrentUser() は auth.getUser() の
+// error を握りつぶして user だけを返す実装になっている。
+// ここではその同じクライアント（supabaseClientは共有グローバル変数）に対して、
+// error を含めた「生の」状態を直接取得する。診断専用の追加コードであり、
+// diagnosis-save.js 自体は変更していない。
+async function rawAuthDiagnostics() {
+  const sessionResult = await supabaseClient.auth.getSession();
+  const userResult = await supabaseClient.auth.getUser();
+  return {
+    hasSession: !!sessionResult.data.session,
+    sessionUserId: sessionResult.data.session ? sessionResult.data.session.user.id : null,
+    sessionError: sessionResult.error ? sessionResult.error.message : null,
+    getUserSucceeded: !!userResult.data.user,
+    getUserUserId: userResult.data.user ? userResult.data.user.id : null,
+    getUserError: userResult.error ? userResult.error.message : null,
+  };
+}
+
+// OAuth復帰・サインイン/サインアウトのたびに、SDKが実際に状態確定した
+// タイミングで診断ログを残す。
+// 【重要】このコールバック自体をasyncにしてgetSession()/getUser()/refreshStatus()を
+// 直接awaitすると、Supabase Authの内部ロック（他の非同期認証処理との排他制御）と
+// 競合し、デッドロックの原因になりうる。そのためコールバックはイベント内容だけを
+// 受け取り、実際の非同期処理はsetTimeoutでコールバックの外へ逃がす。
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  setTimeout(async () => {
+    const diag = await rawAuthDiagnostics();
+    log('onAuthStateChange', { event, hasSessionArg: !!session, diag });
+    await refreshStatus();
+  }, 0);
+});
+
+async function refreshStatus() {
+  const user = await getCurrentUser(); // diagnosis-save.js のラッパー（errorは見えない）
+  const diag = await rawAuthDiagnostics(); // このページ独自の、errorまで見える生の確認
+  document.getElementById('status').textContent = user
+    ? `ログイン中: ${user.email || '(メールなし)'} / user_id=${user.id}`
+    : '未ログイン';
+
+  // 矛盾検知：getCurrentUser()（表示に使っている）は成功しているのに、
+  // 同じクライアントへの生のgetUser()呼び出しが失敗している、または
+  // session/user のuser_idが一致しない場合は、保存処理側でも
+  // not_authenticatedになりうる不整合として警告する。
+  if (user && (!diag.getUserSucceeded || diag.getUserUserId !== user.id)) {
+    showWarning(`ログイン表示は成功していますが、同一クライアントへの生のgetUser()確認と食い違いがあります（getUserError: ${diag.getUserError || 'なし'}）。保存実行時にnot_authenticatedになる可能性があります。`);
+  } else if (user && !diag.hasSession) {
+    showWarning('ログイン表示は成功していますが、getSession()にセッションが見つかりません。');
+  } else {
+    clearWarning();
+  }
+
+  log('refreshStatus/diag', diag);
+  return user;
+}
+
+document.getElementById('btnCheckUser').addEventListener('click', refreshStatus);
+
+document.getElementById('btnSignOut').addEventListener('click', async () => {
+  await signOutUser();
+  log('signOut', 'done');
+  await refreshStatus();
+});
+
+document.getElementById('btnGoogle').addEventListener('click', async () => {
+  log('signInWithGoogle', 'redirecting...');
+  await signInWithGoogle();
+});
+
+document.getElementById('btnMagicLink').addEventListener('click', async () => {
+  const email = document.getElementById('magicEmail').value;
+  const error = await signInWithMagicLink(email);
+  log('signInWithMagicLink', error ? { error: error.message } : 'sent');
+});
+
+async function runSampleSave(label, clientSessionId) {
+  const user = await refreshStatus();
+  // ここでスキップせず、必ず saveDiagnosisSession() 自体を呼ぶ（未ログイン時に
+  // not_authenticated を返すのが saveDiagnosisSession() 自身の責務であることを
+  // このページでもそのまま確認するため）。
+
+  // 保存処理を呼ぶ直前の、同一クライアントでの生の状態を記録しておく。
+  // これと実際のRPC結果を突き合わせることで、「表示は成功していたのに
+  // 保存だけ失敗する」不整合が、クライアント側の状態の問題なのか、
+  // それ以外（RPC側・ネットワーク等）の問題なのかを切り分けられる。
+  const preCallDiag = await rawAuthDiagnostics();
+
+  const results = buildSampleResults();
+  const payload = buildResultPayload(results, '炎', '弓', 7, 'モンド');
+  const pending = {
+    clientSessionId: clientSessionId,
+    diagnosisType: 'element',
+    diagnosisVersion: 'element-v1',
+    scoringVersion: 'element-score-v1',
+    completedAt: new Date().toISOString(),
+    answers: TEST_ANSWERS,
+    encodedAnswers: TEST_ENCODED_ANSWERS,
+    results: payload,
+    newsletterOptIn: false,
+    diagnosisCode: TEST_DIAGNOSIS_CODE,
+  };
+  const result = await saveDiagnosisSession(pending);
+  log(label, result);
+  log(label + '/pre_call_diag', preCallDiag);
+
+  if (result.errorKind === 'auth') {
+    if (preCallDiag.getUserSucceeded) {
+      // 呼び出し直前は同一クライアントでgetUser()が成功していたのに、
+      // 保存処理（同じクライアントのgetCurrentUser()を内部で使う）がnot_authenticatedを
+      // 返した。クライアント側の状態としては「ログインしていた」ように見えるため、
+      // この矛盾自体を明示的に警告する（原因はこのページの診断だけでは断定できない）。
+      showWarning(`矛盾を検知：保存呼び出し直前はgetUser()が成功していましたが（user_id=${preCallDiag.getUserUserId}）、saveDiagnosisSession()はnot_authenticatedを返しました。クライアント状態とRPC呼び出し時の状態がずれている可能性があります。ブラウザのコンソールに「Multiple GoTrueClient instances」という警告が出ていないか確認してください。`);
+    } else {
+      showWarning('保存呼び出し直前の生のgetUser()も失敗していました。表示上「ログイン中」に見えていた場合は、画面表示（getCurrentUser()のエラーを握りつぶす実装）と実際の認証状態がずれていた可能性があります。');
+    }
+  }
+}
+
+document.getElementById('btnSaveNew').addEventListener('click', () => runSampleSave('saveDiagnosisSession(新規/0001)', TEST_CLIENT_SESSION_ID));
+document.getElementById('btnSaveAgain').addEventListener('click', () => runSampleSave('saveDiagnosisSession(再実行/0001)', TEST_CLIENT_SESSION_ID));
+document.getElementById('btnSaveIncomplete').addEventListener('click', () => runSampleSave('saveDiagnosisSession(不完全セッション試験/0002)', TEST_CLIENT_SESSION_ID_INCOMPLETE));
+
+document.getElementById('btnLoadHistory').addEventListener('click', async () => {
+  const result = await loadDiagnosisHistory('element');
+  log('loadDiagnosisHistory', result);
+});
+
+refreshStatus();
+</script>
+</body>
+</html>
