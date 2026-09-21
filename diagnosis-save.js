@@ -1,18 +1,36 @@
 /* ============================================================
-   元素診断・診断結果保存基盤 v1
-   Phase 3: Supabase Auth（Google OAuth メイン＋Email Magic Link併用）
-   Phase 4: pending diagnosis（認証を跨いでも診断結果を失わない）
-   Phase 5: diagnosis_session保存（保存機能そのもの）
-   Phase 6: 結果画面への保存CTA
+   元素診断・診断結果保存基盤 v1（リリースB版：Vercel Preview上の保存基盤テスト用）
 
-   使い方:
-   1. index.html の </head> 直前に以下を追加:
-        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-        <script src="diagnosis-save.js"></script>
-   2. 下の SUPABASE_URL / SUPABASE_ANON_KEY を実際の値に差し替える
-      （anon keyはRLS前提で公開して問題ない。Service Role Keyは絶対に置かない）
-   3. renderResult() 内、「— ここまでが無料診断の結果です —」の直前あたりに
-      下部の「renderResultへの追加コード」をそのまま挿入する
+   【重要】このファイル単体を本番へ配置しても機能しない。
+   現行本番index.htmlには保存UI（saveResultBtn等）・認証導線・
+   buildResultPayload()/handleSaveResultClick()の呼び出しが存在しないため、
+   このJSを読み込んでも呼び出されるコードがない。
+
+   このファイルは「保存基盤（RPC・認証・pending diagnosis）が
+   正しく動くか」をVercel Previewで検証するためのものであり、
+   一般公開（本番index.htmlの差し替え）は別の作業として扱う。
+
+   一般公開には、少なくとも次を互換性のある1セットとして用意する必要がある
+   （このファイル単体の変更では足りない）：
+     ・保存UIを含む index.html
+     ・このファイルに対応する diagnosis-save.js
+     ・mypage.html（現在は404）
+     ・/api/subscribe
+     ・Google認証設定
+     ・プライバシーポリシーの更新（保存機能を公開する事実に合わせる）
+   0921版index.htmlが前提にしている trackEvent / hasDecidedNewsletter /
+   認証トークン付きsubscribeToNewsletter / 保存成功後のマイページ遷移とは
+   まだ完全互換ではないため、それらと組み合わせる場合は個別に整合を確認すること。
+
+   ベース：現在の本番ファイル（直接3回INSERT版）。
+   本番からの変更点はこの3つのみ：
+     1. CHARACTER_DB_VERSION 定数を新設
+     2. buildResultPayload() に ennea_sorted / character_db_version を追加
+     3. saveDiagnosisSession() を save_diagnosis_session RPC（v3）の呼び出しへ変更。
+        RPCが冪等性・不完全保存を判定するようになったため、クライアント側で
+        23505を一律成功扱いにする処理は削除した（エラーコードで個別に分岐する）。
+
+   loadDiagnosisHistory() は本番のまま無変更。
    ============================================================ */
 
 // ---- 設定（実際の値に差し替える） ----
@@ -24,13 +42,17 @@ const DIAGNOSIS_TYPE = 'element';
 const DIAGNOSIS_VERSION = 'element-v1';
 const SCORING_VERSION = 'element-score-v1';
 
+// リリースBで新設。キャラクターDB（CHARACTERS配列）の内容を変更したときだけ上げる。
+const CHARACTER_DB_VERSION = 'char-db-v1';
+
 const PENDING_KEY = 'pendingDiagnosis_v1';
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /* ============================================================
-   Phase 7: 履歴取得
-   汎用化（loadDiagnosisHistory）。元素専用関数にしない。
+   履歴取得（本番のまま無変更）
+   購入権限・report_snapshotsの参照は、マイページ専用権限API完成後に
+   別途追加する（リリースE）。ここで先取りしない。
    ============================================================ */
 
 async function loadDiagnosisHistory(diagnosisType) {
@@ -65,7 +87,7 @@ async function loadDiagnosisHistory(diagnosisType) {
 }
 
 /* ============================================================
-   Phase 3: 認証
+   認証（本番のまま無変更）
    ============================================================ */
 
 async function signInWithGoogle() {
@@ -94,9 +116,7 @@ async function signOutUser() {
 }
 
 /* ============================================================
-   Phase 4: pending diagnosis
-   認証へ飛ぶ直前の診断結果をlocalStorageへ一時保持し、
-   認証完了後に自動でDB保存する。DB保存後は必ず削除する。
+   pending diagnosis（本番のまま無変更）
    ============================================================ */
 
 function stashPendingDiagnosis(answers, results, encodedAnswers, newsletterOptIn) {
@@ -133,8 +153,7 @@ function clearPendingDiagnosis() {
 }
 
 /* ============================================================
-   Phase 5: 保存本体
-   概念を一般化（saveDiagnosisSession）。元素診断専用関数にしない。
+   保存本体（変更箇所）
    ============================================================ */
 
 function buildResultPayload(results, topEl, topW, et, topNat) {
@@ -157,50 +176,77 @@ function buildResultPayload(results, topEl, topW, et, topNat) {
     character_matches: results.charMatches.slice(0, 4).map(c => ({
       name: c.name, match: c.match, el: c.el, w: c.w, nation: c.nation, ennea: c.ennea
     })),
+    // リリースBで追加（CORE2「アナタの旅路」のデータ保存契約）。
+    // computeResults()が既に返している enneaSorted をそのまま保存する。
+    ennea_sorted: results.enneaSorted,
+    character_db_version: CHARACTER_DB_VERSION,
   };
 }
 
-// 戻り値: { ok: true } | { ok: false, error }
+// 変更点：直接3回INSERT → save_diagnosis_session RPC（v3）へ切替。
+// RPC側が「新規保存」「冪等な再実行」「不完全な既存セッション」「他ユーザーとの衝突」を
+// 区別して返すようになったため、クライアント側で23505を一律成功扱いにする処理は行わない。
+// 戻り値: { ok: true } | { ok: false, error, errorKind }
 async function saveDiagnosisSession(pending) {
   const user = await getCurrentUser();
-  if (!user) return { ok: false, error: 'not_authenticated' };
+  if (!user) return { ok: false, error: 'not_authenticated', errorKind: 'auth' };
 
-  // 1) セッション行を作成（client_session_idのUNIQUE制約で重複保存を防ぐ）
-  const { data: session, error: sessionErr } = await supabaseClient
-    .from('diagnosis_sessions')
-    .insert({
-      user_id: user.id,
-      diagnosis_type: pending.diagnosisType,
-      diagnosis_version: pending.diagnosisVersion,
-      scoring_version: pending.scoringVersion,
-      client_session_id: pending.clientSessionId,
-      completed_at: pending.completedAt,
-    })
-    .select()
-    .single();
+  const { error } = await supabaseClient.rpc('save_diagnosis_session', {
+    p_diagnosis_type:    pending.diagnosisType,
+    p_diagnosis_version: pending.diagnosisVersion,
+    p_scoring_version:   pending.scoringVersion,
+    p_client_session_id: pending.clientSessionId,
+    p_completed_at:      pending.completedAt,
+    p_answers:           pending.answers,
+    p_encoded_answers:   pending.encodedAnswers,
+    p_primary_result:    pending.results.primary_result,
+    p_scores:            pending.results.scores,
+    p_character_matches: pending.results.character_matches,
+    p_diagnosis_code:    pending.encodedAnswers ? pending.diagnosisCode : null,
+    p_ennea_sorted:         pending.results.ennea_sorted || null,
+    p_character_db_version: pending.results.character_db_version || null,
+  });
 
-  if (sessionErr) {
-    // 23505 = unique_violation。連打・リダイレクト再実行による重複はここで安全に無視する
-    if (sessionErr.code === '23505') return { ok: true, duplicate: true };
-    return { ok: false, error: sessionErr };
+  if (error) {
+    // RPCが返しうる個別のエラーを区別する。ここでは「成功扱いへ読み替える」ことはしない。
+    //   incomplete_existing_session          … 同じclient_session_idの既存セッションに
+    //                                           answers/resultsの一方が欠けている
+    //                                           （旧・直接INSERT版時代の不完全保存の可能性）。
+    //                                           利用者に再試行を促す（新しいclient_session_idで
+    //                                           もう一度送るのではなく、原因調査が必要）
+    //   conflicting_session_not_found         … client_session_idが衝突したが、
+    //                                           呼び出し元からはその既存行が見えなかった場合。
+    //                                           save_diagnosis_sessionはSECURITY INVOKERであり
+    //                                           RLS（diagnosis_sessionsのSELECTはauth.uid()=user_id
+    //                                           のみ許可）が適用されるため、別ユーザーの行との
+    //                                           衝突は「見つからない」という形でここに現れる。
+    //                                           実務上、別ユーザーとの衝突はこちらに到達する。
+    //   client_session_id_conflict_other_user … RPC内に防御的に残しているコードパスだが、
+    //                                           上記の理由により通常は到達しない
+    //                                           （RLSが先に対象行を除外するため）。
+    //                                           SECURITY DEFINERへは変更していない。
+    //   not_authenticated                     … 未ログイン
+    // これら以外は unknown として扱う。いずれも ok:false のまま返し、
+    // 呼び出し側のUIでエラー表示・再試行導線につなげる。
+    return { ok: false, error, errorKind: classifyError(error) };
   }
-
-  // 2) 回答・結果を保存
-  const [{ error: ansErr }, { error: resErr }] = await Promise.all([
-    supabaseClient.from('diagnosis_answers').insert({
-      session_id: session.id,
-      answers: pending.answers,
-      encoded_answers: pending.encodedAnswers,
-    }),
-    supabaseClient.from('diagnosis_results').insert({
-      session_id: session.id,
-      ...pending.results,
-      diagnosis_code: pending.encodedAnswers ? pending.diagnosisCode : null,
-    }),
-  ]);
-
-  if (ansErr || resErr) return { ok: false, error: ansErr || resErr };
+  // エラーが無ければ、新規保存・冪等な再実行のいずれであっても成功として扱ってよい
+  // （RPCがどちらの場合も同じsession_idを一貫して返す設計のため、クライアント側で
+  //   区別する必要がない）
   return { ok: true };
+}
+
+function classifyError(error) {
+  if (!error) return 'unknown';
+  const msg = (error.message || '').toLowerCase();
+  if (msg.includes('not_authenticated')) return 'auth';
+  if (msg.includes('incomplete_existing_session')) return 'incomplete_existing_session';
+  // client_session_id_conflict_other_user は SECURITY INVOKER + RLS の下では
+  // 実際にはほぼ到達しない（下記コメント参照）。conflicting_session_not_found と
+  // 同じ「安全側の失敗」として同一のerrorKindにまとめる。
+  if (msg.includes('client_session_id_conflict_other_user')) return 'session_conflict';
+  if (msg.includes('conflicting_session_not_found')) return 'session_conflict';
+  return 'unknown';
 }
 
 // メルマガ同意があった場合にサーバー経由でKitへ登録する。
@@ -219,7 +265,7 @@ async function subscribeToNewsletter(email) {
 }
 
 /* ============================================================
-   起動時：認証完了で戻ってきたらpending diagnosisを保存する
+   起動時：認証完了で戻ってきたらpending diagnosisを保存する（本番のまま無変更）
    ============================================================ */
 
 supabaseClient.auth.onAuthStateChange(async (event, session) => {
@@ -236,15 +282,14 @@ supabaseClient.auth.onAuthStateChange(async (event, session) => {
       subscribeToNewsletter(user ? user.email : null);
     }
   } else {
-    // 保存失敗時もpendingは消さない。次回リトライできるようにする（指示書25章）
+    // 保存失敗時もpendingは消さない。次回リトライできるようにする
     console.error('diagnosis save failed:', result.error);
     updateSaveButtonUI('error');
   }
 });
 
 /* ============================================================
-   Phase 6: 結果画面のCTA
-   renderResult()側から呼ぶ想定の3関数。
+   結果画面のCTA（本番のまま無変更）
    ============================================================ */
 
 async function handleSaveResultClick(answers, results, encodedAnswers, diagnosisCode, newsletterOptIn) {
@@ -287,28 +332,24 @@ function updateSaveButtonUI(state) {
 }
 
 /* ============================================================
-   renderResult() への追加コード（そのまま挿入する）
+   呼び出し例（参考・保存UI組み込み時にそのまま使う想定）
    ------------------------------------------------------------
-   挿入場所：「— ここまでが無料診断の結果です —」の直前
+   現行本番index.htmlにはこの呼び出し自体が存在しない（本ファイル冒頭の
+   注記の通り）。将来、保存UIを持つindex.html（一般公開版 or
+   index_release-b.html）へ組み込む際の呼び出し形はこれに合わせること。
 
-   <button id="saveResultBtn"
-     style="width:100%;margin-bottom:14px;background:transparent;border:1px solid #4a3a68;
-            color:#a888d8;border-radius:8px;padding:12px;font-size:13px;cursor:pointer;font-family:inherit">
-     無料で結果を保存
-   </button>
-   <p style="color:#5a4d75;font-size:10.5px;text-align:center;margin:-8px 0 14px">
-     保存すると、次回の診断結果と比較できるようになります。
-   </p>
+   buildResultPayload() の第5引数は topNat（国家）であり、
+   results.enneaWing ではない。また handleSaveResultClick() は
+   第5引数に newsletterOptIn を渡す必要がある（省略すると
+   pending.newsletterOptIn が常に undefined になり、
+   メルマガ同意があってもsubscribeToNewsletter()が呼ばれない）。
 
-   <script>
-   (async function () {
-     var btn = document.getElementById('saveResultBtn');
-     if (!btn) return;
-     var user = await getCurrentUser();
-     updateSaveButtonUI(user ? 'idle_in' : 'idle_out');
-     btn.addEventListener('click', function () {
-       handleSaveResultClick(answers, buildResultPayload(results, topEl, topW, et, results.enneaWing), shortCode, applyData);
-     });
-   })();
-   </script>
+   var resultPayload = buildResultPayload(results, topEl, topW, et, topNat);
+   handleSaveResultClick(
+     answers,
+     resultPayload,
+     shortCode,
+     applyData,
+     newsletterOptIn
+   );
    ============================================================ */
