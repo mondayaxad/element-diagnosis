@@ -1692,6 +1692,64 @@ async function savePdf() {
     }
     const data = await res.json();
     const code = data.code;
+
+    // GA4：購入計測（リリースC）。
+    // ・権限ゲートより前に置く。CORE2専用購入はこの後のCORE1閲覧ゲートで
+    //   止まるため、ここで先に計測しておかないと購入計測自体が漏れる。
+    // ・data.purchase は /api/verify.js がStripe検証済みの購入内容から
+    //   組み立てたブロックであり、閲覧権限の判定には使わない
+    //   （判定は下のentitlementsのみで行う）。
+    // ・旧形式トークン（data.purchase が無い）では、新たにpurchaseイベントを
+    //   発火しない。以前の実装（transaction_id: code 固定・value:1000固定）を
+    //   ここで復活させると、診断コードをGA4へ送ることになり、また実際の
+    //   購入内容と無関係な固定値を送ることになるため。
+    // ・transaction_idには診断コードを使わず、data.purchaseの不可逆な値を使う。
+    try {
+      if (data.purchase && typeof gtag === 'function') {
+        var PRODUCT_ITEM_NAMES = {
+          core1: '元素診断 解析レポート',
+          core2: '元素診断 アナタの旅路',
+          complete: '元素診断 COMPLETE',
+          core2_upgrade: '元素診断 アナタの旅路（追加購入）',
+        };
+        var purchase = data.purchase;
+        var firedKey = 'ga4_purchase_fired_' + purchase.transaction_id;
+        if (!sessionStorage.getItem(firedKey)) {
+          gtag('event', 'purchase', {
+            transaction_id: purchase.transaction_id,
+            currency: purchase.currency ? purchase.currency.toUpperCase() : 'JPY',
+            value: purchase.value,
+            items: [{
+              item_id: purchase.product_id,
+              item_name: PRODUCT_ITEM_NAMES[purchase.product_id] || purchase.product_id,
+              price: purchase.value,
+              quantity: 1,
+            }],
+          });
+          sessionStorage.setItem(firedKey, '1');
+        }
+      }
+    } catch (e) { console.error('GA4 purchase event error:', e); }
+
+    // リリースC：report-data.jsが返すentitlementsで、CORE1閲覧権限を確認する。
+    // entitlementsが無い、またはcore_analysis_accessが明示的にtrueでない場合は
+    // 表示しない（fail-closed）。これは主に2つの場合に該当する：
+    //   1) 正規にCORE2等のみを購入し、CORE1の権限を持たない場合
+    //   2) /api/report-data.js が何らかの理由でentitlementsを返せていない場合
+    //      （例：リリースC適用前の旧バージョンへ誤って切り戻した等）
+    // どちらの場合も、権限を確認できないまま無条件でCORE1を生成・表示することは
+    // しない。
+    // 【重要・デプロイ順序】この判定は、/api/report-data.js が
+    // entitlements を返す版（リリースC以降）に既に更新されていることを前提とする。
+    // report.html のこの変更を、report-data.js の更新より先に本番へ出さないこと
+    // （先に出すと、entitlementsが常に無い状態になり、正規のCORE1購入者まで
+    //  一律ブロックされる）。
+    const entitlements = data.entitlements;
+    if (!entitlements || entitlements.core_analysis_access !== true) {
+      root.innerHTML = '<div class="err-box"><h2>この商品はまだご覧いただけません</h2><p>CORE1（解析レポート）をご購入いただくと、こちらのページから閲覧できます。お心当たりがない場合は @mondayaxad までご連絡ください。</p></div>';
+      return;
+    }
+
     const answersArr = decodeAnswers(code);
     if (!answersArr) {
       root.innerHTML = '<div class="err-box"><h2>診断コードの読み取りに失敗しました</h2><p>お手数ですが @mondayaxad までご連絡ください。</p></div>';
@@ -1701,20 +1759,6 @@ async function savePdf() {
     answersArr.forEach((v,i) => answersObj[i] = v);
     const results = computeResults(answersObj);
     renderFullReport(root, results, code);
-
-    // GA4：購入計測（同一コードでのリロード時の二重計測を防止）
-    try {
-      var firedKey = 'ga4_purchase_fired_' + code;
-      if (!sessionStorage.getItem(firedKey) && typeof gtag === 'function') {
-        gtag('event', 'purchase', {
-          transaction_id: code,
-          currency: 'JPY',
-          value: 1000,
-          items: [{ item_id: 'analysis_report', item_name: '元素診断 解析レポート', price: 1000, quantity: 1 }]
-        });
-        sessionStorage.setItem(firedKey, '1');
-      }
-    } catch (e) { console.error('GA4 purchase event error:', e); }
   } catch (e) {
     console.error(e);
     root.innerHTML = '<div class="err-box"><h2>エラーが発生しました</h2><p>時間をおいて再度お試しください。改善しない場合は @mondayaxad までご連絡ください。</p></div>';
