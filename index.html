@@ -63,13 +63,13 @@
     /* ===== HERO ===== */
     .hero {
       position: relative;
-      min-height: 100svh;
+      min-height: 88svh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 60px 24px 80px;
+      padding: 60px 24px 60px;
       overflow: hidden;
     }
     .hero-bg {
@@ -166,6 +166,26 @@
       box-shadow: 0 0 32px rgba(120,80,200,0.25);
     }
     .hero-cta:hover { opacity: 0.88; transform: translateY(-1px); }
+    .mypage-btn {
+      position: absolute;
+      top: 20px; right: 20px;
+      z-index: 3;
+      color: #a8c8ec;
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-decoration: none;
+      border: 1px solid #3a6a95;
+      background: transparent;
+      border-radius: 4px;
+      padding: 6px 12px;
+      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .mypage-btn:hover {
+      border-color: #7ab8e8;
+      background: rgba(42, 90, 138, 0.5);
+      box-shadow: 0 0 12px rgba(122, 184, 232, 0.35);
+    }
     .hero-scroll {
       position: absolute;
       bottom: 28px; left: 50%;
@@ -309,12 +329,17 @@
     }
   }
   </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="diagnosis-save.js"></script>
 </head>
 <body>
 
 <!-- ===== HERO ===== -->
 <section class="hero">
   <div class="hero-bg"></div>
+
+  <!-- 常設マイページ導線（右上・控えめ） -->
+  <a href="/mypage.html" class="mypage-btn" onclick="trackEvent('mypage_entry_click',{entry_point:'top'})">MY PAGE</a>
 
   <!-- 七元素 回転リング（非表示） -->
 
@@ -336,7 +361,7 @@
       <span class="hero-desc-en">Seven elements flow within. 100 questions to reveal your nature, strength, and values — a self-understanding diagnosis built on Big Five, Enneagram, and Values Theory.</span>
     </p>
 
-    <a href="javascript:void(0)" class="hero-cta" onclick="answers={};currentIdx=0;gtag('event','quiz_start',{event_category:'diagnosis'});setPhase('quiz')">診断をはじめる — Start</a>
+    <a href="javascript:void(0)" class="hero-cta" onclick="answers={};currentIdx=0;gtag('event','quiz_start',{event_category:'diagnosis'});if(window.__isRepeatUser)trackEvent('repeat_diagnosis_start',{diagnosis_type:'element'});setPhase('quiz')">診断をはじめる — Start</a>
 
   </div>
 
@@ -383,6 +408,16 @@
   </div>
 </section>
 
+<!-- ===== SAVE FEATURE INTRO ===== -->
+<section style="max-width:600px;margin:0 auto;padding:0 24px 60px;text-align:center;border-top:1px solid #0e1e30;padding-top:56px">
+  <p class="section-label" style="justify-content:center;display:flex">Results That Stay With You</p>
+  <p style="color:#7098b8;font-size:14px;line-height:1.9;margin-bottom:24px">
+    診断結果は、アナタの記録として保存できます。<br>
+    再診するたび、過去の結果が蓄積されていきます。
+  </p>
+  <a href="/mypage.html" class="footer-btn" style="display:inline-block" onclick="trackEvent('mypage_entry_click',{entry_point:'top'})">診断記録を見る</a>
+</section>
+
 <!-- ===== DIAGNOSIS ===== -->
 <section id="diagnosis" style="overflow:hidden;padding:0 2px">
   <div id="diagnosis-root" style="max-width:100%;overflow-x:hidden"></div>
@@ -392,8 +427,8 @@
 <footer>
   <p class="footer-copy">元素診断 — An original personality framework inspired by Genshin Impact. For entertainment purposes. © マンデーアクスト / @mondayaxad</p>
   <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-top:16px">
-    <a href="javascript:void(0)" onclick="document.getElementById('privacy').style.display='flex'" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">プライバシーポリシー</a>
-    <a href="javascript:void(0)" onclick="document.getElementById('terms').style.display='flex'" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">利用規約</a>
+    <a href="/privacy.html" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">プライバシーポリシー</a>
+    <a href="/terms.html" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">利用規約</a>
     <a href="javascript:void(0)" onclick="document.getElementById('about').style.display='flex'" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">運営者情報</a>
     <a href="https://x.com/mondayaxad" target="_blank" rel="noopener" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">お問い合わせ</a>
   </div>
@@ -428,7 +463,7 @@ const ELEMENT_CODE = { "炎":"PY", "水":"HY", "氷":"CR", "雷":"EL", "風":"AN
 // （診断ロジック自体はサーバー側で再計算せず、既に計算済みの値をそのまま圧縮するだけなので安全）
 const PACK_ELEMENTS = ["炎","水","氷","雷","風","岩","草"];
 const PACK_WEAPONS = ["片手剣","両手剣","長柄","法器","弓"];
-const PACK_NATIONS = ["モンド","璃月","稲妻","スメール","フォンテーヌ","ナタ","スネージナヤ"];
+const PACK_NATIONS = ["モンド","璃月","稲妻","スメール","フォンテーヌ","ナタ","スネージナヤ","ナドクライ"];
 function packShareParams(el, w, nat, charIdx, matchPct) {
   var elI = PACK_ELEMENTS.indexOf(el);       // 0-6  → 3bit
   var wI = PACK_WEAPONS.indexOf(w);          // 0-4  → 3bit
@@ -439,7 +474,7 @@ function packShareParams(el, w, nat, charIdx, matchPct) {
   return packed.toString(36);
 }
 const WEAPON_CODE = { "片手剣":"SW", "両手剣":"CM", "長柄":"PL", "法器":"CT", "弓":"BW" };
-const NATION_CODE = { "モンド":"M", "璃月":"L", "稲妻":"I", "スメール":"S", "フォンテーヌ":"F", "ナタ":"N", "スネージナヤ":"Z" };
+const NATION_CODE = { "モンド":"M", "璃月":"L", "稲妻":"I", "スメール":"S", "フォンテーヌ":"F", "ナタ":"N", "スネージナヤ":"Z", "ナドクライ":"D" };
 function typeCode(el, w, nation) { return ELEMENT_CODE[el] + WEAPON_CODE[w] + (nation ? '-' + NATION_CODE[nation] : ''); }
 // 35タイプ固有の名称（機械的な掛け合わせではなく、組み合わせごとの性質から命名）
 const TYPE_NAME = {
@@ -453,11 +488,11 @@ const TYPE_NAME = {
 };
 function typeName(el, w) { return TYPE_NAME[el][w]; }
 // 国家（価値観理論：シュワルツの基本的価値観をテイワット7国家にマッピング）
-const NATIONS = ["モンド","璃月","稲妻","スメール","フォンテーヌ","ナタ","スネージナヤ"];
+const NATIONS = ["モンド","璃月","稲妻","スメール","フォンテーヌ","ナタ","スネージナヤ","ナドクライ"];
 // 各国家がもたらす意味（一言）
 const NATION_MEANING = {
   "モンド":"自由", "璃月":"契約", "稲妻":"永遠", "スメール":"知恵",
-  "フォンテーヌ":"正義", "ナタ":"戦争", "スネージナヤ":"抗争",
+  "フォンテーヌ":"正義", "ナタ":"戦争", "スネージナヤ":"抗争", "ナドクライ":"月光",
 };
 const NATION_DESC = {
   "モンド":     "モンドが体現するのは「自由」です。誰にも縛られず、自分の意志で選び取ることに、何よりの価値を置きます。規則やしがらみより、自分の心が向く方向を信じるタイプで、束縛を感じる環境では、力を発揮しづらくなる傾向があります。",
@@ -467,6 +502,7 @@ const NATION_DESC = {
   "フォンテーヌ": "フォンテーヌが体現するのは「法と正義」です。公正さと調和を重んじ、誰に対しても等しくあることに、価値を置きます。ひいきや不公平を嫌い、誰から見ても筋の通った判断を下そうとする、バランス感覚に優れた価値観です。",
   "ナタ":       "ナタが体現するのは「戦争」です。真っ向からぶつかり合う戦いの中でこそ、生きる実感を得ることに、価値を置きます。困難を避けるより、正面から挑むことを選ぶタイプで、仲間と共に壁を乗り越えることに、強い充実感を覚えます。",
   "スネージナヤ": "スネージナヤが体現するのは「抗争」です。争いを通じて自らの力を示し、抗い続けることに、価値を置きます。厳しい状況に置かれるほど、かえって強さを発揮するタイプで、簡単には屈しない、したたかな忍耐力を持っています。",
+  "ナドクライ": "ナドクライが体現するのは「月光」です。表舞台の喧騒から離れ、静かな場所で自分の価値観を保つことに、価値を置きます。人に知られることを求めず、慣れた場所より知らない環境にかえって心惹かれる、独自の歩き方をするタイプです。",
 };
 const NATION_TRAITS = {
   "モンド": ["束縛からの解放", "自分の意志優先", "しがらみを嫌う"],
@@ -476,6 +512,7 @@ const NATION_TRAITS = {
   "フォンテーヌ": ["公正さ", "誰にでも平等", "バランス感覚"],
   "ナタ": ["正面から挑む", "仲間との達成感", "困難を避けない"],
   "スネージナヤ": ["逆境での強さ", "したたかな忍耐", "屈しない意志"],
+  "ナドクライ": ["静かな独立性", "未知への惹かれ", "表に出ない機能美"],
 };
 // 35タイプ固有の説明（使い回しではなく、組み合わせごとに意味づけ）
 const TYPE_DESC = {
@@ -787,6 +824,7 @@ const NATION_VALUES = {
   "フォンテーヌ": ['普遍主義','同調'],
   "ナタ":         ['刺激','快楽'],
   "スネージナヤ": ['権力','達成'],
+  "ナドクライ":   ['自己志向','安全'],
 };
 function pickFactorTags_Nation(results, usedWords) {
   const sorted = results.nationScores; // 既にスコア順
@@ -911,10 +949,10 @@ const CHARACTERS = [
   { name:"モナ",      el:"水", w:"法器",   big5:{O:80,C:55,E:45,A:40,N:50}, ennea:5, nation:"モンド" },
   { name:"珊瑚宮心海", el:"水", w:"法器",  big5:{O:70,C:85,E:45,A:70,N:40}, ennea:5, nation:"稲妻" },
   { name:"ヌヴィレット", el:"水", w:"法器", big5:{O:75,C:85,E:40,A:65,N:45}, ennea:1, nation:"フォンテーヌ" },
-  { name:"コロンビーナ", el:"水", w:"法器", big5:{O:70,C:55,E:50,A:45,N:50}, ennea:9, nation:"フォンテーヌ" },
+  { name:"コロンビーナ", el:"水", w:"法器", big5:{O:70,C:55,E:50,A:45,N:50}, ennea:9, nation:"ナドクライ" },
   { name:"ムアラニ",  el:"水", w:"法器",   big5:{O:75,C:50,E:80,A:75,N:30}, ennea:7, nation:"ナタ" },
   { name:"バーバラ",  el:"水", w:"法器",   big5:{O:55,C:65,E:65,A:85,N:45}, ennea:2, nation:"モンド" },
-  { name:"アイノ",    el:"水", w:"両手剣", big5:{O:70,C:60,E:75,A:70,N:30}, ennea:7, nation:"ナタ" },
+  { name:"アイノ",    el:"水", w:"両手剣", big5:{O:70,C:60,E:75,A:70,N:30}, ennea:7, nation:"ナドクライ" },
   { name:"ダリア",    el:"水", w:"片手剣", big5:{O:50,C:60,E:60,A:65,N:40}, ennea:6, nation:"フォンテーヌ" },
   { name:"キャンディス", el:"水", w:"長柄", big5:{O:50,C:80,E:50,A:70,N:40}, ennea:6, nation:"スメール" },
   // ===== 氷 =====
@@ -962,7 +1000,7 @@ const CHARACTERS = [
   { name:"ウェンティ", el:"風", w:"弓",    big5:{O:90,C:40,E:65,A:70,N:40}, ennea:7, nation:"モンド" },
   { name:"チャスカ",  el:"風", w:"弓",     big5:{O:70,C:65,E:55,A:65,N:45}, ennea:6, nation:"ナタ" },
   { name:"ファルザン", el:"風", w:"弓",    big5:{O:80,C:70,E:60,A:60,N:35}, ennea:5, nation:"スメール" },
-  { name:"ヤフォダ",  el:"風", w:"弓",     big5:{O:65,C:55,E:55,A:80,N:35}, ennea:2, nation:"スメール" },
+  { name:"ヤフォダ",  el:"風", w:"弓",     big5:{O:65,C:55,E:55,A:80,N:35}, ennea:2, nation:"ナドクライ" },
   { name:"スクロース", el:"風", w:"法器",  big5:{O:90,C:65,E:35,A:60,N:45}, ennea:5, nation:"モンド" },
   { name:"放浪者",    el:"風", w:"法器",   big5:{O:75,C:55,E:35,A:30,N:60}, ennea:4, nation:"稲妻" },
   { name:"閑雲",      el:"風", w:"法器",   big5:{O:85,C:75,E:40,A:60,N:35}, ennea:1, nation:"璃月" },
@@ -970,10 +1008,10 @@ const CHARACTERS = [
   { name:"鹿野院平蔵", el:"風", w:"法器",  big5:{O:80,C:40,E:60,A:55,N:40}, ennea:7, nation:"稲妻" },
   { name:"夢見月瑞希", el:"風", w:"法器",  big5:{O:65,C:60,E:45,A:80,N:40}, ennea:2, nation:"稲妻" },
   { name:"イファ",    el:"風", w:"法器",   big5:{O:60,C:50,E:65,A:80,N:35}, ennea:2, nation:"ナタ" },
-  { name:"プルーネ",  el:"風", w:"法器",   big5:{O:55,C:60,E:70,A:80,N:30}, ennea:2, nation:"ナタ" },
+  { name:"プルーネ",  el:"風", w:"法器",   big5:{O:55,C:60,E:70,A:80,N:30}, ennea:2, nation:"ナドクライ" },
   // ===== 岩 =====
   { name:"鍾離",      el:"岩", w:"長柄",   big5:{O:80,C:80,E:40,A:65,N:25}, ennea:1, nation:"璃月" },
-  { name:"イルーガ",  el:"岩", w:"長柄",   big5:{O:50,C:75,E:55,A:65,N:35}, ennea:6, nation:"ナタ" },
+  { name:"イルーガ",  el:"岩", w:"長柄",   big5:{O:50,C:75,E:55,A:65,N:35}, ennea:6, nation:"ナドクライ" },
   { name:"カチーナ",  el:"岩", w:"長柄",   big5:{O:50,C:65,E:55,A:70,N:45}, ennea:6, nation:"ナタ" },
   { name:"雲菫",      el:"岩", w:"長柄",   big5:{O:65,C:75,E:60,A:70,N:35}, ennea:4, nation:"璃月" },
   { name:"ナヴィア",  el:"岩", w:"両手剣", big5:{O:60,C:70,E:75,A:75,N:45}, ennea:2, nation:"フォンテーヌ" },
@@ -984,13 +1022,13 @@ const CHARACTERS = [
   { name:"千織",      el:"岩", w:"片手剣", big5:{O:75,C:75,E:60,A:65,N:35}, ennea:4, nation:"稲妻" },
   { name:"シロネン",  el:"岩", w:"片手剣", big5:{O:60,C:80,E:55,A:75,N:30}, ennea:6, nation:"ナタ" },
   { name:"ゴロー",    el:"岩", w:"弓",     big5:{O:50,C:75,E:60,A:75,N:40}, ennea:6, nation:"稲妻" },
-  { name:"リンネア",  el:"岩", w:"弓",     big5:{O:55,C:80,E:45,A:70,N:30}, ennea:6, nation:"モンド" },
+  { name:"リンネア",  el:"岩", w:"弓",     big5:{O:55,C:80,E:45,A:70,N:30}, ennea:6, nation:"ナドクライ" },
   { name:"凝光",      el:"岩", w:"法器",   big5:{O:65,C:85,E:55,A:45,N:35}, ennea:3, nation:"璃月" },
   // ===== 草 =====
   { name:"ナヒーダ",  el:"草", w:"法器",   big5:{O:90,C:70,E:45,A:80,N:40}, ennea:5, nation:"スメール" },
   { name:"白朮",      el:"草", w:"法器",   big5:{O:70,C:80,E:45,A:80,N:40}, ennea:2, nation:"璃月" },
-  { name:"ラウマ",    el:"草", w:"法器",   big5:{O:70,C:65,E:45,A:85,N:40}, ennea:2, nation:"ナタ" },
-  { name:"ネフェル",  el:"草", w:"法器",   big5:{O:65,C:80,E:50,A:80,N:35}, ennea:2, nation:"スメール" },
+  { name:"ラウマ",    el:"草", w:"法器",   big5:{O:70,C:65,E:45,A:85,N:40}, ennea:2, nation:"ナドクライ" },
+  { name:"ネフェル",  el:"草", w:"法器",   big5:{O:65,C:80,E:50,A:80,N:35}, ennea:2, nation:"ナドクライ" },
   { name:"ティナリ",  el:"草", w:"弓",     big5:{O:75,C:85,E:45,A:60,N:40}, ennea:5, nation:"スメール" },
   { name:"コレイ",    el:"草", w:"弓",     big5:{O:65,C:55,E:60,A:75,N:50}, ennea:9, nation:"スメール" },
   { name:"アルハイゼン", el:"草", w:"片手剣", big5:{O:90,C:75,E:35,A:40,N:30}, ennea:5, nation:"スメール" },
@@ -1002,10 +1040,10 @@ const CHARACTERS = [
 { name:"サンドローネ", el:"氷", w:"両手剣", big5:{O:85,C:90,E:20,A:15,N:20}, ennea:5, nation:"スネージナヤ" },
 { name:"魈",     el:"風", w:"長柄",   big5:{O:50,C:80,E:20,A:45,N:65}, ennea:1, nation:"璃月" },
 { name:"エウルア", el:"氷", w:"両手剣", big5:{O:55,C:65,E:50,A:35,N:45}, ennea:8, nation:"モンド" },
-{ name:"重雲",   el:"氷", w:"長柄",   big5:{O:45,C:80,E:40,A:65,N:50}, ennea:1, nation:"璃月" },
-{ name:"フレミネ", el:"氷", w:"長柄",   big5:{O:65,C:60,E:25,A:65,N:55}, ennea:9, nation:"フォンテーヌ" },
-{ name:"フリンズ", el:"雷", w:"長柄",   big5:{O:55,C:80,E:35,A:55,N:35}, ennea:1, nation:"ナタ" },
-{ name:"イネファ", el:"雷", w:"両手剣", big5:{O:50,C:75,E:60,A:80,N:30}, ennea:2, nation:"スネージナヤ" },
+{ name:"重雲",   el:"氷", w:"両手剣",   big5:{O:45,C:80,E:40,A:65,N:50}, ennea:1, nation:"璃月" },
+{ name:"フレミネ", el:"氷", w:"両手剣",   big5:{O:65,C:60,E:25,A:65,N:55}, ennea:9, nation:"フォンテーヌ" },
+{ name:"フリンズ", el:"雷", w:"長柄",   big5:{O:55,C:80,E:35,A:55,N:35}, ennea:1, nation:"ナドクライ" },
+{ name:"イネファ", el:"雷", w:"長柄", big5:{O:50,C:75,E:60,A:80,N:30}, ennea:2, nation:"ナドクライ" },
 ];
 
 
@@ -1141,10 +1179,10 @@ const QUESTIONS = [
 // 回答の一貫性チェック用（4問・スコアには使わず、信頼性の確認のみ）
 // 同じ内容を異なる言い回しで2組×2回、聞くことで、回答のブレを検知する
 
-  { q:"新しいことに関心を持ちやすい方だと思う", check:"O_pos" },
-  { q:"未知のものより、慣れ親しんだものを好む", check:"O_neg" }, // ↑と逆相関が期待値
-  { q:"物事を計画通りに進めることを大切にしている", check:"C_pos" },
-  { q:"計画よりも、その場の流れに任せることが多い", check:"C_neg" }, // ↑と逆相関が期待値
+  { q:"目立たない場所にいても、自分の価値観さえ保てていれば満足できる", nation:"ナドクライ", s:+1 },
+  { q:"周囲の期待から離れて、一人静かに過ごす時間に安らぎを感じる", nation:"ナドクライ", s:+1 },
+  { q:"表舞台よりも、物事の奥底で静かに機能する立場を好む", nation:"ナドクライ", s:+1 },
+  { q:"慣れた場所に留まるより、人の少ない未知の環境に惹かれる", nation:"ナドクライ", s:+1 },
 
 ];
 
@@ -1458,6 +1496,7 @@ function renderIntro(root) {
     startBtn.addEventListener('click', function() {
       answers = {}; currentIdx = 0;
       if (typeof gtag === 'function') gtag('event','quiz_start',{event_category:'diagnosis'});
+      if (window.__isRepeatUser) trackEvent('repeat_diagnosis_start', { diagnosis_type: 'element' });
       setPhase('quiz');
     });
   }
@@ -1633,7 +1672,7 @@ function scrollQuizTop() {
 }
 function nextQ() { jumpQueue = null; if (currentIdx + PAGE_SIZE < QUESTIONS.length) { currentIdx += PAGE_SIZE; quizFocusIdx = null; renderQuiz(document.getElementById('diagnosis-root')); scrollQuizTop(); } }
 function prevQ() { jumpQueue = null; if (currentIdx - PAGE_SIZE >= 0) { currentIdx -= PAGE_SIZE; quizFocusIdx = null; renderQuiz(document.getElementById('diagnosis-root')); scrollQuizTop(); } }
-function showResult() { if (getAnsweredCount() >= QUESTIONS.length) { gtag('event','quiz_complete',{event_category:'diagnosis',value:getAnsweredCount()}); setPhase('result'); } }
+function showResult() { if (getAnsweredCount() >= QUESTIONS.length) { gtag('event','quiz_complete',{event_category:'diagnosis',value:getAnsweredCount()}); if (window.__isRepeatUser) trackEvent('repeat_diagnosis_complete', { diagnosis_type: 'element' }); setPhase('result'); } }
 
 /* ===== RESULT ===== */
 function renderResult(root) {
@@ -1766,7 +1805,21 @@ function renderResult(root) {
         }).join('')}
       </div>
 
-      <div style="text-align:center;color:#5a80a0;font-size:11px;letter-spacing:2px;margin:20px 0 14px">— ここまでが無料診断の結果です —</div>
+      <!-- 診断記録に保存（かなり目立つ位置） -->
+      <div style="background:linear-gradient(135deg,${elC}18,#0a1420);border:1px solid ${elC}50;border-radius:12px;padding:22px 20px;margin-bottom:16px;text-align:center">
+        <div style="font-size:10px;letter-spacing:2px;color:#90c0e0;text-transform:uppercase;margin-bottom:10px">診断記録</div>
+        <p style="color:#a8ccec;font-size:12.5px;line-height:1.8;margin:0 0 16px">この結果をアナタの診断記録として残しませんか。<br>保存すると、次回の診断結果と比較できるようになります。</p>
+        <div id="saveGateArea">
+          <button id="saveResultBtn"
+            style="width:100%;background:${elC};border:none;color:#0a0916;border-radius:8px;padding:14px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit">
+            この結果を診断記録に保存する
+          </button>
+          <label style="display:flex;align-items:center;gap:6px;justify-content:center;color:#6a8098;font-size:10.5px;margin-top:12px;cursor:pointer">
+            <input type="checkbox" id="newsletterOptInCheckbox" checked style="accent-color:${elC};width:12px;height:12px">
+            新着や次の診断のお知らせを受け取る
+          </label>
+        </div>
+      </div>
 
       <!-- シェアボタン群（直接2択＋URL保存） -->
       <div style="display:flex;gap:8px;margin-bottom:8px">
@@ -1787,6 +1840,7 @@ function renderResult(root) {
         この結果のURLをコピー（シェアせず保存）
       </button>
 
+      <div style="text-align:center;color:#5a80a0;font-size:11px;letter-spacing:2px;margin:20px 0 14px">— ここから深層分析 —</div>
 
       <!-- 詳細レポート誘導（ロックパターン版） -->
       <div style="margin-bottom:18px">
@@ -2100,14 +2154,14 @@ function renderResult(root) {
                 <circle r="90" fill="none" stroke="#4a3d70" stroke-width="0.5" opacity="0.4"/>
                 <circle r="50" fill="none" stroke="#4a3d70" stroke-width="0.5" opacity="0.3"/>
                 ${NATIONS.map((n,i) => {
-                  const ang = (i/7)*2*Math.PI - Math.PI/2;
+                  const ang = (i/NATIONS.length)*2*Math.PI - Math.PI/2;
                   const x = (130*Math.cos(ang)).toFixed(1), y = (130*Math.sin(ang)).toFixed(1);
                   return `<line x1="0" y1="0" x2="${x}" y2="${y}" stroke="#c9a860" stroke-width="0.8" opacity="0.5"/><circle cx="${x}" cy="${y}" r="4.5" fill="${n===topNat?'#e8d8a0':'#6a5d3a'}"/>`;
                 }).join('')}
                 <circle r="30" fill="none" stroke="#e8d8a0" stroke-width="1"/>
                 <circle r="4" fill="#f0e4c0"/>
               </g>
-              <text x="320" y="335" text-anchor="middle" font-family="serif" font-size="11" letter-spacing="4" fill="#6a5c88">SEVEN NATIONS COMPASS</text>
+              <text x="320" y="335" text-anchor="middle" font-family="serif" font-size="11" letter-spacing="4" fill="#6a5c88">EIGHT NATIONS COMPASS</text>
             </svg>
           </div>
           <p style="color:#6a90a8;font-size:12px;line-height:1.9;margin:0 0 10px">
@@ -2192,7 +2246,7 @@ function renderResult(root) {
       </div>
 
       <div style="display:flex;gap:10px">
-        <button onclick="answers={};currentIdx=0;gtag('event','quiz_start',{event_category:'diagnosis'});setPhase('quiz')"
+        <button onclick="answers={};currentIdx=0;gtag('event','quiz_start',{event_category:'diagnosis'});if(window.__isRepeatUser)trackEvent('repeat_diagnosis_start',{diagnosis_type:'element'});setPhase('quiz')"
           style="flex:1;background:transparent;border:1px solid #1e3448;color:#6a90b0;border-radius:8px;padding:12px;font-size:13px;cursor:pointer;font-family:inherit">
           もう一度診断する
         </button>
@@ -2203,7 +2257,7 @@ function renderResult(root) {
       </div>
     </section>`;
   // ロックパターンのCTA配線（自動化版 ¥1,000・診断コードをclient_reference_idとして付与）
-  var STRIPE_URL_AUTO = 'https://buy.stripe.com/3cIcMXdCy5VbavmgsK3Nm08';
+  var STRIPE_URL_AUTO = 'https://buy.stripe.com/test_9B64gr9micjz9riccu3Nm00'; // release-c-preview専用：Stripeテスト用Payment Link
   function stripeUrlWithCode() {
     return STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(shortCode);
   }
@@ -2252,6 +2306,28 @@ function renderResult(root) {
         window.prompt('このURLをコピーしてください：', url);
       }
       if (typeof gtag === 'function') gtag('event', 'result_url_copy', { event_category: 'engagement' });
+    };
+  }
+
+  // --- 診断結果保存機能 ---
+  var saveResultBtn = root.querySelector('#saveResultBtn');
+  if (saveResultBtn) {
+    (async function () {
+      var user = await getCurrentUser();
+      updateSaveButtonUI(user ? 'idle_in' : 'idle_out');
+      var decided = await hasDecidedNewsletter();
+      if (decided) {
+        var optInLabel = root.querySelector('#newsletterOptInCheckbox');
+        if (optInLabel) optInLabel.closest('label').style.display = 'none';
+      }
+    })();
+    saveResultBtn.onclick = function () {
+      var resultPayload = buildResultPayload(results, topEl, topW, et, topNat);
+      var optInBox = root.querySelector('#newsletterOptInCheckbox');
+      var optInVisible = optInBox && optInBox.closest('label').style.display !== 'none';
+      var newsletterOptIn = optInVisible ? optInBox.checked : null;
+      handleSaveResultClick(answers, resultPayload, shortCode, applyData, newsletterOptIn);
+      if (typeof gtag === 'function') gtag('event', 'result_save_click', { event_category: 'engagement' });
     };
   }
 
@@ -2353,6 +2429,12 @@ function renderBasis(root) {
 
 /* ===== 初期化 ===== */
 window.addEventListener('DOMContentLoaded', function() {
+  // 再診断かどうかの判定（GA4計測用。表示や結果には一切影響しない）
+  window.__isRepeatUser = false;
+  if (typeof hasPriorDiagnosis === 'function') {
+    hasPriorDiagnosis().then(function(v) { window.__isRepeatUser = v; }).catch(function() {});
+  }
+
   // URLに ?code=診断コード が付いている場合は、その結果をそのまま復元して表示する
   // （Xでシェアされたリンクから戻ってきた時・以前の結果をブックマークしていた時に使用）
   var params = new URLSearchParams(window.location.search);
@@ -2565,11 +2647,15 @@ document.addEventListener('DOMContentLoaded', function() {
     <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本サイト（element-diagnosis-five.vercel.app）は、マンデーアクスト（@mondayaxad）が運営する非公式ファンサイトです。</p>
     <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">Cookieおよびアクセス解析について</p>
     <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本サイトはGoogle Analytics（Google LLC）を使用しています。トラフィックデータは匿名で収集されており、個人を特定するものではありません。Cookieを無効にすることで収集を拒否できます。</p>
-    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">個人情報について</p>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本サイトは診断結果をサーバーに保存しません。診断結果はお使いのブラウザ上でのみ処理されます。</p>
+    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">診断結果の保存について</p>
+    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本サイトの無料診断は、通常はお使いのブラウザ上でのみ処理され、サーバーには保存されません。ただし、結果画面で「結果を保存」を選んだ場合に限り、診断の回答・算出結果を、認証情報に紐づけてデータベース（Supabase, 東京リージョン）に保存します。保存は任意であり、保存しなくても無料診断は最後まで利用できます。</p>
+    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">ログイン（Google／X）について</p>
+    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">結果の保存や診断記録の閲覧には、GoogleまたはX（Twitter）のアカウントによるログインが必要です。ログイン時には各サービスからメールアドレス等の基本的なプロフィール情報を受け取り、アカウントの識別にのみ利用します。</p>
+    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">メールでのお知らせについて</p>
+    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">結果の保存時に「新着や次の診断のお知らせを受け取る」に同意した場合のみ、メールアドレスを配信サービス（Kit）へ登録します。同意は任意で、いつでも配信メール内のリンクから停止できます。</p>
     <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">お問い合わせ</p>
     <p style="color:#6a9cc0;font-size:13px;line-height:1.9">プライバシーに関するお問い合わせはXのDM（@mondayaxad）までご連絡ください。</p>
-    <p style="color:#7098b8;font-size:11px;margin-top:20px">制定日：2026年7月1日</p>
+    <p style="color:#7098b8;font-size:11px;margin-top:20px">制定日：2026年7月1日 / 改定日：2026年9月16日</p>
   </div>
 </div>
 
@@ -2584,6 +2670,8 @@ document.addEventListener('DOMContentLoaded', function() {
     <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本診断はエンターテインメント・自己理解を目的としたものです。診断結果の正確性・完全性を保証するものではありません。公式の解釈と異なる場合があります。</p>
     <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">禁止事項</p>
     <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本サイトのコンテンツの無断転載・商用利用を禁止します。</p>
+    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">アカウント・保存機能について</p>
+    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">結果の保存機能を利用するにはGoogleまたはXアカウントでのログインが必要です。ログインに用いる各アカウントの管理はご自身の責任で行ってください。</p>
     <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">変更について</p>
     <p style="color:#6a9cc0;font-size:13px;line-height:1.9">本規約は予告なく変更される場合があります。</p>
   </div>

@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-FDN7NYZW9D"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-FDN7NYZW9D');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アナタの診断記録 — 元素診断</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="diagnosis-save.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #07070f;
+    --fg: #e0dcf0;
+    --fg-dim: #6a6485;
+    --accent: #7ab8e8;
+    --accent-dim: #2a5878;
+    --card-bg: #100e1c;
+    --card-border: #241f3a;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 48px 20px 100px; }
+
+  .eyebrow {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    opacity: 0.8;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 8px 0 6px;
+    letter-spacing: 1px;
+  }
+  .sub {
+    font-size: 13px;
+    color: var(--fg-dim);
+    margin-bottom: 40px;
+    line-height: 1.8;
+  }
+  .top-link {
+    display: inline-block;
+    font-size: 11.5px;
+    color: var(--fg-dim);
+    text-decoration: none;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--card-border);
+    padding-bottom: 2px;
+  }
+  .top-link:hover { color: var(--accent); }
+
+  /* ---- ログインゲート ---- */
+  .gate {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 4px;
+    padding: 36px 28px;
+    text-align: center;
+  }
+  .gate p {
+    font-size: 13px;
+    line-height: 1.9;
+    color: var(--fg-dim);
+    margin-bottom: 24px;
+  }
+  .btn-google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    background: #fff;
+    color: #1a1a2e;
+    border: none;
+    border-radius: 4px;
+    padding: 13px;
+    font-size: 13.5px;
+    font-family: 'Noto Serif JP', serif;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 14px;
+  }
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--fg-dim);
+    font-size: 11px;
+    margin: 18px 0;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--card-border);
+  }
+  .email-row {
+    display: flex;
+    gap: 8px;
+  }
+  .email-row input {
+    flex: 1;
+    background: #0a0916;
+    border: 1px solid var(--card-border);
+    border-radius: 4px;
+    padding: 11px 12px;
+    color: var(--fg);
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .email-row input:focus { outline: 1px solid var(--accent); }
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--accent-dim);
+    color: var(--accent);
+    border-radius: 4px;
+    padding: 11px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .gate-msg {
+    font-size: 11.5px;
+    color: var(--accent);
+    margin-top: 14px;
+    min-height: 16px;
+  }
+
+  /* ---- 履歴リスト ---- */
+  .session-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-left: 3px solid var(--el-color, var(--accent-dim));
+    border-radius: 4px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    cursor: pointer;
+  }
+  .session-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .session-date {
+    font-size: 11px;
+    color: var(--fg-dim);
+    letter-spacing: 0.5px;
+  }
+  .session-combo {
+    font-size: 16px;
+    font-weight: 700;
+    margin-top: 6px;
+  }
+  .session-combo .el { color: var(--el-color, var(--accent)); }
+  .session-sub {
+    font-size: 11.5px;
+    color: var(--fg-dim);
+    margin-top: 4px;
+  }
+  .session-toggle {
+    font-size: 11px;
+    color: var(--fg-dim);
+  }
+  .session-detail {
+    display: none;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--card-border);
+  }
+  .session-detail.open { display: block; }
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .detail-row .k { color: var(--fg-dim); }
+  .char-line {
+    font-size: 12.5px;
+    padding: 4px 0;
+    color: var(--fg);
+  }
+  .char-line .pct { color: var(--accent); }
+
+  .empty, .loading, .err {
+    text-align: center;
+    color: var(--fg-dim);
+    font-size: 13px;
+    padding: 60px 20px;
+    line-height: 1.9;
+  }
+  .err { color: #d88; }
+
+  .page-title { font-size: 20px; font-weight: 700; margin: 8px 0 24px; letter-spacing: 1px; }
+
+  /* ---- Hero / ELEMENT PROFILE ---- */
+  .hero {
+    background: linear-gradient(135deg, var(--el-color, var(--accent-dim))22, var(--card-bg));
+    border: 1px solid var(--el-color, var(--accent-dim));
+    border-radius: 10px;
+    padding: 30px 24px;
+    margin-bottom: 26px;
+  }
+  .hero-eyebrow {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    opacity: 0.6;
+    margin-bottom: 8px;
+  }
+  .hero-title { font-size: 12px; font-weight: 700; color: var(--fg-dim); margin-bottom: 2px; opacity: 0.8; }
+  .hero-date { font-size: 10px; color: var(--fg-dim); opacity: 0.7; margin-bottom: 18px; }
+  .hero-combo { font-size: 38px; font-weight: 800; line-height: 1.1; margin-bottom: 8px; letter-spacing: 0.5px; }
+  .hero-combo .el { color: var(--el-color, var(--accent)); }
+  .hero-sub { font-size: 12.5px; color: var(--fg-dim); margin-bottom: 22px; }
+  .hero-stats { display: flex; gap: 28px; margin-bottom: 22px; }
+  .hero-stat-num { font-size: 22px; font-weight: 700; color: var(--accent); line-height: 1; }
+  .hero-stat-label { font-size: 10px; color: var(--fg-dim); margin-top: 4px; }
+  .hero-cta-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .hero-btn {
+    flex: 1; min-width: 140px; text-align: center; padding: 11px; border-radius: 6px;
+    font-size: 12.5px; font-weight: 700; text-decoration: none; cursor: pointer; border: none;
+  }
+  .hero-btn-primary { background: var(--accent); color: #0a0916; }
+  .hero-btn-secondary { background: transparent; border: 1px solid var(--accent-dim); color: var(--accent); }
+
+  /* ---- サマリー ---- */
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 28px; }
+  .summary-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 6px; padding: 14px; }
+  .summary-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 9px; }
+  .summary-body { font-size: 12.5px; line-height: 1.75; color: var(--fg); }
+  .summary-body .sub { font-size: 10.5px; color: var(--fg-dim); margin: 0; }
+
+  .section-title { font-size: 11.5px; letter-spacing: 2px; color: var(--fg-dim); text-transform: uppercase; margin: 0 0 12px; }
+
+  .badge-new {
+    display: inline-block; background: var(--accent); color: #0a0916; font-size: 9px; font-weight: 700;
+    padding: 2px 7px; border-radius: 10px; margin-left: 6px; letter-spacing: 0.5px; vertical-align: middle;
+  }
+  .badge-unlocked { color: #90c8f0; }
+  .badge-locked { color: var(--fg-dim); }
+
+  /* ---- 履歴（セッションごとのアコーディオン） ---- */
+  .session-acc {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-left: 3px solid var(--el-color, var(--accent-dim));
+    border-radius: 4px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .session-acc summary {
+    padding: 16px 18px;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .session-acc summary::-webkit-details-marker { display: none; }
+  .session-acc summary::after { content: '詳細を見る ▾'; font-size: 11px; color: var(--fg-dim); white-space: nowrap; }
+  .session-acc[open] summary::after { content: '閉じる ▴'; }
+  .session-date { font-size: 11px; color: var(--fg-dim); letter-spacing: 0.5px; }
+  .session-combo { font-size: 16px; font-weight: 700; margin-top: 6px; }
+  .session-combo .el { color: var(--el-color, var(--accent)); }
+  .session-body { padding: 0 18px 18px; border-top: 1px solid var(--card-border); }
+  .session-body-inner { padding-top: 16px; }
+
+  /* ---- 履歴の蓄積感（縦タイムライン） ---- */
+  .history-timeline { position: relative; padding-left: 16px; }
+  .history-timeline::before {
+    content: ''; position: absolute; left: 4px; top: 8px; bottom: 8px; width: 1px; background: var(--card-border);
+  }
+  .timeline-item { position: relative; margin-bottom: 12px; }
+  .timeline-dot {
+    position: absolute; left: -16px; top: 22px; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--el-color, var(--accent)); border: 2px solid var(--bg); z-index: 1;
+  }
+
+  /* ---- 詳細データ内アコーディオン ---- */
+  details.acc {
+    background: #0a0916; border: 1px solid #2a5878; border-radius: 6px; margin-bottom: 10px; overflow: hidden;
+  }
+  details.acc summary {
+    padding: 11px 14px; font-size: 10.5px; letter-spacing: 1.5px; text-transform: uppercase;
+    cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center;
+  }
+  details.acc summary::-webkit-details-marker { display: none; }
+  details.acc summary::after { content: '▾'; font-size: 9px; color: var(--fg-dim); }
+  details.acc[open] summary::after { content: '▴'; }
+  details.acc .acc-body { padding: 0 14px 14px; }
+
+  .lock-box { background: #0a0916; border: 1px solid var(--card-border); border-radius: 6px; padding: 16px; }
+  .lock-list { list-style: none; margin: 0 0 14px; padding: 0; }
+  .lock-list li { font-size: 12px; color: var(--fg-dim); padding: 4px 0; }
+  .lock-cta-btn {
+    display: block; text-align: center; background: #7ab8e8; color: #0a0916; font-size: 12.5px;
+    font-weight: 700; padding: 11px; border-radius: 4px; text-decoration: none;
+  }
+
+  /* ---- 次の一歩 ---- */
+  .next-steps { margin-top: 8px; }
+  .next-steps-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .next-btn {
+    flex: 1; min-width: 160px; text-align: center; padding: 12px; border-radius: 6px;
+    font-size: 12.5px; font-weight: 700; cursor: pointer; text-decoration: none;
+    background: transparent; border: 1px solid var(--accent-dim); color: var(--accent);
+  }
+  .next-btn-primary { background: var(--accent); color: #0a0916; border: none; }
+  .coming-soon {
+    background: var(--card-bg); border: 1px dashed var(--card-border); border-radius: 6px;
+    padding: 14px; text-align: center; color: var(--fg-dim); font-size: 11px; letter-spacing: 1px;
+  }
+  .newsletter-note { text-align: center; color: var(--fg-dim); font-size: 10.5px; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="/" class="top-link">← TOPへ戻る</a>
+  <div id="root">
+    <div class="loading">読み込み中…</div>
+  </div>
+</div>
+
+<script>
+const ELEMENT_COLOR = {
+  "炎":"#c84a20","水":"#2a7aaa","氷":"#4a80c0","雷":"#9040d0",
+  "風":"#3a8a60","岩":"#a07830","草":"#4a8020"
+};
+const WEAPON_COLOR = {
+  "片手剣":"#9060d0","両手剣":"#c07030","長柄":"#608040","法器":"#5878b0","弓":"#c0a030"
+};
+const ENNEA_NAME = {
+  1:"改革者", 2:"援助者", 3:"達成者", 4:"個性派", 5:"観察者",
+  6:"堅実家", 7:"楽天家", 8:"挑戦者", 9:"調停者"
+};
+const ENNEA_INFO = {
+  1:{ core:"正しさへの希求", fear:"堕落・誤りへの恐れ", desire:"誠実で正しくありたい" },
+  2:{ core:"愛されたい献身", fear:"必要とされぬ恐れ", desire:"愛され必要とされたい" },
+  3:{ core:"価値の証明", fear:"無価値への恐れ", desire:"価値ある存在でありたい" },
+  4:{ core:"独自性の探求", fear:"凡庸・喪失の恐れ", desire:"自分らしくありたい" },
+  5:{ core:"知の蓄積", fear:"無能・侵食の恐れ", desire:"有能で独立していたい" },
+  6:{ core:"安全の確保", fear:"支えを失う恐れ", desire:"安心と支えがほしい" },
+  7:{ core:"充足の追求", fear:"苦痛・欠乏の恐れ", desire:"満たされ自由でありたい" },
+  8:{ core:"力の保持", fear:"支配される恐れ", desire:"自分の人生を統べたい" },
+  9:{ core:"平和の維持", fear:"分裂・喪失の恐れ", desire:"内的平穏を保ちたい" },
+};
+const BIG5_NAME = { O:"開放性", C:"誠実性", E:"外向性", A:"協調性", N:"神経症傾向" };
+const BIG5_INFO = {
+  O:{ high:"好奇心・想像力・新規探究", low:"現実的・慣習的・安定志向" },
+  C:{ high:"規律・計画性・責任感", low:"柔軟・即興的・自由" },
+  E:{ high:"活動的・社交的・刺激希求", low:"内省的・静穏・少人数志向" },
+  A:{ high:"共感・利他・調和", low:"独立・競争・率直" },
+  N:{ high:"情動反応・不安・繊細さ", low:"安定・冷静・楽観" },
+};
+const NATION_MEANING = {
+  "モンド":"自由", "璃月":"契約", "稲妻":"永遠", "スメール":"知恵",
+  "フォンテーヌ":"正義", "ナタ":"戦争", "スネージナヤ":"抗争", "ナドクライ":"月光",
+};
+const STRIPE_URL_AUTO = 'https://buy.stripe.com/test_9B64gr9micjz9riccu3Nm00'; // release-c-preview専用：Stripeテスト用Payment Link
+
+function fmtDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleString('ja-JP', {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit'
+  });
+}
+
+function pageHeaderHtml() {
+  return `<div class="eyebrow">Element Profile</div><h1 class="page-title">アナタの診断記録</h1>`;
+}
+
+function renderGate(root, message) {
+  root.innerHTML = `
+    ${pageHeaderHtml()}
+    <div class="gate" id="historyGateArea">
+      <p>診断記録を見るには、保存したときと同じアカウントでログインしてください。</p>
+      <button id="gateGoogleBtn" class="btn-google">Googleでログイン</button>
+      <div class="gate-msg" id="gateMsg">${message || ''}</div>
+    </div>
+  `;
+  document.getElementById('gateGoogleBtn').onclick = () => signInWithGoogle();
+}
+
+// メール(OTP)ログインのUIは独自ドメイン取得まで保留。
+// renderGateOtpInput()は残してあるので、再有効化時はここにメール欄を戻すだけでよい。
+
+function renderGateOtpInput(email) {
+  const area = document.getElementById('historyGateArea');
+  area.innerHTML = `
+    <p style="color:#7ab8e8">${email} に6桁のコードを送りました。</p>
+    <div class="email-row">
+      <input id="gateOtpInput" type="text" inputmode="numeric" maxlength="6" placeholder="123456"
+        style="text-align:center;letter-spacing:4px;font-size:15px">
+      <button id="gateOtpVerifyBtn" class="btn-secondary">ログイン</button>
+    </div>
+    <div class="gate-msg" id="gateMsg"></div>
+  `;
+  document.getElementById('gateOtpVerifyBtn').onclick = async () => {
+    const token = document.getElementById('gateOtpInput').value.trim();
+    const msg = document.getElementById('gateMsg');
+    if (!token) { msg.textContent = 'コードを入力してください。'; return; }
+    msg.textContent = '確認中…';
+    const error = await verifyEmailOtp(email, token);
+    if (error) { msg.textContent = 'コードが正しくないか、期限切れです。'; return; }
+    // 成功するとonAuthStateChangeが発火し、init()が再実行される
+  };
+}
+
+function renderEmpty(root) {
+  root.innerHTML = `
+    ${pageHeaderHtml()}
+    <div class="empty">
+      まだ保存された診断記録がありません。<br>
+      診断結果画面の「結果を保存」から記録できます。
+    </div>
+  `;
+}
+
+/* 元素TOP3バー（無料診断画面と同じ正規化ロジック） */
+function elementBarsHtml(elements) {
+  if (!elements || elements.length < 7) return '';
+  const top3 = elements.slice(0, 3);
+  const mx = elements[0].score, mn = elements[6].score;
+  return top3.map((e, i) => {
+    const n = mx === mn ? 60 : Math.round(((e.score - mn) / (mx - mn)) * 100);
+    const color = ELEMENT_COLOR[e.element] || '#7ab8e8';
+    const mark = i === 0 ? '◆' : i === 1 ? '②' : '③';
+    return `
+      <div style="margin-bottom:10px">
+        <span style="color:${color};font-size:13px;font-weight:${i===0?'700':'500'}">${mark} ${e.element}</span>
+        <div style="background:#0a0a14;height:6px;border-radius:3px;overflow:hidden;margin-top:4px">
+          <div style="background:${color};width:${n}%;height:100%;border-radius:3px;opacity:${i===0?1:0.55}"></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function bigFiveBarsHtml(big5, color) {
+  if (!big5) return '';
+  return Object.keys(BIG5_NAME).map(k => {
+    const v = big5[k];
+    const tendency = v >= 50 ? BIG5_INFO[k].high : BIG5_INFO[k].low;
+    return `
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--fg-dim);margin-bottom:3px">
+        <span>${BIG5_NAME[k]}</span><span style="color:${color}">${v}</span>
+      </div>
+      <div style="background:#0a0a14;height:5px;border-radius:3px;overflow:hidden">
+        <div style="background:${color};width:${v}%;height:100%"></div>
+      </div>
+      <div style="font-size:10px;color:var(--fg-dim);margin-top:3px">→ ${tendency}の傾向</div>
+    </div>`;
+  }).join('');
+}
+
+function nationBarsHtml(nations, color) {
+  if (!nations || nations.length < 2) return '';
+  const top3 = nations.slice(0, 3);
+  const mx = nations[0].score, mn = nations[nations.length - 1].score;
+  return top3.map((n, i) => {
+    const pct = mx === mn ? 60 : Math.round(((n.score - mn) / (mx - mn)) * 100);
+    return `
+      <div style="margin-bottom:8px">
+        <span style="color:#e0c890;font-size:12px;font-weight:${i===0?'700':'500'}">
+          ${i===0?'◆':i===1?'②':'③'} ${n.nation} <span style="color:var(--fg-dim);font-size:10px">「${NATION_MEANING[n.nation]||''}」</span>
+        </span>
+        <div style="background:#0a0a14;height:5px;border-radius:3px;overflow:hidden;margin-top:3px">
+          <div style="background:#c9a860;width:${pct}%;height:100%;opacity:${i===0?1:0.55}"></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function unlockedDetailHtml(snapshot, elColor, openFirst) {
+  const pr = snapshot.primary_result || {};
+  const info = ENNEA_INFO[pr.enneagram_type];
+  const chars = snapshot.character_matches || [];
+  return `
+    <p style="font-size:10px;color:var(--fg-dim);margin-bottom:12px;line-height:1.7">
+      ここでの表示は、ご購入いただいた解析レポートの主要なスコア・データをマイページ用にまとめたものです。
+      購入時にお届けした解析レポート本体（メール・リンク）とは見え方が異なりますが、算出の元になっているデータは同じです。
+    </p>
+    <details class="acc" ${openFirst ? 'open' : ''}>
+      <summary style="color:${elColor}">Big Five 詳細スコア</summary>
+      <div class="acc-body">${bigFiveBarsHtml(snapshot.scores && snapshot.scores.big5, elColor)}</div>
+    </details>
+
+    ${info ? `
+    <details class="acc">
+      <summary style="color:${elColor}">エニアグラムの深層 — タイプ${pr.enneagram_type}「${ENNEA_NAME[pr.enneagram_type]||''}」</summary>
+      <div class="acc-body">
+        <div style="font-size:12px;line-height:1.9;color:var(--fg)">
+          <strong>CORE：</strong>${info.core}<br>
+          <strong>FEAR：</strong>${info.fear}<br>
+          <strong>DESIRE：</strong>${info.desire}
+          ${pr.enneagram_wing ? `<br><strong>ウィング：</strong>タイプ${pr.enneagram_wing}（${ENNEA_NAME[pr.enneagram_wing]||''}）の傾向を併せ持ちます` : ''}
+        </div>
+      </div>
+    </details>` : ''}
+
+    ${snapshot.scores && snapshot.scores.nations ? `
+    <details class="acc">
+      <summary style="color:${elColor}">価値観理論（国家）— 上位3</summary>
+      <div class="acc-body">${nationBarsHtml(snapshot.scores.nations)}</div>
+    </details>` : ''}
+
+    <details class="acc">
+      <summary style="color:${elColor}">近しいキャラクター（上位${chars.length}名）</summary>
+      <div class="acc-body">
+        ${chars.map((c,i) => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;${i>0?'border-top:1px solid var(--card-border)':''}">
+            <span style="font-size:12.5px;color:${ELEMENT_COLOR[c.el]||elColor}">${i+1}位　${c.name}</span>
+            <span style="font-size:12px;color:#90c8f0;font-weight:700">${c.match}%</span>
+          </div>`).join('')}
+      </div>
+    </details>
+  `;
+}
+
+function lockedDetailHtml(stripeUrl) {
+  return `
+    <div class="lock-box">
+      <div style="font-size:11.5px;color:var(--fg-dim);margin-bottom:10px">深層分析</div>
+      <ul class="lock-list">
+        <li>🔒 Big Five 詳細スコア</li>
+        <li>🔒 エニアグラムの深層</li>
+        <li>🔒 価値観理論（国家）の全スコア</li>
+        <li>🔒 近しいキャラクター 2〜4位</li>
+      </ul>
+      <a href="${stripeUrl}" target="_blank" rel="noopener" class="lock-cta-btn" onclick="trackEvent('mypage_unlock_click',{source:'history_card'})">詳細を解放する（¥1,000）</a>
+      <p style="font-size:10px;color:var(--fg-dim);margin-top:10px;line-height:1.6">
+        以前ご購入いただいた解析レポートがこちらに反映されていない場合があります。お心当たりがある方は、購入時のメール・リンクからご覧いただくか、X（@mondayaxad）までご連絡ください。
+      </p>
+    </div>`;
+}
+
+/* ---- Hero ---- */
+function heroHtml(latest, savedCount, unlockedCount) {
+  const pr = latest.primaryResult || {};
+  const elColor = ELEMENT_COLOR[pr.element] || '#7ab8e8';
+  const enneaStr = pr.enneagram_type
+    ? 'タイプ' + pr.enneagram_type + (pr.enneagram_wing ? 'w' + pr.enneagram_wing : '') + '「' + (ENNEA_NAME[pr.enneagram_type]||'') + '」'
+    : '—';
+  const purchased = !!latest.purchased;
+  const stripeUrl = latest.encodedAnswers
+    ? STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(latest.encodedAnswers)
+    : STRIPE_URL_AUTO;
+  const viewLabel = purchased ? '詳細を見る' : '最新結果を見る';
+  return `
+    <div class="hero" style="--el-color:${elColor}">
+      <div class="hero-eyebrow">Element Profile</div>
+      <div class="hero-title">アナタの診断記録</div>
+      <div class="hero-date">最終診断：${fmtDate(latest.completedAt)}</div>
+
+      <div class="hero-combo"><span class="el">${pr.element||'?'}</span> × ${pr.weapon||'?'}</div>
+      <div class="hero-sub">${enneaStr}　／　価値観国家：${pr.nation||'—'}</div>
+
+      <div class="hero-stats">
+        <div><div class="hero-stat-num">${savedCount}</div><div class="hero-stat-label">保存済み診断</div></div>
+        <div><div class="hero-stat-num">${unlockedCount}</div><div class="hero-stat-label">詳細解放済み</div></div>
+      </div>
+
+      <div class="hero-cta-row">
+        <a href="#session-0" class="hero-btn hero-btn-secondary">${viewLabel}</a>
+        ${purchased ? '' : `<a href="${stripeUrl}" target="_blank" rel="noopener" class="hero-btn hero-btn-primary" onclick="trackEvent('mypage_unlock_click',{source:'hero'})">詳細を解放する</a>`}
+      </div>
+    </div>`;
+}
+
+/* ---- 今回の結果サマリー ---- */
+function summaryHtml(latest) {
+  const pr = latest.primaryResult || {};
+  const elColor = ELEMENT_COLOR[pr.element] || '#7ab8e8';
+  const big5 = latest.scores && latest.scores.big5;
+  const topNation = latest.scores && latest.scores.nations && latest.scores.nations[0];
+  const top1 = (latest.characterMatches && latest.characterMatches[0]) || null;
+  const purchased = !!latest.purchased;
+
+  const big5Level = v => v >= 60 ? '高め' : v <= 40 ? '低め' : '標準';
+  const big5Lines = big5 ? Object.keys(BIG5_NAME).map(k => purchased
+    ? `<div style="display:flex;justify-content:space-between;padding:1px 0"><span>${BIG5_NAME[k]}</span><span style="color:${elColor}">${big5[k]}　<span style="color:var(--fg-dim);font-size:10px">${big5Level(big5[k])}</span></span></div>`
+    : `<div style="display:flex;justify-content:space-between;padding:1px 0"><span>${BIG5_NAME[k]}</span><span style="color:${elColor}">${big5Level(big5[k])}</span></div>`
+  ).join('') : '<p class="sub">データなし</p>';
+  const big5Lock = purchased ? '' : '<p class="sub" style="margin-top:6px">🔒 詳細スコアはレポートで確認</p>';
+
+  return `
+    <div class="section-title">今回の結果サマリー</div>
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-label" style="color:${elColor}">Big Five（全5因子）</div>
+        <div class="summary-body" style="font-size:11.5px">${big5Lines}${big5Lock}</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label" style="color:#7ab8e8">Enneagram</div>
+        <div class="summary-body">
+          タイプ${pr.enneagram_type||'?'}「${ENNEA_NAME[pr.enneagram_type]||''}」
+          ${pr.enneagram_wing ? `<p class="sub">Wing ${pr.enneagram_wing}</p>` : ''}
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label" style="color:#c9a860">価値観国家</div>
+        <div class="summary-body">${topNation ? topNation.nation : (pr.nation||'—')}${(topNation && NATION_MEANING[topNation.nation]) ? `<p class="sub">「${NATION_MEANING[topNation.nation]}」</p>` : ''}</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label" style="color:${ELEMENT_COLOR[top1?top1.el:pr.element]||elColor}">Character Match</div>
+        <div class="summary-body">${top1 ? `${top1.name}<p class="sub">${top1.match}%一致</p>` : '—'}</div>
+      </div>
+    </div>`;
+}
+
+/* ---- 診断履歴 ---- */
+function historyListHtml(sessions) {
+  return `
+    <div id="history" class="section-title" style="margin-top:8px">診断履歴（${sessions.length}件の記録）</div>
+    <div class="history-timeline">
+      ${sessions.map((s, i) => `<div class="timeline-item" style="--el-color:${ELEMENT_COLOR[(s.primaryResult||{}).element]||'#7ab8e8'}"><div class="timeline-dot"></div>${sessionAccordionHtml(s, i === 0, i)}</div>`).join('')}
+    </div>
+  `;
+}
+
+function sessionAccordionHtml(s, isLatest, idx) {
+  const pr = s.primaryResult || {};
+  const elColor = ELEMENT_COLOR[pr.element] || '#7ab8e8';
+  const top1 = (s.characterMatches && s.characterMatches[0]) || null;
+  const stripeUrl = s.encodedAnswers
+    ? STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(s.encodedAnswers)
+    : STRIPE_URL_AUTO;
+  const purchased = !!s.purchased;
+  const historyOpenTrack = `trackEvent('diagnosis_history_open',{diagnosis_type:'${DIAGNOSIS_TYPE}'});` +
+    (purchased ? `trackEvent('mypage_report_open',{diagnosis_type:'${DIAGNOSIS_TYPE}'});` : '');
+
+  return `
+    <details class="session-acc" id="session-${idx}" style="--el-color:${elColor}" ${isLatest ? 'open' : ''}
+      ontoggle="if(this.open){${historyOpenTrack}}">
+      <summary>
+        <div>
+          <div class="session-date">
+            ${fmtDate(s.completedAt)}${isLatest ? '<span class="badge-new">NEW</span>' : ''}
+            ${purchased ? '<span class="badge-unlocked"> ・ 詳細解放済み</span>' : '<span class="badge-locked"> ・ 未解放</span>'}
+          </div>
+          <div class="session-combo"><span class="el">${pr.element || '?'}</span> × ${pr.weapon || '?'}${pr.nation ? ' ・ ' + pr.nation : ''}</div>
+        </div>
+      </summary>
+      <div class="session-body">
+        <div class="session-body-inner">
+          ${top1 ? `
+          <div style="margin-bottom:16px">
+            <div style="font-size:10.5px;letter-spacing:2px;color:#6a90b0;text-transform:uppercase;margin-bottom:8px">最も近しいキャラクター</div>
+            <div style="font-size:20px;font-weight:700;color:${ELEMENT_COLOR[top1.el]||elColor}">${top1.name}</div>
+            <div style="display:flex;gap:6px;margin:6px 0;flex-wrap:wrap">
+              <span style="background:${ELEMENT_COLOR[top1.el]}22;border:1px solid ${ELEMENT_COLOR[top1.el]}55;color:${ELEMENT_COLOR[top1.el]};font-size:10.5px;padding:2px 7px;border-radius:3px">${top1.el}</span>
+              <span style="background:${WEAPON_COLOR[top1.w]}22;border:1px solid ${WEAPON_COLOR[top1.w]}55;color:${WEAPON_COLOR[top1.w]};font-size:10.5px;padding:2px 7px;border-radius:3px">${top1.w}</span>
+              <span style="background:#c9a86022;border:1px solid #c9a86055;color:#e0c890;font-size:10.5px;padding:2px 7px;border-radius:3px">${top1.nation}</span>
+              ${top1.ennea ? `<span style="background:#7ab8e822;border:1px solid #7ab8e855;color:#7ab8e8;font-size:10.5px;padding:2px 7px;border-radius:3px">エニア${top1.ennea} ${ENNEA_NAME[top1.ennea]||''}</span>` : ''}
+            </div>
+            <div style="font-size:12px;color:var(--fg-dim)">一致度 <span style="color:#90c8f0;font-weight:700">${top1.match}%</span></div>
+          </div>` : ''}
+
+          <div style="margin-bottom:18px">
+            <div style="font-size:10.5px;letter-spacing:2px;color:#c0a030;text-transform:uppercase;margin-bottom:8px">あなたに響く元素</div>
+            ${elementBarsHtml(s.scores && s.scores.elements)}
+          </div>
+
+          ${purchased ? unlockedDetailHtml({ primary_result: s.primaryResult, scores: s.scores, character_matches: s.characterMatches }, elColor, isLatest) : lockedDetailHtml(stripeUrl)}
+        </div>
+      </div>
+    </details>`;
+}
+
+/* ---- 次の一歩 ---- */
+function nextStepsHtml(latest) {
+  const purchased = !!latest.purchased;
+  const stripeUrl = latest.encodedAnswers
+    ? STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(latest.encodedAnswers)
+    : STRIPE_URL_AUTO;
+  const rediagBtn = `<a href="/" class="next-btn${purchased ? ' next-btn-primary' : ''}">もう一度元素診断する</a>`;
+  const detailBtn = purchased
+    ? `<a href="#session-0" class="next-btn">保存済み詳細を見る</a>`
+    : `<a href="${stripeUrl}" target="_blank" rel="noopener" class="next-btn next-btn-primary" onclick="trackEvent('mypage_unlock_click',{source:'next_steps'})">詳細レポートを見る</a>`;
+  return `
+    <div class="next-steps">
+      <div class="section-title">次の一歩</div>
+      <div class="next-steps-row">
+        ${purchased ? rediagBtn + detailBtn : detailBtn + rediagBtn}
+      </div>
+      <div class="coming-soon">邪眼診断 — COMING SOON</div>
+    </div>`;
+}
+
+function renderMypage(root, sessions) {
+  const latest = sessions[0];
+  const savedCount = sessions.length;
+  const unlockedCount = sessions.filter(s => s.purchased).length;
+
+  root.innerHTML = `
+    ${heroHtml(latest, savedCount, unlockedCount)}
+    ${summaryHtml(latest)}
+    ${historyListHtml(sessions)}
+    ${nextStepsHtml(latest)}
+  `;
+
+  trackEvent('mypage_view', {
+    entry_point: 'mypage',
+    diagnosis_type: DIAGNOSIS_TYPE,
+    saved_count_bucket: savedCountBucket(savedCount),
+  });
+}
+
+function renderError(root) {
+  root.innerHTML = `${pageHeaderHtml()}<div class="err">読み込みに失敗しました。時間をおいて再度お試しください。</div>`;
+}
+
+async function init() {
+  const root = document.getElementById('root');
+  const user = await getCurrentUser();
+
+  if (!user) {
+    renderGate(root);
+    return;
+  }
+
+  const result = await loadDiagnosisHistory(DIAGNOSIS_TYPE);
+  if (!result.ok) {
+    renderError(root);
+    return;
+  }
+  if (result.sessions.length === 0) {
+    renderEmpty(root);
+    return;
+  }
+  renderMypage(root, result.sessions);
+}
+
+supabaseClient.auth.onAuthStateChange((event) => {
+  if (event === 'SIGNED_IN') init();
+});
+
+init();
+</script>
+</body>
+</html>
