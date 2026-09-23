@@ -62,7 +62,8 @@ async function fetchOwnDiagnosisCodes(userId) {
 
 // product_type → CORE1閲覧権限を持つかどうか（report-data.jsのPRODUCT_PERMISSIONSと同じ考え方）。
 // CORE2のみの購入はCORE1のロックを解除しない。
-const CORE1_PRODUCT_TYPES = new Set(['core1', 'complete']);
+// core1_v2_repass（旧CORE1購入者へのCORE1 v2 1回無料開放）もCORE1相当として扱う。
+const CORE1_PRODUCT_TYPES = new Set(['core1', 'complete', 'core1_v2_repass']);
 
 async function fetchPurchasedHashes(hashes) {
   if (hashes.length === 0) return new Set();
