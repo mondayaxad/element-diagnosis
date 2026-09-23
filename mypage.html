@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-FDN7NYZW9D"></script>
+<!-- Google tag (gtag.js)
+     【Preview版：GA4送信を無効化】本番Measurement IDへPreview操作が混入しないよう、
+     外部スクリプトの読込とgtag('config', ...)による送信を止める。
+     既存コードが呼ぶgtag()自体はno-opとして残し、ReferenceErrorにしない。
+     本番反映時は、このコメントブロックを元のGA4読込へ戻すこと。 -->
 <script>
   window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-FDN7NYZW9D');
+  function gtag() {} // Preview版：no-op。本番反映時に実装へ戻す。
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,6 +18,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="diagnosis-save.js"></script>
+<!-- eti_v2_save.jsは保存自体は行わないが（mypage.htmlは閲覧専用）、
+     v2結果画面からGoogleログイン経由で戻ってきた際のpending保存
+     （onAuthStateChangeリスナー）を成立させるために読み込む。 -->
+<script src="eti_v2_save.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -385,6 +390,45 @@ const NATION_MEANING = {
 };
 const STRIPE_URL_AUTO = 'https://buy.stripe.com/test_9B64gr9micjz9riccu3Nm00'; // release-c-preview専用：Stripeテスト用Payment Link
 
+// 【重要な修正】trackEvent()・savedCountBucket()は、mypage.html内で11箇所・1箇所
+// 呼ばれているが、mypage.html自身にもdiagnosis-save.jsにも定義が存在せず、
+// 実際のページでは実行時にReferenceErrorになる状態だった
+// （mypage_reflects_save_test.jsで実際に検出）。これまでのテストが通っていたのは、
+// テスト側のスタブが偶然この関数を用意していたためで、実コードの不具合を
+// 覆い隠していた。ここで実装を追加する。
+function trackEvent(name, params) {
+  if (typeof gtag === 'function') gtag('event', name, params || {});
+}
+function savedCountBucket(n) {
+  if (n <= 0) return '0';
+  if (n === 1) return '1';
+  if (n <= 4) return '2_4';
+  return '5_plus';
+}
+
+/* ============================================================
+   ETI v2 表示用ヘルパー
+   v1のENNEA_NAME・BIG5_NAME等は一切変更せず、v2専用の対応表だけを追加する。
+   ============================================================ */
+function v2TopName(ranking) {
+  // 【修正】v2_rankingsの各エントリ（element/weapon/nation）は、
+  // computeResultsV2()の実際の戻り値と同じ「プレーンな配列」であり、
+  // {ranking:[...], topGap} という包んだ形ではない（RPCへ渡す時点で
+  // pending.results.elementRanking等がそのまま配列で渡っているため）。
+  // 以前の実装は包んだ形を前提にしており、実データでは常にnullになる
+  // 不具合があった（mypage_reflects_save_test.jsで実際に検出・修正）。
+  if (!ranking || !ranking.length) return null;
+  return ranking[0];
+}
+function v2ClosenessLine(label, ranking, purchased) {
+  const top = v2TopName(ranking);
+  if (!top) return `<div style="display:flex;justify-content:space-between;padding:1px 0"><span>${label}</span><span style="color:var(--fg-dim)">—</span></div>`;
+  const scorePart = purchased
+    ? `<span style="color:var(--fg-dim);font-size:10px">近さスコア ${top.closenessScore}</span>`
+    : '';
+  return `<div style="display:flex;justify-content:space-between;padding:1px 0"><span>${label}</span><span>${top.name}　${scorePart}</span></div>`;
+}
+
 function fmtDate(iso) {
   const d = new Date(iso);
   return d.toLocaleString('ja-JP', {
@@ -436,6 +480,7 @@ function renderGateOtpInput(email) {
 
 function renderEmpty(root) {
   root.innerHTML = `
+    ${logoutButtonHtml()}
     ${pageHeaderHtml()}
     <div class="empty">
       まだ保存された診断記録がありません。<br>
@@ -497,6 +542,63 @@ function nationBarsHtml(nations, color) {
         </div>
       </div>`;
   }).join('');
+}
+
+/* ---- ETI v2版 詳細表示（PERSONALITY/STYLE/VALUES。Enneagramは扱わない） ---- */
+const STYLE_NAME = { AGY:"主導性", REL:"関係調整", ROL:"役割持続", REF:"媒介思考", AUT:"自律距離" };
+const VALUES_NAME = { SD:"自己志向", ST:"刺激", HE:"快楽", AC:"達成", PO:"権力", SE:"安全", CO:"同調", TR:"伝統", BE:"博愛", UN:"普遍主義" };
+
+function v2BarsHtml(scoresObj, nameMap, color) {
+  if (!scoresObj) return '<p class="sub">データなし</p>';
+  return Object.keys(nameMap).map(k => {
+    const v = scoresObj[k];
+    if (v === undefined || v === null) return '';
+    return `<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--fg-dim);margin-bottom:3px">
+        <span>${nameMap[k]}</span><span style="color:${color}">${v}</span>
+      </div>
+      <div style="background:#0a0a14;height:5px;border-radius:3px;overflow:hidden">
+        <div style="background:${color};width:${Math.max(0,Math.min(100,v))}%;height:100%"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function unlockedDetailHtmlV2(v2Scores, elColor, openFirst) {
+  const p = (v2Scores && v2Scores.personality) || null;
+  const st = (v2Scores && v2Scores.style) || null;
+  const va = (v2Scores && v2Scores.values) || null;
+  return `
+    <details class="acc" ${openFirst ? 'open' : ''}>
+      <summary style="color:${elColor}">PERSONALITY 詳細スコア</summary>
+      <div class="acc-body">${v2BarsHtml(p, BIG5_NAME, elColor)}</div>
+    </details>
+    <details class="acc">
+      <summary style="color:${elColor}">STYLE 詳細スコア</summary>
+      <div class="acc-body">${v2BarsHtml(st, STYLE_NAME, elColor)}</div>
+    </details>
+    <details class="acc">
+      <summary style="color:${elColor}">VALUES 詳細スコア（価値観プロファイル）</summary>
+      <div class="acc-body">${v2BarsHtml(va, VALUES_NAME, elColor)}</div>
+      <p class="sub" style="margin-top:6px">VALUESは本人内の相対的な優先度を示す指標です。0〜100はパーセンタイルではありません。</p>
+    </details>`;
+}
+
+function lockedDetailHtmlV2(stripeUrl) {
+  return `
+    <div class="lock-box">
+      <div style="font-size:11.5px;color:var(--fg-dim);margin-bottom:10px">深層分析</div>
+      <ul class="lock-list">
+        <li>🔒 PERSONALITY 詳細スコア</li>
+        <li>🔒 STYLE 詳細スコア</li>
+        <li>🔒 VALUES 詳細スコア（価値観プロファイル）</li>
+        <li>🔒 MIRROR 近しいキャラクター 2〜4位</li>
+      </ul>
+      <a href="${stripeUrl}" target="_blank" rel="noopener" class="lock-cta-btn" onclick="trackEvent('mypage_unlock_click',{source:'history_card'})">詳細を解放する（¥1,000）</a>
+      <p style="font-size:10px;color:var(--fg-dim);margin-top:10px;line-height:1.6">
+        以前ご購入いただいた解析レポートがこちらに反映されていない場合があります。お心当たりがある方は、購入時のメール・リンクからご覧いただくか、X（@mondayaxad）までご連絡ください。
+      </p>
+    </div>`;
 }
 
 function unlockedDetailHtml(snapshot, elColor, openFirst) {
@@ -564,6 +666,7 @@ function lockedDetailHtml(stripeUrl) {
 
 /* ---- Hero ---- */
 function heroHtml(latest, savedCount, unlockedCount) {
+  if (latest.isV2) return heroHtmlV2(latest, savedCount, unlockedCount);
   const pr = latest.primaryResult || {};
   const elColor = ELEMENT_COLOR[pr.element] || '#7ab8e8';
   const enneaStr = pr.enneagram_type
@@ -595,8 +698,41 @@ function heroHtml(latest, savedCount, unlockedCount) {
     </div>`;
 }
 
+/* ---- ETI v2版 Hero（Enneagram表示なし。元素・武器・国家はv2_rankingsの近さスコアから） ---- */
+function heroHtmlV2(latest, savedCount, unlockedCount) {
+  const elTop = v2TopName(latest.v2Rankings && latest.v2Rankings.element);
+  const wTop = v2TopName(latest.v2Rankings && latest.v2Rankings.weapon);
+  const nTop = v2TopName(latest.v2Rankings && latest.v2Rankings.nation);
+  const elColor = ELEMENT_COLOR[elTop && elTop.name] || '#7ab8e8';
+  const purchased = !!latest.purchased;
+  const stripeUrl = latest.encodedAnswers
+    ? STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(latest.encodedAnswers)
+    : STRIPE_URL_AUTO;
+  const viewLabel = purchased ? '詳細を見る' : '最新結果を見る';
+  return `
+    <div class="hero" style="--el-color:${elColor}">
+      <div class="hero-eyebrow">Element Profile · ETI v2</div>
+      <div class="hero-title">アナタの診断記録</div>
+      <div class="hero-date">最終診断：${fmtDate(latest.completedAt)}</div>
+
+      <div class="hero-combo"><span class="el">${elTop ? elTop.name : '?'}</span> × ${wTop ? wTop.name : '?'}</div>
+      <div class="hero-sub">価値観国家（近さスコア）：${nTop ? nTop.name : '—'}</div>
+
+      <div class="hero-stats">
+        <div><div class="hero-stat-num">${savedCount}</div><div class="hero-stat-label">保存済み診断</div></div>
+        <div><div class="hero-stat-num">${unlockedCount}</div><div class="hero-stat-label">詳細解放済み</div></div>
+      </div>
+
+      <div class="hero-cta-row">
+        <a href="#session-0" class="hero-btn hero-btn-secondary">${viewLabel}</a>
+        ${purchased ? '' : `<a href="${stripeUrl}" target="_blank" rel="noopener" class="hero-btn hero-btn-primary" onclick="trackEvent('mypage_unlock_click',{source:'hero'})">詳細を解放する</a>`}
+      </div>
+    </div>`;
+}
+
 /* ---- 今回の結果サマリー ---- */
 function summaryHtml(latest) {
+  if (latest.isV2) return summaryHtmlV2(latest);
   const pr = latest.primaryResult || {};
   const elColor = ELEMENT_COLOR[pr.element] || '#7ab8e8';
   const big5 = latest.scores && latest.scores.big5;
@@ -636,17 +772,77 @@ function summaryHtml(latest) {
     </div>`;
 }
 
+/* ---- ETI v2版 結果サマリー（Enneagram無し。近さスコア＋MIRRORはpurchasedの場合のみ数値表示） ---- */
+function summaryHtmlV2(latest) {
+  const elTop = v2TopName(latest.v2Rankings && latest.v2Rankings.element);
+  const elColor = ELEMENT_COLOR[elTop && elTop.name] || '#7ab8e8';
+  const purchased = !!latest.purchased;
+  const mirrorTop = (latest.mirrorSnapshot && latest.mirrorSnapshot[0]) || null;
+
+  return `
+    <div class="section-title">今回の結果サマリー（ETI v2）</div>
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-label" style="color:${elColor}">元素｜気質（近さスコア）</div>
+        <div class="summary-body" style="font-size:11.5px">
+          ${v2ClosenessLine('元素', latest.v2Rankings && latest.v2Rankings.element, purchased)}
+        </div>
+        ${purchased ? '' : '<p class="sub" style="margin-top:6px">🔒 PERSONALITY詳細スコアはレポートで確認</p>'}
+      </div>
+      <div class="summary-card">
+        <div class="summary-label" style="color:#7ab8e8">武器｜動機（近さスコア）</div>
+        <div class="summary-body" style="font-size:11.5px">
+          ${v2ClosenessLine('武器', latest.v2Rankings && latest.v2Rankings.weapon, purchased)}
+        </div>
+        ${purchased ? '' : '<p class="sub" style="margin-top:6px">🔒 STYLE詳細スコアはレポートで確認</p>'}
+      </div>
+      <div class="summary-card">
+        <div class="summary-label" style="color:#c9a860">国家｜価値観（近さスコア）</div>
+        <div class="summary-body" style="font-size:11.5px">
+          ${v2ClosenessLine('国家', latest.v2Rankings && latest.v2Rankings.nation, purchased)}
+        </div>
+        ${purchased ? '' : '<p class="sub" style="margin-top:6px">🔒 VALUES詳細スコアはレポートで確認</p>'}
+      </div>
+      <div class="summary-card">
+        <div class="summary-label" style="color:${elColor}">MIRROR（近さスコア）</div>
+        <div class="summary-body">${mirrorTop
+          ? `${mirrorTop.name}${purchased ? `<p class="sub">近さスコア ${mirrorTop.mirrorScore}</p>` : ''}`
+          : '—'}</div>
+      </div>
+    </div>
+    <p class="sub" style="margin-top:8px">※「近さスコア」はETI独自の指標（ETI Profile Similarity）で、統計的な確率・的中率ではありません。</p>`;
+}
+
 /* ---- 診断履歴 ---- */
 function historyListHtml(sessions) {
   return `
-    <div id="history" class="section-title" style="margin-top:8px">診断履歴（${sessions.length}件の記録）</div>
+    <div id="history" class="section-title" style="margin-top:8px">診断履歴（ETI v2・${sessions.length}件の記録）</div>
     <div class="history-timeline">
-      ${sessions.map((s, i) => `<div class="timeline-item" style="--el-color:${ELEMENT_COLOR[(s.primaryResult||{}).element]||'#7ab8e8'}"><div class="timeline-dot"></div>${sessionAccordionHtml(s, i === 0, i)}</div>`).join('')}
+      ${sessions.map((s, i) => {
+        const elName = s.isV2 ? (v2TopName(s.v2Rankings && s.v2Rankings.element) || {}).name : (s.primaryResult || {}).element;
+        return `<div class="timeline-item" style="--el-color:${ELEMENT_COLOR[elName]||'#7ab8e8'}"><div class="timeline-dot"></div>${sessionAccordionHtml(s, i === 0, i)}</div>`;
+      }).join('')}
     </div>
   `;
 }
 
+/* ---- 旧版（legacy-v1）結果セクション。v2とは明確に分離し、折りたたみで表示する ---- */
+function legacySectionHtml(v1Sessions) {
+  if (!v1Sessions.length) return '';
+  return `
+    <details class="section-title" style="margin-top:24px;cursor:pointer" id="legacy-section">
+      <summary style="cursor:pointer">旧版結果（legacy-v1・${v1Sessions.length}件）</summary>
+      <p class="sub" style="margin:8px 0 12px">
+        こちらは新しい採点基準（ETI v2）より前の診断結果です。ETI v2の結果へ変換・換算はしていません。
+      </p>
+      <div class="history-timeline">
+        ${v1Sessions.map((s, i) => `<div class="timeline-item" style="--el-color:${ELEMENT_COLOR[(s.primaryResult||{}).element]||'#7ab8e8'}"><div class="timeline-dot"></div>${sessionAccordionHtml(s, false, 'legacy-' + i)}</div>`).join('')}
+      </div>
+    </details>`;
+}
+
 function sessionAccordionHtml(s, isLatest, idx) {
+  if (s.isV2) return sessionAccordionHtmlV2(s, isLatest, idx);
   const pr = s.primaryResult || {};
   const elColor = ELEMENT_COLOR[pr.element] || '#7ab8e8';
   const top1 = (s.characterMatches && s.characterMatches[0]) || null;
@@ -695,36 +891,142 @@ function sessionAccordionHtml(s, isLatest, idx) {
     </details>`;
 }
 
-/* ---- 次の一歩 ---- */
-function nextStepsHtml(latest) {
+/* ---- ETI v2版 診断履歴カード（Enneagram無し。MIRROR・PERSONALITY/STYLE/VALUESを扱う） ---- */
+function sessionAccordionHtmlV2(s, isLatest, idx) {
+  const elTop = v2TopName(s.v2Rankings && s.v2Rankings.element);
+  const wTop = v2TopName(s.v2Rankings && s.v2Rankings.weapon);
+  const nTop = v2TopName(s.v2Rankings && s.v2Rankings.nation);
+  const elColor = ELEMENT_COLOR[elTop && elTop.name] || '#7ab8e8';
+  const top1 = (s.mirrorSnapshot && s.mirrorSnapshot[0]) || null;
+  const stripeUrl = s.encodedAnswers
+    ? STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(s.encodedAnswers)
+    : STRIPE_URL_AUTO;
+  const purchased = !!s.purchased;
+  const historyOpenTrack = `trackEvent('diagnosis_history_open',{diagnosis_type:'${DIAGNOSIS_TYPE}',diagnosis_version:'ETI-2.0'});` +
+    (purchased ? `trackEvent('mypage_report_open',{diagnosis_type:'${DIAGNOSIS_TYPE}',diagnosis_version:'ETI-2.0'});` : '');
+
+  return `
+    <details class="session-acc" id="session-${idx}" style="--el-color:${elColor}" ${isLatest ? 'open' : ''}
+      ontoggle="if(this.open){${historyOpenTrack}}">
+      <summary>
+        <div>
+          <div class="session-date">
+            ${fmtDate(s.completedAt)}${isLatest ? '<span class="badge-new">NEW</span>' : ''}
+            ${purchased ? '<span class="badge-unlocked"> ・ 詳細解放済み</span>' : '<span class="badge-locked"> ・ 未解放</span>'}
+          </div>
+          <div class="session-combo"><span class="el">${elTop ? elTop.name : '?'}</span> × ${wTop ? wTop.name : '?'}${nTop ? ' ・ ' + nTop.name : ''}</div>
+        </div>
+      </summary>
+      <div class="session-body">
+        <div class="session-body-inner">
+          ${top1 ? `
+          <div style="margin-bottom:16px">
+            <div style="font-size:10.5px;letter-spacing:2px;color:#6a90b0;text-transform:uppercase;margin-bottom:8px">MIRROR（最も近いキャラクター）</div>
+            <div style="font-size:20px;font-weight:700;color:${ELEMENT_COLOR[top1.element]||elColor}">${top1.name}</div>
+            <div style="font-size:12px;color:var(--fg-dim)">近さスコア <span style="color:#90c8f0;font-weight:700">${top1.mirrorScore}</span></div>
+          </div>` : ''}
+
+          ${purchased ? unlockedDetailHtmlV2(s.v2Scores, elColor, isLatest) : lockedDetailHtmlV2(stripeUrl)}
+        </div>
+      </div>
+    </details>`;
+}
+
+/* ---- 次の一歩：v2の最新結果がある場合 ---- */
+function nextStepsHtmlV2(latest) {
   const purchased = !!latest.purchased;
   const stripeUrl = latest.encodedAnswers
     ? STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(latest.encodedAnswers)
     : STRIPE_URL_AUTO;
-  const rediagBtn = `<a href="/" class="next-btn${purchased ? ' next-btn-primary' : ''}">もう一度元素診断する</a>`;
+  const rediagBtn = `<a href="/" class="next-btn${purchased ? ' next-btn-primary' : ''}">もう一度ETI v2で診断する</a>`;
   const detailBtn = purchased
     ? `<a href="#session-0" class="next-btn">保存済み詳細を見る</a>`
     : `<a href="${stripeUrl}" target="_blank" rel="noopener" class="next-btn next-btn-primary" onclick="trackEvent('mypage_unlock_click',{source:'next_steps'})">詳細レポートを見る</a>`;
+  // 完全版解析レポートは今回のリリース対象外。決済させず「準備中」とする。
+  const completeBtn = `<a href="#" class="next-btn" style="opacity:0.6" onclick="event.preventDefault();trackEvent('complete_cta_click',{status:'coming_soon'});">完全版解析レポート（準備中）</a>`;
   return `
     <div class="next-steps">
       <div class="section-title">次の一歩</div>
       <div class="next-steps-row">
         ${purchased ? rediagBtn + detailBtn : detailBtn + rediagBtn}
       </div>
+      <div class="next-steps-row" style="margin-top:8px">${completeBtn}</div>
       <div class="coming-soon">邪眼診断 — COMING SOON</div>
     </div>`;
 }
 
+/* ---- 次の一歩：まだETI v2の結果が無い場合（旧購入者への無料開放メッセージを含む） ----
+   【注記】freeOpenEligibleは「旧版CORE1購入済み、かつv2 CORE1未購入」からの近似判定であり、
+   redeemed_from_entitlement_idの消費状況までは見ていない。正確な判定には、
+   無料開放の可否・消費済みかどうかを返す専用API（本人専用履歴・権限API拡張）が必要で、
+   今回のPreview版では未実装。実際の無料開放処理もサーバー側でこれから実装する。 */
+function nextStepsHtmlV1Only(latest, freeOpenEligible) {
+  const freeOpenMsg = freeOpenEligible ? `
+    <div class="lock-box" style="margin-bottom:16px">
+      <p style="font-size:12.5px;line-height:1.7">
+        旧版解析レポートをご購入済みの方は、ETI v2版解析レポートの無料開放対象となる場合があります。正式な開放機能は準備中です。
+      </p>
+    </div>` : '';
+  return `
+    <div class="next-steps">
+      <div class="section-title">次の一歩</div>
+      ${freeOpenMsg}
+      <div class="next-steps-row">
+        <a href="/" class="next-btn next-btn-primary">ETI v2で診断する</a>
+      </div>
+      <div class="coming-soon">邪眼診断 — COMING SOON</div>
+    </div>`;
+}
+
+function nextStepsHtml(latest, freeOpenEligible) {
+  return latest.isV2 ? nextStepsHtmlV2(latest) : nextStepsHtmlV1Only(latest, freeOpenEligible);
+}
+
+/* ---- ログアウト・アカウント ---- */
+function logoutButtonHtml() {
+  return `<div style="text-align:right;margin-bottom:8px">
+    <button onclick="handleLogoutClick()" style="background:transparent;border:1px solid var(--card-border);color:var(--fg-dim);border-radius:6px;padding:6px 14px;font-size:11px;cursor:pointer;font-family:inherit">ログアウト</button>
+  </div>`;
+}
+// ナビゲーション先の決定と実際の遷移を分離する（テストで実際の呼び出しを検証できるように）。
+// jsdomはlocation.hrefへの代入をスパイできない制約があるため、遷移そのものは
+// この小さな関数越しに行う。挙動は従来と同じ（location.hrefへの代入）。
+function navigateTo(url) {
+  location.href = url;
+}
+async function handleLogoutClick() {
+  await signOutUser();
+  // 【P1-5訂正】明示的にログアウトを選択した場合は、共有端末上に100回答・
+  // 計算結果を含むpendingDiagnosis_v2を残さない。期限確認（readPendingDiagnosisV2）
+  // ではなく、有効期限内かどうかに関わらず明示的に削除する。
+  if (typeof clearPendingDiagnosisV2 === 'function') clearPendingDiagnosisV2();
+  // 認証済みデータを画面から消し、ログイン画面（renderGate）へ戻す。
+  navigateTo(location.pathname);
+}
+function accountSectionHtml() {
+  return `
+    <div class="next-steps" style="margin-top:16px">
+      <div class="section-title" style="font-size:13px">アカウント</div>
+      <p class="sub">保存データの削除をご希望の場合は、X（@mondayaxad）までご連絡ください。内容を確認のうえ対応します（即時の自動削除ではありません）。</p>
+    </div>`;
+}
+
 function renderMypage(root, sessions) {
-  const latest = sessions[0];
+  const v2Sessions = sessions.filter(s => s.isV2);
+  const v1Sessions = sessions.filter(s => !s.isV2);
+  const latest = v2Sessions[0] || v1Sessions[0];
   const savedCount = sessions.length;
   const unlockedCount = sessions.filter(s => s.purchased).length;
+  const freeOpenEligible = v1Sessions.some(s => s.purchased) && !v2Sessions.some(s => s.purchased);
 
   root.innerHTML = `
+    ${logoutButtonHtml()}
     ${heroHtml(latest, savedCount, unlockedCount)}
     ${summaryHtml(latest)}
-    ${historyListHtml(sessions)}
-    ${nextStepsHtml(latest)}
+    ${v2Sessions.length ? historyListHtml(v2Sessions) : ''}
+    ${legacySectionHtml(v1Sessions)}
+    ${nextStepsHtml(latest, freeOpenEligible)}
+    ${accountSectionHtml()}
   `;
 
   trackEvent('mypage_view', {
@@ -735,7 +1037,7 @@ function renderMypage(root, sessions) {
 }
 
 function renderError(root) {
-  root.innerHTML = `${pageHeaderHtml()}<div class="err">読み込みに失敗しました。時間をおいて再度お試しください。</div>`;
+  root.innerHTML = `${logoutButtonHtml()}${pageHeaderHtml()}<div class="err">読み込みに失敗しました。時間をおいて再度お試しください。</div>`;
 }
 
 async function init() {
@@ -758,6 +1060,11 @@ async function init() {
   }
   renderMypage(root, result.sessions);
 }
+// eti_v2_save.js（Googleログイン復帰後、v2のpending保存が完了した時点）から
+// 呼べる再読み込みフック。init()自体はSIGNED_IN時にも呼ばれるため、
+// 保存完了前に一度・完了後にもう一度（このフック経由で）呼ばれることがあるが、
+// 後者が最終的に正しい状態を表示する。
+window.refreshMypageHistory = init;
 
 supabaseClient.auth.onAuthStateChange((event) => {
   if (event === 'SIGNED_IN') init();
