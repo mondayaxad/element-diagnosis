@@ -337,7 +337,7 @@
       <span class="hero-desc-en">Seven elements flow within. 100 questions to reveal your nature, strength, and values — a self-understanding diagnosis built on Big Five, Enneagram, and Values Theory.</span>
     </p>
 
-    <a href="javascript:void(0)" class="hero-cta" onclick="answers={};currentIdx=0;gtag('event','quiz_start',{event_category:'diagnosis'});setPhase('quiz')">診断をはじめる — Start</a>
+    <a href="javascript:void(0)" class="hero-cta" onclick="startDiagnosisVersioned()">診断をはじめる — Start</a>
 
   </div>
 
@@ -1450,7 +1450,7 @@ function renderResultV2(root) {
         lockCtaDisabledHtml +
       '</div>' +
 
-      '<p style="text-align:center;margin-top:16px"><a href="/" style="color:#6a90b0;font-size:12px">もう一度診断する →</a></p>' +
+      '<p style="text-align:center;margin-top:16px"><a href="/?dv=ETI-2.0" style="color:#6a90b0;font-size:12px">もう一度診断する →</a></p>' +
     '</section>';
 }
 
@@ -2360,7 +2360,7 @@ function renderResult(root) {
       </div>
 
       <div style="display:flex;gap:10px">
-        <button onclick="answers={};currentIdx=0;gtag('event','quiz_start',{event_category:'diagnosis'});setPhase('quiz')"
+        <button onclick="startDiagnosisVersioned()"
           style="flex:1;background:transparent;border:1px solid #1e3448;color:#6a90b0;border-radius:8px;padding:12px;font-size:13px;cursor:pointer;font-family:inherit">
           もう一度診断する
         </button>
