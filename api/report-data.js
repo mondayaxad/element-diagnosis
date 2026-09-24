@@ -97,6 +97,22 @@ function resolveDiagnosisCode(data) {
   return data.code || null;
 }
 
+// verify.jsと同じ世代判定。旧形式トークンには世代情報が無いため、
+// 接頭辞が無い値は必ずlegacy-v1として扱う。
+function parseDiagnosisReference(reference, tokenData) {
+  if (typeof reference !== 'string' || !reference) return null;
+  if (reference.startsWith('v2_')) {
+    const code = reference.slice(3);
+    return code ? { reference, code, diagnosisVersion: 'ETI-2.0' } : null;
+  }
+  const explicit = tokenData && tokenData.diagnosis_version;
+  return {
+    reference,
+    code: reference,
+    diagnosisVersion: explicit === 'ETI-2.0' ? 'ETI-2.0' : 'element-v1',
+  };
+}
+
 // product_type → 権限フラグ の対応（購入・権限・価格対応表と同一）
 const PRODUCT_PERMISSIONS = {
   core1: ['core_analysis_access'],
@@ -150,8 +166,8 @@ module.exports = async (req, res) => {
 
   // 新形式トークンは診断コードを復号する必要がある。復号に失敗した場合
   // （改ざん、鍵不一致等）は、署名検証は通っていても無効なトークンとして扱う。
-  const diagnosisCode = resolveDiagnosisCode(data);
-  if (!diagnosisCode) {
+  const diagnosisRef = parseDiagnosisReference(resolveDiagnosisCode(data), data);
+  if (!diagnosisRef) {
     res.status(403).json({ error: 'invalid_or_expired_token' });
     return;
   }
@@ -172,7 +188,9 @@ module.exports = async (req, res) => {
   let dbPermissions = new Set();
   let dbLookupFailed = false;
   try {
-    const hash = hashDiagnosisCode(diagnosisCode);
+    // v2は接頭辞を含めてハッシュ化されているため、表示用に接頭辞を外す前の
+    // referenceを使って購入権限を照合する。
+    const hash = hashDiagnosisCode(diagnosisRef.reference);
     dbPermissions = await fetchDbPermissions(hash);
   } catch (err) {
     console.error('report-data error: entitlement lookup failed (falling back to legacy_floor only)', err);
@@ -182,6 +200,7 @@ module.exports = async (req, res) => {
   const finalPermissions = new Set([...floor, ...dbPermissions]);
 
   const responseBody = {
+    diagnosis_version: diagnosisRef.diagnosisVersion,
     entitlements: {
       core_analysis_access: finalPermissions.has('core_analysis_access'),
       journey_report_access: finalPermissions.has('journey_report_access'),
@@ -195,7 +214,7 @@ module.exports = async (req, res) => {
   // 権限が無くてもcodeだけは取得できてしまっていたため、
   // データそのものをサーバー側で絞る（権限が無ければcodeを返さない）。
   if (finalPermissions.has('core_analysis_access')) {
-    responseBody.code = diagnosisCode;
+    responseBody.code = diagnosisRef.code;
   }
 
   if (dbLookupFailed) {

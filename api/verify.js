@@ -93,6 +93,18 @@ function hashDiagnosisCode(diagnosisCode) {
   return crypto.createHash('sha256').update(diagnosisCode).digest('hex');
 }
 
+// Stripeのclient_reference_idで世代を明示する。
+// legacy-v1は従来どおり診断コードのみ、ETI v2は `v2_<診断コード>` とする。
+// DBには従来どおりハッシュだけを保存するため、既存スキーマを変更せず世代を分離できる。
+function parseDiagnosisReference(reference) {
+  if (typeof reference !== 'string' || !reference) return null;
+  if (reference.startsWith('v2_')) {
+    const code = reference.slice(3);
+    return code ? { reference, code, diagnosisVersion: 'ETI-2.0' } : null;
+  }
+  return { reference, code: reference, diagnosisVersion: 'element-v1' };
+}
+
 // ------------------------------------------------------------
 // 新形式トークンの診断コード暗号化（リリースC追加）
 // ------------------------------------------------------------
@@ -229,8 +241,8 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const diagnosisCode = session.client_reference_id;
-    if (!diagnosisCode) {
+    const diagnosisRef = parseDiagnosisReference(session.client_reference_id);
+    if (!diagnosisRef) {
       res.status(400).send('診断コードが見つかりません。お手数ですが、診断結果画面からやり直してください。');
       return;
     }
@@ -269,7 +281,9 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const diagnosisCodeHash = hashDiagnosisCode(diagnosisCode);
+    // 権限は「世代を含む参照値」に紐づける。v1とv2で同じ文字列のコードが
+    // 偶然生成されても、購入権限が相互流用されない。
+    const diagnosisCodeHash = hashDiagnosisCode(diagnosisRef.reference);
 
     const paymentIntentId =
       typeof session.payment_intent === 'string'
@@ -301,6 +315,7 @@ module.exports = async (req, res) => {
       product_id: entitlementRow.product_type,
       value: entitlementRow.amount,
       currency: entitlementRow.currency,
+      diagnosis_version: diagnosisRef.diagnosisVersion,
     };
 
     // 署名付きトークンを発行（有効期限＋purchaseブロック＋暗号化した診断コードを含む）。
@@ -308,8 +323,10 @@ module.exports = async (req, res) => {
     // REPORT_TOKEN_SECRETを持つサーバー（/api/report-data.js）だけ。
     const token = signToken({
       exp: Date.now() + TOKEN_TTL_MS,
+      diagnosis_version: diagnosisRef.diagnosisVersion,
       purchase: purchaseBlock,
-      enc: encryptDiagnosisCode(diagnosisCode),
+      // 暗号化対象も世代付き参照値。report-data.js側で復号後に世代とコードを分離する。
+      enc: encryptDiagnosisCode(diagnosisRef.reference),
     });
 
     // レポート表示ページへリダイレクト

@@ -9,8 +9,9 @@
 //     「本人が保存している診断コード」をサーバー側で導出した範囲だけを検索する
 //   - Stripeの識別子・金額・通貨はレスポンスに含めない
 //
-// 返却形式：{ "purchased": { "<診断コード>": true, ... } }
-// （購入済みの診断コードだけがキーとして含まれる。未購入のものはキー自体が無い）
+// 返却形式：{ "purchased_by_version": { "element-v1:<コード>": true,
+//                                              "ETI-2.0:<コード>": true } }
+// 世代をキーへ含めることで、v1とv2の権利を誤って相互利用しない。
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 
@@ -39,7 +40,7 @@ async function fetchOwnDiagnosisCodes(userId) {
   const url =
     `${SUPABASE_URL}/rest/v1/diagnosis_sessions` +
     `?user_id=eq.${encodeURIComponent(userId)}` +
-    `&select=diagnosis_answers(encoded_answers)`;
+    `&select=diagnosis_version,diagnosis_answers(encoded_answers)`;
 
   const res = await fetch(url, {
     headers: {
@@ -55,15 +56,22 @@ async function fetchOwnDiagnosisCodes(userId) {
   const codes = [];
   rows.forEach((row) => {
     const a = Array.isArray(row.diagnosis_answers) ? row.diagnosis_answers[0] : row.diagnosis_answers;
-    if (a && a.encoded_answers) codes.push(a.encoded_answers);
+    if (a && a.encoded_answers) {
+      const diagnosisVersion = row.diagnosis_version === 'ETI-2.0' ? 'ETI-2.0' : 'element-v1';
+      codes.push({
+        code: a.encoded_answers,
+        diagnosisVersion,
+        reference: diagnosisVersion === 'ETI-2.0' ? `v2_${a.encoded_answers}` : a.encoded_answers,
+      });
+    }
   });
   return codes;
 }
 
 // product_type → CORE1閲覧権限を持つかどうか（report-data.jsのPRODUCT_PERMISSIONSと同じ考え方）。
 // CORE2のみの購入はCORE1のロックを解除しない。
-// core1_v2_repass（旧CORE1購入者へのCORE1 v2 1回無料開放）もCORE1相当として扱う。
-const CORE1_PRODUCT_TYPES = new Set(['core1', 'complete', 'core1_v2_repass']);
+// 旧購入者へのv2無料配布方針は撤回済み。core1_v2_repassを新規権利として扱わない。
+const CORE1_PRODUCT_TYPES = new Set(['core1', 'complete']);
 
 async function fetchPurchasedHashes(hashes) {
   if (hashes.length === 0) return new Set();
@@ -115,26 +123,28 @@ module.exports = async (req, res) => {
 
     const codes = await fetchOwnDiagnosisCodes(userId);
     if (codes.length === 0) {
-      res.status(200).json({ purchased: {} });
+      res.status(200).json({ purchased_by_version: {} });
       return;
     }
 
-    const hashByCode = {};
-    codes.forEach((code) => {
-      hashByCode[code] = hashDiagnosisCode(code);
+    const hashByKey = {};
+    codes.forEach((entry) => {
+      const key = `${entry.diagnosisVersion}:${entry.code}`;
+      hashByKey[key] = hashDiagnosisCode(entry.reference);
     });
-    const hashes = Object.values(hashByCode);
+    const hashes = Object.values(hashByKey);
 
     const purchasedHashes = await fetchPurchasedHashes(hashes);
 
-    const purchased = {};
-    codes.forEach((code) => {
-      if (purchasedHashes.has(hashByCode[code])) {
-        purchased[code] = true;
+    const purchasedByVersion = {};
+    codes.forEach((entry) => {
+      const key = `${entry.diagnosisVersion}:${entry.code}`;
+      if (purchasedHashes.has(hashByKey[key])) {
+        purchasedByVersion[key] = true;
       }
     });
 
-    res.status(200).json({ purchased });
+    res.status(200).json({ purchased_by_version: purchasedByVersion });
   } catch (err) {
     console.error('my-entitlements error:', err);
     res.status(500).json({ error: 'lookup_failed' });

@@ -12,7 +12,7 @@
 
 const PACK_ELEMENTS = ["炎","水","氷","雷","風","岩","草"];
 const PACK_WEAPONS = ["片手剣","両手剣","長柄","法器","弓"];
-const PACK_NATIONS = ["モンド","璃月","稲妻","スメール","フォンテーヌ","ナタ","スネージナヤ"];
+const PACK_NATIONS = ["モンド","璃月","稲妻","スメール","フォンテーヌ","ナタ","スネージナヤ","ナドクライ"];
 function unpackShareParams(p) {
   const n = parseInt(p, 36);
   if (isNaN(n)) return null;
@@ -32,7 +32,7 @@ function unpackShareParams(p) {
 
 const ELEMENT_NAME = { PY:"炎", HY:"水", CR:"氷", EL:"雷", AN:"風", GE:"岩", DE:"草" };
 const WEAPON_NAME = { SW:"片手剣", CM:"両手剣", PL:"長柄", CT:"法器", BW:"弓" };
-const NATION_NAME = { M:"モンド", L:"璃月", I:"稲妻", S:"スメール", F:"フォンテーヌ", N:"ナタ", Z:"スネージナヤ" };
+const NATION_NAME = { M:"モンド", L:"璃月", I:"稲妻", S:"スメール", F:"フォンテーヌ", N:"ナタ", Z:"スネージナヤ", D:"ナドクライ" };
 const CHAR_NAMES = ["ディルック","マーヴィカ","嘉明","ディシア","辛炎","ベネット","胡桃","香菱","トーマ","シュヴルーズ","アルレッキーノ","ニコ","煙緋","クレー","リネ","アンバー","宵宮","ドゥリン","フリーナ","ニィロウ","神里綾人","行秋","タルタリヤ","夜蘭","シグウィン","モナ","珊瑚宮心海","ヌヴィレット","コロンビーナ","ムアラニ","バーバラ","アイノ","ダリア","キャンディス","オデット","神里綾華","スカーク","七七","レイラ","ガイア","申鶴","ロサリア","ミカ","エスコフィエ","ローエン","甘雨","ディオナ","アーロイ","リオセスリ","シャルロット","シトラリ","アリョーシャ","刻晴","クロリンデ","久岐忍","雷電将軍","セノ","イアンサ","フィッシュル","九条裟羅","オロルン","セトス","八重神子","リサ","ヴァレサ","レザー","北斗","ドリー","楓原万葉","ジン","リネット","ファルカ","早柚","ウェンティ","チャスカ","ファルザン","ヤフォダ","スクロース","放浪者","閑雲","藍硯","鹿野院平蔵","夢見月瑞希","イファ","プルーネ","鍾離","イルーガ","カチーナ","雲菫","ナヴィア","荒瀧一斗","ノエル","アルベド","茲白","千織","シロネン","ゴロー","リンネア","凝光","ナヒーダ","白朮","ラウマ","ネフェル","ティナリ","コレイ","アルハイゼン","綺良々","カーヴェ","キィニチ","エミリエ","ヨォーヨ","サンドローネ","魈","エウルア","重雲","フレミネ","フリンズ","イネファ"];
 
 function esc(s) {
@@ -46,6 +46,9 @@ module.exports = async function handler(req, res) {
   const searchParams = url.searchParams;
   const origin = `https://${req.headers.host}`;
   const code = searchParams.get('code') || '';
+  // 明示的に許可する診断バージョンはETI-2.0だけ。
+  // 値が無い場合は既存URL互換のlegacy-v1として扱う。
+  const diagnosisVersion = searchParams.get('dv') === 'ETI-2.0' ? 'ETI-2.0' : null;
 
   let el, w, nat, charIdx, match;
   const packed = searchParams.get('p');
@@ -69,7 +72,10 @@ module.exports = async function handler(req, res) {
   const ogImageUrl = packed
     ? `${origin}/api/og-image?p=${encodeURIComponent(packed)}`
     : `${origin}/api/og-image?` + new URLSearchParams({ el: searchParams.get('el')||'', w: searchParams.get('w')||'', nat: searchParams.get('nat')||'', c: charIdx || '', m: match }).toString();
-  const redirectUrl = `${origin}/?code=${encodeURIComponent(code)}`;
+  const redirectParams = new URLSearchParams();
+  if (diagnosisVersion) redirectParams.set('dv', diagnosisVersion);
+  redirectParams.set('code', code);
+  const redirectUrl = `${origin}/?${redirectParams.toString()}`;
   const title = `元素診断 — 私の結果は【${el} × ${w} × ${nat}】`;
   const description = `最も近しいキャラクター：${charName}（${match}%一致）。あなたも元素診断で、自分だけの結果を見つけてみませんか。`;
 
