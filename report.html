@@ -1,13 +1,20 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-FDN7NYZW9D"></script>
+<!-- Google tag (gtag.js)
+     【Preview版：GA4送信を無効化】本番Measurement IDへPreview操作が混入しないよう、
+     外部スクリプトの読込とgtag('config', ...)による送信を止める。
+     既存コードが呼ぶgtag()自体はno-opとして残し、ReferenceErrorにしない。
+     本番反映時は、このコメントブロックを元のGA4読込へ戻すこと。 -->
 <script>
   window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-FDN7NYZW9D');
+  function gtag() {} // Preview版：no-op。本番反映時に実装へ戻す。
+  // 【Preview版：このファイル内でStripe本番Payment Linkへ遷移させる箇所の分岐フラグ】
+  // Previewではtrue。本番デプロイ時はfalseへ変更する。
+  // ただし本番切替はこの値だけでは完了しない（GA4復元・mypage.htmlのStripeリンク・
+  // diagnosis-save.jsのSupabase接続・Vercel本番環境変数・V2_REPORT_SALES_ENABLED等、
+  // 複数ファイル・複数設定にまたがる）。正式な手順はPREVIEW_TO_PRODUCTION.mdを参照すること。
+  var IS_PREVIEW_BUILD = true;
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -103,6 +110,11 @@
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="js/ETI_v2_QUESTIONS_100.js"></script>
+<script src="js/eti_v2_prototypes.js"></script>
+<script src="js/eti_v2_engine.js"></script>
+<script src="js/characters118_v2.js"></script>
+<script src="js/eti_v2_legacy_adapter.js"></script>
 </head>
 <body>
 <div id="root">
@@ -135,7 +147,7 @@ const WEAPONS = {
 // MBTI風4文字タイプコード＋固有名称（35通り）
 const ELEMENT_CODE = { "炎":"PY", "水":"HY", "氷":"CR", "雷":"EL", "風":"AN", "岩":"GE", "草":"DE" };
 const WEAPON_CODE = { "片手剣":"SW", "両手剣":"CM", "長柄":"PL", "法器":"CT", "弓":"BW" };
-const NATION_CODE = { "モンド":"M", "璃月":"L", "稲妻":"I", "スメール":"S", "フォンテーヌ":"F", "ナタ":"N", "スネージナヤ":"Z" };
+const NATION_CODE = { "モンド":"M", "璃月":"L", "稲妻":"I", "スメール":"S", "フォンテーヌ":"F", "ナタ":"N", "スネージナヤ":"Z", "ナドクライ":"D" };
 function typeCode(el, w, nation) { return ELEMENT_CODE[el] + WEAPON_CODE[w] + (nation ? '-' + NATION_CODE[nation] : ''); }
 // 35タイプ固有の名称（機械的な掛け合わせではなく、組み合わせごとの性質から命名）
 const TYPE_NAME = {
@@ -150,6 +162,8 @@ const TYPE_NAME = {
 function typeName(el, w) { return TYPE_NAME[el][w]; }
 // 国家（価値観理論：シュワルツの基本的価値観をテイワット7国家にマッピング）
 const NATIONS = ["モンド","璃月","稲妻","スメール","フォンテーヌ","ナタ","スネージナヤ"];
+// ETI v2専用：legacy-v1の7国家（NATIONS、上のまま不変）＋ナドクライの8国家。
+const NATIONS_V2 = NATIONS.concat(["ナドクライ"]);
 const NATION_DESC = {
   "モンド":     "モンドが体現するのは「自由」です。誰にも縛られず、自分の意志で選び取ることに、何よりの価値を置きます。",
   "璃月":       "璃月が体現するのは「契約と達成」です。交わした約束を守り、目に見える成果を積み上げることに、価値を置きます。",
@@ -158,6 +172,7 @@ const NATION_DESC = {
   "フォンテーヌ": "フォンテーヌが体現するのは「法と正義」です。公正さと調和を重んじ、誰に対しても等しくあることに、価値を置きます。",
   "ナタ":       "ナタが体現するのは「戦争」です。真っ向からぶつかり合う戦いの中でこそ、生きる実感を得ることに、価値を置きます。",
   "スネージナヤ": "スネージナヤが体現するのは「抗争」です。争いを通じて自らの力を示し、抗い続けることに、価値を置きます。",
+  "ナドクライ":   "ナドクライが体現するのは「月光」です。表舞台の喧騒から離れ、静かな場所で自分の価値観を保つことに、価値を置きます。",
 };
 // 35タイプ固有の説明（使い回しではなく、組み合わせごとに意味づけ）
 const TYPE_DESC = {
@@ -493,6 +508,7 @@ const NATION_VALUES = {
   "フォンテーヌ": ['普遍主義','同調'],
   "ナタ":         ['刺激','快楽'],
   "スネージナヤ": ['権力','達成'],
+  "ナドクライ": ['自己志向','安全'],
 };
 // 価値観次元 → 国家の逆引き（複数国家にまたがる次元は平均を取る）
 const VALUE_NATIONS = {};
@@ -1016,6 +1032,192 @@ function computeResults(answers) {
 
   return { big5, enneaRaw, enneaTop, enneaWing, enneaSorted, elementScores, weaponScores, nationScores, charMatches };
 }
+
+/* ============================================================
+   ETI v2 — STYLE表示コンテンツ（正式名称・詩的タグ・解釈文）
+   Enneagramの代替ではなく、v2で実測したSTYLE5軸をそのまま表示する。
+   固定辞書と実測順位から機械的に組み立てる（自由生成しない）。index.htmlと同一の内容。
+   ============================================================ */
+const STYLE_LABEL = { AGY:'主導性', REL:'関係調整', ROL:'役割持続', REF:'媒介思考', AUT:'自律距離' };
+const STYLE_POETIC_TAG = {
+  AGY:'道を切り拓く意志', REL:'縁を結ぶ調律', ROL:'役目を貫く献身',
+  REF:'思索を介す眼差し', AUT:'距離を守る自律',
+};
+const STYLE_WEAPON_TAG = {
+  AGY:'自ら切り拓く力', REL:'関係に応じる力', ROL:'守り抜く力',
+  REF:'意味を編む力', AUT:'距離から届く力',
+};
+const STYLE_BASE_DESC = {
+  AGY:'誰かの合図を待つより、自ら最初の一歩を選ぶ人です。',
+  REL:'人と人のあいだに流れる温度を読み、関係がほどけない形へ整えます。',
+  ROL:'一度引き受けた役目を、その意味が尽きるまで手放しません。',
+  REF:'衝動のまま触れるのではなく、思索や言葉を介して世界へ近づきます。',
+  AUT:'近づきすぎず離れすぎず、自分の輪郭を守れる距離から歩きます。',
+};
+function rankStyleAxes(styleDisplay) {
+  return ETI_V2_META.styleAxes.map(function(ax, i) {
+    return { axis: ax, score: styleDisplay[ax], order: i };
+  }).sort(function(a, b) { return (b.score - a.score) || (a.order - b.order); });
+}
+function buildStyleCoreText(styleDisplay) {
+  var ranked = rankStyleAxes(styleDisplay);
+  var first = ranked[0].axis, second = ranked[1].axis;
+  return 'あなたの行動の核には〈' + STYLE_POETIC_TAG[first] + '〉があり、そこへ〈' + STYLE_POETIC_TAG[second] + '〉が重なっています。'
+    + STYLE_BASE_DESC[first] + STYLE_BASE_DESC[second];
+}
+function pickStyleTags_Similar(styleDisplay) {
+  return rankStyleAxes(styleDisplay).slice(0, 4).map(function(r) { return STYLE_POETIC_TAG[r.axis]; });
+}
+function pickStyleTags_Weapon(weaponPrototype, styleDisplay) {
+  var scored = ETI_V2_META.styleAxes.map(function(ax, i) {
+    return { axis: ax, protoWeight: weaponPrototype[ax], userScore: styleDisplay[ax], order: i };
+  });
+  scored.sort(function(a, b) {
+    return (b.protoWeight - a.protoWeight) || (b.userScore - a.userScore) || (a.order - b.order);
+  });
+  return scored.slice(0, 4).map(function(r) { return r.axis; });
+}
+// 武器種（行動）特性リング用：v1のpickFactorTags_Weapon_v3（Enneagramのsw強み弱み）に相当する
+// 情報量を持たせつつ、存在しないEnneagramの強み/弱みを捏造しない。実測STYLE値と基本解釈文のみを使う。
+function pickStyleTags_Weapon_v3(weaponPrototype, styleDisplay) {
+  var axes = pickStyleTags_Weapon(weaponPrototype, styleDisplay);
+  return axes.map(function(ax) {
+    return { word: STYLE_WEAPON_TAG[ax], pct: Math.round(styleDisplay[ax]), desc: STYLE_BASE_DESC[ax] };
+  });
+}
+function generateWhySimilarTextV2(top1, topEl, topW) {
+  const points = [];
+  if (top1.el === topEl) points.push('元素');
+  if (top1.w === topW) points.push('武器');
+  let matchLine = points.length
+    ? `特に${points.join('・')}が、あなたと完全に一致しています。`
+    : `元素・武器の型は異なりますが、性格・行動スタイル・価値観の複数の層が、同じ方向を指しているために起きる重なりです。`;
+  return `${top1.name}との一致度は${top1.match}%。${matchLine}（性格類似度：${top1.personalitySim}%・行動スタイル類似度：${top1.styleSim}%・価値観類似度：${top1.valuesSim}%）`;
+}
+// describeCharMatchのv2版：Enneagramの核一致ではなく、MIRRORの3類似度を根拠に組み立てる。
+function describeCharMatchV2(ch, topEl, topW, rankIndex) {
+  const points = [];
+  if (ch.el === topEl) points.push('元素');
+  if (ch.w === topW) points.push('武器');
+  const pointsStr = points.join('・');
+  const simEntries = [['性格類似度', ch.personalitySim], ['行動スタイル類似度', ch.styleSim], ['価値観類似度', ch.valuesSim]];
+  simEntries.sort((a,b) => b[1]-a[1]);
+  const topSim = simEntries[0];
+  const templates = [
+    () => points.length
+      ? `${pointsStr}が一致するだけでなく、${topSim[0]}の高さ（${topSim[1]}%）が、この一致度を支えています。`
+      : `${topSim[0]}が${topSim[1]}%と高く、ほぼ同じ座標に位置しています。元素・武器の型は異なりますが、根の部分が重なっています。`,
+    () => `${ch.name}との重なりの核は${topSim[0]}です（${topSim[1]}%）。${points.length?`さらに${pointsStr}も一致し、`:''}複数の層が同じ方向を指しています。`,
+    () => points.length
+      ? `構造として${pointsStr}が重なっており、その上で${topSim[0]}の高さ（${topSim[1]}%）が、この一致度を裏付けています。`
+      : `表面的な型は異なりますが、${topSim[0]}が強く重なっており（${topSim[1]}%）、性質の根が近いことを示しています。`,
+    () => `一致度${ch.match}%のうち、最も効いているのは${topSim[0]}です（${topSim[1]}%）。${points.length?`${pointsStr}の一致も含め、`:''}複数の層が、同じ方向を向いています。`,
+  ];
+  return templates[rankIndex % templates.length]();
+}
+// 総括：PERSONALITY・STYLE・VALUESの3軸を統合（Enneagramには触れない）
+function buildOverviewSection_v3_V2(results, pal) {
+  const big5 = results.big5; // = results.personality（PERSONALITYの5軸をBig5同名で利用）
+  const topNat = results.nationScores[0].nation;
+  const topFactors = Object.keys(big5)
+    .sort((a,b)=>Math.abs(big5[b]-50)-Math.abs(big5[a]-50)).slice(0,2);
+  const f1 = topFactors[0], f2 = topFactors[1];
+  const styleCore = buildStyleCoreText(results.style);
+
+  const lead = `${styleCore}気質のデータからは、${BIG5[f1].name}（${big5[f1]}）と${BIG5[f2].name}（${big5[f2]}）が突出しており、この2つの軸が、行動を実際の場面に変換する回路として働いています。さらに、価値観の軸では${topNat}が最も強く現れており、${NATION_DESC[topNat]}という指向が、日々の選択の基準になっています。PERSONALITYが「どう動くか」を、STYLEが「どう行動へ表すか」を、VALUESが「何を大切にして選ぶか」を、それぞれ規定しています。この3つの層が同じ方向を向いているとき、あなたは最も自分らしく動けます。逆に、層同士がねじれる場面では、迷いや葛藤が生まれやすくなります。`;
+
+  return `
+    <div class="overview-box" style="border-color:${pal.p}40">
+      <p class="lead">${lead}</p>
+    </div>`;
+}
+// シュワルツ10次元スコア：v2はVALUES(SD/ST/HE/AC/PO/SE/CO/TR/BE/UN)の実測値を
+// 日本語ラベルへ直接対応させる（v1のように国家スコアから近似する必要がない）。
+const SCHWARTZ_AXIS_CODE = {
+  自己志向:'SD', 刺激:'ST', 快楽:'HE', 達成:'AC', 権力:'PO',
+  安全:'SE', 同調:'CO', 伝統:'TR', 博愛:'BE', 普遍主義:'UN',
+};
+function computeSchwartzScoresV2(results) {
+  const scores = {};
+  Object.keys(SCHWARTZ_VALUE).forEach(function(v) {
+    const code = SCHWARTZ_AXIS_CODE[v];
+    scores[v] = Math.round(results.values[code]);
+  });
+  return scores;
+}
+
+/* ============================================================
+   ETI v2 — キャラクター正規化・結果計算（report.html描画用ラッパー）
+   ============================================================ */
+const NATION_REGION_ALIAS_V2 = { "ナド・クライ": "ナドクライ" };
+var V2_CHARACTERS_NORMALIZED = null;
+// regionがnull（ニコ・スカーク・アーロイの3名。audit.region_correctedによる意図的な null 化）の場合、
+// 表示用フォールバックとしてのみ legacy.old_nation_field を使う。元データ（region:null自体）は書き換えない。
+// MIRRORのスコアリングはregionを見ないため、この正規化は表示（国家バッジ等）にのみ影響する。
+function getV2CharacterDisplayRegion(c) {
+  var region = c.region || (c.legacy && c.legacy.old_nation_field) || null;
+  return NATION_REGION_ALIAS_V2[region] || region;
+}
+function getV2CharactersNormalized() {
+  if (!V2_CHARACTERS_NORMALIZED) {
+    V2_CHARACTERS_NORMALIZED = ETI_V2_CHARACTERS.map(function(c) {
+      return Object.assign({}, c, { region: getV2CharacterDisplayRegion(c) });
+    });
+  }
+  return V2_CHARACTERS_NORMALIZED;
+}
+function computeResultsV2ForUI(answersByItemId, encodedCode) {
+  var raw = ETIv2.computeResultsV2(answersByItemId, {
+    elementPrototypes: ELEMENT_PROTOTYPES_V2,
+    weaponPrototypes: WEAPON_PROTOTYPES_V2,
+    nationPrototypes: NATION_PROTOTYPES_V2,
+  });
+  var mirror = ETIv2.computeMirrorV2(raw, getV2CharactersNormalized(), ETI_V2_META);
+  var vm = ETIv2LegacyAdapter.buildV2ViewModel(raw, mirror, encodedCode);
+  vm.raw = raw;
+  return vm;
+}
+
+// v2用リング表示：Enneagramの強み/弱み構造(sw)を持たないため、factorRingsSectionは使わず、
+// リング＋実測値＋基本解釈文だけのシンプルな構成にする（捏造した強み/弱みを追加しない）。
+function styleFactorRingsSection(tagsV2, palette) {
+  const rings = tagsV2.map((t,i) => `
+    <div class="ring-item">
+      ${ringChartSvg(t.pct, palette[i % palette.length])}
+      <div class="ringlabel">${t.word}</div>
+    </div>`).join('');
+  const descRows = tagsV2.map(t => `
+    <div class="sw-row">
+      <span class="sw-icon" style="color:#7fbf6a">●</span>
+      <div>
+        <div class="sw-title">${t.word}</div>
+        <div class="sw-desc">${t.desc}</div>
+      </div>
+    </div>`).join('');
+  return `
+    <div class="ring-grid">${rings}</div>
+    <div class="sw-list">${descRows}</div>`;
+}
+// 「行動スタイルの深層 — STYLE」セクション本体：5軸全ての正式名称・実測値・説明を表示する
+// （上位3軸への切り詰めをしない）。CORE/FEAR/DESIREやウィング・成長/分裂方向に相当する
+// v2固有の概念は存在しないため作らない。
+function styleDeepDiveSection(results, pal) {
+  const ranked = rankStyleAxes(results.style);
+  const rows = ranked.map(r => `
+    <div class="bar-block">
+      <div class="bar-top"><span class="label">${STYLE_LABEL[r.axis]} — ${r.axis}</span><span class="val" style="color:${pal.p}">${Math.round(r.score)}</span></div>
+      <div class="bar-track">
+        <svg width="100%" height="6" style="display:block"><rect x="0" y="0" width="${Math.round(r.score)}%" height="6" rx="3" fill="${pal.p}"/></svg>
+      </div>
+      <div class="bar-note">${STYLE_BASE_DESC[r.axis]}</div>
+    </div>`).join('');
+  return `
+    <div style="text-align:center;margin:6px 0 16px">
+      <div style="font-size:14px;color:${pal.light};line-height:1.9">${buildStyleCoreText(results.style)}</div>
+    </div>
+    ${rows}`;
+}
+
 const ELEMENT_PALETTE = {
   "炎": { p:"#c84a20", light:"#f0a878", dark:"#7a2c10", bg:"#1a0f08" },
   "水": { p:"#2a7aaa", light:"#8fd0ec", dark:"#123a52", bg:"#08131a" },
@@ -1309,13 +1511,14 @@ function schwartzStrengthWeakness(scores) {
 
 function renderFullReport(root, results, diagnosisCode) {
   window.__diagnosisCode = diagnosisCode || '';
+  const diagnosisVersion = results.schemaVersion === 'ETI-2.0' ? 'ETI-2.0' : 'legacy-v1';
   const topEl = results.elementScores[0].element;
   const topW  = results.weaponScores[0].weapon;
   const topNat = results.nationScores[0].nation;
   const pal = ELEMENT_PALETTE[topEl];
-  const et  = results.enneaTop.type;
-  const eInfo = ENNEA[et];
-  const wingInfo = results.enneaWing ? ENNEA[results.enneaWing.type] : null;
+  const et  = diagnosisVersion === 'legacy-v1' ? results.enneaTop.type : null;
+  const eInfo = diagnosisVersion === 'legacy-v1' ? ENNEA[et] : null;
+  const wingInfo = (diagnosisVersion === 'legacy-v1' && results.enneaWing) ? ENNEA[results.enneaWing.type] : null;
   const big5 = results.big5;
   const PALETTE = [pal.p, pal.light, '#c9a860', pal.dark];
   const NAT_PALETTE = ['#c9a860', '#8a5fc0', '#5fb0a0', '#d17a52'];
@@ -1346,16 +1549,18 @@ function renderFullReport(root, results, diagnosisCode) {
 
   const usedWords = new Set();
   const tagsElement = pickFactorTags_Profile_v3(results, ELEMENT_PROFILE[topEl], usedWords);
-  const tagsWeapon = pickFactorTags_Weapon_v3(results, WEAPON_ENNEA[topW], usedWords);
-  const tagsNation = pickFactorTags_Nation_v3(results, usedWords);
-  const schwartzScores = computeSchwartzScores(results);
+  const tagsWeapon = diagnosisVersion === 'ETI-2.0'
+    ? pickStyleTags_Weapon_v3(WEAPON_PROTOTYPES_V2[topW], results.style)
+    : pickFactorTags_Weapon_v3(results, WEAPON_ENNEA[topW], usedWords);
+  const tagsNation = pickFactorTags_Nation_v3(results, usedWords); // Schwartz価値観語彙のみで、Enneagramに依存しないため両世代共通
+  const schwartzScores = diagnosisVersion === 'ETI-2.0' ? computeSchwartzScoresV2(results) : computeSchwartzScores(results);
 
   const top4 = results.charMatches.slice(0,4);
   const charCardsHtml = top4.map((c,i) => `
     <div class="charcard2" style="border-color:${pal.p}30">
       <div class="top"><div><span class="rank">${i+1}</span><span class="name">${c.name}</span></div><span class="pct" style="color:${pal.p}">${c.match}%</span></div>
       <div class="tags"><span style="background:${pal.dark}50;border-color:${pal.p}50;color:${pal.light}">${c.el}</span><span style="background:${pal.dark}50;border-color:${pal.p}50;color:${pal.light}">${c.w}</span><span style="background:#c9a86050;border-color:#c9a86080;color:#e0c890">${c.nation}</span></div>
-      <p>${describeCharMatch(c, results, topEl, topW, et, i)}</p>
+      <p>${diagnosisVersion === 'ETI-2.0' ? describeCharMatchV2(c, topEl, topW, i) : describeCharMatch(c, results, topEl, topW, et, i)}</p>
     </div>`).join('');
   const allSameEl = top4.every(c=>c.el===topEl);
   const commonNotes = [];
@@ -1401,14 +1606,14 @@ function renderFullReport(root, results, diagnosisCode) {
       <svg width="100%" height="100%" viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice">
         <g transform="translate(320,180)">
           <circle r="130" fill="none" stroke="#c9a860" stroke-width="0.7" opacity="0.5"/>
-          ${NATIONS.map((n,i) => {
-            const ang = (i/7)*2*Math.PI - Math.PI/2;
+          ${(diagnosisVersion === 'ETI-2.0' ? NATIONS_V2 : NATIONS).map((n,i,arr) => {
+            const ang = (i/arr.length)*2*Math.PI - Math.PI/2;
             const x=(130*Math.cos(ang)).toFixed(1), y=(130*Math.sin(ang)).toFixed(1);
             return `<line x1="0" y1="0" x2="${x}" y2="${y}" stroke="#c9a860" stroke-width="0.8" opacity="0.5"/><circle cx="${x}" cy="${y}" r="5" fill="${n===topNat?'#e8d8a0':'#5a4d30'}"/>`;
           }).join('')}
           <circle r="4" fill="#f0e4c0"/>
         </g>
-        <text x="320" y="335" text-anchor="middle" font-family="serif" font-size="11" letter-spacing="4" fill="#c9a860" opacity="0.8">SEVEN NATIONS COMPASS</text>
+        <text x="320" y="335" text-anchor="middle" font-family="serif" font-size="11" letter-spacing="4" fill="#c9a860" opacity="0.8">${diagnosisVersion === 'ETI-2.0' ? 'EIGHT NATIONS COMPASS' : 'SEVEN NATIONS COMPASS'}</text>
       </svg>
     </div>`;
 
@@ -1460,7 +1665,7 @@ function renderFullReport(root, results, diagnosisCode) {
       <div class="sec" style="border-color:${pal.p}35">
         <div class="eyebrow">CONNECTING FACTORS</div>
         <div class="sec-title" style="font-size:14px;color:${pal.light}">あなたの武器種（行動）特性</div>
-        ${factorRingsSection(tagsWeapon, PALETTE)}
+        ${diagnosisVersion === 'ETI-2.0' ? styleFactorRingsSection(tagsWeapon, PALETTE) : factorRingsSection(tagsWeapon, PALETTE)}
       </div>
 
       <div class="sec" style="border-color:#c9a86040">
@@ -1480,7 +1685,8 @@ function renderFullReport(root, results, diagnosisCode) {
 
       <div class="sec" style="border-color:${pal.p}35">
         <div class="sec-no">03</div>
-        <div class="sec-title" style="color:${pal.light}">動機の深層 — Enneagram</div>
+        <div class="sec-title" style="color:${pal.light}">${diagnosisVersion === 'ETI-2.0' ? '行動スタイルの深層 — STYLE' : '動機の深層 — Enneagram'}</div>
+        ${diagnosisVersion === 'ETI-2.0' ? styleDeepDiveSection(results, pal) : `
         <div style="text-align:center;margin:6px 0 16px">
           <span style="font-size:32px;font-weight:700;color:${pal.light};letter-spacing:1px">${et}${wingInfo?'w'+results.enneaWing.type:''}</span>
           <div style="font-size:12px;color:#9bb0a2;margin-top:4px">タイプ${et}（${eInfo.name}）${wingInfo?` ／ ウィング${results.enneaWing.type}（${wingInfo.name}）`:''}</div>
@@ -1493,7 +1699,7 @@ function renderFullReport(root, results, diagnosisCode) {
         </div>
         <div class="interact-box" style="border-color:${pal.p}40">
           <span class="tag">ストレス方向</span>負荷がかかった時、タイプ${ENNEA_STRESS[et]}（${ENNEA[ENNEA_STRESS[et]].name}）の性質が現れやすくなります。
-        </div>
+        </div>`}
       </div>
 
       <div class="sec" style="border-color:${pal.p}35">
@@ -1514,8 +1720,8 @@ function renderFullReport(root, results, diagnosisCode) {
       <div class="sec" style="border-color:${pal.p}35">
         <div class="sec-no">06</div>
         <div class="sec-title" style="color:${pal.light}">総括 — 気質・動機・価値観の統合</div>
-        <div class="eyebrow">BIG FIVE × ENNEAGRAM × VALUES THEORY</div>
-        ${buildOverviewSection_v3(results, pal)}
+        <div class="eyebrow">${diagnosisVersion === 'ETI-2.0' ? 'PERSONALITY × STYLE × VALUES THEORY' : 'BIG FIVE × ENNEAGRAM × VALUES THEORY'}</div>
+        ${diagnosisVersion === 'ETI-2.0' ? buildOverviewSection_v3_V2(results, pal) : buildOverviewSection_v3(results, pal)}
       </div>
 
       <div class="sec" style="border-color:#c0a86050;background:linear-gradient(135deg,${pal.dark}30,#0e0c18)">
@@ -1535,10 +1741,15 @@ function renderFullReport(root, results, diagnosisCode) {
 
         <div style="text-align:center;margin-top:20px">
           <div style="font-size:26px;font-weight:700;color:#eee0c0;margin-bottom:14px">¥3,000</div>
-          <a href="https://buy.stripe.com/dRmeV52XU1EV6f62BU3Nm09${diagnosisCode ? '?client_reference_id=' + encodeURIComponent(diagnosisCode) : ''}" target="_blank" rel="noopener"
+          ${IS_PREVIEW_BUILD ? `
+          <span style="display:block;background:#3a3050;color:#8878a8;border-radius:8px;padding:14px;font-size:14px;font-weight:700;letter-spacing:1px;cursor:not-allowed">ナラティブレポート申込（Preview環境では無効）</span>
+          <p style="color:#5a4d75;font-size:10px;margin-top:10px">この決済リンクは本番Payment Linkのみで、Preview用のテストリンクが無いため、Preview環境では無効化しています。</p>
+          ` : `
+          <a href="https://buy.stripe.com/dRmeV52XU1EV6f62BU3Nm09${diagnosisCode ? '?client_reference_id=' + encodeURIComponent(diagnosisVersion === 'ETI-2.0' ? ('narrative_v2_' + diagnosisCode) : diagnosisCode) : ''}" target="_blank" rel="noopener"
             onclick="if(typeof gtag==='function')gtag('event','begin_checkout',{currency:'JPY',value:3000,items:[{item_id:'narrative_report',item_name:'元素診断 ナラティブレポート',price:3000,quantity:1}]})"
             style="display:block;background:linear-gradient(90deg,${pal.p},#c0a860);color:#fff;border-radius:8px;padding:14px;font-size:14px;font-weight:700;text-decoration:none;letter-spacing:1px">ナラティブレポートに申し込む →</a>
-          <p style="color:#5a4d75;font-size:10px;margin-top:10px">診断コードは自動で引き継がれます。念のため、上のコードも控えておくと安心です。</p>
+          <p style="color:#5a4d75;font-size:10px;margin-top:10px">診断コードは自動で引き継がれます。念のため、上のコードも控えておくと安心です。${diagnosisVersion === 'ETI-2.0' ? '（ETI v2の診断コードには narrative_v2_ を付けてお送りします。マンデーへの申込フォームでは、上に表示された診断コードをそのままご記入ください）' : ''}</p>
+          `}
         </div>
       </div>
 
@@ -1747,6 +1958,26 @@ async function savePdf() {
     const entitlements = data.entitlements;
     if (!entitlements || entitlements.core_analysis_access !== true) {
       root.innerHTML = '<div class="err-box"><h2>この商品はまだご覧いただけません</h2><p>CORE1（解析レポート）をご購入いただくと、こちらのページから閲覧できます。お心当たりがない場合は @mondayaxad までご連絡ください。</p></div>';
+      return;
+    }
+
+    // data.diagnosis_versionに応じてlegacy-v1／ETI v2の復号・計算・描画を分岐する。
+    // v2のコードをlegacy decoderへ渡すことは絶対にしない（誤ったもっともらしい別結果の表示を防ぐ）。
+    if (data.diagnosis_version === 'ETI-2.0') {
+      let answersV2Obj;
+      try {
+        answersV2Obj = ETIv2.decodeAnswersV2(code, ETI_V2_QUESTIONS);
+      } catch (e) {
+        answersV2Obj = null;
+      }
+      if (!answersV2Obj) {
+        root.innerHTML = '<div class="err-box"><h2>診断コードの読み取りに失敗しました</h2><p>お手数ですが @mondayaxad までご連絡ください。</p></div>';
+        return;
+      }
+      const resultsV2 = computeResultsV2ForUI(answersV2Obj, code);
+      // ナラティブレポート（¥3,000・別工程・マンデー本人が手作業で参照する）欄に表示する
+      // コードは、v1/v2どちらもここでは接頭辞を付けない生のcodeのまま渡す（今回の変更対象外）。
+      renderFullReport(root, resultsV2, code);
       return;
     }
 

@@ -5,12 +5,18 @@
      【Preview版：GA4送信を無効化】本番Measurement IDへPreview操作が混入しないよう、
      外部スクリプトの読込とgtag('config', ...)による送信を止める。
      既存コードが呼ぶgtag()自体はno-opとして残し、ReferenceErrorにしない。
-     本番反映時は、このコメントブロックを元のGA4読込（外部scriptタグ＋
-     gtag('js',...)/gtag('config',...)）へ戻すこと。 -->
+     本番反映時は、このコメントブロックを元のGA4読込へ戻すこと。 -->
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag() {} // Preview版：no-op。本番反映時に実装へ戻す。
+  // 【Preview版：このファイル内でStripe本番Payment Linkへ遷移させる箇所の分岐フラグ】
+  // Previewではtrue。本番デプロイ時はfalseへ変更する。
+  // ただし本番切替はこの値だけでは完了しない（GA4復元・mypage.htmlのStripeリンク・
+  // diagnosis-save.jsのSupabase接続・Vercel本番環境変数・V2_REPORT_SALES_ENABLED等、
+  // 複数ファイル・複数設定にまたがる）。正式な手順はPREVIEW_TO_PRODUCTION.mdを参照すること。
+  var IS_PREVIEW_BUILD = true;
 </script>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>元素診断 — 原神の元素で分かる性格診断 | あなたの気質と強み</title>
   <meta name="description" content="100問の設問から、あなたの内なる気質「元素」・対人様式「武器」・価値観「国家」を映し出す心理傾向診断。Big Five × エニアグラム × 価値観理論を土台にした、原神ファンのための自己理解ツール。">
@@ -167,6 +173,26 @@
       box-shadow: 0 0 32px rgba(120,80,200,0.25);
     }
     .hero-cta:hover { opacity: 0.88; transform: translateY(-1px); }
+    .mypage-btn {
+      position: absolute;
+      top: 20px; right: 20px;
+      z-index: 3;
+      color: #a8c8ec;
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-decoration: none;
+      border: 1px solid #3a6a95;
+      background: rgba(7,7,15,0.55);
+      border-radius: 4px;
+      padding: 6px 12px;
+      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .mypage-btn:hover {
+      border-color: #7ab8e8;
+      background: rgba(42, 90, 138, 0.5);
+      box-shadow: 0 0 12px rgba(122, 184, 232, 0.35);
+    }
     .hero-scroll {
       position: absolute;
       bottom: 28px; left: 50%;
@@ -310,12 +336,24 @@
     }
   }
   </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="diagnosis-save.js"></script>
+<script src="js/ETI_v2_QUESTIONS_100.js"></script>
+<script src="js/eti_v2_prototypes.js"></script>
+<script src="js/eti_v2_engine.js"></script>
+<script src="js/eti_v2_answer_collection.js"></script>
+<script src="js/characters118_v2.js"></script>
+<script src="js/eti_v2_legacy_adapter.js"></script>
+<script src="js/eti_v2_save.js"></script>
 </head>
 <body>
 
 <!-- ===== HERO ===== -->
 <section class="hero">
   <div class="hero-bg"></div>
+
+  <!-- 保存済み診断へ戻る常設導線。既存ヒーローの構造は変えない。 -->
+  <a href="/mypage.html" class="mypage-btn" onclick="trackEvent('mypage_entry_click',{entry_point:'top'})">MY PAGE</a>
 
   <!-- 七元素 回転リング（非表示） -->
 
@@ -337,11 +375,21 @@
       <span class="hero-desc-en">Seven elements flow within. 100 questions to reveal your nature, strength, and values — a self-understanding diagnosis built on Big Five, Enneagram, and Values Theory.</span>
     </p>
 
-    <a href="javascript:void(0)" class="hero-cta" onclick="startDiagnosisVersioned()">診断をはじめる — Start</a>
+    <a href="javascript:void(0)" class="hero-cta" onclick="startNewDiagnosisV2()">診断をはじめる — Start</a>
 
   </div>
 
   <span class="hero-scroll">↓ scroll</span>
+</section>
+
+<!-- 保存機能の案内。診断本体・既存結果ページのデザインは変更しない。 -->
+<section style="max-width:600px;margin:0 auto;padding:0 24px 60px;text-align:center;border-top:1px solid #0e1e30;padding-top:56px">
+  <p class="section-label" style="justify-content:center;display:flex">Results That Stay With You</p>
+  <p style="color:#7098b8;font-size:14px;line-height:1.9;margin-bottom:24px">
+    診断結果は、アナタの記録として保存できます。<br>
+    再診するたび、過去の結果が蓄積されていきます。
+  </p>
+  <a href="/mypage.html" class="footer-btn" style="display:inline-block" onclick="trackEvent('mypage_entry_click',{entry_point:'top'})">診断記録を見る</a>
 </section>
 
 <!-- ===== ABOUT ===== -->
@@ -400,22 +448,6 @@
   </div>
 </footer>
 
-<!-- ETI v2（新100問エンジン）：legacy-v1のインラインscriptより先に読み込む。
-     ここまでのファイルはlegacy-v1のQUESTIONS/computeResults/render等には一切依存しない。
-     まだ本番反映しない・ステージング統合検証用。 -->
-<script src="ETI_v2_QUESTIONS_100.js"></script>
-<script src="eti_v2_engine.js"></script>
-<script src="eti_v2_prototypes.js"></script>
-<script src="characters118_v2.js"></script>
-<script src="eti_v2_answer_collection.js"></script>
-<!-- diagnosis-save.jsがsupabaseClient/getCurrentUser/classifyError/signInWithGoogleを提供し、
-     eti_v2_save.jsがそれを再利用してsave_diagnosis_session_v2を呼ぶ。
-     v1のsaveDiagnosisSession()・handleSaveResultClick()には一切触れない。 -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="diagnosis-save.js"></script>
-<script src="eti_v2_save.js"></script>
-<script src="eti_v2_quiz_ui.js"></script>
-
 <!-- 診断アプリ（純粋JS・Reactなし）-->
 <script>
 
@@ -445,7 +477,7 @@ const ELEMENT_CODE = { "炎":"PY", "水":"HY", "氷":"CR", "雷":"EL", "風":"AN
 // （診断ロジック自体はサーバー側で再計算せず、既に計算済みの値をそのまま圧縮するだけなので安全）
 const PACK_ELEMENTS = ["炎","水","氷","雷","風","岩","草"];
 const PACK_WEAPONS = ["片手剣","両手剣","長柄","法器","弓"];
-const PACK_NATIONS = ["モンド","璃月","稲妻","スメール","フォンテーヌ","ナタ","スネージナヤ"];
+const PACK_NATIONS = ["モンド","璃月","稲妻","スメール","フォンテーヌ","ナタ","スネージナヤ","ナドクライ"];
 function packShareParams(el, w, nat, charIdx, matchPct) {
   var elI = PACK_ELEMENTS.indexOf(el);       // 0-6  → 3bit
   var wI = PACK_WEAPONS.indexOf(w);          // 0-4  → 3bit
@@ -456,7 +488,7 @@ function packShareParams(el, w, nat, charIdx, matchPct) {
   return packed.toString(36);
 }
 const WEAPON_CODE = { "片手剣":"SW", "両手剣":"CM", "長柄":"PL", "法器":"CT", "弓":"BW" };
-const NATION_CODE = { "モンド":"M", "璃月":"L", "稲妻":"I", "スメール":"S", "フォンテーヌ":"F", "ナタ":"N", "スネージナヤ":"Z" };
+const NATION_CODE = { "モンド":"M", "璃月":"L", "稲妻":"I", "スメール":"S", "フォンテーヌ":"F", "ナタ":"N", "スネージナヤ":"Z", "ナドクライ":"D" };
 function typeCode(el, w, nation) { return ELEMENT_CODE[el] + WEAPON_CODE[w] + (nation ? '-' + NATION_CODE[nation] : ''); }
 // 35タイプ固有の名称（機械的な掛け合わせではなく、組み合わせごとの性質から命名）
 const TYPE_NAME = {
@@ -471,10 +503,12 @@ const TYPE_NAME = {
 function typeName(el, w) { return TYPE_NAME[el][w]; }
 // 国家（価値観理論：シュワルツの基本的価値観をテイワット7国家にマッピング）
 const NATIONS = ["モンド","璃月","稲妻","スメール","フォンテーヌ","ナタ","スネージナヤ"];
+// ETI v2専用：legacy-v1の7国家（NATIONS、上のまま不変）＋ナドクライの8国家。
+const NATIONS_V2 = NATIONS.concat(["ナドクライ"]);
 // 各国家がもたらす意味（一言）
 const NATION_MEANING = {
   "モンド":"自由", "璃月":"契約", "稲妻":"永遠", "スメール":"知恵",
-  "フォンテーヌ":"正義", "ナタ":"戦争", "スネージナヤ":"抗争",
+  "フォンテーヌ":"正義", "ナタ":"戦争", "スネージナヤ":"抗争", "ナドクライ":"月光",
 };
 const NATION_DESC = {
   "モンド":     "モンドが体現するのは「自由」です。誰にも縛られず、自分の意志で選び取ることに、何よりの価値を置きます。規則やしがらみより、自分の心が向く方向を信じるタイプで、束縛を感じる環境では、力を発揮しづらくなる傾向があります。",
@@ -484,6 +518,7 @@ const NATION_DESC = {
   "フォンテーヌ": "フォンテーヌが体現するのは「法と正義」です。公正さと調和を重んじ、誰に対しても等しくあることに、価値を置きます。ひいきや不公平を嫌い、誰から見ても筋の通った判断を下そうとする、バランス感覚に優れた価値観です。",
   "ナタ":       "ナタが体現するのは「戦争」です。真っ向からぶつかり合う戦いの中でこそ、生きる実感を得ることに、価値を置きます。困難を避けるより、正面から挑むことを選ぶタイプで、仲間と共に壁を乗り越えることに、強い充実感を覚えます。",
   "スネージナヤ": "スネージナヤが体現するのは「抗争」です。争いを通じて自らの力を示し、抗い続けることに、価値を置きます。厳しい状況に置かれるほど、かえって強さを発揮するタイプで、簡単には屈しない、したたかな忍耐力を持っています。",
+  "ナドクライ":   "ナドクライが体現するのは「月光」です。表舞台の喧騒から離れ、静かな場所で自分の価値観を保つことに、価値を置きます。人に知られることを求めず、慣れた場所より知らない環境にかえって心惹かれる、独自の歩き方をするタイプです。",
 };
 const NATION_TRAITS = {
   "モンド": ["束縛からの解放", "自分の意志優先", "しがらみを嫌う"],
@@ -493,6 +528,7 @@ const NATION_TRAITS = {
   "フォンテーヌ": ["公正さ", "誰にでも平等", "バランス感覚"],
   "ナタ": ["正面から挑む", "仲間との達成感", "困難を避けない"],
   "スネージナヤ": ["逆境での強さ", "したたかな忍耐", "屈しない意志"],
+  "ナドクライ": ["静かな独立性", "未知への惹かれ", "表に出ない機能美"],
 };
 // 35タイプ固有の説明（使い回しではなく、組み合わせごとに意味づけ）
 const TYPE_DESC = {
@@ -804,6 +840,7 @@ const NATION_VALUES = {
   "フォンテーヌ": ['普遍主義','同調'],
   "ナタ":         ['刺激','快楽'],
   "スネージナヤ": ['権力','達成'],
+  "ナドクライ": ['自己志向','安全'],
 };
 function pickFactorTags_Nation(results, usedWords) {
   const sorted = results.nationScores; // 既にスコア順
@@ -891,6 +928,111 @@ function generateWhySimilarText(top1, topEl, topW, et) {
     ? `特に${points.join('・')}が、あなたと完全に一致しています。`
     : `元素・武器の型は異なりますが、性質の根であるBig Fiveのスコアが強く重なっています。`;
   return `${top1.name}との一致度は${top1.match}%。${matchLine}表面的な共通点ではなく、気質を形づくる複数の層が、同じ方向を指しているために起きる重なりです（Big Five類似度：${top1.big5Sim}%）。`;
+}
+
+
+/* ============================================================
+   ETI v2 — STYLE表示コンテンツ（正式名称・詩的タグ・解釈文）
+   v2にはEnneagramが存在しないため、CORE/FEAR/DESIREの推測値は作らない。
+   固定辞書と実測順位から機械的に組み立てる（自由生成しない。再訪時も同じ文章になる）。
+   ============================================================ */
+const STYLE_LABEL = { AGY:'主導性', REL:'関係調整', ROL:'役割持続', REF:'媒介思考', AUT:'自律距離' };
+const STYLE_POETIC_TAG = {
+  AGY:'道を切り拓く意志', REL:'縁を結ぶ調律', ROL:'役目を貫く献身',
+  REF:'思索を介す眼差し', AUT:'距離を守る自律',
+};
+const STYLE_WEAPON_TAG = {
+  AGY:'自ら切り拓く力', REL:'関係に応じる力', ROL:'守り抜く力',
+  REF:'意味を編む力', AUT:'距離から届く力',
+};
+const STYLE_BASE_DESC = {
+  AGY:'誰かの合図を待つより、自ら最初の一歩を選ぶ人です。',
+  REL:'人と人のあいだに流れる温度を読み、関係がほどけない形へ整えます。',
+  ROL:'一度引き受けた役目を、その意味が尽きるまで手放しません。',
+  REF:'衝動のまま触れるのではなく、思索や言葉を介して世界へ近づきます。',
+  AUT:'近づきすぎず離れすぎず、自分の輪郭を守れる距離から歩きます。',
+};
+// 同点時はETI_V2_META.styleAxesの順序で固定する（決定的：再訪時も同じ結果になる）。
+function rankStyleAxes(styleDisplay) {
+  return ETI_V2_META.styleAxes.map(function(ax, i) {
+    return { axis: ax, score: styleDisplay[ax], order: i };
+  }).sort(function(a, b) { return (b.score - a.score) || (a.order - b.order); });
+}
+// STYLE上位2軸から、固定辞書と実測順位だけで決定的に本文を組み立てる。
+function buildStyleCoreText(styleDisplay) {
+  var ranked = rankStyleAxes(styleDisplay);
+  var first = ranked[0].axis, second = ranked[1].axis;
+  return 'あなたの行動の核には〈' + STYLE_POETIC_TAG[first] + '〉があり、そこへ〈' + STYLE_POETIC_TAG[second] + '〉が重なっています。'
+    + STYLE_BASE_DESC[first] + STYLE_BASE_DESC[second];
+}
+// 近しい人物像タグ：v2ではENNEA_WORDを呼ばず、STYLE上位4軸の詩的タグを使用する。
+function pickStyleTags_Similar(styleDisplay) {
+  return rankStyleAxes(styleDisplay).slice(0, 4).map(function(r) { return STYLE_POETIC_TAG[r.axis]; });
+}
+// 武器種側の表現：選ばれた武器プロトタイプで重みの高い軸を優先し、本人の実測STYLEで同点を判定する。
+// 軸と無関係な語彙は追加しない（STYLE_WEAPON_TAGの5語のみを使う）。
+function pickStyleTags_Weapon(weaponPrototype, styleDisplay) {
+  var scored = ETI_V2_META.styleAxes.map(function(ax, i) {
+    return { axis: ax, protoWeight: weaponPrototype[ax], userScore: styleDisplay[ax], order: i };
+  });
+  scored.sort(function(a, b) {
+    return (b.protoWeight - a.protoWeight) || (b.userScore - a.userScore) || (a.order - b.order);
+  });
+  return scored.slice(0, 4).map(function(r) { return STYLE_WEAPON_TAG[r.axis]; });
+}
+// 「何故似ているか」本文のv2版。Enneagramの核一致には触れず、MIRRORの類似度根拠を示す。
+function generateWhySimilarTextV2(top1, topEl, topW) {
+  const points = [];
+  if (top1.el === topEl) points.push('元素');
+  if (top1.w === topW) points.push('武器');
+  let matchLine = points.length
+    ? `特に${points.join('・')}が、あなたと完全に一致しています。`
+    : `元素・武器の型は異なりますが、性格・行動スタイル・価値観の複数の層が、同じ方向を指しているために起きる重なりです。`;
+  return `${top1.name}との一致度は${top1.match}%。${matchLine}（性格類似度：${top1.personalitySim}%・行動スタイル類似度：${top1.styleSim}%・価値観類似度：${top1.valuesSim}%）`;
+}
+// 近しいキャラクターの4つ目のバッジ（v1のエニアグラム表示に相当）。
+// そのキャラクター自身の実測STYLEの最上位軸から、詩的タグを1つ表示する。
+function styleTopTagForCharacter(charName) {
+  var ch = getV2CharactersNormalized().find(function(c) { return c.name === charName; });
+  if (!ch || !ch.style) return STYLE_POETIC_TAG.AGY;
+  var ranked = rankStyleAxes(ch.style);
+  return STYLE_POETIC_TAG[ranked[0].axis];
+}
+
+/* ============================================================
+   ETI v2 — キャラクター正規化・結果計算（index.html表示用ラッパー）
+   ============================================================ */
+// characters118_v2.jsの事実メタデータ（old_nation_field含む）は変更しない。
+// 辞書照合のためだけに、表示直前でregionを正規化した「別配列」を作る。
+const NATION_REGION_ALIAS_V2 = { "ナド・クライ": "ナドクライ" };
+var V2_CHARACTERS_NORMALIZED = null;
+// regionがnull（ニコ・スカーク・アーロイの3名。audit.region_correctedによる意図的な null 化）の場合、
+// 表示用フォールバックとしてのみ legacy.old_nation_field を使う。元データ（region:null自体）は書き換えない。
+// MIRRORのスコアリングはregionを見ないため、この正規化は表示（国家バッジ等）にのみ影響する。
+function getV2CharacterDisplayRegion(c) {
+  var region = c.region || (c.legacy && c.legacy.old_nation_field) || null;
+  return NATION_REGION_ALIAS_V2[region] || region;
+}
+function getV2CharactersNormalized() {
+  if (!V2_CHARACTERS_NORMALIZED) {
+    V2_CHARACTERS_NORMALIZED = ETI_V2_CHARACTERS.map(function(c) {
+      return Object.assign({}, c, { region: getV2CharacterDisplayRegion(c) });
+    });
+  }
+  return V2_CHARACTERS_NORMALIZED;
+}
+// MIRRORはPERSONALITY/STYLE/VALUESの類似度で計算し、国家一致を必須条件としない
+// （ETIv2.computeMirrorV2自体が国家を見ない設計のため、ここでは正規化済み配列を渡すのみ）。
+function computeResultsV2ForUI(answersByItemId, encodedCode) {
+  var raw = ETIv2.computeResultsV2(answersByItemId, {
+    elementPrototypes: ELEMENT_PROTOTYPES_V2,
+    weaponPrototypes: WEAPON_PROTOTYPES_V2,
+    nationPrototypes: NATION_PROTOTYPES_V2,
+  });
+  var mirror = ETIv2.computeMirrorV2(raw, getV2CharactersNormalized(), ETI_V2_META);
+  var vm = ETIv2LegacyAdapter.buildV2ViewModel(raw, mirror, encodedCode);
+  vm.raw = raw; // 保存(RPC送信)用に、v2固有の生スコアも保持しておく
+  return vm;
 }
 
 /* ============================================================
@@ -1323,162 +1465,24 @@ function render() {
   const phase = window.__phase || 'intro';
   const root = document.getElementById('diagnosis-root');
   if (!root) return;
+  const isV2 = window.__diagnosisVersion === 'ETI-2.0';
   if (phase === 'intro') renderIntro(root);
-  else if (phase === 'quiz') renderQuiz(root);
+  else if (phase === 'quiz') { if (isV2) renderQuizV2(root); else renderQuiz(root); }
   else if (phase === 'result') renderResult(root);
   else if (phase === 'basis') renderBasis(root);
-  // ETI v2（新100問）用の追加フェーズ。legacy-v1の分岐は上4行のまま変更していない。
-  else if (phase === 'quiz_v2') renderQuizV2(root);
-  else if (phase === 'result_v2') renderResultV2(root);
 }
 
-// ETI v2の結果画面（本実装）。無料範囲はPERSONALITY/STYLEを高め/標準/低めの傾向のみ、
-// VALUESは上位2つの名称のみとし、詳細な数値・全項目はCORE1解析レポートへ残す
-// （既存の無料範囲/CORE1範囲を区別する方針をv2でも維持）。
-//
-// 内部軸コード（O/C/E/A/N、AGY/REL/ROL/REF/AUT、SD/ST/...）は利用者へ見せず、
-// 必ず日本語名称に変換して表示する。
-var PERSONALITY_NAME_V2 = { O: '開放性', C: '誠実性', E: '外向性', A: '協調性', N: '情緒感受性' };
-var PERSONALITY_INFO_V2 = {
-  O: { high: '新しい発想や視点に関心が向きやすい', low: '慣れ親しんだやり方を大切にしやすい' },
-  C: { high: '計画的に、責任を持って取り組みやすい', low: '柔軟に、その場に応じて動きやすい' },
-  E: { high: '積極的に人と関わり行動しやすい', low: '一人の時間の中で力を発揮しやすい' },
-  A: { high: '相手に共感し、調和を大切にしやすい', low: '自分の考えを率直に示しやすい' },
-  N: { high: '物事を繊細に感じ取りやすい', low: '落ち着いて安定していやすい' },
-};
-var STYLE_NAME_V2 = { AGY: '主導性', REL: '関係調整', ROL: '役割持続', REF: '媒介思考', AUT: '自律距離' };
-var STYLE_INFO_V2 = {
-  AGY: { high: '自ら率先して物事を動かしやすい', low: '状況の流れに合わせて動きやすい' },
-  REL: { high: '周囲との調整を大切にしやすい', low: '単独での判断を好みやすい' },
-  ROL: { high: '引き受けた役割を最後までやり抜きやすい', low: '状況に応じて役割を切り替えやすい' },
-  REF: { high: '間に立って考えを整理しやすい', low: '直接的に働きかけやすい' },
-  AUT: { high: '適度な距離を保って関わりやすい', low: '密接な関わりを好みやすい' },
-};
-var VALUES_NAME_V2 = { SD: '自己決定', ST: '刺激', HE: '快楽', AC: '達成', PO: '権力', SE: '安全', CO: '同調', TR: '伝統', BE: '博愛', UN: '普遍主義' };
-var VALUES_INFO_V2 = {
-  SD: '自分で選び決めることを大切にする', ST: '新しい刺激や変化を求める', HE: '楽しさや心地よさを大切にする',
-  AC: '成果や達成を重視する', PO: '影響力や統率を重視する', SE: '安定や安心を大切にする',
-  CO: '周囲との調和を大切にする', TR: '受け継がれてきたものを大切にする',
-  BE: '身近な人への思いやりを大切にする', UN: '誰にとっても公平であることを大切にする',
-};
-
-function levelLabelV2(v) {
-  if (v === undefined || v === null) return '—';
-  return v >= 60 ? '高め' : v <= 40 ? '低め' : '標準';
+// 新規診断の開始導線は全てこの関数へ統一する（ヒーローCTA・イントロ内開始ボタン・
+// 完了ページの再診断ボタン等）。旧?code=結果を表示中でも、必ずETI v2を新規に開始する
+// （window.__diagnosisVersionが直前の状態のまま残ることで、legacyのままquizへ進んでしまう
+// 事故を防ぐ）。旧URLの結果表示そのものは、このrouteとは別の経路（DOMContentLoaded時の
+// ?code=復元処理）で行われ、ここでは一切変更しない。
+function startNewDiagnosisV2() {
+  answersV2 = {}; currentIdxV2 = 0; quizFocusIdxV2 = null;
+  window.__diagnosisVersion = 'ETI-2.0';
+  if (typeof gtag === 'function') gtag('event','quiz_start',{event_category:'diagnosis',diagnosis_version:'ETI-2.0'});
+  setPhase('quiz');
 }
-function traitRowV2(code, v, nameMap, infoMap, color) {
-  var level = levelLabelV2(v);
-  var name = nameMap[code] || code;
-  var info = infoMap[code];
-  var phrase = (info && level === '高め') ? info.high : (info && level === '低め') ? info.low : '';
-  return '<div style="padding:4px 0">' +
-    '<div style="display:flex;justify-content:space-between"><span>' + name + '</span><span style="color:' + color + '">' + level + '</span></div>' +
-    (phrase ? '<div style="font-size:10.5px;color:#8090a8;margin-top:1px">' + phrase + '</div>' : '') +
-    '</div>';
-}
-function renderResultV2(root) {
-  var state = window.__v2PendingResult;
-  if (!state) { root.innerHTML = '<p style="padding:32px;text-align:center;color:#9080b0">結果が見つかりません。もう一度診断してください。</p>'; return; }
-
-  var elTop = (state.results.elementRanking && state.results.elementRanking[0]) || null;
-  var wTop = (state.results.weaponRanking && state.results.weaponRanking[0]) || null;
-  var nTop = (state.results.nationRanking && state.results.nationRanking[0]) || null;
-  var mirrorTop = state.mirrorTop[0] || null;
-  var elColor = (elTop && ELEMENTS[elTop.name] && ELEMENTS[elTop.name].color) || '#7ab8e8';
-  var wColor = (wTop && WEAPONS[wTop.name] && WEAPONS[wTop.name].color) || '#7ab8e8';
-
-  var personalityRows = Object.keys(state.results.personality).map(function (k) {
-    return traitRowV2(k, state.results.personality[k], PERSONALITY_NAME_V2, PERSONALITY_INFO_V2, elColor);
-  }).join('');
-  var styleRows = Object.keys(state.results.style).map(function (k) {
-    return traitRowV2(k, state.results.style[k], STYLE_NAME_V2, STYLE_INFO_V2, wColor);
-  }).join('');
-  var valuesEntries = Object.keys(state.results.values).map(function (k) { return { k: k, v: state.results.values[k] }; })
-    .sort(function (a, b) { return b.v - a.v; }).slice(0, 2);
-  var valuesLine = valuesEntries.map(function (e) {
-    return '<div style="margin-bottom:4px"><b>' + (VALUES_NAME_V2[e.k] || e.k) + '</b><div style="font-size:10.5px;color:#8090a8">' + (VALUES_INFO_V2[e.k] || '') + '</div></div>';
-  }).join('');
-
-  // 【無効化】verify.jsがまだv2の診断コード・購入権限付与に対応していないため、
-  // v2結果画面からは現在のStripe Payment Linkへ一切進めない。v2診断コードを
-  // Payment Linkへ送らない。verify.jsのv2対応が完成するまでは非活性表示のみ。
-  var lockCtaDisabledHtml =
-    '<div style="text-align:center;background:#241a38;border:1px solid #3a2a58;color:#8a7aa8;border-radius:6px;padding:11px;font-size:12.5px;font-weight:600">解析レポートは準備中です</div>';
-
-  var saveSection = window.__v2Saved
-    ? '<div style="margin-top:16px;text-align:center"><p style="color:#8ad090;font-size:13px">✓ 保存しました</p><a href="/mypage.html" style="display:inline-block;margin-top:8px;color:#7ab8e8;font-size:13px">マイページで見る →</a></div>'
-    : '<button id="saveResultBtnV2" onclick="handleSaveButtonClickV2()" style="width:100%;margin-top:16px;background:transparent;border:1px solid #4a3a68;color:#a888d8;border-radius:8px;padding:12px;font-size:13px;cursor:pointer;font-family:inherit">無料で結果を保存</button>';
-
-  root.innerHTML =
-    '<section style="padding:24px 20px;color:#e0d4f8;max-width:480px;margin:0 auto">' +
-      '<div style="text-align:center;margin-bottom:20px">' +
-        '<div style="font-size:11px;letter-spacing:2px;color:#6a90b0;margin-bottom:6px">ETI v2 診断結果</div>' +
-        '<div style="font-size:22px;font-weight:700"><span style="color:' + elColor + '">' + (elTop ? elTop.name : '?') + '</span> × <span style="color:' + wColor + '">' + (wTop ? wTop.name : '?') + '</span></div>' +
-        '<div style="font-size:13px;color:#c9a860;margin-top:4px">価値観国家：' + (nTop ? nTop.name : '—') + '</div>' +
-      '</div>' +
-
-      (mirrorTop ? (
-        '<div style="background:#0a1420;border:1px solid #182838;border-radius:10px;padding:14px;margin-bottom:14px">' +
-          '<div style="font-size:10px;letter-spacing:1.5px;color:#6a90b0;margin-bottom:6px">MIRROR｜最も近いキャラクター</div>' +
-          '<div style="font-size:17px;font-weight:700">' + mirrorTop.name + '</div>' +
-          '<div style="font-size:11.5px;color:#8090a8">近さスコア ' + mirrorTop.mirrorScore + '</div>' +
-        '</div>'
-      ) : '') +
-
-      '<div style="background:#0a1420;border:1px solid #182838;border-radius:10px;padding:14px;margin-bottom:8px">' +
-        '<div style="font-size:10px;letter-spacing:1.5px;color:#6a90b0;margin-bottom:8px">PERSONALITY（傾向）</div>' +
-        personalityRows +
-      '</div>' +
-      '<div style="background:#0a1420;border:1px solid #182838;border-radius:10px;padding:14px;margin-bottom:8px">' +
-        '<div style="font-size:10px;letter-spacing:1.5px;color:#6a90b0;margin-bottom:8px">STYLE（傾向）</div>' +
-        styleRows +
-      '</div>' +
-      '<div style="background:#0a1420;border:1px solid #182838;border-radius:10px;padding:14px;margin-bottom:14px">' +
-        '<div style="font-size:10px;letter-spacing:1.5px;color:#6a90b0;margin-bottom:6px">VALUES（上位の傾向）</div>' +
-        '<div>' + (valuesLine || '—') + '</div>' +
-      '</div>' +
-
-      saveSection +
-
-      '<div style="background:#1a1428;border:1px solid #3a2a58;border-radius:10px;padding:14px;margin-top:14px">' +
-        '<div style="font-size:11.5px;color:#c0a8e0;margin-bottom:8px">🔒 CORE1解析レポートで見られること</div>' +
-        '<ul style="font-size:11.5px;color:#a090c0;padding-left:18px;margin:0 0 10px">' +
-          '<li>PERSONALITY・STYLE・VALUES の詳細スコア</li>' +
-          '<li>元素・武器・国家の近さスコア（全項目）</li>' +
-          '<li>MIRROR近しいキャラクター 2〜4位</li>' +
-        '</ul>' +
-        lockCtaDisabledHtml +
-      '</div>' +
-
-      '<p style="text-align:center;margin-top:16px"><a href="/?dv=ETI-2.0" style="color:#6a90b0;font-size:12px">もう一度診断する →</a></p>' +
-    '</section>';
-}
-
-// v1/v2の起動分岐。診断バージョンで分岐する、というこれまでの決定に基づく。
-// 本番のデフォルトはlegacy-v1のまま（本番反映まだ行わない）。
-// ステージングでのE2E検証のため、URLパラメータ ?dv=ETI-2.0 で上書きできるようにする。
-var ACTIVE_DIAGNOSIS_VERSION = (function () {
-  try {
-    var params = new URLSearchParams(window.location.search);
-    if (params.get('dv') === 'ETI-2.0') return 'ETI-2.0';
-  } catch (e) {}
-  return 'legacy-v1';
-})();
-
-function startDiagnosisVersioned() {
-  if (ACTIVE_DIAGNOSIS_VERSION === 'ETI-2.0') {
-    resetAnswersV2();
-    currentPageV2 = 0;
-    quizFocusItemIdV2 = null;
-    if (typeof gtag === 'function') gtag('event', 'quiz_start', { event_category: 'diagnosis', diagnosis_version: 'ETI-2.0' });
-    setPhase('quiz_v2');
-  } else {
-    answers = {}; currentIdx = 0;
-    if (typeof gtag === 'function') gtag('event', 'quiz_start', { event_category: 'diagnosis' });
-    setPhase('quiz');
-  }
-}
-
 function setPhase(p) {
   window.__phase = p;
   render();
@@ -1622,12 +1626,7 @@ function renderIntro(root) {
     </section>`;
   var startBtn = root.querySelector('#start-btn');
   if (startBtn) {
-    startBtn.addEventListener('click', function() {
-      // legacy-v1直書きから、v1/v2を診断バージョンで分岐する起動関数へ変更。
-      // ACTIVE_DIAGNOSIS_VERSIONが既定値'legacy-v1'のままなら、これまでと
-      // 完全に同じ処理（answers={}; currentIdx=0; ...; setPhase('quiz')）が実行される。
-      startDiagnosisVersioned();
-    });
+    startBtn.addEventListener('click', startNewDiagnosisV2);
   }
 
 }
@@ -1803,27 +1802,228 @@ function nextQ() { jumpQueue = null; if (currentIdx + PAGE_SIZE < QUESTIONS.leng
 function prevQ() { jumpQueue = null; if (currentIdx - PAGE_SIZE >= 0) { currentIdx -= PAGE_SIZE; quizFocusIdx = null; renderQuiz(document.getElementById('diagnosis-root')); scrollQuizTop(); } }
 function showResult() { if (getAnsweredCount() >= QUESTIONS.length) { gtag('event','quiz_complete',{event_category:'diagnosis',value:getAnsweredCount()}); setPhase('result'); } }
 
+/* ===== ETI v2 QUIZ（v1のrenderQuiz/selectAnswer/answersとは完全に独立） ===== */
+var V2_CANONICAL_ORDER = null;
+function getV2CanonicalOrder() {
+  if (!V2_CANONICAL_ORDER) V2_CANONICAL_ORDER = ETIv2.getCanonicalOrder(ETI_V2_QUESTIONS);
+  return V2_CANONICAL_ORDER;
+}
+var V2_QUESTIONS_BY_ID = null;
+function getV2QuestionsById() {
+  if (!V2_QUESTIONS_BY_ID) {
+    V2_QUESTIONS_BY_ID = {};
+    ETI_V2_QUESTIONS.forEach(function(q) { V2_QUESTIONS_BY_ID[q.id] = q; });
+  }
+  return V2_QUESTIONS_BY_ID;
+}
+let currentIdxV2 = 0; // ページ先頭のcanonical order内インデックス（0,5,10,...）
+let quizFocusIdxV2 = null; // フォーカス中のitem_id
+
+function renderQuizV2(root) {
+  var order = getV2CanonicalOrder();
+  var byId = getV2QuestionsById();
+  var pageStart = currentIdxV2;
+  var pageIds = order.slice(pageStart, pageStart + PAGE_SIZE);
+  var answeredCount = getAnsweredCountV2();
+  var pct = Math.round((answeredCount / order.length) * 100);
+  var allAnswered = isCompleteV2(order);
+  var firstUnansweredId = getFirstUnansweredItemIdV2(order);
+  var isLastPage = pageStart + PAGE_SIZE >= order.length;
+
+  if (quizFocusIdxV2 === null || pageIds.indexOf(quizFocusIdxV2) === -1) {
+    var firstUnansweredInPage = null;
+    for (var k = 0; k < pageIds.length; k++) {
+      if (answersV2[pageIds[k]] === undefined) { firstUnansweredInPage = pageIds[k]; break; }
+    }
+    quizFocusIdxV2 = firstUnansweredInPage !== null ? firstUnansweredInPage : pageIds[0];
+  }
+
+  root.innerHTML = `
+    <section style="margin-top:32px">
+      <div style="margin-bottom:24px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="color:#6a90b0;font-size:12px">Q${pageStart+1}〜${Math.min(pageStart+PAGE_SIZE, order.length)} / ${order.length}</span>
+          <span style="color:#6a95b8;font-size:12px">回答済 ${answeredCount}</span>
+        </div>
+        <div style="background:#16121f;height:4px;border-radius:2px;overflow:hidden">
+          <div style="background:linear-gradient(90deg,#1a3a5a,#7ab8e8);width:${pct}%;height:100%;border-radius:2px;transition:width 0.3s"></div>
+        </div>
+      </div>
+
+      ${pageIds.map((id, i) => {
+        const q = byId[id];
+        const qIdx = pageStart + i;
+        const cur = answersV2[id];
+        const isFocused = id === quizFocusIdxV2;
+        const scale = ETI_V2_META.responseScales[q.responseMode];
+        return `
+        <div class="q-card-v2" data-qid="${id}" style="background:#0a1420;border:1px solid ${isFocused?'#1a3a5a':'#182838'};border-radius:12px;padding:20px;margin-bottom:12px;opacity:${isFocused?'1':'0.4'};transition:opacity 0.25s,border-color 0.25s;cursor:pointer">
+          <div style="color:${isFocused?'#90c0e0':'#3a3050'};font-size:9px;letter-spacing:1.5px;margin-bottom:10px;opacity:${isFocused?'0.9':'0.7'}">Q${qIdx+1}</div>
+          <p style="color:${isFocused?'#e0d4f8':'#6a90a8'};font-size:14.5px;line-height:1.6;margin:0 0 16px;font-weight:500">${q.text}</p>
+          <div class="scale-dots-v2" data-qid="${id}" style="display:flex;justify-content:space-between;align-items:center;padding:0 4px">
+            ${scale.map(s => `
+              <button data-v="${s.value}" aria-label="${s.label}" style="width:30px;height:30px;border-radius:50%;background:${cur===s.value?'#7ab8e8':'transparent'};border:2px solid ${cur===s.value?'#7ab8e8':'#2a4058'};cursor:pointer;padding:0;flex-shrink:0"></button>
+            `).join('')}
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px">
+            <span style="font-size:9.5px;color:#6a95b8">${scale[0].label}</span>
+            <span style="font-size:9.5px;color:#6a95b8">${scale[scale.length-1].label}</span>
+          </div>
+        </div>`;
+      }).join('')}
+
+      <div style="display:flex;justify-content:space-between;margin-top:8px;gap:8px">
+        <button id="prev-btn-v2" ${pageStart===0?'disabled':''}
+          style="background:transparent;border:1px solid #1e3448;color:${pageStart===0?'#2a2440':'#6a90b0'};border-radius:6px;padding:8px 18px;font-size:12px;cursor:pointer;font-family:inherit">
+          ← 前の5問
+        </button>
+        ${!isLastPage
+          ? `<button id="next-btn-v2" style="background:transparent;border:1px solid #1e3448;color:#6a90b0;border-radius:6px;padding:8px 18px;font-size:12px;cursor:pointer;font-family:inherit">次の5問 →</button>`
+          : `<span></span>`}
+      </div>
+
+      ${allAnswered
+        ? `<button id="result-btn-inline-v2"
+            style="width:100%;margin-top:10px;background:linear-gradient(90deg,#1a3a5a,#2a6a9a);border:none;color:#e0f4ff;border-radius:6px;padding:11px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">
+            結果を見る →
+          </button>` : ''}
+
+      ${!allAnswered && firstUnansweredId !== null && isLastPage
+        ? `<button id="jump-unanswered-btn-v2"
+            style="width:100%;margin-top:8px;background:transparent;border:1px dashed #2a4a68;color:#6a90b0;border-radius:6px;padding:9px;font-size:11.5px;cursor:pointer;font-family:inherit">
+            未回答の設問へ →
+          </button>` : ''}
+    </section>`;
+
+  root.querySelectorAll('.q-card-v2').forEach(function(card) {
+    card.addEventListener('click', function(e) {
+      var id = card.getAttribute('data-qid');
+      if (id !== quizFocusIdxV2) {
+        quizFocusIdxV2 = id;
+        renderQuizV2(document.getElementById('diagnosis-root'));
+      }
+    });
+  });
+
+  root.querySelectorAll('.scale-dots-v2').forEach(function(div) {
+    var id = div.getAttribute('data-qid');
+    div.querySelectorAll('button').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        selectAnswerV2ForUI(id, Number(btn.getAttribute('data-v')));
+      });
+    });
+  });
+
+  var prevBtn = root.querySelector('#prev-btn-v2');
+  if (prevBtn) prevBtn.addEventListener('click', function() { prevQV2(); });
+  var nextBtn = root.querySelector('#next-btn-v2');
+  if (nextBtn) nextBtn.addEventListener('click', function() { nextQV2(); });
+  var resultBtnInline = root.querySelector('#result-btn-inline-v2');
+  if (resultBtnInline) resultBtnInline.addEventListener('click', function() { showResultV2(); });
+  var jumpBtn = root.querySelector('#jump-unanswered-btn-v2');
+  if (jumpBtn) jumpBtn.addEventListener('click', function() {
+    var id = getFirstUnansweredItemIdV2(order);
+    if (id !== null) {
+      var idx = order.indexOf(id);
+      currentIdxV2 = Math.floor(idx / PAGE_SIZE) * PAGE_SIZE;
+      quizFocusIdxV2 = id;
+      renderQuizV2(document.getElementById('diagnosis-root'));
+      scrollQuizTop();
+    }
+  });
+}
+
+// 回答→次の未回答へフォーカス移動。ページの5問が全て埋まったら、最終ページでなければ
+// 自動的に次ページへ進む（以前発生した「質問5から6へ進まない」問題の回帰防止。DOM E2Eで確認する）。
+function selectAnswerV2ForUI(itemId, v) {
+  var root = document.getElementById('diagnosis-root');
+  var order = getV2CanonicalOrder();
+  var wasFocused = (itemId === quizFocusIdxV2);
+  var result = selectAnswerV2(itemId, v);
+  quizFocusIdxV2 = itemId;
+
+  if (result.action === 'deselected') {
+    renderQuizV2(root);
+    return;
+  }
+
+  var idxInOrder = order.indexOf(itemId);
+  var pageStart = Math.floor(idxInOrder / PAGE_SIZE) * PAGE_SIZE;
+  var pageIds = order.slice(pageStart, pageStart + PAGE_SIZE);
+
+  if (wasFocused) {
+    var nextUnfocused = null;
+    for (var k = 0; k < pageIds.length; k++) {
+      if (order.indexOf(pageIds[k]) <= idxInOrder) continue;
+      if (answersV2[pageIds[k]] === undefined) { nextUnfocused = pageIds[k]; break; }
+    }
+    if (nextUnfocused !== null) quizFocusIdxV2 = nextUnfocused;
+  }
+
+  var pageComplete = pageIds.every(function(id) { return answersV2[id] !== undefined; });
+  var isLastPage = pageStart + PAGE_SIZE >= order.length;
+  if (pageComplete && !isLastPage && currentIdxV2 === pageStart) {
+    currentIdxV2 = pageStart + PAGE_SIZE;
+    quizFocusIdxV2 = null;
+    renderQuizV2(root);
+    scrollQuizTop();
+    return;
+  }
+  renderQuizV2(root);
+}
+
+function nextQV2() {
+  var order = getV2CanonicalOrder();
+  if (currentIdxV2 + PAGE_SIZE < order.length) {
+    currentIdxV2 += PAGE_SIZE; quizFocusIdxV2 = null;
+    renderQuizV2(document.getElementById('diagnosis-root')); scrollQuizTop();
+  }
+}
+function prevQV2() {
+  if (currentIdxV2 - PAGE_SIZE >= 0) {
+    currentIdxV2 -= PAGE_SIZE; quizFocusIdxV2 = null;
+    renderQuizV2(document.getElementById('diagnosis-root')); scrollQuizTop();
+  }
+}
+function showResultV2() {
+  var order = getV2CanonicalOrder();
+  if (isCompleteV2(order)) {
+    if (typeof gtag === 'function') gtag('event','quiz_complete',{event_category:'diagnosis',value:getAnsweredCountV2(),diagnosis_version:'ETI-2.0'});
+    setPhase('result');
+  }
+}
+
 /* ===== RESULT ===== */
 function renderResult(root) {
-  const results = computeResults(answers);
+  const diagnosisVersion = (window.__diagnosisVersion === 'ETI-2.0') ? 'ETI-2.0' : 'legacy-v1';
+  const shortCode = diagnosisVersion === 'ETI-2.0' ? ETIv2.encodeAnswersV2(answersV2, ETI_V2_QUESTIONS) : encodeAnswers(answers);
+  const results = diagnosisVersion === 'ETI-2.0' ? computeResultsV2ForUI(answersV2, shortCode) : computeResults(answers);
   const topEl = results.elementScores[0].element;
   const topW = results.weaponScores[0].weapon;
   const topNat = results.nationScores[0].nation;
   const elC = ELEMENTS[topEl].color;
   const wC = WEAPONS[topW].color;
-  const et = results.enneaTop.type;
+  const et = diagnosisVersion === 'legacy-v1' ? results.enneaTop.type : null;
   const top1 = results.charMatches[0];
   const ACCENT = '#7ab8e8';
 
   // 本文・因子タグ（実データ連動、文体は本体サイトに準拠）
-  const whySimilarText = generateWhySimilarText(top1, topEl, topW, et);
+  // v2にはEnneagramが存在しないため、近しい人物像・武器種のタグはSTYLE軸から組み立てる。
+  const whySimilarText = diagnosisVersion === 'ETI-2.0'
+    ? generateWhySimilarTextV2(top1, topEl, topW)
+    : generateWhySimilarText(top1, topEl, topW, et);
   const elementText = ELEMENT_DESC[topEl];
   const weaponText = WEAPON_DESC[topW];
   const nationText = NATION_DESC[topNat];
-  const tagsSimilar = pickFactorTags_Similar(results);
+  const tagsSimilar = diagnosisVersion === 'ETI-2.0'
+    ? pickStyleTags_Similar(results.style)
+    : pickFactorTags_Similar(results);
   const usedProfileWords = new Set();
   const tagsElement = pickFactorTags_Profile(results, ELEMENT_PROFILE[topEl], usedProfileWords);
-  const tagsWeapon = pickFactorTags_Weapon(results, WEAPON_ENNEA[topW], usedProfileWords);
+  const tagsWeapon = diagnosisVersion === 'ETI-2.0'
+    ? pickStyleTags_Weapon(WEAPON_PROTOTYPES_V2[topW], results.style)
+    : pickFactorTags_Weapon(results, WEAPON_ENNEA[topW], usedProfileWords);
   const tagsNation = pickFactorTags_Nation(results, usedProfileWords);
 
   // 診断結果を分析用に記録（元素・武器種・国家・エニアグラム・一致キャラの分布を後から集計できるようにする）
@@ -1831,21 +2031,23 @@ function renderResult(root) {
     window.__resultLogged = true;
     gtag('event', 'diagnosis_result', {
       event_category: 'diagnosis',
+      diagnosis_version: diagnosisVersion,
       element: topEl,
       weapon: topW,
       nation: topNat,
       element_weapon: topEl + topW,
       element_weapon_nation: topEl + topW + '-' + topNat,
-      ennea_type: et,
-      ennea_wing: results.enneaWing ? results.enneaWing.type : null,
+      ennea_type: diagnosisVersion === 'legacy-v1' ? et : null,
+      ennea_wing: (diagnosisVersion === 'legacy-v1' && results.enneaWing) ? results.enneaWing.type : null,
       top_character: top1.name,
       top_character_match: top1.match
     });
   }
 
-  const enneaWingStr = results.enneaWing ? 'w' + results.enneaWing.type : '';
-  const shortCode = encodeAnswers(answers);
-  const applyData = topEl + topW + '-E' + et + enneaWingStr + '-' + shortCode;
+  const enneaWingStr = (diagnosisVersion === 'legacy-v1' && results.enneaWing) ? 'w' + results.enneaWing.type : '';
+  const applyData = diagnosisVersion === 'ETI-2.0'
+    ? (topEl + topW + '-' + shortCode)
+    : (topEl + topW + '-E' + et + enneaWingStr + '-' + shortCode);
   window.__lastApplyData = applyData;
 
   root.innerHTML = `
@@ -1904,7 +2106,7 @@ function renderResult(root) {
               <span style="background:${ELEMENTS[top1.el].color}22;border:1px solid ${ELEMENTS[top1.el].color}55;color:${ELEMENTS[top1.el].color};font-size:11px;padding:2px 8px;border-radius:3px">${top1.el}</span>
               <span style="background:${WEAPONS[top1.w].color}22;border:1px solid ${WEAPONS[top1.w].color}55;color:${WEAPONS[top1.w].color};font-size:11px;padding:2px 8px;border-radius:3px">${top1.w}</span>
               <span style="background:#c9a86022;border:1px solid #c9a86055;color:#e0c890;font-size:11px;padding:2px 8px;border-radius:3px">${top1.nation}</span>
-              <span style="background:#7ab8e822;border:1px solid #7ab8e855;color:${ACCENT};font-size:11px;padding:2px 8px;border-radius:3px">エニア${top1.ennea} ${ENNEA[top1.ennea].name}</span>
+              <span style="background:#7ab8e822;border:1px solid #7ab8e855;color:${ACCENT};font-size:11px;padding:2px 8px;border-radius:3px">${diagnosisVersion === 'ETI-2.0' ? styleTopTagForCharacter(top1.name) : ('エニア' + top1.ennea + ' ' + ENNEA[top1.ennea].name)}</span>
             </div>
           </div>
           <div style="margin-left:auto;text-align:center">
@@ -1932,6 +2134,22 @@ function renderResult(root) {
               </div>
             </div>`;
         }).join('')}
+      </div>
+
+      <!-- 任意保存。押すまでログインもサーバー保存も開始しない。 -->
+      <div style="background:linear-gradient(135deg,${elC}18,#0a1420);border:1px solid ${elC}50;border-radius:12px;padding:22px 20px;margin-bottom:16px;text-align:center">
+        <div style="font-size:10px;letter-spacing:2px;color:#90c0e0;text-transform:uppercase;margin-bottom:10px">診断記録</div>
+        <p style="color:#a8ccec;font-size:12.5px;line-height:1.8;margin:0 0 16px">この結果をアナタの診断記録として残しませんか。<br>保存すると、次回の診断結果と比較できるようになります。</p>
+        <div id="saveGateArea">
+          <button id="${diagnosisVersion === 'ETI-2.0' ? 'saveResultBtnV2' : 'saveResultBtn'}"
+            style="width:100%;background:${elC};border:none;color:#0a0916;border-radius:8px;padding:14px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit">
+            無料で結果を保存
+          </button>
+          <label style="display:flex;align-items:center;gap:6px;justify-content:center;color:#6a8098;font-size:10.5px;margin-top:12px;cursor:pointer">
+            <input type="checkbox" id="newsletterOptInCheckbox" checked style="accent-color:${elC};width:12px;height:12px">
+            新着や次の診断のお知らせを受け取る
+          </label>
+        </div>
       </div>
 
       <div style="text-align:center;color:#5a80a0;font-size:11px;letter-spacing:2px;margin:20px 0 14px">— ここまでが無料診断の結果です —</div>
@@ -1968,7 +2186,7 @@ function renderResult(root) {
               ['近しいキャラクター1名', true],
               ['なぜ似ているかの簡易な理由', true],
               ['Big Five 5因子の詳細スコアと相互作用', false],
-              ['エニアグラムの深層（CORE・FEAR・DESIRE）', false],
+              [diagnosisVersion === 'ETI-2.0' ? '行動スタイル（STYLE）の深層と全5軸の解説' : 'エニアグラムの深層（CORE・FEAR・DESIRE）', false],
               ['価値観10次元の全スコアと強み・弱み', false],
               ['近しいキャラクター4名、それぞれの一致理由', false],
               ['判定根拠（なぜその組み合わせになったか）', false],
@@ -2060,16 +2278,22 @@ function renderResult(root) {
                 style="width:100%;background:${elC};border:none;color:#fff;border-radius:8px;padding:13px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
                 運命のロックを解除
               </button>
-              ${reportPreviewCard(elC, 'エニアグラムの深層', '動機',
-                `<div style="font-size:11.5px;color:#a8ccec;line-height:1.9">
-                  <strong>CORE：</strong>${ENNEA[et].core}<br>
-                  <strong>FEAR：</strong>${ENNEA[et].fear}<br>
-                  <strong>DESIRE：</strong>${ENNEA[et].desire}<br>
-                  ${results.enneaWing ? `<strong>ウィング：</strong>タイプ${results.enneaWing.type}（${ENNEA[results.enneaWing.type].name}）の傾向を併せ持ち、${ENNEA[et].name}の核に、${ENNEA[results.enneaWing.type].name}の色合いが加わります。<br>` : ''}
-                  <strong>統合の方向：</strong>安定している時、タイプ${ENNEA_GROWTH[et]}（${ENNEA[ENNEA_GROWTH[et]].name}）の性質が現れやすくなります。健全な成長のサインです。<br>
-                  <strong>分裂の方向：</strong>負荷がかかった時、タイプ${ENNEA_STRESS[et]}（${ENNEA[ENNEA_STRESS[et]].name}）の性質が現れやすくなります。ストレスへの反応として現れます。<br>
-                  この核となる動機が、日常のどんな場面で強く出るか、どう付き合えばよいかを、フルレポートでは具体的に解説します。
-                </div>`)}
+              ${diagnosisVersion === 'ETI-2.0'
+                ? reportPreviewCard(elC, '行動スタイル／動機の深層', '動機',
+                  `<div style="font-size:11.5px;color:#a8ccec;line-height:1.9">
+                    ${buildStyleCoreText(results.style)}<br><br>
+                    5軸（主導性・関係調整・役割持続・媒介思考・自律距離）それぞれの実測値と、日常のどんな場面で強く出るかを、フルレポートでは具体的に解説します。
+                  </div>`)
+                : reportPreviewCard(elC, 'エニアグラムの深層', '動機',
+                  `<div style="font-size:11.5px;color:#a8ccec;line-height:1.9">
+                    <strong>CORE：</strong>${ENNEA[et].core}<br>
+                    <strong>FEAR：</strong>${ENNEA[et].fear}<br>
+                    <strong>DESIRE：</strong>${ENNEA[et].desire}<br>
+                    ${results.enneaWing ? `<strong>ウィング：</strong>タイプ${results.enneaWing.type}（${ENNEA[results.enneaWing.type].name}）の傾向を併せ持ち、${ENNEA[et].name}の核に、${ENNEA[results.enneaWing.type].name}の色合いが加わります。<br>` : ''}
+                    <strong>統合の方向：</strong>安定している時、タイプ${ENNEA_GROWTH[et]}（${ENNEA[ENNEA_GROWTH[et]].name}）の性質が現れやすくなります。健全な成長のサインです。<br>
+                    <strong>分裂の方向：</strong>負荷がかかった時、タイプ${ENNEA_STRESS[et]}（${ENNEA[ENNEA_STRESS[et]].name}）の性質が現れやすくなります。ストレスへの反応として現れます。<br>
+                    この核となる動機が、日常のどんな場面で強く出るか、どう付き合えばよいかを、フルレポートでは具体的に解説します。
+                  </div>`)}
               ${reportPreviewCard(elC, '近しいキャラクター、4人の一致理由', '一致理由',
                 `<div style="display:flex;flex-direction:column;gap:9px">${results.charMatches.slice(0,4).map((c,i)=>`
                   <div style="font-size:11px;color:#90b8d0">
@@ -2267,15 +2491,15 @@ function renderResult(root) {
                 <circle r="130" fill="none" stroke="#4a3d70" stroke-width="0.7" opacity="0.6"/>
                 <circle r="90" fill="none" stroke="#4a3d70" stroke-width="0.5" opacity="0.4"/>
                 <circle r="50" fill="none" stroke="#4a3d70" stroke-width="0.5" opacity="0.3"/>
-                ${NATIONS.map((n,i) => {
-                  const ang = (i/7)*2*Math.PI - Math.PI/2;
+                ${(diagnosisVersion === 'ETI-2.0' ? NATIONS_V2 : NATIONS).map((n,i,arr) => {
+                  const ang = (i/arr.length)*2*Math.PI - Math.PI/2;
                   const x = (130*Math.cos(ang)).toFixed(1), y = (130*Math.sin(ang)).toFixed(1);
                   return `<line x1="0" y1="0" x2="${x}" y2="${y}" stroke="#c9a860" stroke-width="0.8" opacity="0.5"/><circle cx="${x}" cy="${y}" r="4.5" fill="${n===topNat?'#e8d8a0':'#6a5d3a'}"/>`;
                 }).join('')}
                 <circle r="30" fill="none" stroke="#e8d8a0" stroke-width="1"/>
                 <circle r="4" fill="#f0e4c0"/>
               </g>
-              <text x="320" y="335" text-anchor="middle" font-family="serif" font-size="11" letter-spacing="4" fill="#6a5c88">SEVEN NATIONS COMPASS</text>
+              <text x="320" y="335" text-anchor="middle" font-family="serif" font-size="11" letter-spacing="4" fill="#6a5c88">${diagnosisVersion === 'ETI-2.0' ? 'EIGHT NATIONS COMPASS' : 'SEVEN NATIONS COMPASS'}</text>
             </svg>
           </div>
           <p style="color:#6a90a8;font-size:12px;line-height:1.9;margin:0 0 10px">
@@ -2307,18 +2531,27 @@ function renderResult(root) {
                 style="width:100%;background:#c9a860;border:none;color:#0a1420;border-radius:8px;padding:13px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
                 価値観のロックを解除
               </button>
-              ${reportPreviewCard('#c9a860', '価値観の深層', '価値観',
-                `<div style="display:flex;flex-direction:column;gap:8px">
-                  <div style="margin-bottom:4px">${radarChart(['●●','●●','●●','●●','●●','●●','●●'], [62,45,70,38,55,48,66], '#c9a860', 150)}</div>
-                  ${['ソラナミ','カゲツキ','ヒカリノ','トワユキ','ミズカゲ','ホシオト','ツキノワ'].map((dummy,i)=>`
-                  <div>
-                    <div style="display:flex;align-items:center;gap:8px">
-                      <span style="width:80px;font-size:10px;color:#6a90a8;filter:blur(2.2px)">${dummy}</span>
-                      <div style="flex:1;height:6px;background:#1c1830;border-radius:3px;overflow:hidden"><div style="width:${[62,45,70,38,55,48,66][i]}%;height:100%;background:#c9a860"></div></div>
-                    </div>
-                  </div>`).join('')}
-                  <div style="font-size:10px;color:#6a95b8;margin-top:2px">7国家全ての価値観スコアと、シュワルツの基本的価値観理論に基づく解説、そして${topNat}という結果に至った根拠を、フルレポートに掲載しています。</div>
-                </div>`)}
+              ${(() => {
+                const previewNames = diagnosisVersion === 'ETI-2.0'
+                  ? ['ソラナミ','カゲツキ','ヒカリノ','トワユキ','ミズカゲ','ホシオト','ツキノワ','ユキシズ']
+                  : ['ソラナミ','カゲツキ','ヒカリノ','トワユキ','ミズカゲ','ホシオト','ツキノワ'];
+                const previewScores = diagnosisVersion === 'ETI-2.0'
+                  ? [62,45,70,38,55,48,66,52]
+                  : [62,45,70,38,55,48,66];
+                const nationCountLabel = diagnosisVersion === 'ETI-2.0' ? '8国家' : '7国家';
+                return reportPreviewCard('#c9a860', '価値観の深層', '価値観',
+                  `<div style="display:flex;flex-direction:column;gap:8px">
+                    <div style="margin-bottom:4px">${radarChart(previewNames.map(()=>'●●'), previewScores, '#c9a860', 150)}</div>
+                    ${previewNames.map((dummy,i)=>`
+                    <div>
+                      <div style="display:flex;align-items:center;gap:8px">
+                        <span style="width:80px;font-size:10px;color:#6a90a8;filter:blur(2.2px)">${dummy}</span>
+                        <div style="flex:1;height:6px;background:#1c1830;border-radius:3px;overflow:hidden"><div style="width:${previewScores[i]}%;height:100%;background:#c9a860"></div></div>
+                      </div>
+                    </div>`).join('')}
+                    <div style="font-size:10px;color:#6a95b8;margin-top:2px">${nationCountLabel}全ての価値観スコアと、シュワルツの基本的価値観理論に基づく解説、そして${topNat}という結果に至った根拠を、フルレポートに掲載しています。</div>
+                  </div>`);
+              })()}
             </div>
           </div>
         </div>
@@ -2333,8 +2566,12 @@ function renderResult(root) {
             <div style="font-size:11px;color:${ACCENT};letter-spacing:1px;margin-bottom:12px">ご利用いただける内容</div>
             ${[
               ['Big Five 全5因子の詳細スコア','数値だけでなく、因子同士の相互作用まで解説'],
-              ['エニアグラムの深層','ウィング、統合・分裂時の行動パターン'],
-              ['価値観の深層','7国家の価値観スコア全て、なぜその国家に至ったかの根拠'],
+              diagnosisVersion === 'ETI-2.0'
+                ? ['行動スタイル（STYLE）の深層','5軸全ての実測値と、行動傾向の解説']
+                : ['エニアグラムの深層','ウィング、統合・分裂時の行動パターン'],
+              diagnosisVersion === 'ETI-2.0'
+                ? ['価値観の深層','8国家の価値観スコア全て、なぜその国家に至ったかの根拠']
+                : ['価値観の深層','7国家の価値観スコア全て、なぜその国家に至ったかの根拠'],
               [`${topEl}×${topW}の判定根拠`,'なぜその組み合わせに至ったか、スコアから解説'],
               ['近しいキャラクター4名の一致理由','Big Five類似度・元素・武器・国家、それぞれの一致点を根拠つきで解説'],
               ['強みと弱み（4領域）','仕事・人間関係・日常・探求における傾向'],
@@ -2360,7 +2597,7 @@ function renderResult(root) {
       </div>
 
       <div style="display:flex;gap:10px">
-        <button onclick="startDiagnosisVersioned()"
+        <button onclick="startNewDiagnosisV2()"
           style="flex:1;background:transparent;border:1px solid #1e3448;color:#6a90b0;border-radius:8px;padding:12px;font-size:13px;cursor:pointer;font-family:inherit">
           もう一度診断する
         </button>
@@ -2371,12 +2608,29 @@ function renderResult(root) {
       </div>
     </section>`;
   // ロックパターンのCTA配線（自動化版 ¥1,000・診断コードをclient_reference_idとして付与）
-  var STRIPE_URL_AUTO = 'https://buy.stripe.com/test_9B64gr9micjz9riccu3Nm00'; // release-c-preview専用：Stripeテスト用Payment Link
+  // 【本番/Preview切り替え】IS_PREVIEW_BUILD（<head>で定義）がtrueの間は、v1のCORE1購入も
+  // 必ずStripeテストリンクを使う。本番デプロイ時のCORE1リンク切替はIS_PREVIEW_BUILDの変更で
+  // 反映されるが、それだけで本番切替が完了するわけではない（他の設定はPREVIEW_TO_PRODUCTION.md参照）。
+  // v2はV2_REPORT_SALES_ENABLED=falseの間、Stripeへ一切遷移させず「準備中」表示にする
+  // （mypage.htmlのv2ReportCtaと同じ制御をここでも行う）。有効化後はv2_<code>を送る。
+  var STRIPE_URL_AUTO_PROD = 'https://buy.stripe.com/3cIcMXdCy5VbavmgsK3Nm08';
+  var STRIPE_URL_AUTO_TEST = 'https://buy.stripe.com/test_9B64gr9micjz9riccu3Nm00'; // release-c-preview専用：Stripeテスト用Payment Link（mypage.htmlと同一）
+  var STRIPE_URL_AUTO = IS_PREVIEW_BUILD ? STRIPE_URL_AUTO_TEST : STRIPE_URL_AUTO_PROD;
+  var V2_REPORT_SALES_ENABLED = false; // mypage.htmlと同一の値を維持すること。trueにするのは倉賀側の実ブラウザ・Stripeテスト完了後のみ。
   function stripeUrlWithCode() {
-    return STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(shortCode);
+    var ref = diagnosisVersion === 'ETI-2.0' ? ('v2_' + shortCode) : shortCode;
+    return STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(ref);
   }
+  var v2SalesLocked = diagnosisVersion === 'ETI-2.0' && !V2_REPORT_SALES_ENABLED;
   var lockCtaBtns = root.querySelectorAll('.lock-cta');
   lockCtaBtns.forEach(function(btn) {
+    if (v2SalesLocked) {
+      btn.textContent = '解析レポート（準備中）';
+      btn.style.opacity = '0.6';
+      btn.style.cursor = 'not-allowed';
+      btn.onclick = function(e) { e.preventDefault(); };
+      return;
+    }
     btn.onclick = function() {
       var label = btn.getAttribute('data-label');
       if (typeof gtag === 'function') gtag('event','lock_cta_click',{event_category:'conversion',label:label});
@@ -2385,10 +2639,17 @@ function renderResult(root) {
   });
   var lockUnlockAllBtn = root.querySelector('#lockUnlockAllBtn');
   if (lockUnlockAllBtn) {
-    lockUnlockAllBtn.onclick = function() {
-      if (typeof gtag === 'function') gtag('event','unlock_all_click',{event_category:'conversion'});
-      autoCopyAndProceed(applyData, stripeUrlWithCode());
-    };
+    if (v2SalesLocked) {
+      lockUnlockAllBtn.textContent = '解析レポート（準備中）';
+      lockUnlockAllBtn.style.opacity = '0.6';
+      lockUnlockAllBtn.style.cursor = 'not-allowed';
+      lockUnlockAllBtn.onclick = function(e) { e.preventDefault(); };
+    } else {
+      lockUnlockAllBtn.onclick = function() {
+        if (typeof gtag === 'function') gtag('event','unlock_all_click',{event_category:'conversion'});
+        autoCopyAndProceed(applyData, stripeUrlWithCode());
+      };
+    }
   }
   // シェアボタンのイベント設定（直接2択）
   var saveImgBtn = root.querySelector('#saveImgBtn');
@@ -2400,13 +2661,16 @@ function renderResult(root) {
   var tweetShareBtn = root.querySelector('#tweetShareBtn');
   if (tweetShareBtn) {
     tweetShareBtn.onclick = function() {
-      tweetShareResult(topEl, topW, topNat, top1.name, top1.match, applyData, shortCode, CHARACTERS.findIndex(function(c){return c.name===top1.name;}));
+      var charIdx = diagnosisVersion === 'ETI-2.0'
+        ? getV2CharactersNormalized().findIndex(function(c){return c.name===top1.name;})
+        : CHARACTERS.findIndex(function(c){return c.name===top1.name;});
+      tweetShareResult(topEl, topW, topNat, top1.name, top1.match, applyData, shortCode, charIdx, diagnosisVersion);
     };
   }
   var copyUrlBtn = root.querySelector('#copyUrlBtn');
   if (copyUrlBtn) {
     copyUrlBtn.onclick = function() {
-      var url = window.location.origin + '/?code=' + encodeURIComponent(shortCode);
+      var url = buildResultUrl(shortCode, diagnosisVersion);
       var originalText = copyUrlBtn.innerHTML;
       function showCopied() {
         copyUrlBtn.innerHTML = '✓ コピーしました（このURLで、いつでも同じ結果に戻れます）';
@@ -2421,6 +2685,49 @@ function renderResult(root) {
       }
       if (typeof gtag === 'function') gtag('event', 'result_url_copy', { event_category: 'engagement' });
     };
+  }
+
+  // 既存結果ページへ、表示を変えずに任意保存の配線だけを追加する。
+  // 「結果を見る」だけではログイン・保存を一切開始しない。保存ボタンを押した時だけ開始する。
+  if (diagnosisVersion === 'ETI-2.0') {
+    var saveResultBtnV2 = root.querySelector('#saveResultBtnV2');
+    if (saveResultBtnV2) {
+      (async function () {
+        var user = await getCurrentUser();
+        updateSaveButtonUIV2('idle');
+        var optInBox = root.querySelector('#newsletterOptInCheckbox');
+        if (optInBox && optInBox.closest('label')) optInBox.closest('label').style.display = 'none';
+      })();
+      saveResultBtnV2.onclick = function () {
+        var clientSessionId = crypto.randomUUID();
+        var mirrorTop = results.charMatches.slice(0, 4).map(function(c) {
+          return { name: c.name, match: c.match, el: c.el, w: c.w, nation: c.nation };
+        });
+        handleSaveResultClickV2(answersV2, shortCode, results.raw, mirrorTop, clientSessionId);
+        if (typeof gtag === 'function') gtag('event', 'result_save_click', { event_category: 'engagement', diagnosis_version: 'ETI-2.0' });
+      };
+    }
+  } else {
+    var saveResultBtn = root.querySelector('#saveResultBtn');
+    if (saveResultBtn) {
+      (async function () {
+        var user = await getCurrentUser();
+        updateSaveButtonUI(user ? 'idle_in' : 'idle_out');
+        var decided = await hasDecidedNewsletter();
+        if (decided) {
+          var optInBox = root.querySelector('#newsletterOptInCheckbox');
+          if (optInBox && optInBox.closest('label')) optInBox.closest('label').style.display = 'none';
+        }
+      })();
+      saveResultBtn.onclick = function () {
+        var resultPayload = buildResultPayload(results, topEl, topW, et, topNat);
+        var optInBox = root.querySelector('#newsletterOptInCheckbox');
+        var optInVisible = optInBox && optInBox.closest('label') && optInBox.closest('label').style.display !== 'none';
+        var newsletterOptIn = optInVisible ? optInBox.checked : null;
+        handleSaveResultClick(answers, resultPayload, shortCode, applyData, newsletterOptIn);
+        if (typeof gtag === 'function') gtag('event', 'result_save_click', { event_category: 'engagement' });
+      };
+    }
   }
 
 }
@@ -2521,20 +2828,40 @@ function renderBasis(root) {
 
 /* ===== 初期化 ===== */
 window.addEventListener('DOMContentLoaded', function() {
-  // URLに ?code=診断コード が付いている場合は、その結果をそのまま復元して表示する
-  // （Xでシェアされたリンクから戻ってきた時・以前の結果をブックマークしていた時に使用）
+  // URLの世代判定：
+  //   ?dv=ETI-2.0&code=... → v2結果を復元
+  //   ?code=... のみ（dv無し・dv!=ETI-2.0）→ 常にlegacy-v1として復元（後からv2へ推測変換しない）
+  //   どちらも無い → 新規訪問（ETI v2を開始）
   var params = new URLSearchParams(window.location.search);
   var savedCode = params.get('code');
-  if (savedCode) {
+  var dv = params.get('dv');
+
+  if (savedCode && dv === 'ETI-2.0') {
+    try {
+      var decodedV2 = ETIv2.decodeAnswersV2(savedCode, ETI_V2_QUESTIONS);
+      if (decodedV2) {
+        answersV2 = decodedV2;
+        window.__diagnosisVersion = 'ETI-2.0';
+        window.__phase = 'result';
+        render();
+        return;
+      }
+    } catch (e) {
+      console.error('ETIv2 decode failed for restore:', e);
+    }
+    // 復元に失敗した場合は新規訪問として扱う（下へフォールスルー）。
+  } else if (savedCode) {
     var decoded = decodeAnswers(savedCode);
     if (decoded) {
       answers = {};
       decoded.forEach(function(v, i) { answers[i] = v; });
+      window.__diagnosisVersion = 'legacy-v1';
       window.__phase = 'result';
       render();
       return;
     }
   }
+  window.__diagnosisVersion = 'ETI-2.0';
   window.__phase = 'intro';
   render();
 });
@@ -2681,7 +3008,14 @@ function saveShareImage(topEl, topW, charName, matchPct) {
 }
 
 // 「Xでシェア」：ワンタッチでテキストのみのツイート画面を開く
-function tweetShareResult(topEl, topW, topNat, charName, matchPct, applyData, shortCode, charIdx) {
+function buildResultUrl(shortCode, diagnosisVersion) {
+  var params = new URLSearchParams();
+  if (diagnosisVersion === 'ETI-2.0') params.set('dv', 'ETI-2.0');
+  params.set('code', shortCode || '');
+  return window.location.origin + '/?' + params.toString();
+}
+
+function tweetShareResult(topEl, topW, topNat, charName, matchPct, applyData, shortCode, charIdx, diagnosisVersion) {
   gtag('event', 'result_tweet_click', { event_category: 'engagement' });
   // 診断コードを自動コピー（あとでサイトに戻って申込できるように）
   if (applyData && navigator.clipboard) {
@@ -2692,7 +3026,11 @@ function tweetShareResult(topEl, topW, topNat, charName, matchPct, applyData, sh
   // シェア専用URL（/api/share）：元素・武器・国家・キャラIndex・一致度の5つを、
   // 個別パラメータではなく1つの短い符号（p）にまとめてURLを短縮する。
   var packed = packShareParams(topEl, topW, topNat, charIdx >= 0 ? charIdx : 0, matchPct);
-  var shareUrl = window.location.origin + '/api/share?code=' + encodeURIComponent(shortCode || '') + '&p=' + packed;
+  var shareParams = new URLSearchParams();
+  if (diagnosisVersion === 'ETI-2.0') shareParams.set('dv', 'ETI-2.0');
+  shareParams.set('code', shortCode || '');
+  shareParams.set('p', packed);
+  var shareUrl = window.location.origin + '/api/share?' + shareParams.toString();
 
   var text = encodeURIComponent('元素診断をやってみました。\n\n私の結果は【' + topEl + ' × ' + topW + '× ' + topNat + '】\n最も近しいキャラクター：' + charName + '（' + matchPct + '%一致）\n\n' + shareUrl + '\n\n#元素診断 #' + code + ' #' + charName);
   window.open('https://twitter.com/intent/tweet?text=' + text, '_blank');
@@ -2733,8 +3071,8 @@ document.addEventListener('DOMContentLoaded', function() {
     <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本サイト（element-diagnosis-five.vercel.app）は、マンデーアクスト（@mondayaxad）が運営する非公式ファンサイトです。</p>
     <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">Cookieおよびアクセス解析について</p>
     <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本サイトはGoogle Analytics（Google LLC）を使用しています。トラフィックデータは匿名で収集されており、個人を特定するものではありません。Cookieを無効にすることで収集を拒否できます。</p>
-    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">個人情報について</p>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本サイトは診断結果をサーバーに保存しません。診断結果はお使いのブラウザ上でのみ処理されます。</p>
+    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">診断結果の保存について</p>
+    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">無料診断は通常ブラウザ上だけで処理されます。ただし、結果画面で保存を選んだ場合に限り、回答と算出結果をログイン情報に紐づけて保存します。保存は任意で、保存しなくても診断は最後まで利用できます。</p>
     <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">お問い合わせ</p>
     <p style="color:#6a9cc0;font-size:13px;line-height:1.9">プライバシーに関するお問い合わせはXのDM（@mondayaxad）までご連絡ください。</p>
     <p style="color:#7098b8;font-size:11px;margin-top:20px">制定日：2026年7月1日</p>

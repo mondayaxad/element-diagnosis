@@ -21,7 +21,7 @@
 <!-- eti_v2_save.jsは保存自体は行わないが（mypage.htmlは閲覧専用）、
      v2結果画面からGoogleログイン経由で戻ってきた際のpending保存
      （onAuthStateChangeリスナー）を成立させるために読み込む。 -->
-<script src="eti_v2_save.js"></script>
+<script src="js/eti_v2_save.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -389,6 +389,9 @@ const NATION_MEANING = {
   "フォンテーヌ":"正義", "ナタ":"戦争", "スネージナヤ":"抗争", "ナドクライ":"月光",
 };
 const STRIPE_URL_AUTO = 'https://buy.stripe.com/test_9B64gr9micjz9riccu3Nm00'; // release-c-preview専用：Stripeテスト用Payment Link
+// v2レポート本文が現行デザインのまま新採点結果を描画できるようになるまで、
+// v2だけは課金させない。Claude側の表示統合・実ブラウザ確認後にtrueへ切り替える。
+const V2_REPORT_SALES_ENABLED = false;
 
 // 【重要な修正】trackEvent()・savedCountBucket()は、mypage.html内で11箇所・1箇所
 // 呼ばれているが、mypage.html自身にもdiagnosis-save.jsにも定義が存在せず、
@@ -419,6 +422,22 @@ function v2TopName(ranking) {
   // 不具合があった（mypage_reflects_save_test.jsで実際に検出・修正）。
   if (!ranking || !ranking.length) return null;
   return ranking[0];
+}
+function purchaseReference(session) {
+  if (!session || !session.encodedAnswers) return null;
+  return session.isV2 ? `v2_${session.encodedAnswers}` : session.encodedAnswers;
+}
+function purchaseUrlFor(session) {
+  const reference = purchaseReference(session);
+  return reference
+    ? STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(reference)
+    : STRIPE_URL_AUTO;
+}
+function v2ReportCta(stripeUrl, className, source, label) {
+  if (!V2_REPORT_SALES_ENABLED) {
+    return `<span class="${className}" style="opacity:0.6;cursor:not-allowed" aria-disabled="true">解析レポート（準備中）</span>`;
+  }
+  return `<a href="${stripeUrl}" target="_blank" rel="noopener" class="${className}" onclick="trackEvent('mypage_unlock_click',{source:'${source}'})">${label}</a>`;
 }
 function v2ClosenessLine(label, ranking, purchased) {
   const top = v2TopName(ranking);
@@ -594,7 +613,7 @@ function lockedDetailHtmlV2(stripeUrl) {
         <li>🔒 VALUES 詳細スコア（価値観プロファイル）</li>
         <li>🔒 MIRROR 近しいキャラクター 2〜4位</li>
       </ul>
-      <a href="${stripeUrl}" target="_blank" rel="noopener" class="lock-cta-btn" onclick="trackEvent('mypage_unlock_click',{source:'history_card'})">詳細を解放する（¥1,000）</a>
+      ${v2ReportCta(stripeUrl, 'lock-cta-btn', 'history_card', '詳細を解放する（¥1,000）')}
       <p style="font-size:10px;color:var(--fg-dim);margin-top:10px;line-height:1.6">
         以前ご購入いただいた解析レポートがこちらに反映されていない場合があります。お心当たりがある方は、購入時のメール・リンクからご覧いただくか、X（@mondayaxad）までご連絡ください。
       </p>
@@ -673,9 +692,7 @@ function heroHtml(latest, savedCount, unlockedCount) {
     ? 'タイプ' + pr.enneagram_type + (pr.enneagram_wing ? 'w' + pr.enneagram_wing : '') + '「' + (ENNEA_NAME[pr.enneagram_type]||'') + '」'
     : '—';
   const purchased = !!latest.purchased;
-  const stripeUrl = latest.encodedAnswers
-    ? STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(latest.encodedAnswers)
-    : STRIPE_URL_AUTO;
+  const stripeUrl = purchaseUrlFor(latest);
   const viewLabel = purchased ? '詳細を見る' : '最新結果を見る';
   return `
     <div class="hero" style="--el-color:${elColor}">
@@ -693,7 +710,7 @@ function heroHtml(latest, savedCount, unlockedCount) {
 
       <div class="hero-cta-row">
         <a href="#session-0" class="hero-btn hero-btn-secondary">${viewLabel}</a>
-        ${purchased ? '' : `<a href="${stripeUrl}" target="_blank" rel="noopener" class="hero-btn hero-btn-primary" onclick="trackEvent('mypage_unlock_click',{source:'hero'})">詳細を解放する</a>`}
+        ${purchased ? '' : v2ReportCta(stripeUrl, 'hero-btn hero-btn-primary', 'hero', '詳細を解放する')}
       </div>
     </div>`;
 }
@@ -705,9 +722,7 @@ function heroHtmlV2(latest, savedCount, unlockedCount) {
   const nTop = v2TopName(latest.v2Rankings && latest.v2Rankings.nation);
   const elColor = ELEMENT_COLOR[elTop && elTop.name] || '#7ab8e8';
   const purchased = !!latest.purchased;
-  const stripeUrl = latest.encodedAnswers
-    ? STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(latest.encodedAnswers)
-    : STRIPE_URL_AUTO;
+  const stripeUrl = purchaseUrlFor(latest);
   const viewLabel = purchased ? '詳細を見る' : '最新結果を見る';
   return `
     <div class="hero" style="--el-color:${elColor}">
@@ -846,9 +861,7 @@ function sessionAccordionHtml(s, isLatest, idx) {
   const pr = s.primaryResult || {};
   const elColor = ELEMENT_COLOR[pr.element] || '#7ab8e8';
   const top1 = (s.characterMatches && s.characterMatches[0]) || null;
-  const stripeUrl = s.encodedAnswers
-    ? STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(s.encodedAnswers)
-    : STRIPE_URL_AUTO;
+  const stripeUrl = purchaseUrlFor(s);
   const purchased = !!s.purchased;
   const historyOpenTrack = `trackEvent('diagnosis_history_open',{diagnosis_type:'${DIAGNOSIS_TYPE}'});` +
     (purchased ? `trackEvent('mypage_report_open',{diagnosis_type:'${DIAGNOSIS_TYPE}'});` : '');
@@ -898,9 +911,7 @@ function sessionAccordionHtmlV2(s, isLatest, idx) {
   const nTop = v2TopName(s.v2Rankings && s.v2Rankings.nation);
   const elColor = ELEMENT_COLOR[elTop && elTop.name] || '#7ab8e8';
   const top1 = (s.mirrorSnapshot && s.mirrorSnapshot[0]) || null;
-  const stripeUrl = s.encodedAnswers
-    ? STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(s.encodedAnswers)
-    : STRIPE_URL_AUTO;
+  const stripeUrl = purchaseUrlFor(s);
   const purchased = !!s.purchased;
   const historyOpenTrack = `trackEvent('diagnosis_history_open',{diagnosis_type:'${DIAGNOSIS_TYPE}',diagnosis_version:'ETI-2.0'});` +
     (purchased ? `trackEvent('mypage_report_open',{diagnosis_type:'${DIAGNOSIS_TYPE}',diagnosis_version:'ETI-2.0'});` : '');
@@ -935,13 +946,11 @@ function sessionAccordionHtmlV2(s, isLatest, idx) {
 /* ---- 次の一歩：v2の最新結果がある場合 ---- */
 function nextStepsHtmlV2(latest) {
   const purchased = !!latest.purchased;
-  const stripeUrl = latest.encodedAnswers
-    ? STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(latest.encodedAnswers)
-    : STRIPE_URL_AUTO;
-  const rediagBtn = `<a href="/" class="next-btn${purchased ? ' next-btn-primary' : ''}">もう一度ETI v2で診断する</a>`;
+  const stripeUrl = purchaseUrlFor(latest);
+  const rediagBtn = `<a href="/?dv=ETI-2.0" class="next-btn${purchased ? ' next-btn-primary' : ''}">もう一度ETI v2で診断する</a>`;
   const detailBtn = purchased
     ? `<a href="#session-0" class="next-btn">保存済み詳細を見る</a>`
-    : `<a href="${stripeUrl}" target="_blank" rel="noopener" class="next-btn next-btn-primary" onclick="trackEvent('mypage_unlock_click',{source:'next_steps'})">詳細レポートを見る</a>`;
+    : v2ReportCta(stripeUrl, 'next-btn next-btn-primary', 'next_steps', '詳細レポートを見る');
   // 完全版解析レポートは今回のリリース対象外。決済させず「準備中」とする。
   const completeBtn = `<a href="#" class="next-btn" style="opacity:0.6" onclick="event.preventDefault();trackEvent('complete_cta_click',{status:'coming_soon'});">完全版解析レポート（準備中）</a>`;
   return `
@@ -955,31 +964,21 @@ function nextStepsHtmlV2(latest) {
     </div>`;
 }
 
-/* ---- 次の一歩：まだETI v2の結果が無い場合（旧購入者への無料開放メッセージを含む） ----
-   【注記】freeOpenEligibleは「旧版CORE1購入済み、かつv2 CORE1未購入」からの近似判定であり、
-   redeemed_from_entitlement_idの消費状況までは見ていない。正確な判定には、
-   無料開放の可否・消費済みかどうかを返す専用API（本人専用履歴・権限API拡張）が必要で、
-   今回のPreview版では未実装。実際の無料開放処理もサーバー側でこれから実装する。 */
-function nextStepsHtmlV1Only(latest, freeOpenEligible) {
-  const freeOpenMsg = freeOpenEligible ? `
-    <div class="lock-box" style="margin-bottom:16px">
-      <p style="font-size:12.5px;line-height:1.7">
-        旧版解析レポートをご購入済みの方は、ETI v2版解析レポートの無料開放対象となる場合があります。正式な開放機能は準備中です。
-      </p>
-    </div>` : '';
+/* ---- 次の一歩：まだETI v2の結果が無い場合 ----
+   v1とv2は別商品・別権利として扱い、旧購入者へのv2無料開放は行わない。 */
+function nextStepsHtmlV1Only() {
   return `
     <div class="next-steps">
       <div class="section-title">次の一歩</div>
-      ${freeOpenMsg}
       <div class="next-steps-row">
-        <a href="/" class="next-btn next-btn-primary">ETI v2で診断する</a>
+        <a href="/?dv=ETI-2.0" class="next-btn next-btn-primary">ETI v2で診断する</a>
       </div>
       <div class="coming-soon">邪眼診断 — COMING SOON</div>
     </div>`;
 }
 
-function nextStepsHtml(latest, freeOpenEligible) {
-  return latest.isV2 ? nextStepsHtmlV2(latest) : nextStepsHtmlV1Only(latest, freeOpenEligible);
+function nextStepsHtml(latest) {
+  return latest.isV2 ? nextStepsHtmlV2(latest) : nextStepsHtmlV1Only();
 }
 
 /* ---- ログアウト・アカウント ---- */
@@ -1017,7 +1016,6 @@ function renderMypage(root, sessions) {
   const latest = v2Sessions[0] || v1Sessions[0];
   const savedCount = sessions.length;
   const unlockedCount = sessions.filter(s => s.purchased).length;
-  const freeOpenEligible = v1Sessions.some(s => s.purchased) && !v2Sessions.some(s => s.purchased);
 
   root.innerHTML = `
     ${logoutButtonHtml()}
@@ -1025,7 +1023,7 @@ function renderMypage(root, sessions) {
     ${summaryHtml(latest)}
     ${v2Sessions.length ? historyListHtml(v2Sessions) : ''}
     ${legacySectionHtml(v1Sessions)}
-    ${nextStepsHtml(latest, freeOpenEligible)}
+    ${nextStepsHtml(latest)}
     ${accountSectionHtml()}
   `;
 
