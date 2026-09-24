@@ -49,6 +49,32 @@ const PENDING_KEY = 'pendingDiagnosis_v1';
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// GA4が無いPreviewやmypageでも呼び出し元を落とさない。
+function trackEvent(name, params) {
+  if (typeof gtag === 'function') gtag('event', name, params || {});
+}
+
+// メルマガ同意をすでに選択済みなら、結果画面で毎回聞き直さない。
+async function hasDecidedNewsletter() {
+  const user = await getCurrentUser();
+  if (!user) return false;
+  const { data, error } = await supabaseClient
+    .from('profiles')
+    .select('newsletter_opted_in')
+    .eq('id', user.id)
+    .single();
+  if (error) return false;
+  return data && data.newsletter_opted_in !== null;
+}
+
+async function recordNewsletterDecision(userId, optedIn) {
+  if (!userId || optedIn === null || optedIn === undefined) return;
+  await supabaseClient
+    .from('profiles')
+    .update({ newsletter_opted_in: !!optedIn, newsletter_opted_in_at: new Date().toISOString() })
+    .eq('id', userId);
+}
+
 /* ============================================================
    履歴取得（本番のまま無変更）
    購入権限・report_snapshotsの参照は、マイページ専用権限API完成後に
@@ -117,9 +143,8 @@ async function loadDiagnosisHistory(diagnosisType) {
 }
 
 // /api/my-entitlements を呼び、本人の診断コードの購入状態をsessionsへ反映する。
-// my-entitlements.js側は、v1・v2どちらのencoded_answersも区別なく扱う設計のため
-// （purchase_entitlements.diagnosis_code_hashは形式に依存しないハッシュ値）、
-// ここでもv1/v2を区別せず、まとめて1回のAPI呼び出しで済ませる。
+// APIは世代付きキー（element-v1:<code> / ETI-2.0:<code>）を返す。
+// 同じコード文字列が偶然両世代で生成されても権利を相互利用しない。
 async function attachPurchasedStatus(sessions) {
   const { data: { session: authSession } } = await supabaseClient.auth.getSession();
   const accessToken = authSession && authSession.access_token;
@@ -131,9 +156,11 @@ async function attachPurchasedStatus(sessions) {
   if (!res.ok) return;
 
   const body = await res.json();
-  const purchasedCodes = new Set(Object.keys(body.purchased || {}));
+  const purchasedKeys = new Set(Object.keys(body.purchased_by_version || {}));
   sessions.forEach(s => {
-    if (s.encodedAnswers && purchasedCodes.has(s.encodedAnswers)) {
+    const version = s.isV2 ? 'ETI-2.0' : 'element-v1';
+    const key = s.encodedAnswers ? `${version}:${s.encodedAnswers}` : null;
+    if (key && purchasedKeys.has(key)) {
       s.purchased = true;
     }
   });
@@ -146,7 +173,9 @@ async function attachPurchasedStatus(sessions) {
 async function signInWithGoogle() {
   const { error } = await supabaseClient.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.href.split('?')[0] }
+    // 結果コードのクエリへ戻す必要はない。回答一式はpendingDiagnosis_v1へ
+    // 退避済みなので、認証後は保存履歴を確認できるマイページへ戻す。
+    options: { redirectTo: window.location.origin + '/mypage.html' }
   });
   if (error) console.error('Google sign-in error:', error);
 }
@@ -182,7 +211,9 @@ function stashPendingDiagnosis(answers, results, encodedAnswers, newsletterOptIn
     answers: answers,
     encodedAnswers: encodedAnswers,
     results: results,
-    newsletterOptIn: !!newsletterOptIn,
+    // null/undefinedは「すでに回答済みなので今回は聞いていない」。falseへ
+    // 潰すと、以前の同意を再診断のたびに拒否へ上書きしてしまう。
+    newsletterOptIn: newsletterOptIn == null ? null : !!newsletterOptIn,
   };
   try {
     localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
@@ -321,23 +352,39 @@ async function subscribeToNewsletter(email) {
    起動時：認証完了で戻ってきたらpending diagnosisを保存する（本番のまま無変更）
    ============================================================ */
 
+let pendingSaveInFlight = false;
 supabaseClient.auth.onAuthStateChange(async (event, session) => {
-  if (event !== 'SIGNED_IN') return;
+  // OAuthから戻った時点で既にセッション復元済みの場合、Supabaseは
+  // SIGNED_INではなくINITIAL_SESSIONを通知する。どちらでもpendingを救済する。
+  if (event !== 'SIGNED_IN' && event !== 'INITIAL_SESSION') return;
+  if (!session || pendingSaveInFlight) return;
   const pending = readPendingDiagnosis();
   if (!pending) return;
 
-  const result = await saveDiagnosisSession(pending);
-  if (result.ok) {
-    clearPendingDiagnosis();
-    updateSaveButtonUI('saved');
-    if (pending.newsletterOptIn) {
-      const user = await getCurrentUser();
-      subscribeToNewsletter(user ? user.email : null);
+  pendingSaveInFlight = true;
+  try {
+    const result = await saveDiagnosisSession(pending);
+    if (result.ok) {
+      clearPendingDiagnosis();
+      updateSaveButtonUI('saved');
+      if (pending.newsletterOptIn !== null && pending.newsletterOptIn !== undefined) {
+        const user = await getCurrentUser();
+        if (user) {
+          await recordNewsletterDecision(user.id, pending.newsletterOptIn);
+          if (pending.newsletterOptIn) subscribeToNewsletter(user.email);
+        }
+      }
+      // mypage.html上で認証復帰した場合、保存直後の履歴を同じ画面へ反映する。
+      if (typeof window.refreshMypageHistory === 'function') {
+        await window.refreshMypageHistory();
+      }
+    } else {
+      // 保存失敗時もpendingは消さない。次回リトライできるようにする
+      console.error('diagnosis save failed:', result.error);
+      updateSaveButtonUI('error');
     }
-  } else {
-    // 保存失敗時もpendingは消さない。次回リトライできるようにする
-    console.error('diagnosis save failed:', result.error);
-    updateSaveButtonUI('error');
+  } finally {
+    pendingSaveInFlight = false;
   }
 });
 
@@ -359,7 +406,10 @@ async function handleSaveResultClick(answers, results, encodedAnswers, diagnosis
     if (result.ok) {
       clearPendingDiagnosis();
       updateSaveButtonUI('saved');
-      if (pending.newsletterOptIn) subscribeToNewsletter(user.email);
+      if (pending.newsletterOptIn !== null && pending.newsletterOptIn !== undefined) {
+        await recordNewsletterDecision(user.id, pending.newsletterOptIn);
+        if (pending.newsletterOptIn) subscribeToNewsletter(user.email);
+      }
     } else {
       updateSaveButtonUI('error');
     }
