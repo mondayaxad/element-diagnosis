@@ -2616,7 +2616,9 @@ function renderResult(root) {
   var STRIPE_URL_AUTO_PROD = 'https://buy.stripe.com/3cIcMXdCy5VbavmgsK3Nm08';
   var STRIPE_URL_AUTO_TEST = 'https://buy.stripe.com/test_9B64gr9micjz9riccu3Nm00'; // release-c-preview専用：Stripeテスト用Payment Link（mypage.htmlと同一）
   var STRIPE_URL_AUTO = IS_PREVIEW_BUILD ? STRIPE_URL_AUTO_TEST : STRIPE_URL_AUTO_PROD;
-  var V2_REPORT_SALES_ENABLED = false; // mypage.htmlと同一の値を維持すること。trueにするのは倉賀側の実ブラウザ・Stripeテスト完了後のみ。
+  // PreviewのStripeテスト決済→権利発行→v2レポート表示を実地確認するため有効化。
+  // IS_PREVIEW_BUILD=trueのため、遷移先はテストPayment Linkだけになる。
+  var V2_REPORT_SALES_ENABLED = true; // mypage.htmlと必ず同一値を維持すること。
   function stripeUrlWithCode() {
     var ref = diagnosisVersion === 'ETI-2.0' ? ('v2_' + shortCode) : shortCode;
     return STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(ref);

@@ -389,9 +389,9 @@ const NATION_MEANING = {
   "フォンテーヌ":"正義", "ナタ":"戦争", "スネージナヤ":"抗争", "ナドクライ":"月光",
 };
 const STRIPE_URL_AUTO = 'https://buy.stripe.com/test_9B64gr9micjz9riccu3Nm00'; // release-c-preview専用：Stripeテスト用Payment Link
-// v2レポート本文が現行デザインのまま新採点結果を描画できるようになるまで、
-// v2だけは課金させない。Claude側の表示統合・実ブラウザ確認後にtrueへ切り替える。
-const V2_REPORT_SALES_ENABLED = false;
+// PreviewのStripeテスト決済→権利発行→v2レポート表示を実地確認するため有効化。
+// STRIPE_URL_AUTOはPreview専用テストPayment Linkであり、本番決済には接続しない。
+const V2_REPORT_SALES_ENABLED = true;
 
 // 【重要な修正】trackEvent()・savedCountBucket()は、mypage.html内で11箇所・1箇所
 // 呼ばれているが、mypage.html自身にもdiagnosis-save.jsにも定義が存在せず、
