@@ -327,7 +327,9 @@
   .lock-cta-btn {
     display: block; text-align: center; background: #7ab8e8; color: #0a0916; font-size: 12.5px;
     font-weight: 700; padding: 11px; border-radius: 4px; text-decoration: none;
+    width: 100%; border: none; cursor: pointer; font-family: inherit;
   }
+  .report-open-error { color: #d88; font-size: 11px; line-height: 1.7; margin-top: 8px; }
 
   /* ---- 次の一歩 ---- */
   .next-steps { margin-top: 8px; }
@@ -386,7 +388,7 @@ const BIG5_INFO = {
 };
 const NATION_MEANING = {
   "モンド":"自由", "璃月":"契約", "稲妻":"永遠", "スメール":"知恵",
-  "フォンテーヌ":"正義", "ナタ":"戦争", "スネージナヤ":"抗争", "ナドクライ":"月光",
+  "フォンテーヌ":"正義", "ナタ":"戦争", "スネージナヤ":"慈愛", "ナドクライ":"月光",
 };
 const STRIPE_URL_AUTO = 'https://buy.stripe.com/test_9B64gr9micjz9riccu3Nm00'; // release-c-preview専用：Stripeテスト用Payment Link
 // PreviewのStripeテスト決済→権利発行→v2レポート表示を実地確認するため有効化。
@@ -683,6 +685,49 @@ function lockedDetailHtml(stripeUrl) {
     </div>`;
 }
 
+function purchasedReportButton(session, className, label) {
+  const encodedId = encodeURIComponent(session && session.id ? session.id : '');
+  return `<button type="button" class="${className || 'lock-cta-btn'}" data-session-id="${encodedId}"
+    onclick="openPurchasedReport(decodeURIComponent(this.dataset.sessionId), this)">${label || '購入済みレポートを見る'}</button>`;
+}
+
+async function openPurchasedReport(diagnosisSessionId, button) {
+  if (!diagnosisSessionId || !button) return;
+  const originalLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = 'レポートを準備中…';
+  const oldError = button.parentElement && button.parentElement.querySelector('.report-open-error');
+  if (oldError) oldError.remove();
+
+  try {
+    const { data: { session: authSession } } = await supabaseClient.auth.getSession();
+    const accessToken = authSession && authSession.access_token;
+    if (!accessToken) throw new Error('not_authenticated');
+
+    const response = await fetch('/api/my-report-link', {
+      method: 'POST',
+      headers: {
+        Authorization: 'Bearer ' + accessToken,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ diagnosis_session_id: diagnosisSessionId }),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok || !body.url) throw new Error(body.error || 'link_issue_failed');
+
+    trackEvent('mypage_report_open', { source: 'purchased_report_button' });
+    navigateTo(body.url);
+  } catch (err) {
+    console.error('purchased report open failed:', err);
+    const message = document.createElement('p');
+    message.className = 'report-open-error';
+    message.textContent = 'レポートを開けませんでした。時間をおいて再度お試しください。';
+    button.insertAdjacentElement('afterend', message);
+    button.disabled = false;
+    button.textContent = originalLabel;
+  }
+}
+
 /* ---- Hero ---- */
 function heroHtml(latest, savedCount, unlockedCount) {
   if (latest.isV2) return heroHtmlV2(latest, savedCount, unlockedCount);
@@ -710,7 +755,7 @@ function heroHtml(latest, savedCount, unlockedCount) {
 
       <div class="hero-cta-row">
         <a href="#session-0" class="hero-btn hero-btn-secondary">${viewLabel}</a>
-        ${purchased ? '' : v2ReportCta(stripeUrl, 'hero-btn hero-btn-primary', 'hero', '詳細を解放する')}
+        ${purchased ? purchasedReportButton(latest, 'hero-btn hero-btn-primary', '購入済みレポートを見る') : v2ReportCta(stripeUrl, 'hero-btn hero-btn-primary', 'hero', '詳細を解放する')}
       </div>
     </div>`;
 }
@@ -740,7 +785,7 @@ function heroHtmlV2(latest, savedCount, unlockedCount) {
 
       <div class="hero-cta-row">
         <a href="#session-0" class="hero-btn hero-btn-secondary">${viewLabel}</a>
-        ${purchased ? '' : `<a href="${stripeUrl}" target="_blank" rel="noopener" class="hero-btn hero-btn-primary" onclick="trackEvent('mypage_unlock_click',{source:'hero'})">詳細を解放する</a>`}
+        ${purchased ? purchasedReportButton(latest, 'hero-btn hero-btn-primary', '購入済みレポートを見る') : `<a href="${stripeUrl}" target="_blank" rel="noopener" class="hero-btn hero-btn-primary" onclick="trackEvent('mypage_unlock_click',{source:'hero'})">詳細を解放する</a>`}
       </div>
     </div>`;
 }
@@ -898,7 +943,7 @@ function sessionAccordionHtml(s, isLatest, idx) {
             ${elementBarsHtml(s.scores && s.scores.elements)}
           </div>
 
-          ${purchased ? unlockedDetailHtml({ primary_result: s.primaryResult, scores: s.scores, character_matches: s.characterMatches }, elColor, isLatest) : lockedDetailHtml(stripeUrl)}
+          ${purchased ? unlockedDetailHtml({ primary_result: s.primaryResult, scores: s.scores, character_matches: s.characterMatches }, elColor, isLatest) + purchasedReportButton(s, 'lock-cta-btn', '購入済み旧版レポートを見る') : lockedDetailHtml(stripeUrl)}
         </div>
       </div>
     </details>`;
@@ -937,7 +982,7 @@ function sessionAccordionHtmlV2(s, isLatest, idx) {
             <div style="font-size:12px;color:var(--fg-dim)">近さスコア <span style="color:#90c8f0;font-weight:700">${top1.mirrorScore}</span></div>
           </div>` : ''}
 
-          ${purchased ? unlockedDetailHtmlV2(s.v2Scores, elColor, isLatest) : lockedDetailHtmlV2(stripeUrl)}
+          ${purchased ? unlockedDetailHtmlV2(s.v2Scores, elColor, isLatest) + purchasedReportButton(s, 'lock-cta-btn', '購入済みETI v2レポートを見る') : lockedDetailHtmlV2(stripeUrl)}
         </div>
       </div>
     </details>`;
@@ -949,7 +994,7 @@ function nextStepsHtmlV2(latest) {
   const stripeUrl = purchaseUrlFor(latest);
   const rediagBtn = `<a href="/?dv=ETI-2.0" class="next-btn${purchased ? ' next-btn-primary' : ''}">もう一度ETI v2で診断する</a>`;
   const detailBtn = purchased
-    ? `<a href="#session-0" class="next-btn">保存済み詳細を見る</a>`
+    ? purchasedReportButton(latest, 'next-btn', '購入済みレポートを見る')
     : v2ReportCta(stripeUrl, 'next-btn next-btn-primary', 'next_steps', '詳細レポートを見る');
   // 完全版解析レポートは今回のリリース対象外。決済させず「準備中」とする。
   const completeBtn = `<a href="#" class="next-btn" style="opacity:0.6" onclick="event.preventDefault();trackEvent('complete_cta_click',{status:'coming_soon'});">完全版解析レポート（準備中）</a>`;
