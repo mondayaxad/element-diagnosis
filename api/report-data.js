@@ -177,7 +177,9 @@ module.exports = async (req, res) => {
   // purchaseブロックがある新形式トークンは、それ自体からは権限を導出しない
   // （GA4計測専用のため）。
   const floor = new Set();
-  if (!data.purchase) {
+  // マイページからの再発行トークンはpurchaseブロックを持たないが、旧形式トークンではない。
+  // legacy_floorを適用するとDB権利確認を迂回してしまうため、access_modeで明確に除外する。
+  if (!data.purchase && data.access_mode !== 'mypage_entitlement_reissue') {
     floor.add('core_analysis_access');
   }
 
