@@ -449,7 +449,7 @@ function v2ClosenessLine(label, ranking, purchased) {
   const top = v2TopName(ranking);
   if (!top) return `<div style="display:flex;justify-content:space-between;padding:1px 0"><span>${label}</span><span style="color:var(--fg-dim)">—</span></div>`;
   const scorePart = purchased
-    ? `<span style="color:var(--fg-dim);font-size:10px">近さスコア ${top.score}%</span>`
+    ? `<span style="color:var(--fg-dim);font-size:10px">近さスコア ${top.closenessScore}%</span>`
     : '';
   return `<div style="display:flex;justify-content:space-between;padding:1px 0"><span>${label}</span><span>${top.name}　${scorePart}</span></div>`;
 }
@@ -979,7 +979,7 @@ function sessionAccordionHtmlV2(s, isLatest, idx) {
       </summary>
       <div class="session-body">
         <div class="session-body-inner">
-          <a href="/?code=${encodeURIComponent(s.encodedAnswers || '')}" class="view-on-site-link" onclick="trackEvent('mypage_view_result_click',{diagnosis_type:DIAGNOSIS_TYPE,diagnosis_version:'ETI-2.0'})">この結果を診断結果ページで見る（シェアはこちらから） →</a>
+          <a href="/?dv=ETI-2.0&code=${encodeURIComponent(s.encodedAnswers || '')}" class="view-on-site-link" onclick="trackEvent('mypage_view_result_click',{diagnosis_type:DIAGNOSIS_TYPE,diagnosis_version:'ETI-2.0'})">この結果を診断結果ページで見る（シェアはこちらから） →</a>
 
           ${top1 ? `
           <div style="margin-bottom:16px">
