@@ -330,6 +330,10 @@
     width: 100%; border: none; cursor: pointer; font-family: inherit;
   }
   .report-open-error { color: #d88; font-size: 11px; line-height: 1.7; margin-top: 8px; }
+  .view-on-site-link {
+    display: inline-block; font-size: 11.5px; color: var(--accent); text-decoration: none;
+    margin-bottom: 16px; border-bottom: 1px dotted var(--accent-dim); padding-bottom: 1px;
+  }
 
   /* ---- 次の一歩 ---- */
   .next-steps { margin-top: 8px; }
@@ -445,7 +449,7 @@ function v2ClosenessLine(label, ranking, purchased) {
   const top = v2TopName(ranking);
   if (!top) return `<div style="display:flex;justify-content:space-between;padding:1px 0"><span>${label}</span><span style="color:var(--fg-dim)">—</span></div>`;
   const scorePart = purchased
-    ? `<span style="color:var(--fg-dim);font-size:10px">近さスコア ${top.closenessScore}</span>`
+    ? `<span style="color:var(--fg-dim);font-size:10px">近さスコア ${top.score}%</span>`
     : '';
   return `<div style="display:flex;justify-content:space-between;padding:1px 0"><span>${label}</span><span>${top.name}　${scorePart}</span></div>`;
 }
@@ -866,7 +870,7 @@ function summaryHtmlV2(latest) {
       <div class="summary-card">
         <div class="summary-label" style="color:${elColor}">MIRROR（近さスコア）</div>
         <div class="summary-body">${mirrorTop
-          ? `${mirrorTop.name}${purchased ? `<p class="sub">近さスコア ${mirrorTop.mirrorScore}</p>` : ''}`
+          ? `${mirrorTop.name}${purchased ? `<p class="sub">近さスコア ${mirrorTop.match}%</p>` : ''}`
           : '—'}</div>
       </div>
     </div>
@@ -975,11 +979,13 @@ function sessionAccordionHtmlV2(s, isLatest, idx) {
       </summary>
       <div class="session-body">
         <div class="session-body-inner">
+          <a href="/?code=${encodeURIComponent(s.encodedAnswers || '')}" class="view-on-site-link" onclick="trackEvent('mypage_view_result_click',{diagnosis_type:DIAGNOSIS_TYPE,diagnosis_version:'ETI-2.0'})">この結果を診断結果ページで見る（シェアはこちらから） →</a>
+
           ${top1 ? `
           <div style="margin-bottom:16px">
             <div style="font-size:10.5px;letter-spacing:2px;color:#6a90b0;text-transform:uppercase;margin-bottom:8px">MIRROR（最も近いキャラクター）</div>
             <div style="font-size:20px;font-weight:700;color:${ELEMENT_COLOR[top1.element]||elColor}">${top1.name}</div>
-            <div style="font-size:12px;color:var(--fg-dim)">近さスコア <span style="color:#90c8f0;font-weight:700">${top1.mirrorScore}</span></div>
+            <div style="font-size:12px;color:var(--fg-dim)">近さスコア <span style="color:#90c8f0;font-weight:700">${top1.match}%</span></div>
           </div>` : ''}
 
           ${purchased ? unlockedDetailHtmlV2(s.v2Scores, elColor, isLatest) + purchasedReportButton(s, 'lock-cta-btn', '購入済みETI v2レポートを見る') : lockedDetailHtmlV2(stripeUrl)}
