@@ -10,7 +10,7 @@ const ETI_V2_META = {
   itemSetVersion: "ETI-ITEM-2.0.0",
   scoringVersion: "ETI-SCORE-2.0.0",
   translationModelVersion: "ETI-TRANS-2.0.0",
-  mirrorModelVersion: "ETI-MIRROR-2.0.0",
+  mirrorModelVersion: "ETI-MIRROR-2.0.2",
   personalityAxes: ["O","C","E","A","N"],
   styleAxes: ["AGY","REL","ROL","REF","AUT"],
   valueAxes: ["SD","ST","HE","AC","PO","SE","CO","TR","BE","UN"],

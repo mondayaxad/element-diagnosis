@@ -330,7 +330,7 @@ function computeMirrorV2(userResults, characters, meta) {
 
   const userValuesCentered = centerVector(userResults.values, valueAxes);
 
-  const scored = characters.map(ch => {
+  const scored = characters.map((ch, canonicalIndex) => {
     const pSim = rmseSim(userResults.personality, ch.personality, personalityAxes);
     const sSim = rmseSim(userResults.style, ch.style, styleAxes);
 
@@ -338,17 +338,30 @@ function computeMirrorV2(userResults, characters, meta) {
     const cos = cosineSim(userValuesCentered, charValuesCentered);
     const vSim = cos === null ? 0.5 : (cos + 1) / 2;
 
-    const mirrorScore = Math.round((0.40 * pSim + 0.30 * sSim + 0.30 * vSim) * 100);
+    // ETI-MIRROR-2.0.1：並べ替えは丸め前の実数で行い、表示・保存用の一致率だけ整数に丸める。
+    // （2.0.0は整数へ丸めてから並べ替えていたため、丸め後に同点となった場合に
+    //   キャラクター配列の並び順で順位が決まっていた。）
+    const mirrorScoreRaw = (0.40 * pSim + 0.30 * sSim + 0.30 * vSim) * 100;
+    const mirrorScore = Math.round(mirrorScoreRaw);
 
     return {
       name: ch.name,
       mirrorScore,
+      mirrorScoreRaw,
       pSim, sSim, vSim,
       element: ch.element, weapon: ch.weapon, region: ch.region,
+      canonicalIndex,
     };
   });
 
-  scored.sort((a, b) => b.mirrorScore - a.mirrorScore);
+  // 丸め前の値まで完全に同点の場合のみ、pSim → sSim → vSim → 既存canonical順で決める。
+  scored.sort((a, b) =>
+    (b.mirrorScoreRaw - a.mirrorScoreRaw) ||
+    (b.pSim - a.pSim) ||
+    (b.sSim - a.sSim) ||
+    (b.vSim - a.vSim) ||
+    (a.canonicalIndex - b.canonicalIndex)
+  );
   return scored;
 }
 

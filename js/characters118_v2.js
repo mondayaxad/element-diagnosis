@@ -1,5 +1,5 @@
 // ETI v2.0 character profile dataset
-// profile_version: ETI-CHAR-2.0.0
+// profile_version: ETI-CHAR-2.0.1
 // IMPORTANT: element/weapon/region are factual metadata only.
 // MIRROR uses personality/style/values coordinates; do not add 0/1 category bonuses.
 const ETI_V2_CHARACTERS = [
@@ -9,7 +9,7 @@ const ETI_V2_CHARACTERS = [
     "element": "炎",
     "weapon": "両手剣",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%87%E3%82%A3%E3%83%AB%E3%83%83%E3%82%AF",
     "basis_tags": [
@@ -68,7 +68,7 @@ const ETI_V2_CHARACTERS = [
     "element": "炎",
     "weapon": "両手剣",
     "region": "ナタ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%9E%E3%83%BC%E3%83%B4%E3%82%A3%E3%82%AB",
     "basis_tags": [
@@ -127,7 +127,7 @@ const ETI_V2_CHARACTERS = [
     "element": "炎",
     "weapon": "両手剣",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E5%98%89%E6%98%8E",
     "basis_tags": [
@@ -186,7 +186,7 @@ const ETI_V2_CHARACTERS = [
     "element": "炎",
     "weapon": "両手剣",
     "region": "スメール",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%87%E3%82%A3%E3%82%B7%E3%82%A2",
     "basis_tags": [
@@ -245,7 +245,7 @@ const ETI_V2_CHARACTERS = [
     "element": "炎",
     "weapon": "両手剣",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E8%BE%9B%E7%82%8E",
     "basis_tags": [
@@ -304,7 +304,7 @@ const ETI_V2_CHARACTERS = [
     "element": "炎",
     "weapon": "片手剣",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%99%E3%83%8D%E3%83%83%E3%83%88",
     "basis_tags": [
@@ -363,7 +363,7 @@ const ETI_V2_CHARACTERS = [
     "element": "炎",
     "weapon": "長柄",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E8%83%A1%E6%A1%83",
     "basis_tags": [
@@ -422,7 +422,7 @@ const ETI_V2_CHARACTERS = [
     "element": "炎",
     "weapon": "長柄",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E9%A6%99%E8%8F%B1",
     "basis_tags": [
@@ -481,7 +481,7 @@ const ETI_V2_CHARACTERS = [
     "element": "炎",
     "weapon": "長柄",
     "region": "稲妻",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%88%E3%83%BC%E3%83%9E",
     "basis_tags": [
@@ -540,7 +540,7 @@ const ETI_V2_CHARACTERS = [
     "element": "炎",
     "weapon": "長柄",
     "region": "フォンテーヌ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%B7%E3%83%A5%E3%83%B4%E3%83%AB%E3%83%BC%E3%82%BA",
     "basis_tags": [
@@ -599,7 +599,7 @@ const ETI_V2_CHARACTERS = [
     "element": "炎",
     "weapon": "長柄",
     "region": "スネージナヤ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A2%E3%83%AB%E3%83%AC%E3%83%83%E3%82%AD%E3%83%BC%E3%83%8E",
     "basis_tags": [
@@ -658,7 +658,7 @@ const ETI_V2_CHARACTERS = [
     "element": "炎",
     "weapon": "法器",
     "region": null,
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "medium",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%8B%E3%82%B3",
     "basis_tags": [
@@ -717,7 +717,7 @@ const ETI_V2_CHARACTERS = [
     "element": "炎",
     "weapon": "法器",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E7%85%99%E7%B7%8B",
     "basis_tags": [
@@ -775,7 +775,7 @@ const ETI_V2_CHARACTERS = [
     "element": "炎",
     "weapon": "法器",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%AF%E3%83%AC%E3%83%BC",
     "basis_tags": [
@@ -834,42 +834,42 @@ const ETI_V2_CHARACTERS = [
     "element": "炎",
     "weapon": "弓",
     "region": "フォンテーヌ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%AA%E3%83%8D",
     "basis_tags": [
       "表現",
-      "社交",
       "戦略",
       "家族",
-      "自律",
-      "魅了"
+      "新奇性",
+      "役割責任",
+      "内面の警戒"
     ],
     "personality": {
-      "O": 60,
-      "C": 65,
-      "E": 55,
-      "A": 55,
-      "N": 45
+      "O": 75,
+      "C": 75,
+      "E": 45,
+      "A": 60,
+      "N": 55
     },
     "style": {
-      "AGY": 65,
+      "AGY": 70,
       "REL": 70,
-      "ROL": 55,
-      "REF": 65,
+      "ROL": 75,
+      "REF": 70,
       "AUT": 60
     },
     "values": {
       "SD": 70,
-      "ST": 50,
+      "ST": 70,
       "HE": 60,
       "AC": 65,
-      "PO": 55,
-      "SE": 55,
+      "PO": 45,
+      "SE": 65,
       "CO": 45,
       "TR": 50,
-      "BE": 75,
-      "UN": 50
+      "BE": 85,
+      "UN": 60
     },
     "legacy": {
       "old_big5": {
@@ -884,7 +884,8 @@ const ETI_V2_CHARACTERS = [
     },
     "audit": {
       "big5_updated": false,
-      "region_corrected": false
+      "region_corrected": false,
+      "profile_rebalanced": true
     }
   },
   {
@@ -893,7 +894,7 @@ const ETI_V2_CHARACTERS = [
     "element": "炎",
     "weapon": "弓",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A2%E3%83%B3%E3%83%90%E3%83%BC",
     "basis_tags": [
@@ -952,7 +953,7 @@ const ETI_V2_CHARACTERS = [
     "element": "炎",
     "weapon": "弓",
     "region": "稲妻",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E5%AE%B5%E5%AE%AE",
     "basis_tags": [
@@ -1011,7 +1012,7 @@ const ETI_V2_CHARACTERS = [
     "element": "炎",
     "weapon": "片手剣",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "medium",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%89%E3%82%A5%E3%83%AA%E3%83%B3",
     "basis_tags": [
@@ -1070,7 +1071,7 @@ const ETI_V2_CHARACTERS = [
     "element": "水",
     "weapon": "片手剣",
     "region": "フォンテーヌ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%95%E3%83%AA%E3%83%BC%E3%83%8A",
     "basis_tags": [
@@ -1129,7 +1130,7 @@ const ETI_V2_CHARACTERS = [
     "element": "水",
     "weapon": "片手剣",
     "region": "スメール",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%8B%E3%82%A3%E3%83%AD%E3%82%A6",
     "basis_tags": [
@@ -1188,7 +1189,7 @@ const ETI_V2_CHARACTERS = [
     "element": "水",
     "weapon": "片手剣",
     "region": "稲妻",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E7%A5%9E%E9%87%8C%E7%B6%BE%E4%BA%BA",
     "basis_tags": [
@@ -1247,7 +1248,7 @@ const ETI_V2_CHARACTERS = [
     "element": "水",
     "weapon": "片手剣",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E8%A1%8C%E7%A7%8B",
     "basis_tags": [
@@ -1306,7 +1307,7 @@ const ETI_V2_CHARACTERS = [
     "element": "水",
     "weapon": "弓",
     "region": "スネージナヤ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%BF%E3%83%AB%E3%82%BF%E3%83%AA%E3%83%A4",
     "basis_tags": [
@@ -1318,30 +1319,30 @@ const ETI_V2_CHARACTERS = [
       "忠誠"
     ],
     "personality": {
-      "O": 60,
-      "C": 60,
+      "O": 65,
+      "C": 65,
       "E": 80,
-      "A": 50,
-      "N": 45
+      "A": 45,
+      "N": 35
     },
     "style": {
-      "AGY": 80,
-      "REL": 70,
-      "ROL": 65,
+      "AGY": 85,
+      "REL": 65,
+      "ROL": 75,
       "REF": 55,
-      "AUT": 50
+      "AUT": 70
     },
     "values": {
-      "SD": 50,
-      "ST": 65,
-      "HE": 60,
-      "AC": 80,
-      "PO": 70,
-      "SE": 50,
+      "SD": 75,
+      "ST": 95,
+      "HE": 80,
+      "AC": 95,
+      "PO": 90,
+      "SE": 25,
       "CO": 60,
-      "TR": 50,
-      "BE": 85,
-      "UN": 50
+      "TR": 45,
+      "BE": 90,
+      "UN": 35
     },
     "legacy": {
       "old_big5": {
@@ -1356,7 +1357,8 @@ const ETI_V2_CHARACTERS = [
     },
     "audit": {
       "big5_updated": false,
-      "region_corrected": false
+      "region_corrected": false,
+      "profile_rebalanced": true
     }
   },
   {
@@ -1365,7 +1367,7 @@ const ETI_V2_CHARACTERS = [
     "element": "水",
     "weapon": "弓",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E5%A4%9C%E8%98%AD",
     "basis_tags": [
@@ -1424,7 +1426,7 @@ const ETI_V2_CHARACTERS = [
     "element": "水",
     "weapon": "弓",
     "region": "フォンテーヌ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%B7%E3%82%B0%E3%82%A6%E3%82%A3%E3%83%B3",
     "basis_tags": [
@@ -1483,7 +1485,7 @@ const ETI_V2_CHARACTERS = [
     "element": "水",
     "weapon": "法器",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%A2%E3%83%8A",
     "basis_tags": [
@@ -1542,7 +1544,7 @@ const ETI_V2_CHARACTERS = [
     "element": "水",
     "weapon": "法器",
     "region": "稲妻",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E7%8F%8A%E7%91%9A%E5%AE%AE%E5%BF%83%E6%B5%B7",
     "basis_tags": [
@@ -1601,7 +1603,7 @@ const ETI_V2_CHARACTERS = [
     "element": "水",
     "weapon": "法器",
     "region": "フォンテーヌ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%8C%E3%83%B4%E3%82%A3%E3%83%AC%E3%83%83%E3%83%88",
     "basis_tags": [
@@ -1660,7 +1662,7 @@ const ETI_V2_CHARACTERS = [
     "element": "水",
     "weapon": "法器",
     "region": "ナド・クライ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "medium",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%B3%E3%83%AD%E3%83%B3%E3%83%93%E3%83%BC%E3%83%8A",
     "basis_tags": [
@@ -1719,7 +1721,7 @@ const ETI_V2_CHARACTERS = [
     "element": "水",
     "weapon": "法器",
     "region": "ナタ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%A0%E3%82%A2%E3%83%A9%E3%83%8B",
     "basis_tags": [
@@ -1778,7 +1780,7 @@ const ETI_V2_CHARACTERS = [
     "element": "水",
     "weapon": "法器",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%90%E3%83%BC%E3%83%90%E3%83%A9",
     "basis_tags": [
@@ -1837,7 +1839,7 @@ const ETI_V2_CHARACTERS = [
     "element": "水",
     "weapon": "両手剣",
     "region": "ナド・クライ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A2%E3%82%A4%E3%83%8E",
     "basis_tags": [
@@ -1896,7 +1898,7 @@ const ETI_V2_CHARACTERS = [
     "element": "水",
     "weapon": "片手剣",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%80%E3%83%AA%E3%82%A2",
     "basis_tags": [
@@ -1955,7 +1957,7 @@ const ETI_V2_CHARACTERS = [
     "element": "水",
     "weapon": "長柄",
     "region": "スメール",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%87%E3%82%A3%E3%82%B9",
     "basis_tags": [
@@ -2014,41 +2016,42 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "片手剣",
     "region": "スネージナヤ",
-    "profile_version": "ETI-CHAR-2.0.0",
-    "evidence_confidence": "medium",
+    "profile_version": "ETI-CHAR-2.0.1",
+    "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%AA%E3%83%87%E3%83%83%E3%83%88",
     "basis_tags": [
-      "表現",
       "規律",
-      "寡黙",
       "完成度",
-      "伝統"
+      "自律",
+      "伝統",
+      "内なる情愛",
+      "痛みの抑制"
     ],
     "personality": {
       "O": 65,
       "C": 90,
-      "E": 40,
-      "A": 45,
-      "N": 35
+      "E": 30,
+      "A": 55,
+      "N": 55
     },
     "style": {
-      "AGY": 55,
+      "AGY": 60,
       "REL": 45,
-      "ROL": 85,
+      "ROL": 90,
       "REF": 70,
-      "AUT": 55
+      "AUT": 75
     },
     "values": {
-      "SD": 50,
-      "ST": 50,
-      "HE": 55,
-      "AC": 70,
-      "PO": 50,
-      "SE": 50,
-      "CO": 75,
-      "TR": 70,
-      "BE": 50,
-      "UN": 50
+      "SD": 70,
+      "ST": 40,
+      "HE": 25,
+      "AC": 85,
+      "PO": 25,
+      "SE": 40,
+      "CO": 50,
+      "TR": 75,
+      "BE": 70,
+      "UN": 60
     },
     "legacy": {
       "old_big5": {
@@ -2063,7 +2066,8 @@ const ETI_V2_CHARACTERS = [
     },
     "audit": {
       "big5_updated": true,
-      "region_corrected": false
+      "region_corrected": false,
+      "profile_rebalanced": true
     }
   },
   {
@@ -2072,7 +2076,7 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "片手剣",
     "region": "稲妻",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E7%A5%9E%E9%87%8C%E7%B6%BE%E8%8F%AF",
     "basis_tags": [
@@ -2131,7 +2135,7 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "片手剣",
     "region": null,
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%B9%E3%82%AB%E3%83%BC%E3%82%AF",
     "basis_tags": [
@@ -2190,7 +2194,7 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "片手剣",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E4%B8%83%E4%B8%83",
     "basis_tags": [
@@ -2202,28 +2206,28 @@ const ETI_V2_CHARACTERS = [
     ],
     "personality": {
       "O": 55,
-      "C": 60,
+      "C": 80,
       "E": 30,
       "A": 55,
       "N": 50
     },
     "style": {
       "AGY": 45,
-      "REL": 55,
-      "ROL": 70,
-      "REF": 55,
-      "AUT": 60
+      "REL": 45,
+      "ROL": 75,
+      "REF": 65,
+      "AUT": 70
     },
     "values": {
-      "SD": 50,
+      "SD": 60,
       "ST": 45,
-      "HE": 40,
+      "HE": 35,
       "AC": 50,
-      "PO": 50,
-      "SE": 65,
+      "PO": 40,
+      "SE": 75,
       "CO": 65,
       "TR": 60,
-      "BE": 65,
+      "BE": 70,
       "UN": 55
     },
     "legacy": {
@@ -2238,8 +2242,9 @@ const ETI_V2_CHARACTERS = [
       "old_nation_field": "璃月"
     },
     "audit": {
-      "big5_updated": false,
-      "region_corrected": false
+      "big5_updated": true,
+      "region_corrected": false,
+      "profile_rebalanced": true
     }
   },
   {
@@ -2248,7 +2253,7 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "片手剣",
     "region": "スメール",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%AC%E3%82%A4%E3%83%A9",
     "basis_tags": [
@@ -2306,7 +2311,7 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "片手剣",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%AC%E3%82%A4%E3%82%A2",
     "basis_tags": [
@@ -2365,7 +2370,7 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "長柄",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E7%94%B3%E9%B6%B4",
     "basis_tags": [
@@ -2424,7 +2429,7 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "長柄",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%AD%E3%82%B5%E3%83%AA%E3%82%A2",
     "basis_tags": [
@@ -2483,7 +2488,7 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "長柄",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%9F%E3%82%AB",
     "basis_tags": [
@@ -2542,7 +2547,7 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "長柄",
     "region": "フォンテーヌ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A8%E3%82%B9%E3%82%B3%E3%83%95%E3%82%A3%E3%82%A8",
     "basis_tags": [
@@ -2601,7 +2606,7 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "長柄",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "medium",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%AD%E3%83%BC%E3%82%A8%E3%83%B3",
     "basis_tags": [
@@ -2660,7 +2665,7 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "弓",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E7%94%98%E9%9B%A8",
     "basis_tags": [
@@ -2719,7 +2724,7 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "弓",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%87%E3%82%A3%E3%82%AA%E3%83%8A",
     "basis_tags": [
@@ -2778,7 +2783,7 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "弓",
     "region": null,
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A2%E3%83%BC%E3%83%AD%E3%82%A4",
     "basis_tags": [
@@ -2837,7 +2842,7 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "法器",
     "region": "フォンテーヌ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%AA%E3%82%AA%E3%82%BB%E3%82%B9%E3%83%AA",
     "basis_tags": [
@@ -2896,7 +2901,7 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "法器",
     "region": "フォンテーヌ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%B7%E3%83%A3%E3%83%AB%E3%83%AD%E3%83%83%E3%83%88",
     "basis_tags": [
@@ -2955,7 +2960,7 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "法器",
     "region": "ナタ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%B7%E3%83%88%E3%83%A9%E3%83%AA",
     "basis_tags": [
@@ -3014,41 +3019,42 @@ const ETI_V2_CHARACTERS = [
     "element": "雷",
     "weapon": "長柄",
     "region": "スネージナヤ",
-    "profile_version": "ETI-CHAR-2.0.0",
-    "evidence_confidence": "medium",
+    "profile_version": "ETI-CHAR-2.0.1",
+    "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A2%E3%83%AA%E3%83%A7%E3%83%BC%E3%82%B7%E3%83%A3",
     "basis_tags": [
-      "公正",
+      "現実的理想主義",
       "保護",
-      "理想",
-      "平静",
-      "役割責任",
-      "共感"
+      "責任",
+      "自律",
+      "計算",
+      "公正",
+      "警戒"
     ],
     "personality": {
-      "O": 60,
-      "C": 75,
-      "E": 45,
-      "A": 75,
-      "N": 35
+      "O": 65,
+      "C": 80,
+      "E": 40,
+      "A": 65,
+      "N": 50
     },
     "style": {
-      "AGY": 55,
-      "REL": 75,
+      "AGY": 70,
+      "REL": 60,
       "ROL": 85,
-      "REF": 60,
-      "AUT": 55
+      "REF": 70,
+      "AUT": 80
     },
     "values": {
-      "SD": 55,
+      "SD": 70,
       "ST": 50,
-      "HE": 45,
+      "HE": 35,
       "AC": 50,
-      "PO": 50,
-      "SE": 65,
-      "CO": 70,
-      "TR": 55,
-      "BE": 75,
+      "PO": 20,
+      "SE": 70,
+      "CO": 45,
+      "TR": 50,
+      "BE": 85,
       "UN": 90
     },
     "legacy": {
@@ -3064,7 +3070,8 @@ const ETI_V2_CHARACTERS = [
     },
     "audit": {
       "big5_updated": true,
-      "region_corrected": false
+      "region_corrected": false,
+      "profile_rebalanced": true
     }
   },
   {
@@ -3073,7 +3080,7 @@ const ETI_V2_CHARACTERS = [
     "element": "雷",
     "weapon": "片手剣",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E5%88%BB%E6%99%B4",
     "basis_tags": [
@@ -3132,7 +3139,7 @@ const ETI_V2_CHARACTERS = [
     "element": "雷",
     "weapon": "片手剣",
     "region": "フォンテーヌ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%AF%E3%83%AD%E3%83%AA%E3%83%B3%E3%83%87",
     "basis_tags": [
@@ -3191,7 +3198,7 @@ const ETI_V2_CHARACTERS = [
     "element": "雷",
     "weapon": "片手剣",
     "region": "稲妻",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E4%B9%85%E5%B2%90%E5%BF%8D",
     "basis_tags": [
@@ -3250,7 +3257,7 @@ const ETI_V2_CHARACTERS = [
     "element": "雷",
     "weapon": "長柄",
     "region": "稲妻",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E9%9B%B7%E9%9B%BB%E5%B0%86%E8%BB%8D",
     "basis_tags": [
@@ -3309,7 +3316,7 @@ const ETI_V2_CHARACTERS = [
     "element": "雷",
     "weapon": "長柄",
     "region": "スメール",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%BB%E3%83%8E",
     "basis_tags": [
@@ -3368,7 +3375,7 @@ const ETI_V2_CHARACTERS = [
     "element": "雷",
     "weapon": "長柄",
     "region": "ナタ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A4%E3%82%A2%E3%83%B3%E3%82%B5",
     "basis_tags": [
@@ -3427,7 +3434,7 @@ const ETI_V2_CHARACTERS = [
     "element": "雷",
     "weapon": "弓",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%95%E3%82%A3%E3%83%83%E3%82%B7%E3%83%A5%E3%83%AB",
     "basis_tags": [
@@ -3486,7 +3493,7 @@ const ETI_V2_CHARACTERS = [
     "element": "雷",
     "weapon": "弓",
     "region": "稲妻",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E4%B9%9D%E6%9D%A1%E8%A3%9F%E7%BE%85",
     "basis_tags": [
@@ -3545,7 +3552,7 @@ const ETI_V2_CHARACTERS = [
     "element": "雷",
     "weapon": "弓",
     "region": "ナタ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%AA%E3%83%AD%E3%83%AB%E3%83%B3",
     "basis_tags": [
@@ -3559,27 +3566,27 @@ const ETI_V2_CHARACTERS = [
     "personality": {
       "O": 55,
       "C": 70,
-      "E": 45,
-      "A": 60,
-      "N": 45
+      "E": 40,
+      "A": 65,
+      "N": 50
     },
     "style": {
       "AGY": 50,
-      "REL": 65,
-      "ROL": 65,
-      "REF": 60,
-      "AUT": 70
+      "REL": 60,
+      "ROL": 75,
+      "REF": 70,
+      "AUT": 75
     },
     "values": {
-      "SD": 65,
-      "ST": 50,
-      "HE": 50,
+      "SD": 70,
+      "ST": 55,
+      "HE": 45,
       "AC": 50,
-      "PO": 50,
-      "SE": 50,
+      "PO": 35,
+      "SE": 60,
       "CO": 50,
-      "TR": 60,
-      "BE": 80,
+      "TR": 65,
+      "BE": 85,
       "UN": 80
     },
     "legacy": {
@@ -3594,8 +3601,9 @@ const ETI_V2_CHARACTERS = [
       "old_nation_field": "ナタ"
     },
     "audit": {
-      "big5_updated": false,
-      "region_corrected": false
+      "big5_updated": true,
+      "region_corrected": false,
+      "profile_rebalanced": true
     }
   },
   {
@@ -3604,7 +3612,7 @@ const ETI_V2_CHARACTERS = [
     "element": "雷",
     "weapon": "弓",
     "region": "スメール",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%BB%E3%83%88%E3%82%B9",
     "basis_tags": [
@@ -3617,29 +3625,29 @@ const ETI_V2_CHARACTERS = [
     ],
     "personality": {
       "O": 75,
-      "C": 55,
-      "E": 65,
-      "A": 55,
+      "C": 60,
+      "E": 70,
+      "A": 60,
       "N": 35
     },
     "style": {
       "AGY": 70,
-      "REL": 65,
-      "ROL": 70,
+      "REL": 70,
+      "ROL": 75,
       "REF": 70,
-      "AUT": 55
+      "AUT": 60
     },
     "values": {
       "SD": 70,
-      "ST": 55,
-      "HE": 55,
+      "ST": 65,
+      "HE": 65,
       "AC": 55,
-      "PO": 55,
-      "SE": 55,
-      "CO": 70,
+      "PO": 45,
+      "SE": 50,
+      "CO": 65,
       "TR": 75,
-      "BE": 55,
-      "UN": 55
+      "BE": 65,
+      "UN": 60
     },
     "legacy": {
       "old_big5": {
@@ -3653,8 +3661,9 @@ const ETI_V2_CHARACTERS = [
       "old_nation_field": "スメール"
     },
     "audit": {
-      "big5_updated": false,
-      "region_corrected": false
+      "big5_updated": true,
+      "region_corrected": false,
+      "profile_rebalanced": true
     }
   },
   {
@@ -3663,7 +3672,7 @@ const ETI_V2_CHARACTERS = [
     "element": "雷",
     "weapon": "法器",
     "region": "稲妻",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E5%85%AB%E9%87%8D%E7%A5%9E%E5%AD%90",
     "basis_tags": [
@@ -3722,7 +3731,7 @@ const ETI_V2_CHARACTERS = [
     "element": "雷",
     "weapon": "法器",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%AA%E3%82%B5",
     "basis_tags": [
@@ -3780,7 +3789,7 @@ const ETI_V2_CHARACTERS = [
     "element": "雷",
     "weapon": "法器",
     "region": "ナタ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%B4%E3%82%A1%E3%83%AC%E3%82%B5",
     "basis_tags": [
@@ -3839,7 +3848,7 @@ const ETI_V2_CHARACTERS = [
     "element": "雷",
     "weapon": "両手剣",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%AC%E3%82%B6%E3%83%BC",
     "basis_tags": [
@@ -3851,30 +3860,30 @@ const ETI_V2_CHARACTERS = [
       "素朴"
     ],
     "personality": {
-      "O": 45,
-      "C": 55,
-      "E": 45,
-      "A": 55,
-      "N": 45
+      "O": 35,
+      "C": 60,
+      "E": 30,
+      "A": 70,
+      "N": 50
     },
     "style": {
-      "AGY": 50,
-      "REL": 65,
-      "ROL": 70,
-      "REF": 50,
-      "AUT": 55
+      "AGY": 55,
+      "REL": 75,
+      "ROL": 85,
+      "REF": 25,
+      "AUT": 60
     },
     "values": {
-      "SD": 50,
-      "ST": 50,
-      "HE": 50,
-      "AC": 50,
-      "PO": 50,
-      "SE": 60,
-      "CO": 70,
-      "TR": 55,
-      "BE": 85,
-      "UN": 65
+      "SD": 40,
+      "ST": 45,
+      "HE": 65,
+      "AC": 65,
+      "PO": 20,
+      "SE": 75,
+      "CO": 55,
+      "TR": 60,
+      "BE": 95,
+      "UN": 50
     },
     "legacy": {
       "old_big5": {
@@ -3888,8 +3897,9 @@ const ETI_V2_CHARACTERS = [
       "old_nation_field": "モンド"
     },
     "audit": {
-      "big5_updated": false,
-      "region_corrected": false
+      "big5_updated": true,
+      "region_corrected": false,
+      "profile_rebalanced": true
     }
   },
   {
@@ -3898,7 +3908,7 @@ const ETI_V2_CHARACTERS = [
     "element": "雷",
     "weapon": "両手剣",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E5%8C%97%E6%96%97",
     "basis_tags": [
@@ -3957,7 +3967,7 @@ const ETI_V2_CHARACTERS = [
     "element": "雷",
     "weapon": "両手剣",
     "region": "スメール",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%89%E3%83%AA%E3%83%BC",
     "basis_tags": [
@@ -3969,30 +3979,30 @@ const ETI_V2_CHARACTERS = [
       "遊び心"
     ],
     "personality": {
-      "O": 60,
-      "C": 55,
-      "E": 70,
-      "A": 40,
-      "N": 35
+      "O": 70,
+      "C": 70,
+      "E": 75,
+      "A": 45,
+      "N": 50
     },
     "style": {
-      "AGY": 75,
-      "REL": 55,
-      "ROL": 50,
-      "REF": 70,
-      "AUT": 55
+      "AGY": 80,
+      "REL": 60,
+      "ROL": 65,
+      "REF": 80,
+      "AUT": 70
     },
     "values": {
-      "SD": 60,
-      "ST": 55,
+      "SD": 75,
+      "ST": 70,
       "HE": 70,
       "AC": 95,
-      "PO": 80,
-      "SE": 55,
-      "CO": 50,
-      "TR": 50,
-      "BE": 55,
-      "UN": 50
+      "PO": 75,
+      "SE": 85,
+      "CO": 35,
+      "TR": 40,
+      "BE": 65,
+      "UN": 40
     },
     "legacy": {
       "old_big5": {
@@ -4006,8 +4016,9 @@ const ETI_V2_CHARACTERS = [
       "old_nation_field": "スメール"
     },
     "audit": {
-      "big5_updated": false,
-      "region_corrected": false
+      "big5_updated": true,
+      "region_corrected": false,
+      "profile_rebalanced": true
     }
   },
   {
@@ -4016,7 +4027,7 @@ const ETI_V2_CHARACTERS = [
     "element": "風",
     "weapon": "片手剣",
     "region": "稲妻",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E6%A5%93%E5%8E%9F%E4%B8%87%E8%91%89",
     "basis_tags": [
@@ -4075,7 +4086,7 @@ const ETI_V2_CHARACTERS = [
     "element": "風",
     "weapon": "片手剣",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%B8%E3%83%B3",
     "basis_tags": [
@@ -4134,7 +4145,7 @@ const ETI_V2_CHARACTERS = [
     "element": "風",
     "weapon": "片手剣",
     "region": "フォンテーヌ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%AA%E3%83%8D%E3%83%83%E3%83%88",
     "basis_tags": [
@@ -4146,29 +4157,29 @@ const ETI_V2_CHARACTERS = [
       "役割責任"
     ],
     "personality": {
-      "O": 60,
-      "C": 65,
-      "E": 35,
+      "O": 55,
+      "C": 75,
+      "E": 25,
       "A": 55,
-      "N": 45
+      "N": 55
     },
     "style": {
       "AGY": 50,
-      "REL": 50,
-      "ROL": 65,
-      "REF": 60,
-      "AUT": 70
+      "REL": 45,
+      "ROL": 75,
+      "REF": 70,
+      "AUT": 75
     },
     "values": {
       "SD": 70,
-      "ST": 50,
+      "ST": 40,
       "HE": 40,
       "AC": 50,
-      "PO": 50,
-      "SE": 60,
-      "CO": 60,
-      "TR": 55,
-      "BE": 70,
+      "PO": 35,
+      "SE": 80,
+      "CO": 55,
+      "TR": 50,
+      "BE": 85,
       "UN": 50
     },
     "legacy": {
@@ -4183,8 +4194,9 @@ const ETI_V2_CHARACTERS = [
       "old_nation_field": "フォンテーヌ"
     },
     "audit": {
-      "big5_updated": false,
-      "region_corrected": false
+      "big5_updated": true,
+      "region_corrected": false,
+      "profile_rebalanced": true
     }
   },
   {
@@ -4193,7 +4205,7 @@ const ETI_V2_CHARACTERS = [
     "element": "風",
     "weapon": "両手剣",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "medium",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%95%E3%82%A1%E3%83%AB%E3%82%AB",
     "basis_tags": [
@@ -4252,7 +4264,7 @@ const ETI_V2_CHARACTERS = [
     "element": "風",
     "weapon": "両手剣",
     "region": "稲妻",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E6%97%A9%E6%9F%9A",
     "basis_tags": [
@@ -4264,29 +4276,29 @@ const ETI_V2_CHARACTERS = [
       "生存"
     ],
     "personality": {
-      "O": 65,
-      "C": 35,
-      "E": 50,
-      "A": 60,
-      "N": 35
+      "O": 50,
+      "C": 40,
+      "E": 25,
+      "A": 55,
+      "N": 60
     },
     "style": {
-      "AGY": 40,
-      "REL": 55,
+      "AGY": 30,
+      "REL": 50,
       "ROL": 60,
-      "REF": 50,
-      "AUT": 70
+      "REF": 45,
+      "AUT": 80
     },
     "values": {
-      "SD": 70,
+      "SD": 75,
       "ST": 50,
-      "HE": 50,
-      "AC": 45,
-      "PO": 50,
-      "SE": 75,
-      "CO": 65,
+      "HE": 70,
+      "AC": 50,
+      "PO": 45,
+      "SE": 80,
+      "CO": 60,
       "TR": 55,
-      "BE": 60,
+      "BE": 70,
       "UN": 50
     },
     "legacy": {
@@ -4301,8 +4313,9 @@ const ETI_V2_CHARACTERS = [
       "old_nation_field": "稲妻"
     },
     "audit": {
-      "big5_updated": false,
-      "region_corrected": false
+      "big5_updated": true,
+      "region_corrected": false,
+      "profile_rebalanced": true
     }
   },
   {
@@ -4311,7 +4324,7 @@ const ETI_V2_CHARACTERS = [
     "element": "風",
     "weapon": "弓",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A6%E3%82%A7%E3%83%B3%E3%83%86%E3%82%A3",
     "basis_tags": [
@@ -4370,7 +4383,7 @@ const ETI_V2_CHARACTERS = [
     "element": "風",
     "weapon": "弓",
     "region": "ナタ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%81%E3%83%A3%E3%82%B9%E3%82%AB",
     "basis_tags": [
@@ -4429,7 +4442,7 @@ const ETI_V2_CHARACTERS = [
     "element": "風",
     "weapon": "弓",
     "region": "スメール",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%95%E3%82%A1%E3%83%AB%E3%82%B6%E3%83%B3",
     "basis_tags": [
@@ -4488,7 +4501,7 @@ const ETI_V2_CHARACTERS = [
     "element": "風",
     "weapon": "弓",
     "region": "ナド・クライ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "medium",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%A4%E3%83%95%E3%82%A9%E3%83%80",
     "basis_tags": [
@@ -4547,7 +4560,7 @@ const ETI_V2_CHARACTERS = [
     "element": "風",
     "weapon": "法器",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%B9%E3%82%AF%E3%83%AD%E3%83%BC%E3%82%B9",
     "basis_tags": [
@@ -4605,7 +4618,7 @@ const ETI_V2_CHARACTERS = [
     "element": "風",
     "weapon": "法器",
     "region": "スメール",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E6%94%BE%E6%B5%AA%E8%80%85",
     "basis_tags": [
@@ -4664,7 +4677,7 @@ const ETI_V2_CHARACTERS = [
     "element": "風",
     "weapon": "法器",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E9%96%91%E9%9B%B2",
     "basis_tags": [
@@ -4723,7 +4736,7 @@ const ETI_V2_CHARACTERS = [
     "element": "風",
     "weapon": "法器",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E8%97%8D%E7%A1%AF",
     "basis_tags": [
@@ -4782,7 +4795,7 @@ const ETI_V2_CHARACTERS = [
     "element": "風",
     "weapon": "法器",
     "region": "稲妻",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E9%B9%BF%E9%87%8E%E9%99%A2%E5%B9%B3%E8%94%B5",
     "basis_tags": [
@@ -4841,7 +4854,7 @@ const ETI_V2_CHARACTERS = [
     "element": "風",
     "weapon": "法器",
     "region": "稲妻",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E5%A4%A2%E8%A6%8B%E6%9C%88%E7%91%9E%E5%B8%8C",
     "basis_tags": [
@@ -4900,7 +4913,7 @@ const ETI_V2_CHARACTERS = [
     "element": "風",
     "weapon": "法器",
     "region": "ナタ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A4%E3%83%95%E3%82%A1",
     "basis_tags": [
@@ -4959,7 +4972,7 @@ const ETI_V2_CHARACTERS = [
     "element": "風",
     "weapon": "法器",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "medium",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%97%E3%83%AB%E3%83%BC%E3%83%8D",
     "basis_tags": [
@@ -5018,7 +5031,7 @@ const ETI_V2_CHARACTERS = [
     "element": "岩",
     "weapon": "長柄",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E9%8D%BE%E9%9B%A2",
     "basis_tags": [
@@ -5077,7 +5090,7 @@ const ETI_V2_CHARACTERS = [
     "element": "岩",
     "weapon": "長柄",
     "region": "ナド・クライ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "medium",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A4%E3%83%AB%E3%83%BC%E3%82%AC",
     "basis_tags": [
@@ -5136,7 +5149,7 @@ const ETI_V2_CHARACTERS = [
     "element": "岩",
     "weapon": "長柄",
     "region": "ナタ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%AB%E3%83%81%E3%83%BC%E3%83%8A",
     "basis_tags": [
@@ -5195,7 +5208,7 @@ const ETI_V2_CHARACTERS = [
     "element": "岩",
     "weapon": "長柄",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E9%9B%B2%E8%8F%AB",
     "basis_tags": [
@@ -5254,7 +5267,7 @@ const ETI_V2_CHARACTERS = [
     "element": "岩",
     "weapon": "両手剣",
     "region": "フォンテーヌ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%8A%E3%83%B4%E3%82%A3%E3%82%A2",
     "basis_tags": [
@@ -5313,7 +5326,7 @@ const ETI_V2_CHARACTERS = [
     "element": "岩",
     "weapon": "両手剣",
     "region": "稲妻",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E8%8D%92%E7%80%A7%E4%B8%80%E6%96%97",
     "basis_tags": [
@@ -5372,7 +5385,7 @@ const ETI_V2_CHARACTERS = [
     "element": "岩",
     "weapon": "両手剣",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%8E%E3%82%A8%E3%83%AB",
     "basis_tags": [
@@ -5431,7 +5444,7 @@ const ETI_V2_CHARACTERS = [
     "element": "岩",
     "weapon": "片手剣",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A2%E3%83%AB%E3%83%99%E3%83%89",
     "basis_tags": [
@@ -5490,7 +5503,7 @@ const ETI_V2_CHARACTERS = [
     "element": "岩",
     "weapon": "片手剣",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "medium",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E5%85%B9%E7%99%BD",
     "basis_tags": [
@@ -5549,7 +5562,7 @@ const ETI_V2_CHARACTERS = [
     "element": "岩",
     "weapon": "片手剣",
     "region": "稲妻",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E5%8D%83%E7%B9%94",
     "basis_tags": [
@@ -5608,7 +5621,7 @@ const ETI_V2_CHARACTERS = [
     "element": "岩",
     "weapon": "片手剣",
     "region": "ナタ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%B7%E3%83%AD%E3%83%8D%E3%83%B3",
     "basis_tags": [
@@ -5666,7 +5679,7 @@ const ETI_V2_CHARACTERS = [
     "element": "岩",
     "weapon": "弓",
     "region": "稲妻",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%B4%E3%83%AD%E3%83%BC",
     "basis_tags": [
@@ -5725,7 +5738,7 @@ const ETI_V2_CHARACTERS = [
     "element": "岩",
     "weapon": "弓",
     "region": "ナド・クライ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "medium",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%AA%E3%83%B3%E3%83%8D%E3%82%A2",
     "basis_tags": [
@@ -5784,7 +5797,7 @@ const ETI_V2_CHARACTERS = [
     "element": "岩",
     "weapon": "法器",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E5%87%9D%E5%85%89",
     "basis_tags": [
@@ -5843,7 +5856,7 @@ const ETI_V2_CHARACTERS = [
     "element": "草",
     "weapon": "法器",
     "region": "スメール",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%8A%E3%83%92%E3%83%BC%E3%83%80",
     "basis_tags": [
@@ -5902,7 +5915,7 @@ const ETI_V2_CHARACTERS = [
     "element": "草",
     "weapon": "法器",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E7%99%BD%E6%9C%AE",
     "basis_tags": [
@@ -5961,7 +5974,7 @@ const ETI_V2_CHARACTERS = [
     "element": "草",
     "weapon": "法器",
     "region": "ナド・クライ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "medium",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%A9%E3%82%A6%E3%83%9E",
     "basis_tags": [
@@ -6020,7 +6033,7 @@ const ETI_V2_CHARACTERS = [
     "element": "草",
     "weapon": "法器",
     "region": "ナド・クライ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "medium",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%8D%E3%83%95%E3%82%A7%E3%83%AB",
     "basis_tags": [
@@ -6079,7 +6092,7 @@ const ETI_V2_CHARACTERS = [
     "element": "草",
     "weapon": "弓",
     "region": "スメール",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%86%E3%82%A3%E3%83%8A%E3%83%AA",
     "basis_tags": [
@@ -6138,7 +6151,7 @@ const ETI_V2_CHARACTERS = [
     "element": "草",
     "weapon": "弓",
     "region": "スメール",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%B3%E3%83%AC%E3%82%A4",
     "basis_tags": [
@@ -6197,7 +6210,7 @@ const ETI_V2_CHARACTERS = [
     "element": "草",
     "weapon": "片手剣",
     "region": "スメール",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A2%E3%83%AB%E3%83%8F%E3%82%A4%E3%82%BC%E3%83%B3",
     "basis_tags": [
@@ -6256,7 +6269,7 @@ const ETI_V2_CHARACTERS = [
     "element": "草",
     "weapon": "片手剣",
     "region": "稲妻",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E7%B6%BA%E8%89%AF%E3%80%85",
     "basis_tags": [
@@ -6315,7 +6328,7 @@ const ETI_V2_CHARACTERS = [
     "element": "草",
     "weapon": "両手剣",
     "region": "スメール",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%AB%E3%83%BC%E3%83%B4%E3%82%A7",
     "basis_tags": [
@@ -6374,7 +6387,7 @@ const ETI_V2_CHARACTERS = [
     "element": "草",
     "weapon": "両手剣",
     "region": "ナタ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%AD%E3%82%A3%E3%83%8B%E3%83%81",
     "basis_tags": [
@@ -6432,7 +6445,7 @@ const ETI_V2_CHARACTERS = [
     "element": "草",
     "weapon": "長柄",
     "region": "フォンテーヌ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A8%E3%83%9F%E3%83%AA%E3%82%A8",
     "basis_tags": [
@@ -6491,7 +6504,7 @@ const ETI_V2_CHARACTERS = [
     "element": "草",
     "weapon": "長柄",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%A8%E3%82%A9%E3%83%BC%E3%83%A8",
     "basis_tags": [
@@ -6550,7 +6563,7 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "両手剣",
     "region": "スネージナヤ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "medium",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%B5%E3%83%B3%E3%83%89%E3%83%AD%E3%83%BC%E3%83%8D",
     "basis_tags": [
@@ -6609,7 +6622,7 @@ const ETI_V2_CHARACTERS = [
     "element": "風",
     "weapon": "長柄",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%B7%E3%83%A7%E3%82%A6",
     "basis_tags": [
@@ -6668,7 +6681,7 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "両手剣",
     "region": "モンド",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A8%E3%82%A6%E3%83%AB%E3%82%A2",
     "basis_tags": [
@@ -6727,7 +6740,7 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "両手剣",
     "region": "璃月",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E9%87%8D%E9%9B%B2",
     "basis_tags": [
@@ -6740,28 +6753,28 @@ const ETI_V2_CHARACTERS = [
     ],
     "personality": {
       "O": 45,
-      "C": 80,
-      "E": 40,
-      "A": 65,
-      "N": 50
+      "C": 85,
+      "E": 35,
+      "A": 70,
+      "N": 60
     },
     "style": {
-      "AGY": 50,
-      "REL": 55,
+      "AGY": 45,
+      "REL": 60,
       "ROL": 90,
       "REF": 60,
       "AUT": 55
     },
     "values": {
       "SD": 50,
-      "ST": 50,
-      "HE": 50,
-      "AC": 55,
-      "PO": 50,
-      "SE": 65,
+      "ST": 35,
+      "HE": 35,
+      "AC": 65,
+      "PO": 35,
+      "SE": 75,
       "CO": 85,
-      "TR": 75,
-      "BE": 50,
+      "TR": 85,
+      "BE": 65,
       "UN": 70
     },
     "legacy": {
@@ -6776,8 +6789,9 @@ const ETI_V2_CHARACTERS = [
       "old_nation_field": "璃月"
     },
     "audit": {
-      "big5_updated": false,
-      "region_corrected": false
+      "big5_updated": true,
+      "region_corrected": false,
+      "profile_rebalanced": true
     }
   },
   {
@@ -6786,7 +6800,7 @@ const ETI_V2_CHARACTERS = [
     "element": "氷",
     "weapon": "両手剣",
     "region": "フォンテーヌ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "high",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%95%E3%83%AC%E3%83%9F%E3%83%8D",
     "basis_tags": [
@@ -6845,7 +6859,7 @@ const ETI_V2_CHARACTERS = [
     "element": "雷",
     "weapon": "長柄",
     "region": "ナド・クライ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "medium",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%95%E3%83%AA%E3%83%B3%E3%82%BA",
     "basis_tags": [
@@ -6904,7 +6918,7 @@ const ETI_V2_CHARACTERS = [
     "element": "雷",
     "weapon": "長柄",
     "region": "ナド・クライ",
-    "profile_version": "ETI-CHAR-2.0.0",
+    "profile_version": "ETI-CHAR-2.0.1",
     "evidence_confidence": "medium",
     "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A4%E3%83%8D%E3%83%95%E3%82%A1",
     "basis_tags": [

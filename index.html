@@ -386,7 +386,7 @@
 <section style="max-width:600px;margin:0 auto;padding:0 24px 60px;text-align:center;border-top:1px solid #0e1e30;padding-top:56px">
   <p class="section-label" style="justify-content:center;display:flex">Results That Stay With You</p>
   <p style="color:#7098b8;font-size:14px;line-height:1.9;margin-bottom:24px">
-    診断結果は、アナタの記録として保存できます。<br>
+    診断結果は、あなたの記録として保存できます。<br>
     再診するたび、過去の結果が蓄積されていきます。
   </p>
   <a href="/mypage.html" class="footer-btn" style="display:inline-block" onclick="trackEvent('mypage_entry_click',{entry_point:'top'})">診断記録を見る</a>
@@ -508,7 +508,7 @@ const NATIONS_V2 = NATIONS.concat(["ナドクライ"]);
 // 各国家がもたらす意味（一言）
 const NATION_MEANING = {
   "モンド":"自由", "璃月":"契約", "稲妻":"永遠", "スメール":"知恵",
-  "フォンテーヌ":"正義", "ナタ":"戦争", "スネージナヤ":"抗争", "ナドクライ":"月光",
+  "フォンテーヌ":"正義", "ナタ":"戦争", "スネージナヤ":"慈愛", "ナドクライ":"月光",
 };
 const NATION_DESC = {
   "モンド":     "モンドが体現するのは「自由」です。誰にも縛られず、自分の意志で選び取ることに、何よりの価値を置きます。規則やしがらみより、自分の心が向く方向を信じるタイプで、束縛を感じる環境では、力を発揮しづらくなる傾向があります。",
@@ -517,7 +517,7 @@ const NATION_DESC = {
   "スメール":   "スメールが体現するのは「知恵」です。物事の真実を追い求め、知識を分かち合うことに、価値を置きます。表面的な理解では満足せず、本質まで掘り下げようとする探究心と、それを独占せず還元しようとする姿勢が特徴です。",
   "フォンテーヌ": "フォンテーヌが体現するのは「法と正義」です。公正さと調和を重んじ、誰に対しても等しくあることに、価値を置きます。ひいきや不公平を嫌い、誰から見ても筋の通った判断を下そうとする、バランス感覚に優れた価値観です。",
   "ナタ":       "ナタが体現するのは「戦争」です。真っ向からぶつかり合う戦いの中でこそ、生きる実感を得ることに、価値を置きます。困難を避けるより、正面から挑むことを選ぶタイプで、仲間と共に壁を乗り越えることに、強い充実感を覚えます。",
-  "スネージナヤ": "スネージナヤが体現するのは「抗争」です。争いを通じて自らの力を示し、抗い続けることに、価値を置きます。厳しい状況に置かれるほど、かえって強さを発揮するタイプで、簡単には屈しない、したたかな忍耐力を持っています。",
+  "スネージナヤ": "スネージナヤが体現するのは「慈愛」です。大切なものを守るためなら、厳しい現実にも立ち向かい、自らが痛みを引き受けることに価値を置きます。冷たく見える決断の奥に深い情と献身を抱き、簡単には揺らがない忍耐力を持っています。",
   "ナドクライ":   "ナドクライが体現するのは「月光」です。表舞台の喧騒から離れ、静かな場所で自分の価値観を保つことに、価値を置きます。人に知られることを求めず、慣れた場所より知らない環境にかえって心惹かれる、独自の歩き方をするタイプです。",
 };
 const NATION_TRAITS = {
@@ -2139,7 +2139,7 @@ function renderResult(root) {
       <!-- 任意保存。押すまでログインもサーバー保存も開始しない。 -->
       <div style="background:linear-gradient(135deg,${elC}18,#0a1420);border:1px solid ${elC}50;border-radius:12px;padding:22px 20px;margin-bottom:16px;text-align:center">
         <div style="font-size:10px;letter-spacing:2px;color:#90c0e0;text-transform:uppercase;margin-bottom:10px">診断記録</div>
-        <p style="color:#a8ccec;font-size:12.5px;line-height:1.8;margin:0 0 16px">この結果をアナタの診断記録として残しませんか。<br>保存すると、次回の診断結果と比較できるようになります。</p>
+        <p style="color:#a8ccec;font-size:12.5px;line-height:1.8;margin:0 0 16px">この結果をあなたの診断記録として残しませんか。<br>保存すると、次回の診断結果と比較できるようになります。</p>
         <div id="saveGateArea">
           <button id="${diagnosisVersion === 'ETI-2.0' ? 'saveResultBtnV2' : 'saveResultBtn'}"
             style="width:100%;background:${elC};border:none;color:#0a0916;border-radius:8px;padding:14px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit">
