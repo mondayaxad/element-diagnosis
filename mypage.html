@@ -375,21 +375,67 @@
   .mp-stat-ja { font-size: 11px; color: var(--fg-dim); margin-top: 2px; }
   .mp-stat-num.unknown { color: var(--fg-dim); }
 
-  /* ---- 記録章（エンブレム） ---- */
-  .mp-emblem { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 54px; height: 54px; color: var(--c, #7ab8e8); }
-  .mp-emblem::before { content: ''; position: absolute; inset: 7px; border: 1px solid var(--c, #7ab8e8); transform: rotate(45deg); opacity: .45; border-radius: 3px; }
-  .mp-emblem svg { position: relative; width: 30px; height: 30px; }
-  .mp-emblem.lg { width: 76px; height: 76px; }
-  .mp-emblem.lg svg { width: 40px; height: 40px; }
+  /* ---- 記録章（エンブレム） ----
+     2026秋季章（〜11月末想定）。RECORD/INSIGHTは文字ではなく発光差で表現する。 */
+  .mp-emblem {
+    position: relative; display: inline-flex; align-items: center; justify-content: center;
+    width: 58px; height: 58px; color: var(--c, #7ab8e8); isolation: isolate;
+  }
+  .mp-emblem::before, .mp-emblem::after {
+    content: ''; position: absolute; inset: 7px;
+    border: 1px solid color-mix(in srgb, var(--c, #7ab8e8) 58%, #dcd7ef);
+    transform: rotate(45deg); border-radius: 4px; pointer-events: none;
+  }
+  .mp-emblem::before { opacity: .52; }
+  .mp-emblem::after { inset: 11px; opacity: .18; border-style: dotted; }
+  .mp-emblem svg {
+    position: relative; z-index: 1; width: 34px; height: 34px;
+    filter: drop-shadow(0 0 2px color-mix(in srgb, var(--c, #7ab8e8) 42%, transparent));
+  }
+  .mp-emblem.lg { width: 78px; height: 78px; }
+  .mp-emblem.lg svg { width: 44px; height: 44px; }
 
   /* ---- LATEST RESULT ---- */
   .mp-latest { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 16px; }
+
+  /* ---- 購入状態の見た目（LATEST RESULT／YOUR COLLECTION／THE RECORDSで共通の考え方） ----
+     未購入：LOCKEDを表示し、元素色は弱く静かな枠のまま。
+     購入済：状態文字は出さず、元素色の枠・エンブレム・ごく薄い背景光で静かに煌めく（ネオンにはしない）。 */
+  .mp-latest.state-record, .mp-latest.state-insight {
+    border-color: color-mix(in srgb, var(--lc, #7ab8e8) 33%, var(--card-border));
+    background: linear-gradient(160deg, color-mix(in srgb, var(--lc, #7ab8e8) 8%, transparent), var(--card-bg) 55%);
+  }
+  .mp-latest.state-insight {
+    border-color: color-mix(in srgb, var(--lc, #7ab8e8) 62%, #d9d3ea);
+    background:
+      radial-gradient(circle at 16% 14%, color-mix(in srgb, var(--lc, #7ab8e8) 13%, transparent), transparent 46%),
+      linear-gradient(160deg, color-mix(in srgb, var(--lc, #7ab8e8) 9%, transparent), var(--card-bg) 55%);
+    box-shadow:
+      0 0 14px color-mix(in srgb, var(--lc, #7ab8e8) 14%, transparent),
+      inset 0 0 22px color-mix(in srgb, var(--lc, #7ab8e8) 5%, transparent);
+  }
+  .mp-rec.state-record { border-color: color-mix(in srgb, var(--lc, #7ab8e8) 20%, var(--card-border)); }
+  .mp-rec.state-insight {
+    border-color: color-mix(in srgb, var(--lc, #7ab8e8) 55%, #d9d3ea);
+    background: radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--lc, #7ab8e8) 9%, transparent), transparent 38%), var(--card-bg);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--lc, #7ab8e8) 11%, transparent);
+  }
+  .mp-latest.state-insight .mp-emblem::before, .mp-rec.state-insight .mp-emblem::before {
+    opacity: .82; box-shadow: 0 0 9px color-mix(in srgb, var(--c, #7ab8e8) 38%, transparent);
+  }
+  .mp-latest.state-insight .mp-emblem::after, .mp-rec.state-insight .mp-emblem::after { opacity: .30; }
+  .mp-latest.state-insight .mp-emblem svg, .mp-rec.state-insight .mp-emblem svg {
+    filter:
+      drop-shadow(0 0 4px color-mix(in srgb, var(--c, #7ab8e8) 70%, transparent))
+      drop-shadow(0 0 9px color-mix(in srgb, var(--c, #7ab8e8) 24%, transparent));
+  }
   .mp-latest-main { display: flex; gap: 14px; align-items: flex-start; }
   .mp-latest-info { flex: 1; min-width: 0; }
   .mp-chip-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   .mp-chip { font-size: 11px; letter-spacing: 1px; border: 1px solid var(--card-border); border-radius: 4px; padding: 1px 7px; color: var(--fg-dim); }
   .mp-chip.new { background: var(--accent-dim); border-color: var(--accent); color: #e0f4ff; }
   .mp-chip.insight { border-color: #c0a860; color: #c0a860; }
+  .mp-chip.locked { border-style: dashed; border-color: #5a5478; color: #8a84a6; background: rgba(255,255,255,0.015); }
   .mp-chip.legacy { border-style: dashed; }
   .mp-latest-code { font-size: 12px; color: var(--fg-dim); margin-top: 6px; letter-spacing: 1px; }
   .mp-latest-code b { color: var(--fg); font-weight: 700; margin-right: 8px; }
@@ -402,10 +448,19 @@
   .mp-btn[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
   .mp-notice { margin-top: 14px; padding: 12px; border: 1px solid var(--card-border); border-radius: 8px; text-align: center; background: rgba(255,255,255,0.01); }
   .mp-notice p { font-size: 11.5px; color: var(--fg-dim); margin-bottom: 8px; }
+  .mp-latest-fold { margin-top: 12px; border-top: 1px solid var(--card-border); }
+  .mp-latest-fold > summary {
+    list-style: none; cursor: pointer; min-height: 44px; display: flex; align-items: center;
+    justify-content: space-between; gap: 10px; color: var(--fg-dim); font-size: 11.5px;
+    letter-spacing: .04em; padding: 10px 2px 2px;
+  }
+  .mp-latest-fold > summary::-webkit-details-marker { display: none; }
+  .mp-latest-fold > summary::after { content: '⌄'; font-size: 13px; color: var(--fg-dim); }
+  .mp-latest-fold[open] > summary::after { content: '⌃'; }
+  .mp-latest-fold-body { padding-top: 2px; }
 
   /* ---- INSIGHT 要点カード ---- */
-  .mp-insight-head { display: flex; align-items: baseline; gap: 6px; margin: 14px 0 8px; font-size: 11px; color: var(--fg-dim); }
-  .mp-insight-head b { font-family: 'IM Fell English', serif; letter-spacing: 1.5px; color: #c0a860; border-left: 2px solid #c0a860; padding-left: 6px; }
+  .mp-insight-head { display: flex; align-items: baseline; gap: 6px; margin: 14px 0 8px; padding-left: 7px; border-left: 2px solid #c0a860; font-size: 11px; color: var(--fg-dim); }
   .mp-insight-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
   /* 領域ごとのアクセント（見出し・ゲージ・主要語だけに使い、背景・本文・罫線は既存の暗色のまま）
      パーソナリティ＝紫〜薄紅／行動スタイル＝琥珀〜金／価値観＝青緑〜水色 */
@@ -449,14 +504,52 @@
 
   /* ---- YOUR COLLECTION ---- */
   .mp-collection { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; scroll-snap-type: x proximity; scroll-padding-inline: 2px; -webkit-overflow-scrolling: touch; }
-  .mp-badge { flex: 0 0 96px; scroll-snap-align: start; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 6px 10px; border-radius: 8px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--fg); cursor: pointer; font-family: inherit; }
+  .mp-badge {
+    --badge-c: var(--el-color, var(--accent));
+    flex: 0 0 96px; scroll-snap-align: start; display: flex; flex-direction: column;
+    align-items: center; gap: 5px; padding: 13px 6px 11px; border-radius: 10px;
+    border: 1px solid color-mix(in srgb, var(--badge-c) 26%, var(--card-border));
+    background: radial-gradient(circle at 50% 24%, color-mix(in srgb, var(--badge-c) 8%, transparent), transparent 54%), var(--card-bg);
+    color: var(--fg); cursor: pointer; font-family: inherit;
+  }
   .mp-badge .nm { font-size: 13px; font-weight: 700; }
   .mp-badge .dt { font-size: 11px; color: var(--fg-dim); }
-  .mp-badge .st { font-size: 10px; letter-spacing: 1.5px; border: 1px solid var(--card-border); border-radius: 3px; padding: 1px 8px; color: var(--fg-dim); margin-top: 2px; }
-  .mp-badge.state-record .mp-emblem { opacity: .75; }
-  .mp-badge.state-insight { border-color: rgba(192,168,96,0.55); box-shadow: 0 0 14px rgba(192,168,96,0.14), inset 0 0 18px rgba(192,168,96,0.05); }
-  .mp-badge.state-insight .st { border-color: #c0a860; color: #c0a860; }
-  .mp-badge.state-insight .mp-emblem svg { filter: drop-shadow(0 0 5px var(--c)); }
+  .mp-badge .st {
+    font-size: 11px; letter-spacing: 1.4px; border: 1px dashed color-mix(in srgb, var(--badge-c) 28%, var(--card-border));
+    border-radius: 3px; padding: 1px 7px; color: var(--fg-dim); margin-top: 1px; opacity: .82;
+  }
+
+  .mp-badge.state-record {
+    border-color: color-mix(in srgb, var(--badge-c) 32%, var(--card-border));
+    box-shadow: 0 0 10px color-mix(in srgb, var(--badge-c) 7%, transparent),
+                inset 0 0 12px color-mix(in srgb, var(--badge-c) 4%, transparent);
+  }
+  .mp-badge.state-record .mp-emblem { opacity: .82; }
+  .mp-badge.state-record .mp-emblem svg {
+    filter: drop-shadow(0 0 2px color-mix(in srgb, var(--badge-c) 38%, transparent));
+  }
+
+  .mp-badge.state-insight {
+    border-color: color-mix(in srgb, var(--badge-c) 68%, #d9d3ea);
+    background:
+      radial-gradient(circle at 50% 23%, color-mix(in srgb, var(--badge-c) 17%, transparent), transparent 56%),
+      linear-gradient(180deg, color-mix(in srgb, var(--badge-c) 4%, transparent), transparent 48%),
+      var(--card-bg);
+    box-shadow:
+      0 0 16px color-mix(in srgb, var(--badge-c) 18%, transparent),
+      0 0 30px color-mix(in srgb, var(--badge-c) 8%, transparent),
+      inset 0 0 18px color-mix(in srgb, var(--badge-c) 7%, transparent);
+  }
+  .mp-badge.state-insight .mp-emblem::before {
+    opacity: .82;
+    box-shadow: 0 0 9px color-mix(in srgb, var(--badge-c) 38%, transparent);
+  }
+  .mp-badge.state-insight .mp-emblem::after { opacity: .30; }
+  .mp-badge.state-insight .mp-emblem svg {
+    filter:
+      drop-shadow(0 0 4px color-mix(in srgb, var(--badge-c) 70%, transparent))
+      drop-shadow(0 0 9px color-mix(in srgb, var(--badge-c) 24%, transparent));
+  }
 
   /* ---- THE RECORDS ---- */
   .mp-rec { border: 1px solid var(--card-border); border-radius: 8px; background: var(--card-bg); margin-bottom: 8px; overflow: hidden; }
@@ -885,15 +978,18 @@ function mpTopKeys(obj, n) {
   return Object.keys(obj).filter(k => typeof obj[k] === 'number').sort((a, b) => obj[b] - obj[a]).slice(0, n);
 }
 
-/* ---- 元素ごとのオリジナル記録章モチーフ（ゲーム内アイコンの模写ではない抽象図形） ---- */
+/* ---- 2026秋季・7元素記録章（〜11月末想定） ----
+   ゲーム内元素アイコンの模写ではなく、「結晶標本 / 天体観測図」を基調にしたオリジナル意匠。
+   次シーズンではこの辞書だけを差し替えられるよう、表示ロジックとは分離する。 */
+const MP_EMBLEM_SEASON = '2026-autumn-through-1130';
 const MP_EMBLEM_SVG = {
-  "炎": '<path d="M20 5c4 7 9 11 9 19a9 9 0 0 1-18 0c0-5 3-8 5-12 1 4 3 5 4 6 1-4 0-8 0-13z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M20 22c2 3 3 4 3 6a3 3 0 0 1-6 0c0-2 2-3 3-6z" fill="currentColor" opacity=".6"/>',
-  "水": '<path d="M20 5c5 8 10 13 10 20a10 10 0 0 1-20 0c0-7 5-12 10-20z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M14 26c2 2 4 2 6 0s4-2 6 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
-  "氷": '<g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M20 5v30M7 12.5l26 15M7 27.5l26-15"/><path d="M16 7l4 3 4-3M16 33l4-3 4 3"/></g><polygon points="20,15 24.3,17.5 24.3,22.5 20,25 15.7,22.5 15.7,17.5" fill="currentColor" opacity=".5"/>',
-  "雷": '<path d="M23 4L11 22h8l-3 14 13-19h-8l2-13z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M21 11l-5 8h5" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".6"/>',
-  "風": '<g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 15h17a4.5 4.5 0 1 0-4.5-4.5"/><path d="M6 21h23a4.5 4.5 0 1 1-4.5 4.5"/><path d="M6 27h11"/></g>',
-  "岩": '<g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20 5l11 11-11 19L9 16z"/><path d="M9 16h22M20 5v30"/></g><path d="M20 16l5 0-5 10z" fill="currentColor" opacity=".45"/>',
-  "草": '<g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 31C10 17 18 8 31 8c0 13-8 23-21 23z"/><path d="M10 31l14-16M17 23l-4-3M21 19l4 1"/></g>',
+  "炎": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4.5c1.2 6.1 7.9 8.6 7.9 15.8 0 5.4-3.4 10-7.9 14.8-4.5-4.8-7.9-9.4-7.9-14.8 0-4.1 2.2-7.2 5.5-10.2-.1 3.2.6 5.2 2.4 7.1 1.8-3.7 1.7-8.1 0-12.7z" stroke-width="1.55"/><path d="M20 21c2.7 2.2 4 4.1 4 6.2 0 2.1-1.4 4-4 6.3-2.6-2.3-4-4.2-4-6.3 0-2.1 1.3-4 4-6.2z" stroke-width="1.15" opacity=".72"/></g><circle cx="20" cy="20" r="2.1" fill="currentColor" opacity=".28"/>',
+  "水": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4.7c5 6.7 9.1 11.9 9.1 18.1A9.1 9.1 0 0 1 20 31.9a9.1 9.1 0 0 1-9.1-9.1c0-6.2 4.1-11.4 9.1-18.1z" stroke-width="1.55"/><path d="M13.7 23.6c2.3 2.1 4.5 2.1 6.6 0 2-2 4-2.1 6-.4" stroke-width="1.25"/><path d="M15.4 27.3c1.7 1.2 3.1 1.2 4.7-.1 1.5-1.2 3-1.4 4.6-.2" stroke-width=".95" opacity=".62"/></g><circle cx="20" cy="14.6" r="1.65" fill="currentColor" opacity=".34"/>',
+  "氷": '<g fill="none" stroke="currentColor" stroke-linecap="round"><path d="M20 4.5v31M6.6 12.2l26.8 15.6M6.6 27.8l26.8-15.6" stroke-width="1.3"/><path d="M16.8 7.5L20 10l3.2-2.5M16.8 32.5L20 30l3.2 2.5M9.4 13.8l4 .3-1.7-3.6M30.6 26.2l-4-.3 1.7 3.6M9.4 26.2l4-.3-1.7 3.6M30.6 13.8l-4 .3 1.7-3.6" stroke-width="1.05" opacity=".82"/></g><path d="M20 14.5l4.8 2.7v5.6L20 25.5l-4.8-2.7v-5.6z" fill="currentColor" opacity=".18" stroke="currentColor" stroke-width="1.05"/>',
+  "雷": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M23.3 4.7L11.1 21.3h8.2l-3.5 14 13.1-18.5h-8.1z" stroke-width="1.55"/><path d="M8.1 27.5c2.7-1.5 5.2-1.4 7.7.2M24.5 11.5c2.7-1.3 5.1-1.1 7.3.5" stroke-width=".9" opacity=".55"/></g><circle cx="29.2" cy="26.9" r="1.5" fill="currentColor" opacity=".35"/>',
+  "風": '<g fill="none" stroke="currentColor" stroke-linecap="round"><path d="M6.2 14.5h16.2c4.7 0 6.7-2.4 6.7-4.9 0-2.3-1.7-4-4-4-2.2 0-3.7 1.3-4.1 3.1" stroke-width="1.45"/><path d="M5.7 21h22.2c4 0 6.2 2.1 6.2 4.7 0 2.3-1.8 4.2-4.2 4.2-2 0-3.6-1.2-4.1-3" stroke-width="1.45"/><path d="M7 27.7h10.2" stroke-width="1.05" opacity=".72"/></g><circle cx="11.2" cy="20.9" r="1.35" fill="currentColor" opacity=".28"/>',
+  "岩": '<g fill="none" stroke="currentColor" stroke-linejoin="round"><path d="M20 4.8l11.6 8.8-3.4 16.7L20 35.2l-8.2-4.9-3.4-16.7z" stroke-width="1.45"/><path d="M20 4.8v30.4M8.4 13.6h23.2M11.8 30.3l8.2-8.5 8.2 8.5" stroke-width="1.05" opacity=".7"/></g><path d="M20 12l5 3.7-1.9 7.3-3.1 3.1-3.1-3.1-1.9-7.3z" fill="currentColor" opacity=".16" stroke="currentColor" stroke-width="1"/>',
+  "草": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8.9 31.4C9.2 17.1 17.7 7.8 31.8 7.3c-.4 14.2-8.7 23.8-22.9 24.1z" stroke-width="1.45"/><path d="M9.4 31L25.8 14.5M15.4 24.9l-4.2-2.3M20.1 20.1l5.4 1.1M18.1 17.4l-1.1-5" stroke-width="1.05" opacity=".78"/></g><circle cx="28.9" cy="10.5" r="1.5" fill="currentColor" opacity=".34"/>',
 };
 function mpEmblemHtml(record, size) {
   const color = record.color || '#7ab8e8';
@@ -1081,7 +1177,7 @@ function mpInsightCards(r) {
 }
 function mpInsightHtml(r) {
   return `
-    <div class="mp-insight-head"><b>INSIGHT</b>深く読み解いた記録</div>
+    <div class="mp-insight-head">深く読み解いた記録</div>
     <div class="mp-insight-grid">
       ${mpInsightCards(r).map(c => `<div class="mp-insight-card" data-domain="${c.d}"><div class="t">${c.t}</div>${c.title || ''}${c.body || '<div class="v">—</div>'}<div class="n">${c.n}</div></div>`).join('')}
     </div>`;
@@ -1196,21 +1292,26 @@ function mpLatestHtml(r) {
   return `
     <section class="mp-sec" aria-labelledby="mp-latest-h">
       <div class="mp-sec-head" id="mp-latest-h"><span class="mp-sec-en">LATEST RESULT</span><span class="mp-sec-ja">最新のあなた</span></div>
-      <div class="mp-latest" style="border-color:${r.color}55;background:linear-gradient(160deg, ${r.color}14, var(--card-bg) 55%)">
+      <div class="mp-latest state-${r.purchased ? 'insight' : 'record'}" style="--lc:${r.color}">
         <div class="mp-latest-main">
           ${mpEmblemHtml(r, 'lg')}
           <div class="mp-latest-info">
-            <div class="mp-chip-row"><span class="mp-chip">${mpDate(r.date)}</span><span class="mp-chip new">NEW</span>${r.purchased ? '<span class="mp-chip insight">INSIGHT</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}</div>
+            <div class="mp-chip-row"><span class="mp-chip">${mpDate(r.date)}</span><span class="mp-chip new">NEW</span>${mpEntitlementOk && !r.purchased ? '<span class="mp-chip locked">LOCKED</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}</div>
             ${r.code ? `<div class="mp-latest-code"><b class="mp-typecode" style="color:${mpElText(r.el)}">${r.code}</b><span style="color:${mpElText(r.el)};opacity:.85">${r.typeName}</span></div>` : ''}
             <div class="mp-latest-combo">${mpComboHtml(r)}</div>
           </div>
         </div>
         ${mpVizHtml(r)}
-        ${state}
-        <div class="mp-btn-row">
-          ${viewBtn}
-          ${shareBtn}
-        </div>
+        <details class="mp-latest-fold">
+          <summary>${r.purchased ? '深く読み解いた内容を見る' : mpEntitlementOk ? 'まだ読み解いていない部分を見る' : 'この記録の詳細を見る'}</summary>
+          <div class="mp-latest-fold-body">
+            ${state}
+            <div class="mp-btn-row">
+              ${viewBtn}
+              ${shareBtn}
+            </div>
+          </div>
+        </details>
       </div>
     </section>`;
 }
@@ -1222,11 +1323,15 @@ function mpCollectionHtml(records) {
       <div class="mp-sec-head" id="mp-col-h"><span class="mp-sec-en">YOUR COLLECTION</span><span class="mp-sec-ja">集めてきた記録章</span></div>
       <div class="mp-collection" id="mp-collection" role="list">
         ${records.map((r, i) => `
-          <button type="button" role="listitem" class="mp-badge state-${r.purchased ? 'insight' : 'record'}" onclick="mpOpenRecord(${i})" aria-label="${mpDate(r.date)}の${MP_KINDS[r.kind].label}の記録（${r.purchased ? 'INSIGHT' : mpEntitlementOk ? 'RECORD' : 'RECORD・購入状態未確認'}）">
+          <button type="button" role="listitem"
+            class="mp-badge state-${r.purchased ? 'insight' : 'record'}"
+            style="--badge-c:${r.color}"
+            onclick="mpOpenRecord(${i})"
+            aria-label="${mpDate(r.date)}の${MP_KINDS[r.kind].label}の記録（${r.purchased ? '深く読み解いた記録' : mpEntitlementOk ? '記録' : '購入状態未確認'}）">
             ${mpEmblemHtml(r)}
             <span class="nm" style="color:${mpElText(r.el)}">${r.name}</span>
             <span class="dt">${mpDate(r.date)}</span>
-            <span class="st">${r.purchased ? 'INSIGHT' : 'RECORD'}</span>
+            ${mpEntitlementOk && !r.purchased ? '<span class="st">LOCKED</span>' : ''}
           </button>`).join('')}
       </div>
     </section>`;
@@ -1246,13 +1351,13 @@ function mpRecordHtml(r, i) {
   const detailLink = r.resultUrl
     ? `<a href="${r.resultUrl}" class="mp-detail-link" onclick="trackEvent('mypage_view_result_click',{source:'records'})">当時の診断結果を見る →</a>`
     : '';
-  const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${r.purchased ? '<span class="mp-chip insight">INSIGHT</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
+  const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${mpEntitlementOk && !r.purchased ? '<span class="mp-chip locked">LOCKED</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
   let body;
   if (!mpEntitlementOk) body = mpVizHtml(r) + `<div class="mp-notice"><p>この記録の購入状態を確認できませんでした</p></div>`;
   else if (r.purchased) body = mpInsightHtml(r) + mpVizHtml(r) + mpReadReportBtn(r);
   else body = mpVizHtml(r) + mpLockedHtml(r);
   return `
-    <details class="mp-rec" id="mp-rec-${i}" ontoggle="if(this.open){trackEvent('diagnosis_history_open',{diagnosis_type:'${r.kind}'})}">
+    <details class="mp-rec state-${r.purchased ? 'insight' : 'record'}" style="--lc:${r.color}" id="mp-rec-${i}" ontoggle="if(this.open){trackEvent('diagnosis_history_open',{diagnosis_type:'${r.kind}'})}">
       <summary>
         <span class="d">${mpDate(r.date)}</span>
         <span class="c">${r.headline ? `<span class="el" style="color:${r.color}">${r.headline}</span>` : mpComboHtml(r)}</span>
