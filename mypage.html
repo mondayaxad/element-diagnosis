@@ -399,6 +399,7 @@
   }
   .mp-emblem.lg { width: 90px; height: 90px; }
   .mp-emblem.lg img { width: 90px; height: 90px; }
+  .mp-free .mp-emblem, .mp-free .mp-emblem img { width: 90px; height: 90px; }
 
   /* RECORD：そのシーズンの未覚醒画像をそのまま使う。CSSで別物に加工しない。 */
   .state-record .mp-emblem img {
@@ -513,6 +514,8 @@
   .mp-insight-card .tag .a1 { color: var(--d1); }
   .mp-insight-card .tag .a2 { color: var(--d2); opacity: .82; font-weight: 600; }
   .mp-insight-card .v .nat { font-weight: 700; }
+  .mp-insight-card[data-domain="motive"] .tag .a1, .mp-insight-card[data-domain="motive"] .tag .a2 { display: inline-block; white-space: nowrap; }
+  .mp-insight-card .v.mp-ennea-code { font-family: 'IM Fell English', serif; font-size: 20px; letter-spacing: 1px; line-height: 1.3; margin-bottom: 2px; }
   .mp-insight-card .v { font-size: 12px; color: var(--fg-dim); line-height: 1.7; word-break: break-word; }
   .mp-insight-card .n { font-size: 11px; color: var(--fg-dim); opacity: .75; margin-top: 4px; }
 
@@ -537,13 +540,13 @@
   .mp-eltop-label .el.r1 { font-weight: 700; }
   /* 購入済み：元素名・マーカー・バーをわずかに明るく。1位のバー先端にだけごく弱い光 */
   .state-insight .mp-eltop-label .el { color: color-mix(in srgb, var(--elc) 78%, #ffffff); }
-  .state-insight .mp-eltop-fill { background: color-mix(in srgb, var(--elc) 86%, #ffffff); opacity: .7; }
+  .state-insight .mp-eltop-fill { background: linear-gradient(90deg, var(--elc), var(--elc2, var(--elc))); opacity: .72; }
   .state-insight .mp-eltop-fill.r1 { opacity: 1; }
   .state-insight .mp-eltop-track { overflow: visible; }
   .state-insight .mp-eltop-fill.r1::after {
     content: ''; position: absolute; right: -1px; top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%;
-    background: color-mix(in srgb, var(--elc) 70%, #ffffff); opacity: .55;
-    box-shadow: 0 0 6px color-mix(in srgb, var(--elc) 45%, transparent);
+    background: var(--elc2, var(--elc)); opacity: .55;
+    box-shadow: 0 0 6px color-mix(in srgb, var(--elc2, var(--elc)) 45%, transparent);
   }
   .mp-ring { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 76px; }
   .mp-ring svg { width: 64px; height: 64px; }
@@ -551,6 +554,10 @@
   .mp-ring .base { stroke: #1a1630; }
   /* 購入済み：円周を少し明るく（MIRRORキャラの元素色が確定していればその色）、外側にごく弱い光。数値は白飛びさせない */
   .state-insight .mp-ring .arc { stroke: color-mix(in srgb, var(--rc) 85%, #ffffff); }
+  .mp-ring .arc-g { display: none; }
+  .state-insight .mp-ring .arc-g { display: inline; }
+  .state-insight .mp-ring .arc { display: none; }
+  .state-insight .mp-ring .who { filter: brightness(1.15); }
   .state-insight .mp-ring .base { stroke: color-mix(in srgb, var(--rc) 12%, #1a1630); }
   .state-insight .mp-ring svg { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--rc) 26%, transparent)); }
   .mp-ring .lbl { font-size: 10.5px; color: var(--fg-dim); letter-spacing: 1px; }
@@ -612,6 +619,12 @@
   .mp-then { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--card-border); font-size: 11.5px; color: var(--fg-dim); line-height: 1.8; }
   .mp-then-title { font-size: 11px; color: var(--fg); margin-bottom: 2px; }
   .mp-locked-title { margin-top: 14px; font-size: 11px; color: var(--fg); }
+  .mp-lockbox { margin-top: 4px; }
+  .mp-seen { margin-top: 12px; padding: 10px 12px; border: 1px solid var(--card-border); border-radius: 6px; background: rgba(255,255,255,0.012); }
+  .mp-seen-title { font-size: 11px; color: var(--fg-dim); margin-bottom: 4px; }
+  .mp-seen-list { list-style: none; margin: 0; padding: 0; }
+  .mp-seen-list li { font-size: 12px; color: var(--fg); line-height: 1.8; }
+  .mp-seen-list li::before { content: '✓'; color: var(--accent); margin-right: 6px; font-size: 11px; }
   .mp-locked-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--card-border); }
   .mp-locked-row .t { font-size: 12px; color: var(--fg); flex: 0 0 auto; }
   .mp-locked-row .blur { flex: 1; font-size: 11px; color: var(--fg-dim); filter: blur(3.5px); user-select: none; overflow: hidden; white-space: nowrap; }
@@ -976,6 +989,11 @@ const MP_NATION_COLOR = {
   "フォンテーヌ":"#5a8cc4", "ナタ":"#c0704c", "スネージナヤ":"#86a8c4", "ナドクライ":"#a49cd4",
 };
 const MP_NEUTRAL = 'var(--fg)';
+// 購入済みの元素バー・MIRRORリングのグラデーション終端色（表示専用）。始点は既存の元素色 MP_EL_COLOR。
+const MP_EL_GLOW_END = {
+  "水":"#7cc8ee", "雷":"#c3a4ee", "風":"#6cc8b4", "炎":"#eaa84e",
+  "草":"#b0d25c", "氷":"#cfe4fb", "岩":"#e8c264",
+};
 function mpTint(hex, t) {
   const m = /^#([0-9a-f]{6})$/i.exec(hex || '');
   if (!m) return null;
@@ -1185,12 +1203,19 @@ function mpElementTop3(r) {
   const mx = rows[0].score, mn = rows[6].score;
   return rows.slice(0, 3).map(x => ({ el: x.el, n: mx === mn ? 60 : Math.round(((x.score - mn) / (mx - mn)) * 100) }));
 }
-function mpRingSvg(pct, color) {
+let mpRingSeq = 0;
+// 未購入：単色の控えめな円周（.arc）。購入済み：元素色のグラデーション円周（.arc-g）に切り替える（CSSで出し分け）。
+function mpRingSvg(pct, color, grad) {
   const R = 26, C = 2 * Math.PI * R;
   const len = Math.max(0, Math.min(100, pct)) / 100 * C;
+  const id = 'mpRingGrad' + (++mpRingSeq);
+  const g = grad || [color, color];
   return `<svg viewBox="0 0 64 64" aria-hidden="true">
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${g[0]}"/><stop offset="1" stop-color="${g[1]}"/></linearGradient></defs>
     <circle class="base" cx="32" cy="32" r="${R}" fill="none" stroke-width="4"/>
     <circle class="arc" style="--rc:${color}" cx="32" cy="32" r="${R}" fill="none" stroke-width="4" stroke-linecap="round"
+      stroke-dasharray="${len.toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 32 32)"/>
+    <circle class="arc-g" stroke="url(#${id})" cx="32" cy="32" r="${R}" fill="none" stroke-width="4" stroke-linecap="round"
       stroke-dasharray="${len.toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 32 32)"/>
     <text x="32" y="36" text-anchor="middle" font-size="14" fill="#e0dcf0" font-family="IM Fell English, serif">${pct}%</text>
   </svg>`;
@@ -1206,12 +1231,12 @@ function mpVizHtml(r) {
         ${top3.map((e, i) => `
           <div class="mp-eltop">
             <div class="mp-eltop-label"><span class="el${i === 0 ? ' r1' : ''}" style="--elc:${MP_EL_COLOR[e.el]}">${i === 0 ? '◆' : i === 1 ? '②' : '③'} ${e.el}</span><span class="ax">${MP_ELEMENT_AXIS[e.el] || ''}</span></div>
-            <div class="mp-eltop-track"><div class="mp-eltop-fill${i === 0 ? ' r1' : ''}" style="width:${e.n}%;--elc:${MP_EL_COLOR[e.el]}"></div></div>
+            <div class="mp-eltop-track"><div class="mp-eltop-fill${i === 0 ? ' r1' : ''}" style="width:${e.n}%;--elc:${MP_EL_COLOR[e.el]};--elc2:${MP_EL_GLOW_END[e.el] || MP_EL_COLOR[e.el]}"></div></div>
           </div>`).join('')}
       </div>` : '<div></div>';
   const ring = hasRing ? `
       <div class="mp-ring" style="--rc:${MP_EL_COLOR[r.mirror.el] ? mpElText(r.mirror.el) : r.color}" role="img" aria-label="MIRROR ${r.mirror.name} 一致度${r.mirror.match}%">
-        ${mpRingSvg(r.mirror.match, MP_EL_COLOR[r.mirror.el] ? mpElText(r.mirror.el) : r.color)}
+        ${mpRingSvg(r.mirror.match, MP_EL_COLOR[r.mirror.el] ? mpElText(r.mirror.el) : r.color, (() => { const ge = MP_EL_COLOR[r.mirror.el] ? r.mirror.el : r.el; return MP_EL_COLOR[ge] ? [MP_EL_COLOR[ge], MP_EL_GLOW_END[ge]] : null; })())}
         <span class="lbl">MIRROR</span>
         <span class="who" style="color:${mpMirrorText(r.mirror)}">${r.mirror.name}</span>
       </div>` : '';
@@ -1262,11 +1287,44 @@ function mpInsightCards(r) {
   // 旧版（legacy-v1）：旧版が測定していた項目のみ。v2へ換算しない。
   const pr = s.primaryResult || {};
   const big5 = mpRankedAxes((s.scores && s.scores.big5) || null, MP_BIG5_NAME);
+  const et = pr.enneagram_type, ew = pr.enneagram_wing;
+  const values = mpRankedAxes(mpLegacySchwartzScores(s.scores), MP_LEGACY_VALUE_NAME, MP_LEGACY_VALUE_ORDER);
   return [
     { d: 'personality', t: 'パーソナリティ', title: mpTop2TitleHtml(big5.slice(0, 2).map(x => x.name)), body: mpGaugesHtml(big5, 2), n: note },
-    { d: 'motive', t: '動機（旧版）', body: `<div class="v">${pr.enneagram_type ? `タイプ${mpEsc(pr.enneagram_type)}「${MP_ENNEA_NAME[pr.enneagram_type] || ''}」` : '—'}</div>`, n: 'エニアグラム' },
-    { d: 'values', t: '価値観', body: `<div class="v">${pr.nation ? `<span class="nat" style="color:${mpNatText(pr.nation)}">${mpEsc(pr.nation)}</span>「${(typeof NATION_MEANING !== 'undefined' && NATION_MEANING[pr.nation]) || ''}」` : '—'}</div>`, n: '国家' },
+    { d: 'motive', t: '動機',
+      title: MP_ENNEA_NAME[et] ? `<div class="tag"><span class="a1" style="color:${MP_ENNEA_COLOR[et]}">タイプ${et}（${MP_ENNEA_NAME[et]}）</span>${MP_ENNEA_NAME[ew] ? `<span class="mp-x"> ／ </span><span class="a2" style="color:${MP_ENNEA_COLOR[ew]}">ウィング${ew}（${MP_ENNEA_NAME[ew]}）</span>` : ''}</div>` : '',
+      body: MP_ENNEA_NAME[et] ? `<div class="v mp-ennea-code"><span style="color:${MP_ENNEA_COLOR[et]}">${et}</span>${MP_ENNEA_NAME[ew] ? `<span style="color:${MP_ENNEA_COLOR[ew]}">w${ew}</span>` : ''}</div>` : '', n: 'エニアグラム' },
+    { d: 'values', t: '価値観', title: mpTop2TitleHtml(values.slice(0, 2).map(x => x.name)), body: mpGaugesHtml(values, 2), n: note },
   ];
+}
+// エニアグラム9タイプの表示色（表示専用。低彩度で世界観に馴染む色）
+const MP_ENNEA_COLOR = {
+  1:"#d6c68e", 2:"#dc9fb0", 3:"#e2ac62", 4:"#ad90dc", 5:"#82acdc",
+  6:"#8fbe9e", 7:"#e8c070", 8:"#dc836f", 9:"#8ecccc",
+};
+// 旧版の価値観10次元：report.html の computeSchwartzScores() と同じ辞書・同じ計算
+// （国家スコア(-1〜1)を0〜100へ換算し、複数国家にまたがる次元は平均。博愛は協調性(A)）。国家名は表示しない。
+const MP_LEGACY_VALUE_ORDER = ['自己志向','刺激','達成','伝統','安全','普遍主義','同調','権力','快楽','博愛'];
+const MP_LEGACY_VALUE_NAME = Object.fromEntries(MP_LEGACY_VALUE_ORDER.map(v => [v, v]));
+const MP_LEGACY_NATION_VALUES = {
+  "モンド":['自己志向','刺激'], "璃月":['達成','伝統'], "稲妻":['伝統','安全'], "スメール":['普遍主義'],
+  "フォンテーヌ":['普遍主義','同調'], "ナタ":['刺激','快楽'], "スネージナヤ":['権力','達成'], "ナドクライ":['自己志向','安全'],
+};
+function mpLegacySchwartzScores(scores) {
+  const ns = scores && Array.isArray(scores.nations) ? scores.nations : null;
+  const big5 = scores && scores.big5;
+  if (!ns || !ns.length) return null;
+  const valueNations = {};
+  Object.entries(MP_LEGACY_NATION_VALUES).forEach(([n, vs]) => vs.forEach(v => { (valueNations[v] = valueNations[v] || []).push(n); }));
+  const out = {};
+  MP_LEGACY_VALUE_ORDER.forEach(v => {
+    if (v === '博愛') { if (big5 && typeof big5.A === 'number') out[v] = big5.A; return; }
+    const nations = valueNations[v] || [];
+    if (!nations.length) { out[v] = 50; return; }
+    const vals = nations.map(n => { const x = ns.find(e => e && e.nation === n); return x && typeof x.score === 'number' ? Math.round((x.score + 1) * 50) : 50; });
+    out[v] = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+  });
+  return out;
 }
 function mpInsightHtml(r) {
   return `
@@ -1295,15 +1353,28 @@ async function mpRetryEntitlement(button) {
 }
 
 /* ---- まだ読み解いていない部分（実データは一切出さない固定の見出し＋輪郭だけのゲージ） ---- */
-function mpLockedHtml(r) {
-  const rows = r.isLegacy
-    ? [['動機の深層', 'あなたを動かしているもの'], ['パーソナリティの深層', '考え方・感じ方の傾向'], ['価値観の深層', '大切にしているもの・目指すもの']]
-    : [['行動スタイルの深層', 'あなたの行動の核にあるもの'], ['パーソナリティの深層', '考え方・感じ方の傾向'], ['価値観の深層', '大切にしているもの・目指すもの']];
+// 未購入の訴求：LATEST RESULT と THE RECORDS で同じ内容・同じ文言（CTAの主語だけ「この結果／この記録」）。
+// 実値は一切出さず、「何が解放されるのか」だけを見出し・短い説明・輪郭だけのゲージで示す。
+// 旧版（legacy-v1）の解析レポートには行動スタイル（STYLE）が無いため、その行だけ旧版が測定していた「動機」を示す。
+function mpLockedHtml(r, where) {
+  const rows = [
+    ['パーソナリティの深層', '考え方・感じ方の傾向'],
+    r.isLegacy ? ['動機の深層', 'あなたを動かしているもの'] : ['行動スタイルの深層', 'あなたの行動の核にあるもの'],
+    ['価値観の深層', '大切にしているもの・目指すもの'],
+    ['MIRRORの深層', 'あなたと近しい隠されたキャラクターたち（4名）'],
+  ];
+  const isLatest = where === 'latest';
   return `
-    <div class="mp-locked-title">まだ読み解いていない部分</div>
-    ${rows.map(([t, cap]) => `<div class="mp-locked-row"><span class="txt"><span class="t">${t}</span><span class="cap">${cap}</span><span class="ghost" aria-hidden="true"></span></span><span class="lk" aria-label="未解析">🔒</span></div>`).join('')}
-    <p class="mp-rec-cta-note">この記録には、まだ知らない自分があります。</p>
-    ${mpReportCtaHtml(r, 'records', 'この記録の解析レポートを見る')}`;
+    <div class="mp-lockbox">
+      <div class="mp-seen">
+        <div class="mp-seen-title">すでに見えているもの</div>
+        <ul class="mp-seen-list"><li>元素・武器・国家の判定結果</li><li>近しいキャラクター1名</li></ul>
+      </div>
+      <div class="mp-locked-title">まだ読み解いていないもの</div>
+      ${rows.map(([t, cap]) => `<div class="mp-locked-row"><span class="txt"><span class="t">${t}</span><span class="cap">${cap}</span><span class="ghost" aria-hidden="true"></span></span><span class="lk" aria-label="未解析">🔒</span></div>`).join('')}
+      <p class="mp-rec-cta-note">この記録には、まだ知らない自分があります。</p>
+      ${mpReportCtaHtml(r, isLatest ? 'latest' : 'records', isLatest ? 'この結果の解析レポートを見る' : 'この記録の解析レポートを見る')}
+    </div>`;
 }
 
 /* ---- 共有：/api/share（個別OGP）経由。符号化の並び順はshare.js・og-image.mjsと同一。
@@ -1380,7 +1451,7 @@ function mpLatestHtml(r) {
   } else if (r.purchased) {
     state = mpInsightHtml(r) + mpReadReportBtn(r);
   } else {
-    state = `<div class="mp-notice"><p>この記録には、<br>まだ読み解いていない部分があります</p>${mpReportCtaHtml(r, 'latest', 'この結果の解析レポートを見る')}</div>`;
+    state = mpLockedHtml(r, 'latest');
   }
   return `
     <section class="mp-sec" aria-labelledby="mp-latest-h">
@@ -1448,7 +1519,7 @@ function mpRecordHtml(r, i) {
   let body;
   if (!mpEntitlementOk) body = mpVizHtml(r) + `<div class="mp-notice"><p>この記録の購入状態を確認できませんでした</p></div>`;
   else if (r.purchased) body = mpInsightHtml(r) + mpVizHtml(r) + mpReadReportBtn(r);
-  else body = mpVizHtml(r) + mpLockedHtml(r);
+  else body = mpVizHtml(r) + mpLockedHtml(r, 'records');
   return `
     <details class="mp-rec state-${r.purchased ? 'insight' : 'record'}" style="--lc:${r.color}" id="mp-rec-${i}" ontoggle="if(this.open){trackEvent('diagnosis_history_open',{diagnosis_type:'${r.kind}'})}">
       <summary>
