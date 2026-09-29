@@ -375,25 +375,42 @@
   .mp-stat-ja { font-size: 11px; color: var(--fg-dim); margin-top: 2px; }
   .mp-stat-num.unknown { color: var(--fg-dim); }
 
-  /* ---- 記録章（エンブレム） ----
-     2026秋季章（〜11月末想定）。RECORD/INSIGHTは文字ではなく発光差で表現する。 */
+  /* ---- 記録章（PNGエンブレム / season-pinned） ----
+     RECORDとAWAKENEDは別画像。
+     過去の記録は診断日からシーズンを決定するため、次シーズン追加時にも旧章は置換されない。 */
   .mp-emblem {
-    position: relative; display: inline-flex; align-items: center; justify-content: center;
-    width: 58px; height: 58px; color: var(--c, #7ab8e8); isolation: isolate;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 58px;
+    color: var(--c, #7ab8e8);
+    isolation: isolate;
   }
-  .mp-emblem::before, .mp-emblem::after {
-    content: ''; position: absolute; inset: 7px;
-    border: 1px solid color-mix(in srgb, var(--c, #7ab8e8) 58%, #dcd7ef);
-    transform: rotate(45deg); border-radius: 4px; pointer-events: none;
+  .mp-emblem::before,
+  .mp-emblem::after { content: none; }
+  .mp-emblem img {
+    display: block;
+    width: 58px;
+    height: 58px;
+    object-fit: contain;
+    transform: translateZ(0);
   }
-  .mp-emblem::before { opacity: .52; }
-  .mp-emblem::after { inset: 11px; opacity: .18; border-style: dotted; }
-  .mp-emblem svg {
-    position: relative; z-index: 1; width: 34px; height: 34px;
-    filter: drop-shadow(0 0 2px color-mix(in srgb, var(--c, #7ab8e8) 42%, transparent));
+  .mp-emblem.lg { width: 82px; height: 82px; }
+  .mp-emblem.lg img { width: 82px; height: 82px; }
+
+  /* RECORD：そのシーズンの未覚醒画像をそのまま使う。CSSで別物に加工しない。 */
+  .state-record .mp-emblem img {
+    opacity: .78;
+    filter: saturate(.80) brightness(.84);
   }
-  .mp-emblem.lg { width: 78px; height: 78px; }
-  .mp-emblem.lg svg { width: 44px; height: 44px; }
+
+  /* AWAKENED：購入済み専用の別画像を表示。追加のネオン化はせず、画像自体の演出を主役にする。 */
+  .state-insight .mp-emblem img {
+    opacity: 1;
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--c, #7ab8e8) 12%, transparent));
+  }
 
   /* ---- LATEST RESULT ---- */
   .mp-latest { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 16px; }
@@ -518,38 +535,18 @@
     font-size: 11px; letter-spacing: 1.4px; border: 1px dashed color-mix(in srgb, var(--badge-c) 28%, var(--card-border));
     border-radius: 3px; padding: 1px 7px; color: var(--fg-dim); margin-top: 1px; opacity: .82;
   }
-
-  .mp-badge.state-record {
-    border-color: color-mix(in srgb, var(--badge-c) 32%, var(--card-border));
-    box-shadow: 0 0 10px color-mix(in srgb, var(--badge-c) 7%, transparent),
-                inset 0 0 12px color-mix(in srgb, var(--badge-c) 4%, transparent);
-  }
-  .mp-badge.state-record .mp-emblem { opacity: .82; }
-  .mp-badge.state-record .mp-emblem svg {
-    filter: drop-shadow(0 0 2px color-mix(in srgb, var(--badge-c) 38%, transparent));
-  }
-
+  /* コレクションはカードではなく記録章が主役。状態差は別画像で表現する。 */
+  .mp-badge.state-record,
   .mp-badge.state-insight {
-    border-color: color-mix(in srgb, var(--badge-c) 68%, #d9d3ea);
-    background:
-      radial-gradient(circle at 50% 23%, color-mix(in srgb, var(--badge-c) 17%, transparent), transparent 56%),
-      linear-gradient(180deg, color-mix(in srgb, var(--badge-c) 4%, transparent), transparent 48%),
-      var(--card-bg);
-    box-shadow:
-      0 0 16px color-mix(in srgb, var(--badge-c) 18%, transparent),
-      0 0 30px color-mix(in srgb, var(--badge-c) 8%, transparent),
-      inset 0 0 18px color-mix(in srgb, var(--badge-c) 7%, transparent);
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
   }
-  .mp-badge.state-insight .mp-emblem::before {
-    opacity: .82;
-    box-shadow: 0 0 9px color-mix(in srgb, var(--badge-c) 38%, transparent);
+  .mp-badge.state-insight .nm {
+    text-shadow: 0 0 7px color-mix(in srgb, var(--badge-c) 10%, transparent);
   }
-  .mp-badge.state-insight .mp-emblem::after { opacity: .30; }
-  .mp-badge.state-insight .mp-emblem svg {
-    filter:
-      drop-shadow(0 0 4px color-mix(in srgb, var(--badge-c) 70%, transparent))
-      drop-shadow(0 0 9px color-mix(in srgb, var(--badge-c) 24%, transparent));
-  }
+
+
 
   /* ---- THE RECORDS ---- */
   .mp-rec { border: 1px solid var(--card-border); border-radius: 8px; background: var(--card-bg); margin-bottom: 8px; overflow: hidden; }
@@ -978,23 +975,75 @@ function mpTopKeys(obj, n) {
   return Object.keys(obj).filter(k => typeof obj[k] === 'number').sort((a, b) => obj[b] - obj[a]).slice(0, n);
 }
 
-/* ---- 2026秋季・7元素記録章（〜11月末想定） ----
-   ゲーム内元素アイコンの模写ではなく、「結晶標本 / 天体観測図」を基調にしたオリジナル意匠。
-   次シーズンではこの辞書だけを差し替えられるよう、表示ロジックとは分離する。 */
-const MP_EMBLEM_SEASON = '2026-autumn-through-1130';
-const MP_EMBLEM_SVG = {
-  "炎": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4.5c1.2 6.1 7.9 8.6 7.9 15.8 0 5.4-3.4 10-7.9 14.8-4.5-4.8-7.9-9.4-7.9-14.8 0-4.1 2.2-7.2 5.5-10.2-.1 3.2.6 5.2 2.4 7.1 1.8-3.7 1.7-8.1 0-12.7z" stroke-width="1.55"/><path d="M20 21c2.7 2.2 4 4.1 4 6.2 0 2.1-1.4 4-4 6.3-2.6-2.3-4-4.2-4-6.3 0-2.1 1.3-4 4-6.2z" stroke-width="1.15" opacity=".72"/></g><circle cx="20" cy="20" r="2.1" fill="currentColor" opacity=".28"/>',
-  "水": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4.7c5 6.7 9.1 11.9 9.1 18.1A9.1 9.1 0 0 1 20 31.9a9.1 9.1 0 0 1-9.1-9.1c0-6.2 4.1-11.4 9.1-18.1z" stroke-width="1.55"/><path d="M13.7 23.6c2.3 2.1 4.5 2.1 6.6 0 2-2 4-2.1 6-.4" stroke-width="1.25"/><path d="M15.4 27.3c1.7 1.2 3.1 1.2 4.7-.1 1.5-1.2 3-1.4 4.6-.2" stroke-width=".95" opacity=".62"/></g><circle cx="20" cy="14.6" r="1.65" fill="currentColor" opacity=".34"/>',
-  "氷": '<g fill="none" stroke="currentColor" stroke-linecap="round"><path d="M20 4.5v31M6.6 12.2l26.8 15.6M6.6 27.8l26.8-15.6" stroke-width="1.3"/><path d="M16.8 7.5L20 10l3.2-2.5M16.8 32.5L20 30l3.2 2.5M9.4 13.8l4 .3-1.7-3.6M30.6 26.2l-4-.3 1.7 3.6M9.4 26.2l4-.3-1.7 3.6M30.6 13.8l-4 .3 1.7-3.6" stroke-width="1.05" opacity=".82"/></g><path d="M20 14.5l4.8 2.7v5.6L20 25.5l-4.8-2.7v-5.6z" fill="currentColor" opacity=".18" stroke="currentColor" stroke-width="1.05"/>',
-  "雷": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M23.3 4.7L11.1 21.3h8.2l-3.5 14 13.1-18.5h-8.1z" stroke-width="1.55"/><path d="M8.1 27.5c2.7-1.5 5.2-1.4 7.7.2M24.5 11.5c2.7-1.3 5.1-1.1 7.3.5" stroke-width=".9" opacity=".55"/></g><circle cx="29.2" cy="26.9" r="1.5" fill="currentColor" opacity=".35"/>',
-  "風": '<g fill="none" stroke="currentColor" stroke-linecap="round"><path d="M6.2 14.5h16.2c4.7 0 6.7-2.4 6.7-4.9 0-2.3-1.7-4-4-4-2.2 0-3.7 1.3-4.1 3.1" stroke-width="1.45"/><path d="M5.7 21h22.2c4 0 6.2 2.1 6.2 4.7 0 2.3-1.8 4.2-4.2 4.2-2 0-3.6-1.2-4.1-3" stroke-width="1.45"/><path d="M7 27.7h10.2" stroke-width="1.05" opacity=".72"/></g><circle cx="11.2" cy="20.9" r="1.35" fill="currentColor" opacity=".28"/>',
-  "岩": '<g fill="none" stroke="currentColor" stroke-linejoin="round"><path d="M20 4.8l11.6 8.8-3.4 16.7L20 35.2l-8.2-4.9-3.4-16.7z" stroke-width="1.45"/><path d="M20 4.8v30.4M8.4 13.6h23.2M11.8 30.3l8.2-8.5 8.2 8.5" stroke-width="1.05" opacity=".7"/></g><path d="M20 12l5 3.7-1.9 7.3-3.1 3.1-3.1-3.1-1.9-7.3z" fill="currentColor" opacity=".16" stroke="currentColor" stroke-width="1"/>',
-  "草": '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M8.9 31.4C9.2 17.1 17.7 7.8 31.8 7.3c-.4 14.2-8.7 23.8-22.9 24.1z" stroke-width="1.45"/><path d="M9.4 31L25.8 14.5M15.4 24.9l-4.2-2.3M20.1 20.1l5.4 1.1M18.1 17.4l-1.1-5" stroke-width="1.05" opacity=".78"/></g><circle cx="28.9" cy="10.5" r="1.5" fill="currentColor" opacity=".34"/>',
+/* ---- 記録章シーズンレジストリ ----
+   重要：過去シーズンの定義は削除・上書きしない。
+   新シーズンは MP_EMBLEM_SEASONS に「追加」する。
+   record.emblemSeason が将来DBに保存されればそれを最優先し、
+   現在の既存記録は completedAt/date から決定論的にシーズンを復元する。 */
+const MP_EMBLEM_SEASONS = {
+  '2026-autumn': {
+    // 最初の基準シーズン。開始日より前の既存記録（旧版を含む）もこの章に固定する。
+    from: '2026-09-01T00:00:00+09:00',
+    // 表示・運用上の目安。判定には使わない（次シーズンの開始日で切り替わる）。
+    to:   '2026-11-30T23:59:59+09:00',
+    record: {
+      "炎":"assets/emblems/2026-autumn/record/pyro.png",
+      "水":"assets/emblems/2026-autumn/record/hydro.png",
+      "風":"assets/emblems/2026-autumn/record/anemo.png",
+      "雷":"assets/emblems/2026-autumn/record/electro.png",
+      "草":"assets/emblems/2026-autumn/record/dendro.png",
+      "氷":"assets/emblems/2026-autumn/record/cryo.png",
+      "岩":"assets/emblems/2026-autumn/record/geo.png",
+    },
+    awakened: {
+      "炎":"assets/emblems/2026-autumn/awakened/pyro.png",
+      "水":"assets/emblems/2026-autumn/awakened/hydro.png",
+      "風":"assets/emblems/2026-autumn/awakened/anemo.png",
+      "雷":"assets/emblems/2026-autumn/awakened/electro.png",
+      "草":"assets/emblems/2026-autumn/awakened/dendro.png",
+      "氷":"assets/emblems/2026-autumn/awakened/cryo.png",
+      "岩":"assets/emblems/2026-autumn/awakened/geo.png",
+    },
+  },
 };
+// 基準シーズン（最初のシーズン）。この値は変更しない。
+// 最も早い開始日より前の記録と、日付が読めない記録はこの章に固定する。
+const MP_EMBLEM_BASE_SEASON = '2026-autumn';
+
+function mpEmblemSeasonKey(record) {
+  // 将来、保存データへ emblemSeason を持たせた場合はそれを最優先。
+  const explicit = record && (record.emblemSeason || (record.session && record.session.emblemSeason));
+  if (explicit && MP_EMBLEM_SEASONS[explicit]) return explicit;
+
+  // 保存値が無い既存記録は、診断完了日時と各シーズンの「開始日」だけで決める。
+  // 開始日が記録日時以前のシーズンのうち最も新しいものを採用するため、
+  // 新シーズンを追加しても、その開始日より前の記録の章は変わらない。
+  const raw = record && (record.date || (record.session && record.session.completedAt));
+  const t = raw ? new Date(raw).getTime() : NaN;
+  if (!isFinite(t)) return MP_EMBLEM_BASE_SEASON;
+  let picked = MP_EMBLEM_BASE_SEASON, pickedFrom = -Infinity;
+  for (const [key, season] of Object.entries(MP_EMBLEM_SEASONS)) {
+    const from = new Date(season.from).getTime();
+    if (isFinite(from) && from <= t && from > pickedFrom) { picked = key; pickedFrom = from; }
+  }
+  // どのシーズンの開始日よりも前の記録（2026-09-01以前）は基準シーズンに固定
+  return picked;
+}
+
+function mpEmblemSrc(record) {
+  const seasonKey = mpEmblemSeasonKey(record);
+  const season = MP_EMBLEM_SEASONS[seasonKey] || MP_EMBLEM_SEASONS[MP_EMBLEM_BASE_SEASON];
+  const state = record && record.purchased ? 'awakened' : 'record';
+  const el = record && record.el;
+  return (season[state] && season[state][el]) || '';
+}
+
 function mpEmblemHtml(record, size) {
   const color = record.color || '#7ab8e8';
-  const svg = record.emblemSvg || MP_EMBLEM_SVG[record.el] || '<circle cx="20" cy="20" r="11" fill="none" stroke="currentColor" stroke-width="1.8"/>';
-  return `<span class="mp-emblem ${size === 'lg' ? 'lg' : ''}" style="--c:${color}" aria-hidden="true"><svg viewBox="0 0 40 40">${svg}</svg></span>`;
+  const src = mpEmblemSrc(record);
+  if (!src) return '';
+  const stateLabel = record.purchased ? '解析済みの記録章' : '記録章';
+  return `<span class="mp-emblem ${size === 'lg' ? 'lg' : ''}" style="--c:${color}" aria-hidden="true"><img src="${src}" alt="${mpEsc(record.el || '')}${stateLabel}" loading="lazy" decoding="async"></span>`;
 }
 
 /* ============================================================
@@ -1033,6 +1082,8 @@ const MP_KINDS = {
         code: el && w ? mpTypeCode(el, w, nation) : '',
         typeName: (el && w && MP_TYPE_NAME[el]) ? MP_TYPE_NAME[el][w] : '',
         purchased: !!s.purchased, resultUrl,
+        // 現在は保存値が無くても日付から復元可能。将来DBに保存されたら自動的に優先される。
+        emblemSeason: s.emblemSeason || null,
       };
     },
   },
