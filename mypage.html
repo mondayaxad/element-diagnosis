@@ -569,6 +569,19 @@
   .mp-ent-warn .sub { font-size: 11px; color: var(--fg-dim); margin-bottom: 10px; line-height: 1.7; }
 
   /* ---- YOUR COLLECTION ---- */
+  .mp-col-wrap { position: relative; }
+  .mp-col-count { margin-left: auto; font-size: 11px; color: var(--fg-dim); letter-spacing: .5px; }
+  .mp-col-wrap.has-more::after {
+    content: ''; position: absolute; top: 0; right: 0; bottom: 10px; width: 36px; pointer-events: none;
+    background: linear-gradient(90deg, transparent, var(--bg) 88%);
+  }
+  .mp-col-next {
+    position: absolute; right: 2px; top: 44px; z-index: 1; width: 30px; height: 30px; border-radius: 50%;
+    border: 1px solid var(--card-border); background: rgba(16,14,28,0.9); color: var(--fg-dim);
+    font-size: 16px; line-height: 1; cursor: pointer; font-family: inherit;
+  }
+  .mp-col-next:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .mp-col-wrap.at-end::after, .mp-col-wrap.at-end .mp-col-next { display: none; }
   .mp-collection { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; scroll-snap-type: x proximity; scroll-padding-inline: 2px; -webkit-overflow-scrolling: touch; }
   .mp-badge {
     --badge-c: var(--el-color, var(--accent));
@@ -1484,7 +1497,8 @@ function mpLatestHtml(r) {
 function mpCollectionHtml(records) {
   return `
     <section class="mp-sec" aria-labelledby="mp-col-h">
-      <div class="mp-sec-head" id="mp-col-h"><span class="mp-sec-en">YOUR COLLECTION</span><span class="mp-sec-ja">集めてきた記録章</span></div>
+      <div class="mp-sec-head" id="mp-col-h"><span class="mp-sec-en">YOUR COLLECTION</span><span class="mp-sec-ja">集めてきた記録章</span>${records.length >= 4 ? `<span class="mp-col-count">全${records.length}件</span>` : ''}</div>
+      <div class="mp-col-wrap${records.length >= 4 ? ' has-more' : ''}" id="mp-col-wrap">
       <div class="mp-collection" id="mp-collection" role="list">
         ${records.map((r, i) => `
           <button type="button" role="listitem"
@@ -1498,7 +1512,21 @@ function mpCollectionHtml(records) {
             ${mpEntitlementOk && !r.purchased ? '<span class="st">LOCKED</span>' : ''}
           </button>`).join('')}
       </div>
+      ${records.length >= 4 ? `<button type="button" class="mp-col-next" onclick="mpCollectionNext()" aria-label="記録章の続きを見る（全${records.length}件）">›</button>` : ''}
+      </div>
     </section>`;
+}
+// 4件以上のときだけ：右端の見切れ（フェード）と小さな矢印で、続きがあることを示す。末尾まで来たら隠す。
+function mpCollectionUpdateHint() {
+  const wrap = document.getElementById('mp-col-wrap'), col = document.getElementById('mp-collection');
+  if (!wrap || !col) return;
+  wrap.classList.toggle('at-end', col.scrollLeft + col.clientWidth >= col.scrollWidth - 4);
+}
+function mpCollectionNext() {
+  const col = document.getElementById('mp-collection');
+  if (!col) return;
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  col.scrollBy({ left: Math.round(col.clientWidth * 0.8), behavior: reduce ? 'auto' : 'smooth' });
 }
 function mpOpenRecord(i) {
   const d = document.getElementById('mp-rec-' + i);
@@ -1591,6 +1619,9 @@ function renderMypage(root, sessions, uid) {
     ${mpRediagHtml()}
     ${mpAccountHtml(uid)}
   `;
+
+  const mpCol = document.getElementById('mp-collection');
+  if (mpCol) { mpCol.addEventListener('scroll', mpCollectionUpdateHint, { passive: true }); mpCollectionUpdateHint(); }
 
   trackEvent('mypage_view', {
     entry_point: 'mypage',
