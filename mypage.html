@@ -413,7 +413,7 @@
     filter: drop-shadow(0 0 4px color-mix(in srgb, var(--c, #7ab8e8) 16%, transparent));
   }
   .mp-latest.state-insight .mp-latest-main .mp-emblem img {
-    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c, #7ab8e8) 26%, transparent));
+    filter: drop-shadow(0 0 7px color-mix(in srgb, var(--c, #7ab8e8) 30%, transparent));
   }
   .mp-rec.state-insight .mp-free .mp-emblem img {
     filter: drop-shadow(0 0 4px color-mix(in srgb, var(--c, #7ab8e8) 18%, transparent));
@@ -431,36 +431,50 @@
     box-shadow: 0 0 7px color-mix(in srgb, var(--c, #7ab8e8) 24%, transparent);
   }
   .mp-badge.state-insight .mp-emblem img {
-    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c, #7ab8e8) 30%, transparent));
+    filter: drop-shadow(0 0 7px color-mix(in srgb, var(--c, #7ab8e8) 36%, transparent));
   }
 
   /* ---- LATEST RESULT ---- */
   .mp-latest { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 16px; }
 
   /* ---- 購入状態の見た目（LATEST RESULT／YOUR COLLECTION／THE RECORDSで共通の考え方） ----
-     未購入：LOCKEDを表示し、元素色は弱く静かな枠のまま。
+     未購入：「未読の頁」を表示し、元素色は弱く静かな枠のまま。
      購入済：状態文字は出さず、元素色の枠・エンブレム・ごく薄い背景光で静かに煌めく（ネオンにはしない）。 */
   .mp-latest.state-record, .mp-latest.state-insight {
     border-color: color-mix(in srgb, var(--lc, #7ab8e8) 33%, var(--card-border));
     background: linear-gradient(160deg, color-mix(in srgb, var(--lc, #7ab8e8) 8%, transparent), var(--card-bg) 55%);
   }
+  /* 購入済み：暗い紺をベースに、元素色（左上）と、その明るい色（右下）の淡いにじみを重ねる。文字の下地は暗いまま。 */
   .mp-latest.state-insight {
-    border-color: color-mix(in srgb, var(--lc, #7ab8e8) 72%, #d9d3ea);
+    border-color: color-mix(in srgb, var(--lc, #7ab8e8) 70%, #e2ddf2);
     background:
-      radial-gradient(ellipse 70% 55% at 22% 18%, color-mix(in srgb, var(--lc, #7ab8e8) 14%, transparent), transparent 70%),
-      linear-gradient(160deg, color-mix(in srgb, var(--lc, #7ab8e8) 9%, transparent), var(--card-bg) 55%);
+      radial-gradient(ellipse 75% 60% at 18% 12%, color-mix(in srgb, var(--lc, #7ab8e8) 13%, transparent), transparent 72%),
+      radial-gradient(ellipse 70% 55% at 100% 100%, color-mix(in srgb, var(--lc2, #7ab8e8) 8%, transparent), transparent 70%),
+      linear-gradient(165deg, color-mix(in srgb, var(--lc, #7ab8e8) 7%, #0b0a18), #0b0a18 60%);
     box-shadow:
-      0 0 12px color-mix(in srgb, var(--lc, #7ab8e8) 18%, transparent),
-      inset 0 0 22px color-mix(in srgb, var(--lc, #7ab8e8) 5%, transparent);
+      0 0 14px color-mix(in srgb, var(--lc, #7ab8e8) 20%, transparent),
+      0 0 30px color-mix(in srgb, var(--lc, #7ab8e8) 7%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--lc2, #7ab8e8) 18%, transparent),
+      inset 0 0 26px color-mix(in srgb, var(--lc, #7ab8e8) 6%, transparent);
   }
   .mp-rec.state-record { border-color: color-mix(in srgb, var(--lc, #7ab8e8) 20%, var(--card-border)); }
+  /* にじみの上でも補助テキストの読みやすさを無地のとき以上に保つため、購入済みカード内だけ補助色をわずかに明るく */
+  .mp-latest.state-insight, .mp-rec.state-insight { --fg-dim: #7d7799; }
   .mp-rec.state-insight {
     border-color: color-mix(in srgb, var(--lc, #7ab8e8) 62%, #d9d3ea);
-    background: linear-gradient(90deg, color-mix(in srgb, var(--lc, #7ab8e8) 4%, transparent), transparent 65%), var(--card-bg);
+    background:
+      radial-gradient(ellipse 55% 140% at 0% 0%, color-mix(in srgb, var(--lc, #7ab8e8) 11%, transparent), transparent 70%),
+      radial-gradient(ellipse 45% 120% at 100% 100%, color-mix(in srgb, var(--lc2, #7ab8e8) 5%, transparent), transparent 70%),
+      var(--card-bg);
     box-shadow:
-      inset 2px 0 0 color-mix(in srgb, var(--lc, #7ab8e8) 45%, transparent),
-      0 0 6px color-mix(in srgb, var(--lc, #7ab8e8) 9%, transparent);
+      inset 2px 0 0 color-mix(in srgb, var(--lc, #7ab8e8) 50%, transparent),
+      0 0 7px color-mix(in srgb, var(--lc, #7ab8e8) 10%, transparent);
   }
+  /* 開いた本文は情報優先：にじみは見出し側だけに留め、本文の下地は暗いまま */
+  .mp-rec.state-insight[open] { background:
+      radial-gradient(ellipse 60% 220px at 0% 0%, color-mix(in srgb, var(--lc, #7ab8e8) 11%, transparent), transparent 75%),
+      radial-gradient(ellipse 50% 260px at 100% 100%, color-mix(in srgb, var(--lc2, #7ab8e8) 5%, transparent), transparent 75%),
+      var(--card-bg); }
   .mp-latest.state-insight .mp-emblem::before, .mp-rec.state-insight .mp-emblem::before {
     opacity: .82; box-shadow: 0 0 9px color-mix(in srgb, var(--c, #7ab8e8) 38%, transparent);
   }
@@ -473,10 +487,11 @@
   .mp-latest-main { display: flex; gap: 10px; align-items: flex-start; }
   .mp-latest-info { flex: 1; min-width: 0; }
   .mp-chip-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-  .mp-chip { font-size: 11px; letter-spacing: 1px; border: 1px solid var(--card-border); border-radius: 4px; padding: 1px 7px; color: var(--fg-dim); }
+  .mp-chip { font-size: 11px; line-height: 16px; letter-spacing: .5px; border: 1px solid var(--card-border); border-radius: 4px; padding: 1px 7px; color: var(--fg-dim); }
   .mp-chip.new { background: var(--accent-dim); border-color: var(--accent); color: #e0f4ff; }
   .mp-chip.insight { border-color: #c0a860; color: #c0a860; }
-  .mp-chip.locked { border-style: dashed; border-color: #5a5478; color: #8a84a6; background: rgba(255,255,255,0.015); }
+  /* 未解放：直接的なラベルではなく「まだ読まれていない頁」として静かに示す（点線・淡色・背景なし） */
+  .mp-chip.locked { border-style: dotted; border-color: #4a4566; color: #8a84a6; background: transparent; letter-spacing: .04em; padding: 1px 6px; }
   .mp-chip.legacy { border-style: dashed; }
   .mp-latest-code { font-size: 12px; color: var(--fg-dim); margin-top: 6px; letter-spacing: 1px; }
   .mp-latest-code b { color: var(--fg); font-weight: 700; margin-right: 8px; }
@@ -542,7 +557,7 @@
   .state-insight .mp-eltop-label .el { color: color-mix(in srgb, var(--elc) 78%, #ffffff); }
   .state-insight .mp-eltop-fill { background: linear-gradient(90deg, var(--elc), var(--elc2, var(--elc))); opacity: .72; }
   .state-insight .mp-eltop-fill.r1 { opacity: 1; }
-  .state-insight .mp-eltop-track { overflow: visible; }
+  .state-insight .mp-eltop-track { overflow: visible; background: color-mix(in srgb, var(--lc, #7ab8e8) 10%, #0a0916); }
   .state-insight .mp-eltop-fill.r1::after {
     content: ''; position: absolute; right: -1px; top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%;
     background: var(--elc2, var(--elc)); opacity: .55;
@@ -558,7 +573,7 @@
   .state-insight .mp-ring .arc-g { display: inline; }
   .state-insight .mp-ring .arc { display: none; }
   .state-insight .mp-ring .who { filter: brightness(1.15); }
-  .state-insight .mp-ring .base { stroke: color-mix(in srgb, var(--rc) 12%, #1a1630); }
+  .state-insight .mp-ring .base { stroke: color-mix(in srgb, var(--rc) 18%, #15122a); }
   .state-insight .mp-ring svg { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--rc) 26%, transparent)); }
   .mp-ring .lbl { font-size: 10.5px; color: var(--fg-dim); letter-spacing: 1px; }
   .mp-ring .who { font-size: 11px; color: var(--fg); max-width: 88px; text-align: center; line-height: 1.4; word-break: break-word; }
@@ -594,8 +609,8 @@
   .mp-badge .nm { font-size: 13px; font-weight: 700; }
   .mp-badge .dt { font-size: 11px; color: var(--fg-dim); }
   .mp-badge .st {
-    font-size: 11px; letter-spacing: 1.4px; border: 1px dashed color-mix(in srgb, var(--badge-c) 28%, var(--card-border));
-    border-radius: 3px; padding: 1px 7px; color: var(--fg-dim); margin-top: 1px; opacity: .82;
+    font-size: 11px; letter-spacing: .12em; border: 1px dotted color-mix(in srgb, var(--badge-c) 24%, var(--card-border));
+    border-radius: 999px; padding: 1px 9px; color: var(--fg-dim); margin-top: 1px; opacity: .78;
   }
   /* コレクションはカードではなく記録章が主役。状態差は別画像で表現する。 */
   .mp-badge.state-record,
@@ -606,6 +621,9 @@
   }
   .mp-badge.state-insight .nm {
     text-shadow: 0 0 7px color-mix(in srgb, var(--badge-c) 10%, transparent);
+  }
+  .mp-badge.state-insight {
+    background: radial-gradient(circle 52px at 50% 50px, color-mix(in srgb, var(--badge-c) 16%, transparent), color-mix(in srgb, var(--badge-c2, var(--badge-c)) 4%, transparent) 70%, transparent 100%);
   }
 
 
@@ -1469,11 +1487,11 @@ function mpLatestHtml(r) {
   return `
     <section class="mp-sec" aria-labelledby="mp-latest-h">
       <div class="mp-sec-head" id="mp-latest-h"><span class="mp-sec-en">LATEST RESULT</span><span class="mp-sec-ja">最新のあなた</span></div>
-      <div class="mp-latest state-${r.purchased ? 'insight' : 'record'}" style="--lc:${r.color}">
+      <div class="mp-latest state-${r.purchased ? 'insight' : 'record'}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}">
         <div class="mp-latest-main">
           ${mpEmblemHtml(r, 'lg')}
           <div class="mp-latest-info">
-            <div class="mp-chip-row"><span class="mp-chip">${mpDate(r.date)}</span><span class="mp-chip new">NEW</span>${mpEntitlementOk && !r.purchased ? '<span class="mp-chip locked">LOCKED</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}</div>
+            <div class="mp-chip-row"><span class="mp-chip">${mpDate(r.date)}</span><span class="mp-chip new">NEW</span>${mpEntitlementOk && !r.purchased ? '<span class="mp-chip locked" title="まだ読み解いていない記録">未読の頁</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}</div>
             ${r.code ? `<div class="mp-latest-code"><b class="mp-typecode" style="color:${mpElText(r.el)}">${r.code}</b><span style="color:${mpElText(r.el)};opacity:.85">${r.typeName}</span></div>` : ''}
             <div class="mp-latest-combo">${mpComboHtml(r)}</div>
           </div>
@@ -1503,13 +1521,13 @@ function mpCollectionHtml(records) {
         ${records.map((r, i) => `
           <button type="button" role="listitem"
             class="mp-badge state-${r.purchased ? 'insight' : 'record'}"
-            style="--badge-c:${r.color}"
+            style="--badge-c:${r.color};--badge-c2:${MP_EL_GLOW_END[r.el] || r.color}"
             onclick="mpOpenRecord(${i})"
             aria-label="${mpDate(r.date)}の${MP_KINDS[r.kind].label}の記録（${r.purchased ? '深く読み解いた記録' : mpEntitlementOk ? '記録' : '購入状態未確認'}）">
             ${mpEmblemHtml(r)}
             <span class="nm" style="color:${mpElText(r.el)}">${r.name}</span>
             <span class="dt">${mpDate(r.date)}</span>
-            ${mpEntitlementOk && !r.purchased ? '<span class="st">LOCKED</span>' : ''}
+            ${mpEntitlementOk && !r.purchased ? '<span class="st" title="まだ読み解いていない記録">未読の頁</span>' : ''}
           </button>`).join('')}
       </div>
       ${records.length >= 4 ? `<button type="button" class="mp-col-next" onclick="mpCollectionNext()" aria-label="記録章の続きを見る（全${records.length}件）">›</button>` : ''}
@@ -1543,13 +1561,13 @@ function mpRecordHtml(r, i) {
   const detailLink = r.resultUrl
     ? `<a href="${r.resultUrl}" class="mp-detail-link" onclick="trackEvent('mypage_view_result_click',{source:'records'})">当時の診断結果を見る →</a>`
     : '';
-  const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${mpEntitlementOk && !r.purchased ? '<span class="mp-chip locked">LOCKED</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
+  const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${mpEntitlementOk && !r.purchased ? '<span class="mp-chip locked" title="まだ読み解いていない記録">未読の頁</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
   let body;
   if (!mpEntitlementOk) body = mpVizHtml(r) + `<div class="mp-notice"><p>この記録の購入状態を確認できませんでした</p></div>`;
   else if (r.purchased) body = mpInsightHtml(r) + mpVizHtml(r) + mpReadReportBtn(r);
   else body = mpVizHtml(r) + mpLockedHtml(r, 'records');
   return `
-    <details class="mp-rec state-${r.purchased ? 'insight' : 'record'}" style="--lc:${r.color}" id="mp-rec-${i}" ontoggle="if(this.open){trackEvent('diagnosis_history_open',{diagnosis_type:'${r.kind}'})}">
+    <details class="mp-rec state-${r.purchased ? 'insight' : 'record'}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}" id="mp-rec-${i}" ontoggle="if(this.open){trackEvent('diagnosis_history_open',{diagnosis_type:'${r.kind}'})}">
       <summary>
         <span class="d">${mpDate(r.date)}</span>
         <span class="c">${r.headline ? `<span class="el" style="color:${r.color}">${r.headline}</span>` : mpComboHtml(r)}</span>
