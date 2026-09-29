@@ -2828,6 +2828,32 @@ function renderBasis(root) {
     </section>`;
 }
 
+/* ===== 保存済み・共有URLからの復元時の表示位置（表示層のみ） =====
+   復元に成功した場合だけ、巨大なHeroを飛ばして結果の先頭（#diagnosis-root）から見せる。
+   decode・URL形式・legacy/v2の復元分岐・診断ロジックには一切触れない。
+   Webフォント読込などで上部の高さが変わる場合に備え、利用者がまだ自分で
+   スクロール操作をしていなければ、読込完了時にもう一度だけ位置を合わせる。 */
+// 呼び出し元（v2復元）はtry内にあるため、ここでの例外は外へ出さない（復元の成否に影響させない）。
+function revealRestoredResult() {
+  try {
+  var userMoved = false;
+  var markMoved = function() { userMoved = true; };
+  ['wheel', 'touchstart', 'keydown'].forEach(function(t) {
+    window.addEventListener(t, markMoved, { once: true, passive: true });
+  });
+  var go = function() {
+    if (userMoved || window.__phase !== 'result') return;
+    var root = document.getElementById('diagnosis-root');
+    if (root) root.scrollIntoView({ block: 'start' });
+  };
+  requestAnimationFrame(go);
+  if (document.readyState === 'complete') setTimeout(go, 0);
+  else window.addEventListener('load', go, { once: true });
+  } catch (e) {
+    console.error('restore scroll failed:', e);
+  }
+}
+
 /* ===== 初期化 ===== */
 window.addEventListener('DOMContentLoaded', function() {
   // URLの世代判定：
@@ -2846,6 +2872,7 @@ window.addEventListener('DOMContentLoaded', function() {
         window.__diagnosisVersion = 'ETI-2.0';
         window.__phase = 'result';
         render();
+        revealRestoredResult();
         return;
       }
     } catch (e) {
@@ -2860,6 +2887,7 @@ window.addEventListener('DOMContentLoaded', function() {
       window.__diagnosisVersion = 'legacy-v1';
       window.__phase = 'result';
       render();
+      revealRestoredResult();
       return;
     }
   }

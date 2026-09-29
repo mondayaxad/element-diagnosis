@@ -372,7 +372,8 @@
   .mp-stat-top { display: flex; justify-content: center; align-items: baseline; gap: 12px; }
   .mp-stat-en { font-family: 'IM Fell English', serif; font-size: 11px; letter-spacing: 1.5px; color: var(--fg); }
   .mp-stat-num { font-family: 'IM Fell English', serif; font-size: 26px; color: var(--accent); }
-  .mp-stat-ja { font-size: 10.5px; color: var(--fg-dim); margin-top: 2px; }
+  .mp-stat-ja { font-size: 11px; color: var(--fg-dim); margin-top: 2px; }
+  .mp-stat-num.unknown { color: var(--fg-dim); }
 
   /* ---- 記録章（エンブレム） ---- */
   .mp-emblem { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 54px; height: 54px; color: var(--c, #7ab8e8); }
@@ -386,7 +387,7 @@
   .mp-latest-main { display: flex; gap: 14px; align-items: flex-start; }
   .mp-latest-info { flex: 1; min-width: 0; }
   .mp-chip-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-  .mp-chip { font-size: 10px; letter-spacing: 1px; border: 1px solid var(--card-border); border-radius: 4px; padding: 1px 7px; color: var(--fg-dim); }
+  .mp-chip { font-size: 11px; letter-spacing: 1px; border: 1px solid var(--card-border); border-radius: 4px; padding: 1px 7px; color: var(--fg-dim); }
   .mp-chip.new { background: var(--accent-dim); border-color: var(--accent); color: #e0f4ff; }
   .mp-chip.insight { border-color: #c0a860; color: #c0a860; }
   .mp-chip.legacy { border-style: dashed; }
@@ -395,7 +396,7 @@
   .mp-latest-combo { font-size: 18px; font-weight: 700; margin-top: 2px; line-height: 1.5; }
   .mp-latest-mirror { font-size: 12px; color: var(--fg-dim); margin-top: 2px; }
   .mp-btn-row { display: flex; gap: 8px; margin-top: 14px; }
-  .mp-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 42px; padding: 10px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; text-decoration: none; font-family: inherit; border: 1px solid var(--accent-dim); background: transparent; color: var(--accent); }
+  .mp-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 10px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; text-decoration: none; font-family: inherit; border: 1px solid var(--accent-dim); background: transparent; color: var(--accent); }
   .mp-btn.primary { background: linear-gradient(135deg, #1a4a78, #2a6a9a); border-color: #2a6a9a; color: #e0f4ff; }
   .mp-btn.full { width: 100%; flex: none; }
   .mp-btn[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
@@ -405,18 +406,45 @@
   /* ---- INSIGHT 要点カード ---- */
   .mp-insight-head { display: flex; align-items: baseline; gap: 6px; margin: 14px 0 8px; font-size: 11px; color: var(--fg-dim); }
   .mp-insight-head b { font-family: 'IM Fell English', serif; letter-spacing: 1.5px; color: #c0a860; border-left: 2px solid #c0a860; padding-left: 6px; }
-  .mp-insight-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-  .mp-insight-card { border: 1px solid var(--card-border); border-radius: 6px; padding: 8px; background: rgba(192,168,96,0.03); min-width: 0; }
-  .mp-insight-card .t { font-size: 10.5px; color: var(--fg); font-weight: 700; margin-bottom: 4px; }
-  .mp-insight-card .v { font-size: 11px; color: var(--fg-dim); line-height: 1.6; word-break: break-word; }
-  .mp-insight-card .n { font-size: 9.5px; color: var(--fg-dim); opacity: .7; margin-top: 3px; }
+  .mp-insight-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  .mp-insight-card { border: 1px solid var(--card-border); border-left: 2px solid rgba(192,168,96,0.6); border-radius: 6px; padding: 10px 12px; background: rgba(192,168,96,0.03); min-width: 0; }
+  .mp-insight-card .t { font-size: 11.5px; color: #c0a860; font-weight: 700; margin-bottom: 4px; letter-spacing: .5px; }
+  .mp-insight-card .tag { font-size: 13.5px; color: var(--fg); font-weight: 700; line-height: 1.6; margin-bottom: 6px; word-break: break-word; }
+  .mp-insight-card .v { font-size: 12px; color: var(--fg-dim); line-height: 1.7; word-break: break-word; }
+  .mp-insight-card .n { font-size: 11px; color: var(--fg-dim); opacity: .75; margin-top: 4px; }
+
+  /* ---- 細いゲージ（実測値 0〜100。購入済みの要点でのみ使用） ---- */
+  .mp-gauge { display: grid; grid-template-columns: 5.5em 1fr 2.2em; align-items: center; gap: 8px; font-size: 11.5px; color: var(--fg-dim); padding: 2px 0; }
+  .mp-gauge .nm { color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mp-gauge .track { height: 4px; border-radius: 2px; background: #1a1630; overflow: hidden; }
+  .mp-gauge .fill { height: 100%; border-radius: 2px; background: #c0a860; }
+  .mp-gauge .val { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* ---- 視覚要約（無料公開範囲：元素TOP3の相対バー・MIRROR一致度） ---- */
+  .mp-viz { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--card-border); }
+  .mp-viz-title { font-size: 11px; color: var(--fg-dim); letter-spacing: 1px; margin-bottom: 6px; }
+  .mp-eltop { margin-bottom: 7px; }
+  .mp-eltop:last-child { margin-bottom: 0; }
+  .mp-eltop-label { font-size: 12px; display: flex; align-items: baseline; gap: 6px; }
+  .mp-eltop-label .ax { font-size: 11px; color: var(--fg-dim); }
+  .mp-eltop-track { height: 5px; border-radius: 3px; background: #0a0916; overflow: hidden; margin-top: 3px; }
+  .mp-eltop-fill { height: 100%; border-radius: 3px; }
+  .mp-ring { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 76px; }
+  .mp-ring svg { width: 64px; height: 64px; }
+  .mp-ring .lbl { font-size: 10.5px; color: var(--fg-dim); letter-spacing: 1px; }
+  .mp-ring .who { font-size: 11px; color: var(--fg); max-width: 88px; text-align: center; line-height: 1.4; word-break: break-word; }
+
+  /* ---- 購入状態を確認できなかった場合（中立表示。購入導線は出さない） ---- */
+  .mp-ent-warn { margin-top: 14px; padding: 12px; border: 1px dashed var(--card-border); border-radius: 8px; text-align: center; }
+  .mp-ent-warn p { font-size: 12px; color: var(--fg); margin-bottom: 4px; }
+  .mp-ent-warn .sub { font-size: 11px; color: var(--fg-dim); margin-bottom: 10px; line-height: 1.7; }
 
   /* ---- YOUR COLLECTION ---- */
-  .mp-collection { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; }
+  .mp-collection { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; scroll-snap-type: x proximity; scroll-padding-inline: 2px; -webkit-overflow-scrolling: touch; }
   .mp-badge { flex: 0 0 96px; scroll-snap-align: start; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 6px 10px; border-radius: 8px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--fg); cursor: pointer; font-family: inherit; }
   .mp-badge .nm { font-size: 13px; font-weight: 700; }
-  .mp-badge .dt { font-size: 10px; color: var(--fg-dim); }
-  .mp-badge .st { font-size: 9px; letter-spacing: 1.5px; border: 1px solid var(--card-border); border-radius: 3px; padding: 1px 8px; color: var(--fg-dim); margin-top: 2px; }
+  .mp-badge .dt { font-size: 11px; color: var(--fg-dim); }
+  .mp-badge .st { font-size: 10px; letter-spacing: 1.5px; border: 1px solid var(--card-border); border-radius: 3px; padding: 1px 8px; color: var(--fg-dim); margin-top: 2px; }
   .mp-badge.state-record .mp-emblem { opacity: .75; }
   .mp-badge.state-insight { border-color: rgba(192,168,96,0.55); box-shadow: 0 0 14px rgba(192,168,96,0.14), inset 0 0 18px rgba(192,168,96,0.05); }
   .mp-badge.state-insight .st { border-color: #c0a860; color: #c0a860; }
@@ -424,10 +452,10 @@
 
   /* ---- THE RECORDS ---- */
   .mp-rec { border: 1px solid var(--card-border); border-radius: 8px; background: var(--card-bg); margin-bottom: 8px; overflow: hidden; }
-  .mp-rec > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 12px 14px; font-size: 12.5px; }
+  .mp-rec > summary { list-style: none; cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-height: 48px; padding: 12px 14px; font-size: 12.5px; }
   .mp-rec > summary::-webkit-details-marker { display: none; }
   .mp-rec > summary .d { color: var(--fg-dim); font-size: 11.5px; flex: 0 0 auto; }
-  .mp-rec > summary .c { flex: 1; min-width: 0; }
+  .mp-rec > summary .c { flex: 1; min-width: 0; word-break: keep-all; }
   .mp-rec > summary .c .el { font-weight: 700; }
   .mp-rec > summary::after { content: '⌄'; color: var(--fg-dim); font-size: 13px; }
   .mp-rec[open] > summary::after { content: '⌃'; }
@@ -443,14 +471,21 @@
   .mp-locked-row .t { font-size: 12px; color: var(--fg); flex: 0 0 auto; }
   .mp-locked-row .blur { flex: 1; font-size: 11px; color: var(--fg-dim); filter: blur(3.5px); user-select: none; overflow: hidden; white-space: nowrap; }
   .mp-locked-row .lk { flex: 0 0 auto; font-size: 12px; opacity: .8; }
+  .mp-locked-row .txt { flex: 1; min-width: 0; }
+  .mp-locked-row .cap { display: block; font-size: 11px; color: var(--fg-dim); margin-top: 2px; }
+  /* 実値を持たない輪郭だけのゲージ（「情報が存在する」ことだけを示す） */
+  .mp-locked-row .ghost { display: block; height: 4px; margin-top: 6px; border-radius: 2px; border: 1px dashed var(--card-border); background: repeating-linear-gradient(90deg, rgba(122,184,232,0.10) 0 8px, transparent 8px 14px); }
   .mp-rec-cta-note { font-size: 11.5px; color: var(--fg-dim); margin: 14px 0 8px; text-align: center; }
+  .mp-detail-link { display: inline-block; margin-top: 14px; font-size: 12px; color: var(--accent); text-decoration: none; border-bottom: 1px dotted var(--accent-dim); padding: 6px 0 1px; }
+  .mp-btn.ghost { border-color: var(--card-border); color: var(--fg-dim); }
+  .mp-btn:focus-visible, .mp-badge:focus-visible, .mp-rec > summary:focus-visible, .mp-account-row:focus-visible, .mp-detail-link:focus-visible, .lock-cta-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   /* ---- RE-DIAGNOSIS / ACCOUNT ---- */
   .mp-rediag { text-align: center; }
   .mp-rediag-copy { font-size: 13px; color: var(--fg); margin-bottom: 12px; line-height: 1.8; }
-  .mp-rediag-note { font-size: 10.5px; color: var(--fg-dim); margin-top: 10px; line-height: 1.7; }
+  .mp-rediag-note { font-size: 11px; color: var(--fg-dim); margin-top: 10px; line-height: 1.7; }
   .mp-account { border: 1px solid var(--card-border); border-radius: 8px; background: var(--card-bg); }
-  .mp-account-row { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 12px 14px; background: transparent; border: none; color: var(--fg); font-size: 12px; font-family: inherit; cursor: pointer; text-align: left; }
+  .mp-account-row { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 44px; padding: 12px 14px; background: transparent; border: none; color: var(--fg); font-size: 12px; font-family: inherit; cursor: pointer; text-align: left; }
   .mp-account-row + .mp-account-row, .mp-account details + .mp-account-row { border-top: 1px solid var(--card-border); }
   .mp-account details > summary { list-style: none; }
   .mp-account details > summary::-webkit-details-marker { display: none; }
@@ -526,6 +561,70 @@ function savedCountBucket(n) {
 }
 
 /* ============================================================
+   購入状態の確認結果（表示専用）
+   diagnosis-save.js の attachPurchasedStatus() は、/api/my-entitlements の失敗を
+   握りつぶして全件「未購入」のまま返すため、呼び出し側からは失敗を区別できない。
+   ここでは attachPurchasedStatus() の処理・API・照合キーには一切手を加えず、
+   その実行中に行われる /api/my-entitlements の応答が正常だったかだけを観測する。
+   失敗時は「未購入」として扱わず、購入導線を出さない中立表示にする
+   （購入済みの利用者へ誤って再購入を促さないため）。
+   ============================================================ */
+// sessions配列 → その呼び出しでの確認成否。呼び出しごとに独立して記録し、描画は自分のsessionsの結果だけを見る。
+const mpEntitlementResults = new WeakMap();
+let mpEntitlementObserverInstalled = false;
+// 描画関数群が参照する値。init()が描画の直前に、その描画に使うsessionsの結果を設定する（描画は同期処理）。
+let mpEntitlementOk = true;
+(function mpObserveEntitlementCheck() {
+  const original = window.attachPurchasedStatus;
+  // 二重ラップ防止：このIIFEはページ読込時に1回だけ実行される。init()／refreshMypageHistory()は再ラップしない。
+  if (typeof original !== 'function' || original.__mpObserved) return;
+  // 観測付きの呼び出しは直列化する（前の呼び出しがfetchを元へ戻してから次を始める）。
+  let queue = Promise.resolve();
+  const observed = function (sessions) {
+    const self = this, args = arguments;
+    const run = () => mpRunObservedEntitlementCheck(original, self, args, sessions);
+    const p = queue.then(run, run);
+    queue = p.catch(() => {});
+    return p;
+  };
+  observed.__mpObserved = true;
+  window.attachPurchasedStatus = observed;
+  mpEntitlementObserverInstalled = true;
+})();
+async function mpRunObservedEntitlementCheck(original, self, args, sessions) {
+  const realFetch = window.fetch;
+  let probe = null;
+  // /api/my-entitlements以外の通信は、元のfetchの戻り値（同じPromise）をそのまま返すだけで一切触れない。
+  const observingFetch = function (input) {
+    const p = realFetch.apply(this, arguments);
+    const url = typeof input === 'string' ? input : ((input && input.url) || '');
+    if (probe === null && url.indexOf('/api/my-entitlements') !== -1) {
+      // 本体（attachPurchasedStatus）より先に登録されるため、本文を読む前にclone()できる。probeは決してrejectしない。
+      probe = p.then(res => res.ok
+        ? res.clone().json().then(b => !!(b && b.purchased_by_version && typeof b.purchased_by_version === 'object'))
+        : false).catch(() => false);
+    }
+    return p;
+  };
+  window.fetch = observingFetch;
+  try {
+    return await original.apply(self, args);
+  } finally {
+    // 例外時も必ず元へ戻す（他のコードが途中でfetchを差し替えていた場合は、その差し替えを上書きしない）。
+    if (window.fetch === observingFetch) window.fetch = realFetch;
+    // アクセストークンが無くAPIを呼べなかった場合（probe無し）や例外時は「確認できなかった」扱い
+    let ok = false;
+    try { ok = probe ? await probe : false; } catch (e) { ok = false; }
+    if (sessions && typeof sessions === 'object') mpEntitlementResults.set(sessions, ok);
+  }
+}
+function mpEntitlementCheckedOk(sessions) {
+  // 観測を設置できなかった場合は従来の挙動（未購入扱いの表示）に倒す
+  if (!mpEntitlementObserverInstalled) return true;
+  return mpEntitlementResults.has(sessions) ? mpEntitlementResults.get(sessions) : false;
+}
+
+/* ============================================================
    ETI v2 表示用ヘルパー
    v1のENNEA_NAME・BIG5_NAME等は一切変更せず、v2専用の対応表だけを追加する。
    ============================================================ */
@@ -573,7 +672,7 @@ function fmtDate(iso) {
 }
 
 function pageHeaderHtml() {
-  return `<div class="eyebrow">Element Profile</div><h1 class="page-title">あなたの診断記録</h1>`;
+  return `<div class="eyebrow">MY ARCHIVE</div><h1 class="page-title">あなたの記録</h1>`;
 }
 
 function renderGate(root, message) {
@@ -831,67 +930,137 @@ function mpThenHtml(r) {
   return `<div class="mp-then"><div class="mp-then-title">このときのあなた</div>${lines.map(l => `<div>${l}</div>`).join('')}</div>`;
 }
 
-/* ---- 購入によって分かったことの要点（本文は転載しない。実測の上位軸名のみ） ---- */
-// 表示値（整数）で順位付けし、次の規則でのみ強調する（案B）。
-//   完全同点            → 同点の軸をすべて並べ「（同順位）」
-//   1位が45〜55         → 形容なし。軸名と数値だけ（2位との差が5未満なら2軸）
-//   1位と2位の差が5未満 → 上位2軸を並べ「（同程度）」
-//   1位≧60 かつ 差≧5    → 「○○の傾向が強く表れています（値）」
-//   それ以外            → 形容なし。軸名と数値だけ
-function mpRankedAxes(obj, nameMap) {
-  if (!obj) return [];
-  return Object.keys(obj).filter(k => typeof obj[k] === 'number' && isFinite(obj[k]))
-    .map(k => ({ key: k, name: nameMap[k] || k, v: Math.round(obj[k]) }))
-    .sort((a, b) => b.v - a.v);
+/* ---- 視覚要約（無料公開範囲のみ） ----
+   index.htmlの無料結果「あなたに響く元素」と同じ材料・同じ正規化で元素TOP3の相対バーを作る
+   （v2：v2_rankings.elementのclosenessScore／旧版：scores.elementsのscore。いずれも7元素分を保存済み）。
+   数値そのものは出さず、index.htmlと同じく最下位〜1位の範囲で相対化した長さだけを示す。
+   MIRROR一致度はindex.htmlの無料結果で表示している値（1位の一致度%）だけを使う。 */
+function mpElementTop3(r) {
+  const s = r.session || {};
+  let rows = null;
+  if (!r.isLegacy) {
+    const el = s.v2Rankings && s.v2Rankings.element;
+    if (Array.isArray(el)) rows = el.map(x => ({ el: x && x.name, score: x && x.closenessScore }));
+  } else {
+    const el = s.scores && s.scores.elements;
+    if (Array.isArray(el)) rows = el.map(x => ({ el: x && x.element, score: x && x.score }));
+  }
+  if (!rows || rows.length < 7) return null;
+  if (rows.some(x => !MP_EL_COLOR[x.el] || typeof x.score !== 'number' || !isFinite(x.score))) return null;
+  // 保存済みの1位と食い違うデータは描かない（推測で補わない）
+  if (rows[0].el !== r.el) return null;
+  const mx = rows[0].score, mn = rows[6].score;
+  return rows.slice(0, 3).map(x => ({ el: x.el, n: mx === mn ? 60 : Math.round(((x.score - mn) / (mx - mn)) * 100) }));
 }
-function mpAxisSummary(obj, nameMap) {
-  const r = mpRankedAxes(obj, nameMap);
-  if (!r.length) return '—';
-  const fmt = x => `${x.name} ${x.v}`;
-  const a = r[0], b = r[1];
-  if (b && a.v === b.v) return r.filter(x => x.v === a.v).map(fmt).join('・') + '（同順位）';
-  if (a.v >= 45 && a.v <= 55) return (b && a.v - b.v < 5) ? `${fmt(a)}・${fmt(b)}` : fmt(a);
-  if (b && a.v - b.v < 5) return `${fmt(a)}・${fmt(b)}（同程度）`;
-  if (a.v >= 60 && (!b || a.v - b.v >= 5)) return `${a.name}${/傾向$/.test(a.name) ? '' : 'の傾向'}が強く表れています（${a.v}）`;
-  return fmt(a);
+function mpRingSvg(pct, color) {
+  const R = 26, C = 2 * Math.PI * R;
+  const len = Math.max(0, Math.min(100, pct)) / 100 * C;
+  return `<svg viewBox="0 0 64 64" aria-hidden="true">
+    <circle cx="32" cy="32" r="${R}" fill="none" stroke="#1a1630" stroke-width="4"/>
+    <circle cx="32" cy="32" r="${R}" fill="none" stroke="${color}" stroke-width="4" stroke-linecap="round"
+      stroke-dasharray="${len.toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 32 32)"/>
+    <text x="32" y="36" text-anchor="middle" font-size="14" fill="#e0dcf0" font-family="IM Fell English, serif">${pct}%</text>
+  </svg>`;
+}
+function mpVizHtml(r) {
+  if (r.kind !== 'element') return '';
+  const top3 = mpElementTop3(r);
+  const hasRing = r.mirror && r.mirror.match !== null && r.mirror.name;
+  if (!top3 && !hasRing) return '';
+  const bars = top3 ? `
+      <div>
+        <div class="mp-viz-title">あなたに響く元素</div>
+        ${top3.map((e, i) => `
+          <div class="mp-eltop">
+            <div class="mp-eltop-label"><span style="color:${MP_EL_COLOR[e.el]};font-weight:${i === 0 ? 700 : 400}">${i === 0 ? '◆' : i === 1 ? '②' : '③'} ${e.el}</span><span class="ax">${MP_ELEMENT_AXIS[e.el] || ''}</span></div>
+            <div class="mp-eltop-track"><div class="mp-eltop-fill" style="width:${e.n}%;background:${MP_EL_COLOR[e.el]};opacity:${i === 0 ? 1 : 0.55}"></div></div>
+          </div>`).join('')}
+      </div>` : '<div></div>';
+  const ring = hasRing ? `
+      <div class="mp-ring" role="img" aria-label="MIRROR ${r.mirror.name} 一致度${r.mirror.match}%">
+        ${mpRingSvg(r.mirror.match, r.color)}
+        <span class="lbl">MIRROR</span>
+        <span class="who">${r.mirror.name}</span>
+      </div>` : '';
+  return `<div class="mp-viz">${bars}${ring}</div>`;
+}
+
+/* ---- 購入によって分かったことの要点（本文は転載しない。実測値と既存辞書の語のみ） ----
+   行動スタイル：index.html／report.htmlと同じ固定辞書（STYLE_POETIC_TAG）と同じ順位規則
+   （値の降順、同点はAGY→REL→ROL→REF→AUTの順）で上位2軸の語を並べる。
+   パーソナリティ・価値観：一言の解釈辞書が既存に無いため、軸名と実測値（上位2軸）だけを示す。 */
+const MP_STYLE_AXES = ['AGY', 'REL', 'ROL', 'REF', 'AUT'];
+const MP_STYLE_POETIC_TAG = {
+  AGY:'道を切り拓く意志', REL:'縁を結ぶ調律', ROL:'役目を貫く献身',
+  REF:'思索を介す眼差し', AUT:'距離を守る自律',
+};
+function mpRankedAxes(obj, nameMap, order) {
+  if (!obj) return [];
+  const keys = order || Object.keys(nameMap);
+  return keys.filter(k => typeof obj[k] === 'number' && isFinite(obj[k]))
+    .map((k, i) => ({ key: k, name: nameMap[k] || k, v: Math.round(obj[k]), raw: obj[k], i }))
+    .sort((a, b) => (b.raw - a.raw) || (a.i - b.i));
+}
+function mpGaugesHtml(ranked, n) {
+  return ranked.slice(0, n).map(x => `
+    <div class="mp-gauge"><span class="nm">${x.name}</span><span class="track"><span class="fill" style="display:block;width:${Math.max(0, Math.min(100, x.v))}%"></span></span><span class="val">${x.v}</span></div>`).join('');
 }
 function mpInsightCards(r) {
   const s = r.session;
   const note = '実測値（0〜100）';
   if (!r.isLegacy && s.v2Scores) {
+    const style = mpRankedAxes(s.v2Scores.style, MP_STYLE_NAME, MP_STYLE_AXES);
+    const styleTag = style.length >= 2 ? `${MP_STYLE_POETIC_TAG[style[0].key]} × ${MP_STYLE_POETIC_TAG[style[1].key]}` : '';
     return [
-      { t: '行動スタイル', v: mpAxisSummary(s.v2Scores.style, MP_STYLE_NAME), n: note },
-      { t: 'パーソナリティ', v: mpAxisSummary(s.v2Scores.personality, MP_BIG5_NAME), n: note },
-      { t: '価値観', v: mpAxisSummary(s.v2Scores.values, MP_VALUES_NAME), n: note },
+      { t: '行動スタイル', tag: styleTag, body: mpGaugesHtml(style, 2), n: note },
+      { t: 'パーソナリティ', body: mpGaugesHtml(mpRankedAxes(s.v2Scores.personality, MP_BIG5_NAME), 2), n: note },
+      { t: '価値観', body: mpGaugesHtml(mpRankedAxes(s.v2Scores.values, MP_VALUES_NAME), 2), n: note },
     ];
   }
   // 旧版（legacy-v1）：旧版が測定していた項目のみ。v2へ換算しない。
   const pr = s.primaryResult || {};
   return [
-    { t: '動機（旧版）', v: pr.enneagram_type ? `タイプ${pr.enneagram_type}「${MP_ENNEA_NAME[pr.enneagram_type] || ''}」` : '—', n: 'エニアグラム' },
-    { t: 'パーソナリティ', v: mpAxisSummary((s.scores && s.scores.big5) || null, MP_BIG5_NAME), n: note },
-    { t: '価値観', v: pr.nation ? `${pr.nation}「${(typeof NATION_MEANING !== 'undefined' && NATION_MEANING[pr.nation]) || ''}」` : '—', n: '国家' },
+    { t: '動機（旧版）', body: `<div class="v">${pr.enneagram_type ? `タイプ${mpEsc(pr.enneagram_type)}「${MP_ENNEA_NAME[pr.enneagram_type] || ''}」` : '—'}</div>`, n: 'エニアグラム' },
+    { t: 'パーソナリティ', body: mpGaugesHtml(mpRankedAxes((s.scores && s.scores.big5) || null, MP_BIG5_NAME), 2), n: note },
+    { t: '価値観', body: `<div class="v">${pr.nation ? `${mpEsc(pr.nation)}「${(typeof NATION_MEANING !== 'undefined' && NATION_MEANING[pr.nation]) || ''}」` : '—'}</div>`, n: '国家' },
   ];
 }
 function mpInsightHtml(r) {
   return `
     <div class="mp-insight-head"><b>INSIGHT</b>深く読み解いた記録</div>
     <div class="mp-insight-grid">
-      ${mpInsightCards(r).map(c => `<div class="mp-insight-card"><div class="t">${c.t}</div><div class="v">${c.v}</div><div class="n">${c.n}</div></div>`).join('')}
-    </div>
-    <div style="margin-top:10px">${purchasedReportButton(r.session, 'mp-btn primary full', '解析レポートを読む ›')}</div>`;
+      ${mpInsightCards(r).map(c => `<div class="mp-insight-card"><div class="t">${c.t}</div>${c.tag ? `<div class="tag">${c.tag}</div>` : ''}${c.body || '<div class="v">—</div>'}<div class="n">${c.n}</div></div>`).join('')}
+    </div>`;
+}
+function mpReadReportBtn(r) {
+  return `<div style="margin-top:12px">${purchasedReportButton(r.session, 'mp-btn primary full', '解析レポートを読む ›')}</div>`;
 }
 
-/* ---- まだ読み解いていない部分（実データは一切出さない固定ダミー＋ぼかし） ---- */
+/* ---- 購入導線（元素解析レポート ¥1,000。販売停止中は既存の「準備中」表示のまま） ---- */
+const MP_REPORT_PRICE = '¥1,000';
+function mpReportCtaHtml(r, source, label) {
+  return v2ReportCta(purchaseUrlFor(r.session), 'mp-btn primary full', source, `${label}　${MP_REPORT_PRICE}`);
+}
+
+/* ---- 購入状態を確認できなかった記録（未購入とは扱わず、購入導線を出さない） ---- */
+function mpEntitlementUnknownHtml() {
+  return `<div class="mp-ent-warn" role="status"><p>購入状態を確認できませんでした</p><p class="sub">解析レポートの購入状況を確認できなかったため、購入・閲覧の導線を表示していません。</p><button type="button" class="mp-btn full" onclick="mpRetryEntitlement(this)">もう一度確認する</button></div>`;
+}
+async function mpRetryEntitlement(button) {
+  if (button) { button.disabled = true; button.textContent = '確認中…'; }
+  await init();
+}
+
+/* ---- まだ読み解いていない部分（実データは一切出さない固定の見出し＋輪郭だけのゲージ） ---- */
 function mpLockedHtml(r) {
   const rows = r.isLegacy
-    ? ['動機の深層', 'パーソナリティの深層', '価値観の深層']
-    : ['行動スタイルの深層', 'パーソナリティの深層', '価値観の深層'];
+    ? [['動機の深層', 'あなたを動かしているもの'], ['パーソナリティの深層', '考え方・感じ方の傾向'], ['価値観の深層', '大切にしているもの・目指すもの']]
+    : [['行動スタイルの深層', 'あなたの行動の核にあるもの'], ['パーソナリティの深層', '考え方・感じ方の傾向'], ['価値観の深層', '大切にしているもの・目指すもの']];
   return `
     <div class="mp-locked-title">まだ読み解いていない部分</div>
-    ${rows.map(t => `<div class="mp-locked-row"><span class="t">${t}</span><span class="blur" aria-hidden="true">この記録の解析結果がここに記されています</span><span class="lk" aria-label="未解析">🔒</span></div>`).join('')}
+    ${rows.map(([t, cap]) => `<div class="mp-locked-row"><span class="txt"><span class="t">${t}</span><span class="cap">${cap}</span><span class="ghost" aria-hidden="true"></span></span><span class="lk" aria-label="未解析">🔒</span></div>`).join('')}
     <p class="mp-rec-cta-note">この記録には、まだ知らない自分があります。</p>
-    ${v2ReportCta(purchaseUrlFor(r.session), 'mp-btn primary full', 'records', 'この記録の解析レポートを見る ›')}`;
+    ${mpReportCtaHtml(r, 'records', 'この記録の解析レポートを見る')}`;
 }
 
 /* ---- 共有：/api/share（個別OGP）経由。符号化の並び順はshare.js・og-image.mjsと同一。
@@ -937,12 +1106,11 @@ function mpShare(idx) {
    ============================================================ */
 function mpArchiveHtml(records) {
   const pad = n => String(n).padStart(2, '0');
-  // 権利は「診断世代＋回答コード」単位（attachPurchasedStatusと同じキー）。同じ回答コードの別記録は1件として数える。
-  const insightKeys = new Set(records.filter(r => r.purchased).map(r => {
-    const s = r.session || {};
-    return s.encodedAnswers ? `${s.isV2 ? 'ETI-2.0' : 'element-v1'}:${s.encodedAnswers}` : `session:${s.id}`;
-  }));
-  const insights = insightKeys.size;
+  // INSIGHTSは「画面上でINSIGHT状態になっている診断記録の数」（THE RECORDS／YOUR COLLECTIONの表示と一致させる）。
+  // 購入状態を確認できなかった場合は数を出さない（0件と誤認させない）。
+  const insightNum = mpEntitlementOk
+    ? `<span class="mp-stat-num">${pad(records.filter(r => r.purchased).length)}</span>`
+    : `<span class="mp-stat-num unknown" aria-label="確認できませんでした">--</span>`;
   return `
     <section class="mp-archive" aria-labelledby="mp-archive-title">
       <div class="mp-archive-eyebrow">MY ARCHIVE</div>
@@ -950,49 +1118,57 @@ function mpArchiveHtml(records) {
       <p class="mp-archive-desc">これまでに見つめてきた、いくつもの「自分」が<br>ここに記録されています。</p>
       <div class="mp-stats">
         <div class="mp-stat"><div class="mp-stat-top"><span class="mp-stat-en">RECORDS</span><span class="mp-stat-num">${pad(records.length)}</span></div><div class="mp-stat-ja">残してきた自分</div></div>
-        <div class="mp-stat"><div class="mp-stat-top"><span class="mp-stat-en">INSIGHTS</span><span class="mp-stat-num">${pad(insights)}</span></div><div class="mp-stat-ja">深く読み解いた自分</div></div>
+        <div class="mp-stat"><div class="mp-stat-top"><span class="mp-stat-en">INSIGHTS</span>${insightNum}</div><div class="mp-stat-ja">深く読み解いた自分</div></div>
       </div>
+      ${mpEntitlementOk ? '' : mpEntitlementUnknownHtml()}
     </section>`;
 }
 
+// CTAの優先順位（§23）：未購入＝解析レポート導線 > 結果を見る > Xシェア、
+// 購入済み＝解析レポートを読む > 結果を見る > Xシェア（控えめ）。再診断は下のRE-DIAGNOSIS。
 function mpLatestHtml(r) {
   const viewBtn = r.resultUrl
-    ? `<a href="${r.resultUrl}" class="mp-btn primary" onclick="trackEvent('mypage_view_result_click',{source:'latest'})">結果を見る ›</a>`
-    : `<span class="mp-btn primary" aria-disabled="true">結果を見る ›</span>`;
-  const tail = r.purchased
-    ? mpInsightHtml(r)
-    : `<div class="mp-notice"><p>この記録には、まだ読み解いていない部分があります</p>${v2ReportCta(purchaseUrlFor(r.session), 'mp-btn full', 'latest', 'この結果の解析レポートを見る ›')}</div>`;
+    ? `<a href="${r.resultUrl}" class="mp-btn" onclick="trackEvent('mypage_view_result_click',{source:'latest'})">結果を見る ›</a>`
+    : `<span class="mp-btn" aria-disabled="true">結果を見る ›</span>`;
+  const shareBtn = `<button type="button" class="mp-btn${r.purchased ? ' ghost' : ''}" onclick="mpShare(0)"><span aria-hidden="true">𝕏</span> Xシェア</button>`;
+  let state;
+  if (!mpEntitlementOk) {
+    state = `<div class="mp-notice"><p>この記録の購入状態を確認できませんでした</p></div>`;
+  } else if (r.purchased) {
+    state = mpInsightHtml(r) + mpReadReportBtn(r);
+  } else {
+    state = `<div class="mp-notice"><p>この記録には、<br>まだ読み解いていない部分があります</p>${mpReportCtaHtml(r, 'latest', 'この結果の解析レポートを見る')}</div>`;
+  }
   return `
     <section class="mp-sec" aria-labelledby="mp-latest-h">
       <div class="mp-sec-head" id="mp-latest-h"><span class="mp-sec-en">LATEST RESULT</span><span class="mp-sec-ja">最新のあなた</span></div>
-      <div class="mp-latest">
+      <div class="mp-latest" style="border-color:${r.color}55;background:linear-gradient(160deg, ${r.color}14, var(--card-bg) 55%)">
         <div class="mp-latest-main">
           ${mpEmblemHtml(r, 'lg')}
           <div class="mp-latest-info">
             <div class="mp-chip-row"><span class="mp-chip">${mpDate(r.date)}</span><span class="mp-chip new">NEW</span>${r.purchased ? '<span class="mp-chip insight">INSIGHT</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}</div>
             ${r.code ? `<div class="mp-latest-code"><b>${r.code}</b>${r.typeName}</div>` : ''}
             <div class="mp-latest-combo"><span style="color:${r.color}">${r.el || '—'}</span>${r.w ? ' × ' + r.w : ''}${r.nation ? ' × ' + r.nation : ''}</div>
-            ${r.mirror ? `<div class="mp-latest-mirror">MIRROR：${r.mirror.name}（${r.mirror.match}%）</div>` : ''}
           </div>
         </div>
+        ${mpVizHtml(r)}
+        ${state}
         <div class="mp-btn-row">
           ${viewBtn}
-          <button type="button" class="mp-btn" onclick="mpShare(0)"><span aria-hidden="true">𝕏</span> Xシェア</button>
+          ${shareBtn}
         </div>
-        ${tail}
       </div>
     </section>`;
 }
 
-// 記録章：存在する記録だけを古い順に並べ、新しい記録は右端に増える（読み込み時は右端＝最新を表示）。
+// 記録章：存在する記録だけを新しい順に左から並べる（最新が最初に目に入る）。
 function mpCollectionHtml(records) {
-  const chronological = records.map((r, i) => ({ r, i })).reverse();
   return `
     <section class="mp-sec" aria-labelledby="mp-col-h">
       <div class="mp-sec-head" id="mp-col-h"><span class="mp-sec-en">YOUR COLLECTION</span><span class="mp-sec-ja">集めてきた記録章</span></div>
       <div class="mp-collection" id="mp-collection" role="list">
-        ${chronological.map(({ r, i }) => `
-          <button type="button" role="listitem" class="mp-badge state-${r.purchased ? 'insight' : 'record'}" onclick="mpOpenRecord(${i})" aria-label="${mpDate(r.date)}の${MP_KINDS[r.kind].label}の記録（${r.purchased ? 'INSIGHT' : 'RECORD'}）">
+        ${records.map((r, i) => `
+          <button type="button" role="listitem" class="mp-badge state-${r.purchased ? 'insight' : 'record'}" onclick="mpOpenRecord(${i})" aria-label="${mpDate(r.date)}の${MP_KINDS[r.kind].label}の記録（${r.purchased ? 'INSIGHT' : mpEntitlementOk ? 'RECORD' : 'RECORD・購入状態未確認'}）">
             ${mpEmblemHtml(r)}
             <span class="nm">${r.name}</span>
             <span class="dt">${mpDate(r.date)}</span>
@@ -1008,11 +1184,19 @@ function mpOpenRecord(i) {
   d.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+// 履歴アコーディオン（過去を振り返る主導線）。過去の結果ページはセカンダリ導線に下げる。
+//   未購入：無料情報 → 視覚要約 → まだ読み解いていない3項目 → 解析レポート導線（¥1,000）
+//   購入済：無料情報 → INSIGHT要点 → 視覚要約 → 解析レポート本文への導線
+//   確認不可：無料情報 → 視覚要約 → 中立表示（購入導線なし）
 function mpRecordHtml(r, i) {
-  const again = r.resultUrl
-    ? `<a href="${r.resultUrl}" class="mp-btn full" onclick="trackEvent('mypage_view_result_click',{source:'records'})">この結果をもう一度見る ›</a>`
-    : `<span class="mp-btn full" aria-disabled="true">この結果をもう一度見る ›</span>`;
+  const detailLink = r.resultUrl
+    ? `<a href="${r.resultUrl}" class="mp-detail-link" onclick="trackEvent('mypage_view_result_click',{source:'records'})">詳細な診断結果を開く →</a>`
+    : '';
   const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${r.purchased ? '<span class="mp-chip insight">INSIGHT</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
+  let body;
+  if (!mpEntitlementOk) body = mpVizHtml(r) + `<div class="mp-notice"><p>この記録の購入状態を確認できませんでした</p></div>`;
+  else if (r.purchased) body = mpInsightHtml(r) + mpVizHtml(r) + mpReadReportBtn(r);
+  else body = mpVizHtml(r) + mpLockedHtml(r);
   return `
     <details class="mp-rec" id="mp-rec-${i}" ontoggle="if(this.open){trackEvent('diagnosis_history_open',{diagnosis_type:'${r.kind}'})}">
       <summary>
@@ -1026,8 +1210,8 @@ function mpRecordHtml(r, i) {
           <div>${mpFreeListHtml(r)}</div>
         </div>
         ${mpThenHtml(r)}
-        <div style="margin-top:12px">${again}</div>
-        ${r.purchased ? mpInsightHtml(r) : mpLockedHtml(r)}
+        ${body}
+        ${detailLink}
       </div>
     </details>`;
 }
@@ -1044,8 +1228,8 @@ function mpRediagHtml() {
     <section class="mp-sec mp-rediag" aria-labelledby="mp-rediag-h">
       <div class="mp-sec-head" id="mp-rediag-h" style="justify-content:center"><span class="mp-sec-en">RE-DIAGNOSIS</span></div>
       <p class="mp-rediag-copy">今のあなたは、あの日と同じだろうか。</p>
-      <a href="/?dv=ETI-2.0" class="mp-btn primary full" onclick="trackEvent('mypage_rediagnosis_click',{})">↻ もう一度、診断する ›</a>
-      <p class="mp-rediag-note">新しい診断は、別の記録として保存されます。購入済みの解析レポートは、対象の診断記録から引き続き閲覧できます。</p>
+      <a href="/?dv=ETI-2.0" class="mp-btn full" onclick="trackEvent('mypage_rediagnosis_click',{})">↻ もう一度、診断する ›</a>
+      <p class="mp-rediag-note">新しい診断は、今のあなたの新しい記録として別に保存されます。これまでの記録と、購入済みの解析レポートはそのまま残ります。</p>
     </section>`;
 }
 
@@ -1085,9 +1269,6 @@ function renderMypage(root, sessions, uid) {
     ${mpAccountHtml(uid)}
   `;
 
-  const col = document.getElementById('mp-collection');
-  if (col) col.scrollLeft = col.scrollWidth;
-
   trackEvent('mypage_view', {
     entry_point: 'mypage',
     diagnosis_type: DIAGNOSIS_TYPE,
@@ -1117,6 +1298,7 @@ async function init() {
     renderEmpty(root);
     return;
   }
+  mpEntitlementOk = mpEntitlementCheckedOk(result.sessions);
   renderMypage(root, result.sessions, user.id);
 }
 // eti_v2_save.js（Googleログイン復帰後、v2のpending保存が完了した時点）から
