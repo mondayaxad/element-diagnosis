@@ -383,8 +383,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 58px;
-    height: 58px;
+    width: 70px;
+    height: 70px;
     color: var(--c, #7ab8e8);
     isolation: isolate;
   }
@@ -392,13 +392,13 @@
   .mp-emblem::after { content: none; }
   .mp-emblem img {
     display: block;
-    width: 58px;
-    height: 58px;
+    width: 70px;
+    height: 70px;
     object-fit: contain;
     transform: translateZ(0);
   }
-  .mp-emblem.lg { width: 82px; height: 82px; }
-  .mp-emblem.lg img { width: 82px; height: 82px; }
+  .mp-emblem.lg { width: 90px; height: 90px; }
+  .mp-emblem.lg img { width: 90px; height: 90px; }
 
   /* RECORD：そのシーズンの未覚醒画像をそのまま使う。CSSで別物に加工しない。 */
   .state-record .mp-emblem img {
@@ -409,7 +409,28 @@
   /* AWAKENED：購入済み専用の別画像を表示。追加のネオン化はせず、画像自体の演出を主役にする。 */
   .state-insight .mp-emblem img {
     opacity: 1;
-    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--c, #7ab8e8) 12%, transparent));
+    filter: drop-shadow(0 0 4px color-mix(in srgb, var(--c, #7ab8e8) 16%, transparent));
+  }
+  .mp-latest.state-insight .mp-latest-main .mp-emblem img {
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c, #7ab8e8) 26%, transparent));
+  }
+  .mp-rec.state-insight .mp-free .mp-emblem img {
+    filter: drop-shadow(0 0 4px color-mix(in srgb, var(--c, #7ab8e8) 18%, transparent));
+  }
+
+  /* YOUR COLLECTION：カード枠ではなく、エンブレム単体を囲う細い菱形の輪郭（元素色・透明度高め）。
+     未購入は暗く発光なし、購入済みは元素色で少し明るく、外側にごく薄い光。 */
+  .mp-badge .mp-emblem::before {
+    content: ''; position: absolute; inset: 9px; z-index: -1; pointer-events: none;
+    border: 1px solid color-mix(in srgb, var(--c, #7ab8e8) 24%, transparent);
+    transform: rotate(45deg); border-radius: 3px;
+  }
+  .mp-badge.state-insight .mp-emblem::before {
+    border-color: color-mix(in srgb, var(--c, #7ab8e8) 62%, transparent);
+    box-shadow: 0 0 7px color-mix(in srgb, var(--c, #7ab8e8) 24%, transparent);
+  }
+  .mp-badge.state-insight .mp-emblem img {
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--c, #7ab8e8) 30%, transparent));
   }
 
   /* ---- LATEST RESULT ---- */
@@ -423,19 +444,21 @@
     background: linear-gradient(160deg, color-mix(in srgb, var(--lc, #7ab8e8) 8%, transparent), var(--card-bg) 55%);
   }
   .mp-latest.state-insight {
-    border-color: color-mix(in srgb, var(--lc, #7ab8e8) 62%, #d9d3ea);
+    border-color: color-mix(in srgb, var(--lc, #7ab8e8) 72%, #d9d3ea);
     background:
-      radial-gradient(circle at 16% 14%, color-mix(in srgb, var(--lc, #7ab8e8) 13%, transparent), transparent 46%),
+      radial-gradient(ellipse 70% 55% at 22% 18%, color-mix(in srgb, var(--lc, #7ab8e8) 14%, transparent), transparent 70%),
       linear-gradient(160deg, color-mix(in srgb, var(--lc, #7ab8e8) 9%, transparent), var(--card-bg) 55%);
     box-shadow:
-      0 0 14px color-mix(in srgb, var(--lc, #7ab8e8) 14%, transparent),
+      0 0 12px color-mix(in srgb, var(--lc, #7ab8e8) 18%, transparent),
       inset 0 0 22px color-mix(in srgb, var(--lc, #7ab8e8) 5%, transparent);
   }
   .mp-rec.state-record { border-color: color-mix(in srgb, var(--lc, #7ab8e8) 20%, var(--card-border)); }
   .mp-rec.state-insight {
-    border-color: color-mix(in srgb, var(--lc, #7ab8e8) 55%, #d9d3ea);
-    background: radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--lc, #7ab8e8) 9%, transparent), transparent 38%), var(--card-bg);
-    box-shadow: 0 0 10px color-mix(in srgb, var(--lc, #7ab8e8) 11%, transparent);
+    border-color: color-mix(in srgb, var(--lc, #7ab8e8) 62%, #d9d3ea);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--lc, #7ab8e8) 4%, transparent), transparent 65%), var(--card-bg);
+    box-shadow:
+      inset 2px 0 0 color-mix(in srgb, var(--lc, #7ab8e8) 45%, transparent),
+      0 0 6px color-mix(in srgb, var(--lc, #7ab8e8) 9%, transparent);
   }
   .mp-latest.state-insight .mp-emblem::before, .mp-rec.state-insight .mp-emblem::before {
     opacity: .82; box-shadow: 0 0 9px color-mix(in srgb, var(--c, #7ab8e8) 38%, transparent);
@@ -446,7 +469,7 @@
       drop-shadow(0 0 4px color-mix(in srgb, var(--c, #7ab8e8) 70%, transparent))
       drop-shadow(0 0 9px color-mix(in srgb, var(--c, #7ab8e8) 24%, transparent));
   }
-  .mp-latest-main { display: flex; gap: 14px; align-items: flex-start; }
+  .mp-latest-main { display: flex; gap: 10px; align-items: flex-start; }
   .mp-latest-info { flex: 1; min-width: 0; }
   .mp-chip-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   .mp-chip { font-size: 11px; letter-spacing: 1px; border: 1px solid var(--card-border); border-radius: 4px; padding: 1px 7px; color: var(--fg-dim); }
@@ -508,9 +531,28 @@
   .mp-eltop-label { font-size: 12px; display: flex; align-items: baseline; gap: 6px; }
   .mp-eltop-label .ax { font-size: 11px; color: var(--fg-dim); }
   .mp-eltop-track { height: 5px; border-radius: 3px; background: #0a0916; overflow: hidden; margin-top: 3px; }
-  .mp-eltop-fill { height: 100%; border-radius: 3px; }
+  .mp-eltop-fill { position: relative; height: 100%; border-radius: 3px; background: var(--elc); opacity: .55; }
+  .mp-eltop-fill.r1 { opacity: 1; }
+  .mp-eltop-label .el { color: var(--elc); font-weight: 400; }
+  .mp-eltop-label .el.r1 { font-weight: 700; }
+  /* 購入済み：元素名・マーカー・バーをわずかに明るく。1位のバー先端にだけごく弱い光 */
+  .state-insight .mp-eltop-label .el { color: color-mix(in srgb, var(--elc) 78%, #ffffff); }
+  .state-insight .mp-eltop-fill { background: color-mix(in srgb, var(--elc) 86%, #ffffff); opacity: .7; }
+  .state-insight .mp-eltop-fill.r1 { opacity: 1; }
+  .state-insight .mp-eltop-track { overflow: visible; }
+  .state-insight .mp-eltop-fill.r1::after {
+    content: ''; position: absolute; right: -1px; top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%;
+    background: color-mix(in srgb, var(--elc) 70%, #ffffff); opacity: .55;
+    box-shadow: 0 0 6px color-mix(in srgb, var(--elc) 45%, transparent);
+  }
   .mp-ring { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 76px; }
   .mp-ring svg { width: 64px; height: 64px; }
+  .mp-ring .arc { stroke: var(--rc); }
+  .mp-ring .base { stroke: #1a1630; }
+  /* 購入済み：円周を少し明るく（MIRRORキャラの元素色が確定していればその色）、外側にごく弱い光。数値は白飛びさせない */
+  .state-insight .mp-ring .arc { stroke: color-mix(in srgb, var(--rc) 85%, #ffffff); }
+  .state-insight .mp-ring .base { stroke: color-mix(in srgb, var(--rc) 12%, #1a1630); }
+  .state-insight .mp-ring svg { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--rc) 26%, transparent)); }
   .mp-ring .lbl { font-size: 10.5px; color: var(--fg-dim); letter-spacing: 1px; }
   .mp-ring .who { font-size: 11px; color: var(--fg); max-width: 88px; text-align: center; line-height: 1.4; word-break: break-word; }
 
@@ -1147,8 +1189,8 @@ function mpRingSvg(pct, color) {
   const R = 26, C = 2 * Math.PI * R;
   const len = Math.max(0, Math.min(100, pct)) / 100 * C;
   return `<svg viewBox="0 0 64 64" aria-hidden="true">
-    <circle cx="32" cy="32" r="${R}" fill="none" stroke="#1a1630" stroke-width="4"/>
-    <circle cx="32" cy="32" r="${R}" fill="none" stroke="${color}" stroke-width="4" stroke-linecap="round"
+    <circle class="base" cx="32" cy="32" r="${R}" fill="none" stroke-width="4"/>
+    <circle class="arc" style="--rc:${color}" cx="32" cy="32" r="${R}" fill="none" stroke-width="4" stroke-linecap="round"
       stroke-dasharray="${len.toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 32 32)"/>
     <text x="32" y="36" text-anchor="middle" font-size="14" fill="#e0dcf0" font-family="IM Fell English, serif">${pct}%</text>
   </svg>`;
@@ -1163,12 +1205,12 @@ function mpVizHtml(r) {
         <div class="mp-viz-title">あなたに響く元素</div>
         ${top3.map((e, i) => `
           <div class="mp-eltop">
-            <div class="mp-eltop-label"><span style="color:${MP_EL_COLOR[e.el]};font-weight:${i === 0 ? 700 : 400}">${i === 0 ? '◆' : i === 1 ? '②' : '③'} ${e.el}</span><span class="ax">${MP_ELEMENT_AXIS[e.el] || ''}</span></div>
-            <div class="mp-eltop-track"><div class="mp-eltop-fill" style="width:${e.n}%;background:${MP_EL_COLOR[e.el]};opacity:${i === 0 ? 1 : 0.55}"></div></div>
+            <div class="mp-eltop-label"><span class="el${i === 0 ? ' r1' : ''}" style="--elc:${MP_EL_COLOR[e.el]}">${i === 0 ? '◆' : i === 1 ? '②' : '③'} ${e.el}</span><span class="ax">${MP_ELEMENT_AXIS[e.el] || ''}</span></div>
+            <div class="mp-eltop-track"><div class="mp-eltop-fill${i === 0 ? ' r1' : ''}" style="width:${e.n}%;--elc:${MP_EL_COLOR[e.el]}"></div></div>
           </div>`).join('')}
       </div>` : '<div></div>';
   const ring = hasRing ? `
-      <div class="mp-ring" role="img" aria-label="MIRROR ${r.mirror.name} 一致度${r.mirror.match}%">
+      <div class="mp-ring" style="--rc:${MP_EL_COLOR[r.mirror.el] ? mpElText(r.mirror.el) : r.color}" role="img" aria-label="MIRROR ${r.mirror.name} 一致度${r.mirror.match}%">
         ${mpRingSvg(r.mirror.match, MP_EL_COLOR[r.mirror.el] ? mpElText(r.mirror.el) : r.color)}
         <span class="lbl">MIRROR</span>
         <span class="who" style="color:${mpMirrorText(r.mirror)}">${r.mirror.name}</span>
