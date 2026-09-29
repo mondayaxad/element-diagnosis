@@ -407,9 +407,17 @@
   .mp-insight-head { display: flex; align-items: baseline; gap: 6px; margin: 14px 0 8px; font-size: 11px; color: var(--fg-dim); }
   .mp-insight-head b { font-family: 'IM Fell English', serif; letter-spacing: 1.5px; color: #c0a860; border-left: 2px solid #c0a860; padding-left: 6px; }
   .mp-insight-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
-  .mp-insight-card { border: 1px solid var(--card-border); border-left: 2px solid rgba(192,168,96,0.6); border-radius: 6px; padding: 10px 12px; background: rgba(192,168,96,0.03); min-width: 0; }
-  .mp-insight-card .t { font-size: 11.5px; color: #c0a860; font-weight: 700; margin-bottom: 4px; letter-spacing: .5px; }
-  .mp-insight-card .tag { font-size: 13.5px; color: var(--fg); font-weight: 700; line-height: 1.6; margin-bottom: 6px; word-break: break-word; }
+  /* 領域ごとのアクセント（見出し・ゲージ・主要語だけに使い、背景・本文・罫線は既存の暗色のまま）
+     パーソナリティ＝紫〜薄紅／行動スタイル＝琥珀〜金／価値観＝青緑〜水色 */
+  .mp-insight-card { --d1: #b48ad8; --d2: #d9aed6; --g1: #7a52a8; --g2: #cfa0d0;
+    border: 1px solid var(--card-border); border-left: 2px solid var(--g1); border-radius: 6px; padding: 10px 12px; background: rgba(255,255,255,0.012); min-width: 0; }
+  .mp-insight-card[data-domain="style"], .mp-insight-card[data-domain="motive"] { --d1: #dcae5a; --d2: #e6cc8c; --g1: #a8702a; --g2: #e0c070; }
+  .mp-insight-card[data-domain="values"] { --d1: #5cc4b0; --d2: #92d4dc; --g1: #1f8a7e; --g2: #7cc8d8; }
+  .mp-insight-card .t { font-size: 11.5px; color: var(--d1); font-weight: 700; margin-bottom: 4px; letter-spacing: .5px; }
+  .mp-insight-card .tag { font-size: 14px; font-weight: 700; line-height: 1.6; margin-bottom: 6px; word-break: keep-all; overflow-wrap: anywhere; }
+  .mp-insight-card .tag .a1 { color: var(--d1); }
+  .mp-insight-card .tag .a2 { color: var(--d2); opacity: .82; font-weight: 600; }
+  .mp-insight-card .v .nat { font-weight: 700; }
   .mp-insight-card .v { font-size: 12px; color: var(--fg-dim); line-height: 1.7; word-break: break-word; }
   .mp-insight-card .n { font-size: 11px; color: var(--fg-dim); opacity: .75; margin-top: 4px; }
 
@@ -417,7 +425,7 @@
   .mp-gauge { display: grid; grid-template-columns: 5.5em 1fr 2.2em; align-items: center; gap: 8px; font-size: 11.5px; color: var(--fg-dim); padding: 2px 0; }
   .mp-gauge .nm { color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mp-gauge .track { height: 4px; border-radius: 2px; background: #1a1630; overflow: hidden; }
-  .mp-gauge .fill { height: 100%; border-radius: 2px; background: #c0a860; }
+  .mp-gauge .fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--g1, #7a52a8), var(--g2, #cfa0d0)); box-shadow: 0 0 4px color-mix(in srgb, var(--g2, #cfa0d0) 35%, transparent); }
   .mp-gauge .val { text-align: right; font-variant-numeric: tabular-nums; }
 
   /* ---- 視覚要約（無料公開範囲：元素TOP3の相対バー・MIRROR一致度） ---- */
@@ -464,6 +472,11 @@
   .mp-free-title { font-size: 11px; color: var(--fg); margin-bottom: 4px; }
   .mp-free-list { font-size: 11.5px; color: var(--fg-dim); line-height: 1.8; }
   .mp-free-list b { color: var(--fg); font-weight: 400; }
+  /* 意味色：値だけに色を付け、ラベルは既存の淡色のまま */
+  .mp-x { color: #5a5478; font-weight: 400; margin: 0 .2em; }
+  .mp-cw { white-space: nowrap; }
+  .mp-typecode { letter-spacing: 1.5px; font-weight: 700 !important; }
+  .mp-pct { color: var(--fg); font-variant-numeric: tabular-nums; font-weight: 700; margin-left: 2px; }
   .mp-then { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--card-border); font-size: 11.5px; color: var(--fg-dim); line-height: 1.8; }
   .mp-then-title { font-size: 11px; color: var(--fg); margin-bottom: 2px; }
   .mp-locked-title { margin-top: 14px; font-size: 11px; color: var(--fg); }
@@ -821,6 +834,37 @@ const MP_VALUES_NAME = { SD:"自己志向", ST:"刺激", HE:"快楽", AC:"達成
 const MP_ENNEA_NAME = { 1:"改革者", 2:"援助者", 3:"達成者", 4:"個性派", 5:"観察者", 6:"堅実家", 7:"楽天家", 8:"挑戦者", 9:"調停者" };
 const MP_EL_COLOR = { "炎":"#c84a20", "水":"#2a7aaa", "氷":"#4a80c0", "雷":"#9040d0", "風":"#3a8a60", "岩":"#a07830", "草":"#4a8020" };
 
+/* ---- 意味色（表示専用。診断ロジック・保存データには持ち込まない） ----
+   元素＝既存の元素色（MP_EL_COLOR）、武器＝既存の武器色（WEAPON_COLOR）、
+   国家＝既存の対応表が無いためUI用の固定色をここだけに定義。
+   暗い背景で読めるよう白へ寄せて明度を上げる（彩度も自然に下がる）。
+   対応表に無い値は推測せず、既存のニュートラル色にする。 */
+const MP_NATION_COLOR = {
+  "モンド":"#5fa596", "璃月":"#c2a15a", "稲妻":"#9577c4", "スメール":"#78a35c",
+  "フォンテーヌ":"#5a8cc4", "ナタ":"#c0704c", "スネージナヤ":"#86a8c4", "ナドクライ":"#a49cd4",
+};
+const MP_NEUTRAL = 'var(--fg)';
+function mpTint(hex, t) {
+  const m = /^#([0-9a-f]{6})$/i.exec(hex || '');
+  if (!m) return null;
+  const n = parseInt(m[1], 16);
+  return '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+    .map(c => Math.round(c + (255 - c) * t).toString(16).padStart(2, '0')).join('');
+}
+function mpElText(el) { return mpTint(MP_EL_COLOR[el], 0.38) || MP_NEUTRAL; }
+function mpWText(w) { return mpTint(WEAPON_COLOR[w], 0.38) || MP_NEUTRAL; }
+function mpNatText(n) { return mpTint(MP_NATION_COLOR[n], 0.22) || MP_NEUTRAL; }
+// MIRRORはキャラクターの元素が保存データ（mirror_snapshot／character_matchesのel）で確定できる場合だけ色を付ける
+function mpMirrorText(mirror) { return (mirror && MP_EL_COLOR[mirror.el]) ? mpElText(mirror.el) : MP_NEUTRAL; }
+function mpComboHtml(r) {
+  const parts = [];
+  if (r.el) parts.push(`<span style="color:${mpElText(r.el)}">${r.el}</span>`);
+  if (r.w) parts.push(`<span style="color:${mpWText(r.w)}">${r.w}</span>`);
+  if (r.nation) parts.push(`<span style="color:${mpNatText(r.nation)}">${r.nation}</span>`);
+  // 「× 語」を一まとまりにして、行末に×だけが残る改行を防ぐ
+  return parts.length ? parts[0] + parts.slice(1).map(x => `<span class="mp-cw"><span class="mp-x">×</span>${x}</span>`).join('') : '—';
+}
+
 // DB由来の文字列をinnerHTMLへ入れる前に必ず通す（自分のデータであっても安全側に倒す）
 function mpEsc(v) {
   if (v === null || v === undefined) return v;
@@ -911,11 +955,11 @@ function mpFreeListHtml(r) {
   return `
     <div class="mp-free-title">無料でわかること</div>
     <div class="mp-free-list">
-      <div>タイプ：<b>${r.code || '—'}</b>${r.typeName ? `　<b>${r.typeName}</b>` : ''}</div>
-      <div>元素：<b>${r.el || '—'}</b></div>
-      <div>武器：<b>${r.w || '—'}</b></div>
-      <div>国家：<b>${r.nation || '—'}</b></div>
-      <div>MIRROR：<b>${r.mirror ? `${r.mirror.name}（${r.mirror.match}%）` : '—'}</b></div>
+      <div>タイプ：<b class="mp-typecode" style="color:${r.code ? mpElText(r.el) : MP_NEUTRAL}">${r.code || '—'}</b>${r.typeName ? `　<b style="color:${mpElText(r.el)}">${r.typeName}</b>` : ''}</div>
+      <div>元素：<b style="color:${mpElText(r.el)}">${r.el || '—'}</b></div>
+      <div>武器：<b style="color:${mpWText(r.w)}">${r.w || '—'}</b></div>
+      <div>国家：<b style="color:${mpNatText(r.nation)}">${r.nation || '—'}</b></div>
+      <div>MIRROR：${r.mirror ? `<b style="color:${mpMirrorText(r.mirror)}">${r.mirror.name}</b><span class="mp-pct">${r.mirror.match}%</span>` : '<b>—</b>'}</div>
     </div>`;
 }
 // 「このときのあなた」：既存辞書（元素の軸・武器の原理・国家の意味）の語をそのまま表示する。
@@ -978,9 +1022,9 @@ function mpVizHtml(r) {
       </div>` : '<div></div>';
   const ring = hasRing ? `
       <div class="mp-ring" role="img" aria-label="MIRROR ${r.mirror.name} 一致度${r.mirror.match}%">
-        ${mpRingSvg(r.mirror.match, r.color)}
+        ${mpRingSvg(r.mirror.match, MP_EL_COLOR[r.mirror.el] ? mpElText(r.mirror.el) : r.color)}
         <span class="lbl">MIRROR</span>
-        <span class="who">${r.mirror.name}</span>
+        <span class="who" style="color:${mpMirrorText(r.mirror)}">${r.mirror.name}</span>
       </div>` : '';
   return `<div class="mp-viz">${bars}${ring}</div>`;
 }
@@ -1005,31 +1049,41 @@ function mpGaugesHtml(ranked, n) {
   return ranked.slice(0, n).map(x => `
     <div class="mp-gauge"><span class="nm">${x.name}</span><span class="track"><span class="fill" style="display:block;width:${Math.max(0, Math.min(100, x.v))}%"></span></span><span class="val">${x.v}</span></div>`).join('');
 }
+// 上位2軸の見出し：1位は領域色を強く、2位は控えめ、×は淡い中間色。
+// 行動スタイルは既存辞書（STYLE_POETIC_TAG）の語、パーソナリティ・価値観は既存の軸名をそのまま使う（新しい名称は作らない）。
+function mpTop2TitleHtml(labels) {
+  const l = labels.filter(Boolean);
+  if (!l.length) return '';
+  return `<div class="tag"><span class="a1">${l[0]}</span>${l[1] ? `<span class="mp-x"> × </span><span class="a2">${l[1]}</span>` : ''}</div>`;
+}
+// 表示順：パーソナリティ → 行動スタイル → 価値観
 function mpInsightCards(r) {
   const s = r.session;
   const note = '実測値（0〜100）';
   if (!r.isLegacy && s.v2Scores) {
+    const personality = mpRankedAxes(s.v2Scores.personality, MP_BIG5_NAME);
     const style = mpRankedAxes(s.v2Scores.style, MP_STYLE_NAME, MP_STYLE_AXES);
-    const styleTag = style.length >= 2 ? `${MP_STYLE_POETIC_TAG[style[0].key]} × ${MP_STYLE_POETIC_TAG[style[1].key]}` : '';
+    const values = mpRankedAxes(s.v2Scores.values, MP_VALUES_NAME);
     return [
-      { t: '行動スタイル', tag: styleTag, body: mpGaugesHtml(style, 2), n: note },
-      { t: 'パーソナリティ', body: mpGaugesHtml(mpRankedAxes(s.v2Scores.personality, MP_BIG5_NAME), 2), n: note },
-      { t: '価値観', body: mpGaugesHtml(mpRankedAxes(s.v2Scores.values, MP_VALUES_NAME), 2), n: note },
+      { d: 'personality', t: 'パーソナリティ', title: mpTop2TitleHtml(personality.slice(0, 2).map(x => x.name)), body: mpGaugesHtml(personality, 2), n: note },
+      { d: 'style', t: '行動スタイル', title: style.length >= 2 ? mpTop2TitleHtml([MP_STYLE_POETIC_TAG[style[0].key], MP_STYLE_POETIC_TAG[style[1].key]]) : '', body: mpGaugesHtml(style, 2), n: note },
+      { d: 'values', t: '価値観', title: mpTop2TitleHtml(values.slice(0, 2).map(x => x.name)), body: mpGaugesHtml(values, 2), n: note },
     ];
   }
   // 旧版（legacy-v1）：旧版が測定していた項目のみ。v2へ換算しない。
   const pr = s.primaryResult || {};
+  const big5 = mpRankedAxes((s.scores && s.scores.big5) || null, MP_BIG5_NAME);
   return [
-    { t: '動機（旧版）', body: `<div class="v">${pr.enneagram_type ? `タイプ${mpEsc(pr.enneagram_type)}「${MP_ENNEA_NAME[pr.enneagram_type] || ''}」` : '—'}</div>`, n: 'エニアグラム' },
-    { t: 'パーソナリティ', body: mpGaugesHtml(mpRankedAxes((s.scores && s.scores.big5) || null, MP_BIG5_NAME), 2), n: note },
-    { t: '価値観', body: `<div class="v">${pr.nation ? `${mpEsc(pr.nation)}「${(typeof NATION_MEANING !== 'undefined' && NATION_MEANING[pr.nation]) || ''}」` : '—'}</div>`, n: '国家' },
+    { d: 'personality', t: 'パーソナリティ', title: mpTop2TitleHtml(big5.slice(0, 2).map(x => x.name)), body: mpGaugesHtml(big5, 2), n: note },
+    { d: 'motive', t: '動機（旧版）', body: `<div class="v">${pr.enneagram_type ? `タイプ${mpEsc(pr.enneagram_type)}「${MP_ENNEA_NAME[pr.enneagram_type] || ''}」` : '—'}</div>`, n: 'エニアグラム' },
+    { d: 'values', t: '価値観', body: `<div class="v">${pr.nation ? `<span class="nat" style="color:${mpNatText(pr.nation)}">${mpEsc(pr.nation)}</span>「${(typeof NATION_MEANING !== 'undefined' && NATION_MEANING[pr.nation]) || ''}」` : '—'}</div>`, n: '国家' },
   ];
 }
 function mpInsightHtml(r) {
   return `
     <div class="mp-insight-head"><b>INSIGHT</b>深く読み解いた記録</div>
     <div class="mp-insight-grid">
-      ${mpInsightCards(r).map(c => `<div class="mp-insight-card"><div class="t">${c.t}</div>${c.tag ? `<div class="tag">${c.tag}</div>` : ''}${c.body || '<div class="v">—</div>'}<div class="n">${c.n}</div></div>`).join('')}
+      ${mpInsightCards(r).map(c => `<div class="mp-insight-card" data-domain="${c.d}"><div class="t">${c.t}</div>${c.title || ''}${c.body || '<div class="v">—</div>'}<div class="n">${c.n}</div></div>`).join('')}
     </div>`;
 }
 function mpReadReportBtn(r) {
@@ -1147,8 +1201,8 @@ function mpLatestHtml(r) {
           ${mpEmblemHtml(r, 'lg')}
           <div class="mp-latest-info">
             <div class="mp-chip-row"><span class="mp-chip">${mpDate(r.date)}</span><span class="mp-chip new">NEW</span>${r.purchased ? '<span class="mp-chip insight">INSIGHT</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}</div>
-            ${r.code ? `<div class="mp-latest-code"><b>${r.code}</b>${r.typeName}</div>` : ''}
-            <div class="mp-latest-combo"><span style="color:${r.color}">${r.el || '—'}</span>${r.w ? ' × ' + r.w : ''}${r.nation ? ' × ' + r.nation : ''}</div>
+            ${r.code ? `<div class="mp-latest-code"><b class="mp-typecode" style="color:${mpElText(r.el)}">${r.code}</b><span style="color:${mpElText(r.el)};opacity:.85">${r.typeName}</span></div>` : ''}
+            <div class="mp-latest-combo">${mpComboHtml(r)}</div>
           </div>
         </div>
         ${mpVizHtml(r)}
@@ -1170,7 +1224,7 @@ function mpCollectionHtml(records) {
         ${records.map((r, i) => `
           <button type="button" role="listitem" class="mp-badge state-${r.purchased ? 'insight' : 'record'}" onclick="mpOpenRecord(${i})" aria-label="${mpDate(r.date)}の${MP_KINDS[r.kind].label}の記録（${r.purchased ? 'INSIGHT' : mpEntitlementOk ? 'RECORD' : 'RECORD・購入状態未確認'}）">
             ${mpEmblemHtml(r)}
-            <span class="nm">${r.name}</span>
+            <span class="nm" style="color:${mpElText(r.el)}">${r.name}</span>
             <span class="dt">${mpDate(r.date)}</span>
             <span class="st">${r.purchased ? 'INSIGHT' : 'RECORD'}</span>
           </button>`).join('')}
@@ -1190,7 +1244,7 @@ function mpOpenRecord(i) {
 //   確認不可：無料情報 → 視覚要約 → 中立表示（購入導線なし）
 function mpRecordHtml(r, i) {
   const detailLink = r.resultUrl
-    ? `<a href="${r.resultUrl}" class="mp-detail-link" onclick="trackEvent('mypage_view_result_click',{source:'records'})">詳細な診断結果を開く →</a>`
+    ? `<a href="${r.resultUrl}" class="mp-detail-link" onclick="trackEvent('mypage_view_result_click',{source:'records'})">当時の診断結果を見る →</a>`
     : '';
   const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${r.purchased ? '<span class="mp-chip insight">INSIGHT</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
   let body;
@@ -1201,7 +1255,7 @@ function mpRecordHtml(r, i) {
     <details class="mp-rec" id="mp-rec-${i}" ontoggle="if(this.open){trackEvent('diagnosis_history_open',{diagnosis_type:'${r.kind}'})}">
       <summary>
         <span class="d">${mpDate(r.date)}</span>
-        <span class="c">${r.headline ? `<span class="el" style="color:${r.color}">${r.headline}</span>` : `<span class="el" style="color:${r.color}">${r.el || '—'}</span>${r.w ? ' × ' + r.w : ''}${r.nation ? ' × ' + r.nation : ''}`}</span>
+        <span class="c">${r.headline ? `<span class="el" style="color:${r.color}">${r.headline}</span>` : mpComboHtml(r)}</span>
         <span class="mp-chip-row">${chips}</span>
       </summary>
       <div class="mp-rec-body">
