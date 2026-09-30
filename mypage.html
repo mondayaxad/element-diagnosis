@@ -526,7 +526,7 @@
   .mp-insight-card[data-domain="motive"] .tag .a1, .mp-insight-card[data-domain="motive"] .tag .a2 { display: inline-block; white-space: nowrap; }
   .mp-insight-card .v.mp-ennea-code { font-family: 'IM Fell English', serif; font-size: 20px; letter-spacing: 1px; line-height: 1.3; margin-bottom: 2px; }
   .mp-insight-card .v { font-size: 12px; color: var(--fg-dim); line-height: 1.7; word-break: break-word; }
-  .mp-insight-card .n { font-size: 11px; color: var(--fg-dim); opacity: .75; margin-top: 4px; }
+  .mp-insight-card .n { font-size: 11px; line-height: 1.6; color: var(--fg-dim); opacity: .75; margin-top: 4px; }
 
   /* ---- 細いゲージ（実測値 0〜100。購入済みの要点でのみ使用） ---- */
   .mp-gauge { display: grid; grid-template-columns: 5.5em 1fr 2.2em; align-items: center; gap: 8px; font-size: 11.5px; color: var(--fg-dim); padding: 2px 0; }
@@ -655,6 +655,11 @@
   /* 意味色：値だけに色を付け、ラベルは既存の淡色のまま */
   .mp-x { color: #5a5478; font-weight: 400; margin: 0 .2em; }
   .mp-cw { white-space: nowrap; }
+  /* 購入済みだけ：意味色からその明るい色へのグラデーション文字（未購入は単色のまま） */
+  .state-insight .mp-gt {
+    background: linear-gradient(90deg, var(--gc), color-mix(in srgb, var(--gc) 50%, #ffffff));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+  }
   .mp-typecode { letter-spacing: 1.5px; font-weight: 700 !important; }
   .mp-pct { color: var(--fg); font-variant-numeric: tabular-nums; font-weight: 700; margin-left: 2px; }
   .mp-then { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--card-border); font-size: 11.5px; color: var(--fg-dim); line-height: 1.8; }
@@ -1086,9 +1091,9 @@ function mpNatText(n) { return mpTint(MP_NATION_COLOR[n], 0.22) || MP_NEUTRAL; }
 function mpMirrorText(mirror) { return (mirror && MP_EL_COLOR[mirror.el]) ? mpElText(mirror.el) : MP_NEUTRAL; }
 function mpComboHtml(r) {
   const parts = [];
-  if (r.el) parts.push(`<span style="color:${mpElText(r.el)}">${r.el}</span>`);
-  if (r.w) parts.push(`<span style="color:${mpWText(r.w)}">${r.w}</span>`);
-  if (r.nation) parts.push(`<span style="color:${mpNatText(r.nation)}">${r.nation}</span>`);
+  if (r.el) parts.push(`<span class="mp-gt" style="color:${mpElText(r.el)};--gc:${mpElText(r.el)}">${r.el}</span>`);
+  if (r.w) parts.push(`<span class="mp-gt" style="color:${mpWText(r.w)};--gc:${mpWText(r.w)}">${r.w}</span>`);
+  if (r.nation) parts.push(`<span class="mp-gt" style="color:${mpNatText(r.nation)};--gc:${mpNatText(r.nation)}">${r.nation}</span>`);
   // 「× 語」を一まとまりにして、行末に×だけが残る改行を防ぐ
   return parts.length ? parts[0] + parts.slice(1).map(x => `<span class="mp-cw"><span class="mp-x">×</span>${x}</span>`).join('') : '—';
 }
@@ -1250,10 +1255,10 @@ function mpFreeListHtml(r) {
   if (r.kind !== 'element') return (MP_KINDS[r.kind].freeListHtml || (() => ''))(r);
   return `
     <div class="mp-free-list">
-      <div>タイプ：<b class="mp-typecode" style="color:${r.code ? mpElText(r.el) : MP_NEUTRAL}">${r.code || '—'}</b>${r.typeName ? `　<b style="color:${mpElText(r.el)}">${r.typeName}</b>` : ''}</div>
-      <div>元素：<b style="color:${mpElText(r.el)}">${r.el || '—'}</b></div>
-      <div>武器：<b style="color:${mpWText(r.w)}">${r.w || '—'}</b></div>
-      <div>国家：<b style="color:${mpNatText(r.nation)}">${r.nation || '—'}</b></div>
+      <div>タイプ：<b class="mp-typecode mp-gt" style="color:${r.code ? mpElText(r.el) : MP_NEUTRAL};--gc:${r.code ? mpElText(r.el) : MP_NEUTRAL}">${r.code || '—'}</b>${r.typeName ? `　<b class="mp-gt" style="color:${mpElText(r.el)};--gc:${mpElText(r.el)}">${r.typeName}</b>` : ''}</div>
+      <div>元素：<b class="mp-gt" style="color:${mpElText(r.el)};--gc:${mpElText(r.el)}">${r.el || '—'}</b></div>
+      <div>武器：<b class="mp-gt" style="color:${mpWText(r.w)};--gc:${mpWText(r.w)}">${r.w || '—'}</b></div>
+      <div>国家：<b class="mp-gt" style="color:${mpNatText(r.nation)};--gc:${mpNatText(r.nation)}">${r.nation || '—'}</b></div>
     </div>`;
 }
 function mpComboText(r) {
@@ -1372,19 +1377,25 @@ function mpMirrorCard(r) {
     return `<div class="mp-gauge mp-mirror-row"><span class="nm" style="color:${el ? mpElText(el) : 'var(--d1)'}">${mpEsc(m.name)}</span><span class="track"><span class="fill" style="display:block;width:${pct === null ? 0 : Math.max(0, Math.min(100, pct))}%;--g1:${g1};--g2:${g2}"></span></span><span class="val">${pct === null ? '—' : pct + '%'}</span></div>`;
   });
   if (!rows.length) return null;
-  return { d: 'mirror', t: 'MIRROR', title: '', body: rows.join(''), n: '近しいキャラクター4名と一致度' };
+  return { d: 'mirror', t: 'MIRROR', title: '', body: rows.join(''), n: r.isLegacy ? 'キャラクターの中で、あなたに近い4人' : '118人中、気質・動き方・価値観が近い4人' };
 }
 function mpInsightCards(r) {
   const s = r.session;
-  const note = '実測値（0〜100）';
+  // 各カードの下には、その領域が何を表しているかを一行で示す
+  const MP_DOMAIN_NOTE = {
+    personality: '考え方や感じ方に表れる、基本的な気質',
+    style: '人や物事に向き合うときの、自然な動き方',
+    values: '大切にしているもの、選ぶときの判断の軸',
+    motive: 'あなたを行動へ向かわせる、心の奥の動機',
+  };
   if (!r.isLegacy && s.v2Scores) {
     const personality = mpRankedAxes(s.v2Scores.personality, MP_BIG5_NAME);
     const style = mpRankedAxes(s.v2Scores.style, MP_STYLE_NAME, MP_STYLE_AXES);
     const values = mpRankedAxes(s.v2Scores.values, MP_VALUES_NAME);
     return [
-      { d: 'personality', t: 'パーソナリティ', title: mpTop2TitleHtml(personality.slice(0, 2).map(x => x.name)), body: mpGaugesHtml(personality, 2), n: note },
-      { d: 'style', t: '行動スタイル', title: style.length >= 2 ? mpTop2TitleHtml([MP_STYLE_POETIC_TAG[style[0].key], MP_STYLE_POETIC_TAG[style[1].key]]) : '', body: mpGaugesHtml(style, 2), n: note },
-      { d: 'values', t: '価値観', title: mpTop2TitleHtml(values.slice(0, 2).map(x => x.name)), body: mpGaugesHtml(values, 2), n: note },
+      { d: 'personality', t: 'パーソナリティ', title: mpTop2TitleHtml(personality.slice(0, 2).map(x => x.name)), body: mpGaugesHtml(personality, 2), n: MP_DOMAIN_NOTE.personality },
+      { d: 'style', t: '行動スタイル', title: style.length >= 2 ? mpTop2TitleHtml([MP_STYLE_POETIC_TAG[style[0].key], MP_STYLE_POETIC_TAG[style[1].key]]) : '', body: mpGaugesHtml(style, 2), n: MP_DOMAIN_NOTE.style },
+      { d: 'values', t: '価値観', title: mpTop2TitleHtml(values.slice(0, 2).map(x => x.name)), body: mpGaugesHtml(values, 2), n: MP_DOMAIN_NOTE.values },
       mpMirrorCard(r),
     ].filter(Boolean);
   }
@@ -1394,11 +1405,11 @@ function mpInsightCards(r) {
   const et = pr.enneagram_type, ew = pr.enneagram_wing;
   const values = mpRankedAxes(mpLegacySchwartzScores(s.scores), MP_LEGACY_VALUE_NAME, MP_LEGACY_VALUE_ORDER);
   return [
-    { d: 'personality', t: 'パーソナリティ', title: mpTop2TitleHtml(big5.slice(0, 2).map(x => x.name)), body: mpGaugesHtml(big5, 2), n: note },
+    { d: 'personality', t: 'パーソナリティ', title: mpTop2TitleHtml(big5.slice(0, 2).map(x => x.name)), body: mpGaugesHtml(big5, 2), n: MP_DOMAIN_NOTE.personality },
     { d: 'motive', t: '動機',
       title: MP_ENNEA_NAME[et] ? `<div class="tag"><span class="a1" style="color:${MP_ENNEA_COLOR[et]}">タイプ${et}（${MP_ENNEA_NAME[et]}）</span>${MP_ENNEA_NAME[ew] ? `<span class="mp-x"> ／ </span><span class="a2" style="color:${MP_ENNEA_COLOR[ew]}">ウィング${ew}（${MP_ENNEA_NAME[ew]}）</span>` : ''}</div>` : '',
-      body: MP_ENNEA_NAME[et] ? `<div class="v mp-ennea-code"><span style="color:${MP_ENNEA_COLOR[et]}">${et}</span>${MP_ENNEA_NAME[ew] ? `<span style="color:${MP_ENNEA_COLOR[ew]}">w${ew}</span>` : ''}</div>` : '', n: 'エニアグラム' },
-    { d: 'values', t: '価値観', title: mpTop2TitleHtml(values.slice(0, 2).map(x => x.name)), body: mpGaugesHtml(values, 2), n: note },
+      body: MP_ENNEA_NAME[et] ? `<div class="v mp-ennea-code"><span style="color:${MP_ENNEA_COLOR[et]}">${et}</span>${MP_ENNEA_NAME[ew] ? `<span style="color:${MP_ENNEA_COLOR[ew]}">w${ew}</span>` : ''}</div>` : '', n: MP_DOMAIN_NOTE.motive },
+    { d: 'values', t: '価値観', title: mpTop2TitleHtml(values.slice(0, 2).map(x => x.name)), body: mpGaugesHtml(values, 2), n: MP_DOMAIN_NOTE.values },
     mpMirrorCard(r),
   ].filter(Boolean);
 }
@@ -1566,7 +1577,7 @@ function mpLatestHtml(r) {
           ${mpEmblemHtml(r, 'lg')}
           <div class="mp-latest-info">
             <div class="mp-chip-row"><span class="mp-chip">${mpDate(r.date)}</span><span class="mp-chip new">NEW</span>${mpEntitlementOk && !r.purchased ? '<span class="mp-chip locked" title="まだ読み解いていない記録">LOCKED</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}</div>
-            ${r.code ? `<div class="mp-latest-code"><b class="mp-typecode" style="color:${mpElText(r.el)}">${r.code}</b><span style="color:${mpElText(r.el)};opacity:.85">${r.typeName}</span></div>` : ''}
+            ${r.code ? `<div class="mp-latest-code"><b class="mp-typecode mp-gt" style="color:${mpElText(r.el)};--gc:${mpElText(r.el)}">${r.code}</b><span class="mp-gt" style="color:${mpElText(r.el)};--gc:${mpElText(r.el)};opacity:.85">${r.typeName}</span></div>` : ''}
             <div class="mp-latest-combo">${mpComboHtml(r)}</div>
           </div>
         </div>
