@@ -572,7 +572,8 @@
   .state-insight .mp-ring .base { stroke: color-mix(in srgb, var(--rc) 18%, #15122a); }
   .state-insight .mp-ring svg { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--rc) 26%, transparent)); }
   .mp-ring .lbl { font-size: 10.5px; color: var(--fg-dim); letter-spacing: 1px; }
-  .mp-ring .who { font-size: 11px; color: var(--fg); max-width: 88px; text-align: center; line-height: 1.4; word-break: break-word; }
+  /* MIRRORのキャラクター名はリングの主役として大きめ・太字で */
+  .mp-ring .who { font-size: 15px; font-weight: 700; letter-spacing: .04em; color: var(--fg); max-width: 96px; text-align: center; line-height: 1.35; word-break: keep-all; overflow-wrap: anywhere; }
 
   /* ---- 購入状態を確認できなかった場合（中立表示。購入導線は出さない） ---- */
   .mp-ent-warn { margin-top: 14px; padding: 12px; border: 1px dashed var(--card-border); border-radius: 8px; text-align: center; }
@@ -1253,7 +1254,6 @@ function mpFreeListHtml(r) {
       <div>元素：<b style="color:${mpElText(r.el)}">${r.el || '—'}</b></div>
       <div>武器：<b style="color:${mpWText(r.w)}">${r.w || '—'}</b></div>
       <div>国家：<b style="color:${mpNatText(r.nation)}">${r.nation || '—'}</b></div>
-      <div>MIRROR：${r.mirror ? `<b style="color:${mpMirrorText(r.mirror)}">${r.mirror.name}</b><span class="mp-pct">${r.mirror.match}%</span>` : '<b>—</b>'}</div>
     </div>`;
 }
 function mpComboText(r) {
@@ -1638,7 +1638,8 @@ function mpRecordHtml(r, i) {
   const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${mpEntitlementOk && !r.purchased ? '<span class="mp-chip locked" title="まだ読み解いていない記録">LOCKED</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
   let body;
   if (!mpEntitlementOk) body = mpVizHtml(r) + `<div class="mp-notice"><p>この記録の購入状態を確認できませんでした</p></div>`;
-  else if (r.purchased) body = mpInsightHtml(r) + mpVizHtml(r) + mpReadReportBtn(r);
+  // 並び順は未購入と同じ：基本情報 → あなたに響く元素・MIRRORリング → 解析結果（購入済み）／まだ読み解いていないもの（未購入）
+  else if (r.purchased) body = mpVizHtml(r) + mpInsightHtml(r) + mpReadReportBtn(r);
   else body = mpVizHtml(r) + mpLockedHtml(r, 'records');
   return `
     <details class="mp-rec state-${r.purchased ? 'insight' : 'record'}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}" id="mp-rec-${i}" ontoggle="if(this.open){trackEvent('diagnosis_history_open',{diagnosis_type:'${r.kind}'})}">
