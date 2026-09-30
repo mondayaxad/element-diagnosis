@@ -419,17 +419,6 @@
     filter: drop-shadow(0 0 4px color-mix(in srgb, var(--c, #7ab8e8) 18%, transparent));
   }
 
-  /* YOUR COLLECTION：カード枠ではなく、エンブレム単体を囲う細い菱形の輪郭（元素色・透明度高め）。
-     未購入は暗く発光なし、購入済みは元素色で少し明るく、外側にごく薄い光。 */
-  .mp-badge .mp-emblem::before {
-    content: ''; position: absolute; inset: 9px; z-index: -1; pointer-events: none;
-    border: 1px solid color-mix(in srgb, var(--c, #7ab8e8) 24%, transparent);
-    transform: rotate(45deg); border-radius: 3px;
-  }
-  .mp-badge.state-insight .mp-emblem::before {
-    border-color: color-mix(in srgb, var(--c, #7ab8e8) 62%, transparent);
-    box-shadow: 0 0 7px color-mix(in srgb, var(--c, #7ab8e8) 24%, transparent);
-  }
   .mp-badge.state-insight .mp-emblem img {
     filter: drop-shadow(0 0 7px color-mix(in srgb, var(--c, #7ab8e8) 36%, transparent));
   }
@@ -438,7 +427,7 @@
   .mp-latest { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 16px; }
 
   /* ---- 購入状態の見た目（LATEST RESULT／YOUR COLLECTION／THE RECORDSで共通の考え方） ----
-     未購入：「未読の頁」を表示し、元素色は弱く静かな枠のまま。
+     未購入：LOCKEDを静かに表示し、元素色は弱く静かな枠のまま。
      購入済：状態文字は出さず、元素色の枠・エンブレム・ごく薄い背景光で静かに煌めく（ネオンにはしない）。 */
   .mp-latest.state-record, .mp-latest.state-insight {
     border-color: color-mix(in srgb, var(--lc, #7ab8e8) 33%, var(--card-border));
@@ -490,7 +479,7 @@
   .mp-chip { font-size: 11px; line-height: 16px; letter-spacing: .5px; border: 1px solid var(--card-border); border-radius: 4px; padding: 1px 7px; color: var(--fg-dim); }
   .mp-chip.new { background: var(--accent-dim); border-color: var(--accent); color: #e0f4ff; }
   .mp-chip.insight { border-color: #c0a860; color: #c0a860; }
-  /* 未解放：直接的なラベルではなく「まだ読まれていない頁」として静かに示す（点線・淡色・背景なし） */
+  /* 未解放：LOCKEDを強調せず静かに示す（点線・淡色・背景なし） */
   .mp-chip.locked { border-style: dotted; border-color: #4a4566; color: #8a84a6; background: transparent; letter-spacing: .04em; padding: 1px 6px; }
   .mp-chip.legacy { border-style: dashed; }
   .mp-latest-code { font-size: 12px; color: var(--fg-dim); margin-top: 6px; letter-spacing: 1px; }
@@ -524,6 +513,7 @@
     border: 1px solid var(--card-border); border-left: 2px solid var(--g1); border-radius: 6px; padding: 10px 12px; background: rgba(255,255,255,0.012); min-width: 0; }
   .mp-insight-card[data-domain="style"], .mp-insight-card[data-domain="motive"] { --d1: #dcae5a; --d2: #e6cc8c; --g1: #a8702a; --g2: #e0c070; }
   .mp-insight-card[data-domain="values"] { --d1: #5cc4b0; --d2: #92d4dc; --g1: #1f8a7e; --g2: #7cc8d8; }
+  .mp-insight-card[data-domain="mirror"] { --d1: #a9bfe6; --d2: #cbd8f0; --g1: #5f7fb8; --g2: #b8cbee; }
   .mp-insight-card .t { font-size: 11.5px; color: var(--d1); font-weight: 700; margin-bottom: 4px; letter-spacing: .5px; }
   .mp-insight-card .tag { font-size: 14px; font-weight: 700; line-height: 1.6; margin-bottom: 6px; word-break: keep-all; overflow-wrap: anywhere; }
   .mp-insight-card .tag .a1 { color: var(--d1); }
@@ -540,6 +530,8 @@
   .mp-gauge .track { height: 4px; border-radius: 2px; background: #1a1630; overflow: hidden; }
   .mp-gauge .fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--g1, #7a52a8), var(--g2, #cfa0d0)); box-shadow: 0 0 4px color-mix(in srgb, var(--g2, #cfa0d0) 35%, transparent); }
   .mp-gauge .val { text-align: right; font-variant-numeric: tabular-nums; }
+  .mp-gauge.mp-mirror-row { grid-template-columns: 6.5em 1fr 2.8em; }
+  .mp-gauge.mp-mirror-row .nm { font-weight: 700; }
 
   /* ---- 視覚要約（無料公開範囲：元素TOP3の相対バー・MIRROR一致度） ---- */
   .mp-viz { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--card-border); }
@@ -612,18 +604,32 @@
     font-size: 11px; letter-spacing: .12em; border: 1px dotted color-mix(in srgb, var(--badge-c) 24%, var(--card-border));
     border-radius: 999px; padding: 1px 9px; color: var(--fg-dim); margin-top: 1px; opacity: .78;
   }
-  /* コレクションはカードではなく記録章が主役。状態差は別画像で表現する。 */
-  .mp-badge.state-record,
-  .mp-badge.state-insight {
-    border-color: transparent;
-    background: transparent;
+  /* YOUR COLLECTION：1件ずつのカード。解放前は地味な暗い枠、解放後は元素色の濃い枠と静かな光＋元素色のINSIGHT。 */
+  .mp-badge.state-record {
+    border-color: color-mix(in srgb, var(--badge-c) 14%, #26223a);
+    background: var(--card-bg);
     box-shadow: none;
+  }
+  .mp-badge.state-insight {
+    border-color: color-mix(in srgb, var(--badge-c2, var(--badge-c)) 72%, #1a1730);
+    background:
+      radial-gradient(circle 56px at 50% 48px, color-mix(in srgb, var(--badge-c) 16%, transparent), transparent 100%),
+      linear-gradient(180deg, color-mix(in srgb, var(--badge-c) 6%, var(--card-bg)), var(--card-bg) 70%);
+    box-shadow:
+      0 0 12px color-mix(in srgb, var(--badge-c) 18%, transparent),
+      inset 0 0 14px color-mix(in srgb, var(--badge-c) 6%, transparent);
   }
   .mp-badge.state-insight .nm {
     text-shadow: 0 0 7px color-mix(in srgb, var(--badge-c) 10%, transparent);
   }
-  .mp-badge.state-insight {
-    background: radial-gradient(circle 52px at 50% 50px, color-mix(in srgb, var(--badge-c) 16%, transparent), color-mix(in srgb, var(--badge-c2, var(--badge-c)) 4%, transparent) 70%, transparent 100%);
+  /* INSIGHT：元素色で塗りつぶし、文字はその元素色を溶かした濃い色（明るい元素色の上で読める濃さ） */
+  .mp-badge .st.insight {
+    border: 1px solid color-mix(in srgb, var(--badge-c2, var(--badge-c)) 82%, var(--badge-c));
+    background: linear-gradient(135deg,
+      color-mix(in srgb, var(--badge-c2, var(--badge-c)) 92%, #ffffff),
+      color-mix(in srgb, var(--badge-c2, var(--badge-c)) 70%, var(--badge-c)));
+    color: color-mix(in srgb, var(--badge-c) 30%, #0b0a18);
+    font-weight: 700; border-radius: 4px; letter-spacing: .14em; opacity: 1;
   }
 
 
@@ -638,10 +644,7 @@
   .mp-rec > summary::after { content: '⌄'; color: var(--fg-dim); font-size: 13px; }
   .mp-rec[open] > summary::after { content: '⌃'; }
   .mp-rec-body { padding: 4px 14px 16px; border-top: 1px solid var(--card-border); }
-  .mp-free { display: grid; grid-template-columns: auto 1fr; gap: 12px; margin-top: 12px; }
-  .mp-free-title { font-size: 11px; color: var(--fg); margin-bottom: 4px; }
-  .mp-free-list { font-size: 11.5px; color: var(--fg-dim); line-height: 1.8; }
-  .mp-free-list b { color: var(--fg); font-weight: 400; }
+  .mp-free { display: flex; justify-content: center; margin-top: 12px; }
   /* 意味色：値だけに色を付け、ラベルは既存の淡色のまま */
   .mp-x { color: #5a5478; font-weight: 400; margin: 0 .2em; }
   .mp-cw { white-space: nowrap; }
@@ -665,6 +668,43 @@
   /* 実値を持たない輪郭だけのゲージ（「情報が存在する」ことだけを示す） */
   .mp-locked-row .ghost { display: block; height: 4px; margin-top: 6px; border-radius: 2px; border: 1px dashed var(--card-border); background: repeating-linear-gradient(90deg, rgba(122,184,232,0.10) 0 8px, transparent 8px 14px); }
   .mp-rec-cta-note { font-size: 11.5px; color: var(--fg-dim); margin: 14px 0 8px; text-align: center; }
+
+  /* ---- 未購入の訴求：まだ読み解いていないもの（元素色で「中に何かある」気配を出す。実値は出さない） ---- */
+  .mp-lockbox .mp-locked-title { color: #cfcae4; letter-spacing: .06em; }
+  /* 各項目の色は購入後の解析カードと同じ領域色（パーソナリティ＝紫／行動スタイル・動機＝琥珀／価値観＝青緑／MIRROR＝銀青） */
+  .mp-lockbox .mp-locked-row { --dc1: #b48ad8; --dc2: #d9aed6; }
+  .mp-lockbox .mp-locked-row[data-domain="style"], .mp-lockbox .mp-locked-row[data-domain="motive"] { --dc1: #dcae5a; --dc2: #e6cc8c; }
+  .mp-lockbox .mp-locked-row[data-domain="values"] { --dc1: #5cc4b0; --dc2: #92d4dc; }
+  .mp-lockbox .mp-locked-row[data-domain="mirror"] { --dc1: #a9bfe6; --dc2: #cbd8f0; }
+  .mp-lockbox .mp-locked-row {
+    position: relative; padding: 9px 0 9px 12px;
+    border-bottom-color: color-mix(in srgb, var(--dc1) 16%, var(--card-border));
+    background: linear-gradient(90deg, color-mix(in srgb, var(--dc1) 8%, transparent), transparent 60%);
+  }
+  .mp-lockbox .mp-locked-row::before {
+    content: ''; position: absolute; left: 0; top: 10px; bottom: 10px; width: 2px; border-radius: 1px;
+    background: linear-gradient(180deg, var(--dc2), var(--dc1)); opacity: .8;
+  }
+  .mp-lockbox .mp-locked-row .t { color: var(--dc1); font-weight: 700; }
+  .mp-lockbox .mp-locked-row .cap { color: color-mix(in srgb, var(--dc2) 30%, #8e88aa); }
+  .mp-lockbox .mp-locked-row .ghost {
+    border-color: color-mix(in srgb, var(--dc1) 30%, var(--card-border));
+    background: repeating-linear-gradient(90deg, color-mix(in srgb, var(--dc1) 26%, transparent) 0 8px, transparent 8px 14px);
+  }
+  .mp-lockbox .mp-locked-row .lk { opacity: 1; filter: drop-shadow(0 0 4px color-mix(in srgb, var(--dc1) 45%, transparent)); }
+  .mp-lockbox .mp-rec-cta-note { color: #9a94b6; }
+  /* 購入CTA：元素ごとの深いグラデーション＋明るい元素色の縁と弱い光（白文字の読みやすさを保つ濃さ） */
+  .mp-lockbox > a.mp-btn.primary {
+    min-height: 50px; font-size: 13.5px; letter-spacing: .04em; color: #ffffff;
+    border: 1px solid transparent;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.06), transparent 45%),
+      linear-gradient(135deg, color-mix(in srgb, var(--lc, #7ab8e8) 50%, #0b0a18), color-mix(in srgb, var(--lc, #7ab8e8) 70%, #0b0a18) 55%, color-mix(in srgb, color-mix(in srgb, var(--lc, #7ab8e8) 85%, var(--lc2, #7ab8e8)) 70%, #0b0a18));
+    box-shadow:
+      0 0 10px color-mix(in srgb, var(--lc, #7ab8e8) 16%, transparent),
+      0 3px 10px rgba(0,0,0,0.30);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+  }
   .mp-detail-link { display: inline-block; margin-top: 14px; font-size: 12px; color: var(--accent); text-decoration: none; border-bottom: 1px dotted var(--accent-dim); padding: 6px 0 1px; }
   .mp-btn.ghost { border-color: var(--card-border); color: var(--fg-dim); }
   .mp-btn:focus-visible, .mp-badge:focus-visible, .mp-rec > summary:focus-visible, .mp-account-row:focus-visible, .mp-detail-link:focus-visible, .lock-cta-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -1184,21 +1224,9 @@ function mpNormalize(s) {
   return MP_KINDS[kind].normalize(s);
 }
 
-/* ---- 無料でわかること ---- */
+/* ---- 元素・武器・国家の表記（Xシェア本文用） ---- */
 function mpComboText(r) {
   return [r.el, r.w, r.nation].filter(Boolean).join(' × ') || '—';
-}
-function mpFreeListHtml(r) {
-  if (r.kind !== 'element') return (MP_KINDS[r.kind].freeListHtml || (() => ''))(r);
-  return `
-    <div class="mp-free-title">無料でわかること</div>
-    <div class="mp-free-list">
-      <div>タイプ：<b class="mp-typecode" style="color:${r.code ? mpElText(r.el) : MP_NEUTRAL}">${r.code || '—'}</b>${r.typeName ? `　<b style="color:${mpElText(r.el)}">${r.typeName}</b>` : ''}</div>
-      <div>元素：<b style="color:${mpElText(r.el)}">${r.el || '—'}</b></div>
-      <div>武器：<b style="color:${mpWText(r.w)}">${r.w || '—'}</b></div>
-      <div>国家：<b style="color:${mpNatText(r.nation)}">${r.nation || '—'}</b></div>
-      <div>MIRROR：${r.mirror ? `<b style="color:${mpMirrorText(r.mirror)}">${r.mirror.name}</b><span class="mp-pct">${r.mirror.match}%</span>` : '<b>—</b>'}</div>
-    </div>`;
 }
 // 「このときのあなた」：既存辞書（元素の軸・武器の原理・国家の意味）の語をそのまま表示する。
 // 元素・武器・国家を「気質／動機／価値観」へ対応付けるなどの新しい解釈は加えない。
@@ -1302,6 +1330,19 @@ function mpTop2TitleHtml(labels) {
   return `<div class="tag"><span class="a1">${l[0]}</span>${l[1] ? `<span class="mp-x"> × </span><span class="a2">${l[1]}</span>` : ''}</div>`;
 }
 // 表示順：パーソナリティ → 行動スタイル → 価値観
+// MIRROR（購入済みのみ）：保存済みの上位4名（v2＝mirror_snapshot／旧版＝character_matches）と一致度。
+// バーは各キャラクターの元素色（MP_EL_COLOR→MP_EL_GLOW_END）のグラデーション。元素が不明なら領域色（銀青）。
+function mpMirrorCard(r) {
+  const s = r.session || {};
+  const list = (r.isLegacy ? s.characterMatches : s.mirrorSnapshot) || [];
+  const rows = list.slice(0, 4).filter(m => m && m.name).map(m => {
+    const el = MP_EL_COLOR[m.el] ? m.el : null, pct = mpNum(m.match);
+    const g1 = el ? MP_EL_COLOR[el] : '#5f7fb8', g2 = el ? (MP_EL_GLOW_END[el] || MP_EL_COLOR[el]) : '#b8cbee';
+    return `<div class="mp-gauge mp-mirror-row"><span class="nm" style="color:${el ? mpElText(el) : 'var(--d1)'}">${mpEsc(m.name)}</span><span class="track"><span class="fill" style="display:block;width:${pct === null ? 0 : Math.max(0, Math.min(100, pct))}%;--g1:${g1};--g2:${g2}"></span></span><span class="val">${pct === null ? '—' : pct + '%'}</span></div>`;
+  });
+  if (!rows.length) return null;
+  return { d: 'mirror', t: 'MIRROR', title: '', body: rows.join(''), n: '近しいキャラクター4名と一致度' };
+}
 function mpInsightCards(r) {
   const s = r.session;
   const note = '実測値（0〜100）';
@@ -1313,7 +1354,8 @@ function mpInsightCards(r) {
       { d: 'personality', t: 'パーソナリティ', title: mpTop2TitleHtml(personality.slice(0, 2).map(x => x.name)), body: mpGaugesHtml(personality, 2), n: note },
       { d: 'style', t: '行動スタイル', title: style.length >= 2 ? mpTop2TitleHtml([MP_STYLE_POETIC_TAG[style[0].key], MP_STYLE_POETIC_TAG[style[1].key]]) : '', body: mpGaugesHtml(style, 2), n: note },
       { d: 'values', t: '価値観', title: mpTop2TitleHtml(values.slice(0, 2).map(x => x.name)), body: mpGaugesHtml(values, 2), n: note },
-    ];
+      mpMirrorCard(r),
+    ].filter(Boolean);
   }
   // 旧版（legacy-v1）：旧版が測定していた項目のみ。v2へ換算しない。
   const pr = s.primaryResult || {};
@@ -1326,7 +1368,8 @@ function mpInsightCards(r) {
       title: MP_ENNEA_NAME[et] ? `<div class="tag"><span class="a1" style="color:${MP_ENNEA_COLOR[et]}">タイプ${et}（${MP_ENNEA_NAME[et]}）</span>${MP_ENNEA_NAME[ew] ? `<span class="mp-x"> ／ </span><span class="a2" style="color:${MP_ENNEA_COLOR[ew]}">ウィング${ew}（${MP_ENNEA_NAME[ew]}）</span>` : ''}</div>` : '',
       body: MP_ENNEA_NAME[et] ? `<div class="v mp-ennea-code"><span style="color:${MP_ENNEA_COLOR[et]}">${et}</span>${MP_ENNEA_NAME[ew] ? `<span style="color:${MP_ENNEA_COLOR[ew]}">w${ew}</span>` : ''}</div>` : '', n: 'エニアグラム' },
     { d: 'values', t: '価値観', title: mpTop2TitleHtml(values.slice(0, 2).map(x => x.name)), body: mpGaugesHtml(values, 2), n: note },
-  ];
+    mpMirrorCard(r),
+  ].filter(Boolean);
 }
 // エニアグラム9タイプの表示色（表示専用。低彩度で世界観に馴染む色）
 const MP_ENNEA_COLOR = {
@@ -1389,10 +1432,10 @@ async function mpRetryEntitlement(button) {
 // 旧版（legacy-v1）の解析レポートには行動スタイル（STYLE）が無いため、その行だけ旧版が測定していた「動機」を示す。
 function mpLockedHtml(r, where) {
   const rows = [
-    ['パーソナリティの深層', '考え方・感じ方の傾向'],
-    r.isLegacy ? ['動機の深層', 'あなたを動かしているもの'] : ['行動スタイルの深層', 'あなたの行動の核にあるもの'],
-    ['価値観の深層', '大切にしているもの・目指すもの'],
-    ['MIRRORの深層', 'あなたと近しい隠されたキャラクターたち（4名）'],
+    ['パーソナリティの深層', '考え方・感じ方の傾向', 'personality'],
+    r.isLegacy ? ['動機の深層', 'あなたを動かしているもの', 'motive'] : ['行動スタイルの深層', 'あなたの行動の核にあるもの', 'style'],
+    ['価値観の深層', '大切にしているもの・目指すもの', 'values'],
+    ['MIRRORの深層', 'あなたと近しい隠されたキャラクターたち（4名）', 'mirror'],
   ];
   const isLatest = where === 'latest';
   return `
@@ -1402,7 +1445,7 @@ function mpLockedHtml(r, where) {
         <ul class="mp-seen-list"><li>元素・武器・国家の判定結果</li><li>近しいキャラクター1名</li></ul>
       </div>
       <div class="mp-locked-title">まだ読み解いていないもの</div>
-      ${rows.map(([t, cap]) => `<div class="mp-locked-row"><span class="txt"><span class="t">${t}</span><span class="cap">${cap}</span><span class="ghost" aria-hidden="true"></span></span><span class="lk" aria-label="未解析">🔒</span></div>`).join('')}
+      ${rows.map(([t, cap, d]) => `<div class="mp-locked-row" data-domain="${d}"><span class="txt"><span class="t">${t}</span><span class="cap">${cap}</span><span class="ghost" aria-hidden="true"></span></span><span class="lk" aria-label="未解析">🔒</span></div>`).join('')}
       <p class="mp-rec-cta-note">この記録には、まだ知らない自分があります。</p>
       ${mpReportCtaHtml(r, isLatest ? 'latest' : 'records', isLatest ? 'この結果の解析レポートを見る' : 'この記録の解析レポートを見る')}
     </div>`;
@@ -1491,7 +1534,7 @@ function mpLatestHtml(r) {
         <div class="mp-latest-main">
           ${mpEmblemHtml(r, 'lg')}
           <div class="mp-latest-info">
-            <div class="mp-chip-row"><span class="mp-chip">${mpDate(r.date)}</span><span class="mp-chip new">NEW</span>${mpEntitlementOk && !r.purchased ? '<span class="mp-chip locked" title="まだ読み解いていない記録">未読の頁</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}</div>
+            <div class="mp-chip-row"><span class="mp-chip">${mpDate(r.date)}</span><span class="mp-chip new">NEW</span>${mpEntitlementOk && !r.purchased ? '<span class="mp-chip locked" title="まだ読み解いていない記録">LOCKED</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}</div>
             ${r.code ? `<div class="mp-latest-code"><b class="mp-typecode" style="color:${mpElText(r.el)}">${r.code}</b><span style="color:${mpElText(r.el)};opacity:.85">${r.typeName}</span></div>` : ''}
             <div class="mp-latest-combo">${mpComboHtml(r)}</div>
           </div>
@@ -1523,11 +1566,11 @@ function mpCollectionHtml(records) {
             class="mp-badge state-${r.purchased ? 'insight' : 'record'}"
             style="--badge-c:${r.color};--badge-c2:${MP_EL_GLOW_END[r.el] || r.color}"
             onclick="mpOpenRecord(${i})"
-            aria-label="${mpDate(r.date)}の${MP_KINDS[r.kind].label}の記録（${r.purchased ? '深く読み解いた記録' : mpEntitlementOk ? '記録' : '購入状態未確認'}）">
+            aria-label="${mpDate(r.date)}の${MP_KINDS[r.kind].label}の記録（${r.purchased ? 'INSIGHT・深く読み解いた記録' : mpEntitlementOk ? '記録' : '購入状態未確認'}）">
             ${mpEmblemHtml(r)}
             <span class="nm" style="color:${mpElText(r.el)}">${r.name}</span>
             <span class="dt">${mpDate(r.date)}</span>
-            ${mpEntitlementOk && !r.purchased ? '<span class="st" title="まだ読み解いていない記録">未読の頁</span>' : ''}
+            ${r.purchased ? '<span class="st insight">INSIGHT</span>' : mpEntitlementOk ? '<span class="st" title="まだ読み解いていない記録">LOCKED</span>' : ''}
           </button>`).join('')}
       </div>
       ${records.length >= 4 ? `<button type="button" class="mp-col-next" onclick="mpCollectionNext()" aria-label="記録章の続きを見る（全${records.length}件）">›</button>` : ''}
@@ -1561,7 +1604,7 @@ function mpRecordHtml(r, i) {
   const detailLink = r.resultUrl
     ? `<a href="${r.resultUrl}" class="mp-detail-link" onclick="trackEvent('mypage_view_result_click',{source:'records'})">当時の診断結果を見る →</a>`
     : '';
-  const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${mpEntitlementOk && !r.purchased ? '<span class="mp-chip locked" title="まだ読み解いていない記録">未読の頁</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
+  const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${mpEntitlementOk && !r.purchased ? '<span class="mp-chip locked" title="まだ読み解いていない記録">LOCKED</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
   let body;
   if (!mpEntitlementOk) body = mpVizHtml(r) + `<div class="mp-notice"><p>この記録の購入状態を確認できませんでした</p></div>`;
   else if (r.purchased) body = mpInsightHtml(r) + mpVizHtml(r) + mpReadReportBtn(r);
@@ -1576,7 +1619,6 @@ function mpRecordHtml(r, i) {
       <div class="mp-rec-body">
         <div class="mp-free">
           ${mpEmblemHtml(r)}
-          <div>${mpFreeListHtml(r)}</div>
         </div>
         ${mpThenHtml(r)}
         ${body}
@@ -1611,7 +1653,7 @@ function mpAccountHtml(uid) {
           <summary class="mp-account-row"><span>⚙ アカウント設定</span><span>›</span></summary>
           <div class="mp-account-body">
             ${uid ? `<div>ユーザーID</div><div class="mp-uid">${mpEsc(uid)}</div>` : ''}
-            <div style="margin-top:8px">保存データの削除をご希望の場合は、X（@mondayaxad）までご連絡ください。内容を確認のうえ対応します（即時の自動削除ではありません）。</div>
+            <div style="margin-top:8px">アカウントの削除をご希望の場合は、X（@mondayaxad）またはメール（<a href="mailto:yaduns0522@gmail.com" style="color:var(--accent)">yaduns0522@gmail.com</a>）までご連絡ください。内容を確認のうえ対応します（即時の自動削除ではありません）。</div>
           </div>
         </details>
         <button type="button" class="mp-account-row" onclick="handleLogoutClick()"><span>⇥ ログアウト</span><span>›</span></button>
