@@ -378,6 +378,12 @@
   .mp-stat-num { font-family: 'IM Fell English', serif; font-size: 26px; color: var(--accent); }
   .mp-stat-ja { font-size: 11px; color: var(--fg-dim); margin-top: 2px; }
   .mp-stat-num.unknown { color: var(--fg-dim); }
+  /* 数字は最新結果の元素色（その明るい色へのグラデーション） */
+  .mp-stats[style] .mp-stat-num:not(.unknown) {
+    color: var(--sc);
+    background: linear-gradient(90deg, var(--sc), color-mix(in srgb, var(--sc2) 70%, #ffffff));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
 
   /* ---- 記録章（PNGエンブレム / season-pinned） ----
      RECORDとAWAKENEDは別画像。
@@ -439,14 +445,14 @@
   }
   /* 購入済み：暗い紺をベースに、元素色（左上）と、その明るい色（右下）の淡いにじみを重ねる。文字の下地は暗いまま。 */
   .mp-latest.state-insight {
-    border-color: color-mix(in srgb, var(--lc, #7ab8e8) 70%, #e2ddf2);
+    border-color: color-mix(in srgb, var(--lc, #7ab8e8) 46%, #3a3552);
     background:
       radial-gradient(ellipse 75% 60% at 18% 12%, color-mix(in srgb, var(--lc, #7ab8e8) 13%, transparent), transparent 72%),
       radial-gradient(ellipse 70% 55% at 100% 100%, color-mix(in srgb, var(--lc2, #7ab8e8) 8%, transparent), transparent 70%),
       linear-gradient(165deg, color-mix(in srgb, var(--lc, #7ab8e8) 7%, #0b0a18), #0b0a18 60%);
     box-shadow:
-      0 0 14px color-mix(in srgb, var(--lc, #7ab8e8) 20%, transparent),
-      0 0 30px color-mix(in srgb, var(--lc, #7ab8e8) 7%, transparent),
+      0 0 12px color-mix(in srgb, var(--lc, #7ab8e8) 13%, transparent),
+      0 0 28px color-mix(in srgb, var(--lc, #7ab8e8) 5%, transparent),
       inset 0 1px 0 color-mix(in srgb, var(--lc2, #7ab8e8) 18%, transparent),
       inset 0 0 26px color-mix(in srgb, var(--lc, #7ab8e8) 6%, transparent);
   }
@@ -454,14 +460,13 @@
   /* にじみの上でも補助テキストの読みやすさを無地のとき以上に保つため、購入済みカード内だけ補助色をわずかに明るく */
   .mp-latest.state-insight, .mp-rec.state-insight { --fg-dim: #7d7799; }
   .mp-rec.state-insight {
-    border-color: color-mix(in srgb, var(--lc, #7ab8e8) 62%, #d9d3ea);
+    border-color: color-mix(in srgb, var(--lc, #7ab8e8) 42%, #3a3552);
     background:
       radial-gradient(ellipse 55% 140% at 0% 0%, color-mix(in srgb, var(--lc, #7ab8e8) 11%, transparent), transparent 70%),
       radial-gradient(ellipse 45% 120% at 100% 100%, color-mix(in srgb, var(--lc2, #7ab8e8) 5%, transparent), transparent 70%),
       var(--card-bg);
     box-shadow:
-      inset 2px 0 0 color-mix(in srgb, var(--lc, #7ab8e8) 50%, transparent),
-      0 0 7px color-mix(in srgb, var(--lc, #7ab8e8) 10%, transparent);
+      0 0 7px color-mix(in srgb, var(--lc, #7ab8e8) 8%, transparent);
   }
   /* 開いた本文は情報優先：にじみは見出し側だけに留め、本文の下地は暗いまま */
   .mp-rec.state-insight[open] { background:
@@ -616,12 +621,12 @@
     box-shadow: none;
   }
   .mp-badge.state-insight {
-    border-color: color-mix(in srgb, var(--badge-c2, var(--badge-c)) 72%, #1a1730);
+    border-color: color-mix(in srgb, var(--badge-c2, var(--badge-c)) 48%, #2a2640);
     background:
       radial-gradient(circle 56px at 50% 48px, color-mix(in srgb, var(--badge-c) 16%, transparent), transparent 100%),
       linear-gradient(180deg, color-mix(in srgb, var(--badge-c) 6%, var(--card-bg)), var(--card-bg) 70%);
     box-shadow:
-      0 0 12px color-mix(in srgb, var(--badge-c) 18%, transparent),
+      0 0 10px color-mix(in srgb, var(--badge-c) 12%, transparent),
       inset 0 0 14px color-mix(in srgb, var(--badge-c) 6%, transparent);
   }
   .mp-badge.state-insight .nm {
@@ -638,6 +643,35 @@
   }
 
 
+
+  /* ---- 購入済みの装飾フレーム：内側の細い二重線・四隅の菱形・上下中央の元素紋（7元素で紋が変わる） ---- */
+  .mp-latest.state-insight, .mp-rec.state-insight, .mp-badge.state-insight { position: relative; }
+  .mp-orn { position: absolute; inset: 5px; pointer-events: none; z-index: 0;
+    border: 1px solid color-mix(in srgb, var(--oc) 30%, transparent); border-radius: 5px; }
+  .mp-latest > .mp-orn { border-radius: 7px; }
+  .mp-orn i { position: absolute; display: block; }
+  /* 四隅：小さな菱形の光点 */
+  .mp-orn .k { width: 5px; height: 5px; transform: rotate(45deg);
+    background: color-mix(in srgb, var(--oc2) 80%, #ffffff);
+    box-shadow: 0 0 5px color-mix(in srgb, var(--oc) 70%, transparent); }
+  .mp-orn .k.tl { top: -3px; left: -3px; } .mp-orn .k.tr { top: -3px; right: -3px; }
+  .mp-orn .k.bl { bottom: -3px; left: -3px; } .mp-orn .k.br { bottom: -3px; right: -3px; }
+  /* 上下中央：元素紋と、その左右に伸びる明るい線 */
+  .mp-orn .ln { left: 50%; width: 58%; max-width: 220px; height: 1px; transform: translateX(-50%);
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--oc2) 75%, transparent) 42%, transparent 46%, transparent 54%, color-mix(in srgb, var(--oc2) 75%, transparent) 58%, transparent); }
+  .mp-orn .ln.t { top: -1px; } .mp-orn .ln.b { bottom: -1px; }
+  .mp-orn .m { left: 50%; width: 11px; height: 11px; margin-left: -5.5px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--oc2) 70%, #ffffff), var(--oc));
+    -webkit-mask: var(--om) center / contain no-repeat; mask: var(--om) center / contain no-repeat;
+    filter: drop-shadow(0 0 3px color-mix(in srgb, var(--oc) 80%, transparent)); }
+  .mp-orn .m.t { top: -6px; } .mp-orn .m.b { bottom: -6px; }
+  /* THE RECORDS：閉じた状態でも見えるようsummary内に置き、details全体に掛ける */
+  .mp-rec > summary > .mp-orn { border-radius: 4px; }
+  .mp-badge > .mp-orn { inset: 4px; border-radius: 7px; }
+  .mp-badge > .mp-orn .ln { width: 80%; }
+  .mp-badge > .mp-orn .m { width: 9px; height: 9px; margin-left: -4.5px; }
+  .mp-badge > .mp-orn .m.t { top: -5px; } .mp-badge > .mp-orn .m.b { bottom: -5px; }
+  .mp-latest.state-insight > :not(.mp-orn), .mp-badge.state-insight > :not(.mp-orn) { position: relative; z-index: 1; }
 
   /* ---- THE RECORDS ---- */
   .mp-rec { border: 1px solid var(--card-border); border-radius: 8px; background: var(--card-bg); margin-bottom: 8px; overflow: hidden; }
@@ -1083,6 +1117,21 @@ function mpTint(hex, t) {
   const n = parseInt(m[1], 16);
   return '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255]
     .map(c => Math.round(c + (255 - c) * t).toString(16).padStart(2, '0')).join('');
+}
+// 購入済みフレームの上下中央に置く元素紋（24×24のシルエット。CSSのmaskで元素色のグラデーションを流し込む）
+const MP_ORN_PATH = {
+  '水': 'M12 2C12 2 5 10 5 14.5a7 7 0 0 0 14 0C19 10 12 2 12 2Z',
+  '炎': 'M12 1c1 5 6 7 6 13a6 6 0 0 1-12 0c0-4 3-5 3-9 2 2 2 4 3 5 1-3 0-6 0-9Z',
+  '風': 'M3 6.5h12.5a2.5 2.5 0 1 0-2.5-2.5h2a.5.5 0 1 1 .5.5H3Zm0 5h17a3 3 0 1 1-3 3h2a1 1 0 1 0 1-1H3Zm3 5h8v2H6Z',
+  '雷': 'M13.5 1 4 14h7l-2 9 10.5-13.5h-7Z',
+  '草': 'M20 3C9 3 4 9 4 16c0 2 1 4 1 4s2-1.5 3-3.5c1 1 3 1.2 5 .3C19 14 20 8 20 3Z',
+  '氷': 'M12 2l2 8 8 2-8 2-2 8-2-8-8-2 8-2Z',
+  '岩': 'M12 2l8 5v10l-8 5-8-5V7Z',
+};
+function mpOrnHtml(r, c, c2) {
+  const d = MP_ORN_PATH[r.el] || 'M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3Z';
+  const om = `url(&quot;data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='${d}'/></svg>`)}&quot;)`;
+  return `<span class="mp-orn" aria-hidden="true" data-el="${r.el || ''}" style="--oc:${c};--oc2:${c2};--om:${om}"><i class="k tl"></i><i class="k tr"></i><i class="k bl"></i><i class="k br"></i><i class="ln t"></i><i class="ln b"></i><i class="m t"></i><i class="m b"></i></span>`;
 }
 function mpElText(el) { return mpTint(MP_EL_COLOR[el], 0.38) || MP_NEUTRAL; }
 function mpWText(w) { return mpTint(WEAPON_COLOR[w], 0.38) || MP_NEUTRAL; }
@@ -1546,7 +1595,7 @@ function mpArchiveHtml(records) {
       <div class="mp-archive-eyebrow">MY ARCHIVE</div>
       <h1 class="mp-archive-title" id="mp-archive-title">あなたの記録</h1>
       <p class="mp-archive-desc">これまでに見つめてきた、いくつもの「自分」が<br>ここに記録されています。</p>
-      <div class="mp-stats">
+      <div class="mp-stats"${records[0] ? ` style="--sc:${mpElText(records[0].el)};--sc2:${MP_EL_GLOW_END[records[0].el] || records[0].color}"` : ''}>
         <div class="mp-stat"><div class="mp-stat-top"><span class="mp-stat-en">RECORDS</span><span class="mp-stat-num">${pad(records.length)}</span></div><div class="mp-stat-ja">残してきた自分</div></div>
         <div class="mp-stat"><div class="mp-stat-top"><span class="mp-stat-en">INSIGHTS</span>${insightNum}</div><div class="mp-stat-ja">深く読み解いた自分</div></div>
       </div>
@@ -1572,7 +1621,7 @@ function mpLatestHtml(r) {
   return `
     <section class="mp-sec" aria-labelledby="mp-latest-h">
       <div class="mp-sec-head" id="mp-latest-h"><span class="mp-sec-en">LATEST RESULT</span><span class="mp-sec-ja">最新のあなた</span></div>
-      <div class="mp-latest state-${r.purchased ? 'insight' : 'record'}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}">
+      <div class="mp-latest state-${r.purchased ? 'insight' : 'record'}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}">${r.purchased && mpEntitlementOk ? mpOrnHtml(r, r.color, MP_EL_GLOW_END[r.el] || r.color) : ''}
         <div class="mp-latest-main">
           ${mpEmblemHtml(r, 'lg')}
           <div class="mp-latest-info">
@@ -1609,6 +1658,7 @@ function mpCollectionHtml(records) {
             style="--badge-c:${r.color};--badge-c2:${MP_EL_GLOW_END[r.el] || r.color}"
             onclick="mpOpenRecord(${i})"
             aria-label="${mpDate(r.date)}の${MP_KINDS[r.kind].label}の記録（${r.purchased ? 'INSIGHT・深く読み解いた記録' : mpEntitlementOk ? '記録' : '購入状態未確認'}）">
+            ${r.purchased ? mpOrnHtml(r, r.color, MP_EL_GLOW_END[r.el] || r.color) : ''}
             ${mpEmblemHtml(r)}
             <span class="nm" style="color:${mpElText(r.el)}">${r.name}</span>
             <span class="dt">${mpDate(r.date)}</span>
@@ -1654,7 +1704,7 @@ function mpRecordHtml(r, i) {
   else body = mpVizHtml(r) + mpLockedHtml(r, 'records');
   return `
     <details class="mp-rec state-${r.purchased ? 'insight' : 'record'}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}" id="mp-rec-${i}" ontoggle="if(this.open){trackEvent('diagnosis_history_open',{diagnosis_type:'${r.kind}'})}">
-      <summary>
+      <summary>${r.purchased && mpEntitlementOk ? mpOrnHtml(r, r.color, MP_EL_GLOW_END[r.el] || r.color) : ''}
         <span class="d">${mpDate(r.date)}</span>
         <span class="c">${r.headline ? `<span class="el" style="color:${r.color}">${r.headline}</span>` : mpComboHtml(r)}</span>
         <span class="mp-chip-row">${chips}</span>
