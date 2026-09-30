@@ -651,11 +651,11 @@
   .mp-latest > .mp-orn { border-radius: 7px; }
   .mp-orn i { position: absolute; display: block; }
   /* 四隅：小さな菱形の光点 */
-  .mp-orn .k { width: 5px; height: 5px; transform: rotate(45deg);
-    background: color-mix(in srgb, var(--oc2) 80%, #ffffff);
-    box-shadow: 0 0 5px color-mix(in srgb, var(--oc) 70%, transparent); }
-  .mp-orn .k.tl { top: -3px; left: -3px; } .mp-orn .k.tr { top: -3px; right: -3px; }
-  .mp-orn .k.bl { bottom: -3px; left: -3px; } .mp-orn .k.br { bottom: -3px; right: -3px; }
+  .mp-orn .k { width: 3.5px; height: 3.5px; transform: rotate(45deg);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--oc2) 70%, #ffffff), var(--oc));
+    opacity: .85; box-shadow: 0 0 3px color-mix(in srgb, var(--oc) 45%, transparent); }
+  .mp-orn .k.tl { top: -2.25px; left: -2.25px; } .mp-orn .k.tr { top: -2.25px; right: -2.25px; }
+  .mp-orn .k.bl { bottom: -2.25px; left: -2.25px; } .mp-orn .k.br { bottom: -2.25px; right: -2.25px; }
   /* 上下中央：元素紋と、その左右に伸びる明るい線 */
   .mp-orn .ln { left: 50%; width: 58%; max-width: 220px; height: 1px; transform: translateX(-50%);
     background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--oc2) 75%, transparent) 42%, transparent 46%, transparent 54%, color-mix(in srgb, var(--oc2) 75%, transparent) 58%, transparent); }
