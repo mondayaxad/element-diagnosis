@@ -24,6 +24,10 @@
 <script src="js/eti_v2_save.js"></script>
 <!-- Xシェア（/api/share）のキャラクター番号を正本の並び順から取得するため読み込む（計算には使用しない） -->
 <script src="js/characters118_v2.js"></script>
+<!-- MIRROR上位4名を report.html と同じ正本（現行のキャラクター座標・ETIv2.computeMirrorV2）で表示するため読み込む。
+     採点・保存・共有URLの仕様は変更しない（算出元をreportと揃えるだけ）。 -->
+<script src="js/ETI_v2_QUESTIONS_100.js"></script>
+<script src="js/eti_v2_engine.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -644,7 +648,9 @@
   .mp-rec > summary::after { content: '⌄'; color: var(--fg-dim); font-size: 13px; }
   .mp-rec[open] > summary::after { content: '⌃'; }
   .mp-rec-body { padding: 4px 14px 16px; border-top: 1px solid var(--card-border); }
-  .mp-free { display: flex; justify-content: center; margin-top: 12px; }
+  .mp-free { display: grid; grid-template-columns: auto 1fr; gap: 12px; margin-top: 12px; }
+  .mp-free-list { font-size: 11.5px; color: var(--fg-dim); line-height: 1.8; }
+  .mp-free-list b { color: var(--fg); font-weight: 400; }
   /* 意味色：値だけに色を付け、ラベルは既存の淡色のまま */
   .mp-x { color: #5a5478; font-weight: 400; margin: 0 .2em; }
   .mp-cw { white-space: nowrap; }
@@ -1183,6 +1189,20 @@ function mpEmblemHtml(record, size) {
    将来の新診断は MP_KINDS に種別を追加すれば、同じ棚（YOUR COLLECTION）と
    履歴（THE RECORDS）に載る。未公開の診断は一切表示しない。
    ============================================================ */
+// v2のMIRROR上位4名：解析レポート（report.html）と同じく、保存済みのスコア（パーソナリティ・行動スタイル・価値観）から
+// 現行のキャラクター座標で ETIv2.computeMirrorV2 を実行する。保存時スナップショット（mirror_snapshot）は、
+// キャラクター座標の改訂前に保存された記録だとレポートと食い違うため、算出できない場合の予備としてだけ使う。
+function mpMirrorTop4V2(s) {
+  const sc = s && s.v2Scores;
+  try {
+    if (sc && sc.personality && sc.style && sc.values && typeof ETIv2 !== 'undefined' && typeof ETI_V2_META !== 'undefined'
+        && typeof ETI_V2_CHARACTERS !== 'undefined' && Array.isArray(ETI_V2_CHARACTERS)) {
+      const rows = ETIv2.computeMirrorV2(sc, ETI_V2_CHARACTERS, ETI_V2_META);
+      if (Array.isArray(rows) && rows.length) return rows.slice(0, 4).map(x => ({ name: x.name, match: x.mirrorScore, el: x.element, w: x.weapon, nation: x.region }));
+    }
+  } catch (e) { console.error('mirror recompute failed (falling back to saved snapshot):', e); }
+  return Array.isArray(s && s.mirrorSnapshot) ? s.mirrorSnapshot.slice(0, 4) : [];
+}
 const MP_KINDS = {
   element: {
     label: '元素診断',
@@ -1193,7 +1213,7 @@ const MP_KINDS = {
         el = (v2TopName(r.element) || {}).name;
         w = (v2TopName(r.weapon) || {}).name;
         nation = (v2TopName(r.nation) || {}).name;
-        const m = (s.mirrorSnapshot && s.mirrorSnapshot[0]) || null;
+        const m = mpMirrorTop4V2(s)[0] || null;
         mirror = m ? { name: m.name, match: m.match, el: m.el, w: m.w, nation: m.nation } : null;
         if (s.encodedAnswers) resultUrl = '/?dv=ETI-2.0&code=' + encodeURIComponent(s.encodedAnswers);
       } else {
@@ -1224,7 +1244,18 @@ function mpNormalize(s) {
   return MP_KINDS[kind].normalize(s);
 }
 
-/* ---- 元素・武器・国家の表記（Xシェア本文用） ---- */
+/* ---- 履歴を開いたときの基本情報（見出し文字列は出さない） ---- */
+function mpFreeListHtml(r) {
+  if (r.kind !== 'element') return (MP_KINDS[r.kind].freeListHtml || (() => ''))(r);
+  return `
+    <div class="mp-free-list">
+      <div>タイプ：<b class="mp-typecode" style="color:${r.code ? mpElText(r.el) : MP_NEUTRAL}">${r.code || '—'}</b>${r.typeName ? `　<b style="color:${mpElText(r.el)}">${r.typeName}</b>` : ''}</div>
+      <div>元素：<b style="color:${mpElText(r.el)}">${r.el || '—'}</b></div>
+      <div>武器：<b style="color:${mpWText(r.w)}">${r.w || '—'}</b></div>
+      <div>国家：<b style="color:${mpNatText(r.nation)}">${r.nation || '—'}</b></div>
+      <div>MIRROR：${r.mirror ? `<b style="color:${mpMirrorText(r.mirror)}">${r.mirror.name}</b><span class="mp-pct">${r.mirror.match}%</span>` : '<b>—</b>'}</div>
+    </div>`;
+}
 function mpComboText(r) {
   return [r.el, r.w, r.nation].filter(Boolean).join(' × ') || '—';
 }
@@ -1334,7 +1365,7 @@ function mpTop2TitleHtml(labels) {
 // バーは各キャラクターの元素色（MP_EL_COLOR→MP_EL_GLOW_END）のグラデーション。元素が不明なら領域色（銀青）。
 function mpMirrorCard(r) {
   const s = r.session || {};
-  const list = (r.isLegacy ? s.characterMatches : s.mirrorSnapshot) || [];
+  const list = (r.isLegacy ? s.characterMatches : mpMirrorTop4V2(s)) || [];
   const rows = list.slice(0, 4).filter(m => m && m.name).map(m => {
     const el = MP_EL_COLOR[m.el] ? m.el : null, pct = mpNum(m.match);
     const g1 = el ? MP_EL_COLOR[el] : '#5f7fb8', g2 = el ? (MP_EL_GLOW_END[el] || MP_EL_COLOR[el]) : '#b8cbee';
@@ -1619,6 +1650,7 @@ function mpRecordHtml(r, i) {
       <div class="mp-rec-body">
         <div class="mp-free">
           ${mpEmblemHtml(r)}
+          <div>${mpFreeListHtml(r)}</div>
         </div>
         ${mpThenHtml(r)}
         ${body}
