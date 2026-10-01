@@ -67,206 +67,127 @@
       overflow-x: hidden;
     }
 
-    /* ===== HERO ===== */
-    .hero {
-      position: relative;
-      min-height: 100svh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 60px 24px 80px;
-      overflow: hidden;
+    /* ===== TOP（確定版：index-demo-v3 を正本に移植。.tp 配下にだけ効かせ、診断・結果画面のスタイルとは衝突させない） ===== */
+    :root {
+      --t-head: #e2e4f6; --t-body: #8e9dbf; --t-sub: #6f7ea3; --t-en: #56648a; --t-brand: #7aa2cf; --t-link: #86b6e6;
+      --c-el: #a8d8f0; --c-wp: #8ccfd6; --c-na: #e0c890; --c-mi: #b8a8e0;
+      --d-p: #b48ad8; --d-s: #dcae5a; --d-v: #5cc4b0; --d-m: #a9bfe6;
+      --font-jp: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+      --font-en: 'IM Fell English', 'Times New Roman', serif;
     }
-    .hero-bg {
-      position: absolute;
-      inset: 0;
+    /* 一枚の夜：背景画像＋色レイヤー（固定。セクションごとに切り替えない） */
+    .night { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: var(--bg); }
+    .night .photo {
+      position: absolute; top: 0; left: 0; right: 0; height: 128svh;
+      background: url('/assets/backgrounds/quiet-starry-lake.jpg') center top / cover no-repeat;
+      opacity: .26; filter: brightness(.6) saturate(.75) contrast(.95);
+    }
+    .night .tint {
+      position: absolute; inset: 0;
       background:
-        radial-gradient(ellipse 80% 60% at 50% 30%, rgba(100,60,180,0.18) 0%, transparent 70%),
-        radial-gradient(ellipse 60% 80% at 20% 80%, rgba(40,100,160,0.10) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 50% at 80% 70%, rgba(180,80,40,0.08) 0%, transparent 60%);
-      pointer-events: none;
+        radial-gradient(ellipse 90% 40% at 50% 34%, rgba(7,7,15,.55), transparent 75%),
+        radial-gradient(ellipse 80% 50% at 50% 24%, rgba(100,60,180,.14), transparent 70%),
+        radial-gradient(ellipse 60% 40% at 12% 84%, rgba(40,90,170,.10), transparent 65%),
+        radial-gradient(ellipse 45% 35% at 90% 62%, rgba(60,60,150,.08), transparent 65%),
+        linear-gradient(180deg, rgba(7,7,15,.5) 0%, rgba(7,7,15,0) 22%);
     }
-    /* 七元素 回転リング */
-    .hero-ring {
-      position: absolute;
-      top: 50%; left: 50%;
-      width: min(520px, 90vw);
-      height: min(520px, 90vw);
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      animation: ring-spin 60s linear infinite;
-    }
-    @keyframes ring-spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
-    .hero-ring-inner {
-      position: absolute;
-      top: 50%; left: 50%;
-      width: min(360px, 62vw);
-      height: min(360px, 62vw);
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      animation: ring-spin 40s linear infinite reverse;
-    }
-    .ring-dot {
-      position: absolute;
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      top: 50%; left: 50%;
-      filter: blur(0.5px);
-    }
-    .hero-content { position: relative; z-index: 2; max-width: 680px; }
-    .hero-en {
-      font-family: 'IM Fell English', serif;
-      font-style: italic;
-      font-size: clamp(11px, 1.8vw, 14px);
-      letter-spacing: 0.25em;
-      color: var(--accent-dim);
-      text-transform: uppercase;
-      margin-bottom: 20px;
-      display: block;
-    }
-    .hero-title {
-      font-size: clamp(32px, 8vw, 64px);
-      font-weight: 700;
-      line-height: 1.15;
-      letter-spacing: 0.05em;
-      color: #f0e8ff;
-      margin-bottom: 10px;
-    }
-    .hero-title-sub {
-      font-family: 'IM Fell English', serif;
-      font-style: italic;
-      font-size: clamp(16px, 3.5vw, 26px);
-      color: #6098c0;
-      letter-spacing: 0.08em;
-      margin-bottom: 28px;
-    }
-    .hero-desc {
-      font-size: clamp(13px, 1.8vw, 15px);
-      line-height: 1.95;
-      color: #6a90a8;
-      max-width: 520px;
-      margin: 0 auto 36px;
-    }
-    .hero-desc-en {
-      font-family: 'IM Fell English', serif;
-      font-style: italic;
-      font-size: clamp(11px, 1.5vw, 13px);
-      color: #5a80a0;
-      margin-top: 10px;
-      display: block;
-    }
-    .hero-cta {
-      display: inline-block;
-      background: linear-gradient(135deg, #1a4a78, #2a6a9a);
-      color: #e0f4ff;
-      text-decoration: none;
-      border: none;
-      border-radius: 6px;
-      padding: 16px 48px;
-      font-size: 15px;
-      font-family: 'Noto Serif JP', serif;
-      letter-spacing: 0.2em;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.2s;
-      box-shadow: 0 0 32px rgba(120,80,200,0.25);
-    }
-    .hero-cta:hover { opacity: 0.88; transform: translateY(-1px); }
-    .mypage-btn {
-      position: absolute;
-      top: 20px; right: 20px;
-      z-index: 3;
-      color: #a8c8ec;
-      font-size: 10.5px;
-      font-weight: 600;
-      letter-spacing: 0.15em;
-      text-decoration: none;
-      border: 1px solid #3a6a95;
-      background: rgba(7,7,15,0.55);
-      border-radius: 4px;
-      padding: 6px 12px;
-      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
-    }
-    .mypage-btn:hover {
-      border-color: #7ab8e8;
-      background: rgba(42, 90, 138, 0.5);
-      box-shadow: 0 0 12px rgba(122, 184, 232, 0.35);
-    }
-    .hero-scroll {
-      position: absolute;
-      bottom: 28px; left: 50%;
-      transform: translateX(-50%);
-      color: #7098b8;
-      font-size: 11px;
-      letter-spacing: 0.2em;
-      animation: scroll-fade 2.5s ease-in-out infinite;
-    }
-    @keyframes scroll-fade { 0%,100%{opacity:0.3} 50%{opacity:0.8} }
-
-    /* 七元素ラベル行 */
-    .elements-strip {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 28px;
-    }
-    .el-tag {
-      font-size: 12px;
-      padding: 3px 10px;
-      border-radius: 3px;
-      letter-spacing: 0.05em;
-      opacity: 0.85;
-    }
-
-    /* ===== ABOUT ===== */
-    .about {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 80px 24px;
-      border-top: 1px solid #0e1e30;
-    }
-    .section-label {
-      font-family: 'IM Fell English', serif;
-      font-style: italic;
-      font-size: 11px;
-      letter-spacing: 0.3em;
-      color: var(--accent-dim);
-      text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-    .about-title {
-      font-size: clamp(20px, 3.5vw, 28px);
-      font-weight: 700;
-      color: #c8e8f8;
-      line-height: 1.5;
-      margin-bottom: 20px;
-    }
-    .about-body {
-      font-size: 14px;
-      line-height: 2;
-      color: #6a90a8;
-    }
-    .about-body + .about-body { margin-top: 16px; }
-    .about-en {
-      font-family: 'IM Fell English', serif;
-      font-style: italic;
-      font-size: 12px;
-      color: #5a80a0;
-      margin-top: 10px;
-    }
-
+    .tp { position: relative; z-index: 1; color: var(--t-head); }
+    .tp .deep { background: linear-gradient(180deg, rgba(7,7,15,0) 0, rgba(8,8,20,.78) 180px, rgba(8,8,20,.84) 100%); }
+    .tp .wrap { max-width: 720px; margin: 0 auto; padding-inline: 24px; }
+    .tp .eyebrow { font-family: var(--font-en); font-style: italic; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: #5d7cab; margin-bottom: 16px; }
+    .tp .h2 { font-size: clamp(20px, 3.5vw, 28px); font-weight: 700; line-height: 1.5; color: var(--t-head); margin-bottom: 20px; }
+    .tp .link { display: inline-flex; align-items: center; gap: 6px; color: var(--t-link); font-size: 12.5px; text-decoration: none; border-bottom: 1px solid rgba(134,182,230,.32); padding-bottom: 2px; }
+    .tp .link .arw { transition: transform .2s; display: inline-block; }
+    .tp .link:hover .arw { transform: translateX(3px); }
+    .tp .link:focus-visible, .tp .cta:focus-visible, .tp summary:focus-visible { outline: 1px solid var(--t-link); outline-offset: 4px; }
+    .tp .spark { position: relative; width: 132px; height: 1px; margin: 0 auto; background: linear-gradient(90deg, transparent, rgba(160,180,240,.35), transparent); }
+    .tp .spark::after { content: ''; position: absolute; left: 50%; top: 50%; width: 3px; height: 3px; margin: -1.5px 0 0 -1.5px; border-radius: 50%; background: #dfe8ff; box-shadow: 0 0 6px 1px rgba(170,190,255,.7); }
+    .tp .jp { word-break: auto-phrase; }
+    /* HERO（寸法は旧 .hero と同じ） */
+    .tp .hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 60px 24px 80px; }
+    .tp .gems { position: absolute; inset: 0; pointer-events: none; }
+    .tp .gem { position: absolute; width: 56px; height: 56px; transform-origin: top left; }
+    .tp .gem svg { display: block; filter: drop-shadow(0 0 6px var(--gc)); }
+    .tp .hero-content { position: relative; z-index: 2; max-width: 680px; }
+    .tp .hero-en { display: flex; align-items: center; justify-content: center; gap: 12px; font-family: var(--font-en); font-style: italic; font-size: clamp(11px, 1.8vw, 14px); letter-spacing: .25em; text-transform: uppercase; color: var(--t-brand); text-shadow: 0 0 14px rgba(122,162,207,.22); margin-bottom: 20px; white-space: nowrap; }
+    .tp .hero-en .rule { width: 28px; height: 1px; background: rgba(122,162,207,.45); flex: none; }
+    @media (max-width: 560px) { .tp .hero-en { white-space: normal; } .tp .hero-en .rule { display: none; } }
+    .tp .hero-title { font-size: clamp(32px, 8vw, 64px); font-weight: 700; line-height: 1.15; letter-spacing: .05em; color: #f1eeff; margin-bottom: 10px; text-shadow: 0 0 30px rgba(140,130,240,.24), 0 2px 18px rgba(7,7,15,.8); }
+    .tp .hero-sub { font-family: var(--font-en), var(--font-jp); font-style: italic; font-size: clamp(16px, 3.5vw, 26px); letter-spacing: .08em; color: #86acd8; margin-bottom: 28px; }
+    .tp .hero .spark { margin-bottom: 28px; }
+    .tp .hero-desc { font-size: clamp(13px, 1.8vw, 15px); line-height: 1.95; color: var(--t-body); max-width: 520px; margin: 0 auto 36px; }
+    .tp .hero-desc strong { font-weight: 700; }
+    .tp .k-el { color: var(--c-el); } .tp .k-wp { color: var(--c-wp); } .tp .k-na { color: var(--c-na); }
+    .tp .hero-desc .theory-line { color: var(--t-sub); }
+    .tp .hero-desc .en { display: block; margin-top: 10px; font-family: var(--font-en); font-style: italic; font-size: clamp(11px, 1.5vw, 13px); color: var(--t-en); }
+    .tp .cta-wrap { display: flex; flex-direction: column; align-items: center; }
+    .tp .cta { display: inline-block; padding: 16px 48px; border-radius: 6px; text-decoration: none; font-family: var(--font-jp); font-size: 15px; letter-spacing: .2em; color: #eef4ff; background: linear-gradient(135deg, #1b4c86 0%, #2556a0 52%, #3c4a9e 100%); border: 1px solid rgba(150,180,240,.22); box-shadow: 0 0 32px rgba(90,80,200,.24), 0 12px 26px rgba(0,0,0,.4), inset 0 1px 0 rgba(210,225,255,.16); transition: filter .2s, box-shadow .2s; cursor: pointer; }
+    .tp .cta:hover { filter: brightness(1.1); box-shadow: 0 0 36px rgba(100,90,210,.3), 0 12px 26px rgba(0,0,0,.4), inset 0 1px 0 rgba(210,225,255,.2); }
+    .tp .cta .en { font-family: var(--font-en); letter-spacing: .14em; }
+    /* マイページ入口：主CTAの下の補助導線（右上のMY PAGEボタンは置かない） */
+    .tp .hero-record-link { margin-top: 18px; color: #7896b3; font-size: 12px; letter-spacing: .08em; text-decoration: none; opacity: .9; transition: color .2s ease; }
+    .tp .hero-record-link:hover { color: #a8c7e3; }
+    .tp .hero-record-link .arw { display: inline-block; transition: transform .2s ease; }
+    .tp .hero-record-link:hover .arw { transform: translateX(3px); }
+    .tp .hero-record-link:focus-visible { outline: 1px solid var(--t-link); outline-offset: 4px; }
+    @media (max-width: 480px) { .tp .cta { padding: 14px 32px; font-size: 14px; } }
+    .tp .hero-scroll { position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); width: 1px; height: 38px; background: linear-gradient(180deg, rgba(140,170,230,.5), transparent); }
+    /* ABOUT（寸法は旧 .about と同じ） */
+    .tp .about { padding-block: 80px; }
+    .tp .about-body { font-size: 14px; line-height: 2; color: var(--t-body); }
+    .tp .about-body + .about-body { margin-top: 16px; }
+    .tp .about-body .q { color: #c3cde6; }
+    .tp .about-body.triad b { font-weight: 700; }
+    .tp .about-en { margin-top: 10px; font-family: var(--font-en); font-style: italic; font-size: 12px; color: var(--t-en); }
+    .tp .about .link { margin-top: 18px; }
+    .tp .theory { margin-top: 72px; padding-top: 30px; position: relative; }
+    .tp .theory::before { content: ''; position: absolute; top: 0; left: 0; width: 64px; height: 1px; background: linear-gradient(90deg, rgba(140,170,230,.4), transparent); }
+    .tp .theory-names { font-family: var(--font-en); font-size: 13px; letter-spacing: .06em; color: #a9b8da; }
+    .tp .theory-names i { font-style: normal; color: #4f628e; margin: 0 .4em; }
+    .tp .theory summary { list-style: none; cursor: pointer; margin-top: 10px; }
+    .tp .theory details[open] summary .arw { transform: rotate(90deg); }
+    .tp .theory dl { margin-top: 18px; }
+    .tp .theory .item { display: grid; grid-template-columns: 8em 1fr; gap: 14px; padding: 12px 0; border-top: 1px solid rgba(140,160,220,.08); }
+    .tp .theory .item:first-child { border-top: 0; }
+    .tp .theory dt { font-size: 12px; letter-spacing: .1em; color: #5d7cab; padding-top: 1px; }
+    .tp .theory dd { min-width: 0; font-size: 13px; line-height: 1.7; color: #99a8c8; }
+    .tp .theory dd small { display: block; font-family: var(--font-en); font-style: italic; font-size: 11px; color: var(--t-en); }
+    /* RECORDS / 公式LINE / DEEPER INSIGHT */
+    .tp .obs { padding-block: 0 80px; display: grid; gap: 80px; }
+    .tp .obs .lead { font-size: 14px; line-height: 2; color: var(--t-body); }
+    .tp .obs .link { margin-top: 18px; }
+    .tp .timeline { margin-top: 24px; }
+    .tp .timeline svg { display: block; width: 100%; max-width: 420px; height: auto; overflow: visible; }
+    .tp .timeline text { font-family: var(--font-en); font-style: italic; font-size: 10px; letter-spacing: .2em; fill: #5d7cab; }
+    .tp .timeline .now { fill: #c7d8f5; }
+    .tp .line-sec { --line-g: #7fd6a4; }
+    .tp .line-link { border-bottom-color: rgba(127,214,164,.34); transition: color .2s, border-color .2s, text-shadow .2s; }
+    .tp .line-link:hover { color: #bfe8d0; border-bottom-color: rgba(127,214,164,.6); text-shadow: 0 0 10px rgba(127,214,164,.18); }
+    .tp .line-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--line-g); box-shadow: 0 0 5px rgba(127,214,164,.55); flex: none; }
+    .tp .domains { margin-top: 22px; display: grid; gap: 12px; list-style: none; max-width: 420px; }
+    .tp .domains li { display: grid; grid-template-columns: 8px 7.6em 1fr; align-items: center; gap: 12px; font-size: 13px; color: #b3bfda; letter-spacing: .04em; }
+    .tp .domains .pt { width: 7px; height: 7px; border-radius: 50%; background: var(--dc); box-shadow: 0 0 6px var(--dc); }
+    .tp .domains .ln { height: 1px; background: linear-gradient(90deg, var(--dc), transparent); opacity: .55; width: var(--w); }
+    .tp .domains .en { font-family: var(--font-en); letter-spacing: .1em; }
+    /* 最終CTA */
+    .tp .final { text-align: center; padding-block: 0 80px; }
+    .tp .final .copy { margin-top: 24px; font-size: 14px; line-height: 1.8; letter-spacing: .1em; color: var(--t-body); }
+    .tp .final .cta-wrap { margin-top: 20px; }
+    @media (prefers-reduced-motion: reduce) { .tp .link .arw, .tp .hero-record-link .arw { transition: none; } }
     /* ===== DIAGNOSIS ===== */
     #diagnosis {
-      border-top: 1px solid #0e1e30;
+      position: relative; z-index: 1;
+      background: rgba(8,8,20,.86);
+      border-top: 1px solid rgba(140,160,220,.10);
       padding: 60px 0 0;
     }
     #diagnosis-root { min-height: 100vh; }
 
     /* ===== FOOTER ===== */
     footer {
-      border-top: 1px solid #0e1e30;
+      position: relative; z-index: 1;
+      background: rgba(7,7,15,.92);
+      border-top: 1px solid rgba(140,160,220,.10);
       padding: 48px 24px;
       text-align: center;
     }
@@ -304,12 +225,6 @@
       letter-spacing: 0.1em;
     }
 
-    @media (prefers-reduced-motion: reduce) {
-      .hero-ring, .hero-ring-inner { animation: none; }
-    }
-    @media (max-width: 480px) {
-      .hero-cta { padding: 14px 32px; font-size: 14px; }
-    }
     summary::-webkit-details-marker { display: none; }
     summary::marker { content: ""; }
 
@@ -348,90 +263,113 @@
 </head>
 <body>
 
-<!-- ===== HERO ===== -->
-<section class="hero">
-  <div class="hero-bg"></div>
+<!-- ===== TOP（確定版：index-demo-v3 を正本に移植。UIのみ。開始・計測の呼び出しは既存のまま） ===== -->
+<div class="night" aria-hidden="true"><div class="photo"></div><div class="tint"></div></div>
+<main class="tp">
+  <section class="hero" id="top">
+    <!-- 小さな結晶（renderHeroGems() が描画） -->
+    <div class="gems" id="heroGems" aria-hidden="true"></div>
+    <div class="hero-content">
+      <p class="hero-en"><span class="rule" aria-hidden="true"></span><span>Element Diagnosis — Know Your Nature</span><span class="rule" aria-hidden="true"></span></p>
+      <h1 class="hero-title">元素診断</h1>
+      <p class="hero-sub">あなたの気質と強みを、元素に映す</p>
+      <div class="spark" aria-hidden="true"></div>
+      <p class="hero-desc jp">
+        人の内には、7つの気質が流れている。<br>
+        100の問いに答えることで、あなたの<strong class="k-el">元素（内的な性質）</strong>と<strong class="k-wp">武器（強みと関わり方）</strong>と<strong class="k-na">国家（価値観）</strong>が映し出される。
+        <br><span class="theory-line">Big Five × エニアグラム × 価値観理論を土台にした、自己理解のための診断。</span>
+        <span class="en">Seven elements flow within. 100 questions to reveal your nature, strength, and values — a self-understanding diagnosis built on Big Five, Enneagram, and Values Theory.</span>
+      </p>
+      <div class="cta-wrap">
+        <a href="javascript:void(0)" class="cta" onclick="startNewDiagnosisV2()">診断をはじめる <span class="en">— Start</span></a>
+        <a href="/mypage.html" class="hero-record-link" onclick="trackEvent('mypage_entry_click',{entry_point:'top'})">診断記録を見る <span class="arw">→</span></a>
+      </div>
+    </div>
+    <span class="hero-scroll" aria-hidden="true"></span>
+  </section>
 
-  <!-- 保存済み診断へ戻る常設導線。既存ヒーローの構造は変えない。 -->
-  <a href="/mypage.html" class="mypage-btn" onclick="trackEvent('mypage_entry_click',{entry_point:'top'})">MY PAGE</a>
+  <div class="deep">
+    <!-- ABOUT -->
+    <section class="about wrap">
+      <p class="eyebrow">About this Diagnosis</p>
+      <h2 class="h2">なぜ、元素で性格を測るのか</h2>
+      <p class="about-body jp">
+        ビッグファイブやエニアグラム、価値観理論といった心理尺度は、自分を知るための優れた地図だ。しかし数字や抽象的なラベルは、心に留まりにくい。そこでワタシは、原神というゲームの<span class="q">「元素」「国家」</span>体系に着目した。各キャラクターのパーソナリティに割り当てられた元素と、彼らが生きる国家を、心理傾向の軸として再解釈することで、結果が物語として記憶に残る診断を設計した。
+      </p>
+      <p class="about-body triad jp">
+        <b class="k-el">元素</b>は内的な気質。<b class="k-wp">武器</b>は他者との関わり方。<b class="k-na">国家</b>は何を大切にするかという価値観。3つの掛け合わせが、あなたという人間の輪郭を描く。
+      </p>
+      <p class="about-en">Big Five, Enneagram, and Values Theory provide reference frameworks for the diagnosis. The seven elements and seven nations provide the story that makes results memorable. Designed by a writer who spent years studying personality psychology and 118 characters across all seven elements and nations.</p>
+      <a class="link" href="https://note.com/mondayaxad/n/ne73b307f6273" target="_blank" rel="noopener">この診断が生まれた経緯を、noteで読む <span class="arw">→</span></a>
+      <div class="theory">
+        <p class="theory-names">Big Five<i>/</i>Enneagram<i>/</i>Values Theory</p>
+        <details>
+          <summary class="link">診断設計と心理理論について <span class="arw">→</span></summary>
+          <dl>
+            <div class="item"><dt>略称</dt><dd>ETI（Element Type Indicator）<small>"What's your ETI?"</small></dd></div>
+            <div class="item"><dt>診断形式</dt><dd>100問 / 5段階回答<small>100 questions · 5-point scale</small></dd></div>
+            <div class="item"><dt>測定軸</dt><dd>7元素 × 5武器 × 7国家<small>7 elements × 5 weapons × 7 nations</small></dd></div>
+            <div class="item"><dt>土台となる尺度</dt><dd>Big Five / Enneagram / Values Theory<small>Academic psychology base</small></dd></div>
+            <div class="item"><dt>料金</dt><dd class="jp">診断：無料 ／ 解析レポート：¥1,000 ／ ナラティブ：¥3,000<small>Diagnosis: Free / Analysis: ¥1,000 / Narrative: ¥3,000</small></dd></div>
+          </dl>
+        </details>
+      </div>
+    </section>
 
-  <!-- 七元素 回転リング（非表示） -->
+    <!-- RECORDS / 公式LINE / DEEPER INSIGHT -->
+    <div class="obs wrap">
+      <section aria-labelledby="rec-h">
+        <p class="eyebrow">Results That Stay With You</p>
+        <h2 class="h2" id="rec-h">記録として、残す</h2>
+        <p class="lead jp">診断結果は、あなたの記録として保存できます。<br>再診するたび、過去の結果が蓄積されていきます。</p>
+        <div class="timeline" aria-hidden="true">
+          <svg viewBox="0 0 320 44">
+            <line x1="6" y1="16" x2="306" y2="16" stroke="rgba(140,160,220,.22)" stroke-width="1"/>
+            <line x1="6" y1="16" x2="306" y2="16" stroke="url(#tp-tl)" stroke-width="1"/>
+            <defs><linearGradient id="tp-tl" x1="0" x2="1"><stop offset="0" stop-color="#7aa2cf" stop-opacity="0"/><stop offset="1" stop-color="#a8d8f0" stop-opacity=".7"/></linearGradient></defs>
+            <circle cx="40" cy="16" r="2.2" fill="#5d7cab" opacity=".55"/>
+            <circle cx="112" cy="16" r="2.2" fill="#6f8fbf" opacity=".7"/>
+            <circle cx="190" cy="16" r="2.4" fill="#86a8d8" opacity=".85"/>
+            <circle cx="290" cy="16" r="7" fill="none" stroke="#a8d8f0" stroke-opacity=".35" stroke-width="1"/>
+            <circle cx="290" cy="16" r="3.2" fill="#d6ecff"/>
+            <text x="6" y="40">PAST</text>
+            <text x="306" y="40" text-anchor="end" class="now">NOW</text>
+          </svg>
+        </div>
+        <a class="link" href="/mypage.html" onclick="trackEvent('mypage_entry_click',{entry_point:'top'})">診断記録を見る <span class="arw">→</span></a>
+      </section>
 
-  <!-- 宝石の散りばめ装飾（リニューアル感） -->
-  <div id="heroGems" style="position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1"></div>
+      <section class="line-sec" aria-labelledby="line-h">
+        <p class="eyebrow">Stay Connected</p>
+        <h2 class="h2" id="line-h">旅の続きを、静かに受け取る</h2>
+        <p class="lead jp">元素診断の更新や、新しい観測、<br>先行体験の案内などを公式LINEからお届けします。<br>必要なときだけ、静かにお知らせします。</p>
+        <a class="link line-link" href="https://line.me/R/ti/p/@307ttqfu?oat_content=url&amp;ts=09190026#~" target="_blank" rel="noopener"><span class="line-dot" aria-hidden="true"></span>公式LINEを追加する <span class="arw">→</span></a>
+      </section>
 
-  <div class="hero-content">
-    <span class="hero-en">Element Diagnosis — Know Your Nature</span>
-    <h1 class="hero-title">元素診断</h1>
-    <p class="hero-title-sub">あなたの気質と強みを、元素に映す</p>
+      <section aria-labelledby="deep-h">
+        <p class="eyebrow">Deeper Insight</p>
+        <h2 class="h2" id="deep-h">さらに深く、読み解く</h2>
+        <p class="lead jp">診断結果の先では、4つの視点から、あなたをより深く読み解くことができます。</p>
+        <ul class="domains">
+          <li style="--dc:var(--d-p);--w:78%"><span class="pt"></span><span>パーソナリティ</span><span class="ln"></span></li>
+          <li style="--dc:var(--d-s);--w:62%"><span class="pt"></span><span>行動スタイル</span><span class="ln"></span></li>
+          <li style="--dc:var(--d-v);--w:70%"><span class="pt"></span><span>価値観</span><span class="ln"></span></li>
+          <li style="--dc:var(--d-m);--w:54%"><span class="pt"></span><span class="en">MIRROR</span><span class="ln"></span></li>
+        </ul>
+        <a class="link" href="/report_sample.html">解析レポートの例を見る <span class="arw">→</span></a>
+      </section>
+    </div>
 
-    <!-- 七元素タグ -->
-    <div class="elements-strip" id="elStrip"></div>
-
-    <p class="hero-desc">
-      人の内には、7つの気質が流れている。<br>
-      100の問いに答えることで、あなたの<strong style="color:#a8d8f0">元素（内的な性質）</strong>と<strong style="color:#a8d8f0">武器（強みと関わり方）</strong>と<strong style="color:#e0c890">国家（価値観）</strong>が映し出される。<br>
-      Big Five × エニアグラム × 価値観理論を土台にした、自己理解のための診断。
-      <span class="hero-desc-en">Seven elements flow within. 100 questions to reveal your nature, strength, and values — a self-understanding diagnosis built on Big Five, Enneagram, and Values Theory.</span>
-    </p>
-
-    <a href="javascript:void(0)" class="hero-cta" onclick="startNewDiagnosisV2()">診断をはじめる — Start</a>
-
+    <!-- 最終CTA -->
+    <section class="final wrap">
+      <div class="spark" aria-hidden="true"></div>
+      <p class="copy">まだ見ぬ、自分を知る。</p>
+      <div class="cta-wrap">
+        <a href="javascript:void(0)" class="cta" onclick="startNewDiagnosisV2()">診断をはじめる <span class="en">— Start</span></a>
+      </div>
+    </section>
   </div>
-
-  <span class="hero-scroll">↓ scroll</span>
-</section>
-
-<!-- 保存機能の案内。診断本体・既存結果ページのデザインは変更しない。 -->
-<section style="max-width:600px;margin:0 auto;padding:0 24px 60px;text-align:center;border-top:1px solid #0e1e30;padding-top:56px">
-  <p class="section-label" style="justify-content:center;display:flex">Results That Stay With You</p>
-  <p style="color:#7098b8;font-size:14px;line-height:1.9;margin-bottom:24px">
-    診断結果は、あなたの記録として保存できます。<br>
-    再診するたび、過去の結果が蓄積されていきます。
-  </p>
-  <a href="/mypage.html" class="footer-btn" style="display:inline-block" onclick="trackEvent('mypage_entry_click',{entry_point:'top'})">診断記録を見る</a>
-</section>
-
-<!-- ===== ABOUT ===== -->
-<section class="about">
-  <p class="section-label">About this Diagnosis</p>
-  <h2 class="about-title">なぜ、元素で性格を測るのか</h2>
-  <p class="about-body">
-    ビッグファイブやエニアグラム、価値観理論といった心理尺度は、自分を知るための優れた地図だ。しかし数字や抽象的なラベルは、心に留まりにくい。そこでワタシは、原神というゲームの「元素」「国家」体系に着目した。各キャラクターのパーソナリティに割り当てられた元素と、彼らが生きる国家を、心理傾向の軸として再解釈することで、結果が物語として記憶に残る診断を設計した。
-  </p>
-  <p class="about-body">
-    元素は内的な気質。武器は他者との関わり方。国家は何を大切にするかという価値観。3つの掛け合わせが、あなたという人間の輪郭を描く。
-  </p>
-  <p class="about-en">Big Five, Enneagram, and Values Theory provide the scientific foundation. The seven elements and seven nations provide the story that makes results memorable. Designed by a writer who spent years studying personality psychology and 118 characters across all seven elements and nations.</p>
-  <a href="https://note.com/mondayaxad/n/ne73b307f6273" target="_blank" rel="noopener"
-    style="display:inline-flex;align-items:center;gap:6px;margin-top:18px;color:#7ab8e8;font-size:12.5px;text-decoration:none;border-bottom:1px solid #7ab8e850;padding-bottom:2px">
-    この診断が生まれた経緯を、noteで読む →
-  </a>
-
-  <div style="margin-top:32px; display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px;">
-    <div style="background:#08101a; border:1px solid #0e1e30; border-radius:8px; padding:16px;">
-      <div style="color:#7ab8e8; font-size:12px; letter-spacing:0.1em; margin-bottom:6px;">略称</div>
-      <div style="color:#7098b8; font-size:13px; line-height:1.7;">ETI（Element Type Indicator）<br><span style="font-family:'IM Fell English',serif;font-style:italic;font-size:11px;color:#5a80a0;">"What's your ETI?"</span></div>
-    </div>
-    <div style="background:#08101a; border:1px solid #0e1e30; border-radius:8px; padding:16px;">
-      <div style="color:#7ab8e8; font-size:12px; letter-spacing:0.1em; margin-bottom:6px;">診断形式</div>
-      <div style="color:#7098b8; font-size:13px; line-height:1.7;">100問 / 5段階回答<br><span style="font-family:'IM Fell English',serif;font-style:italic;font-size:11px;color:#5a80a0;">100 questions · 5-point scale</span></div>
-    </div>
-    <div style="background:#08101a; border:1px solid #0e1e30; border-radius:8px; padding:16px;">
-      <div style="color:#7ab8e8; font-size:12px; letter-spacing:0.1em; margin-bottom:6px;">測定軸</div>
-      <div style="color:#7098b8; font-size:13px; line-height:1.7;">7元素 × 5武器 × 7国家<br><span style="font-family:'IM Fell English',serif;font-style:italic;font-size:11px;color:#5a80a0;">7 elements × 5 weapons × 7 nations</span></div>
-    </div>
-    <div style="background:#08101a; border:1px solid #0e1e30; border-radius:8px; padding:16px;">
-      <div style="color:#7ab8e8; font-size:12px; letter-spacing:0.1em; margin-bottom:6px;">土台となる尺度</div>
-      <div style="color:#7098b8; font-size:13px; line-height:1.7;">Big Five / Enneagram / Values Theory<br><span style="font-family:'IM Fell English',serif;font-style:italic;font-size:11px;color:#5a80a0;">Academic psychology base</span></div>
-    </div>
-    <div style="background:#08101a; border:1px solid #0e1e30; border-radius:8px; padding:16px;">
-      <div style="color:#7ab8e8; font-size:12px; letter-spacing:0.1em; margin-bottom:6px;">料金</div>
-      <div style="color:#7098b8; font-size:13px; line-height:1.7;">診断：無料 ／ 解析レポート：¥1,000 ／ ナラティブ：¥3,000<br><span style="font-family:'IM Fell English',serif;font-style:italic;font-size:11px;color:#5a80a0;">Diagnosis: Free / Analysis: ¥1,000 / Narrative: ¥3,000</span></div>
-    </div>
-  </div>
-</section>
-
+</main>
 <!-- ===== DIAGNOSIS ===== -->
 <section id="diagnosis" style="overflow:hidden;padding:0 2px">
   <div id="diagnosis-root" style="max-width:100%;overflow-x:hidden"></div>
@@ -627,20 +565,20 @@ function renderHeroGems() {
   if (!container) return;
   const els = Object.keys(ELEMENTS);
   const positions = [
-    {top:'8%',  left:'10%', size:34, op:0.5},
-    {top:'14%', left:'82%', size:26, op:0.4},
-    {top:'40%', left:'4%',  size:22, op:0.35},
-    {top:'58%', left:'88%', size:30, op:0.45},
-    {top:'78%', left:'14%', size:24, op:0.4},
-    {top:'85%', left:'70%', size:20, op:0.35},
-    {top:'28%', left:'92%', size:18, op:0.3},
+    {top:'8%',  left:'10%', size:26, op:0.40},
+    {top:'14%', left:'82%', size:20, op:0.32},
+    {top:'40%', left:'4%',  size:16, op:0.26},
+    {top:'58%', left:'88%', size:22, op:0.34},
+    {top:'78%', left:'14%', size:18, op:0.28},
+    {top:'85%', left:'70%', size:15, op:0.26},
+    {top:'28%', left:'92%', size:14, op:0.22},
   ];
   let html = '';
   els.forEach((el, i) => {
     const p = positions[i % positions.length];
     const c = ELEMENTS[el].color;
     html += `
-      <div style="position:absolute;top:${p.top};left:${p.left};width:56px;height:56px;opacity:${p.op};transform:scale(${(p.size/56).toFixed(2)});transform-origin:top left">
+      <div class="gem" style="top:${p.top};left:${p.left};opacity:${p.op};transform:scale(${(p.size/56).toFixed(2)});--gc:${c}80">
         ${gemPlanetSvg(c, el, 'hero'+i, false)}
       </div>`;
   });
