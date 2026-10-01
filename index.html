@@ -340,6 +340,7 @@
 <script src="js/eti_v2_legacy_adapter.js"></script>
 <script src="js/eti_v2_save.js"></script>
 <script src="js/diagnosis-record-check.js"></script>
+<script src="js/auth-providers.js"></script>
 </head>
 <body>
 
@@ -2735,7 +2736,7 @@ function renderResult(root) {
           + '<button type="button" class="rs-btn" disabled aria-busy="true">記録しています</button><div class="rs-saving" aria-hidden="true"></div>';
       } else if (state === 'signed_out') {
         html = label + '<p class="rs-text">この結果を、今のあなたとして残しませんか。<br>保存すると、次に診断したとき今日の自分と見比べられます。</p>'
-          + '<button type="button" class="rs-btn" id="recordSaveBtn">結果を保存する</button>' + optIn;
+          + '<div id="recordAuth"></div>' + optIn;
       } else if (state === 'error') {
         html = label + '<p class="rs-text">この結果は、まだ診断記録に残っていません。</p>'
           + '<p class="rs-err" role="alert">保存できませんでした。通信状況を確かめて、もう一度お試しください。</p>'
@@ -2748,12 +2749,48 @@ function renderResult(root) {
       recordCard.innerHTML = html;
       var btn = recordCard.querySelector('#recordSaveBtn');
       if (btn) btn.onclick = function () { onRecordSaveClick(state); };
+      // 未ログイン：Google／X／メールの3方式（js/auth-providers.js）
+      var authBox = recordCard.querySelector('#recordAuth');
+      if (authBox) renderAuthChoices(authBox, {
+        // Google は従来どおり（保存関数が pending を退避して Google へ遷移する）
+        onGoogle: function () { onRecordSaveClick('signed_out'); },
+        onX: onRecordSaveWithX,
+        // メールOTPはページ遷移しない。ログインできたら、そのまま通常の保存へ進む
+        onEmailSignedIn: function () { onRecordSaveClick('unsaved', true); },
+        onChoose: function (m) { if (m !== 'google') trackRecordSaveClick(); },
+      });
     };
 
-    var onRecordSaveClick = async function (fromState) {
+    var trackRecordSaveClick = function () {
       if (typeof gtag === 'function') gtag('event', 'result_save_click', isV2Record
         ? { event_category: 'engagement', diagnosis_version: 'ETI-2.0' }
         : { event_category: 'engagement' });
+    };
+
+    // X ログイン：Google のときに保存関数が行うのと同じ pending 退避（既存の関数をそのまま使う）をしてから
+    // X へ遷移する。復帰先は /mypage.html で、保存は既存の onAuthStateChange が行う。
+    var onRecordSaveWithX = function () {
+      var optInBox = recordCard.querySelector('#newsletterOptInCheckbox');
+      var newsletterOptIn = optInBox ? optInBox.checked : null;
+      if (isV2Record) {
+        stashPendingDiagnosisV2(buildPendingV2(answersV2, shortCode, results.raw, recordMirrorTop(), crypto.randomUUID()));
+      } else {
+        stashPendingDiagnosis(answers, buildResultPayload(results, topEl, topW, et, topNat), shortCode, newsletterOptIn);
+        var pending = readPendingDiagnosis();
+        pending.diagnosisCode = applyData;
+        localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
+      }
+      return signInWithX();
+    };
+
+    var recordMirrorTop = function () {
+      return results.charMatches.slice(0, 4).map(function(c) {
+        return { name: c.name, match: c.match, el: c.el, w: c.w, nation: c.nation };
+      });
+    };
+
+    var onRecordSaveClick = async function (fromState, alreadyTracked) {
+      if (!alreadyTracked) trackRecordSaveClick();
       var optInBox = recordCard.querySelector('#newsletterOptInCheckbox');
       var newsletterOptIn = optInBox ? optInBox.checked : null;
       renderRecordCard('saving');
@@ -2763,10 +2800,7 @@ function renderResult(root) {
       if (before.state === 'saved') { renderRecordCard('saved'); return; }
       if (isV2Record) {
         var clientSessionId = crypto.randomUUID();
-        var mirrorTop = results.charMatches.slice(0, 4).map(function(c) {
-          return { name: c.name, match: c.match, el: c.el, w: c.w, nation: c.nation };
-        });
-        var res = await handleSaveResultClickV2(answersV2, shortCode, results.raw, mirrorTop, clientSessionId);
+        var res = await handleSaveResultClickV2(answersV2, shortCode, results.raw, recordMirrorTop(), clientSessionId);
         if (res && res.ok) { renderRecordCard('just_saved'); return; }
         // 未ログイン：Google認証へ遷移中（保存は認証復帰後の既存処理が行う）
         if (res && res.pendingStashed && res.error === 'not_authenticated') return;

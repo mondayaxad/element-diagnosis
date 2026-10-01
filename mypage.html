@@ -22,6 +22,7 @@
      v2結果画面からGoogleログイン経由で戻ってきた際のpending保存
      （onAuthStateChangeリスナー）を成立させるために読み込む。 -->
 <script src="js/eti_v2_save.js"></script>
+<script src="js/auth-providers.js"></script>
 <!-- Xシェア（/api/share）のキャラクター番号を正本の並び順から取得するため読み込む（計算には使用しない） -->
 <script src="js/characters118_v2.js"></script>
 <!-- MIRROR上位4名を report.html と同じ正本（現行のキャラクター座標・ETIv2.computeMirrorV2）で表示するため読み込む。
@@ -955,15 +956,19 @@ function renderGate(root, message) {
     ${pageHeaderHtml()}
     <div class="gate" id="historyGateArea">
       <p>診断記録を見るには、保存したときと同じアカウントでログインしてください。</p>
-      <button id="gateGoogleBtn" class="btn-google">Googleでログイン</button>
+      <div id="gateAuth"></div>
       <div class="gate-msg" id="gateMsg">${message || ''}</div>
     </div>
   `;
-  document.getElementById('gateGoogleBtn').onclick = () => signInWithGoogle();
+  // Google（既存の signInWithGoogle をそのまま）／X／メール6桁OTP（js/auth-providers.js）
+  // メールOTPはページ遷移しない。ログインすると下の onAuthStateChange(SIGNED_IN) が init() を再実行する。
+  renderAuthChoices(document.getElementById('gateAuth'), {
+    onGoogle: () => signInWithGoogle(),
+    googleButtonId: 'gateGoogleBtn',
+  });
 }
 
-// メール(OTP)ログインのUIは独自ドメイン取得まで保留。
-// renderGateOtpInput()は残してあるので、再有効化時はここにメール欄を戻すだけでよい。
+// renderGateOtpInput() は旧メールOTP UI（未使用）。現在のメールOTPは js/auth-providers.js の renderAuthChoices() が描く。
 
 function renderGateOtpInput(email) {
   const area = document.getElementById('historyGateArea');
