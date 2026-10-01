@@ -7,21 +7,16 @@
 //     このファイルだけは .mjs 拡張子（ESモジュール）＋ Edge Runtime を使用する。
 //     （他のAPIファイルはCommonJS形式・Node.jsランタイムのまま）
 import { ImageResponse } from '@vercel/og';
+// 新デザイン（7元素の正式背景＋情報レイヤー）。Webプレビュー（ogp-card-demo.html）と同じ組み立てを使う。
+import { buildOgpCardTree } from '../js/ogp-card.mjs';
+import { ELEMENT_KEY } from '../js/ogp-theme.mjs';
+import { CHAR_ELEMENT } from './_ogp-char-element.mjs';
 
 export const config = { runtime: 'edge' };
 
 // ---- 最低限必要なデータ（index.html/report.htmlと同一の定義） ----
 const ELEMENT_CODE = { "炎":"PY", "水":"HY", "氷":"CR", "雷":"EL", "風":"AN", "岩":"GE", "草":"DE" };
 const WEAPON_CODE = { "片手剣":"SW", "両手剣":"CM", "長柄":"PL", "法器":"CT", "弓":"BW" };
-const ELEMENT_PALETTE = {
-  "炎": { main:"#c84a20", text:"#f0a878", glow:"#c84a2060" },
-  "水": { main:"#2a7aaa", text:"#8fd0ec", glow:"#2a7aaa60" },
-  "氷": { main:"#4a80c0", text:"#a8c8ec", glow:"#4a80c060" },
-  "雷": { main:"#9040d0", text:"#d0a0f0", glow:"#9040d060" },
-  "風": { main:"#3a8a60", text:"#8fd8b0", glow:"#3a8a6060" },
-  "岩": { main:"#a07830", text:"#e0c088", glow:"#a0783060" },
-  "草": { main:"#4a8020", text:"#9cd070", glow:"#4a802060" },
-};
 const TYPE_NAME = {
   "炎": { "片手剣":"殉愛者", "両手剣":"猛進者", "長柄":"殉衛者", "法器":"信奉者", "弓":"貫徹者" },
   "水": { "片手剣":"同調者", "両手剣":"孤淵者", "長柄":"静衛者", "法器":"深識者", "弓":"静観者" },
@@ -78,127 +73,66 @@ export default async function handler(req) {
   }
   const charName = (charIdx !== null && CHAR_NAMES[Number(charIdx)]) ? CHAR_NAMES[Number(charIdx)] : '';
 
-  const pal = ELEMENT_PALETTE[el] || ELEMENT_PALETTE['風'];
   const code = (ELEMENT_CODE[el] || 'AN') + (WEAPON_CODE[w] || 'CT');
   const typeName = (TYPE_NAME[el] && TYPE_NAME[el][w]) || '';
+  const matchText = (match === null || match === undefined || match === '') ? '' : String(match);
+  const data = {
+    code, typeName, element: el, weapon: w, nation: nat,
+    mirrorName: charName,
+    // キャラクター名は本人の元素色（既存キャラクターデータの element。新しい判定はしない）
+    mirrorElement: CHAR_ELEMENT[charName] || el,
+    match: matchText,
+  };
 
-  // ---- 日本語フォントの読み込み（表示する文字だけをサブセット取得し、軽量化する） ----
-  const labelText = '元素診断—MYRESULT最も近しいキャラクター%一致';
-  const allText = Array.from(new Set((el + w + nat + typeName + charName + labelText + code + (match||'')).split(''))).join('');
-  let fonts = [];
+  // ---- 日本語フォント（表示する文字だけをサブセット取得。Satori は TTF/OTF/WOFF のみ対応） ----
+  const labelText = '元素診断—MYRESULT最も近しいキャラクター%一致私の結果は【】×';
+  const allText = Array.from(new Set((labelText + code + typeName + el + w + nat + charName + matchText + '0123456789').split(''))).join('');
+  const fonts = [];
+  for (const [family, name] of [['Noto+Serif+JP', 'Noto Serif JP'], ['Noto+Sans+JP', 'Noto Sans JP']]) {
+    try {
+      // 古いブラウザを装って WOFF2 ではなく TTF の URL を返させる（既存実装と同じ方法）
+      const cssRes = await fetch(
+        `https://fonts.googleapis.com/css2?family=${family}:wght@700&text=${encodeURIComponent(allText)}`,
+        { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko' } }
+      );
+      const css = await cssRes.text();
+      const fontUrlMatch = css.match(/src: url\(([^)]+)\)/);
+      if (fontUrlMatch) {
+        const fontRes = await fetch(fontUrlMatch[1]);
+        fonts.push({ name, data: await fontRes.arrayBuffer(), weight: 700, style: 'normal' });
+      }
+    } catch (e) {
+      // フォント取得に失敗しても画像生成は続ける（真っ白は避ける）
+    }
+  }
+
+  // ---- 背景：主結果の元素の正式背景（JPEG。@vercel/og は WebP 非対応）。取得できなければ背景なし（SVG円環）で描く ----
+  const origin = new URL(req.url).origin;
+  const bgKey = ELEMENT_KEY[el] || 'anemo';
+  let backgroundUrl = null;
   try {
-    // 重要：Satoriは TTF/OTF/WOFF のみ対応し、WOFF2は非対応。
-    // Google Fontsは通常WOFF2を返すため、古いブラウザ（WOFF2非対応）を装う
-    // User-Agentを送ることで、TTF形式のURLを強制的に取得する。
-    const cssRes = await fetch(
-      `https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700&text=${encodeURIComponent(allText)}`,
-      { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko' } }
-    );
-    const css = await cssRes.text();
-    const fontUrlMatch = css.match(/src: url\(([^)]+)\)/);
-    if (fontUrlMatch) {
-      const fontRes = await fetch(fontUrlMatch[1]);
-      const fontData = await fontRes.arrayBuffer();
-      fonts = [{ name: 'Noto Sans JP', data: fontData, weight: 700, style: 'normal' }];
+    const bgRes = await fetch(`${origin}/assets/ogp/backgrounds/${bgKey}.jpg`);
+    if (bgRes.ok && (bgRes.headers.get('content-type') || '').includes('image')) {
+      backgroundUrl = 'data:image/jpeg;base64,' + toBase64(await bgRes.arrayBuffer());
     }
   } catch (e) {
-    // フォント取得に失敗しても、画像自体は生成を続ける（文字化けする可能性はあるが真っ白は避ける）
+    // 背景が取れない場合（Previewの保護など）も、情報と円環だけで生成を続ける
   }
-
-  // h() は React.createElement 相当のヘルパー。JSXを使わずSatoriが認識できる形にする。
-  function h(type, props, ...children) {
-    return { type, props: { ...props, children: children.length === 1 ? children[0] : children } };
-  }
-  const abs = (extra) => ({ position: 'absolute', display: 'flex', ...extra });
-
-  const ELEMENTS_ORDER = ["炎", "水", "氷", "雷", "風", "岩", "草"];
-  const centerX = 260, centerY = 275, R = 190;
-
-  // レポート画面の「SEVEN NATIONS COMPASS」と同じ構造：
-  // 円の外周に7要素を等間隔で配置し、中心から線で結ぶ。実際の元素だけを一回り大きく光らせる。
-  const nodePos = ELEMENTS_ORDER.map((e, i) => {
-    const ang = (i / 7) * 2 * Math.PI - Math.PI / 2;
-    return { el: e, x: centerX + R * Math.cos(ang), y: centerY + R * Math.sin(ang) };
-  });
-
-  const lines = nodePos.map(({ x, y }) => {
-    const dx = x - centerX, dy = y - centerY;
-    const length = Math.sqrt(dx * dx + dy * dy);
-    const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-    return h('div', {
-      style: abs({
-        top: centerY, left: centerX, width: length, height: 1,
-        background: `linear-gradient(90deg, #4a3d7090, #4a3d7010)`,
-        transform: `rotate(${angle}deg)`, transformOrigin: '0 0',
-      }),
-    });
-  });
-
-  const nodes = nodePos.map(({ el: nodeEl, x, y }) => {
-    const isActive = nodeEl === el;
-    const nodeColor = (ELEMENT_PALETTE[nodeEl] || ELEMENT_PALETTE['風']).main;
-    const size = isActive ? 26 : 14;
-    return h('div', {
-      style: abs({
-        top: y - size / 2, left: x - size / 2, width: size, height: size, borderRadius: '50%',
-        background: isActive ? nodeColor : '#3a3050',
-        border: isActive ? `2.5px solid #ffffffc0` : `1.5px solid ${nodeColor}80`,
-      }),
-    });
-  });
 
   return new ImageResponse(
-    h('div', {
-      style: {
-        width: '1200px', height: '630px', display: 'flex',
-        backgroundColor: '#07060c',
-        backgroundImage: `radial-gradient(ellipse 70% 90% at 78% 45%, ${pal.glow} 0%, transparent 55%)`,
-        position: 'relative', fontFamily: fonts.length ? 'Noto Sans JP' : 'sans-serif',
-      },
-    },
-      h('div', { style: abs({ top: 44, left: 64, fontSize: 20, letterSpacing: 4, color: '#c9a860' }) }, '元素診断 — MY RESULT'),
-      h('div', { style: abs({ top: 96, left: 60, fontSize: 150, fontWeight: 800, color: pal.text, lineHeight: 1 }) }, code),
-      h('div', { style: abs({ top: 270, left: 64, alignItems: 'baseline', gap: 16 }) },
-        h('div', { style: { display: 'flex', fontSize: 52, fontWeight: 700, color: '#f4eefc' } }, typeName),
-        h('div', { style: { display: 'flex', fontSize: 17, padding: '6px 15px', borderRadius: 18, border: `1.5px solid ${pal.main}`, color: pal.text, background: pal.glow } }, el),
-        h('div', { style: { display: 'flex', fontSize: 17, padding: '6px 15px', borderRadius: 18, border: `1.5px solid ${pal.main}`, color: pal.text, background: pal.glow } }, w),
-        h('div', { style: { display: 'flex', fontSize: 17, padding: '6px 15px', borderRadius: 18, border: '1.5px solid #c9a860', color: '#e0c890', background: '#c9a86020' } }, nat),
-      ),
-
-      charName ? h('div', {
-        style: abs({
-          top: 366, left: 64, width: 640, padding: '20px 26px', borderRadius: 14,
-          border: `1.5px solid ${pal.main}`, background: `linear-gradient(135deg, ${pal.glow}, #100e1a)`,
-          alignItems: 'center', justifyContent: 'space-between',
-        }),
-      },
-        h('div', { style: { display: 'flex', flexDirection: 'column' } },
-          h('div', { style: { display: 'flex', fontSize: 15, letterSpacing: 2, color: '#8870b0', marginBottom: 6 } }, '最も近しいキャラクター'),
-          h('div', { style: { display: 'flex', fontSize: 42, fontWeight: 700, color: pal.text } }, charName),
-        ),
-        match ? h('div', { style: { display: 'flex', alignItems: 'baseline', fontSize: 56, fontWeight: 800, color: '#f4eefc' } },
-          h('span', {}, match), h('span', { style: { display: 'flex', fontSize: 26, marginLeft: 4 } }, '%一致')
-        ) : h('div', { style: { display: 'none' } }),
-      ) : h('div', { style: { display: 'none' } }),
-
-      h('div', { style: abs({ top: 0, right: 0, width: 480, height: 630 }) },
-        // 外周の円環（レポート画面と同じ、7ノードの位置に合わせた半径）
-        h('div', {
-          style: abs({
-            top: centerY - R, left: centerX - R, width: R * 2, height: R * 2, borderRadius: '50%',
-            border: `1px solid #4a3d70`, opacity: 0.5,
-          }),
-        }),
-        ...lines,
-        ...nodes,
-        h('div', {
-          style: abs({
-            top: centerY + R + 26, left: centerX - 140, width: 280, justifyContent: 'center',
-            fontSize: 12, letterSpacing: 3, color: pal.text, opacity: 0.85,
-          }),
-        }, 'ELEMENTAL RESONANCE MAP'),
-      ),
-    ),
+    buildOgpCardTree(data, {
+      backgroundUrl,
+      showBackground: !!backgroundUrl,
+      fontSerif: fonts.some(f => f.name === 'Noto Serif JP') ? 'Noto Serif JP' : (fonts[0] ? fonts[0].name : 'sans-serif'),
+      fontSans: fonts.some(f => f.name === 'Noto Sans JP') ? 'Noto Sans JP' : (fonts[0] ? fonts[0].name : 'sans-serif'),
+    }),
     { width: 1200, height: 630, fonts }
   );
+}
+
+function toBase64(buf) {
+  const bytes = new Uint8Array(buf);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
 }
