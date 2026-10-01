@@ -45,12 +45,12 @@ function isValidEmailForOtp(email) {
 }
 
 // Supabase のエラーを利用者向けの文に変える（詳細はconsoleへ）
+// 送信の失敗は、Supabase の送信上限（429）でもメール送信サービス側の上限・障害（5xx）でも
+// 利用者には区別がつかず、しばらく復旧しないことがあるため、Google / X へ案内する。
+const AUTH_EMAIL_UNAVAILABLE_MSG = 'いまメールでのログインが混み合っています。Google または X でのログインをお試しください。';
 function authErrorMessage(error, phase) {
-  const code = (error && (error.code || error.error_code)) || '';
-  const status = error && error.status;
-  if (status === 429 || /rate_limit/.test(code)) return '送信が続いたため、少し時間をおいてからお試しください。';
   if (phase === 'verify') return 'コードが正しくないか、有効期限が切れています。';
-  return '送信できませんでした。メールアドレスを確かめて、もう一度お試しください。';
+  return AUTH_EMAIL_UNAVAILABLE_MSG;
 }
 
 const AUTH_ICON_GOOGLE = '<svg viewBox="0 0 18 18" width="16" height="16" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg>';
@@ -82,6 +82,7 @@ function injectAuthChoiceStyles() {
     .au-note { font-size: 12px; line-height: 1.8; color: #9aa8c6; margin: 0; word-break: auto-phrase; }
     .au-msg { font-size: 12px; line-height: 1.7; color: #d6a8b8; min-height: 0; margin: 0; }
     .au-msg:empty { display: none; }
+    .au-msg-info { color: #c9d6ee; font-size: 12.5px; margin-bottom: 4px; word-break: auto-phrase; }
     .au-sub { display: flex; justify-content: center; gap: 18px; }
     .au-link { background: none; border: 0; padding: 4px; color: #8aa3c8; font-size: 11.5px; font-family: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
     .au-link[disabled] { color: #56627e; cursor: default; text-decoration: none; }
@@ -108,15 +109,11 @@ function renderAuthChoices(container, h) {
   const handlers = h || {};
   const choose = m => { if (typeof handlers.onChoose === 'function') handlers.onChoose(m); };
 
-  function showChoices(message) {
-    container.innerHTML = `
-      <div class="au">
+  const providerButtonsHtml = () => `
         <button type="button" class="au-btn au-google" data-au="google"${handlers.googleButtonId ? ` id="${handlers.googleButtonId}"` : ''}>${AUTH_ICON_GOOGLE}Googleで続ける</button>
-        <button type="button" class="au-btn au-x" data-au="x">${AUTH_ICON_X}Xで続ける</button>
-        <div class="au-or">または</div>
-        <button type="button" class="au-btn" data-au="email">${AUTH_ICON_MAIL}メールで続ける</button>
-        <p class="au-msg" role="alert">${message ? escapeAuthHtml(message) : ''}</p>
-      </div>`;
+        <button type="button" class="au-btn au-x" data-au="x">${AUTH_ICON_X}Xで続ける</button>`;
+
+  function wireProviderButtons() {
     container.querySelector('[data-au="google"]').onclick = () => { choose('google'); handlers.onGoogle(); };
     container.querySelector('[data-au="x"]').onclick = async (ev) => {
       choose('x');
@@ -127,7 +124,28 @@ function renderAuthChoices(container, h) {
         showChoices('Xでのログインを開始できませんでした。時間をおいて、もう一度お試しください。');
       }
     };
+  }
+
+  function showChoices(message) {
+    container.innerHTML = `
+      <div class="au">${providerButtonsHtml()}
+        <div class="au-or">または</div>
+        <button type="button" class="au-btn" data-au="email">${AUTH_ICON_MAIL}メールで続ける</button>
+        <p class="au-msg" role="alert">${message ? escapeAuthHtml(message) : ''}</p>
+      </div>`;
+    wireProviderButtons();
     container.querySelector('[data-au="email"]').onclick = () => { choose('email'); showEmailInput(''); };
+  }
+
+  // メール送信に失敗したとき：Google / X を前面に出す（メール欄に留めない）
+  function showEmailUnavailable(email) {
+    container.innerHTML = `
+      <div class="au" data-au-state="email-unavailable">
+        <p class="au-msg au-msg-info" role="alert">${escapeAuthHtml(AUTH_EMAIL_UNAVAILABLE_MSG)}</p>${providerButtonsHtml()}
+        <div class="au-sub"><button type="button" class="au-link" id="auRetryEmail">メールでもう一度試す</button></div>
+      </div>`;
+    wireProviderButtons();
+    container.querySelector('#auRetryEmail').onclick = () => showEmailInput(email);
   }
 
   function showEmailInput(prefill, message) {
@@ -152,8 +170,7 @@ function renderAuthChoices(container, h) {
       const error = await sendEmailOtp(email);
       if (error) {
         console.error('email OTP send error:', error);
-        send.disabled = false; send.textContent = 'コードを送る';
-        msg.textContent = authErrorMessage(error, 'send');
+        showEmailUnavailable(email);
         return;
       }
       showCodeInput(email);
@@ -222,5 +239,5 @@ function renderAuthChoices(container, h) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { signInWithX, sendEmailOtp, verifyEmailOtp, isValidEmailForOtp, authErrorMessage };
+  module.exports = { signInWithX, sendEmailOtp, verifyEmailOtp, isValidEmailForOtp, authErrorMessage, AUTH_EMAIL_UNAVAILABLE_MSG };
 }
