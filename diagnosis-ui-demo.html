@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>元素診断 — 診断中UIデモ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<!--
+  診断中UIのデモ（見た目と操作フィードバックの確認専用）。
+  設問文・回答スケールは js/ETI_v2_QUESTIONS_100.js をそのまま読み込んで表示するだけ。
+  採点・回答収集（eti_v2_answer_collection.js）・保存・認証・決済は一切読み込まない。
+  回答の持ち方（5問ごとのページ、次の未回答へフォーカス、同じ選択の再タップで解除、
+  ページが埋まったら次ページへ）は現行 renderQuizV2 / selectAnswerV2ForUI の挙動をデモ内で再現している。
+  ?state=A（Q1未回答）/ B（Q1回答済み）/ C（中盤）で確認用の状態を開ける。
+-->
+<script src="js/ETI_v2_QUESTIONS_100.js"></script>
+<style>
+  /* 静かな夜の観測室：TOPより暗く、元素色は使わない中立の藍 */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    color-scheme: dark;
+    --bg: #07070f;
+    --bg-2: #090b16;
+    --bg-3: #0b1020;
+    --card: #090d18;
+    --card-on: #0c1425;
+    --line: #172238;          /* 通常の枠：暗い藍 */
+    --line-on: #3a5a92;       /* 現在設問の枠：青〜青紫の細線 */
+    --t-main: #e4e2f6;        /* 主文：青白〜薄紫 */
+    --t-sub: #7f93b5;         /* 補助：青灰 */
+    --t-dim: #5a6886;         /* 非アクティブ：暗い藍灰 */
+    --t-num-on: #9ccbee;      /* 現在設問の番号：少し明るい水色 */
+    --dot: #2c3d5e;
+    --dot-on: #8fb4ea;
+    --font-jp: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    --font-en: 'IM Fell English', 'Times New Roman', serif;
+    --ease: cubic-bezier(.3,.7,.3,1);
+    --t: 180ms;
+  }
+  html { -webkit-text-size-adjust: 100%; background: var(--bg); }
+  body {
+    min-height: 100svh; color: var(--t-main); font-family: var(--font-jp); -webkit-font-smoothing: antialiased;
+    background:
+      radial-gradient(ellipse 80% 40% at 50% 0%, rgba(70,60,150,.10), transparent 70%),
+      linear-gradient(180deg, var(--bg-3) 0%, var(--bg-2) 30%, var(--bg) 100%);
+    background-attachment: fixed;
+  }
+  .quiz { max-width: 600px; margin: 0 auto; padding: 32px 16px 64px; }
+
+  /* ===== 進捗 ===== */
+  .prog { margin-bottom: 20px; }
+  .prog-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 9px; }
+  /* 数字は読みやすさ優先で本文書体のライニング数字（IM Fellの旧式数字は 1/0 が読みにくい） */
+  .prog-range { font-family: var(--font-jp); font-size: 12.5px; letter-spacing: .12em; color: #8aa3c8; font-variant-numeric: tabular-nums; }
+  .prog-range .of { color: var(--t-dim); letter-spacing: .08em; }
+  .prog-count { font-size: 11.5px; letter-spacing: .08em; color: var(--t-sub); font-variant-numeric: tabular-nums; }
+  .prog-count b { font-weight: 500; color: #a9c2e6; }
+  .prog-bar { height: 2px; border-radius: 1px; background: #121a2e; overflow: hidden; }
+  .prog-bar i { display: block; height: 100%; border-radius: 1px; background: linear-gradient(90deg, #2a3f78, #6f9fd8 70%, #a8d8f0); transition: width .3s var(--ease); }
+
+  /* ===== 設問カード ===== */
+  .q {
+    position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 17px 18px 15px; margin-bottom: 10px; cursor: pointer;
+    transition: opacity var(--t) var(--ease), border-color var(--t) var(--ease), background var(--t) var(--ease), box-shadow var(--t) var(--ease);
+  }
+  .q-no { font-family: var(--font-jp); font-size: 11px; letter-spacing: .14em; color: var(--t-dim); margin-bottom: 8px; font-variant-numeric: tabular-nums; transition: color var(--t) var(--ease); }
+  .q-text { font-size: 14.5px; line-height: 1.65; word-break: auto-phrase; font-weight: 500; color: var(--t-sub); margin-bottom: 14px; transition: color var(--t) var(--ease); }
+
+  /* 現在の設問：暗闇の中で輪郭が見えている程度 */
+  .q.is-active {
+    opacity: 1; border-color: var(--line-on);
+    background: linear-gradient(170deg, #0f1a31 0%, var(--card-on) 55%, #0b1122 100%);
+    box-shadow: inset 0 0 22px rgba(90,120,210,.07), 0 0 0 1px rgba(110,140,230,.04);
+  }
+  .q.is-active .q-no { color: var(--t-num-on); }
+  .q.is-active .q-text { color: var(--t-main); }
+  /* 回答済み：枠を弱め、本文を少し沈める（選んだ回答は残す） */
+  .q.is-done { opacity: .76; border-color: #131c2e; }
+  .q.is-done .q-text { color: #8391ad; }
+  /* 次以降の未回答：読もうと思えば読める */
+  .q.is-next { opacity: .56; }
+  /* 回答した瞬間：カードが静かに沈む */
+  .q.is-settling { opacity: .88; border-color: #243453; }
+
+  /* ===== 5段階 ===== */
+  .scale { display: flex; justify-content: space-between; align-items: center; padding: 0 4px; }
+  .dot {
+    position: relative; width: 32px; height: 32px; border-radius: 50%; flex: none; cursor: pointer;
+    background: transparent; border: 1.5px solid var(--dot); color: #5c6f93;
+    font-family: var(--font-jp); font-size: 12px; line-height: 1; font-variant-numeric: tabular-nums;
+    display: grid; place-items: center;
+    transition: background var(--t) var(--ease), border-color var(--t) var(--ease), color var(--t) var(--ease), box-shadow var(--t) var(--ease);
+  }
+  .q.is-active .dot { border-color: #3a5078; color: #7d93bb; }
+  .dot:hover { border-color: #56709e; color: #a6bbe0; }
+  .dot:focus-visible { outline: 1px solid var(--dot-on); outline-offset: 3px; }
+  /* 選択済み：内側を淡い藍〜青紫で塗り、外周を1pxだけ明るく */
+  .dot.is-on, .q.is-active .dot.is-on {
+    background: radial-gradient(circle at 40% 35%, rgba(150,170,245,.42), rgba(80,90,190,.34) 70%);
+    border-color: var(--dot-on); color: #eef2ff;
+    box-shadow: 0 0 0 1px rgba(160,190,250,.22), 0 0 8px rgba(120,150,240,.22);
+  }
+  .scale-labels { display: flex; justify-content: space-between; margin-top: 8px; }
+  .scale-labels span { font-size: 10px; letter-spacing: .04em; color: var(--t-dim); }
+  .q.is-active .scale-labels span { color: var(--t-sub); }
+
+  /* ===== ページ送り ===== */
+  .pager { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; }
+  .pager button, .result-btn, .jump-btn { font-family: inherit; cursor: pointer; }
+  .pager button { background: transparent; border: 1px solid #1c2a44; color: #7f93b5; border-radius: 6px; padding: 8px 18px; font-size: 12px; letter-spacing: .04em; }
+  .pager button:disabled { color: #2a3350; cursor: default; }
+  .result-btn { width: 100%; margin-top: 12px; border: none; color: #eef4ff; border-radius: 6px; padding: 12px; font-size: 13px; letter-spacing: .12em;
+    background: linear-gradient(135deg, #1b4c86 0%, #2556a0 52%, #3c4a9e 100%); }
+  .jump-btn { width: 100%; margin-top: 8px; background: transparent; border: 1px dashed #2a3c60; color: #7f93b5; border-radius: 6px; padding: 9px; font-size: 11.5px; }
+
+  /* デモ用：状態切り替え（本実装には入れない） */
+  .demo-bar { max-width: 600px; margin: 0 auto; padding: 12px 16px 0; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 11px; color: var(--t-dim); }
+  .demo-bar a { color: var(--t-sub); text-decoration: none; border: 1px solid #1c2a44; border-radius: 4px; padding: 3px 9px; }
+
+  @media (prefers-reduced-motion: reduce) { :root { --t: 0ms; } .prog-bar i { transition: none; } }
+</style>
+</head>
+<body>
+<nav class="demo-bar" aria-label="デモの状態">デモ状態：<a href="?state=A">A 未回答</a><a href="?state=B">B Q1回答済み</a><a href="?state=C">C 中盤</a></nav>
+<main class="quiz" id="quiz"></main>
+
+<script>
+(function () {
+  var PAGE_SIZE = 5;
+  var ORDER = ETI_V2_QUESTIONS.map(function (q) { return q.id; });
+  var BY_ID = {}; ETI_V2_QUESTIONS.forEach(function (q) { BY_ID[q.id] = q; });
+  var answers = {};            // デモ内だけの回答（保存しない）
+  var pageStart = 0, focusId = null, busy = false;
+  var reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var root = document.getElementById('quiz');
+  var pad2 = function (n) { return String(n).padStart(2, '0'); };
+
+  // 確認用の状態
+  var st = (location.search.match(/state=([ABC])/) || [])[1] || 'A';
+  if (st === 'B') { answers[ORDER[0]] = 1; }
+  if (st === 'C') {
+    var vals = [2, 1, 0, -1, 1, 2, 0, 1, -2, 1];
+    for (var k = 0; k < 23; k++) answers[ORDER[k]] = vals[k % vals.length];
+    pageStart = 20;
+  }
+
+  function answeredCount() { return ORDER.filter(function (id) { return answers[id] !== undefined; }).length; }
+  function pageIds() { return ORDER.slice(pageStart, pageStart + PAGE_SIZE); }
+  function firstUnansweredIn(ids, afterIdx) {
+    for (var i = 0; i < ids.length; i++) {
+      if (afterIdx !== undefined && ORDER.indexOf(ids[i]) <= afterIdx) continue;
+      if (answers[ids[i]] === undefined) return ids[i];
+    }
+    return null;
+  }
+  function cardState(id) {
+    if (id === focusId) return 'is-active';
+    return answers[id] !== undefined ? 'is-done' : 'is-next';
+  }
+
+  function render() {
+    var ids = pageIds();
+    if (focusId === null || ids.indexOf(focusId) === -1) focusId = firstUnansweredIn(ids) || ids[0];
+    var n = answeredCount(), total = ORDER.length, isLast = pageStart + PAGE_SIZE >= total;
+    var allDone = n === total, firstUn = firstUnansweredIn(ORDER);
+    root.innerHTML =
+      '<div class="prog">' +
+        '<div class="prog-top"><span class="prog-range">Q' + pad2(pageStart + 1) + '—' + pad2(Math.min(pageStart + PAGE_SIZE, total)) + ' <span class="of">/ ' + total + '</span></span>' +
+        '<span class="prog-count">回答済 <b>' + n + '</b></span></div>' +
+        '<div class="prog-bar" role="progressbar" aria-valuemin="0" aria-valuemax="' + total + '" aria-valuenow="' + n + '"><i style="width:' + (n / total * 100) + '%"></i></div>' +
+      '</div>' +
+      ids.map(function (id, i) {
+        var q = BY_ID[id], scale = ETI_V2_META.responseScales[q.responseMode], cur = answers[id];
+        return '<div class="q ' + cardState(id) + '" data-qid="' + id + '">' +
+          '<div class="q-no">Q' + (pageStart + i + 1) + '</div>' +
+          '<p class="q-text">' + q.text + '</p>' +
+          '<div class="scale" role="radiogroup" aria-label="Q' + (pageStart + i + 1) + 'の回答">' +
+            scale.map(function (s, j) {
+              return '<button type="button" class="dot' + (cur === s.value ? ' is-on' : '') + '" data-v="' + s.value + '" role="radio" aria-checked="' + (cur === s.value) + '" aria-label="' + s.label + '">' + (j + 1) + '</button>';
+            }).join('') +
+          '</div>' +
+          '<div class="scale-labels"><span>' + scale[0].label + '</span><span>' + scale[scale.length - 1].label + '</span></div>' +
+        '</div>';
+      }).join('') +
+      '<div class="pager"><button type="button" id="prev" ' + (pageStart === 0 ? 'disabled' : '') + '>← 前の5問</button>' +
+        (!isLast ? '<button type="button" id="next">次の5問 →</button>' : '<span></span>') + '</div>' +
+      (allDone ? '<button type="button" class="result-btn">結果を見る →</button>' : '') +
+      (!allDone && firstUn !== null && isLast ? '<button type="button" class="jump-btn">未回答の設問へ →</button>' : '');
+    bind();
+  }
+
+  // クラスだけ付け替えて、150〜200msのトランジションで状態を移す（再描画しない）
+  function refreshStates() {
+    root.querySelectorAll('.q').forEach(function (c) {
+      c.classList.remove('is-active', 'is-done', 'is-next', 'is-settling');
+      c.classList.add(cardState(c.getAttribute('data-qid')));
+    });
+    var n = answeredCount();
+    root.querySelector('.prog-count b').textContent = n;
+    root.querySelector('.prog-bar i').style.width = (n / ORDER.length * 100) + '%';
+  }
+
+  // 次のカードが画面下に隠れているときだけ、上部が見える程度に短く寄せる
+  function nudgeInto(card) {
+    if (!card) return;
+    var r = card.getBoundingClientRect(), vh = window.innerHeight;
+    if (r.top >= 12 && r.bottom <= vh - 12) return;
+    var dy = r.top < 12 ? r.top - 16 : Math.min(r.bottom - vh + 24, r.top - 72);
+    if (Math.abs(dy) < 8) return;
+    window.scrollBy({ top: dy, behavior: reduceMotion ? 'auto' : 'smooth' });
+  }
+
+  function select(id, v) {
+    if (busy) return;
+    var card = root.querySelector('.q[data-qid="' + id + '"]');
+    var wasFocused = id === focusId;
+    // 同じ選択の再タップで解除（現行と同じ）
+    if (answers[id] === v) {
+      delete answers[id]; focusId = id; render(); return;
+    }
+    answers[id] = v; focusId = id;
+    // 1. 選んだ円が静かに点灯
+    card.querySelectorAll('.dot').forEach(function (d) {
+      var on = Number(d.getAttribute('data-v')) === v;
+      d.classList.toggle('is-on', on); d.setAttribute('aria-checked', on);
+    });
+    var ids = pageIds(), idx = ORDER.indexOf(id);
+    var nextId = wasFocused ? (firstUnansweredIn(ids, idx) || firstUnansweredIn(ids)) : null;
+    if (!wasFocused) { refreshStates(); return; }
+    busy = true;
+    // 2. 現在カードが少し沈む
+    card.classList.add('is-settling');
+    setTimeout(function () {
+      busy = false;
+      if (nextId) {
+        // 3. 次の設問が明るくなる
+        focusId = nextId; refreshStates();
+        nudgeInto(root.querySelector('.q[data-qid="' + nextId + '"]'));
+      } else if (pageStart + PAGE_SIZE < ORDER.length) {
+        // ページが埋まったら次の5問へ（現行と同じ）
+        pageStart += PAGE_SIZE; focusId = null; render();
+        window.scrollTo({ top: root.offsetTop - 8, behavior: reduceMotion ? 'auto' : 'smooth' });
+      } else {
+        focusId = null; render();
+      }
+    }, reduceMotion ? 0 : 180);
+  }
+
+  function bind() {
+    root.querySelectorAll('.q').forEach(function (c) {
+      c.addEventListener('click', function () {
+        var id = c.getAttribute('data-qid');
+        if (id !== focusId) { focusId = id; refreshStates(); }
+      });
+    });
+    root.querySelectorAll('.dot').forEach(function (d) {
+      d.addEventListener('click', function (e) {
+        e.stopPropagation();
+        select(d.closest('.q').getAttribute('data-qid'), Number(d.getAttribute('data-v')));
+      });
+    });
+    var p = root.querySelector('#prev'); if (p) p.addEventListener('click', function () { pageStart = Math.max(0, pageStart - PAGE_SIZE); focusId = null; render(); });
+    var nx = root.querySelector('#next'); if (nx) nx.addEventListener('click', function () { pageStart += PAGE_SIZE; focusId = null; render(); });
+    var j = root.querySelector('.jump-btn'); if (j) j.addEventListener('click', function () {
+      var id = firstUnansweredIn(ORDER); if (id === null) return;
+      pageStart = Math.floor(ORDER.indexOf(id) / PAGE_SIZE) * PAGE_SIZE; focusId = id; render();
+    });
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
