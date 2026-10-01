@@ -223,6 +223,36 @@
       .qz-card.is-arriving, .qz-card.is-settling { animation: none; }
     }
 
+    /* ===== 診断記録カード（確定版：result-save-demo。完了ページの保存カードだけに効かせる） ===== */
+    .rs-card { position: relative; overflow: hidden; text-align: center; border-radius: 12px; padding: 22px 20px 20px; margin-bottom: 16px;
+      border: 1px solid #243353; color: #e2e4f6;
+      background: radial-gradient(ellipse 70% 90% at 12% 110%, color-mix(in srgb, var(--el) 9%, transparent), transparent 70%), linear-gradient(165deg, #0d1428 0%, #0a0e1b 60%, #080b16 100%); }
+    .rs-card::before { content: ''; position: absolute; top: 0; left: 18%; right: 18%; height: 1px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--el) 55%, transparent), transparent); }
+    .rs-label { font-size: 11px; letter-spacing: .3em; color: #8aa3c8; margin-bottom: 12px; }
+    .rs-text { font-size: 13px; line-height: 1.95; color: #9aa8c6; margin: 0 0 18px; word-break: auto-phrase; }
+    .rs-btn { display: flex; align-items: center; justify-content: center; width: 100%; border: 1px solid rgba(150,180,240,.2); border-radius: 8px; padding: 14px;
+      font-family: inherit; font-size: 13.5px; letter-spacing: .14em; color: #eef3ff; cursor: pointer;
+      background: linear-gradient(135deg, #16284f 0%, #1f4282 55%, color-mix(in srgb, var(--el) 28%, #24428a) 100%);
+      box-shadow: inset 0 1px 0 rgba(210,225,255,.12), 0 8px 20px rgba(0,0,0,.35); transition: filter .2s; }
+    .rs-btn:hover { filter: brightness(1.08); }
+    .rs-btn[disabled] { cursor: default; filter: none; }
+    .rs-btn:focus-visible, .rs-link:focus-visible { outline: 1px solid #8fb6e8; outline-offset: 3px; }
+    .rs-link { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; border-radius: 8px; padding: 13px;
+      font-size: 13.5px; letter-spacing: .12em; text-decoration: none; color: #d9e6fb;
+      border: 1px solid color-mix(in srgb, var(--el) 30%, #2c3f66); background: rgba(20,30,60,.45); transition: background .2s; }
+    .rs-link:hover { background: rgba(30,44,86,.6); }
+    .rs-link .arw { display: inline-block; transition: transform .2s; }
+    .rs-link:hover .arw { transform: translateX(3px); }
+    .rs-done { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: .12em; color: #a9c6ea; margin-bottom: 10px; }
+    .rs-done::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: color-mix(in srgb, var(--el) 70%, #cfe0ff); box-shadow: 0 0 6px color-mix(in srgb, var(--el) 50%, transparent); }
+    .rs-saving { position: relative; height: 1px; margin: 14px auto 0; width: 60%; background: #1c2a48; overflow: hidden; }
+    .rs-saving::after { content: ''; position: absolute; top: 0; left: -40%; width: 40%; height: 100%; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--el) 60%, #a8c8f0), transparent); animation: rs-sweep 1.4s ease-in-out infinite; }
+    @keyframes rs-sweep { to { left: 100%; } }
+    .rs-err { font-size: 12px; line-height: 1.8; color: #d6a8b8; margin: -6px 0 14px; }
+    .rs-optin { display: flex; align-items: center; gap: 6px; justify-content: center; color: #6f7ea3; font-size: 10.5px; margin-top: 12px; cursor: pointer; }
+    .rs-optin input { width: 12px; height: 12px; accent-color: #5f86c8; }
+    @media (prefers-reduced-motion: reduce) { .rs-saving::after { animation: none; left: 30%; } .rs-link .arw { transition: none; } }
+
     /* ===== DIAGNOSIS ===== */
     #diagnosis {
       position: relative; z-index: 1;
@@ -309,6 +339,7 @@
 <script src="js/characters118_v2.js"></script>
 <script src="js/eti_v2_legacy_adapter.js"></script>
 <script src="js/eti_v2_save.js"></script>
+<script src="js/diagnosis-record-check.js"></script>
 </head>
 <body>
 
@@ -2133,21 +2164,12 @@ function renderResult(root) {
         }).join('')}
       </div>
 
-      <!-- 任意保存。押すまでログインもサーバー保存も開始しない。 -->
-      <div style="background:linear-gradient(135deg,${elC}18,#0a1420);border:1px solid ${elC}50;border-radius:12px;padding:22px 20px;margin-bottom:16px;text-align:center">
-        <div style="font-size:10px;letter-spacing:2px;color:#90c0e0;text-transform:uppercase;margin-bottom:10px">診断記録</div>
-        <p style="color:#a8ccec;font-size:12.5px;line-height:1.8;margin:0 0 16px">この結果をあなたの診断記録として残しませんか。<br>保存すると、次回の診断結果と比較できるようになります。</p>
-        <div id="saveGateArea">
-          <button id="${diagnosisVersion === 'ETI-2.0' ? 'saveResultBtnV2' : 'saveResultBtn'}"
-            style="width:100%;background:${elC};border:none;color:#0a0916;border-radius:8px;padding:14px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit">
-            無料で結果を保存
-          </button>
-          <label style="display:flex;align-items:center;gap:6px;justify-content:center;color:#6a8098;font-size:10.5px;margin-top:12px;cursor:pointer">
-            <input type="checkbox" id="newsletterOptInCheckbox" checked style="accent-color:${elC};width:12px;height:12px">
-            新着や次の診断のお知らせを受け取る
-          </label>
-        </div>
-      </div>
+      <!-- 診断記録カード（確定版：result-save-demo）。押すまでログインもサーバー保存も開始しない（ログイン済みでも自動保存しない）。
+           表示時に行うのは、ログイン状態と「この結果がすでに保存済みか」の読み取りだけ。 -->
+      <section id="recordCard" class="rs-card" style="--el:${elC}" aria-live="polite">
+        <div class="rs-label">診断記録</div>
+        <p class="rs-text">この結果の記録状況を確認しています。</p>
+      </section>
 
       <div style="text-align:center;color:#5a80a0;font-size:11px;letter-spacing:2px;margin:20px 0 14px">— ここまでが無料診断の結果です —</div>
 
@@ -2686,49 +2708,94 @@ function renderResult(root) {
     };
   }
 
-  // 既存結果ページへ、表示を変えずに任意保存の配線だけを追加する。
-  // 「結果を見る」だけではログイン・保存を一切開始しない。保存ボタンを押した時だけ開始する。
-  if (diagnosisVersion === 'ETI-2.0') {
-    var saveResultBtnV2 = root.querySelector('#saveResultBtnV2');
-    if (saveResultBtnV2) {
-      (async function () {
-        var user = await getCurrentUser();
-        updateSaveButtonUIV2('idle');
-        var optInBox = root.querySelector('#newsletterOptInCheckbox');
-        if (optInBox && optInBox.closest('label')) optInBox.closest('label').style.display = 'none';
-      })();
-      saveResultBtnV2.onclick = function () {
+  // 診断記録カード：3状態（未ログイン／ログイン済み・未保存／保存済み）＋保存中・エラー。
+  // 「結果を見る」だけではログイン・保存を一切開始しない（ログイン済みでも自動保存しない）。
+  // 表示時は findSavedDiagnosisRecord()（読み取り専用）で保存済みかだけを確認する。
+  // 保存は従来どおり handleSaveResultClickV2() / handleSaveResultClick() を呼ぶ（書き込み側は無変更）。
+  var recordCard = root.querySelector('#recordCard');
+  if (recordCard) {
+    var isV2Record = diagnosisVersion === 'ETI-2.0';
+    // 完全一致の判定キー（user_id はチェック側でログイン中の本人に固定）
+    var recordKey = isV2Record
+      ? { diagnosisVersion: 'ETI-2.0', itemSetVersion: ETI_V2_META.itemSetVersion, scoringVersion: ETI_V2_META.scoringVersion, diagnosisCode: shortCode }
+      : { diagnosisVersion: DIAGNOSIS_VERSION, itemSetVersion: null, scoringVersion: SCORING_VERSION, diagnosisCode: applyData };
+    var showOptIn = false; // メルマガ同意の確認（legacyのみ・既存仕様どおり未回答のときだけ表示）
+
+    var renderRecordCard = function (state) {
+      var label = '<div class="rs-label">診断記録</div>';
+      var optIn = (!isV2Record && showOptIn && (state === 'signed_out' || state === 'unsaved' || state === 'error'))
+        ? '<label class="rs-optin"><input type="checkbox" id="newsletterOptInCheckbox" checked>新着や次の診断のお知らせを受け取る</label>' : '';
+      var html;
+      if (state === 'saved' || state === 'just_saved') {
+        html = label + (state === 'just_saved' ? '<div class="rs-done">記録しました</div>' : '')
+          + '<p class="rs-text">' + (state === 'just_saved' ? 'この結果は診断記録に残りました。' : 'この結果は、すでに診断記録に残っています。') + '</p>'
+          + '<a class="rs-link" href="/mypage.html" onclick="trackEvent(\'mypage_entry_click\',{entry_point:\'result\'})">マイページで見る <span class="arw">→</span></a>';
+      } else if (state === 'saving') {
+        html = label + '<p class="rs-text">この結果を、診断記録に残しています。</p>'
+          + '<button type="button" class="rs-btn" disabled aria-busy="true">記録しています</button><div class="rs-saving" aria-hidden="true"></div>';
+      } else if (state === 'signed_out') {
+        html = label + '<p class="rs-text">この結果を、今のあなたとして残しませんか。<br>保存すると、次に診断したとき今日の自分と見比べられます。</p>'
+          + '<button type="button" class="rs-btn" id="recordSaveBtn">結果を保存する</button>' + optIn;
+      } else if (state === 'error') {
+        html = label + '<p class="rs-text">この結果は、まだ診断記録に残っていません。</p>'
+          + '<p class="rs-err" role="alert">保存できませんでした。通信状況を確かめて、もう一度お試しください。</p>'
+          + '<button type="button" class="rs-btn" id="recordSaveBtn">もう一度試す</button>' + optIn;
+      } else {
+        html = label + '<p class="rs-text">この結果は、まだ診断記録に残っていません。<br>記録として残すと、マイページからいつでも見返せます。</p>'
+          + '<button type="button" class="rs-btn" id="recordSaveBtn">この結果を診断記録に残す</button>' + optIn;
+      }
+      recordCard.setAttribute('data-state', state);
+      recordCard.innerHTML = html;
+      var btn = recordCard.querySelector('#recordSaveBtn');
+      if (btn) btn.onclick = function () { onRecordSaveClick(state); };
+    };
+
+    var onRecordSaveClick = async function (fromState) {
+      if (typeof gtag === 'function') gtag('event', 'result_save_click', isV2Record
+        ? { event_category: 'engagement', diagnosis_version: 'ETI-2.0' }
+        : { event_category: 'engagement' });
+      var optInBox = recordCard.querySelector('#newsletterOptInCheckbox');
+      var newsletterOptIn = optInBox ? optInBox.checked : null;
+      renderRecordCard('saving');
+      try {
+      // ログイン済みなら、保存直前にもう一度読み取りで確認する（同じ結果ならINSERTしない）
+      var before = await findSavedDiagnosisRecord(recordKey);
+      if (before.state === 'saved') { renderRecordCard('saved'); return; }
+      if (isV2Record) {
         var clientSessionId = crypto.randomUUID();
         var mirrorTop = results.charMatches.slice(0, 4).map(function(c) {
           return { name: c.name, match: c.match, el: c.el, w: c.w, nation: c.nation };
         });
-        handleSaveResultClickV2(answersV2, shortCode, results.raw, mirrorTop, clientSessionId);
-        if (typeof gtag === 'function') gtag('event', 'result_save_click', { event_category: 'engagement', diagnosis_version: 'ETI-2.0' });
-      };
-    }
-  } else {
-    var saveResultBtn = root.querySelector('#saveResultBtn');
-    if (saveResultBtn) {
-      (async function () {
-        var user = await getCurrentUser();
-        updateSaveButtonUI(user ? 'idle_in' : 'idle_out');
-        var decided = await hasDecidedNewsletter();
-        if (decided) {
-          var optInBox = root.querySelector('#newsletterOptInCheckbox');
-          if (optInBox && optInBox.closest('label')) optInBox.closest('label').style.display = 'none';
-        }
-      })();
-      saveResultBtn.onclick = function () {
+        var res = await handleSaveResultClickV2(answersV2, shortCode, results.raw, mirrorTop, clientSessionId);
+        if (res && res.ok) { renderRecordCard('just_saved'); return; }
+        // 未ログイン：Google認証へ遷移中（保存は認証復帰後の既存処理が行う）
+        if (res && res.pendingStashed && res.error === 'not_authenticated') return;
+        renderRecordCard('error');
+      } else {
         var resultPayload = buildResultPayload(results, topEl, topW, et, topNat);
-        var optInBox = root.querySelector('#newsletterOptInCheckbox');
-        var optInVisible = optInBox && optInBox.closest('label') && optInBox.closest('label').style.display !== 'none';
-        var newsletterOptIn = optInVisible ? optInBox.checked : null;
-        handleSaveResultClick(answers, resultPayload, shortCode, applyData, newsletterOptIn);
-        if (typeof gtag === 'function') gtag('event', 'result_save_click', { event_category: 'engagement' });
-      };
-    }
-  }
+        await handleSaveResultClick(answers, resultPayload, shortCode, applyData, newsletterOptIn);
+        // legacy の保存関数は結果を返さないため、読み取りで確認して表示を決める
+        var after = await findSavedDiagnosisRecord(recordKey);
+        if (after.state === 'saved') renderRecordCard('just_saved');
+        else if (after.state === 'signed_out') return; // Google認証へ遷移中
+        else renderRecordCard('error');
+      }
+      } catch (e) {
+        // 保存処理の例外でカードが「記録しています」のまま止まらないようにする
+        console.error('diagnosis record save failed:', e);
+        renderRecordCard('error');
+      }
+    };
 
+    (async function () {
+      if (!isV2Record) {
+        try { showOptIn = !(await hasDecidedNewsletter()); } catch (e) { showOptIn = false; }
+      }
+      var found = await findSavedDiagnosisRecord(recordKey);
+      if (found.state === 'unknown') console.error('saved-record check failed (showing as unsaved):', found.error);
+      renderRecordCard(found.state === 'saved' ? 'saved' : found.state === 'signed_out' ? 'signed_out' : 'unsaved');
+    })();
+  }
 }
 
 function autoCopyAndProceed(data, url) {
