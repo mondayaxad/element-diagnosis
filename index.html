@@ -174,6 +174,55 @@
     .tp .final .copy { margin-top: 24px; font-size: 14px; line-height: 1.8; letter-spacing: .1em; color: var(--t-body); }
     .tp .final .cta-wrap { margin-top: 20px; }
     @media (prefers-reduced-motion: reduce) { .tp .link .arw, .tp .hero-record-link .arw { transition: none; } }
+    /* ===== 診断中UI（確定版：diagnosis-ui-demo。表示のみ。renderQuizV2 の .qz 配下だけに効かせる） ===== */
+    .qz { margin-top: 32px; --qz-line: #172238; --qz-line-on: #3a5a92; --qz-dot: #2c3d5e; --qz-dot-on: #8fb4ea; --qz-dim: #5a6886; --qz-sub: #7f93b5; }
+    .qz-prog { margin-bottom: 20px; }
+    .qz-prog-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 9px; }
+    .qz-range { font-size: 12.5px; letter-spacing: .12em; color: #8aa3c8; font-variant-numeric: tabular-nums; }
+    .qz-range .of { color: var(--qz-dim); letter-spacing: .08em; }
+    .qz-count { font-size: 11.5px; letter-spacing: .08em; color: var(--qz-sub); font-variant-numeric: tabular-nums; }
+    .qz-count b { font-weight: 500; color: #a9c2e6; }
+    .qz-bar { height: 2px; border-radius: 1px; background: #121a2e; overflow: hidden; }
+    .qz-bar i { display: block; height: 100%; border-radius: 1px; background: linear-gradient(90deg, #2a3f78, #6f9fd8 70%, #a8d8f0); transition: width .3s ease; }
+    .qz-card { position: relative; background: #090d18; border: 1px solid var(--qz-line); border-radius: 12px; padding: 17px 18px 15px; margin-bottom: 10px; cursor: pointer;
+      transition: opacity .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease; }
+    .qz-no { font-size: 11px; letter-spacing: .14em; color: var(--qz-dim); margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+    .qz-text { font-size: 14.5px; line-height: 1.65; font-weight: 500; color: var(--qz-sub); margin: 0 0 14px; word-break: auto-phrase; }
+    .qz-card.is-active { opacity: 1; border-color: var(--qz-line-on); background: linear-gradient(170deg, #0f1a31 0%, #0c1425 55%, #0b1122 100%);
+      box-shadow: inset 0 0 22px rgba(90,120,210,.07), 0 0 0 1px rgba(110,140,230,.04); }
+    .qz-card.is-active .qz-no { color: #9ccbee; }
+    .qz-card.is-active .qz-text { color: #e4e2f6; }
+    .qz-card.is-done { opacity: .76; border-color: #131c2e; }
+    .qz-card.is-done .qz-text { color: #8391ad; }
+    .qz-card.is-next { opacity: .56; }
+    /* 回答した瞬間：次の設問が灯り、直前の設問が静かに沈む（180ms） */
+    .qz-card.is-arriving { animation: qz-arrive .18s ease both; }
+    .qz-card.is-settling { animation: qz-settle .18s ease both; }
+    @keyframes qz-arrive { from { opacity: .56; } to { opacity: 1; } }
+    @keyframes qz-settle { from { opacity: 1; } to { opacity: .76; } }
+    .qz-scale { display: flex; justify-content: space-between; align-items: center; padding: 0 4px; }
+    .qz-dot { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; cursor: pointer; padding: 0; background: transparent;
+      border: 1.5px solid var(--qz-dot); color: #5c6f93; font-family: inherit; font-size: 12px; line-height: 1; font-variant-numeric: tabular-nums;
+      display: grid; place-items: center; transition: background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease; }
+    .qz-card.is-active .qz-dot { border-color: #3a5078; color: #7d93bb; }
+    .qz-dot:hover { border-color: #56709e; color: #a6bbe0; }
+    .qz-dot:focus-visible { outline: 1px solid var(--qz-dot-on); outline-offset: 3px; }
+    .qz-dot.is-on, .qz-card.is-active .qz-dot.is-on { background: radial-gradient(circle at 40% 35%, rgba(150,170,245,.42), rgba(80,90,190,.34) 70%);
+      border-color: var(--qz-dot-on); color: #eef2ff; box-shadow: 0 0 0 1px rgba(160,190,250,.22), 0 0 8px rgba(120,150,240,.22); }
+    .qz-labels { display: flex; justify-content: space-between; margin-top: 8px; }
+    .qz-labels span { font-size: 10px; letter-spacing: .04em; color: var(--qz-dim); }
+    .qz-card.is-active .qz-labels span { color: var(--qz-sub); }
+    .qz-pager { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; }
+    .qz-pager button { background: transparent; border: 1px solid #1c2a44; color: #7f93b5; border-radius: 6px; padding: 8px 18px; font-size: 12px; letter-spacing: .04em; cursor: pointer; font-family: inherit; }
+    .qz-pager button:disabled { color: #2a3350; cursor: default; }
+    .qz-result { width: 100%; margin-top: 12px; border: none; color: #eef4ff; border-radius: 6px; padding: 12px; font-size: 13px; letter-spacing: .12em; cursor: pointer; font-family: inherit;
+      background: linear-gradient(135deg, #1b4c86 0%, #2556a0 52%, #3c4a9e 100%); }
+    .qz-jump { width: 100%; margin-top: 8px; background: transparent; border: 1px dashed #2a3c60; color: #7f93b5; border-radius: 6px; padding: 9px; font-size: 11.5px; cursor: pointer; font-family: inherit; }
+    @media (prefers-reduced-motion: reduce) {
+      .qz-card, .qz-dot, .qz-bar i { transition: none; }
+      .qz-card.is-arriving, .qz-card.is-settling { animation: none; }
+    }
+
     /* ===== DIAGNOSIS ===== */
     #diagnosis {
       position: relative; z-index: 1;
@@ -1776,16 +1825,20 @@ function renderQuizV2(root) {
     quizFocusIdxV2 = firstUnansweredInPage !== null ? firstUnansweredInPage : pageIds[0];
   }
 
+  // 表示だけの状態：直前に回答した設問を静かに沈め、次の設問を灯す（回答・遷移の処理には関与しない）
+  var prevFocusV2 = window.__qzPrevFocusV2;
+  var focusMovedV2 = prevFocusV2 !== undefined && prevFocusV2 !== quizFocusIdxV2 && pageIds.indexOf(prevFocusV2) !== -1;
+  window.__qzPrevFocusV2 = quizFocusIdxV2;
+  var pad2 = function(n) { return String(n).padStart(2, '0'); };
+
   root.innerHTML = `
-    <section style="margin-top:32px">
-      <div style="margin-bottom:24px">
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-          <span style="color:#6a90b0;font-size:12px">Q${pageStart+1}〜${Math.min(pageStart+PAGE_SIZE, order.length)} / ${order.length}</span>
-          <span style="color:#6a95b8;font-size:12px">回答済 ${answeredCount}</span>
+    <section class="qz">
+      <div class="qz-prog">
+        <div class="qz-prog-top">
+          <span class="qz-range">Q${pad2(pageStart+1)}—${pad2(Math.min(pageStart+PAGE_SIZE, order.length))} <span class="of">/ ${order.length}</span></span>
+          <span class="qz-count">回答済 <b>${answeredCount}</b></span>
         </div>
-        <div style="background:#16121f;height:4px;border-radius:2px;overflow:hidden">
-          <div style="background:linear-gradient(90deg,#1a3a5a,#7ab8e8);width:${pct}%;height:100%;border-radius:2px;transition:width 0.3s"></div>
-        </div>
+        <div class="qz-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${order.length}" aria-valuenow="${answeredCount}"><i style="width:${pct}%"></i></div>
       </div>
 
       ${pageIds.map((id, i) => {
@@ -1794,44 +1847,50 @@ function renderQuizV2(root) {
         const cur = answersV2[id];
         const isFocused = id === quizFocusIdxV2;
         const scale = ETI_V2_META.responseScales[q.responseMode];
+        const state = isFocused ? 'is-active' : (cur !== undefined ? 'is-done' : 'is-next');
+        const motion = focusMovedV2 ? (isFocused ? ' is-arriving' : (id === prevFocusV2 && cur !== undefined ? ' is-settling' : '')) : '';
         return `
-        <div class="q-card-v2" data-qid="${id}" style="background:#0a1420;border:1px solid ${isFocused?'#1a3a5a':'#182838'};border-radius:12px;padding:20px;margin-bottom:12px;opacity:${isFocused?'1':'0.4'};transition:opacity 0.25s,border-color 0.25s;cursor:pointer">
-          <div style="color:${isFocused?'#90c0e0':'#3a3050'};font-size:9px;letter-spacing:1.5px;margin-bottom:10px;opacity:${isFocused?'0.9':'0.7'}">Q${qIdx+1}</div>
-          <p style="color:${isFocused?'#e0d4f8':'#6a90a8'};font-size:14.5px;line-height:1.6;margin:0 0 16px;font-weight:500">${q.text}</p>
-          <div class="scale-dots-v2" data-qid="${id}" style="display:flex;justify-content:space-between;align-items:center;padding:0 4px">
-            ${scale.map(s => `
-              <button data-v="${s.value}" aria-label="${s.label}" style="width:30px;height:30px;border-radius:50%;background:${cur===s.value?'#7ab8e8':'transparent'};border:2px solid ${cur===s.value?'#7ab8e8':'#2a4058'};cursor:pointer;padding:0;flex-shrink:0"></button>
+        <div class="q-card-v2 qz-card ${state}${motion}" data-qid="${id}">
+          <div class="qz-no">Q${qIdx+1}</div>
+          <p class="qz-text">${q.text}</p>
+          <div class="scale-dots-v2 qz-scale" data-qid="${id}" role="radiogroup" aria-label="Q${qIdx+1}の回答">
+            ${scale.map((s, j) => `
+              <button data-v="${s.value}" aria-label="${s.label}" role="radio" aria-checked="${cur===s.value}" class="qz-dot${cur===s.value?' is-on':''}">${j+1}</button>
             `).join('')}
           </div>
-          <div style="display:flex;justify-content:space-between;margin-top:8px">
-            <span style="font-size:9.5px;color:#6a95b8">${scale[0].label}</span>
-            <span style="font-size:9.5px;color:#6a95b8">${scale[scale.length-1].label}</span>
+          <div class="qz-labels">
+            <span>${scale[0].label}</span>
+            <span>${scale[scale.length-1].label}</span>
           </div>
         </div>`;
       }).join('')}
 
-      <div style="display:flex;justify-content:space-between;margin-top:8px;gap:8px">
-        <button id="prev-btn-v2" ${pageStart===0?'disabled':''}
-          style="background:transparent;border:1px solid #1e3448;color:${pageStart===0?'#2a2440':'#6a90b0'};border-radius:6px;padding:8px 18px;font-size:12px;cursor:pointer;font-family:inherit">
-          ← 前の5問
-        </button>
+      <div class="qz-pager">
+        <button id="prev-btn-v2" ${pageStart===0?'disabled':''}>← 前の5問</button>
         ${!isLastPage
-          ? `<button id="next-btn-v2" style="background:transparent;border:1px solid #1e3448;color:#6a90b0;border-radius:6px;padding:8px 18px;font-size:12px;cursor:pointer;font-family:inherit">次の5問 →</button>`
+          ? `<button id="next-btn-v2">次の5問 →</button>`
           : `<span></span>`}
       </div>
 
       ${allAnswered
-        ? `<button id="result-btn-inline-v2"
-            style="width:100%;margin-top:10px;background:linear-gradient(90deg,#1a3a5a,#2a6a9a);border:none;color:#e0f4ff;border-radius:6px;padding:11px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">
-            結果を見る →
-          </button>` : ''}
+        ? `<button id="result-btn-inline-v2" class="qz-result">結果を見る →</button>` : ''}
 
       ${!allAnswered && firstUnansweredId !== null && isLastPage
-        ? `<button id="jump-unanswered-btn-v2"
-            style="width:100%;margin-top:8px;background:transparent;border:1px dashed #2a4a68;color:#6a90b0;border-radius:6px;padding:9px;font-size:11.5px;cursor:pointer;font-family:inherit">
-            未回答の設問へ →
-          </button>` : ''}
+        ? `<button id="jump-unanswered-btn-v2" class="qz-jump">未回答の設問へ →</button>` : ''}
     </section>`;
+
+  // 次の設問が画面外に隠れたときだけ、上部が見える程度に短く寄せる（ページ送り時は既存のscrollQuizTopが優先）
+  if (focusMovedV2) {
+    var activeCard = root.querySelector('.qz-card.is-active');
+    if (activeCard) requestAnimationFrame(function() {
+      var r = activeCard.getBoundingClientRect(), vh = window.innerHeight;
+      if (r.top >= 12 && r.bottom <= vh - 12) return;
+      var dy = r.top < 12 ? r.top - 16 : Math.min(r.bottom - vh + 24, r.top - 72);
+      if (Math.abs(dy) < 8) return;
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.scrollBy({ top: dy, behavior: reduce ? 'auto' : 'smooth' });
+    });
+  }
 
   root.querySelectorAll('.q-card-v2').forEach(function(card) {
     card.addEventListener('click', function(e) {
