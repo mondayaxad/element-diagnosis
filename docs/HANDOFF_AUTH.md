@@ -75,7 +75,7 @@ Supabase のログイン復帰は同じホスト（ブランチ名入りURL）�
 - Resend（Free、Tokyo）に `mail.elementdiagnosis.com` を登録。DNS（MX・SPF・DKIM）は Vercel DNS に自動設定済み、公開DNSで確認済み。
 - Resend API キーは Supabase SMTP パスワードにのみ設定（チャット・リポジトリには無い）。
 - DMARC：`_dmarc.elementdiagnosis.com` に `v=DMARC1; p=none;`（2026-10-02 追加、公開DNSで確認）。届き方が安定したら p=quarantine を検討。
-- メールテンプレート：`docs/email-templates/`（件名「【元素診断】ログインコード {{ .Token }}」）。Preview・本番の両方に手動で入れる。
+- メールテンプレート：`docs/email-templates/`（件名「【元素診断】ログインコード {{ .Token }}」）。Preview には 2026-10-02 に手動で反映し、受信・表示・ログインを実機で確認済み。本番の Supabase にも同じものを入れる。
 - 送信失敗（429・5xx）時は Google / X へ誘導する（`e1c7ac9`）。上限を超えても Google / X でログインできるため、Pro への移行は通数を見て判断。
 
 ## 6.5 2026-10-02 の追加（GitHub担当）
