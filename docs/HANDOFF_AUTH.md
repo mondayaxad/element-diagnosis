@@ -47,7 +47,7 @@
 | Magic Link / Confirm signup テンプレート | 件名「元素診断のログインコード」、本文に `{{ .Token }}`（英文とリンクも残存。動作に影響なし。整形は後日PCで） | OK |
 | Custom SMTP | Resend（`smtp.resend.com:465`、user `resend`、送信元 `noreply@mail.elementdiagnosis.com`、差出人名「元素診断｜Element Diagnosis」） | OK |
 | メール送信上限 | 30通/時 | Preview は可。公開前に見直す |
-| Manual linking | 無効 | このまま |
+| Manual linking | 有効（2026-10-02） | OK。マイページの「ログイン方法」から Google / X を連携できる（実装は commit 待ち） |
 
 ## 5. 次のアクション
 | # | 担当 | 内容 | 状態 |
@@ -77,6 +77,7 @@ Supabase のログイン復帰は同じホスト（ブランチ名入りURL）�
 - 送信失敗（429・5xx）時は Google / X へ誘導する（`e1c7ac9`）。上限を超えても Google / X でログインできるため、Pro への移行は通数を見て判断。
 
 ## 7. 未解決・注意
+- X ログインのテストで、X 側のメールが Google と一致せず、記録のない別アカウントが作られた。その X を Google のアカウントへ連携するには、先に Supabase の Users でその空アカウントを削除する（人の操作）。
 - `privacy.html` / `terms.html` は release-c-preview にのみ存在し、本番（main）では 404。X の登録に本番URLを使っているため、本番反映時に必ず含める。メールログイン・ログイン方法の連携についての追記も必要。
 - X の開発者プランは Pay Per Use。ログイン時のユーザー情報取得が課金対象か、残高0でログインが失敗しないかは要確認。
 - X がメールを返すか、同じメールの Google ユーザーに自動でまとまるかは実機で確認する（推測で実装を足さない）。
