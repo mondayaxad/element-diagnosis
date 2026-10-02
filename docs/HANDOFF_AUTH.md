@@ -47,7 +47,7 @@
 | Magic Link / Confirm signup テンプレート | 件名「元素診断のログインコード」、本文に `{{ .Token }}`（英文とリンクも残存。動作に影響なし。整形は後日PCで） | OK |
 | Custom SMTP | Resend（`smtp.resend.com:465`、user `resend`、送信元 `noreply@mail.elementdiagnosis.com`、差出人名「元素診断｜Element Diagnosis」） | OK |
 | メール送信上限 | 30通/時 | Preview は可。公開前に見直す |
-| Manual linking | 有効（2026-10-02） | OK。マイページの「ログイン方法」から Google / X を連携できる（実装は commit 待ち） |
+| Manual linking | 有効（2026-10-02） | OK。マイページの「ログイン方法」から Google / X を連携（`685ca7b`）。実機で Google→X 連携→X ログインで同じ記録を確認済み |
 
 ## 5. 次のアクション
 | # | 担当 | 内容 | 状態 |
