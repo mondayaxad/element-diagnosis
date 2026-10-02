@@ -55,7 +55,7 @@
 | 1 | 人 | Authentication → Sign In / Providers → Email：Email OTP Length を 6 に | 済 |
 | 2 | 人 | Custom SMTP（Resend）設定、Magic Link / Confirm signup に `{{ .Token }}`、件名「元素診断のログインコード」 | 済 |
 | 3 | Supabase担当 | 再読み取りで 1・2 の差分解消を確認 | 済（2026-10-02） |
-| 4 | 人 | ブランチ名入り Preview URL で、チームメンバー宛てにメールOTP実機テスト（`docs/AUTH_PROVIDERS_SETUP.md` §5-3）。1時間2通まで、連打・再送しない | 未 |
+| 4 | 人 | ブランチ名入り Preview URL で、チームメンバー宛てにメールOTP実機テスト（`docs/AUTH_PROVIDERS_SETUP.md` §5-3）。1時間2通まで、連打・再送しない | 済（2026-10-02：メールOTPでログイン成功。Google で保存していたのと同じ記録が表示＝同一メールの identity が同じ user_id にまとまることを確認） |
 | 5 | 人 | X Developer Portal：OAuth 2.0 Web App、Callback `https://akivoobkqcnqvdumxtmg.supabase.co/auth/v1/callback`、Request email from users を有効、Client ID / Secret 発行 | 未 |
 | 6 | 人 | ダッシュボードで X / Twitter (OAuth 2.0) を有効化し ID/Secret を入力。`external_x_email_optional` は false のまま | 未 |
 | 7 | Supabase担当 | 再読み取りで X 有効を確認 | 未 |
