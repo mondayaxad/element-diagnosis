@@ -766,6 +766,17 @@
   .mp-account details > summary { list-style: none; }
   .mp-account details > summary::-webkit-details-marker { display: none; }
   .mp-account-body { padding: 0 14px 12px; font-size: 11px; color: var(--fg-dim); line-height: 1.8; }
+  .mp-login { padding: 12px 14px; border-bottom: 1px solid var(--card-border); }
+  .mp-login-title { font-size: 12px; color: var(--fg); margin-bottom: 4px; }
+  .mp-login-note { font-size: 11px; color: var(--fg-dim); line-height: 1.8; margin-bottom: 8px; }
+  .mp-login-row { display: flex; justify-content: space-between; align-items: center; min-height: 36px; font-size: 12px; color: var(--fg); }
+  .mp-login-row + .mp-login-row { border-top: 1px dashed var(--card-border); }
+  .mp-login-on { font-size: 11px; color: var(--accent); }
+  .mp-login-btn { background: transparent; border: 1px solid var(--accent-dim); color: var(--accent); border-radius: 6px; padding: 6px 12px; font-size: 11px; font-family: inherit; cursor: pointer; }
+  .mp-login-btn[disabled] { opacity: .6; cursor: default; }
+  .mp-login-msg { font-size: 11px; line-height: 1.7; color: #d6a8b8; margin-top: 6px; }
+  .mp-login-msg:empty { display: none; }
+  .empty-hint { margin-top: 12px; font-size: 11.5px; color: var(--fg-dim); line-height: 1.8; }
   .mp-uid { font-family: monospace; font-size: 10.5px; word-break: break-all; color: var(--fg-dim); }
 
   @media (prefers-reduced-motion: reduce) { .mp-collection { scroll-behavior: auto; } }
@@ -992,14 +1003,16 @@ function renderGateOtpInput(email) {
   };
 }
 
-function renderEmpty(root) {
+function renderEmpty(root, user) {
   root.innerHTML = `
     ${logoutButtonHtml()}
     ${pageHeaderHtml()}
     <div class="empty">
       まだ保存された診断記録がありません。<br>
       診断結果画面の「結果を保存」から記録できます。
+      <p class="empty-hint">以前ほかの方法（Google・X・メール）で保存した記録は、そのときと同じ方法でログインすると表示されます。</p>
     </div>
+    ${user ? mpAccountHtml(user) : ''}
   `;
 }
 
@@ -1743,11 +1756,51 @@ function mpRediagHtml() {
     </section>`;
 }
 
-function mpAccountHtml(uid) {
+// ログイン方法：つながっている方法を表示し、未連携の Google / X を追加できる（js/auth-providers.js）
+function mpLoginMethodsHtml(user) {
+  if (!user || typeof authLinkedProviders !== 'function') return '';
+  const linked = authLinkedProviders(user);
+  const rows = [];
+  if (linked.has('email')) {
+    rows.push(`<div class="mp-login-row"><span>メール${user.email ? `（${mpEsc(user.email)}）` : ''}</span><span class="mp-login-on">✓ 利用中</span></div>`);
+  }
+  AUTH_LINKABLE_PROVIDERS.forEach(p => {
+    rows.push(linked.has(p.provider)
+      ? `<div class="mp-login-row"><span>${p.label}</span><span class="mp-login-on">✓ 連携済み</span></div>`
+      : `<div class="mp-login-row"><span>${p.label}</span><button type="button" class="mp-login-btn" data-provider="${p.provider}" onclick="mpLinkProvider(this)">${p.label}を連携する</button></div>`);
+  });
+  const notice = (typeof AUTH_RETURN_ERROR !== 'undefined' && AUTH_RETURN_ERROR) ? authLinkErrorMessage(AUTH_RETURN_ERROR) : '';
+  return `
+        <div class="mp-login" id="mpLogin">
+          <div class="mp-login-title">ログイン方法</div>
+          <div class="mp-login-note">ほかの方法も連携しておくと、次からどの方法でログインしても、この記録を見られます。</div>
+          ${rows.join('')}
+          <div class="mp-login-msg" id="mpLoginMsg" role="alert">${mpEsc(notice)}</div>
+        </div>`;
+}
+
+async function mpLinkProvider(btn) {
+  const provider = btn && btn.dataset.provider;
+  if (!provider) return;
+  btn.disabled = true;
+  const msg = document.getElementById('mpLoginMsg');
+  if (msg) msg.textContent = '';
+  const { error } = await linkAuthProvider(provider) || {};
+  // 成功時は連携先へ移動する。戻ってきたら SIGNED_IN / USER_UPDATED で再描画される
+  if (error) {
+    console.error('link identity error:', error);
+    if (msg) msg.textContent = authLinkErrorMessage(error);
+    btn.disabled = false;
+  }
+}
+
+function mpAccountHtml(userOrUid) {
+  const user = (userOrUid && typeof userOrUid === 'object') ? userOrUid : null;
+  const uid = user ? user.id : userOrUid;
   return `
     <section class="mp-sec" aria-labelledby="mp-acc-h">
       <div class="mp-sec-head" id="mp-acc-h"><span class="mp-sec-en">ACCOUNT</span></div>
-      <div class="mp-account">
+      <div class="mp-account">${mpLoginMethodsHtml(user)}
         <details>
           <summary class="mp-account-row"><span>⚙ アカウント設定</span><span>›</span></summary>
           <div class="mp-account-body">
@@ -1763,7 +1816,7 @@ function mpAccountHtml(uid) {
 /* ============================================================
    ページ全体
    ============================================================ */
-function renderMypage(root, sessions, uid) {
+function renderMypage(root, sessions, userOrUid) {
   const records = sessions
     .slice()
     .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
@@ -1776,7 +1829,7 @@ function renderMypage(root, sessions, uid) {
     ${mpCollectionHtml(records)}
     ${mpRecordsHtml(records)}
     ${mpRediagHtml()}
-    ${mpAccountHtml(uid)}
+    ${mpAccountHtml(userOrUid)}
   `;
 
   const mpCol = document.getElementById('mp-collection');
@@ -1808,11 +1861,11 @@ async function init() {
     return;
   }
   if (result.sessions.length === 0) {
-    renderEmpty(root);
+    renderEmpty(root, user);
     return;
   }
   mpEntitlementOk = mpEntitlementCheckedOk(result.sessions);
-  renderMypage(root, result.sessions, user.id);
+  renderMypage(root, result.sessions, user);
 }
 // eti_v2_save.js（Googleログイン復帰後、v2のpending保存が完了した時点）から
 // 呼べる再読み込みフック。init()自体はSIGNED_IN時にも呼ばれるため、

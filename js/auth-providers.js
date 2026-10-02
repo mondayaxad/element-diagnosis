@@ -238,6 +238,67 @@ function renderAuthChoices(container, h) {
   showChoices();
 }
 
+// ---- ログイン方法の連携（マイページ） ----
+// ログイン中のアカウントに、別のログイン方法（Google / X）を追加する。同じ user_id のまま
+// 次回からどちらでもログインできる。Supabase の「Manual linking」が有効である必要がある。
+// 連携の解除は、ログインできなくなる事故を避けるため提供しない。
+const AUTH_LINKABLE_PROVIDERS = [
+  { provider: 'google', label: 'Google' },
+  { provider: 'x', label: 'X' },
+];
+
+// user.identities から、つながっているログイン方法を返す（X は旧名 twitter も X として扱う）
+function authLinkedProviders(user) {
+  const set = new Set();
+  ((user && user.identities) || []).forEach(i => {
+    const p = i && i.provider;
+    if (!p) return;
+    set.add(p === 'twitter' ? 'x' : p);
+  });
+  return set;
+}
+
+function linkAuthProvider(provider) {
+  return supabaseClient.auth.linkIdentity({
+    provider: provider,
+    options: { redirectTo: window.location.origin + '/mypage.html' },
+  });
+}
+
+// OAuth から戻ったときの URL に付くエラー（例：連携しようとした X が別アカウントで使用中）を読み、
+// URL からは取り除く。supabase-js が URL を処理する前に、読み込み時点で控えておく。
+function readAuthReturnError() {
+  try {
+    const params = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
+    const q = new URLSearchParams(window.location.search || '');
+    const code = params.get('error_code') || q.get('error_code') || params.get('error') || q.get('error');
+    if (!code) return null;
+    const description = params.get('error_description') || q.get('error_description') || '';
+    return { code: code, description: description };
+  } catch (e) {
+    return null;
+  }
+}
+const AUTH_RETURN_ERROR = typeof window !== 'undefined' && window.location ? readAuthReturnError() : null;
+// エラー付きで戻ってきた場合だけ、URL のエラー部分を消す（再読み込みで同じ案内が出続けないように）
+if (AUTH_RETURN_ERROR && typeof history !== 'undefined' && history.replaceState) {
+  try { history.replaceState(null, '', window.location.pathname); } catch (e) { /* noop */ }
+}
+
+function authLinkErrorMessage(err) {
+  const code = (err && (err.code || err.error_code)) || '';
+  const text = ((err && (err.description || err.message)) || '').toLowerCase();
+  if (/identity_already_exists|already linked|already exists/.test(code + ' ' + text)) {
+    return 'このアカウントは、すでに別の記録で使われているため連携できませんでした。';
+  }
+  if (/manual_linking_disabled|manual linking/.test(code + ' ' + text)) {
+    return 'ログイン方法の連携は、現在準備中です。';
+  }
+  if (/access_denied/.test(code)) return '連携を中止しました。';
+  return 'ログイン方法を連携できませんでした。時間をおいて、もう一度お試しください。';
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { signInWithX, sendEmailOtp, verifyEmailOtp, isValidEmailForOtp, authErrorMessage, AUTH_EMAIL_UNAVAILABLE_MSG };
+  module.exports = { signInWithX, sendEmailOtp, verifyEmailOtp, isValidEmailForOtp, authErrorMessage, AUTH_EMAIL_UNAVAILABLE_MSG,
+    authLinkedProviders, authLinkErrorMessage, AUTH_LINKABLE_PROVIDERS };
 }
