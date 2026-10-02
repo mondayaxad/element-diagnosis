@@ -774,6 +774,8 @@
   .mp-login-on { font-size: 11px; color: var(--accent); }
   .mp-login-btn { background: transparent; border: 1px solid var(--accent-dim); color: var(--accent); border-radius: 6px; padding: 6px 12px; font-size: 11px; font-family: inherit; cursor: pointer; }
   .mp-login-btn[disabled] { opacity: .6; cursor: default; }
+  .mp-login-unlink { background: transparent; border: none; color: var(--fg-dim); font-size: 11px; font-family: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; margin-left: 10px; padding: 4px; }
+  .mp-login-unlink[disabled] { opacity: .5; cursor: default; }
   .mp-login-msg { font-size: 11px; line-height: 1.7; color: #d6a8b8; margin-top: 6px; }
   .mp-login-msg:empty { display: none; }
   .empty-hint { margin-top: 12px; font-size: 11.5px; color: var(--fg-dim); line-height: 1.8; }
@@ -1765,8 +1767,10 @@ function mpLoginMethodsHtml(user) {
     rows.push(`<div class="mp-login-row"><span>メール${user.email ? `（${mpEsc(user.email)}）` : ''}</span><span class="mp-login-on">✓ 利用中</span></div>`);
   }
   AUTH_LINKABLE_PROVIDERS.forEach(p => {
+    const unlinkBtn = canUnlinkAuthProvider(user, p.provider)
+      ? ` <button type="button" class="mp-login-unlink" data-provider="${p.provider}" data-label="${p.label}" onclick="mpUnlinkProvider(this)">解除</button>` : '';
     rows.push(linked.has(p.provider)
-      ? `<div class="mp-login-row"><span>${p.label}</span><span class="mp-login-on">✓ 連携済み</span></div>`
+      ? `<div class="mp-login-row"><span>${p.label}</span><span><span class="mp-login-on">✓ 連携済み</span>${unlinkBtn}</span></div>`
       : `<div class="mp-login-row"><span>${p.label}</span><button type="button" class="mp-login-btn" data-provider="${p.provider}" onclick="mpLinkProvider(this)">${p.label}を連携する</button></div>`);
   });
   const notice = (typeof AUTH_RETURN_ERROR !== 'undefined' && AUTH_RETURN_ERROR) ? authLinkErrorMessage(AUTH_RETURN_ERROR) : '';
@@ -1792,6 +1796,26 @@ async function mpLinkProvider(btn) {
     if (msg) msg.textContent = authLinkErrorMessage(error);
     btn.disabled = false;
   }
+}
+
+async function mpUnlinkProvider(btn) {
+  const provider = btn && btn.dataset.provider;
+  if (!provider) return;
+  const label = btn.dataset.label || provider;
+  if (!window.confirm(`${label}のログインを解除しますか？\n解除しても診断記録は消えません。次からは、ほかの方法でログインしてください。`)) return;
+  btn.disabled = true;
+  const msg = document.getElementById('mpLoginMsg');
+  if (msg) msg.textContent = '';
+  const user = await getCurrentUser();
+  const { error } = await unlinkAuthProvider(user, provider);
+  if (error) {
+    console.error('unlink identity error:', error);
+    if (msg) msg.textContent = authUnlinkErrorMessage(error);
+    btn.disabled = false;
+    return;
+  }
+  // 解除後のログイン方法を表示し直す
+  init();
 }
 
 function mpAccountHtml(userOrUid) {

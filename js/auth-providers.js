@@ -241,7 +241,7 @@ function renderAuthChoices(container, h) {
 // ---- ログイン方法の連携（マイページ） ----
 // ログイン中のアカウントに、別のログイン方法（Google / X）を追加する。同じ user_id のまま
 // 次回からどちらでもログインできる。Supabase の「Manual linking」が有効である必要がある。
-// 連携の解除は、ログインできなくなる事故を避けるため提供しない。
+// 解除はログイン方法が2つ以上あるときだけ（最後の1つは外せない）。
 const AUTH_LINKABLE_PROVIDERS = [
   { provider: 'google', label: 'Google' },
   { provider: 'x', label: 'X' },
@@ -263,6 +263,28 @@ function linkAuthProvider(provider) {
     provider: provider,
     options: { redirectTo: window.location.origin + '/mypage.html' },
   });
+}
+
+// 連携の解除。最後の1つは外せない（ログインできなくなるため）。記録（user_id）はそのまま。
+function authIdentityFor(user, provider) {
+  return ((user && user.identities) || []).find(i => i && (i.provider === provider || (provider === 'x' && i.provider === 'twitter'))) || null;
+}
+function canUnlinkAuthProvider(user, provider) {
+  const all = (user && user.identities) || [];
+  return all.length >= 2 && !!authIdentityFor(user, provider);
+}
+async function unlinkAuthProvider(user, provider) {
+  if (!canUnlinkAuthProvider(user, provider)) return { error: { code: 'single_identity_not_deletable' } };
+  const { error } = await supabaseClient.auth.unlinkIdentity(authIdentityFor(user, provider));
+  return { error: error || null };
+}
+function authUnlinkErrorMessage(err) {
+  const code = (err && (err.code || err.error_code)) || '';
+  const text = ((err && err.message) || '').toLowerCase();
+  if (/single_identity_not_deletable|at least 2|only one/.test(code + ' ' + text)) {
+    return 'ログイン方法が1つだけのときは解除できません。';
+  }
+  return 'ログイン方法を解除できませんでした。時間をおいて、もう一度お試しください。';
 }
 
 // OAuth から戻ったときの URL に付くエラー（例：連携しようとした X が別アカウントで使用中）を読み、
@@ -300,5 +322,5 @@ function authLinkErrorMessage(err) {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { signInWithX, sendEmailOtp, verifyEmailOtp, isValidEmailForOtp, authErrorMessage, AUTH_EMAIL_UNAVAILABLE_MSG,
-    authLinkedProviders, authLinkErrorMessage, AUTH_LINKABLE_PROVIDERS };
+    authLinkedProviders, authLinkErrorMessage, AUTH_LINKABLE_PROVIDERS, canUnlinkAuthProvider, authUnlinkErrorMessage };
 }
