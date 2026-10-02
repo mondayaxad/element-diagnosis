@@ -1,6 +1,6 @@
 # 引き継ぎ書：元素診断 Preview C ／ 認証3方式（Google・X・メールOTP）
 
-更新：2026-10-01。2つのセッションの共有メモ。最新はこのファイル（`release-c-preview`）を `git pull` して読む。
+更新：2026-10-02。2つのセッションの共有メモ。最新はこのファイル（`release-c-preview`）を `git pull` して読む。
 
 ## 0. 運用ルール（全工程共通）
 - 禁止：force push・main・Production・DB変更（migration/schema/RPC/UNIQUE）・Stripe・PR操作。SQLは実行しない。
@@ -42,18 +42,19 @@
 | Google | 有効 | OK |
 | X (OAuth 2.0) | 無効・ID/Secret 空 | 要対応 |
 | Email provider | 有効・新規登録可 | OK |
-| OTP 桁数 | 8 | 6 にする |
+| OTP 桁数 | 6 | OK（2026-10-02 変更） |
 | OTP 有効期限 | 3600秒 | OK |
-| Magic Link / Confirm signup テンプレート | リンクのみ（`{{ .Token }}` なし） | 要対応 |
-| Custom SMTP | なし（内蔵送信：1時間2通、チームメンバー宛てのみ） | Preview はこのまま |
+| Magic Link / Confirm signup テンプレート | 件名「元素診断のログインコード」、本文に `{{ .Token }}`（英文とリンクも残存。動作に影響なし。整形は後日PCで） | OK |
+| Custom SMTP | Resend（`smtp.resend.com:465`、user `resend`、送信元 `noreply@mail.elementdiagnosis.com`、差出人名「元素診断｜Element Diagnosis」） | OK |
+| メール送信上限 | 30通/時 | Preview は可。公開前に見直す |
 | Manual linking | 無効 | このまま |
 
 ## 5. 次のアクション
 | # | 担当 | 内容 | 状態 |
 |---|---|---|---|
-| 1 | 人 | Authentication → Sign In / Providers → Email：Email OTP Length を 6 に | 未 |
-| 2 | 人 | Authentication → Emails → Templates：Magic Link と Confirm signup の両方に `ログインコード：{{ .Token }}（60分間有効）`、件名「元素診断のログインコード」 | 未 |
-| 3 | Supabase担当 | 再読み取りで 1・2 の差分解消を確認 | 未 |
+| 1 | 人 | Authentication → Sign In / Providers → Email：Email OTP Length を 6 に | 済 |
+| 2 | 人 | Custom SMTP（Resend）設定、Magic Link / Confirm signup に `{{ .Token }}`、件名「元素診断のログインコード」 | 済 |
+| 3 | Supabase担当 | 再読み取りで 1・2 の差分解消を確認 | 済（2026-10-02） |
 | 4 | 人 | ブランチ名入り Preview URL で、チームメンバー宛てにメールOTP実機テスト（`docs/AUTH_PROVIDERS_SETUP.md` §5-3）。1時間2通まで、連打・再送しない | 未 |
 | 5 | 人 | X Developer Portal：OAuth 2.0 Web App、Callback `https://akivoobkqcnqvdumxtmg.supabase.co/auth/v1/callback`、Request email from users を有効、Client ID / Secret 発行 | 未 |
 | 6 | 人 | ダッシュボードで X / Twitter (OAuth 2.0) を有効化し ID/Secret を入力。`external_x_email_optional` は false のまま | 未 |
@@ -69,10 +70,16 @@ Preview は Vercel Authentication で保護されているため、アプリ内�
 
 Supabase のログイン復帰は同じホスト（ブランチ名入りURL）に戻るので続けてテストできる見込み。アプリ内ブラウザで Cookie が保たれるかは実機で確認する。
 
-## 6. 未解決・注意
+## 6. メール送信基盤（2026-10-02 決定）
+- 独自ドメイン `elementdiagnosis.com` を Vercel で取得（自動更新ON、次回 2027-10-02、年11.25ドル）。サイトURLには割り当てない（メール専用）。
+- Resend（Free、Tokyo）に `mail.elementdiagnosis.com` を登録。DNS（MX・SPF・DKIM）は Vercel DNS に自動設定済み、公開DNSで確認済み。
+- Resend API キーは Supabase SMTP パスワードにのみ設定（チャット・リポジトリには無い）。
+- 送信失敗（429・5xx）時は Google / X へ誘導する（`e1c7ac9`）。上限を超えても Google / X でログインできるため、Pro への移行は通数を見て判断。
+
+## 7. 未解決・注意
 - X がメールを返すか、同じメールの Google ユーザーに自動でまとまるかは実機で確認する（推測で実装を足さない）。
 - 別 user_id になった場合、履歴は元のアカウントに残る。購入権は診断コードのハッシュに紐づくので消えないが、マイページにはそのアカウントで保存した分しか出ない。
 - X アプリ内ブラウザでは Google がログインを拒否する可能性。メールOTPで代替できるかを確認する。
 - Preview は保護されているため、X のクローラーは OGP を取得できず、OGP 背景は円環表示になる。OGP は本番で確認する。
-- 一般公開前に Custom SMTP のサービス選定が必要（今回は導入しない）。
+- 公開前に、メール送信上限（30通/時）と Resend のプラン（Free は 1日100通・月3,000通）を見直す。
 - `scoring_version` が空の既存保存行は「未保存」と判定される。Preview の実データで確認が必要。
