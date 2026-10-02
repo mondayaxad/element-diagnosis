@@ -28,18 +28,23 @@
 4. Google と X が別々のアカウントに分かれている場合は、依頼者に「どのアカウントか／すべてか」を確認する。
 
 ## 3. 削除するもの
+外部キーの設定（2026-10-02 に Table Editor で確認）：
+
+```
+auth.users ──(profiles_id_fkey: ON DELETE CASCADE)──▶ public.profiles(id)
+public.profiles ──(diagnosis_sessions_user_id_fkey: ON DELETE CASCADE)──▶ public.diagnosis_sessions(user_id)
+```
+
+→ **Authentication → Users でユーザーを削除すると、`profiles`（お知らせ配信の同意）と `diagnosis_sessions`（診断記録）も自動で削除される。**
+（`diagnosis_answers`・`diagnosis_results` は `diagnosis_sessions` にぶら下がる。こちらの ON DELETE は未確認。初回の削除後に、該当 session の行が残っていないか Table Editor で確認する。）
+
 | 対象 | 場所 | 方法 |
 |---|---|---|
-| 診断記録 | `diagnosis_sessions`（と、それに紐づく `diagnosis_answers`・`diagnosis_results`） | ユーザー削除で一緒に消えるか（外部キーの ON DELETE）を **初回に一度確認**。消えない設定なら、ユーザー削除の前に user_id で該当行を削除する |
-| お知らせ配信の同意 | `profiles` | 同上（ユーザー削除で消えるか初回に確認） |
-| アカウント | Authentication → Users | 該当ユーザーの「…」→ Delete user |
+| アカウント・プロフィール・診断記録 | Authentication → Users | 該当ユーザーの「…」→ Delete user（上記の CASCADE で一括削除） |
 | お知らせ配信の登録 | Kit（Subscribers） | メールアドレスで検索し、**購読者を削除**（配信停止だけでなく削除） |
 | ログインコードの送信ログ | Resend | 一定期間で自動削除されるため対応不要 |
 
-### 初回だけ行う確認（外部キーの設定）
-Supabase の Table Editor で `diagnosis_sessions` と `profiles` の `user_id` 列の外部キー設定（auth.users への参照と ON DELETE）を確認し、結果をこの文書に追記する。
-- ON DELETE CASCADE なら、ユーザー削除で記録も消える。
-- それ以外（RESTRICT / SET NULL / 参照なし）なら、ユーザー削除の前に記録の削除が必要。削除の方法は、その時点で手順を追記してから行う。
+削除後の確認：Table Editor で `profiles` と `diagnosis_sessions` を User UID で絞り込み、行が残っていないこと。
 
 ## 4. 残すもの
 | 対象 | 理由 |

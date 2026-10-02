@@ -82,7 +82,7 @@ Supabase のログイン復帰は同じホスト（ブランチ名入りURL）�
 - アカウント削除は当面「メール／X DM で依頼 → 手動削除 ＋ Kit 購読者削除」で運用
 
 ## 7. 未解決・注意
-- 削除手順書の初回確認：`diagnosis_sessions` / `profiles` の user_id 外部キー（ON DELETE）を Table Editor で確認し、手順書に追記する。
+- 外部キー確認済み（2026-10-02）：auth.users →(CASCADE) profiles →(CASCADE) diagnosis_sessions。Users 削除で記録まで消える。answers/results 側は初回削除時に確認。
 - X ログインのテストで、X 側のメールが Google と一致せず、記録のない別アカウントが作られた。その X を Google のアカウントへ連携するには、先に Supabase の Users でその空アカウントを削除する（人の操作）。
 - `privacy.html` / `terms.html` は release-c-preview にのみ存在し、本番（main）では 404。X の登録に本番URLを使っているため、本番反映時に必ず含める。メールログイン・ログイン方法の連携についての追記も必要。
 - X の開発者プランは Pay Per Use。ログイン時のユーザー情報取得が課金対象か、残高0でログインが失敗しないかは要確認。
