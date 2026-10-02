@@ -40,7 +40,7 @@
 |---|---|---|
 | Site URL / Redirect URLs | ブランチ名入り Preview URL ＋ `/**` の1件 | OK（テストはブランチ名入りURLで） |
 | Google | 有効 | OK |
-| X (OAuth 2.0) | 無効・ID/Secret 空 | 要対応 |
+| X (OAuth 2.0) | 有効・ID/Secret 設定あり・email_optional false | OK（2026-10-02） |
 | Email provider | 有効・新規登録可 | OK |
 | OTP 桁数 | 6 | OK（2026-10-02 変更） |
 | OTP 有効期限 | 3600秒 | OK |
@@ -56,9 +56,9 @@
 | 2 | 人 | Custom SMTP（Resend）設定、Magic Link / Confirm signup に `{{ .Token }}`、件名「元素診断のログインコード」 | 済 |
 | 3 | Supabase担当 | 再読み取りで 1・2 の差分解消を確認 | 済（2026-10-02） |
 | 4 | 人 | ブランチ名入り Preview URL で、チームメンバー宛てにメールOTP実機テスト（`docs/AUTH_PROVIDERS_SETUP.md` §5-3）。1時間2通まで、連打・再送しない | 済（2026-10-02：メールOTPでログイン成功。Google で保存していたのと同じ記録が表示＝同一メールの identity が同じ user_id にまとまることを確認） |
-| 5 | 人 | X Developer Portal：OAuth 2.0 Web App、Callback `https://akivoobkqcnqvdumxtmg.supabase.co/auth/v1/callback`、Request email from users を有効、Client ID / Secret 発行 | 未 |
-| 6 | 人 | ダッシュボードで X / Twitter (OAuth 2.0) を有効化し ID/Secret を入力。`external_x_email_optional` は false のまま | 未 |
-| 7 | Supabase担当 | 再読み取りで X 有効を確認 | 未 |
+| 5 | 人 | X Developer Portal：OAuth 2.0 Web App、Callback `https://akivoobkqcnqvdumxtmg.supabase.co/auth/v1/callback`、Request email from users を有効、Client ID / Secret 発行 | 済（X Console のアプリ「Element Diagnosis Login」、Read、Request email ON、Web App。Privacy/Terms は本番URL `/privacy` `/terms` を登録＝現状 main 未反映で404） |
+| 6 | 人 | ダッシュボードで X / Twitter (OAuth 2.0) を有効化し ID/Secret を入力。`external_x_email_optional` は false のまま | 済（X OAuth 2.0 有効、email_optional false） |
+| 7 | Supabase担当 | 再読み取りで X 有効を確認 | 済（2026-10-02 再読み取りで確認） |
 | 8 | 人＋両セッション | 実機テスト（§5 全体）。Supabase担当は認証ログ、GitHub担当は Vercel のログで失敗原因を調べる | 未 |
 
 1・2・6 を API で自動化する場合は、Auth Config を Read and write にした PAT を別に作り API認証情報を差し替える。差分提示 → 承認 → PATCH の順。
@@ -77,6 +77,8 @@ Supabase のログイン復帰は同じホスト（ブランチ名入りURL）�
 - 送信失敗（429・5xx）時は Google / X へ誘導する（`e1c7ac9`）。上限を超えても Google / X でログインできるため、Pro への移行は通数を見て判断。
 
 ## 7. 未解決・注意
+- `privacy.html` / `terms.html` は release-c-preview にのみ存在し、本番（main）では 404。X の登録に本番URLを使っているため、本番反映時に必ず含める。メールログイン・ログイン方法の連携についての追記も必要。
+- X の開発者プランは Pay Per Use。ログイン時のユーザー情報取得が課金対象か、残高0でログインが失敗しないかは要確認。
 - X がメールを返すか、同じメールの Google ユーザーに自動でまとまるかは実機で確認する（推測で実装を足さない）。
 - 別 user_id になった場合、履歴は元のアカウントに残る。購入権は診断コードのハッシュに紐づくので消えないが、マイページにはそのアカウントで保存した分しか出ない。
 - X アプリ内ブラウザでは Google がログインを拒否する可能性。メールOTPで代替できるかを確認する。
