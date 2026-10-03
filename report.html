@@ -1087,8 +1087,8 @@ function pickStyleTags_Weapon_v3(weaponPrototype, styleDisplay) {
   return axes.map(function(ax) {
     var v = Math.round(styleDisplay[ax]);
     var plain = STYLE_PLAIN[ax], band = styleBand(v);
-    return { word: plain.power, formal: STYLE_LABEL[ax], pct: v, desc: STYLE_BASE_DESC[ax], sw: plain.sw[band],
-      why: STYLE_LABEL[ax] + '（' + ax + '）の実測値（' + v + '）から導かれています。' };
+    return { word: plain.power, pct: v, desc: STYLE_BASE_DESC[ax], sw: plain.sw[band],
+      why: '行動スタイルの実測値（' + v + '）から導かれています。' };
   });
 }
 // STYLE 5軸のわかりやすい説明と、実測値の高低ごとの強み・弱み（レポート専用。実測値の帯で選ぶだけで、推測値は作らない）
@@ -1121,6 +1121,17 @@ const STYLE_PLAIN = {
          lo:{ s:'人と力を合わせることで、一人では出せない成果を出せます。', ww:'依存', w:'一人で決める場面になると、不安を感じやすくなります。' } } },
 };
 function styleBand(v) { return v >= 60 ? 'hi' : (v <= 40 ? 'lo' : 'mid'); }
+// セクション冒頭の一言（何を測っているか）と、下に置く点数の基準
+function secIntro(text) { return `<p style="font-size:12px;color:#a3afba;line-height:1.85;margin:2px 0 14px">${text}</p>`; }
+function scoreScaleNote(hiText, midText, loText) {
+  return `<div style="font-size:10.5px;color:#7d8a96;margin-top:12px;line-height:1.8">数値は0〜100。<span style="color:#9fd0a0">60以上</span>＝${hiText}、<span style="color:#c8c0a0">41〜59</span>＝${midText}、<span style="color:#d8a070">40以下</span>＝${loText}として説明しています。</div>`;
+}
+// Big Five 各因子が何を表すか（平易な一言）
+const BIG5_PLAIN = {
+  O:'新しい考えや体験に、どれだけ心が開いているか', C:'計画を立て、決めたことをやり通す力',
+  E:'人との関わりや刺激から、どれだけ活力を得るか', A:'相手を思いやり、協力しようとする姿勢',
+  N:'気持ちの揺れやすさ、ストレスへの敏感さ',
+};
 function generateWhySimilarTextV2(top1, topEl, topW) {
   const points = [];
   if (top1.el === topEl) points.push('元素');
@@ -1267,9 +1278,10 @@ function styleDeepDiveSection(results, pal) {
     </div>`;
   }).join('');
   return `
+    ${secIntro('行動スタイルは、人や物事に向き合うときの「動き方」を、推進・調和・完遂・熟考・自律の5つで表したものです。')}
     <div style="background:#0e0c18;border-left:3px solid ${STYLE_COLOR[first]};border-radius:6px;padding:16px 18px;margin:6px 0 18px">${lead}</div>
     ${rows}
-    <div style="font-size:10.5px;color:#7d8a96;margin-top:10px;line-height:1.7">数値は0〜100。60以上を「強く出ている」、40以下を「控えめ」として説明しています。</div>`;
+    ${scoreScaleNote('強く出ている', '場面によって使い分けている', '控えめ')}`;
 }
 
 // ---------- 国家：なぜその国家になったか（価値観の実測値と国家の重なりを図で示す） ----------
@@ -1297,11 +1309,11 @@ function nationReasonSection(results) {
       <span style="width:30px;text-align:right;font-size:12px;font-weight:700;color:${i === 0 ? '#f0dca0' : '#8f9fb0'}">${n.score}</span>
     </div>`).join('');
   const userBars = userTop.map(ax => {
-    const val = Math.round(results.values[ax]), shared = proto[ax] > 0;
+    const val = Math.round(results.values[ax]);
     return `
     <div style="margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
-        <span style="font-size:12.5px;color:${col(ax)};font-weight:700">${label(ax)}${shared ? `<span style="font-size:10px;font-weight:400;color:#f0dca0;border:1px solid #c9a86066;border-radius:10px;padding:1px 7px;margin-left:8px">${topNat}も重視</span>` : ''}</span>
+        <span style="font-size:12.5px;color:${col(ax)};font-weight:700">${label(ax)}</span>
         <span style="font-size:12px;font-weight:700;color:${col(ax)}">${val}</span>
       </div>
       <div style="height:7px;background:#1a1626;border-radius:4px;overflow:hidden"><div style="width:${val}%;height:100%;border-radius:4px;background:linear-gradient(90deg, ${col(ax)}55, ${col(ax)} 65%, #ffffffcc)"></div></div>
@@ -1512,13 +1524,13 @@ function factorRingsSection(tags, palette) {
   const rings = tags.map((t,i) => `
     <div class="ring-item">
       ${ringChartSvg(t.pct, palette[i % palette.length])}
-      <div class="ringlabel">${t.word}${t.formal ? `<div style="font-size:9.5px;color:#7d8a96;margin-top:1px">${t.formal}</div>` : ''}</div>
+      <div class="ringlabel">${t.word}</div>
     </div>`).join('');
   const strengthRows = tags.map(t => `
     <div class="sw-row">
       <span class="sw-icon" style="color:#7fbf6a">✓</span>
       <div>
-        <div class="sw-title">${t.word}${t.formal ? `<span style="font-size:11px;font-weight:400;color:#7d8a96;margin-left:6px">${t.formal}</span>` : ''}</div>
+        <div class="sw-title">${t.word}</div>
         <div class="sw-desc">${t.sw.s}<br><span style="color:#5a4d75;font-size:10.5px">${t.why}</span></div>
       </div>
     </div>`).join('');
@@ -1649,7 +1661,12 @@ function renderFullReport(root, results, diagnosisCode) {
           <rect x="0" y="0" width="${big5[k]}%" height="6" rx="3" fill="url(#${gradId})"/>
         </svg>
       </div>
-      <div class="bar-note">${big5[k]>=50?BIG5[k].high:BIG5[k].low}</div>
+      <div style="font-size:11px;color:#8f9fb0;margin-top:6px">${BIG5_PLAIN[k]}</div>
+      <div class="bar-note" style="color:#b8c4cc;margin-top:3px">${big5[k] >= 60
+        ? `<span style="color:#9fd0a0">高め</span> — ${BIG5[k].high}の傾向がはっきり出ています。`
+        : big5[k] <= 40
+          ? `<span style="color:#d8a070">低め</span> — ${BIG5[k].low}の傾向が出ています。`
+          : `<span style="color:#c8c0a0">中間</span> — 「${BIG5[k].high.split('・')[0]}」と「${BIG5[k].low.split('・')[0]}」のどちらにも偏らず、場面で使い分けます。`}</div>
     </div>`;
   }).join('');
 
@@ -1785,8 +1802,10 @@ function renderFullReport(root, results, diagnosisCode) {
       <div class="sec" style="border-color:#c9a86040">
         <div class="eyebrow">TEN BASIC VALUES</div>
         <div class="sec-title" style="font-size:14px;color:#e0c890">価値観プロファイル（10次元）</div>
+        ${secIntro('あなたが何を大切にして選ぶかを、10の価値の重みで表しています。外側に広がっている価値ほど、判断のときに強く働いています。')}
         <div style="margin:12px 0 8px">${schwartzRadar(schwartzScores, 240)}</div>
         ${schwartzStrengthWeakness(schwartzScores)}
+        ${scoreScaleNote('強く大切にしている', 'ほどほどに大切にしている', 'あまり重視していない')}
       </div>
 
       <div class="sec" style="border-color:${pal.p}35">
@@ -1811,7 +1830,9 @@ function renderFullReport(root, results, diagnosisCode) {
       <div class="sec" style="border-color:${pal.p}35">
         <div class="sec-no">04</div>
         <div class="sec-title" style="color:${pal.light}">気質のデータ — Big Five 5因子</div>
+        ${secIntro('Big Fiveは、性格を5つの基本的な側面から測る、心理学でもっとも広く使われている枠組みです。')}
         ${barsHtml}
+        ${scoreScaleNote('その傾向がはっきり出ている', 'どちらにも偏らない', '反対側の傾向が出ている')}
       </div>
 
       <div class="sec" style="border-color:${pal.p}35">
