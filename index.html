@@ -955,6 +955,21 @@ function lockBadge(c) {
 }
 // 暗い背景で読める文字色（元素・武器の固有色を少し明るくする）
 function rxText(c) { return `color-mix(in srgb, ${c} 66%, #ffffff)`; }
+// 類似度ゲージ（項目別）：[ラベル, 値(0-100), 色]。バーは暗い同系色から明るい色へのグラデーション
+function similarityGauges(items) {
+  return `<div style="display:flex;flex-direction:column;gap:9px;margin:14px 0 2px">${items.map(([label, v, c]) => {
+    const w = Math.max(0, Math.min(100, Math.round(v)));
+    return `<div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+        <span style="font-size:11px;letter-spacing:.5px;color:var(--rx-secondary)">${label}</span>
+        <span style="font-size:12px;font-weight:700;color:color-mix(in srgb, ${c} 55%, #ffffff)">${w}<span style="font-size:9.5px;font-weight:400;margin-left:1px">%</span></span>
+      </div>
+      <div style="height:7px;background:#14121f;border-radius:4px;overflow:hidden;box-shadow:inset 0 0 0 1px #ffffff0a">
+        <div style="width:${w}%;height:100%;border-radius:4px;background:linear-gradient(90deg, color-mix(in srgb, ${c} 45%, #0c0a14), ${c} 70%, color-mix(in srgb, ${c} 60%, #ffffff));box-shadow:0 0 8px ${c}55"></div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
 // 本文の冒頭語（元素名・武器名・国家名）を固有色で強調する
 function rxLead(text, word, color) {
   return text.indexOf(word) === 0 ? `<strong style="color:${color};font-weight:700">${word}</strong>` + text.slice(word.length) : text;
@@ -991,7 +1006,7 @@ function generateWhySimilarText(top1, topEl, topW, et) {
   let matchLine = points.length
     ? `特に<strong style="color:var(--rx-primary)">${points.join('・')}が、あなたと完全に一致</strong>しています。`
     : `元素・武器の型は異なりますが、性質の根であるBig Fiveのスコアが強く重なっています。`;
-  return `${top1.name}との一致度は<strong style="color:var(--rx-primary);font-size:13px">${top1.match}%</strong>。${matchLine}表面的な共通点ではなく、気質を形づくる複数の層が、同じ方向を指しているために起きる重なりです<span style="color:var(--rx-tertiary);font-size:11px">（Big Five類似度：${top1.big5Sim}%）</span>。`;
+  return `${top1.name}との一致度は<strong style="color:var(--rx-primary);font-size:13px">${top1.match}%</strong>。${matchLine}表面的な共通点ではなく、気質を形づくる複数の層が、同じ方向を指しているために起きる重なりです。`;
 }
 
 
@@ -1052,7 +1067,7 @@ function generateWhySimilarTextV2(top1, topEl, topW) {
   let matchLine = points.length
     ? `特に<strong style="color:var(--rx-primary)">${points.join('・')}が、あなたと完全に一致</strong>しています。`
     : `元素・武器の型は異なりますが、性格・行動スタイル・価値観の複数の層が、同じ方向を指しているために起きる重なりです。`;
-  return `${top1.name}との一致度は<strong style="color:var(--rx-primary);font-size:13px">${top1.match}%</strong>。${matchLine}<span style="color:var(--rx-tertiary);font-size:11px">（性格類似度：${top1.personalitySim}%・行動スタイル類似度：${top1.styleSim}%・価値観類似度：${top1.valuesSim}%）</span>`;
+  return `${top1.name}との一致度は<strong style="color:var(--rx-primary);font-size:13px">${top1.match}%</strong>。${matchLine}`;
 }
 // 近しいキャラクターの4つ目のバッジ（v1のエニアグラム表示に相当）。
 // そのキャラクター自身の実測STYLEの最上位軸から、詩的タグを1つ表示する。
@@ -2179,7 +2194,7 @@ function renderResult(root) {
               <div>${rxLead(ELEMENT_DESC[topEl], topEl, elT)}</div>
               <div style="font-size:10.5px;letter-spacing:1.5px;color:${wT};margin:14px 0 3px">関わり方｜${topW}</div>
               <div>${rxLead(WEAPON_DESC[topW], topW, wT)}</div>
-              <div style="margin-top:10px;color:var(--rx-primary)">この二つが重なる時、「<strong style="font-weight:700">${typeName(topEl,topW)}</strong>」という人物像が立ち上がります。</div>
+              <div style="margin-top:10px;color:var(--rx-primary)">この二つが重なる時、「<strong style="font-weight:700;color:${elT}">${typeName(topEl,topW)}</strong>」という人物像が立ち上がります。</div>
               <div style="font-size:10.5px;letter-spacing:1.5px;color:${natT};margin:14px 0 3px">価値観｜${topNat}</div>
               <div>${topNat}は<strong style="color:${natT}">「${NATION_MEANING[topNat]}」</strong>を大切にする国家です。${NATION_DESC[topNat]}</div>
             </div>
@@ -2195,7 +2210,7 @@ function renderResult(root) {
         <div style="font-size:11px;letter-spacing:3px;color:#6a90b0;text-transform:uppercase;margin-bottom:12px">最も近しいキャラクター</div>
         <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
           <div>
-            <div style="font-size:30px;font-weight:700;color:${ELEMENTS[top1.el].color};line-height:1.1">${top1.name}</div>
+            <div style="font-size:30px;font-weight:700;color:${ELEMENTS[top1.el].color};line-height:1.2;display:inline-block;padding-right:2px;background:linear-gradient(90deg, color-mix(in srgb, ${ELEMENTS[top1.el].color} 72%, #ffffff), ${ELEMENTS[top1.el].color} 55%, color-mix(in srgb, ${WEAPONS[top1.w].color} 75%, #ffffff));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${top1.name}</div>
             <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
               <span style="background:${ELEMENTS[top1.el].color}22;border:1px solid ${ELEMENTS[top1.el].color}55;color:${ELEMENTS[top1.el].color};font-size:11px;padding:2px 8px;border-radius:3px">${top1.el}</span>
               <span style="background:${WEAPONS[top1.w].color}22;border:1px solid ${WEAPONS[top1.w].color}55;color:${WEAPONS[top1.w].color};font-size:11px;padding:2px 8px;border-radius:3px">${top1.w}</span>
@@ -2224,7 +2239,7 @@ function renderResult(root) {
                 <span style="color:#5a80a0;font-size:10px">${ELEMENTS[e.element].axis}</span>
               </span>
               <div style="background:#0a0a14;height:6px;border-radius:3px;overflow:hidden;margin-top:4px">
-                <div style="background:${ELEMENTS[e.element].color};width:${n}%;height:100%;border-radius:3px;opacity:${i===0?1:0.55}"></div>
+                <div style="background:linear-gradient(90deg, color-mix(in srgb, ${ELEMENTS[e.element].color} 50%, #0a0a14), ${ELEMENTS[e.element].color} 65%, color-mix(in srgb, ${ELEMENTS[e.element].color} 60%, #ffffff));width:${n}%;height:100%;border-radius:3px;opacity:${i===0?1:0.7}"></div>
               </div>
             </div>`;
         }).join('')}
@@ -2298,6 +2313,9 @@ function renderResult(root) {
           <p style="color:var(--rx-secondary);font-size:12px;line-height:1.95;margin:0 0 4px">
             ${whySimilarText}
           </p>
+          ${diagnosisVersion === 'ETI-2.0'
+            ? similarityGauges([['性格類似度', top1.personalitySim, '#b48ad8'], ['行動スタイル類似度', top1.styleSim, '#dcae5a'], ['価値観類似度', top1.valuesSim, '#5cc4b0']])
+            : similarityGauges([['性格類似度（Big Five）', top1.big5Sim, '#b48ad8']])}
 
           <div style="height:1px;background:#182838;margin:18px 0"></div>
 
