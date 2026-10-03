@@ -2452,7 +2452,19 @@ function renderResult(root) {
                 style="width:100%;background:${wC};border:none;color:#fff;border-radius:8px;padding:13px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
                 傾向のロックを解除
               </button>
-              ${reportPreviewCard(wC, `${topEl}×${topW}の判定根拠`, '判定根拠',
+              ${diagnosisVersion === 'ETI-2.0'
+                ? reportPreviewCard(wC, 'STYLE｜行動スタイル5軸', 'スタイル',
+                  `<div style="display:flex;flex-direction:column;gap:10px">
+                    <div style="margin-bottom:4px">${radarChart(ETI_V2_META.styleAxes.map(ax => STYLE_LABEL[ax]), ETI_V2_META.styleAxes.map(ax => results.style[ax]), wC, 150)}</div>
+                    ${rankStyleAxes(results.style).map(r => `
+                    <div>
+                      <div style="display:flex;justify-content:space-between;font-size:10.5px;margin-bottom:3px"><span style="color:#b6c4bc">${STYLE_LABEL[r.axis]} — ${r.axis}</span><span style="color:${wC};font-weight:700">${Math.round(r.score)}</span></div>
+                      <div style="height:6px;background:#151120;border-radius:3px;overflow:hidden"><div style="width:${Math.round(r.score)}%;height:100%;border-radius:3px;background:linear-gradient(90deg, color-mix(in srgb, ${wC} 50%, #0c0a14), ${wC})"></div></div>
+                      <div style="font-size:9.5px;color:#6a95b8;line-height:1.6;margin-top:4px">${STYLE_BASE_DESC[r.axis]}</div>
+                    </div>`).join('')}
+                    <div style="font-size:10px;color:#6a95b8;margin-top:2px">5軸それぞれの実測値と、日常のどんな場面で強く出るかを、フルレポートで解説しています。</div>
+                  </div>`)
+                : reportPreviewCard(wC, `${topEl}×${topW}の判定根拠`, '判定根拠',
                 `<div style="font-size:11.5px;color:#a8ccec;line-height:1.9">
                   ${ELEMENT_DESC[topEl]}<br><br>
                   ${WEAPON_DESC[topW]}<br><br>
