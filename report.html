@@ -1047,8 +1047,8 @@ const STYLE_POETIC_TAG = {
   REF:'思索を介す眼差し', AUT:'距離を守る自律',
 };
 const STYLE_WEAPON_TAG = {
-  AGY:'自ら切り拓く力', REL:'関係に応じる力', ROL:'守り抜く力',
-  REF:'意味を編む力', AUT:'距離から届く力',
+  AGY:'推進', REL:'調和', ROL:'完遂',
+  REF:'熟考', AUT:'自律',
 };
 const STYLE_BASE_DESC = {
   AGY:'誰かの合図を待つより、自ら最初の一歩を選ぶ人です。',
@@ -1085,9 +1085,42 @@ function pickStyleTags_Weapon(weaponPrototype, styleDisplay) {
 function pickStyleTags_Weapon_v3(weaponPrototype, styleDisplay) {
   var axes = pickStyleTags_Weapon(weaponPrototype, styleDisplay);
   return axes.map(function(ax) {
-    return { word: STYLE_WEAPON_TAG[ax], pct: Math.round(styleDisplay[ax]), desc: STYLE_BASE_DESC[ax] };
+    var v = Math.round(styleDisplay[ax]);
+    var plain = STYLE_PLAIN[ax], band = styleBand(v);
+    return { word: plain.power, formal: STYLE_LABEL[ax], pct: v, desc: STYLE_BASE_DESC[ax], sw: plain.sw[band],
+      why: STYLE_LABEL[ax] + '（' + ax + '）の実測値（' + v + '）から導かれています。' };
   });
 }
+// STYLE 5軸のわかりやすい説明と、実測値の高低ごとの強み・弱み（レポート専用。実測値の帯で選ぶだけで、推測値は作らない）
+const STYLE_COLOR = { AGY:'#e0805a', REL:'#5fb8a0', ROL:'#d4ad5a', REF:'#9a86e0', AUT:'#6aa4dc' };
+const STYLE_PLAIN = {
+  AGY: { power:'推進',
+    hi:'指示や合図を待たずに、自分で決めて動き始めることが多いタイプです。', mid:'自分から動く場面と、周りに合わせて動く場面を使い分けています。', lo:'まず周りの状況や相手の出方を見てから動く、慎重なタイプです。',
+    sw:{ hi:{ s:'迷っている場に最初の一歩を示し、物事を前に進められます。', ww:'先走り', w:'周りの準備が整う前に動き出し、置いていかれる人が出ることがあります。' },
+         mid:{ s:'状況に応じて、引っ張る役と支える役のどちらにも回れます。', ww:'様子見の長さ', w:'動くべきか迷っているうちに、タイミングを逃すことがあります。' },
+         lo:{ s:'状況を見極めてから動くため、無駄な衝突や失敗を避けられます。', ww:'受け身', w:'きっかけを待つうちに、自分の意見を出す機会を逃しがちです。' } } },
+  REL: { power:'調和',
+    hi:'場の空気や相手の気持ちを読み、関係がうまくいくように自然と調整します。', mid:'必要なときには相手に合わせ、そうでないときは自分のやり方を通します。', lo:'関係の調整より、内容や自分のやり方を優先する傾向があります。',
+    sw:{ hi:{ s:'人と人のあいだを取り持ち、チームの雰囲気を安定させられます。', ww:'気疲れ', w:'相手に合わせすぎて、自分の本音を後回しにしやすくなります。' },
+         mid:{ s:'協調と主張のバランスが取れ、どんな相手とも関係を築けます。', ww:'立ち位置の揺れ', w:'場面ごとに態度が変わり、本心が伝わりにくいことがあります。' },
+         lo:{ s:'空気に流されず、言うべきことをはっきり伝えられます。', ww:'摩擦', w:'言い方や順序への配慮が足りず、誤解を生むことがあります。' } } },
+  ROL: { power:'完遂',
+    hi:'一度引き受けたことは、最後までやり遂げようとします。', mid:'責任は果たしつつ、状況が変われば役割の持ち方も見直します。', lo:'役割に縛られず、状況に応じてやり方を柔軟に変えます。',
+    sw:{ hi:{ s:'責任感が強く、周りから安心して任せてもらえます。', ww:'抱え込み', w:'役目を手放せず、無理をしてでも続けてしまうことがあります。' },
+         mid:{ s:'続ける力と切り替える力の両方を持ち、長く安定して働けます。', ww:'中途の迷い', w:'続けるか手放すかの判断に、時間がかかることがあります。' },
+         lo:{ s:'変化に強く、新しいやり方へすばやく切り替えられます。', ww:'継続の弱さ', w:'飽きや状況の変化で、途中で手を離しやすくなります。' } } },
+  REF: { power:'熟考',
+    hi:'すぐ行動するより、まず考えたり言葉にしたりしてから動きます。', mid:'考えることと動くことを、場面に合わせて行き来します。', lo:'考えるより先に、実際に動いて確かめるタイプです。',
+    sw:{ hi:{ s:'物事の意味や仕組みを整理し、筋の通った判断ができます。', ww:'考えすぎ', w:'考える時間が長く、動き出しが遅れることがあります。' },
+         mid:{ s:'考えすぎず、動きすぎず、ほどよい速さで判断できます。', ww:'中途半端さ', w:'深く考えるべき場面でも、早めに結論を出してしまうことがあります。' },
+         lo:{ s:'行動が早く、試しながら答えを見つけられます。', ww:'見切り発車', w:'準備や確認が足りないまま進め、やり直しが増えることがあります。' } } },
+  AUT: { power:'自律',
+    hi:'人と適度な距離を保ち、自分のペースで物事を進めます。', mid:'人と一緒に進める時間と、一人で進める時間の両方を大切にします。', lo:'人と近い距離で、一緒に進めることを好みます。',
+    sw:{ hi:{ s:'周りに流されず、自分の判断で落ち着いて進められます。', ww:'距離の取りすぎ', w:'頼ることが苦手で、困りごとを一人で抱えがちです。' },
+         mid:{ s:'協力と自立を使い分け、どんな体制でも力を出せます。', ww:'ペースの揺れ', w:'周りに合わせるか自分を通すかで、疲れがたまることがあります。' },
+         lo:{ s:'人と力を合わせることで、一人では出せない成果を出せます。', ww:'依存', w:'一人で決める場面になると、不安を感じやすくなります。' } } },
+};
+function styleBand(v) { return v >= 60 ? 'hi' : (v <= 40 ? 'lo' : 'mid'); }
 function generateWhySimilarTextV2(top1, topEl, topW) {
   const points = [];
   if (top1.el === topEl) points.push('元素');
@@ -1125,15 +1158,28 @@ function buildOverviewSection_v3_V2(results, pal) {
   const topFactors = Object.keys(big5)
     .sort((a,b)=>Math.abs(big5[b]-50)-Math.abs(big5[a]-50)).slice(0,2);
   const f1 = topFactors[0], f2 = topFactors[1];
-  const styleCore = buildStyleCoreText(results.style);
-
-  const lead = `${styleCore}気質のデータからは、${BIG5[f1].name}（${big5[f1]}）と${BIG5[f2].name}（${big5[f2]}）が突出しており、この2つの軸が、行動を実際の場面に変換する回路として働いています。さらに、価値観の軸では${topNat}が最も強く現れており、${NATION_DESC[topNat]}という指向が、日々の選択の基準になっています。PERSONALITYが「どう動くか」を、STYLEが「どう行動へ表すか」を、VALUESが「何を大切にして選ぶか」を、それぞれ規定しています。この3つの層が同じ方向を向いているとき、あなたは最も自分らしく動けます。逆に、層同士がねじれる場面では、迷いや葛藤が生まれやすくなります。`;
-
+  const ranked = rankStyleAxes(results.style);
+  const s1 = ranked[0].axis, s2 = ranked[1].axis;
+  const C = { p:'#b48ad8', s:'#dcae5a', v:'#5cc4b0' };
+  const b5 = f => `<strong style="color:${C.p}">${BIG5[f].name}</strong><span style="color:#8f9fb0;font-size:11.5px">（${big5[f]}・${big5[f] >= 50 ? BIG5[f].high : BIG5[f].low}）</span>`;
+  const st = ax => `<strong style="color:${STYLE_COLOR[ax]}">「${STYLE_PLAIN[ax].power}」</strong><span style="color:#8f9fb0;font-size:11.5px">（${STYLE_LABEL[ax]}）</span>`;
+  const row = (color, tag, title, body) => `
+    <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #1c1830">
+      <span style="flex-shrink:0;width:4px;border-radius:2px;background:${color}"></span>
+      <div>
+        <div style="font-size:10.5px;letter-spacing:1.5px;color:${color};margin-bottom:3px">${tag}<span style="color:#8f9fb0;letter-spacing:0;margin-left:8px">${title}</span></div>
+        <div style="font-size:12.5px;color:#c8d0d8;line-height:1.9">${body}</div>
+      </div>
+    </div>`;
   return `
     <div class="overview-box" style="border-color:${pal.p}40">
-      <p class="lead">${lead}</p>
+      ${row(C.p, 'PERSONALITY', 'どう感じ、どう動くか', `気質のデータでは、${b5(f1)}と${b5(f2)}が突出しています。この2つが、あなたの反応の土台です。`)}
+      ${row(C.s, 'STYLE', 'どう行動へ表すか', `行動では${st(s1)}がいちばん強く、${st(s2)}がそれに続きます。${STYLE_PLAIN[s1][styleBand(Math.round(results.style[s1]))]}`)}
+      ${row(C.v, 'VALUES', '何を大切にして選ぶか', `価値観は<strong style="color:#f0dca0">${topNat}</strong>にもっとも近く、「<strong style="color:#f0dca0">${REPORT_NATION_MEANING[topNat] || ''}</strong>」が日々の選択の基準になっています。`)}
+      <p style="font-size:13.5px;color:#eef4ee;line-height:1.95;margin:16px 0 0;padding:12px 14px;border-radius:8px;background:linear-gradient(90deg,${pal.p}22,transparent)">この3つの層が<strong style="color:${pal.light}">同じ方向を向いているとき</strong>、あなたは最も自分らしく動けます。逆に、層同士がねじれる場面では、迷いや葛藤が生まれやすくなります。</p>
     </div>`;
 }
+
 // シュワルツ10次元スコア：v2はVALUES(SD/ST/HE/AC/PO/SE/CO/TR/BE/UN)の実測値を
 // 日本語ラベルへ直接対応させる（v1のように国家スコアから近似する必要がない）。
 const SCHWARTZ_AXIS_CODE = {
@@ -1186,44 +1232,96 @@ function computeResultsV2ForUI(answersByItemId, encodedCode) {
   return vm;
 }
 
-// v2用リング表示：Enneagramの強み/弱み構造(sw)を持たないため、factorRingsSectionは使わず、
-// リング＋実測値＋基本解釈文だけのシンプルな構成にする（捏造した強み/弱みを追加しない）。
-function styleFactorRingsSection(tagsV2, palette) {
-  const rings = tagsV2.map((t,i) => `
-    <div class="ring-item">
-      ${ringChartSvg(t.pct, palette[i % palette.length])}
-      <div class="ringlabel">${t.word}</div>
-    </div>`).join('');
-  const descRows = tagsV2.map(t => `
-    <div class="sw-row">
-      <span class="sw-icon" style="color:#7fbf6a">●</span>
-      <div>
-        <div class="sw-title">${t.word}</div>
-        <div class="sw-desc">${t.desc}</div>
-      </div>
-    </div>`).join('');
-  return `
-    <div class="ring-grid">${rings}</div>
-    <div class="sw-list">${descRows}</div>`;
-}
 // 「行動スタイルの深層 — STYLE」セクション本体：5軸全ての正式名称・実測値・説明を表示する
 // （上位3軸への切り詰めをしない）。CORE/FEAR/DESIREやウィング・成長/分裂方向に相当する
 // v2固有の概念は存在しないため作らない。
 function styleDeepDiveSection(results, pal) {
   const ranked = rankStyleAxes(results.style);
-  const rows = ranked.map(r => `
+  const v = ax => Math.round(results.style[ax]);
+  const first = ranked[0].axis, second = ranked[1].axis, last = ranked[ranked.length - 1].axis;
+  const em = (ax, text) => `<strong style="color:${STYLE_COLOR[ax]};font-weight:700">${text}</strong>`;
+  // いちばん低い軸：数値の帯に合わせて言い方を変える（高い値を「控えめ」と呼ばない）
+  const lastBand = styleBand(v(last)), lastName = em(last, '「' + STYLE_PLAIN[last].power + '」');
+  const lastLine = lastBand === 'lo'
+    ? `いちばん控えめなのは${lastName}（${v(last)}）で、${STYLE_PLAIN[last].lo}`
+    : lastBand === 'mid'
+      ? `5軸の中でいちばん数値が低いのは${lastName}（${v(last)}）で、${STYLE_PLAIN[last].mid}`
+      : `いちばん数値が低い${lastName}（${v(last)}）も高めで、5軸すべてがしっかり出ています。`;
+  const lead = `
+    <p style="font-size:13.5px;color:#e8eef0;line-height:1.95;margin:0 0 8px">あなたの行動でいちばん強く出ているのは${em(first, '「' + STYLE_PLAIN[first].power + '」')}<span style="color:#8f9fb0;font-size:11.5px">（${STYLE_LABEL[first]} ${v(first)}）</span>、次に${em(second, '「' + STYLE_PLAIN[second].power + '」')}<span style="color:#8f9fb0;font-size:11.5px">（${STYLE_LABEL[second]} ${v(second)}）</span>です。</p>
+    <p style="font-size:12.5px;color:#b8c4cc;line-height:1.95;margin:0">${STYLE_PLAIN[first][styleBand(v(first))]}${STYLE_PLAIN[second][styleBand(v(second))]}${lastLine}</p>`;
+  const rows = ranked.map(r => {
+    const c = STYLE_COLOR[r.axis], val = Math.round(r.score), gid = 'styg' + r.axis;
+    return `
     <div class="bar-block">
-      <div class="bar-top"><span class="label">${STYLE_LABEL[r.axis]} — ${r.axis}</span><span class="val" style="color:${pal.p}">${Math.round(r.score)}</span></div>
+      <div class="bar-top"><span class="label"><span style="color:#eef4ee">${STYLE_PLAIN[r.axis].power}</span><span style="color:#7d8a96;font-size:11px;margin-left:6px">${STYLE_LABEL[r.axis]} — ${r.axis}</span></span><span class="val" style="color:${c}">${val}</span></div>
       <div class="bar-track">
-        <svg width="100%" height="6" style="display:block"><rect x="0" y="0" width="${Math.round(r.score)}%" height="6" rx="3" fill="${pal.p}"/></svg>
+        <svg width="100%" height="6" style="display:block">
+          <defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="${c}" stop-opacity="0.35"/><stop offset="60%" stop-color="${c}"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0.85"/>
+          </linearGradient></defs>
+          <rect x="0" y="0" width="${val}%" height="6" rx="3" fill="url(#${gid})"/>
+        </svg>
       </div>
-      <div class="bar-note">${STYLE_BASE_DESC[r.axis]}</div>
-    </div>`).join('');
+      <div class="bar-note" style="color:#a3afba">${STYLE_PLAIN[r.axis][styleBand(val)]}</div>
+    </div>`;
+  }).join('');
   return `
-    <div style="text-align:center;margin:6px 0 16px">
-      <div style="font-size:14px;color:${pal.light};line-height:1.9">${buildStyleCoreText(results.style)}</div>
-    </div>
-    ${rows}`;
+    <div style="background:#0e0c18;border-left:3px solid ${STYLE_COLOR[first]};border-radius:6px;padding:16px 18px;margin:6px 0 18px">${lead}</div>
+    ${rows}
+    <div style="font-size:10.5px;color:#7d8a96;margin-top:10px;line-height:1.7">数値は0〜100。60以上を「強く出ている」、40以下を「控えめ」として説明しています。</div>`;
+}
+
+// ---------- 国家：なぜその国家になったか（価値観の実測値と国家の重なりを図で示す） ----------
+const REPORT_NATION_MEANING = { "モンド":"自由", "璃月":"契約", "稲妻":"永遠", "スメール":"知恵", "フォンテーヌ":"正義", "ナタ":"戦争", "スネージナヤ":"慈愛", "ナドクライ":"月光" };
+function nationReasonSection(results) {
+  const axes = ETI_V2_META.valueAxes;
+  const codeToLabel = {}; Object.keys(SCHWARTZ_AXIS_CODE).forEach(l => { codeToLabel[SCHWARTZ_AXIS_CODE[l]] = l; });
+  const topNat = results.nationScores[0].nation;
+  const center = obj => { const m = axes.reduce((a, ax) => a + obj[ax], 0) / axes.length; const o = {}; axes.forEach(ax => { o[ax] = obj[ax] - m; }); return o; };
+  const user = center(results.values), proto = center(NATION_PROTOTYPES_V2[topNat]);
+  // 国家が重んじる価値（プロトタイプで平均より高い上位3）と、あなたが強く持つ価値（平均より高い上位3）
+  const natTop = axes.slice().sort((a, b) => proto[b] - proto[a]).slice(0, 3);
+  const userTop = axes.slice().sort((a, b) => results.values[b] - results.values[a]).slice(0, 3);
+  // 決め手：あなたと国家の両方で平均より高い価値のうち、重なりの大きい順
+  const overlap = list => list.filter(ax => user[ax] > 0 && proto[ax] > 0).sort((a, b) => user[b] * proto[b] - user[a] * proto[a]).slice(0, 2);
+  const keys = overlap(userTop).length ? overlap(userTop) : overlap(axes);
+  const label = ax => codeToLabel[ax];
+  const col = ax => SCHWARTZ_VALUE[label(ax)] || '#c9a860';
+  const chip = ax => `<strong style="color:${col(ax)}">${label(ax)}</strong>`;
+  const near = results.nationScores.slice(0, 4);
+  const nearBars = near.map((n, i) => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <span style="width:84px;font-size:12px;color:${i === 0 ? '#f0dca0' : '#a3afba'};font-weight:${i === 0 ? 700 : 400}">${n.nation}</span>
+      <div style="flex:1;height:8px;background:#1a1626;border-radius:4px;overflow:hidden"><div style="width:${n.score}%;height:100%;border-radius:4px;background:${i === 0 ? 'linear-gradient(90deg,#6a5428,#c9a860 60%,#f4e2b0)' : 'linear-gradient(90deg,#2a2638,#5a5470)'}"></div></div>
+      <span style="width:30px;text-align:right;font-size:12px;font-weight:700;color:${i === 0 ? '#f0dca0' : '#8f9fb0'}">${n.score}</span>
+    </div>`).join('');
+  const userBars = userTop.map(ax => {
+    const val = Math.round(results.values[ax]), shared = proto[ax] > 0;
+    return `
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+        <span style="font-size:12.5px;color:${col(ax)};font-weight:700">${label(ax)}${shared ? `<span style="font-size:10px;font-weight:400;color:#f0dca0;border:1px solid #c9a86066;border-radius:10px;padding:1px 7px;margin-left:8px">${topNat}も重視</span>` : ''}</span>
+        <span style="font-size:12px;font-weight:700;color:${col(ax)}">${val}</span>
+      </div>
+      <div style="height:7px;background:#1a1626;border-radius:4px;overflow:hidden"><div style="width:${val}%;height:100%;border-radius:4px;background:linear-gradient(90deg, ${col(ax)}55, ${col(ax)} 65%, #ffffffcc)"></div></div>
+    </div>`;
+  }).join('');
+  const gap = near.length > 1 ? near[0].score - near[1].score : null;
+  const reason = keys.length
+    ? `あなたが強く持つ価値のうち、${keys.map(chip).join('と')}は、${topNat}がもっとも大切にする価値（${natTop.map(chip).join('・')}）と重なっています。この重なりが、${topNat}を選んだ<strong style="color:#f0dca0">決め手</strong>です。`
+    : `${topNat}がもっとも大切にする価値（${natTop.map(chip).join('・')}）と、あなたの価値観全体の傾き方が、8国家の中でいちばん近い形をしています。`;
+  return `
+    <div style="background:#100c1a;border:1px solid #c9a86040;border-radius:10px;padding:18px 16px;margin:16px 0">
+      <div style="font-size:10.5px;letter-spacing:2px;color:#c9a860;margin-bottom:6px">WHY ${topNat}</div>
+      <div style="font-size:15px;font-weight:700;color:#f0dca0;margin-bottom:12px">なぜあなたは${topNat}なのか</div>
+      <div style="font-size:11px;color:#8f9fb0;margin-bottom:8px">国家との近さ（上位4国）</div>
+      ${nearBars}
+      ${gap != null ? `<div style="font-size:11px;color:#8f9fb0;margin:2px 0 16px">2位の${near[1].nation}とは<strong style="color:#e8eef0">${gap}ポイント差</strong>です。</div>` : ''}
+      <div style="font-size:11px;color:#8f9fb0;margin-bottom:8px">あなたが強く持つ価値（上位3）</div>
+      ${userBars}
+      <p style="font-size:12.5px;color:#c8d0d8;line-height:1.95;margin:12px 0 0">${topNat}は「<strong style="color:#f0dca0">${REPORT_NATION_MEANING[topNat] || ''}</strong>」を体現する国家です。${reason}</p>
+    </div>`;
 }
 
 const ELEMENT_PALETTE = {
@@ -1414,13 +1512,13 @@ function factorRingsSection(tags, palette) {
   const rings = tags.map((t,i) => `
     <div class="ring-item">
       ${ringChartSvg(t.pct, palette[i % palette.length])}
-      <div class="ringlabel">${t.word}</div>
+      <div class="ringlabel">${t.word}${t.formal ? `<div style="font-size:9.5px;color:#7d8a96;margin-top:1px">${t.formal}</div>` : ''}</div>
     </div>`).join('');
   const strengthRows = tags.map(t => `
     <div class="sw-row">
       <span class="sw-icon" style="color:#7fbf6a">✓</span>
       <div>
-        <div class="sw-title">${t.word}</div>
+        <div class="sw-title">${t.word}${t.formal ? `<span style="font-size:11px;font-weight:400;color:#7d8a96;margin-left:6px">${t.formal}</span>` : ''}</div>
         <div class="sw-desc">${t.sw.s}<br><span style="color:#5a4d75;font-size:10.5px">${t.why}</span></div>
       </div>
     </div>`).join('');
@@ -1673,14 +1771,14 @@ function renderFullReport(root, results, diagnosisCode) {
       <div class="sec" style="border-color:${pal.p}35">
         <div class="eyebrow">CONNECTING FACTORS</div>
         <div class="sec-title" style="font-size:14px;color:${pal.light}">あなたの武器種（行動）特性</div>
-        ${diagnosisVersion === 'ETI-2.0' ? styleFactorRingsSection(tagsWeapon, PALETTE) : factorRingsSection(tagsWeapon, PALETTE)}
+        ${factorRingsSection(tagsWeapon, PALETTE)}
       </div>
 
       <div class="sec" style="border-color:#c9a86040">
         <div class="sec-no">02</div>
         <div class="sec-title" style="color:#e0c890">国家 — ${topNat}（価値観）</div>
         <p class="desc">${NATION_DESC[topNat]}</p>
-        <div class="quote-box" style="border-color:#c9a860">シュワルツの基本的価値観理論は、10の価値観次元を円環状に配置するモデルです。パーセンテージの単純な順位ではなく、10次元それぞれの実測スコアとして表示します。</div>
+        ${diagnosisVersion === 'ETI-2.0' ? nationReasonSection(results) : `<div class="quote-box" style="border-color:#c9a860">シュワルツの基本的価値観理論は、10の価値観次元を円環状に配置するモデルです。パーセンテージの単純な順位ではなく、10次元それぞれの実測スコアとして表示します。</div>`}
         ${nationImg}
       </div>
 

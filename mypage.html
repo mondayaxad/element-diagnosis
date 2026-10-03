@@ -1438,14 +1438,11 @@ function mpVizHtml(r) {
 }
 
 /* ---- 購入によって分かったことの要点（本文は転載しない。実測値と既存辞書の語のみ） ----
-   行動スタイル：index.html／report.htmlと同じ固定辞書（STYLE_POETIC_TAG）と同じ順位規則
+   行動スタイル：report.html と同じ語（推進・調和・完遂・熟考・自律＝STYLE_PLAIN）と同じ順位規則
    （値の降順、同点はAGY→REL→ROL→REF→AUTの順）で上位2軸の語を並べる。
    パーソナリティ・価値観：一言の解釈辞書が既存に無いため、軸名と実測値（上位2軸）だけを示す。 */
 const MP_STYLE_AXES = ['AGY', 'REL', 'ROL', 'REF', 'AUT'];
-const MP_STYLE_POETIC_TAG = {
-  AGY:'道を切り拓く意志', REL:'縁を結ぶ調律', ROL:'役目を貫く献身',
-  REF:'思索を介す眼差し', AUT:'距離を守る自律',
-};
+const MP_STYLE_WORD = { AGY:'推進', REL:'調和', ROL:'完遂', REF:'熟考', AUT:'自律' };
 function mpRankedAxes(obj, nameMap, order) {
   if (!obj) return [];
   const keys = order || Object.keys(nameMap);
@@ -1458,7 +1455,7 @@ function mpGaugesHtml(ranked, n) {
     <div class="mp-gauge"><span class="nm">${x.name}</span><span class="track"><span class="fill" style="display:block;width:${Math.max(0, Math.min(100, x.v))}%"></span></span><span class="val">${x.v}</span></div>`).join('');
 }
 // 上位2軸の見出し：1位は領域色を強く、2位は控えめ、×は淡い中間色。
-// 行動スタイルは既存辞書（STYLE_POETIC_TAG）の語、パーソナリティ・価値観は既存の軸名をそのまま使う（新しい名称は作らない）。
+// 行動スタイルはレポートと同じ語（MP_STYLE_WORD）、パーソナリティ・価値観は既存の軸名をそのまま使う（新しい名称は作らない）。
 function mpTop2TitleHtml(labels) {
   const l = labels.filter(Boolean);
   if (!l.length) return '';
@@ -1493,7 +1490,7 @@ function mpInsightCards(r) {
     const values = mpRankedAxes(s.v2Scores.values, MP_VALUES_NAME);
     return [
       { d: 'personality', t: 'パーソナリティ', title: mpTop2TitleHtml(personality.slice(0, 2).map(x => x.name)), body: mpGaugesHtml(personality, 2), n: MP_DOMAIN_NOTE.personality },
-      { d: 'style', t: '行動スタイル', title: style.length >= 2 ? mpTop2TitleHtml([MP_STYLE_POETIC_TAG[style[0].key], MP_STYLE_POETIC_TAG[style[1].key]]) : '', body: mpGaugesHtml(style, 2), n: MP_DOMAIN_NOTE.style },
+      { d: 'style', t: '行動スタイル', title: style.length >= 2 ? mpTop2TitleHtml([MP_STYLE_WORD[style[0].key], MP_STYLE_WORD[style[1].key]]) : '', body: mpGaugesHtml(style, 2), n: MP_DOMAIN_NOTE.style },
       { d: 'values', t: '価値観', title: mpTop2TitleHtml(values.slice(0, 2).map(x => x.name)), body: mpGaugesHtml(values, 2), n: MP_DOMAIN_NOTE.values },
       mpMirrorCard(r),
     ].filter(Boolean);
