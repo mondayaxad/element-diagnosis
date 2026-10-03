@@ -10,15 +10,18 @@
 
 // v2結果一式から、RPC呼び出し用のpendingオブジェクトを組み立てる。
 // buildResultPayload()（v1）に相当するv2版。
-function buildPendingV2(answersV2, encodedAnswers, results, mirrorTop, clientSessionId) {
+// mirrorVersions：{ characterProfileVersion, mirrorModelVersion }。表示・mirror_snapshot を作った版と同じ値を渡す
+// （js/eti_v2_mirror_resolver.js）。省略時は ETI-CHAR-2.0.1 / ETI-MIRROR-2.0.2（この引数を追加する前の固定値）。
+function buildPendingV2(answersV2, encodedAnswers, results, mirrorTop, clientSessionId, mirrorVersions) {
+  const mv = mirrorVersions || {};
   return {
     diagnosisType: 'element',
     diagnosisVersion: 'ETI-2.0',
     itemSetVersion: 'ETI-ITEM-2.0.0',
     scoringVersion: 'ETI-SCORE-2.0.0',
     translationModelVersion: (typeof TRANSLATION_MODEL_VERSION !== 'undefined') ? TRANSLATION_MODEL_VERSION : 'ETI-TRANS-2.0.0',
-    characterProfileVersion: 'ETI-CHAR-2.0.1',
-    mirrorModelVersion: 'ETI-MIRROR-2.0.2',
+    characterProfileVersion: mv.characterProfileVersion || 'ETI-CHAR-2.0.1',
+    mirrorModelVersion: mv.mirrorModelVersion || 'ETI-MIRROR-2.0.2',
     clientSessionId: clientSessionId,
     completedAt: new Date().toISOString(),
     answersV2: answersV2,
@@ -161,9 +164,9 @@ function signInWithGoogleV2() {
   });
 }
 
-async function handleSaveResultClickV2(answersV2, encodedAnswers, results, mirrorTop, clientSessionId) {
+async function handleSaveResultClickV2(answersV2, encodedAnswers, results, mirrorTop, clientSessionId, mirrorVersions) {
   updateSaveButtonUIV2('saving');
-  const pending = buildPendingV2(answersV2, encodedAnswers, results, mirrorTop, clientSessionId);
+  const pending = buildPendingV2(answersV2, encodedAnswers, results, mirrorTop, clientSessionId, mirrorVersions);
   stashPendingDiagnosisV2(pending);
 
   const user = await getCurrentUser();

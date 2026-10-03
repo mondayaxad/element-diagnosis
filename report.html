@@ -114,6 +114,9 @@
 <script src="js/eti_v2_prototypes.js"></script>
 <script src="js/eti_v2_engine.js"></script>
 <script src="js/characters118_v2.js"></script>
+<script src="js/characters118_v2_1.js"></script>
+<script src="js/eti_mirror_selection_v21.js"></script>
+<script src="js/eti_v2_mirror_resolver.js"></script>
 <script src="js/eti_v2_legacy_adapter.js"></script>
 </head>
 <body>
@@ -1158,13 +1161,14 @@ function getV2CharacterDisplayRegion(c) {
   var region = c.region || (c.legacy && c.legacy.old_nation_field) || null;
   return NATION_REGION_ALIAS_V2[region] || region;
 }
+// レポートのMIRROR版：マイページから開いた場合はマイページで表示している版（mv）。購入直後（Stripe→verify）など mv が無い場合は
+// 最新版（ETI-MIRROR-2.1.0）。レポートの購入トークンには MIRROR 版が含まれないため（js/eti_v2_mirror_resolver.js 参照）。
+function reportV2MirrorVersion() {
+  var mv = new URLSearchParams(window.location.search).get('mv');
+  return mv ? ETIv2MirrorResolver.versionFromUrlParam(mv) : ETIv2MirrorResolver.CURRENT;
+}
 function getV2CharactersNormalized() {
-  if (!V2_CHARACTERS_NORMALIZED) {
-    V2_CHARACTERS_NORMALIZED = ETI_V2_CHARACTERS.map(function(c) {
-      return Object.assign({}, c, { region: getV2CharacterDisplayRegion(c) });
-    });
-  }
-  return V2_CHARACTERS_NORMALIZED;
+  return ETIv2MirrorResolver.normalizedCharacters(ETIv2MirrorResolver.resolveVersion(reportV2MirrorVersion()));
 }
 function computeResultsV2ForUI(answersByItemId, encodedCode) {
   var raw = ETIv2.computeResultsV2(answersByItemId, {
@@ -1172,9 +1176,13 @@ function computeResultsV2ForUI(answersByItemId, encodedCode) {
     weaponPrototypes: WEAPON_PROTOTYPES_V2,
     nationPrototypes: NATION_PROTOTYPES_V2,
   });
-  var mirror = ETIv2.computeMirrorV2(raw, getV2CharactersNormalized(), ETI_V2_META);
-  var vm = ETIv2LegacyAdapter.buildV2ViewModel(raw, mirror, encodedCode);
+  var computed = ETIv2MirrorResolver.computeMirror(raw, reportV2MirrorVersion());
+  var vm = ETIv2LegacyAdapter.buildV2ViewModel(raw, computed.rankings, encodedCode);
   vm.raw = raw;
+  // 一致率の表（charMatches）は生スコア順のまま。MIRROR見出しに使う1人は vm.mirror。
+  vm.mirror = vm.charMatches.find(function(c) { return c.name === computed.mirror.name; }) || vm.charMatches[0];
+  vm.mirrorModelVersion = computed.mirrorModelVersion;
+  vm.characterProfileVersion = computed.characterProfileVersion;
   return vm;
 }
 

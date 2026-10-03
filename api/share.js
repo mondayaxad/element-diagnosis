@@ -75,6 +75,9 @@ module.exports = async function handler(req, res) {
   const redirectParams = new URLSearchParams();
   if (diagnosisVersion) redirectParams.set('dv', diagnosisVersion);
   redirectParams.set('code', code);
+  // ETI v2 の MIRROR 版（例 mv=2.1.0）をそのまま結果URLへ引き継ぐ。無い旧リンクは付けない（旧版として表示される）。
+  const mirrorVersionParam = searchParams.get('mv');
+  if (diagnosisVersion && mirrorVersionParam && /^\d+\.\d+\.\d+$/.test(mirrorVersionParam)) redirectParams.set('mv', mirrorVersionParam);
   const redirectUrl = `${origin}/?${redirectParams.toString()}`;
   const title = `元素診断 — 私の結果は【${el} × ${w} × ${nat}】`;
   const description = `最も近しいキャラクター：${charName}（${match}%一致）。あなたも元素診断で、自分だけの結果を見つけてみませんか。`;

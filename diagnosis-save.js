@@ -122,6 +122,9 @@ async function loadDiagnosisHistory(diagnosisType) {
       v2Scores: isV2 && r ? r.v2_scores : null,
       v2Rankings: isV2 && r ? r.v2_rankings : null,
       mirrorSnapshot: isV2 && r ? r.mirror_snapshot : null,
+      // 保存時のMIRROR版（mypageで当時の版のキャラクター座標・選択規則で表示するため。読み取りのみ）
+      mirrorModelVersion: isV2 && r ? r.mirror_model_version : null,
+      characterProfileVersion: isV2 && r ? r.character_profile_version : null,
       itemSetVersion: isV2 ? (row.item_set_version || (r && r.item_set_version)) : null,
       diagnosisCode: r ? r.diagnosis_code : null,
       encodedAnswers: a ? a.encoded_answers : null,

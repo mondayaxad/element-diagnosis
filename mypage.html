@@ -28,7 +28,12 @@
 <!-- MIRROR上位4名を report.html と同じ正本（現行のキャラクター座標・ETIv2.computeMirrorV2）で表示するため読み込む。
      採点・保存・共有URLの仕様は変更しない（算出元をreportと揃えるだけ）。 -->
 <script src="js/ETI_v2_QUESTIONS_100.js"></script>
+<script src="js/eti_v2_prototypes.js"></script>
 <script src="js/eti_v2_engine.js"></script>
+<!-- 保存時のMIRROR版（mirror_model_version）ごとに、当時のキャラクター座標・選択規則で表示する -->
+<script src="js/characters118_v2_1.js"></script>
+<script src="js/eti_mirror_selection_v21.js"></script>
+<script src="js/eti_v2_mirror_resolver.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -1020,7 +1025,8 @@ function renderEmpty(root, user) {
 
 function purchasedReportButton(session, className, label) {
   const encodedId = encodeURIComponent(session && session.id ? session.id : '');
-  return `<button type="button" class="${className || 'lock-cta-btn'}" data-session-id="${encodedId}"
+  const mv = session && session.isV2 ? mpMirrorUrlParam(session) : null;
+  return `<button type="button" class="${className || 'lock-cta-btn'}" data-session-id="${encodedId}"${mv ? ` data-mv="${encodeURIComponent(mv)}"` : ''}
     onclick="openPurchasedReport(decodeURIComponent(this.dataset.sessionId), this)">${label || '購入済みレポートを見る'}</button>`;
 }
 
@@ -1049,7 +1055,10 @@ async function openPurchasedReport(diagnosisSessionId, button) {
     if (!response.ok || !body.url) throw new Error(body.error || 'link_issue_failed');
 
     trackEvent('mypage_report_open', { source: 'purchased_report_button' });
-    navigateTo(body.url);
+    // 保存時のMIRROR版をレポートへ渡す（レポートは診断コードから計算し直すため、版が無いと最新版で表示される）
+    let reportUrl = body.url;
+    if (button.dataset.mv) reportUrl += (reportUrl.indexOf('?') >= 0 ? '&' : '?') + 'mv=' + button.dataset.mv;
+    navigateTo(reportUrl);
   } catch (err) {
     console.error('purchased report open failed:', err);
     const message = document.createElement('p');
@@ -1264,19 +1273,39 @@ function mpEmblemHtml(record, size) {
    将来の新診断は MP_KINDS に種別を追加すれば、同じ棚（YOUR COLLECTION）と
    履歴（THE RECORDS）に載る。未公開の診断は一切表示しない。
    ============================================================ */
-// v2のMIRROR上位4名：解析レポート（report.html）と同じく、保存済みのスコア（パーソナリティ・行動スタイル・価値観）から
-// 現行のキャラクター座標で ETIv2.computeMirrorV2 を実行する。保存時スナップショット（mirror_snapshot）は、
-// キャラクター座標の改訂前に保存された記録だとレポートと食い違うため、算出できない場合の予備としてだけ使う。
-function mpMirrorTop4V2(s) {
+// v2のMIRROR：保存済みのスコア（パーソナリティ・行動スタイル・価値観）から計算する（js/eti_v2_mirror_resolver.js）。
+// Preview の v2 記録は保存時の版にかかわらず最新版（ETI-MIRROR-2.1.0 / ETI-CHAR-2.1.0）で表示する（displayVersionForSaved）。
+// 計算できない場合は保存時スナップショット（mirror_snapshot）を使う。
+function mpMirrorComputedV2(s) {
   const sc = s && s.v2Scores;
   try {
-    if (sc && sc.personality && sc.style && sc.values && typeof ETIv2 !== 'undefined' && typeof ETI_V2_META !== 'undefined'
-        && typeof ETI_V2_CHARACTERS !== 'undefined' && Array.isArray(ETI_V2_CHARACTERS)) {
-      const rows = ETIv2.computeMirrorV2(sc, ETI_V2_CHARACTERS, ETI_V2_META);
-      if (Array.isArray(rows) && rows.length) return rows.slice(0, 4).map(x => ({ name: x.name, match: x.mirrorScore, el: x.element, w: x.weapon, nation: x.region }));
+    if (sc && sc.personality && sc.style && sc.values && typeof ETIv2MirrorResolver !== 'undefined') {
+      return ETIv2MirrorResolver.computeMirror(sc, ETIv2MirrorResolver.displayVersionForSaved(s.mirrorModelVersion));
     }
   } catch (e) { console.error('mirror recompute failed (falling back to saved snapshot):', e); }
+  return null;
+}
+// 一致率の上位4名（生スコア順位。MIRROR の選択とは別の一覧）
+function mpMirrorTop4V2(s) {
+  const c = mpMirrorComputedV2(s);
+  if (c && Array.isArray(c.rankings) && c.rankings.length) return c.rankings.slice(0, 4).map(x => ({ name: x.name, match: x.mirrorScore, el: x.element, w: x.weapon, nation: x.region }));
   return Array.isArray(s && s.mirrorSnapshot) ? s.mirrorSnapshot.slice(0, 4) : [];
+}
+// MIRROR（最も近しいキャラクター1人）。保存時の版で計算し、ETI-MIRROR-2.1.0 は同率処理（元素→国家→武器→番号）の選択結果。
+// 計算は決定的なので index で表示・保存した人物と一致する。計算できない場合だけ保存時スナップショットの選択（selected:true）を使う。
+function mpMirrorV2(s) {
+  const c = mpMirrorComputedV2(s);
+  if (c && c.mirror) return { name: c.mirror.name, match: c.mirror.mirrorScore, el: c.mirror.element, w: c.mirror.weapon, nation: c.mirror.region };
+  if (typeof ETIv2MirrorResolver !== 'undefined') {
+    const saved = ETIv2MirrorResolver.mirrorFromSnapshot(s && s.mirrorSnapshot);
+    if (saved && saved.name) return saved;
+  }
+  return mpMirrorTop4V2(s)[0] || null;
+}
+// 結果URL・レポートURLに付けるMIRROR版（mv）。マイページで表示している版と同じ
+function mpMirrorUrlParam(s) {
+  if (!s || typeof ETIv2MirrorResolver === 'undefined') return null;
+  return ETIv2MirrorResolver.urlParamFor(ETIv2MirrorResolver.displayVersionForSaved(s.mirrorModelVersion));
 }
 const MP_KINDS = {
   element: {
@@ -1288,9 +1317,10 @@ const MP_KINDS = {
         el = (v2TopName(r.element) || {}).name;
         w = (v2TopName(r.weapon) || {}).name;
         nation = (v2TopName(r.nation) || {}).name;
-        const m = mpMirrorTop4V2(s)[0] || null;
+        const m = mpMirrorV2(s);
         mirror = m ? { name: m.name, match: m.match, el: m.el, w: m.w, nation: m.nation } : null;
-        if (s.encodedAnswers) resultUrl = '/?dv=ETI-2.0&code=' + encodeURIComponent(s.encodedAnswers);
+        const mv = mpMirrorUrlParam(s);
+        if (s.encodedAnswers) resultUrl = '/?dv=ETI-2.0&code=' + encodeURIComponent(s.encodedAnswers) + (mv ? '&mv=' + encodeURIComponent(mv) : '');
       } else {
         const pr = s.primaryResult || {};
         el = pr.element; w = pr.weapon; nation = pr.nation;

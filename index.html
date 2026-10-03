@@ -337,6 +337,9 @@
 <script src="js/eti_v2_engine.js"></script>
 <script src="js/eti_v2_answer_collection.js"></script>
 <script src="js/characters118_v2.js"></script>
+<script src="js/characters118_v2_1.js"></script>
+<script src="js/eti_mirror_selection_v21.js"></script>
+<script src="js/eti_v2_mirror_resolver.js"></script>
 <script src="js/eti_v2_legacy_adapter.js"></script>
 <script src="js/eti_v2_save.js"></script>
 <script src="js/diagnosis-record-check.js"></script>
@@ -1032,25 +1035,32 @@ function getV2CharacterDisplayRegion(c) {
   var region = c.region || (c.legacy && c.legacy.old_nation_field) || null;
   return NATION_REGION_ALIAS_V2[region] || region;
 }
-function getV2CharactersNormalized() {
-  if (!V2_CHARACTERS_NORMALIZED) {
-    V2_CHARACTERS_NORMALIZED = ETI_V2_CHARACTERS.map(function(c) {
-      return Object.assign({}, c, { region: getV2CharacterDisplayRegion(c) });
-    });
-  }
-  return V2_CHARACTERS_NORMALIZED;
+// この画面で使うMIRROR版：新規診断は最新版（ETI-MIRROR-2.1.0）。URLから復元した結果は mv の版
+// （mv無しのURLも最新版で表示）。js/eti_v2_mirror_resolver.js を参照。
+function currentV2MirrorVersion() {
+  return window.__mirrorVersion || ETIv2MirrorResolver.CURRENT;
 }
-// MIRRORはPERSONALITY/STYLE/VALUESの類似度で計算し、国家一致を必須条件としない
-// （ETIv2.computeMirrorV2自体が国家を見ない設計のため、ここでは正規化済み配列を渡すのみ）。
-function computeResultsV2ForUI(answersByItemId, encodedCode) {
+// 表示中の版のキャラクター座標（region は表示用に正規化済み）。118名の並び順は版によらず同じ。
+function getV2CharactersNormalized() {
+  return ETIv2MirrorResolver.normalizedCharacters(ETIv2MirrorResolver.resolveVersion(currentV2MirrorVersion()));
+}
+// MIRRORはPERSONALITY/STYLE/VALUESの類似度で計算し、国家一致を必須条件としない。
+// 一致率ランキング（charMatches）は生スコア順のまま。表示・保存するMIRRORは vm.mirror
+// （ETI-MIRROR-2.1.0 では同率時に 元素→国家→武器→番号 で選ぶため、charMatches[0] と異なり得る）。
+function computeResultsV2ForUI(answersByItemId, encodedCode, mirrorModelVersion) {
   var raw = ETIv2.computeResultsV2(answersByItemId, {
     elementPrototypes: ELEMENT_PROTOTYPES_V2,
     weaponPrototypes: WEAPON_PROTOTYPES_V2,
     nationPrototypes: NATION_PROTOTYPES_V2,
   });
-  var mirror = ETIv2.computeMirrorV2(raw, getV2CharactersNormalized(), ETI_V2_META);
-  var vm = ETIv2LegacyAdapter.buildV2ViewModel(raw, mirror, encodedCode);
+  var computed = ETIv2MirrorResolver.computeMirror(raw, mirrorModelVersion || currentV2MirrorVersion());
+  var vm = ETIv2LegacyAdapter.buildV2ViewModel(raw, computed.rankings, encodedCode);
   vm.raw = raw; // 保存(RPC送信)用に、v2固有の生スコアも保持しておく
+  vm.mirror = vm.charMatches.find(function(c) { return c.name === computed.mirror.name; }) || vm.charMatches[0];
+  vm.mirrorModelVersion = computed.mirrorModelVersion;
+  vm.characterProfileVersion = computed.characterProfileVersion;
+  vm.mirrorSelection = computed.selectionMeta;
+  vm.mirrorSnapshot = ETIv2MirrorResolver.buildMirrorSnapshot(computed);
   return vm;
 }
 
@@ -1499,6 +1509,7 @@ function render() {
 function startNewDiagnosisV2() {
   answersV2 = {}; currentIdxV2 = 0; quizFocusIdxV2 = null;
   window.__diagnosisVersion = 'ETI-2.0';
+  window.__mirrorVersion = null; // 新規診断は最新のMIRROR版で計算する
   if (typeof gtag === 'function') gtag('event','quiz_start',{event_category:'diagnosis',diagnosis_version:'ETI-2.0'});
   setPhase('quiz');
 }
@@ -2034,7 +2045,8 @@ function renderResult(root) {
   const elC = ELEMENTS[topEl].color;
   const wC = WEAPONS[topW].color;
   const et = diagnosisVersion === 'legacy-v1' ? results.enneaTop.type : null;
-  const top1 = results.charMatches[0];
+  // MIRROR（最も近しいキャラクター）。v2は版ごとの選択結果、legacyは従来どおり1位。
+  const top1 = (diagnosisVersion === 'ETI-2.0' && results.mirror) ? results.mirror : results.charMatches[0];
   const ACCENT = '#7ab8e8';
 
   // 本文・因子タグ（実データ連動、文体は本体サイトに準拠）
@@ -2773,7 +2785,7 @@ function renderResult(root) {
       var optInBox = recordCard.querySelector('#newsletterOptInCheckbox');
       var newsletterOptIn = optInBox ? optInBox.checked : null;
       if (isV2Record) {
-        stashPendingDiagnosisV2(buildPendingV2(answersV2, shortCode, results.raw, recordMirrorTop(), crypto.randomUUID()));
+        stashPendingDiagnosisV2(buildPendingV2(answersV2, shortCode, results.raw, recordMirrorTop(), crypto.randomUUID(), recordMirrorVersions()));
       } else {
         stashPendingDiagnosis(answers, buildResultPayload(results, topEl, topW, et, topNat), shortCode, newsletterOptIn);
         var pending = readPendingDiagnosis();
@@ -2783,10 +2795,12 @@ function renderResult(root) {
       return signInWithX();
     };
 
+    // 保存する mirror_snapshot：表示と同じ選択結果から作る（一致率上位4名の並び＋選ばれたMIRRORに selected:true）
     var recordMirrorTop = function () {
-      return results.charMatches.slice(0, 4).map(function(c) {
-        return { name: c.name, match: c.match, el: c.el, w: c.w, nation: c.nation };
-      });
+      return results.mirrorSnapshot;
+    };
+    var recordMirrorVersions = function () {
+      return { characterProfileVersion: results.characterProfileVersion, mirrorModelVersion: results.mirrorModelVersion };
     };
 
     var onRecordSaveClick = async function (fromState, alreadyTracked) {
@@ -2800,7 +2814,7 @@ function renderResult(root) {
       if (before.state === 'saved') { renderRecordCard('saved'); return; }
       if (isV2Record) {
         var clientSessionId = crypto.randomUUID();
-        var res = await handleSaveResultClickV2(answersV2, shortCode, results.raw, recordMirrorTop(), clientSessionId);
+        var res = await handleSaveResultClickV2(answersV2, shortCode, results.raw, recordMirrorTop(), clientSessionId, recordMirrorVersions());
         if (res && res.ok) { renderRecordCard('just_saved'); return; }
         // 未ログイン：Google認証へ遷移中（保存は認証復帰後の既存処理が行う）
         if (res && res.pendingStashed && res.error === 'not_authenticated') return;
@@ -2968,6 +2982,8 @@ window.addEventListener('DOMContentLoaded', function() {
       if (decodedV2) {
         answersV2 = decodedV2;
         window.__diagnosisVersion = 'ETI-2.0';
+        // mv の無いURLは最新版で表示する（Preview のデータは最新版へ更新する決定）
+        window.__mirrorVersion = ETIv2MirrorResolver.versionFromUrlParam(params.get('mv'));
         window.__phase = 'result';
         render();
         revealRestoredResult();
@@ -3140,6 +3156,8 @@ function buildResultUrl(shortCode, diagnosisVersion) {
   var params = new URLSearchParams();
   if (diagnosisVersion === 'ETI-2.0') params.set('dv', 'ETI-2.0');
   params.set('code', shortCode || '');
+  // v2はMIRROR版を付ける（どの版の結果かをURLで示す）
+  if (diagnosisVersion === 'ETI-2.0') params.set('mv', ETIv2MirrorResolver.urlParamFor(currentV2MirrorVersion()));
   return window.location.origin + '/?' + params.toString();
 }
 
@@ -3157,6 +3175,7 @@ function tweetShareResult(topEl, topW, topNat, charName, matchPct, applyData, sh
   var shareParams = new URLSearchParams();
   if (diagnosisVersion === 'ETI-2.0') shareParams.set('dv', 'ETI-2.0');
   shareParams.set('code', shortCode || '');
+  if (diagnosisVersion === 'ETI-2.0') shareParams.set('mv', ETIv2MirrorResolver.urlParamFor(currentV2MirrorVersion()));
   shareParams.set('p', packed);
   var shareUrl = window.location.origin + '/api/share?' + shareParams.toString();
 

@@ -10,7 +10,9 @@ const ETI_V2_META = {
   itemSetVersion: "ETI-ITEM-2.0.0",
   scoringVersion: "ETI-SCORE-2.0.0",
   translationModelVersion: "ETI-TRANS-2.0.0",
-  mirrorModelVersion: "ETI-MIRROR-2.0.2",
+  // 新規診断の版。過去の版（ETI-MIRROR-2.0.2 / ETI-CHAR-2.0.1）での計算は js/eti_v2_mirror_resolver.js が担う。
+  characterProfileVersion: "ETI-CHAR-2.1.0",
+  mirrorModelVersion: "ETI-MIRROR-2.1.0",
   personalityAxes: ["O","C","E","A","N"],
   styleAxes: ["AGY","REL","ROL","REF","AUT"],
   valueAxes: ["SD","ST","HE","AC","PO","SE","CO","TR","BE","UN"],
