@@ -1,0 +1,27 @@
+// golden-compare.js — Phase 1 ゴールデン比較：F01 の算出値と、承認済みサンプル（core1_v4_revised_sample.json）を項目ごとに照合して docs/ へ書く
+'use strict';
+const fs = require('fs');
+const path = require('path');
+const { calculateResult } = require('../src/calculate-result');
+const A = require('../fixtures/golden/approved_sample_CORE1-V4-AUDITED-SAMPLE-001.json');
+const fx = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'answers', 'F01.json'), 'utf8'));
+const s = calculateResult(fx.input);
+const rows = [];
+const cmp = (label, got, want) => { const ok = JSON.stringify(got) === JSON.stringify(want); rows.push(`| ${label} | ${ok ? '一致' : '**不一致**'} | ${JSON.stringify(got).slice(0, 120)} |`); return ok; };
+const pick = (r) => r.map((x) => [x.name, x.display]);
+let all = true;
+all &= cmp('PERSONALITY 5軸', s.axes.personality, A.axes.personality);
+all &= cmp('STYLE 5軸', s.axes.style, A.axes.style);
+all &= cmp('VALUES 10軸', s.axes.values, A.axes.values);
+all &= cmp('診断コード（100問）', s.diagnosis_code, A.diagnosis_code);
+all &= cmp('元素 全順位', pick(s.rankings.element), pick(A.rankings.elements));
+all &= cmp('武器種 全順位', pick(s.rankings.weapon), pick(A.rankings.weapons));
+all &= cmp('国家 全順位', pick(s.rankings.nation), pick(A.rankings.nations));
+all &= cmp('MIRROR TOP10', pick(s.mirror.top10), pick(A.mirror.top10));
+all &= cmp('選択MIRROR', s.mirror.selected.name, (A.mirror.top10.find((r) => r.selected) || A.mirror.top10[0]).name);
+all &= cmp('HIDDEN SHAPE TOP10', pick(s.hidden.top10), pick(A.hidden_shape.top10));
+all &= cmp('MENTOR TOP10（E+20/AGY+20/AC+10）', pick(s.mentor.top10), pick(A.mentor.top10));
+all &= cmp('DOMAIN 4平均', s.domains.items.map((d) => d.display), A.domain_editorial.means.map((d) => d.display));
+const md = `# Phase 1 ゴールデン比較（F01＝承認サンプル）\n\n自動生成：\`node tools/golden-compare.js\`。照合先：同梱の \`fixtures/golden/approved_sample_CORE1-V4-AUDITED-SAMPLE-001.json\`（承認済み46ページの数値。MANIFEST.json の SHA-256 で固定）。エンジン：${require('../src/engine').loadEngine().engineSource}。\n\n| 項目 | 結果 | 算出値（先頭） |\n|---|---|---|\n${rows.join('\n')}\n\n**総合：${all ? 'すべて一致' : '不一致あり'}**（文章側の修正は算出に触れていない）\n`;
+fs.writeFileSync(path.join(__dirname, '..', 'docs', 'golden-comparison.md'), md);
+console.log(md);

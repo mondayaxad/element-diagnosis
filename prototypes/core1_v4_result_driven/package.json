@@ -1,0 +1,11 @@
+{
+  "name": "core1-v4-result-driven",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ETI CORE1 完全版 v4 — 診断結果連動 46ページ自動生成（本番未接続プロトタイプ）",
+  "scripts": {
+    "fixtures": "node tools/make-fixtures.js",
+    "build": "node src/build-report.js --all",
+    "test": "node --test tests/*.test.js"
+  }
+}

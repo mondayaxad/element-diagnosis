@@ -1,0 +1,41 @@
+
+/* ================= 画面閲覧ナビ（スマホ・PC共通。印刷では非表示） ================= */
+.viewer-nav, .vn-open { display: none; }
+.js .viewer-nav:not([hidden]) { display: flex; }
+.js .vn-open:not([hidden]) { display: block; }
+.viewer-nav { position: fixed; z-index: 50; left: 50%; bottom: calc(10px + env(safe-area-inset-bottom)); transform: translateX(-50%); transform-origin: 50% 100%; gap: 5px; align-items: center; padding: 6px 7px; border-radius: 999px; background: rgba(6, 12, 19, .92); border: 1px solid rgba(143, 182, 214, .32); box-shadow: 0 6px 22px rgba(0, 0, 0, .5); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); max-width: calc(100vw - 12px); }
+.vn-btn, .vn-open, .viewer-nav button { font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; font-size: 13px; color: #dce7f1; text-decoration: none; padding: 8px 11px; border-radius: 999px; background: rgba(143, 182, 214, .14); border: 0; white-space: nowrap; cursor: pointer; line-height: 1; }
+.vn-btn:hover { background: rgba(143, 182, 214, .26); }
+.vn-pos { font-family: 'Hiragino Sans', sans-serif; font-size: 12px; color: #9fb4c8; padding: 0 3px; white-space: nowrap; }
+.vn-mode { background: rgba(77, 160, 211, .3); }
+.vn-close { padding: 8px 10px; }
+.vn-open { position: fixed; z-index: 50; left: 50%; bottom: calc(10px + env(safe-area-inset-bottom)); transform: translateX(-50%); transform-origin: 50% 100%; background: rgba(6, 12, 19, .92); border: 1px solid rgba(143, 182, 214, .32); }
+.toc-panel { position: fixed; inset: 0; z-index: 60; background: rgba(0, 0, 0, .6); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.toc-panel[hidden], .mobile-notice[hidden] { display: none; }
+.toc-box { background: #0b1622; border: 1px solid rgba(143, 182, 214, .3); border-radius: 12px; width: min(460px, 100%); max-height: 80vh; display: flex; flex-direction: column; }
+.toc-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid rgba(143, 182, 214, .2); font-family: 'Hiragino Sans', sans-serif; color: #eef4fa; font-size: 15px; }
+.toc-head button { font-size: 13px; color: #dce7f1; background: rgba(143, 182, 214, .16); border: 0; border-radius: 999px; padding: 8px 12px; cursor: pointer; }
+.toc-box ol { list-style: none; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 6px 0; margin: 0; }
+.toc-box a { display: flex; gap: 10px; padding: 9px 16px; color: #d3dfeb; text-decoration: none; font-size: 14px; font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; }
+.toc-box a:hover, .toc-box a:focus { background: rgba(143, 182, 214, .12); outline: none; }
+.toc-box a span { color: #7fb6dc; font-variant-numeric: tabular-nums; min-width: 34px; }
+.mobile-notice { position: fixed; inset: 0; z-index: 70; background: rgba(0, 0, 0, .7); display: flex; align-items: center; justify-content: center; padding: 18px; }
+.mn-box { background: #0b1622; border: 1px solid rgba(143, 182, 214, .35); border-radius: 12px; padding: 18px 18px 14px; max-width: 420px; font-family: 'Hiragino Sans', 'Yu Gothic', sans-serif; }
+.mn-box b { display: block; color: #eef4fa; font-size: 16px; margin-bottom: 8px; }
+.mn-box p { color: #c3d2e0; font-size: 14px; line-height: 1.75; margin: 0 0 14px; }
+.mn-box strong { color: #f5cf8c; }
+.mn-btns { display: flex; flex-direction: column; gap: 8px; }
+.mn-btns button { font-size: 14px; padding: 11px; border-radius: 10px; border: 0; cursor: pointer; background: rgba(143, 182, 214, .16); color: #e6eef6; }
+.mn-btns button:first-child { background: #2a7aaa; color: #fff; }
+@media screen and (max-width: 840px) {
+  .pages { padding: 10px 6px 90px; gap: 12px; align-items: flex-start; width: max-content; min-width: 100%; }
+  html.js .pages { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  html.js[data-mode="fit"] .page { zoom: var(--fit, 1); }
+  html.js[data-mode="read"] .page { zoom: 1; }
+  html.js[data-mode="read"] .pages::before { content: '← 横にスクロールして読めます →'; position: sticky; left: 0; display: block; width: calc(100vw - 12px); text-align: center; font: 12px 'Hiragino Sans', sans-serif; color: #f5cf8c; padding: 2px 0 6px; }
+}
+.nojs-note { position: sticky; top: 0; z-index: 5; background: #0b1622; color: #f5cf8c; font: 13px/1.6 'Hiragino Sans', sans-serif; padding: 8px 12px; border-bottom: 1px solid rgba(143,182,214,.3); }
+@media print {
+  .nojs-note { display: none !important; }
+  .viewer-nav, .vn-open, .toc-panel, .mobile-notice { display: none !important; }
+}

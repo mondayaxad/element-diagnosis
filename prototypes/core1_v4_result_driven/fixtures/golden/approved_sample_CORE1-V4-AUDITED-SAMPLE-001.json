@@ -1,0 +1,5858 @@
+{
+  "sample_id": "CORE1-V4-AUDITED-SAMPLE-001",
+  "sample_kind": "valid_eti_v2_100_answers",
+  "generated_at": "2026-10-04T00:00:00+09:00",
+  "diagnosed_at": "2026-10-04",
+  "construction": {
+    "method": "nearest_reachable_axis_value_then_seeded_placement",
+    "seed": 20261004,
+    "prng": "mulberry32",
+    "design_reference_vector": {
+      "O": 78,
+      "C": 72,
+      "E": 32,
+      "A": 68,
+      "N": 62,
+      "AGY": 42,
+      "REL": 72,
+      "ROL": 84,
+      "REF": 76,
+      "AUT": 68,
+      "SD": 82,
+      "ST": 45,
+      "HE": 38,
+      "AC": 58,
+      "PO": 25,
+      "SE": 62,
+      "CO": 48,
+      "TR": 52,
+      "BE": 78,
+      "UN": 88
+    },
+    "per_axis": {
+      "O": {
+        "design_reference": 78,
+        "reachable_value": 78,
+        "signed_sum": 9,
+        "items": 8
+      },
+      "C": {
+        "design_reference": 72,
+        "reachable_value": 72,
+        "signed_sum": 7,
+        "items": 8
+      },
+      "E": {
+        "design_reference": 32,
+        "reachable_value": 31,
+        "signed_sum": -6,
+        "items": 8
+      },
+      "A": {
+        "design_reference": 68,
+        "reachable_value": 69,
+        "signed_sum": 6,
+        "items": 8
+      },
+      "N": {
+        "design_reference": 62,
+        "reachable_value": 63,
+        "signed_sum": 4,
+        "items": 8
+      },
+      "AGY": {
+        "design_reference": 42,
+        "reachable_value": 42,
+        "signed_sum": -2,
+        "items": 6
+      },
+      "REL": {
+        "design_reference": 72,
+        "reachable_value": 71,
+        "signed_sum": 5,
+        "items": 6
+      },
+      "ROL": {
+        "design_reference": 84,
+        "reachable_value": 83,
+        "signed_sum": 8,
+        "items": 6
+      },
+      "REF": {
+        "design_reference": 76,
+        "reachable_value": 75,
+        "signed_sum": 6,
+        "items": 6
+      },
+      "AUT": {
+        "design_reference": 68,
+        "reachable_value": 67,
+        "signed_sum": 4,
+        "items": 6
+      },
+      "SD": {
+        "design_reference": 82,
+        "reachable_value": 83,
+        "signed_sum": 4,
+        "items": 3
+      },
+      "ST": {
+        "design_reference": 45,
+        "reachable_value": 42,
+        "signed_sum": -1,
+        "items": 3
+      },
+      "HE": {
+        "design_reference": 38,
+        "reachable_value": 42,
+        "signed_sum": -1,
+        "items": 3
+      },
+      "AC": {
+        "design_reference": 58,
+        "reachable_value": 58,
+        "signed_sum": 1,
+        "items": 3
+      },
+      "PO": {
+        "design_reference": 25,
+        "reachable_value": 25,
+        "signed_sum": -3,
+        "items": 3
+      },
+      "SE": {
+        "design_reference": 62,
+        "reachable_value": 58,
+        "signed_sum": 1,
+        "items": 3
+      },
+      "CO": {
+        "design_reference": 48,
+        "reachable_value": 50,
+        "signed_sum": 0,
+        "items": 3
+      },
+      "TR": {
+        "design_reference": 52,
+        "reachable_value": 50,
+        "signed_sum": 0,
+        "items": 3
+      },
+      "BE": {
+        "design_reference": 78,
+        "reachable_value": 75,
+        "signed_sum": 3,
+        "items": 3
+      },
+      "UN": {
+        "design_reference": 88,
+        "reachable_value": 92,
+        "signed_sum": 5,
+        "items": 3
+      }
+    },
+    "note": "各軸の正式採点で到達可能な値のうち、承認済みデザインの参照値に最も近い値（同距離なら符号付き合計の小さい方）を選び、その合計になる回答をseedで配置した。質問・プロトタイプ・人物座標・重みは変更していない。"
+  },
+  "answers": [
+    0,
+    2,
+    2,
+    1,
+    0,
+    -1,
+    2,
+    -1,
+    1,
+    1,
+    0,
+    1,
+    -2,
+    -1,
+    0,
+    -1,
+    0,
+    0,
+    -2,
+    -1,
+    1,
+    1,
+    1,
+    0,
+    2,
+    0,
+    1,
+    2,
+    -1,
+    0,
+    0,
+    0,
+    2,
+    0,
+    0,
+    1,
+    -1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    -1,
+    0,
+    1,
+    0,
+    2,
+    0,
+    0,
+    -2,
+    -1,
+    2,
+    0,
+    2,
+    2,
+    -1,
+    -1,
+    0,
+    2,
+    1,
+    0,
+    -1,
+    -2,
+    0,
+    2,
+    1,
+    1,
+    0,
+    0,
+    2,
+    2,
+    0,
+    -1,
+    0,
+    0,
+    0,
+    -1,
+    0,
+    1,
+    0,
+    0,
+    -1,
+    -2,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    1,
+    1,
+    1,
+    2,
+    2
+  ],
+  "answer_item_ids": [
+    "Q001",
+    "Q002",
+    "Q003",
+    "Q004",
+    "Q005",
+    "Q006",
+    "Q007",
+    "Q008",
+    "Q009",
+    "Q010",
+    "Q011",
+    "Q012",
+    "Q013",
+    "Q014",
+    "Q015",
+    "Q016",
+    "Q017",
+    "Q018",
+    "Q019",
+    "Q020",
+    "Q021",
+    "Q022",
+    "Q023",
+    "Q024",
+    "Q025",
+    "Q026",
+    "Q027",
+    "Q028",
+    "Q029",
+    "Q030",
+    "Q031",
+    "Q032",
+    "Q033",
+    "Q034",
+    "Q035",
+    "Q036",
+    "Q037",
+    "Q038",
+    "Q039",
+    "Q040",
+    "Q041",
+    "Q042",
+    "Q043",
+    "Q044",
+    "Q045",
+    "Q046",
+    "Q047",
+    "Q048",
+    "Q049",
+    "Q050",
+    "Q051",
+    "Q052",
+    "Q053",
+    "Q054",
+    "Q055",
+    "Q056",
+    "Q057",
+    "Q058",
+    "Q059",
+    "Q060",
+    "Q061",
+    "Q062",
+    "Q063",
+    "Q064",
+    "Q065",
+    "Q066",
+    "Q067",
+    "Q068",
+    "Q069",
+    "Q070",
+    "Q071",
+    "Q072",
+    "Q073",
+    "Q074",
+    "Q075",
+    "Q076",
+    "Q077",
+    "Q078",
+    "Q079",
+    "Q080",
+    "Q081",
+    "Q082",
+    "Q083",
+    "Q084",
+    "Q085",
+    "Q086",
+    "Q087",
+    "Q088",
+    "Q089",
+    "Q090",
+    "Q091",
+    "Q092",
+    "Q093",
+    "Q094",
+    "Q095",
+    "Q096",
+    "Q097",
+    "Q098",
+    "Q099",
+    "Q100"
+  ],
+  "diagnosis_code": "fpf9dyg6tna6wobkgr8z9a6dtyzxemo9bpjftu65y8fdm",
+  "diagnosis_code_roundtrip": true,
+  "diagnosis_version": "ETI-2.0",
+  "item_set_version": "ETI-ITEM-2.0.0",
+  "scoring_version": "ETI-SCORE-2.0.0",
+  "translation_model_version": "ETI-TRANS-2.0.0",
+  "character_profile_version": "ETI-CHAR-2.1.0",
+  "mirror_model_version": "ETI-MIRROR-2.1.0",
+  "report_models": {
+    "hidden_shape": "CORE1-HIDDEN-1.0.0",
+    "mentor": "CORE1-MENTOR-1.0.0",
+    "domain_editorial": "CORE1-DOMAIN-EDITORIAL-0.1.0",
+    "rank_band": "CORE1-RANKBAND-1.0.0"
+  },
+  "axes": {
+    "personality": {
+      "O": 78,
+      "C": 72,
+      "E": 31,
+      "A": 69,
+      "N": 63
+    },
+    "style": {
+      "AGY": 42,
+      "REL": 71,
+      "ROL": 83,
+      "REF": 75,
+      "AUT": 67
+    },
+    "values": {
+      "SD": 83,
+      "ST": 42,
+      "HE": 42,
+      "AC": 58,
+      "PO": 25,
+      "SE": 58,
+      "CO": 50,
+      "TR": 50,
+      "BE": 75,
+      "UN": 92
+    },
+    "values_centered": {
+      "SD": 1.0333333333333332,
+      "ST": -0.6333333333333333,
+      "HE": -0.6333333333333333,
+      "AC": 0.033333333333333326,
+      "PO": -1.3,
+      "SE": 0.033333333333333326,
+      "CO": -0.3,
+      "TR": -0.3,
+      "BE": 0.7,
+      "UN": 1.3666666666666667
+    }
+  },
+  "rankings": {
+    "elements": [
+      {
+        "rank": 1,
+        "key": "水",
+        "name": "水",
+        "display": 90,
+        "raw_similarity": 0.9021225255740628,
+        "band": "top",
+        "gap_to_next": 5,
+        "prototype": {
+          "O": 70,
+          "C": 70,
+          "E": 50,
+          "A": 70,
+          "N": 70
+        },
+        "evidence": {
+          "rows": [
+            {
+              "axis": "O",
+              "user": 78,
+              "prototype": 70,
+              "absDiff": 8,
+              "sq": 0.0064,
+              "shareOfSquaredError": 0.1336116910229645
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "prototype": 70,
+              "absDiff": 2,
+              "sq": 0.0004,
+              "shareOfSquaredError": 0.008350730688935281
+            },
+            {
+              "axis": "E",
+              "user": 31,
+              "prototype": 50,
+              "absDiff": 19,
+              "sq": 0.0361,
+              "shareOfSquaredError": 0.7536534446764092
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "prototype": 70,
+              "absDiff": 1,
+              "sq": 0.0001,
+              "shareOfSquaredError": 0.0020876826722338203
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "prototype": 70,
+              "absDiff": 7,
+              "sq": 0.004900000000000001,
+              "shareOfSquaredError": 0.1022964509394572
+            }
+          ],
+          "distance": 0.09787747442593725,
+          "display": 90
+        }
+      },
+      {
+        "rank": 2,
+        "key": "草",
+        "name": "草",
+        "display": 85,
+        "raw_similarity": 0.8504005347603141,
+        "band": "top",
+        "gap_to_next": 7,
+        "prototype": {
+          "O": 90,
+          "C": 70,
+          "E": 50,
+          "A": 90,
+          "N": 50
+        },
+        "evidence": {
+          "rows": [
+            {
+              "axis": "O",
+              "user": 78,
+              "prototype": 90,
+              "absDiff": 12,
+              "sq": 0.0144,
+              "shareOfSquaredError": 0.128686327077748
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "prototype": 70,
+              "absDiff": 2,
+              "sq": 0.0004,
+              "shareOfSquaredError": 0.003574620196604111
+            },
+            {
+              "axis": "E",
+              "user": 31,
+              "prototype": 50,
+              "absDiff": 19,
+              "sq": 0.0361,
+              "shareOfSquaredError": 0.32260947274352103
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "prototype": 90,
+              "absDiff": 21,
+              "sq": 0.04409999999999999,
+              "shareOfSquaredError": 0.39410187667560315
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "prototype": 50,
+              "absDiff": 13,
+              "sq": 0.016900000000000002,
+              "shareOfSquaredError": 0.1510277033065237
+            }
+          ],
+          "distance": 0.14959946523968592,
+          "display": 85
+        }
+      },
+      {
+        "rank": 3,
+        "key": "風",
+        "name": "風",
+        "display": 78,
+        "raw_similarity": 0.7791380521683284,
+        "band": "top",
+        "gap_to_next": 3,
+        "prototype": {
+          "O": 90,
+          "C": 30,
+          "E": 50,
+          "A": 70,
+          "N": 50
+        },
+        "evidence": {
+          "rows": [
+            {
+              "axis": "O",
+              "user": 78,
+              "prototype": 90,
+              "absDiff": 12,
+              "sq": 0.0144,
+              "shareOfSquaredError": 0.05904059040590407
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "prototype": 30,
+              "absDiff": 42,
+              "sq": 0.17639999999999997,
+              "shareOfSquaredError": 0.7232472324723248
+            },
+            {
+              "axis": "E",
+              "user": 31,
+              "prototype": 50,
+              "absDiff": 19,
+              "sq": 0.0361,
+              "shareOfSquaredError": 0.14801148011480117
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "prototype": 70,
+              "absDiff": 1,
+              "sq": 0.0001,
+              "shareOfSquaredError": 0.0004100041000410005
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "prototype": 50,
+              "absDiff": 13,
+              "sq": 0.016900000000000002,
+              "shareOfSquaredError": 0.06929069290692909
+            }
+          ],
+          "distance": 0.2208619478316715,
+          "display": 78
+        }
+      },
+      {
+        "rank": 4,
+        "key": "雷",
+        "name": "雷",
+        "display": 75,
+        "raw_similarity": 0.7486436792121591,
+        "band": "middle",
+        "gap_to_next": 1,
+        "prototype": {
+          "O": 70,
+          "C": 70,
+          "E": 70,
+          "A": 30,
+          "N": 70
+        },
+        "evidence": {
+          "rows": [
+            {
+              "axis": "O",
+              "user": 78,
+              "prototype": 70,
+              "absDiff": 8,
+              "sq": 0.0064,
+              "shareOfSquaredError": 0.020259575815131367
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "prototype": 70,
+              "absDiff": 2,
+              "sq": 0.0004,
+              "shareOfSquaredError": 0.0012662234884457104
+            },
+            {
+              "axis": "E",
+              "user": 31,
+              "prototype": 70,
+              "absDiff": 39,
+              "sq": 0.1521,
+              "shareOfSquaredError": 0.4814814814814814
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "prototype": 30,
+              "absDiff": 39,
+              "sq": 0.1521,
+              "shareOfSquaredError": 0.4814814814814814
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "prototype": 70,
+              "absDiff": 7,
+              "sq": 0.004900000000000001,
+              "shareOfSquaredError": 0.015511237733459955
+            }
+          ],
+          "distance": 0.251356320787841,
+          "display": 75
+        }
+      },
+      {
+        "rank": 5,
+        "key": "氷",
+        "name": "氷",
+        "display": 74,
+        "raw_similarity": 0.7362197884601651,
+        "band": "middle",
+        "gap_to_next": 4,
+        "prototype": {
+          "O": 50,
+          "C": 70,
+          "E": 10,
+          "A": 30,
+          "N": 90
+        },
+        "evidence": {
+          "rows": [
+            {
+              "axis": "O",
+              "user": 78,
+              "prototype": 50,
+              "absDiff": 28,
+              "sq": 0.07840000000000001,
+              "shareOfSquaredError": 0.22535211267605634
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "prototype": 70,
+              "absDiff": 2,
+              "sq": 0.0004,
+              "shareOfSquaredError": 0.0011497556769186547
+            },
+            {
+              "axis": "E",
+              "user": 31,
+              "prototype": 10,
+              "absDiff": 21,
+              "sq": 0.04409999999999999,
+              "shareOfSquaredError": 0.12676056338028166
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "prototype": 30,
+              "absDiff": 39,
+              "sq": 0.1521,
+              "shareOfSquaredError": 0.43719459614831846
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "prototype": 90,
+              "absDiff": 27,
+              "sq": 0.0729,
+              "shareOfSquaredError": 0.20954297211842482
+            }
+          ],
+          "distance": 0.26378021153983483,
+          "display": 74
+        }
+      },
+      {
+        "rank": 6,
+        "key": "岩",
+        "name": "岩",
+        "display": 70,
+        "raw_similarity": 0.6993673337775816,
+        "band": "bottom",
+        "gap_to_next": 1,
+        "prototype": {
+          "O": 30,
+          "C": 90,
+          "E": 50,
+          "A": 90,
+          "N": 30
+        },
+        "evidence": {
+          "rows": [
+            {
+              "axis": "O",
+              "user": 78,
+              "prototype": 30,
+              "absDiff": 48,
+              "sq": 0.2304,
+              "shareOfSquaredError": 0.5098473113520691
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "prototype": 90,
+              "absDiff": 18,
+              "sq": 0.0324,
+              "shareOfSquaredError": 0.07169727815888471
+            },
+            {
+              "axis": "E",
+              "user": 31,
+              "prototype": 50,
+              "absDiff": 19,
+              "sq": 0.0361,
+              "shareOfSquaredError": 0.0798849302943129
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "prototype": 90,
+              "absDiff": 21,
+              "sq": 0.04409999999999999,
+              "shareOfSquaredError": 0.09758796193848196
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "prototype": 30,
+              "absDiff": 33,
+              "sq": 0.10890000000000001,
+              "shareOfSquaredError": 0.24098251825625142
+            }
+          ],
+          "distance": 0.30063266622241835,
+          "display": 70
+        }
+      },
+      {
+        "rank": 7,
+        "key": "炎",
+        "name": "炎",
+        "display": 69,
+        "raw_similarity": 0.6914874394777418,
+        "band": "bottom",
+        "gap_to_next": null,
+        "prototype": {
+          "O": 50,
+          "C": 90,
+          "E": 90,
+          "A": 70,
+          "N": 50
+        },
+        "evidence": {
+          "rows": [
+            {
+              "axis": "O",
+              "user": 78,
+              "prototype": 50,
+              "absDiff": 28,
+              "sq": 0.07840000000000001,
+              "shareOfSquaredError": 0.164740491699937
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "prototype": 90,
+              "absDiff": 18,
+              "sq": 0.0324,
+              "shareOfSquaredError": 0.0680815297331372
+            },
+            {
+              "axis": "E",
+              "user": 31,
+              "prototype": 90,
+              "absDiff": 59,
+              "sq": 0.34809999999999997,
+              "shareOfSquaredError": 0.7314561882748476
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "prototype": 70,
+              "absDiff": 1,
+              "sq": 0.0001,
+              "shareOfSquaredError": 0.00021012817818869513
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "prototype": 50,
+              "absDiff": 13,
+              "sq": 0.016900000000000002,
+              "shareOfSquaredError": 0.03551166211388948
+            }
+          ],
+          "distance": 0.3085125605222582,
+          "display": 69
+        }
+      }
+    ],
+    "weapons": [
+      {
+        "rank": 1,
+        "key": "長柄",
+        "name": "長柄",
+        "display": 82,
+        "raw_similarity": 0.8209469352398568,
+        "band": "top",
+        "gap_to_next": 1,
+        "prototype": {
+          "AGY": 55,
+          "REL": 70,
+          "ROL": 90,
+          "REF": 45,
+          "AUT": 45
+        },
+        "evidence": {
+          "rows": [
+            {
+              "axis": "AGY",
+              "user": 42,
+              "prototype": 55,
+              "absDiff": 13,
+              "sq": 0.016900000000000002,
+              "shareOfSquaredError": 0.10542732376793514
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "prototype": 70,
+              "absDiff": 1,
+              "sq": 0.0001,
+              "shareOfSquaredError": 0.0006238303181534623
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "prototype": 90,
+              "absDiff": 7,
+              "sq": 0.004900000000000001,
+              "shareOfSquaredError": 0.030567685589519656
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "prototype": 45,
+              "absDiff": 30,
+              "sq": 0.09,
+              "shareOfSquaredError": 0.561447286338116
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "prototype": 45,
+              "absDiff": 22,
+              "sq": 0.0484,
+              "shareOfSquaredError": 0.30193387398627575
+            }
+          ],
+          "distance": 0.1790530647601431,
+          "display": 82
+        }
+      },
+      {
+        "rank": 2,
+        "key": "法器",
+        "name": "法器",
+        "display": 81,
+        "raw_similarity": 0.808531987005662,
+        "band": "top",
+        "gap_to_next": 4,
+        "prototype": {
+          "AGY": 30,
+          "REL": 45,
+          "ROL": 55,
+          "REF": 90,
+          "AUT": 65
+        },
+        "evidence": {
+          "rows": [
+            {
+              "axis": "AGY",
+              "user": 42,
+              "prototype": 30,
+              "absDiff": 12,
+              "sq": 0.0144,
+              "shareOfSquaredError": 0.0785597381342062
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "prototype": 45,
+              "absDiff": 26,
+              "sq": 0.06760000000000001,
+              "shareOfSquaredError": 0.36879432624113473
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "prototype": 55,
+              "absDiff": 28,
+              "sq": 0.07840000000000001,
+              "shareOfSquaredError": 0.4277141298417894
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "prototype": 90,
+              "absDiff": 15,
+              "sq": 0.0225,
+              "shareOfSquaredError": 0.1227495908346972
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "prototype": 65,
+              "absDiff": 2,
+              "sq": 0.0004,
+              "shareOfSquaredError": 0.002182214948172395
+            }
+          ],
+          "distance": 0.19146801299433805,
+          "display": 81
+        }
+      },
+      {
+        "rank": 3,
+        "key": "弓",
+        "name": "弓",
+        "display": 77,
+        "raw_similarity": 0.7668476892672946,
+        "band": "top",
+        "gap_to_next": 2,
+        "prototype": {
+          "AGY": 45,
+          "REL": 35,
+          "ROL": 55,
+          "REF": 65,
+          "AUT": 90
+        },
+        "evidence": {
+          "rows": [
+            {
+              "axis": "AGY",
+              "user": 42,
+              "prototype": 45,
+              "absDiff": 3,
+              "sq": 0.0009,
+              "shareOfSquaredError": 0.003311258278145695
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "prototype": 35,
+              "absDiff": 36,
+              "sq": 0.1296,
+              "shareOfSquaredError": 0.47682119205298
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "prototype": 55,
+              "absDiff": 28,
+              "sq": 0.07840000000000001,
+              "shareOfSquaredError": 0.2884473877851361
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "prototype": 65,
+              "absDiff": 10,
+              "sq": 0.010000000000000002,
+              "shareOfSquaredError": 0.03679175864606328
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "prototype": 90,
+              "absDiff": 23,
+              "sq": 0.0529,
+              "shareOfSquaredError": 0.19462840323767475
+            }
+          ],
+          "distance": 0.23315231073270537,
+          "display": 77
+        }
+      },
+      {
+        "rank": 4,
+        "key": "片手剣",
+        "name": "片手剣",
+        "display": 75,
+        "raw_similarity": 0.7461102601521676,
+        "band": "middle",
+        "gap_to_next": 13,
+        "prototype": {
+          "AGY": 50,
+          "REL": 90,
+          "ROL": 60,
+          "REF": 45,
+          "AUT": 30
+        },
+        "evidence": {
+          "rows": [
+            {
+              "axis": "AGY",
+              "user": 42,
+              "prototype": 50,
+              "absDiff": 8,
+              "sq": 0.0064,
+              "shareOfSquaredError": 0.019857275829972074
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "prototype": 90,
+              "absDiff": 19,
+              "sq": 0.0361,
+              "shareOfSquaredError": 0.11200744647843623
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "prototype": 60,
+              "absDiff": 23,
+              "sq": 0.0529,
+              "shareOfSquaredError": 0.16413279553211294
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "prototype": 45,
+              "absDiff": 30,
+              "sq": 0.09,
+              "shareOfSquaredError": 0.27924294135898226
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "prototype": 30,
+              "absDiff": 37,
+              "sq": 0.1369,
+              "shareOfSquaredError": 0.4247595408004964
+            }
+          ],
+          "distance": 0.25388973984783236,
+          "display": 75
+        }
+      },
+      {
+        "rank": 5,
+        "key": "両手剣",
+        "name": "両手剣",
+        "display": 62,
+        "raw_similarity": 0.6240212771977649,
+        "band": "bottom",
+        "gap_to_next": null,
+        "prototype": {
+          "AGY": 90,
+          "REL": 30,
+          "ROL": 60,
+          "REF": 30,
+          "AUT": 90
+        },
+        "evidence": {
+          "rows": [
+            {
+              "axis": "AGY",
+              "user": 42,
+              "prototype": 90,
+              "absDiff": 48,
+              "sq": 0.2304,
+              "shareOfSquaredError": 0.32597623089983024
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "prototype": 30,
+              "absDiff": 41,
+              "sq": 0.16809999999999997,
+              "shareOfSquaredError": 0.2378324844368987
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "prototype": 60,
+              "absDiff": 23,
+              "sq": 0.0529,
+              "shareOfSquaredError": 0.0748443689869836
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "prototype": 30,
+              "absDiff": 45,
+              "sq": 0.2025,
+              "shareOfSquaredError": 0.28650254668930397
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "prototype": 90,
+              "absDiff": 23,
+              "sq": 0.0529,
+              "shareOfSquaredError": 0.0748443689869836
+            }
+          ],
+          "distance": 0.37597872280223515,
+          "display": 62
+        }
+      }
+    ],
+    "nations": [
+      {
+        "rank": 1,
+        "key": "スメール",
+        "name": "スメール",
+        "display": 96,
+        "raw_similarity": 0.9285540914789779,
+        "band": "top",
+        "gap_to_next": 9,
+        "prototype": {
+          "SD": 85,
+          "ST": 55,
+          "HE": 35,
+          "AC": 60,
+          "PO": 25,
+          "SE": 45,
+          "CO": 35,
+          "TR": 40,
+          "BE": 70,
+          "UN": 95
+        },
+        "evidence": {
+          "rows": [
+            {
+              "axis": "SD",
+              "userCentered": 25.5,
+              "protoCentered": 30.5,
+              "contribution": 0.18271548251683115
+            },
+            {
+              "axis": "ST",
+              "userCentered": -15.5,
+              "protoCentered": 0.5,
+              "contribution": -0.0018206942970176037
+            },
+            {
+              "axis": "HE",
+              "userCentered": -15.5,
+              "protoCentered": -19.5,
+              "contribution": 0.07100707758368655
+            },
+            {
+              "axis": "AC",
+              "userCentered": 0.5,
+              "protoCentered": 5.5,
+              "contribution": 0.0006460528150707627
+            },
+            {
+              "axis": "PO",
+              "userCentered": -32.5,
+              "protoCentered": -29.5,
+              "contribution": 0.2252375041633068
+            },
+            {
+              "axis": "SE",
+              "userCentered": 0.5,
+              "protoCentered": -9.5,
+              "contribution": -0.0011159094078494992
+            },
+            {
+              "axis": "CO",
+              "userCentered": -7.5,
+              "protoCentered": -19.5,
+              "contribution": 0.034358263346945105
+            },
+            {
+              "axis": "TR",
+              "userCentered": -7.5,
+              "protoCentered": -14.5,
+              "contribution": 0.025548452232343796
+            },
+            {
+              "axis": "BE",
+              "userCentered": 17.5,
+              "protoCentered": 15.5,
+              "contribution": 0.06372430039561613
+            },
+            {
+              "axis": "UN",
+              "userCentered": 34.5,
+              "protoCentered": 40.5,
+              "contribution": 0.32825356213004475
+            }
+          ],
+          "cosine": 0.9285540914789779,
+          "display": 96
+        }
+      },
+      {
+        "rank": 2,
+        "key": "ナドクライ",
+        "name": "ナド・クライ",
+        "display": 87,
+        "raw_similarity": 0.7393205326007838,
+        "band": "top",
+        "gap_to_next": 4,
+        "prototype": {
+          "SD": 90,
+          "ST": 60,
+          "HE": 25,
+          "AC": 30,
+          "PO": 20,
+          "SE": 60,
+          "CO": 20,
+          "TR": 35,
+          "BE": 50,
+          "UN": 70
+        },
+        "evidence": {
+          "rows": [
+            {
+              "axis": "SD",
+              "userCentered": 25.5,
+              "protoCentered": 44,
+              "contribution": 0.25523619617787063
+            },
+            {
+              "axis": "ST",
+              "userCentered": -15.5,
+              "protoCentered": 14,
+              "contribution": -0.049363863253652336
+            },
+            {
+              "axis": "HE",
+              "userCentered": -15.5,
+              "protoCentered": -21,
+              "contribution": 0.07404579488047851
+            },
+            {
+              "axis": "AC",
+              "userCentered": 0.5,
+              "protoCentered": -16,
+              "contribution": -0.0018198659264019295
+            },
+            {
+              "axis": "PO",
+              "userCentered": -32.5,
+              "protoCentered": -26,
+              "contribution": 0.1922233384762038
+            },
+            {
+              "axis": "SE",
+              "userCentered": 0.5,
+              "protoCentered": 14,
+              "contribution": 0.0015923826856016883
+            },
+            {
+              "axis": "CO",
+              "userCentered": -7.5,
+              "protoCentered": -26,
+              "contribution": 0.04435923195604703
+            },
+            {
+              "axis": "TR",
+              "userCentered": -7.5,
+              "protoCentered": -11,
+              "contribution": 0.0187673673660199
+            },
+            {
+              "axis": "BE",
+              "userCentered": 17.5,
+              "protoCentered": 4,
+              "contribution": 0.015923826856016884
+            },
+            {
+              "axis": "UN",
+              "userCentered": 34.5,
+              "protoCentered": 24,
+              "contribution": 0.1883561233825997
+            }
+          ],
+          "cosine": 0.7393205326007839,
+          "display": 87
+        }
+      },
+      {
+        "rank": 3,
+        "key": "フォンテーヌ",
+        "name": "フォンテーヌ",
+        "display": 83,
+        "raw_similarity": 0.6608385972452978,
+        "band": "top",
+        "gap_to_next": 8,
+        "prototype": {
+          "SD": 55,
+          "ST": 45,
+          "HE": 50,
+          "AC": 60,
+          "PO": 45,
+          "SE": 65,
+          "CO": 80,
+          "TR": 55,
+          "BE": 65,
+          "UN": 95
+        },
+        "evidence": {
+          "rows": [
+            {
+              "axis": "SD",
+              "userCentered": 25.5,
+              "protoCentered": -6.5,
+              "contribution": -0.05667994695648544
+            },
+            {
+              "axis": "ST",
+              "userCentered": -15.5,
+              "protoCentered": -16.5,
+              "contribution": 0.08745638874281238
+            },
+            {
+              "axis": "HE",
+              "userCentered": -15.5,
+              "protoCentered": -11.5,
+              "contribution": 0.06095445276014196
+            },
+            {
+              "axis": "AC",
+              "userCentered": 0.5,
+              "protoCentered": -1.5,
+              "contribution": -0.00025647034821939116
+            },
+            {
+              "axis": "PO",
+              "userCentered": -32.5,
+              "protoCentered": -16.5,
+              "contribution": 0.18337629897686467
+            },
+            {
+              "axis": "SE",
+              "userCentered": 0.5,
+              "protoCentered": 3.5,
+              "contribution": 0.0005984308125119126
+            },
+            {
+              "axis": "CO",
+              "userCentered": -7.5,
+              "protoCentered": 18.5,
+              "contribution": -0.04744701442058736
+            },
+            {
+              "axis": "TR",
+              "userCentered": -7.5,
+              "protoCentered": -6.5,
+              "contribution": 0.016670572634260424
+            },
+            {
+              "axis": "BE",
+              "userCentered": 17.5,
+              "protoCentered": 3.5,
+              "contribution": 0.020945078437916945
+            },
+            {
+              "axis": "UN",
+              "userCentered": 34.5,
+              "protoCentered": 33.5,
+              "contribution": 0.3952208066060817
+            }
+          ],
+          "cosine": 0.6608385972452978,
+          "display": 83
+        }
+      },
+      {
+        "rank": 4,
+        "key": "モンド",
+        "name": "モンド",
+        "display": 75,
+        "raw_similarity": 0.5047826402659563,
+        "band": "middle",
+        "gap_to_next": 28,
+        "prototype": {
+          "SD": 90,
+          "ST": 80,
+          "HE": 65,
+          "AC": 45,
+          "PO": 25,
+          "SE": 35,
+          "CO": 20,
+          "TR": 25,
+          "BE": 55,
+          "UN": 70
+        },
+        "evidence": {
+          "rows": [
+            {
+              "axis": "SD",
+              "userCentered": 25.5,
+              "protoCentered": 39,
+              "contribution": 0.216849389090494
+            },
+            {
+              "axis": "ST",
+              "userCentered": -15.5,
+              "protoCentered": 29,
+              "contribution": -0.09801287118770946
+            },
+            {
+              "axis": "HE",
+              "userCentered": -15.5,
+              "protoCentered": 14,
+              "contribution": -0.04731655850441146
+            },
+            {
+              "axis": "AC",
+              "userCentered": 0.5,
+              "protoCentered": -6,
+              "contribution": -0.0006541459701070709
+            },
+            {
+              "axis": "PO",
+              "userCentered": -32.5,
+              "protoCentered": -26,
+              "contribution": 0.18425111491349164
+            },
+            {
+              "axis": "SE",
+              "userCentered": 0.5,
+              "protoCentered": -16,
+              "contribution": -0.0017443892536188558
+            },
+            {
+              "axis": "CO",
+              "userCentered": -7.5,
+              "protoCentered": -31,
+              "contribution": 0.050696312683297995
+            },
+            {
+              "axis": "TR",
+              "userCentered": -7.5,
+              "protoCentered": -26,
+              "contribution": 0.042519488056959605
+            },
+            {
+              "axis": "BE",
+              "userCentered": 17.5,
+              "protoCentered": 4,
+              "contribution": 0.015263405969164987
+            },
+            {
+              "axis": "UN",
+              "userCentered": 34.5,
+              "protoCentered": 19,
+              "contribution": 0.142930894468395
+            }
+          ],
+          "cosine": 0.5047826402659563,
+          "display": 75
+        }
+      },
+      {
+        "rank": 5,
+        "key": "ナタ",
+        "name": "ナタ",
+        "display": 47,
+        "raw_similarity": -0.06003688783610116,
+        "band": "middle",
+        "gap_to_next": 1,
+        "prototype": {
+          "SD": 70,
+          "ST": 95,
+          "HE": 90,
+          "AC": 75,
+          "PO": 55,
+          "SE": 25,
+          "CO": 30,
+          "TR": 45,
+          "BE": 70,
+          "UN": 55
+        },
+        "evidence": {
+          "rows": [
+            {
+              "axis": "SD",
+              "userCentered": 25.5,
+              "protoCentered": 9,
+              "contribution": 0.05299409907071237
+            },
+            {
+              "axis": "ST",
+              "userCentered": -15.5,
+              "protoCentered": 34,
+              "contribution": -0.1216901534216358
+            },
+            {
+              "axis": "HE",
+              "userCentered": -15.5,
+              "protoCentered": 29,
+              "contribution": -0.10379454262433642
+            },
+            {
+              "axis": "AC",
+              "userCentered": 0.5,
+              "protoCentered": 14,
+              "contribution": 0.0016163777494334927
+            },
+            {
+              "axis": "PO",
+              "userCentered": -32.5,
+              "protoCentered": -6,
+              "contribution": 0.045027665877075865
+            },
+            {
+              "axis": "SE",
+              "userCentered": 0.5,
+              "protoCentered": -36,
+              "contribution": -0.004156399927114696
+            },
+            {
+              "axis": "CO",
+              "userCentered": -7.5,
+              "protoCentered": -31,
+              "contribution": 0.05368683239189815
+            },
+            {
+              "axis": "TR",
+              "userCentered": -7.5,
+              "protoCentered": -16,
+              "contribution": 0.027709332847431302
+            },
+            {
+              "axis": "BE",
+              "userCentered": 17.5,
+              "protoCentered": 9,
+              "contribution": 0.03636849936225359
+            },
+            {
+              "axis": "UN",
+              "userCentered": 34.5,
+              "protoCentered": -6,
+              "contribution": -0.047798599161819
+            }
+          ],
+          "cosine": -0.060036887836101165,
+          "display": 47
+        }
+      },
+      {
+        "rank": 6,
+        "key": "璃月",
+        "name": "璃月",
+        "display": 46,
+        "raw_similarity": -0.07387337956967437,
+        "band": "middle",
+        "gap_to_next": 2,
+        "prototype": {
+          "SD": 45,
+          "ST": 35,
+          "HE": 40,
+          "AC": 85,
+          "PO": 60,
+          "SE": 70,
+          "CO": 65,
+          "TR": 85,
+          "BE": 60,
+          "UN": 50
+        },
+        "evidence": {
+          "rows": [
+            {
+              "axis": "SD",
+              "userCentered": 25.5,
+              "protoCentered": -14.5,
+              "contribution": -0.1150091877721562
+            },
+            {
+              "axis": "ST",
+              "userCentered": -15.5,
+              "protoCentered": -24.5,
+              "contribution": 0.11811964585930039
+            },
+            {
+              "axis": "HE",
+              "userCentered": -15.5,
+              "protoCentered": -19.5,
+              "contribution": 0.09401359568393296
+            },
+            {
+              "axis": "AC",
+              "userCentered": 0.5,
+              "protoCentered": 25.5,
+              "contribution": 0.003965834061108835
+            },
+            {
+              "axis": "PO",
+              "userCentered": -32.5,
+              "protoCentered": 0.5,
+              "contribution": -0.0050544943916092985
+            },
+            {
+              "axis": "SE",
+              "userCentered": 0.5,
+              "protoCentered": 10.5,
+              "contribution": 0.0016329904957506965
+            },
+            {
+              "axis": "CO",
+              "userCentered": -7.5,
+              "protoCentered": 5.5,
+              "contribution": -0.012830639609469759
+            },
+            {
+              "axis": "TR",
+              "userCentered": -7.5,
+              "protoCentered": 25.5,
+              "contribution": -0.05948751091663252
+            },
+            {
+              "axis": "BE",
+              "userCentered": 17.5,
+              "protoCentered": 0.5,
+              "contribution": 0.0027216508262511607
+            },
+            {
+              "axis": "UN",
+              "userCentered": 34.5,
+              "protoCentered": -9.5,
+              "contribution": -0.10194526380615063
+            }
+          ],
+          "cosine": -0.07387337956967437,
+          "display": 46
+        }
+      },
+      {
+        "rank": 7,
+        "key": "稲妻",
+        "name": "稲妻",
+        "display": 44,
+        "raw_similarity": -0.12015846333541882,
+        "band": "bottom",
+        "gap_to_next": 16,
+        "prototype": {
+          "SD": 25,
+          "ST": 20,
+          "HE": 30,
+          "AC": 50,
+          "PO": 55,
+          "SE": 90,
+          "CO": 85,
+          "TR": 95,
+          "BE": 60,
+          "UN": 45
+        },
+        "evidence": {
+          "rows": [
+            {
+              "axis": "SD",
+              "userCentered": 25.5,
+              "protoCentered": -30.5,
+              "contribution": -0.15510912009812777
+            },
+            {
+              "axis": "ST",
+              "userCentered": -15.5,
+              "protoCentered": -35.5,
+              "contribution": 0.1097380820752103
+            },
+            {
+              "axis": "HE",
+              "userCentered": -15.5,
+              "protoCentered": -25.5,
+              "contribution": 0.07882594627937642
+            },
+            {
+              "axis": "AC",
+              "userCentered": 0.5,
+              "protoCentered": -5.5,
+              "contribution": -0.0005484411189583432
+            },
+            {
+              "axis": "PO",
+              "userCentered": -32.5,
+              "protoCentered": -0.5,
+              "contribution": 0.0032407884302083916
+            },
+            {
+              "axis": "SE",
+              "userCentered": 0.5,
+              "protoCentered": 34.5,
+              "contribution": 0.0034402215643750617
+            },
+            {
+              "axis": "CO",
+              "userCentered": -7.5,
+              "protoCentered": 29.5,
+              "contribution": -0.04412458093437579
+            },
+            {
+              "axis": "TR",
+              "userCentered": -7.5,
+              "protoCentered": 39.5,
+              "contribution": -0.05908206599687606
+            },
+            {
+              "axis": "BE",
+              "userCentered": 17.5,
+              "protoCentered": 4.5,
+              "contribution": 0.01570535931562528
+            },
+            {
+              "axis": "UN",
+              "userCentered": 34.5,
+              "protoCentered": -10.5,
+              "contribution": -0.0722446528518763
+            }
+          ],
+          "cosine": -0.12015846333541881,
+          "display": 44
+        }
+      },
+      {
+        "rank": 8,
+        "key": "スネージナヤ",
+        "name": "スネージナヤ",
+        "display": 28,
+        "raw_similarity": -0.44051820288643284,
+        "band": "bottom",
+        "gap_to_next": null,
+        "prototype": {
+          "SD": 65,
+          "ST": 65,
+          "HE": 40,
+          "AC": 90,
+          "PO": 95,
+          "SE": 55,
+          "CO": 35,
+          "TR": 40,
+          "BE": 35,
+          "UN": 30
+        },
+        "evidence": {
+          "rows": [
+            {
+              "axis": "SD",
+              "userCentered": 25.5,
+              "protoCentered": 10,
+              "contribution": 0.059122179861073876
+            },
+            {
+              "axis": "ST",
+              "userCentered": -15.5,
+              "protoCentered": 10,
+              "contribution": -0.03593701128810373
+            },
+            {
+              "axis": "HE",
+              "userCentered": -15.5,
+              "protoCentered": -15,
+              "contribution": 0.053905516932155596
+            },
+            {
+              "axis": "AC",
+              "userCentered": 0.5,
+              "protoCentered": 35,
+              "contribution": 0.004057404500269776
+            },
+            {
+              "axis": "PO",
+              "userCentered": -32.5,
+              "protoCentered": 40,
+              "contribution": -0.30140719144861194
+            },
+            {
+              "axis": "SE",
+              "userCentered": 0.5,
+              "protoCentered": 0,
+              "contribution": 0
+            },
+            {
+              "axis": "CO",
+              "userCentered": -7.5,
+              "protoCentered": -20,
+              "contribution": 0.034777752859455224
+            },
+            {
+              "axis": "TR",
+              "userCentered": -7.5,
+              "protoCentered": -15,
+              "contribution": 0.026083314644591418
+            },
+            {
+              "axis": "BE",
+              "userCentered": 17.5,
+              "protoCentered": -20,
+              "contribution": -0.08114809000539552
+            },
+            {
+              "axis": "UN",
+              "userCentered": 34.5,
+              "protoCentered": -25,
+              "contribution": -0.19997207894186753
+            }
+          ],
+          "cosine": -0.44051820288643284,
+          "display": 28
+        }
+      }
+    ],
+    "rank_band_rule": {
+      "version": "CORE1-RANKBAND-1.0.0",
+      "top": 3,
+      "bottom": {
+        "element": 2,
+        "weapon": 1,
+        "nation": 2
+      }
+    }
+  },
+  "mirror": {
+    "model": "ETI-MIRROR-2.1.0",
+    "selected": "オロルン",
+    "selection_meta": {
+      "mirrorModelVersion": "ETI-MIRROR-2.1.0",
+      "characterProfileVersion": "ETI-CHAR-2.1.0",
+      "rawScoreEpsilonPt": 1e-10,
+      "tiedAtTopCount": 1,
+      "selectedBy": "highest_raw_score",
+      "topAttributes": {
+        "element": [
+          "水"
+        ],
+        "nation": [
+          "スメール"
+        ],
+        "weapon": [
+          "長柄"
+        ]
+      },
+      "trace": []
+    },
+    "top10": [
+      {
+        "rank": 1,
+        "character_id": 60,
+        "name": "オロルン",
+        "official_element": "雷",
+        "official_weapon": "弓",
+        "official_region": "ナタ",
+        "basis_tags": [
+          "寡黙",
+          "共感",
+          "自然",
+          "神秘",
+          "自律",
+          "共同体"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%AA%E3%83%AD%E3%83%AB%E3%83%B3",
+        "raw": 90.01180106858264,
+        "display": 90,
+        "pSim": 0.8788389501531123,
+        "sSim": 0.9037711062102447,
+        "vSim": 0.9248369958716933,
+        "layer_diffs": {
+          "personality": [
+            {
+              "axis": "O",
+              "user": 78,
+              "character": 55,
+              "absDiff": 23
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "character": 70,
+              "absDiff": 2
+            },
+            {
+              "axis": "E",
+              "user": 31,
+              "character": 35,
+              "absDiff": 4
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "character": 65,
+              "absDiff": 4
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "character": 50,
+              "absDiff": 13
+            }
+          ],
+          "style": [
+            {
+              "axis": "AGY",
+              "user": 42,
+              "character": 45,
+              "absDiff": 3
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "character": 60,
+              "absDiff": 11
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "character": 75,
+              "absDiff": 8
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "character": 65,
+              "absDiff": 10
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "character": 80,
+              "absDiff": 13
+            }
+          ],
+          "values": [
+            {
+              "axis": "SD",
+              "userCentered": 25.5,
+              "characterCentered": 11,
+              "sameSign": true
+            },
+            {
+              "axis": "ST",
+              "userCentered": -15.5,
+              "characterCentered": -4,
+              "sameSign": true
+            },
+            {
+              "axis": "HE",
+              "userCentered": -15.5,
+              "characterCentered": -9,
+              "sameSign": true
+            },
+            {
+              "axis": "AC",
+              "userCentered": 0.5,
+              "characterCentered": -9,
+              "sameSign": false
+            },
+            {
+              "axis": "PO",
+              "userCentered": -32.5,
+              "characterCentered": -29,
+              "sameSign": true
+            },
+            {
+              "axis": "SE",
+              "userCentered": 0.5,
+              "characterCentered": 1,
+              "sameSign": true
+            },
+            {
+              "axis": "CO",
+              "userCentered": -7.5,
+              "characterCentered": -9,
+              "sameSign": true
+            },
+            {
+              "axis": "TR",
+              "userCentered": -7.5,
+              "characterCentered": 6,
+              "sameSign": false
+            },
+            {
+              "axis": "BE",
+              "userCentered": 17.5,
+              "characterCentered": 26,
+              "sameSign": true
+            },
+            {
+              "axis": "UN",
+              "userCentered": 34.5,
+              "characterCentered": 16,
+              "sameSign": true
+            }
+          ]
+        }
+      },
+      {
+        "rank": 2,
+        "character_id": 100,
+        "name": "白朮",
+        "official_element": "草",
+        "official_weapon": "法器",
+        "official_region": "璃月",
+        "basis_tags": [
+          "治癒",
+          "知的探究",
+          "戦略",
+          "共感",
+          "自律",
+          "粘り強さ"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E7%99%BD%E6%9C%AE",
+        "raw": 89.83470487177017,
+        "display": 90,
+        "pSim": 0.8788389501531123,
+        "sSim": 0.9227989637375249,
+        "vSim": 0.8999059317839979,
+        "layer_diffs": {
+          "personality": [
+            {
+              "axis": "O",
+              "user": 78,
+              "character": 65,
+              "absDiff": 13
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "character": 75,
+              "absDiff": 3
+            },
+            {
+              "axis": "E",
+              "user": 31,
+              "character": 45,
+              "absDiff": 14
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "character": 75,
+              "absDiff": 6
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "character": 45,
+              "absDiff": 18
+            }
+          ],
+          "style": [
+            {
+              "axis": "AGY",
+              "user": 42,
+              "character": 55,
+              "absDiff": 13
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "character": 75,
+              "absDiff": 4
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "character": 75,
+              "absDiff": 8
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "character": 75,
+              "absDiff": 0
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "character": 60,
+              "absDiff": 7
+            }
+          ],
+          "values": [
+            {
+              "axis": "SD",
+              "userCentered": 25.5,
+              "characterCentered": 24,
+              "sameSign": true
+            },
+            {
+              "axis": "ST",
+              "userCentered": -15.5,
+              "characterCentered": -11,
+              "sameSign": true
+            },
+            {
+              "axis": "HE",
+              "userCentered": -15.5,
+              "characterCentered": -1,
+              "sameSign": true
+            },
+            {
+              "axis": "AC",
+              "userCentered": 0.5,
+              "characterCentered": 9,
+              "sameSign": true
+            },
+            {
+              "axis": "PO",
+              "userCentered": -32.5,
+              "characterCentered": -11,
+              "sameSign": true
+            },
+            {
+              "axis": "SE",
+              "userCentered": 0.5,
+              "characterCentered": -11,
+              "sameSign": false
+            },
+            {
+              "axis": "CO",
+              "userCentered": -7.5,
+              "characterCentered": -16,
+              "sameSign": true
+            },
+            {
+              "axis": "TR",
+              "userCentered": -7.5,
+              "characterCentered": -11,
+              "sameSign": true
+            },
+            {
+              "axis": "BE",
+              "userCentered": 17.5,
+              "characterCentered": 14,
+              "sameSign": true
+            },
+            {
+              "axis": "UN",
+              "userCentered": 34.5,
+              "characterCentered": 14,
+              "sameSign": true
+            }
+          ]
+        }
+      },
+      {
+        "rank": 3,
+        "character_id": 51,
+        "name": "アリョーシャ",
+        "official_element": "雷",
+        "official_weapon": "長柄",
+        "official_region": "スネージナヤ",
+        "basis_tags": [
+          "現実的理想主義",
+          "保護",
+          "責任",
+          "自律",
+          "計算",
+          "公正",
+          "警戒"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A2%E3%83%AA%E3%83%A7%E3%83%BC%E3%82%B7%E3%83%A3",
+        "raw": 89.78485486471695,
+        "display": 90,
+        "pSim": 0.8952145048205621,
+        "sSim": 0.871703468480243,
+        "vSim": 0.9275056872495726,
+        "layer_diffs": {
+          "personality": [
+            {
+              "axis": "O",
+              "user": 78,
+              "character": 60,
+              "absDiff": 18
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "character": 80,
+              "absDiff": 8
+            },
+            {
+              "axis": "E",
+              "user": 31,
+              "character": 35,
+              "absDiff": 4
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "character": 60,
+              "absDiff": 9
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "character": 55,
+              "absDiff": 8
+            }
+          ],
+          "style": [
+            {
+              "axis": "AGY",
+              "user": 42,
+              "character": 65,
+              "absDiff": 23
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "character": 60,
+              "absDiff": 11
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "character": 80,
+              "absDiff": 3
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "character": 65,
+              "absDiff": 10
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "character": 75,
+              "absDiff": 8
+            }
+          ],
+          "values": [
+            {
+              "axis": "SD",
+              "userCentered": 25.5,
+              "characterCentered": 10,
+              "sameSign": true
+            },
+            {
+              "axis": "ST",
+              "userCentered": -15.5,
+              "characterCentered": 0,
+              "sameSign": false
+            },
+            {
+              "axis": "HE",
+              "userCentered": -15.5,
+              "characterCentered": -15,
+              "sameSign": true
+            },
+            {
+              "axis": "AC",
+              "userCentered": 0.5,
+              "characterCentered": -10,
+              "sameSign": false
+            },
+            {
+              "axis": "PO",
+              "userCentered": -32.5,
+              "characterCentered": -35,
+              "sameSign": true
+            },
+            {
+              "axis": "SE",
+              "userCentered": 0.5,
+              "characterCentered": 20,
+              "sameSign": true
+            },
+            {
+              "axis": "CO",
+              "userCentered": -7.5,
+              "characterCentered": -15,
+              "sameSign": true
+            },
+            {
+              "axis": "TR",
+              "userCentered": -7.5,
+              "characterCentered": -10,
+              "sameSign": true
+            },
+            {
+              "axis": "BE",
+              "userCentered": 17.5,
+              "characterCentered": 25,
+              "sameSign": true
+            },
+            {
+              "axis": "UN",
+              "userCentered": 34.5,
+              "characterCentered": 30,
+              "sameSign": true
+            }
+          ]
+        }
+      },
+      {
+        "rank": 4,
+        "character_id": 103,
+        "name": "ティナリ",
+        "official_element": "草",
+        "official_weapon": "弓",
+        "official_region": "スメール",
+        "basis_tags": [
+          "知的探究",
+          "指導",
+          "役割責任",
+          "実利",
+          "共感",
+          "規律"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%86%E3%82%A3%E3%83%8A%E3%83%AA",
+        "raw": 88.41988414444819,
+        "display": 88,
+        "pSim": 0.8700769458487063,
+        "sSim": 0.9022247475073575,
+        "vSim": 0.8850021295093067,
+        "layer_diffs": {
+          "personality": [
+            {
+              "axis": "O",
+              "user": 78,
+              "character": 70,
+              "absDiff": 8
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "character": 80,
+              "absDiff": 8
+            },
+            {
+              "axis": "E",
+              "user": 31,
+              "character": 45,
+              "absDiff": 14
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "character": 55,
+              "absDiff": 14
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "character": 45,
+              "absDiff": 18
+            }
+          ],
+          "style": [
+            {
+              "axis": "AGY",
+              "user": 42,
+              "character": 60,
+              "absDiff": 18
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "character": 70,
+              "absDiff": 1
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "character": 80,
+              "absDiff": 3
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "character": 75,
+              "absDiff": 0
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "character": 55,
+              "absDiff": 12
+            }
+          ],
+          "values": [
+            {
+              "axis": "SD",
+              "userCentered": 25.5,
+              "characterCentered": 3.5,
+              "sameSign": true
+            },
+            {
+              "axis": "ST",
+              "userCentered": -15.5,
+              "characterCentered": -6.5,
+              "sameSign": true
+            },
+            {
+              "axis": "HE",
+              "userCentered": -15.5,
+              "characterCentered": -11.5,
+              "sameSign": true
+            },
+            {
+              "axis": "AC",
+              "userCentered": 0.5,
+              "characterCentered": 8.5,
+              "sameSign": true
+            },
+            {
+              "axis": "PO",
+              "userCentered": -32.5,
+              "characterCentered": -11.5,
+              "sameSign": true
+            },
+            {
+              "axis": "SE",
+              "userCentered": 0.5,
+              "characterCentered": -1.5,
+              "sameSign": false
+            },
+            {
+              "axis": "CO",
+              "userCentered": -7.5,
+              "characterCentered": 8.5,
+              "sameSign": false
+            },
+            {
+              "axis": "TR",
+              "userCentered": -7.5,
+              "characterCentered": -6.5,
+              "sameSign": true
+            },
+            {
+              "axis": "BE",
+              "userCentered": 17.5,
+              "characterCentered": 3.5,
+              "sameSign": true
+            },
+            {
+              "axis": "UN",
+              "userCentered": 34.5,
+              "characterCentered": 13.5,
+              "sameSign": true
+            }
+          ]
+        }
+      },
+      {
+        "rank": 5,
+        "character_id": 109,
+        "name": "エミリエ",
+        "official_element": "草",
+        "official_weapon": "長柄",
+        "official_region": "フォンテーヌ",
+        "basis_tags": [
+          "researcher",
+          "実利",
+          "寡黙",
+          "共感",
+          "専門性",
+          "情報"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A8%E3%83%9F%E3%83%AA%E3%82%A8",
+        "raw": 86.85391066017428,
+        "display": 87,
+        "pSim": 0.8720156259537908,
+        "sSim": 0.8822714987779086,
+        "vSim": 0.8501713552895134,
+        "layer_diffs": {
+          "personality": [
+            {
+              "axis": "O",
+              "user": 78,
+              "character": 75,
+              "absDiff": 3
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "character": 70,
+              "absDiff": 2
+            },
+            {
+              "axis": "E",
+              "user": 31,
+              "character": 45,
+              "absDiff": 14
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "character": 60,
+              "absDiff": 9
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "character": 40,
+              "absDiff": 23
+            }
+          ],
+          "style": [
+            {
+              "axis": "AGY",
+              "user": 42,
+              "character": 55,
+              "absDiff": 13
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "character": 60,
+              "absDiff": 11
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "character": 70,
+              "absDiff": 13
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "character": 90,
+              "absDiff": 15
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "character": 70,
+              "absDiff": 3
+            }
+          ],
+          "values": [
+            {
+              "axis": "SD",
+              "userCentered": 25.5,
+              "characterCentered": 10.5,
+              "sameSign": true
+            },
+            {
+              "axis": "ST",
+              "userCentered": -15.5,
+              "characterCentered": 0.5,
+              "sameSign": false
+            },
+            {
+              "axis": "HE",
+              "userCentered": -15.5,
+              "characterCentered": -9.5,
+              "sameSign": true
+            },
+            {
+              "axis": "AC",
+              "userCentered": 0.5,
+              "characterCentered": 10.5,
+              "sameSign": true
+            },
+            {
+              "axis": "PO",
+              "userCentered": -32.5,
+              "characterCentered": -4.5,
+              "sameSign": true
+            },
+            {
+              "axis": "SE",
+              "userCentered": 0.5,
+              "characterCentered": -4.5,
+              "sameSign": false
+            },
+            {
+              "axis": "CO",
+              "userCentered": -7.5,
+              "characterCentered": -4.5,
+              "sameSign": true
+            },
+            {
+              "axis": "TR",
+              "userCentered": -7.5,
+              "characterCentered": -9.5,
+              "sameSign": true
+            },
+            {
+              "axis": "BE",
+              "userCentered": 17.5,
+              "characterCentered": 0.5,
+              "sameSign": true
+            },
+            {
+              "axis": "UN",
+              "userCentered": 34.5,
+              "characterCentered": 10.5,
+              "sameSign": true
+            }
+          ]
+        }
+      },
+      {
+        "rank": 6,
+        "character_id": 12,
+        "name": "煙緋",
+        "official_element": "炎",
+        "official_weapon": "法器",
+        "official_region": "璃月",
+        "basis_tags": [
+          "公正",
+          "知的探究",
+          "実利",
+          "社交",
+          "自律"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E7%85%99%E7%B7%8B",
+        "raw": 86.63871302255579,
+        "display": 87,
+        "pSim": 0.830058833710016,
+        "sSim": 0.8752602709638986,
+        "vSim": 0.9059517181746066,
+        "layer_diffs": {
+          "personality": [
+            {
+              "axis": "O",
+              "user": 78,
+              "character": 65,
+              "absDiff": 13
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "character": 85,
+              "absDiff": 13
+            },
+            {
+              "axis": "E",
+              "user": 31,
+              "character": 50,
+              "absDiff": 19
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "character": 45,
+              "absDiff": 24
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "character": 50,
+              "absDiff": 13
+            }
+          ],
+          "style": [
+            {
+              "axis": "AGY",
+              "user": 42,
+              "character": 60,
+              "absDiff": 18
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "character": 55,
+              "absDiff": 16
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "character": 70,
+              "absDiff": 13
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "character": 80,
+              "absDiff": 5
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "character": 65,
+              "absDiff": 2
+            }
+          ],
+          "values": [
+            {
+              "axis": "SD",
+              "userCentered": 25.5,
+              "characterCentered": 23,
+              "sameSign": true
+            },
+            {
+              "axis": "ST",
+              "userCentered": -15.5,
+              "characterCentered": -7,
+              "sameSign": true
+            },
+            {
+              "axis": "HE",
+              "userCentered": -15.5,
+              "characterCentered": -7,
+              "sameSign": true
+            },
+            {
+              "axis": "AC",
+              "userCentered": 0.5,
+              "characterCentered": -2,
+              "sameSign": false
+            },
+            {
+              "axis": "PO",
+              "userCentered": -32.5,
+              "characterCentered": -7,
+              "sameSign": true
+            },
+            {
+              "axis": "SE",
+              "userCentered": 0.5,
+              "characterCentered": 3,
+              "sameSign": true
+            },
+            {
+              "axis": "CO",
+              "userCentered": -7.5,
+              "characterCentered": -7,
+              "sameSign": true
+            },
+            {
+              "axis": "TR",
+              "userCentered": -7.5,
+              "characterCentered": -7,
+              "sameSign": true
+            },
+            {
+              "axis": "BE",
+              "userCentered": 17.5,
+              "characterCentered": -2,
+              "sameSign": false
+            },
+            {
+              "axis": "UN",
+              "userCentered": 34.5,
+              "characterCentered": 13,
+              "sameSign": true
+            }
+          ]
+        }
+      },
+      {
+        "rank": 7,
+        "character_id": 115,
+        "name": "フレミネ",
+        "official_element": "氷",
+        "official_weapon": "両手剣",
+        "official_region": "フォンテーヌ",
+        "basis_tags": [
+          "慎重",
+          "寡黙",
+          "共感",
+          "solitary",
+          "役割責任",
+          "粘り強さ"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%95%E3%83%AC%E3%83%9F%E3%83%8D",
+        "raw": 86.4676211836762,
+        "display": 86,
+        "pSim": 0.9090054946713814,
+        "sSim": 0.8826969736110786,
+        "vSim": 0.7875497396162865,
+        "layer_diffs": {
+          "personality": [
+            {
+              "axis": "O",
+              "user": 78,
+              "character": 65,
+              "absDiff": 13
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "character": 60,
+              "absDiff": 12
+            },
+            {
+              "axis": "E",
+              "user": 31,
+              "character": 25,
+              "absDiff": 6
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "character": 70,
+              "absDiff": 1
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "character": 55,
+              "absDiff": 8
+            }
+          ],
+          "style": [
+            {
+              "axis": "AGY",
+              "user": 42,
+              "character": 40,
+              "absDiff": 2
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "character": 50,
+              "absDiff": 21
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "character": 80,
+              "absDiff": 3
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "character": 60,
+              "absDiff": 15
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "character": 70,
+              "absDiff": 3
+            }
+          ],
+          "values": [
+            {
+              "axis": "SD",
+              "userCentered": 25.5,
+              "characterCentered": -2,
+              "sameSign": false
+            },
+            {
+              "axis": "ST",
+              "userCentered": -15.5,
+              "characterCentered": -7,
+              "sameSign": true
+            },
+            {
+              "axis": "HE",
+              "userCentered": -15.5,
+              "characterCentered": -7,
+              "sameSign": true
+            },
+            {
+              "axis": "AC",
+              "userCentered": 0.5,
+              "characterCentered": 3,
+              "sameSign": true
+            },
+            {
+              "axis": "PO",
+              "userCentered": -32.5,
+              "characterCentered": -12,
+              "sameSign": true
+            },
+            {
+              "axis": "SE",
+              "userCentered": 0.5,
+              "characterCentered": 8,
+              "sameSign": true
+            },
+            {
+              "axis": "CO",
+              "userCentered": -7.5,
+              "characterCentered": 8,
+              "sameSign": false
+            },
+            {
+              "axis": "TR",
+              "userCentered": -7.5,
+              "characterCentered": -2,
+              "sameSign": true
+            },
+            {
+              "axis": "BE",
+              "userCentered": 17.5,
+              "characterCentered": 8,
+              "sameSign": true
+            },
+            {
+              "axis": "UN",
+              "userCentered": 34.5,
+              "characterCentered": 3,
+              "sameSign": true
+            }
+          ]
+        }
+      },
+      {
+        "rank": 8,
+        "character_id": 38,
+        "name": "レイラ",
+        "official_element": "氷",
+        "official_weapon": "片手剣",
+        "official_region": "スメール",
+        "basis_tags": [
+          "知的探究",
+          "anxious",
+          "慎重",
+          "粘り強さ",
+          "創造"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%AC%E3%82%A4%E3%83%A9",
+        "raw": 86.22320863601882,
+        "display": 86,
+        "pSim": 0.9135130067582414,
+        "sSim": 0.8852829568024001,
+        "vSim": 0.7708066553872387,
+        "layer_diffs": {
+          "personality": [
+            {
+              "axis": "O",
+              "user": 78,
+              "character": 70,
+              "absDiff": 8
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "character": 55,
+              "absDiff": 17
+            },
+            {
+              "axis": "E",
+              "user": 31,
+              "character": 30,
+              "absDiff": 1
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "character": 65,
+              "absDiff": 4
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "character": 65,
+              "absDiff": 2
+            }
+          ],
+          "style": [
+            {
+              "axis": "AGY",
+              "user": 42,
+              "character": 35,
+              "absDiff": 7
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "character": 55,
+              "absDiff": 16
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "character": 65,
+              "absDiff": 18
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "character": 80,
+              "absDiff": 5
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "character": 65,
+              "absDiff": 2
+            }
+          ],
+          "values": [
+            {
+              "axis": "SD",
+              "userCentered": 25.5,
+              "characterCentered": 23,
+              "sameSign": true
+            },
+            {
+              "axis": "ST",
+              "userCentered": -15.5,
+              "characterCentered": -7,
+              "sameSign": true
+            },
+            {
+              "axis": "HE",
+              "userCentered": -15.5,
+              "characterCentered": -2,
+              "sameSign": true
+            },
+            {
+              "axis": "AC",
+              "userCentered": 0.5,
+              "characterCentered": -2,
+              "sameSign": false
+            },
+            {
+              "axis": "PO",
+              "userCentered": -32.5,
+              "characterCentered": -7,
+              "sameSign": true
+            },
+            {
+              "axis": "SE",
+              "userCentered": 0.5,
+              "characterCentered": 8,
+              "sameSign": true
+            },
+            {
+              "axis": "CO",
+              "userCentered": -7.5,
+              "characterCentered": -2,
+              "sameSign": true
+            },
+            {
+              "axis": "TR",
+              "userCentered": -7.5,
+              "characterCentered": -7,
+              "sameSign": true
+            },
+            {
+              "axis": "BE",
+              "userCentered": 17.5,
+              "characterCentered": -2,
+              "sameSign": false
+            },
+            {
+              "axis": "UN",
+              "userCentered": 34.5,
+              "characterCentered": -2,
+              "sameSign": false
+            }
+          ]
+        }
+      },
+      {
+        "rank": 9,
+        "character_id": 34,
+        "name": "オデット",
+        "official_element": "氷",
+        "official_weapon": "片手剣",
+        "official_region": "スネージナヤ",
+        "basis_tags": [
+          "規律",
+          "完成度",
+          "自律",
+          "伝統",
+          "内なる情愛",
+          "痛みの抑制"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%AA%E3%83%87%E3%83%83%E3%83%88",
+        "raw": 86.12775646803476,
+        "display": 86,
+        "pSim": 0.890546813659903,
+        "sSim": 0.8690038168494975,
+        "vSim": 0.8145256472051241,
+        "layer_diffs": {
+          "personality": [
+            {
+              "axis": "O",
+              "user": 78,
+              "character": 60,
+              "absDiff": 18
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "character": 85,
+              "absDiff": 13
+            },
+            {
+              "axis": "E",
+              "user": 31,
+              "character": 35,
+              "absDiff": 4
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "character": 60,
+              "absDiff": 9
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "character": 60,
+              "absDiff": 3
+            }
+          ],
+          "style": [
+            {
+              "axis": "AGY",
+              "user": 42,
+              "character": 60,
+              "absDiff": 18
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "character": 50,
+              "absDiff": 21
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "character": 85,
+              "absDiff": 2
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "character": 70,
+              "absDiff": 5
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "character": 75,
+              "absDiff": 8
+            }
+          ],
+          "values": [
+            {
+              "axis": "SD",
+              "userCentered": 25.5,
+              "characterCentered": 15.5,
+              "sameSign": true
+            },
+            {
+              "axis": "ST",
+              "userCentered": -15.5,
+              "characterCentered": -14.5,
+              "sameSign": true
+            },
+            {
+              "axis": "HE",
+              "userCentered": -15.5,
+              "characterCentered": -29.5,
+              "sameSign": true
+            },
+            {
+              "axis": "AC",
+              "userCentered": 0.5,
+              "characterCentered": 30.5,
+              "sameSign": true
+            },
+            {
+              "axis": "PO",
+              "userCentered": -32.5,
+              "characterCentered": -29.5,
+              "sameSign": true
+            },
+            {
+              "axis": "SE",
+              "userCentered": 0.5,
+              "characterCentered": -4.5,
+              "sameSign": false
+            },
+            {
+              "axis": "CO",
+              "userCentered": -7.5,
+              "characterCentered": -9.5,
+              "sameSign": true
+            },
+            {
+              "axis": "TR",
+              "userCentered": -7.5,
+              "characterCentered": 20.5,
+              "sameSign": false
+            },
+            {
+              "axis": "BE",
+              "userCentered": 17.5,
+              "characterCentered": 15.5,
+              "sameSign": true
+            },
+            {
+              "axis": "UN",
+              "userCentered": 34.5,
+              "characterCentered": 5.5,
+              "sameSign": true
+            }
+          ]
+        }
+      },
+      {
+        "rank": 10,
+        "character_id": 17,
+        "name": "ドゥリン",
+        "official_element": "炎",
+        "official_weapon": "片手剣",
+        "official_region": "モンド",
+        "basis_tags": [
+          "慎重",
+          "共感",
+          "好奇心",
+          "創造",
+          "anxious",
+          "平和"
+        ],
+        "evidence_confidence": "medium",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%89%E3%82%A5%E3%83%AA%E3%83%B3",
+        "raw": 86.11445775559991,
+        "display": 86,
+        "pSim": 0.8647964497507554,
+        "sSim": 0.8538493927484391,
+        "vSim": 0.863570599437218,
+        "layer_diffs": {
+          "personality": [
+            {
+              "axis": "O",
+              "user": 78,
+              "character": 70,
+              "absDiff": 8
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "character": 45,
+              "absDiff": 27
+            },
+            {
+              "axis": "E",
+              "user": 31,
+              "character": 25,
+              "absDiff": 6
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "character": 75,
+              "absDiff": 6
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "character": 70,
+              "absDiff": 7
+            }
+          ],
+          "style": [
+            {
+              "axis": "AGY",
+              "user": 42,
+              "character": 30,
+              "absDiff": 12
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "character": 65,
+              "absDiff": 6
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "character": 55,
+              "absDiff": 28
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "character": 65,
+              "absDiff": 10
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "character": 65,
+              "absDiff": 2
+            }
+          ],
+          "values": [
+            {
+              "axis": "SD",
+              "userCentered": 25.5,
+              "characterCentered": 11.5,
+              "sameSign": true
+            },
+            {
+              "axis": "ST",
+              "userCentered": -15.5,
+              "characterCentered": -3.5,
+              "sameSign": true
+            },
+            {
+              "axis": "HE",
+              "userCentered": -15.5,
+              "characterCentered": -3.5,
+              "sameSign": true
+            },
+            {
+              "axis": "AC",
+              "userCentered": 0.5,
+              "characterCentered": -3.5,
+              "sameSign": false
+            },
+            {
+              "axis": "PO",
+              "userCentered": -32.5,
+              "characterCentered": -13.5,
+              "sameSign": true
+            },
+            {
+              "axis": "SE",
+              "userCentered": 0.5,
+              "characterCentered": 11.5,
+              "sameSign": true
+            },
+            {
+              "axis": "CO",
+              "userCentered": -7.5,
+              "characterCentered": -3.5,
+              "sameSign": true
+            },
+            {
+              "axis": "TR",
+              "userCentered": -7.5,
+              "characterCentered": -8.5,
+              "sameSign": true
+            },
+            {
+              "axis": "BE",
+              "userCentered": 17.5,
+              "characterCentered": 11.5,
+              "sameSign": true
+            },
+            {
+              "axis": "UN",
+              "userCentered": 34.5,
+              "characterCentered": 1.5,
+              "sameSign": true
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "hidden_shape": {
+    "model": "CORE1-HIDDEN-1.0.0",
+    "weights": {
+      "P": 0.4,
+      "S": 0.3,
+      "V": 0.3
+    },
+    "user_shape": {
+      "personality": {
+        "peaks": [
+          "O",
+          "C",
+          "A",
+          "N"
+        ],
+        "valleys": [
+          "E"
+        ]
+      },
+      "style": {
+        "peaks": [
+          "ROL",
+          "REF",
+          "REL"
+        ],
+        "valleys": [
+          "AGY",
+          "AUT"
+        ]
+      },
+      "values": {
+        "peaks": [
+          "UN",
+          "SD",
+          "BE",
+          "AC",
+          "SE"
+        ],
+        "valleys": [
+          "PO",
+          "HE",
+          "ST",
+          "TR",
+          "CO"
+        ]
+      }
+    },
+    "top10": [
+      {
+        "rank": 1,
+        "character_id": 60,
+        "name": "オロルン",
+        "official_element": "雷",
+        "official_weapon": "弓",
+        "official_region": "ナタ",
+        "basis_tags": [
+          "寡黙",
+          "共感",
+          "自然",
+          "神秘",
+          "自律",
+          "共同体"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%AA%E3%83%AD%E3%83%AB%E3%83%B3",
+        "raw": 90.56747778391141,
+        "display": 91,
+        "Pshape": 0.9125985603810541,
+        "Sshape": 0.8772808497506149,
+        "Vshape": 0.9248369958716933,
+        "mirror_rank": 1,
+        "shape": {
+          "personality": {
+            "peaks": [
+              "C",
+              "A"
+            ],
+            "valleys": [
+              "E",
+              "N"
+            ]
+          },
+          "style": {
+            "peaks": [
+              "AUT",
+              "ROL"
+            ],
+            "valleys": [
+              "AGY",
+              "REL"
+            ]
+          },
+          "values": {
+            "peaks": [
+              "BE",
+              "UN",
+              "SD",
+              "TR",
+              "SE"
+            ],
+            "valleys": [
+              "PO",
+              "CO",
+              "AC",
+              "HE",
+              "ST"
+            ]
+          }
+        }
+      },
+      {
+        "rank": 2,
+        "character_id": 115,
+        "name": "フレミネ",
+        "official_element": "氷",
+        "official_weapon": "両手剣",
+        "official_region": "フォンテーヌ",
+        "basis_tags": [
+          "慎重",
+          "寡黙",
+          "共感",
+          "solitary",
+          "役割責任",
+          "粘り強さ"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%95%E3%83%AC%E3%83%9F%E3%83%8D",
+        "raw": 89.6337561202205,
+        "display": 90,
+        "Pshape": 0.9765255699439754,
+        "Sshape": 0.8982080377990964,
+        "Vshape": 0.7875497396162865,
+        "mirror_rank": 7,
+        "shape": {
+          "personality": {
+            "peaks": [
+              "A",
+              "O",
+              "C"
+            ],
+            "valleys": [
+              "E"
+            ]
+          },
+          "style": {
+            "peaks": [
+              "ROL",
+              "AUT"
+            ],
+            "valleys": [
+              "AGY",
+              "REL"
+            ]
+          },
+          "values": {
+            "peaks": [
+              "SE",
+              "CO",
+              "BE",
+              "AC",
+              "UN"
+            ],
+            "valleys": [
+              "PO",
+              "HE",
+              "ST",
+              "TR",
+              "SD"
+            ]
+          }
+        }
+      },
+      {
+        "rank": 3,
+        "character_id": 100,
+        "name": "白朮",
+        "official_element": "草",
+        "official_weapon": "法器",
+        "official_region": "璃月",
+        "basis_tags": [
+          "治癒",
+          "知的探究",
+          "戦略",
+          "共感",
+          "自律",
+          "粘り強さ"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E7%99%BD%E6%9C%AE",
+        "raw": 88.89707536811518,
+        "display": 89,
+        "Pshape": 0.8488869329756733,
+        "Sshape": 0.9314806698522771,
+        "Vshape": 0.8999059317839979,
+        "mirror_rank": 2,
+        "shape": {
+          "personality": {
+            "peaks": [
+              "C",
+              "A",
+              "O"
+            ],
+            "valleys": [
+              "N",
+              "E"
+            ]
+          },
+          "style": {
+            "peaks": [
+              "REL",
+              "ROL",
+              "REF"
+            ],
+            "valleys": [
+              "AGY",
+              "AUT"
+            ]
+          },
+          "values": {
+            "peaks": [
+              "SD",
+              "BE",
+              "UN",
+              "AC"
+            ],
+            "valleys": [
+              "CO",
+              "TR",
+              "SE",
+              "PO",
+              "ST",
+              "HE"
+            ]
+          }
+        }
+      },
+      {
+        "rank": 4,
+        "character_id": 38,
+        "name": "レイラ",
+        "official_element": "氷",
+        "official_weapon": "片手剣",
+        "official_region": "スメール",
+        "basis_tags": [
+          "知的探究",
+          "anxious",
+          "慎重",
+          "粘り強さ",
+          "創造"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%AC%E3%82%A4%E3%83%A9",
+        "raw": 88.83080736248053,
+        "display": 89,
+        "Pshape": 0.9591780632641885,
+        "Sshape": 0.9113161723431941,
+        "Vshape": 0.7708066553872387,
+        "mirror_rank": 8,
+        "shape": {
+          "personality": {
+            "peaks": [
+              "O",
+              "A",
+              "N"
+            ],
+            "valleys": [
+              "E",
+              "C"
+            ]
+          },
+          "style": {
+            "peaks": [
+              "REF",
+              "ROL",
+              "AUT"
+            ],
+            "valleys": [
+              "AGY",
+              "REL"
+            ]
+          },
+          "values": {
+            "peaks": [
+              "SD",
+              "SE"
+            ],
+            "valleys": [
+              "TR",
+              "PO",
+              "ST",
+              "UN",
+              "BE",
+              "CO",
+              "AC",
+              "HE"
+            ]
+          }
+        }
+      },
+      {
+        "rank": 5,
+        "character_id": 17,
+        "name": "ドゥリン",
+        "official_element": "炎",
+        "official_weapon": "片手剣",
+        "official_region": "モンド",
+        "basis_tags": [
+          "慎重",
+          "共感",
+          "好奇心",
+          "創造",
+          "anxious",
+          "平和"
+        ],
+        "evidence_confidence": "medium",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%89%E3%82%A5%E3%83%AA%E3%83%B3",
+        "raw": 88.17962388609402,
+        "display": 88,
+        "Pshape": 0.8856115426202253,
+        "Sshape": 0.8949348066056158,
+        "Vshape": 0.863570599437218,
+        "mirror_rank": 10,
+        "shape": {
+          "personality": {
+            "peaks": [
+              "A",
+              "O",
+              "N"
+            ],
+            "valleys": [
+              "E",
+              "C"
+            ]
+          },
+          "style": {
+            "peaks": [
+              "REL",
+              "REF",
+              "AUT"
+            ],
+            "valleys": [
+              "AGY",
+              "ROL"
+            ]
+          },
+          "values": {
+            "peaks": [
+              "SD",
+              "SE",
+              "BE",
+              "UN"
+            ],
+            "valleys": [
+              "PO",
+              "TR",
+              "CO",
+              "AC",
+              "HE",
+              "ST"
+            ]
+          }
+        }
+      },
+      {
+        "rank": 6,
+        "character_id": 103,
+        "name": "ティナリ",
+        "official_element": "草",
+        "official_weapon": "弓",
+        "official_region": "スメール",
+        "basis_tags": [
+          "知的探究",
+          "指導",
+          "役割責任",
+          "実利",
+          "共感",
+          "規律"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%86%E3%82%A3%E3%83%8A%E3%83%AA",
+        "raw": 85.7220196855343,
+        "display": 86,
+        "Pshape": 0.8380380551463084,
+        "Sshape": 0.8550144531467587,
+        "Vshape": 0.8850021295093067,
+        "mirror_rank": 4,
+        "shape": {
+          "personality": {
+            "peaks": [
+              "C",
+              "O"
+            ],
+            "valleys": [
+              "N",
+              "E",
+              "A"
+            ]
+          },
+          "style": {
+            "peaks": [
+              "ROL",
+              "REF",
+              "REL"
+            ],
+            "valleys": [
+              "AUT",
+              "AGY"
+            ]
+          },
+          "values": {
+            "peaks": [
+              "UN",
+              "AC",
+              "CO",
+              "SD",
+              "BE"
+            ],
+            "valleys": [
+              "PO",
+              "HE",
+              "TR",
+              "ST",
+              "SE"
+            ]
+          }
+        }
+      },
+      {
+        "rank": 7,
+        "character_id": 51,
+        "name": "アリョーシャ",
+        "official_element": "雷",
+        "official_weapon": "長柄",
+        "official_region": "スネージナヤ",
+        "basis_tags": [
+          "現実的理想主義",
+          "保護",
+          "責任",
+          "自律",
+          "計算",
+          "公正",
+          "警戒"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A2%E3%83%AA%E3%83%A7%E3%83%BC%E3%82%B7%E3%83%A3",
+        "raw": 85.41724392073166,
+        "display": 85,
+        "Pshape": 0.9115314873699247,
+        "Sshape": 0.7043604602815831,
+        "Vshape": 0.9275056872495726,
+        "mirror_rank": 3,
+        "shape": {
+          "personality": {
+            "peaks": [
+              "C",
+              "O",
+              "A"
+            ],
+            "valleys": [
+              "E",
+              "N"
+            ]
+          },
+          "style": {
+            "peaks": [
+              "ROL",
+              "AUT"
+            ],
+            "valleys": [
+              "REL",
+              "REF",
+              "AGY"
+            ]
+          },
+          "values": {
+            "peaks": [
+              "UN",
+              "BE",
+              "SE",
+              "SD"
+            ],
+            "valleys": [
+              "PO",
+              "CO",
+              "HE",
+              "TR",
+              "AC"
+            ]
+          }
+        }
+      },
+      {
+        "rank": 8,
+        "character_id": 28,
+        "name": "コロンビーナ",
+        "official_element": "水",
+        "official_weapon": "法器",
+        "official_region": "ナド・クライ",
+        "basis_tags": [
+          "神秘",
+          "寡黙",
+          "自律",
+          "solitary",
+          "共感",
+          "自己同一性"
+        ],
+        "evidence_confidence": "medium",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%B3%E3%83%AD%E3%83%B3%E3%83%93%E3%83%BC%E3%83%8A",
+        "raw": 84.65946723139292,
+        "display": 85,
+        "Pshape": 0.9146085653759819,
+        "Sshape": 0.7164899510318761,
+        "Vshape": 0.8860142028465787,
+        "mirror_rank": 26,
+        "shape": {
+          "personality": {
+            "peaks": [
+              "O",
+              "A"
+            ],
+            "valleys": [
+              "E",
+              "C",
+              "N"
+            ]
+          },
+          "style": {
+            "peaks": [
+              "AUT",
+              "REF"
+            ],
+            "valleys": [
+              "AGY",
+              "REL",
+              "ROL"
+            ]
+          },
+          "values": {
+            "peaks": [
+              "SD",
+              "BE",
+              "UN",
+              "TR"
+            ],
+            "valleys": [
+              "CO",
+              "PO",
+              "AC",
+              "ST",
+              "SE",
+              "HE"
+            ]
+          }
+        }
+      },
+      {
+        "rank": 9,
+        "character_id": 47,
+        "name": "アーロイ",
+        "official_element": "氷",
+        "official_weapon": "弓",
+        "official_region": null,
+        "basis_tags": [
+          "自律",
+          "探索",
+          "生存",
+          "公正",
+          "保護",
+          "寡黙"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A2%E3%83%BC%E3%83%AD%E3%82%A4",
+        "raw": 84.5207059580221,
+        "display": 85,
+        "Pshape": 0.9185145125978346,
+        "Sshape": 0.7349283179242785,
+        "Vshape": 0.8577425305460122,
+        "mirror_rank": 12,
+        "shape": {
+          "personality": {
+            "peaks": [
+              "C",
+              "O"
+            ],
+            "valleys": [
+              "E",
+              "N",
+              "A"
+            ]
+          },
+          "style": {
+            "peaks": [
+              "ROL",
+              "AUT"
+            ],
+            "valleys": [
+              "REL",
+              "AGY",
+              "REF"
+            ]
+          },
+          "values": {
+            "peaks": [
+              "SD",
+              "SE",
+              "UN",
+              "ST",
+              "BE"
+            ],
+            "valleys": [
+              "TR",
+              "CO",
+              "PO",
+              "AC",
+              "HE"
+            ]
+          }
+        }
+      },
+      {
+        "rank": 10,
+        "character_id": 70,
+        "name": "リネット",
+        "official_element": "風",
+        "official_weapon": "片手剣",
+        "official_region": "フォンテーヌ",
+        "basis_tags": [
+          "寡黙",
+          "自律",
+          "家族",
+          "観察",
+          "平静",
+          "役割責任"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%AA%E3%83%8D%E3%83%83%E3%83%88",
+        "raw": 84.34068691109867,
+        "display": 84,
+        "Pshape": 0.9122993954779073,
+        "Sshape": 0.8206159939127228,
+        "Vshape": 0.7743410424866901,
+        "mirror_rank": 30,
+        "shape": {
+          "personality": {
+            "peaks": [
+              "C",
+              "N"
+            ],
+            "valleys": [
+              "E"
+            ]
+          },
+          "style": {
+            "peaks": [
+              "ROL",
+              "AUT",
+              "REF"
+            ],
+            "valleys": [
+              "REL",
+              "AGY"
+            ]
+          },
+          "values": {
+            "peaks": [
+              "SE",
+              "BE",
+              "SD",
+              "CO"
+            ],
+            "valleys": [
+              "PO",
+              "ST",
+              "UN",
+              "TR",
+              "AC",
+              "HE"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "mentor": {
+    "model": "CORE1-MENTOR-1.0.0",
+    "status": "ok",
+    "input_direction": {
+      "selected_by": "report_author_for_prototype",
+      "selected_by_label": "レポート作成者（プロトタイプ用に明示）",
+      "label": "現在の博愛・普遍性・思慮を保ちながら、外向的な発信と主導性を少し高める",
+      "deltas": {
+        "E": 20,
+        "AGY": 20,
+        "AC": 10
+      }
+    },
+    "target_axes": [
+      "E",
+      "AGY",
+      "AC"
+    ],
+    "deltas": [
+      {
+        "axis": "E",
+        "before": 31,
+        "delta": 20,
+        "after": 51,
+        "clamped": false
+      },
+      {
+        "axis": "AGY",
+        "before": 42,
+        "delta": 20,
+        "after": 62,
+        "clamped": false
+      },
+      {
+        "axis": "AC",
+        "before": 58,
+        "delta": 10,
+        "after": 68,
+        "clamped": false
+      }
+    ],
+    "unchanged_axes": [
+      "O",
+      "C",
+      "A",
+      "N",
+      "REL",
+      "ROL",
+      "REF",
+      "AUT",
+      "SD",
+      "ST",
+      "HE",
+      "PO",
+      "SE",
+      "CO",
+      "TR",
+      "BE",
+      "UN"
+    ],
+    "target_vector": {
+      "personality": {
+        "O": 78,
+        "C": 72,
+        "E": 51,
+        "A": 69,
+        "N": 63
+      },
+      "style": {
+        "AGY": 62,
+        "REL": 71,
+        "ROL": 83,
+        "REF": 75,
+        "AUT": 67
+      },
+      "values": {
+        "SD": 83,
+        "ST": 42,
+        "HE": 42,
+        "AC": 68,
+        "PO": 25,
+        "SE": 58,
+        "CO": 50,
+        "TR": 50,
+        "BE": 75,
+        "UN": 92
+      }
+    },
+    "top10": [
+      {
+        "rank": 1,
+        "character_id": 100,
+        "name": "白朮",
+        "official_element": "草",
+        "official_weapon": "法器",
+        "official_region": "璃月",
+        "basis_tags": [
+          "治癒",
+          "知的探究",
+          "戦略",
+          "共感",
+          "自律",
+          "粘り強さ"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E7%99%BD%E6%9C%AE",
+        "raw": 91.2776420251776,
+        "display": 91,
+        "pSim": 0.892855238112169,
+        "sSim": 0.9403342644392948,
+        "vSim": 0.9117801522503999,
+        "mirror_rank": 2,
+        "layer_diffs_to_target": {
+          "personality": [
+            {
+              "axis": "O",
+              "user": 78,
+              "character": 65,
+              "absDiff": 13
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "character": 75,
+              "absDiff": 3
+            },
+            {
+              "axis": "E",
+              "user": 51,
+              "character": 45,
+              "absDiff": 6
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "character": 75,
+              "absDiff": 6
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "character": 45,
+              "absDiff": 18
+            }
+          ],
+          "style": [
+            {
+              "axis": "AGY",
+              "user": 62,
+              "character": 55,
+              "absDiff": 7
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "character": 75,
+              "absDiff": 4
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "character": 75,
+              "absDiff": 8
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "character": 75,
+              "absDiff": 0
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "character": 60,
+              "absDiff": 7
+            }
+          ],
+          "values": [
+            {
+              "axis": "SD",
+              "userCentered": 24.5,
+              "characterCentered": 24,
+              "sameSign": true
+            },
+            {
+              "axis": "ST",
+              "userCentered": -16.5,
+              "characterCentered": -11,
+              "sameSign": true
+            },
+            {
+              "axis": "HE",
+              "userCentered": -16.5,
+              "characterCentered": -1,
+              "sameSign": true
+            },
+            {
+              "axis": "AC",
+              "userCentered": 9.5,
+              "characterCentered": 9,
+              "sameSign": true
+            },
+            {
+              "axis": "PO",
+              "userCentered": -33.5,
+              "characterCentered": -11,
+              "sameSign": true
+            },
+            {
+              "axis": "SE",
+              "userCentered": -0.5,
+              "characterCentered": -11,
+              "sameSign": true
+            },
+            {
+              "axis": "CO",
+              "userCentered": -8.5,
+              "characterCentered": -16,
+              "sameSign": true
+            },
+            {
+              "axis": "TR",
+              "userCentered": -8.5,
+              "characterCentered": -11,
+              "sameSign": true
+            },
+            {
+              "axis": "BE",
+              "userCentered": 16.5,
+              "characterCentered": 14,
+              "sameSign": true
+            },
+            {
+              "axis": "UN",
+              "userCentered": 33.5,
+              "characterCentered": 14,
+              "sameSign": true
+            }
+          ]
+        }
+      },
+      {
+        "rank": 2,
+        "character_id": 103,
+        "name": "ティナリ",
+        "official_element": "草",
+        "official_weapon": "弓",
+        "official_region": "スメール",
+        "basis_tags": [
+          "知的探究",
+          "指導",
+          "役割責任",
+          "実利",
+          "共感",
+          "規律"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%86%E3%82%A3%E3%83%8A%E3%83%AA",
+        "raw": 90.80664889234339,
+        "display": 91,
+        "pSim": 0.8830384678622925,
+        "sSim": 0.9437861227097792,
+        "vSim": 0.905717549885277,
+        "mirror_rank": 4,
+        "layer_diffs_to_target": {
+          "personality": [
+            {
+              "axis": "O",
+              "user": 78,
+              "character": 70,
+              "absDiff": 8
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "character": 80,
+              "absDiff": 8
+            },
+            {
+              "axis": "E",
+              "user": 51,
+              "character": 45,
+              "absDiff": 6
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "character": 55,
+              "absDiff": 14
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "character": 45,
+              "absDiff": 18
+            }
+          ],
+          "style": [
+            {
+              "axis": "AGY",
+              "user": 62,
+              "character": 60,
+              "absDiff": 2
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "character": 70,
+              "absDiff": 1
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "character": 80,
+              "absDiff": 3
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "character": 75,
+              "absDiff": 0
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "character": 55,
+              "absDiff": 12
+            }
+          ],
+          "values": [
+            {
+              "axis": "SD",
+              "userCentered": 24.5,
+              "characterCentered": 3.5,
+              "sameSign": true
+            },
+            {
+              "axis": "ST",
+              "userCentered": -16.5,
+              "characterCentered": -6.5,
+              "sameSign": true
+            },
+            {
+              "axis": "HE",
+              "userCentered": -16.5,
+              "characterCentered": -11.5,
+              "sameSign": true
+            },
+            {
+              "axis": "AC",
+              "userCentered": 9.5,
+              "characterCentered": 8.5,
+              "sameSign": true
+            },
+            {
+              "axis": "PO",
+              "userCentered": -33.5,
+              "characterCentered": -11.5,
+              "sameSign": true
+            },
+            {
+              "axis": "SE",
+              "userCentered": -0.5,
+              "characterCentered": -1.5,
+              "sameSign": true
+            },
+            {
+              "axis": "CO",
+              "userCentered": -8.5,
+              "characterCentered": 8.5,
+              "sameSign": false
+            },
+            {
+              "axis": "TR",
+              "userCentered": -8.5,
+              "characterCentered": -6.5,
+              "sameSign": true
+            },
+            {
+              "axis": "BE",
+              "userCentered": 16.5,
+              "characterCentered": 3.5,
+              "sameSign": true
+            },
+            {
+              "axis": "UN",
+              "userCentered": 33.5,
+              "characterCentered": 13.5,
+              "sameSign": true
+            }
+          ]
+        }
+      },
+      {
+        "rank": 3,
+        "character_id": 51,
+        "name": "アリョーシャ",
+        "official_element": "雷",
+        "official_weapon": "長柄",
+        "official_region": "スネージナヤ",
+        "basis_tags": [
+          "現実的理想主義",
+          "保護",
+          "責任",
+          "自律",
+          "計算",
+          "公正",
+          "警戒"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A2%E3%83%AA%E3%83%A7%E3%83%BC%E3%82%B7%E3%83%A3",
+        "raw": 89.91462104773629,
+        "display": 90,
+        "pSim": 0.8743815300204624,
+        "sSim": 0.9221539981758857,
+        "vSim": 0.9091579967213739,
+        "mirror_rank": 3,
+        "layer_diffs_to_target": {
+          "personality": [
+            {
+              "axis": "O",
+              "user": 78,
+              "character": 60,
+              "absDiff": 18
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "character": 80,
+              "absDiff": 8
+            },
+            {
+              "axis": "E",
+              "user": 51,
+              "character": 35,
+              "absDiff": 16
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "character": 60,
+              "absDiff": 9
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "character": 55,
+              "absDiff": 8
+            }
+          ],
+          "style": [
+            {
+              "axis": "AGY",
+              "user": 62,
+              "character": 65,
+              "absDiff": 3
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "character": 60,
+              "absDiff": 11
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "character": 80,
+              "absDiff": 3
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "character": 65,
+              "absDiff": 10
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "character": 75,
+              "absDiff": 8
+            }
+          ],
+          "values": [
+            {
+              "axis": "SD",
+              "userCentered": 24.5,
+              "characterCentered": 10,
+              "sameSign": true
+            },
+            {
+              "axis": "ST",
+              "userCentered": -16.5,
+              "characterCentered": 0,
+              "sameSign": false
+            },
+            {
+              "axis": "HE",
+              "userCentered": -16.5,
+              "characterCentered": -15,
+              "sameSign": true
+            },
+            {
+              "axis": "AC",
+              "userCentered": 9.5,
+              "characterCentered": -10,
+              "sameSign": false
+            },
+            {
+              "axis": "PO",
+              "userCentered": -33.5,
+              "characterCentered": -35,
+              "sameSign": true
+            },
+            {
+              "axis": "SE",
+              "userCentered": -0.5,
+              "characterCentered": 20,
+              "sameSign": false
+            },
+            {
+              "axis": "CO",
+              "userCentered": -8.5,
+              "characterCentered": -15,
+              "sameSign": true
+            },
+            {
+              "axis": "TR",
+              "userCentered": -8.5,
+              "characterCentered": -10,
+              "sameSign": true
+            },
+            {
+              "axis": "BE",
+              "userCentered": 16.5,
+              "characterCentered": 25,
+              "sameSign": true
+            },
+            {
+              "axis": "UN",
+              "userCentered": 33.5,
+              "characterCentered": 30,
+              "sameSign": true
+            }
+          ]
+        }
+      },
+      {
+        "rank": 4,
+        "character_id": 75,
+        "name": "ファルザン",
+        "official_element": "風",
+        "official_weapon": "弓",
+        "official_region": "スメール",
+        "basis_tags": [
+          "知的探究",
+          "指導",
+          "自負",
+          "伝統",
+          "規律",
+          "自律"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%95%E3%82%A1%E3%83%AB%E3%82%B6%E3%83%B3",
+        "raw": 88.79877056490528,
+        "display": 89,
+        "pSim": 0.8629598598949928,
+        "sSim": 0.9659412272681472,
+        "vSim": 0.843404645035372,
+        "mirror_rank": 17,
+        "layer_diffs_to_target": {
+          "personality": [
+            {
+              "axis": "O",
+              "user": 78,
+              "character": 75,
+              "absDiff": 3
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "character": 65,
+              "absDiff": 7
+            },
+            {
+              "axis": "E",
+              "user": 51,
+              "character": 55,
+              "absDiff": 4
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "character": 60,
+              "absDiff": 9
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "character": 35,
+              "absDiff": 28
+            }
+          ],
+          "style": [
+            {
+              "axis": "AGY",
+              "user": 62,
+              "character": 65,
+              "absDiff": 3
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "character": 65,
+              "absDiff": 6
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "character": 80,
+              "absDiff": 3
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "character": 75,
+              "absDiff": 0
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "character": 65,
+              "absDiff": 2
+            }
+          ],
+          "values": [
+            {
+              "axis": "SD",
+              "userCentered": 24.5,
+              "characterCentered": 19,
+              "sameSign": true
+            },
+            {
+              "axis": "ST",
+              "userCentered": -16.5,
+              "characterCentered": -11,
+              "sameSign": true
+            },
+            {
+              "axis": "HE",
+              "userCentered": -16.5,
+              "characterCentered": -6,
+              "sameSign": true
+            },
+            {
+              "axis": "AC",
+              "userCentered": 9.5,
+              "characterCentered": 4,
+              "sameSign": true
+            },
+            {
+              "axis": "PO",
+              "userCentered": -33.5,
+              "characterCentered": -11,
+              "sameSign": true
+            },
+            {
+              "axis": "SE",
+              "userCentered": -0.5,
+              "characterCentered": -6,
+              "sameSign": true
+            },
+            {
+              "axis": "CO",
+              "userCentered": -8.5,
+              "characterCentered": -1,
+              "sameSign": true
+            },
+            {
+              "axis": "TR",
+              "userCentered": -8.5,
+              "characterCentered": 9,
+              "sameSign": false
+            },
+            {
+              "axis": "BE",
+              "userCentered": 16.5,
+              "characterCentered": -1,
+              "sameSign": false
+            },
+            {
+              "axis": "UN",
+              "userCentered": 33.5,
+              "characterCentered": 4,
+              "sameSign": true
+            }
+          ]
+        }
+      },
+      {
+        "rank": 5,
+        "character_id": 109,
+        "name": "エミリエ",
+        "official_element": "草",
+        "official_weapon": "長柄",
+        "official_region": "フォンテーヌ",
+        "basis_tags": [
+          "researcher",
+          "実利",
+          "寡黙",
+          "共感",
+          "専門性",
+          "情報"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A8%E3%83%9F%E3%83%AA%E3%82%A8",
+        "raw": 88.6202748702848,
+        "display": 89,
+        "pSim": 0.8851958188914707,
+        "sSim": 0.8929486104714189,
+        "vSim": 0.8807994600161132,
+        "mirror_rank": 5,
+        "layer_diffs_to_target": {
+          "personality": [
+            {
+              "axis": "O",
+              "user": 78,
+              "character": 75,
+              "absDiff": 3
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "character": 70,
+              "absDiff": 2
+            },
+            {
+              "axis": "E",
+              "user": 51,
+              "character": 45,
+              "absDiff": 6
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "character": 60,
+              "absDiff": 9
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "character": 40,
+              "absDiff": 23
+            }
+          ],
+          "style": [
+            {
+              "axis": "AGY",
+              "user": 62,
+              "character": 55,
+              "absDiff": 7
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "character": 60,
+              "absDiff": 11
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "character": 70,
+              "absDiff": 13
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "character": 90,
+              "absDiff": 15
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "character": 70,
+              "absDiff": 3
+            }
+          ],
+          "values": [
+            {
+              "axis": "SD",
+              "userCentered": 24.5,
+              "characterCentered": 10.5,
+              "sameSign": true
+            },
+            {
+              "axis": "ST",
+              "userCentered": -16.5,
+              "characterCentered": 0.5,
+              "sameSign": false
+            },
+            {
+              "axis": "HE",
+              "userCentered": -16.5,
+              "characterCentered": -9.5,
+              "sameSign": true
+            },
+            {
+              "axis": "AC",
+              "userCentered": 9.5,
+              "characterCentered": 10.5,
+              "sameSign": true
+            },
+            {
+              "axis": "PO",
+              "userCentered": -33.5,
+              "characterCentered": -4.5,
+              "sameSign": true
+            },
+            {
+              "axis": "SE",
+              "userCentered": -0.5,
+              "characterCentered": -4.5,
+              "sameSign": true
+            },
+            {
+              "axis": "CO",
+              "userCentered": -8.5,
+              "characterCentered": -4.5,
+              "sameSign": true
+            },
+            {
+              "axis": "TR",
+              "userCentered": -8.5,
+              "characterCentered": -9.5,
+              "sameSign": true
+            },
+            {
+              "axis": "BE",
+              "userCentered": 16.5,
+              "characterCentered": 0.5,
+              "sameSign": true
+            },
+            {
+              "axis": "UN",
+              "userCentered": 33.5,
+              "characterCentered": 10.5,
+              "sameSign": true
+            }
+          ]
+        }
+      },
+      {
+        "rank": 6,
+        "character_id": 14,
+        "name": "リネ",
+        "official_element": "炎",
+        "official_weapon": "弓",
+        "official_region": "フォンテーヌ",
+        "basis_tags": [
+          "表現",
+          "戦略",
+          "家族",
+          "新奇性",
+          "役割責任",
+          "内面の警戒"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%83%AA%E3%83%8D",
+        "raw": 88.17370045264434,
+        "display": 88,
+        "pSim": 0.9253006024120676,
+        "sSim": 0.936281870711704,
+        "vSim": 0.7691073411603506,
+        "mirror_rank": 11,
+        "layer_diffs_to_target": {
+          "personality": [
+            {
+              "axis": "O",
+              "user": 78,
+              "character": 80,
+              "absDiff": 2
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "character": 75,
+              "absDiff": 3
+            },
+            {
+              "axis": "E",
+              "user": 51,
+              "character": 40,
+              "absDiff": 11
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "character": 60,
+              "absDiff": 9
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "character": 55,
+              "absDiff": 8
+            }
+          ],
+          "style": [
+            {
+              "axis": "AGY",
+              "user": 62,
+              "character": 70,
+              "absDiff": 8
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "character": 70,
+              "absDiff": 1
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "character": 75,
+              "absDiff": 8
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "character": 70,
+              "absDiff": 5
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "character": 60,
+              "absDiff": 7
+            }
+          ],
+          "values": [
+            {
+              "axis": "SD",
+              "userCentered": 24.5,
+              "characterCentered": 8.5,
+              "sameSign": true
+            },
+            {
+              "axis": "ST",
+              "userCentered": -16.5,
+              "characterCentered": 8.5,
+              "sameSign": false
+            },
+            {
+              "axis": "HE",
+              "userCentered": -16.5,
+              "characterCentered": -1.5,
+              "sameSign": true
+            },
+            {
+              "axis": "AC",
+              "userCentered": 9.5,
+              "characterCentered": 3.5,
+              "sameSign": true
+            },
+            {
+              "axis": "PO",
+              "userCentered": -33.5,
+              "characterCentered": -16.5,
+              "sameSign": true
+            },
+            {
+              "axis": "SE",
+              "userCentered": -0.5,
+              "characterCentered": -1.5,
+              "sameSign": true
+            },
+            {
+              "axis": "CO",
+              "userCentered": -8.5,
+              "characterCentered": -16.5,
+              "sameSign": true
+            },
+            {
+              "axis": "TR",
+              "userCentered": -8.5,
+              "characterCentered": -6.5,
+              "sameSign": true
+            },
+            {
+              "axis": "BE",
+              "userCentered": 16.5,
+              "characterCentered": 23.5,
+              "sameSign": true
+            },
+            {
+              "axis": "UN",
+              "userCentered": 33.5,
+              "characterCentered": -1.5,
+              "sameSign": false
+            }
+          ]
+        }
+      },
+      {
+        "rank": 7,
+        "character_id": 12,
+        "name": "煙緋",
+        "official_element": "炎",
+        "official_weapon": "法器",
+        "official_region": "璃月",
+        "basis_tags": [
+          "公正",
+          "知的探究",
+          "実利",
+          "社交",
+          "自律"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E7%85%99%E7%B7%8B",
+        "raw": 88.10525863395179,
+        "display": 88,
+        "pSim": 0.8527587014455523,
+        "sSim": 0.9042921110879568,
+        "vSim": 0.8955382414496997,
+        "mirror_rank": 6,
+        "layer_diffs_to_target": {
+          "personality": [
+            {
+              "axis": "O",
+              "user": 78,
+              "character": 65,
+              "absDiff": 13
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "character": 85,
+              "absDiff": 13
+            },
+            {
+              "axis": "E",
+              "user": 51,
+              "character": 50,
+              "absDiff": 1
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "character": 45,
+              "absDiff": 24
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "character": 50,
+              "absDiff": 13
+            }
+          ],
+          "style": [
+            {
+              "axis": "AGY",
+              "user": 62,
+              "character": 60,
+              "absDiff": 2
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "character": 55,
+              "absDiff": 16
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "character": 70,
+              "absDiff": 13
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "character": 80,
+              "absDiff": 5
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "character": 65,
+              "absDiff": 2
+            }
+          ],
+          "values": [
+            {
+              "axis": "SD",
+              "userCentered": 24.5,
+              "characterCentered": 23,
+              "sameSign": true
+            },
+            {
+              "axis": "ST",
+              "userCentered": -16.5,
+              "characterCentered": -7,
+              "sameSign": true
+            },
+            {
+              "axis": "HE",
+              "userCentered": -16.5,
+              "characterCentered": -7,
+              "sameSign": true
+            },
+            {
+              "axis": "AC",
+              "userCentered": 9.5,
+              "characterCentered": -2,
+              "sameSign": false
+            },
+            {
+              "axis": "PO",
+              "userCentered": -33.5,
+              "characterCentered": -7,
+              "sameSign": true
+            },
+            {
+              "axis": "SE",
+              "userCentered": -0.5,
+              "characterCentered": 3,
+              "sameSign": false
+            },
+            {
+              "axis": "CO",
+              "userCentered": -8.5,
+              "characterCentered": -7,
+              "sameSign": true
+            },
+            {
+              "axis": "TR",
+              "userCentered": -8.5,
+              "characterCentered": -7,
+              "sameSign": true
+            },
+            {
+              "axis": "BE",
+              "userCentered": 16.5,
+              "characterCentered": -2,
+              "sameSign": false
+            },
+            {
+              "axis": "UN",
+              "userCentered": 33.5,
+              "characterCentered": 13,
+              "sameSign": true
+            }
+          ]
+        }
+      },
+      {
+        "rank": 8,
+        "character_id": 60,
+        "name": "オロルン",
+        "official_element": "雷",
+        "official_weapon": "弓",
+        "official_region": "ナタ",
+        "basis_tags": [
+          "寡黙",
+          "共感",
+          "自然",
+          "神秘",
+          "自律",
+          "共同体"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%AA%E3%83%AD%E3%83%AB%E3%83%B3",
+        "raw": 87.87848158836951,
+        "display": 88,
+        "pSim": 0.8604292294210568,
+        "sSim": 0.8780984003386337,
+        "vSim": 0.9039453467122742,
+        "mirror_rank": 1,
+        "layer_diffs_to_target": {
+          "personality": [
+            {
+              "axis": "O",
+              "user": 78,
+              "character": 55,
+              "absDiff": 23
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "character": 70,
+              "absDiff": 2
+            },
+            {
+              "axis": "E",
+              "user": 51,
+              "character": 35,
+              "absDiff": 16
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "character": 65,
+              "absDiff": 4
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "character": 50,
+              "absDiff": 13
+            }
+          ],
+          "style": [
+            {
+              "axis": "AGY",
+              "user": 62,
+              "character": 45,
+              "absDiff": 17
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "character": 60,
+              "absDiff": 11
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "character": 75,
+              "absDiff": 8
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "character": 65,
+              "absDiff": 10
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "character": 80,
+              "absDiff": 13
+            }
+          ],
+          "values": [
+            {
+              "axis": "SD",
+              "userCentered": 24.5,
+              "characterCentered": 11,
+              "sameSign": true
+            },
+            {
+              "axis": "ST",
+              "userCentered": -16.5,
+              "characterCentered": -4,
+              "sameSign": true
+            },
+            {
+              "axis": "HE",
+              "userCentered": -16.5,
+              "characterCentered": -9,
+              "sameSign": true
+            },
+            {
+              "axis": "AC",
+              "userCentered": 9.5,
+              "characterCentered": -9,
+              "sameSign": false
+            },
+            {
+              "axis": "PO",
+              "userCentered": -33.5,
+              "characterCentered": -29,
+              "sameSign": true
+            },
+            {
+              "axis": "SE",
+              "userCentered": -0.5,
+              "characterCentered": 1,
+              "sameSign": false
+            },
+            {
+              "axis": "CO",
+              "userCentered": -8.5,
+              "characterCentered": -9,
+              "sameSign": true
+            },
+            {
+              "axis": "TR",
+              "userCentered": -8.5,
+              "characterCentered": 6,
+              "sameSign": false
+            },
+            {
+              "axis": "BE",
+              "userCentered": 16.5,
+              "characterCentered": 26,
+              "sameSign": true
+            },
+            {
+              "axis": "UN",
+              "userCentered": 33.5,
+              "characterCentered": 16,
+              "sameSign": true
+            }
+          ]
+        }
+      },
+      {
+        "rank": 9,
+        "character_id": 117,
+        "name": "イネファ",
+        "official_element": "雷",
+        "official_weapon": "長柄",
+        "official_region": "ナド・クライ",
+        "basis_tags": [
+          "researcher",
+          "役割責任",
+          "ケア",
+          "自律",
+          "実利",
+          "忠誠"
+        ],
+        "evidence_confidence": "medium",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E3%82%A4%E3%83%8D%E3%83%95%E3%82%A1",
+        "raw": 87.60074146807256,
+        "display": 88,
+        "pSim": 0.8429013049067562,
+        "sSim": 0.9484248121670895,
+        "vSim": 0.8477314968929871,
+        "mirror_rank": 14,
+        "layer_diffs_to_target": {
+          "personality": [
+            {
+              "axis": "O",
+              "user": 78,
+              "character": 60,
+              "absDiff": 18
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "character": 75,
+              "absDiff": 3
+            },
+            {
+              "axis": "E",
+              "user": 51,
+              "character": 60,
+              "absDiff": 9
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "character": 75,
+              "absDiff": 6
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "character": 35,
+              "absDiff": 28
+            }
+          ],
+          "style": [
+            {
+              "axis": "AGY",
+              "user": 62,
+              "character": 55,
+              "absDiff": 7
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "character": 70,
+              "absDiff": 1
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "character": 80,
+              "absDiff": 3
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "character": 70,
+              "absDiff": 5
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "character": 60,
+              "absDiff": 7
+            }
+          ],
+          "values": [
+            {
+              "axis": "SD",
+              "userCentered": 24.5,
+              "characterCentered": 19,
+              "sameSign": true
+            },
+            {
+              "axis": "ST",
+              "userCentered": -16.5,
+              "characterCentered": -6,
+              "sameSign": true
+            },
+            {
+              "axis": "HE",
+              "userCentered": -16.5,
+              "characterCentered": -16,
+              "sameSign": true
+            },
+            {
+              "axis": "AC",
+              "userCentered": 9.5,
+              "characterCentered": -6,
+              "sameSign": false
+            },
+            {
+              "axis": "PO",
+              "userCentered": -33.5,
+              "characterCentered": -6,
+              "sameSign": true
+            },
+            {
+              "axis": "SE",
+              "userCentered": -0.5,
+              "characterCentered": -6,
+              "sameSign": true
+            },
+            {
+              "axis": "CO",
+              "userCentered": -8.5,
+              "characterCentered": 9,
+              "sameSign": false
+            },
+            {
+              "axis": "TR",
+              "userCentered": -8.5,
+              "characterCentered": -6,
+              "sameSign": true
+            },
+            {
+              "axis": "BE",
+              "userCentered": 16.5,
+              "characterCentered": 9,
+              "sameSign": true
+            },
+            {
+              "axis": "UN",
+              "userCentered": 33.5,
+              "characterCentered": 9,
+              "sameSign": true
+            }
+          ]
+        }
+      },
+      {
+        "rank": 10,
+        "character_id": 79,
+        "name": "閑雲",
+        "official_element": "風",
+        "official_weapon": "法器",
+        "official_region": "璃月",
+        "basis_tags": [
+          "researcher",
+          "技能",
+          "指導",
+          "保護",
+          "自負",
+          "社交"
+        ],
+        "evidence_confidence": "high",
+        "source_url": "https://wikiwiki.jp/genshinwiki/%E9%96%91%E9%9B%B2",
+        "raw": 87.4306437214116,
+        "display": 87,
+        "pSim": 0.8724068967381073,
+        "sSim": 0.9247670285047839,
+        "vSim": 0.8263785665581262,
+        "mirror_rank": 15,
+        "layer_diffs_to_target": {
+          "personality": [
+            {
+              "axis": "O",
+              "user": 78,
+              "character": 85,
+              "absDiff": 7
+            },
+            {
+              "axis": "C",
+              "user": 72,
+              "character": 70,
+              "absDiff": 2
+            },
+            {
+              "axis": "E",
+              "user": 51,
+              "character": 45,
+              "absDiff": 6
+            },
+            {
+              "axis": "A",
+              "user": 69,
+              "character": 55,
+              "absDiff": 14
+            },
+            {
+              "axis": "N",
+              "user": 63,
+              "character": 40,
+              "absDiff": 23
+            }
+          ],
+          "style": [
+            {
+              "axis": "AGY",
+              "user": 62,
+              "character": 55,
+              "absDiff": 7
+            },
+            {
+              "axis": "REL",
+              "user": 71,
+              "character": 70,
+              "absDiff": 1
+            },
+            {
+              "axis": "ROL",
+              "user": 83,
+              "character": 75,
+              "absDiff": 8
+            },
+            {
+              "axis": "REF",
+              "user": 75,
+              "character": 80,
+              "absDiff": 5
+            },
+            {
+              "axis": "AUT",
+              "user": 67,
+              "character": 55,
+              "absDiff": 12
+            }
+          ],
+          "values": [
+            {
+              "axis": "SD",
+              "userCentered": 24.5,
+              "characterCentered": 5.5,
+              "sameSign": true
+            },
+            {
+              "axis": "ST",
+              "userCentered": -16.5,
+              "characterCentered": -9.5,
+              "sameSign": true
+            },
+            {
+              "axis": "HE",
+              "userCentered": -16.5,
+              "characterCentered": -4.5,
+              "sameSign": true
+            },
+            {
+              "axis": "AC",
+              "userCentered": 9.5,
+              "characterCentered": 10.5,
+              "sameSign": true
+            },
+            {
+              "axis": "PO",
+              "userCentered": -33.5,
+              "characterCentered": -14.5,
+              "sameSign": true
+            },
+            {
+              "axis": "SE",
+              "userCentered": -0.5,
+              "characterCentered": 0.5,
+              "sameSign": false
+            },
+            {
+              "axis": "CO",
+              "userCentered": -8.5,
+              "characterCentered": -9.5,
+              "sameSign": true
+            },
+            {
+              "axis": "TR",
+              "userCentered": -8.5,
+              "characterCentered": 10.5,
+              "sameSign": false
+            },
+            {
+              "axis": "BE",
+              "userCentered": 16.5,
+              "characterCentered": 10.5,
+              "sameSign": true
+            },
+            {
+              "axis": "UN",
+              "userCentered": 33.5,
+              "characterCentered": 0.5,
+              "sameSign": true
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "domain_editorial": {
+    "model": "CORE1-DOMAIN-EDITORIAL-0.1.0",
+    "excluded_axes": [
+      "ST",
+      "HE",
+      "CO",
+      "TR"
+    ],
+    "axes": [
+      {
+        "key": "understanding",
+        "label": "理解・戦略",
+        "axes": [
+          {
+            "axis": "O",
+            "value": 78
+          },
+          {
+            "axis": "REF",
+            "value": 75
+          },
+          {
+            "axis": "SD",
+            "value": 83
+          },
+          {
+            "axis": "UN",
+            "value": 92
+          }
+        ]
+      },
+      {
+        "key": "integration",
+        "label": "関係・統合",
+        "axes": [
+          {
+            "axis": "A",
+            "value": 69
+          },
+          {
+            "axis": "REL",
+            "value": 71
+          },
+          {
+            "axis": "BE",
+            "value": 75
+          },
+          {
+            "axis": "N",
+            "value": 63
+          }
+        ]
+      },
+      {
+        "key": "sustain",
+        "label": "実行・持続",
+        "axes": [
+          {
+            "axis": "C",
+            "value": 72
+          },
+          {
+            "axis": "ROL",
+            "value": 83
+          },
+          {
+            "axis": "SE",
+            "value": 58
+          },
+          {
+            "axis": "AC",
+            "value": 58
+          }
+        ]
+      },
+      {
+        "key": "expression",
+        "label": "発信・拡張",
+        "axes": [
+          {
+            "axis": "E",
+            "value": 31
+          },
+          {
+            "axis": "AGY",
+            "value": 42
+          },
+          {
+            "axis": "AUT",
+            "value": 67
+          },
+          {
+            "axis": "PO",
+            "value": 25
+          }
+        ]
+      }
+    ],
+    "means": [
+      {
+        "key": "understanding",
+        "label": "理解・戦略",
+        "mean": 82,
+        "display": 82
+      },
+      {
+        "key": "integration",
+        "label": "関係・統合",
+        "mean": 69.5,
+        "display": 70
+      },
+      {
+        "key": "sustain",
+        "label": "実行・持続",
+        "mean": 67.75,
+        "display": 68
+      },
+      {
+        "key": "expression",
+        "label": "発信・拡張",
+        "mean": 41.25,
+        "display": 41
+      }
+    ]
+  },
+  "display_names": {
+    "ナドクライ": "ナド・クライ",
+    "ナド・クライ": "ナド・クライ"
+  },
+  "provenance": [
+    {
+      "file": "js/ETI_v2_QUESTIONS_100.js",
+      "sha256": "6c602439e0bf82a88183f6f6a694dd20da974b3f01be07d396315786ae5ddab4"
+    },
+    {
+      "file": "js/eti_v2_prototypes.js",
+      "sha256": "35d45e433f56b6df3d56fe07e1b8ffddd02649dd46c043ea37c603e0835e1d74"
+    },
+    {
+      "file": "js/eti_v2_engine.js",
+      "sha256": "a49696b34497f25bf2c38635999b19766a1799837acd48f17602ae120685daa9"
+    },
+    {
+      "file": "js/characters118_v2_1.js",
+      "sha256": "a5b368ff82065df07c5a23963e8a8f051597b57b972933e06f5b9132355c1747"
+    },
+    {
+      "file": "js/eti_mirror_selection_v21.js",
+      "sha256": "d7fb3bd8f3039243c06bf098646a4eb065edd31027215cb1ed8d31f4f53ccb1b"
+    },
+    {
+      "file": "js/eti_v2_mirror_resolver.js",
+      "sha256": "031c7f9d54ed619b52faa37ece324d153826f35559b1ab4cc0728eb96e1ab0bb"
+    },
+    {
+      "file": "prototypes/core1_v4_audited/core1_report_models.js",
+      "sha256": "798a23646593c6a7355d1adf5873c86e78210f560a70609f2889b90516a196aa"
+    }
+  ]
+}

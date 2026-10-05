@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "core1/report-snapshot.schema.json",
+  "title": "CORE1 immutable report snapshot (one buyer, one report version)",
+  "type": "object",
+  "required": ["schema", "session_id", "diagnosed_at", "generated_at", "answers_hash", "diagnosis_code", "versions", "axes", "values_centered", "values_flat", "rankings", "mirror", "hidden", "mentor", "domains", "engine_provenance"],
+  "properties": {
+    "schema": { "const": "CORE1-REPORT-SNAPSHOT-1.0.0" },
+    "answers_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "diagnosis_code": { "type": "string", "description": "ETIv2.encodeAnswersV2 of the 100 answers" },
+    "versions": { "type": "object", "required": ["diagnosis", "items", "scoring", "translation", "characters", "mirror", "hidden", "mentor", "domain", "rankband", "report_content_version", "report_template_version"] },
+    "axes": { "type": "object", "required": ["personality", "style", "values"] },
+    "values_flat": { "type": "boolean" },
+    "rankings": {
+      "type": "object", "required": ["element", "weapon", "nation"],
+      "additionalProperties": { "type": "array", "items": { "type": "object", "required": ["rank", "key", "name", "band", "distance", "display", "evidence"] } }
+    },
+    "mirror": { "type": "object", "required": ["model", "top10", "selected", "selectionMeta"] },
+    "hidden": { "type": "object", "required": ["model", "weights", "top10"] },
+    "mentor": { "type": "object", "required": ["model", "status", "top10"], "properties": { "status": { "enum": ["ok", "goal_not_selected"] } } },
+    "domains": { "type": "object", "required": ["model", "items", "excludedAxes"] },
+    "engine_provenance": { "type": "array", "minItems": 6, "items": { "type": "object", "required": ["file", "sha256"] } }
+  }
+}

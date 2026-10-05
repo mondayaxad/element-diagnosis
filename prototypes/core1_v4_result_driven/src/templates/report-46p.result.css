@@ -1,0 +1,48 @@
+/* ================= 結果連動版の追加（本文と根拠の分離・未生成表示・支える軸） ================= */
+/* 根拠欄：本文より小さく、低いコントラストで、本文の後ろに置く */
+.ev { display: block; margin-top: .6mm; font-family: var(--font-num); font-size: 6.8pt; letter-spacing: .04em; color: var(--ink-soft); opacity: .9; }
+.ev::before { content: '根拠　'; letter-spacing: .1em; }
+.to-note .ev { margin-top: 1mm; }
+/* 軸辞典：見出しを持たない1行バー（コード・項目名・数値はカード見出しの1回だけ） */
+.dict.ax .pole.bare, .pole.bare { grid-template-columns: 22mm 1fr 22mm; }
+.dc-h .dc-n { white-space: nowrap; }
+/* 支える軸 */
+.tc.support { border-color: color-mix(in srgb, var(--accent-l) 60%, transparent); }
+.tc b.s { background: color-mix(in srgb, var(--accent-l) 55%, #ffffff); }
+.pole.support .pl, .mb.support .mb-n { color: var(--accent-l); }
+.pole.support .pl::after, .mb.support .mb-n::after { content: '支'; font-family: var(--font-num); font-size: 6pt; color: #06101a; background: color-mix(in srgb, var(--accent-l) 55%, #ffffff); border-radius: .6mm; padding: 0 .7mm; margin-left: 1mm; vertical-align: .1em; }
+.core-note.soft { color: var(--ink-soft); font-weight: 400; }
+/* MIRROR選択印・MENTOR未生成 */
+.new-tag.sel { background: var(--mi, #8fd0f0); }
+.mentor-empty { border: 1px dashed color-mix(in srgb, var(--me, #e2b46a) 60%, transparent); border-radius: 2mm; padding: 5mm 6mm; margin: 4mm 0 5mm; background: rgba(0, 0, 0, .18); }
+.mentor-empty p { font-size: 9.4pt; line-height: 1.85; margin-top: 1.6mm; }
+.mv-bar .to.down { background: repeating-linear-gradient(135deg, rgba(200, 220, 238, .55) 0 1.2mm, transparent 1.2mm 2.4mm); }
+/* P36：今回この三人を選ぶ理由 */
+.tl-row.why span { color: var(--accent-l); font-weight: 700; }
+.tl-row.why p { font-size: 8.5pt; line-height: 1.66; }
+.new-tag { white-space: nowrap; display: inline-block; }
+/* 結果連動版：可変長の本文が紙面に収まるよう、局所的に詰める（本文全体は縮めない） */
+.ch-name .new-tag { margin-left: 1.6mm; vertical-align: .15em; }
+.lens-page .lc-row { padding: .7mm 0; }
+.lens-page .lc-row p { line-height: 1.58; }
+.lens-page .lens-cards { gap: 2.4mm; }
+.dictionary-page:not(.dense):not(.axis-dict) .dict-grid .dc-def { font-size: 9.4pt !important; line-height: 1.62 !important; }
+.dictionary-page:not(.dense):not(.axis-dict) .dict-grid .dict { padding: 2.6mm 3.4mm; }
+.theme-detail-page .td-body p { margin-bottom: 1.4mm; }
+.nav-cat .nv-row p { line-height: 1.58; }
+.ev { line-height: 1.4; margin-top: .3mm; }
+.nav-cat.m3 .nv-row p { font-size: 8.9pt; }
+.layout-a .td-body p { line-height: 1.85; }
+.nav-cat.m3 .nv-row { padding-top: 1.6mm; padding-bottom: 1.6mm; }
+/* 内容整合性修正：緊張／並存の印、核の方向、近づく方法の最低限、タイプ名一行 */
+.tk { display: inline-block; font-size: 6.6pt; letter-spacing: .08em; padding: 0 1.2mm; margin-right: 1.4mm; border-radius: .7mm; vertical-align: .12em; }
+.tk.tension { background: var(--warn-l); color: #10131a; } .tk.coexist { background: rgba(143, 182, 214, .28); color: var(--ink-strong); }
+.tc .pole-tag { font-style: normal; font-size: 6.6pt; margin-left: 1.2mm; color: var(--accent-l); letter-spacing: .02em; }
+.nv-box .min { display: block; font-size: 7.6pt; color: var(--ink-soft); margin-top: .4mm; }
+.tri-c.one { white-space: pre; letter-spacing: .12em; }
+.nv-box .min { display: inline; margin-left: 1.2mm; }
+.nav-cat .nv-two { grid-template-columns: 1fr 2.1fr; }
+.nav-cat .nv-two .nv-box.use p { line-height: 1.62; }
+.nav-cat.m3 .nv-row p { font-size: 8.6pt; line-height: 1.52; margin-top: .6mm; }
+.nav-cat.m3 .nv-row { margin-bottom: 1.2mm; }
+.nav-cat.m3 .sc-table td, .nav-cat.m3 .sc-table th { padding-top: 1.4mm; padding-bottom: 1.4mm; }

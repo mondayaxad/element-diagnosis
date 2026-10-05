@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "core1/report-input.schema.json",
+  "title": "CORE1 report input (100 answers + versions + optional MENTOR goal)",
+  "type": "object",
+  "required": ["session_id", "display_name", "diagnosed_at", "generated_at", "answers", "versions", "mentor_goal"],
+  "additionalProperties": false,
+  "properties": {
+    "session_id": { "type": "string", "minLength": 1 },
+    "display_name": { "type": "string", "minLength": 1 },
+    "diagnosed_at": { "type": "string", "format": "date-time" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "answers": {
+      "type": "object",
+      "description": "Q001..Q100 exactly once; integer -2..2. Missing answers are rejected, never filled with 0.",
+      "patternProperties": { "^Q(0\\d\\d|100)$": { "type": "integer", "minimum": -2, "maximum": 2 } },
+      "additionalProperties": false,
+      "minProperties": 100, "maxProperties": 100
+    },
+    "versions": {
+      "type": "object",
+      "required": ["diagnosis", "items", "scoring", "translation", "characters", "mirror"],
+      "properties": {
+        "diagnosis": { "const": "ETI-2.0" }, "items": { "const": "ETI-ITEM-2.0.0" }, "scoring": { "const": "ETI-SCORE-2.0.0" },
+        "translation": { "const": "ETI-TRANS-2.0.0" }, "characters": { "const": "ETI-CHAR-2.1.0" }, "mirror": { "const": "ETI-MIRROR-2.1.0" }
+      }
+    },
+    "mentor_goal": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["goal_id", "label", "selected_by", "selected_at", "deltas"],
+          "properties": {
+            "goal_id": { "type": "string", "description": "must exist in src/content/mentor-goals.json" },
+            "label": { "type": "string" },
+            "selected_by": { "enum": ["user", "fixture"] },
+            "selected_at": { "type": "string", "format": "date-time" },
+            "deltas": { "type": "object", "minProperties": 1, "patternProperties": { "^(personality|style|values)\\.[A-Z]+$": { "type": "number" } }, "additionalProperties": false }
+          }
+        }
+      ]
+    }
+  }
+}

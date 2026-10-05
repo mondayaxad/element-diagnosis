@@ -1,0 +1,181 @@
+[
+ {
+  "page_kind": "element",
+  "category": "風",
+  "records": [
+   {
+    "core_axis_code": "C",
+    "core_axis_score": 31,
+    "core_axis_pole": "即興・可変側",
+    "core_axis_phrase": "誠実性（即興・可変側）",
+    "core_selection_reason": "主要一致軸：辞書の core_axes 候補（O:high, C:low, A:high）のうち、型と同じ向きにあり、型との差が最小（差 1）。統計的因果ではなく編集規則。"
+   },
+   {
+    "core_axis_code": "O",
+    "core_axis_score": 88,
+    "core_axis_pole": "探究・抽象側",
+    "core_axis_phrase": "開放性（探究・抽象側）",
+    "core_selection_reason": "支える軸：辞書の core_axes 候補（O:high, C:low, A:high）のうち、型と同じ向きにあり、型との差が次に小さい（差 2）。統計的因果ではなく編集規則。"
+   },
+   {
+    "core_axis_code": "A",
+    "core_axis_score": 66,
+    "core_axis_pole": "協調・配慮側",
+    "core_axis_phrase": "協調性（協調・配慮側）",
+    "core_selection_reason": "支える軸：辞書の core_axes 候補（O:high, C:low, A:high）のうち、型と同じ向きにあり、型との差が次に小さい（差 4）。統計的因果ではなく編集規則。"
+   }
+  ]
+ },
+ {
+  "page_kind": "element",
+  "category": "水",
+  "records": [
+   {
+    "core_axis_code": "A",
+    "core_axis_score": 66,
+    "core_axis_pole": "協調・配慮側",
+    "core_axis_phrase": "協調性（協調・配慮側）",
+    "core_selection_reason": "主要一致軸：辞書の core_axes 候補（A:high, C:high, O:high）のうち、型と同じ向きにあり、型との差が最小（差 4）。統計的因果ではなく編集規則。"
+   },
+   {
+    "core_axis_code": "O",
+    "core_axis_score": 88,
+    "core_axis_pole": "探究・抽象側",
+    "core_axis_phrase": "開放性（探究・抽象側）",
+    "core_selection_reason": "支える軸：辞書の core_axes 候補（A:high, C:high, O:high）のうち、型と同じ向きにあり、型との差が次に小さい（差 18）。統計的因果ではなく編集規則。"
+   }
+  ]
+ },
+ {
+  "page_kind": "element",
+  "category": "草",
+  "records": [
+   {
+    "core_axis_code": "O",
+    "core_axis_score": 88,
+    "core_axis_pole": "探究・抽象側",
+    "core_axis_phrase": "開放性（探究・抽象側）",
+    "core_selection_reason": "主要一致軸：辞書の core_axes 候補（O:high, A:high, C:high）のうち、型と同じ向きにあり、型との差が最小（差 2）。統計的因果ではなく編集規則。"
+   },
+   {
+    "core_axis_code": "A",
+    "core_axis_score": 66,
+    "core_axis_pole": "協調・配慮側",
+    "core_axis_phrase": "協調性（協調・配慮側）",
+    "core_selection_reason": "支える軸：辞書の core_axes 候補（O:high, A:high, C:high）のうち、型と同じ向きにあり、型との差が次に小さい（差 24）。統計的因果ではなく編集規則。"
+   }
+  ]
+ },
+ {
+  "page_kind": "weapon",
+  "category": "弓",
+  "records": [
+   {
+    "core_axis_code": "AUT",
+    "core_axis_score": 88,
+    "core_axis_pole": "自律・自己裁量側",
+    "core_axis_phrase": "自律距離（自律・自己裁量側）",
+    "core_selection_reason": "主要一致軸：辞書の core_axes 候補（AUT:high, REF:high, REL:low）のうち、型と同じ向きにあり、型との差が最小（差 2）。統計的因果ではなく編集規則。"
+   }
+  ]
+ },
+ {
+  "page_kind": "weapon",
+  "category": "法器",
+  "records": []
+ },
+ {
+  "page_kind": "weapon",
+  "category": "両手剣",
+  "records": [
+   {
+    "core_axis_code": "AUT",
+    "core_axis_score": 88,
+    "core_axis_pole": "自律・自己裁量側",
+    "core_axis_phrase": "自律距離（自律・自己裁量側）",
+    "core_selection_reason": "主要一致軸：辞書の core_axes 候補（AGY:high, AUT:high, REL:low）のうち、型と同じ向きにあり、型との差が最小（差 2）。統計的因果ではなく編集規則。"
+   }
+  ]
+ },
+ {
+  "page_kind": "nation",
+  "category": "モンド",
+  "records": [
+   {
+    "core_axis_code": "ST",
+    "core_axis_score": 75,
+    "core_axis_pole": "変化・新奇側",
+    "core_axis_phrase": "刺激（変化・新奇側）",
+    "core_selection_reason": "主要一致軸：辞書の core_axes 候補（SD:high, ST:high, CO:low）のうち、型と同じ向きにあり、型との差が最小（差 3.3）。統計的因果ではなく編集規則。"
+   },
+   {
+    "core_axis_code": "SD",
+    "core_axis_score": 92,
+    "core_axis_pole": "自己決定側",
+    "core_axis_phrase": "自己方向（自己決定側）",
+    "core_selection_reason": "支える軸：辞書の core_axes 候補（SD:high, ST:high, CO:low）のうち、型と同じ向きにあり、型との差が次に小さい（差 3.7）。統計的因果ではなく編集規則。"
+   },
+   {
+    "core_axis_code": "CO",
+    "core_axis_score": 25,
+    "core_axis_pole": "自己裁量側",
+    "core_axis_phrase": "同調（自己裁量側）",
+    "core_selection_reason": "支える軸：辞書の core_axes 候補（SD:high, ST:high, CO:low）のうち、型と同じ向きにあり、型との差が次に小さい（差 6.7）。統計的因果ではなく編集規則。"
+   }
+  ]
+ },
+ {
+  "page_kind": "nation",
+  "category": "ナド・クライ",
+  "records": [
+   {
+    "core_axis_code": "SD",
+    "core_axis_score": 92,
+    "core_axis_pole": "自己決定側",
+    "core_axis_phrase": "自己方向（自己決定側）",
+    "core_selection_reason": "主要一致軸：辞書の core_axes 候補（SD:high, PO:low, CO:low）のうち、型と同じ向きにあり、型との差が最小（差 1.3）。統計的因果ではなく編集規則。"
+   },
+   {
+    "core_axis_code": "CO",
+    "core_axis_score": 25,
+    "core_axis_pole": "自己裁量側",
+    "core_axis_phrase": "同調（自己裁量側）",
+    "core_selection_reason": "支える軸：辞書の core_axes 候補（SD:high, PO:low, CO:low）のうち、型と同じ向きにあり、型との差が次に小さい（差 1.7）。統計的因果ではなく編集規則。"
+   },
+   {
+    "core_axis_code": "PO",
+    "core_axis_score": 17,
+    "core_axis_pole": "地位を優先しにくい側",
+    "core_axis_phrase": "権力（地位を優先しにくい側）",
+    "core_selection_reason": "支える軸：辞書の core_axes 候補（SD:high, PO:low, CO:low）のうち、型と同じ向きにあり、型との差が次に小さい（差 6.3）。統計的因果ではなく編集規則。"
+   }
+  ]
+ },
+ {
+  "page_kind": "nation",
+  "category": "スメール",
+  "records": [
+   {
+    "core_axis_code": "PO",
+    "core_axis_score": 17,
+    "core_axis_pole": "地位を優先しにくい側",
+    "core_axis_phrase": "権力（地位を優先しにくい側）",
+    "core_selection_reason": "主要一致軸：辞書の core_axes 候補（UN:high, SD:high, PO:low）のうち、型と同じ向きにあり、型との差が最小（差 2.8）。統計的因果ではなく編集規則。"
+   },
+   {
+    "core_axis_code": "SD",
+    "core_axis_score": 92,
+    "core_axis_pole": "自己決定側",
+    "core_axis_phrase": "自己方向（自己決定側）",
+    "core_selection_reason": "支える軸：辞書の core_axes 候補（UN:high, SD:high, PO:low）のうち、型と同じ向きにあり、型との差が次に小さい（差 12.2）。統計的因果ではなく編集規則。"
+   },
+   {
+    "core_axis_code": "UN",
+    "core_axis_score": 67,
+    "core_axis_pole": "公平・普遍側",
+    "core_axis_phrase": "普遍主義（公平・普遍側）",
+    "core_selection_reason": "支える軸：辞書の core_axes 候補（UN:high, SD:high, PO:low）のうち、型と同じ向きにあり、型との差が次に小さい（差 22.8）。統計的因果ではなく編集規則。"
+   }
+  ]
+ }
+]

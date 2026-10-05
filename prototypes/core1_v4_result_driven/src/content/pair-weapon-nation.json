@@ -1,0 +1,973 @@
+{
+ "version": "CORE1-PAIR-WN-1.0.0",
+ "review_status": "editorial_reviewed_v1",
+ "relation_labels": {
+  "alignment": "一致",
+  "complement": "補完",
+  "tension": "緊張",
+  "conditional": "条件付き"
+ },
+ "relation_rule": "既定関係は辞書の編集判断。表示ラベルは本人の根拠軸がカテゴリの向きと一致する割合で確定する（CORE1-PAIR-RELATION-0.1.0）。",
+ "items": {
+  "片手剣×モンド": {
+   "pair_id": "WEAPON.片手剣×NATION.モンド",
+   "a": "片手剣",
+   "b": "モンド",
+   "default_relation": "conditional",
+   "summary": "合わせる器用さを、選ぶ自由のために使う。",
+   "together": "片手剣の合わせる力が、モンドの一人ひとりが選べる余白を大切にする価値に向かうと、人がそれぞれのやり方を選べる場を整えられます。",
+   "tension": "周りに合わせる動き方と、自分で選びたい価値の間で、自分の選択が後回しになることがあります。",
+   "works_when": "合わせる場面と、自分で選ぶ場面が分けられている時。",
+   "friction_when": "周りに合わせ続け、自分で選んだ実感がなくなる時。",
+   "scene_templates": [
+    "メンバーそれぞれが選んだやり方を、全体の流れに合わせて調整する。",
+    "自分のやり方を一つ選んだ上で、他は周りに合わせる。"
+   ],
+   "observation_question": "「今日、自分で選んだことは何か」",
+   "shared_themes": [
+    "合わせる器用さを、選ぶ自由のために使う。"
+   ],
+   "tension_themes": [
+    "周りに合わせる動き方と、自分で選びたい価値の間で、自分の選択が後回しになることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "片手剣×璃月": {
+   "pair_id": "WEAPON.片手剣×NATION.璃月",
+   "a": "片手剣",
+   "b": "璃月",
+   "default_relation": "alignment",
+   "summary": "合わせる力で、約束と関係を長く保つ。",
+   "together": "片手剣の調整する力と、璃月の約束と信頼を守る価値は、どちらも関係を長く保つ方向にあります。相手に合わせながら、交わした約束を丁寧に守り続けられます。",
+   "tension": "合わせることと守ることが重なり、引き受ける約束が増えすぎることがあります。",
+   "works_when": "引き受ける約束の数と範囲が決まっている時。",
+   "friction_when": "相手に合わせて約束を増やし続け、守りきれなくなる時。",
+   "scene_templates": [
+    "取引先の事情に合わせて段取りを調整しながら、約束の期日は守る。",
+    "引き継いだ関係を、相手ごとに合わせて丁寧に続ける。"
+   ],
+   "observation_question": "「合わせて増えた約束のうち、守れるのはどれか」",
+   "shared_themes": [
+    "合わせる力で、約束と関係を長く保つ。"
+   ],
+   "tension_themes": [
+    "合わせることと守ることが重なり、引き受ける約束が増えすぎることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "片手剣×稲妻": {
+   "pair_id": "WEAPON.片手剣×NATION.稲妻",
+   "a": "片手剣",
+   "b": "稲妻",
+   "default_relation": "alignment",
+   "summary": "合わせる力で、決まった型を支える。",
+   "together": "片手剣の周りと合わせる力と、稲妻の型を守る価値は、どちらも共有された形に沿う方向にあります。決まった型の中で、周りと息を合わせて動けます。",
+   "tension": "合わせる力と型を守る価値が重なり、自分の判断を出す機会が少なくなることがあります。",
+   "works_when": "型の中で、自分の判断を出してよい部分が決まっている時。",
+   "friction_when": "型と周りに合わせ続け、自分の考えが見えなくなる時。",
+   "scene_templates": [
+    "決まった手順に沿いながら、メンバー間の段取りを調整する。",
+    "型を守る中で、気づいた改善点を一つだけ提案する。"
+   ],
+   "observation_question": "「型に合わせる中で、自分の判断を出せたか」",
+   "shared_themes": [
+    "合わせる力で、決まった型を支える。"
+   ],
+   "tension_themes": [
+    "合わせる力と型を守る価値が重なり、自分の判断を出す機会が少なくなることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "片手剣×スメール": {
+   "pair_id": "WEAPON.片手剣×NATION.スメール",
+   "a": "片手剣",
+   "b": "スメール",
+   "default_relation": "conditional",
+   "summary": "合わせる力で、理解を広げる場を作る。",
+   "together": "片手剣の調整する力が、スメールの理解と公平さを求める価値に向かうと、立場の違う人が理解し合える場を整えられます。",
+   "tension": "周りに合わせる動き方と、自分で納得したい価値の間で、判断を保留しがちになることがあります。",
+   "works_when": "合わせた上で、自分の判断も言葉にできている時。",
+   "friction_when": "周りに合わせて納得できない決定を受け入れ、問いが残る時。",
+   "scene_templates": [
+    "意見の違う人たちの話を聞き、共通の理解を作る場を整える。",
+    "相手に合わせて説明を変えながら、根拠は同じものを示す。"
+   ],
+   "observation_question": "「合わせた結果に、自分は納得しているか」",
+   "shared_themes": [
+    "合わせる力で、理解を広げる場を作る。"
+   ],
+   "tension_themes": [
+    "周りに合わせる動き方と、自分で納得したい価値の間で、判断を保留しがちになることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "片手剣×フォンテーヌ": {
+   "pair_id": "WEAPON.片手剣×NATION.フォンテーヌ",
+   "a": "片手剣",
+   "b": "フォンテーヌ",
+   "default_relation": "alignment",
+   "summary": "合わせる力で、公平な合意を作る。",
+   "together": "片手剣の調整する力と、フォンテーヌの公平さと説明責任を求める価値は、どちらも周りとの合意を大切にする方向にあります。立場の違う人をつなぎ、公平な着地点を作れます。",
+   "tension": "合わせることと公平さの両方を求めるため、全員が納得するまで決められないことがあります。",
+   "works_when": "合意の基準を先に決め、その中で調整できている時。",
+   "friction_when": "全員に合わせようとして、基準がぶれてしまう時。",
+   "scene_templates": [
+    "意見の違う二人の間で、共通の基準を言葉にして示す。",
+    "チームのルールを、全員の意見を聞きながら公平にまとめる。"
+   ],
+   "observation_question": "「この合意は、公平な基準に沿っているか」",
+   "shared_themes": [
+    "合わせる力で、公平な合意を作る。"
+   ],
+   "tension_themes": [
+    "合わせることと公平さの両方を求めるため、全員が納得するまで決められないことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "片手剣×ナタ": {
+   "pair_id": "WEAPON.片手剣×NATION.ナタ",
+   "a": "片手剣",
+   "b": "ナタ",
+   "default_relation": "alignment",
+   "summary": "合わせる力で、仲間の熱をつなぐ。",
+   "together": "片手剣の周りと合わせる力と、ナタの熱を仲間と分け合う価値は、どちらも仲間と一緒に動く方向にあります。それぞれの熱を、チームの動きとしてまとめられます。",
+   "tension": "熱に合わせ続けるぶん、自分のペースが保ちにくくなることがあります。",
+   "works_when": "自分のペースと、チームの熱の両方を確かめられている時。",
+   "friction_when": "チームの熱に合わせ続けて、疲れに気づかない時。",
+   "scene_templates": [
+    "チームの挑戦で、メンバー同士の役割を調整して熱をつなぐ。",
+    "盛り上がる場で、ついていけない人に合わせて段取りを変える。"
+   ],
+   "observation_question": "「チームの熱に合わせる中で、自分のペースを保てたか」",
+   "shared_themes": [
+    "合わせる力で、仲間の熱をつなぐ。"
+   ],
+   "tension_themes": [
+    "熱に合わせ続けるぶん、自分のペースが保ちにくくなることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "片手剣×スネージナヤ": {
+   "pair_id": "WEAPON.片手剣×NATION.スネージナヤ",
+   "a": "片手剣",
+   "b": "スネージナヤ",
+   "default_relation": "conditional",
+   "summary": "合わせる力で、目的への道筋を整える。",
+   "together": "片手剣の調整する力が、スネージナヤの目的へ力を集める価値に向かうと、目的のために人と段取りを整える役割を担えます。",
+   "tension": "周りに合わせる動き方と、目的のために集める価値の間で、誰の都合を優先するかに迷うことがあります。",
+   "works_when": "目的と、調整してよい範囲が決まっている時。",
+   "friction_when": "目的と周りの都合の板挟みになり、疲れが溜まる時。",
+   "scene_templates": [
+    "大きな目標に向けて、メンバーそれぞれの段取りを調整する。",
+    "目的を共有した上で、各自の役割を組み替える。"
+   ],
+   "observation_question": "「目的と周りの都合の、どちらを優先するか決めているか」",
+   "shared_themes": [
+    "合わせる力で、目的への道筋を整える。"
+   ],
+   "tension_themes": [
+    "周りに合わせる動き方と、目的のために集める価値の間で、誰の都合を優先するかに迷うことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "片手剣×ナドクライ": {
+   "pair_id": "WEAPON.片手剣×NATION.ナドクライ",
+   "a": "片手剣",
+   "b": "ナドクライ",
+   "default_relation": "tension",
+   "summary": "周りに合わせる力と、自分で選ぶ境界。",
+   "together": "片手剣は周りと一緒に決めて合わせ、ナド・クライは自分の判断で境界を守ります。合わせる相手と範囲を自分で選べると、柔軟さと自律が両立します。",
+   "tension": "合わせたい動き方と、自分で選びたい価値がぶつかり、内側で引っかかりが生まれることがあります。",
+   "works_when": "合わせる相手と範囲を、自分で決めている時。",
+   "friction_when": "周りに合わせ続け、自分で選んだ境界が崩れる時。",
+   "scene_templates": [
+    "合わせる相手を選び、その人たちとは丁寧に段取りを調整する。",
+    "頼まれた時に、合わせる範囲と合わせない範囲を伝える。"
+   ],
+   "observation_question": "「今日合わせたのは、自分で選んだ相手か」",
+   "shared_themes": [
+    "周りに合わせる力と、自分で選ぶ境界。"
+   ],
+   "tension_themes": [
+    "合わせたい動き方と、自分で選びたい価値がぶつかり、内側で引っかかりが生まれることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "両手剣×モンド": {
+   "pair_id": "WEAPON.両手剣×NATION.モンド",
+   "a": "両手剣",
+   "b": "モンド",
+   "default_relation": "alignment",
+   "summary": "自分で選んだ道を、決断で切り開く。",
+   "together": "両手剣の自分で決めて進む力と、モンドの自分で選ぶ自由を大切にする価値は、同じ方向を指しています。誰かに決められた道ではなく、自分で選んだ道を力強く進めます。",
+   "tension": "自律が重なるぶん、周りと相談する前に決めてしまうことがあります。",
+   "works_when": "決める前に、影響を受ける人の声を一つ聞けている時。",
+   "friction_when": "自分で選ぶことにこだわり、周りの意見を聞かずに進む時。",
+   "scene_templates": [
+    "自分で選んだ新しい取り組みを、迷わず始める。",
+    "決められた道に疑問を感じた時、自分で別の道を選んで進む。"
+   ],
+   "observation_question": "「自分で選んだ道に、誰かの声は届いていたか」",
+   "shared_themes": [
+    "自分で選んだ道を、決断で切り開く。"
+   ],
+   "tension_themes": [
+    "自律が重なるぶん、周りと相談する前に決めてしまうことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "両手剣×璃月": {
+   "pair_id": "WEAPON.両手剣×NATION.璃月",
+   "a": "両手剣",
+   "b": "璃月",
+   "default_relation": "conditional",
+   "summary": "決断の力で、約束を果たす。",
+   "together": "両手剣の決断する力が、璃月の約束と積み重ねを守る価値に向かうと、約束を果たすための難しい判断を迷わず下せます。",
+   "tension": "自分で決めたい動き方と、受け継いだ形を守る価値の間で、どちらを優先するかに迷うことがあります。",
+   "works_when": "約束の範囲の中で、決断の権限が自分にある時。",
+   "friction_when": "約束を守るために、自分の判断を抑え続ける時。",
+   "scene_templates": [
+    "約束の期日を守るため、優先順位を自分で決めて進める。",
+    "受け継いだ方針の中で、自分が責任を持つ部分を決断する。"
+   ],
+   "observation_question": "「この決断は、どの約束を守るためか」",
+   "shared_themes": [
+    "決断の力で、約束を果たす。"
+   ],
+   "tension_themes": [
+    "自分で決めたい動き方と、受け継いだ形を守る価値の間で、どちらを優先するかに迷うことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "両手剣×稲妻": {
+   "pair_id": "WEAPON.両手剣×NATION.稲妻",
+   "a": "両手剣",
+   "b": "稲妻",
+   "default_relation": "tension",
+   "summary": "大きく決める力と、変わらない型。",
+   "together": "両手剣は大きな決断で状況を変え、稲妻は変わらない型を守ります。型を守るための決断として力を使えると、ぶれない強さになります。",
+   "tension": "変えたい動き方と、変えたくない価値がぶつかり、内側で張り詰めることがあります。",
+   "works_when": "決断が、型を守る方向で使われている時。",
+   "friction_when": "型への不満を抱えたまま従い、決断の力を抑え続ける時。",
+   "scene_templates": [
+    "型を守るために、崩れそうな部分を自分の判断で立て直す。",
+    "型を変える必要がある時、理由を示した上で決断する。"
+   ],
+   "observation_question": "「この決断は、型を守るものか、変えるものか」",
+   "shared_themes": [
+    "大きく決める力と、変わらない型。"
+   ],
+   "tension_themes": [
+    "変えたい動き方と、変えたくない価値がぶつかり、内側で張り詰めることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "両手剣×スメール": {
+   "pair_id": "WEAPON.両手剣×NATION.スメール",
+   "a": "両手剣",
+   "b": "スメール",
+   "default_relation": "tension",
+   "summary": "先に決める力と、納得してから選ぶ価値。",
+   "together": "両手剣は選択肢を絞って先に決め、スメールは理解し納得してから選びます。理解を深めた上で決断できると、根拠のある強い判断になります。",
+   "tension": "決めたい動き方と、納得したい価値がぶつかり、決断の時機に迷うことがあります。",
+   "works_when": "理解を深める時間に区切りをつけ、決める時点を決めている時。",
+   "friction_when": "納得できないまま決めて後悔する、または理解を待って決められない時。",
+   "scene_templates": [
+    "調べる期間を決めた上で、期限が来たら自分で方針を決める。",
+    "決断の理由を、根拠と一緒に周りに説明する。"
+   ],
+   "observation_question": "「決めるのに必要な理解は、どこまでか」",
+   "shared_themes": [
+    "先に決める力と、納得してから選ぶ価値。"
+   ],
+   "tension_themes": [
+    "決めたい動き方と、納得したい価値がぶつかり、決断の時機に迷うことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "両手剣×フォンテーヌ": {
+   "pair_id": "WEAPON.両手剣×NATION.フォンテーヌ",
+   "a": "両手剣",
+   "b": "フォンテーヌ",
+   "default_relation": "conditional",
+   "summary": "決断に、説明できる理由を添える。",
+   "together": "両手剣の決断する力が、フォンテーヌの説明できる公平さに支えられると、大胆な判断にも周りが納得できる筋が通ります。",
+   "tension": "早く決めたい動き方と、筋道を求める価値の間で、説明に時間をかけるかどうかに迷うことがあります。",
+   "works_when": "決断と同時に、その理由を一文で示せている時。",
+   "friction_when": "理由を説明しないまま決め、周りの納得を得られない時。",
+   "scene_templates": [
+    "方針を決めた時に、判断の根拠を短く添えて伝える。",
+    "停滞した議論を、公平な基準で選択肢を比べて決める。"
+   ],
+   "observation_question": "「この決断の理由を、誰にでも説明できるか」",
+   "shared_themes": [
+    "決断に、説明できる理由を添える。"
+   ],
+   "tension_themes": [
+    "早く決めたい動き方と、筋道を求める価値の間で、説明に時間をかけるかどうかに迷うことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "両手剣×ナタ": {
+   "pair_id": "WEAPON.両手剣×NATION.ナタ",
+   "a": "両手剣",
+   "b": "ナタ",
+   "default_relation": "alignment",
+   "summary": "決断の力で、仲間の挑戦を前へ進める。",
+   "together": "両手剣の決断する力と、ナタの挑戦の熱を分け合う価値は、同じ方向にあります。迷う仲間の前で道を決め、皆で挑戦へ踏み出せます。",
+   "tension": "決断と熱が重なるぶん、立ち止まって確かめる工程が抜けやすくなります。",
+   "works_when": "挑戦の方向が決まり、確かめる時点も置かれている時。",
+   "friction_when": "勢いで決めて進み、仲間が置いていかれる時。",
+   "scene_templates": [
+    "迷うチームの前で目標を決め、一緒に挑戦を始める。",
+    "難しい課題に、自分が先頭に立って取りかかる。"
+   ],
+   "observation_question": "「決めた挑戦に、仲間はついて来られているか」",
+   "shared_themes": [
+    "決断の力で、仲間の挑戦を前へ進める。"
+   ],
+   "tension_themes": [
+    "決断と熱が重なるぶん、立ち止まって確かめる工程が抜けやすくなります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "両手剣×スネージナヤ": {
+   "pair_id": "WEAPON.両手剣×NATION.スネージナヤ",
+   "a": "両手剣",
+   "b": "スネージナヤ",
+   "default_relation": "alignment",
+   "summary": "決断の力で、目的へ力を集める。",
+   "together": "両手剣の決断と推進の力と、スネージナヤの目的へ力を集める価値は、同じ方向を指しています。大きな目的に向けて、迷わず人と資源を動かせます。",
+   "tension": "決断と統率が重なるぶん、周りの事情を聞く前に進めてしまうことがあります。",
+   "works_when": "目的と決断の理由を、関わる人に共有できている時。",
+   "friction_when": "目的のために押し切り、周りの声が届かなくなる時。",
+   "scene_templates": [
+    "大きな目標に向けて、担当と資源の配分を自分で決める。",
+    "停滞した計画を、目的を言い直して一気に動かす。"
+   ],
+   "observation_question": "「この決断は、関わる人の声を聞いた上でのものか」",
+   "shared_themes": [
+    "決断の力で、目的へ力を集める。"
+   ],
+   "tension_themes": [
+    "決断と統率が重なるぶん、周りの事情を聞く前に進めてしまうことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "両手剣×ナドクライ": {
+   "pair_id": "WEAPON.両手剣×NATION.ナドクライ",
+   "a": "両手剣",
+   "b": "ナドクライ",
+   "default_relation": "alignment",
+   "summary": "自分の判断で、選んだ道を進む。",
+   "together": "両手剣の自分で決める力と、ナド・クライの自分で選ぶ境界を守る価値は、同じ方向にあります。周りの期待に流されず、自分の判断で道を選んで進めます。",
+   "tension": "自律が重なるため、一人で決めて一人で抱えることになりやすくなります。",
+   "works_when": "決めたことを、信頼する相手と共有できている時。",
+   "friction_when": "自分で決めることにこだわり、助けを求められなくなる時。",
+   "scene_templates": [
+    "自分が責任を持つ範囲を決め、その中では迷わず判断する。",
+    "決めた方針を、信頼する相手にだけ先に相談する。"
+   ],
+   "observation_question": "「自分で決めたことを、誰かと分け合えているか」",
+   "shared_themes": [
+    "自分の判断で、選んだ道を進む。"
+   ],
+   "tension_themes": [
+    "自律が重なるため、一人で決めて一人で抱えることになりやすくなります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "長柄×モンド": {
+   "pair_id": "WEAPON.長柄×NATION.モンド",
+   "a": "長柄",
+   "b": "モンド",
+   "default_relation": "tension",
+   "summary": "役割を続ける力と、選び直す自由。",
+   "together": "長柄は引き受けた役割を支え続け、モンドは自分で選び直せる余白を大切にします。続ける役割を自分で選べると、続けることが窮屈になりません。",
+   "tension": "役割を離れにくい動き方と、縛られたくない価値の間で、窮屈さを感じることがあります。",
+   "works_when": "続ける役割を、自分で選んで引き受けている時。",
+   "friction_when": "頼まれるままに役割を続け、選んだ実感がなくなる時。",
+   "scene_templates": [
+    "続ける役割を一つ選び、他は区切りをつけて手放す。",
+    "長く続けている役割を、続けるかどうか自分で選び直す。"
+   ],
+   "observation_question": "「今続けている役割は、自分で選んだものか」",
+   "shared_themes": [
+    "役割を続ける力と、選び直す自由。"
+   ],
+   "tension_themes": [
+    "役割を離れにくい動き方と、縛られたくない価値の間で、窮屈さを感じることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "長柄×璃月": {
+   "pair_id": "WEAPON.長柄×NATION.璃月",
+   "a": "長柄",
+   "b": "璃月",
+   "default_relation": "alignment",
+   "summary": "役割を、約束として長く支える。",
+   "together": "長柄の役割を続ける力と、璃月の約束と積み重ねを守る価値は、同じ方向を指しています。交わした約束を、目立たなくても長く支え続けられます。",
+   "tension": "続ける力が重なるため、役割から離れる時機を見失いやすくなります。",
+   "works_when": "支える役割に、見直す時期が決まっている時。",
+   "friction_when": "約束だからと役割を続け、負担が限界を超える時。",
+   "scene_templates": [
+    "引き継いだ役割を、決めた期間しっかり支える。",
+    "長く続く約束の役割を、次の人へ渡す準備を始める。"
+   ],
+   "observation_question": "「この役割は、いつ次へ渡すか」",
+   "shared_themes": [
+    "役割を、約束として長く支える。"
+   ],
+   "tension_themes": [
+    "続ける力が重なるため、役割から離れる時機を見失いやすくなります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "長柄×稲妻": {
+   "pair_id": "WEAPON.長柄×NATION.稲妻",
+   "a": "長柄",
+   "b": "稲妻",
+   "default_relation": "alignment",
+   "summary": "役割を続けて、型を守る。",
+   "together": "長柄の役割を続ける力と、稲妻の型を守る価値は、同じ方向にあります。決まった型を、長い期間崩さずに支えられます。",
+   "tension": "続ける力と守る価値が重なり、変える必要がある時に動きにくくなります。",
+   "works_when": "守る型と、変えてよい部分が決まっている時。",
+   "friction_when": "型と役割を守り続け、改善の声を上げられない時。",
+   "scene_templates": [
+    "決まった手順の確認役を、長く欠かさず続ける。",
+    "型を守る役割を担いながら、改善点を一つ提案する。"
+   ],
+   "observation_question": "「続けている型に、変えてよい部分はあるか」",
+   "shared_themes": [
+    "役割を続けて、型を守る。"
+   ],
+   "tension_themes": [
+    "続ける力と守る価値が重なり、変える必要がある時に動きにくくなります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "長柄×スメール": {
+   "pair_id": "WEAPON.長柄×NATION.スメール",
+   "a": "長柄",
+   "b": "スメール",
+   "default_relation": "conditional",
+   "summary": "知識を現場で続く仕組みにする。ただし理由が伴う時に限る。",
+   "together": "長柄は役割を引き受けて続けるスタイル、スメールは自分で理解し、納得して選ぶことを重んじる価値観です。協力する時は、知識を現場で長く運用できる形にできます。",
+   "tension": "理由を説明されない役割を任された時に緊張が生まれます。役割を離れにくく、納得できない決定を受け入れにくいため、問いを抱えたまま役割を続けやすくなります。",
+   "works_when": "役割に理由と決定権が添えられている時。知識が仕組みになり、長く残る。",
+   "friction_when": "理由の説明がない役割を続ける時。内側に問いを抱えたまま、静かに消耗する。",
+   "scene_templates": [
+    "前任者の資料を読み解き、次の人が迷わない手順書に作り直す。",
+    "方針の理由が分からないまま担当を続け、終わった後にどっと疲れる。"
+   ],
+   "observation_question": "「この役割の理由と、決める権限は誰が持っているか」",
+   "shared_themes": [
+    "知識を現場で続く仕組みにする。ただし理由が伴う時に限る。"
+   ],
+   "tension_themes": [
+    "理由を説明されない役割を任された時に緊張が生まれます。役割を離れにくく、納得できない決定を受け入れにくいため、問いを抱えたまま役割を続けやすくなります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "長柄×フォンテーヌ": {
+   "pair_id": "WEAPON.長柄×NATION.フォンテーヌ",
+   "a": "長柄",
+   "b": "フォンテーヌ",
+   "default_relation": "alignment",
+   "summary": "役割を続けて、公平な基準を守る。",
+   "together": "長柄の役割を続ける力と、フォンテーヌの公平さと説明責任を求める価値は、どちらも基準を長く保つ方向にあります。公平なルールを、運用の中で守り続けられます。",
+   "tension": "基準を守る役割を続けるうちに、例外への対応が負担になることがあります。",
+   "works_when": "守る基準と、例外の扱いが決まっている時。",
+   "friction_when": "基準を守る役割を一人で抱え、例外の対応に追われる時。",
+   "scene_templates": [
+    "チームのルールを運用する役割を、公平に続ける。",
+    "例外が増えた時に、条件を整理して基準を更新する。"
+   ],
+   "observation_question": "「守っている基準の運用を、誰かと分け合えるか」",
+   "shared_themes": [
+    "役割を続けて、公平な基準を守る。"
+   ],
+   "tension_themes": [
+    "基準を守る役割を続けるうちに、例外への対応が負担になることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "長柄×ナタ": {
+   "pair_id": "WEAPON.長柄×NATION.ナタ",
+   "a": "長柄",
+   "b": "ナタ",
+   "default_relation": "conditional",
+   "summary": "役割を続ける力で、仲間の挑戦を支える。",
+   "together": "長柄の支え続ける力が、ナタの挑戦の熱を分け合う価値に向かうと、熱のある挑戦を裏側から支え続ける役割を担えます。",
+   "tension": "前に出て挑みたい価値と、支える側に回る動き方の間で、役割に迷うことがあります。",
+   "works_when": "支える役割と、自分も挑む場面の両方がある時。",
+   "friction_when": "支える役割ばかりで、自分が挑む手応えを得られない時。",
+   "scene_templates": [
+    "チームの挑戦を、準備や確認の役割で最後まで支える。",
+    "支える役割の中で、自分も一つ挑戦する場面を作る。"
+   ],
+   "observation_question": "「支える役割の中に、自分が挑む場面はあるか」",
+   "shared_themes": [
+    "役割を続ける力で、仲間の挑戦を支える。"
+   ],
+   "tension_themes": [
+    "前に出て挑みたい価値と、支える側に回る動き方の間で、役割に迷うことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "長柄×スネージナヤ": {
+   "pair_id": "WEAPON.長柄×NATION.スネージナヤ",
+   "a": "長柄",
+   "b": "スネージナヤ",
+   "default_relation": "conditional",
+   "summary": "役割を続ける力で、目的を支える。",
+   "together": "長柄の役割を続ける力が、スネージナヤの目的へ力を集める価値に向かうと、大きな目的を最後まで支える頼れる役割を担えます。",
+   "tension": "目的のために役割が増え続け、決定権のない責任を抱えることがあります。",
+   "works_when": "目的と、支える範囲と権限が決まっている時。",
+   "friction_when": "目的のために役割を背負い続け、判断する権限がない時。",
+   "scene_templates": [
+    "大きな目標に向けて、自分が支える部分を決めて最後まで担う。",
+    "目的に必要な役割を引き受ける時、権限も一緒に確かめる。"
+   ],
+   "observation_question": "「この役割に、必要な権限は添えられているか」",
+   "shared_themes": [
+    "役割を続ける力で、目的を支える。"
+   ],
+   "tension_themes": [
+    "目的のために役割が増え続け、決定権のない責任を抱えることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "長柄×ナドクライ": {
+   "pair_id": "WEAPON.長柄×NATION.ナドクライ",
+   "a": "長柄",
+   "b": "ナドクライ",
+   "default_relation": "conditional",
+   "summary": "自分で選んだ役割を、長く支える。",
+   "together": "長柄の役割を続ける力が、ナド・クライの自分で選ぶ境界を守る価値と結びつくと、自分で選んだ役割を最後まで支えられます。",
+   "tension": "続けたい動き方と、自分で選びたい価値の間で、選んでいない役割まで続けてしまうことがあります。",
+   "works_when": "支える役割を、自分で選んで引き受けている時。",
+   "friction_when": "頼まれた役割を断れずに続け、選んだ実感がなくなる時。",
+   "scene_templates": [
+    "引き受ける役割を自分で選び、その役割は最後まで支える。",
+    "選んでいない役割を、区切りの時点で手放す。"
+   ],
+   "observation_question": "「今支えている役割は、自分で選んだものか」",
+   "shared_themes": [
+    "自分で選んだ役割を、長く支える。"
+   ],
+   "tension_themes": [
+    "続けたい動き方と、自分で選びたい価値の間で、選んでいない役割まで続けてしまうことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "法器×モンド": {
+   "pair_id": "WEAPON.法器×NATION.モンド",
+   "a": "法器",
+   "b": "モンド",
+   "default_relation": "conditional",
+   "summary": "言葉と仕組みで、選ぶ自由を広げる。",
+   "together": "法器の言葉と仕組みで状況を変える力が、モンドの選ぶ自由を大切にする価値に向かうと、人が自分で選べる情報や仕組みを整えられます。",
+   "tension": "仕組みを作りたい動き方と、縛られたくない価値の間で、どこまで決めるかに迷うことがあります。",
+   "works_when": "仕組みが、選ぶ余白を残す形で作られている時。",
+   "friction_when": "仕組みを作り込みすぎて、自分も周りも選ぶ余地がなくなる時。",
+   "scene_templates": [
+    "選択肢を比べられる資料を作り、相手に選んでもらう。",
+    "決まりを増やす代わりに、判断の目安だけを示す。"
+   ],
+   "observation_question": "「作った仕組みは、選ぶ余白を残しているか」",
+   "shared_themes": [
+    "言葉と仕組みで、選ぶ自由を広げる。"
+   ],
+   "tension_themes": [
+    "仕組みを作りたい動き方と、縛られたくない価値の間で、どこまで決めるかに迷うことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "法器×璃月": {
+   "pair_id": "WEAPON.法器×NATION.璃月",
+   "a": "法器",
+   "b": "璃月",
+   "default_relation": "alignment",
+   "summary": "言葉と仕組みで、受け継がれる形を作る。",
+   "together": "法器の言葉と仕組みにする力と、璃月の約束と継承を守る価値は、どちらも長く残る形を作る方向にあります。積み重ねたものを、次へ受け継がれる文書や仕組みにできます。",
+   "tension": "形を残す力が重なるため、文書や手順が増えすぎることがあります。",
+   "works_when": "受け継ぐものを選び、必要な量だけを形にしている時。",
+   "friction_when": "すべてを残そうとして、仕組みが重くなる時。",
+   "scene_templates": [
+    "長く続く取り組みの経緯を、次の担当者向けにまとめる。",
+    "約束の内容を、誰でも確かめられる文書にする。"
+   ],
+   "observation_question": "「残す仕組みは、次の人が使える量か」",
+   "shared_themes": [
+    "言葉と仕組みで、受け継がれる形を作る。"
+   ],
+   "tension_themes": [
+    "形を残す力が重なるため、文書や手順が増えすぎることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "法器×稲妻": {
+   "pair_id": "WEAPON.法器×NATION.稲妻",
+   "a": "法器",
+   "b": "稲妻",
+   "default_relation": "alignment",
+   "summary": "言葉と仕組みで、型を磨き残す。",
+   "together": "法器の言葉にする力と、稲妻の型を磨く価値は、同じ方向にあります。磨いてきた型を、言葉と仕組みで誰にでも伝わる形にできます。",
+   "tension": "型を正確に言葉にしようとして、準備が長くなることがあります。",
+   "works_when": "型の要点を、必要な量に絞って言葉にしている時。",
+   "friction_when": "型の説明を完璧にしようとして、伝える時機を逃す時。",
+   "scene_templates": [
+    "長く磨いてきた手順を、図解つきの手引きにまとめる。",
+    "型の意味を、新しい人に短い言葉で説明する。"
+   ],
+   "observation_question": "「型の要点を、短く伝えられたか」",
+   "shared_themes": [
+    "言葉と仕組みで、型を磨き残す。"
+   ],
+   "tension_themes": [
+    "型を正確に言葉にしようとして、準備が長くなることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "法器×スメール": {
+   "pair_id": "WEAPON.法器×NATION.スメール",
+   "a": "法器",
+   "b": "スメール",
+   "default_relation": "alignment",
+   "summary": "理解を、言葉と仕組みで共有する。",
+   "together": "法器の整理して言葉にする力と、スメールの理解と公平さを求める価値は、同じ方向を指しています。理解したことを、立場の違う人にも使える知識として残せます。",
+   "tension": "理解と整理の両方を求めるため、外へ出す時機が遅れることがあります。",
+   "works_when": "説明の相手を決め、必要な量に絞って渡せている時。",
+   "friction_when": "完璧な説明を求めて、いつまでも共有できない時。",
+   "scene_templates": [
+    "意見が割れた時、それぞれの根拠を一枚の表にまとめる。",
+    "調べたことを、誰でも使える手引きにして共有する。"
+   ],
+   "observation_question": "「この説明は、誰に渡すためのものか」",
+   "shared_themes": [
+    "理解を、言葉と仕組みで共有する。"
+   ],
+   "tension_themes": [
+    "理解と整理の両方を求めるため、外へ出す時機が遅れることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "法器×フォンテーヌ": {
+   "pair_id": "WEAPON.法器×NATION.フォンテーヌ",
+   "a": "法器",
+   "b": "フォンテーヌ",
+   "default_relation": "alignment",
+   "summary": "説明できる基準を作る。",
+   "together": "法器の整理して言葉にする力と、フォンテーヌの公平さと説明責任を求める価値が、判断の根拠を言葉にする方向で重なります。誰にでも説明できる基準を作れます。",
+   "tension": "説明の精度と公平さの両方を求め、基準づくりに時間がかかることがあります。",
+   "works_when": "原則と例外を、短い言葉で示せている時。",
+   "friction_when": "完璧な基準を求めて、決める時機を逃す時。",
+   "scene_templates": [
+    "評価の基準を、例外の条件と一緒に文書にする。",
+    "判断の理由を、図や表で誰にでもわかる形にする。"
+   ],
+   "observation_question": "「この基準を、一枚で説明できるか」",
+   "shared_themes": [
+    "説明できる基準を作る。"
+   ],
+   "tension_themes": [
+    "説明の精度と公平さの両方を求め、基準づくりに時間がかかることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "法器×ナタ": {
+   "pair_id": "WEAPON.法器×NATION.ナタ",
+   "a": "法器",
+   "b": "ナタ",
+   "default_relation": "tension",
+   "summary": "整えてから出す力と、熱を分け合う挑戦。",
+   "together": "法器は言葉と仕組みを整えてから届け、ナタは熱を分け合ってすぐに挑みます。挑戦の熱を、言葉と仕組みで支えられると、勢いが長く続く挑戦になります。",
+   "tension": "整えたい動き方と、すぐ挑みたい価値の間で、速さの取り合いが起こることがあります。",
+   "works_when": "挑戦の中で、整える役割が決まっている時。",
+   "friction_when": "整えることにこだわって挑戦の熱に乗り遅れる時。",
+   "scene_templates": [
+    "チームの挑戦の目標を、短い言葉で共有できる形にする。",
+    "挑戦の後に、わかったことを手引きにまとめる。"
+   ],
+   "observation_question": "「この挑戦に、どこまでの準備が必要か」",
+   "shared_themes": [
+    "整えてから出す力と、熱を分け合う挑戦。"
+   ],
+   "tension_themes": [
+    "整えたい動き方と、すぐ挑みたい価値の間で、速さの取り合いが起こることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "法器×スネージナヤ": {
+   "pair_id": "WEAPON.法器×NATION.スネージナヤ",
+   "a": "法器",
+   "b": "スネージナヤ",
+   "default_relation": "conditional",
+   "summary": "言葉と仕組みで、目的への道筋を示す。",
+   "together": "法器の言葉と仕組みで状況を変える力が、スネージナヤの目的へ力を集める価値に向かうと、大きな目的への道筋を誰にでも伝わる形で示せます。",
+   "tension": "前に出ずに設計したい動き方と、統率を求める価値の間で、役割に迷うことがあります。",
+   "works_when": "目的と、設計の役割が決まっている時。",
+   "friction_when": "目的のための設計を求められ続け、実行の手応えが得られない時。",
+   "scene_templates": [
+    "大きな計画を、誰が何をするかの図にまとめる。",
+    "目的を、関わる人が動ける言葉に置き換えて伝える。"
+   ],
+   "observation_question": "「この設計は、目的に向けて人を動かせるか」",
+   "shared_themes": [
+    "言葉と仕組みで、目的への道筋を示す。"
+   ],
+   "tension_themes": [
+    "前に出ずに設計したい動き方と、統率を求める価値の間で、役割に迷うことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "法器×ナドクライ": {
+   "pair_id": "WEAPON.法器×NATION.ナドクライ",
+   "a": "法器",
+   "b": "ナドクライ",
+   "default_relation": "alignment",
+   "summary": "自分の判断で、言葉と仕組みを作る。",
+   "together": "法器の自分で考えて整える力と、ナド・クライの自分で選ぶ価値は、同じ方向にあります。自分が納得できる形で、言葉や仕組みを作れます。",
+   "tension": "自分で整える力が重なるため、一人で作り込んで共有が遅れることがあります。",
+   "works_when": "作ったものを、信頼する相手と途中で共有できている時。",
+   "friction_when": "一人で作り込み、完成するまで誰にも見せない時。",
+   "scene_templates": [
+    "自分のやり方を、自分で整えた手順書にまとめる。",
+    "作りかけの資料を、信頼する相手に一度見せる。"
+   ],
+   "observation_question": "「作っているものを、誰かと途中で共有できたか」",
+   "shared_themes": [
+    "自分の判断で、言葉と仕組みを作る。"
+   ],
+   "tension_themes": [
+    "自分で整える力が重なるため、一人で作り込んで共有が遅れることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "弓×モンド": {
+   "pair_id": "WEAPON.弓×NATION.モンド",
+   "a": "弓",
+   "b": "モンド",
+   "default_relation": "alignment",
+   "summary": "自分で選んだ一点を、自由に狙う。",
+   "together": "弓の自分の判断で一点を選ぶ力と、モンドの自分で選ぶ自由を大切にする価値は、同じ方向を指しています。周りに流されず、自分が狙いたい一点を選べます。",
+   "tension": "自律が重なるため、周りとの調整が後回しになることがあります。",
+   "works_when": "選んだ一点を、周りにも伝えられている時。",
+   "friction_when": "自分の選択にこだわり、周りとの連携が途切れる時。",
+   "scene_templates": [
+    "たくさんの選択肢から、自分が本当に取り組みたい一つを選ぶ。",
+    "決められた手順の外で、自分が狙う一点を試す。"
+   ],
+   "observation_question": "「選んだ一点を、周りに伝えられたか」",
+   "shared_themes": [
+    "自分で選んだ一点を、自由に狙う。"
+   ],
+   "tension_themes": [
+    "自律が重なるため、周りとの調整が後回しになることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "弓×璃月": {
+   "pair_id": "WEAPON.弓×NATION.璃月",
+   "a": "弓",
+   "b": "璃月",
+   "default_relation": "tension",
+   "summary": "自分で選ぶ一点と、守る約束。",
+   "together": "弓は自分の判断で一点を選び、璃月は約束と積み重ねを守ります。約束の中で狙う一点を選べると、信頼を保ちながら的確に動けます。",
+   "tension": "自分で選びたい動き方と、受け継いだ形を守る価値の間で、どちらを優先するかに迷うことがあります。",
+   "works_when": "約束の範囲の中で、自分が選べる一点が決まっている時。",
+   "friction_when": "約束に縛られて自分の判断を出せない、または約束より自分の判断を優先してしまう時。",
+   "scene_templates": [
+    "約束を守りながら、自分が重点を置く一点を決める。",
+    "受け継いだ方針の中で、最も効く一点に絞って取り組む。"
+   ],
+   "observation_question": "「約束の中で、自分が選べる一点はどれか」",
+   "shared_themes": [
+    "自分で選ぶ一点と、守る約束。"
+   ],
+   "tension_themes": [
+    "自分で選びたい動き方と、受け継いだ形を守る価値の間で、どちらを優先するかに迷うことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "弓×稲妻": {
+   "pair_id": "WEAPON.弓×NATION.稲妻",
+   "a": "弓",
+   "b": "稲妻",
+   "default_relation": "conditional",
+   "summary": "距離を取って、型の要点を見定める。",
+   "together": "弓の距離を取って一点を見定める力が、稲妻の型を磨く価値に向かうと、型の中の最も大切な要点を正確に見抜けます。",
+   "tension": "自分の判断で選びたい動き方と、型に沿う価値の間で、どちらを優先するかに迷うことがあります。",
+   "works_when": "型の中で、自分が見定める役割が決まっている時。",
+   "friction_when": "型に合わせて自分の判断を抑え続ける時。",
+   "scene_templates": [
+    "長く続く手順の中で、最も重要な確認点を一つ選ぶ。",
+    "型を守る中で、崩れそうな一点を見つけて伝える。"
+   ],
+   "observation_question": "「型の中で、最も大切な一点はどこか」",
+   "shared_themes": [
+    "距離を取って、型の要点を見定める。"
+   ],
+   "tension_themes": [
+    "自分の判断で選びたい動き方と、型に沿う価値の間で、どちらを優先するかに迷うことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "弓×スメール": {
+   "pair_id": "WEAPON.弓×NATION.スメール",
+   "a": "弓",
+   "b": "スメール",
+   "default_relation": "alignment",
+   "summary": "理解をもとに、要点を見定める。",
+   "together": "弓の全体を見て一点を選ぶ力と、スメールの理解と納得を求める価値は、同じ方向にあります。深く理解した上で、最も重要な一点を選べます。",
+   "tension": "理解と見極めの両方に時間をかけ、動き出しが遅れることがあります。",
+   "works_when": "理解を深めた後、期限内に一点を選べている時。",
+   "friction_when": "理解と観察を続け、選ぶ前に時機を逃す時。",
+   "scene_templates": [
+    "調べたことの中から、判断に最も効く一点を選んで伝える。",
+    "意見が割れた時、根拠を整理して最も重要な論点を示す。"
+   ],
+   "observation_question": "「理解したことのうち、選ぶ一点はどれか」",
+   "shared_themes": [
+    "理解をもとに、要点を見定める。"
+   ],
+   "tension_themes": [
+    "理解と見極めの両方に時間をかけ、動き出しが遅れることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "弓×フォンテーヌ": {
+   "pair_id": "WEAPON.弓×NATION.フォンテーヌ",
+   "a": "弓",
+   "b": "フォンテーヌ",
+   "default_relation": "conditional",
+   "summary": "距離を取って、公平さの要点を見る。",
+   "together": "弓の距離を取って見定める力が、フォンテーヌの公平さを求める価値に向かうと、偏りのない視点で判断の要点を見抜けます。",
+   "tension": "自分の判断で選びたい動き方と、規範に沿う価値の間で、どちらを優先するかに迷うことがあります。",
+   "works_when": "見定めた要点を、公平な基準と一緒に示せている時。",
+   "friction_when": "距離を取りすぎて、基準づくりに関わる時機を逃す時。",
+   "scene_templates": [
+    "評価の場面で、偏りが出やすい一点を見つけて指摘する。",
+    "距離を取って全体を見た上で、公平な判断の根拠を示す。"
+   ],
+   "observation_question": "「見定めた要点は、公平な基準に沿っているか」",
+   "shared_themes": [
+    "距離を取って、公平さの要点を見る。"
+   ],
+   "tension_themes": [
+    "自分の判断で選びたい動き方と、規範に沿う価値の間で、どちらを優先するかに迷うことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "弓×ナタ": {
+   "pair_id": "WEAPON.弓×NATION.ナタ",
+   "a": "弓",
+   "b": "ナタ",
+   "default_relation": "tension",
+   "summary": "距離を取る焦点と、熱を分け合う挑戦。",
+   "together": "弓は距離を取って一点を選び、ナタは熱を分け合って一緒に挑みます。熱のある挑戦の中で狙う一点を示せると、挑戦がより的確になります。",
+   "tension": "距離を取りたい動き方と、一緒に熱くなる価値の間で、関わり方に迷うことがあります。",
+   "works_when": "挑戦の中で、自分が狙いを示す役割が決まっている時。",
+   "friction_when": "熱のある場から距離を取りすぎ、仲間との一体感を得られない時。",
+   "scene_templates": [
+    "チームの挑戦で、最も効く一点を見定めて伝える。",
+    "盛り上がった挑戦の後で、次に狙う一点を示す。"
+   ],
+   "observation_question": "「挑戦の中で、自分が示す一点はどれか」",
+   "shared_themes": [
+    "距離を取る焦点と、熱を分け合う挑戦。"
+   ],
+   "tension_themes": [
+    "距離を取りたい動き方と、一緒に熱くなる価値の間で、関わり方に迷うことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "弓×スネージナヤ": {
+   "pair_id": "WEAPON.弓×NATION.スネージナヤ",
+   "a": "弓",
+   "b": "スネージナヤ",
+   "default_relation": "conditional",
+   "summary": "目的のために、効く一点を射抜く。",
+   "together": "弓の一点に集中する力が、スネージナヤの目的へ力を集める価値に向かうと、大きな目的のために最も効く一手を見定められます。",
+   "tension": "自分の判断で選びたい動き方と、統率に沿う価値の間で、どちらを優先するかに迷うことがあります。",
+   "works_when": "目的と、自分が見定める役割が決まっている時。",
+   "friction_when": "目的のために自分の判断を抑え続ける時。",
+   "scene_templates": [
+    "大きな目標に向けて、最も効果の大きい一手を選んで提案する。",
+    "目的を妨げている一点を見つけて、取り除く。"
+   ],
+   "observation_question": "「目的のために、射抜くべき一点はどれか」",
+   "shared_themes": [
+    "目的のために、効く一点を射抜く。"
+   ],
+   "tension_themes": [
+    "自分の判断で選びたい動き方と、統率に沿う価値の間で、どちらを優先するかに迷うことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "弓×ナドクライ": {
+   "pair_id": "WEAPON.弓×NATION.ナドクライ",
+   "a": "弓",
+   "b": "ナドクライ",
+   "default_relation": "alignment",
+   "summary": "自分の判断で、関わる一点を選ぶ。",
+   "together": "弓の自分の判断で一点を選ぶ力と、ナド・クライの自分で選ぶ境界を守る価値は、同じ方向を指しています。誰と何にどこまで関わるかを、自分で選べます。",
+   "tension": "自律と距離が重なるため、周りから関わりにくいと見られることがあります。",
+   "works_when": "選んだ関わり方を、相手に言葉で伝えられている時。",
+   "friction_when": "距離を取ったまま一人で判断し、周りとのつながりが薄れる時。",
+   "scene_templates": [
+    "関わる範囲を自分で決め、その一点には深く関わる。",
+    "頼まれごとを受ける前に、自分が関わる一点を選ぶ。"
+   ],
+   "observation_question": "「選んだ関わり方を、相手に伝えられたか」",
+   "shared_themes": [
+    "自分の判断で、関わる一点を選ぶ。"
+   ],
+   "tension_themes": [
+    "自律と距離が重なるため、周りから関わりにくいと見られることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  }
+ }
+}
