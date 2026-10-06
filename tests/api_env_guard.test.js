@@ -46,7 +46,11 @@ function fakeSupabase({ rows = {}, user = { id: 'user-1', email: 'owner@example.
     }
     if (url.includes('/rest/v1/purchase_entitlements')) return json(200, rows.entitlements || []);
     if (url.includes('/rest/v1/diagnosis_sessions')) return json(200, rows.sessions || []);
-    if (url.includes('/rest/v1/profiles')) return json(200, [{ newsletter_opted_in: true, newsletter_consent_version: subscribe.CONSENT_VERSION }]);
+    if (url.includes('/rest/v1/profiles') && opts.method === 'PATCH') return json(200, [{ id: 'user-1' }]);
+    if (url.includes('/rest/v1/profiles')) {
+      return json(200, [{ onboarding_status: 'completed', newsletter_opted_in: true, newsletter_consent_version: subscribe.CONSENT_VERSION,
+        newsletter_consent_source: 'registration_onboarding', newsletter_sync_status: 'pending', newsletter_sync_attempts: 0, newsletter_sync_attempted_at: null }]);
+    }
     if (url.startsWith('https://api.kit.com')) return json(200, { subscribers: [] });
     throw new Error('unexpected fetch ' + url);
   };

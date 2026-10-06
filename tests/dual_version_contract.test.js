@@ -43,7 +43,7 @@ function fakeSupabase(rows) {
       let one = false;
       const q = new Proxy({}, { get(_t, k) {
         if (k === 'then') return (res, rej) => Promise.resolve(table === 'diagnosis_sessions' ? { data: one ? rows[0] : rows, error: null }
-          : table === 'profiles' ? { data: { newsletter_opted_in: false }, error: null } : { data: [], error: null }).then(res, rej);
+          : table === 'profiles' ? { data: { onboarding_status: 'completed', newsletter_sync_status: 'synced', newsletter_sync_attempts: 1, newsletter_sync_attempted_at: null }, error: null } : { data: [], error: null }).then(res, rej);
         if (k === 'single' || k === 'maybeSingle') return () => { one = true; return q; };
         return () => q;
       } });

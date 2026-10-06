@@ -256,11 +256,6 @@
     .rs-saving::after { content: ''; position: absolute; top: 0; left: -40%; width: 40%; height: 100%; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--el) 60%, #a8c8f0), transparent); animation: rs-sweep 1.4s ease-in-out infinite; }
     @keyframes rs-sweep { to { left: 100%; } }
     .rs-err { font-size: 12px; line-height: 1.8; color: #d6a8b8; margin: -6px 0 14px; }
-    /* メール配信の同意：初期OFF。主CTAより一段弱いが、読める大きさと明るさを保つ。ラベル全体がタップ領域（44px以上） */
-    .rs-optin { display: flex; align-items: flex-start; gap: 10px; max-width: 340px; margin: 14px auto 0; min-height: 44px; padding: 8px 4px; color: #a9b6d6; font-size: 12px; line-height: 1.7; text-align: left; cursor: pointer; }
-    .rs-optin input { flex: none; width: 18px; height: 18px; margin-top: 2px; accent-color: #5f86c8; cursor: pointer; }
-    .rs-optin input:focus-visible { outline: 2px solid #7ab8e8; outline-offset: 2px; }
-    .rs-optin-sub { display: block; color: #8d9abb; font-size: 11px; line-height: 1.7; margin-top: 2px; }
 
     /* 完全解析：¥1,000の案内の後に置く折りたたみ。閉じた状態は細い一行だけ。主CTAより一段弱い枠線型ボタン。
        役割ごとの色（白一色にしない）：見出し --ca-title／本文 --ca-body／補足 --ca-muted／罫 --ca-line／価格 --ca-gold／
@@ -374,6 +369,8 @@
 <!-- Supabase の接続先（環境ごと）。diagnosis-save.js より前に同期で読み込む。取得できなければログイン・保存を止める -->
 <script src="/api/public-config?format=js"></script>
 <script src="diagnosis-save.js"></script>
+<!-- 登録完了モーダル（新規ユーザーの初回認証後だけ。判定と記録は diagnosis-save.js） -->
+<script src="js/registration-onboarding.js"></script>
 <!-- 完全解析（46ページ）の表示用状態。PREVIEW ONLY：購入権は発行しない -->
 <script src="complete-analysis.js"></script>
 <script src="js/ETI_v2_QUESTIONS_100.js"></script>
@@ -2723,14 +2720,9 @@ function renderResult(root) {
     var recordKey = isV2Record
       ? { diagnosisVersion: 'ETI-2.0', itemSetVersion: ETI_V2_META.itemSetVersion, scoringVersion: ETI_V2_META.scoringVersion, diagnosisCode: shortCode }
       : { diagnosisVersion: DIAGNOSIS_VERSION, itemSetVersion: null, scoringVersion: SCORING_VERSION, diagnosisCode: applyData };
-    var showOptIn = false; // メール配信の同意（未回答のときだけ表示。判断済みなら再表示しない）
 
     var renderRecordCard = function (state) {
       var label = '<div class="rs-label">診断記録</div>';
-      // メール配信の同意（任意・初期OFF）。未チェックでも保存・登録・マイページ利用はできる。
-      var optIn = (showOptIn && (state === 'signed_out' || state === 'unsaved' || state === 'error'))
-        ? '<label class="rs-optin" for="newsletterOptInCheckbox"><input type="checkbox" id="newsletterOptInCheckbox" aria-describedby="newsletterOptInDesc">'
-          + '<span>新しい診断や更新のお知らせをメールで受け取る<span class="rs-optin-sub" id="newsletterOptInDesc">配信は不定期です。いつでもメール内から停止できます。</span></span></label>' : '';
       var html;
       if (state === 'saved' || state === 'just_saved') {
         html = label + (state === 'just_saved' ? '<div class="rs-done">記録しました</div>' : '')
@@ -2741,14 +2733,14 @@ function renderResult(root) {
           + '<button type="button" class="rs-btn" disabled aria-busy="true">記録しています</button><div class="rs-saving" aria-hidden="true"></div>';
       } else if (state === 'signed_out') {
         html = label + '<p class="rs-text">この結果を、今のあなたとして残しませんか。<br>保存すると、次に診断したとき今日の自分と見比べられます。</p>'
-          + '<div id="recordAuth"></div>' + optIn;
+          + '<div id="recordAuth"></div>';
       } else if (state === 'error') {
         html = label + '<p class="rs-text">この結果は、まだ診断記録に残っていません。</p>'
           + '<p class="rs-err" role="alert">保存できませんでした。通信状況を確かめて、もう一度お試しください。</p>'
-          + '<button type="button" class="rs-btn" id="recordSaveBtn">もう一度試す</button>' + optIn;
+          + '<button type="button" class="rs-btn" id="recordSaveBtn">もう一度試す</button>';
       } else {
         html = label + '<p class="rs-text">この結果は、まだ診断記録に残っていません。<br>記録として残すと、マイページからいつでも見返せます。</p>'
-          + '<button type="button" class="rs-btn" id="recordSaveBtn">この結果を診断記録に残す</button>' + optIn;
+          + '<button type="button" class="rs-btn" id="recordSaveBtn">この結果を診断記録に残す</button>';
       }
       recordCard.setAttribute('data-state', state);
       recordCard.innerHTML = html;
@@ -2775,14 +2767,10 @@ function renderResult(root) {
     // X ログイン：Google のときに保存関数が行うのと同じ pending 退避（既存の関数をそのまま使う）をしてから
     // X へ遷移する。復帰先は /mypage.html で、保存は既存の onAuthStateChange が行う。
     var onRecordSaveWithX = function () {
-      var optInBox = recordCard.querySelector('#newsletterOptInCheckbox');
-      var newsletterOptIn = optInBox ? optInBox.checked : null;
-      // OAuth往復中も選択を保持する（保存完了後に processPendingNewsletterConsent が記録・同期する）
-      if (newsletterOptIn !== null) stashNewsletterConsent(newsletterOptIn);
       if (isV2Record) {
         stashPendingDiagnosisV2(buildPendingV2(answersV2, shortCode, results.raw, recordMirrorTop(), crypto.randomUUID(), recordMirrorVersions()));
       } else {
-        stashPendingDiagnosis(answers, buildResultPayload(results, topEl, topW, et, topNat), shortCode, newsletterOptIn);
+        stashPendingDiagnosis(answers, buildResultPayload(results, topEl, topW, et, topNat), shortCode);
         var pending = readPendingDiagnosis();
         pending.diagnosisCode = applyData;
         localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
@@ -2800,9 +2788,6 @@ function renderResult(root) {
 
     var onRecordSaveClick = async function (fromState, alreadyTracked) {
       if (!alreadyTracked) trackRecordSaveClick();
-      var optInBox = recordCard.querySelector('#newsletterOptInCheckbox');
-      var newsletterOptIn = optInBox ? optInBox.checked : null;
-      if (newsletterOptIn !== null) stashNewsletterConsent(newsletterOptIn);
       renderRecordCard('saving');
       try {
       // ログイン済みなら、保存直前にもう一度読み取りで確認する（同じ結果ならINSERTしない）
@@ -2813,16 +2798,18 @@ function renderResult(root) {
         var res = await handleSaveResultClickV2(answersV2, shortCode, results.raw, recordMirrorTop(), clientSessionId, recordMirrorVersions());
         if (res && res.ok) {
           renderRecordCard('just_saved');
-          // 保存完了後に同意を記録し、true を確認できた場合だけKit同期（失敗しても保存は成功のまま）
-          processPendingNewsletterConsent().catch(function () {});
           return;
         }
+        // 登録完了モーダルで「いいえ」：サインアウト済み（記録は pending のまま残る）
+        if (res && res.registration === 'declined') { renderRecordCard('signed_out'); return; }
         // 未ログイン：Google認証へ遷移中（保存は認証復帰後の既存処理が行う）
         if (res && res.pendingStashed && res.error === 'not_authenticated') return;
         renderRecordCard('error');
       } else {
         var resultPayload = buildResultPayload(results, topEl, topW, et, topNat);
-        await handleSaveResultClick(answers, resultPayload, shortCode, applyData, newsletterOptIn);
+        var v1res = await handleSaveResultClick(answers, resultPayload, shortCode, applyData);
+        // 登録完了モーダルで「いいえ」：サインアウト済み（記録は pending のまま残る）
+        if (v1res && v1res.registration === 'declined') { renderRecordCard('signed_out'); return; }
         // legacy の保存関数は結果を返さないため、読み取りで確認して表示を決める
         var after = await findSavedDiagnosisRecord(recordKey);
         if (after.state === 'saved') renderRecordCard('just_saved');
@@ -2837,7 +2824,6 @@ function renderResult(root) {
     };
 
     (async function () {
-      try { showOptIn = !(await hasDecidedNewsletter()); } catch (e) { showOptIn = false; }
       var found = await findSavedDiagnosisRecord(recordKey);
       if (found.state === 'unknown') console.error('saved-record check failed (showing as unsaved):', found.error);
       renderRecordCard(found.state === 'saved' ? 'saved' : found.state === 'signed_out' ? 'signed_out' : 'unsaved');
@@ -3259,7 +3245,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">Cookieおよびアクセス解析について</p>
     <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本サイトはGoogle Analytics（Google LLC）を使用しています。トラフィックデータは匿名で収集されており、個人を特定するものではありません。Cookieを無効にすることで収集を拒否できます。</p>
     <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">診断結果の保存について</p>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">無料診断は通常ブラウザ上だけで処理されます。ただし、結果画面で保存を選んだ場合に限り、回答と算出結果をログイン情報に紐づけて保存します。保存は任意で、保存しなくても診断は最後まで利用できます。</p>
+    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">無料診断は通常ブラウザ上だけで処理されます。ただし、結果画面で保存を選んだ場合に限り、回答と算出結果をログイン情報に紐づけて保存します。保存は任意で、保存しなくても診断は最後まで利用できます。保存のために初めて登録するときは、利用規約とプライバシーポリシーへの同意をお願いしています。登録した方には、元素診断のアップデートや新しい解析、関連する商品・企画などのお知らせをメールでお届けすることがあります（いつでも停止できます）。</p>
     <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">お問い合わせ</p>
     <p style="color:#6a9cc0;font-size:13px;line-height:1.9">プライバシーに関するお問い合わせはXのDM（@mondayaxad）までご連絡ください。</p>
     <p style="color:#7098b8;font-size:11px;margin-top:20px">制定日：2026年7月1日</p>

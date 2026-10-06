@@ -148,14 +148,14 @@ async function saveDiagnosisSessionV2(pending) {
 }
 
 // index.html（結果画面）から呼ぶ唯一の入口。v1のhandleSaveResultClick()と同じ構造：
-// ログイン済みなら即保存、未ログインならpendingを保存してGoogleログインへ遷移し、
-// 認証復帰後はonAuthStateChangeが自動で保存する。
+// ログイン済みなら（登録完了を確認してから）保存、未ログインならpendingを保存してGoogleログインへ遷移し、
+// 認証復帰後は runSignedInFlow()（diagnosis-save.js）が自動で保存する。
 // v2専用のGoogleログイン開始。v1のsignInWithGoogle()（redirectToが現在ページの
 // クエリ無しURL）は一切変更しない。v2は「?dv=ETI-2.0」というクエリに依存した
 // 状態を維持し続けるより、ログイン復帰先を最初から/mypage.htmlに固定する方が
 // 堅牢なため、そちらへ直接戻す設計にする（推奨案として提示されたもの）。
-// 復帰後は、mypage.html側でも読み込まれるeti_v2_save.jsのonAuthStateChangeが
-// pendingDiagnosis_v2を検出して保存し、保存完了後はmypage自身の履歴表示に
+// 復帰後は、mypage.html側でも runSignedInFlow()（diagnosis-save.js）が
+// 登録完了を確認してから pendingDiagnosis_v2 を保存し、保存完了後はmypage自身の履歴表示に
 // その結果がそのまま反映される。
 function signInWithGoogleV2() {
   return supabaseClient.auth.signInWithOAuth({
@@ -171,6 +171,12 @@ async function handleSaveResultClickV2(answersV2, encodedAnswers, results, mirro
 
   const user = await getCurrentUser();
   if (user) {
+    // 登録完了（規約への同意）が済むまで保存しない。pending は残す（diagnosis-save.js）
+    const reg = await ensureRegistrationComplete();
+    if (reg.state !== 'ok') {
+      updateSaveButtonUIV2('error');
+      return { ok: false, error: 'registration_' + reg.state, errorKind: 'registration', registration: reg.state, pendingStashed: true };
+    }
     const result = await saveDiagnosisSessionV2(pending);
     if (result.ok) {
       clearPendingDiagnosisV2();
@@ -183,7 +189,7 @@ async function handleSaveResultClickV2(answersV2, encodedAnswers, results, mirro
     return result;
   } else {
     // 未ログイン：Googleへ遷移する（v2専用のsignInWithGoogleV2()。
-    // 復帰先は/mypage.html固定）。保存は認証復帰後のonAuthStateChangeに委ねる。
+    // 復帰先は/mypage.html固定）。保存は認証復帰後の runSignedInFlow() に委ねる。
     const { error } = await signInWithGoogleV2();
     if (error) {
       // 【4-4対応】OAuth開始自体が失敗した場合、ボタンが「保存中…」のまま
@@ -209,13 +215,9 @@ function updateSaveButtonUIV2(state) {
   btn.disabled = (state === 'saving' || state === 'saved');
 }
 
-// 起動時：Googleログインから戻ってきたら、v2のpendingがあれば自動保存する。
-// v1側のonAuthStateChangeリスナー（diagnosis-save.js）とは別の、独立したリスナーとして登録する。
-// 【重要】このリスナーはindex.html・mypage.htmlの両方で登録されうる。
-// mypage.html側では、保存成功後にmypage自身の履歴表示を更新する必要があるため、
-// mypage.html側が用意する再読み込みフック（window.refreshMypageHistory、存在すれば）
-// を呼ぶ。mypage.htmlが読み込まれていない文脈（例：index.htmlに将来この
-// リスナーだけが残るケース）では、このフックが無いため何もしない（安全側）。
+// 認証の後、v2のpendingがあれば自動保存する。呼び出し元は diagnosis-save.js の runSignedInFlow()
+// （登録完了の判定 → v1 → v2 → Kit 同期）。保存成功後は、mypage.html が用意する再読み込みフック
+// （window.refreshMypageHistory、存在すれば）を呼ぶ。
 //
 // 【4-2対応】SIGNED_INだけに依存すると、次のケースを取りこぼす：
 //   ・既にログイン済みの利用者がpendingを持ったままmypage.htmlへ来た場合
@@ -233,6 +235,9 @@ async function processPendingDiagnosisV2Once() {
 
   _pendingDiagnosisV2InFlight = true;
   try {
+    // 登録完了（規約への同意）前は保存しない。pending は残す（diagnosis-save.js の判定を共有する）
+    const reg = await ensureRegistrationComplete();
+    if (reg.state !== 'ok') return { ok: false, skipped: 'registration_' + reg.state };
     const result = await saveDiagnosisSessionV2(pending);
     if (result.ok) {
       clearPendingDiagnosisV2();
@@ -251,12 +256,9 @@ async function processPendingDiagnosisV2Once() {
   }
 }
 
-if (typeof supabaseClient !== 'undefined') {
-  supabaseClient.auth.onAuthStateChange(async (event) => {
-    if (event !== 'SIGNED_IN' && event !== 'INITIAL_SESSION') return;
-    await processPendingDiagnosisV2Once();
-  });
-}
+// 認証の後の自動保存は、diagnosis-save.js の runSignedInFlow() が
+// 登録完了の判定 → v1 → v2（processPendingDiagnosisV2Once）→ Kit 同期 の順で呼ぶ。
+// ここでは独自の onAuthStateChange を登録しない（登録完了前の保存・順序の入れ替わりを防ぐ）。
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {

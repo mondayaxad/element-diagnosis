@@ -109,162 +109,132 @@ function trackEvent(name, params) {
 }
 
 /* ============================================================
-   メール配信（Kit）の同意（2026-10-06 統合指示書 §10〜§13）
-   - マイページ登録・診断保存だけでは Kit へ登録しない。明示的な同意（チェック）がある場合だけ。
-   - 未チェックは false として記録する（未回答の null とは区別する）。
-   - 順序：認証 → 診断保存 → 同意記録 → Kit同期。Kit の失敗で保存・登録を失敗扱いにしない。
-   - 同意記録を確認できない場合（列が無い・型が違う・RLSで書けない等）は Kit へ送らない（fail-closed）。
-   - 判断済み（true/false）のユーザーには再表示せず、保存のたびに Kit を呼ばない。
-   - OAuth 往復中の選択は、診断の pending とは別キーで一時保持する。
+   登録完了（利用規約・プライバシーポリシーへの同意とお知らせメール）2026-10-07
+   - 新規か既存かは、認証の後に profiles.onboarding_status で判定する（メール入力前に存在確認はしない）。
+     Google・X・メールOTP のどの経路でも、onAuthStateChange → runSignedInFlow() の同じ処理を通る。
+   - required：登録完了モーダル（js/registration-onboarding.js）を表示し、同意したら
+     RPC complete_registration_onboarding で記録する（日時・版はサーバー側で決まる）。
+     「いいえ」はサインアウトする。診断の pending は消さず、次回ログイン時に再びモーダルを表示する。
+   - completed／legacy_exempt：表示しない。既存ユーザー（legacy_exempt）の配信設定は変えない。
+   - profiles を読めない・値が想定外・モーダルを出せない：登録済みとは扱わない（fail-closed。保存もしない）。
+   - 順序：認証 → 判定 → 同意記録 → 診断の pending 保存 → /api/subscribe（Kit 同期）。
+     Kit の失敗で登録・保存を失敗扱いにしない。再送は「24時間以上・3回まで」（サーバーも同じ条件で判定する）。
+   メール案内専用のチェックボックスは設けない。配信内容は登録完了モーダルに明示する。
    ============================================================ */
-const NEWSLETTER_CONSENT_KEY = 'pendingNewsletterConsent_v1';
-const NEWSLETTER_CONSENT_SOURCE = 'mypage_signup';
-const NEWSLETTER_CONSENT_VERSION = '2026-10-06-v1';
-const NEWSLETTER_CONSENT_TTL_MS = 24 * 60 * 60 * 1000;
+const REGISTRATION_TERMS_VERSION = '2026-10-07';
+const REGISTRATION_PRIVACY_VERSION = '2026-10-07';
+const NEWSLETTER_CONSENT_VERSION = '2026-10-07-v1';
+const NEWSLETTER_RETRY_INTERVAL_MS = 24 * 60 * 60 * 1000;
+const NEWSLETTER_MAX_ATTEMPTS = 3;
+const REGISTRATION_KNOWN_STATUSES = ['required', 'completed', 'legacy_exempt'];
 
-// 判断済み（true または false が記録済み）なら、結果画面で毎回聞き直さない。
-// 読めない・型が確認できない場合は「未判断」として扱う（表示はするが、記録できなければ送らない）。
-async function hasDecidedNewsletter() {
-  const user = await getCurrentUser();
-  if (!user) return false;
-  const { data, error } = await supabaseClient
-    .from('profiles')
-    .select('newsletter_opted_in')
-    .eq('id', user.id)
-    .single();
-  if (error || !data) return false;
-  return typeof data.newsletter_opted_in === 'boolean';
-}
+// 旧仕様（結果画面の任意チェック）の一時保持は使わない。残っていれば消す。
+try { localStorage.removeItem('pendingNewsletterConsent_v1'); } catch (e) { /* noop */ }
 
-// 同意判断を profiles へ記録し、書き戻された値で記録できたことを確かめる。
-// 戻り値 ok:true は「値・版が確かに保存された」場合だけ。それ以外は Kit へ送らない。
-async function recordNewsletterDecision(userId, optedIn) {
-  if (!userId || typeof optedIn !== 'boolean') return { ok: false, reason: 'invalid_input' };
+// 本人の登録状態を読む。読めない場合は null（＝登録済みとは扱わない）。
+async function fetchRegistrationProfile(userId) {
   try {
     const { data, error } = await supabaseClient
       .from('profiles')
-      .update({
-        newsletter_opted_in: optedIn,
-        newsletter_opted_in_at: new Date().toISOString(),
-        newsletter_consent_source: NEWSLETTER_CONSENT_SOURCE,
-        newsletter_consent_version: NEWSLETTER_CONSENT_VERSION,
-      })
+      .select('onboarding_status, newsletter_sync_status, newsletter_sync_attempts, newsletter_sync_attempted_at')
       .eq('id', userId)
-      .select('newsletter_opted_in, newsletter_consent_version')
       .single();
-    if (error || !data) return { ok: false, reason: 'record_failed' };
-    if (data.newsletter_opted_in !== optedIn || data.newsletter_consent_version !== NEWSLETTER_CONSENT_VERSION) {
-      return { ok: false, reason: 'record_unverified' };
-    }
-    return { ok: true };
+    if (error || !data) return null;
+    return data;
   } catch (e) {
-    return { ok: false, reason: 'record_failed' };
-  }
-}
-
-// 結果画面で選んだ値を一時保持する（null＝今回は聞いていない＝何もしない）。
-function stashNewsletterConsent(optIn) {
-  if (typeof optIn !== 'boolean') return;
-  try {
-    localStorage.setItem(NEWSLETTER_CONSENT_KEY, JSON.stringify({
-      optIn, source: NEWSLETTER_CONSENT_SOURCE, version: NEWSLETTER_CONSENT_VERSION, createdAt: Date.now(),
-    }));
-  } catch (e) { /* 保存できなくても診断保存は続ける */ }
-}
-function readNewsletterConsent() {
-  try {
-    const raw = localStorage.getItem(NEWSLETTER_CONSENT_KEY);
-    if (!raw) return null;
-    const c = JSON.parse(raw);
-    if (!c || typeof c.optIn !== 'boolean' || c.version !== NEWSLETTER_CONSENT_VERSION
-      || !(Date.now() - Number(c.createdAt) < NEWSLETTER_CONSENT_TTL_MS)) {
-      clearNewsletterConsent();
-      return null;
-    }
-    return c;
-  } catch (e) {
-    clearNewsletterConsent();
     return null;
   }
 }
-function clearNewsletterConsent() {
-  try { localStorage.removeItem(NEWSLETTER_CONSENT_KEY); } catch (e) { /* noop */ }
+
+// 同意を記録する（RPC。二重に呼ばれても completed のまま同じ結果を返す）。
+async function completeRegistrationOnboarding() {
+  try {
+    const { data, error } = await supabaseClient.rpc('complete_registration_onboarding', {
+      p_terms_version: REGISTRATION_TERMS_VERSION,
+      p_privacy_version: REGISTRATION_PRIVACY_VERSION,
+      p_newsletter_consent_version: NEWSLETTER_CONSENT_VERSION,
+    });
+    if (error || !data || data.onboarding_status !== 'completed') return { ok: false, error: error || 'unexpected_result' };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: 'exception' };
+  }
 }
 
-let newsletterConsentInFlight = false;
-// 保存が済んだ後に呼ぶ。一時保持した選択を記録し、同意 true が確かに記録できた場合だけ Kit へ同期する。
-// 一時保持（pendingNewsletterConsent_v1）は、DB記録と（同意 true の場合は）Kit同期が完了するまで消さない。
-//   ・DB の読取失敗・型不正・書込失敗・書込確認失敗 → 保持したまま（Kit は呼ばない。次回再試行）
-//   ・false を記録できた → 削除（Kit は呼ばない）
-//   ・true を記録し Kit 同期に成功 → 削除／Kit 同期に失敗 → 保持（次回再試行。保存は成功のまま・赤いエラーなし）
-//   ・DB が既に true で、保持も true → Kit 同期の再試行として扱う（成功で削除・失敗で保持）
-//   ・DB が既に false、または保存済みの判断と保持中の選択が食い違う → DB を上書きせず、保持を破棄
-async function processPendingNewsletterConsent() {
-  if (newsletterConsentInFlight) return { skipped: 'in_flight' };
-  // 最初の await より前に印を付ける（同時に呼ばれても Kit 同期を二重にしない）
-  newsletterConsentInFlight = true;
-  const ga = (name, extra) => trackEvent(name, Object.assign({ entry_point: NEWSLETTER_CONSENT_SOURCE, consent_version: NEWSLETTER_CONSENT_VERSION }, extra || {}));
-  // Kit 同期：成功した時だけ保持を消す
-  const syncToKit = async () => {
-    const synced = await subscribeToNewsletter();
-    ga(synced.ok ? 'newsletter_subscribe_success' : 'newsletter_subscribe_error');
-    if (synced.ok) clearNewsletterConsent();
-    return synced.ok;
-  };
-  try {
-    const consent = readNewsletterConsent();
-    if (!consent) return { skipped: 'no_consent' };
-    // 診断の保存がまだ終わっていない間は待つ（認証 → 診断保存 → 同意記録 → Kit同期）
-    const v2Pending = typeof readPendingDiagnosisV2 === 'function' ? readPendingDiagnosisV2() : null;
-    if (readPendingDiagnosis() || v2Pending) return { skipped: 'save_pending' };
-    const user = await getCurrentUser();
-    if (!user) return { skipped: 'not_authenticated' };
+// ページのスクリプト（js/registration-onboarding.js・js/eti_v2_save.js）がすべて読み込まれるまで待つ。
+// 認証の通知は外部スクリプトの読み込みの合間に届くことがあり、待たないとモーダルや v2 保存を取りこぼす。
+function whenDocumentReady() {
+  if (typeof document === 'undefined' || !document.readyState || document.readyState !== 'loading') return Promise.resolve();
+  return new Promise((resolve) => document.addEventListener('DOMContentLoaded', () => resolve(), { once: true }));
+}
 
-    const { data: current, error: readError } = await supabaseClient
-      .from('profiles')
-      .select('newsletter_opted_in')
-      .eq('id', user.id)
-      .single();
-    if (readError || !current) {
-      ga('newsletter_subscribe_error', { reason: 'consent_unverifiable' });
-      return { ok: false, reason: 'consent_unverifiable' }; // 保持したまま（次回再試行）
-    }
-    const decided = current.newsletter_opted_in;
-    if (decided === true) {
-      if (consent.optIn === true) {
-        // 前回 DB 記録後に Kit 同期が失敗していた場合の再試行
-        const ok = await syncToKit();
-        return { ok: true, synced: ok, retried: true };
-      }
-      clearNewsletterConsent(); // 保存済みの判断と食い違う：上書きしない
-      return { skipped: 'already_decided' };
-    }
-    if (decided === false) {
-      clearNewsletterConsent(); // 以前の判断（停止）を、診断保存だけで変えない
-      return { skipped: 'already_decided' };
-    }
-    if (decided !== null && decided !== undefined) {
-      return { ok: false, reason: 'unexpected_type' }; // 型が確認できない：送らず保持
-    }
+async function runRegistrationCheck() {
+  await whenDocumentReady();
+  const user = await getCurrentUser();
+  if (!user) return { state: 'signed_out' };
+  const profile = await fetchRegistrationProfile(user.id);
+  if (!profile) return { state: 'error', reason: 'profile_unavailable' };
+  const status = profile.onboarding_status;
+  if (REGISTRATION_KNOWN_STATUSES.indexOf(status) === -1) return { state: 'error', reason: 'unexpected_status' };
+  if (status !== 'required') return { state: 'ok', userId: user.id, profile: profile, justCompleted: false };
 
-    const recorded = await recordNewsletterDecision(user.id, consent.optIn);
-    if (!recorded.ok) {
-      ga('newsletter_subscribe_error', { reason: recorded.reason });
-      return { ok: false, reason: recorded.reason }; // 保持したまま（次回再試行）
-    }
-    ga(consent.optIn ? 'newsletter_opt_in' : 'newsletter_opt_out');
-    if (!consent.optIn) {
-      clearNewsletterConsent();
-      return { ok: true, synced: false };
-    }
-    const ok = await syncToKit();
-    return { ok: true, synced: ok };
-  } catch (e) {
-    ga('newsletter_subscribe_error', { reason: 'exception' });
-    return { ok: false, reason: 'exception' };
-  } finally {
-    newsletterConsentInFlight = false;
+  if (typeof window.showRegistrationOnboarding !== 'function') return { state: 'error', reason: 'ui_unavailable' };
+  trackEvent('registration_onboarding_view');
+  const choice = await window.showRegistrationOnboarding({ userId: user.id, onAccept: completeRegistrationOnboarding });
+  if (choice === 'accepted') {
+    trackEvent('registration_onboarding_complete');
+    return {
+      state: 'ok',
+      userId: user.id,
+      justCompleted: true,
+      profile: Object.assign({}, profile, { onboarding_status: 'completed', newsletter_sync_status: 'pending', newsletter_sync_attempts: 0 }),
+    };
   }
+  trackEvent('registration_onboarding_decline');
+  await signOutUser();
+  return { state: 'declined' };
+}
+
+// 同じページ内では1回だけ判定する（OAuth 復帰・再読込・同時の呼び出しでもモーダルは1つ）。
+// ok 以外の結果は保持しない（次の呼び出しで判定し直す）。サインアウトで捨てる。
+let registrationCheckPromise = null;
+function ensureRegistrationComplete() {
+  if (!registrationCheckPromise) {
+    registrationCheckPromise = runRegistrationCheck().then(
+      (r) => { if (r.state !== 'ok') registrationCheckPromise = null; return r; },
+      () => { registrationCheckPromise = null; return { state: 'error', reason: 'exception' }; }
+    );
+  }
+  return registrationCheckPromise;
+}
+function resetRegistrationCheck() {
+  registrationCheckPromise = null;
+}
+
+// Kit 同期を今行うか（サーバー /api/subscribe も同じ条件で判定する）。
+//   登録完了（completed）の人だけ。legacy_exempt は対象外。
+//   synced なら送らない。初回（試行0回）は送る。失敗後は前回から24時間以上・3回未満のときだけ。
+function newsletterSyncDue(profile, now) {
+  if (!profile || profile.onboarding_status !== 'completed') return false;
+  if (profile.newsletter_sync_status === 'synced') return false;
+  const attempts = Number(profile.newsletter_sync_attempts) || 0;
+  if (attempts === 0) return true;
+  if (attempts >= NEWSLETTER_MAX_ATTEMPTS) return false;
+  const last = Date.parse(profile.newsletter_sync_attempted_at || '');
+  if (!Number.isFinite(last)) return true;
+  return (now - last) >= NEWSLETTER_RETRY_INTERVAL_MS;
+}
+
+async function syncNewsletterIfDue(profile) {
+  if (!newsletterSyncDue(profile, Date.now())) return { skipped: 'not_due' };
+  const synced = await subscribeToNewsletter();
+  trackEvent(synced.ok ? 'newsletter_subscribe_success' : 'newsletter_subscribe_error', { consent_version: NEWSLETTER_CONSENT_VERSION });
+  return synced;
+}
+
+// 旧 index-test.html（公開停止予定）向けの互換。結果画面でお知らせの選択を出さない。
+async function hasDecidedNewsletter() {
+  return true;
 }
 
 /* ============================================================
@@ -375,14 +345,6 @@ async function signInWithGoogle() {
   if (error) console.error('Google sign-in error:', error);
 }
 
-async function signInWithMagicLink(email) {
-  const { error } = await supabaseClient.auth.signInWithOtp({
-    email: email,
-    options: { emailRedirectTo: window.location.href.split('?')[0] }
-  });
-  return error;
-}
-
 async function getCurrentUser() {
   const { data: { user } } = await supabaseClient.auth.getUser();
   return user;
@@ -396,7 +358,7 @@ async function signOutUser() {
    pending diagnosis（本番のまま無変更）
    ============================================================ */
 
-function stashPendingDiagnosis(answers, results, encodedAnswers, newsletterOptIn) {
+function stashPendingDiagnosis(answers, results, encodedAnswers) {
   const pending = {
     clientSessionId: crypto.randomUUID(),
     diagnosisType: DIAGNOSIS_TYPE,
@@ -406,12 +368,7 @@ function stashPendingDiagnosis(answers, results, encodedAnswers, newsletterOptIn
     answers: answers,
     encodedAnswers: encodedAnswers,
     results: results,
-    // null/undefinedは「すでに回答済みなので今回は聞いていない」。falseへ
-    // 潰すと、以前の同意を再診断のたびに拒否へ上書きしてしまう。
-    newsletterOptIn: newsletterOptIn == null ? null : !!newsletterOptIn,
   };
-  // メール配信の選択は診断の pending とは別に一時保持し、保存完了後に processPendingNewsletterConsent() が扱う
-  if (pending.newsletterOptIn !== null) stashNewsletterConsent(pending.newsletterOptIn);
   try {
     localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
   } catch (e) {
@@ -521,6 +478,8 @@ function classifyError(error) {
   if (!error) return 'unknown';
   const msg = (error.message || '').toLowerCase();
   if (msg.includes('not_authenticated')) return 'auth';
+  // 登録完了（規約への同意）前のユーザーの保存は、DB 側でも拒否される
+  if (msg.includes('onboarding_required')) return 'onboarding_required';
   if (msg.includes('incomplete_existing_session')) return 'incomplete_existing_session';
   // client_session_id_conflict_other_user は SECURITY INVOKER + RLS の下では
   // 実際にはほぼ到達しない（下記コメント参照）。conflicting_session_not_found と
@@ -530,9 +489,10 @@ function classifyError(error) {
   return 'unknown';
 }
 
-// 同意が記録された本人だけを、サーバー経由でKitへ登録する。
+// 登録完了で同意を記録した本人だけを、サーバー経由でKitへ登録する。
 // メールアドレスはブラウザから送らない。サーバーが認証トークンから本人のメールを取得し、
-// DB上の同意 true を確認してから送る。失敗しても診断結果の保存には影響させない（画面に赤いエラーを出さない）。
+// DB上の同意（版・取得経路）と再送条件を確認してから送り、結果を newsletter_sync_status に記録する。
+// 失敗しても登録・診断結果の保存には影響させない（画面に赤いエラーを出さない）。
 async function subscribeToNewsletter() {
   try {
     const { data: { session } } = await supabaseClient.auth.getSession();
@@ -551,62 +511,102 @@ async function subscribeToNewsletter() {
 }
 
 /* ============================================================
-   起動時：認証完了で戻ってきたらpending diagnosisを保存する（本番のまま無変更）
+   起動時：認証の後の処理（全経路共通）
+   認証 → 登録完了の判定（必要ならモーダル）→ 診断の pending 保存（v1 → v2）→ Kit 同期
    ============================================================ */
 
 let pendingSaveInFlight = false;
-supabaseClient.auth.onAuthStateChange(async (event, session) => {
-  // OAuthから戻った時点で既にセッション復元済みの場合、Supabaseは
-  // SIGNED_INではなくINITIAL_SESSIONを通知する。どちらでもpendingを救済する。
-  if (event !== 'SIGNED_IN' && event !== 'INITIAL_SESSION') return;
-  if (!session || pendingSaveInFlight) return;
-  const pending = readPendingDiagnosis();
-  if (!pending) return;
 
+async function savePendingDiagnosisV1() {
+  if (pendingSaveInFlight) return { skipped: 'in_flight' };
+  const pending = readPendingDiagnosis();
+  if (!pending) return { skipped: 'no_pending' };
   pendingSaveInFlight = true;
   try {
     const result = await saveDiagnosisSession(pending);
     if (result.ok) {
       clearPendingDiagnosis();
       updateSaveButtonUI('saved');
-      // 保存完了後に同意を記録し、同意 true を確認できた場合だけ Kit 同期（失敗しても保存は成功のまま）
-      await processPendingNewsletterConsent().catch(() => {});
-      // mypage.html上で認証復帰した場合、保存直後の履歴を同じ画面へ反映する。
-      if (typeof window.refreshMypageHistory === 'function') {
-        await window.refreshMypageHistory();
-      }
     } else {
       // 保存失敗時もpendingは消さない。次回リトライできるようにする
-      console.error('diagnosis save failed:', result.error);
+      console.error('diagnosis save failed:', result.errorKind);
       updateSaveButtonUI('error');
     }
+    return result;
   } finally {
     pendingSaveInFlight = false;
   }
+}
+
+async function runSignedInFlow() {
+  await whenDocumentReady();
+  const reg = await ensureRegistrationComplete();
+  if (typeof window.onRegistrationStateChange === 'function') window.onRegistrationStateChange(reg);
+  if (reg.state !== 'ok') return reg; // 登録前・いいえ・確認不能：保存も Kit 同期もしない（pending は残す）
+
+  let savedAny = false;
+  const v1 = await savePendingDiagnosisV1();
+  if (v1 && v1.ok) savedAny = true;
+  if (typeof processPendingDiagnosisV2Once === 'function') {
+    const v2 = await processPendingDiagnosisV2Once();
+    if (v2 && v2.ok) savedAny = true;
+  }
+  // 保存の成否に関係なく、登録が済んでいれば Kit 同期（条件を満たす場合だけ。失敗しても登録・保存は成功のまま）
+  await syncNewsletterIfDue(reg.profile).catch(() => {});
+  // mypage.html上で認証復帰した場合、保存直後の履歴を同じ画面へ反映する。
+  if (savedAny && typeof window.refreshMypageHistory === 'function') {
+    await window.refreshMypageHistory();
+  }
+  return reg;
+}
+
+let signedInFlowRunning = null;
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT') {
+    resetRegistrationCheck();
+    return;
+  }
+  // OAuthから戻った時点で既にセッション復元済みの場合、Supabaseは
+  // SIGNED_INではなくINITIAL_SESSIONを通知する。どちらでも同じ処理を通す。
+  if (event !== 'SIGNED_IN' && event !== 'INITIAL_SESSION') return;
+  if (!session || signedInFlowRunning) return;
+  // supabase-js の通知処理の中で auth の呼び出しを待たないよう、次のタスクで実行する
+  signedInFlowRunning = new Promise((resolve) => setTimeout(resolve, 0))
+    .then(runSignedInFlow)
+    .catch((e) => console.error('signed-in flow failed:', e && e.message))
+    .finally(() => { signedInFlowRunning = null; });
 });
 
 /* ============================================================
    結果画面のCTA（本番のまま無変更）
    ============================================================ */
 
-async function handleSaveResultClick(answers, results, encodedAnswers, diagnosisCode, newsletterOptIn) {
+// 戻り値：保存の結果（{ ok, ... }）。登録完了前に止まった場合は { ok:false, registration:'declined'|'error' }。
+// 未ログインで Google へ遷移した場合は undefined（ページ遷移するため）。
+async function handleSaveResultClick(answers, results, encodedAnswers, diagnosisCode) {
   updateSaveButtonUI('saving');
   const user = await getCurrentUser();
 
-  const pendingId = stashPendingDiagnosis(answers, results, encodedAnswers, newsletterOptIn);
+  stashPendingDiagnosis(answers, results, encodedAnswers);
   const pending = readPendingDiagnosis();
   pending.diagnosisCode = diagnosisCode;
   localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
 
   if (user) {
+    // 登録完了（規約への同意）が済むまで保存しない。pending は残す
+    const reg = await ensureRegistrationComplete();
+    if (reg.state !== 'ok') {
+      updateSaveButtonUI('error');
+      return { ok: false, registration: reg.state };
+    }
     const result = await saveDiagnosisSession(pending);
     if (result.ok) {
       clearPendingDiagnosis();
       updateSaveButtonUI('saved');
-      await processPendingNewsletterConsent().catch(() => {});
     } else {
       updateSaveButtonUI('error');
     }
+    return result;
   } else {
     // 未ログイン：Googleをメインに提示。認証完了後はonAuthStateChangeが自動保存する
     await signInWithGoogle();
@@ -636,17 +636,14 @@ function updateSaveButtonUI(state) {
    index_release-b.html）へ組み込む際の呼び出し形はこれに合わせること。
 
    buildResultPayload() の第5引数は topNat（国家）であり、
-   results.enneaWing ではない。また handleSaveResultClick() は
-   第5引数に newsletterOptIn を渡す必要がある（省略すると
-   pending.newsletterOptIn が常に undefined になり、
-   メルマガ同意があってもsubscribeToNewsletter()が呼ばれない）。
+   results.enneaWing ではない。お知らせメールの同意は結果画面では扱わない
+   （登録完了モーダルで記録する。runSignedInFlow() を参照）。
 
    var resultPayload = buildResultPayload(results, topEl, topW, et, topNat);
    handleSaveResultClick(
      answers,
      resultPayload,
      shortCode,
-     applyData,
-     newsletterOptIn
+     applyData
    );
    ============================================================ */

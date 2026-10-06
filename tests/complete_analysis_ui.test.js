@@ -28,7 +28,8 @@ function fakeSupabase({ signedIn = true, rows = [], historyError = false } = {})
         if (k === 'then') return (res, rej) => {
           let out;
           if (table === 'diagnosis_sessions') out = ${historyError ? '{ data: null, error: { message: "x" } }' : '{ data: one ? (rows[0] || null) : rows, error: null }'};
-          else if (table === 'profiles') out = { data: { newsletter_opted_in: null }, error: null };
+          // 登録完了済みのユーザー（登録完了モーダルは出ない）
+          else if (table === 'profiles') out = { data: { onboarding_status: 'completed', newsletter_sync_status: 'synced', newsletter_sync_attempts: 1, newsletter_sync_attempted_at: null }, error: null };
           else out = { data: one ? null : [], error: null };
           return Promise.resolve(out).then(res, rej);
         };
@@ -381,18 +382,13 @@ test('index：Preview指定なしでは購入状態不明として¥3,000CTAを�
   await p.__ctx.close();
 });
 
-test('index：Kit 同意欄は初期OFF・ラベル全体がタップ領域・44px', { skip: skip() }, async () => {
-  // 未ログイン（保存前）の記録カードで確認する。ログイン済みで同じ結果が保存済みなら同意欄は出ない（正しい挙動）
+test('index：結果画面にメール案内専用のチェックボックスを出さない（配信内容は登録完了モーダルで明示）', { skip: skip() }, async () => {
+  // 未ログイン（保存前）の記録カードで確認する
   const p = await indexResult(null, { signedIn: false });
-  await p.waitForSelector('#newsletterOptInCheckbox', { state: 'attached', timeout: 5000 });
-  const cb = p.locator('#newsletterOptInCheckbox');
-  assert.equal(await cb.isChecked(), false);
-  await p.locator('label.rs-optin').scrollIntoViewIfNeeded();
-  await p.locator('.rs-optin-sub').click();
-  assert.equal(await cb.isChecked(), true);
-  const lb = await p.locator('label.rs-optin').boundingBox();
-  assert.ok(lb.height >= 44);
-  assert.ok(parseFloat(await p.locator('label.rs-optin').evaluate((e) => getComputedStyle(e).fontSize)) >= 12);
+  await p.waitForSelector('#recordAuth', { state: 'attached', timeout: 5000 });
+  assert.equal(await p.locator('#newsletterOptInCheckbox').count(), 0);
+  assert.equal(await p.locator('label.rs-optin').count(), 0);
+  assert.equal(await p.evaluate(() => typeof window.showRegistrationOnboarding), 'function');
   await p.__ctx.close();
 });
 
