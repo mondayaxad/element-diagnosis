@@ -2078,6 +2078,9 @@ function caApplyStates(records) {
 const CA_TRIGGER_LABEL = { free: 'アップグレード', analysis: 'アップグレード', complete_generating: '準備中', complete_failed: '準備中', complete_ready: '完全解析', unknown: '状態を確認' };
 function caTriggerHtml(r) {
   if (!r || !caAvailable() || !r.session || !r.session.id) return '';
+  // 権利API未実装で Preview 指定も無い場合は、入口（とシート）を作らない。
+  // API実装後に状態確認へ失敗した時だけ「状態を確認」を出す。
+  if (!CompleteAnalysis.headerEntryEnabled()) return '';
   const k = caKey(r);
   // 完全解析の対象外で、解析レポートも購入済み（＝この記録に開ける導線が無い）なら入口を出さない
   if (!caIsEligible(r) && k !== 'free' && k !== 'unknown') return '';

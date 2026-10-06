@@ -119,6 +119,16 @@
     return makeState({ entitlementStatus: 'unknown', diagnosisSessionId: o.diagnosisSessionId });
   }
 
+  // ---- mypage 右上の入口を出すか ----
+  // 3つの場合を区別する：
+  //   ・権利API未実装（CA_COMPLETE_API_READY = false）かつ有効な Preview 指定なし → 出さない
+  //     （押しても解決できない「状態を確認」を利用者に見せない）
+  //   ・Preview fixture 指定あり（?preview_entitlement=free 等）→ fixture どおり出す
+  //   ・権利API実装済み → 出す。通信・状態確認に失敗した時だけ unknown（「状態を確認」）になる
+  function headerEntryEnabled(loc) {
+    return CA_COMPLETE_API_READY === true || previewStateName(loc) !== null;
+  }
+
   // ---- 完全解析の適格性（記録が46ページ生成の入力契約を満たすか） ----
   // prototypes/core1_v4_result_driven の入力契約：ETI v2 の100問（Q001〜Q100・各 -2〜2）と
   // 版（diagnosis: ETI-2.0 / items: ETI-ITEM-2.0.0）。旧版（element-v1）は設問が別物
@@ -220,6 +230,7 @@
     INTEGRATION_TEXT: CA_INTEGRATION_TEXT,
     lensListHtml: lensListHtml,
     completeApiReady: CA_COMPLETE_API_READY,
+    headerEntryEnabled: headerEntryEnabled,
     completeEligibility: completeEligibility,
     withEligibility: withEligibility,
     completeCheckoutHref: completeCheckoutHref,

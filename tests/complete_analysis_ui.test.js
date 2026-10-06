@@ -238,14 +238,54 @@ test('mypage unknown：購入CTAを出さない（シート・ページとも）
   await p.__ctx.close();
 });
 
-test('mypage 実データ（Preview指定なし）：完全解析の権利APIが無いので unknown、購入CTAなし', { skip: skip() }, async () => {
+test('mypage 実データ（Preview指定なし）・権利API未実装：右上入口・オーバーレイ・シートを作らない', { skip: skip() }, async () => {
   const p = await mypage(null);
+  assert.equal(await p.locator('#mpUpgradeTrigger').count(), 0);
+  assert.equal(await p.locator('#mpUpgradeOverlay, #latest-upgrade-dialog, #mpUpgradeBody').count(), 0);
+  // 完全解析の購入CTAはどこにも無い。既存の解析レポート導線（LATEST RESULT 内の ¥1,000）はそのまま残る
+  assert.equal(await p.locator('a[data-product-id^="core_complete_analysis"]').count(), 0);
+  assert.ok(await p.locator('.mp-latest a[href*="buy.stripe"]').count() >= 1);
+  // 既存の集計・LOCKED 表示は変わらない
+  assert.equal(await p.locator('.mp-stat-en').allInnerTexts().then((x) => x.join(',')), 'RECORDS,INSIGHTS');
+  assert.equal(await p.locator('.mp-latest .mp-chip.locked').count(), 1);
+  // 無効な指定値も「指定なし」と同じ扱い
+  const q = await page('/mypage.html?preview_entitlement=bogus');
+  await q.waitForSelector('.mp-latest', { state: 'attached' });
+  assert.equal(await q.locator('#mpUpgradeTrigger, #mpUpgradeOverlay').count(), 0);
+  await q.__ctx.close();
+  await p.__ctx.close();
+});
+
+test('mypage Preview 指定あり：free はアップグレード、unknown は状態確認画面を確認できる', { skip: skip() }, async () => {
+  const f = await mypage('free');
+  assert.equal(await f.locator('#mpUpgradeTrigger').innerText(), 'アップグレード');
+  assert.equal(await f.locator('#mpUpgradeOverlay').count(), 1);
+  await f.__ctx.close();
+  const u = await mypage('unknown');
+  assert.equal(await u.locator('#mpUpgradeTrigger').innerText(), '状態を確認');
+  await u.click('#mpUpgradeTrigger');
+  assert.match(await u.locator('#mpUpgradeBody').innerText(), /購入状態を確認できませんでした/);
+  assert.equal(await u.locator('a[href*="buy.stripe"]').count(), 0);
+  await u.__ctx.close();
+});
+
+test('権利API実装後（CA_COMPLETE_API_READY = true）は、Preview 指定なしでも入口を出し、状態不明なら「状態を確認」', { skip: skip() }, async () => {
+  const src = fs.readFileSync(path.join(ROOT, 'complete-analysis.js'), 'utf8').replace('var CA_COMPLETE_API_READY = false;', 'var CA_COMPLETE_API_READY = true;');
+  assert.ok(src.includes('var CA_COMPLETE_API_READY = true;'));
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const p = await ctx.newPage();
+  p.setDefaultTimeout(8000);
+  await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: fakeSupabase({ rows: ROWS }) }));
+  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  await p.route('**/api/my-entitlements', (r) => r.fulfill({ contentType: 'application/json', body: '{"purchased_by_version":{}}' }));
+  await p.route('**/complete-analysis.js', (r) => r.fulfill({ contentType: 'application/javascript', body: src }));
+  await p.goto(base + '/mypage.html');
+  await p.waitForSelector('.mp-latest', { state: 'attached' });
   assert.equal(await p.locator('#mpUpgradeTrigger').innerText(), '状態を確認');
   await p.click('#mpUpgradeTrigger');
+  assert.match(await p.locator('#mpUpgradeBody').innerText(), /購入状態を確認できませんでした/);
   assert.equal(await p.locator('#mpUpgradeBody a[href*="buy.stripe"]').count(), 0);
-  // 既存の解析レポート導線（LATEST RESULT 内の ¥1,000）はそのまま残る
-  assert.ok(await p.locator('.mp-latest a[href*="buy.stripe"]').count() >= 1);
-  await p.__ctx.close();
+  await ctx.close();
 });
 
 test('mypage 記録別の権利：過去Aだけ complete、最新Bは free。BからAを開けない', { skip: skip() }, async () => {

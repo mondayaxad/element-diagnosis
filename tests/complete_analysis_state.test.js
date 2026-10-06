@@ -104,3 +104,20 @@ test('GA4 へは文字列・数値・真偽値だけを送る', () => {
   CA.track('complete_checkout_click', { source: 'index', preview_dummy: true, nested: { a: 1 }, fn() {} });
   assert.deepEqual(plain(events), [['complete_checkout_click', { source: 'index', preview_dummy: true }]]);
 });
+
+test('右上入口：権利API未実装なら Preview 指定がある時だけ出す', () => {
+  assert.equal(load().CA.headerEntryEnabled(), false, '指定なし');
+  assert.equal(load({ search: '?preview_entitlement=bogus' }).CA.headerEntryEnabled(), false, '無効な指定');
+  for (const st of ['free', 'analysis', 'complete-generating', 'complete-ready', 'unknown']) {
+    assert.equal(load({ search: '?preview_entitlement=' + st }).CA.headerEntryEnabled(), true, st);
+  }
+  // 本番ホストでは Preview 指定が無効なので出さない
+  assert.equal(load({ host: 'element-diagnosis-five.vercel.app', search: '?preview_entitlement=free' }).CA.headerEntryEnabled(), false);
+  // 権利API実装後は指定なしでも出す（状態不明なら unknown＝「状態を確認」）
+  const apiSrc = SRC.replace('var CA_COMPLETE_API_READY = false;', 'var CA_COMPLETE_API_READY = true;');
+  assert.notEqual(apiSrc, SRC);
+  const win = { location: { hostname: 'x.vercel.app', search: '' } };
+  vm.runInContext(apiSrc, vm.createContext({ window: win, URLSearchParams }));
+  assert.equal(win.CompleteAnalysis.headerEntryEnabled(), true);
+  assert.equal(win.CompleteAnalysis.stateKey(win.CompleteAnalysis.realState({ analysisKnown: false })), 'unknown');
+});
