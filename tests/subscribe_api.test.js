@@ -8,7 +8,8 @@ const { createHandler, CONSENT_VERSION } = require(path.join(__dirname, '..', 'a
 
 const KEY = 'kit_secret_for_test_only';
 const USER = { id: 'user-1', email: 'owner@example.test' };
-const baseEnv = { SUPABASE_URL: 'https://supabase.test', SUPABASE_SERVICE_ROLE_KEY: 'svc_test', KIT_API_KEY: KEY, VERCEL_ENV: 'production' };
+const { PROD_ENV, PREVIEW_ENV } = require('./fixtures/server_env');
+const baseEnv = { ...PROD_ENV, KIT_API_KEY: KEY };
 
 function json(status, body) {
   return { ok: status >= 200 && status < 300, status, json: async () => body, text: async () => JSON.stringify(body) };
@@ -142,14 +143,17 @@ test('同意 true・未登録なら、Kit 作成を1回だけ呼ぶ（API key �
 });
 
 test('Preview ガード：許可リストに無いメールは Kit を呼ばない／許可したテスト用メールだけ送る', async () => {
-  const h1 = harness({ env: { VERCEL_ENV: 'preview', KIT_PREVIEW_ALLOWED_EMAILS: '' } });
+  const h1 = harness({ env: { ...PREVIEW_ENV, KIT_PREVIEW_ALLOWED_EMAILS: '' } });
   const r1 = await h1.call();
   assert.deepEqual(r1.body, { ok: true, skipped: 'preview_guard' });
   assert.equal(h1.kitCalls().length, 0);
-  const h2 = harness({ env: { VERCEL_ENV: undefined } }); // 環境不明は Preview 扱い
-  assert.deepEqual((await h2.call()).body, { ok: true, skipped: 'preview_guard' });
-  assert.equal(h2.kitCalls().length, 0);
-  const h3 = harness({ env: { VERCEL_ENV: 'preview', KIT_PREVIEW_ALLOWED_EMAILS: 'someone@x.test, OWNER@example.test' } });
+  // 環境不明は環境ガードで止める（503）。Supabase・Kit のどちらにも接続しない
+  const h2 = harness({ env: { VERCEL_ENV: undefined } });
+  const r2 = await h2.call();
+  assert.equal(r2.code, 503);
+  assert.equal(r2.body.error, 'service_unavailable');
+  assert.equal(h2.calls.length, 0);
+  const h3 = harness({ env: { ...PREVIEW_ENV, KIT_PREVIEW_ALLOWED_EMAILS: 'someone@x.test, OWNER@example.test' } });
   assert.deepEqual((await h3.call()).body, { ok: true });
   assert.equal(h3.kitCreates().length, 1);
 });

@@ -14,6 +14,7 @@ for (const p of ['playwright', '/opt/node22/lib/node_modules/playwright']) {
   try { ({ chromium } = require(p)); break; } catch (e) { /* 次を試す */ }
 }
 const ROOT = path.join(__dirname, '..');
+const { previewPublicConfigJs } = require('./fixtures/server_env');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.mjs': 'application/javascript', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.json': 'application/json', '.css': 'text/css', '.svg': 'image/svg+xml' };
 
 // 偽の Supabase：signedIn=false で未ログイン。rows は diagnosis_sessions の行。
@@ -97,6 +98,7 @@ async function page(url, { width = 390, height = 844, supa = { rows: ROWS }, red
   const errors = [];
   p.on('pageerror', (e) => errors.push(String(e)));
   await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: fakeSupabase(supa) }));
+  await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: previewPublicConfigJs() }));
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
   await p.route(/cdnjs\.cloudflare\.com|googletagmanager/, (r) => r.fulfill({ contentType: 'application/javascript', body: '' }));
   await p.route('**/api/my-entitlements', (r) => r.fulfill({ contentType: 'application/json', body: '{"purchased_by_version":{}}' }));
@@ -276,6 +278,7 @@ test('権利API実装後（CA_COMPLETE_API_READY = true）は、Preview 指定�
   const p = await ctx.newPage();
   p.setDefaultTimeout(8000);
   await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: fakeSupabase({ rows: ROWS }) }));
+  await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: previewPublicConfigJs() }));
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
   await p.route('**/api/my-entitlements', (r) => r.fulfill({ contentType: 'application/json', body: '{"purchased_by_version":{}}' }));
   await p.route('**/complete-analysis.js', (r) => r.fulfill({ contentType: 'application/javascript', body: src }));

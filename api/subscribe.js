@@ -13,8 +13,13 @@
 //      メールだけを送る。それ以外は Kit を呼ばずに終える（本番Kitリストへテスト登録しない）
 //   7. 秘密・メールアドレス・Kit の応答本文をログやレスポンスへ出さない
 //
+//   8. 環境ガード（lib/server-env.js）を Supabase へ接続する前に通す。環境不明・Ref の取り違え・
+//      設定不足のときは 503 で止める（Kit も呼ばない）
+//
 // service role の利用は、トークン検証（/auth/v1/user）と、本人の profiles 1行の2列の読み取りだけに限る。
 // テストでは createHandler({ fetchImpl, env }) に偽の fetch を渡す（実行時に mock を有効にする設定は持たない）。
+
+const { requireServerEnv, requestHost, logEnvDenied } = require('../lib/server-env');
 
 const KIT_SUBSCRIBERS_URL = 'https://api.kit.com/v4/subscribers';
 const CONSENT_VERSION = '2026-10-06-v1';
@@ -28,9 +33,10 @@ function parseBody(req) {
 }
 
 function createHandler({ fetchImpl, env }) {
-  async function getVerifiedUser(accessToken) {
-    const res = await fetchImpl(`${env.SUPABASE_URL}/auth/v1/user`, {
-      headers: { Authorization: `Bearer ${accessToken}`, apikey: env.SUPABASE_SERVICE_ROLE_KEY },
+  // ログインユーザー本人としてのアクセス：公開キー＋ユーザーの access token（サーバー用キーは使わない）
+  async function getVerifiedUser(conn, accessToken) {
+    const res = await fetchImpl(`${conn.supabaseUrl}/auth/v1/user`, {
+      headers: conn.userHeaders(accessToken),
     });
     if (!res.ok) return null;
     const user = await res.json().catch(() => null);
@@ -40,11 +46,11 @@ function createHandler({ fetchImpl, env }) {
   }
 
   // 本人の行だけを読む。列が存在しない等で読めない場合は null（＝同意を確認できない）。
-  async function readConsent(userId) {
-    const url = `${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(userId)}` +
+  async function readConsent(conn, userId) {
+    const url = `${conn.supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(userId)}` +
       '&select=newsletter_opted_in,newsletter_consent_version';
     const res = await fetchImpl(url, {
-      headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` },
+      headers: conn.adminHeaders(), // 管理者アクセス（本人の行だけを id で絞る）
     });
     if (!res.ok) return null;
     const rows = await res.json().catch(() => null);
@@ -68,9 +74,11 @@ function createHandler({ fetchImpl, env }) {
       res.status(405).json({ error: 'method_not_allowed' });
       return;
     }
-    if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.error('subscribe error: server configuration is incomplete');
-      res.status(500).json({ error: 'server_configuration_error' });
+    // 環境ガード：Supabase へ接続する前に、環境・接続先を確かめる。
+    const guard = requireServerEnv(env, { host: requestHost(req), admin: true, user: true });
+    if (!guard.ok) {
+      const incidentId = logEnvDenied('subscribe', guard);
+      res.status(503).json({ error: 'service_unavailable', incident_id: incidentId });
       return;
     }
 
@@ -88,7 +96,7 @@ function createHandler({ fetchImpl, env }) {
     }
 
     try {
-      const user = await getVerifiedUser(accessToken);
+      const user = await getVerifiedUser(guard, accessToken);
       if (!user) {
         res.status(401).json({ error: 'unauthorized' });
         return;
@@ -98,7 +106,7 @@ function createHandler({ fetchImpl, env }) {
         return;
       }
 
-      const consent = await readConsent(user.id);
+      const consent = await readConsent(guard, user.id);
       if (!consent || consent.newsletter_opted_in !== true || consent.newsletter_consent_version !== CONSENT_VERSION) {
         res.status(403).json({ error: 'consent_required' });
         return;

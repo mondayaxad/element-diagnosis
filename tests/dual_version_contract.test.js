@@ -18,6 +18,7 @@ for (const p of ['playwright', '/opt/node22/lib/node_modules/playwright']) {
   try { ({ chromium } = require(p)); break; } catch (e) { /* 次を試す */ }
 }
 const ROOT = path.join(__dirname, '..');
+const { previewPublicConfigJs } = require('./fixtures/server_env');
 const skip = () => !chromium;
 
 // ---- 静的な契約：購入状態の照合キーは「世代:コード」 ----
@@ -100,6 +101,7 @@ async function mypage(purchasedKeys) {
   p.setDefaultTimeout(8000);
   const linkCalls = [];
   await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: fakeSupabase(ROWS) }));
+  await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: previewPublicConfigJs() }));
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
   await p.route('**/api/my-entitlements', (r) => r.fulfill({ contentType: 'application/json',
     body: JSON.stringify({ purchased_by_version: Object.fromEntries(purchasedKeys.map((k) => [k, true])) }) }));

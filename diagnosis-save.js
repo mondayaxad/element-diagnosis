@@ -33,9 +33,60 @@
    loadDiagnosisHistory() は本番のまま無変更。
    ============================================================ */
 
-// ---- 設定（実際の値に差し替える） ----
-const SUPABASE_URL = 'https://akivoobkqcnqvdumxtmg.supabase.co'; // release-c-preview専用：テスト用Supabaseプロジェクト
-const SUPABASE_ANON_KEY = 'sb_publishable_ebFsEEouWTvJKOpk6ytYYQ_V0cOqtgl'; // release-c-preview専用：テスト用プロジェクトのpublishable key
+// ---- 接続先の設定 ----
+// Supabase の URL・公開キーはコードに書かない。各ページが先に読み込む /api/public-config?format=js が
+// window.__ED_PUBLIC_CONFIG__ を設定する（Production は本番、release-c-preview の Preview は Preview 専用の
+// Supabase）。設定が無い・形式が不正・ページのホストと環境名が食い違う場合は、別の接続先を試さず、
+// 何もしない代用クライアント（unavailableSupabaseClient）を使う。ログイン・保存は
+// 「現在ご利用いただけません」として失敗し、pending（localStorage）は消さない（復旧後に再開できる）。
+const PRODUCTION_HOSTS = ['element-diagnosis-five.vercel.app'];
+const SUPABASE_CONFIG_UNAVAILABLE = { code: 'config_unavailable', message: 'ログイン・保存は現在ご利用いただけません。' };
+
+function readPublicSupabaseConfig() {
+  const cfg = window.__ED_PUBLIC_CONFIG__;
+  if (!cfg || typeof cfg !== 'object') return null;
+  const { appEnv, supabaseUrl, supabaseAnonKey, projectRef } = cfg;
+  if (appEnv !== 'production' && appEnv !== 'preview' && appEnv !== 'development') return null;
+  if (typeof projectRef !== 'string' || !/^[a-z0-9]{20}$/.test(projectRef)) return null;
+  if (supabaseUrl !== 'https://' + projectRef + '.supabase.co') return null;
+  if (typeof supabaseAnonKey !== 'string' || !supabaseAnonKey || supabaseAnonKey.indexOf('sb_secret_') === 0) return null;
+  // 本番ホストでは production の設定だけ、本番以外のホストでは production 以外の設定だけを使う。
+  const host = (window.location && window.location.hostname) || '';
+  const isProductionHost = PRODUCTION_HOSTS.indexOf(host) !== -1;
+  if (isProductionHost !== (appEnv === 'production')) return null;
+  return { appEnv: appEnv, supabaseUrl: supabaseUrl, supabaseAnonKey: supabaseAnonKey, projectRef: projectRef };
+}
+
+// 設定が使えないときの代用品。supabase-js と同じ呼び出し方で、常に config_unavailable のエラーを返す。
+// トップレベルの onAuthStateChange 登録などが例外で止まらないようにする。
+function createUnavailableSupabaseClient() {
+  const fail = () => Promise.resolve({ data: { session: null, user: null }, error: SUPABASE_CONFIG_UNAVAILABLE });
+  function queryBuilder() {
+    const q = new Proxy({}, {
+      get(_t, k) {
+        if (k === 'then') {
+          return (resolve, reject) => Promise.resolve({ data: null, error: SUPABASE_CONFIG_UNAVAILABLE }).then(resolve, reject);
+        }
+        return () => q;
+      },
+    });
+    return q;
+  }
+  const auth = new Proxy({}, {
+    get(_t, k) {
+      if (k === 'onAuthStateChange') return () => ({ data: { subscription: { unsubscribe() {} } } });
+      return fail;
+    },
+  });
+  return {
+    unavailable: true,
+    from: queryBuilder,
+    rpc: () => Promise.resolve({ data: null, error: SUPABASE_CONFIG_UNAVAILABLE }),
+    auth: auth,
+  };
+}
+
+const publicSupabaseConfig = readPublicSupabaseConfig();
 
 // diagnosis_type / version は既存ロジックと結果の形が変わったときだけ上げる
 const DIAGNOSIS_TYPE = 'element';
@@ -47,7 +98,10 @@ const CHARACTER_DB_VERSION = 'char-db-v1';
 
 const PENDING_KEY = 'pendingDiagnosis_v1';
 
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = (publicSupabaseConfig && window.supabase && typeof window.supabase.createClient === 'function')
+  ? window.supabase.createClient(publicSupabaseConfig.supabaseUrl, publicSupabaseConfig.supabaseAnonKey)
+  : createUnavailableSupabaseClient();
+if (supabaseClient.unavailable) console.error('supabase config unavailable');
 
 // GA4が無いPreviewやmypageでも呼び出し元を落とさない。
 function trackEvent(name, params) {

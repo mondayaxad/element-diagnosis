@@ -23,21 +23,24 @@
 //   7. SUPABASE_URLを固定値ではなく環境変数から取得する。未設定の場合は
 //      500エラーを返す（設定手順は release_c_supabase_env_setup.md を参照）
 //
+//   8. 環境ガード（lib/server-env.js）を、Supabase へ接続する前に通す。環境不明・Ref の取り違え・
+//      設定不足のときは 503（legacy_floor の保証も含めて止める。別の接続先へは切り替えない）
+//   9. トークンに環境名（env）があり、現在の環境と異なる場合は無効なトークンとして扱う（403）。
+//      env を持たない旧形式トークンは従来どおり受け付ける（後方互換）
+//
 // 署名検証・有効期限確認の中核ロジックは本番版から変更していない。
 
 const crypto = require('crypto');
+const { requireServerEnv, requestHost, logEnvDenied } = require('../lib/server-env');
 
-const SECRET = process.env.REPORT_TOKEN_SECRET;
-// Supabaseプロジェクト自体のURLは秘密情報ではないが、Preview環境ではテスト用
-// Supabaseプロジェクトへ向けたいため、固定値ではなく環境変数から取得する。
-// 未設定の場合は、誤って本番Supabaseへ接続する・接続先が不明なまま動作することを
-// 防ぐため、リクエストごとに明示的にエラーとして扱う。
-const SUPABASE_URL = process.env.SUPABASE_URL;
+// Supabaseプロジェクト自体のURLは秘密情報ではないが、Preview環境ではPreview専用の
+// Supabaseプロジェクトへ向けるため、リクエストごとに環境ガードで検査した値だけを使う。
 
-function verifyToken(token) {
+function verifyToken(secret, token) {
   if (!token || typeof token !== 'string' || !token.includes('.')) return null;
   const [payload, sig] = token.split('.');
-  const expectedSig = crypto.createHmac('sha256', SECRET).update(payload).digest('base64url');
+  if (typeof sig !== 'string') return null;
+  const expectedSig = crypto.createHmac('sha256', secret).update(payload).digest('base64url');
 
   // タイミング攻撃対策：定数時間比較
   const sigBuf = Buffer.from(sig);
@@ -66,14 +69,14 @@ function hashDiagnosisCode(diagnosisCode) {
 // /api/verify.js の encryptDiagnosisCode() と対になる。
 // 導出方法（HKDF、info文字列）は両ファイルで一致させる必要がある。
 // ------------------------------------------------------------
-function deriveCodeEncryptionKey() {
+function deriveCodeEncryptionKey(secret) {
   return Buffer.from(
-    crypto.hkdfSync('sha256', SECRET, Buffer.alloc(0), 'report-token-code-encryption-v1', 32)
+    crypto.hkdfSync('sha256', secret, Buffer.alloc(0), 'report-token-code-encryption-v1', 32)
   );
 }
 
-function decryptDiagnosisCode(enc) {
-  const key = deriveCodeEncryptionKey();
+function decryptDiagnosisCode(secret, enc) {
+  const key = deriveCodeEncryptionKey(secret);
   const iv = Buffer.from(enc.iv, 'base64url');
   const tag = Buffer.from(enc.tag, 'base64url');
   const data = Buffer.from(enc.data, 'base64url');
@@ -85,12 +88,12 @@ function decryptDiagnosisCode(enc) {
 // トークンのペイロード形式に応じて実際の診断コードを取り出す。
 //   - 新形式（encを持つ）：復号する。復号失敗（改ざん・鍵不一致等）はnullを返す
 //   - 旧形式（codeを平文で持つ）：そのまま返す（後方互換）
-function resolveDiagnosisCode(data) {
+function resolveDiagnosisCode(secret, data) {
   if (data.enc) {
     try {
-      return decryptDiagnosisCode(data.enc);
+      return decryptDiagnosisCode(secret, data.enc);
     } catch (err) {
-      console.error('report-data error: code decryption failed', err);
+      console.error('report-data error: code decryption failed', err && err.name ? err.name : 'unknown');
       return null;
     }
   }
@@ -121,109 +124,120 @@ const PRODUCT_PERMISSIONS = {
   core2_upgrade: ['journey_report_access'],
 };
 
-// service roleキーでpurchase_entitlementsを直接検索する（経路A：
-// クライアントへ生テーブルを公開せず、このサーバー処理だけが読む）。
-async function fetchDbPermissions(diagnosisCodeHash) {
-  const url =
-    `${SUPABASE_URL}/rest/v1/purchase_entitlements` +
-    `?diagnosis_code_hash=eq.${encodeURIComponent(diagnosisCodeHash)}` +
-    `&status=eq.active&select=product_type`;
+function createHandler({ env, fetchImpl }) {
+  // service roleキーでpurchase_entitlementsを直接検索する（経路A：
+  // クライアントへ生テーブルを公開せず、このサーバー処理だけが読む）。
+  async function fetchDbPermissions(conn, diagnosisCodeHash) {
+    const url =
+      `${conn.supabaseUrl}/rest/v1/purchase_entitlements` +
+      `?diagnosis_code_hash=eq.${encodeURIComponent(diagnosisCodeHash)}` +
+      `&status=eq.active&select=product_type`;
 
-  const res = await fetch(url, {
-    headers: {
-      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-    },
-  });
+    // 管理者アクセス（ヘッダーはキーの形式に合わせて lib/server-env.js が作る）
+    const res = await fetchImpl(url, { headers: conn.adminHeaders() });
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new Error(`purchase_entitlements lookup failed: ${res.status} ${body}`);
+    if (!res.ok) {
+      // 応答本文はログ・例外へ含めない（ステータスだけ）。
+      throw new Error(`purchase_entitlements lookup failed: ${res.status}`);
+    }
+
+    const rows = await res.json();
+    const permissions = new Set();
+    for (const row of rows) {
+      (PRODUCT_PERMISSIONS[row.product_type] || []).forEach((p) => permissions.add(p));
+    }
+    return permissions;
   }
 
-  const rows = await res.json();
-  const permissions = new Set();
-  for (const row of rows) {
-    (PRODUCT_PERMISSIONS[row.product_type] || []).forEach((p) => permissions.add(p));
-  }
-  return permissions;
+  return async function handler(req, res) {
+    // 環境ガード：Supabase へ接続する前に、環境・接続先・署名鍵を確かめる。
+    const guard = requireServerEnv(env, { host: requestHost(req), admin: true, reportSecret: true });
+    if (!guard.ok) {
+      const incidentId = logEnvDenied('report-data', guard);
+      res.status(503).json({ error: 'service_unavailable', incident_id: incidentId });
+      return;
+    }
+    const secret = env.REPORT_TOKEN_SECRET;
+
+    const token = (req.query || {}).token;
+    const data = verifyToken(secret, token);
+
+    if (!data) {
+      res.status(403).json({ error: 'invalid_or_expired_token' });
+      return;
+    }
+
+    // 別環境で発行されたトークン（env が現在の環境と異なる）は受け付けない。
+    // env を持たない旧形式トークンは後方互換のため従来どおり扱う。
+    if (data.env !== undefined && data.env !== guard.appEnv) {
+      res.status(403).json({ error: 'invalid_or_expired_token' });
+      return;
+    }
+
+    // 新形式トークンは診断コードを復号する必要がある。復号に失敗した場合
+    // （改ざん、鍵不一致等）は、署名検証は通っていても無効なトークンとして扱う。
+    const diagnosisRef = parseDiagnosisReference(resolveDiagnosisCode(secret, data), data);
+    if (!diagnosisRef) {
+      res.status(403).json({ error: 'invalid_or_expired_token' });
+      return;
+    }
+
+    // legacy_floor：purchaseブロックが無い（＝旧形式の）トークンは、
+    // 署名検証に成功した時点でCORE1閲覧を保証する（後方互換）。
+    // purchaseブロックがある新形式トークンは、それ自体からは権限を導出しない
+    // （GA4計測専用のため）。
+    const floor = new Set();
+    // マイページからの再発行トークンはpurchaseブロックを持たないが、旧形式トークンではない。
+    // legacy_floorを適用するとDB権利確認を迂回してしまうため、access_modeで明確に除外する。
+    if (!data.purchase && data.access_mode !== 'mypage_entitlement_reissue') {
+      floor.add('core_analysis_access');
+    }
+
+    // DB検索に失敗しても、legacy_floorの保証（旧形式トークン＝CORE1）だけは
+    // 必ず維持する。DB由来の権限（新形式トークンの実際の購入内容）は
+    // 確認できない場合、安全側に倒して付与しない（空集合のまま扱う）。
+    // これにより、DB障害時に旧トークン保有者が一律500で締め出されることを防ぐ。
+    let dbPermissions = new Set();
+    let dbLookupFailed = false;
+    try {
+      // v2は接頭辞を含めてハッシュ化されているため、表示用に接頭辞を外す前の
+      // referenceを使って購入権限を照合する。
+      const hash = hashDiagnosisCode(diagnosisRef.reference);
+      dbPermissions = await fetchDbPermissions(guard, hash);
+    } catch (err) {
+      console.error('report-data error: entitlement lookup failed (falling back to legacy_floor only)', err && err.message);
+      dbLookupFailed = true;
+    }
+
+    const finalPermissions = new Set([...floor, ...dbPermissions]);
+
+    const responseBody = {
+      diagnosis_version: diagnosisRef.diagnosisVersion,
+      entitlements: {
+        core_analysis_access: finalPermissions.has('core_analysis_access'),
+        journey_report_access: finalPermissions.has('journey_report_access'),
+      },
+      // GA4計測専用。閲覧権限には使わない。旧形式トークンではnull。
+      purchase: data.purchase || null,
+    };
+
+    // 診断コード自体は、CORE1閲覧権限がある場合にのみレスポンスへ含める。
+    // report.html の表示ゲートはUI上の制御に過ぎず、このAPIを直接叩けば
+    // 権限が無くてもcodeだけは取得できてしまっていたため、
+    // データそのものをサーバー側で絞る（権限が無ければcodeを返さない）。
+    if (finalPermissions.has('core_analysis_access')) {
+      responseBody.code = diagnosisRef.code;
+    }
+
+    if (dbLookupFailed) {
+      // DB確認ができなかったことをクライアント側で識別できるようにする
+      // （現状report.htmlはこのフィールドを見ないが、将来の商品別表示制御のために残す）。
+      responseBody.degraded = true;
+    }
+
+    res.status(200).json(responseBody);
+  };
 }
 
-module.exports = async (req, res) => {
-  if (!SUPABASE_URL) {
-    console.error('report-data error: SUPABASE_URL is not set');
-    res.status(500).json({ error: 'server_configuration_error' });
-    return;
-  }
-
-  const token = req.query.token;
-  const data = verifyToken(token);
-
-  if (!data) {
-    res.status(403).json({ error: 'invalid_or_expired_token' });
-    return;
-  }
-
-  // 新形式トークンは診断コードを復号する必要がある。復号に失敗した場合
-  // （改ざん、鍵不一致等）は、署名検証は通っていても無効なトークンとして扱う。
-  const diagnosisRef = parseDiagnosisReference(resolveDiagnosisCode(data), data);
-  if (!diagnosisRef) {
-    res.status(403).json({ error: 'invalid_or_expired_token' });
-    return;
-  }
-
-  // legacy_floor：purchaseブロックが無い（＝旧形式の）トークンは、
-  // 署名検証に成功した時点でCORE1閲覧を保証する（後方互換）。
-  // purchaseブロックがある新形式トークンは、それ自体からは権限を導出しない
-  // （GA4計測専用のため）。
-  const floor = new Set();
-  // マイページからの再発行トークンはpurchaseブロックを持たないが、旧形式トークンではない。
-  // legacy_floorを適用するとDB権利確認を迂回してしまうため、access_modeで明確に除外する。
-  if (!data.purchase && data.access_mode !== 'mypage_entitlement_reissue') {
-    floor.add('core_analysis_access');
-  }
-
-  // DB検索に失敗しても、legacy_floorの保証（旧形式トークン＝CORE1）だけは
-  // 必ず維持する。DB由来の権限（新形式トークンの実際の購入内容）は
-  // 確認できない場合、安全側に倒して付与しない（空集合のまま扱う）。
-  // これにより、DB障害時に旧トークン保有者が一律500で締め出されることを防ぐ。
-  let dbPermissions = new Set();
-  let dbLookupFailed = false;
-  try {
-    // v2は接頭辞を含めてハッシュ化されているため、表示用に接頭辞を外す前の
-    // referenceを使って購入権限を照合する。
-    const hash = hashDiagnosisCode(diagnosisRef.reference);
-    dbPermissions = await fetchDbPermissions(hash);
-  } catch (err) {
-    console.error('report-data error: entitlement lookup failed (falling back to legacy_floor only)', err);
-    dbLookupFailed = true;
-  }
-
-  const finalPermissions = new Set([...floor, ...dbPermissions]);
-
-  const responseBody = {
-    diagnosis_version: diagnosisRef.diagnosisVersion,
-    entitlements: {
-      core_analysis_access: finalPermissions.has('core_analysis_access'),
-      journey_report_access: finalPermissions.has('journey_report_access'),
-    },
-    // GA4計測専用。閲覧権限には使わない。旧形式トークンではnull。
-    purchase: data.purchase || null,
-  };
-
-  // 診断コード自体は、CORE1閲覧権限がある場合にのみレスポンスへ含める。
-  // report.html の表示ゲートはUI上の制御に過ぎず、このAPIを直接叩けば
-  // 権限が無くてもcodeだけは取得できてしまっていたため、
-  // データそのものをサーバー側で絞る（権限が無ければcodeを返さない）。
-  if (finalPermissions.has('core_analysis_access')) {
-    responseBody.code = diagnosisRef.code;
-  }
-
-  if (dbLookupFailed) {
-    // DB確認ができなかったことをクライアント側で識別できるようにする
-    // （現状report.htmlはこのフィールドを見ないが、将来の商品別表示制御のために残す）。
-    responseBody.degraded = true;
-  }
-
-  res.status(200).json(responseBody);
-};
+module.exports = createHandler({ env: process.env, fetchImpl: (...args) => fetch(...args) });
+module.exports.createHandler = createHandler;

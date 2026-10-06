@@ -11,6 +11,7 @@ const vm = require('vm');
 const SRC = fs.readFileSync(path.join(__dirname, '..', 'diagnosis-save.js'), 'utf8');
 const INDEX = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 const VERSION = '2026-10-06-v1';
+const { PREVIEW_REF } = require('./fixtures/server_env');
 
 function makeStorage(init) {
   const m = new Map(Object.entries(init || {}));
@@ -73,7 +74,9 @@ function load(opts = {}) {
     console: { error() {}, log() {}, warn() {} },
     localStorage: storage, fetch: fetchImpl, crypto: { randomUUID: () => 'uuid-1' },
     gtag: (_e, name, p) => events.push([name, p]), document: { getElementById: () => null },
-    location: { origin: 'https://preview.test' }, URLSearchParams, Date, JSON, Promise,
+    location: { origin: 'https://preview.test', hostname: 'preview.test' }, URLSearchParams, Date, JSON, Promise,
+    // /api/public-config?format=js が設定する公開設定（偽の Preview 設定）
+    __ED_PUBLIC_CONFIG__: Object.freeze({ appEnv: 'preview', supabaseUrl: `https://${PREVIEW_REF}.supabase.co`, supabaseAnonKey: 'sb_publishable_preview_fake_for_test', projectRef: PREVIEW_REF }),
   };
   ctx.window = ctx;
   ctx.window.supabase = supabase;
