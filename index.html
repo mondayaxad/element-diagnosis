@@ -41,7 +41,7 @@
       { "@type": "Question", "name": "元素診断とは何ですか？",
         "acceptedAnswer": { "@type": "Answer", "text": "元素診断は、Big Five・エニアグラム・シュワルツの価値観理論という3つの心理学的枠組みを土台に、原神の「元素」「武器種」「国家」というモチーフで性格を可視化する診断ツールです。100問の設問に答えると、35タイプの中からあなたに近いタイプが分かります。" } },
       { "@type": "Question", "name": "元素診断は無料ですか？",
-        "acceptedAnswer": { "@type": "Answer", "text": "はい、100問の診断と基本的な結果表示は無料です。より詳しいナラティブレポートは有償でご用意しています。" } },
+        "acceptedAnswer": { "@type": "Answer", "text": "はい、100問の診断と基本的な結果表示は無料です。より詳しい解析レポート（¥1,000）は有償でご用意しています。" } },
       { "@type": "Question", "name": "何タイプありますか？",
         "acceptedAnswer": { "@type": "Answer", "text": "7つの元素×5つの武器種の組み合わせで、全35タイプに分類されます。" } }
     ]
@@ -256,8 +256,41 @@
     .rs-saving::after { content: ''; position: absolute; top: 0; left: -40%; width: 40%; height: 100%; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--el) 60%, #a8c8f0), transparent); animation: rs-sweep 1.4s ease-in-out infinite; }
     @keyframes rs-sweep { to { left: 100%; } }
     .rs-err { font-size: 12px; line-height: 1.8; color: #d6a8b8; margin: -6px 0 14px; }
-    .rs-optin { display: flex; align-items: center; gap: 6px; justify-content: center; color: #6f7ea3; font-size: 10.5px; margin-top: 12px; cursor: pointer; }
-    .rs-optin input { width: 12px; height: 12px; accent-color: #5f86c8; }
+    /* メール配信の同意：初期OFF。主CTAより一段弱いが、読める大きさと明るさを保つ。ラベル全体がタップ領域（44px以上） */
+    .rs-optin { display: flex; align-items: flex-start; gap: 10px; max-width: 340px; margin: 14px auto 0; min-height: 44px; padding: 8px 4px; color: #a9b6d6; font-size: 12px; line-height: 1.7; text-align: left; cursor: pointer; }
+    .rs-optin input { flex: none; width: 18px; height: 18px; margin-top: 2px; accent-color: #5f86c8; cursor: pointer; }
+    .rs-optin input:focus-visible { outline: 2px solid #7ab8e8; outline-offset: 2px; }
+    .rs-optin-sub { display: block; color: #8d9abb; font-size: 11px; line-height: 1.7; margin-top: 2px; }
+
+    /* 完全解析：¥1,000の案内の後に置く折りたたみ。閉じた状態は細い一行だけ。主CTAより一段弱い枠線型ボタン。
+       役割ごとの色（白一色にしない）：見出し --ca-title／本文 --ca-body／補足 --ca-muted／罫 --ca-line／価格 --ca-gold／
+       人物像 --ca-mirror・--ca-hidden・--ca-mentor */
+    .ca-fold { --ca-title: #e0dcf0; --ca-body: #aaa5bb; --ca-muted: #817b96; --ca-line: #2d2944; --ca-gold: #c9a860;
+      --ca-mirror: #83b9da; --ca-hidden: #ac82d4; --ca-mentor: #d3ad68;
+      margin-top: 22px; border-top: 1px solid var(--ca-line); text-align: left; }
+    .ca-fold > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: 0 4px; color: var(--ca-body); font-size: 13px; letter-spacing: .08em; cursor: pointer; }
+    .ca-fold > summary::-webkit-details-marker { display: none; }
+    .ca-fold > summary::after { content: ''; width: 7px; height: 7px; border-right: 1px solid var(--ca-muted); border-bottom: 1px solid var(--ca-muted); transform: rotate(45deg); margin: -4px 6px 0 0; }
+    .ca-fold[open] > summary::after { transform: rotate(-135deg); margin-top: 4px; }
+    .ca-fold > summary:focus-visible { outline: 2px solid #7ab8e8; outline-offset: 2px; }
+    .ca-fold-body { padding: 8px 4px 6px; }
+    .ca-fold .ca-eyebrow { font-size: 10.5px; letter-spacing: .2em; color: var(--ca-muted); }
+    .ca-fold .ca-lead { word-break: auto-phrase; margin: 6px 0 0; font-size: 14px; color: var(--ca-title); line-height: 1.8; letter-spacing: .05em; }
+    .ca-fold .ca-body { margin: 12px 0 0; font-size: 12.5px; color: var(--ca-body); line-height: 1.9; }
+    .ca-fold .ca-meta { margin: 6px 0 0; font-size: 11.5px; color: var(--ca-muted); line-height: 1.7; }
+    .ca-lens-list { list-style: none; margin: 14px 0 0; padding: 0; border-top: 1px solid var(--ca-line); }
+    .ca-lens { position: relative; padding: 10px 2px 10px 14px; border-bottom: 1px solid var(--ca-line); }
+    .ca-lens::before { content: ''; position: absolute; left: 0; top: 10px; bottom: 10px; width: 2px; border-radius: 1px; background: var(--lens-c); }
+    .ca-lens--mirror { --lens-c: var(--ca-mirror); } .ca-lens--hidden { --lens-c: var(--ca-hidden); } .ca-lens--mentor { --lens-c: var(--ca-mentor); }
+    .ca-lens-head { display: block; }
+    .ca-lens-en { font-size: 12px; letter-spacing: .16em; color: var(--lens-c); }
+    .ca-lens-desc { display: block; margin-top: 1px; font-size: 12.5px; color: var(--ca-body); line-height: 1.7; }
+    .ca-fold-price { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 18px; padding-top: 10px; border-top: 1px dashed var(--ca-line); }
+    .ca-fold-price .ca-meta { margin: 0; }
+    .ca-fold-price .ca-price { flex: none; white-space: nowrap; font-size: 16px; letter-spacing: .06em; color: var(--ca-gold); }
+    .ca-fold-btn { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 46px; margin-top: 10px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--el, #7ab8e8) 45%, var(--ca-line)); background: transparent; color: var(--ca-title); font-family: inherit; font-size: 14px; letter-spacing: .08em; text-decoration: none; }
+    .ca-fold-btn:focus-visible { outline: 2px solid #7ab8e8; outline-offset: 2px; }
+    .ca-fold-note { margin: 10px 0 0; padding-left: 8px; border-left: 2px solid var(--ca-line); font-size: 11px; color: var(--ca-muted); line-height: 1.7; }
     @media (prefers-reduced-motion: reduce) { .rs-saving::after { animation: none; left: 30%; } .rs-link .arw { transition: none; } }
 
     /* ===== DIAGNOSIS ===== */
@@ -339,6 +372,8 @@
   </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="diagnosis-save.js"></script>
+<!-- 完全解析（46ページ）の表示用状態。PREVIEW ONLY：購入権は発行しない -->
+<script src="complete-analysis.js"></script>
 <script src="js/ETI_v2_QUESTIONS_100.js"></script>
 <script src="js/eti_v2_prototypes.js"></script>
 <script src="js/eti_v2_engine.js"></script>
@@ -401,7 +436,7 @@
             <div class="item"><dt>診断形式</dt><dd>100問 / 5段階回答<small>100 questions · 5-point scale</small></dd></div>
             <div class="item"><dt>測定軸</dt><dd>7元素 × 5武器 × 7国家<small>7 elements × 5 weapons × 7 nations</small></dd></div>
             <div class="item"><dt>土台となる尺度</dt><dd>Big Five / Enneagram / Values Theory<small>Academic psychology base</small></dd></div>
-            <div class="item"><dt>料金</dt><dd class="jp">診断：無料 ／ 解析レポート：¥1,000 ／ ナラティブ：¥3,000<small>Diagnosis: Free / Analysis: ¥1,000 / Narrative: ¥3,000</small></dd></div>
+            <div class="item"><dt>料金</dt><dd class="jp">診断：無料 ／ 解析レポート：¥1,000<small>Diagnosis: Free / Analysis: ¥1,000</small></dd></div>
           </dl>
         </details>
       </div>
@@ -2578,6 +2613,7 @@ function renderResult(root) {
           <p style="text-align:center;color:#c0a860;font-size:11px;margin-top:8px;font-weight:600">
             ✓ 決済完了後、自動的にレポートページへ移動します。
           </p>
+          ${completeAnalysisFoldHtml(diagnosisVersion === 'ETI-2.0' && results.raw && results.raw.meta ? results.raw.meta.itemSetVersion : null, diagnosisVersion)}
         </div>
       </div>
 
@@ -2685,12 +2721,14 @@ function renderResult(root) {
     var recordKey = isV2Record
       ? { diagnosisVersion: 'ETI-2.0', itemSetVersion: ETI_V2_META.itemSetVersion, scoringVersion: ETI_V2_META.scoringVersion, diagnosisCode: shortCode }
       : { diagnosisVersion: DIAGNOSIS_VERSION, itemSetVersion: null, scoringVersion: SCORING_VERSION, diagnosisCode: applyData };
-    var showOptIn = false; // メルマガ同意の確認（legacyのみ・既存仕様どおり未回答のときだけ表示）
+    var showOptIn = false; // メール配信の同意（未回答のときだけ表示。判断済みなら再表示しない）
 
     var renderRecordCard = function (state) {
       var label = '<div class="rs-label">診断記録</div>';
-      var optIn = (!isV2Record && showOptIn && (state === 'signed_out' || state === 'unsaved' || state === 'error'))
-        ? '<label class="rs-optin"><input type="checkbox" id="newsletterOptInCheckbox" checked>新着や次の診断のお知らせを受け取る</label>' : '';
+      // メール配信の同意（任意・初期OFF）。未チェックでも保存・登録・マイページ利用はできる。
+      var optIn = (showOptIn && (state === 'signed_out' || state === 'unsaved' || state === 'error'))
+        ? '<label class="rs-optin" for="newsletterOptInCheckbox"><input type="checkbox" id="newsletterOptInCheckbox" aria-describedby="newsletterOptInDesc">'
+          + '<span>新しい診断や更新のお知らせをメールで受け取る<span class="rs-optin-sub" id="newsletterOptInDesc">配信は不定期です。いつでもメール内から停止できます。</span></span></label>' : '';
       var html;
       if (state === 'saved' || state === 'just_saved') {
         html = label + (state === 'just_saved' ? '<div class="rs-done">記録しました</div>' : '')
@@ -2737,6 +2775,8 @@ function renderResult(root) {
     var onRecordSaveWithX = function () {
       var optInBox = recordCard.querySelector('#newsletterOptInCheckbox');
       var newsletterOptIn = optInBox ? optInBox.checked : null;
+      // OAuth往復中も選択を保持する（保存完了後に processPendingNewsletterConsent が記録・同期する）
+      if (newsletterOptIn !== null) stashNewsletterConsent(newsletterOptIn);
       if (isV2Record) {
         stashPendingDiagnosisV2(buildPendingV2(answersV2, shortCode, results.raw, recordMirrorTop(), crypto.randomUUID(), recordMirrorVersions()));
       } else {
@@ -2760,6 +2800,7 @@ function renderResult(root) {
       if (!alreadyTracked) trackRecordSaveClick();
       var optInBox = recordCard.querySelector('#newsletterOptInCheckbox');
       var newsletterOptIn = optInBox ? optInBox.checked : null;
+      if (newsletterOptIn !== null) stashNewsletterConsent(newsletterOptIn);
       renderRecordCard('saving');
       try {
       // ログイン済みなら、保存直前にもう一度読み取りで確認する（同じ結果ならINSERTしない）
@@ -2768,7 +2809,12 @@ function renderResult(root) {
       if (isV2Record) {
         var clientSessionId = crypto.randomUUID();
         var res = await handleSaveResultClickV2(answersV2, shortCode, results.raw, recordMirrorTop(), clientSessionId, recordMirrorVersions());
-        if (res && res.ok) { renderRecordCard('just_saved'); return; }
+        if (res && res.ok) {
+          renderRecordCard('just_saved');
+          // 保存完了後に同意を記録し、true を確認できた場合だけKit同期（失敗しても保存は成功のまま）
+          processPendingNewsletterConsent().catch(function () {});
+          return;
+        }
         // 未ログイン：Google認証へ遷移中（保存は認証復帰後の既存処理が行う）
         if (res && res.pendingStashed && res.error === 'not_authenticated') return;
         renderRecordCard('error');
@@ -2789,14 +2835,53 @@ function renderResult(root) {
     };
 
     (async function () {
-      if (!isV2Record) {
-        try { showOptIn = !(await hasDecidedNewsletter()); } catch (e) { showOptIn = false; }
-      }
+      try { showOptIn = !(await hasDecidedNewsletter()); } catch (e) { showOptIn = false; }
       var found = await findSavedDiagnosisRecord(recordKey);
       if (found.state === 'unknown') console.error('saved-record check failed (showing as unsaved):', found.error);
       renderRecordCard(found.state === 'saved' ? 'saved' : found.state === 'signed_out' ? 'signed_out' : 'unsaved');
     })();
   }
+}
+
+/* 完全解析（46ページ）の折りたたみ【PREVIEW ONLY の状態表示】
+   ¥1,000の主導線より前・料金概要には出さない。<details> なのでJSが無くても内容へ到達できる。
+   完全解析の権利APIが無い間は状態を unknown とし、購入CTAを出さない（freeと推測しない）。
+   ?preview_entitlement= は Preview でのみ有効（complete-analysis.js のガード）。 */
+function completeAnalysisFoldHtml(itemSetVersion, diagnosisVersion) {
+  var CA = (typeof CompleteAnalysis !== 'undefined') ? CompleteAnalysis : null;
+  // 完全解析の適格性：旧版（element-v1）など、46ページ生成の入力契約を満たさない結果には折りたたみ自体を出さない
+  var elig = CA ? CA.completeEligibility({ diagnosisVersion: diagnosisVersion, itemSetVersion: itemSetVersion, answersComplete: !!itemSetVersion }) : { eligible: false };
+  if (!elig.eligible) return '';
+  var name = CA.previewStateName();
+  var st = CA.withEligibility(name ? CA.previewState(name, '') : CA.realState({ analysisKnown: false }), elig);
+  var key = CA.stateKey(st);
+  var offer = CA.completeCheckoutHref(st) ? CA.offerFor(st) : null;
+  var cta;
+  if (offer) {
+    var isUp = offer.offer === 'upgrade_2000';
+    cta = '<div class="ca-fold-price"><span class="ca-meta">' + (isUp ? 'この記録への追加' : 'この結果の完全解析') + '</span><span class="ca-price">' + (isUp ? '追加 ' : '') + offer.price + '</span></div>'
+      + '<!-- PREVIEW ONLY：ダミー決済リンク -->'
+      + '<a class="ca-fold-btn" href="' + CA.completeCheckoutHref(st) + '" target="_blank" rel="noopener" data-preview-dummy="true"'
+      + ' data-offer="' + offer.offer + '" data-product-id="' + offer.productId + '"'
+      + ' onclick="CompleteAnalysis.track(\'' + (isUp ? 'complete_upgrade_click' : 'complete_checkout_click') + '\',{source:\'index\',offer:\'' + offer.offer + '\',preview_dummy:true})">'
+      + 'この記録を完全解析する</a>'
+      + '<p class="ca-fold-note">Preview：テスト用のダミー決済リンクです。完全解析の権利は発行されません。</p>';
+  } else if (key === 'complete_ready' || key === 'complete_generating') {
+    cta = '<p class="ca-fold-note">この記録の完全解析は購入済みです。マイページから開けます。</p>';
+  } else {
+    cta = '<p class="ca-fold-note">この結果の購入状態を確認できないため、完全解析の購入導線は表示していません。</p>';
+  }
+  return '<details class="ca-fold" ontoggle="if(this.open&&typeof CompleteAnalysis!==\'undefined\')CompleteAnalysis.track(\'complete_details_open\',{source:\'index\',preview_dummy:' + (!!offer) + '})">'
+    + '<summary>◇ 完全解析との違いを見る</summary>'
+    + '<div class="ca-fold-body">'
+    + '<div class="ca-eyebrow">COMPLETE ANALYSIS｜完全解析</div>'
+    + '<p class="ca-lead">この結果を、46ページの一つの記録として残します。</p>'
+    // complete-analysis.js を読めなかった場合も、三つの人物像の説明へは到達できるようにする
+    + (CA ? CA.lensListHtml('count') : '<p class="ca-body">MIRROR・HIDDEN SHAPE・MENTOR 各10名</p>')
+    + (CA ? '<p class="ca-body">' + CA.INTEGRATION_TEXT + '</p>' : '')
+    + '<p class="ca-meta">解析レポートの内容も含まれます。</p>'
+    + cta
+    + '</div></details>';
 }
 
 function autoCopyAndProceed(data, url) {

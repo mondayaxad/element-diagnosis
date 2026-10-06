@@ -97,6 +97,29 @@
   /* ラグジュアリー装飾 */
   .gold-rule { height:1px; margin:20px 0; background:linear-gradient(90deg, transparent, #c0a860, transparent); }
   .eyebrow { font-size:10px; letter-spacing:0.25em; color:#c0a860; text-transform:uppercase; margin-bottom:8px; }
+  /* 完全解析の案内（本文を読み終えた終端だけ。追従しない・背景画像や紋章を置かない）
+     役割ごとの色（白一色にしない）：見出し --ca-title／本文 --ca-body／補足 --ca-muted／罫 --ca-line／価格 --ca-gold／
+     人物像 --ca-mirror・--ca-hidden・--ca-mentor */
+  .ca-r-sec { --ca-title:#e0dcf0; --ca-body:#aaa5bb; --ca-muted:#817b96; --ca-line:#2d2944; --ca-gold:#c9a860;
+    --ca-mirror:#83b9da; --ca-hidden:#ac82d4; --ca-mentor:#d3ad68; --ca-view:#9fc3dd; }
+  .ca-r-sec .ca-eyebrow { font-size:10.5px; letter-spacing:0.2em; color:var(--ca-muted); }
+  .ca-r-sec .ca-lead { word-break:auto-phrase; margin:6px 0 0; font-size:15px; font-weight:700; color:var(--ca-title); line-height:1.8; letter-spacing:0.05em; }
+  .ca-r-sec .ca-body { margin:12px 0 0; font-size:12.5px; color:var(--ca-body); line-height:1.9; }
+  .ca-r-sec .ca-meta { margin:0; font-size:11.5px; color:var(--ca-muted); line-height:1.7; }
+  .ca-r-sec .ca-state { margin:10px 0 0; font-size:17px; font-weight:700; color:var(--ca-state, var(--ca-title)); }
+  .ca-lens-list { list-style:none; margin:16px 0 0; padding:0; border-top:1px solid var(--ca-line); }
+  .ca-lens { position:relative; padding:11px 2px 11px 14px; border-bottom:1px solid var(--ca-line); }
+  .ca-lens::before { content:''; position:absolute; left:0; top:11px; bottom:11px; width:2px; border-radius:1px; background:var(--lens-c); }
+  .ca-lens--mirror { --lens-c:var(--ca-mirror); } .ca-lens--hidden { --lens-c:var(--ca-hidden); } .ca-lens--mentor { --lens-c:var(--ca-mentor); }
+  .ca-lens-en { font-size:11.5px; letter-spacing:0.16em; color:var(--lens-c); }
+  .ca-lens-head { display:block; }
+  .ca-lens-desc { display:block; margin-top:1px; font-size:12.5px; color:var(--ca-body); line-height:1.7; }
+  .ca-r-price { display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-top:20px; padding-top:10px; border-top:1px dashed var(--ca-line); }
+  .ca-r-price .ca-price { flex:none; font-size:16px; letter-spacing:0.06em; color:var(--ca-gold); white-space:nowrap; }
+  .ca-r-btn:focus-visible { outline:2px solid #a888d8; outline-offset:2px; }
+  .ca-r-btn { display:flex; align-items:center; justify-content:center; width:100%; min-height:46px; margin-top:12px; border-radius:8px; border:1px solid #6a5a94; background:transparent; color:var(--ca-title); font-family:inherit; font-size:14px; letter-spacing:0.08em; text-decoration:none; cursor:pointer; }
+  .ca-r-btn.is-view { border-color:color-mix(in srgb, var(--ca-view) 40%, var(--ca-line)); color:var(--ca-view); }
+  .ca-r-note { margin-top:10px; padding-left:8px; border-left:2px solid var(--ca-line); font-size:11px; color:var(--ca-muted); line-height:1.7; }
   .cover-dots { position:relative; width:220px; height:220px; margin:0 auto 20px; }
   .cover-dots svg { width:100%; height:100%; }
   .sec-img { width:100%; aspect-ratio:16/9; border-radius:10px; margin:16px 0; overflow:hidden; position:relative; }
@@ -110,6 +133,8 @@
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- 完全解析（46ページ）の表示用状態。PREVIEW ONLY：購入権は発行しない -->
+<script src="complete-analysis.js"></script>
 <script src="js/ETI_v2_QUESTIONS_100.js"></script>
 <script src="js/eti_v2_prototypes.js"></script>
 <script src="js/eti_v2_engine.js"></script>
@@ -1627,6 +1652,54 @@ function schwartzStrengthWeakness(scores) {
     <div class="sw-list">${rowsW}</div>`;
 }
 
+/* 完全解析（46ページ）の案内【PREVIEW ONLY の状態表示】
+   旧ナラティブ販売欄（¥3,000・旧Stripeリンク・申込コード・ギフト説明・旧ナラティブ用のGA4 item）を置き換える。
+   report の閲覧者は解析レポート購入済みのため、¥1,000と¥3,000を再比較させず、追加¥2,000だけを示す。
+   完全解析の権利APIが無い間は状態を unknown とし、購入CTAを出さない（購入済みかどうかを推測しない）。 */
+function completeAnalysisReportHtml(pal, results, diagnosisVersion) {
+  var CA = (typeof CompleteAnalysis !== 'undefined') ? CompleteAnalysis : null;
+  // 完全解析の適格性：診断版・設問版と、回答から ETI v2 の結果を計算できたか（旧版は対象外＝ブロック自体を出さない）
+  var meta = results && results.raw && results.raw.meta;
+  var elig = CA ? CA.completeEligibility({ diagnosisVersion: diagnosisVersion, itemSetVersion: meta ? meta.itemSetVersion : null, answersComplete: !!meta }) : { eligible: false };
+  if (!elig.eligible) return '';
+  var name = CA ? CA.previewStateName() : null;
+  var st = CA.withEligibility(name ? CA.previewState(name, '') : CA.realState({ analysisKnown: false }), elig);
+  var key = CA.stateKey(st);
+  // 三つの人物像は文章に埋め込まず、色線付きの3行で示す
+  var lenses = CA ? CA.lensListHtml('count') : '<p class="ca-body">MIRROR・HIDDEN SHAPE・MENTOR 各10名</p>';
+  var head = `
+        <div class="ca-eyebrow">COMPLETE ANALYSIS</div>
+        <p class="ca-lead">この観測を、三つの人物像とともに統合する。</p>`;
+  var body;
+  if (key === 'analysis' && CA.completeCheckoutHref(st)) {
+    var up = CA.OFFERS.upgrade;
+    // 内容は三つの人物像として既に示しているため、購入へ進むボタンは1つだけにする
+    body = `${head}
+        ${lenses}
+        <p class="ca-body">${CA.INTEGRATION_TEXT}</p>
+        <div class="ca-r-price"><span class="ca-meta">この解析レポートの内容は、完全解析にもすべて含まれます</span><span class="ca-price">追加 ${up.price}</span></div>
+        <!-- PREVIEW ONLY：ダミー決済リンク -->
+        <a class="ca-r-btn" href="${CA.completeCheckoutHref(st)}" target="_blank" rel="noopener" data-preview-dummy="true" data-offer="${up.offer}" data-product-id="${up.productId}"
+          onclick="CompleteAnalysis.track('complete_upgrade_click',{source:'analysis_report',offer:'${up.offer}',preview_dummy:true})">この記録を完全解析する</a>
+        <p class="ca-r-note">Preview：テスト用のダミー決済リンクです。完全解析の権利は発行されません。</p>`;
+  } else if (key === 'complete_generating' || key === 'complete_failed') {
+    body = `${head}
+        <p class="ca-state">完全解析を生成しています</p>
+        <p class="ca-body">この記録の結果をもとに、完全解析を準備しています。</p>`;
+  } else if (key === 'complete_ready') {
+    body = `${head}
+        <p class="ca-state">完全解析が保存されています</p>
+        <button type="button" class="ca-r-btn" onclick="CompleteAnalysis.track('complete_report_open',{source:'analysis_report',preview_dummy:true});var n=this.nextElementSibling;if(n)n.hidden=false;">この記録の完全解析を開く</button>
+        <p class="ca-r-note" hidden>Preview：完全解析の閲覧先はまだ接続していません。</p>`;
+  } else {
+    body = `${head}
+        ${lenses}
+        <p class="ca-r-note">この記録の完全解析の購入状態を確認できないため、購入導線は表示していません。</p>`;
+  }
+  return `<div class="sec ca-r-sec" style="border-color:${pal.p}35;--ca-state:${pal.light}">${body}
+      </div>`;
+}
+
 function renderFullReport(root, results, diagnosisCode) {
   window.__diagnosisCode = diagnosisCode || '';
   const diagnosisVersion = results.schemaVersion === 'ETI-2.0' ? 'ETI-2.0' : 'legacy-v1';
@@ -1851,34 +1924,7 @@ function renderFullReport(root, results, diagnosisCode) {
         ${diagnosisVersion === 'ETI-2.0' ? buildOverviewSection_v3_V2(results, pal) : buildOverviewSection_v3(results, pal)}
       </div>
 
-      <div class="sec" style="border-color:#c0a86050;background:linear-gradient(135deg,${pal.dark}30,#0e0c18)">
-        <div class="eyebrow" style="color:#c0a860">NARRATIVE REPORT</div>
-        <div class="sec-title" style="color:#e8d8a0">ここから先は、データではなく物語です</div>
-        <p class="desc">ここまでの分析は、全て100問の回答スコアから、確定的なロジックで導かれたものです。ナラティブレポートは、ここに<strong style="color:#eef4ee">あなたのXの投稿</strong>を重ね、マンデー本人が、より深くあなたの気質・動機・価値観を考察し、あなただけの言葉で一篇を書き下ろします。</p>
-        <p class="desc">さらに、4つの層（動機・気質・キャラクター・ナラティブ）が交わった先に立ち現れる、あなただけの<strong style="color:#e8d8a0">固有天賦</strong>もお渡しします。</p>
-
-        <div style="background:#08060f;border:1px solid #c0a86040;border-radius:8px;padding:12px 14px;margin-top:16px">
-          <div style="font-size:10px;color:#8878a8;letter-spacing:1px;margin-bottom:6px">あなたの診断コード（申込フォームでご入力いただきます）</div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <code id="narrativeCodeText" style="flex:1;color:#e8d8a0;font-size:11px;word-break:break-all;line-height:1.5;font-family:monospace;background:#0e0c18;border-radius:4px;padding:8px 10px">${diagnosisCode || ''}</code>
-            <button onclick="navigator.clipboard.writeText(document.getElementById('narrativeCodeText').textContent);this.textContent='✓';setTimeout(()=>this.textContent='📋',1500)"
-              style="flex-shrink:0;background:#c0a86020;border:1px solid #c0a86060;color:#e8d8a0;border-radius:6px;padding:8px 12px;font-size:13px;cursor:pointer">📋</button>
-          </div>
-        </div>
-
-        <div style="text-align:center;margin-top:20px">
-          <div style="font-size:26px;font-weight:700;color:#eee0c0;margin-bottom:14px">¥3,000</div>
-          ${IS_PREVIEW_BUILD ? `
-          <span style="display:block;background:#3a3050;color:#8878a8;border-radius:8px;padding:14px;font-size:14px;font-weight:700;letter-spacing:1px;cursor:not-allowed">ナラティブレポート申込（Preview環境では無効）</span>
-          <p style="color:#5a4d75;font-size:10px;margin-top:10px">この決済リンクは本番Payment Linkのみで、Preview用のテストリンクが無いため、Preview環境では無効化しています。</p>
-          ` : `
-          <a href="https://buy.stripe.com/dRmeV52XU1EV6f62BU3Nm09${diagnosisCode ? '?client_reference_id=' + encodeURIComponent(diagnosisVersion === 'ETI-2.0' ? ('narrative_v2_' + diagnosisCode) : diagnosisCode) : ''}" target="_blank" rel="noopener"
-            onclick="if(typeof gtag==='function')gtag('event','begin_checkout',{currency:'JPY',value:3000,items:[{item_id:'narrative_report',item_name:'元素診断 ナラティブレポート',price:3000,quantity:1}]})"
-            style="display:block;background:linear-gradient(90deg,${pal.p},#c0a860);color:#fff;border-radius:8px;padding:14px;font-size:14px;font-weight:700;text-decoration:none;letter-spacing:1px">ナラティブレポートに申し込む →</a>
-          <p style="color:#5a4d75;font-size:10px;margin-top:10px">診断コードは自動で引き継がれます。念のため、上のコードも控えておくと安心です。${diagnosisVersion === 'ETI-2.0' ? '（ETI v2の診断コードには narrative_v2_ を付けてお送りします。マンデーへの申込フォームでは、上に表示された診断コードをそのままご記入ください）' : ''}</p>
-          `}
-        </div>
-      </div>
+      ${completeAnalysisReportHtml(pal, results, diagnosisVersion)}
 
       <div style="text-align:center;padding:30px 10px;color:#5a4d75;font-size:11px;line-height:2">
         <button id="pdfSaveBtn" onclick="savePdf()" style="background:transparent;border:1px solid #3a3050;color:#8878a8;border-radius:6px;padding:10px 20px;font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:16px">
@@ -2083,7 +2129,11 @@ async function savePdf() {
     // （先に出すと、entitlementsが常に無い状態になり、正規のCORE1購入者まで
     //  一律ブロックされる）。
     const entitlements = data.entitlements;
-    if (!entitlements || entitlements.core_analysis_access !== true) {
+    // 完全解析権（core_complete_access）は同じ記録の解析レポート権を内包する（指示書 §8-4）。
+    // 既存の product_type = complete（¥2,500・CORE1＋CORE2）の権限は report-data.js 側でそのまま。
+    const canViewAnalysis = !!entitlements &&
+      (entitlements.core_analysis_access === true || entitlements.core_complete_access === true);
+    if (!canViewAnalysis) {
       root.innerHTML = '<div class="err-box"><h2>この商品はまだご覧いただけません</h2><p>CORE1（解析レポート）をご購入いただくと、こちらのページから閲覧できます。お心当たりがない場合は @mondayaxad までご連絡ください。</p></div>';
       return;
     }
@@ -2102,8 +2152,8 @@ async function savePdf() {
         return;
       }
       const resultsV2 = computeResultsV2ForUI(answersV2Obj, code);
-      // ナラティブレポート（¥3,000・別工程・マンデー本人が手作業で参照する）欄に表示する
-      // コードは、v1/v2どちらもここでは接頭辞を付けない生のcodeのまま渡す（今回の変更対象外）。
+      // 旧ナラティブ販売欄は完全解析の案内へ置換済み（申込コードの表示は廃止）。
+      // renderFullReport へは、v1/v2どちらも接頭辞を付けない生のcodeのまま渡す（今回の変更対象外）。
       renderFullReport(root, resultsV2, code);
       return;
     }

@@ -54,7 +54,22 @@ function trackEvent(name, params) {
   if (typeof gtag === 'function') gtag('event', name, params || {});
 }
 
-// メルマガ同意をすでに選択済みなら、結果画面で毎回聞き直さない。
+/* ============================================================
+   メール配信（Kit）の同意（2026-10-06 統合指示書 §10〜§13）
+   - マイページ登録・診断保存だけでは Kit へ登録しない。明示的な同意（チェック）がある場合だけ。
+   - 未チェックは false として記録する（未回答の null とは区別する）。
+   - 順序：認証 → 診断保存 → 同意記録 → Kit同期。Kit の失敗で保存・登録を失敗扱いにしない。
+   - 同意記録を確認できない場合（列が無い・型が違う・RLSで書けない等）は Kit へ送らない（fail-closed）。
+   - 判断済み（true/false）のユーザーには再表示せず、保存のたびに Kit を呼ばない。
+   - OAuth 往復中の選択は、診断の pending とは別キーで一時保持する。
+   ============================================================ */
+const NEWSLETTER_CONSENT_KEY = 'pendingNewsletterConsent_v1';
+const NEWSLETTER_CONSENT_SOURCE = 'mypage_signup';
+const NEWSLETTER_CONSENT_VERSION = '2026-10-06-v1';
+const NEWSLETTER_CONSENT_TTL_MS = 24 * 60 * 60 * 1000;
+
+// 判断済み（true または false が記録済み）なら、結果画面で毎回聞き直さない。
+// 読めない・型が確認できない場合は「未判断」として扱う（表示はするが、記録できなければ送らない）。
 async function hasDecidedNewsletter() {
   const user = await getCurrentUser();
   if (!user) return false;
@@ -63,16 +78,139 @@ async function hasDecidedNewsletter() {
     .select('newsletter_opted_in')
     .eq('id', user.id)
     .single();
-  if (error) return false;
-  return data && data.newsletter_opted_in !== null;
+  if (error || !data) return false;
+  return typeof data.newsletter_opted_in === 'boolean';
 }
 
+// 同意判断を profiles へ記録し、書き戻された値で記録できたことを確かめる。
+// 戻り値 ok:true は「値・版が確かに保存された」場合だけ。それ以外は Kit へ送らない。
 async function recordNewsletterDecision(userId, optedIn) {
-  if (!userId || optedIn === null || optedIn === undefined) return;
-  await supabaseClient
-    .from('profiles')
-    .update({ newsletter_opted_in: !!optedIn, newsletter_opted_in_at: new Date().toISOString() })
-    .eq('id', userId);
+  if (!userId || typeof optedIn !== 'boolean') return { ok: false, reason: 'invalid_input' };
+  try {
+    const { data, error } = await supabaseClient
+      .from('profiles')
+      .update({
+        newsletter_opted_in: optedIn,
+        newsletter_opted_in_at: new Date().toISOString(),
+        newsletter_consent_source: NEWSLETTER_CONSENT_SOURCE,
+        newsletter_consent_version: NEWSLETTER_CONSENT_VERSION,
+      })
+      .eq('id', userId)
+      .select('newsletter_opted_in, newsletter_consent_version')
+      .single();
+    if (error || !data) return { ok: false, reason: 'record_failed' };
+    if (data.newsletter_opted_in !== optedIn || data.newsletter_consent_version !== NEWSLETTER_CONSENT_VERSION) {
+      return { ok: false, reason: 'record_unverified' };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, reason: 'record_failed' };
+  }
+}
+
+// 結果画面で選んだ値を一時保持する（null＝今回は聞いていない＝何もしない）。
+function stashNewsletterConsent(optIn) {
+  if (typeof optIn !== 'boolean') return;
+  try {
+    localStorage.setItem(NEWSLETTER_CONSENT_KEY, JSON.stringify({
+      optIn, source: NEWSLETTER_CONSENT_SOURCE, version: NEWSLETTER_CONSENT_VERSION, createdAt: Date.now(),
+    }));
+  } catch (e) { /* 保存できなくても診断保存は続ける */ }
+}
+function readNewsletterConsent() {
+  try {
+    const raw = localStorage.getItem(NEWSLETTER_CONSENT_KEY);
+    if (!raw) return null;
+    const c = JSON.parse(raw);
+    if (!c || typeof c.optIn !== 'boolean' || c.version !== NEWSLETTER_CONSENT_VERSION
+      || !(Date.now() - Number(c.createdAt) < NEWSLETTER_CONSENT_TTL_MS)) {
+      clearNewsletterConsent();
+      return null;
+    }
+    return c;
+  } catch (e) {
+    clearNewsletterConsent();
+    return null;
+  }
+}
+function clearNewsletterConsent() {
+  try { localStorage.removeItem(NEWSLETTER_CONSENT_KEY); } catch (e) { /* noop */ }
+}
+
+let newsletterConsentInFlight = false;
+// 保存が済んだ後に呼ぶ。一時保持した選択を記録し、同意 true が確かに記録できた場合だけ Kit へ同期する。
+// 一時保持（pendingNewsletterConsent_v1）は、DB記録と（同意 true の場合は）Kit同期が完了するまで消さない。
+//   ・DB の読取失敗・型不正・書込失敗・書込確認失敗 → 保持したまま（Kit は呼ばない。次回再試行）
+//   ・false を記録できた → 削除（Kit は呼ばない）
+//   ・true を記録し Kit 同期に成功 → 削除／Kit 同期に失敗 → 保持（次回再試行。保存は成功のまま・赤いエラーなし）
+//   ・DB が既に true で、保持も true → Kit 同期の再試行として扱う（成功で削除・失敗で保持）
+//   ・DB が既に false、または保存済みの判断と保持中の選択が食い違う → DB を上書きせず、保持を破棄
+async function processPendingNewsletterConsent() {
+  if (newsletterConsentInFlight) return { skipped: 'in_flight' };
+  // 最初の await より前に印を付ける（同時に呼ばれても Kit 同期を二重にしない）
+  newsletterConsentInFlight = true;
+  const ga = (name, extra) => trackEvent(name, Object.assign({ entry_point: NEWSLETTER_CONSENT_SOURCE, consent_version: NEWSLETTER_CONSENT_VERSION }, extra || {}));
+  // Kit 同期：成功した時だけ保持を消す
+  const syncToKit = async () => {
+    const synced = await subscribeToNewsletter();
+    ga(synced.ok ? 'newsletter_subscribe_success' : 'newsletter_subscribe_error');
+    if (synced.ok) clearNewsletterConsent();
+    return synced.ok;
+  };
+  try {
+    const consent = readNewsletterConsent();
+    if (!consent) return { skipped: 'no_consent' };
+    // 診断の保存がまだ終わっていない間は待つ（認証 → 診断保存 → 同意記録 → Kit同期）
+    const v2Pending = typeof readPendingDiagnosisV2 === 'function' ? readPendingDiagnosisV2() : null;
+    if (readPendingDiagnosis() || v2Pending) return { skipped: 'save_pending' };
+    const user = await getCurrentUser();
+    if (!user) return { skipped: 'not_authenticated' };
+
+    const { data: current, error: readError } = await supabaseClient
+      .from('profiles')
+      .select('newsletter_opted_in')
+      .eq('id', user.id)
+      .single();
+    if (readError || !current) {
+      ga('newsletter_subscribe_error', { reason: 'consent_unverifiable' });
+      return { ok: false, reason: 'consent_unverifiable' }; // 保持したまま（次回再試行）
+    }
+    const decided = current.newsletter_opted_in;
+    if (decided === true) {
+      if (consent.optIn === true) {
+        // 前回 DB 記録後に Kit 同期が失敗していた場合の再試行
+        const ok = await syncToKit();
+        return { ok: true, synced: ok, retried: true };
+      }
+      clearNewsletterConsent(); // 保存済みの判断と食い違う：上書きしない
+      return { skipped: 'already_decided' };
+    }
+    if (decided === false) {
+      clearNewsletterConsent(); // 以前の判断（停止）を、診断保存だけで変えない
+      return { skipped: 'already_decided' };
+    }
+    if (decided !== null && decided !== undefined) {
+      return { ok: false, reason: 'unexpected_type' }; // 型が確認できない：送らず保持
+    }
+
+    const recorded = await recordNewsletterDecision(user.id, consent.optIn);
+    if (!recorded.ok) {
+      ga('newsletter_subscribe_error', { reason: recorded.reason });
+      return { ok: false, reason: recorded.reason }; // 保持したまま（次回再試行）
+    }
+    ga(consent.optIn ? 'newsletter_opt_in' : 'newsletter_opt_out');
+    if (!consent.optIn) {
+      clearNewsletterConsent();
+      return { ok: true, synced: false };
+    }
+    const ok = await syncToKit();
+    return { ok: true, synced: ok };
+  } catch (e) {
+    ga('newsletter_subscribe_error', { reason: 'exception' });
+    return { ok: false, reason: 'exception' };
+  } finally {
+    newsletterConsentInFlight = false;
+  }
 }
 
 /* ============================================================
@@ -218,6 +356,8 @@ function stashPendingDiagnosis(answers, results, encodedAnswers, newsletterOptIn
     // 潰すと、以前の同意を再診断のたびに拒否へ上書きしてしまう。
     newsletterOptIn: newsletterOptIn == null ? null : !!newsletterOptIn,
   };
+  // メール配信の選択は診断の pending とは別に一時保持し、保存完了後に processPendingNewsletterConsent() が扱う
+  if (pending.newsletterOptIn !== null) stashNewsletterConsent(pending.newsletterOptIn);
   try {
     localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
   } catch (e) {
@@ -336,18 +476,23 @@ function classifyError(error) {
   return 'unknown';
 }
 
-// メルマガ同意があった場合にサーバー経由でKitへ登録する。
-// 失敗しても診断結果の保存自体には影響させない（サイレントに諦める）。
-async function subscribeToNewsletter(email) {
-  if (!email) return;
+// 同意が記録された本人だけを、サーバー経由でKitへ登録する。
+// メールアドレスはブラウザから送らない。サーバーが認証トークンから本人のメールを取得し、
+// DB上の同意 true を確認してから送る。失敗しても診断結果の保存には影響させない（画面に赤いエラーを出さない）。
+async function subscribeToNewsletter() {
   try {
-    await fetch('/api/subscribe', {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const accessToken = session && session.access_token;
+    if (!accessToken) return { ok: false, status: 401 };
+    const res = await fetch('/api/subscribe', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + accessToken },
+      body: JSON.stringify({ consentVersion: NEWSLETTER_CONSENT_VERSION }),
     });
+    return { ok: res.ok, status: res.status };
   } catch (e) {
-    console.error('newsletter subscribe failed:', e);
+    console.error('newsletter subscribe failed');
+    return { ok: false, status: 0 };
   }
 }
 
@@ -370,13 +515,8 @@ supabaseClient.auth.onAuthStateChange(async (event, session) => {
     if (result.ok) {
       clearPendingDiagnosis();
       updateSaveButtonUI('saved');
-      if (pending.newsletterOptIn !== null && pending.newsletterOptIn !== undefined) {
-        const user = await getCurrentUser();
-        if (user) {
-          await recordNewsletterDecision(user.id, pending.newsletterOptIn);
-          if (pending.newsletterOptIn) subscribeToNewsletter(user.email);
-        }
-      }
+      // 保存完了後に同意を記録し、同意 true を確認できた場合だけ Kit 同期（失敗しても保存は成功のまま）
+      await processPendingNewsletterConsent().catch(() => {});
       // mypage.html上で認証復帰した場合、保存直後の履歴を同じ画面へ反映する。
       if (typeof window.refreshMypageHistory === 'function') {
         await window.refreshMypageHistory();
@@ -409,10 +549,7 @@ async function handleSaveResultClick(answers, results, encodedAnswers, diagnosis
     if (result.ok) {
       clearPendingDiagnosis();
       updateSaveButtonUI('saved');
-      if (pending.newsletterOptIn !== null && pending.newsletterOptIn !== undefined) {
-        await recordNewsletterDecision(user.id, pending.newsletterOptIn);
-        if (pending.newsletterOptIn) subscribeToNewsletter(user.email);
-      }
+      await processPendingNewsletterConsent().catch(() => {});
     } else {
       updateSaveButtonUI('error');
     }

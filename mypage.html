@@ -18,6 +18,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="diagnosis-save.js"></script>
+<!-- 完全解析（46ページ）の表示用状態。PREVIEW ONLY：購入権は発行しない -->
+<script src="complete-analysis.js"></script>
 <!-- eti_v2_save.jsは保存自体は行わないが（mypage.htmlは閲覧専用）、
      v2結果画面からGoogleログイン経由で戻ってきた際のpending保存
      （onAuthStateChangeリスナー）を成立させるために読み込む。 -->
@@ -787,6 +789,160 @@
   .mp-uid { font-family: monospace; font-size: 10.5px; word-break: break-all; color: var(--fg-dim); }
 
   @media (prefers-reduced-motion: reduce) { .mp-collection { scroll-behavior: auto; } }
+
+  /* ============================================================
+     完全解析（PREVIEW ONLY の状態表示）：右上の小さな入口・状態別シート・complete記録の静かな強調
+     既存の集計・LOCKED・解析レポート導線は変更しない。追従・点滅・回転はしない。
+     色は役割ごとのトークンで分ける（白一色にしない）：
+       見出し --ca-title／本文 --ca-body／補足・英字 --ca-muted／罫 --ca-line／価格・補助 --ca-gold
+       人物像 --ca-mirror・--ca-hidden・--ca-mentor／元素色 --ca-el（最新結果から渡す）
+     ============================================================ */
+  :root {
+    --ca-title: #e0dcf0; --ca-body: #aaa5bb; --ca-muted: #817b96; --ca-line: #2d2944;
+    --ca-gold: #c9a860; --ca-mirror: #83b9da; --ca-hidden: #ac82d4; --ca-mentor: #d3ad68;
+    --ca-view: #9fc3dd;
+  }
+  .archive-header__topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .archive-upgrade-trigger {
+    position: relative; flex: none; height: 36px; padding: 0 14px; border-radius: 10px;
+    background: rgba(10, 12, 24, .72); color: var(--fg); font-family: inherit; font-size: 12.5px; letter-spacing: .06em; white-space: nowrap; cursor: pointer;
+    border: 1px solid color-mix(in srgb, var(--uc, #7ab8e8) 26%, transparent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--uc, #7ab8e8) 6%, transparent);
+    transition: border-color .2s, color .2s, box-shadow .2s;
+  }
+  /* 見た目は36px、タップ領域は44px相当を確保する */
+  .archive-upgrade-trigger::after { content: ''; position: absolute; inset: -4px -2px; }
+  .archive-upgrade-trigger:hover, .archive-upgrade-trigger:focus-visible {
+    border-color: color-mix(in srgb, var(--uc, #7ab8e8) 48%, transparent); color: #ece6fa;
+    box-shadow: 0 0 12px color-mix(in srgb, var(--uc, #7ab8e8) 9%, transparent);
+  }
+  .archive-upgrade-trigger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .archive-upgrade-trigger.is-ready { border-color: color-mix(in srgb, var(--uc, #7ab8e8) 38%, transparent); color: #e6e0f4; }
+  @media (max-width: 340px) { .archive-upgrade-trigger { font-size: 11px; padding: 0 10px; } }
+
+  /* ---- シートの外枠（モバイル：下から／デスクトップ：中央） ---- */
+  .ca-overlay { position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, .68); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .ca-overlay[hidden] { display: none; }
+  .ca-sheet {
+    position: relative; display: flex; flex-direction: column; width: min(480px, 100%); max-height: 80vh;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--ca-el-line, #7ab8e8) 5%, #0d0d1a), #0b0c17 220px);
+    color: var(--ca-body); border-radius: 14px; overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--ca-el-line, #7ab8e8) 35%, transparent);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .55);
+  }
+  .ca-sheet::before { content: ''; position: absolute; top: 0; left: 12%; right: 12%; height: 1px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--ca-el, #7ab8e8) 80%, #ffffff), transparent); }
+  .ca-sheet:focus { outline: none; }
+  /* 閉じるボタンはスクロールしない帯に置き、本文と重ならない */
+  .ca-sheet-bar { flex: none; display: flex; justify-content: flex-end; height: 46px; padding: 2px 4px 0; }
+  .ca-close { width: 44px; height: 44px; border: none; border-radius: 50%; background: transparent; color: var(--ca-muted); font-size: 19px; line-height: 1; cursor: pointer; font-family: inherit; position: relative; }
+  .ca-close::before { content: ''; position: absolute; inset: 8px; border-radius: 50%; background: #15142a; border: 1px solid var(--ca-line); z-index: -1; }
+  .ca-close { z-index: 0; isolation: isolate; }
+  .ca-close:hover, .ca-close:focus-visible { color: var(--ca-title); }
+  .ca-close:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .ca-sheet-scroll { overflow-y: auto; overscroll-behavior: contain; padding: 0 20px 26px; -webkit-overflow-scrolling: touch; }
+  @media (max-width: 599px) {
+    .ca-overlay { align-items: flex-end; padding: 0; }
+    .ca-sheet { width: 100%; max-height: 85vh; max-height: 85dvh; border-radius: 18px 18px 0 0; border-bottom: none; }
+    .ca-sheet-scroll { padding-bottom: calc(26px + env(safe-area-inset-bottom, 0px)); }
+  }
+
+  /* ---- 文字の役割 ---- */
+  .ca-eyebrow { font-family: 'IM Fell English', serif; font-size: 10.5px; letter-spacing: .2em; color: var(--ca-muted); text-transform: uppercase; }
+  .ca-meta { font-size: 11px; color: var(--ca-muted); line-height: 1.7; letter-spacing: .04em; }
+  .ca-title { font-size: 15px; font-weight: 700; color: var(--ca-title); letter-spacing: .06em; margin-top: 4px; }
+  .ca-body { font-size: 12.5px; color: var(--ca-body); line-height: 1.9; margin-top: 6px; }
+  .ca-status { font-size: 10.5px; letter-spacing: .14em; color: var(--ca-gold); border: 1px solid color-mix(in srgb, var(--ca-gold) 45%, transparent); border-radius: 4px; padding: 1px 7px; white-space: nowrap; }
+  .ca-card-head, .ca-rec-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+
+  /* ---- 冒頭の記録票 ---- */
+  .ca-record-slip { border-bottom: 1px solid var(--ca-line); padding: 2px 0 16px; }
+  .ca-record-slip .ca-meta { margin-top: 2px; }
+  .ca-slip-combo { margin-top: 8px; font-size: 19px; font-weight: 700; letter-spacing: .06em; line-height: 1.5; }
+  .ca-slip-combo .mp-x { color: #4f4a66; }
+  .ca-slip-code { margin-top: 2px; font-size: 12px; letter-spacing: .06em; }
+  .ca-slip-typecode { font-family: 'IM Fell English', serif; color: color-mix(in srgb, var(--ca-el, #7ab8e8) 70%, #0b0c17); font-weight: 700; }
+  .ca-slip-sep { color: #4f4a66; margin: 0 4px; }
+  .ca-slip-typename { color: var(--ca-body); }
+  .ca-lead { margin-top: 20px; padding-left: 12px; border-left: 2px solid color-mix(in srgb, var(--ca-el, #7ab8e8) 75%, transparent); font-size: 14px; font-weight: 400; color: var(--ca-body); line-height: 1.85; letter-spacing: .04em; }
+  .ca-state-head { margin-top: 24px; }
+  .ca-state-head .ca-lead { margin-top: 6px; }
+  .ca-state-title { word-break: auto-phrase; margin-top: 8px; font-size: 18px; font-weight: 700; color: var(--ca-el, var(--ca-title)); letter-spacing: .05em; line-height: 1.6; }
+  .ca-state-head.is-unknown .ca-state-title { color: var(--ca-view); font-size: 15px; }
+  .ca-state-head.is-unknown .ca-body { color: var(--ca-muted); }
+
+  /* ---- 商品カード ---- */
+  .ca-card { margin-top: 24px; }
+  .ca-card--primary {
+    position: relative; padding: 18px 16px 16px; border-radius: 10px;
+    background: color-mix(in srgb, var(--ca-el-line, #7ab8e8) 6%, #111223);
+    border: 1px solid color-mix(in srgb, var(--ca-el-line, #7ab8e8) 34%, var(--ca-line));
+  }
+  .ca-card--primary::before { content: ''; position: absolute; left: 14px; right: 14px; top: -1px; height: 1px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--ca-el, #7ab8e8) 85%, #ffffff), transparent); }
+  .ca-card--secondary { padding: 24px 2px 4px; border-top: 1px solid var(--ca-line); }
+  .ca-card--secondary.is-sole { padding-top: 20px; }
+  .ca-card--secondary .ca-title { margin-top: 6px; }
+
+  /* 観測項目：1枚の暗色面を細罫で4区画に分ける（箇条書き・チェック・鍵は並べない） */
+  .ca-observation-grid { margin: 14px 0 0; display: grid; grid-template-columns: 1fr; border: 1px solid var(--ca-line); border-radius: 8px; background: rgba(8, 8, 18, .55); overflow: hidden; }
+  .ca-observation-item { padding: 11px 14px 12px; }
+  .ca-observation-item + .ca-observation-item { border-top: 1px solid var(--ca-line); }
+  .ca-observation-item dt { font-size: 13.5px; font-weight: 700; letter-spacing: .1em; color: var(--ca-el, #7ab8e8); }
+  .ca-observation-item.is-gold dt { color: var(--ca-gold); }
+  .ca-observation-item dd { margin-top: 3px; font-size: 12px; color: var(--ca-body); line-height: 1.75; }
+  @media (min-width: 420px) {
+    .ca-observation-grid { grid-template-columns: 1fr 1fr; }
+    .ca-observation-item + .ca-observation-item { border-top: none; }
+    .ca-observation-item:nth-child(n+3) { border-top: 1px solid var(--ca-line); }
+    .ca-observation-item:nth-child(2n) { border-left: 1px solid var(--ca-line); }
+  }
+
+  /* 三つの観測レンズ：左の色線と英字の色、日本語説明で区別する（色が無くても見出しと位置で判別できる） */
+  .ca-lens-list { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--ca-line); }
+  .ca-lens { position: relative; padding: 12px 2px 12px 14px; border-bottom: 1px solid var(--ca-line); }
+  .ca-lens::before { content: ''; position: absolute; left: 0; top: 12px; bottom: 12px; width: 2px; border-radius: 1px; background: var(--lens-c); }
+  .ca-lens--mirror { --lens-c: var(--ca-mirror); }
+  .ca-lens--hidden { --lens-c: var(--ca-hidden); }
+  .ca-lens--mentor { --lens-c: var(--ca-mentor); }
+  .ca-lens-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .ca-lens-en { font-family: 'IM Fell English', serif; font-size: 13px; letter-spacing: .16em; color: var(--lens-c); }
+  /* 人数・ページ数：日本語が主、英語は小さな補助 */
+  .ca-lens-count, .ca-pages { display: inline-flex; flex-direction: column; align-items: flex-end; flex: none; line-height: 1.3; white-space: nowrap; }
+  .ca-lens-count-ja { font-size: 12px; color: var(--ca-body); letter-spacing: .06em; }
+  .ca-lens-count-en, .ca-pages-en { font-family: 'IM Fell English', serif; font-size: 9.5px; letter-spacing: .16em; color: var(--ca-muted); }
+  .ca-pages-ja { font-size: 12px; color: var(--ca-gold); letter-spacing: .08em; }
+  .ca-card-head .ca-eyebrow, .ca-rec-head .ca-eyebrow { align-self: flex-start; margin-top: 2px; }
+  .ca-lens-desc { display: block; margin-top: 2px; font-size: 12.5px; color: var(--ca-body); line-height: 1.75; }
+  .ca-integration { margin-top: 14px; }
+
+  /* 価格は説明の後に一呼吸置いて、淡い金色で */
+  .ca-price-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-top: 20px; padding-top: 12px; border-top: 1px dashed var(--ca-line); }
+  .ca-price { flex: none; font-family: 'IM Fell English', serif; font-size: 17px; letter-spacing: .06em; color: var(--ca-gold); white-space: nowrap; }
+
+  /* ---- ボタン：主＝既存解析レポートと同じ塗り／副＝透明＋元素色の枠／閲覧＝透明＋淡い青 ---- */
+  .ca-btn { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 12px; padding: 10px 12px; border-radius: 8px; font-family: inherit; font-size: 14px; font-weight: 700; letter-spacing: .08em; text-decoration: none; cursor: pointer; }
+  .ca-primary-action { background: linear-gradient(135deg, #1a4a78, #2a6a9a); border: 1px solid #2a6a9a; color: #e0f4ff; }
+  .ca-secondary-action { background: transparent; border: 1px solid color-mix(in srgb, var(--ca-el-line, var(--lc, #7ab8e8)) 55%, var(--ca-line)); color: var(--ca-title); font-weight: 400; }
+  .ca-view-action { background: transparent; border: 1px solid color-mix(in srgb, var(--ca-view) 40%, var(--ca-line)); color: var(--ca-view); font-weight: 400; }
+  .ca-quiet-action { background: transparent; border: 1px solid var(--ca-line); color: var(--ca-muted); font-weight: 400; font-size: 13px; min-height: 44px; }
+  .ca-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .ca-btn[disabled], .ca-btn[aria-disabled="true"] { opacity: .75; cursor: default; color: var(--ca-muted); border-color: var(--ca-line); border-style: dashed; background: transparent; }
+  .ca-preview-note { margin-top: 10px; padding-left: 8px; border-left: 2px solid var(--ca-line); font-size: 11px; color: var(--ca-muted); line-height: 1.7; }
+  .ca-ineligible { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--ca-line); }
+  .ca-ineligible .ca-body { color: var(--ca-muted); }
+  .ca-msg { font-size: 11.5px; color: var(--ca-view); line-height: 1.7; margin-top: 8px; }
+
+  /* complete（ready）の記録だけ、紋章・四隅・外周線・ラベル・ボタンを一段深くする。白飛びさせない。 */
+  .mp-chip.complete, .mp-badge .st.complete { border-color: color-mix(in srgb, var(--ca-gold) 70%, transparent); color: var(--ca-gold); background: color-mix(in srgb, var(--ca-gold) 10%, transparent); letter-spacing: .14em; }
+  .mp-badge .st.complete { border-style: solid; border-radius: 4px; font-weight: 700; opacity: 1; }
+  .is-complete.state-insight { box-shadow: 0 0 14px color-mix(in srgb, var(--lc, var(--badge-c, #7ab8e8)) 18%, transparent), inset 0 0 18px color-mix(in srgb, var(--lc, var(--badge-c, #7ab8e8)) 8%, transparent); }
+  .is-complete .mp-orn { border-color: color-mix(in srgb, var(--oc) 46%, transparent); }
+  .is-complete .mp-orn .k { opacity: 1; box-shadow: 0 0 5px color-mix(in srgb, var(--oc) 60%, transparent); }
+  .is-complete .mp-emblem img { filter: drop-shadow(0 0 9px color-mix(in srgb, var(--c, #7ab8e8) 40%, transparent)); }
+  .ca-rec-complete { margin-top: 12px; padding: 12px 14px 14px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--lc, #7ab8e8) 34%, var(--ca-line)); background: rgba(10, 12, 24, .5); }
+  .ca-rec-complete .ca-body { margin-top: 6px; }
+  .ca-rec-complete .ca-btn { margin-top: 10px; }
+  .ca-rec-complete.is-ready .ca-secondary-action { border-color: color-mix(in srgb, var(--lc, #7ab8e8) 62%, var(--ca-gold)); box-shadow: 0 0 8px color-mix(in srgb, var(--lc, #7ab8e8) 14%, transparent); }
+  @media (prefers-reduced-motion: reduce) { .archive-upgrade-trigger { transition: none; } }
 
 </style>
 </head>
@@ -1638,8 +1794,11 @@ function mpArchiveHtml(records) {
     ? `<span class="mp-stat-num">${pad(records.filter(r => r.purchased).length)}</span>`
     : `<span class="mp-stat-num unknown" aria-label="確認できませんでした">--</span>`;
   return `
-    <section class="mp-archive" aria-labelledby="mp-archive-title">
-      <div class="mp-archive-eyebrow">MY ARCHIVE</div>
+    <section class="mp-archive archive-header" aria-labelledby="mp-archive-title">
+      <div class="archive-header__topline">
+        <div class="mp-archive-eyebrow archive-header__eyebrow">MY ARCHIVE</div>
+        ${caTriggerHtml(records[0])}
+      </div>
       <h1 class="mp-archive-title" id="mp-archive-title">あなたの記録</h1>
       <p class="mp-archive-desc">これまでに見つめてきた、いくつもの「自分」が<br>ここに記録されています。</p>
       <div class="mp-stats"${records[0] ? ` style="--sc:${mpElText(records[0].el)};--sc2:${MP_EL_GLOW_END[records[0].el] || records[0].color}"` : ''}>
@@ -1661,18 +1820,18 @@ function mpLatestHtml(r) {
   if (!mpEntitlementOk) {
     state = `<div class="mp-notice"><p>この記録の購入状態を確認できませんでした</p></div>`;
   } else if (r.purchased) {
-    state = mpInsightHtml(r) + mpReadReportBtn(r);
+    state = mpInsightHtml(r) + mpReadReportBtn(r) + caRecordCompleteHtml(r);
   } else {
     state = mpLockedHtml(r, 'latest');
   }
   return `
     <section class="mp-sec" aria-labelledby="mp-latest-h">
       <div class="mp-sec-head" id="mp-latest-h"><span class="mp-sec-en">LATEST RESULT</span><span class="mp-sec-ja">最新のあなた</span></div>
-      <div class="mp-latest state-${r.purchased ? 'insight' : 'record'}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}">${r.purchased && mpEntitlementOk ? mpOrnHtml(r, r.color, MP_EL_GLOW_END[r.el] || r.color) : ''}
+      <div class="mp-latest state-${r.purchased ? 'insight' : 'record'}${caIsReady(r) ? ' is-complete' : ''}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}">${r.purchased && mpEntitlementOk ? mpOrnHtml(r, r.color, MP_EL_GLOW_END[r.el] || r.color) : ''}
         <div class="mp-latest-main">
           ${mpEmblemHtml(r, 'lg')}
           <div class="mp-latest-info">
-            <div class="mp-chip-row"><span class="mp-chip">${mpDate(r.date)}</span><span class="mp-chip new">NEW</span>${mpEntitlementOk && !r.purchased ? '<span class="mp-chip locked" title="まだ読み解いていない記録">LOCKED</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}</div>
+            <div class="mp-chip-row"><span class="mp-chip">${mpDate(r.date)}</span><span class="mp-chip new">NEW</span>${mpEntitlementOk && !r.purchased ? '<span class="mp-chip locked" title="まだ読み解いていない記録">LOCKED</span>' : ''}${caIsReady(r) ? '<span class="mp-chip complete">COMPLETE</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}</div>
             ${r.code ? `<div class="mp-latest-code"><b class="mp-typecode mp-gt" style="color:${mpElText(r.el)};--gc:${mpElText(r.el)}">${r.code}</b><span class="mp-gt" style="color:${mpElText(r.el)};--gc:${mpElText(r.el)};opacity:.85">${r.typeName}</span></div>` : ''}
             <div class="mp-latest-combo">${mpComboHtml(r)}</div>
           </div>
@@ -1701,15 +1860,15 @@ function mpCollectionHtml(records) {
       <div class="mp-collection" id="mp-collection" role="list">
         ${records.map((r, i) => `
           <button type="button" role="listitem"
-            class="mp-badge state-${r.purchased ? 'insight' : 'record'}"
+            class="mp-badge state-${r.purchased ? 'insight' : 'record'}${caIsReady(r) ? ' is-complete' : ''}"
             style="--badge-c:${r.color};--badge-c2:${MP_EL_GLOW_END[r.el] || r.color}"
             onclick="mpOpenRecord(${i})"
-            aria-label="${mpDate(r.date)}の${MP_KINDS[r.kind].label}の記録（${r.purchased ? 'INSIGHT・深く読み解いた記録' : mpEntitlementOk ? '記録' : '購入状態未確認'}）">
+            aria-label="${mpDate(r.date)}の${MP_KINDS[r.kind].label}の記録（${caIsReady(r) ? 'COMPLETE・完全解析が保存された記録' : r.purchased ? 'INSIGHT・深く読み解いた記録' : mpEntitlementOk ? '記録' : '購入状態未確認'}）">
             ${r.purchased ? mpOrnHtml(r, r.color, MP_EL_GLOW_END[r.el] || r.color) : ''}
             ${mpEmblemHtml(r)}
             <span class="nm" style="color:${mpElText(r.el)}">${r.name}</span>
             <span class="dt">${mpDate(r.date)}</span>
-            ${r.purchased ? '<span class="st insight">INSIGHT</span>' : mpEntitlementOk ? '<span class="st" title="まだ読み解いていない記録">LOCKED</span>' : ''}
+            ${caIsReady(r) ? '<span class="st complete">COMPLETE</span>' : r.purchased ? '<span class="st insight">INSIGHT</span>' : mpEntitlementOk ? '<span class="st" title="まだ読み解いていない記録">LOCKED</span>' : ''}
           </button>`).join('')}
       </div>
       ${records.length >= 4 ? `<button type="button" class="mp-col-next" onclick="mpCollectionNext()" aria-label="記録章の続きを見る（全${records.length}件）">›</button>` : ''}
@@ -1743,14 +1902,14 @@ function mpRecordHtml(r, i) {
   const detailLink = r.resultUrl
     ? `<a href="${r.resultUrl}" class="mp-detail-link" onclick="trackEvent('mypage_view_result_click',{source:'records'})">当時の診断結果を見る →</a>`
     : '';
-  const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${mpEntitlementOk && !r.purchased ? '<span class="mp-chip locked" title="まだ読み解いていない記録">LOCKED</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
+  const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${mpEntitlementOk && !r.purchased ? '<span class="mp-chip locked" title="まだ読み解いていない記録">LOCKED</span>' : ''}${caIsReady(r) ? '<span class="mp-chip complete">COMPLETE</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
   let body;
   if (!mpEntitlementOk) body = mpVizHtml(r) + `<div class="mp-notice"><p>この記録の購入状態を確認できませんでした</p></div>`;
   // 並び順は未購入と同じ：基本情報 → あなたに響く元素・MIRRORリング → 解析結果（購入済み）／まだ読み解いていないもの（未購入）
-  else if (r.purchased) body = mpVizHtml(r) + mpInsightHtml(r) + mpReadReportBtn(r);
+  else if (r.purchased) body = mpVizHtml(r) + mpInsightHtml(r) + mpReadReportBtn(r) + caRecordCompleteHtml(r);
   else body = mpVizHtml(r) + mpLockedHtml(r, 'records');
   return `
-    <details class="mp-rec state-${r.purchased ? 'insight' : 'record'}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}" id="mp-rec-${i}" ontoggle="if(this.open){trackEvent('diagnosis_history_open',{diagnosis_type:'${r.kind}'})}">
+    <details class="mp-rec state-${r.purchased ? 'insight' : 'record'}${caIsReady(r) ? ' is-complete' : ''}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}" id="mp-rec-${i}" ontoggle="if(this.open){trackEvent('diagnosis_history_open',{diagnosis_type:'${r.kind}'})}">
       <summary>${r.purchased && mpEntitlementOk ? mpOrnHtml(r, r.color, MP_EL_GLOW_END[r.el] || r.color) : ''}
         <span class="d">${mpDate(r.date)}</span>
         <span class="c">${r.headline ? `<span class="el" style="color:${r.color}">${r.headline}</span>` : mpComboHtml(r)}</span>
@@ -1865,6 +2024,364 @@ function mpAccountHtml(userOrUid) {
 }
 
 /* ============================================================
+   完全解析（46ページ）— 右上の入口と状態別シート【PREVIEW ONLY の状態表示】
+   - 入口は「最新の診断記録」にだけ作用する（アカウント全体の購入ではない）。
+   - 状態は記録（diagnosis_session_id）ごとに持つ。別の記録の状態・URLは参照しない。
+   - 完全解析の権利APIが無い間、実データの状態は unknown（free と推測せず、購入CTAを出さない）。
+   - ?preview_entitlement= は complete-analysis.js のガードを通った Preview でのみ有効。
+     Preview の状態は表示の確認用であり、購入権を発行しない（サーバー側の確認はそのまま働く）。
+   ============================================================ */
+const caStates = new Map(); // diagnosis_session_id → 表示用状態
+const caImpressions = new Set();
+function caAvailable() { return typeof CompleteAnalysis !== 'undefined' && CompleteAnalysis; }
+function caStateOf(r) { return (r && r.session && caStates.get(String(r.session.id || ''))) || null; }
+function caKey(r) { return caAvailable() ? CompleteAnalysis.stateKey(caStateOf(r)) : 'unknown'; }
+function caIsReady(r) { return caKey(r) === 'complete_ready'; }
+
+// 完全解析の適格性：保存された診断版・設問版と、回答が ETI v2 の100問として検証できるかで判定する（表示文字では判定しない）。
+function caEligibilityOf(r) {
+  const s = (r && r.session) || {};
+  let answersComplete = false;
+  try {
+    if (s.isV2 && s.encodedAnswers && typeof ETIv2 !== 'undefined' && typeof ETI_V2_QUESTIONS !== 'undefined') {
+      const a = ETIv2.decodeAnswersV2(s.encodedAnswers, ETI_V2_QUESTIONS);
+      answersComplete = !!a && ETIv2.validateAnswersV2(a, ETI_V2_QUESTIONS).valid === true;
+    }
+  } catch (e) { answersComplete = false; }
+  return CompleteAnalysis.completeEligibility({ diagnosisVersion: s.diagnosisVersion, itemSetVersion: s.itemSetVersion, answersComplete });
+}
+function caIsEligible(r) { const st = caStateOf(r); return !!(st && st.completeEligible); }
+
+function caApplyStates(records) {
+  caStates.clear();
+  if (!caAvailable() || !records.length) return;
+  const preview = CompleteAnalysis.previewStateName();
+  const past = CompleteAnalysis.previewPastStateName();
+  records.forEach((r, i) => {
+    const id = String((r.session && r.session.id) || '');
+    let st;
+    if (preview) {
+      // Preview fixture：最新記録だけ指定状態。preview_past があれば新しい順で2件目だけその状態。他は free。
+      st = CompleteAnalysis.previewState(i === 0 ? preview : (i === 1 && past) ? past : 'free', id);
+      // 表示の確認用に、既存の INSIGHT／LOCKED 表示も同じ fixture に揃える（権利は発行しない）
+      if (st.entitlementStatus === 'ok') r.purchased = st.analysisAccess;
+    } else {
+      st = CompleteAnalysis.realState({ analysisKnown: mpEntitlementOk, diagnosisSessionId: id });
+    }
+    // 不適格な記録（旧版など）は、Preview 指定があっても完全解析の状態・購入導線を成立させない
+    caStates.set(id, CompleteAnalysis.withEligibility(st, caEligibilityOf(r)));
+  });
+  // Preview の unknown は、既存の「購入状態を確認できませんでした」表示（購入導線なし）に揃える
+  if (preview) mpEntitlementOk = preview !== 'unknown';
+}
+
+const CA_TRIGGER_LABEL = { free: 'アップグレード', analysis: 'アップグレード', complete_generating: '準備中', complete_failed: '準備中', complete_ready: '完全解析', unknown: '状態を確認' };
+function caTriggerHtml(r) {
+  if (!r || !caAvailable() || !r.session || !r.session.id) return '';
+  const k = caKey(r);
+  // 完全解析の対象外で、解析レポートも購入済み（＝この記録に開ける導線が無い）なら入口を出さない
+  if (!caIsEligible(r) && k !== 'free' && k !== 'unknown') return '';
+  return `<button type="button" class="archive-upgrade-trigger${k === 'complete_ready' ? ' is-ready' : ''}" id="mpUpgradeTrigger"
+    aria-haspopup="dialog" aria-controls="latest-upgrade-dialog" aria-expanded="false" data-state="${k}"
+    style="--uc:${mpElText(r.el)}">${CA_TRIGGER_LABEL[k] || CA_TRIGGER_LABEL.unknown}</button>`;
+}
+
+// 各記録（LATEST RESULT／THE RECORDS）内の完全解析表示。complete の記録だけに出る。
+function caRecordCompleteHtml(r) {
+  const k = caKey(r);
+  const id = encodeURIComponent(String((r.session && r.session.id) || ''));
+  if (k === 'complete_ready') {
+    return `<div class="ca-rec-complete is-ready"><div class="ca-rec-head"><span class="ca-eyebrow">COMPLETE｜完全解析</span><span class="ca-pages"><span class="ca-pages-ja">全46ページ</span><span class="ca-pages-en">COMPLETE RECORD</span></span></div>
+      <p class="ca-body">この記録の完全解析が保存されています。</p>
+      <button type="button" class="ca-btn ca-secondary-action" data-session-id="${id}" onclick="openPurchasedComplete(decodeURIComponent(this.dataset.sessionId), this)">完全解析を開く ›</button></div>`;
+  }
+  if (k === 'complete_generating' || k === 'complete_failed') {
+    return `<div class="ca-rec-complete"><div class="ca-rec-head"><span class="ca-eyebrow">COMPLETE｜完全解析</span><span class="ca-status">準備中</span></div>
+      <p class="ca-body">完全解析を準備しています。解析レポートは、すでに確認できます。</p></div>`;
+  }
+  return '';
+}
+
+// 冒頭の「記録票」：最新結果の組合せを既存ページと同じ意味色（元素・武器・国家）で示す
+function caTargetHtml(r) {
+  return `<div class="ca-record-slip">
+      <div class="ca-eyebrow">LATEST OBSERVATION</div>
+      <div class="ca-meta">最新の記録</div>
+      <div class="ca-slip-combo">${mpComboHtml(r)}</div>
+      ${r.code ? `<div class="ca-slip-code"><span class="ca-slip-typecode">${r.code}</span>${r.typeName ? `<span class="ca-slip-sep">｜</span><span class="ca-slip-typename">${r.typeName}</span>` : ''}</div>` : ''}
+    </div>`;
+}
+// 完全解析の購入先。適格な記録で、購入可能な状態のときだけ返す（それ以外は null）
+function caCompleteCheckoutHref(r) {
+  return caAvailable() ? CompleteAnalysis.completeCheckoutHref(caStateOf(r)) : null;
+}
+function caDummyAttrs(offer, r) {
+  return `href="${caCompleteCheckoutHref(r)}" target="_blank" rel="noopener" data-preview-dummy="true"
+    data-offer="${offer.offer}" data-product-id="${offer.productId}" data-diagnosis-session-id="${encodeURIComponent(String(r.session.id))}"`;
+}
+const CA_PREVIEW_NOTE = '<p class="ca-preview-note">Preview：テスト用のダミー決済リンクです。完全解析の権利は発行されません。</p>';
+
+// 解析レポートの観測項目（箇条書きにせず、1枚の暗色面を細罫で4区画に分ける）
+function caObservationGridHtml(r) {
+  const items = [
+    ['気質', '考え方と感じ方に表れる、基本的な傾向'],
+    r.isLegacy ? ['動機', 'あなたを行動へ向かわせる、心の奥の動き'] : ['行動', '人や物事へ向かうときの、自然な動き方'],
+    ['価値観', '大切にするものと、選択を支える判断軸'],
+    ['人物像', '近しいキャラクター4名と、その一致理由'],
+  ];
+  return `<dl class="ca-observation-grid">${items.map(([t, d], i) =>
+    `<div class="ca-observation-item${i % 2 ? ' is-gold' : ''}"><dt>${t}</dt><dd>${d}</dd></div>`).join('')}</dl>`;
+}
+// 完全解析の三つの人物像（MIRROR／HIDDEN SHAPE／MENTOR）と統合の一文
+function caLensBlockHtml() {
+  return `${CompleteAnalysis.lensListHtml('persons')}
+    <p class="ca-body ca-integration">${CompleteAnalysis.INTEGRATION_TEXT}</p>`;
+}
+
+function caAnalysisCardHtml(r) {
+  return `<section class="ca-card ca-card--primary" aria-label="解析レポート">
+        <div class="ca-eyebrow">STRUCTURE / INTERPRETATION</div>
+        <h3 class="ca-title">解析レポート</h3>
+        <p class="ca-body">この結果の内側にある、考え方・動き方・選び方を観測します。</p>
+        ${caObservationGridHtml(r)}
+        <div class="ca-price-row"><span class="ca-meta">この記録の解析レポート</span><span class="ca-price">${MP_REPORT_PRICE}</span></div>
+        <div data-ca-cta="analysis_checkout_click">${v2ReportCta(purchaseUrlFor(r.session), 'ca-btn ca-primary-action', 'mypage_header', 'この記録の分析を見る')}</div>
+      </section>`;
+}
+// 既存の RE-DIAGNOSIS へ案内する（新しい導線は作らない）
+function caGoRediagnosis() {
+  const r = (window.__mpRecords || [])[0];
+  caCloseSheet(r);
+  const sec = document.getElementById('mp-rediag-h');
+  if (sec) sec.scrollIntoView({ behavior: window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+}
+
+function caSheetBodyHtml(r) {
+  const k = caKey(r);
+  const target = caTargetHtml(r);
+  const eligible = caIsEligible(r) && !!caCompleteCheckoutHref(r);
+  if (k === 'free' && !eligible) {
+    // 完全解析の対象外（旧版など）：解析レポートだけを示し、完全解析のセクション・購入導線は出さない
+    return `${target}
+      <h2 class="ca-lead" id="latest-upgrade-title">この記録に、もう一つ深い観測を加える。</h2>
+      ${caAnalysisCardHtml(r)}
+      <div class="ca-ineligible">
+        <p class="ca-body">完全解析（全46ページ）は、最新版の100問で診断した記録が対象です。この記録は以前の版のため、解析レポートのみご利用いただけます。</p>
+        <button type="button" class="ca-btn ca-quiet-action" onclick="caGoRediagnosis()">最新版で診断する（RE-DIAGNOSIS）</button>
+      </div>`;
+  }
+  if (k === 'free') {
+    const direct = CompleteAnalysis.OFFERS.direct;
+    return `${target}
+      <h2 class="ca-lead" id="latest-upgrade-title">この記録に、もう一つ深い観測を加える。</h2>
+      ${caAnalysisCardHtml(r)}
+      <section class="ca-card ca-card--secondary" aria-label="完全解析">
+        <div class="ca-card-head"><span class="ca-eyebrow">COMPLETE ANALYSIS</span><span class="ca-pages"><span class="ca-pages-ja">全46ページ</span><span class="ca-pages-en">COMPLETE RECORD</span></span></div>
+        <h3 class="ca-title">完全解析</h3>
+        <p class="ca-body">三つの人物像から、この結果の全体を統合します。</p>
+        ${caLensBlockHtml()}
+        <div class="ca-price-row"><span class="ca-meta">解析レポートの内容もすべて含まれます</span><span class="ca-price">${direct.price}</span></div>
+        <!-- PREVIEW ONLY：ダミー決済リンク -->
+        <a class="ca-btn ca-secondary-action" data-ca-cta="complete_checkout_click" ${caDummyAttrs(direct, r)}>この記録を完全解析する</a>
+        ${CA_PREVIEW_NOTE}
+      </section>`;
+  }
+  if (k === 'analysis' && eligible) {
+    const up = CompleteAnalysis.OFFERS.upgrade;
+    return `${target}
+      <div class="ca-state-head">
+        <div class="ca-eyebrow">ANALYSIS OBSERVED</div>
+        <h2 class="ca-lead" id="latest-upgrade-title">構造と解釈まで観測されています</h2>
+      </div>
+      <section class="ca-card ca-card--secondary is-sole" aria-label="完全解析">
+        <div class="ca-card-head"><span class="ca-eyebrow">COMPLETE ANALYSIS</span><span class="ca-pages"><span class="ca-pages-ja">全46ページ</span><span class="ca-pages-en">COMPLETE RECORD</span></span></div>
+        <h3 class="ca-title">完全解析</h3>
+        ${caLensBlockHtml()}
+        <div class="ca-price-row"><span class="ca-meta">対象：${mpComboText(r)}／この診断記録</span><span class="ca-price">追加 ${up.price}</span></div>
+        <!-- PREVIEW ONLY：ダミー決済リンク -->
+        <a class="ca-btn ca-primary-action" data-ca-cta="complete_upgrade_click" ${caDummyAttrs(up, r)}>完全解析へ進む</a>
+        ${CA_PREVIEW_NOTE}
+      </section>`;
+  }
+  if (k === 'complete_generating' || k === 'complete_failed') {
+    return `${target}
+      <div class="ca-state-head">
+        <div class="ca-card-head"><span class="ca-eyebrow">COMPLETE ANALYSIS</span><span class="ca-status">準備中</span></div>
+        <h2 class="ca-state-title" id="latest-upgrade-title">完全解析を準備しています</h2>
+        <p class="ca-body">この記録の結果をもとに、統合処理を進めています。解析レポートは、すでに確認できます。</p>
+      </div>
+      ${purchasedReportButton(r.session, 'ca-btn ca-view-action', '解析レポートを見る')}
+      <button type="button" class="ca-btn ca-quiet-action" onclick="caRecheck(this)">状態を更新</button>`;
+  }
+  if (k === 'complete_ready') {
+    const id = encodeURIComponent(String(r.session.id));
+    return `${target}
+      <div class="ca-state-head">
+        <div class="ca-card-head"><span class="ca-eyebrow">COMPLETE ANALYSIS</span><span class="ca-pages"><span class="ca-pages-ja">全46ページ</span><span class="ca-pages-en">COMPLETE RECORD</span></span></div>
+        <h2 class="ca-state-title" id="latest-upgrade-title">この記録の完全解析が保存されています</h2>
+      </div>
+      <button type="button" class="ca-btn ca-primary-action" data-session-id="${id}" onclick="openPurchasedComplete(decodeURIComponent(this.dataset.sessionId), this)">完全解析を開く</button>
+      ${purchasedReportButton(r.session, 'ca-btn ca-view-action', '解析レポートを見る')}`;
+  }
+  if (k === 'analysis') {
+    // 完全解析の対象外で解析レポートは購入済み（通常は入口自体を出さない。念のための安全側表示）
+    return `${target}
+      <div class="ca-state-head"><h2 class="ca-lead" id="latest-upgrade-title">この記録は、構造と解釈まで観測されています</h2></div>
+      ${purchasedReportButton(r.session, 'ca-btn ca-view-action', '解析レポートを見る')}`;
+  }
+  return `${target}
+    <div class="ca-state-head is-unknown">
+      <h2 class="ca-state-title" id="latest-upgrade-title">購入状態を確認できませんでした</h2>
+      <p class="ca-body">通信状態を確認して、もう一度お試しください。</p>
+    </div>
+    <button type="button" class="ca-btn ca-view-action" onclick="caRecheck(this)">状態を再確認</button>`;
+}
+
+function caSheetShellHtml(r) {
+  if (!caTriggerHtml(r)) return '';
+  return `
+    <div class="ca-overlay" id="mpUpgradeOverlay" hidden>
+      <div class="ca-sheet" id="latest-upgrade-dialog" role="dialog" aria-modal="true" aria-labelledby="latest-upgrade-title" tabindex="-1" style="--ca-el:${mpElText(r.el)};--ca-el-line:${r.color}">
+        <div class="ca-sheet-bar"><button type="button" class="ca-close" id="mpUpgradeClose" aria-label="閉じる">×</button></div>
+        <div class="ca-sheet-scroll" id="mpUpgradeBody"></div>
+      </div>
+    </div>`;
+}
+
+function caTrackParams(r, extra) {
+  const st = caStateOf(r);
+  return Object.assign({
+    diagnosis_session_id: String((r.session && r.session.id) || ''),
+    source: 'mypage_header',
+    latest_entitlement: caKey(r),
+    preview_dummy: !!(st && st.preview),
+  }, extra || {});
+}
+
+let caLastFocus = null;
+let caScrollY = 0;
+function caOpenSheet(r) {
+  const overlay = document.getElementById('mpUpgradeOverlay');
+  const body = document.getElementById('mpUpgradeBody');
+  const trigger = document.getElementById('mpUpgradeTrigger');
+  if (!overlay || !body) return;
+  body.innerHTML = caSheetBodyHtml(r);
+  caLastFocus = trigger || document.activeElement;
+  caScrollY = window.scrollY || 0;
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
+  overlay.hidden = false;
+  if (trigger) trigger.setAttribute('aria-expanded', 'true');
+  const close = document.getElementById('mpUpgradeClose');
+  if (close) close.focus();
+  CompleteAnalysis.track('mypage_upgrade_open', caTrackParams(r));
+}
+function caCloseSheet(r) {
+  const overlay = document.getElementById('mpUpgradeOverlay');
+  if (!overlay || overlay.hidden) return;
+  overlay.hidden = true;
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
+  const trigger = document.getElementById('mpUpgradeTrigger');
+  if (trigger) trigger.setAttribute('aria-expanded', 'false');
+  if (caLastFocus && typeof caLastFocus.focus === 'function') caLastFocus.focus({ preventScroll: true });
+  if (Math.abs((window.scrollY || 0) - caScrollY) > 1) window.scrollTo(0, caScrollY);
+  if (r) CompleteAnalysis.track('mypage_upgrade_close', caTrackParams(r));
+}
+function caFocusables(root) {
+  return Array.from(root.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+    .filter(el => el.offsetParent !== null || el === document.activeElement);
+}
+function caWireSheet(r) {
+  const trigger = document.getElementById('mpUpgradeTrigger');
+  const overlay = document.getElementById('mpUpgradeOverlay');
+  if (!trigger || !overlay || !r) return;
+  // 同じ記録・同じ状態の表示は1回だけ計測する（再描画で重複させない）
+  const impKey = `${(r.session && r.session.id) || ''}:${caKey(r)}`;
+  if (!caImpressions.has(impKey)) { caImpressions.add(impKey); CompleteAnalysis.track('mypage_upgrade_impression', caTrackParams(r)); }
+  trigger.addEventListener('click', () => caOpenSheet(r));
+  document.getElementById('mpUpgradeClose').addEventListener('click', () => caCloseSheet(r));
+  // オーバーレイ（外側）押下で閉じる。シート内部の押下では閉じない
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) caCloseSheet(r); });
+  overlay.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { e.preventDefault(); caCloseSheet(r); return; }
+    if (e.key !== 'Tab') return;
+    const sheet = document.getElementById('latest-upgrade-dialog');
+    const f = caFocusables(sheet);
+    if (!f.length) { e.preventDefault(); sheet.focus(); return; }
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && (document.activeElement === first || !sheet.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && (document.activeElement === last || !sheet.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
+  });
+  // CTA の計測（購入導線は Preview のダミーまたは既存の解析レポート導線）
+  overlay.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a');
+    if (!a) return;
+    const wrap = a.closest('[data-ca-cta]');
+    const name = a.dataset.caCta || (wrap && wrap.dataset.caCta);
+    if (!name) return;
+    const offer = a.dataset.offer || (name === 'analysis_checkout_click' ? 'analysis_1000' : '');
+    CompleteAnalysis.track(name, caTrackParams(r, offer ? { offer } : {}));
+  });
+}
+async function caRecheck(button) {
+  if (button) { button.disabled = true; button.textContent = '確認中…'; }
+  const overlay = document.getElementById('mpUpgradeOverlay');
+  if (overlay) overlay.hidden = true;
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
+  await init();
+}
+
+// 完全解析を開く：対象記録の diagnosis_session_id だけを使う。
+// 将来API：POST /api/my-complete-report-link（本人所有・complete権・ready をサーバーで確認し、短命URLを返す）。未実装。
+async function openPurchasedComplete(diagnosisSessionId, button) {
+  if (!diagnosisSessionId || !button) return;
+  const old = button.parentElement && button.parentElement.querySelector('.ca-msg');
+  if (old) old.remove();
+  const say = (text) => {
+    const p = document.createElement('p');
+    p.className = 'ca-msg';
+    p.setAttribute('role', 'status');
+    p.textContent = text;
+    button.insertAdjacentElement('afterend', p);
+  };
+  // この記録の状態だけを見る（他の記録の権利・URLは参照しない）
+  const st = caStates.get(String(diagnosisSessionId));
+  if (!st || st.entitlementStatus !== 'ok' || !st.completeAccess || st.completeStatus !== 'ready') {
+    say('この記録の完全解析は、まだ開けません。');
+    return;
+  }
+  CompleteAnalysis.track('complete_report_open', { diagnosis_session_id: String(diagnosisSessionId), source: 'mypage_header', preview_dummy: !!st.preview });
+  if (st.preview) {
+    // Preview fixture は表示確認用。閲覧先URLは発行しない
+    say('Preview：完全解析の閲覧先はまだ接続していません（この記録だけが対象です）。');
+    return;
+  }
+  const originalLabel = button.textContent;
+  button.disabled = true;
+  button.textContent = '完全解析を準備中…';
+  try {
+    const { data: { session: authSession } } = await supabaseClient.auth.getSession();
+    const accessToken = authSession && authSession.access_token;
+    if (!accessToken) throw new Error('not_authenticated');
+    const response = await fetch('/api/my-complete-report-link', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ diagnosisSessionId: String(diagnosisSessionId) }),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok || !body.url) throw new Error(body.error || 'complete_link_failed');
+    navigateTo(body.url);
+  } catch (err) {
+    console.error('complete report open failed:', err && err.message);
+    say('完全解析を開けませんでした。時間をおいて再度お試しください。');
+    button.disabled = false;
+    button.textContent = originalLabel;
+  }
+}
+
+/* ============================================================
    ページ全体
    ============================================================ */
 function renderMypage(root, sessions, userOrUid) {
@@ -1872,6 +2389,7 @@ function renderMypage(root, sessions, userOrUid) {
     .slice()
     .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
     .map(mpNormalize);
+  caApplyStates(records);
   window.__mpRecords = records;
 
   root.innerHTML = `
@@ -1881,7 +2399,9 @@ function renderMypage(root, sessions, userOrUid) {
     ${mpRecordsHtml(records)}
     ${mpRediagHtml()}
     ${mpAccountHtml(userOrUid)}
+    ${caSheetShellHtml(records[0])}
   `;
+  caWireSheet(records[0]);
 
   const mpCol = document.getElementById('mp-collection');
   if (mpCol) { mpCol.addEventListener('scroll', mpCollectionUpdateHint, { passive: true }); mpCollectionUpdateHint(); }
@@ -1917,6 +2437,11 @@ async function init() {
   }
   mpEntitlementOk = mpEntitlementCheckedOk(result.sessions);
   renderMypage(root, result.sessions, user);
+  // 認証 → 診断保存 → 同意記録 → Kit同期 の順を守る：保存済みの記録が表示できた後にだけ、
+  // OAuth往復中に一時保持していたメール配信の選択を処理する（diagnosis-save.js）。
+  if (typeof processPendingNewsletterConsent === 'function') {
+    processPendingNewsletterConsent().catch(e => console.error('newsletter consent processing failed:', e && e.message));
+  }
 }
 // eti_v2_save.js（Googleログイン復帰後、v2のpending保存が完了した時点）から
 // 呼べる再読み込みフック。init()自体はSIGNED_IN時にも呼ばれるため、
