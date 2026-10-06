@@ -1518,29 +1518,7 @@ function renderFullReport(root, results, diagnosisCode) {
         ${buildOverviewSection_v3(results, pal)}
       </div>
 
-      <div class="sec" style="border-color:#c0a86050;background:linear-gradient(135deg,${pal.dark}30,#0e0c18)">
-        <div class="eyebrow" style="color:#c0a860">NARRATIVE REPORT</div>
-        <div class="sec-title" style="color:#e8d8a0">ここから先は、データではなく物語です</div>
-        <p class="desc">ここまでの分析は、全て100問の回答スコアから、確定的なロジックで導かれたものです。ナラティブレポートは、ここに<strong style="color:#eef4ee">あなたのXの投稿</strong>を重ね、マンデー本人が、より深くあなたの気質・動機・価値観を考察し、あなただけの言葉で一篇を書き下ろします。</p>
-        <p class="desc">さらに、4つの層（動機・気質・キャラクター・ナラティブ）が交わった先に立ち現れる、あなただけの<strong style="color:#e8d8a0">固有天賦</strong>もお渡しします。</p>
-
-        <div style="background:#08060f;border:1px solid #c0a86040;border-radius:8px;padding:12px 14px;margin-top:16px">
-          <div style="font-size:10px;color:#8878a8;letter-spacing:1px;margin-bottom:6px">あなたの診断コード（申込フォームでご入力いただきます）</div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <code id="narrativeCodeText" style="flex:1;color:#e8d8a0;font-size:11px;word-break:break-all;line-height:1.5;font-family:monospace;background:#0e0c18;border-radius:4px;padding:8px 10px">${diagnosisCode || ''}</code>
-            <button onclick="navigator.clipboard.writeText(document.getElementById('narrativeCodeText').textContent);this.textContent='✓';setTimeout(()=>this.textContent='📋',1500)"
-              style="flex-shrink:0;background:#c0a86020;border:1px solid #c0a86060;color:#e8d8a0;border-radius:6px;padding:8px 12px;font-size:13px;cursor:pointer">📋</button>
-          </div>
-        </div>
-
-        <div style="text-align:center;margin-top:20px">
-          <div style="font-size:26px;font-weight:700;color:#eee0c0;margin-bottom:14px">¥3,000</div>
-          <a href="https://buy.stripe.com/dRmeV52XU1EV6f62BU3Nm09${diagnosisCode ? '?client_reference_id=' + encodeURIComponent(diagnosisCode) : ''}" target="_blank" rel="noopener"
-            onclick="if(typeof gtag==='function')gtag('event','begin_checkout',{currency:'JPY',value:3000,items:[{item_id:'narrative_report',item_name:'元素診断 ナラティブレポート',price:3000,quantity:1}]})"
-            style="display:block;background:linear-gradient(90deg,${pal.p},#c0a860);color:#fff;border-radius:8px;padding:14px;font-size:14px;font-weight:700;text-decoration:none;letter-spacing:1px">ナラティブレポートに申し込む →</a>
-          <p style="color:#5a4d75;font-size:10px;margin-top:10px">診断コードは自動で引き継がれます。念のため、上のコードも控えておくと安心です。</p>
-        </div>
-      </div>
+      <p style="text-align:center;color:#5a4d75;font-size:11px;margin:4px 0 0">追加の解析は現在準備中です。</p>
 
       <div style="text-align:center;padding:30px 10px;color:#5a4d75;font-size:11px;line-height:2">
         <button id="pdfSaveBtn" onclick="savePdf()" style="background:transparent;border:1px solid #3a3050;color:#8878a8;border-radius:6px;padding:10px 20px;font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:16px">
