@@ -1,9 +1,10 @@
 # 完全解析：決済・権利・生成・閲覧基盤 設計草案（第1段階・改訂1）
 
-- 状態：**草案（DRAFT）**。DB は Preview にだけ complete_01・complete_02 を適用済み（2026-10-07）。外部サービス未設定・コード本体は未変更。
+- 状態：**草案（DRAFT）**。DB は Preview にだけ complete_01・complete_02・complete_03 を適用済み（2026-10-07）。外部サービス未設定・コード本体は未変更。
 - 基準：branch `release-c-preview` ／ baseline `8aca76db77449d4bd7fbe859bd23597474f208c7` ／ 2026-10-07
-- 関連 migration（Preview 適用済み・本文は編集しない）：`docs/sql/20261007111306_complete_01_orders_entitlements_reports.sql`、`docs/sql/20261007113230_complete_02_service_role_privileges.sql`
+- 関連 migration（Preview 適用済み・本文は編集しない）：`docs/sql/20261007111306_complete_01_orders_entitlements_reports.sql`、`docs/sql/20261007113230_complete_02_service_role_privileges.sql`、`docs/sql/20261007205700_complete_03_mentor_goal_ownership.sql`
 - 戻し（草案・実行禁止）：`docs/sql/complete_99_rollback_DRAFT_DO_NOT_RUN.sql`
+- migration の番号：complete_01＝表・権利・生成物（適用済み）／complete_02＝service_role の権限を arw に縮小（適用済み）／complete_03＝MENTOR 目標の所有者整合・記録の所有者固定（適用済み）／complete_04＝決済の原子的処理（SQL 関数。草案予定）／complete_05＝運営者 API の監査ログ表（運営者 API の実装時）
 - 改訂1：判断 1〜13（2026-10-07）を反映（§0）。**販売（決済の有効化）は §13 の停止条件がすべて解除されるまで行わない。**
 
 ## 0. 確定した判断（2026-10-07）
@@ -34,7 +35,7 @@
 | A2 | dispute 発生時は権利を**一時停止**（suspended）。勝訴で復旧、敗訴または返金確定で失効 | DB `record_entitlements.status='suspended'`・失効は最終状態、§8 |
 | A3 | 生成 HTML に実名・user_id・diagnosis_session_id を入れない。表示名は「あなた」。識別子が必要なら推測困難な report_id（complete_reports.id）だけ | §5-1、§13（解除条件）、生成時の確認テスト |
 | A4 | 署名 URL は初期300秒。本人確認の後に毎回発行する（使い回さない・保存しない） | §6、§7 |
-| A5 | 運営者 API は Supabase JWT を検証し、環境変数の運営者 user UUID と完全一致で認可。POST のみ、監査ログ必須 | §7、監査ログ表は運営者 API 実装時に complete_02 で追加 |
+| A5 | 運営者 API は Supabase JWT を検証し、環境変数の運営者 user UUID と完全一致で認可。POST のみ、監査ログ必須 | §7、監査ログ表は運営者 API 実装時に complete_05 で追加 |
 | A6 | MENTOR 選択画面は、対象記録の選択後・Checkout の直前に置く | §5-3、§7 |
 | A7 | 旧 complete ¥2,500・旧ナラティブ・旧 CORE2 は新しい完全解析権を付与しない | §4-3、DB（完全解析権は complete_orders の支払いからだけ） |
 | A8 | 価格の正本：解析レポート ¥1,000／完全解析 直接 ¥3,000／アップグレード ¥2,000 | §2、DB 金額 CHECK |
@@ -203,6 +204,7 @@ POST /api/my-complete-report-link ── 本人・complete 権 active・ready・
 - 結果から自動で選ばない。選択は本人の明示操作だけ（API 経由。ブラウザから表へ直接書けない）。
 - 記録ごとに1つ。支払い前は選び直せる。支払い確定（Webhook）で `locked_at` を入れ、以後は変更不可。
 - 注文作成時に目標を注文へ写し、DB トリガーで記録の選択と一致することを確認する。生成は注文（＝生成物に写した値）の目標を使う。
+- complete_03（Preview 適用済み・20261007205700）：目標の user_id が記録の所有者と一致することを DB で保証する（INSERT・UPDATE のたび。記録の user_id は変更不可。他人の記録と存在しない記録は同じ誤り `mentor_goal_record_not_found`）。決済待ち・支払済みの注文がある間の目標変更を拒否（`mentor_goal_checkout_in_progress`）。同じ目標の再送では `selected_at` を動かさない（冪等）。支払後の変更は complete_01 の `mentor_goal_locked` のまま。
 - カタログを改訂するときは新しい版名（例：1.1.0）として追加し、旧版の注文・生成物は旧版のまま。
 
 ### 4-5. 販売対象の判定（判断 4）
@@ -367,7 +369,7 @@ generating（貸出し期限切れ）──claim で回収──▶ generating
 - 認可：`Authorization: Bearer <Supabase JWT>` を `/auth/v1/user` で検証し、得られた user id が環境変数 `COMPLETE_ADMIN_USER_IDS`（運営者の user UUID。Preview 用は release-c-preview 限定）と**完全一致**するときだけ許可。一致しなければ 403（存在を明かさない）。
 - 入力：`{ "reportId": "...", "action": "requeue" | "process_now", "reason": "..." }`。
 - 処理：`failed → queued`（attempts を戻す）または queued の即時処理。
-- **監査ログ必須**：誰が・いつ・どの report／order に・何をしたか・理由・結果を記録してから応答する。監査ログを書けなければ処理しない。監査ログ表（`complete_admin_audit_log`）は運営者 API の実装時に **complete_02** として追加（complete_01 には含めない）。
+- **監査ログ必須**：誰が・いつ・どの report／order に・何をしたか・理由・結果を記録してから応答する。監査ログを書けなければ処理しない。監査ログ表（`complete_admin_audit_log`）は運営者 API の実装時に **complete_04** として追加（complete_01 には含めない。complete_02 は権限縮小、complete_03 は MENTOR 目標の所有者整合、complete_04 は決済の原子的処理に使う）。
 
 ### 既存 API の変更（橋渡し）
 - report-data／my-report-link：解析権の判定を §4-3 の OR に広げ、`core_analysis_access` を返す（旧の判定は変えずに追加）。
@@ -533,7 +535,7 @@ RC1 は技術候補。**次がすべて満たされるまで販売しない**（
 6. 販売画面・規約・特定商取引法表記の文言（§13-9）。
 7. ~~MENTOR 選択画面の位置~~ → **決定（A6）**：対象記録の選択後・Checkout の直前。
 8. ~~署名 URL の有効時間~~ → **決定（A4）**：初期300秒・毎回発行。
-9. ~~運営者用 API の認証~~ → **決定（A5）**：Supabase JWT＋運営者 UUID の完全一致・POST のみ・監査ログ必須（監査ログ表は complete_02）。
+9. ~~運営者用 API の認証~~ → **決定（A5）**：Supabase JWT＋運営者 UUID の完全一致・POST のみ・監査ログ必須（監査ログ表は complete_05）。
 
 ---
 

@@ -1,5 +1,5 @@
 -- ============================================================
--- complete_99：complete_01 の戻し【実行禁止・草案】2026-10-07 改訂2。Preview 専用。未適用。
+-- complete_99：complete_01〜03 の戻し【実行禁止・草案】2026-10-07 改訂3（complete_03 のトリガー・関数を明示的に削除）。Preview 専用。未適用。
 -- 注意：購入・権利・MENTOR 目標・Webhook 受信・生成物の記録をすべて消す。Preview の試験データだけの段階でのみ使う。
 --       決済が1件でも記録された後は、この戻しではなく状態（revoked 等）で扱うこと（会計記録を消さない）。
 --       非公開 Storage に置いた生成物ファイルは、この SQL では消えない（別手順）。
@@ -21,6 +21,18 @@ begin
   end if;
 end
 $$;
+
+-- complete_03：所有者確認・所有者固定のトリガーと関数（diagnosis_sessions は消さないため明示的に削除する）
+drop trigger if exists diagnosis_sessions_owner_immutable on public.diagnosis_sessions;
+drop function if exists public.diagnosis_sessions_owner_immutable();
+do $$
+begin
+  if to_regclass('public.record_mentor_goals') is not null then
+    drop trigger if exists record_mentor_goals_0_ownership on public.record_mentor_goals;
+  end if;
+end
+$$;
+drop function if exists public.record_mentor_goals_ownership();
 
 drop function if exists public.claim_complete_report_job(integer);
 drop table if exists public.complete_reports;
