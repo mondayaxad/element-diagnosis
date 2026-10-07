@@ -1,3 +1,5 @@
 {
+  "buildCommand": "node scripts/build-public.js",
+  "outputDirectory": "dist",
   "cleanUrls": true
 }
