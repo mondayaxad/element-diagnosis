@@ -13,8 +13,12 @@
      どちらの経路でも、同じ診断記録（diagnosis_session_id）へ
        core_analysis_access = true / core_complete_access = true
      が成立する設計とする（docs/COMPLETE_ANALYSIS_PREVIEW_DESIGN.md）。
-   - 完全解析の権利APIはまだ無い（CA_COMPLETE_API_READY = false）。その間は
-     free と推測せず、完全解析の状態を常に 'unknown' とし、購入CTAを出さない。
+   - 完全解析の権利APIはまだ無い（CA_COMPLETE_API_READY = false）。完全解析はまだ販売していない
+     （CA_COMPLETE_SALES_OPEN = false）ため、実データでは「完全解析の権利は無い」と確定できる。
+     解析レポートの購入状態（/api/my-entitlements）を確認できた記録だけ free／analysis とし、
+     確認できなければ 'unknown'（購入導線を出さない）。
+   - 決済は未接続（2026-10-07）。¥3,000／¥2,000 は「準備中」の押せないボタンとして見せるだけで、
+     href・決済イベント・外部遷移を持たせない。ダミーの Payment Link にも接続しない。
    - ?preview_entitlement= による状態切替は Preview でのみ有効。
      本番ビルドでは CA_PREVIEW_BUILD を false にする。加えて本番ホスト名では常に無効、
      ページ側の IS_PREVIEW_BUILD が false の場合も無効（三重のガード）。
@@ -26,13 +30,11 @@
   var CA_PREVIEW_BUILD = true;
   // 本番ホストでは、CA_PREVIEW_BUILD の値に関係なく Preview 用の状態切替を無効にする。
   var CA_PRODUCTION_HOSTS = ['element-diagnosis-five.vercel.app'];
-  // 完全解析の権利API（記録単位）が実装されるまで false。false の間、実データでの完全解析状態は unknown。
+  // 完全解析の権利API（記録単位）が実装されるまで false。
   var CA_COMPLETE_API_READY = false;
-
-  // PREVIEW ONLY：既存のPreview用CORE1テストPayment Linkをダミーとして使う（本番URL定数とは別物）。
-  // client_reference_id は付けない。付けると /api/verify.js が CORE1（¥1,000）の権利として
-  // 記録してしまうため。実装時は、サーバー側で diagnosis_session_id を持つCheckout Sessionを作る。
-  var CA_PREVIEW_DUMMY_CHECKOUT_URL = 'https://buy.stripe.com/test_9B64gr9micjz9riccu3Nm00'; // PREVIEW ONLY
+  // 完全解析（¥3,000／追加¥2,000）の決済を開始するまで false。false の間、購入先は常に無し（null）。
+  // 実装時は、サーバー側で diagnosis_session_id を持つ Checkout Session を作る（Payment Link は使わない）。
+  var CA_COMPLETE_SALES_OPEN = false;
 
   var CA_OFFERS = {
     direct: { offer: 'direct_3000', price: '¥3,000', productId: 'core_complete_analysis' },
@@ -111,12 +113,15 @@
   }
 
   // 実データでの状態。analysisKnown=false（既存の購入確認に失敗）なら unknown。
-  // 完全解析の権利APIが無い間は、解析購入の有無にかかわらず unknown（freeと推測しない）。
-  // API実装時は、ここで記録別のAPI応答（entitlementStatus/completeStatus等）から makeState する。
+  // 完全解析を販売していない間（CA_COMPLETE_SALES_OPEN = false）は、完全解析の権利は存在しないため
+  // completeAccess = false と確定できる。解析レポートの購入有無（analysisAccess）は呼び出し側が
+  // /api/my-entitlements の結果から渡す。
+  // 販売開始後は、完全解析の権利API（CA_COMPLETE_API_READY）の記録別応答が無い限り unknown にする。
   function realState(opts) {
     var o = opts || {};
-    // 現時点では CA_COMPLETE_API_READY = false のため、常にこの分岐（unknown）になる。
-    return makeState({ entitlementStatus: 'unknown', diagnosisSessionId: o.diagnosisSessionId });
+    if (o.analysisKnown !== true) return makeState({ entitlementStatus: 'unknown', diagnosisSessionId: o.diagnosisSessionId });
+    if (CA_COMPLETE_SALES_OPEN && !CA_COMPLETE_API_READY) return makeState({ entitlementStatus: 'unknown', diagnosisSessionId: o.diagnosisSessionId });
+    return makeState({ entitlementStatus: 'ok', analysisAccess: o.analysisAccess === true, diagnosisSessionId: o.diagnosisSessionId });
   }
 
   // ---- mypage 右上の入口を出すか ----
@@ -125,8 +130,9 @@
   //     （押しても解決できない「状態を確認」を利用者に見せない）
   //   ・Preview fixture 指定あり（?preview_entitlement=free 等）→ fixture どおり出す
   //   ・権利API実装済み → 出す。通信・状態確認に失敗した時だけ unknown（「状態を確認」）になる
-  function headerEntryEnabled(loc) {
-    return CA_COMPLETE_API_READY === true || previewStateName(loc) !== null;
+  // 旧仕様の互換（右上入口は mypage が記録の有無と購入状態だけで出す。2026-10-07）
+  function headerEntryEnabled() {
+    return true;
   }
 
   // ---- 完全解析の適格性（記録が46ページ生成の入力契約を満たすか） ----
@@ -152,9 +158,19 @@
     if (!s.completeEligible) { s.completeAccess = false; s.completeStatus = 'none'; s.completeReportUrl = null; }
     return s;
   }
-  // 完全解析の購入先（不適格・状態不明・購入済みなら null）
-  function completeCheckoutHref(state) {
-    return state && state.completeEligible === true && offerFor(state) ? CA_PREVIEW_DUMMY_CHECKOUT_URL : null;
+  // 完全解析の購入先。販売前（CA_COMPLETE_SALES_OPEN = false）は常に null（ダミーリンクにも接続しない）。
+  function completeCheckoutHref() {
+    return null;
+  }
+  // 「準備中」として見せる商品（適格で、権利を確認できた free／analysis のときだけ）。押せるボタンにはしない。
+  function pendingOfferFor(state) {
+    return state && state.completeEligible === true ? offerFor(state) : null;
+  }
+  // 準備中ボタン：<button disabled>。href・onclick・決済用の data 属性を持たせない。
+  function pendingButtonHtml(offer, className) {
+    if (!offer) return '';
+    var label = offer.offer === 'upgrade_2000' ? '完全解析へアップグレード ' + offer.price + '（準備中）' : '完全解析 ' + offer.price + '（準備中）';
+    return '<button type="button" class="' + (className || 'ca-btn') + ' is-pending" disabled aria-disabled="true" data-pending-offer="' + offer.offer + '">' + label + '</button>';
   }
 
   // GA4 等で使う状態キー
@@ -172,7 +188,7 @@
     return null;
   }
 
-  function checkoutUrl() { return CA_PREVIEW_DUMMY_CHECKOUT_URL; }
+  function checkoutUrl() { return null; }
 
   function track(name, params) {
     // GA4 へは回答・メール・トークン・完全URLを送らない（指示書 §16）
@@ -234,6 +250,9 @@
     completeEligibility: completeEligibility,
     withEligibility: withEligibility,
     completeCheckoutHref: completeCheckoutHref,
-    isPreviewDummyCheckout: true,
+    pendingOfferFor: pendingOfferFor,
+    pendingButtonHtml: pendingButtonHtml,
+    completeSalesOpen: CA_COMPLETE_SALES_OPEN,
+    isPreviewDummyCheckout: false,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -118,6 +118,7 @@
   .ca-r-price .ca-price { flex:none; font-size:16px; letter-spacing:0.06em; color:var(--ca-gold); white-space:nowrap; }
   .ca-r-btn:focus-visible { outline:2px solid #a888d8; outline-offset:2px; }
   .ca-r-btn { display:flex; align-items:center; justify-content:center; width:100%; min-height:46px; margin-top:12px; border-radius:8px; border:1px solid #6a5a94; background:transparent; color:var(--ca-title); font-family:inherit; font-size:14px; letter-spacing:0.08em; text-decoration:none; cursor:pointer; }
+  .ca-r-btn.is-pending { font-family:inherit; font-size:13px; color:#a3a6c4; border-style:dashed; cursor:not-allowed; }
   .ca-r-btn.is-view { border-color:color-mix(in srgb, var(--ca-view) 40%, var(--ca-line)); color:var(--ca-view); }
   .ca-r-note { margin-top:10px; padding-left:8px; border-left:2px solid var(--ca-line); font-size:11px; color:var(--ca-muted); line-height:1.7; }
   .cover-dots { position:relative; width:220px; height:220px; margin:0 auto 20px; }
@@ -1671,17 +1672,16 @@ function completeAnalysisReportHtml(pal, results, diagnosisVersion) {
         <div class="ca-eyebrow">COMPLETE ANALYSIS</div>
         <p class="ca-lead">この観測を、三つの人物像とともに統合する。</p>`;
   var body;
-  if (key === 'analysis' && CA.completeCheckoutHref(st)) {
+  if (key === 'analysis' && CA.pendingOfferFor(st)) {
     var up = CA.OFFERS.upgrade;
     // 内容は三つの人物像として既に示しているため、購入へ進むボタンは1つだけにする
     body = `${head}
         ${lenses}
         <p class="ca-body">${CA.INTEGRATION_TEXT}</p>
         <div class="ca-r-price"><span class="ca-meta">この解析レポートの内容は、完全解析にもすべて含まれます</span><span class="ca-price">追加 ${up.price}</span></div>
-        <!-- PREVIEW ONLY：ダミー決済リンク -->
-        <a class="ca-r-btn" href="${CA.completeCheckoutHref(st)}" target="_blank" rel="noopener" data-preview-dummy="true" data-offer="${up.offer}" data-product-id="${up.productId}"
-          onclick="CompleteAnalysis.track('complete_upgrade_click',{source:'analysis_report',offer:'${up.offer}',preview_dummy:true})">この記録を完全解析する</a>
-        <p class="ca-r-note">Preview：テスト用のダミー決済リンクです。完全解析の権利は発行されません。</p>`;
+        <!-- 決済は未接続（2026-10-07）：押せない「準備中」。href・決済イベントなし -->
+        ${CA.pendingButtonHtml(up, 'ca-r-btn')}
+        <p class="ca-r-note">完全解析は準備中です。現在はお申し込みいただけません。</p>`;
   } else if (key === 'complete_generating' || key === 'complete_failed') {
     body = `${head}
         <p class="ca-state">完全解析を生成しています</p>

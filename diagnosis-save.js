@@ -131,6 +131,20 @@ const REGISTRATION_KNOWN_STATUSES = ['required', 'completed', 'legacy_exempt'];
 // 旧仕様（結果画面の任意チェック）の一時保持は使わない。残っていれば消す。
 try { localStorage.removeItem('pendingNewsletterConsent_v1'); } catch (e) { /* noop */ }
 
+/* 端末ヒント（2026-10-07）：この端末で登録済み（completed／legacy_exempt）を DB で確認したことがある、という印だけ。
+   - 値は '1' だけ。メールアドレス・user_id・トークン・同意日時・購入状態・診断内容は保存しない。
+   - 診断完了ページで保存カードを早い位置に出すかどうか（表示位置）にだけ使う。
+     認証・規約同意・保存許可の根拠にはしない。保存の前には必ずログインと onboarding_status を確認する。
+   - ログアウトでは消さない（久しぶりに診断する登録済みユーザーにも早い位置の保存導線を出すため）。
+   - 古い・別端末・プライベートブラウズ・ブラウザによる削除などで当てにならないことがある（best-effort）。 */
+const REGISTRATION_KNOWN_HINT_KEY = 'ed_registration_known_v1';
+function markRegistrationKnownDevice() {
+  try { localStorage.setItem(REGISTRATION_KNOWN_HINT_KEY, '1'); } catch (e) { /* noop */ }
+}
+function hasRegistrationKnownHint() {
+  try { return localStorage.getItem(REGISTRATION_KNOWN_HINT_KEY) === '1'; } catch (e) { return false; }
+}
+
 // 本人の登録状態を読む。読めない場合は null（＝登録済みとは扱わない）。
 async function fetchRegistrationProfile(userId) {
   try {
@@ -176,12 +190,17 @@ async function runRegistrationCheck() {
   if (!profile) return { state: 'error', reason: 'profile_unavailable' };
   const status = profile.onboarding_status;
   if (REGISTRATION_KNOWN_STATUSES.indexOf(status) === -1) return { state: 'error', reason: 'unexpected_status' };
-  if (status !== 'required') return { state: 'ok', userId: user.id, profile: profile, justCompleted: false };
+  if (status !== 'required') {
+    markRegistrationKnownDevice();
+    return { state: 'ok', userId: user.id, profile: profile, justCompleted: false };
+  }
 
   if (typeof window.showRegistrationOnboarding !== 'function') return { state: 'error', reason: 'ui_unavailable' };
   trackEvent('registration_onboarding_view');
   const choice = await window.showRegistrationOnboarding({ userId: user.id, onAccept: completeRegistrationOnboarding });
   if (choice === 'accepted') {
+    // 同意の RPC が completed を返したときだけ accepted になる（js/registration-onboarding.js）
+    markRegistrationKnownDevice();
     trackEvent('registration_onboarding_complete');
     return {
       state: 'ok',
@@ -209,6 +228,35 @@ function ensureRegistrationComplete() {
 }
 function resetRegistrationCheck() {
   registrationCheckPromise = null;
+}
+
+// 登録状態を読むだけ（モーダルは開かない）。診断完了ページで保存カードの位置を決めるために使う。
+//   { state: 'signed_out' } | { state: 'ok', status: 'required'|'completed'|'legacy_exempt' } | { state: 'error' }
+// 保存の可否はここでは決めない（保存時に ensureRegistrationComplete() で改めて判定する）。
+async function peekRegistrationStatus() {
+  let user = null;
+  try { user = await getCurrentUser(); } catch (e) { return { state: 'error', reason: 'auth_unavailable' }; }
+  if (!user) return { state: 'signed_out' };
+  const profile = await fetchRegistrationProfile(user.id);
+  if (!profile) return { state: 'error', reason: 'profile_unavailable' };
+  const status = profile.onboarding_status;
+  if (REGISTRATION_KNOWN_STATUSES.indexOf(status) === -1) return { state: 'error', reason: 'unexpected_status' };
+  if (status !== 'required') markRegistrationKnownDevice();
+  return { state: 'ok', status: status };
+}
+
+// 認証の後の処理（登録完了の判定とモーダル）をページを開いた時点で行うか。
+// 診断完了ページ（index.html）は window.ED_REGISTRATION_CHECK_ON_LOAD = 'pending_only' とし、
+// 認証復帰後に保存する診断（pending）があるときだけ行う。それ以外は「保存」を押したときに判定する
+// （登録完了前のユーザーへ、ページを開いただけで規約モーダルを出さない）。
+function registrationCheckOnLoadIsPendingOnly() {
+  return typeof window !== 'undefined' && window.ED_REGISTRATION_CHECK_ON_LOAD === 'pending_only';
+}
+function hasPendingDiagnosisToSave() {
+  if (readPendingDiagnosis()) return true;
+  // v2 の pending は js/eti_v2_save.js が期限・形式を確かめて読む（壊れた・期限切れは消える）
+  if (typeof readPendingDiagnosisV2 === 'function') return !!readPendingDiagnosisV2();
+  try { return !!localStorage.getItem('pendingDiagnosis_v2'); } catch (e) { return false; }
 }
 
 // Kit 同期を今行うか（サーバー /api/subscribe も同じ条件で判定する）。
@@ -572,7 +620,12 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
   if (!session || signedInFlowRunning) return;
   // supabase-js の通知処理の中で auth の呼び出しを待たないよう、次のタスクで実行する
   signedInFlowRunning = new Promise((resolve) => setTimeout(resolve, 0))
-    .then(runSignedInFlow)
+    .then(whenDocumentReady)
+    .then(() => {
+      // 診断完了ページ：保存する pending が無ければ、ここでは判定もモーダルも行わない（保存を押したときに行う）
+      if (registrationCheckOnLoadIsPendingOnly() && !hasPendingDiagnosisToSave()) return null;
+      return runSignedInFlow();
+    })
     .catch((e) => console.error('signed-in flow failed:', e && e.message))
     .finally(() => { signedInFlowRunning = null; });
 });

@@ -61,14 +61,23 @@ test('free は analysis/complete とも閲覧不可、analysis は解析レポ�
   assert.equal(a.analysisAccess, true); assert.equal(a.completeAccess, false);
 });
 
-test('実データ：権利APIが無い間は常に unknown（free と推測しない）', () => {
+test('実データ：解析レポートの購入状態を確認できたときだけ free／analysis。確認できなければ unknown', () => {
   const { CA } = load();
   assert.equal(CA.completeApiReady, false);
-  for (const analysisKnown of [true, false]) {
-    const st = CA.realState({ analysisKnown, diagnosisSessionId: 'A' });
-    assert.equal(CA.stateKey(st), 'unknown');
-    assert.equal(CA.offerFor(st), null);
-  }
+  assert.equal(CA.completeSalesOpen, false);
+  // 解析レポートの購入状態を確認できない：unknown（購入導線なし）
+  const u = CA.realState({ analysisKnown: false, analysisAccess: true, diagnosisSessionId: 'A' });
+  assert.equal(CA.stateKey(u), 'unknown');
+  assert.equal(CA.offerFor(u), null);
+  // 確認できた：完全解析は販売前なので未購入で確定（free／analysis）
+  assert.equal(CA.stateKey(CA.realState({ analysisKnown: true, analysisAccess: false })), 'free');
+  assert.equal(CA.stateKey(CA.realState({ analysisKnown: true, analysisAccess: true })), 'analysis');
+  // 販売開始後、完全解析の権利APIが無い間は unknown に戻す（推測しない）
+  const openSrc = SRC.replace('var CA_COMPLETE_SALES_OPEN = false;', 'var CA_COMPLETE_SALES_OPEN = true;');
+  assert.notEqual(openSrc, SRC);
+  const win = { location: { hostname: 'x.vercel.app', search: '' } };
+  vm.runInContext(openSrc, vm.createContext({ window: win, URLSearchParams }));
+  assert.equal(win.CompleteAnalysis.stateKey(win.CompleteAnalysis.realState({ analysisKnown: true, analysisAccess: false })), 'unknown');
 });
 
 test('?preview_entitlement は Preview でのみ有効', () => {
@@ -91,12 +100,33 @@ test('preview_past は preview_entitlement と組で、Previewでのみ有効', 
   assert.equal(load({ search: '?preview_past=complete-ready' }).CA.previewPastStateName(), null);
 });
 
-test('ダミー決済リンクは本番Payment Linkではなく、診断コードを付けない', () => {
+test('決済未接続：完全解析の購入先は常に無し。ダミーの Payment Link も持たない', () => {
   const { CA } = load();
-  const url = CA.checkoutUrl();
-  assert.match(url, /^https:\/\/buy\.stripe\.com\/test_/);
-  assert.ok(!url.includes('client_reference_id'));
-  assert.equal(CA.isPreviewDummyCheckout, true);
+  assert.equal(CA.checkoutUrl(), null);
+  assert.equal(CA.isPreviewDummyCheckout, false);
+  assert.ok(!/buy\.stripe\.com/.test(SRC), 'complete-analysis.js に Stripe のリンクが無い');
+  for (const name of ['free', 'analysis']) {
+    const st = CA.withEligibility(CA.previewState(name, 'A'), { eligible: true });
+    assert.equal(CA.completeCheckoutHref(st), null, name);
+    assert.ok(CA.pendingOfferFor(st), name);
+  }
+});
+
+test('準備中ボタン：押せない button。href・onclick・商品IDを持たない。価格と「準備中」を表示', () => {
+  const { CA } = load();
+  const direct = CA.pendingButtonHtml(CA.OFFERS.direct, 'x');
+  const up = CA.pendingButtonHtml(CA.OFFERS.upgrade, 'x');
+  assert.match(direct, /^<button type="button" class="x is-pending" disabled aria-disabled="true"/);
+  assert.ok(direct.includes('>完全解析 ¥3,000（準備中）</button>'));
+  assert.ok(up.includes('>完全解析へアップグレード ¥2,000（準備中）</button>'));
+  for (const h of [direct, up]) {
+    assert.ok(!/href=|onclick=|data-product-id|buy\.stripe/.test(h), h);
+  }
+  assert.equal(CA.pendingButtonHtml(null, 'x'), '');
+  // 不適格・状態不明・購入済みでは準備中ボタンも出さない
+  assert.equal(CA.pendingOfferFor(CA.withEligibility(CA.previewState('free', 'A'), { eligible: false })), null);
+  assert.equal(CA.pendingOfferFor(CA.withEligibility(CA.previewState('unknown', 'A'), { eligible: true })), null);
+  assert.equal(CA.pendingOfferFor(CA.withEligibility(CA.previewState('complete-ready', 'A'), { eligible: true })), null);
 });
 
 test('GA4 へは文字列・数値・真偽値だけを送る', () => {
@@ -105,19 +135,8 @@ test('GA4 へは文字列・数値・真偽値だけを送る', () => {
   assert.deepEqual(plain(events), [['complete_checkout_click', { source: 'index', preview_dummy: true }]]);
 });
 
-test('右上入口：権利API未実装なら Preview 指定がある時だけ出す', () => {
-  assert.equal(load().CA.headerEntryEnabled(), false, '指定なし');
-  assert.equal(load({ search: '?preview_entitlement=bogus' }).CA.headerEntryEnabled(), false, '無効な指定');
-  for (const st of ['free', 'analysis', 'complete-generating', 'complete-ready', 'unknown']) {
-    assert.equal(load({ search: '?preview_entitlement=' + st }).CA.headerEntryEnabled(), true, st);
-  }
-  // 本番ホストでは Preview 指定が無効なので出さない
-  assert.equal(load({ host: 'element-diagnosis-five.vercel.app', search: '?preview_entitlement=free' }).CA.headerEntryEnabled(), false);
-  // 権利API実装後は指定なしでも出す（状態不明なら unknown＝「状態を確認」）
-  const apiSrc = SRC.replace('var CA_COMPLETE_API_READY = false;', 'var CA_COMPLETE_API_READY = true;');
-  assert.notEqual(apiSrc, SRC);
-  const win = { location: { hostname: 'x.vercel.app', search: '' } };
-  vm.runInContext(apiSrc, vm.createContext({ window: win, URLSearchParams }));
-  assert.equal(win.CompleteAnalysis.headerEntryEnabled(), true);
-  assert.equal(win.CompleteAnalysis.stateKey(win.CompleteAnalysis.realState({ analysisKnown: false })), 'unknown');
+test('右上入口：Preview 指定の有無に関係なく出す（未購入者にも出す。2026-10-07）', () => {
+  assert.equal(load().CA.headerEntryEnabled(), true, '指定なし');
+  assert.equal(load({ host: 'element-diagnosis-five.vercel.app' }).CA.headerEntryEnabled(), true);
+  assert.equal(load().CA.stateKey(load().CA.realState({ analysisKnown: false })), 'unknown');
 });
