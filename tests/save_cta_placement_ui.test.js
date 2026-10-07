@@ -27,6 +27,7 @@ function fakeSupabase({ signedIn = true, status = 'completed', profileError = fa
     let user = ${signedIn ? '{ id: "user-1", email: "owner@example.test" }' : 'null'};
     let status = ${JSON.stringify(status)};
     const rows = ${JSON.stringify(rows)};
+    const saved = []; // 保存された記録（結果ページの「保存済みか」の確認に返す）
     const cbs = [];
     const delay = (ms) => new Promise((r) => setTimeout(r, ms));
     function builder(table) {
@@ -37,7 +38,7 @@ function fakeSupabase({ signedIn = true, status = 'completed', profileError = fa
           if (table === 'profiles') {
             window.__log.push('read:profiles');
             out = ${profileError ? '{ data: null, error: { message: "unavailable" } }' : `{ data: { onboarding_status: status, newsletter_sync_status: 'synced', newsletter_sync_attempts: 1, newsletter_sync_attempted_at: null }, error: null }`};
-          } else if (table === 'diagnosis_sessions') out = { data: inner ? [] : (one ? (rows[0] || null) : rows), error: null };
+          } else if (table === 'diagnosis_sessions') out = { data: inner ? saved.slice() : (one ? (rows[0] || null) : rows), error: null };
           else out = { data: one ? null : [], error: null };
           return Promise.resolve(out).then(res, rej);
         };
@@ -48,10 +49,14 @@ function fakeSupabase({ signedIn = true, status = 'completed', profileError = fa
       return q;
     }
     return { from: builder,
-      rpc: async (name) => {
+      rpc: async (name, a) => {
         window.__log.push('rpc:' + name);
         if (name === 'complete_registration_onboarding') { status = 'completed'; return { data: { onboarding_status: 'completed', newsletter_sync_status: 'pending' }, error: null }; }
-        return { data: null, error: status === 'required' ? { message: 'onboarding_required' } : null };
+        if (window.__saveFails && name.startsWith('save_diagnosis_session')) return { data: null, error: { message: 'network' } };
+        if (status === 'required') return { data: null, error: { message: 'onboarding_required' } };
+        if (name === 'save_diagnosis_session_v2') saved.push({ id: 'saved-' + saved.length, diagnosis_version: 'ETI-2.0', item_set_version: a.p_item_set_version || 'ETI-ITEM-2.0.0',
+          diagnosis_results: [{ diagnosis_code: a.p_encoded_answers, scoring_version: a.p_scoring_version || 'ETI-SCORE-2.0.0', item_set_version: a.p_item_set_version || 'ETI-ITEM-2.0.0' }] });
+        return { data: null, error: null };
       },
       auth: {
         getUser: async () => { if (${userDelayMs}) await delay(${userDelayMs}); return { data: { user } }; },
@@ -60,7 +65,7 @@ function fakeSupabase({ signedIn = true, status = 'completed', profileError = fa
         signInWithOtp: async () => { window.__log.push('otp:send'); return { error: null }; },
         verifyOtp: async () => { window.__log.push('otp:verify'); user = { id: 'user-1', email: 'owner@example.test' }; cbs.forEach((cb) => cb('SIGNED_IN', { access_token: 't' })); return { error: null }; },
         signOut: async () => { window.__log.push('signOut'); user = null; cbs.forEach((cb) => cb('SIGNED_OUT', null)); return {}; },
-        signInWithOAuth: async () => { window.__log.push('oauth'); return { error: null }; },
+        signInWithOAuth: async (o) => { window.__log.push('oauth'); window.__log.push('oauth:' + new URL(o.options.redirectTo).pathname); return { error: null }; },
       } };
   } };`;
 }
@@ -103,8 +108,9 @@ test.before(async () => {
 });
 test.after(async () => { if (browser) await browser.close(); if (server) server.close(); });
 
-// hint：端末ヒントを最初から入れておくか／pendingV2：未保存の v2 診断を最初から入れておくか／entitlements：/api/my-entitlements の応答
-async function openPage(url, { supa = {}, hint = false, pendingV2 = false, width = 390, height = 844, entitlements } = {}) {
+// hint：端末ヒントを最初から入れておくか／pendingV2：未保存の v2 診断を最初から入れておくか（文字列ならその診断コード）
+// seed：最初に入れておく localStorage／entitlements：/api/my-entitlements の応答
+async function openPage(url, { supa = {}, hint = false, pendingV2 = false, seed = {}, width = 390, height = 844, entitlements } = {}) {
   const ctx = await browser.newContext({ viewport: { width, height } });
   const p = await ctx.newPage();
   p.setDefaultTimeout(8000);
@@ -119,14 +125,15 @@ async function openPage(url, { supa = {}, hint = false, pendingV2 = false, width
   await p.route('**/api/my-entitlements', (r) => entitlements ? entitlements(r) : r.fulfill({ contentType: 'application/json', body: '{"purchased_by_version":{}}' }));
   await p.route('**/api/subscribe', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }));
   await p.exposeFunction('__recordGtag', (name) => { gtagEvents.push(name); });
-  await p.addInitScript(({ hint, pendingV2, HINT }) => {
+  await p.addInitScript(({ hint, pendingV2, seed, HINT }) => {
     window.gtag = function (kind, name) { if (kind === 'event' && window.__recordGtag) window.__recordGtag(name); };
     if (sessionStorage.getItem('__seeded')) return;
     sessionStorage.setItem('__seeded', '1');
     if (hint) localStorage.setItem(HINT, '1');
     if (pendingV2) localStorage.setItem('pendingDiagnosis_v2', JSON.stringify({ diagnosisType: 'element', diagnosisVersion: 'ETI-2.0', clientSessionId: 'c-1',
-      answersV2: [1], encodedAnswers: 'X', results: { personality: {}, style: {}, values: {}, valuesCentered: {}, elementRanking: [], weaponRanking: [], nationRanking: [] }, createdAt: Date.now() }));
-  }, { hint, pendingV2, HINT });
+      answersV2: [1], encodedAnswers: typeof pendingV2 === 'string' ? pendingV2 : 'X', results: { personality: {}, style: {}, values: {}, valuesCentered: {}, elementRanking: [], weaponRanking: [], nationRanking: [] }, createdAt: Date.now() }));
+    Object.keys(seed).forEach((k) => localStorage.setItem(k, typeof seed[k] === 'function' ? seed[k]() : seed[k]));
+  }, { hint, pendingV2, seed, HINT });
   await p.goto(base + url);
   p.__ctx = ctx; p.__errors = errors; p.__popups = popups; p.__gtag = gtagEvents;
   return p;
@@ -140,36 +147,44 @@ async function resultUrl() {
 async function indexResult(opts) {
   const p = await openPage(await resultUrl(), opts);
   await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
-  // 配置が決まるまで待つ（確認中は data-placement="pending"）
-  await p.waitForFunction(() => { const e = document.getElementById('recordEarly'); return e && e.getAttribute('data-placement') !== 'pending'; });
+  // 状態が決まるまで待つ（確認中は data-state="pending"）
+  await p.waitForFunction(() => { const e = document.getElementById('recordCard'); return e && e.getAttribute('data-state') !== 'pending'; });
   return p;
 }
 const log = (p) => p.evaluate(() => window.__log.slice());
-const placement = (p) => p.evaluate(() => document.getElementById('recordEarly').getAttribute('data-placement'));
-// 早い位置（元素TOP3 の直後）と下部（購入導線の後）の縦位置
-async function positions(p) {
-  return p.evaluate(() => ({
-    early: document.getElementById('recordEarly').getBoundingClientRect().top + scrollY,
+const cardState = (p) => p.evaluate(() => document.getElementById('recordCard').getAttribute('data-state'));
+// 保存カードは元素TOP3の直後・購入導線より前の1か所だけ
+async function assertSingleEarlyCard(p, msg) {
+  const r = await p.evaluate(() => ({
+    cards: document.querySelectorAll('#recordCard, #recordEarly, #recordCardBottom, .rs-card').length,
+    note: document.querySelectorAll('.rs-note, #recordNoteJump').length,
+    card: document.getElementById('recordCard').getBoundingClientRect().top + scrollY,
     unlock: document.getElementById('lockUnlockAllBtn').getBoundingClientRect().top + scrollY,
-    bottom: document.getElementById('recordCardBottom').hidden ? null : document.getElementById('recordCardBottom').getBoundingClientRect().top + scrollY,
+    share: document.getElementById('saveImgBtn').getBoundingClientRect().top + scrollY,
   }));
+  assert.equal(r.cards, 1, '保存カードは1つ ' + (msg || ''));
+  assert.equal(r.note, 0, '「下部の保存へ」の案内なし');
+  assert.ok(r.card < r.share && r.card < r.unlock, '画像保存・購入導線より前 ' + (msg || ''));
 }
+const btnText = (p, sel) => p.locator(sel).innerText().then((t) => t.trim());
 
 // ---------------- 診断完了ページ ----------------
 
-test('A：ログイン中・completed／legacy_exempt は早い位置で保存。モーダルなし・端末ヒントを記録', { skip: skip() }, async () => {
+test('ログイン中・completed／legacy_exempt：「この結果を診断記録に保存する」。モーダルなしで保存し、同じページで「保存しました」', { skip: skip() }, async () => {
   for (const status of ['completed', 'legacy_exempt']) {
     const p = await indexResult({ supa: { status } });
-    assert.equal(await placement(p), 'early', status);
-    const btn = p.locator('#recordEarly #recordSaveBtn');
-    assert.equal((await btn.innerText()).trim(), 'この結果を診断記録に保存する');
-    assert.equal(await p.locator('#recordCardBottom').isHidden(), true);
-    const pos = await positions(p);
-    assert.ok(pos.early < pos.unlock, '購入導線より前');
+    await assertSingleEarlyCard(p, status);
+    assert.equal(await btnText(p, '#recordCard #recordSaveBtn'), 'この結果を診断記録に保存する');
     assert.equal(await p.evaluate((k) => localStorage.getItem(k), HINT), '1', 'DB で確認できたので端末ヒントを記録');
-    await btn.click();
+    const url = p.url();
+    await p.locator('#recordSaveBtn').click();
     await p.waitForFunction(() => window.__log.includes('rpc:save_diagnosis_session_v2'));
-    await p.waitForSelector('#recordEarly .rs-done');
+    await p.waitForFunction(() => document.getElementById('recordCard').getAttribute('data-state') === 'just_saved');
+    assert.match(await p.locator('#recordCard').innerText(), /✓ 診断記録に保存しました/);
+    assert.match(await p.locator('#recordCard a[href="/mypage.html"]').innerText(), /マイページで確認する/);
+    assert.equal(p.url(), url, 'マイページへ自動で移動しない');
+    // 結果閲覧・画像保存・Xシェア・購入導線はそのまま続けられる
+    for (const sel of ['#saveImgBtn', '#tweetShareBtn', '#lockUnlockAllBtn']) assert.equal(await p.locator(sel).isVisible(), true, sel);
     assert.equal(await p.locator('.ro-dialog').count(), 0, 'モーダルを出さない');
     assert.ok(!(await log(p)).includes('rpc:complete_registration_onboarding'));
     assert.deepEqual(p.__errors, []);
@@ -177,82 +192,75 @@ test('A：ログイン中・completed／legacy_exempt は早い位置で保存�
   }
 });
 
-test('D：ログイン中・required は、開いただけではモーダルを出さない。早い位置は案内だけ、保存は下部', { skip: skip() }, async () => {
+test('ログイン中・required：開いただけではモーダルなし。「登録を完了して診断記録に保存する」を押したときだけモーダル → 同意 → 保存', { skip: skip() }, async () => {
   const p = await indexResult({ supa: { status: 'required' } });
   await p.waitForTimeout(600);
   assert.equal(await p.locator('.ro-dialog').count(), 0, 'ページを開いただけではモーダルなし');
-  assert.equal(await placement(p), 'note');
-  assert.match(await p.locator('#recordEarly').innerText(), /この結果は、ページ下部から診断記録に残せます。/);
-  assert.equal(await p.locator('#recordEarly button:not(#recordNoteJump), #recordEarly a').count(), 0, '早い位置に保存・ログインのボタンなし');
-  const pos = await positions(p);
-  assert.ok(pos.bottom > pos.unlock, '保存カードは購入導線の後');
+  await assertSingleEarlyCard(p);
+  assert.equal(await btnText(p, '#recordCard #recordSaveBtn'), '登録を完了して診断記録に保存する');
   assert.equal(await p.evaluate((k) => localStorage.getItem(k), HINT), null, 'required では端末ヒントを付けない');
-  const l = await log(p);
-  assert.ok(!l.some((x) => x.startsWith('rpc:')), JSON.stringify(l));
-  // 保存を押したときだけモーダル。同意前は保存しない
-  await p.locator('#recordCardBottom #recordSaveBtn').click();
+  assert.ok(!(await log(p)).some((x) => x.startsWith('rpc:')));
+  const url = p.url();
+  await p.locator('#recordSaveBtn').click();
   await p.waitForSelector('.ro-dialog');
   assert.ok(!(await log(p)).includes('rpc:save_diagnosis_session_v2'), '同意前は保存しない');
   await p.locator('#roAll').check();
   await p.locator('#roYes').click();
   await p.waitForFunction(() => window.__log.includes('rpc:save_diagnosis_session_v2'));
-  const l2 = await log(p);
-  assert.ok(l2.indexOf('rpc:complete_registration_onboarding') < l2.indexOf('rpc:save_diagnosis_session_v2'), JSON.stringify(l2));
-  await p.waitForSelector('#recordCardBottom .rs-done');
+  const l = await log(p);
+  assert.ok(l.indexOf('rpc:complete_registration_onboarding') < l.indexOf('rpc:save_diagnosis_session_v2'), JSON.stringify(l));
+  await p.waitForFunction(() => document.getElementById('recordCard').getAttribute('data-state') === 'just_saved');
+  assert.equal(p.url(), url, 'マイページへ自動で移動しない');
   assert.equal(await p.evaluate((k) => localStorage.getItem(k), HINT), '1', '同意の完了後に端末ヒントを記録');
   assert.deepEqual(p.__errors, []);
   await p.__ctx.close();
 });
 
-test('D：required が保存を押してモーダルで「いいえ」→ 保存しない・サインアウト', { skip: skip() }, async () => {
+test('required がモーダルで「いいえ」→ 保存しない・サインアウトし、未登録の表示に戻る', { skip: skip() }, async () => {
   const p = await indexResult({ supa: { status: 'required' } });
-  await p.locator('#recordCardBottom #recordSaveBtn').click();
+  await p.locator('#recordSaveBtn').click();
   await p.waitForSelector('.ro-dialog');
   await p.locator('#roNo').click();
   await p.waitForFunction(() => window.__log.includes('signOut'));
   const l = await log(p);
   assert.ok(!l.includes('rpc:save_diagnosis_session_v2') && !l.includes('rpc:complete_registration_onboarding'), JSON.stringify(l));
-  await p.waitForSelector('#recordCardBottom #recordAuth', { state: 'attached' });
-  assert.equal(await p.evaluate((k) => localStorage.getItem(k), HINT), null);
+  await p.waitForSelector('#recordCard #recordLoginBtn');
+  assert.equal(await btnText(p, '#recordLoginBtn'), '無料登録して診断記録に保存する');
   await p.__ctx.close();
 });
 
-test('C：ログアウト中・端末ヒントなし：早い位置は案内だけ。押しても下部へスクロールするだけ', { skip: skip() }, async () => {
+test('ログアウト中・端末ヒントなし：上部に「無料登録して診断記録に保存する」と補足。押すまでログイン・保存しない', { skip: skip() }, async () => {
   const p = await indexResult({ supa: { signedIn: false } });
-  assert.equal(await placement(p), 'note');
-  assert.equal(await p.locator('#recordEarly #recordAuth, #recordEarly #recordLoginBtn, #recordEarly #recordSaveBtn').count(), 0);
-  await p.waitForSelector('#recordCardBottom #recordAuth [data-au="google"]', { state: 'attached' });
-  const pos = await positions(p);
-  assert.ok(pos.bottom > pos.unlock && pos.early < pos.unlock);
-  await p.evaluate(() => window.scrollTo(0, 0));
-  await p.locator('#recordNoteJump').click();
-  await p.waitForFunction(() => { const r = document.getElementById('recordCardBottom').getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0; });
+  await assertSingleEarlyCard(p);
+  assert.equal(await btnText(p, '#recordCard #recordLoginBtn'), '無料登録して診断記録に保存する');
+  assert.match(await p.locator('#recordCard').innerText(), /保存後も、このページで結果を続けてご覧いただけます。/);
+  assert.equal(await p.locator('#recordAuth').isHidden(), true);
+  await p.locator('#recordLoginBtn').click();
+  await p.waitForSelector('#recordCard #recordAuth [data-au="google"]');
   const l = await log(p);
   assert.ok(!l.includes('oauth') && !l.includes('otp:send') && !l.some((x) => x.startsWith('rpc:')), JSON.stringify(l));
   assert.equal(await p.locator('.ro-dialog').count(), 0);
   await p.__ctx.close();
 });
 
-test('B：ログアウト中・端末ヒントあり：早い位置に「ログインして診断記録に保存する」。ヒントだけでは保存・同意しない', { skip: skip() }, async () => {
+test('ログアウト中・端末ヒントあり：「ログインして診断記録に保存する」。ヒントは文言だけで、保存・同意しない', { skip: skip() }, async () => {
   const p = await indexResult({ supa: { signedIn: false }, hint: true });
-  assert.equal(await placement(p), 'early');
-  const btn = p.locator('#recordEarly #recordLoginBtn');
-  assert.equal((await btn.innerText()).trim(), 'ログインして診断記録に保存する');
-  assert.equal(await p.locator('#recordCardBottom').isHidden(), true);
+  await assertSingleEarlyCard(p);
+  assert.equal(await btnText(p, '#recordCard #recordLoginBtn'), 'ログインして診断記録に保存する');
+  assert.doesNotMatch(await p.locator('#recordCard').innerText(), /無料登録/);
   await p.waitForTimeout(300);
-  const l = await log(p);
-  assert.ok(!l.some((x) => x.startsWith('rpc:')), 'ヒントだけでは保存も同意もしない ' + JSON.stringify(l));
-  // 押すとログイン方法を出すだけ（まだログイン・保存しない）
-  await btn.click();
-  await p.waitForSelector('#recordEarly #recordAuth [data-au="google"]');
+  assert.ok(!(await log(p)).some((x) => x.startsWith('rpc:')), 'ヒントだけでは保存も同意もしない');
+  await p.locator('#recordLoginBtn').click();
+  await p.waitForSelector('#recordCard #recordAuth [data-au="google"]');
   assert.ok(!(await log(p)).some((x) => x === 'oauth' || x.startsWith('rpc:')));
   await p.__ctx.close();
 });
 
-test('B→ログイン後に DB が required（ヒントの偽陽性）：保存の前に必ずモーダル', { skip: skip() }, async () => {
+test('メールOTP：ログイン後に DB が required（ヒントの偽陽性）でも必ずモーダル → 保存後も同じページ', { skip: skip() }, async () => {
   const p = await indexResult({ supa: { signedIn: false, status: 'required' }, hint: true });
-  await p.locator('#recordEarly #recordLoginBtn').click();
-  await p.locator('#recordEarly [data-au="email"]').click();
+  const url = p.url();
+  await p.locator('#recordLoginBtn').click();
+  await p.locator('#recordCard [data-au="email"]').click();
   await p.locator('#auEmail').fill('owner@example.test');
   await p.locator('#auSend').click();
   await p.locator('#auCode').fill('123456');
@@ -260,32 +268,130 @@ test('B→ログイン後に DB が required（ヒントの偽陽性）：保存
   assert.ok(!(await log(p)).includes('rpc:save_diagnosis_session_v2'), 'モーダルの前に保存しない');
   await p.locator('#roAll').check();
   await p.locator('#roYes').click();
-  await p.waitForFunction(() => window.__log.includes('rpc:save_diagnosis_session_v2'));
+  await p.waitForFunction(() => document.getElementById('recordCard').getAttribute('data-state') === 'just_saved');
   const l = await log(p);
   assert.ok(l.indexOf('rpc:complete_registration_onboarding') < l.indexOf('rpc:save_diagnosis_session_v2'), JSON.stringify(l));
+  assert.equal(l.filter((x) => x === 'rpc:save_diagnosis_session_v2').length, 1, '保存は1回だけ');
+  assert.equal(p.url(), url);
   assert.deepEqual(p.__errors, []);
   await p.__ctx.close();
 });
 
-test('B→ログイン後に DB が completed：モーダルなしで保存', { skip: skip() }, async () => {
-  const p = await indexResult({ supa: { signedIn: false, status: 'completed' }, hint: true });
-  await p.locator('#recordEarly #recordLoginBtn').click();
-  await p.locator('#recordEarly [data-au="email"]').click();
+test('メールOTP：ログイン後に DB が completed ならモーダルなしで保存し、同じページで「保存しました」', { skip: skip() }, async () => {
+  const p = await indexResult({ supa: { signedIn: false, status: 'completed' } });
+  const url = p.url();
+  await p.locator('#recordLoginBtn').click();
+  await p.locator('#recordCard [data-au="email"]').click();
   await p.locator('#auEmail').fill('owner@example.test');
   await p.locator('#auSend').click();
   await p.locator('#auCode').fill('123456');
-  await p.waitForFunction(() => window.__log.includes('rpc:save_diagnosis_session_v2'));
-  await p.waitForSelector('#recordEarly .rs-done');
+  await p.waitForFunction(() => document.getElementById('recordCard').getAttribute('data-state') === 'just_saved');
   assert.equal(await p.locator('.ro-dialog').count(), 0);
-  assert.ok(!(await log(p)).includes('rpc:complete_registration_onboarding'));
+  assert.equal((await log(p)).filter((x) => x === 'rpc:save_diagnosis_session_v2').length, 1, '保存は1回だけ');
+  assert.equal(p.url(), url);
   await p.__ctx.close();
 });
 
-test('DB の登録状態を確認できない：保存ボタンを出さず、保存もしない（fail-closed）', { skip: skip() }, async () => {
+test('Google：認証へ進む前に戻り先（この結果ページ）を残す', { skip: skip() }, async () => {
+  const p = await indexResult({ supa: { signedIn: false } });
+  await p.locator('#recordLoginBtn').click();
+  await p.locator('#recordCard [data-au="google"]').click();
+  await p.waitForFunction(() => window.__log.includes('oauth'));
+  const ret = await p.evaluate(() => JSON.parse(localStorage.getItem('ed_save_return_v1')));
+  assert.equal(ret.url, `${base}/?dv=ETI-2.0&code=${RB.code}&mv=${new URL(ret.url).searchParams.get('mv')}`);
+  assert.ok(await p.evaluate(() => !!localStorage.getItem('pendingDiagnosis_v2')), 'pending を退避');
+  await p.__ctx.close();
+});
+
+test('Google・X の認証から戻ったマイページ：表示せず結果ページの保存カードへ戻り、そこで保存して「保存しました」', { skip: skip() }, async () => {
+  const resultPath = `/?dv=ETI-2.0&code=${RB.code}`;
+  for (const status of ['completed', 'required']) {
+    const p = await openPage('/mypage.html?code=auth-code', { supa: { status }, pendingV2: RB.code,
+      seed: { ed_save_return_v1: JSON.stringify({ url: base + resultPath, at: Date.now() }) } });
+    await p.waitForURL((u) => u.pathname === '/' && u.searchParams.get('code') === RB.code);
+    await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
+    if (status === 'required') {
+      // 結果ページで規約モーダル（マイページでは出さない）
+      await p.waitForSelector('.ro-dialog');
+      await p.locator('#roAll').check();
+      await p.locator('#roYes').click();
+    }
+    await p.waitForFunction(() => document.getElementById('recordCard').getAttribute('data-state') === 'just_saved');
+    assert.match(await p.locator('#recordCard').innerText(), /✓ 診断記録に保存しました/, status);
+    assert.equal(new URL(p.url()).pathname, '/', '結果ページに留まる ' + status);
+    assert.ok(await p.evaluate(() => !localStorage.getItem('pendingDiagnosis_v2')), '保存成功後に pending を削除');
+    assert.ok(await p.evaluate(() => !localStorage.getItem('ed_save_return_v1')), '戻り先の印は1回で消す');
+    assert.equal((await log(p)).filter((x) => x === 'rpc:save_diagnosis_session_v2').length, 1, '保存は1回だけ ' + status);
+    // 保存カードが画面内にある（レイアウトが落ち着いた後も）
+    await p.waitForFunction(() => { const r = document.getElementById('recordCard').getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; }, null, { timeout: 4000 });
+    await p.waitForTimeout(2200);
+    assert.ok(await p.locator('#recordCard').evaluate((e) => { const r = e.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; }), 'card in view ' + status);
+    assert.deepEqual(p.__errors, []);
+    await p.__ctx.close();
+  }
+});
+
+test('戻り先の印があっても、認証から戻ったのでなければマイページは通常どおり表示する', { skip: skip() }, async () => {
+  const p = await openPage('/mypage.html', { supa: { rows: [] }, seed: { ed_save_return_v1: JSON.stringify({ url: base + '/?code=x', at: Date.now() }) } });
+  await p.waitForSelector('#mpUpgradeTrigger');
+  assert.equal(new URL(p.url()).pathname, '/mypage.html');
+  await p.__ctx.close();
+  // 別サイトの URL は受け付けない
+  const q = await openPage('/mypage.html?code=auth-code', { supa: { rows: [] }, seed: { ed_save_return_v1: JSON.stringify({ url: 'https://evil.example/?code=x', at: Date.now() }) } });
+  await q.waitForSelector('#mpUpgradeTrigger');
+  assert.equal(new URL(q.url()).host, new URL(base).host);
+  await q.__ctx.close();
+});
+
+test('OAuth をキャンセル・失敗して戻っても pending は残り、結果ページで再試行できる', { skip: skip() }, async () => {
+  const p = await openPage('/mypage.html?error=access_denied&error_description=cancelled', { supa: { signedIn: false }, pendingV2: RB.code,
+    seed: { ed_save_return_v1: JSON.stringify({ url: `${base}/?dv=ETI-2.0&code=${RB.code}`, at: Date.now() }) } });
+  await p.waitForURL((u) => u.pathname === '/' && u.searchParams.get('code') === RB.code);
+  await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
+  await p.waitForFunction(() => document.getElementById('recordCard').getAttribute('data-state') === 'signed_out');
+  assert.equal(await btnText(p, '#recordLoginBtn'), '無料登録して診断記録に保存する', '再試行できる');
+  assert.ok(await p.evaluate(() => !!localStorage.getItem('pendingDiagnosis_v2')), 'pending を失わない');
+  assert.ok(!(await log(p)).some((x) => x.startsWith('rpc:')));
+  await p.__ctx.close();
+});
+
+test('戻り先の印：印の無い通常のマイページログインは移動しない・60分を過ぎた印は無効', { skip: skip() }, async () => {
+  // 認証から戻った（?code=）が、印が無い：通常どおりマイページ
+  const p = await openPage('/mypage.html?code=auth-code', { supa: { rows: [] } });
+  await p.waitForSelector('#mpUpgradeTrigger');
+  assert.equal(new URL(p.url()).pathname, '/mypage.html');
+  await p.__ctx.close();
+  // 60分を過ぎた印は使わず、消す
+  const q = await openPage('/mypage.html?code=auth-code', { supa: { rows: [] },
+    seed: { ed_save_return_v1: JSON.stringify({ url: `${base}/?code=x`, at: Date.now() - 61 * 60 * 1000 }) } });
+  await q.waitForSelector('#mpUpgradeTrigger');
+  assert.equal(new URL(q.url()).pathname, '/mypage.html');
+  assert.equal(await q.evaluate(() => localStorage.getItem('ed_save_return_v1')), null);
+  await q.__ctx.close();
+});
+
+test('保存に失敗したら pending を残し、「もう一度試す」で再試行できる（成功時だけ pending を削除・二重保存なし）', { skip: skip() }, async () => {
+  const p = await indexResult({ supa: { status: 'completed' } });
+  await p.evaluate(() => { window.__saveFails = true; });
+  await p.locator('#recordSaveBtn').click();
+  await p.waitForFunction(() => document.getElementById('recordCard').getAttribute('data-state') === 'error');
+  assert.ok(await p.evaluate(() => !!localStorage.getItem('pendingDiagnosis_v2')), '失敗時は pending を残す');
+  assert.equal(await btnText(p, '#recordSaveBtn'), 'もう一度試す');
+  await p.evaluate(() => { window.__saveFails = false; window.__log.length = 0; });
+  // 連打しても保存は1回
+  await p.locator('#recordSaveBtn').evaluate((b) => { b.click(); b.click(); });
+  await p.waitForFunction(() => document.getElementById('recordCard').getAttribute('data-state') === 'just_saved');
+  assert.equal((await log(p)).filter((x) => x === 'rpc:save_diagnosis_session_v2').length, 1);
+  assert.ok(await p.evaluate(() => !localStorage.getItem('pendingDiagnosis_v2')), '成功後に pending を削除');
+  await p.__ctx.close();
+});
+
+test('DB の登録状態を確認できない：「登録状態を確認できませんでした」と「もう一度確認する」。保存ボタンなし', { skip: skip() }, async () => {
   const p = await indexResult({ supa: { status: 'completed', profileError: true }, hint: true });
-  assert.equal(await p.locator('#recordEarly').getAttribute('data-state'), 'registration_unknown');
-  assert.equal(await p.locator('#recordSaveBtn').count(), 0);
-  assert.equal(await p.locator('#recordRecheckBtn').innerText(), 'もう一度確認する');
+  assert.equal(await cardState(p), 'registration_unknown');
+  assert.match(await p.locator('#recordCard').innerText(), /登録状態を確認できませんでした/);
+  assert.equal(await p.locator('#recordSaveBtn, #recordLoginBtn').count(), 0);
+  assert.equal(await btnText(p, '#recordRecheckBtn'), 'もう一度確認する');
   await p.waitForTimeout(300);
   assert.ok(!(await log(p)).some((x) => x.startsWith('rpc:')));
   assert.equal(await p.locator('.ro-dialog').count(), 0);
@@ -296,11 +402,9 @@ test('認証状態の確認中は中立の表示だけ（誤った保存・ロ�
   for (const supa of [{ signedIn: true, status: 'completed', userDelayMs: 3000 }, { signedIn: false, userDelayMs: 3000 }]) {
     const p = await openPage(await resultUrl(), { supa });
     await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
-    assert.equal(await placement(p), 'pending', JSON.stringify(supa));
-    assert.equal(await p.locator('#recordSaveBtn, #recordLoginBtn, #recordAuth, .rs-note').count(), 0);
-    assert.equal(await p.locator('#recordCardBottom').isHidden(), true);
-    // 確定後は1回だけ描画する
-    await p.waitForFunction(() => document.getElementById('recordEarly').getAttribute('data-placement') !== 'pending');
+    assert.equal(await cardState(p), 'pending', JSON.stringify(supa));
+    assert.equal(await p.locator('#recordSaveBtn, #recordLoginBtn, #recordAuth').count(), 0);
+    await p.waitForFunction(() => document.getElementById('recordCard').getAttribute('data-state') !== 'pending');
     await p.__ctx.close();
   }
 });
@@ -311,7 +415,6 @@ test('ログアウトしても端末ヒントは残る（ほかの保存デー�
   await p.evaluate(() => signOutUser());
   await p.waitForFunction(() => window.__log.includes('signOut'));
   assert.equal(await p.evaluate((k) => localStorage.getItem(k), HINT), '1');
-  // ヒントの値は '1' だけ（メール・ID・トークンを含まない）
   const all = await p.evaluate(() => JSON.stringify(Object.fromEntries(Object.keys(localStorage).map((k) => [k, localStorage.getItem(k)]))));
   assert.ok(!all.includes('owner@example.test') && !all.includes('user-1'), all);
   await p.__ctx.close();
@@ -325,7 +428,6 @@ test('認証復帰時に pending があれば、従来どおり保存を再開�
   await p.waitForFunction(() => window.__log.includes('rpc:save_diagnosis_session_v2'));
   await p.waitForFunction(() => !localStorage.getItem('pendingDiagnosis_v2'));
   await p.__ctx.close();
-  // completed：モーダルなしで保存
   const q = await openPage('/', { supa: { status: 'completed' }, pendingV2: true });
   await q.waitForFunction(() => window.__log.includes('rpc:save_diagnosis_session_v2'));
   assert.equal(await q.locator('.ro-dialog').count(), 0);
@@ -340,11 +442,12 @@ test('トップ（結果以外）を開いただけでは、required でもモ�
   await p.__ctx.close();
 });
 
-test('診断完了ページ：320／390／1280px で横スクロールしない（A・C）', { skip: skip() }, async () => {
+test('診断完了ページ：320／390／1280px で横スクロールしない（全状態）', { skip: skip() }, async () => {
   for (const width of [320, 390, 1280]) {
-    for (const opts of [{ supa: { status: 'completed' } }, { supa: { signedIn: false } }]) {
+    for (const opts of [{ supa: { status: 'completed' } }, { supa: { status: 'required' } }, { supa: { signedIn: false } }, { supa: { signedIn: false }, hint: true }]) {
       const p = await indexResult(Object.assign({ width }, opts));
-      assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${width} ${JSON.stringify(opts)}`);
+      assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth
+        && Array.from(document.querySelectorAll('#recordCard *')).every((e) => e.getBoundingClientRect().right <= window.innerWidth + 0.5)), `${width} ${JSON.stringify(opts)}`);
       await p.__ctx.close();
     }
   }
@@ -479,5 +582,104 @@ test('マイページ：320／390／1280px で横スクロールしない（記�
     assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth
       && Array.from(document.querySelectorAll('#mpUpgradeBody *')).every((e) => e.getBoundingClientRect().right <= window.innerWidth + 0.5)), 'sheet ' + width);
     await p.__ctx.close();
+  }
+});
+
+// ---------------- LATEST RESULT のアコーディオン（2026-10-07 追加） ----------------
+const actionTexts = (p, sel) => p.locator(`${sel} .mp-rec-actions`).locator('a, button').allInnerTexts().then((a) => a.map((t) => t.trim()));
+async function openLatestFold(p) {
+  const d = p.locator('details.mp-latest-fold');
+  if (!(await d.evaluate((e) => e.open))) await d.locator('summary').click();
+  return d;
+}
+async function openRecord(p, i) {
+  const d = p.locator(`#mp-rec-${i}`);
+  if (!(await d.evaluate((e) => e.open))) await d.locator('summary').click();
+  return d;
+}
+
+test('LATEST RESULT：4状態で THE RECORDS の同じ記録と同じ購入・閲覧導線を出す', { skip: skip() }, async () => {
+  const cases = [
+    { name: 'free', opts: { supa: { rows: [RB.row, RA.row] } }, want: ['解析レポート　¥1,000', '完全解析 ¥3,000（準備中）'] },
+    { name: 'analysis', opts: { supa: { rows: [RB.row, RA.row] }, entitlements: purchasedFor(RB.code) }, want: ['解析レポートを見る', '完全解析へアップグレード ¥2,000（準備中）'] },
+    { name: 'complete', opts: { url: '/mypage.html?preview_entitlement=complete-ready', supa: { rows: [RB.row, RA.row] } }, want: ['解析レポートを見る', '完全解析を見る'] },
+  ];
+  for (const c of cases) {
+    const p = await mypage(c.opts);
+    await openLatestFold(p);
+    const latest = await actionTexts(p, '.mp-latest-fold');
+    assert.deepEqual(latest, c.want, 'latest ' + c.name);
+    await openRecord(p, 0);
+    assert.deepEqual(await actionTexts(p, '#mp-rec-0'), latest, '最新記録と THE RECORDS の同じ記録で一致 ' + c.name);
+    // 準備中ボタンは button・disabled・href なし
+    for (const b of await p.locator('.mp-latest-fold button.is-pending').all()) {
+      assert.equal(await b.isDisabled(), true); assert.equal(await b.getAttribute('href'), null); assert.equal(await b.getAttribute('onclick'), null);
+    }
+    // 配置：購入状態の表示の後、「結果を見る」「Xシェア」の前
+    const order = await p.evaluate(() => {
+      const fold = document.querySelector('.mp-latest-fold-body');
+      const acts = fold.querySelector('.mp-rec-actions'), row = fold.querySelector('.mp-btn-row');
+      return !!(acts && row && (acts.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING));
+    });
+    assert.ok(order, 'actions before 結果を見る/Xシェア ' + c.name);
+    assert.match(await p.locator('.mp-latest-fold .mp-btn-row').innerText(), /結果を見る[\s\S]*Xシェア/);
+    // 完全解析を見る は最新記録（B）が対象
+    if (c.name === 'complete') assert.equal(await p.locator('.mp-latest-fold').getByText('完全解析を見る').getAttribute('data-session-id'), 'sess-B');
+    if (c.name === 'analysis') assert.equal(await p.locator('.mp-latest-fold').getByText('解析レポートを見る').getAttribute('data-session-id'), 'sess-B');
+    // 右上の入口は残る
+    assert.equal(await p.locator('#mpUpgradeTrigger').count(), 1);
+    assert.deepEqual(p.__errors, []);
+    await p.__ctx.close();
+  }
+});
+
+test('LATEST RESULT：購入状態APIが失敗しても開閉でき、購入・閲覧ボタンを隠して「もう一度確認する」', { skip: skip() }, async () => {
+  const p = await mypage({ supa: { rows: [RB.row, RA.row] }, entitlements: (r) => r.fulfill({ status: 503, contentType: 'application/json', body: '{"error":"service_unavailable"}' }) });
+  const d = await openLatestFold(p);
+  assert.equal(await d.evaluate((e) => e.open), true);
+  assert.match(await d.innerText(), /この記録の購入状態を確認できませんでした/);
+  assert.equal(await d.locator('.mp-notice button').innerText(), 'もう一度確認する');
+  assert.equal(await d.locator('a[href*="buy.stripe"], button.is-pending, [data-session-id]').count(), 0);
+  // THE RECORDS の同じ記録も同じ表示
+  const r0 = await openRecord(p, 0);
+  assert.equal(await r0.locator('.mp-notice button').innerText(), 'もう一度確認する');
+  await d.locator('summary').click();
+  assert.equal(await d.evaluate((e) => e.open), false);
+  await p.__ctx.close();
+});
+
+test('LATEST RESULT：¥1,000 は最新記録の session に紐づき、既存の計測（source=latest）を維持。準備中は遷移・計測しない', { skip: skip() }, async () => {
+  const p = await mypage({ supa: { rows: [RB.row, RA.row] } });
+  const d = await openLatestFold(p);
+  const link = d.locator('.mp-rec-actions a');
+  const href = await link.getAttribute('href');
+  assert.ok(href.includes('v2_' + RB.code) || href.includes(encodeURIComponent('v2_' + RB.code)), '最新記録（B）のコード');
+  assert.ok(!href.includes(RA.code), '過去記録（A）に紐づけない');
+  assert.match(await link.getAttribute('onclick'), /mypage_unlock_click',\{source:'latest'\}/);
+  const pending = d.locator('button.is-pending');
+  const url = p.url(); const before = p.__gtag.length;
+  await pending.click({ force: true });
+  await pending.evaluate((e) => e.click());
+  await p.waitForTimeout(200);
+  assert.equal(p.url(), url);
+  assert.equal(p.__popups.length, 0);
+  assert.equal(p.__gtag.length, before);
+  // THE RECORDS 側の同じ記録の ¥1,000 は従来どおり source=records
+  const r0 = await openRecord(p, 0);
+  assert.match(await r0.locator('.mp-rec-actions a').getAttribute('onclick'), /source:'records'/);
+  assert.equal(await r0.locator('.mp-rec-actions a').getAttribute('href'), href);
+  await p.__ctx.close();
+});
+
+test('LATEST RESULT：320／390／1280px で横スクロールしない（最新の詳細を開いた状態）', { skip: skip() }, async () => {
+  for (const width of [320, 390, 1280]) {
+    for (const opts of [{ supa: { rows: [RB.row, RA.row] } }, { supa: { rows: [RB.row, RA.row] }, entitlements: purchasedFor(RB.code) }]) {
+      const p = await mypage(Object.assign({ width }, opts));
+      await openLatestFold(p);
+      assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth
+        && Array.from(document.querySelectorAll('.mp-latest-fold .mp-rec-actions *')).every((e) => e.getBoundingClientRect().right <= window.innerWidth + 0.5)), 'width ' + width);
+      assert.equal(await p.locator('.mp-latest-fold .mp-rec-actions').evaluate((e) => getComputedStyle(e).flexDirection), width <= 420 ? 'column' : 'row');
+      await p.__ctx.close();
+    }
   }
 });

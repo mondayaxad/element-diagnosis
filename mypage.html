@@ -1729,15 +1729,8 @@ function mpInsightHtml(r) {
       ${mpInsightCards(r).map(c => `<div class="mp-insight-card" data-domain="${c.d}"><div class="t">${c.t}</div>${c.title || ''}${c.body || '<div class="v">—</div>'}<div class="n">${c.n}</div></div>`).join('')}
     </div>`;
 }
-function mpReadReportBtn(r) {
-  return `<div style="margin-top:12px">${purchasedReportButton(r.session, 'mp-btn primary full', '解析レポートを読む ›')}</div>`;
-}
-
 /* ---- 購入導線（元素解析レポート ¥1,000。販売停止中は既存の「準備中」表示のまま） ---- */
 const MP_REPORT_PRICE = '¥1,000';
-function mpReportCtaHtml(r, source, label) {
-  return v2ReportCta(purchaseUrlFor(r.session), 'mp-btn primary full', source, `${label}　${MP_REPORT_PRICE}`);
-}
 
 /* ---- 購入状態を確認できなかった記録（未購入とは扱わず、購入導線を出さない） ---- */
 function mpEntitlementUnknownHtml() {
@@ -1747,12 +1740,16 @@ function mpEntitlementUnknownHtml() {
 function mpRecordUnknownHtml() {
   return `<div class="mp-notice" role="status"><p>この記録の購入状態を確認できませんでした</p><button type="button" class="mp-btn full" onclick="mpRetryEntitlement(this)">もう一度確認する</button></div>`;
 }
-// 記録内の購入・閲覧導線（2026-10-07）。その記録（diagnosis_session_id）だけを対象にする。
+// 記録の購入・閲覧導線（2026-10-07）。LATEST RESULT と THE RECORDS の両方がこの関数だけを使う
+// （文言・価格・状態判定をずらさないため）。引数の記録（diagnosis_session_id）だけを対象にする。
+//   購入状態を確認できない：購入・閲覧ボタンを出さず、「もう一度確認する」だけ
 //   無料のみ：解析レポート ¥1,000（既存の決済導線）／完全解析 ¥3,000（準備中・押せない）
 //   解析レポート購入済み：解析レポートを見る／完全解析へアップグレード ¥2,000（準備中・押せない）
 //   完全解析購入済み：解析レポートを見る／完全解析を見る
 // 完全解析の対象外（旧版など）の記録には、完全解析のボタンを出さない。
-function mpRecordActionsHtml(r) {
+// source：¥1,000 導線の既存の計測（mypage_unlock_click）の source。'latest' または 'records'。
+function mpRecordActionsHtml(r, source) {
+  if (!mpEntitlementOk) return mpRecordUnknownHtml();
   const st = caAvailable() ? caStateOf(r) : null;
   const offer = st ? CompleteAnalysis.pendingOfferFor(st) : null;
   const pending = offer ? CompleteAnalysis.pendingButtonHtml(offer, 'mp-btn mp-btn-pending') : '';
@@ -1765,7 +1762,7 @@ function mpRecordActionsHtml(r) {
       items.push(pending);
     }
   } else {
-    items.push(v2ReportCta(purchaseUrlFor(r.session), 'mp-btn primary', 'records', `解析レポート　${MP_REPORT_PRICE}`));
+    items.push(v2ReportCta(purchaseUrlFor(r.session), 'mp-btn primary', source === 'latest' ? 'latest' : 'records', `解析レポート　${MP_REPORT_PRICE}`));
     if (pending) items.push(pending);
   }
   return `<div class="mp-rec-actions">${items.join('')}</div>`;
@@ -1796,7 +1793,7 @@ function mpLockedHtml(r, where) {
       <div class="mp-locked-title">まだ読み解いていないもの</div>
       ${rows.map(([t, cap, d]) => `<div class="mp-locked-row" data-domain="${d}"><span class="txt"><span class="t">${t}</span><span class="cap">${cap}</span><span class="ghost" aria-hidden="true"></span></span><span class="lk" aria-label="未解析">🔒</span></div>`).join('')}
       <p class="mp-rec-cta-note">この記録には、まだ知らない自分があります。</p>
-      ${isLatest ? mpReportCtaHtml(r, 'latest', 'この結果の解析レポートを見る') : mpRecordActionsHtml(r)}
+      ${mpRecordActionsHtml(r, isLatest ? 'latest' : 'records')}
     </div>`;
 }
 
@@ -1872,10 +1869,11 @@ function mpLatestHtml(r) {
     : `<span class="mp-btn" aria-disabled="true">結果を見る ›</span>`;
   const shareBtn = `<button type="button" class="mp-btn${r.purchased ? ' ghost' : ''}" onclick="mpShare(0)"><span aria-hidden="true">𝕏</span> Xシェア</button>`;
   let state;
+  // 購入状態の表示の直後に、THE RECORDS と同じ購入・閲覧導線（最新の記録そのものが対象）
   if (!mpEntitlementOk) {
-    state = mpRecordUnknownHtml();
+    state = mpRecordActionsHtml(r, 'latest');
   } else if (r.purchased) {
-    state = mpInsightHtml(r) + mpReadReportBtn(r) + caRecordCompleteHtml(r);
+    state = mpInsightHtml(r) + caRecordCompleteHtml(r, false) + mpRecordActionsHtml(r, 'latest');
   } else {
     state = mpLockedHtml(r, 'latest');
   }
@@ -1960,9 +1958,9 @@ function mpRecordHtml(r, i) {
   const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${mpEntitlementOk && !r.purchased ? '<span class="mp-chip locked" title="まだ読み解いていない記録">LOCKED</span>' : ''}${caIsReady(r) ? '<span class="mp-chip complete">COMPLETE</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
   let body;
   // 開閉（<details>）は購入状態APIと無関係。確認できなかった記録も開けて、中に再確認を出す
-  if (!mpEntitlementOk) body = mpVizHtml(r) + mpRecordUnknownHtml();
+  if (!mpEntitlementOk) body = mpVizHtml(r) + mpRecordActionsHtml(r, 'records');
   // 並び順は未購入と同じ：基本情報 → あなたに響く元素・MIRRORリング → 解析結果（購入済み）／まだ読み解いていないもの（未購入）
-  else if (r.purchased) body = mpVizHtml(r) + mpInsightHtml(r) + caRecordCompleteHtml(r, false) + mpRecordActionsHtml(r);
+  else if (r.purchased) body = mpVizHtml(r) + mpInsightHtml(r) + caRecordCompleteHtml(r, false) + mpRecordActionsHtml(r, 'records');
   else body = mpVizHtml(r) + mpLockedHtml(r, 'records');
   return `
     <details class="mp-rec state-${r.purchased ? 'insight' : 'record'}${caIsReady(r) ? ' is-complete' : ''}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}" id="mp-rec-${i}" ontoggle="if(this.open){trackEvent('diagnosis_history_open',{diagnosis_type:'${r.kind}'})}">
@@ -2156,7 +2154,7 @@ function caTriggerHtml(records) {
 }
 
 // 各記録（LATEST RESULT／THE RECORDS）内の完全解析表示。complete の記録だけに出る。
-// withButton=false：THE RECORDS 内では「完全解析を見る」を購入・閲覧導線の行（mpRecordActionsHtml）に置くため、ここでは出さない。
+// withButton=false：LATEST RESULT／THE RECORDS 内では「完全解析を見る」を購入・閲覧導線の行（mpRecordActionsHtml）に置くため、ここでは出さない。
 function caRecordCompleteHtml(r, withButton) {
   const k = caKey(r);
   const id = encodeURIComponent(String((r.session && r.session.id) || ''));
@@ -2555,6 +2553,11 @@ function renderError(root) {
 
 async function init() {
   const root = document.getElementById('root');
+  // 結果ページで保存を始めて認証から戻ってきた：マイページは表示せず、結果ページへ戻す（diagnosis-save.js）
+  if (window.__edReturningToResult) {
+    root.innerHTML = '<p class="empty">診断結果のページへ戻っています…</p>';
+    return;
+  }
   const user = await getCurrentUser();
 
   if (!user) {

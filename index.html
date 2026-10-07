@@ -256,15 +256,11 @@
     .rs-saving::after { content: ''; position: absolute; top: 0; left: -40%; width: 40%; height: 100%; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--el) 60%, #a8c8f0), transparent); animation: rs-sweep 1.4s ease-in-out infinite; }
     @keyframes rs-sweep { to { left: 100%; } }
     .rs-err { font-size: 12px; line-height: 1.8; color: #d6a8b8; margin: -6px 0 14px; }
-    /* 早い位置の枠：確認中は中立の1行（高さを小さく保ち、確定後に1回だけ描画する） */
-    .rs-early { margin-bottom: 16px; }
-    .rs-early.rs-card { margin-bottom: 16px; }
-    .rs-pending { min-height: 20px; margin: 0; padding: 12px 0; font-size: 12px; letter-spacing: .08em; color: #6f82a6; text-align: center; }
-    .rs-note { margin: 0; padding: 12px 14px; border: 1px solid #1c2a44; border-radius: 10px; background: rgba(12,18,34,.6);
-      font-size: 12.5px; line-height: 1.8; color: #9aa8c6; text-align: center; word-break: auto-phrase; }
-    .rs-note-link { display: inline-block; margin-left: 6px; padding: 2px 0; background: none; border: none; border-bottom: 1px solid #3a5480;
-      color: #b9cdee; font: inherit; font-size: 12px; cursor: pointer; }
-    .rs-note-link:focus-visible { outline: 1px solid #8fb6e8; outline-offset: 3px; }
+    /* 確認中は中立の1行だけ（確定後に1回だけ描画する） */
+    .rs-pending { min-height: 20px; margin: 0; font-size: 12px; letter-spacing: .08em; color: #6f82a6; text-align: center; }
+    .rs-sub { font-size: 12px; line-height: 1.8; color: #8c9bbb; margin: 10px 0 0; word-break: auto-phrase; }
+    .rs-done-head { font-size: 14px; letter-spacing: .08em; color: #cfe0f8; margin: 0 0 8px; }
+    .rs-link.rs-quiet { margin-top: 4px; padding: 10px; font-size: 12.5px; border-color: #24365a; background: transparent; }
 
     /* 完全解析：¥1,000の案内の後に置く折りたたみ。閉じた状態は細い一行だけ。主CTAより一段弱い枠線型ボタン。
        役割ごとの色（白一色にしない）：見出し --ca-title／本文 --ca-body／補足 --ca-muted／罫 --ca-line／価格 --ca-gold／
@@ -2293,14 +2289,13 @@ function renderResult(root) {
         }).join('')}
       </div>
 
-      <!-- 診断記録（早い位置）。押すまでログインもサーバー保存も開始しない（ログイン済みでも自動保存しない）。
+      <!-- 診断記録（元素TOP3の直後・1か所だけ）。押すまでログインもサーバー保存も開始しない（ログイン済みでも自動保存しない）。
            表示時に行うのは、ログイン状態・登録状態・「この結果がすでに保存済みか」の読み取りだけ。
-           確認が済むまでは中立の表示だけを出し、済んだら1回だけ描画する：
-             登録済みでログイン中 → ここに保存カード／ログアウト中で端末ヒントあり → ここに「ログインして保存」
-             それ以外（未登録・登録完了前） → ここには小さな案内だけ。保存カードは購入導線の後（#recordCardBottom） -->
-      <div id="recordEarly" class="rs-early" data-placement="pending" aria-live="polite">
+           確認が済むまでは中立の1行だけを出し、済んだら1回だけ描画する。登録・ログイン・同意・保存の後も、
+           マイページへ自動で移動せず、このカードの中で「保存しました」を示す。 -->
+      <section id="recordCard" class="rs-card" style="--el:${elC}" data-state="pending" aria-live="polite">
         <p class="rs-pending">診断記録の状態を確認しています</p>
-      </div>
+      </section>
 
       <div style="text-align:center;color:#5a80a0;font-size:11px;letter-spacing:2px;margin:20px 0 14px">— ここまでが無料診断の結果です —</div>
 
@@ -2632,9 +2627,6 @@ function renderResult(root) {
         </div>
       </div>
 
-      <!-- 診断記録（下部）。無料結果・有料解析の説明と購入導線を見た後に置く。未登録・登録完了前の人の保存カード -->
-      <section id="recordCardBottom" class="rs-card" style="--el:${elC}" aria-live="polite" hidden></section>
-
       <div style="display:flex;gap:10px">
         <button onclick="startNewDiagnosisV2()"
           style="flex:1;background:transparent;border:1px solid #1e3448;color:#6a90b0;border-radius:8px;padding:12px;font-size:13px;cursor:pointer;font-family:inherit">
@@ -2728,72 +2720,46 @@ function renderResult(root) {
     };
   }
 
-  // 診断記録カード（2026-10-07）：保存導線を4つの場合で出し分ける。
-  //   A ログイン中・登録済み（completed／legacy_exempt）     … 早い位置に保存カード
-  //   B ログアウト中・端末ヒントあり（ed_registration_known_v1） … 早い位置に「ログインして診断記録に保存する」
-  //   C ログアウト中・端末ヒントなし                             … 早い位置は案内だけ。保存カードは下部
-  //   D ログイン中・登録完了前（required）                       … C と同じ配置。保存を押したときだけ規約モーダル
-  // 配置はログイン状態・DB の onboarding_status・端末ヒントの確認が済んでから1回だけ決める（確認中は中立表示）。
-  // 端末ヒントは配置にだけ使う。保存は従来どおり handleSaveResultClickV2()／handleSaveResultClick() が、
-  // ログインと onboarding_status を確かめてから行う（required ならそこでモーダル）。
-  // 「結果を見る」だけではログイン・保存を一切開始しない（ログイン済みでも自動保存しない）。
-  var recordEarly = root.querySelector('#recordEarly');
-  var recordBottom = root.querySelector('#recordCardBottom');
-  var recordCard = null;
-  if (recordEarly && recordBottom) {
+  // 診断記録カード（2026-10-07 改訂）：元素TOP3の直後に1つだけ。状態ごとに文言を出し分ける。
+  //   ログイン中・登録済み（completed／legacy_exempt） … 「この結果を診断記録に保存する」
+  //   ログイン中・登録完了前（required）              … 「登録を完了して診断記録に保存する」（押したときだけ規約モーダル）
+  //   ログアウト中・端末ヒントあり                     … 「ログインして診断記録に保存する」
+  //   ログアウト中・端末ヒントなし                     … 「無料登録して診断記録に保存する」
+  //   保存済み                                         … 「✓ 診断記録に保存しました」（マイページへは自動で移動しない）
+  //   登録状態を確認できない                           … 保存できるとは表示せず「もう一度確認する」
+  // 端末ヒント（ed_registration_known_v1）は文言の出し分けだけに使う。保存は従来どおり
+  // handleSaveResultClickV2()／handleSaveResultClick() が、ログインと onboarding_status を確かめてから行う。
+  var recordCard = root.querySelector('#recordCard');
+  // 認証から戻った直後（/mypage.html から #recordCard 付きで戻る）：保存カードの位置を表示する
+  if (window.location.hash === '#recordCard') window.__edReturnToRecordCard = true;
+  if (recordCard) {
     var isV2Record = diagnosisVersion === 'ETI-2.0';
     // 完全一致の判定キー（user_id はチェック側でログイン中の本人に固定）
     var recordKey = isV2Record
       ? { diagnosisVersion: 'ETI-2.0', itemSetVersion: ETI_V2_META.itemSetVersion, scoringVersion: ETI_V2_META.scoringVersion, diagnosisCode: shortCode }
       : { diagnosisVersion: DIAGNOSIS_VERSION, itemSetVersion: null, scoringVersion: SCORING_VERSION, diagnosisCode: applyData };
 
-    // 保存カードを置く位置を決める（'early'＝早い位置、'bottom'＝購入導線の後）。
-    var mountRecordCard = function (where) {
-      if (where === 'early') {
-        recordEarly.className = 'rs-early rs-card';
-        recordEarly.style.setProperty('--el', elC);
-        recordEarly.setAttribute('data-placement', 'early');
-        recordBottom.hidden = true;
-        recordBottom.innerHTML = '';
-        recordCard = recordEarly;
-      } else {
-        recordEarly.className = 'rs-early';
-        recordEarly.setAttribute('data-placement', 'note');
-        // 案内だけ。押しても下部の保存カードへスクロールするだけで、ログインやモーダルは開始しない
-        recordEarly.innerHTML = '<p class="rs-note">この結果は、ページ下部から診断記録に残せます。'
-          + '<button type="button" class="rs-note-link" id="recordNoteJump">下部の保存へ</button></p>';
-        var jump = recordEarly.querySelector('#recordNoteJump');
-        if (jump) jump.onclick = function () {
-          var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-          recordBottom.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
-        };
-        recordBottom.hidden = false;
-        recordCard = recordBottom;
-      }
-    };
-
+    var RS_LOGIN_LABEL = { signed_out_known: 'ログインして診断記録に保存する', signed_out: '無料登録して診断記録に保存する' };
     var renderRecordCard = function (state) {
-      if (!recordCard) return;
       var label = '<div class="rs-label">診断記録</div>';
       var html;
       if (state === 'saved' || state === 'just_saved') {
-        html = label + (state === 'just_saved' ? '<div class="rs-done">記録しました</div>' : '')
-          + '<p class="rs-text">' + (state === 'just_saved' ? 'この結果は診断記録に残りました。' : 'この結果は、すでに診断記録に残っています。') + '</p>'
-          + '<a class="rs-link" href="/mypage.html" onclick="trackEvent(\'mypage_entry_click\',{entry_point:\'result\'})">マイページで見る <span class="arw">→</span></a>';
+        // 同じページに留まる。マイページは任意の副導線
+        html = label + '<p class="rs-done-head" role="status">✓ 診断記録に保存しました</p>'
+          + '<p class="rs-text">' + (state === 'just_saved' ? 'このまま、結果の続きをご覧いただけます。' : 'この結果は、すでに診断記録に残っています。') + '</p>'
+          + '<a class="rs-link rs-quiet" href="/mypage.html" onclick="trackEvent(\'mypage_entry_click\',{entry_point:\'result\'})">マイページで確認する <span class="arw">→</span></a>';
       } else if (state === 'saving') {
         html = label + '<p class="rs-text">この結果を、診断記録に残しています。</p>'
           + '<button type="button" class="rs-btn" disabled aria-busy="true">記録しています</button><div class="rs-saving" aria-hidden="true"></div>';
-      } else if (state === 'signed_out_known') {
-        // B：この端末で登録済みを確認したことがある。押すとログイン方法を出す（ヒントだけでは保存しない）
-        html = label + '<p class="rs-text">この結果を、診断記録に残せます。</p>'
-          + '<button type="button" class="rs-btn" id="recordLoginBtn">ログインして診断記録に保存する</button>'
-          + '<div id="recordAuth" hidden></div>';
-      } else if (state === 'signed_out') {
+      } else if (state === 'signed_out_known' || state === 'signed_out') {
+        // 押すとログイン方法（Google／X／メール）を出す。端末ヒントは文言だけに使う
         html = label + '<p class="rs-text">この結果を、今のあなたとして残しませんか。<br>保存すると、次に診断したとき今日の自分と見比べられます。</p>'
-          + '<div id="recordAuth"></div>';
+          + '<button type="button" class="rs-btn" id="recordLoginBtn">' + RS_LOGIN_LABEL[state] + '</button>'
+          + (state === 'signed_out' ? '<p class="rs-sub">保存後も、このページで結果を続けてご覧いただけます。</p>' : '')
+          + '<div id="recordAuth" hidden></div>';
       } else if (state === 'registration_unknown') {
         // 登録状態（profiles）を確認できない：登録済みとは扱わず、保存ボタンを出さない（fail-closed）
-        html = label + '<p class="rs-text">診断記録の状態を確認できませんでした。</p>'
+        html = label + '<p class="rs-text">登録状態を確認できませんでした</p>'
           + '<p class="rs-err" role="alert">通信状況を確かめて、もう一度お試しください。</p>'
           + '<button type="button" class="rs-btn" id="recordRecheckBtn">もう一度確認する</button>';
       } else if (state === 'error') {
@@ -2801,18 +2767,22 @@ function renderResult(root) {
           + '<p class="rs-err" role="alert">保存できませんでした。通信状況を確かめて、もう一度お試しください。</p>'
           + '<button type="button" class="rs-btn" id="recordSaveBtn">もう一度試す</button>';
       } else {
+        // 'unsaved'（登録済み）／'unsaved_required'（登録完了前。押したときだけ規約モーダル）
         html = label + '<p class="rs-text">この結果は、まだ診断記録に残っていません。<br>記録として残すと、マイページからいつでも見返せます。</p>'
-          + '<button type="button" class="rs-btn" id="recordSaveBtn">この結果を診断記録に保存する</button>';
+          + '<button type="button" class="rs-btn" id="recordSaveBtn">' + (state === 'unsaved_required' ? '登録を完了して診断記録に保存する' : 'この結果を診断記録に保存する') + '</button>';
       }
       recordCard.setAttribute('data-state', state);
       recordCard.innerHTML = html;
       var btn = recordCard.querySelector('#recordSaveBtn');
       if (btn) btn.onclick = function () { onRecordSaveClick(state); };
       var recheck = recordCard.querySelector('#recordRecheckBtn');
-      if (recheck) recheck.onclick = function () { recheck.disabled = true; decideRecordPlacement(); };
-      // 未ログイン：Google／X／メールの3方式（js/auth-providers.js）
+      if (recheck) recheck.onclick = function () { recheck.disabled = true; decideRecordState(); };
       var authBox = recordCard.querySelector('#recordAuth');
-      var wireAuth = function () {
+      var loginBtn = recordCard.querySelector('#recordLoginBtn');
+      if (authBox && loginBtn) loginBtn.onclick = function () {
+        loginBtn.hidden = true;
+        authBox.hidden = false;
+        // 未ログイン：Google／X／メールの3方式（js/auth-providers.js）
         renderAuthChoices(authBox, {
           // Google は従来どおり（保存関数が pending を退避して Google へ遷移する）
           onGoogle: function () { onRecordSaveClick('signed_out'); },
@@ -2822,12 +2792,6 @@ function renderResult(root) {
           onChoose: function (m) { if (m !== 'google') trackRecordSaveClick(); },
         });
       };
-      var loginBtn = recordCard.querySelector('#recordLoginBtn');
-      if (authBox && loginBtn) {
-        loginBtn.onclick = function () { loginBtn.hidden = true; authBox.hidden = false; wireAuth(); };
-      } else if (authBox) {
-        wireAuth();
-      }
     };
 
     var trackRecordSaveClick = function () {
@@ -2839,6 +2803,8 @@ function renderResult(root) {
     // X ログイン：Google のときに保存関数が行うのと同じ pending 退避（既存の関数をそのまま使う）をしてから
     // X へ遷移する。復帰先は /mypage.html で、保存は既存の onAuthStateChange が行う。
     var onRecordSaveWithX = function () {
+      // 認証後は一度 /mypage.html へ戻り、そこからこの結果ページの保存カードへ戻る（diagnosis-save.js）
+      rememberSaveReturn(buildResultUrl(shortCode, diagnosisVersion));
       if (isV2Record) {
         stashPendingDiagnosisV2(buildPendingV2(answersV2, shortCode, results.raw, recordMirrorTop(), crypto.randomUUID(), recordMirrorVersions()));
       } else {
@@ -2858,8 +2824,14 @@ function renderResult(root) {
       return { characterProfileVersion: results.characterProfileVersion, mirrorModelVersion: results.mirrorModelVersion };
     };
 
+    var recordSaveInFlight = false;
     var onRecordSaveClick = async function (fromState, alreadyTracked) {
+      // 二重保存を防ぐ（保存中の再押下・同時の呼び出しは無視する）
+      if (recordSaveInFlight) return;
+      recordSaveInFlight = true;
       if (!alreadyTracked) trackRecordSaveClick();
+      // Google で認証する場合に備え、戻り先（この結果ページ）を残す。メールOTP・ログイン済みでは使われない
+      if (fromState === 'signed_out') rememberSaveReturn(buildResultUrl(shortCode, diagnosisVersion));
       renderRecordCard('saving');
       try {
       // ログイン済みなら、保存直前にもう一度読み取りで確認する（同じ結果ならINSERTしない）
@@ -2892,35 +2864,61 @@ function renderResult(root) {
         // 保存処理の例外でカードが「記録しています」のまま止まらないようにする
         console.error('diagnosis record save failed:', e);
         renderRecordCard('error');
+      } finally {
+        recordSaveInFlight = false;
       }
     };
 
-    // 配置の決定（読み取りだけ。モーダルは開かない）
-    var decideRecordPlacement = async function () {
+    // この結果の pending（認証の往復前に退避した保存待ち）があるか。別の結果の古い pending とは区別する
+    var pendingForThisResult = function () {
+      var p = isV2Record ? (typeof readPendingDiagnosisV2 === 'function' ? readPendingDiagnosisV2() : null) : readPendingDiagnosis();
+      return !!(p && (isV2Record ? p.encodedAnswers === shortCode : p.diagnosisCode === applyData));
+    };
+    // 状態の決定（読み取りだけ。モーダルは開かない）。afterFlow：認証後の保存処理が終わった後の再判定
+    var decideRecordState = async function (afterFlow) {
       var found = await findSavedDiagnosisRecord(recordKey);
       if (found.state === 'unknown') console.error('saved-record check failed (showing as unsaved):', found.error);
+      // 認証から戻った直後（#recordCard 付き）に保存済みなら、いま保存できたものとして示す
+      if (found.state === 'saved') { renderRecordCard((afterFlow && afterFlow.savedAny) || window.__edReturnToRecordCard ? 'just_saved' : 'saved'); return; }
       if (found.state === 'signed_out') {
-        var known = typeof hasRegistrationKnownHint === 'function' && hasRegistrationKnownHint();
-        mountRecordCard(known ? 'early' : 'bottom');
-        renderRecordCard(known ? 'signed_out_known' : 'signed_out');
+        renderRecordCard(hasRegistrationKnownHint() ? 'signed_out_known' : 'signed_out');
         return;
       }
-      if (found.state === 'saved') { mountRecordCard('early'); renderRecordCard('saved'); return; }
+      // 認証から戻り、保存する pending の処理中（diagnosis-save.js の runSignedInFlow）：終わるまで「記録しています」
+      if (!afterFlow && pendingForThisResult()) {
+        renderRecordCard('saving');
+        // 念のため：処理の完了通知が来ないまま止まらないよう、一定時間後に読み取りで判定し直す
+        setTimeout(function () { if (recordCard.getAttribute('data-state') === 'saving') window.onSignedInFlowDone({}); }, 15000);
+        return;
+      }
       var reg = await peekRegistrationStatus();
-      if (reg.state === 'signed_out') {
-        var known2 = hasRegistrationKnownHint();
-        mountRecordCard(known2 ? 'early' : 'bottom');
-        renderRecordCard(known2 ? 'signed_out_known' : 'signed_out');
-        return;
-      }
-      if (reg.state !== 'ok') { mountRecordCard('early'); renderRecordCard('registration_unknown'); return; }
-      if (reg.status === 'required') { mountRecordCard('bottom'); renderRecordCard('unsaved'); return; }
-      mountRecordCard('early');
-      renderRecordCard('unsaved');
+      if (reg.state === 'signed_out') { renderRecordCard(hasRegistrationKnownHint() ? 'signed_out_known' : 'signed_out'); return; }
+      if (reg.state !== 'ok') { renderRecordCard('registration_unknown'); return; }
+      // 登録は済んだが、この結果の保存に失敗した（pending は残っている）：再試行できる
+      if (afterFlow && afterFlow.state === 'ok' && pendingForThisResult()) { renderRecordCard('error'); return; }
+      renderRecordCard(reg.status === 'required' ? 'unsaved_required' : 'unsaved');
     };
-    decideRecordPlacement().catch(function (e) {
-      console.error('record placement failed:', e && e.message);
-      mountRecordCard('early');
+    // 認証後の保存処理（pending）が終わったら、このカードへ結果を反映する（同じページに留まる）
+    // 認証から戻った直後：保存カードの位置へ戻す（URL の #recordCard は外す）
+    // 画像などの読み込みでカードより上の高さが後から変わるため、利用者が自分で動かすまでは少し後にも合わせ直す
+    var returnUserMoved = false;
+    if (window.__edReturnToRecordCard) ['wheel', 'touchstart', 'keydown'].forEach(function (t) {
+      window.addEventListener(t, function () { returnUserMoved = true; }, { once: true, passive: true });
+    });
+    var scrollToRecordCard = function () { if (!returnUserMoved) recordCard.scrollIntoView({ block: 'center' }); };
+    var showReturnedCard = function () {
+      if (!window.__edReturnToRecordCard) return;
+      scrollToRecordCard();
+      [300, 1000, 2000].forEach(function (ms) { setTimeout(scrollToRecordCard, ms); });
+      if (window.location.hash === '#recordCard') {
+        try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (e) { /* noop */ }
+      }
+    };
+    window.onSignedInFlowDone = function (r) {
+      decideRecordState(r || {}).then(showReturnedCard).catch(function () { renderRecordCard('registration_unknown'); });
+    };
+    decideRecordState().then(showReturnedCard).catch(function (e) {
+      console.error('record state check failed:', e && e.message);
       renderRecordCard('registration_unknown');
     });
   }
@@ -3073,6 +3071,9 @@ function revealRestoredResult() {
   });
   var go = function() {
     if (userMoved || window.__phase !== 'result') return;
+    // 認証から戻った直後は、結果の先頭ではなく保存カードの位置を表示する
+    var card = window.__edReturnToRecordCard ? document.getElementById('recordCard') : null;
+    if (card) { card.scrollIntoView({ block: 'center' }); return; }
     var root = document.getElementById('diagnosis-root');
     if (root) root.scrollIntoView({ block: 'start' });
   };

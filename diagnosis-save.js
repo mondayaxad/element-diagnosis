@@ -252,6 +252,45 @@ async function peekRegistrationStatus() {
 function registrationCheckOnLoadIsPendingOnly() {
   return typeof window !== 'undefined' && window.ED_REGISTRATION_CHECK_ON_LOAD === 'pending_only';
 }
+/* 認証後に結果ページへ戻る（2026-10-07）
+   Google・X の認証は、許可済みの戻り先 /mypage.html へ一度戻る（Supabase の Redirect URLs は変えない）。
+   結果ページで保存を始めるときに元の結果ページの URL を印として残し、マイページは「認証から戻ってきた」ときだけ、
+   セッションの確立を待ってから結果ページへ戻す。保存・規約モーダル・完了表示はすべて結果ページで行う
+   （マイページへ自動で移動したままにしない）。印は同じサイトの結果ページ（/?…）だけを受け付け、60分で無効。 */
+const SAVE_RETURN_KEY = 'ed_save_return_v1';
+const SAVE_RETURN_MAX_AGE_MS = 60 * 60 * 1000;
+function rememberSaveReturn(url) {
+  try { localStorage.setItem(SAVE_RETURN_KEY, JSON.stringify({ url: String(url || ''), at: Date.now() })); } catch (e) { /* noop */ }
+}
+function readSaveReturnUrl() {
+  try {
+    const raw = localStorage.getItem(SAVE_RETURN_KEY);
+    if (!raw) return null;
+    const v = JSON.parse(raw);
+    const origin = window.location.origin;
+    if (!v || typeof v.url !== 'string' || !(Date.now() - Number(v.at) < SAVE_RETURN_MAX_AGE_MS)) { localStorage.removeItem(SAVE_RETURN_KEY); return null; }
+    if (v.url.indexOf(origin + '/?') !== 0) { localStorage.removeItem(SAVE_RETURN_KEY); return null; }
+    return v.url;
+  } catch (e) { return null; }
+}
+function clearSaveReturn() {
+  try { localStorage.removeItem(SAVE_RETURN_KEY); } catch (e) { /* noop */ }
+}
+// 認証から戻ってきた URL か（PKCE の ?code= / 失敗時の ?error= / 旧方式の #access_token=）。読み込み時点で判定する
+const AUTH_RETURN_IN_URL = (typeof window !== 'undefined' && !!window.location)
+  && (/[?&](code|error|error_description)=/.test(window.location.search || '') || /(access_token|error)=/.test(window.location.hash || ''));
+// 結果ページ以外（マイページ）で、認証から戻り、戻り先の印があるときだけ結果ページへ戻す
+const SAVE_RETURN_TARGET = (typeof window !== 'undefined' && !registrationCheckOnLoadIsPendingOnly() && AUTH_RETURN_IN_URL) ? readSaveReturnUrl() : null;
+if (SAVE_RETURN_TARGET) window.__edReturningToResult = true;
+function returnToResultPage() {
+  if (!SAVE_RETURN_TARGET || window.__edReturnStarted) return;
+  window.__edReturnStarted = true;
+  clearSaveReturn();
+  window.location.replace(SAVE_RETURN_TARGET + '#recordCard');
+}
+// セッションの確立（onAuthStateChange）を待つ。通知が来ない場合も 8 秒で戻す
+if (SAVE_RETURN_TARGET) setTimeout(returnToResultPage, 8000);
+
 function hasPendingDiagnosisToSave() {
   if (readPendingDiagnosis()) return true;
   // v2 の pending は js/eti_v2_save.js が期限・形式を確かめて読む（壊れた・期限切れは消える）
@@ -590,7 +629,10 @@ async function runSignedInFlow() {
   await whenDocumentReady();
   const reg = await ensureRegistrationComplete();
   if (typeof window.onRegistrationStateChange === 'function') window.onRegistrationStateChange(reg);
-  if (reg.state !== 'ok') return reg; // 登録前・いいえ・確認不能：保存も Kit 同期もしない（pending は残す）
+  if (reg.state !== 'ok') { // 登録前・いいえ・確認不能：保存も Kit 同期もしない（pending は残す）
+    if (typeof window.onSignedInFlowDone === 'function') { try { window.onSignedInFlowDone({ state: reg.state, savedAny: false }); } catch (e) { /* noop */ } }
+    return reg;
+  }
 
   let savedAny = false;
   const v1 = await savePendingDiagnosisV1();
@@ -599,6 +641,8 @@ async function runSignedInFlow() {
     const v2 = await processPendingDiagnosisV2Once();
     if (v2 && v2.ok) savedAny = true;
   }
+  // 結果ページ：保存の結果を保存カードへ反映する（同じページに留まる）
+  if (typeof window.onSignedInFlowDone === 'function') { try { window.onSignedInFlowDone({ state: reg.state, savedAny: savedAny }); } catch (e) { /* noop */ } }
   // 保存の成否に関係なく、登録が済んでいれば Kit 同期（条件を満たす場合だけ。失敗しても登録・保存は成功のまま）
   await syncNewsletterIfDue(reg.profile).catch(() => {});
   // mypage.html上で認証復帰した場合、保存直後の履歴を同じ画面へ反映する。
@@ -617,13 +661,17 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
   // OAuthから戻った時点で既にセッション復元済みの場合、Supabaseは
   // SIGNED_INではなくINITIAL_SESSIONを通知する。どちらでも同じ処理を通す。
   if (event !== 'SIGNED_IN' && event !== 'INITIAL_SESSION') return;
+  // 認証から戻ったマイページ：セッションが確立したら（失敗しても）結果ページへ戻す。ここでは保存しない
+  if (window.__edReturningToResult) { setTimeout(returnToResultPage, 0); return; }
   if (!session || signedInFlowRunning) return;
   // supabase-js の通知処理の中で auth の呼び出しを待たないよう、次のタスクで実行する
   signedInFlowRunning = new Promise((resolve) => setTimeout(resolve, 0))
     .then(whenDocumentReady)
     .then(() => {
-      // 診断完了ページ：保存する pending が無ければ、ここでは判定もモーダルも行わない（保存を押したときに行う）
-      if (registrationCheckOnLoadIsPendingOnly() && !hasPendingDiagnosisToSave()) return null;
+      // 診断完了ページ：ページ内のログイン（メールOTP）の SIGNED_IN では何もしない。保存はそのページの保存処理が行う
+      // （同じ pending をここでも保存すると二重保存になる）。ページを開いたとき（INITIAL_SESSION）に、
+      // 保存する pending があるときだけ認証後の処理を行う。無ければ判定もモーダルも行わない（保存を押したときに行う）。
+      if (registrationCheckOnLoadIsPendingOnly() && (event !== 'INITIAL_SESSION' || !hasPendingDiagnosisToSave())) return null;
       return runSignedInFlow();
     })
     .catch((e) => console.error('signed-in flow failed:', e && e.message))
