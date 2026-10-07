@@ -1,10 +1,10 @@
 # 完全解析：決済・権利・生成・閲覧基盤 設計草案（第1段階・改訂1）
 
-- 状態：**草案（DRAFT）**。DB は Preview にだけ complete_01・complete_02・complete_03 を適用済み（2026-10-07）。外部サービス未設定・コード本体は未変更。
+- 状態：**草案（DRAFT）**。DB は Preview にだけ complete_01〜complete_04 を適用済み（2026-10-07）。外部サービス未設定・コード本体は未変更。
 - 基準：branch `release-c-preview` ／ baseline `8aca76db77449d4bd7fbe859bd23597474f208c7` ／ 2026-10-07
-- 関連 migration（Preview 適用済み・本文は編集しない）：`docs/sql/20261007111306_complete_01_orders_entitlements_reports.sql`、`docs/sql/20261007113230_complete_02_service_role_privileges.sql`、`docs/sql/20261007205700_complete_03_mentor_goal_ownership.sql`
+- 関連 migration（Preview 適用済み・本文は編集しない）：`docs/sql/20261007111306_complete_01_orders_entitlements_reports.sql`、`docs/sql/20261007113230_complete_02_service_role_privileges.sql`、`docs/sql/20261007205700_complete_03_mentor_goal_ownership.sql`、`docs/sql/20261007213147_complete_04_payment_transactions.sql`
 - 戻し（草案・実行禁止）：`docs/sql/complete_99_rollback_DRAFT_DO_NOT_RUN.sql`
-- migration の番号：complete_01＝表・権利・生成物（適用済み）／complete_02＝service_role の権限を arw に縮小（適用済み）／complete_03＝MENTOR 目標の所有者整合・記録の所有者固定（適用済み）／complete_04＝決済の原子的処理（SQL 関数。草案予定）／complete_05＝運営者 API の監査ログ表（運営者 API の実装時）
+- migration の番号：complete_01＝表・権利・生成物（適用済み）／complete_02＝service_role の権限を arw に縮小（適用済み）／complete_03＝MENTOR 目標の所有者整合・記録の所有者固定（適用済み）／complete_04＝決済の原子的処理・再購入禁止・旧購入権の結び付け（適用済み・20261007213147）／complete_05＝運営者 API の監査ログ表（運営者 API の実装時）
 - 改訂1：判断 1〜13（2026-10-07）を反映（§0）。**販売（決済の有効化）は §13 の停止条件がすべて解除されるまで行わない。**
 
 ## 0. 確定した判断（2026-10-07）
@@ -370,6 +370,36 @@ generating（貸出し期限切れ）──claim で回収──▶ generating
 - 入力：`{ "reportId": "...", "action": "requeue" | "process_now", "reason": "..." }`。
 - 処理：`failed → queued`（attempts を戻す）または queued の即時処理。
 - **監査ログ必須**：誰が・いつ・どの report／order に・何をしたか・理由・結果を記録してから応答する。監査ログを書けなければ処理しない。監査ログ表（`complete_admin_audit_log`）は運営者 API の実装時に **complete_04** として追加（complete_01 には含めない。complete_02 は権限縮小、complete_03 は MENTOR 目標の所有者整合、complete_04 は決済の原子的処理に使う）。
+
+### 決済の確定方針と complete_04（2026-10-07 決定・Preview 適用済み 20261007213147）
+
+| 項目 | 決定 |
+|---|---|
+| 決済方法 | 初期リリースはカードだけ（非同期決済の「入金待ち」状態は作らない） |
+| MENTOR 変更 | created・checkout_open・paid・disputed は禁止。expired・failed・canceled は選び直し可（complete_03） |
+| 返金・敗訴後 | 同じ記録の再購入は不可（`complete_repurchase_not_allowed`）。権利 revoked・生成物 revoked＋隔離・MENTOR ロック維持。再購入は新しい診断記録から |
+| Webhook の更新 | SQL 関数1回＝1トランザクション（complete_04）。Stripe API は注文 ID と Idempotency-Key で再開可能に |
+| Webhook の失敗 | 通信・Stripe 再取得・DB の失敗は failed＋HTTP 500（再配送で処理し直す）。署名済みで恒久的な不一致は ignored＋HTTP 200。failed のまま 200 にしない |
+| Preview への Webhook | Vercel の Protection Bypass for Automation（クエリ方式）。secret はコード・DB・アプリの環境変数に置かず、Stripe Dashboard だけに設定。URL 全文をログに出さない。Stripe 署名検証は必須 |
+| 関数の構成 | mentor-goal（GET・POST）、complete-status（GET 状態・POST 署名 URL）を各1関数にまとめる。本数の制限は Preview build の実測で判断 |
+| 生成 | Webhook の DB 処理で必ず queued → `@vercel/functions` の waitUntil で開始 → マイページの状態取得で取り残しを回収 → 運営者 API で再試行 |
+| 旧 ¥1,000 からの ¥2,000 | 診断コードのハッシュ一致だけでは認めない。`complete_legacy_bindings`（旧購入権1件→1人・1記録、一度だけ）を根拠にする。API が Stripe の Checkout Session を取り直し、購入時メールと Auth の本人メールが一致した時だけ結び付ける。不一致は運営者確認 |
+| 結び付け前の旧購入者 | ¥3,000 へ誘導しない（DB は `complete_legacy_purchase_pending` で拒否、UI は「既存の購入を確認中」） |
+| customer_email | Checkout 作成時に渡さない（決済画面で本人が入力） |
+
+complete_04 の内容（関数はすべて SECURITY INVOKER・search_path 空・EXECUTE は service_role だけ。本文に削除文を書かない）：
+
+- 表 `complete_legacy_bindings`：旧購入権・利用者・記録の固定（旧購入権・記録とも一意）。service_role は SELECT・INSERT だけ（更新・削除なし）。INSERT のトリガーで本人の記録・旧購入権の有効性・診断コードのハッシュ一致を確認。
+- トリガー：`complete_orders_no_repurchase`（再購入禁止）、`complete_orders_state_guard`（注文の状態を後戻りさせない）。
+- 関数：`complete_create_order`（記録ごとに直列化・冪等・決済待ちの注文を返す・offer の条件）、`complete_mark_checkout_open`、`complete_close_unopened_order`、`complete_apply_payment`（注文 paid・MENTOR ロック・権利・生成物 queued・イベント processed を同時に）、`complete_apply_checkout_expired`、`complete_apply_refund`（全額で失効・一部は記録だけ・支払い確定より先でも refunded を優先）、`complete_apply_dispute`（opened／won／lost。支払い確定前の opened は再送待ち、古い opened は無視）、`complete_bind_legacy_purchase`、`complete_webhook_gate`・`complete_webhook_finish`（イベントの重複排除と結果記録）。
+- record_entitlement の analysis 権だけを根拠とする ¥2,000 は、現行の商品構成では発生しない（direct は analysis と complete を同時に付与するため）。現時点の ¥2,000 の根拠は旧購入権の結び付けだけ。将来の商品追加に備えた経路として残す。
+
+API 実装時の必須事項（complete_04 の適用承認時の補足・2026-10-07）：
+
+- 再送待ち：支払い確定前の dispute などは SQL が例外 `complete_retry_later` を返す（トランザクション全体を取り消し、イベントも残さない）。API は HTTP 500 で返して Stripe に再送させ、ignored・HTTP 200 にしない。HTTP 200 にするのは恒久的な不一致（ignored）だけ。
+- 旧購入権の照合：Stripe の購入時メールと Auth のメールの平文を DB に保存しない（`complete_legacy_bindings` には旧購入権・利用者・記録・照合方式・日時だけ）。API のログにもメール、Checkout Session ID、PaymentIntent ID の全文を出さない（末尾だけ）。
+- 手動確認待ち：Auth にメールが無い、または Stripe の購入時メールと一致しない場合は自動で結び付けず、`legacy_purchase_verification_required` として停止する（¥3,000 へ誘導しない）。運営者の確認機能と確認記録は complete_05 で扱う。
+- 生成素材のハッシュ：本文素材・テンプレート・入力のハッシュは、ブラウザの入力ではなく、サーバーが読み取った保存済み回答と固定素材から計算して `complete_apply_payment` へ渡す。
 
 ### 既存 API の変更（橋渡し）
 - report-data／my-report-link：解析権の判定を §4-3 の OR に広げ、`core_analysis_access` を返す（旧の判定は変えずに追加）。
