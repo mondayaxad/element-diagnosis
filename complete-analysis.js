@@ -36,6 +36,13 @@
   // 実装時は、サーバー側で diagnosis_session_id を持つ Checkout Session を作る（Payment Link は使わない）。
   var CA_COMPLETE_SALES_OPEN = false;
 
+  // MENTOR 目標の選択（2026-10-07）。決済（Checkout）は未接続のまま、目標の選択と確認画面までを Preview で開く。
+  // 有効になるのは、この値が true かつ /api/public-config の appEnv が "preview" のときだけ（ホスト名では判断しない）。
+  // サーバー側も Preview 以外では /api/mentor-goal が 404 not_available を返す（二重の停止）。
+  var CA_MENTOR_SELECT_OPEN = true;
+  // 旧 ¥1,000 購入の本人確認が済むまでの表示（¥3,000・¥2,000 を出さない）
+  var CA_LEGACY_PENDING_TEXT = '既存の解析レポート購入を確認しています';
+
   var CA_OFFERS = {
     direct: { offer: 'direct_3000', price: '¥3,000', productId: 'core_complete_analysis' },
     upgrade: { offer: 'upgrade_2000', price: '¥2,000', productId: 'core_complete_analysis_upgrade' },
@@ -190,6 +197,29 @@
 
   function checkoutUrl() { return null; }
 
+  // MENTOR 目標の選択を出してよいか（公開設定の appEnv === "preview" かつ CA_MENTOR_SELECT_OPEN）
+  function mentorSelectEnabled() {
+    var cfg = global.__ED_PUBLIC_CONFIG__;
+    return CA_MENTOR_SELECT_OPEN === true && !!cfg && cfg.appEnv === 'preview';
+  }
+
+  // サーバー（/api/my-entitlements v2 の records）の状態から、完全解析の導線を決める。
+  //   unknown：状態を確認できない／purchased：完全解析権あり／closed：再購入不可（返金・失効・一時停止など）
+  //   ineligible：販売対象外／checkout_in_progress：決済手続き中／legacy_pending：旧 ¥1,000 購入の確認中
+  //   offer：direct（¥3,000）または upgrade（¥2,000。根拠は固定済みの旧購入権か記録単位の解析権だけ）
+  function completeOfferFor(complete, lookup) {
+    if (lookup !== 'ok' || !complete || typeof complete !== 'object') return { kind: 'unknown' };
+    if (complete.completeEntitlement === 'active') return { kind: 'purchased' };
+    if (complete.repurchaseBlocked) return { kind: 'closed' };
+    if (complete.completeEligible !== true) return { kind: 'ineligible', reason: complete.ineligibleReason || null };
+    if (complete.checkoutInProgress) return { kind: 'checkout_in_progress' };
+    if (complete.legacyPurchasePending) return { kind: 'legacy_pending' };
+    if (complete.analysisSource === 'legacy_purchase_entitlement' || complete.analysisSource === 'record_entitlement') {
+      return { kind: 'offer', offer: CA_OFFERS.upgrade };
+    }
+    return { kind: 'offer', offer: CA_OFFERS.direct };
+  }
+
   function track(name, params) {
     // GA4 へは回答・メール・トークン・完全URLを送らない（指示書 §16）
     var p = {};
@@ -254,5 +284,8 @@
     pendingButtonHtml: pendingButtonHtml,
     completeSalesOpen: CA_COMPLETE_SALES_OPEN,
     isPreviewDummyCheckout: false,
+    mentorSelectEnabled: mentorSelectEnabled,
+    completeOfferFor: completeOfferFor,
+    LEGACY_PENDING_TEXT: CA_LEGACY_PENDING_TEXT,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

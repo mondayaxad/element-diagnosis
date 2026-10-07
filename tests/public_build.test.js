@@ -45,7 +45,8 @@ test('許可リストどおりに dist を作り、問題が無い', () => {
 test('公開禁止のものは dist に無い（docs・tests・prototypes・lib・scripts・api・SQL・設定・テスト用ページ）', () => {
   const r = buildTo();
   for (const d of ['docs', 'tests', 'prototypes', 'lib', 'scripts', 'api', 'node_modules']) assert.ok(!r.has(d), `${d}/ が dist にあります`);
-  for (const f of ['api/public-config.js', 'lib/server-env.js', 'package.json', 'vercel.json', '.gitignore', 'index-test.html',
+  for (const f of ['api/public-config.js', 'api/mentor-goal.js', 'lib/server-env.js', 'lib/complete-eligibility.js',
+                   'prototypes/core1_v4_result_driven/src/content/mentor-goals.json', 'package.json', 'vercel.json', '.gitignore', 'index-test.html',
                    'js/ogp-card.mjs', 'js/ogp-theme.mjs', 'js/ogp-fixtures.mjs']) {
     assert.ok(!r.has(f), `${f} が dist にあります`);
   }
@@ -68,7 +69,8 @@ test('許可リストはディレクトリを丸ごと・再帰でコピーし�
 test('API の import は解決でき、lib/server-env.js などサーバー専用ファイルは dist に出ない', () => {
   const api = B.traceApiImports();
   assert.deepEqual(api.problems, []);
-  for (const f of ['api/public-config.js', 'api/verify.js', 'api/og-image.mjs', 'lib/server-env.js', 'js/ogp-card.mjs', 'js/ogp-theme.mjs']) {
+  for (const f of ['api/public-config.js', 'api/verify.js', 'api/og-image.mjs', 'lib/server-env.js', 'js/ogp-card.mjs', 'js/ogp-theme.mjs',
+                   'api/mentor-goal.js', 'lib/complete-eligibility.js', 'prototypes/core1_v4_result_driven/src/content/mentor-goals.json']) {
     assert.ok(api.files.includes(f), `API からたどれません: ${f}`);
   }
   assert.deepEqual(api.packages, ['@vercel/og', 'stripe']);

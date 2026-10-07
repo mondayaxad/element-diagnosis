@@ -967,6 +967,27 @@
   .ca-pick-state { font-size: 11.5px; color: var(--ca-body); }
   .ca-repick { margin-top: 0; margin-bottom: 12px; }
   .ca-pending-note { margin-top: 8px; font-size: 11.5px; line-height: 1.7; color: var(--ca-muted); }
+  /* MENTOR 目標の選択（2026-10-07・決済は未接続）：標準の radio・44px 以上のタップ領域・狭い画面でも横に溢れない */
+  .ca-step-back { margin-top: 0; margin-bottom: 12px; }
+  .ca-goal-fieldset { margin: 18px 0 0; padding: 0; border: none; min-width: 0; }
+  .ca-goal-fieldset legend { padding: 0; font-size: 15px; font-weight: 700; color: var(--ca-title); letter-spacing: .06em; }
+  .ca-goal-list { display: grid; gap: 8px; margin-top: 12px; }
+  .ca-goal-option { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; min-height: 44px; padding: 12px 14px; border: 1px solid var(--ca-line); border-radius: 8px; background: rgba(255,255,255,0.02); cursor: pointer; }
+  .ca-goal-option input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--ca-mentor, var(--accent)); }
+  .ca-goal-option:has(input:checked) { border-color: color-mix(in srgb, var(--ca-mentor, var(--accent)) 60%, var(--ca-line)); background: color-mix(in srgb, var(--ca-mentor, var(--accent)) 7%, transparent); }
+  .ca-goal-option:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .ca-goal-option.is-disabled { cursor: default; }
+  .ca-goal-label { display: block; font-size: 13.5px; font-weight: 700; color: var(--ca-title); line-height: 1.6; overflow-wrap: anywhere; }
+  .ca-goal-desc { display: block; margin-top: 3px; font-size: 12px; color: var(--ca-body); line-height: 1.75; overflow-wrap: anywhere; }
+  .ca-mentor-note { margin-top: 12px; padding-left: 8px; border-left: 2px solid var(--ca-line); font-size: 11.5px; color: var(--ca-muted); line-height: 1.7; }
+  .ca-mentor-error { margin-top: 12px; font-size: 12px; color: var(--ca-view); line-height: 1.7; }
+  .ca-confirm-list { margin: 16px 0 0; border: 1px solid var(--ca-line); border-radius: 8px; overflow: hidden; }
+  .ca-confirm-item { padding: 11px 14px; }
+  .ca-confirm-item + .ca-confirm-item { border-top: 1px solid var(--ca-line); }
+  .ca-confirm-item dt { font-size: 11px; color: var(--ca-muted); letter-spacing: .08em; }
+  .ca-confirm-item dd { margin: 3px 0 0; font-size: 13px; color: var(--ca-title); line-height: 1.7; overflow-wrap: anywhere; }
+  .ca-confirm-item dd .ca-goal-desc { color: var(--ca-body); }
+  .mp-rec-actions > .mp-rec-mentor { flex-basis: 100%; margin: 0; font-size: 11.5px; color: var(--fg-dim); line-height: 1.6; }
 
 </style>
 </head>
@@ -1752,7 +1773,9 @@ function mpRecordActionsHtml(r, source) {
   if (!mpEntitlementOk) return mpRecordUnknownHtml();
   const st = caAvailable() ? caStateOf(r) : null;
   const offer = st ? CompleteAnalysis.pendingOfferFor(st) : null;
-  const pending = offer ? CompleteAnalysis.pendingButtonHtml(offer, 'mp-btn mp-btn-pending') : '';
+  // MENTOR 目標の選択が有効な記録（Preview）では、準備中ボタンの代わりに目標選択への導線・確認中の表示を出す
+  const pending = caMentorMode(r) ? caRecordMentorHtml(r)
+    : (offer ? CompleteAnalysis.pendingButtonHtml(offer, 'mp-btn mp-btn-pending') : '');
   const items = [];
   if (r.purchased) {
     items.push(purchasedReportButton(r.session, 'mp-btn primary', '解析レポートを見る'));
@@ -1765,7 +1788,8 @@ function mpRecordActionsHtml(r, source) {
     items.push(v2ReportCta(purchaseUrlFor(r.session), 'mp-btn primary', source === 'latest' ? 'latest' : 'records', `解析レポート　${MP_REPORT_PRICE}`));
     if (pending) items.push(pending);
   }
-  return `<div class="mp-rec-actions">${items.join('')}</div>`;
+  const rid = String((r.session && r.session.id) || '');
+  return `<div class="mp-rec-actions" data-rec-actions="${encodeURIComponent(rid)}" data-rec-source="${source === 'latest' ? 'latest' : 'records'}">${items.join('')}</div>`;
 }
 async function mpRetryEntitlement(button) {
   if (button) { button.disabled = true; button.textContent = '確認中…'; }
@@ -2123,8 +2147,11 @@ function caApplyStates(records) {
       // 解析レポートの購入状態（/api/my-entitlements）を確認できた記録だけ free／analysis。完全解析は販売前のため未購入で確定
       st = CompleteAnalysis.realState({ analysisKnown: mpEntitlementOk, analysisAccess: r.purchased === true, diagnosisSessionId: id });
     }
-    // 不適格な記録（旧版など）は、Preview 指定があっても完全解析の状態・購入導線を成立させない
-    caStates.set(id, CompleteAnalysis.withEligibility(st, caEligibilityOf(r)));
+    // 不適格な記録（旧版など）は、Preview 指定があっても完全解析の状態・購入導線を成立させない。
+    // サーバー（/api/my-entitlements v2）の判定がある記録は、それを正とする（RC1 の6つの版の完全一致）。
+    const sv = caServerOf(r);
+    const elig = (!preview && sv.lookup === 'ok' && sv.complete) ? { eligible: sv.complete.completeEligible === true } : caEligibilityOf(r);
+    caStates.set(id, CompleteAnalysis.withEligibility(st, elig));
   });
   // Preview の unknown は、既存の「購入状態を確認できませんでした」表示（購入導線なし）に揃える
   if (preview) mpEntitlementOk = preview !== 'unknown';
@@ -2225,6 +2252,12 @@ function caGoRediagnosis() {
 }
 
 function caSheetBodyHtml(r) {
+  if (caMentorMode(r)) {
+    if (caStep === 'goal') return caMentorGoalHtml(r);
+    if (caStep === 'confirm') return caMentorConfirmHtml(r);
+    const overview = caMentorOverviewHtml(r);
+    if (overview) return overview;
+  }
   const k = caKey(r);
   const target = caTargetHtml(r);
   const eligible = caIsEligible(r);
@@ -2356,6 +2389,254 @@ function caTrackParams(r, extra) {
   }, extra || {});
 }
 
+/* ---- MENTOR 目標の選択（2026-10-07）：記録選択 → 目標選択 → 内容確認。決済（Checkout）は未接続 ----
+   ・Preview だけ（CompleteAnalysis.mentorSelectEnabled()：公開設定の appEnv === "preview"）。サーバーも Preview 以外は 404。
+   ・目標の文言はカタログ（/api/mentor-goal が返す label・keep_phrase）をそのまま表示する。
+   ・段階は history に載せない。シート内の「戻る」で段階を戻し、Escape でシート全体を閉じる。
+   ・計測（GA4）は追加しない。記録 ID・目標・説明文を計測やログへ送らない。 */
+let caStep = 'overview';
+let caOpenedForMentor = false;
+let caMentorOpenWired = false;
+const caMentorData = new Map(); // diagnosis_session_id → GET /api/mentor-goal の応答
+let caMentorLoading = false;
+let caMentorBusy = false;
+let caMentorError = null;
+let caMentorPick = null;
+function caRecordId(r) { return String((r && r.session && r.session.id) || ''); }
+function caServerOf(r) {
+  const s = r && r.session;
+  return { complete: (s && s.complete) || null, lookup: (s && s.completeLookup) || 'none' };
+}
+function caOfferOf(r) {
+  if (!caAvailable() || typeof CompleteAnalysis.completeOfferFor !== 'function') return { kind: 'unknown' };
+  const sv = caServerOf(r);
+  return CompleteAnalysis.completeOfferFor(sv.complete, sv.lookup);
+}
+// この記録で MENTOR 目標の選択を扱うか（Preview・実データ・購入状態を確認できた・サーバーの完全解析の状態がある）
+function caMentorMode(r) {
+  if (!r || !caAvailable() || typeof CompleteAnalysis.mentorSelectEnabled !== 'function' || !CompleteAnalysis.mentorSelectEnabled()) return false;
+  if (!mpEntitlementOk) return false;
+  const st = caStateOf(r);
+  if (st && st.preview) return false;
+  return caOfferOf(r).kind !== 'unknown';
+}
+function caOfferLabel(offer) {
+  return offer === CompleteAnalysis.OFFERS.upgrade ? `追加 ${offer.price}` : offer.price;
+}
+// 記録内の導線（LATEST RESULT／THE RECORDS で同じ内容）
+function caRecordMentorHtml(r) {
+  const o = caOfferOf(r);
+  const sv = caServerOf(r);
+  const id = encodeURIComponent(caRecordId(r));
+  if (o.kind === 'offer') {
+    const up = o.offer === CompleteAnalysis.OFFERS.upgrade;
+    const chosen = sv.complete && sv.complete.mentorGoal ? '<p class="mp-rec-mentor">MENTOR 目標：選択済み</p>' : '';
+    return `<button type="button" class="mp-btn" data-mentor-open="${id}">${up ? `完全解析へ 追加${o.offer.price}：目標を選ぶ` : `完全解析 ${o.offer.price}：目標を選ぶ`}</button>${chosen}`;
+  }
+  if (o.kind === 'legacy_pending') return `<p class="mp-rec-mentor" role="status">${CompleteAnalysis.LEGACY_PENDING_TEXT}</p>`;
+  if (o.kind === 'checkout_in_progress') return '<p class="mp-rec-mentor">完全解析の決済手続き中です</p>';
+  return '';
+}
+// 目標の選択後に、同じ記録の LATEST RESULT と THE RECORDS の表示をそろえる
+function caSyncRecordActions(id) {
+  const rec = caSheetRecords.find((x) => caRecordId(x) === id);
+  if (!rec) return;
+  document.querySelectorAll('[data-rec-actions]').forEach((el) => {
+    if (decodeURIComponent(el.dataset.recActions || '') !== id) return;
+    el.outerHTML = mpRecordActionsHtml(rec, el.dataset.recSource === 'latest' ? 'latest' : 'records');
+  });
+}
+// 最初の段階（記録の概要）。完全解析の導線だけを MENTOR 用に差し替える。対象外・再購入不可は従来の表示へ。
+function caMentorOverviewHtml(r) {
+  const k = caKey(r);
+  if (k !== 'free' && k !== 'analysis') return null;
+  const o = caOfferOf(r);
+  if (!['offer', 'legacy_pending', 'checkout_in_progress', 'closed', 'purchased'].includes(o.kind)) return null;
+  const target = caTargetHtml(r);
+  const head = k === 'free'
+    ? `<h2 class="ca-lead" id="latest-upgrade-title">この記録に、もう一つ深い観測を加える。</h2>${caAnalysisCardHtml(r)}`
+    : `<div class="ca-state-head"><div class="ca-eyebrow">ANALYSIS OBSERVED</div><h2 class="ca-lead" id="latest-upgrade-title">構造と解釈まで観測されています</h2></div>
+       ${purchasedReportButton(r.session, 'ca-btn ca-view-action', '解析レポートを見る')}`;
+  if (o.kind === 'legacy_pending') {
+    return `${target}${head}<p class="ca-mentor-note" role="status">${CompleteAnalysis.LEGACY_PENDING_TEXT}</p>`;
+  }
+  if (o.kind === 'checkout_in_progress') {
+    return `${target}${head}<p class="ca-mentor-note" role="status">完全解析の決済手続き中です。</p>`;
+  }
+  if (o.kind === 'purchased' || o.kind === 'closed') {
+    return `${target}${head}<p class="ca-mentor-note" role="status">${o.kind === 'purchased' ? 'この記録の完全解析は、お申し込み済みです。' : 'この記録の完全解析は、新たにお申し込みいただけません。'}</p>`;
+  }
+  const up = o.offer === CompleteAnalysis.OFFERS.upgrade;
+  return `${target}${head}
+    <section class="ca-card ca-card--secondary${up ? ' is-sole' : ''}" aria-label="完全解析">
+      <div class="ca-card-head"><span class="ca-eyebrow">COMPLETE ANALYSIS</span><span class="ca-pages"><span class="ca-pages-ja">全46ページ</span><span class="ca-pages-en">COMPLETE RECORD</span></span></div>
+      <h3 class="ca-title">完全解析</h3>
+      ${caLensBlockHtml()}
+      <div class="ca-price-row"><span class="ca-meta">${up ? `対象：${mpComboText(r)}／この診断記録` : '解析レポートの内容もすべて含まれます'}</span><span class="ca-price">${caOfferLabel(o.offer)}</span></div>
+      <button type="button" class="ca-btn ca-secondary-action" data-mentor-start="1">目標を選んで進む</button>
+      <p class="ca-pending-note">お支払いは準備中です。目標の選択と内容の確認まで進めます。</p>
+    </section>`;
+}
+function caMentorSelectedGoal(data) {
+  if (!data || !data.catalog || !Array.isArray(data.catalog.goals)) return null;
+  const id = caMentorPick || (data.selection && data.selection.goalId);
+  return data.catalog.goals.find((g) => g.goalId === id) || null;
+}
+function caEsc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+}
+// 目標の段階：fieldset・legend・標準の radio。支払後ロック・決済手続き中は読み取りだけ
+function caMentorGoalHtml(r) {
+  const data = caMentorData.get(caRecordId(r));
+  const back = '<button type="button" class="ca-btn ca-quiet-action ca-step-back" data-mentor-back="overview">← 戻る</button>';
+  const head = `<div class="ca-state-head"><div class="ca-eyebrow">MENTOR GOAL</div>
+      <h2 class="ca-state-title" id="latest-upgrade-title">MENTOR の目標を選ぶ</h2></div>`;
+  if (!data) {
+    if (caMentorError) {
+      return `${back}${caTargetHtml(r)}${head}<p class="ca-mentor-error" role="alert">${caEsc(caMentorError)}</p>
+        <button type="button" class="ca-btn ca-view-action" data-mentor-retry="1">もう一度読み込む</button>`;
+    }
+    return `${back}${caTargetHtml(r)}${head}<p class="ca-body" role="status">目標を読み込んでいます…</p>`;
+  }
+  const readOnly = !data.changeAllowed;
+  const current = caMentorPick || (data.selection && data.selection.goalId) || '';
+  const options = data.catalog.goals.map((g) => `
+      <label class="ca-goal-option${readOnly ? ' is-disabled' : ''}">
+        <input type="radio" name="ca-mentor-goal" value="${caEsc(g.goalId)}"${g.goalId === current ? ' checked' : ''}${readOnly ? ' disabled' : ''}>
+        <span><span class="ca-goal-label">${caEsc(g.label)}</span><span class="ca-goal-desc">${caEsc(g.description)}</span></span>
+      </label>`).join('');
+  const note = data.locked ? '<p class="ca-mentor-note">お支払い済みのため、目標は変更できません。</p>'
+    : (readOnly ? '<p class="ca-mentor-note">決済手続き中のため、目標は変更できません。</p>'
+      : '<p class="ca-mentor-note">5つの中から1つ選んでください。決済手続きへ進んだ後は変更できません。</p>');
+  const err = caMentorError ? `<p class="ca-mentor-error" role="alert">${caEsc(caMentorError)}</p>` : '';
+  const action = readOnly
+    ? (data.selection ? '<button type="button" class="ca-btn ca-primary-action" data-mentor-confirm="1">内容を確認する</button>' : '')
+    : `<button type="button" class="ca-btn ca-primary-action" data-mentor-submit="1"${!current || caMentorBusy ? ' disabled' : ''}${caMentorBusy ? ' aria-busy="true"' : ''}>${caMentorBusy ? '保存しています…' : 'この目標で内容を確認する'}</button>`;
+  return `${back}${caTargetHtml(r)}${head}
+    <fieldset class="ca-goal-fieldset">
+      <legend>目標</legend>
+      <div class="ca-goal-list">${options}</div>
+    </fieldset>
+    ${note}${err}${action}`;
+}
+// 内容確認の段階：対象記録・目標・金額。「決済へ進む」は準備中（押せない）
+function caMentorConfirmHtml(r) {
+  const data = caMentorData.get(caRecordId(r));
+  const goal = caMentorSelectedGoal(data);
+  if (!data || !goal) { caStep = 'goal'; return caMentorGoalHtml(r); }
+  const o = caOfferOf(r);
+  const back = `<button type="button" class="ca-btn ca-quiet-action ca-step-back" data-mentor-back="goal">${data.changeAllowed ? '← 目標を選び直す' : '← 目標を確認する'}</button>`;
+  const priceRow = o.kind === 'offer'
+    ? `<div class="ca-confirm-item"><dt>内容</dt><dd>${o.offer === CompleteAnalysis.OFFERS.upgrade ? '完全解析へのアップグレード（全46ページ）' : '完全解析（全46ページ）'}</dd></div>
+       <div class="ca-confirm-item"><dt>金額</dt><dd>${caOfferLabel(o.offer)}</dd></div>`
+    : '';
+  return `${back}
+    <div class="ca-state-head"><div class="ca-eyebrow">CONFIRM</div>
+      <h2 class="ca-state-title" id="latest-upgrade-title">内容を確認する</h2></div>
+    <dl class="ca-confirm-list">
+      <div class="ca-confirm-item"><dt>対象の記録</dt><dd>${mpDate(r.date)}の記録｜${caEsc(mpComboText(r))}</dd></div>
+      <div class="ca-confirm-item"><dt>MENTOR 目標</dt><dd>${caEsc(goal.label)}<span class="ca-goal-desc">${caEsc(goal.description)}</span></dd></div>
+      ${priceRow}
+    </dl>
+    ${o.kind === 'legacy_pending' ? `<p class="ca-mentor-note" role="status">${CompleteAnalysis.LEGACY_PENDING_TEXT}</p>` : ''}
+    <button type="button" class="ca-btn ca-secondary-action is-pending" disabled aria-disabled="true">決済へ進む（準備中）</button>
+    ${CA_PENDING_NOTE}`;
+}
+function caGoStep(step) {
+  caStep = step;
+  caRenderSheet();
+  caFocusStep();
+}
+function caFocusStep() {
+  const body = document.getElementById('mpUpgradeBody');
+  if (!body) return;
+  const checked = body.querySelector('input[name="ca-mentor-goal"]:checked:not([disabled])');
+  const first = checked || body.querySelector('input[name="ca-mentor-goal"]:not([disabled])') || caFocusables(body)[0];
+  if (first) first.focus(); else { const c = document.getElementById('mpUpgradeClose'); if (c) c.focus(); }
+}
+async function caMentorRequest(method, query, body) {
+  const { data: { session: authSession } } = await supabaseClient.auth.getSession();
+  const accessToken = authSession && authSession.access_token;
+  if (!accessToken) return { status: 401, body: { error: 'not_authenticated' } };
+  const res = await fetch('/api/mentor-goal' + (query || ''), {
+    method,
+    headers: Object.assign({ Authorization: 'Bearer ' + accessToken }, body ? { 'Content-Type': 'application/json' } : {}),
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const json = await res.json().catch(() => ({}));
+  return { status: res.status, body: json || {} };
+}
+async function caLoadMentor(r) {
+  const id = caRecordId(r);
+  if (!id || caMentorLoading) return;
+  caMentorLoading = true;
+  try {
+    const out = await caMentorRequest('GET', '?diagnosisSessionId=' + encodeURIComponent(id));
+    if (caRecordId(caSelected) !== id) return; // 途中で対象が変わった
+    if (out.status === 200 && out.body && out.body.catalog) {
+      caMentorData.set(id, out.body);
+      caMentorError = null;
+    } else {
+      caMentorError = out.status === 404 && out.body.error === 'not_available'
+        ? '現在、目標の選択はご利用いただけません。'
+        : '目標を読み込めませんでした。通信状態を確認して、もう一度お試しください。';
+    }
+  } catch (e) {
+    if (caRecordId(caSelected) === id) caMentorError = '目標を読み込めませんでした。通信状態を確認して、もう一度お試しください。';
+  } finally {
+    caMentorLoading = false;
+  }
+  if (caRecordId(caSelected) === id && caStep !== 'overview') { caRenderSheet(); caFocusStep(); }
+}
+async function caSubmitMentorGoal() {
+  if (caMentorBusy) return; // 二重送信の防止
+  const r = caSelected;
+  const id = caRecordId(r);
+  const data = caMentorData.get(id);
+  if (!data || !data.changeAllowed) return;
+  const goalId = caMentorPick || (data.selection && data.selection.goalId);
+  if (!goalId) return;
+  if (data.selection && data.selection.goalId === goalId) { caMentorPick = null; caGoStep('confirm'); return; }
+  caMentorBusy = true;
+  caMentorError = null;
+  caRenderSheet();
+  let out;
+  try {
+    out = await caMentorRequest('POST', '', { diagnosisSessionId: id, goalId });
+  } catch (e) {
+    out = { status: 0, body: {} };
+  }
+  caMentorBusy = false;
+  if (caRecordId(caSelected) !== id) return;
+  if (out.status === 200 && out.body.selection) {
+    data.selection = out.body.selection;
+    data.locked = !!out.body.locked;
+    data.changeAllowed = out.body.changeAllowed !== false;
+    caMentorPick = null;
+    if (r.session && r.session.complete) r.session.complete.mentorGoal = out.body.selection;
+    caSyncRecordActions(id);
+    caGoStep('confirm');
+    return;
+  }
+  const code = out.body && out.body.error;
+  if (out.status === 403 && code === 'onboarding_required') {
+    // 登録の完了が必要：シートを閉じてから登録の確認へ（規約のモーダルとシートを重ねない）
+    caCloseSheet();
+    await init();
+    return;
+  }
+  if (out.status === 409) {
+    caMentorData.delete(id);
+    caMentorError = code === 'mentor_goal_locked' ? 'お支払い済みのため、目標は変更できません。' : '決済手続き中のため、目標は変更できません。';
+    caRenderSheet();
+    await caLoadMentor(r);
+    return;
+  }
+  caMentorError = out.status === 422 ? 'この記録は完全解析の対象外です。' : '目標を保存できませんでした。通信状態を確認して、もう一度お試しください。';
+  caRenderSheet();
+  caFocusStep();
+}
+
 let caLastFocus = null;
 let caScrollY = 0;
 let caSheetRecords = [];
@@ -2370,17 +2651,25 @@ function caRenderSheet() {
   if (recs.length === 1) caSelected = recs[0];
   if (!caSelected) { body.innerHTML = caPickerHtml(recs); return; }
   if (sheet) { sheet.style.setProperty('--ca-el', mpElText(caSelected.el)); sheet.style.setProperty('--ca-el-line', caSelected.color); }
-  body.innerHTML = (recs.length > 1 ? '<button type="button" class="ca-btn ca-quiet-action ca-repick" data-repick="1">← 対象の記録を選び直す</button>' : '')
+  const inMentorStep = caStep !== 'overview' && caMentorMode(caSelected);
+  body.innerHTML = (recs.length > 1 && !inMentorStep ? '<button type="button" class="ca-btn ca-quiet-action ca-repick" data-repick="1">← 対象の記録を選び直す</button>' : '')
     + caSheetBodyHtml(caSelected);
+  if (inMentorStep && !caMentorData.has(caRecordId(caSelected)) && !caMentorLoading && !caMentorError) caLoadMentor(caSelected);
 }
-function caOpenSheet() {
+function caOpenSheet(opts) {
+  const o = opts || {};
   const overlay = document.getElementById('mpUpgradeOverlay');
   const body = document.getElementById('mpUpgradeBody');
   const trigger = document.getElementById('mpUpgradeTrigger');
   if (!overlay || !body) return;
-  caSelected = null;
+  caSelected = o.record || null;
+  caStep = o.step || 'overview';
+  caOpenedForMentor = !!o.record;
+  caMentorData.clear();
+  caMentorError = null;
+  caMentorPick = null;
   caRenderSheet();
-  caLastFocus = trigger || document.activeElement;
+  caLastFocus = o.returnFocus || trigger || document.activeElement;
   caScrollY = window.scrollY || 0;
   document.documentElement.style.overflow = 'hidden';
   document.body.style.overflow = 'hidden';
@@ -2388,9 +2677,10 @@ function caOpenSheet() {
   if (trigger) trigger.setAttribute('aria-expanded', 'true');
   const close = document.getElementById('mpUpgradeClose');
   if (close) close.focus();
-  // 計測の項目は従来どおり（対象は選択済みの記録、未選択なら最新の記録）。記録0件では計測しない
+  // 計測の項目は従来どおり（対象は選択済みの記録、未選択なら最新の記録）。記録0件では計測しない。
+  // 記録内の「目標を選ぶ」から開いた場合は計測しない（MENTOR 目標の選択には計測を追加しない）
   const tr = caSelected || caSheetRecords[0];
-  if (tr) CompleteAnalysis.track('mypage_upgrade_open', caTrackParams(tr));
+  if (tr && !caOpenedForMentor) CompleteAnalysis.track('mypage_upgrade_open', caTrackParams(tr));
 }
 function caCloseSheet() {
   const overlay = document.getElementById('mpUpgradeOverlay');
@@ -2403,11 +2693,28 @@ function caCloseSheet() {
   if (caLastFocus && typeof caLastFocus.focus === 'function') caLastFocus.focus({ preventScroll: true });
   if (Math.abs((window.scrollY || 0) - caScrollY) > 1) window.scrollTo(0, caScrollY);
   const tr = caSelected || caSheetRecords[0];
-  if (tr) CompleteAnalysis.track('mypage_upgrade_close', caTrackParams(tr));
+  if (tr && !caOpenedForMentor) CompleteAnalysis.track('mypage_upgrade_close', caTrackParams(tr));
+  caOpenedForMentor = false;
+  caStep = 'overview';
 }
 function caFocusables(root) {
-  return Array.from(root.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+  return Array.from(root.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'))
     .filter(el => el.offsetParent !== null || el === document.activeElement);
+}
+// Tab の停止位置：radio は同じ name のまとまりを1か所として数える（ブラウザの Tab 移動と同じ）。
+// まとまりの代表は、フォーカス中の radio、無ければ選択中の radio、無ければ先頭。
+function caTabStops(root) {
+  const seen = new Set();
+  const active = document.activeElement;
+  const out = [];
+  caFocusables(root).forEach((el) => {
+    if (el.tagName !== 'INPUT' || el.type !== 'radio' || !el.name) { out.push(el); return; }
+    if (seen.has(el.name)) return;
+    seen.add(el.name);
+    const group = Array.from(root.querySelectorAll(`input[type="radio"][name="${el.name}"]:not([disabled])`));
+    out.push(group.find((x) => x === active) || group.find((x) => x.checked) || group[0]);
+  });
+  return out;
 }
 function caWireSheet(records) {
   const trigger = document.getElementById('mpUpgradeTrigger');
@@ -2426,18 +2733,51 @@ function caWireSheet(records) {
     if (e.key === 'Escape') { e.preventDefault(); caCloseSheet(); return; }
     if (e.key !== 'Tab') return;
     const sheet = document.getElementById('latest-upgrade-dialog');
-    const f = caFocusables(sheet);
+    const f = caTabStops(sheet);
     if (!f.length) { e.preventDefault(); sheet.focus(); return; }
     const first = f[0], last = f[f.length - 1];
     if (e.shiftKey && (document.activeElement === first || !sheet.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
     else if (!e.shiftKey && (document.activeElement === last || !sheet.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
   });
+  // MENTOR 目標の選択（段階の移動・送信）。計測はしない
+  overlay.addEventListener('click', (e) => {
+    const t = e.target.closest ? e.target : null;
+    if (!t) return;
+    const start = t.closest('[data-mentor-start]');
+    const back = t.closest('[data-mentor-back]');
+    const retry = t.closest('[data-mentor-retry]');
+    const submit = t.closest('[data-mentor-submit]');
+    const toConfirm = t.closest('[data-mentor-confirm]');
+    if (start) { caMentorError = null; caMentorPick = null; caGoStep('goal'); }
+    else if (back) { caMentorError = null; caMentorPick = null; caGoStep(back.dataset.mentorBack === 'goal' ? 'goal' : 'overview'); }
+    else if (retry) { caMentorError = null; caMentorData.delete(caRecordId(caSelected)); caGoStep('goal'); }
+    else if (submit) caSubmitMentorGoal();
+    else if (toConfirm) caGoStep('confirm');
+  });
+  overlay.addEventListener('change', (e) => {
+    if (!e.target || e.target.name !== 'ca-mentor-goal') return;
+    caMentorPick = e.target.value;
+    const btn = document.querySelector('#mpUpgradeBody [data-mentor-submit]');
+    if (btn && !caMentorBusy) btn.disabled = false;
+  });
+  // 記録内（LATEST RESULT／THE RECORDS）の「目標を選ぶ」：その記録を対象にして、シートを目標の段階から開く
+  if (!caMentorOpenWired) {
+    caMentorOpenWired = true;
+    document.addEventListener('click', (e) => {
+      const b = e.target.closest && e.target.closest('[data-mentor-open]');
+      if (!b) return;
+      const id = decodeURIComponent(b.dataset.mentorOpen || '');
+      const rec = caSheetRecords.find((x) => caRecordId(x) === id);
+      if (rec && caMentorMode(rec)) caOpenSheet({ record: rec, step: 'goal', returnFocus: b });
+    });
+  }
   // 対象の記録の選択・選び直し
   overlay.addEventListener('click', (e) => {
     const pick = e.target.closest && e.target.closest('[data-pick-index]');
     const repick = e.target.closest && e.target.closest('[data-repick]');
     if (!pick && !repick) return;
     caSelected = pick ? (caSheetRecords[Number(pick.dataset.pickIndex)] || null) : null;
+    caStep = 'overview';
     caRenderSheet();
     const body = document.getElementById('mpUpgradeBody');
     const next = body && caFocusables(body)[0];

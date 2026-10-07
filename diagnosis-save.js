@@ -416,6 +416,12 @@ async function attachPurchasedStatus(sessions) {
       s.purchased = true;
     }
   });
+  // 完全解析（v2・Preview だけ）：記録ごとの状態を付ける。読み取りに失敗した・無い場合は付けない（従来の表示のまま）。
+  const completeOk = body.completeLookup === 'ok' && body.records && typeof body.records === 'object';
+  sessions.forEach(s => {
+    s.completeLookup = completeOk ? 'ok' : (body.completeLookup === 'failed' ? 'failed' : 'none');
+    s.complete = completeOk && s.id && body.records[s.id] ? body.records[s.id] : null;
+  });
 }
 
 /* ============================================================
