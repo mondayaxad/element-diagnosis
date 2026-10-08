@@ -53,10 +53,11 @@ async function setup({ env = {}, prices = PRICES } = {}) {
   const stripe = fakeStripe({ prices: JSON.parse(JSON.stringify(prices)) });
   const logger = makeLogger();
   const fullEnv = { ...SALES_ENV, ...env };
-  const deps = { env: fullEnv, fetchImpl: db.fetchImpl, stripeFactory: stripe.factory, logger };
+  // 生成・保存・閲覧は tests/complete_report_job.test.js で試す。ここでは後段の生成を起動しない（試験の後まで走り続けないように）
+  const deps = { env: fullEnv, fetchImpl: db.fetchImpl, stripeFactory: stripe.factory, logger, waitUntil: null };
   const checkoutH = Checkout.createHandler(deps);
   const webhookH = Webhook.createHandler(deps);
-  const statusH = Status.createHandler({ env: fullEnv, fetchImpl: db.fetchImpl, logger });
+  const statusH = Status.createHandler({ env: fullEnv, fetchImpl: db.fetchImpl, logger, waitUntil: null });
   const ctx = {
     db, stripe, logger, env: fullEnv,
     async checkout(token, body, { headers = {}, method = 'POST' } = {}) {
@@ -521,9 +522,9 @@ test('Webhook：署名なし・1バイト変更・古い timestamp・別の secr
   assert.equal((await ctx.webhookRaw(req)).code, 400);
   // GET は 405、secret が無ければ 503
   const g = makeRes();
-  await Webhook.createHandler({ env: SALES_ENV, fetchImpl: ctx.db.fetchImpl, stripeFactory: ctx.stripe.factory, logger: ctx.logger })({ method: 'GET', headers: {} }, g);
+  await Webhook.createHandler({ env: SALES_ENV, fetchImpl: ctx.db.fetchImpl, stripeFactory: ctx.stripe.factory, logger: ctx.logger, waitUntil: null })({ method: 'GET', headers: {} }, g);
   assert.equal(g.code, 405);
-  const noSecret = Webhook.createHandler({ env: { ...SALES_ENV, STRIPE_COMPLETE_WEBHOOK_SECRET: undefined }, fetchImpl: ctx.db.fetchImpl, stripeFactory: ctx.stripe.factory, logger: ctx.logger });
+  const noSecret = Webhook.createHandler({ env: { ...SALES_ENV, STRIPE_COMPLETE_WEBHOOK_SECRET: undefined }, fetchImpl: ctx.db.fetchImpl, stripeFactory: ctx.stripe.factory, logger: ctx.logger, waitUntil: null });
   const n = makeRes();
   await noSecret(eventRequest({ ...base, secret: SECRET }).req, n);
   assert.equal(n.code, 503);
@@ -713,7 +714,7 @@ test('Webhook：販売を閉じていても返金・dispute を処理する', as
   const p = await person(ctx);
   const { csId, chargeId } = await openAndPay(ctx, p);
   // 販売を閉じた後の Webhook（同じ DB・Stripe）
-  const closed = Webhook.createHandler({ env: { ...SALES_ENV, COMPLETE_SALES_OPEN: 'false' }, fetchImpl: ctx.db.fetchImpl, stripeFactory: ctx.stripe.factory, logger: ctx.logger });
+  const closed = Webhook.createHandler({ env: { ...SALES_ENV, COMPLETE_SALES_OPEN: 'false' }, fetchImpl: ctx.db.fetchImpl, stripeFactory: ctx.stripe.factory, logger: ctx.logger, waitUntil: null });
   const send = async (o) => { const res = makeRes(); await closed(eventRequest({ secret: SECRET, ...o }).req, res); return res; };
   assert.equal((await send({ type: 'checkout.session.completed', objectId: csId })).code, 200);
   ctx.stripe.refund(chargeId, 3000);
@@ -737,7 +738,7 @@ test('状態確認：認証が先・本人の記録だけ・Stripe ID・保存�
   assert.equal((await ctx.status(p.token, 'not-a-uuid')).code, 400);
   assert.equal((await ctx.status(p.token, undefined)).code, 400);
   assert.deepEqual((await ctx.status(p.token, other.sessionId)).body, { error: 'record_not_found' });
-  assert.equal((await ctx.status(p.token, p.sessionId, { method: 'POST' })).code, 405);
+  assert.equal((await ctx.status(p.token, p.sessionId, { method: 'PUT' })).code, 405);
   let r = await ctx.status(p.token, p.sessionId);
   assert.deepEqual(r.body, { salesOpen: true, order: null, entitlements: { analysis: null, complete: null }, report: null,
     mentorGoal: { goalId: 'GOAL_PACE_01', goalCatalogVersion: CE.MENTOR_CATALOG_VERSION, locked: false } });

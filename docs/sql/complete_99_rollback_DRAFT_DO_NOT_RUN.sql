@@ -1,5 +1,5 @@
 -- ============================================================
--- complete_99：complete_01〜05 の戻し【実行禁止・草案】2026-10-07 改訂5（complete_03・04・05 のトリガー・関数・表を明示的に削除）。Preview 専用。未適用。
+-- complete_99：complete_01〜06 の戻し【実行禁止・草案】2026-10-08 改訂6（complete_03〜06 のトリガー・関数・表を明示的に削除）。Preview 専用。未適用。
 -- 注意：購入・権利・MENTOR 目標・Webhook 受信・生成物の記録・運営者操作の監査ログをすべて消す。Preview の試験データだけの段階でのみ使う。
 --       決済が1件でも記録された後は、この戻しではなく状態（revoked 等）で扱うこと（会計記録を消さない）。
 --       非公開 Storage に置いた生成物ファイルは、この SQL では消えない（別手順）。
@@ -21,6 +21,13 @@ begin
   end if;
 end
 $$;
+
+-- complete_06：生成ジョブ・閲覧の権限確認の関数（保存先の形式の制約は complete_reports と一緒に消える）
+--   非公開 bucket（complete-reports）の中の生成物は、この SQL では消えない（Storage API で別に消す）。
+drop function if exists public.complete_report_for_view(uuid, uuid);
+drop function if exists public.complete_fail_report(uuid, uuid, text, boolean);
+drop function if exists public.complete_finish_report(uuid, uuid, text, text);
+drop function if exists public.complete_claim_report(uuid, integer);
 
 -- complete_05：運営者操作の関数・監査ログ表（監査ログの表は追記だけのトリガーを持つが、表の削除はトリガーでは止まらない）
 drop function if exists public.complete_admin_record_failure(uuid, text, uuid, text, text);

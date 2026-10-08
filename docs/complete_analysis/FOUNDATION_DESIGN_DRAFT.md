@@ -274,12 +274,22 @@ generating（貸出し期限切れ）──claim で回収──▶ generating
 
 ---
 
-## 6. 保存と閲覧（判断 5・7）
+## 6. 保存と閲覧（判断 5・7。2026-10-08 実装に合わせて改訂）
 
 - 形式：認証必須の非公開 HTML だけ（PDF は販売表示・契約内容に含めない）。
-- 保存先：Supabase Storage の**非公開バケット**（手動作成。公開にしない）。パスは `complete/<env>/<ランダムID>.html`（session ID・ユーザー ID を含めない）。パスは DB だけに持ち、応答・ログに出さない。
-- 閲覧：`POST /api/my-complete-report-link` が本人確認の後に**毎回**、**300秒の署名 URL** を発行して返す（A4）。使い回さない・DB やブラウザに保存しない。期限が切れたら取り直す。
-- 失効時：権利の状態で API が直ちに拒否する（署名 URL は短時間のため、発行済みのものも短時間で無効）。生成物は削除せず**非公開のまま隔離**（`quarantined_at`。可能なら隔離用のパスへ移す）。保持期間は本番前に決定。
+- 保存先：Supabase Storage の**非公開 bucket `complete-reports`**（公開にしない・Storage のポリシーを作らない。サーバー用キーだけが読み書きする）。
+  - パスは `reports/<report_id>/<試行回数>-<乱数32桁>.html`。report_id は complete_reports の乱数 ID で、記録 ID・user ID・注文 ID を含めない。
+  - パスは DB（`complete_reports.storage_path`）だけに持ち、応答・ログに出さない。
+- 閲覧：`POST /api/complete-status`（既存の関数に統合。新しい関数は作らない）が、本人確認（Bearer）と権利の確認の後に**毎回**、**300秒の閲覧 URL** を発行する（A4）。
+  - URL は `GET /api/complete-status?view=<token>`。token は AES-256-GCM で暗号化した { report_id・user_id・記録 ID・期限 }（中身は読めない・改ざんできない）。
+  - Supabase Storage の署名 URL は、保存先のパスを URL に含むため使わない。
+  - 開くたびに DB で権利を確かめ直す（失効した権利では、発行済みの URL でも開けない）。保存物の SHA-256 が記録と一致しなければ出さない。
+  - 閲覧の応答ヘッダー：`Cache-Control: private, no-store`・`Referrer-Policy: no-referrer`・`X-Content-Type-Options: nosniff`・`X-Frame-Options: DENY`・`X-Robots-Tag: noindex`・CSP（生成 HTML の CSP の指示を全て含み、`frame-ancestors 'none'; sandbox` を加える）。
+  - トークンはアプリのログ・エラー応答・照合 ID に含めない。なお URL のクエリに入るため、Vercel の要求ログ（プラットフォーム側）には残り得る（300秒で失効・開くたびに権利を再確認するため許容）。
+  - 秘密値 `COMPLETE_VIEW_TOKEN_SECRET`：暗号学的乱数 32バイト以上を base64url（パディングなし・43文字以上）で表したもの。条件を満たさなければ発行も閲覧も 503（fail-closed）。値はチャット・ログ・commit・試験結果に出さない。
+  - URL は持っている人が300秒の間だけ開ける（共有されると開ける。期限で失効する）。使い回さない・DB やブラウザに保存しない。
+- 失効時：権利の状態で API が直ちに拒否する（suspended・revoked の生成物は閲覧できないことを必須とする）。ready の後の返金・敗訴では、生成物を即時には削除せず**非公開のまま隔離・アクセス不能**（`revoked_at`・`quarantined_at`）を正とする。
+  - **後日の決定事項（保持ポリシー）**：隔離した生成物の物理削除の時期（保持期間）は未決定。本番前に決めて、削除の手順（Storage と DB の記録）を追加する。
 - 完全解析の購入者の解析レポート：report-data／my-report-link を §4-3 の OR で判定するよう拡張し、`core_analysis_access` を返す。
 
 ---
@@ -507,10 +517,10 @@ Preview への適用（2026-10-08 記録）：
   - `CORE1-PAIR-RELATION-0.1.0`
   - `CORE1-DOMAIN-EDITORIAL-0.1.0`
 - 仮の文言：MENTOR の方向が fixture 由来の時だけ「サンプル用の仮の方向」と出る。生成器は利用者の選択（`selected_by: user`）だけを渡し、出力検査でもこの文言を拒否する。
-- prototypes の55件のテスト：この環境では54件合格・1件不合格（**既知の環境差として記録**）。
+- prototypes の55件のテスト：この環境では54件合格・1件不合格（**環境に依存する差を観測。原因は未確定**）。
   - 不合格は A4 印刷レイアウトの試験で、F05 の P08 の下端の図が 16px はみ出す。
-  - `docs/test-results.md` は55件合格を記録しており、prototypes は変更していない。フォント環境の違いによる可能性が高い（この環境に Hiragino・Yu・Noto は無く、IPA・WenQuanYi で描画される）が、原因は確定していない。
-  - サーバー用 Web テンプレート側で余白を調整して解消した（下の「紙面の余白」）。prototypes の試験が環境差で54/55のままでも、サーバー版の全 fixture のはみ出し0件・F05 P08 の回帰試験を条件に、候補生成器として扱う（2026-10-08 判断）。
+  - `docs/test-results.md` は55件合格を記録しており、prototypes は変更していない。実行環境によって結果が変わる差を観測したが、原因（フォント・ブラウザの版など）は特定していない。参考：この環境には Hiragino・Yu・Noto のフォントが無く、IPA・WenQuanYi で描画される。
+  - サーバー用 Web テンプレート側で余白を調整して解消した（下の「紙面の余白」）。サーバー版の全 fixture・全ページの検証（はみ出し0件・F05 P08 の回帰試験）が通っているため、prototypes の試験が54/55のままでも現工程の停止条件にはしない（2026-10-08 判断）。
 
 #### 配置（サーバー専用・静的公開しない）
 - `api/_complete/generate-report.js`：入口。`api/_complete/rc1/`：生成器（src・assets・vendor）。
@@ -591,6 +601,43 @@ Preview への適用（2026-10-08 記録）：
   - 含まれたファイルだけを空のディレクトリへ写して実行し、同じ golden hash を得た。
   - 公開物（dist）に、生成器・本文素材・画像・fixture は出ない。同じ内容のファイルは、正本エンジン6本（`js/`。診断画面が元から配信しているもの）だけ。
   - `prototypes/.../mentor-goals.json` が含まれるのは、既存の `lib/complete-eligibility.js` 経由（MENTOR API と同じ。サーバー内だけ）。
+
+### 生成・非公開保存・閲覧（2026-10-08・ローカル実装と検証のみ。Preview 未適用・販売は閉じたまま）
+
+実装：`lib/complete-report-job.js`（生成ジョブ・Storage・閲覧トークン）、`api/complete-status.js`（POST の閲覧 URL 発行・GET ?view= の閲覧・取り残しの回収）、`api/stripe-webhook.js`（支払い確定の後の後段起動）、`docs/sql/complete_06_report_storage_DRAFT_DO_NOT_RUN.sql`（DB 関数。未適用）。
+
+Preview の Storage（2026-10-08・読み取りのみ）：bucket 0件・オブジェクト0件・storage のポリシー0件。storage の表は RLS 有効（ポリシーが無いため anon・authenticated は読めない）。complete_reports は0行。
+
+- 生成ジョブ（complete_06 の関数。SECURITY INVOKER・EXECUTE は service_role だけ）：
+  - `complete_claim_report(report_id, lease秒)`：queued・再試行時刻を過ぎた failed・lease の切れた generating を1行だけ取得（for update skip locked）。同時に呼ばれても1つだけが生成する。
+  - `complete_finish_report`：lease を持ったまま generating の時だけ ready（保存先・出力ハッシュ・ready_at）。lease を失った・revoked なら ready にしない。
+  - `complete_fail_report`：一時的な失敗は failed（再試行は 1分・2分・4分…最大1時間後）。再試行しない失敗・上限（max_attempts＝5）に達した失敗は止める。理由コードだけを記録する。
+  - `complete_report_for_view(user, 記録)`：生成物 ready（失効・隔離なし）・注文 paid・完全解析権 active の時だけ保存先を返す。suspended（dispute 中）・revoked（返金・敗訴）では返さない。
+  - 保存先の形式の制約：`reports/<自分の report_id>/<試行回数>-<乱数32桁>.html` だけ。
+- 処理の順（1件）：取得 → `reports/<report_id>/` の下の残り（中断した試行）を消す → DB の保存値から入力を作る → 素材ハッシュ・入力ハッシュが凍結値と一致することを確かめる（違えば再試行せずに止める）→ 生成 → 保存（上書きしない）→ 完了の記録。
+  - 完了を記録できなかった・lease を失った・revoked になった時は、保存した物を消す。途中で止まった場合も、次の取得の時に残りを消す。
+- 起動：
+  - Webhook は支払い確定（applied）の後、応答を待たせずに `@vercel/functions` の waitUntil で生成を始める（3.9.8 に固定）。
+  - 起動できなかった・失敗した生成は、状態確認（GET）と閲覧 URL の発行（POST）の時に、期限の来た生成（取り残し）を見つけて応答の後で始める（同時に呼ばれても lease で1つだけ）。
+- ログ：「API 名・理由コード・照合 ID」だけ。保存先・注文 ID・user ID・report ID・記録 ID・トークンを出さない（試験で全行を検査）。
+
+検証（2026-10-08・ローカル）：
+- 生成・保存・閲覧の試験 18件（偽の DB・Storage・Stripe）。主な内容：
+  - Webhook は生成を待たずに応答し、後段で ready になる。保存物は1つだけで、生成器の出力と同じ。
+  - 同時生成（3つ同時でも生成は1回）、ready の後の再実行、途中失敗（保存の失敗・完了記録の失敗）と再試行、中断した試行の残りの掃除、lease の切れた遅い処理、生成中の返金、再試行しない失敗、上限回数で停止。
+  - 状態確認での取り残しの回収。
+  - 閲覧 URL：300秒・応答に ID と保存先なし・トークンの中身は読めない・保存物そのものを返す・CSP 等のヘッダー。
+  - 期限切れ（300秒後）・改ざん・別の秘密値のトークン、別ユーザー、権利失効の直後（dispute 中・返金・敗訴では発行済みの URL でも開けない。勝訴で戻れば開ける）、保存物の改ざん、Storage の一時的な失敗、秘密値の不足・Production では 404、ログと応答の禁止情報。
+- 同じ試験を、ローカル PG17 の本物の SQL 関数（complete_01〜06）でも実行した。
+- complete_06 の SQL の試験 28件：適用・二度当て・complete_01〜05 の定義が不変・権限・SECURITY INVOKER・保存先の制約・関数の拒否条件・非 Preview で中止・complete_99 で戻して再適用・二度当てで余分な権限を外す。
+
+Preview への適用（未実施・別承認）：
+1. complete_06 の SQL（DB 関数と保存先の制約）。
+2. 非公開 bucket `complete-reports` の作成（Storage API。public=false・ファイルの上限 2MB・MIME は text/html だけ・Storage のポリシーは作らない）。
+3. Vercel の Preview 環境変数 `COMPLETE_VIEW_TOKEN_SECRET`（32文字以上の乱数）。
+4. `package.json` に `@vercel/functions@3.9.8` を追加したため、Preview の build で依存の解決とバンドルを確かめる。
+
+範囲外として記録：Vercel のランタイムログに Node の `url.parse()` の非推奨警告（DEP0169）が出る（public-config・mentor-goal で確認。このリポジトリのコードは `url.parse` を使っていない。依存またはランタイム側）。今回は対応しない。
 
 ### 既存 API の変更（橋渡し）
 - report-data／my-report-link：解析権の判定を §4-3 の OR に広げ、`core_analysis_access` を返す（旧の判定は変えずに追加）。

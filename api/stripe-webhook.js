@@ -9,7 +9,9 @@
 //   - イベント本文の値は信用しない。対象の Checkout Session・Charge・Dispute を Stripe から取り直して判断する。
 //   - DB の更新は complete_04 の SQL 関数だけ（complete_apply_payment・_checkout_expired・_refund・_dispute・
 //     complete_webhook_finish）。支払い確定で注文 paid・MENTOR ロック・権利・complete_reports（queued）を同時に作る。
-//     この工程では生成処理を起動しない。
+//     生成は応答の後で始める（下記）。
+//   - 支払い確定（applied）の後は、応答を待たせずに Vercel の waitUntil で生成を始める（api/_complete の生成器・非公開 Storage）。
+//     起動できなかった・失敗した生成は、状態確認（api/complete-status.js）の時に回収する。
 //   - 応答：処理済み・重複・恒久的な不一致（ignored）は HTTP 200。complete_retry_later、Stripe・DB の一時的な失敗は
 //     failed を記録して HTTP 500（Stripe が再送し、failed のイベントは処理し直す）。
 //   - 完全解析の注文でないイベント（metadata.app が違う・旧 ¥1,000 の決済など）は DB に書かずに 200。
@@ -18,12 +20,13 @@
 const { resolveAppEnv, requireServerEnv, requestHost, logEnvDenied } = require('../lib/server-env');
 const CE = require('../lib/complete-eligibility');
 const CP = require('../lib/complete-payment');
+const RJ = require('../lib/complete-report-job');
 
 const API = 'stripe-webhook';
 const MAX_BODY_BYTES = 512 * 1024;
 const ZERO_SHA = '0'.repeat(64);
 
-function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = () => Date.now() }) {
+function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = () => Date.now(), waitUntil = RJ.defaultWaitUntil(), storageFactory = null }) {
   const stripeClients = new Map();
   function stripeFor(key) {
     if (!stripeClients.has(key)) stripeClients.set(key, stripeFactory(key));
@@ -219,6 +222,17 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
     try {
       const result = await handle(guard, stripe, ev, event.data.object);
       const kind = typeof result === 'string' && result.startsWith('ignored') ? 'ignored' : 'processed';
+      // 支払い確定で生成物が queued になった：応答を待たせずに、応答の後で生成を始める（失敗しても状態確認の時に回収する）
+      if (ev.type === 'checkout.session.completed' && result === 'applied') {
+        RJ.scheduleReport(waitUntil, async () => {
+          const rows = await CP.selectRows(fetchImpl, guard, `stripe_webhook_events?event_id=eq.${encodeURIComponent(ev.id)}&select=order_id`);
+          const orderId = rows[0] && rows[0].order_id;
+          if (!CE.isUuid(orderId)) return;
+          const reports = await CP.selectRows(fetchImpl, guard, `complete_reports?source_order_id=eq.${encodeURIComponent(orderId)}&select=id`);
+          if (!reports[0]) return;
+          await RJ.processReport({ conn: guard, fetchImpl, storage: storageFactory ? storageFactory(guard) : null, reportId: reports[0].id, logger });
+        }, logger);
+      }
       return reply(res, 200, { received: true, result: kind });
     } catch (err) {
       // 恒久的な不一致（ignored）は各処理で 200 にしている。ここに来るものはすべて failed を記録して 500（Stripe が再送する）。

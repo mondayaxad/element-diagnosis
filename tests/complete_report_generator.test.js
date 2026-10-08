@@ -381,14 +381,17 @@ test('全12 fixture で生成でき、大きさは上限の範囲内（最大・
 });
 
 // ================= 公開・配置
-test('生成器・本文素材・画像は静的公開されない（dist に出ない・API の import からもまだ呼ばれない）', () => {
+test('生成器・本文素材・画像は静的公開されない（dist に出ない。API からはサーバー内で読み込むだけ）', () => {
   const out = path.join(fs.mkdtempSync(path.join(require('os').tmpdir(), 'ed-gen-')), 'dist');
   const r = B.build({ outDir: out });
   assert.deepEqual(r.problems, []);
   assert.deepEqual(r.files.filter((f) => /^(api|lib|prototypes|scripts)\//.test(f) || /mentor-goals|report-46p|complete-materials|eti-js/.test(f)), []);
   assert.equal(r.files.some((f) => f.includes('_complete')), false);
-  // api/_complete は関数の入口ではない（Vercel は _ で始まるものを関数にしない）。どの API からもまだ require されない
-  assert.equal(B.traceApiImports().files.some((f) => f.includes('_complete')), false);
+  // api/_complete は関数の入口ではない（Vercel は _ で始まるものを関数にしない）。生成器は lib/complete-report-job.js 経由で
+  // Webhook・状態確認の関数から読み込まれる（サーバー内だけ。dist には出ない）
+  const traced = B.traceApiImports().files;
+  assert.ok(traced.includes('api/_complete/generate-report.js'));
+  assert.deepEqual(B.apiFilesExposed(out, traced), []);
   assert.deepEqual(B.forbiddenIn(['api/_complete/generate-report.js']).length, 1);
 });
 

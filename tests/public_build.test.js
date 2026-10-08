@@ -47,7 +47,7 @@ test('公開禁止のものは dist に無い（docs・tests・prototypes・lib�
   for (const d of ['docs', 'tests', 'prototypes', 'lib', 'scripts', 'api', 'node_modules']) assert.ok(!r.has(d), `${d}/ が dist にあります`);
   for (const f of ['api/public-config.js', 'api/mentor-goal.js', 'lib/server-env.js', 'lib/complete-eligibility.js',
                    'api/complete-checkout.js', 'api/stripe-webhook.js', 'api/complete-status.js', 'lib/complete-payment.js',
-                   'lib/complete-materials.json', 'scripts/complete-materials.js',
+                   'lib/complete-materials.json', 'scripts/complete-materials.js', 'lib/complete-report-job.js',
                    'prototypes/core1_v4_result_driven/src/content/mentor-goals.json', 'package.json', 'vercel.json', '.gitignore', 'index-test.html',
                    'js/ogp-card.mjs', 'js/ogp-theme.mjs', 'js/ogp-fixtures.mjs']) {
     assert.ok(!r.has(f), `${f} が dist にあります`);
@@ -76,7 +76,7 @@ test('API の import は解決でき、lib/server-env.js などサーバー専�
                    'api/complete-checkout.js', 'api/stripe-webhook.js', 'api/complete-status.js', 'lib/complete-payment.js', 'lib/complete-materials.json']) {
     assert.ok(api.files.includes(f), `API からたどれません: ${f}`);
   }
-  assert.deepEqual(api.packages, ['@vercel/og', 'stripe']);
+  assert.deepEqual(api.packages, ['@vercel/functions', '@vercel/og', 'stripe']);
   // 決済の API は生成素材（prototypes の CSS・画像・本文 JSON）を読み込まない（固定したハッシュだけを使う）
   assert.deepEqual(api.files.filter((f) => f.startsWith('prototypes/') && !f.endsWith('/mentor-goals.json')), []);
   const r = buildTo();

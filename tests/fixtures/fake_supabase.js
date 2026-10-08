@@ -145,9 +145,15 @@ function createMemoryBackend() {
       if (o.offer === 'direct_complete' && !t.record_entitlements.some((e) => e.diagnosis_session_id === o.diagnosis_session_id && e.right_type === 'analysis' && e.status !== 'revoked')) right('analysis');
       right('complete');
       for (const k of ['p_content_sha256', 'p_template_sha256', 'p_input_sha256']) if (!/^[0-9a-f]{64}$/.test(a[k])) raise('check_violation');
+      const res0 = t.diagnosis_results.find((x) => x.session_id === o.diagnosis_session_id);
+      if (!res0) raise('complete_result_missing');
       t.complete_reports.push({ id: uuid(), user_id: o.user_id, diagnosis_session_id: o.diagnosis_session_id, source_order_id: o.id, status: 'queued',
+        attempts: 0, max_attempts: 5, last_error_code: null, next_retry_at: null, lease_token: null, lease_expires_at: null,
         content_version: a.p_content_version, template_version: a.p_template_version, content_sha256: a.p_content_sha256,
-        template_sha256: a.p_template_sha256, input_sha256: a.p_input_sha256, mentor_goal_id: o.mentor_goal_id, storage_path: null, created_at: now() });
+        template_sha256: a.p_template_sha256, input_sha256: a.p_input_sha256,
+        ...Object.fromEntries(Object.keys(CE.RC1_REQUIRED_VERSIONS).map((k) => [k, res0[k]])),
+        mentor_goal_catalog_version: o.mentor_goal_catalog_version, mentor_goal_id: o.mentor_goal_id,
+        storage_path: null, output_sha256: null, ready_at: null, revoked_at: null, quarantined_at: null, created_at: now() });
       fin(a, type, 'processed', null, o.id);
       return 'applied';
     },
@@ -170,7 +176,7 @@ function createMemoryBackend() {
       if (o.status === 'refunded') { fin(a, type, 'processed', 'noop', o.id); return 'noop'; }
       Object.assign(o, { status: 'refunded', stripe_payment_intent_id: o.stripe_payment_intent_id || a.p_payment_intent_id });
       t.record_entitlements.filter((e) => e.source_order_id === o.id).forEach((e) => { e.status = 'revoked'; });
-      t.complete_reports.filter((r) => r.source_order_id === o.id).forEach((r) => { r.status = 'revoked'; });
+      t.complete_reports.filter((r) => r.source_order_id === o.id).forEach((r) => { Object.assign(r, { status: 'revoked', revoked_at: now(), quarantined_at: now(), lease_token: null, lease_expires_at: null }); });
       fin(a, type, 'processed', null, o.id); return 'applied';
     },
     complete_apply_dispute(a) {
@@ -196,9 +202,50 @@ function createMemoryBackend() {
       } else {
         o.status = 'disputed'; if (!o.last_event_created || a.p_event_created > o.last_event_created) o.last_event_created = a.p_event_created;
         rights.forEach((e) => { e.status = 'revoked'; });
-        t.complete_reports.filter((r) => r.source_order_id === o.id).forEach((r) => { r.status = 'revoked'; });
+        t.complete_reports.filter((r) => r.source_order_id === o.id).forEach((r) => { Object.assign(r, { status: 'revoked', revoked_at: now(), quarantined_at: now(), lease_token: null, lease_expires_at: null }); });
       }
       fin(a, type, 'processed', null, o.id); return 'applied';
+    },
+    // ---- complete_06（生成ジョブ・閲覧の権限確認）の模型
+    complete_claim_report(a) {
+      const nowMs = Date.now();
+      const due = (r) => r.status === 'queued'
+        || (r.status === 'failed' && r.attempts < r.max_attempts && r.next_retry_at && Date.parse(r.next_retry_at) <= nowMs)
+        || (r.status === 'generating' && r.lease_expires_at && Date.parse(r.lease_expires_at) < nowMs && r.attempts < r.max_attempts);
+      const r = t.complete_reports.filter((x) => (!a.p_report_id || x.id === a.p_report_id) && due(x)).sort((x, y) => (x.created_at < y.created_at ? -1 : 1))[0];
+      if (!r) return [];
+      const lease = Math.max(30, Math.min(a.p_lease_seconds || 120, 900));
+      Object.assign(r, { status: 'generating', attempts: r.attempts + 1, lease_token: uuid(), lease_expires_at: new Date(nowMs + lease * 1000).toISOString(), generating_at: now() });
+      return [{ report_id: r.id, lease_token: r.lease_token, attempt: r.attempts }];
+    },
+    complete_finish_report(a) {
+      if (!/^[0-9a-f]{64}$/.test(a.p_output_sha256 || '') || !new RegExp(`^reports/${a.p_report_id}/[0-9]{1,2}-[0-9a-f]{32}\\.html$`).test(a.p_storage_path || '')) raise('complete_invalid_report_output');
+      const r = t.complete_reports.find((x) => x.id === a.p_report_id);
+      if (!r) raise('complete_report_not_found');
+      if (r.status === 'revoked' || r.revoked_at) return 'revoked';
+      if (r.status !== 'generating' || r.lease_token !== a.p_lease_token) return 'lost_lease';
+      Object.assign(r, { status: 'ready', storage_path: a.p_storage_path, output_sha256: a.p_output_sha256, ready_at: now(), lease_token: null, lease_expires_at: null, last_error_code: null, next_retry_at: null });
+      return 'ready';
+    },
+    complete_fail_report(a) {
+      if (!/^[a-z][a-z0-9_]{1,63}$/.test(a.p_error_code || '')) raise('complete_invalid_error_code');
+      const r = t.complete_reports.find((x) => x.id === a.p_report_id);
+      if (!r) raise('complete_report_not_found');
+      if (r.status === 'revoked' || r.revoked_at) return 'revoked';
+      if (r.status !== 'generating' || r.lease_token !== a.p_lease_token) return 'lost_lease';
+      const stop = !a.p_retryable || r.attempts >= r.max_attempts;
+      Object.assign(r, { status: 'failed', failed_at: now(), last_error_code: a.p_error_code, attempts: stop ? Math.max(r.attempts, r.max_attempts) : r.attempts,
+        next_retry_at: stop ? null : new Date(Date.now() + Math.min(3600, 60 * 2 ** Math.max(r.attempts - 1, 0)) * 1000).toISOString(), lease_token: null, lease_expires_at: null });
+      return stop ? 'stopped' : 'failed';
+    },
+    complete_report_for_view(a) {
+      const r = t.complete_reports.filter((x) => x.user_id === a.p_user_id && x.diagnosis_session_id === a.p_diagnosis_session_id).sort((x, y) => (x.created_at < y.created_at ? 1 : -1))[0];
+      if (!r) return [{ state: 'not_found', report_id: null, storage_path: null, output_sha256: null }];
+      const o = t.complete_orders.find((x) => x.id === r.source_order_id && x.user_id === a.p_user_id);
+      const entitled = t.record_entitlements.some((e) => e.source_order_id === r.source_order_id && e.user_id === a.p_user_id && e.diagnosis_session_id === a.p_diagnosis_session_id && e.right_type === 'complete' && e.status === 'active');
+      if (r.status === 'revoked' || r.revoked_at || r.quarantined_at || !o || o.status !== 'paid' || !entitled) return [{ state: 'not_entitled', report_id: null, storage_path: null, output_sha256: null }];
+      if (r.status !== 'ready' || !r.storage_path || !r.output_sha256) return [{ state: 'not_ready', report_id: r.id, storage_path: null, output_sha256: null }];
+      return [{ state: 'ok', report_id: r.id, storage_path: r.storage_path, output_sha256: r.output_sha256 }];
     },
   };
 
@@ -266,10 +313,12 @@ function createMemoryBackend() {
       if (token) tokens[token] = id;
       return id;
     },
-    async record({ id = uuid(), userId, code = `CODE_${crypto.randomBytes(4).toString('hex')}`, versions = CE.RC1_REQUIRED_VERSIONS, goal = 'GOAL_PACE_01' }) {
-      t.diagnosis_sessions.push({ id, user_id: userId, diagnosis_version: 'ETI-2.0', completed_at: now(), created_at: now() });
-      t.diagnosis_results.push({ session_id: id, ...versions });
-      t.diagnosis_answers.push({ session_id: id, encoded_answers: code });
+    // answers を渡すと、index.html と同じ保存値（answers_v2・encoded_answers・v2_scores 等）を作る（生成器の試験用）
+    async record({ id = uuid(), userId, code = `CODE_${crypto.randomBytes(4).toString('hex')}`, versions = CE.RC1_REQUIRED_VERSIONS, goal = 'GOAL_PACE_01', answers = null, completedAt = now() }) {
+      const saved = answers ? require('./report_data').savedRecord(answers) : null;
+      t.diagnosis_sessions.push({ id, user_id: userId, diagnosis_version: 'ETI-2.0', completed_at: completedAt, created_at: now() });
+      t.diagnosis_results.push({ session_id: id, ...versions, ...(saved ? { v2_scores: saved.v2_scores, v2_rankings: saved.v2_rankings, mirror_snapshot: saved.mirror_snapshot } : {}) });
+      t.diagnosis_answers.push({ session_id: id, encoded_answers: saved ? saved.encoded_answers : code, answers_v2: saved ? saved.answers_v2 : {} });
       if (goal) t.record_mentor_goals.push({ diagnosis_session_id: id, user_id: userId, goal_catalog_version: CE.MENTOR_CATALOG_VERSION, goal_id: goal, selected_at: now(), locked_at: null });
       return id;
     },
@@ -280,6 +329,8 @@ function createMemoryBackend() {
       return id;
     },
     async rows(table) { return JSON.parse(JSON.stringify(t[table])); },
+    // 試験用：行を直接書き換える（lease の期限切れ・再試行時刻の到来などを作る）
+    async patch(table, id, values) { Object.assign(t[table].find((x) => x.id === id), values); },
     async close() {},
   };
 }
