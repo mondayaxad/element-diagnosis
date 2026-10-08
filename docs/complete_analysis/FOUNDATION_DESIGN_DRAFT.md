@@ -1,10 +1,10 @@
 # 完全解析：決済・権利・生成・閲覧基盤 設計草案（第1段階・改訂1）
 
-- 状態：**草案（DRAFT）**。DB は Preview にだけ complete_01〜complete_04 を適用済み（2026-10-07）。外部サービス未設定・コード本体は未変更。
+- 状態：**草案（DRAFT）**。DB は Preview にだけ complete_01〜complete_05 を適用済み（2026-10-07）。外部サービス未設定・コード本体は未変更。
 - 基準：branch `release-c-preview` ／ baseline `8aca76db77449d4bd7fbe859bd23597474f208c7` ／ 2026-10-07
-- 関連 migration（Preview 適用済み・本文は編集しない）：`docs/sql/20261007111306_complete_01_orders_entitlements_reports.sql`、`docs/sql/20261007113230_complete_02_service_role_privileges.sql`、`docs/sql/20261007205700_complete_03_mentor_goal_ownership.sql`、`docs/sql/20261007213147_complete_04_payment_transactions.sql`
-- 戻し（草案・実行禁止）：`docs/sql/complete_99_rollback_DRAFT_DO_NOT_RUN.sql`
-- migration の番号：complete_01＝表・権利・生成物（適用済み）／complete_02＝service_role の権限を arw に縮小（適用済み）／complete_03＝MENTOR 目標の所有者整合・記録の所有者固定（適用済み）／complete_04＝決済の原子的処理・再購入禁止・旧購入権の結び付け（適用済み・20261007213147）／complete_05＝運営者 API の監査ログ表（運営者 API の実装時）
+- 関連 migration（Preview 適用済み・本文は編集しない）：`docs/sql/20261007111306_complete_01_orders_entitlements_reports.sql`、`docs/sql/20261007113230_complete_02_service_role_privileges.sql`、`docs/sql/20261007205700_complete_03_mentor_goal_ownership.sql`、`docs/sql/20261007213147_complete_04_payment_transactions.sql`、`docs/sql/20261007234325_complete_05_admin_audit_log.sql`
+- 戻し（草案・実行禁止）：`docs/sql/complete_99_rollback_DRAFT_DO_NOT_RUN.sql`（改訂5：complete_05 の関数・表・トリガーも明示的に削除）
+- migration の番号：complete_01＝表・権利・生成物（適用済み）／complete_02＝service_role の権限を arw に縮小（適用済み）／complete_03＝MENTOR 目標の所有者整合・記録の所有者固定（適用済み）／complete_04＝決済の原子的処理・再購入禁止・旧購入権の結び付け（適用済み・20261007213147）／complete_05＝運営者操作の監査ログ・旧購入権の手動確認（適用済み・20261007234325）
 - 改訂1：判断 1〜13（2026-10-07）を反映（§0）。**販売（決済の有効化）は §13 の停止条件がすべて解除されるまで行わない。**
 
 ## 0. 確定した判断（2026-10-07）
@@ -35,7 +35,7 @@
 | A2 | dispute 発生時は権利を**一時停止**（suspended）。勝訴で復旧、敗訴または返金確定で失効 | DB `record_entitlements.status='suspended'`・失効は最終状態、§8 |
 | A3 | 生成 HTML に実名・user_id・diagnosis_session_id を入れない。表示名は「あなた」。識別子が必要なら推測困難な report_id（complete_reports.id）だけ | §5-1、§13（解除条件）、生成時の確認テスト |
 | A4 | 署名 URL は初期300秒。本人確認の後に毎回発行する（使い回さない・保存しない） | §6、§7 |
-| A5 | 運営者 API は Supabase JWT を検証し、環境変数の運営者 user UUID と完全一致で認可。POST のみ、監査ログ必須 | §7、監査ログ表は運営者 API 実装時に complete_05 で追加 |
+| A5 | 運営者 API は Supabase JWT を検証し、環境変数 `COMPLETE_ADMIN_USER_ID`（運営者1人の user UUID）と完全一致で認可。POST のみ、監査ログ必須 | §7、監査ログ表は complete_05（適用済み） |
 | A6 | MENTOR 選択画面は、対象記録の選択後・Checkout の直前に置く | §5-3、§7 |
 | A7 | 旧 complete ¥2,500・旧ナラティブ・旧 CORE2 は新しい完全解析権を付与しない | §4-3、DB（完全解析権は complete_orders の支払いからだけ） |
 | A8 | 価格の正本：解析レポート ¥1,000／完全解析 直接 ¥3,000／アップグレード ¥2,000 | §2、DB 金額 CHECK |
@@ -366,10 +366,10 @@ generating（貸出し期限切れ）──claim で回収──▶ generating
 
 ### POST /api/admin/complete-report-retry（運営者用・内部。A5）
 - **POST のみ**（他のメソッドは 405）。
-- 認可：`Authorization: Bearer <Supabase JWT>` を `/auth/v1/user` で検証し、得られた user id が環境変数 `COMPLETE_ADMIN_USER_IDS`（運営者の user UUID。Preview 用は release-c-preview 限定）と**完全一致**するときだけ許可。一致しなければ 403（存在を明かさない）。
-- 入力：`{ "reportId": "...", "action": "requeue" | "process_now", "reason": "..." }`。
+- 認可：`Authorization: Bearer <Supabase JWT>` を `/auth/v1/user` で検証し、得られた user id が環境変数 `COMPLETE_ADMIN_USER_ID`（運営者1人の user UUID。Preview と Production で別の値を設定）と**完全一致**するときだけ許可。一致しなければ 403（存在を明かさない）。
+- 入力：`{ "reportId": "...", "action": "requeue" | "process_now", "reasonCode": "..." }`（自由記述の理由は受け取らない。理由コードは生成再試行の migration で決める）。
 - 処理：`failed → queued`（attempts を戻す）または queued の即時処理。
-- **監査ログ必須**：誰が・いつ・どの report／order に・何をしたか・理由・結果を記録してから応答する。監査ログを書けなければ処理しない。監査ログ表（`complete_admin_audit_log`）は運営者 API の実装時に **complete_04** として追加（complete_01 には含めない。complete_02 は権限縮小、complete_03 は MENTOR 目標の所有者整合、complete_04 は決済の原子的処理に使う）。
+- **監査ログ必須**：誰が・いつ・どの report／order に・何をしたか・理由・結果を記録してから応答する。監査ログを書けなければ処理しない。監査ログ表（`complete_admin_audit_log`）は **complete_05**（Preview 適用済み 20261007234325）。生成物の状態を戻す SQL 関数は、生成 API の実装時に別の migration で追加する（監査ログの操作種別 `report_requeue`・`report_process_now` と理由コードも、その migration で同時に追加する。complete_05 には含めない）。
 
 ### 決済の確定方針と complete_04（2026-10-07 決定・Preview 適用済み 20261007213147）
 
@@ -400,6 +400,55 @@ API 実装時の必須事項（complete_04 の適用承認時の補足・2026-10
 - 旧購入権の照合：Stripe の購入時メールと Auth のメールの平文を DB に保存しない（`complete_legacy_bindings` には旧購入権・利用者・記録・照合方式・日時だけ）。API のログにもメール、Checkout Session ID、PaymentIntent ID の全文を出さない（末尾だけ）。
 - 手動確認待ち：Auth にメールが無い、または Stripe の購入時メールと一致しない場合は自動で結び付けず、`legacy_purchase_verification_required` として停止する（¥3,000 へ誘導しない）。運営者の確認機能と確認記録は complete_05 で扱う。
 - 生成素材のハッシュ：本文素材・テンプレート・入力のハッシュは、ブラウザの入力ではなく、サーバーが読み取った保存済み回答と固定素材から計算して `complete_apply_payment` へ渡す。
+
+### 運営者による旧購入権の手動確認と complete_05（2026-10-07 改訂1 承認・Preview 適用済み 20261007234325）
+
+自動照合（Stripe の購入時メールと Auth のメールの一致）で結び付けられなかった旧 ¥1,000 購入者を、運営者が個別に確認して承認・却下する。DB は complete_05 で、監査ログ表と操作関数を追加する。
+
+| 項目 | 決定 |
+|---|---|
+| 監査ログ表 | `complete_admin_audit_log`：監査 ID・運営者の user ID（`actor_user_id`）・操作種別（`action`）・対象種別（`target_type`）・対象 ID（`target_id`）・結果（`outcome`）・理由コード（`reason_code`）・照合 ID（`incident_id`：16進12桁）・実行日時。この9列だけ |
+| 保存しないもの | メールアドレス、Stripe の秘密値、Checkout Session ID・PaymentIntent ID の全文、診断コード、回答、MENTOR の本文、リクエスト本文、自由記述。自由記述の列を作らない |
+| 操作種別 | `legacy_binding_approve`・`legacy_binding_reject` だけ（対象種別は `legacy_entitlement` だけ）。生成の再試行（`report_requeue`・`report_process_now`）は、生成再試行 API を実装する migration で関数・権限・理由コードと同時に追加する |
+| 理由コード | 下の表のとおり意味を固定し、操作・結果の組み合わせごとに CHECK で強制する |
+| 未認証・未認可 | `not_authenticated`・`not_authorized` はこの表に入れない（運営者として認証・認可される前のアクセスは API のセキュリティログで扱う） |
+| 照合 ID | NOT NULL・一意。同じ照合 ID の再送は新しい行を作らず前回の結果を返す。同じ照合 ID で運営者・操作・対象・内容（承認は記録、却下・失敗は理由コード）が違えば `complete_admin_incident_conflict`（行を追加しない。API は 409）。新しい照合 ID なら同じ購入権を再度却下でき、1行追加される |
+| 運営者 ID | 外部キーにしない（UUID・NOT NULL）。Auth の利用者が削除された後も監査記録を維持し、表示時に存在しなくても削除・書き換えない |
+| 追記だけ | UPDATE・DELETE・TRUNCATE をトリガーで拒否（所有者でも）。RLS 有効・ポリシーなし。anon・authenticated・PUBLIC は権限なし。service_role は SELECT・INSERT だけ |
+| 手動承認 | `complete_admin_approve_legacy_binding(運営者, 利用者, 記録, 旧購入権, 照合 ID)`：complete_04 の `complete_bind_legacy_purchase`（照合方式 `operator_verified`）で本人の記録・旧購入権の有効性・診断コードのハッシュ一致・一度だけの固定を確かめ、同じトランザクションで監査ログを追加。applied（`operator_verified`）／noop（`already_bound`）を返す |
+| 手動却下 | `complete_admin_reject_legacy_binding(運営者, 旧購入権, 理由コード, 照合 ID)`：結び付けは作らず、却下の理由コードだけを記録して rejected を返す。結び付け済みの購入権は却下できない。却下の後に再確認して承認へ進むことはできる |
+| 失敗の記録 | 操作の途中で失敗すると、結び付けも監査ログも取り消される。API はその後で同じ照合 ID で `complete_admin_record_failure(運営者, 操作種別, 対象, 失敗の理由コード, 照合 ID)` を呼び、failed を残す（Webhook の failed 記録と同じ形）。失敗した照合 ID で同じ操作を再送すると failed が返るため、やり直しは新しい照合 ID で行う |
+| 関数 | すべて SECURITY INVOKER・search_path 空。呼び出し関数の EXECUTE は service_role だけ、トリガー関数は所有者だけ。本文に削除文を書かない |
+
+理由コード（固定）：
+
+| 操作 | 結果 | reason_code |
+|---|---|---|
+| 手動承認 | applied | `operator_verified` |
+| 手動承認 | noop | `already_bound` |
+| 手動却下 | rejected | `email_mismatch`・`auth_email_missing`・`stripe_session_unavailable`・`purchase_not_eligible`・`identity_unverified` |
+| 実行失敗（承認・却下） | failed | `invalid_request`・`record_not_found`・`legacy_purchase_not_found`・`binding_conflict`・`purchase_hash_mismatch`・`database_error`・`internal_error` |
+
+API が DB の例外を失敗の理由コードへ対応付ける：`complete_admin_invalid_request`・`complete_admin_invalid_reason` → `invalid_request`／`complete_record_not_found` → `record_not_found`／`complete_legacy_purchase_not_found` → `legacy_purchase_not_found`／`complete_legacy_already_bound`・`complete_legacy_record_already_bound` → `binding_conflict`／`complete_legacy_not_matched` → `purchase_hash_mismatch`／DB への接続・応答の失敗 → `database_error`／その他 → `internal_error`。`complete_admin_incident_conflict` は失敗として記録せず 409 で返す。
+
+Preview への適用（2026-10-08 記録）：
+
+- 適用前：Ref `qelqehkigydgrwedbgtr`・`deployment_environment()='preview'`・PostgreSQL 17.11・migration 13件・complete_05 の表／関数／トリガー0件・実行中の処理と待機ロックなしを確認。
+- 適用：`apply_migration` を1回だけ実行して成功（タイムアウトなし）。version `20261007234325`、記録された本文の SHA-256 `86ff4ae2952b84341f44aebab7c2939808603623c0e651f019f4fbffe576c645`（19,793 バイト）はファイルと一致。
+- 適用後：列9つ（すべて NOT NULL）・外部キー0件・制約（action・target_type・outcome・incident_id 形式・incident_id 一意・理由コード）・索引・ACL（`service_role=ar` だけ）・RLS 有効・ポリシー0件・トリガー2つ・関数4つ（SECURITY INVOKER・search_path 空・呼び出し関数は service_role だけ、トリガー関数は所有者だけ）を確認。complete_01〜04 の定義・権限・既存データ（購入権・記録・プロフィール）の md5 は適用の前後で同一。
+- ダミー試験（1つの DO ブロックで実行し、最後に例外で全体を取り消し）：51件すべて合格。取り消し後に監査ログ0件・結び付け0件・試験用の利用者・購入権・故障注入の関数とトリガーが残っていないこと、既存データの md5 が同一であることを確認。
+
+運営者 API の前提（API は未実装。実装時に守る）：
+
+- ログイン中の利用者を Supabase JWT で確認する（`Authorization: Bearer` を `/auth/v1/user` で検証。ブラウザから渡された user ID は使わない）。
+- 運営者は Vercel の環境変数 `COMPLETE_ADMIN_USER_ID`（運営者1人の user UUID）との**完全一致**だけで許可する。Preview と Production で別の値を設定し、値はチャット・ログ・コードに出さない。未設定・空・UUID でない値のときは全員を拒否する。
+- service_role の鍵を持つことだけでは運営者操作を成立させない。API は JWT と運営者 UUID の確認を終えてから、確認済みの user ID を `actor_user_id` として関数へ渡す。確認より前に DB を読まない・書かない。
+- 一致しない利用者は 403（運営者機能の存在を明かさない文言）。POST のみ（他は 405）。
+- 入力は旧購入権 ID・利用者 ID・記録 ID・理由コード・照合 ID だけ（自由記述・メールは受け取らない）。照合 ID は操作ごとに API が発行し、通信の再送では同じ値を使う。ログには理由コードと照合 ID だけを出す（メール、Stripe ID の全文、診断コードを出さない）。
+- 監査ログを書けなければ操作も成立しない（承認・却下は同じトランザクション）。失敗は `complete_admin_record_failure` で別に記録する。
+- 将来運営者が複数になる場合は、環境変数の一覧ではなく DB の運営者ロール表（service_role だけが読む）へ移す（別の migration・別承認）。
+
+ローカル PG17 の検証（2026-10-07 改訂1、complete_01〜04 は適用済みの本文）：129件すべて合格。complete_04 の既存の試験（270件）も、改訂した complete_99 で合格。リポジトリの単体テスト 332件合格。内容：正しい承認（結び付けと監査ログの同時作成）、途中失敗で両方取り消し、同じ照合 ID の承認・却下・失敗記録の再送で行が増えない、同じ照合 ID を別の購入権・記録・運営者・操作・理由に使うと衝突（行を追加しない）、新しい照合 ID での再却下、別の利用者・別の記録・存在しない対象、ハッシュ不一致、別の購入権が結び付いた記録、却下後の承認、理由コードと操作・結果の組み合わせ違反・未認証・未認可・report_requeue・report_process_now の CHECK 拒否、列の確認（メール・Stripe ID・自由記述なし）、UPDATE・DELETE・TRUNCATE の拒否（service_role と所有者）、anon・authenticated の拒否、service_role の権限、二度当て、complete_99 で戻した後の 01〜05 の再適用、complete_04 が無い状態・非 Preview での中止、complete_01〜04 の定義・権限・既存データが前後で同一。
 
 ### 既存 API の変更（橋渡し）
 - report-data／my-report-link：解析権の判定を §4-3 の OR に広げ、`core_analysis_access` を返す（旧の判定は変えずに追加）。
@@ -510,6 +559,15 @@ API 実装時の必須事項（complete_04 の適用承認時の補足・2026-10
 - `CA_PREVIEW_BUILD=true`・Preview 用の状態切替・テスト用リンクが残っている。
 - `report_sample.html` の旧 ¥3,000 販売欄が残っている。
 
+### 12-1. 本番移行前のセキュリティ整理の候補（停止条件ではない・2026-10-07 記録）
+
+- **API の確認順の統一**：原則を「環境確認 → 認証 → 詳細な入力・記録の確認」の順にそろえる。
+  - 現状の `/api/mentor-goal`（Preview 配信 818ed5b で確認）は、環境確認の後、認証より先に入力の形式を確かめる。
+  - そのため未認証のとき、記録 ID が無い・形式違反なら 400 `invalid_request`、形式を満たせば 401 `not_authenticated` になる。
+  - 記録の存在・所有者は認証の後にしか確かめないため情報漏洩にはつながらず、Preview 反映の停止条件にはしない（2026-10-07 判断）。
+  - 本番移行前に、認証の確認（Bearer の有無と JWT 検証）を入力の形式確認より前へ移す。同じ順序を他の新規 API（complete-status・Checkout・運営者 API）にも適用し、順序の試験を加える。
+- **MENTOR 選択の実機確認**：Preview で実在データへ書き込む MENTOR 選択 POST は未実施。実施は別承認とする。
+
 ---
 
 ## 13. 正本候補（COMPLETE-RC1）の販売停止条件と解除に必要な本文監査
@@ -565,7 +623,7 @@ RC1 は技術候補。**次がすべて満たされるまで販売しない**（
 6. 販売画面・規約・特定商取引法表記の文言（§13-9）。
 7. ~~MENTOR 選択画面の位置~~ → **決定（A6）**：対象記録の選択後・Checkout の直前。
 8. ~~署名 URL の有効時間~~ → **決定（A4）**：初期300秒・毎回発行。
-9. ~~運営者用 API の認証~~ → **決定（A5）**：Supabase JWT＋運営者 UUID の完全一致・POST のみ・監査ログ必須（監査ログ表は complete_05）。
+9. ~~運営者用 API の認証~~ → **決定（A5）**：Supabase JWT＋運営者 UUID の完全一致・POST のみ・監査ログ必須（監査ログ表は complete_05。Preview 適用済み 20261007234325）。
 
 ---
 

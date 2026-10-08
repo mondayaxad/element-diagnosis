@@ -1,6 +1,6 @@
 -- ============================================================
--- complete_99：complete_01〜04 の戻し【実行禁止・草案】2026-10-07 改訂4（complete_03・04 のトリガー・関数・表を明示的に削除）。Preview 専用。未適用。
--- 注意：購入・権利・MENTOR 目標・Webhook 受信・生成物の記録をすべて消す。Preview の試験データだけの段階でのみ使う。
+-- complete_99：complete_01〜05 の戻し【実行禁止・草案】2026-10-07 改訂5（complete_03・04・05 のトリガー・関数・表を明示的に削除）。Preview 専用。未適用。
+-- 注意：購入・権利・MENTOR 目標・Webhook 受信・生成物の記録・運営者操作の監査ログをすべて消す。Preview の試験データだけの段階でのみ使う。
 --       決済が1件でも記録された後は、この戻しではなく状態（revoked 等）で扱うこと（会計記録を消さない）。
 --       非公開 Storage に置いた生成物ファイルは、この SQL では消えない（別手順）。
 -- ============================================================
@@ -21,6 +21,21 @@ begin
   end if;
 end
 $$;
+
+-- complete_05：運営者操作の関数・監査ログ表（監査ログの表は追記だけのトリガーを持つが、表の削除はトリガーでは止まらない）
+drop function if exists public.complete_admin_record_failure(uuid, text, uuid, text, text);
+drop function if exists public.complete_admin_reject_legacy_binding(uuid, uuid, text, text);
+drop function if exists public.complete_admin_approve_legacy_binding(uuid, uuid, uuid, uuid, text);
+do $$
+begin
+  if to_regclass('public.complete_admin_audit_log') is not null then
+    drop trigger if exists complete_admin_audit_log_no_update on public.complete_admin_audit_log;
+    drop trigger if exists complete_admin_audit_log_no_truncate on public.complete_admin_audit_log;
+  end if;
+end
+$$;
+drop table if exists public.complete_admin_audit_log;
+drop function if exists public.complete_admin_audit_log_immutable();
 
 -- complete_04：決済処理の関数・旧購入権の結び付け表・注文のトリガー（表を消す前に明示的に削除する）
 do $$
