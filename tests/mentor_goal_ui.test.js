@@ -326,13 +326,19 @@ test('upgrade（固定済みの旧購入権）は 追加¥2,000、内容確認�
   await p.__ctx.close();
 });
 
-test('完全解析の読み取り失敗・v2 の項目なしでは MENTOR を出さず、従来の表示のまま（Production の停止は mentor_goal_state.test.js）', { skip: skip() }, async () => {
+test('完全解析の読み取り失敗・v2 の項目なしでは MENTOR を出さない（失敗は「もう一度確認する」、項目なしは従来の表示。Production の停止は mentor_goal_state.test.js）', { skip: skip() }, async () => {
   for (const over of [{ completeLookup: 'failed' }, { completeLookup: null }]) {
     const w = world(over);
     const p = await open(w);
     assert.equal(await p.locator('[data-mentor-open]').count(), 0, JSON.stringify(over));
     assert.match(await actions(p, 'sess-B', 'latest').innerText(), /解析レポート/);
-    assert.ok(await p.locator('.mp-btn-pending').count() >= 1, '従来の準備中ボタン');
+    if (over.completeLookup === 'failed') {
+      // 完全解析の閲覧（2026-10-08）：状態を取得できない記録は、準備中ボタンの代わりに「もう一度確認する」
+      assert.equal(await actions(p, 'sess-B', 'latest').locator('[data-ca-view-recheck]').count(), 1);
+      assert.equal(await p.locator('.mp-btn-pending').count(), 0);
+    } else {
+      assert.ok(await p.locator('.mp-btn-pending').count() >= 1, '従来の準備中ボタン');
+    }
     await p.click('#mpUpgradeTrigger');
     if (await p.locator('#mpUpgradeBody .ca-pick').count()) await p.click('#mpUpgradeBody [data-pick-index="0"]');
     assert.equal(await p.locator('#mpUpgradeBody [data-mentor-start]').count(), 0);

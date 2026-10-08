@@ -988,6 +988,14 @@
   .ca-confirm-item dd { margin: 3px 0 0; font-size: 13px; color: var(--ca-title); line-height: 1.7; overflow-wrap: anywhere; }
   .ca-confirm-item dd .ca-goal-desc { color: var(--ca-body); }
   .mp-rec-actions > .mp-rec-mentor { flex-basis: 100%; margin: 0; font-size: 11.5px; color: var(--fg-dim); line-height: 1.6; }
+  /* 完全解析の閲覧（Preview）：記録内の導線の行に、状態の文と操作を1つずつ置く */
+  .mp-rec-actions > .ca-view { flex-basis: 100%; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .ca-view > .mp-btn { flex: none; width: 100%; white-space: normal; line-height: 1.5; }
+  .ca-view-status { margin: 0; padding: 10px 12px; border: 1px solid var(--card-border); border-radius: 6px; font-size: 12.5px; color: var(--fg); line-height: 1.6; overflow-wrap: anywhere; }
+  .ca-view-status:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .ca-view.is-preparing .ca-view-status { border-style: dashed; color: var(--fg-dim); }
+  .ca-view-note { margin: 0; font-size: 11.5px; color: var(--fg-dim); line-height: 1.6; overflow-wrap: anywhere; }
+  .ca-view .mp-btn[aria-busy="true"] { opacity: .6; cursor: progress; }
 
 </style>
 </head>
@@ -1773,8 +1781,11 @@ function mpRecordActionsHtml(r, source) {
   if (!mpEntitlementOk) return mpRecordUnknownHtml();
   const st = caAvailable() ? caStateOf(r) : null;
   const offer = st ? CompleteAnalysis.pendingOfferFor(st) : null;
+  // 完全解析を購入済みの記録（Preview）では、閲覧の状態（準備中・見る・再確認・停止・失効）を出す
+  const view = caViewOf(r);
   // MENTOR 目標の選択が有効な記録（Preview）では、準備中ボタンの代わりに目標選択への導線・確認中の表示を出す
-  const pending = caMentorMode(r) ? caRecordMentorHtml(r)
+  const pending = view ? caViewHtml(r, view)
+    : caMentorMode(r) ? caRecordMentorHtml(r)
     : (offer ? CompleteAnalysis.pendingButtonHtml(offer, 'mp-btn mp-btn-pending') : '');
   const items = [];
   if (r.purchased) {
@@ -1785,7 +1796,13 @@ function mpRecordActionsHtml(r, source) {
       items.push(pending);
     }
   } else {
-    items.push(v2ReportCta(purchaseUrlFor(r.session), 'mp-btn primary', source === 'latest' ? 'latest' : 'records', `解析レポート　${MP_REPORT_PRICE}`));
+    // 完全解析の権利がある記録には、解析レポート ¥1,000 の購入導線を出さない（完全解析が内包する）。
+    // 完全解析の状態を読み取れなかった時（権利の有無が不明）だけは、従来どおり ¥1,000 の導線を残す
+    const svc = caServerOf(r).complete;
+    const hasComplete = !!(view && ((svc && svc.completeEntitlement) || view.kind !== 'retry'));
+    if (!hasComplete) {
+      items.push(v2ReportCta(purchaseUrlFor(r.session), 'mp-btn primary', source === 'latest' ? 'latest' : 'records', `解析レポート　${MP_REPORT_PRICE}`));
+    }
     if (pending) items.push(pending);
   }
   const rid = String((r.session && r.session.id) || '');
@@ -2389,6 +2406,210 @@ function caTrackParams(r, extra) {
   }, extra || {});
 }
 
+/* ============================================================
+   完全解析の閲覧（2026-10-08・Preview のみ。CompleteAnalysis.completeViewEnabled()）
+   - 状態は記録ごと。初期値は /api/my-entitlements v2 の completeEntitlement・completeStatus、
+     再確認は GET /api/complete-status（本人の記録だけ。取り残した生成の回収も始まる）。
+   - 「完全解析を見る」を押した時だけ POST /api/complete-status で閲覧 URL（300秒）を発行し、同じタブで移動する。
+     閲覧 URL・トークンは変数に一時的に持つだけで、localStorage・sessionStorage・DOM 属性・GA4・console に出さない。
+   - 決済からの戻り（?complete_return=1。現在の Checkout の戻り先 ?complete=returned も同じ扱い）では、
+     2秒→3秒→5秒…の間隔で最大60秒だけ状態を確認し、その後は手動の「もう一度確認する」にする。
+   ============================================================ */
+const caViewStates = new Map(); // diagnosis_session_id → { kind, note, busy }（GET の結果・操作中の表示）
+const caViewPolls = new Map();  // diagnosis_session_id → 実行中の確認の番号（同じ記録で二重に回さない）
+const CA_VIEW_MAX_POLL_MS = 60000;
+const CA_VIEW_MAX_PARALLEL_POLLS = 3; // 決済から戻った時に同時に確認する記録の数
+const CA_VIEW_NOTES = {
+  slow: '準備に時間がかかっています。少し時間をおいて、もう一度確認してください。',
+  failed: '状態を確認できませんでした。少し時間をおいて、もう一度確認してください。',
+  open_failed: '完全解析を開けませんでした。少し時間をおいて、もう一度確認してください。',
+  generating: '完全解析を準備しています。準備ができると「完全解析を見る」に変わります。',
+  suspended: 'お支払いについて確認中のため、閲覧を一時的に止めています。',
+  revoked: '返金などにより、この記録の完全解析の権利は終了しています。',
+  not_entitled: 'この記録の完全解析を閲覧する権利を確認できませんでした。',
+  login: 'ログインの有効期限が切れました。もう一度ログインしてから開いてください。',
+};
+function caViewEnabled() {
+  return !!(caAvailable() && typeof CompleteAnalysis.completeViewEnabled === 'function' && CompleteAnalysis.completeViewEnabled());
+}
+// 閲覧の状態（null なら従来の導線：目標選択・準備中）
+function caViewOf(r) {
+  if (!caViewEnabled() || !mpEntitlementOk) return null;
+  const st = caStateOf(r);
+  if (st && st.preview) return null; // Preview の表示確認（?preview_entitlement=）は従来の表示
+  const id = caRecordId(r);
+  if (!id) return null;
+  const local = caViewStates.get(id);
+  const v = local || CompleteAnalysis.completeViewFromRecord(caServerOf(r).complete, caServerOf(r).lookup);
+  return v && v.kind !== 'none' ? v : null;
+}
+function caViewHtml(r, v) {
+  const id = encodeURIComponent(caRecordId(r));
+  const T = CompleteAnalysis.VIEW_TEXT;
+  const note = v.note ? `<p class="ca-view-note" role="status">${caEsc(v.note)}</p>` : '';
+  const status = (text, extra) => `<p class="ca-view-status" tabindex="-1" role="status" data-ca-view-focus>${caEsc(text)}</p>${extra || ''}`;
+  let body;
+  if (v.kind === 'ready') {
+    body = `<button type="button" class="mp-btn primary" data-ca-view-open="${id}" data-ca-view-focus${v.busy ? ' aria-disabled="true" aria-busy="true"' : ''}>${v.busy ? '完全解析を開いています…' : T.ready}</button>${note}`;
+  } else if (v.kind === 'preparing') {
+    body = status(T.preparing) + note;
+  } else if (v.kind === 'suspended') {
+    body = status(T.suspended, `<p class="ca-view-note">${CA_VIEW_NOTES.suspended}</p>`);
+  } else if (v.kind === 'revoked') {
+    body = status(T.revoked, `<p class="ca-view-note">${CA_VIEW_NOTES.revoked}</p>`);
+  } else if (v.kind === 'login') {
+    body = `<p class="ca-view-note" role="status">${CA_VIEW_NOTES.login}</p><button type="button" class="mp-btn" data-ca-view-login="${id}" data-ca-view-focus>ログインし直す</button>`;
+  } else {
+    body = `${note}<button type="button" class="mp-btn" data-ca-view-recheck="${id}" data-ca-view-focus${v.busy ? ' aria-disabled="true" aria-busy="true"' : ''}>${v.busy ? '確認しています…' : T.retry}</button>`;
+  }
+  return `<div class="ca-view is-${v.kind}" data-ca-view="${id}">${body}</div>`;
+}
+// 同じ記録の LATEST RESULT と THE RECORDS を描き直す。フォーカスが中にあれば、描き直した後の操作へ戻す
+function caViewRender(id) {
+  const records = window.__mpRecords || [];
+  const rec = records.find((x) => caRecordId(x) === id);
+  if (!rec) return;
+  const active = document.activeElement;
+  let refocus = null;
+  document.querySelectorAll('[data-rec-actions]').forEach((el) => {
+    if (decodeURIComponent(el.dataset.recActions || '') !== id) return;
+    const src = el.dataset.recSource === 'latest' ? 'latest' : 'records';
+    const had = active && el.contains(active);
+    el.outerHTML = mpRecordActionsHtml(rec, src);
+    if (had) refocus = src;
+  });
+  if (refocus) {
+    const box = document.querySelector(`[data-rec-actions="${encodeURIComponent(id)}"][data-rec-source="${refocus}"]`);
+    const target = box && box.querySelector('[data-ca-view-focus]');
+    if (target) target.focus();
+  }
+}
+function caViewSet(id, v) { caViewStates.set(id, v); caViewRender(id); }
+async function caViewAccessToken() {
+  try {
+    const { data: { session: authSession } } = await supabaseClient.auth.getSession();
+    return (authSession && authSession.access_token) || null;
+  } catch (e) { return null; }
+}
+// GET /api/complete-status（本人の記録の状態）。戻り値：{ status, view }
+async function caViewFetchStatus(id) {
+  const token = await caViewAccessToken();
+  if (!token) return { status: 401, view: { kind: 'login' } };
+  let res;
+  try {
+    res = await fetch('/api/complete-status?diagnosisSessionId=' + encodeURIComponent(id), { headers: { Authorization: 'Bearer ' + token }, cache: 'no-store' });
+  } catch (e) { return { status: 0, view: { kind: 'retry', note: CA_VIEW_NOTES.failed } }; }
+  const body = await res.json().catch(() => null);
+  if (res.status === 200) return { status: 200, view: CompleteAnalysis.completeViewFromStatus(body) };
+  if (res.status === 401) return { status: 401, view: { kind: 'login' } };
+  return { status: res.status, view: { kind: 'retry', note: CA_VIEW_NOTES.failed } };
+}
+const caViewFinal = (k) => k === 'ready' || k === 'suspended' || k === 'revoked' || k === 'login';
+// 一定の間隔で状態を確認する（最大60秒。無限には回さない）。期限が来たら手動の「もう一度確認する」へ
+async function caViewPoll(id) {
+  const run = (caViewPolls.get(id) || 0) + 1;
+  caViewPolls.set(id, run);
+  const started = Date.now();
+  for (const sec of CompleteAnalysis.RETURN_POLL_DELAYS) {
+    if (Date.now() - started + sec * 1000 > CA_VIEW_MAX_POLL_MS) break;
+    await new Promise((resolve) => setTimeout(resolve, sec * 1000));
+    if (caViewPolls.get(id) !== run || !document.querySelector(`[data-rec-actions="${encodeURIComponent(id)}"]`)) return;
+    const { status, view } = await caViewFetchStatus(id);
+    if (caViewPolls.get(id) !== run) return;
+    if (caViewFinal(view.kind)) { caViewSet(id, view); return; }
+    const cur = caViewStates.get(id);
+    // 生成中は「準備しています」、生成の失敗（サーバーの状態）は「もう一度確認する」。通信の失敗は表示を変えずに次の確認へ
+    if (view.kind === 'preparing' && (!cur || cur.kind !== 'preparing' || cur.note)) caViewSet(id, { kind: 'preparing' });
+    if (status === 200 && view.kind === 'retry' && (!cur || cur.kind !== 'retry')) caViewSet(id, { kind: 'retry' });
+  }
+  if (caViewPolls.get(id) === run) caViewSet(id, { kind: 'retry', note: CA_VIEW_NOTES.slow });
+}
+async function caViewRecheck(id) {
+  const cur = caViewStates.get(id) || { kind: 'retry' };
+  if (cur.busy) return;
+  caViewSet(id, Object.assign({}, cur, { kind: 'retry', busy: true }));
+  const { view } = await caViewFetchStatus(id);
+  if (view.kind === 'none') { caViewSet(id, { kind: 'none' }); return; } // 権利なし：従来の導線へ戻す
+  caViewSet(id, view.kind === 'preparing' ? { kind: 'preparing', note: CA_VIEW_NOTES.generating } : view);
+  if (view.kind === 'preparing') caViewPoll(id);
+}
+// 閲覧 URL は応答の値をそのまま使う（同じサイトの /api/complete-status?view= 以外へは移動しない）。保存しない
+function caViewNavigate(url) { location.assign(url); }
+async function caViewOpen(id) {
+  const cur = caViewStates.get(id);
+  if (cur && cur.busy) return;
+  caViewSet(id, { kind: 'ready', busy: true });
+  const token = await caViewAccessToken();
+  if (!token) { caViewSet(id, { kind: 'login' }); return; }
+  let res = null;
+  let body = null;
+  try {
+    res = await fetch('/api/complete-status', {
+      method: 'POST', cache: 'no-store',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ diagnosisSessionId: id }),
+    });
+    body = await res.json().catch(() => null);
+  } catch (e) { res = null; }
+  const status = res ? res.status : 0;
+  if (status === 200 && body && typeof body.viewUrl === 'string' && /^\/api\/complete-status\?view=[A-Za-z0-9_-]+$/.test(body.viewUrl)) {
+    CompleteAnalysis.track('complete_report_open', { source: 'mypage_record' });
+    caViewNavigate(body.viewUrl);
+    caViewStates.set(id, { kind: 'ready' }); // 戻る操作で表示が「開いています…」のまま残らないように
+    return;
+  }
+  if (status === 401) { caViewSet(id, { kind: 'login' }); return; }
+  if (status === 409) { caViewSet(id, { kind: 'preparing', note: CA_VIEW_NOTES.generating }); caViewPoll(id); return; }
+  if (status === 403) {
+    // 権利の状態を確かめ直して、停止・失効の案内を出す
+    const { view } = await caViewFetchStatus(id);
+    if (view.kind === 'suspended' || view.kind === 'revoked' || view.kind === 'login') { caViewSet(id, view); return; }
+    caViewSet(id, { kind: 'retry', note: CA_VIEW_NOTES.not_entitled });
+    return;
+  }
+  caViewSet(id, { kind: 'retry', note: CA_VIEW_NOTES.open_failed });
+}
+async function caViewRelogin() {
+  try { await signOutUser(); } catch (e) { /* ログアウトに失敗してもログイン画面へ */ }
+  await init();
+}
+let caViewWired = false;
+function caViewWire() {
+  if (caViewWired) return;
+  caViewWired = true;
+  document.addEventListener('click', (e) => {
+    const t = e.target && e.target.closest ? e.target.closest('[data-ca-view-open],[data-ca-view-recheck],[data-ca-view-login]') : null;
+    // 処理中は aria-disabled（フォーカスを保つため disabled にしない）。押しても何もしない
+    if (!t || t.disabled || t.getAttribute('aria-disabled') === 'true') return;
+    if (t.dataset.caViewOpen) caViewOpen(decodeURIComponent(t.dataset.caViewOpen));
+    else if (t.dataset.caViewRecheck) caViewRecheck(decodeURIComponent(t.dataset.caViewRecheck));
+    else if (t.dataset.caViewLogin) caViewRelogin();
+  });
+}
+// 決済からの戻り：全記録のうち、対象になり得る記録（決済手続き中・購入済みで未完成）だけを、それぞれ最大60秒確認する
+function caViewReturnCheck(records) {
+  if (!caViewEnabled()) return;
+  let params;
+  try { params = new URLSearchParams(location.search); } catch (e) { return; }
+  const returned = params.get('complete_return') === '1' || params.get('complete') === 'returned';
+  if (!returned) return;
+  params.delete('complete_return');
+  params.delete('complete');
+  try { history.replaceState(null, '', location.pathname + (params.toString() ? '?' + params : '') + location.hash); } catch (e) { /* URL はそのまま */ }
+  // 読み込んだ全記録から対象を先に抜き出す（完全解析は過去の記録も選べるため、新しい順の上位だけに絞らない）
+  const ids = records.map((r) => {
+    const id = caRecordId(r);
+    const sv = caServerOf(r);
+    const c = sv.lookup === 'ok' && sv.complete;
+    if (!id || !c) return null;
+    return c.checkoutInProgress || (c.completeEntitlement === 'active' && c.completeStatus !== 'ready') ? id : null;
+  }).filter(Boolean);
+  // 同時に確認するのは最大3件。1件が終わる（ready・停止・失効・60秒の上限）たびに次の記録を始める
+  const queue = ids.slice();
+  const next = () => { const id = queue.shift(); if (id) caViewPoll(id).finally(next); };
+  for (let i = 0; i < CA_VIEW_MAX_PARALLEL_POLLS; i++) next();
+}
+
 /* ---- MENTOR 目標の選択（2026-10-07）：記録選択 → 目標選択 → 内容確認。決済（Checkout）は未接続 ----
    ・Preview だけ（CompleteAnalysis.mentorSelectEnabled()：公開設定の appEnv === "preview"）。サーバーも Preview 以外は 404。
    ・目標の文言はカタログ（/api/mentor-goal が返す label・keep_phrase）をそのまま表示する。
@@ -2859,6 +3080,8 @@ function renderMypage(root, sessions, userOrUid) {
     .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
     .map(mpNormalize);
   caApplyStates(records);
+  caViewStates.clear();
+  caViewPolls.clear();
   window.__mpRecords = records;
 
   root.innerHTML = `
@@ -2871,6 +3094,8 @@ function renderMypage(root, sessions, userOrUid) {
     ${caSheetShellHtml(records)}
   `;
   caWireSheet(records);
+  caViewWire();
+  caViewReturnCheck(records);
 
   const mpCol = document.getElementById('mp-collection');
   if (mpCol) { mpCol.addEventListener('scroll', mpCollectionUpdateHint, { passive: true }); mpCollectionUpdateHint(); }

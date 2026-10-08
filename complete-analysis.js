@@ -40,6 +40,19 @@
   // 有効になるのは、この値が true かつ /api/public-config の appEnv が "preview" のときだけ（ホスト名では判断しない）。
   // サーバー側も Preview 以外では /api/mentor-goal が 404 not_available を返す（二重の停止）。
   var CA_MENTOR_SELECT_OPEN = true;
+  // 完全解析の閲覧（2026-10-08）。購入済みの記録に「完全解析を見る」等の状態を出す。
+  // 有効になるのは、この値が true かつ /api/public-config の appEnv が "preview" のときだけ（Production の表示は変えない）。
+  // 閲覧 URL は押した時だけ POST /api/complete-status で発行し、同じタブで移動する（保存・送信しない）。
+  var CA_COMPLETE_VIEW_OPEN = true;
+  // 決済から戻った直後の状態確認の間隔（秒）。合計がおよそ60秒で止め、その後は手動の「もう一度確認する」に切り替える。
+  var CA_RETURN_POLL_DELAYS = [2, 3, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5];
+  var CA_VIEW_TEXT = {
+    preparing: '完全解析を準備しています',
+    ready: '完全解析を見る',
+    retry: 'もう一度確認する',
+    suspended: '現在、完全解析を閲覧できません',
+    revoked: 'この完全解析は利用できません',
+  };
   // 旧 ¥1,000 購入の本人確認が済むまでの表示（¥3,000・¥2,000 を出さない）
   var CA_LEGACY_PENDING_TEXT = '既存の解析レポート購入を確認しています';
 
@@ -203,6 +216,40 @@
     return CA_MENTOR_SELECT_OPEN === true && !!cfg && cfg.appEnv === 'preview';
   }
 
+  // 完全解析の閲覧を出してよいか（公開設定の appEnv === "preview" かつ CA_COMPLETE_VIEW_OPEN）
+  function completeViewEnabled() {
+    var cfg = global.__ED_PUBLIC_CONFIG__;
+    return CA_COMPLETE_VIEW_OPEN === true && !!cfg && cfg.appEnv === 'preview';
+  }
+
+  // 完全解析の閲覧の状態（記録ごと）。入力はサーバーの値だけ：
+  //   entitlement：完全解析権の状態（'active'／'suspended'／'revoked'／null）
+  //   reportStatus：生成物の状態（'queued'／'generating'／'ready'／'failed'／'revoked'／'none'）
+  //   lookupFailed：状態を取得できなかった
+  // 戻り値 kind：none（権利なし。目標選択・準備中の導線を維持）／preparing／ready／retry／suspended／revoked
+  function completeViewStateFor(v) {
+    var o = v || {};
+    if (o.lookupFailed) return { kind: 'retry' };
+    if (o.entitlement === 'revoked') return { kind: 'revoked' };
+    if (o.entitlement === 'suspended') return { kind: 'suspended' };
+    if (o.entitlement !== 'active') return { kind: 'none' };
+    if (o.reportStatus === 'revoked') return { kind: 'revoked' };
+    if (o.reportStatus === 'ready') return { kind: 'ready' };
+    if (o.reportStatus === 'failed') return { kind: 'retry' };
+    return { kind: 'preparing' }; // queued・generating・まだ生成物の行が無い
+  }
+  // /api/my-entitlements v2 の記録（records[id]）と completeLookup から
+  function completeViewFromRecord(complete, lookup) {
+    if (lookup === 'failed') return completeViewStateFor({ lookupFailed: true });
+    if (lookup !== 'ok' || !complete || typeof complete !== 'object') return { kind: 'none' };
+    return completeViewStateFor({ entitlement: complete.completeEntitlement, reportStatus: complete.completeStatus });
+  }
+  // GET /api/complete-status の応答（本文）から
+  function completeViewFromStatus(body) {
+    if (!body || typeof body !== 'object' || !body.entitlements) return completeViewStateFor({ lookupFailed: true });
+    return completeViewStateFor({ entitlement: body.entitlements.complete, reportStatus: body.report ? body.report.status : 'none' });
+  }
+
   // サーバー（/api/my-entitlements v2 の records）の状態から、完全解析の導線を決める。
   //   unknown：状態を確認できない／purchased：完全解析権あり／closed：再購入不可（返金・失効・一時停止など）
   //   ineligible：販売対象外／checkout_in_progress：決済手続き中／legacy_pending：旧 ¥1,000 購入の確認中
@@ -287,5 +334,11 @@
     mentorSelectEnabled: mentorSelectEnabled,
     completeOfferFor: completeOfferFor,
     LEGACY_PENDING_TEXT: CA_LEGACY_PENDING_TEXT,
+    completeViewEnabled: completeViewEnabled,
+    completeViewStateFor: completeViewStateFor,
+    completeViewFromRecord: completeViewFromRecord,
+    completeViewFromStatus: completeViewFromStatus,
+    VIEW_TEXT: CA_VIEW_TEXT,
+    RETURN_POLL_DELAYS: CA_RETURN_POLL_DELAYS.slice(),
   };
 })(typeof window !== 'undefined' ? window : globalThis);
