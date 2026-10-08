@@ -560,7 +560,7 @@ function render(vm, K) {
   { kicker: 'DOMAINS', sub: 'Contribution domains', toc: '四つの貢献ドメイン' });
   P[34] = page(34, 'navigation-page domain-page', 't-neutral', 'あなたのドメイン平均', `
     <p class="lead">${DM.lead34}</p>
-    <div class="dm-badge"><b>ETI編集用派生指標</b><span>採用した4軸の単純平均</span><span>能力値・才能量・人口比ではありません</span><span>今後、分布と安定性の検証が必要です</span></div>
+    <div class="dm-badge"><b>ETI編集用派生指標</b><span>採用した4軸の単純平均</span><span>能力値・才能量・人口比ではありません</span><span>確立された心理尺度ではありません</span></div>
     <div class="dm-alloc">${DM.items.map((d) => `<div class="dma" style="--c:${DC[d.key].color}">
       <div class="dma-h"><span class="dma-n">${d.label}</span><span class="dma-v">${d.display}</span></div>
       <div class="dma-bar"><span style="width:${d.display}%"></span></div>
@@ -570,7 +570,7 @@ function render(vm, K) {
       <p class="small">${DM.band34}</p></div>
     <div class="dm-read">
       <div class="nv-box"><div class="sp-k">読み方</div><p>${DM.read34}</p></div>
-      <div class="nv-box"><div class="sp-k">計算・採用軸・版</div><p>各ドメインに割り当てた4軸の単純平均を四捨五入した値。例：${DM.items[0].label}＝(${DM.items[0].axes.map((x) => x.value).join('＋')})÷4＝${DM.items[0].display}。版：${S.domains.model}。正式な心理尺度ではなく、本番公開前に回答分布と順位の安定性の検証が必要です。</p></div>
+      <div class="nv-box"><div class="sp-k">計算・採用軸・版</div><p>各ドメインに割り当てた4軸の単純平均を四捨五入した値。例：${DM.items[0].label}＝(${DM.items[0].axes.map((x) => x.value).join('＋')})÷4＝${DM.items[0].display}。版：${S.domains.model}。確立された心理尺度ではなく、能力値・才能量・人口比を示すものではありません。</p></div>
     </div>`, { kicker: 'DOMAIN MEANS', sub: 'Simple means', toc: 'ドメイン平均' });
   const f35 = DM.flow35, topD = DC[f35[0].key];
   P[35] = page(35, 'navigation-page domain-page', 't-neutral', '周囲へ、どう貢献するか', `

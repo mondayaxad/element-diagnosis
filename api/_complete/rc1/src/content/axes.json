@@ -2,12 +2,12 @@
  "version": "CORE1-AXES-1.1.0",
  "review_status": "editorial_reviewed_v1",
  "text_bands": {
-  "version": "CORE1-TEXT-BANDS-0.1.0",
+  "version": "CORE1-TEXT-BANDS-1.0.0",
   "high_min": 65,
   "low_max": 35,
   "v_centered_high": 8,
   "v_centered_low": -8,
-  "note": "文章選択用の暫定帯。人口規準ではない。「上位○%」へ変換しない。実分布での校正前提。"
+  "note": "文章選択用の帯（RC1 承認・2026-10-08）。この text_bands が帯の唯一の定義で、judgments.js・polarity.js はここだけを読む。人口規準ではない。「上位○%」へ変換しない。"
  },
  "axes": {
   "O": {

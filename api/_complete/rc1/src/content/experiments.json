@@ -1,7 +1,7 @@
 {
  "version": "CORE1-RULES-1.0.0",
  "review_status": "editorial_reviewed_v1",
- "condition_note": "P/S は表示値、VALUES は centered（vc:）で判定する。閾値は文章選択用の暫定値で、心理規準ではない（CORE1-TEXT-BANDS-0.1.0）。",
+ "condition_note": "P/S は表示値、VALUES は centered（vc:）で判定する。閾値は文章選択用の暫定値で、心理規準ではない（帯は CORE1-TEXT-BANDS-1.0.0）。",
  "tensions": [
   {
    "id": "T_ROL_PO",

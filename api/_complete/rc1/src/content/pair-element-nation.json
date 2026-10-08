@@ -7,7 +7,7 @@
   "tension": "緊張",
   "conditional": "条件付き"
  },
- "relation_rule": "既定関係は辞書の編集判断。表示ラベルは本人の根拠軸がカテゴリの向きと一致する割合で確定する（CORE1-PAIR-RELATION-0.1.0）。",
+ "relation_rule": "既定関係は辞書の編集判断。表示ラベルは本人の根拠軸がカテゴリの向きと一致する割合で確定する（CORE1-PAIR-RELATION-1.0.0）。",
  "items": {
   "炎×モンド": {
    "pair_id": "ELEMENT.炎×NATION.モンド",

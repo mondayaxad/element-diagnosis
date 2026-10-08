@@ -8,6 +8,7 @@ const { loadContent } = require('./content-store');
 const { makeJudge, RULES, LAYER_OF } = require('./judgments');
 const { displayName } = require('./engine');
 const { makePolarity } = require('./polarity');
+const { DOMAIN_MODEL, sortDomains } = require('./models/domains');
 
 const COPY_VERSION = 'CORE1-COPY-RULES-1.0.0';
 const ELEMENT_CODE = { '炎': 'PY', '水': 'HY', '氷': 'CR', '雷': 'EL', '風': 'AN', '岩': 'GE', '草': 'DE' };
@@ -563,12 +564,12 @@ function buildClaims(snap) {
   // ============ P33–P35 ドメイン ============
   const D = snap.domains.items;
   const DC = K.rules.domains;
-  const dSorted = [...D].sort((a, b) => (b.mean - a.mean) || a.key.localeCompare(b.key));
+  const dSorted = sortDomains(D); // 同じ平均なら DOMAIN_MODEL.domains の定義順
   const dLow = dSorted[dSorted.length - 1];
   const lowAxes = [...dLow.axes].sort((a, b) => a.value - b.value).slice(0, 2).map((x) => x.axis);
   vm.domains = {
     items: D, content: DC, sorted: dSorted,
-    lead34: C('P34', 'LEAD', `このレポート上では、<strong>${dSorted[0].label}の平均が最も高い</strong>配置です。${DC[dSorted[0].key].desc}側の4軸が、相対的に高く出ています。`, { kind: 'calculated_fact', rule: 'CORE1-DOMAIN-EDITORIAL-0.1.0', evidence: D.map((d) => ({ path: `domains.${d.key}`, value: d.display })) }),
+    lead34: C('P34', 'LEAD', `このレポート上では、<strong>${dSorted[0].label}の平均が最も高い</strong>配置です。${DC[dSorted[0].key].desc}側の4軸が、相対的に高く出ています。`, { kind: 'calculated_fact', rule: DOMAIN_MODEL.version, evidence: D.map((d) => ({ path: `domains.${d.key}`, value: d.display })) }),
     read34: C('P34', 'READ', `数値の大小は、各ドメインに入れた4軸の平均です。${dLow.label}が低めに出ているのは、${lowAxes.map((a) => nm(a)).join('と')}が低いためで、能力の不足ではありません。`, { kind: 'calculated_fact', rule: 'DOMAIN_LOWEST_AXES', evidence: evAx(...lowAxes) }),
     band34: C('P34', 'BAND', `帯は能力の量ではなく、四つの平均の大小を並べたものです。最も高い${dSorted[0].label}と最も低い${dLow.label}の間に、残りの二つが並んでいます。`, { kind: 'calculated_fact', rule: 'DOMAIN_ORDER' }),
     flow35: dSorted.slice(0, 3),

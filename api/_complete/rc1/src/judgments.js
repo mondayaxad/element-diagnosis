@@ -1,21 +1,31 @@
 // judgments.js — スナップショットから「文章を選ぶための判定」を作る（数値はここで新たに計算しない。読むだけ）。
-// すべて決定論的。閾値は文章選択用の暫定版（CORE1-TEXT-BANDS-0.1.0 / CORE1-GAP-LABELS-CANDIDATE-0.1.0）。
+// すべて決定論的。文章選択用の帯と gap の区切りは RC1 で承認済み（CORE1-TEXT-BANDS-1.0.0 / CORE1-GAP-LABELS-1.0.0・2026-10-08）。
 'use strict';
+const { loadContent } = require('./content-store');
 
 const RULES = Object.freeze({
-  textBands: 'CORE1-TEXT-BANDS-0.1.0',
-  gapLabels: 'CORE1-GAP-LABELS-CANDIDATE-0.1.0',
+  textBands: 'CORE1-TEXT-BANDS-1.0.0',
+  gapLabels: 'CORE1-GAP-LABELS-1.0.0',
   core: 'CORE1-CORE-AXIS-1.0.0',
-  pairRelation: 'CORE1-PAIR-RELATION-0.1.0',
+  pairRelation: 'CORE1-PAIR-RELATION-1.0.0',
   charDiff: 'CORE1-CHAR-DIFF-1.0.0',
   tension: 'CORE1-TENSION-1.0.0',
   weakness: 'CORE1-WEAKNESS-1.0.0',
 });
-const GAP = { close: 2, clear: 8 };      // 表示点の差。人口規準ではない（候補版）
+const GAP = { close: 2, clear: 8 };      // 表示点の差。人口規準ではない（CORE1-GAP-LABELS-1.0.0）
 const DEV_MIN = 15;                       // 型との違いとして語る最小差（表示点）
 // 中立と中央域（CORE1-NEUTRAL-1.0.0）：P/S は 50、VALUES は centered 0 を neutral（方向なし）とする。
-// 核・支える軸の候補は「強い側」にある軸だけ：P/S は 35以下または65以上、VALUES は |centered| >= 8。
-const NEUTRAL = Object.freeze({ version: 'CORE1-NEUTRAL-1.0.0', ps_neutral: 50, v_neutral: 0, ps_low_max: 35, ps_high_min: 65, v_abs_min: 8, eps: 1e-9 });
+// 核・支える軸の候補は「強い側」にある軸だけ。帯の境界（P/S 35以下・65以上、VALUES |centered| 8以上）は
+// content/axes.json の text_bands（CORE1-TEXT-BANDS-1.0.0）が唯一の定義で、ここでは数値を持たない。
+function textBandsOf(content) {
+  const B = content && content.axes && content.axes.text_bands;
+  if (!B || B.version !== RULES.textBands) throw new Error('text_bands version mismatch');
+  const nums = [B.high_min, B.low_max, B.v_centered_high, B.v_centered_low];
+  if (!nums.every(Number.isFinite) || B.v_centered_low !== -B.v_centered_high || !(B.low_max < 50 && B.high_min > 50)) throw new Error('text_bands invalid');
+  return B;
+}
+const TB = textBandsOf(loadContent());
+const NEUTRAL = Object.freeze({ version: 'CORE1-NEUTRAL-1.0.0', text_bands: TB.version, ps_neutral: 50, v_neutral: 0, ps_low_max: TB.low_max, ps_high_min: TB.high_min, v_abs_min: TB.v_centered_high, eps: 1e-9 });
 const LAYER_OF = {};
 ['O', 'C', 'E', 'A', 'N'].forEach((a) => { LAYER_OF[a] = 'personality'; });
 ['AGY', 'REL', 'ROL', 'REF', 'AUT'].forEach((a) => { LAYER_OF[a] = 'style'; });
@@ -148,4 +158,4 @@ function makeJudge(snap) {
   return { snap, NEUTRAL, strong, sideOfValue, av, vc, side, band, isV, userCentered, cond, matchRule, protoDiffs, coreOf, deviationOf, sharedOf, gapState, charDiffs, charCommon, charDifference, shapeOf, sharedShape };
 }
 
-module.exports = { makeJudge, NEUTRAL, RULES, LAYER_OF, KIND_LAYER, GAP, DEV_MIN };
+module.exports = { makeJudge, NEUTRAL, textBandsOf, RULES, LAYER_OF, KIND_LAYER, GAP, DEV_MIN };

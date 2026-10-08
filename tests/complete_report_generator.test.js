@@ -31,7 +31,10 @@ const FIXTURE = require('./fixtures/complete_report_F01.json').input;
 // 代表 fixture の HTML の SHA-256（レビュー済みの値。変わったら差分レビューが必要）
 // 2026-10-08 更新：f31ce716… → 8c5419b5…。差分レビュー：本文は同一（画像の埋め込み方を正規化し、冒頭の案内文を除いて
 // 1,643行すべて一致）。変更は冒頭の案内文（スマートフォン向け）と、web.css（fit-to-width・画像の参照・紙面の余白）だけ。
-const GOLDEN_SHA256 = '8c5419b5722efef3955fa163743540ce93ca482d69760c570deef22b0a9b9e48';
+// 2026-10-08 更新（判定規則4種の RC1 承認・CORE1-CONTENT-1.0.1）：8c5419b5… → 580923f8…。差分レビュー：生の HTML で4行・本文で4行だけ
+// （P33 の版 DOMAIN-EDITORIAL-0.1.0 → 1.0.0、P34 の「今後、分布と安定性の検証が必要です」→「確立された心理尺度ではありません」、
+// P34 の計算の注記の版と末尾を P33 の恒久的な注意書きへ、P39 の版の欄 DOMAIN-EDITORIAL-1.0.0・CONTENT-1.0.1）。他の 3,319 行は同一。
+const GOLDEN_SHA256 = '580923f812f27078ebace89809dc0888cbdec9ba1f0c16f7b6296fe5e199f022';
 const GOAL_IDS = ['GOAL_VISIBLE_01', 'GOAL_BOUNDARY_01', 'GOAL_RELATION_01', 'GOAL_EXPLORE_01', 'GOAL_PACE_01'];
 const sha = (s) => crypto.createHash('sha256').update(s).digest('hex');
 const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -71,17 +74,20 @@ test.before(() => { base = G.generateCompleteReport(FIXTURE); });
 test('素材ハッシュ（lib/complete-materials.json）がサーバー生成器の実ファイルと一致する', () => {
   assert.deepEqual(require('../lib/complete-materials.json'), computeMaterials());
   assert.equal(CP.MATERIALS.templateVersion, 'CORE1-TEMPLATE-46P-WEB-1.0.0');
-  assert.equal(CP.MATERIALS.contentVersion, 'CORE1-CONTENT-1.0.0');
+  assert.equal(CP.MATERIALS.contentVersion, 'CORE1-CONTENT-1.0.1');
   assert.equal(base.contentSha256, CP.MATERIALS.contentSha256);
   assert.equal(base.templateSha256, CP.MATERIALS.templateSha256);
 });
 
-test('rc1 は prototypes の複製：Web 版で変えたファイル（追加1・変更3・削除3）以外はバイト単位で同一（本文素材・算出・画像・正本エンジン）', () => {
+test('rc1 は prototypes の複製：Web 版で変えたファイル（追加1・変更3・削除3）と判定規則4種の承認（変更7）以外はバイト単位で同一（本文素材・算出・画像・正本エンジン）', () => {
   const walk = (dir, rel = '') => fs.readdirSync(path.join(dir, rel), { withFileTypes: true })
     .flatMap((d) => (d.isDirectory() ? walk(dir, path.join(rel, d.name)) : [path.join(rel, d.name)]));
   const proto = new Set(['src', 'assets', 'vendor'].flatMap((d) => walk(PROTO, d)));
   const copy = new Set(['src', 'assets', 'vendor'].flatMap((d) => walk(RC1, d)));
-  const CHANGED = ['src/templates/report-46p.js', 'src/calculate-result.js', 'src/build-claims.js'];
+  // 2026-10-08 判定規則4種の RC1 承認：版 1.0.0・TEXT-BANDS の定義の一元化・DOMAIN の同点順と注意書き（tests/complete_rules_rc1.test.js）
+  const APPROVED_RULES = ['src/judgments.js', 'src/models/domains.js', 'src/content/axes.json', 'src/content/experiments.json',
+    'src/content/pair-element-weapon.json', 'src/content/pair-element-nation.json', 'src/content/pair-weapon-nation.json'];
+  const CHANGED = ['src/templates/report-46p.js', 'src/calculate-result.js', 'src/build-claims.js', ...APPROVED_RULES];
   const ADDED = ['src/templates/web.css'];
   const REMOVED = ['src/build-report.js', 'src/templates/viewer.js', 'src/templates/viewer.css']; // build-report.js は fixture から dist/ へ書き出す CLI（サーバーでは使わない）
   assert.deepEqual([...copy].filter((f) => !proto.has(f)).sort(), ADDED);
@@ -96,7 +102,14 @@ test('rc1 は prototypes の複製：Web 版で変えたファイル（追加1�
   for (const [f, h] of Object.entries(man.files)) assert.equal(sha(fs.readFileSync(path.join(ROOT, f))), h, f);
 });
 
-test('全12 fixture：Web 版の46ページは prototypes の紙面と同一（違いは P39 の ID・生成日・版の欄と、画像の埋め込み方だけ）', () => {
+// 判定規則4種の承認（2026-10-08）で変えた紙面：版の表記と P34 の注意書き。prototypes の紙面にこの置き換えだけを当てて比べる
+const APPROVED_PAGE_EDITS = [
+  [/DOMAIN-EDITORIAL-0\.1\.0/g, 'DOMAIN-EDITORIAL-1.0.0'],
+  ['<span>今後、分布と安定性の検証が必要です</span>', '<span>確立された心理尺度ではありません</span>'],
+  ['正式な心理尺度ではなく、本番公開前に回答分布と順位の安定性の検証が必要です。', '確立された心理尺度ではなく、能力値・才能量・人口比を示すものではありません。'],
+];
+const approvedEdits = (s) => APPROVED_PAGE_EDITS.reduce((t, [a, b]) => t.split(a).join(b), s);
+test('全12 fixture：Web 版の46ページは prototypes の紙面と同一（違いは P39 の ID・生成日・版の欄、画像の埋め込み方、判定規則4種の承認で変えた表記・同点順だけ）', () => {
   const P = {
     calc: require(path.join(PROTO, 'src/calculate-result')), claims: require(path.join(PROTO, 'src/build-claims')),
     content: require(path.join(PROTO, 'src/content-store')), tpl: require(path.join(PROTO, 'src/templates/report-46p')),
@@ -116,14 +129,26 @@ test('全12 fixture：Web 版の46ページは prototypes の紙面と同一（�
     assert.ok(a.join('').includes('[IMG assets/elements/'), '画像の正規化');
     assert.equal(a.length, 46, fx.fixture_id);
     assert.equal(b.length, 46, fx.fixture_id);
+    // ドメインの平均に同点がある fixture（F04）は、P34・P35 の並びが定義順に変わる（承認済み）。他は同点なし
+    const D = P.calc.calculateResult({ session_id: 'x', display_name: 'x', diagnosed_at: '2026-10-04T10:00:00+09:00', generated_at: '2026-10-04T10:00:00+09:00',
+      answers: fx.input.answers, versions: { diagnosis: 'ETI-2.0', items: 'ETI-ITEM-2.0.0', scoring: 'ETI-SCORE-2.0.0', translation: 'ETI-TRANS-2.0.0', characters: 'ETI-CHAR-2.1.0', mirror: 'ETI-MIRROR-2.1.0' } }).domains.items;
+    const tied = new Set(D.map((d) => d.mean)).size < D.length;
     for (let i = 0; i < 46; i++) {
+      if (tied && (i === 33 || i === 34)) {
+        const order = ['understanding', 'integration', 'sustain', 'expression'];
+        const sorted = [...D].sort((x, y) => (y.mean - x.mean) || (order.indexOf(x.key) - order.indexOf(y.key)));
+        const lead = `平均の高い${sorted[0].label}を入口に、${sorted[1].label}、${sorted[2].label}へつながる順序で読みます。`;
+        if (i === 34) assert.ok(a[i].includes(lead), `${fx.fixture_id} P35 は定義順`);
+        assert.equal(fx.fixture_id, 'F04', '同点は F04 だけ');
+        continue;
+      }
       if (i === 38) {
         const strip = (s) => s.replace(/<div class="cp-meta">[\s\S]*?<\/div>/, '');
         assert.equal(strip(a[i]), strip(b[i]), `${fx.fixture_id} P39`);
         assert.match(b[i], /<span>ID　x<\/span>/);
         assert.doesNotMatch(a[i], /<span>ID|生成日/);
       } else {
-        assert.equal(a[i], b[i], `${fx.fixture_id} P${i + 1}`);
+        assert.equal(a[i], approvedEdits(b[i]), `${fx.fixture_id} P${i + 1}`);
       }
     }
   }

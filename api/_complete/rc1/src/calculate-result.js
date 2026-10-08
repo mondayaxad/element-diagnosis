@@ -10,7 +10,7 @@ const { center } = require('./models/vector');
 
 const SNAPSHOT_SCHEMA = 'CORE1-REPORT-SNAPSHOT-1.0.0';
 const RANKBAND_MODEL = Object.freeze({ version: 'CORE1-RANKBAND-1.1.0', bands: { element: [3, 2, 2], weapon: [3, 0, 2], nation: [3, 3, 2] } });
-const REPORT_CONTENT_VERSION = 'CORE1-CONTENT-1.0.0';
+const REPORT_CONTENT_VERSION = 'CORE1-CONTENT-1.0.1'; // 1.0.1（2026-10-08）：判定規則4種の 1.0.0 固定・P34 の注意書き・DOMAIN の同点順
 const REPORT_TEMPLATE_VERSION = 'CORE1-TEMPLATE-46P-WEB-1.0.0'; // Web 版（サーバー生成器）。prototypes の版は CORE1-TEMPLATE-46P-1.0.0
 const TOP_N = 10;
 
