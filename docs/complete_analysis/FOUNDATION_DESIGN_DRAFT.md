@@ -295,43 +295,83 @@ generating（貸出し期限切れ）──claim で回収──▶ generating
 ### GET /api/mentor-goals（任意・新規）
 カタログ（goal_id・label・keep_phrase）を返す。deltas・borrow は返さない（表示に不要）。
 
-### POST /api/create-complete-checkout（新規）
-- 入力：`{ "diagnosisSessionId": "...", "offer": "direct_complete" | "analysis_upgrade" }`（Price ID・金額・user_id・目標は受け付けない）
-- 環境ガード：`requireServerEnv({admin, user, stripe})`、新しい Price ID の環境変数、販売開始フラグ（Preview のみ ON 可）。
-- 確認の順：
-  1. 認証。
-  2. 本人の記録。
-  3. onboarding が completed／legacy_exempt。
-  4. 販売対象（版一致）。
-  5. MENTOR 選択済み。
-  6. 権利（§4-3）：
-     - direct：解析権なし・完全解析権なし。
-     - upgrade：解析権あり（根拠を記録）・完全解析権なし。
-     - 完全解析権あり、または生成物が queued／generating／ready なら作らない。
-  7. 決済待ちの注文があれば、その URL を返す（冪等）。
-  8. Stripe の Price を取得して、金額・通貨・active・livemode を照合。
-  9. complete_orders 作成（DB トリガーでも前提を確認）。
-  10. Checkout Session 作成：Idempotency-Key、`client_reference_id` なし、metadata は `{order_id}` だけ、`expires_at` を設定。
-- 出力：`{ "url": "https://checkout.stripe.com/..." }`
-- 誤り：401／404／403（`onboarding_required`、`not_eligible`、`sales_closed`）／409（`mentor_goal_required`、`already_purchased`、`upgrade_requires_analysis`、`direct_not_allowed_after_analysis`、`checkout_in_progress`）／503。
+### 決済 API の実装（2026-10-08・Preview 限定・販売は閉じたまま）
 
-### POST /api/stripe-webhook（新規）
-- raw body（Vercel Functions で本文の自動解析を止める設定を要検証）、`Stripe-Signature`、環境別の `STRIPE_WEBHOOK_SECRET` で `constructEvent`。不正は 400。
-- livemode と環境の不一致は 400（処理しない）。
-- event_id を `stripe_webhook_events` に記録（重複なら 200 で終了）。
-- 対象イベント：
+実装：`api/complete-checkout.js`・`api/stripe-webhook.js`・`api/complete-status.js`・`lib/complete-payment.js`・`lib/complete-materials.json`（＋`scripts/complete-materials.js`）。DB は complete_04 の SQL 関数だけで更新する。Production（と環境不明）ではすべて 404 `not_available`（外部へ接続しない）。
 
-  | イベント | 処理 |
+必要な環境変数（名前だけ。Preview にだけ設定する。値はチャット・ログ・コードに出さない。2026-10-08 時点では未設定）：
+`COMPLETE_SALES_OPEN`、`COMPLETE_CHECKOUT_ORIGIN`、`STRIPE_COMPLETE_PRICE_DIRECT`、`STRIPE_COMPLETE_PRICE_UPGRADE`、`STRIPE_COMPLETE_WEBHOOK_SECRET`。
+
+#### POST /api/complete-checkout
+- 販売の開始：`COMPLETE_SALES_OPEN` が文字列 `true` のときだけ動く。未設定・それ以外は 503 `sales_closed`（認証・DB・Stripe に接続しない）。
+- 戻り先：`COMPLETE_CHECKOUT_ORIGIN` から作る（Host・X-Forwarded-Host は使わない）。
+  - https の origin だけを認める：userinfo・port・path（末尾の `/` を含む）・query・fragment・前後の空白を拒否する。
+  - Preview で許可した固定 origin（`https://element-diagnosis-git-release-c-preview-nmkw0322-4497s-projects.vercel.app`、`lib/complete-payment.js` の `PREVIEW_CHECKOUT_ORIGINS`）と一致しなければ 503（fail-closed）。
+  - Price の環境変数が無い・形式違反のときも 503。
+- 確認の順：環境 → 販売開始・設定 → 認証（Bearer を `/auth/v1/user` で検証）→ 入力 → 本人の記録・登録完了・RC1・MENTOR 選択・再購入禁止。
+- 入力：`{ "diagnosisSessionId": "<uuid>" }` だけ。金額・Price・user ID・目標 ID・offer などの項目が付いていれば 400。
+- offer はサーバーが決める：有効な解析権または旧購入権の結び付けがあれば upgrade ¥2,000、無ければ direct ¥3,000。
+- 旧 ¥1,000 の購入（診断コードのハッシュ一致）が未結び付けの場合：
+  - 購入時の Checkout Session を Stripe から取り直し、購入時メールと Auth の**確認済み**メールを照合する（大文字小文字・前後の空白を無視）。
+  - 一致すれば complete_04 の `complete_bind_legacy_purchase`（`stripe_email_verified`）で結び付けて upgrade にする。
+  - 不一致・Auth のメールなし／未確認・Session を取得できない・未払い・別の記録へ結び付け済みは、409 `legacy_purchase_verification_required`（¥3,000 へ誘導しない。運営者の手動確認へ）。
+  - メールは DB・ログに保存しない。
+- 注文：`complete_create_order`（記録ごとに直列化。決済待ちの注文があればそれを返す）。
+- Price：Stripe から取得して、有効・JPY・3000／2000・Test（livemode=false）・一回払いを照合する。違えば注文を canceled にして 503。
+- Checkout Session：
+  - カードだけ。customer_email・customer・client_reference_id は渡さない。
+  - metadata は `order_id`・`app`・`env` の3つだけ。
+  - Stripe の Idempotency-Key は `complete-checkout-<注文 ID>`（二重クリック・並行要求でも Session は1つ）。
+- Session を作った後に `complete_mark_checkout_open` が失敗した場合は 503 を返す。次の要求で同じ注文・同じ Idempotency-Key から同じ Session を回収する。
+- Stripe の一時的な失敗（通信・5xx・429・処理中の Idempotency-Key）は注文を残して 503。恒久的な失敗は注文を failed にして 502。
+- 出力：`{ checkoutUrl, offer, amount }`。
+  - `checkoutUrl` は Stripe が返した決済画面の URL。https・正規ホスト `checkout.stripe.com`・userinfo／port なしのときだけ返す（違えば 500）。
+  - Session ID を含むが、決済画面へ移るために返す（2026-10-08 承認）。ログには出さない。
+- 誤り：401 `not_authenticated`／400／404 `record_not_found`／403 `onboarding_required`／422 `not_eligible`／409（`mentor_goal_required`、`repurchase_not_allowed`、`legacy_purchase_verification_required`、`checkout_in_progress`、`offer_changed`）／503。
+
+#### POST /api/stripe-webhook
+- Bearer 認証は使わない。生のリクエスト本文（`req` のストリームから読む。`req.body` は使わない）と `Stripe-Signature` だけで検証する。
+  - 秘密値は `STRIPE_COMPLETE_WEBHOOK_SECRET`。HMAC-SHA256、許容 300 秒、定数時間で比較。
+  - 署名なし・形式違反・時刻外れ・不一致は 400。秘密値が無ければ 503（fail-closed）。
+- Preview の Test のイベントだけを扱う。Live のイベント・対象外のイベント・完全解析でない Session（旧 ¥1,000 など）は DB に書かずに 200。
+- **`COMPLETE_SALES_OPEN=false` でも停止しない**（返金・dispute を処理するため）。
+- イベント本文の値は信用しない。Checkout Session・Charge・Dispute を Stripe から取り直して判断する。
+
+  | イベント | 処理（complete_04 の関数） |
   |---|---|
-  | `checkout.session.completed`（paid）、`async_payment_succeeded` | 注文を paid、目標をロック、権利を付与、生成物を queued |
-  | `async_payment_failed`、`expired` | 注文を failed／expired |
-  | `charge.refunded`（全額） | refunded・権利 revoked・生成物 revoked＋隔離 |
-  | `charge.dispute.created` | disputed |
-  | `charge.dispute.closed` | lost なら revoked＋隔離 |
+  | `checkout.session.completed` | Session の金額・通貨・支払い状態・Price（注文の offer の Price・1行・数量1）・metadata を確かめて `complete_apply_payment`：注文 paid・MENTOR ロック・権利・`complete_reports` queued を同時に作る |
+  | `checkout.session.expired` | Stripe 上で expired のときだけ `complete_apply_checkout_expired`（違えば 500 で再送） |
+  | `charge.refunded` | Charge の返金額で `complete_apply_refund`（一部は記録だけ、全額で refunded・権利と生成物を revoked） |
+  | `charge.dispute.created`・`charge.dispute.closed` | Dispute の状態で `complete_apply_dispute`（opened／won／lost）。閉じていない closed は ignored |
 
-- 順序：注文の `last_event_created` より古いイベントで状態を巻き戻さない。paid の前に refund が来たら refunded を優先する。
-- 照合：metadata の order_id・金額・Price・offer の一致を再確認。不一致は failed＋監査（権利なし）。
-- すぐ 200 を返す。生成は waitUntil で合図だけ。
+- 生成素材のハッシュ：
+  - 本文素材・テンプレートは、サーバー専用の `lib/complete-materials.json` に固定したハッシュを使う（静的公開しない）。
+  - 素材を変えたら `node scripts/complete-materials.js` で作り直す。試験が元の素材との不一致を検出する。
+  - 入力のハッシュは、保存済みの回答・6つの版・注文に固定した MENTOR 目標から計算する。ブラウザから受け取ったハッシュは使わない。
+- 応答：
+  - 処理済み・重複・恒久的な不一致（金額・Price・metadata・livemode）は 200（不一致は ignored）。
+  - `complete_retry_later`、Stripe・DB の一時的な失敗、想定外の例外は failed を記録して 500（Stripe が再送し、failed のイベントは処理し直す）。
+- **生成器が未実装の間は、支払い確定後も `complete_reports` は queued まで**（生成処理を起動しない。waitUntil も未使用）。
+- 応答に Stripe ID を出さない（`{ received, result }` か `{ error, incident_id }` だけ）。
+
+#### GET /api/complete-status
+- 確認の順：環境 → 認証 → 入力（`diagnosisSessionId`）→ 本人の記録。他人の記録と存在しない記録は同じ 404。
+- 出力：`{ salesOpen, order: {status, offer, amount}|null, entitlements: {analysis, complete}, report: {status}|null, mentorGoal: {goalId, goalCatalogVersion, locked}|null }`。
+- Stripe ID・保存パス・メール・診断コード・注文 ID・user ID は返さない。
+- 署名 URL の発行（POST）は、Storage と閲覧機能の工程で追加する。
+
+#### ログ
+- 「API 名・理由コード・照合 ID」の1行だけ（例：`stripe-webhook error: db_error 0123456789ab`）。環境ガードの拒否は従来の JSON。
+- URL・query・署名・メール・Stripe ID 全文・user ID・記録 ID は出さない（試験でログの全行を検査）。
+
+#### 検証（2026-10-08・ローカル）
+- 決済 API の試験 32件（外部通信はすべて偽物）：
+  - 偽の DB の模型で合格。
+  - ローカル PG17 に complete_01〜05（適用済みの本文）を入れた DB で、本物の SQL 関数に対しても合格。
+- 不具合を入れた9種類の変更（署名・時刻・customer_email・メール照合・販売フラグ・Idempotency-Key・応答の ID・イベント本文の信用・500→200）はすべて試験で検出。
+- 署名方式は Stripe 公式 SDK（17.7.0）と相互に一致。
+- `@vercel/nft` でバンドルを解析：Checkout・Webhook には lib・素材ハッシュ JSON・stripe が入り、docs・tests・scripts・素材の CSS や画像は入らない。
+- Vercel の関数の本数：本数だけでは止めない。Preview の build の成功を正とし、上限エラーが出た場合だけ統合を再設計する（2026-10-08 判断）。
 
 ### GET /api/my-entitlements（v2・後方互換）
 ```json
@@ -558,6 +598,9 @@ Preview への適用（2026-10-08 記録）：
 - 本番 DB に onboarding（legacy_exempt 規則）と complete_01 相当が未適用。
 - `CA_PREVIEW_BUILD=true`・Preview 用の状態切替・テスト用リンクが残っている。
 - `report_sample.html` の旧 ¥3,000 販売欄が残っている。
+- **完全解析の販売開始（`COMPLETE_SALES_OPEN=true`）は、Preview でも、生成・保存・閲覧まで通るまで禁止**（2026-10-08 決定）。生成器が未実装の間は、支払い確定後も `complete_reports` は queued のまま。
+- **Webhook の raw body が Vercel の実環境で保持されること**を、Webhook の設定後に Preview で確かめるまで止める（必須の停止条件。Stripe の Test イベントで署名検証が通ること、1バイト変えた本文が拒否されることを実環境で確認する）。
+- `COMPLETE_CHECKOUT_ORIGIN` が https の origin だけで、Preview で許可した固定 origin と一致すること（一致しなければ Checkout は閉じる）。Production 用の origin は Production 移行時に別承認で許可リストへ加える。
 
 ### 12-1. 本番移行前のセキュリティ整理の候補（停止条件ではない・2026-10-07 記録）
 
