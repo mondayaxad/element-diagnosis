@@ -201,13 +201,18 @@ test('生成素材のハッシュは素材ファイルと一致（lib/complete-m
   assert.deepEqual(CP.MATERIALS, fresh);
   assert.match(CP.MATERIALS.contentSha256, /^[0-9a-f]{64}$/);
   assert.match(CP.MATERIALS.templateSha256, /^[0-9a-f]{64}$/);
-  const base = { encodedAnswers: 'CODE_A', result: { ...CE.RC1_REQUIRED_VERSIONS }, mentorGoalCatalogVersion: CE.MENTOR_CATALOG_VERSION, mentorGoalId: 'GOAL_PACE_01' };
+  const base = { encodedAnswers: 'CODE_A', result: { ...CE.RC1_REQUIRED_VERSIONS }, mentorGoalCatalogVersion: CE.MENTOR_CATALOG_VERSION, mentorGoalId: 'GOAL_PACE_01', diagnosedDate: '2026-10-04' };
   const h = CP.inputSha256(base);
   assert.match(h, /^[0-9a-f]{64}$/);
   assert.equal(CP.inputSha256({ ...base }), h);
   assert.notEqual(CP.inputSha256({ ...base, mentorGoalId: 'GOAL_VISIBLE_01' }), h);
   assert.notEqual(CP.inputSha256({ ...base, encodedAnswers: 'CODE_B' }), h);
   assert.notEqual(CP.inputSha256({ ...base, result: { ...base.result, mirror_model_version: 'ETI-MIRROR-2.0.2' } }), h);
+  assert.notEqual(CP.inputSha256({ ...base, diagnosedDate: '2026-10-05' }), h);
+  // 診断日は日本時間の日付
+  assert.equal(CP.jstDate('2026-10-03T15:00:00.000Z'), '2026-10-04');
+  assert.equal(CP.jstDate('2026-10-03T14:59:59.999Z'), '2026-10-03');
+  assert.equal(CP.jstDate('not a date'), null);
 });
 
 test('Stripe の例外の分類：通信・5xx・429・処理中の冪等キーは一時的', () => {
@@ -548,12 +553,16 @@ test('Webhook 支払い確定：注文 paid・MENTOR ロック・権利・comple
   assert.equal(await ctx.state(p.sessionId), 'paid|lock=true|ent=analysis:active,complete:active|rep=queued');
   const [report] = await ctx.db.rows('complete_reports');
   assert.equal(report.content_version, 'CORE1-CONTENT-1.0.0');
-  assert.equal(report.template_version, 'CORE1-TEMPLATE-46P-1.0.0');
+  assert.equal(report.template_version, 'CORE1-TEMPLATE-46P-WEB-1.0.0');
+  assert.equal(report.template_version, CP.MATERIALS.templateVersion);
   assert.equal(report.content_sha256, CP.MATERIALS.contentSha256);
   assert.equal(report.template_sha256, CP.MATERIALS.templateSha256);
   const answers = await ctx.db.rows('diagnosis_answers');
   const code = answers.find((a) => a.session_id === p.sessionId).encoded_answers;
-  assert.equal(report.input_sha256, CP.inputSha256({ encodedAnswers: code, result: CE.RC1_REQUIRED_VERSIONS, mentorGoalCatalogVersion: CE.MENTOR_CATALOG_VERSION, mentorGoalId: 'GOAL_PACE_01' }));
+  const session = (await ctx.db.rows('diagnosis_sessions')).find((x) => x.id === p.sessionId);
+  const diagnosedDate = CP.jstDate(new Date(session.completed_at).toISOString());
+  assert.match(diagnosedDate, /^\d{4}-\d{2}-\d{2}$/);
+  assert.equal(report.input_sha256, CP.inputSha256({ encodedAnswers: code, result: CE.RC1_REQUIRED_VERSIONS, mentorGoalCatalogVersion: CE.MENTOR_CATALOG_VERSION, mentorGoalId: 'GOAL_PACE_01', diagnosedDate }));
   // 同じイベントの重複配送
   const dup = await ctx.webhook({ type: 'checkout.session.completed', objectId: csId, id: r.event.id });
   assert.deepEqual([dup.code, dup.body.result], [200, 'processed']);

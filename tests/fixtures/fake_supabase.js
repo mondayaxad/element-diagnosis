@@ -267,7 +267,7 @@ function createMemoryBackend() {
       return id;
     },
     async record({ id = uuid(), userId, code = `CODE_${crypto.randomBytes(4).toString('hex')}`, versions = CE.RC1_REQUIRED_VERSIONS, goal = 'GOAL_PACE_01' }) {
-      t.diagnosis_sessions.push({ id, user_id: userId, diagnosis_version: 'ETI-2.0', created_at: now() });
+      t.diagnosis_sessions.push({ id, user_id: userId, diagnosis_version: 'ETI-2.0', completed_at: now(), created_at: now() });
       t.diagnosis_results.push({ session_id: id, ...versions });
       t.diagnosis_answers.push({ session_id: id, encoded_answers: code });
       if (goal) t.record_mentor_goals.push({ diagnosis_session_id: id, user_id: userId, goal_catalog_version: CE.MENTOR_CATALOG_VERSION, goal_id: goal, selected_at: now(), locked_at: null });

@@ -1,9 +1,9 @@
 {
   "generatorRelease": "COMPLETE-RC1",
   "contentVersion": "CORE1-CONTENT-1.0.0",
-  "templateVersion": "CORE1-TEMPLATE-46P-1.0.0",
-  "contentSha256": "ede62caab3b2bfdaaa92520f387dac0753b1f4c5dd6d3bad3bb748e3587f6cfc",
-  "templateSha256": "d7d08236926bed8f3212b1ca311a69f5afcb9fbd42a98738ea60e8c553ef7eaf",
+  "templateVersion": "CORE1-TEMPLATE-46P-WEB-1.0.0",
+  "contentSha256": "9c4aae7449d496bc358981ed8f7c4fd6746478255d0af0a11361b04578d6a9e8",
+  "templateSha256": "0bcac6c28f8536596e43870ca02822359cc613e320a5a77b8a00d7929a86a1f8",
   "contentFiles": 11,
-  "templateFiles": 26
+  "templateFiles": 44
 }

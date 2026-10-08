@@ -1,0 +1,40 @@
+
+/* ================= 修正版の追加（表紙の元素画像・人物リストの得点） ================= */
+.cover-page { background: radial-gradient(ellipse 85% 70% at 50% 44%, var(--cv1, #143450) 0%, var(--cv2, #0a1826) 50%, #03070c 100%); }
+.cover-ring.cover-img { opacity: .62; width: 168mm; height: 168mm; }
+.cover-img img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 52%, transparent 71%); mask-image: radial-gradient(circle at 50% 50%, #000 52%, transparent 71%); }
+.cover-page .cover-title { text-shadow: 0 0 22px rgba(0, 0, 0, .85), 0 0 34px color-mix(in srgb, var(--cvg, #76b6dd) 45%, transparent); }
+.cover-page .cover-lead, .cover-page .cover-combo, .cover-page .cover-label { text-shadow: 0 0 12px rgba(0, 0, 0, .9); }
+.ch-sc { font-family: var(--font-num); font-weight: 300; font-size: 10.5pt; color: var(--accent-l); margin-left: 1.4mm; }
+@media print { .cover-img img { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+.cover-ring.cover-img { opacity: .82; }
+.td-side .td-beyond.in-side { margin-top: 0; padding: 2mm 2.8mm; }
+.td-side .td-beyond.in-side p { font-size: var(--fs-small); line-height: 1.68; }
+.dc-near { font-size: 8pt; line-height: 1.6; color: var(--ink-body); margin-top: .8mm; }
+.dc-near i { display: block; font-style: normal; font-size: 6.8pt; letter-spacing: .1em; color: var(--ink-soft); }
+
+/* ================= 表紙：元素診断／完全解析｜CORE1／タイプコード／タイプ名／組み合わせ ================= */
+.cover-page .cover-label { font-size: 13pt; letter-spacing: .6em; color: color-mix(in srgb, var(--cvg, #76b6dd) 60%, #ffffff); }
+.cover-page .cover-title { font-size: 26pt; letter-spacing: .14em; }
+.cover-code { font-family: var(--font-num); font-size: 34pt; font-weight: 300; letter-spacing: .22em; color: #f4f8fc; margin-top: 4mm; text-shadow: 0 0 18px rgba(0, 0, 0, .9), 0 0 30px color-mix(in srgb, var(--cvg, #76b6dd) 55%, transparent); }
+.cover-type { font-size: 22pt; font-weight: 700; letter-spacing: .4em; color: color-mix(in srgb, var(--cvg, #76b6dd) 45%, #ffffff); text-shadow: 0 0 14px rgba(0, 0, 0, .9); }
+
+/* ================= 詳細ページのマーク：表紙と同じく画像をそのまま円形に埋め込む ================= */
+.td-sym.td-img { width: 34mm; height: 34mm; }
+.td-img img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 56%, transparent 71%); mask-image: radial-gradient(circle at 50% 50%, #000 56%, transparent 71%); }
+
+/* ================= 核となる軸 ================= */
+.tc.core { border-color: var(--accent-l); background: color-mix(in srgb, var(--accent) 34%, transparent); box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 45%, transparent); }
+.tc b { font-family: var(--font-num); font-size: 6.4pt; color: #06101a; background: var(--accent-l); border-radius: .7mm; padding: 0 .9mm; margin-left: 1.2mm; vertical-align: .1em; }
+.core-note { margin-left: 2.4mm; font-size: 7.2pt; letter-spacing: .08em; color: var(--accent-l); font-weight: 700; }
+.pole.core .pl, .mb.core .mb-n { color: var(--accent-l); font-weight: 700; }
+.pole.core .pl::after, .mb.core .mb-n::after { content: '核'; font-family: var(--font-num); font-size: 6pt; color: #06101a; background: var(--accent-l); border-radius: .6mm; padding: 0 .7mm; margin-left: 1mm; vertical-align: .1em; }
+
+/* ================= P10–P12 行見出しを一行に ================= */
+.to-k { white-space: nowrap; letter-spacing: .02em; }
+
+/* ================= 軸辞典：項目名と数値は見出しの一度だけ ================= */
+.dict.ax .pole .pc, .dict.ax .pole .pl, .dict.ax .pole .pv { display: none; }
+.dict.ax .pole { grid-template-columns: 22mm 1fr 22mm; }

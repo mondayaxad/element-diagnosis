@@ -79,15 +79,17 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
         return 'ignored:price_mismatch';
       }
       const sid = encodeURIComponent(order.diagnosis_session_id);
-      const [answers, results] = await Promise.all([
+      const [sessions, answers, results] = await Promise.all([
+        CP.selectRows(fetchImpl, conn, `diagnosis_sessions?id=eq.${sid}&select=completed_at`),
         CP.selectRows(fetchImpl, conn, `diagnosis_answers?session_id=eq.${sid}&select=encoded_answers`),
         CP.selectRows(fetchImpl, conn, `diagnosis_results?session_id=eq.${sid}&select=diagnosis_version,item_set_version,scoring_version,` +
           'translation_model_version,character_profile_version,mirror_model_version'),
       ]);
-      if (!answers[0] || !results[0]) throw new CP.PaymentError('record_data_missing', true);
+      const diagnosedDate = sessions[0] ? CP.jstDate(sessions[0].completed_at) : null;
+      if (!answers[0] || !results[0] || !diagnosedDate) throw new CP.PaymentError('record_data_missing', true);
       input = CP.inputSha256({
         encodedAnswers: answers[0].encoded_answers, result: results[0],
-        mentorGoalCatalogVersion: order.mentor_goal_catalog_version, mentorGoalId: order.mentor_goal_id,
+        mentorGoalCatalogVersion: order.mentor_goal_catalog_version, mentorGoalId: order.mentor_goal_id, diagnosedDate,
       });
     }
     const m = CP.MATERIALS;

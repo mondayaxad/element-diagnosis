@@ -490,6 +490,108 @@ Preview への適用（2026-10-08 記録）：
 
 ローカル PG17 の検証（2026-10-07 改訂1、complete_01〜04 は適用済みの本文）：129件すべて合格。complete_04 の既存の試験（270件）も、改訂した complete_99 で合格。リポジトリの単体テスト 332件合格。内容：正しい承認（結び付けと監査ログの同時作成）、途中失敗で両方取り消し、同じ照合 ID の承認・却下・失敗記録の再送で行が増えない、同じ照合 ID を別の購入権・記録・運営者・操作・理由に使うと衝突（行を追加しない）、新しい照合 ID での再却下、別の利用者・別の記録・存在しない対象、ハッシュ不一致、別の購入権が結び付いた記録、却下後の承認、理由コードと操作・結果の組み合わせ違反・未認証・未認可・report_requeue・report_process_now の CHECK 拒否、列の確認（メール・Stripe ID・自由記述なし）、UPDATE・DELETE・TRUNCATE の拒否（service_role と所有者）、anon・authenticated の拒否、service_role の権限、二度当て、complete_99 で戻した後の 01〜05 の再適用、complete_04 が無い状態・非 Preview での中止、complete_01〜04 の定義・権限・既存データが前後で同一。
 
+### 完全解析 HTML 生成エンジン（2026-10-08・RC1 candidate / sales closed・API 未接続）
+
+状態は **RC1 candidate / sales closed**。生成できても「販売承認済み本文」ではない。全文レビューで承認されるまで、`COMPLETE_SALES_OPEN` を有効にせず、Stripe 設定・Storage 作成・実注文の作成もしない。
+
+**正本候補**は `prototypes/core1_v4_result_driven/` だけ。旧 50 問診断を基にした13ページの個別ナラティブ資料（handoff_for_chatgpt.md・report_spec_v1.md・master_template.html・build_report.py：X 投稿を材料に人手で執筆・Big Five／エニアグラム／上位4キャラ中心・PDF 手動納品・旧価格）は、完全解析の正本ではない。生成器へ取り込まず、旧ナラティブ商品の資料として分離して保持する（リポジトリには入れていない）。
+
+#### 監査（2026-10-08・読み取りのみ）
+- 素材ハッシュ：`lib/complete-materials.json`（当時は prototypes を対象）と実ファイルが一致。
+- 6つの版：エンジンの期待値（ETI-2.0・ITEM／SCORE／TRANS-2.0.0・CHAR-2.1.0・MIRROR-2.1.0）が RC1 と一致。同梱の正本エンジン（vendor/eti-js）6ファイルはリポジトリの `js/` とバイト単位で同一。
+- MENTOR カタログ：`CORE1-MENTOR-GOALS-1.0.0`・5目標。
+- 本文素材 161件はすべて `editorial_reviewed_v1`。TODO・lorem・未置換記号はなし。
+- **暫定・候補のまま残っている判定規則**（販売承認の前に校正または承認が必要）：
+  - `CORE1-TEXT-BANDS-0.1.0`：65以上／36〜64／35以下。「文章選択用の暫定帯」と明記。
+  - `CORE1-GAP-LABELS-CANDIDATE-0.1.0`
+  - `CORE1-PAIR-RELATION-0.1.0`
+  - `CORE1-DOMAIN-EDITORIAL-0.1.0`
+- 仮の文言：MENTOR の方向が fixture 由来の時だけ「サンプル用の仮の方向」と出る。生成器は利用者の選択（`selected_by: user`）だけを渡し、出力検査でもこの文言を拒否する。
+- prototypes の55件のテスト：この環境では54件合格・1件不合格（**既知の環境差として記録**）。
+  - 不合格は A4 印刷レイアウトの試験で、F05 の P08 の下端の図が 16px はみ出す。
+  - `docs/test-results.md` は55件合格を記録しており、prototypes は変更していない。フォント環境の違いによる可能性が高い（この環境に Hiragino・Yu・Noto は無く、IPA・WenQuanYi で描画される）が、原因は確定していない。
+  - サーバー用 Web テンプレート側で余白を調整して解消した（下の「紙面の余白」）。prototypes の試験が環境差で54/55のままでも、サーバー版の全 fixture のはみ出し0件・F05 P08 の回帰試験を条件に、候補生成器として扱う（2026-10-08 判断）。
+
+#### 配置（サーバー専用・静的公開しない）
+- `api/_complete/generate-report.js`：入口。`api/_complete/rc1/`：生成器（src・assets・vendor）。
+  - `_` で始まるため Vercel の独立した関数にならない。`dist/` に出ない。どの API からもまだ呼ばない。
+- 移動と変更は分けた。
+  - **手順1（複製のみ）**：prototypes の src・assets・vendor の56ファイルを複製し、ファイルのハッシュ（56/56 同一）と、全12 fixture の出力 HTML・スナップショットの SHA-256（12/12 同一）を照合した。
+  - **手順2（Web 版の変更）**：手順1の状態との差分は次だけ。本文・数値・ページ構成・画像は変えていない。
+    - `templates/report-46p.js`：viewer.js・noscript・操作ボタンを外し、静的な目次（ページ内リンク）と説明文に置き換え。CSP の meta と no-referrer。P39 の ID・生成日、HTML コメントの session_id・answers_hash を削除。
+    - `templates/web.css`（追加）：840px 未満では A4 の紙面全体を画面幅に合わせて縮小表示する（fit-to-width）。紙面の余白も調整する。
+    - 画像：同じ画像を2回埋め込まない。画像ごとに CSS のカスタムプロパティ（`--img-N`）へ1回だけ入れ、表紙と詳細ページは背景として参照する（`role="img"`・`aria-label`）。
+    - `calculate-result.js`：テンプレートの版を `CORE1-TEMPLATE-46P-WEB-1.0.0` に変更。
+    - `build-claims.js`：MENTOR 目標の文言を本文へ入れる2か所（P36・P38）で HTML エスケープ。
+    - 削除：`viewer.js`・`viewer.css`・`build-report.js`（fixture から dist へ書き出す CLI）。
+  - 全12 fixture で、Web 版の46ページは prototypes の紙面と同一。違いは P39 の ID・生成日・版の欄と、画像の埋め込み方だけ（画像のバイトは同一）で、試験で確認している。
+  - prototypes は査読用の原本として残す（変更なし）。
+- 素材ハッシュの対象を、サーバー生成器（`api/_complete/`）に変えた（2026-10-08 承認）。区分は次の3つで維持する。
+  - content_hash（`contentSha256`）：査読済みの本文・辞書・MENTOR カタログ（`rc1/src/content/*.json`）。旧式の計算で ede62caa…（変更前と同一）。
+  - template_hash（`templateSha256`）：テンプレート・CSS・画像・文章を組み立てるコード・正本エンジンの同梱物・入口。
+  - input_hash（`input_sha256`）：その利用者の入力（保存済み回答・6つの版・MENTOR・診断日）。
+  - 相対パスは `api/_complete/` からとし、置き場所を変えても内容が同じなら同じ値になる。
+- `scripts/complete-materials.js` は、通常実行では照合だけ（不一致なら終了コード 1、書き換えない）。
+  - 明示的に `--write` を付けた時だけ `lib/complete-materials.json` を書き換え、旧値・新値・対象ファイルの一覧を表示する。
+  - golden hash は自動では書き換えない。テストから `--write` を呼ばない（試験で確認）。
+
+#### 入力（サーバーが DB から取得したものだけ・8項目）
+- 項目：`answers`（answers_v2）、`encodedAnswers`、`savedScores`（v2_scores）、`savedRankings`（v2_rankings）、`mirrorSnapshot`、`versions`（6つの版）、`mentorGoal`（goalId・goalCatalogVersion・selectedAt）、`diagnosedAt`。
+- これ以外の項目があれば生成しない（メール・表示名・本文・ハッシュ・ID・Stripe ID などが入る余地をなくす）。
+- 回答から正本エンジンで算出し直し、保存済みのスコア・順位・MIRROR・診断コードと一致しなければ生成しない。
+- MENTOR の文言と動かす軸は、サーバーのカタログから取る。
+- 呼称は「あなた」。診断日は日本時間の日付だけを出す。
+- 入力ハッシュは `lib/complete-payment.js` の `inputSha256`。
+  - 診断日を加えた（2026-10-08 承認）。使うのは保存済みの `diagnosis_sessions.completed_at` だけで、実行時の現在日時は使わない。
+  - Asia/Tokyo の `YYYY-MM-DD` に正規化する。同じ UTC 値からは必ず同じ日付になる。
+  - HTML に出す日付と入力ハッシュに入れる日付は、同じ関数（`lib/complete-payment.js` の `jstIso`。日付は `jstDate`＝`jstIso` の先頭10文字）から作る。Webhook も同じ `jstDate` を使う。
+  - Webhook が `complete_reports.input_sha256` に保存する値と同じ規則にそろえた。Webhook は `diagnosis_sessions.completed_at` を読む。
+  - 実注文は無いため、既存の保存値への影響はない。
+
+#### 出力
+- HTML だけ（PDF は作らない）。46ページ固定。
+- 同じ入力・同じ素材からはバイト単位で同じ HTML・SHA-256。現在時刻・乱数を本文に入れず、生成日時は DB のメタデータ側に持つ。
+- CSP の meta：`default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src 'none'; script-src 'none'; connect-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'`。
+- 画像：承認済みの JPEG を data: で埋め込む（RC1 候補では維持。2026-10-08 判断）。CSS・SVG だけへの置き換えは行わない。
+  - 1件のレポートで使う画像は9点（主元素は表紙と詳細ページで共通）。同じ画像は1回だけ埋め込む（検査で重複・未定義の参照を拒否）。
+  - 外部通信なし。画像は template_hash の対象。
+  - 20点とも EXIF・XMP・IPTC・コメントを含まない（JFIF の見出しだけ。撮影情報・氏名・位置情報なし）。同じ画像ファイルの重複もない（試験で確認）。
+  - 内容：抽象的な紋章風の図（円・線・点）。公式のロゴやゲーム画像は見当たらない（目視）。
+  - **出所・利用可否は未確認**：リポジトリには「承認済み画像20点」（prototypes の README）以上の記録がない（作成者・作成方法・利用許諾）。ファイル名は元素・国家の名前に対応している。出所と利用可否の確認を記録するまでは販売しない（停止条件）。
+- 最大サイズは 1.5 MiB。代表例は約 0.66 MiB（画像の重複をなくした後）で、全12 fixture は上限内。
+- 出力の検査に1つでも通らなければ理由コードで止める：
+  - 46ページ・順序、CSP。
+  - script・イベント属性・外部 URL・iframe・form・@import・@font-face。
+  - 未置換の記号、メール・UUID・Stripe ID・診断コード、最大サイズ。
+  - 文字の検査は、data: の base64 を除いた本文で行う。
+- 閲覧：ブラウザ閲覧を正とする（印刷は目的にしない）。
+  - 840px 以上：A4 の紙面を原寸で中央に表示する。
+  - 840px 未満：A4 の構成を組み替えずに、ページ全体を画面幅に合わせて縮小表示する（fit-to-width。2026-10-08 判断）。
+    - 横スクロールなし。ページの比率・配置・改ページは維持する。
+    - 利用者はブラウザのピンチ操作で拡大できる（viewport で拡大を禁止しない）。
+    - 冒頭に「スマートフォンでは、指で広げて拡大してご覧ください。」を出す。
+  - JavaScript は使わない。CSS の `zoom` を画面幅 20px ごとの段階で指定する。
+    - `zoom` は Chromium・Safari（WebKit）・Firefox 126 以降が対応する。対応しない古いブラウザでは縮小されず、紙面の列だけを横スクロールで読める。
+    - 試験は Chromium（Playwright）で行った。この環境に WebKit が無いため、Safari の実機確認は閲覧機能の工程で行う。
+  - レスポンシブな文章の組み替えは行わない。
+- 紙面の余白（2026-10-08）：文章・文字の大きさ・図の大きさは変えずに、ブロックの間隔・行の間隔（一部の本文 1.85〜1.9 → 1.8）・カードの間隔・下端に寄せた要素の下余白だけを `web.css` で詰めた。
+  - 測り方：本文枠の高さの制約を外した時の、中身の最下端から本文枠の下端までの余裕。
+  - 全12 fixture・46ページで最小 26px（目標 24px 以上）。F05 の P08 は −16px → 40px 以上。切り取りなし、A4 の高さは不変。
+
+#### 検証（2026-10-08・ローカル）
+- 生成器の試験：23件合格。
+  - 主な内容：素材ハッシュ、複製の同一性、全12 fixture の紙面同一、46ページ・見出し、6つの版、5目標、golden hash、入力1つの変更、保存値の不一致、入力の禁止項目、出力の禁止要素、エスケープ、検査の失敗例、サイズ、静的公開なし、320・390・1280px の表示（Playwright・CSP 違反なし・外部要求なし・画像表示）。
+  - 追加の試験：全12 fixture・46ページのはみ出し（余裕 24px 以上・切り取りなし）、F05 P08 の回帰、320・390px の fit-to-width（scrollWidth＝clientWidth・全ページが画面幅内・比率・重なりなし・目次の移動）と 1280px の原寸、CSS の段の倍率、画像のメタデータと重複、素材ハッシュのスクリプト（照合だけ・不一致で exit 1・書き換えない・--write を呼ばない）。
+  - リポジトリ全体は 387件合格。決済 API の試験は、ローカル PG17 の本物の SQL 関数でも32件合格。
+- golden hash（代表 fixture `tests/fixtures/complete_report_F01.json`）：`8c5419b5722efef3955fa163743540ce93ca482d69760c570deef22b0a9b9e48`。
+  - 2026-10-08 に f31ce716… から更新。差分レビューの結果、本文は同一（画像の埋め込み方を正規化し、冒頭の案内文を除いて1,643行すべて一致）。変更は案内文と web.css だけ。
+  - 本文・テンプレート・素材の変更でこの値が変わったら、差分をレビューしてから更新する（安易に書き換えない）。
+- Vercel のバンドル解析（`@vercel/nft`。将来の関数を模した入口から）：
+  - 生成器が実行時に読むファイルはすべて含まれ、docs・tests・scripts は含まれない。
+  - 含まれたファイルだけを空のディレクトリへ写して実行し、同じ golden hash を得た。
+  - 公開物（dist）に、生成器・本文素材・画像・fixture は出ない。同じ内容のファイルは、正本エンジン6本（`js/`。診断画面が元から配信しているもの）だけ。
+  - `prototypes/.../mentor-goals.json` が含まれるのは、既存の `lib/complete-eligibility.js` 経由（MENTOR API と同じ。サーバー内だけ）。
+
 ### 既存 API の変更（橋渡し）
 - report-data／my-report-link：解析権の判定を §4-3 の OR に広げ、`core_analysis_access` を返す（旧の判定は変えずに追加）。
 - verify：変更なし（¥1,000 の経路のまま）。
@@ -598,6 +700,9 @@ Preview への適用（2026-10-08 記録）：
 - 本番 DB に onboarding（legacy_exempt 規則）と complete_01 相当が未適用。
 - `CA_PREVIEW_BUILD=true`・Preview 用の状態切替・テスト用リンクが残っている。
 - `report_sample.html` の旧 ¥3,000 販売欄が残っている。
+- **生成器の本文が全文レビューで承認されるまで販売しない**（状態は RC1 candidate / sales closed）。暫定・候補の判定規則（TEXT-BANDS・GAP-LABELS・PAIR-RELATION・DOMAIN-EDITORIAL の各 0.1.0）の内容承認を含む。
+- **画像20点の出所・利用可否を確認して記録するまで販売しない**（リポジトリに記録が無い）。
+- Safari（WebKit）での fit-to-width 表示を、閲覧機能の工程で実機確認するまで販売しない。
 - **完全解析の販売開始（`COMPLETE_SALES_OPEN=true`）は、Preview でも、生成・保存・閲覧まで通るまで禁止**（2026-10-08 決定）。生成器が未実装の間は、支払い確定後も `complete_reports` は queued のまま。
 - **Webhook の raw body が Vercel の実環境で保持されること**を、Webhook の設定後に Preview で確かめるまで止める（必須の停止条件。Stripe の Test イベントで署名検証が通ること、1バイト変えた本文が拒否されることを実環境で確認する）。
 - `COMPLETE_CHECKOUT_ORIGIN` が https の origin だけで、Preview で許可した固定 origin と一致すること（一致しなければ Checkout は閉じる）。Production 用の origin は Production 移行時に別承認で許可リストへ加える。

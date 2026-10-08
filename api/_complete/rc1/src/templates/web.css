@@ -1,0 +1,91 @@
+/* ================= Web 閲覧（サーバー生成器・JS なし） =================
+   840px 以上：A4 の紙面（210mm×297mm）を原寸で中央に表示する。
+   840px 未満：A4 の紙面を組み替えずに、ページ全体を画面の幅に合わせて縮小表示する（fit-to-width）。
+     ・ページの比率・配置・改ページは変えない。横スクロールは出さない。拡大はブラウザのピンチ操作で行う
+       （viewport で拡大を禁止しない）。
+     ・JavaScript は使わない。CSS の zoom（Chromium・Safari〔WebKit〕・Firefox 126 以降が対応）を、画面幅 20px ごとの
+       段階で指定する（各段の下限の幅から左右 8px を除いた幅に、紙面 794px が収まる倍率。小数第3位で切り捨て）。
+     ・zoom に対応しない古いブラウザでは縮小されず、紙面の列だけを横スクロールで読める（画面全体ははみ出さない）。
+   目次はページ内リンク（外部へは移動しない）。 */
+html, body { max-width: 100%; overflow-x: hidden; }
+.web-toc { max-width: 210mm; margin: 0 auto; padding: 12px 14px 0; font-family: 'Hiragino Sans', 'Yu Gothic', 'Noto Sans JP', sans-serif; color: #d3dfeb; }
+.web-note { font-size: 13px; line-height: 1.7; color: #f5cf8c; margin: 0 0 8px; }
+.web-note.narrow { display: none; }
+.web-toc details { border: 1px solid rgba(143, 182, 214, .3); border-radius: 10px; background: #0b1622; }
+.web-toc summary { cursor: pointer; padding: 10px 14px; font-size: 14px; color: #eef4fa; }
+.web-toc ol { list-style: none; margin: 0; padding: 4px 0 8px; max-height: 60vh; overflow-y: auto; }
+.web-toc a { display: flex; gap: 10px; padding: 7px 16px; color: #d3dfeb; text-decoration: none; font-size: 14px; }
+.web-toc a:hover, .web-toc a:focus { background: rgba(143, 182, 214, .12); }
+.web-toc a span { color: #7fb6dc; font-variant-numeric: tabular-nums; min-width: 34px; }
+.page { scroll-margin-top: 8px; }
+@media screen and (max-width: 839.98px) {
+  .web-toc { padding: 10px 8px 0; }
+  .web-note.narrow { display: block; }
+  .web-note.wide { display: none; }
+  .pages { width: 100%; padding: 10px 8px 24px; gap: 10px; align-items: center; overflow-x: auto; }
+  .page { box-shadow: 0 2mm 6mm rgba(0, 0, 0, .45); }
+}
+@media screen and (max-width: 259.98px) { .page { zoom: 0.282; } }
+@media screen and (min-width: 260px) and (max-width: 279.98px) { .page { zoom: 0.307; } }
+@media screen and (min-width: 280px) and (max-width: 299.98px) { .page { zoom: 0.332; } }
+@media screen and (min-width: 300px) and (max-width: 319.98px) { .page { zoom: 0.357; } }
+@media screen and (min-width: 320px) and (max-width: 339.98px) { .page { zoom: 0.382; } }
+@media screen and (min-width: 340px) and (max-width: 359.98px) { .page { zoom: 0.408; } }
+@media screen and (min-width: 360px) and (max-width: 379.98px) { .page { zoom: 0.433; } }
+@media screen and (min-width: 380px) and (max-width: 399.98px) { .page { zoom: 0.458; } }
+@media screen and (min-width: 400px) and (max-width: 419.98px) { .page { zoom: 0.483; } }
+@media screen and (min-width: 420px) and (max-width: 439.98px) { .page { zoom: 0.508; } }
+@media screen and (min-width: 440px) and (max-width: 459.98px) { .page { zoom: 0.534; } }
+@media screen and (min-width: 460px) and (max-width: 479.98px) { .page { zoom: 0.559; } }
+@media screen and (min-width: 480px) and (max-width: 499.98px) { .page { zoom: 0.584; } }
+@media screen and (min-width: 500px) and (max-width: 519.98px) { .page { zoom: 0.609; } }
+@media screen and (min-width: 520px) and (max-width: 539.98px) { .page { zoom: 0.634; } }
+@media screen and (min-width: 540px) and (max-width: 559.98px) { .page { zoom: 0.659; } }
+@media screen and (min-width: 560px) and (max-width: 579.98px) { .page { zoom: 0.685; } }
+@media screen and (min-width: 580px) and (max-width: 599.98px) { .page { zoom: 0.71; } }
+@media screen and (min-width: 600px) and (max-width: 619.98px) { .page { zoom: 0.735; } }
+@media screen and (min-width: 620px) and (max-width: 639.98px) { .page { zoom: 0.76; } }
+@media screen and (min-width: 640px) and (max-width: 659.98px) { .page { zoom: 0.785; } }
+@media screen and (min-width: 660px) and (max-width: 679.98px) { .page { zoom: 0.811; } }
+@media screen and (min-width: 680px) and (max-width: 699.98px) { .page { zoom: 0.836; } }
+@media screen and (min-width: 700px) and (max-width: 719.98px) { .page { zoom: 0.861; } }
+@media screen and (min-width: 720px) and (max-width: 739.98px) { .page { zoom: 0.886; } }
+@media screen and (min-width: 740px) and (max-width: 759.98px) { .page { zoom: 0.911; } }
+@media screen and (min-width: 760px) and (max-width: 779.98px) { .page { zoom: 0.937; } }
+@media screen and (min-width: 780px) and (max-width: 799.98px) { .page { zoom: 0.962; } }
+@media screen and (min-width: 800px) and (max-width: 819.98px) { .page { zoom: 0.987; } }
+@media screen and (min-width: 820px) and (max-width: 839.98px) { .page { zoom: 1; } }
+@media print {
+  .web-toc { display: none !important; }
+}
+
+/* ================= 画像（同じ画像は1回だけ埋め込み、背景として参照する） ================= */
+.cover-img .img, .td-img .img { display: block; width: 100%; height: 100%; background-size: cover; background-position: center; background-repeat: no-repeat; border-radius: 50%; }
+.cover-img .img { -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 52%, transparent 71%); mask-image: radial-gradient(circle at 50% 50%, #000 52%, transparent 71%); }
+.td-img .img { -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 56%, transparent 71%); mask-image: radial-gradient(circle at 50% 50%, #000 56%, transparent 71%); }
+
+/* ================= 紙面の余白の調整（Web 版・2026-10-08） =================
+   文章・文字の大きさ・図の大きさは変えずに、ブロックの間隔・カードの間隔・下端に寄せた要素の下余白だけを詰めて、
+   紙面の下端に余裕を作る（フォント環境の違いで本文が長くなっても、はみ出さないため）。
+   きっかけ：F05 の P08 で下端の図が 16px はみ出していた（prototypes の A4 試験と同じ症状）。
+   目標：全12 fixture・46ページで、中身の最下端から紙面の本文枠の下端まで 24px 以上。 */
+.page:not(.cover-page) .page-inner { gap: 2.6mm; }
+.axis-band, .td-beyond, .dm-wrap, .closing, .scene, .read-steps, .shape-demo, .lens-strip, .color-key, .note-band, .ep-three,
+.to-note, .pp-second, .overlap, .wk-rank, .dm-read, .ct-scenes { margin-bottom: 1.5mm; }
+.character-ranking-page .cr-list { gap: .7mm; }
+.character-ranking-page .ch-row { padding-top: 1.25mm; padding-bottom: 1.25mm; }
+.character-ranking-page .shape-demo { padding-top: 1.6mm; }
+.theme-detail-page .td-hero { padding-bottom: 2mm; }
+.theme-detail-page .td-body p, .layout-a .td-body p { line-height: 1.8; margin-bottom: 1.1mm; }
+.theme-detail-page .td-beyond { padding-top: 2mm; padding-bottom: 2mm; }
+.dict-grid { gap: 2.8mm; }
+.dict-grid .dict { padding-top: 2.5mm; padding-bottom: 2.5mm; }
+.overview-page .rank-list { gap: .9mm; }
+.overview-page .axis-band { padding-top: 2mm; }
+.overview-page .band-head { margin-bottom: 1.2mm; }
+.overview-page .band-note { margin-top: 1.3mm; }
+.overview-page .pole { padding-top: 1.1mm; padding-bottom: 1.1mm; }
+.lens-cards { gap: 2.2mm; }
+.lc-row { padding-top: .8mm; padding-bottom: .8mm; }
+.lens-card { padding-top: 2.1mm; padding-bottom: 2.1mm; }
+.lcd-why { margin-bottom: 1mm; }

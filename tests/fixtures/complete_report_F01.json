@@ -1,0 +1,315 @@
+{
+ "note": "完全解析の生成器の代表 fixture（合成データ）。回答は prototypes/core1_v4_result_driven/fixtures/answers/F01.json（承認版サンプル）と同じ。保存値は正本エンジンで index.html と同じ手順で作った。実在の利用者のデータではない。",
+ "input": {
+  "answers": {
+   "Q001": 0,
+   "Q002": 2,
+   "Q003": 2,
+   "Q004": 1,
+   "Q005": 0,
+   "Q006": -1,
+   "Q007": 2,
+   "Q008": -1,
+   "Q009": 1,
+   "Q010": 1,
+   "Q011": 0,
+   "Q012": 1,
+   "Q013": -2,
+   "Q014": -1,
+   "Q015": 0,
+   "Q016": -1,
+   "Q017": 0,
+   "Q018": 0,
+   "Q019": -2,
+   "Q020": -1,
+   "Q021": 1,
+   "Q022": 1,
+   "Q023": 1,
+   "Q024": 0,
+   "Q025": 2,
+   "Q026": 0,
+   "Q027": 1,
+   "Q028": 2,
+   "Q029": -1,
+   "Q030": 0,
+   "Q031": 0,
+   "Q032": 0,
+   "Q033": 2,
+   "Q034": 0,
+   "Q035": 0,
+   "Q036": 1,
+   "Q037": -1,
+   "Q038": 0,
+   "Q039": 0,
+   "Q040": 0,
+   "Q041": 0,
+   "Q042": 0,
+   "Q043": 0,
+   "Q044": -1,
+   "Q045": 0,
+   "Q046": 1,
+   "Q047": 0,
+   "Q048": 2,
+   "Q049": 0,
+   "Q050": 0,
+   "Q051": -2,
+   "Q052": -1,
+   "Q053": 2,
+   "Q054": 0,
+   "Q055": 2,
+   "Q056": 2,
+   "Q057": -1,
+   "Q058": -1,
+   "Q059": 0,
+   "Q060": 2,
+   "Q061": 1,
+   "Q062": 0,
+   "Q063": -1,
+   "Q064": -2,
+   "Q065": 0,
+   "Q066": 2,
+   "Q067": 1,
+   "Q068": 1,
+   "Q069": 0,
+   "Q070": 0,
+   "Q071": 2,
+   "Q072": 2,
+   "Q073": 0,
+   "Q074": -1,
+   "Q075": 0,
+   "Q076": 0,
+   "Q077": 0,
+   "Q078": -1,
+   "Q079": 0,
+   "Q080": 1,
+   "Q081": 0,
+   "Q082": 0,
+   "Q083": -1,
+   "Q084": -2,
+   "Q085": 0,
+   "Q086": 0,
+   "Q087": 1,
+   "Q088": 0,
+   "Q089": 0,
+   "Q090": 0,
+   "Q091": 0,
+   "Q092": 0,
+   "Q093": 0,
+   "Q094": 0,
+   "Q095": 1,
+   "Q096": 1,
+   "Q097": 1,
+   "Q098": 1,
+   "Q099": 2,
+   "Q100": 2
+  },
+  "encodedAnswers": "fpf9dyg6tna6wobkgr8z9a6dtyzxemo9bpjftu65y8fdm",
+  "savedScores": {
+   "personality": {
+    "O": 78,
+    "C": 72,
+    "E": 31,
+    "A": 69,
+    "N": 63
+   },
+   "style": {
+    "AGY": 42,
+    "REL": 71,
+    "ROL": 83,
+    "REF": 75,
+    "AUT": 67
+   },
+   "values": {
+    "SD": 83,
+    "ST": 42,
+    "HE": 42,
+    "AC": 58,
+    "PO": 25,
+    "SE": 58,
+    "CO": 50,
+    "TR": 50,
+    "BE": 75,
+    "UN": 92
+   },
+   "valuesCentered": {
+    "SD": 1.0333333333333332,
+    "ST": -0.6333333333333333,
+    "HE": -0.6333333333333333,
+    "AC": 0.033333333333333326,
+    "PO": -1.3,
+    "SE": 0.033333333333333326,
+    "CO": -0.3,
+    "TR": -0.3,
+    "BE": 0.7,
+    "UN": 1.3666666666666667
+   }
+  },
+  "savedRankings": {
+   "element": [
+    {
+     "name": "水",
+     "distance": 0.09787747442593725,
+     "closenessScore": 90
+    },
+    {
+     "name": "草",
+     "distance": 0.14959946523968595,
+     "closenessScore": 85
+    },
+    {
+     "name": "風",
+     "distance": 0.2208619478316715,
+     "closenessScore": 78
+    },
+    {
+     "name": "雷",
+     "distance": 0.2513563207878409,
+     "closenessScore": 75
+    },
+    {
+     "name": "氷",
+     "distance": 0.26378021153983483,
+     "closenessScore": 74
+    },
+    {
+     "name": "岩",
+     "distance": 0.3006326662224184,
+     "closenessScore": 70
+    },
+    {
+     "name": "炎",
+     "distance": 0.3085125605222582,
+     "closenessScore": 69
+    }
+   ],
+   "weapon": [
+    {
+     "name": "長柄",
+     "distance": 0.17905306476014313,
+     "closenessScore": 82
+    },
+    {
+     "name": "法器",
+     "distance": 0.19146801299433802,
+     "closenessScore": 81
+    },
+    {
+     "name": "弓",
+     "distance": 0.23315231073270537,
+     "closenessScore": 77
+    },
+    {
+     "name": "片手剣",
+     "distance": 0.25388973984783236,
+     "closenessScore": 75
+    },
+    {
+     "name": "両手剣",
+     "distance": 0.37597872280223515,
+     "closenessScore": 62
+    }
+   ],
+   "nation": [
+    {
+     "name": "スメール",
+     "distance": 0.03572295426051103,
+     "cosineSimilarity": 0.9285540914789779,
+     "closenessScore": 96
+    },
+    {
+     "name": "ナドクライ",
+     "distance": 0.1303397336996081,
+     "cosineSimilarity": 0.7393205326007838,
+     "closenessScore": 87
+    },
+    {
+     "name": "フォンテーヌ",
+     "distance": 0.1695807013773511,
+     "cosineSimilarity": 0.6608385972452978,
+     "closenessScore": 83
+    },
+    {
+     "name": "モンド",
+     "distance": 0.24760867986702184,
+     "cosineSimilarity": 0.5047826402659563,
+     "closenessScore": 75
+    },
+    {
+     "name": "ナタ",
+     "distance": 0.5300184439180505,
+     "cosineSimilarity": -0.06003688783610116,
+     "closenessScore": 47
+    },
+    {
+     "name": "璃月",
+     "distance": 0.5369366897848372,
+     "cosineSimilarity": -0.07387337956967437,
+     "closenessScore": 46
+    },
+    {
+     "name": "稲妻",
+     "distance": 0.5600792316677095,
+     "cosineSimilarity": -0.12015846333541882,
+     "closenessScore": 44
+    },
+    {
+     "name": "スネージナヤ",
+     "distance": 0.7202591014432165,
+     "cosineSimilarity": -0.44051820288643284,
+     "closenessScore": 28
+    }
+   ]
+  },
+  "mirrorSnapshot": [
+   {
+    "name": "オロルン",
+    "match": 90,
+    "el": "雷",
+    "w": "弓",
+    "nation": "ナタ",
+    "selected": true,
+    "selection": {
+     "mirror_model_version": "ETI-MIRROR-2.1.0",
+     "character_profile_version": "ETI-CHAR-2.1.0",
+     "selected_by": "highest_raw_score",
+     "tied_at_top": 1
+    }
+   },
+   {
+    "name": "白朮",
+    "match": 90,
+    "el": "草",
+    "w": "法器",
+    "nation": "璃月"
+   },
+   {
+    "name": "アリョーシャ",
+    "match": 90,
+    "el": "雷",
+    "w": "長柄",
+    "nation": "スネージナヤ"
+   },
+   {
+    "name": "ティナリ",
+    "match": 88,
+    "el": "草",
+    "w": "弓",
+    "nation": "スメール"
+   }
+  ],
+  "versions": {
+   "diagnosis_version": "ETI-2.0",
+   "item_set_version": "ETI-ITEM-2.0.0",
+   "scoring_version": "ETI-SCORE-2.0.0",
+   "translation_model_version": "ETI-TRANS-2.0.0",
+   "character_profile_version": "ETI-CHAR-2.1.0",
+   "mirror_model_version": "ETI-MIRROR-2.1.0"
+  },
+  "mentorGoal": {
+   "goalId": "GOAL_VISIBLE_01",
+   "goalCatalogVersion": "CORE1-MENTOR-GOALS-1.0.0",
+   "selectedAt": "2026-10-04T10:05:00+09:00"
+  },
+  "diagnosedAt": "2026-10-04T01:00:00.000Z"
+ }
+}
