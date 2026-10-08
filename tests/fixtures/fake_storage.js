@@ -8,7 +8,8 @@ const res = (status, body, raw) => ({
   arrayBuffer: async () => { const b = raw || Buffer.from(JSON.stringify(body || {})); return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength); },
 });
 
-function createFakeStorage({ bucket = 'complete-reports' } = {}) {
+// allowedMimeTypes：Preview の bucket と同じ（text/html だけ。charset 付きの形は許可しない前提で厳しく比べる）
+function createFakeStorage({ bucket = 'complete-reports', allowedMimeTypes = ['text/html'] } = {}) {
   const objects = new Map();
   const failures = [];
   const calls = [];
@@ -32,6 +33,7 @@ function createFakeStorage({ bucket = 'complete-reports' } = {}) {
       if (method === 'POST' && u.pathname.startsWith(objPrefix)) {
         if (take('upload')) return res(503, {});
         const key = keyOf(u.pathname, objPrefix);
+        if (!allowedMimeTypes.includes(opts.headers['Content-Type'])) return res(415, { statusCode: '415', error: 'invalid_mime_type' });
         if (objects.has(key) && opts.headers['x-upsert'] !== 'true') return res(409, { message: 'exists' });
         objects.set(key, { body: Buffer.from(opts.body), contentType: opts.headers['Content-Type'] });
         return res(200, { Key: `${bucket}/${key}` });

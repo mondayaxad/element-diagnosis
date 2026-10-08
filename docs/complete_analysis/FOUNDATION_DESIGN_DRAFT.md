@@ -278,6 +278,8 @@ generating（貸出し期限切れ）──claim で回収──▶ generating
 
 - 形式：認証必須の非公開 HTML だけ（PDF は販売表示・契約内容に含めない）。
 - 保存先：Supabase Storage の**非公開 bucket `complete-reports`**（公開にしない・Storage のポリシーを作らない。サーバー用キーだけが読み書きする）。
+  - bucket の設定：public=false・上限 2MB・許可する MIME は `text/html` だけ（2026-10-08 に Preview で作成。広げない）。
+  - MIME の使い分け：Storage への保存は `Content-Type: text/html`（bucket の許可と完全に一致）。閲覧 API の応答だけが `text/html; charset=utf-8`。
   - パスは `reports/<report_id>/<試行回数>-<乱数32桁>.html`。report_id は complete_reports の乱数 ID で、記録 ID・user ID・注文 ID を含めない。
   - パスは DB（`complete_reports.storage_path`）だけに持ち、応答・ログに出さない。
 - 閲覧：`POST /api/complete-status`（既存の関数に統合。新しい関数は作らない）が、本人確認（Bearer）と権利の確認の後に**毎回**、**300秒の閲覧 URL** を発行する（A4）。
@@ -604,7 +606,12 @@ Preview への適用（2026-10-08 記録）：
 
 ### 生成・非公開保存・閲覧（2026-10-08・ローカル実装と検証のみ。Preview 未適用・販売は閉じたまま）
 
-実装：`lib/complete-report-job.js`（生成ジョブ・Storage・閲覧トークン）、`api/complete-status.js`（POST の閲覧 URL 発行・GET ?view= の閲覧・取り残しの回収）、`api/stripe-webhook.js`（支払い確定の後の後段起動）、`docs/sql/complete_06_report_storage_DRAFT_DO_NOT_RUN.sql`（DB 関数。未適用）。
+実装：`lib/complete-report-job.js`（生成ジョブ・Storage・閲覧トークン）、`api/complete-status.js`（POST の閲覧 URL 発行・GET ?view= の閲覧・取り残しの回収）、`api/stripe-webhook.js`（支払い確定の後の後段起動）、`docs/sql/20261008101348_complete_06_report_storage.sql`（DB 関数。2026-10-08 に Preview へ適用済み）。
+
+complete_06 の SQL ファイルについて（2026-10-08）：
+- Preview へ適用した本文（`supabase_migrations.schema_migrations` の記録）と同じ内容を残すため、本文は1バイトも変えずにファイル名だけを適用済みの版（20261008101348）に変えた。
+- そのため、ファイルの見出しには「【実行禁止・草案】…未適用」が残っている。これは適用前の文面で、**実際には適用済み**である（正はこの設計書と DB の記録）。
+- 照合：ファイルの SHA-256 は `0662325f…c71c45`（改名の前後で同じ）。末尾の改行1つを除いた SHA-256 `575e8019…df7c3b6` が、DB の記録の SHA-256 と一致する（DB の記録は末尾の改行を含まない）。
 
 Preview の Storage（2026-10-08・読み取りのみ）：bucket 0件・オブジェクト0件・storage のポリシー0件。storage の表は RLS 有効（ポリシーが無いため anon・authenticated は読めない）。complete_reports は0行。
 
@@ -631,11 +638,12 @@ Preview の Storage（2026-10-08・読み取りのみ）：bucket 0件・オブ�
 - 同じ試験を、ローカル PG17 の本物の SQL 関数（complete_01〜06）でも実行した。
 - complete_06 の SQL の試験 28件：適用・二度当て・complete_01〜05 の定義が不変・権限・SECURITY INVOKER・保存先の制約・関数の拒否条件・非 Preview で中止・complete_99 で戻して再適用・二度当てで余分な権限を外す。
 
-Preview への適用（未実施・別承認）：
-1. complete_06 の SQL（DB 関数と保存先の制約）。
-2. 非公開 bucket `complete-reports` の作成（Storage API。public=false・ファイルの上限 2MB・MIME は text/html だけ・Storage のポリシーは作らない）。
-3. Vercel の Preview 環境変数 `COMPLETE_VIEW_TOKEN_SECRET`（32文字以上の乱数）。
-4. `package.json` に `@vercel/functions@3.9.8` を追加したため、Preview の build で依存の解決とバンドルを確かめる。
+Preview への適用（2026-10-08）：
+1. complete_06 の SQL：適用済み（版 20261008101348。1回だけ）。適用の後に、関数の署名・SECURITY INVOKER・search_path・権限・RLS、既存の関数・ポリシー・権限・制約のハッシュと行数が不変であることを確かめた。最後に取り消すダミー試験（取得・完了・失敗・閲覧の権限・失効）も期待どおり。
+2. 非公開 bucket `complete-reports`：作成済み（SQL で storage.buckets に挿入。public=false・上限 2MB・MIME は text/html だけ・Storage のポリシーは0件）。
+3. Vercel の Preview 環境変数 `COMPLETE_VIEW_TOKEN_SECRET`（32バイト以上の乱数・base64url で43文字以上）：持ち主が Preview だけに登録する（値はチャット・ログ・commit・試験結果に出さない）。
+4. `@vercel/functions@3.9.8`：Preview の build で依存の解決とバンドルを確認済み（9c57be6）。
+5. 保存・取得・削除の確認と、秘密値を使った Preview の E2E は、秘密値の登録の後に合成した試験用利用者で行う（未完了）。
 
 範囲外として記録：Vercel のランタイムログに Node の `url.parse()` の非推奨警告（DEP0169）が出る（public-config・mentor-goal で確認。このリポジトリのコードは `url.parse` を使っていない。依存またはランタイム側）。今回は対応しない。
 

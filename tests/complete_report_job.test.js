@@ -158,7 +158,9 @@ test('Webhook は生成の完了を待たずに応答し、応答の後で生成
   assert.match(rep.storage_path, new RegExp(`^reports/${rep.id}/1-[0-9a-f]{32}\\.html$`));
   assert.deepEqual([...ctx.storage.objects.keys()], [rep.storage_path]);
   const obj = ctx.storage.objects.get(rep.storage_path);
-  assert.equal(obj.contentType, 'text/html; charset=utf-8');
+  // Storage 上の MIME は bucket の許可と同じ text/html（charset は閲覧の応答だけ）
+  assert.equal(obj.contentType, 'text/html');
+  assert.equal(RJ.UPLOAD_CONTENT_TYPE, 'text/html');
   assert.equal(sha(obj.body), rep.output_sha256);
   // 保存物は生成器の出力と同じ（DB の保存値だけから作る）
   const { input } = await RJ.loadGenerationInput(ctx.fetchImpl, ctx.conn, rep.id);
