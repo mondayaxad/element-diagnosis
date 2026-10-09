@@ -24,6 +24,7 @@
 <script src="js/registration-onboarding.js"></script>
 <!-- 完全解析（46ページ）の表示用状態。PREVIEW ONLY：購入権は発行しない -->
 <script src="complete-analysis.js"></script>
+<script src="js/guest-purchase.js"></script>
 <!-- eti_v2_save.jsは保存自体は行わないが（mypage.htmlは閲覧専用）、
      v2結果画面からGoogleログイン経由で戻ってきた際のpending保存
      （onAuthStateChangeリスナー）を成立させるために読み込む。 -->
@@ -106,6 +107,13 @@
     color: var(--fg-dim);
     margin-bottom: 24px;
   }
+  .mp-checkout-msg { font-size: 11.5px; color: #d6a8b8; line-height: 1.7; margin: 6px 0 0; }
+  .mp-claim { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 4px; padding: 14px 16px; margin: 0 0 16px; font-size: 12.5px; line-height: 1.8; color: var(--fg); }
+  .mp-claim p { margin: 0 0 8px; }
+  .mp-claim .mp-claim-note { font-size: 11px; color: var(--fg-dim); }
+  .mp-claim button { background: transparent; border: 1px solid var(--accent-dim); color: var(--accent); border-radius: 6px; padding: 8px 14px; font-size: 12px; font-family: inherit; cursor: pointer; }
+  .mp-claim button[disabled] { opacity: .6; cursor: default; }
+  .mp-claim input { width: 100%; box-sizing: border-box; background: rgba(6,9,20,.8); border: 1px solid var(--card-border); border-radius: 6px; padding: 10px; color: var(--fg); font-size: 16px; font-family: inherit; margin: 0 0 8px; }
   .gate p.gate-title {
     font-size: 15px;
     color: var(--fg);
@@ -1171,12 +1179,78 @@ function purchaseUrlFor(session) {
     ? STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(reference)
     : STRIPE_URL_AUTO;
 }
-function v2ReportCta(stripeUrl, className, source, label) {
-  if (!V2_REPORT_SALES_ENABLED) {
-    return `<span class="${className}" style="opacity:0.6;cursor:not-allowed" aria-disabled="true">解析レポート（準備中）</span>`;
+// 販売の開閉はサーバーの COMPLETE_SALES_OPEN（公開設定の completeSalesOpen）だけで決める
+function mpSalesOpen() {
+  const c = window.__ED_PUBLIC_CONFIG__;
+  return !!(c && c.completeSalesOpen === true);
+}
+// 解析レポート ¥1,000：記録 ID があればサーバーが作る Checkout（POST /api/complete-checkout）。販売停止中は「準備中」
+function v2ReportCta(stripeUrl, className, source, label, sessionId) {
+  if (!V2_REPORT_SALES_ENABLED || !mpSalesOpen()) {
+    return `<button type="button" class="${className} mp-pending-analysis" disabled aria-disabled="true" style="opacity:0.6;cursor:not-allowed">解析レポート（準備中）</button>`;
+  }
+  if (sessionId) {
+    return `<button type="button" class="${className}" data-analysis-checkout="${mpEsc(sessionId)}" data-source="${mpEsc(source)}">${label}</button>`;
   }
   return `<a href="${stripeUrl}" target="_blank" rel="noopener" class="${className}" onclick="trackEvent('mypage_unlock_click',{source:'${source}'})">${label}</a>`;
 }
+// サーバーの Checkout を作り、同じタブで Stripe の決済画面へ移動する（金額・offer はサーバーが決める）
+async function mpStartCheckout(body, source, offerLabel) {
+  trackEvent('checkout_start', { offer: offerLabel, source });
+  let token = null;
+  try { const { data } = await supabaseClient.auth.getSession(); token = data && data.session ? data.session.access_token : null; } catch (e) { token = null; }
+  if (!token) return { ok: false, error: 'not_authenticated' };
+  let res;
+  let out = {};
+  try {
+    res = await fetch('/api/complete-checkout', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body) });
+    out = await res.json().catch(() => ({}));
+  } catch (e) {
+    return { ok: false, error: 'network' };
+  }
+  if (res.ok && typeof out.checkoutUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(out.checkoutUrl)) {
+    trackEvent('checkout_redirect', { offer: out.offer, value: out.amount, currency: 'JPY', source });
+    location.assign(out.checkoutUrl);
+    return { ok: true };
+  }
+  trackEvent('checkout_failed', { offer: offerLabel, reason: out.error || 'unknown', source });
+  return { ok: false, error: out.error || 'unknown' };
+}
+const MP_CHECKOUT_ERRORS = {
+  sales_closed: '現在、お申し込みを受け付けていません（準備中）。',
+  analysis_already_purchased: 'この記録の解析レポートは購入済みです。',
+  repurchase_not_allowed: 'この記録の完全解析は購入済みです。',
+  checkout_in_progress: '決済の手続き中です。しばらくしてから、もう一度お試しください。',
+  mentor_goal_required: 'MENTOR の目標を選んでから、もう一度お試しください。',
+  legacy_purchase_verification_required: '以前のご購入を確認しています。確認できない場合は、お問い合わせください。',
+  onboarding_required: '登録を完了してから、もう一度お試しください。',
+  not_authenticated: 'ログインの有効期限が切れました。もう一度ログインしてください。',
+  network: '通信できませんでした。電波の良い場所で、もう一度お試しください。',
+};
+function mpCheckoutErrorText(code) { return MP_CHECKOUT_ERRORS[code] || 'お手続きを開始できませんでした。時間をおいて、もう一度お試しください。'; }
+document.addEventListener('click', async (e) => {
+  const btn = e.target && e.target.closest && e.target.closest('[data-analysis-checkout], [data-complete-checkout]');
+  if (!btn || btn.disabled) return;
+  e.preventDefault();
+  const analysis = btn.hasAttribute('data-analysis-checkout');
+  const id = btn.getAttribute(analysis ? 'data-analysis-checkout' : 'data-complete-checkout');
+  btn.disabled = true;
+  const prev = btn.textContent;
+  btn.textContent = '決済画面へ移動しています…';
+  const r = await mpStartCheckout(analysis ? { diagnosisSessionId: id, product: 'analysis' } : { diagnosisSessionId: id },
+    btn.getAttribute('data-source') || 'mypage', analysis ? 'analysis' : 'complete');
+  if (r.ok) return;
+  btn.disabled = false;
+  btn.textContent = prev;
+  let msg = btn.parentElement && btn.parentElement.querySelector('.mp-checkout-msg');
+  if (!msg) {
+    msg = document.createElement('p');
+    msg.className = 'mp-checkout-msg';
+    msg.setAttribute('role', 'status');
+    btn.insertAdjacentElement('afterend', msg);
+  }
+  msg.textContent = mpCheckoutErrorText(r.error);
+});
 function v2ClosenessLine(label, ranking, purchased) {
   const top = v2TopName(ranking);
   if (!top) return `<div style="display:flex;justify-content:space-between;padding:1px 0"><span>${label}</span><span style="color:var(--fg-dim)">—</span></div>`;
@@ -1889,7 +1963,7 @@ function mpRecordActionsHtml(r, source) {
     const svc = caServerOf(r).complete;
     const hasComplete = !!(view && ((svc && svc.completeEntitlement) || view.kind !== 'retry'));
     if (!hasComplete) {
-      items.push(v2ReportCta(purchaseUrlFor(r.session), 'mp-btn primary', source === 'latest' ? 'latest' : 'records', `解析レポート　${MP_REPORT_PRICE}`));
+      items.push(v2ReportCta(purchaseUrlFor(r.session), 'mp-btn primary', source === 'latest' ? 'latest' : 'records', `解析レポート　${MP_REPORT_PRICE}`, r.session && r.session.id));
     }
     if (pending) items.push(pending);
   }
@@ -2346,7 +2420,7 @@ function caAnalysisCardHtml(r) {
         <p class="ca-body">この結果の内側にある、考え方・動き方・選び方を観測します。</p>
         ${caObservationGridHtml(r)}
         <div class="ca-price-row"><span class="ca-meta">この記録の解析レポート</span><span class="ca-price">${MP_REPORT_PRICE}</span></div>
-        <div data-ca-cta="analysis_checkout_click">${v2ReportCta(purchaseUrlFor(r.session), 'ca-btn ca-primary-action', 'mypage_header', 'この記録の分析を見る')}</div>
+        <div data-ca-cta="analysis_checkout_click">${v2ReportCta(purchaseUrlFor(r.session), 'ca-btn ca-primary-action', 'mypage_header', 'この記録の分析を見る', r.session && r.session.id)}</div>
       </section>`;
 }
 // 既存の RE-DIAGNOSIS へ案内する（新しい導線は作らない）
@@ -2863,8 +2937,11 @@ function caMentorConfirmHtml(r) {
       ${priceRow}
     </dl>
     ${o.kind === 'legacy_pending' ? `<p class="ca-mentor-note" role="status">${CompleteAnalysis.LEGACY_PENDING_TEXT}</p>` : ''}
-    <button type="button" class="ca-btn ca-secondary-action is-pending" disabled aria-disabled="true">決済へ進む（準備中）</button>
-    ${CA_PENDING_NOTE}`;
+    ${caSalesOpen() && o.kind === 'offer'
+      ? `<button type="button" class="ca-btn ca-secondary-action" data-complete-checkout="${caEsc(caRecordId(r))}" data-source="mypage_confirm">決済へ進む（${caOfferLabel(o.offer)}）</button>
+         <p class="ca-mentor-note">Stripe の決済画面へ移動します。お支払いの後、この記録で完全解析を作成します。</p>`
+      : `<button type="button" class="ca-btn ca-secondary-action is-pending" disabled aria-disabled="true">決済へ進む（準備中）</button>
+    ${CA_PENDING_NOTE}`}`;
 }
 function caGoStep(step) {
   caStep = step;
@@ -3233,7 +3310,12 @@ async function init() {
   const user = await getCurrentUser();
 
   if (!user) {
+    // 購入の引き継ぎ（購入完了ページ・解析レポートの「マイページに引き継ぐ」）・購入時メールでの復旧から来た時の案内
+    let intentNote = '';
+    try { intentNote = sessionStorage.getItem('ed_claim_intent_v1') ? 'ログインすると、この端末の購入をマイページに引き継ぎます。' : ''; } catch (e) { intentNote = ''; }
+    if (location.hash === '#recover') intentNote = '購入時のメールアドレスで「メールで続ける」からログインすると、その購入を引き継げます。';
     renderGate(root);
+    if (intentNote) { const g = document.getElementById('gateMsg'); if (g) g.textContent = intentNote; }
     return;
   }
 
@@ -3249,6 +3331,14 @@ async function init() {
     return;
   }
 
+  // 決済から戻った直後：Webhook を待たずに、本人の決済待ちの注文を Stripe に問い合わせて反映する（冪等・失敗しても表示は続ける）
+  if (/(?:^|[?&])(complete=returned|complete_return=1)(?:&|$)/.test(location.search)) {
+    try {
+      const { data } = await supabaseClient.auth.getSession();
+      const t = data && data.session ? data.session.access_token : null;
+      if (t) await fetch('/api/complete-checkout?op=user-reconcile', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` }, body: '{}' });
+    } catch (e) { /* 反映の確認は記録の状態確認でも行う */ }
+  }
   const result = await loadDiagnosisHistory(DIAGNOSIS_TYPE);
   if (!result.ok) {
     renderError(root);
@@ -3256,10 +3346,12 @@ async function init() {
   }
   if (result.sessions.length === 0) {
     renderEmpty(root, user);
+    mpGuestPurchaseFlow(root);
     return;
   }
   mpEntitlementOk = mpEntitlementCheckedOk(result.sessions);
   renderMypage(root, result.sessions, user);
+  mpGuestPurchaseFlow(root);
   // お知らせメール（Kit）の同期は、登録完了と診断の保存の後に diagnosis-save.js の runSignedInFlow() が行う。
 }
 // eti_v2_save.js（Googleログイン復帰後、v2のpending保存が完了した時点）から
@@ -3267,6 +3359,105 @@ async function init() {
 // 保存完了前に一度・完了後にもう一度（このフック経由で）呼ばれることがあるが、
 // 後者が最終的に正しい状態を表示する。
 window.refreshMypageHistory = init;
+
+/* 購入の引き継ぎ（ゲスト購入 → この本人のマイページ）
+   ・この端末の Cookie にある、支払済み・未引き継ぎの購入を、押した時（または「引き継ぐ」を押してログインした直後）だけ引き継ぐ。
+   ・Cookie を失った時（#recover）：購入時のメールアドレスにメールで6桁コードを送り、そのコードでログインした直後だけ
+     サーバーが購入時メールと照合して引き継ぐ（メールアドレスの文字列一致だけでは引き継がない）。 */
+let mpGuestFlowBusy = false;
+async function mpAccessToken() {
+  try { const { data } = await supabaseClient.auth.getSession(); return data && data.session ? data.session.access_token : null; } catch (e) { return null; }
+}
+function mpJwtAmr(token) {
+  try { return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).amr || []; } catch (e) { return []; }
+}
+function mpClaimBox(root, html) {
+  let box = document.getElementById('mpClaimBox');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'mpClaimBox';
+    box.className = 'mp-claim';
+    box.setAttribute('role', 'status');
+    const head = root.querySelector('.page-title');
+    if (head && head.parentNode) head.insertAdjacentElement('afterend', box); else root.prepend(box);
+  }
+  box.innerHTML = html;
+  return box;
+}
+async function mpGuestPurchaseFlow(root) {
+  if (mpGuestFlowBusy || typeof EdGuestPurchase === 'undefined') return;
+  mpGuestFlowBusy = true;
+  try {
+    const G = EdGuestPurchase;
+    const intent = G.takeClaimIntent();
+    const token = await mpAccessToken();
+    if (!token) return;
+    if (location.hash === '#recover') { await mpRecoverFlow(root, token); return; }
+    const st = await G.status();
+    const claimable = st.ok ? (st.body.purchases || []).filter((p) => p.canClaim) : [];
+    if (!claimable.length) return;
+    const run = async () => {
+      const rs = await G.claimAll(await mpAccessToken(), claimable);
+      const ok = rs.filter((x) => x.ok).length;
+      const conflict = rs.some((x) => x.error === 'claim_conflict');
+      mpClaimBox(root, ok
+        ? `<p>✓ この端末の購入（${ok}件）をマイページに引き継ぎました。</p><p class="mp-claim-note">診断記録と購入済みのレポートを、いつでも見返せます。</p>`
+        : `<p>${conflict ? 'この購入は、別のアカウントに引き継ぎ済みです。' : '購入を引き継げませんでした。時間をおいて、もう一度お試しください。'}</p>`);
+      if (ok) setTimeout(() => { mpGuestFlowBusy = false; init(); }, 1200);
+    };
+    if (intent) { await run(); return; }
+    const box = mpClaimBox(root, `<p>この端末に、マイページへ引き継げる購入があります（${claimable.length}件）。</p>`
+      + '<p class="mp-claim-note">引き継ぐと、この診断記録と購入済みのレポートを、このアカウントでいつでも見返せます。</p>'
+      + '<button type="button" id="mpClaimBtn">この購入をマイページに引き継ぐ</button>');
+    box.querySelector('#mpClaimBtn').onclick = (e) => { e.target.disabled = true; G.track('claim_start', { source: 'mypage' }); run(); };
+  } finally {
+    mpGuestFlowBusy = false;
+  }
+}
+async function mpRecoverFlow(root, token) {
+  const G = EdGuestPurchase;
+  const fresh = mpJwtAmr(token).some((a) => a && a.method === 'otp' && Date.now() / 1000 - a.timestamp < 600);
+  if (fresh) {
+    G.track('claim_start', { source: 'recover' });
+    const r = await G.recover(token);
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* そのまま */ }
+    if (r.ok && r.body.claimed > 0) {
+      mpClaimBox(root, `<p>✓ 購入時のメールアドレスで確認した購入（${r.body.claimed}件）を、マイページに引き継ぎました。</p>`);
+      setTimeout(() => { init(); }, 1200);
+    } else if (r.ok) {
+      mpClaimBox(root, '<p>このメールアドレスで、引き継げる購入は見つかりませんでした。</p><p class="mp-claim-note">購入時に Stripe の決済画面で入力したメールアドレスでお試しください。すでに引き継ぎ済みの購入は、引き継いだアカウントでご覧いただけます。</p>');
+    } else {
+      mpClaimBox(root, '<p>確認できませんでした。もう一度お試しください。</p>');
+    }
+    return;
+  }
+  // メール OTP でのログインがまだ（Google・X でログイン中など）：購入時のメールアドレスで確認する
+  const box = mpClaimBox(root, '<p>購入時のメールアドレスで、購入を引き継ぎます。</p>'
+    + '<p class="mp-claim-note">Stripe の決済画面で入力したメールアドレスに、6桁のコードを送ります。コードでログインすると、そのメールアドレスのアカウントに引き継ぎます。</p>'
+    + '<input type="email" id="mpRecoverEmail" autocomplete="email" placeholder="購入時のメールアドレス"><button type="button" id="mpRecoverSend">コードを送る</button>'
+    + '<div id="mpRecoverCode" hidden><input type="text" id="mpRecoverOtp" inputmode="numeric" maxlength="6" placeholder="6桁のコード"><button type="button" id="mpRecoverVerify">確認して引き継ぐ</button></div>'
+    + '<p class="mp-claim-note" id="mpRecoverMsg"></p>');
+  const msg = box.querySelector('#mpRecoverMsg');
+  box.querySelector('#mpRecoverSend').onclick = async (e) => {
+    const email = box.querySelector('#mpRecoverEmail').value.trim();
+    if (!isValidEmailForOtp(email)) { msg.textContent = 'メールアドレスを確認してください。'; return; }
+    e.target.disabled = true;
+    const err = await sendEmailOtp(email);
+    e.target.disabled = false;
+    if (err) { msg.textContent = authErrorMessage(err, 'send'); return; }
+    box.querySelector('#mpRecoverCode').hidden = false;
+    msg.textContent = 'コードを送りました。メールに届いた6桁のコードを入力してください。';
+  };
+  box.querySelector('#mpRecoverVerify').onclick = async (e) => {
+    const email = box.querySelector('#mpRecoverEmail').value.trim();
+    const code = box.querySelector('#mpRecoverOtp').value.trim();
+    if (!/^\d{6}$/.test(code)) { msg.textContent = '6桁のコードを入力してください。'; return; }
+    e.target.disabled = true;
+    const err = await verifyEmailOtp(email, code);
+    if (err) { e.target.disabled = false; msg.textContent = authErrorMessage(err, 'verify'); return; }
+    // ログインが切り替わると onAuthStateChange(SIGNED_IN) → init() が #recover のまま再実行し、上の照合へ進む
+  };
+}
 
 supabaseClient.auth.onAuthStateChange((event) => {
   if (event === 'SIGNED_IN') init();

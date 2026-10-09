@@ -136,6 +136,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <!-- 完全解析（46ページ）の表示用状態。PREVIEW ONLY：購入権は発行しない -->
 <script src="complete-analysis.js"></script>
+<script src="js/guest-purchase.js"></script>
 <script src="js/ETI_v2_QUESTIONS_100.js"></script>
 <script src="js/eti_v2_prototypes.js"></script>
 <script src="js/eti_v2_engine.js"></script>
@@ -2171,6 +2172,30 @@ async function savePdf() {
     console.error(e);
     root.innerHTML = '<div class="err-box"><h2>エラーが発生しました</h2><p>時間をおいて再度お試しください。改善しない場合は @mondayaxad までご連絡ください。</p></div>';
   }
+})();
+</script>
+<script>
+// 購入の引き継ぎ（控えめな導線）：この端末に、支払済み・未引き継ぎの購入がある時だけ、レポートの最後に出す。
+// 押した時だけマイページのログイン（Google・X・メール）へ。ログインしなくても、このページはそのまま読める。
+(function () {
+  if (typeof EdGuestPurchase === 'undefined') return;
+  var tries = 0;
+  function place() {
+    var wrap = document.querySelector('#root .wrap') || document.querySelector('.wrap');
+    if (!wrap && tries++ < 20) { setTimeout(place, 500); return; }
+    EdGuestPurchase.status().then(function (r) {
+      var list = (r.ok && r.body.purchases) || [];
+      if (!list.some(function (p) { return p.canClaim; })) return;
+      var box = document.createElement('section');
+      box.setAttribute('aria-label', 'マイページへの引き継ぎ');
+      box.style.cssText = 'margin:28px 0 8px;padding:14px 16px;border:1px solid #221c38;border-radius:10px;text-align:center';
+      box.innerHTML = '<button type="button" style="background:transparent;border:1px solid #3a3058;color:#a89cc8;border-radius:6px;padding:9px 14px;font-size:12px;font-family:inherit;cursor:pointer">この購入をマイページに引き継ぐ</button>'
+        + '<p style="margin:8px 0 0;font-size:11px;color:#7a6d98;line-height:1.8">ログインすると、この診断記録と購入済みレポートをいつでも見返せます。</p>';
+      box.querySelector('button').onclick = function () { EdGuestPurchase.startClaim('analysis_report'); };
+      (wrap || document.body).appendChild(box);
+    });
+  }
+  window.addEventListener('load', function () { setTimeout(place, 800); });
 })();
 </script>
 </body>

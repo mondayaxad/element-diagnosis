@@ -99,7 +99,7 @@ async function page(url, { width = 390, height = 844, supa = { rows: ROWS }, red
   const errors = [];
   p.on('pageerror', (e) => errors.push(String(e)));
   await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: fakeSupabase(supa) }));
-  await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: previewPublicConfigJs() }));
+  await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: previewPublicConfigJs(global.__cfgExtra || {}) }));
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
   await p.route(/cdnjs\.cloudflare\.com|googletagmanager/, (r) => r.fulfill({ contentType: 'application/javascript', body: '' }));
   await p.route('**/api/my-entitlements', (r) => r.fulfill({ contentType: 'application/json', body: '{"purchased_by_version":{}}' }));
@@ -264,9 +264,9 @@ test('mypage 実データ（Preview指定なし）：未購入者にも右上入
   assert.equal(await body.locator('a[href*="buy.stripe"], button.is-pending, .ca-card').count(), 0);
   await body.locator('[data-pick-index="1"]').click();
   assert.match(await body.innerText(), new RegExp('SELECTED RECORD'));
-  assert.equal(await body.locator('.ca-card--primary a[href*="buy.stripe"]').count(), 1, '解析レポート¥1,000は既存の導線');
-  const href = await body.locator('.ca-card--primary a[href*="buy.stripe"]').getAttribute('href');
-  assert.ok(href.includes('client_reference_id=v2_'), '選んだ記録（A）の診断コードを付ける');
+  // 販売停止中（既定）：解析レポート ¥1,000 も「準備中」で押せない（Payment Link へは送らない）
+  assert.equal(await body.locator('.ca-card--primary a[href*="buy.stripe"]').count(), 0);
+  assert.match(await body.locator('.ca-card--primary').innerText(), /解析レポート（準備中）/);
   assert.equal(await body.locator('button.is-pending').count(), 1);
   assert.equal(await body.locator('a[data-product-id^="core_complete_analysis"], [data-preview-dummy]').count(), 0);
   // 選び直せる
@@ -390,7 +390,9 @@ test('index：¥1,000主導線のあとに折りたたみ。閉じても¥1,000�
   const btnY = (await p.locator('#lockUnlockAllBtn').boundingBox()).y, foldBox = await fold.boundingBox();
   assert.ok(foldBox.y > btnY, '¥1,000 より後');
   assert.ok(foldBox.height >= 44 && foldBox.height <= 52, 'closed height ' + foldBox.height);
-  assert.equal(await p.locator('#lockUnlockAllBtn').innerText().then((s) => s.trim()), '全てのロックを解除する →');
+  // 販売停止中（既定）は ¥1,000 も「準備中」で押せない
+  assert.equal(await p.locator('#lockUnlockAllBtn').innerText().then((s) => s.trim()), '解析レポート（準備中）');
+  assert.equal(await p.locator('#lockUnlockAllBtn').isDisabled(), true);
   await p.click('details.ca-fold > summary');
   const text = await fold.innerText();
   for (const s of ['COMPLETE ANALYSIS｜完全解析', 'この結果を、46ページの一つの記録として残します。', 'MIRROR', '現在のあなたに近い10名', 'HIDDEN SHAPE', '表に出にくい一面に近い10名', 'MENTOR', 'これから伸ばす方向に近い10名', '解析レポートの内容も含まれます。', '¥3,000', '完全解析は準備中です']) assert.ok(text.includes(s), s);

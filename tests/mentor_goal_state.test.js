@@ -22,10 +22,10 @@ function load(config, host = 'element-diagnosis-git-release-c-preview.vercel.app
 const rec = (over) => Object.assign({ completeEligible: true, ineligibleReason: null, mentorGoal: null, mentorGoalLocked: false, checkoutInProgress: false,
   completeEntitlement: null, completeStatus: 'none', analysisSource: null, legacyPurchasePending: false, repurchaseBlocked: false }, over || {});
 
-test('MENTOR の選択は公開設定の appEnv === "preview" のときだけ（ホスト名では判断しない）', () => {
+test('MENTOR の選択は公開設定の appEnv が preview・production のときだけ（ホスト名では判断しない）', () => {
   assert.equal(load({ appEnv: 'preview' }).CA.mentorSelectEnabled(), true);
-  assert.equal(load({ appEnv: 'production' }).CA.mentorSelectEnabled(), false);
-  assert.equal(load({ appEnv: 'production' }, 'element-diagnosis-git-release-c-preview.vercel.app').CA.mentorSelectEnabled(), false);
+  assert.equal(load({ appEnv: 'production' }).CA.mentorSelectEnabled(), true);
+  assert.equal(load({ appEnv: 'staging' }, 'element-diagnosis-five.vercel.app').CA.mentorSelectEnabled(), false);
   assert.equal(load({ appEnv: 'preview' }, 'element-diagnosis-five.vercel.app').CA.mentorSelectEnabled(), true, 'ホスト名ではなく公開設定で判断する（サーバー側でも 404）');
   assert.equal(load({ appEnv: 'development' }).CA.mentorSelectEnabled(), false);
   assert.equal(load(undefined).CA.mentorSelectEnabled(), false);

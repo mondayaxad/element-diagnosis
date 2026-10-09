@@ -37,6 +37,9 @@ const PUBLIC_FILES = [
   'complete-analysis.js',
   'diagnosis-save.js',
   'ogp.jpeg',
+  'purchase-complete.html',                                   // 購入完了ページ（Stripe の戻り先。noindex）
+  'js/guest-purchase.js',
+  'js/ga.js',
   'complete-sample.html',                                     // 完全解析サンプル（どこからもリンクしない・noindex）
   'assets/ogp/ogp-top-20261009.jpg',                          // TOP・完全解析サンプルの OGP（1200×630）
   'robots.txt',

@@ -295,6 +295,16 @@
     .ca-fold-btn:focus-visible { outline: 2px solid #7ab8e8; outline-offset: 2px; }
     /* 準備中（決済未接続）：押せないことが分かる見た目。button 既定の文字指定を打ち消す */
     .ca-fold-btn.is-pending { font-family: inherit; font-size: 13px; letter-spacing: .06em; color: #9aa8c6; background: transparent; border-style: dashed; cursor: not-allowed; opacity: 1; }
+    .ca-goal-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 0; padding: 0; border: none; }
+    .ca-goal-list legend { font-size: 12px; color: var(--ca-body); margin-bottom: 4px; padding: 0; }
+    .ca-goal { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--ca-line); border-radius: 8px; cursor: pointer; }
+    .ca-goal input { margin-top: 5px; flex: none; }
+    .ca-goal b { display: block; font-weight: 600; font-size: 13px; color: var(--ca-title); line-height: 1.7; }
+    .ca-goal span { display: block; font-size: 11.5px; color: var(--ca-muted); line-height: 1.7; }
+    .ca-goal:has(input:checked) { border-color: color-mix(in srgb, var(--el, #7ab8e8) 60%, var(--ca-line)); }
+    .ca-fold-btn[disabled] { opacity: .55; cursor: default; }
+    .ca-guest-msg { margin: 8px 0 0; font-size: 11.5px; color: #d6a8b8; line-height: 1.7; }
+    .ca-guest-msg:empty { display: none; }
     .ca-fold-note { margin: 10px 0 0; padding-left: 8px; border-left: 2px solid var(--ca-line); font-size: 11px; color: var(--ca-muted); line-height: 1.7; }
     @media (prefers-reduced-motion: reduce) { .rs-saving::after { animation: none; left: 30%; } .rs-link .arw { transition: none; } }
 
@@ -386,6 +396,7 @@
 <script src="js/registration-onboarding.js"></script>
 <!-- 完全解析（46ページ）の表示用状態。PREVIEW ONLY：購入権は発行しない -->
 <script src="complete-analysis.js"></script>
+<script src="js/guest-purchase.js"></script>
 <script src="js/ETI_v2_QUESTIONS_100.js"></script>
 <script src="js/eti_v2_prototypes.js"></script>
 <script src="js/eti_v2_engine.js"></script>
@@ -2624,7 +2635,7 @@ function renderResult(root) {
             全てのロックを解除する →
           </button>
           <p style="text-align:center;color:#c0a860;font-size:11px;margin-top:8px;font-weight:600">
-            ✓ 決済完了後、自動的にレポートページへ移動します。
+            ${diagnosisVersion === 'ETI-2.0' ? '✓ 登録不要。お支払いの後、このブラウザですぐにお読みいただけます。' : '✓ 決済完了後、自動的にレポートページへ移動します。'}
           </p>
           ${completeAnalysisFoldHtml(diagnosisVersion === 'ETI-2.0' && results.raw && results.raw.meta ? results.raw.meta.itemSetVersion : null, diagnosisVersion)}
         </div>
@@ -2657,36 +2668,51 @@ function renderResult(root) {
     var ref = diagnosisVersion === 'ETI-2.0' ? ('v2_' + shortCode) : shortCode;
     return STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(ref);
   }
-  var v2SalesLocked = diagnosisVersion === 'ETI-2.0' && !V2_REPORT_SALES_ENABLED;
+  // ETI v2：サーバーが作る Checkout（ゲスト購入・登録不要）。販売停止中（COMPLETE_SALES_OPEN）は「準備中」。
+  // v1：従来の Payment Link（販売停止中は同じく「準備中」）。
+  var guestFlow = diagnosisVersion === 'ETI-2.0' && typeof EdGuestPurchase !== 'undefined';
+  var salesOpenNow = typeof EdGuestPurchase !== 'undefined' && EdGuestPurchase.salesOpen();
+  var v2SalesLocked = !salesOpenNow || (diagnosisVersion === 'ETI-2.0' && !guestFlow);
   var lockCtaBtns = root.querySelectorAll('.lock-cta');
-  lockCtaBtns.forEach(function(btn) {
-    if (v2SalesLocked) {
-      btn.textContent = '解析レポート（準備中）';
-      btn.style.opacity = '0.6';
-      btn.style.cursor = 'not-allowed';
-      btn.onclick = function(e) { e.preventDefault(); };
-      return;
-    }
-    btn.onclick = function() {
-      var label = btn.getAttribute('data-label');
-      if (typeof gtag === 'function') gtag('event','lock_cta_click',{event_category:'conversion',label:label});
-      autoCopyAndProceed(applyData, stripeUrlWithCode());
-    };
-  });
   var lockUnlockAllBtn = root.querySelector('#lockUnlockAllBtn');
+  function lockPending(btn) {
+    btn.textContent = '解析レポート（準備中）';
+    btn.style.opacity = '0.6';
+    btn.style.cursor = 'not-allowed';
+    btn.disabled = true;
+    btn.onclick = function(e) { e.preventDefault(); };
+  }
+  function startAnalysis(btn, label) {
+    if (typeof gtag === 'function') gtag('event', label ? 'lock_cta_click' : 'unlock_all_click', label ? { event_category: 'conversion', label: label } : { event_category: 'conversion' });
+    if (!guestFlow) { autoCopyAndProceed(applyData, stripeUrlWithCode()); return; }
+    btn.disabled = true;
+    var prev = btn.textContent;
+    btn.textContent = '決済画面へ移動しています…';
+    EdGuestPurchase.checkout('analysis', shortCode, null, 'result_lock').then(function (r) {
+      if (r.ok) return;
+      btn.disabled = false;
+      btn.textContent = prev;
+      var m = root.querySelector('#guestAnalysisMsg');
+      if (m) m.textContent = EdGuestPurchase.errorText(r.error);
+    });
+  }
+  lockCtaBtns.forEach(function(btn) {
+    if (v2SalesLocked) { lockPending(btn); return; }
+    btn.onclick = function() { startAnalysis(btn, btn.getAttribute('data-label')); };
+  });
   if (lockUnlockAllBtn) {
     if (v2SalesLocked) {
-      lockUnlockAllBtn.textContent = '解析レポート（準備中）';
-      lockUnlockAllBtn.style.opacity = '0.6';
-      lockUnlockAllBtn.style.cursor = 'not-allowed';
-      lockUnlockAllBtn.onclick = function(e) { e.preventDefault(); };
+      lockPending(lockUnlockAllBtn);
     } else {
-      lockUnlockAllBtn.onclick = function() {
-        if (typeof gtag === 'function') gtag('event','unlock_all_click',{event_category:'conversion'});
-        autoCopyAndProceed(applyData, stripeUrlWithCode());
-      };
+      lockUnlockAllBtn.onclick = function() { startAnalysis(lockUnlockAllBtn, null); };
     }
+    var gm = document.createElement('p');
+    gm.id = 'guestAnalysisMsg';
+    gm.className = 'ca-guest-msg';
+    gm.setAttribute('role', 'status');
+    lockUnlockAllBtn.insertAdjacentElement('afterend', gm);
   }
+  if (guestFlow) initGuestPurchase(root, shortCode, { lockCtaBtns: lockCtaBtns, lockUnlockAllBtn: lockUnlockAllBtn });
   // シェアボタンのイベント設定（直接2択）
   var saveImgBtn = root.querySelector('#saveImgBtn');
   if (saveImgBtn) {
@@ -2942,7 +2968,10 @@ function completeAnalysisFoldHtml(itemSetVersion, diagnosisVersion) {
   // 決済は未接続（2026-10-07）：価格は見せるが、ボタンは押せない「準備中」（href・決済イベントなし）
   var offer = CA.pendingOfferFor(st);
   var cta;
-  if (offer) {
+  // 実データ（Preview の状態指定なし）：ゲスト購入の欄（js/guest-purchase.js。この端末の購入状態を確かめてから描く）
+  if (!name && diagnosisVersion === 'ETI-2.0' && typeof EdGuestPurchase !== 'undefined') {
+    cta = '<div data-guest-complete><p class="ca-fold-note">購入状態を確認しています…</p></div>';
+  } else if (offer) {
     var isUp = offer.offer === 'upgrade_2000';
     cta = '<div class="ca-fold-price"><span class="ca-meta">' + (isUp ? 'この記録への追加' : 'この結果の完全解析') + '</span><span class="ca-price">' + (isUp ? '追加 ' : '') + offer.price + '</span></div>'
       + CA.pendingButtonHtml(offer, 'ca-fold-btn')
@@ -2963,6 +2992,106 @@ function completeAnalysisFoldHtml(itemSetVersion, diagnosisVersion) {
     + '<p class="ca-meta">解析レポートの内容も含まれます。</p>'
     + cta
     + '</div></details>';
+}
+
+/* ゲスト購入（ETI v2・登録不要）：この端末の購入状態に合わせて、解析レポートの主導線と完全解析の欄を描く。
+   ・購入済み（この端末）：解析レポートを読む／完全解析の状態。¥2,000 は同じ記録で解析レポートを購入済みの時だけ。
+   ・販売停止中：価格は見せるが、ボタンは「準備中」で押せない。
+   ・価格・権利はサーバーが決める（ここでは offer と目標だけを送る）。 */
+function initGuestPurchase(root, code, refs) {
+  var G = EdGuestPurchase;
+  var box = root.querySelector('[data-guest-complete]');
+  var open = G.salesOpen();
+  function goalPicker(goalsData, offer) {
+    var goals = (goalsData && goalsData.catalog && goalsData.catalog.goals) || [];
+    if (!goals.length) return '<p class="ca-fold-note">目標の一覧を読み込めませんでした。再読み込みしてください。</p>';
+    return '<fieldset class="ca-goal-list"><legend>MENTOR の目標を1つ選んでください（お支払いの後は変えられません）</legend>'
+      + goals.map(function (g) {
+        return '<label class="ca-goal"><input type="radio" name="guest-mentor-goal" value="' + G.esc(g.goalId) + '"><span><b>' + G.esc(g.label) + '</b><span>' + G.esc(g.description || '') + '</span></span></label>';
+      }).join('') + '</fieldset>'
+      + '<button type="button" class="ca-fold-btn" data-guest-buy="' + offer + '" disabled>目標を選んで決済へ（' + G.yen(G.OFFERS[offer].price) + '）</button>'
+      + '<p class="ca-guest-msg" data-guest-msg role="status"></p>';
+  }
+  function priceHead(offer) {
+    var isUp = offer === 'analysis_upgrade';
+    return '<div class="ca-fold-price"><span class="ca-meta">' + (isUp ? '解析レポートご購入済みの方への追加' : '解析レポート＋完全解析') + '</span><span class="ca-price">' + (isUp ? '追加 ' : '') + G.yen(G.OFFERS[offer].price) + '</span></div>';
+  }
+  function pendingHtml(offer) {
+    var isUp = offer === 'analysis_upgrade';
+    return priceHead(offer) + '<button type="button" class="ca-fold-btn is-pending" disabled aria-disabled="true">' + (isUp ? '完全解析へアップグレード ' : '完全解析 ') + G.yen(G.OFFERS[offer].price) + '（準備中）</button>'
+      + '<p class="ca-fold-note">完全解析は準備中です。現在はお申し込みいただけません。</p>';
+  }
+  function readAnalysisButton(btn, p) {
+    if (!btn) return;
+    btn.textContent = '解析レポートを読む →';
+    btn.disabled = false;
+    btn.style.opacity = '';
+    btn.style.cursor = 'pointer';
+    btn.onclick = function () {
+      btn.disabled = true;
+      G.openAnalysis(p.ref, 'result').then(function (ok) { if (!ok) { btn.disabled = false; } });
+    };
+  }
+  G.status(code).then(function (r) {
+    var purchases = (r.ok && r.body.purchases) || [];
+    var mine = purchases.filter(function (p) { return p.thisRecord; })[0] || null;
+    var hasAnalysis = !!(mine && mine.analysis === 'active');
+    if (hasAnalysis) {
+      readAnalysisButton(refs.lockUnlockAllBtn, mine);
+      refs.lockCtaBtns.forEach(function (b) { readAnalysisButton(b, mine); b.textContent = '解析レポートで読む'; });
+    } else if (r.ok && r.body.codePurchased && refs.lockUnlockAllBtn) {
+      refs.lockUnlockAllBtn.textContent = 'この結果は購入済みです（マイページで読めます）';
+      refs.lockUnlockAllBtn.disabled = false;
+      refs.lockUnlockAllBtn.style.opacity = '';
+      refs.lockUnlockAllBtn.onclick = function () { location.assign('/mypage.html'); };
+    }
+    if (!box) return;
+    if (!r.ok) {
+      // 購入状態を確認できない：¥3,000 へ誘導しない（購入済みの方へ重ねて売らない）
+      box.innerHTML = '<p class="ca-fold-note">この結果の購入状態を確認できないため、完全解析の購入導線は表示していません。</p>';
+      return;
+    }
+    if (mine && mine.complete) {
+      box.innerHTML = '<p class="ca-fold-note">この結果の完全解析は購入済みです（' + G.esc(G.completeLabel(mine)) + '）。</p>'
+        + '<a class="ca-fold-btn" href="/purchase-complete">購入した内容を見る</a>';
+      return;
+    }
+    if (mine && mine.pending) {
+      box.innerHTML = '<p class="ca-fold-note">お支払いを確認しています。</p><a class="ca-fold-btn" href="/purchase-complete">購入状況を見る</a>';
+      return;
+    }
+    if (!mine && r.ok && r.body.codePurchased) {
+      box.innerHTML = '<p class="ca-fold-note">この結果は購入済みです。完全解析は、マイページの診断記録から選べます。</p><a class="ca-fold-btn" href="/mypage.html">マイページで記録を選ぶ</a>';
+      return;
+    }
+    var offer = hasAnalysis ? 'analysis_upgrade' : 'direct_complete';
+    if (!open) { box.innerHTML = pendingHtml(offer); return; }
+    box.innerHTML = priceHead(offer) + '<p class="ca-fold-note">読み込んでいます…</p>';
+    G.goals().then(function (gr) {
+      box.innerHTML = priceHead(offer) + goalPicker(gr.ok ? gr.body : null, offer);
+      var btn = box.querySelector('[data-guest-buy]');
+      var msg = box.querySelector('[data-guest-msg]');
+      box.addEventListener('change', function (e) {
+        if (e.target && e.target.name === 'guest-mentor-goal') {
+          btn.disabled = false;
+          G.track('mentor_goal_select', { source: 'result', goal_selected: true });
+        }
+      });
+      if (btn) btn.onclick = function () {
+        var picked = box.querySelector('input[name="guest-mentor-goal"]:checked');
+        if (!picked) return;
+        btn.disabled = true;
+        var prev = btn.textContent;
+        btn.textContent = '決済画面へ移動しています…';
+        G.checkout(offer, code, picked.value, 'result_complete').then(function (res) {
+          if (res.ok) return;
+          btn.disabled = false;
+          btn.textContent = prev;
+          if (msg) msg.textContent = G.errorText(res.error);
+        });
+      };
+    });
+  });
 }
 
 function autoCopyAndProceed(data, url) {

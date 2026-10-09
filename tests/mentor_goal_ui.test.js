@@ -206,8 +206,12 @@ test('シート：目標選択 → 送信（連打しても1回）→ 内容確�
   const confirm = await p.locator('#mpUpgradeBody').innerText();
   assert.match(confirm, new RegExp(CE.MENTOR_CATALOG.goals[2].label));
   assert.match(confirm, /¥3,000/);
-  const pay = p.locator('#mpUpgradeBody button', { hasText: '決済へ進む（準備中）' });
-  assert.equal(await pay.isDisabled(), true);
+  // 販売中：決済へ進む（金額はサーバーが決める。押すと POST /api/complete-checkout → Stripe。ここでは押さない）
+  const pay = p.locator('#mpUpgradeBody button[data-complete-checkout]');
+  assert.equal(await pay.count(), 1);
+  assert.equal((await pay.innerText()).trim(), '決済へ進む（¥3,000）');
+  assert.equal(await pay.isDisabled(), false);
+  assert.equal(await pay.getAttribute('data-complete-checkout'), 'sess-B');
   assert.equal(await pay.getAttribute('href'), null);
   // LATEST RESULT と THE RECORDS（同じ記録）の表示がそろう
   assert.match(await actions(p, 'sess-B', 'latest').innerText(), /MENTOR 目標：選択済み/);
@@ -462,8 +466,9 @@ test('販売開始後：目標が未選択なら「目標を選ぶ」、選択�
   await p.waitForSelector('#mpUpgradeBody .ca-confirm-list');
   assert.match(await p.locator('#mpUpgradeBody').innerText(), /内容を確認する/);
   assert.match(await p.locator('#mpUpgradeBody').innerText(), new RegExp(CE.MENTOR_CATALOG.goals[1].label));
-  const pay = p.locator('#mpUpgradeBody button.is-pending[disabled]');
-  assert.equal(await pay.count(), 1, '決済は接続前のため、確認の画面の「決済へ進む（準備中）」は無効のまま');
+  const pay = p.locator('#mpUpgradeBody button[data-complete-checkout]');
+  assert.equal(await pay.count(), 1, '販売中は確認の画面から決済へ進める');
+  assert.equal(await p.locator('#mpUpgradeBody button.is-pending[disabled]').count(), 0);
   assert.equal(w.posts.length, 0, '選択済みの目標は再送信しない');
   // 未選択（A）は目標の段階から
   await p.keyboard.press('Escape');

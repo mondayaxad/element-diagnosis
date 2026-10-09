@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<script src="/js/ga.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<title>ご購入の確認 — 元素診断</title>
+<style>
+  :root { --bg:#07070f; --panel:#0e0b18; --line:#241d3a; --fg:#e6e2f2; --sub:#9a92b4; --dim:#6f6888; --accent:#b98af0; --gold:#d6bd84; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font-family:'Noto Serif JP','Hiragino Mincho ProN',serif; line-height:1.9; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:520px; margin:0 auto; padding:40px 16px 72px; }
+  .eyebrow { font-size:10.5px; letter-spacing:.32em; color:var(--accent); margin:0 0 8px; }
+  h1 { font-size:20px; font-weight:600; letter-spacing:.08em; margin:0 0 6px; }
+  .lead { font-size:12.5px; color:var(--sub); margin:0 0 24px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:18px 18px 16px; margin-bottom:16px; }
+  .row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 0; border-bottom:1px dashed var(--line); }
+  .row:last-of-type { border-bottom:none; }
+  .row-name { font-size:13.5px; }
+  .row-state { font-size:11.5px; color:var(--sub); }
+  .btn { display:inline-flex; align-items:center; justify-content:center; min-height:40px; padding:8px 16px; border-radius:4px;
+    border:1px solid color-mix(in srgb, var(--accent) 55%, transparent); background:rgba(185,138,240,.10); color:var(--fg);
+    font-family:inherit; font-size:12.5px; letter-spacing:.08em; cursor:pointer; text-decoration:none; white-space:nowrap; }
+  .btn[disabled] { opacity:.55; cursor:default; }
+  .btn:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+  .claim { margin-top:14px; padding-top:12px; border-top:1px solid var(--line); }
+  .claim .btn { background:transparent; border-color:var(--line); color:var(--sub); font-size:12px; }
+  .note { font-size:11.5px; color:var(--dim); margin:6px 0 0; }
+  .msg { font-size:12px; color:#d6a8b8; margin:8px 0 0; min-height:0; }
+  .msg:empty { display:none; }
+  .spinner { display:inline-block; width:12px; height:12px; border:1.5px solid #3a3058; border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; vertical-align:-2px; margin-right:6px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .links { margin-top:28px; font-size:12px; color:var(--sub); }
+  .links a { color:var(--sub); }
+  @media (max-width:360px) { .row { flex-wrap:wrap; } .row .btn { width:100%; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <p class="eyebrow">ELEMENT DIAGNOSIS</p>
+  <h1 id="pcTitle">ご購入の確認</h1>
+  <p class="lead" id="pcLead">お支払いの状況を確認しています。</p>
+  <div id="pcList" aria-live="polite"><p class="note"><span class="spinner" aria-hidden="true"></span>確認しています…</p></div>
+  <p class="links"><a href="/">元素診断のトップへ</a> ・ <a href="/mypage.html">マイページ</a></p>
+</main>
+<script src="/js/guest-purchase.js"></script>
+<script>
+(function () {
+  'use strict';
+  var G = window.EdGuestPurchase;
+  var list = document.getElementById('pcList');
+  var canceled = /(?:^|[?&])status=canceled(?:&|$)/.test(location.search);
+  // 戻り先の印（?status=canceled）は表示に使った後、URL から消す
+  if (location.search) { try { history.replaceState(null, '', location.pathname); } catch (e) { /* 消せなくても表示は続ける */ } }
+  if (canceled) {
+    document.getElementById('pcTitle').textContent = 'お手続きを中止しました';
+    document.getElementById('pcLead').textContent = 'お支払いは行われていません。診断結果のページから、いつでもお申し込みいただけます。';
+  }
+
+  var delays = [2000, 3000, 5000, 8000, 13000, 20000, 30000];
+  var tries = 0;
+  var busy = false;
+
+  function analysisRow(p) {
+    if (!p.analysis) return '';
+    var ok = p.analysis === 'active';
+    return '<div class="row"><div><div class="row-name">解析レポート</div><div class="row-state">' + (ok ? '読めます' : p.analysis === 'suspended' ? '一時停止中' : '失効') + '</div></div>'
+      + (ok ? '<button type="button" class="btn" data-open-analysis="' + G.esc(p.ref) + '">解析レポートを読む</button>' : '') + '</div>';
+  }
+  function completeRow(p) {
+    if (!p.complete) return '';
+    var ready = p.complete === 'active' && p.report === 'ready';
+    var working = p.complete === 'active' && (p.report === 'queued' || p.report === 'generating' || p.report === 'failed' || !p.report);
+    return '<div class="row"><div><div class="row-name">完全解析</div><div class="row-state">' + (working ? '<span class="spinner" aria-hidden="true"></span>' : '') + G.esc(G.completeLabel(p)) + '</div></div>'
+      + (ready ? '<button type="button" class="btn" data-open-complete="' + G.esc(p.ref) + '">完全解析を読む</button>' : '') + '</div>';
+  }
+  function claimBlock(p) {
+    if (p.claimed) return '<div class="claim"><p class="note">この購入はマイページに引き継ぎ済みです。<a href="/mypage.html">マイページ</a>からご覧ください。</p></div>';
+    if (!p.canClaim) return '';
+    return '<div class="claim"><button type="button" class="btn" data-claim>この購入をマイページに引き継ぐ</button>'
+      + '<p class="note">ログインすると、この診断記録と購入済みレポートをいつでも見返せます。</p></div>';
+  }
+  function cardHtml(p) {
+    if (p.pending && !p.analysis && !p.complete) {
+      return '<div class="card"><p class="note"><span class="spinner" aria-hidden="true"></span>お支払いを確認しています…</p></div>';
+    }
+    return '<div class="card">' + analysisRow(p) + completeRow(p) + '<p class="msg" data-msg></p>' + claimBlock(p) + '</div>';
+  }
+
+  // GA4：支払いを確認できた購入を1回だけ（同じ購入の再表示では送らない）
+  function trackConfirmed(purchases) {
+    purchases.forEach(function (p) {
+      if (p.pending || (!p.analysis && !p.complete)) return;
+      var key = 'ed_pc_' + p.ref.slice(0, 12) + (p.complete ? 'c' : 'a');
+      try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch (e) { return; }
+      G.track('purchase_confirmed', { state: p.complete ? 'complete' : 'analysis' });
+    });
+  }
+
+  async function load() {
+    if (busy) return;
+    busy = true;
+    var r = await G.status();
+    busy = false;
+    if (!r.ok) {
+      list.innerHTML = '<div class="card"><p class="note">購入状況を確認できませんでした。</p><button type="button" class="btn" data-retry>もう一度確認する</button></div>';
+      return;
+    }
+    var purchases = (r.body.purchases || []);
+    if (tries === 0) G.track('checkout_return', { state: canceled ? 'canceled' : purchases.length ? 'found' : 'none' });
+    if (!purchases.length) {
+      if (!canceled) document.getElementById('pcLead').textContent = '';
+      list.innerHTML = '<div class="card"><p class="row-name">この端末では、ご購入を確認できませんでした。</p>'
+        + '<p class="note">購入したときと同じ端末・ブラウザで開いてください。マイページに引き継いだ購入は、マイページからご覧いただけます。</p>'
+        + '<p class="note">端末を変えた・ブラウザのデータを消した場合は、マイページで購入時のメールアドレスを確認すると引き継げます。</p>'
+        + '<p style="margin:12px 0 0"><a class="btn" href="/mypage.html#recover">マイページで購入を引き継ぐ</a></p></div>';
+      return;
+    }
+    if (!canceled) {
+      document.getElementById('pcTitle').textContent = 'ご購入ありがとうございます';
+      document.getElementById('pcLead').textContent = 'このページから、すぐにお読みいただけます。';
+    }
+    list.innerHTML = purchases.map(cardHtml).join('');
+    trackConfirmed(purchases);
+    var waiting = purchases.some(function (p) {
+      return p.pending || (p.complete === 'active' && p.report !== 'ready' && p.report !== 'revoked');
+    });
+    if (waiting && tries < delays.length) setTimeout(load, delays[tries++]);
+  }
+
+  list.addEventListener('click', async function (e) {
+    var t = e.target.closest('button');
+    if (!t) return;
+    var card = t.closest('.card');
+    var msg = card && card.querySelector('[data-msg]');
+    if (t.hasAttribute('data-retry')) { load(); return; }
+    if (t.hasAttribute('data-claim')) { G.startClaim('purchase_complete'); return; }
+    t.disabled = true;
+    if (t.hasAttribute('data-open-analysis')) {
+      if (!(await G.openAnalysis(t.getAttribute('data-open-analysis'), 'purchase_complete'))) {
+        t.disabled = false;
+        if (msg) msg.textContent = '解析レポートを開けませんでした。もう一度お試しください。';
+      }
+      return;
+    }
+    if (t.hasAttribute('data-open-complete')) {
+      var o = await G.openComplete(t.getAttribute('data-open-complete'), 'purchase_complete');
+      if (!o.ok) {
+        t.disabled = false;
+        if (msg) msg.textContent = o.error === 'report_not_ready' ? '完全解析はまだ作成中です。少し待ってから開いてください。' : '完全解析を開けませんでした。もう一度お試しください。';
+      }
+    }
+  });
+
+  load();
+})();
+</script>
+</body>
+</html>

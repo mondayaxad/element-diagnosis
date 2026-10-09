@@ -110,7 +110,7 @@ test.after(async () => { if (browser) await browser.close(); if (server) server.
 
 // hint：端末ヒントを最初から入れておくか／pendingV2：未保存の v2 診断を最初から入れておくか（文字列ならその診断コード）
 // seed：最初に入れておく localStorage／entitlements：/api/my-entitlements の応答
-async function openPage(url, { supa = {}, hint = false, pendingV2 = false, seed = {}, width = 390, height = 844, entitlements } = {}) {
+async function openPage(url, { supa = {}, hint = false, pendingV2 = false, seed = {}, width = 390, height = 844, entitlements, salesOpen = false } = {}) {
   const ctx = await browser.newContext({ viewport: { width, height } });
   const p = await ctx.newPage();
   p.setDefaultTimeout(8000);
@@ -118,7 +118,8 @@ async function openPage(url, { supa = {}, hint = false, pendingV2 = false, seed 
   p.on('pageerror', (e) => errors.push(String(e)));
   ctx.on('page', (np) => popups.push(np));
   await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: fakeSupabase(supa) }));
-  await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: previewPublicConfigJs() }));
+  // salesOpen：販売中の表示（公開設定の completeSalesOpen。サーバー・Stripe には接続しない）
+  await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: previewPublicConfigJs(salesOpen ? { completeSalesOpen: true, completeApiReady: true } : {}) }));
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
   await p.route(/cdnjs\.cloudflare\.com|googletagmanager/, (r) => r.fulfill({ contentType: 'application/javascript', body: '' }));
   await p.route(/buy\.stripe\.com/, (r) => r.fulfill({ contentType: 'text/html', body: '<p>stripe</p>' }));
@@ -494,15 +495,15 @@ test('マイページ：記録内CTA（無料のみ／解析購入済み）と�
   await p.locator('#mp-rec-1 > summary').click();
   const a = p.locator('#mp-rec-1 .mp-rec-actions');
   const aBtns = await a.locator('a, button').allInnerTexts();
-  assert.deepEqual(aBtns.map((t) => t.trim()), ['解析レポート　¥1,000', '完全解析 ¥3,000（準備中）']);
-  assert.match(await a.locator('a').getAttribute('href'), /buy\.stripe\.com\/test_.*client_reference_id=v2_/);
+  // 販売停止中（既定）：¥1,000 も「準備中」。Payment Link へは送らない
+  assert.deepEqual(aBtns.map((t) => t.trim()), ['解析レポート（準備中）', '完全解析 ¥3,000（準備中）']);
+  assert.equal(await a.locator('a[href*="buy.stripe"]').count(), 0);
   // B（解析レポート購入済み）
   await p.locator('#mp-rec-0 > summary').click();
   const b = p.locator('#mp-rec-0 .mp-rec-actions');
   assert.deepEqual((await b.locator('a, button').allInnerTexts()).map((t) => t.trim()), ['解析レポートを見る', '完全解析へアップグレード ¥2,000（準備中）']);
   // 準備中ボタン：button・disabled・href なし。強制クリックしても外部遷移・決済イベントなし
-  for (const sel of ['#mp-rec-1 button.is-pending', '#mp-rec-0 button.is-pending']) {
-    const btn = p.locator(sel);
+  for (const btn of [...await p.locator('#mp-rec-1 button.is-pending').all(), ...await p.locator('#mp-rec-0 button.is-pending').all()]) {
     assert.equal(await btn.evaluate((e) => e.tagName), 'BUTTON');
     assert.equal(await btn.isDisabled(), true);
     assert.equal(await btn.getAttribute('href'), null);
@@ -536,8 +537,9 @@ test('マイページ：記録1件はその記録が選択済み。右上の文�
   assert.equal(await f.locator('#mpUpgradeTrigger').innerText(), 'アップグレード');
   await f.click('#mpUpgradeTrigger');
   assert.equal(await f.locator('#mpUpgradeBody .ca-pick').count(), 0);
-  assert.equal(await f.locator('#mpUpgradeBody .ca-card--primary a[href*="buy.stripe"]').count(), 1);
-  assert.equal((await f.locator('#mpUpgradeBody button.is-pending').innerText()).trim(), '完全解析 ¥3,000（準備中）');
+  assert.equal(await f.locator('#mpUpgradeBody .ca-card--primary a[href*="buy.stripe"]').count(), 0);
+  assert.match(await f.locator('#mpUpgradeBody .ca-card--primary').innerText(), /解析レポート（準備中）/);
+  assert.deepEqual((await f.locator('#mpUpgradeBody button.is-pending').allInnerTexts()).map((t) => t.trim()).filter((t) => /完全解析/.test(t)), ['完全解析 ¥3,000（準備中）']);
   await f.__ctx.close();
   const a = await mypage({ supa: { rows: [RA.row] }, entitlements: purchasedFor(RA.code) });
   assert.equal(await a.locator('#mpUpgradeTrigger').innerText(), '完全解析へ');
@@ -548,7 +550,7 @@ test('マイページ：記録1件はその記録が選択済み。右上の文�
 });
 
 test('マイページ：記録が複数なら、対象を選ぶまで購入導線を確定しない（日付・結果を表示）', { skip: skip() }, async () => {
-  const p = await mypage({ supa: { rows: [RB.row, RA.row] } });
+  const p = await mypage({ supa: { rows: [RB.row, RA.row] }, salesOpen: true });
   await p.click('#mpUpgradeTrigger');
   const body = p.locator('#mpUpgradeBody');
   assert.match(await body.innerText(), /どの診断記録をアップグレードしますか/);
@@ -558,9 +560,10 @@ test('マイページ：記録が複数なら、対象を選ぶまで購入導�
   assert.equal(await body.locator('a[href*="buy.stripe"], button.is-pending, .ca-card').count(), 0, '選ぶまで購入導線なし');
   // 過去A を選ぶと、A の診断コードの導線だけになる（最新B ではない）
   await body.locator('[data-pick-index="1"]').click();
-  const href = await body.locator('.ca-card--primary a[href*="buy.stripe"]').getAttribute('href');
-  assert.ok(href.includes(encodeURIComponent('v2_' + RA.code)) || href.includes('v2_' + RA.code), 'A のコード');
-  assert.ok(!href.includes(RB.code), 'B のコードではない');
+  // 販売中：¥1,000 はサーバーの Checkout（選んだ記録 A の ID だけを送る。診断コードは URL に載せない）
+  const buy = body.locator('.ca-card--primary [data-analysis-checkout]');
+  assert.equal(await buy.getAttribute('data-analysis-checkout'), 'sess-A', 'A の記録');
+  assert.equal(await body.locator('a[href*="buy.stripe"]').count(), 0);
   await p.__ctx.close();
 });
 
@@ -600,7 +603,7 @@ async function openRecord(p, i) {
 
 test('LATEST RESULT：4状態で THE RECORDS の同じ記録と同じ購入・閲覧導線を出す', { skip: skip() }, async () => {
   const cases = [
-    { name: 'free', opts: { supa: { rows: [RB.row, RA.row] } }, want: ['解析レポート　¥1,000', '完全解析 ¥3,000（準備中）'] },
+    { name: 'free', opts: { supa: { rows: [RB.row, RA.row] } }, want: ['解析レポート（準備中）', '完全解析 ¥3,000（準備中）'] },
     { name: 'analysis', opts: { supa: { rows: [RB.row, RA.row] }, entitlements: purchasedFor(RB.code) }, want: ['解析レポートを見る', '完全解析へアップグレード ¥2,000（準備中）'] },
     { name: 'complete', opts: { url: '/mypage.html?preview_entitlement=complete-ready', supa: { rows: [RB.row, RA.row] } }, want: ['解析レポートを見る', '完全解析を見る'] },
   ];
@@ -648,26 +651,29 @@ test('LATEST RESULT：購入状態APIが失敗しても開閉でき、購入・�
   await p.__ctx.close();
 });
 
-test('LATEST RESULT：¥1,000 は最新記録の session に紐づき、既存の計測（source=latest）を維持。準備中は遷移・計測しない', { skip: skip() }, async () => {
-  const p = await mypage({ supa: { rows: [RB.row, RA.row] } });
+test('LATEST RESULT：¥1,000 は最新記録の session に紐づき、入口（source=latest／records）を送る。販売中だけ押せる', { skip: skip() }, async () => {
+  const p = await mypage({ supa: { rows: [RB.row, RA.row] }, salesOpen: true });
   const d = await openLatestFold(p);
-  const link = d.locator('.mp-rec-actions a');
-  const href = await link.getAttribute('href');
-  assert.ok(href.includes('v2_' + RB.code) || href.includes(encodeURIComponent('v2_' + RB.code)), '最新記録（B）のコード');
-  assert.ok(!href.includes(RA.code), '過去記録（A）に紐づけない');
-  assert.match(await link.getAttribute('onclick'), /mypage_unlock_click',\{source:'latest'\}/);
-  const pending = d.locator('button.is-pending');
-  const url = p.url(); const before = p.__gtag.length;
-  await pending.click({ force: true });
-  await pending.evaluate((e) => e.click());
-  await p.waitForTimeout(200);
-  assert.equal(p.url(), url);
-  assert.equal(p.__popups.length, 0);
-  assert.equal(p.__gtag.length, before);
-  // THE RECORDS 側の同じ記録の ¥1,000 は従来どおり source=records
+  const btn = d.locator('.mp-rec-actions [data-analysis-checkout]');
+  assert.equal((await btn.innerText()).trim(), '解析レポート　¥1,000');
+  assert.equal(await btn.getAttribute('data-analysis-checkout'), 'sess-B', '最新記録（B）');
+  assert.equal(await btn.getAttribute('data-source'), 'latest');
+  assert.equal(await btn.getAttribute('href'), null);
+  // THE RECORDS 側の同じ記録は source=records
   const r0 = await openRecord(p, 0);
-  assert.match(await r0.locator('.mp-rec-actions a').getAttribute('onclick'), /source:'records'/);
-  assert.equal(await r0.locator('.mp-rec-actions a').getAttribute('href'), href);
+  const rb = r0.locator('.mp-rec-actions [data-analysis-checkout]');
+  assert.equal(await rb.getAttribute('data-analysis-checkout'), 'sess-B');
+  assert.equal(await rb.getAttribute('data-source'), 'records');
+  // 押すと本人のトークン付きで POST /api/complete-checkout（記録 ID と product だけ）。Stripe の画面へ同じタブで移動する
+  const posts = [];
+  await p.route('**/api/complete-checkout', (r) => { posts.push({ body: JSON.parse(r.request().postData()), auth: r.request().headers().authorization || '' });
+    r.fulfill({ contentType: 'application/json', body: JSON.stringify({ checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test_fake', offer: 'analysis', amount: 1000 }) }); });
+  await p.route('https://checkout.stripe.com/**', (r) => r.fulfill({ contentType: 'text/html', body: '<p>stripe</p>' }));
+  await btn.click();
+  await p.waitForURL(/checkout\.stripe\.com/);
+  assert.deepEqual(posts.map((x) => x.body), [{ diagnosisSessionId: 'sess-B', product: 'analysis' }]);
+  assert.match(posts[0].auth, /^Bearer /);
+  assert.equal(p.__popups.length, 0, '新しいタブを開かない');
   await p.__ctx.close();
 });
 

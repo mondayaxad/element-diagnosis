@@ -54,9 +54,10 @@ test('戻りの確認は 2秒→3秒→5秒… で合計60秒以内（無限に�
   assert.ok(d.length <= 12);
 });
 
-test('機能フラグ：appEnv が preview の時だけ有効（Production・設定なし・その他は無効）', () => {
+test('機能フラグ：appEnv が preview・production の時だけ有効（設定なし・その他は無効）', () => {
   assert.equal(load('preview').completeViewEnabled(), true);
-  for (const env of ['production', 'development', null]) assert.equal(load(env).completeViewEnabled(), false, String(env));
+  assert.equal(load('production').completeViewEnabled(), true);
+  for (const env of ['development', null]) assert.equal(load(env).completeViewEnabled(), false, String(env));
   // 販売は閉じたまま（Checkout の導線は押せない準備中のまま）
   assert.equal(load('preview').completeSalesOpen, false);
   assert.equal(load('preview').completeCheckoutHref(), null);

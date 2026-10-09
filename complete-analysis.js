@@ -35,6 +35,13 @@
   // 完全解析（¥3,000／追加¥2,000）の決済を開始するまで false。false の間、購入先は常に無し（null）。
   // 実装時は、サーバー側で diagnosis_session_id を持つ Checkout Session を作る（Payment Link は使わない）。
   var CA_COMPLETE_SALES_OPEN = false;
+  // 2026-10-09：販売の開閉はサーバーの COMPLETE_SALES_OPEN だけで決める（/api/public-config の completeSalesOpen）。
+  // 公開設定が無い・false なら上の false のまま（販売停止）。権利 API も公開設定が示す時だけ使う。
+  (function () {
+    var cfg = global.__ED_PUBLIC_CONFIG__;
+    if (cfg && cfg.completeApiReady === true) CA_COMPLETE_API_READY = true;
+    if (cfg && cfg.completeSalesOpen === true) CA_COMPLETE_SALES_OPEN = true;
+  })();
 
   // MENTOR 目標の選択（2026-10-07）。決済（Checkout）は未接続のまま、目標の選択と確認画面までを Preview で開く。
   // 有効になるのは、この値が true かつ /api/public-config の appEnv が "preview" のときだけ（ホスト名では判断しない）。
@@ -213,13 +220,13 @@
   // MENTOR 目標の選択を出してよいか（公開設定の appEnv === "preview" かつ CA_MENTOR_SELECT_OPEN）
   function mentorSelectEnabled() {
     var cfg = global.__ED_PUBLIC_CONFIG__;
-    return CA_MENTOR_SELECT_OPEN === true && !!cfg && cfg.appEnv === 'preview';
+    return CA_MENTOR_SELECT_OPEN === true && !!cfg && (cfg.appEnv === 'preview' || cfg.appEnv === 'production');
   }
 
   // 完全解析の閲覧を出してよいか（公開設定の appEnv === "preview" かつ CA_COMPLETE_VIEW_OPEN）
   function completeViewEnabled() {
     var cfg = global.__ED_PUBLIC_CONFIG__;
-    return CA_COMPLETE_VIEW_OPEN === true && !!cfg && cfg.appEnv === 'preview';
+    return CA_COMPLETE_VIEW_OPEN === true && !!cfg && (cfg.appEnv === 'preview' || cfg.appEnv === 'production');
   }
 
   // 完全解析の閲覧の状態（記録ごと）。入力はサーバーの値だけ：
