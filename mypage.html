@@ -1079,6 +1079,18 @@ const V2_REPORT_SALES_ENABLED = true;
 function trackEvent(name, params) {
   if (typeof gtag === 'function') gtag('event', name, params || {});
 }
+// 完全解析サンプルの CTA から来た時：sample_to_mypage を1回だけ記録し、URL から from=sample を消す。
+// 入口の種類だけを送る（記録 ID・個人情報は送らない）。
+(function mpSampleEntry() {
+  let params;
+  try { params = new URLSearchParams(location.search); } catch (e) { return; }
+  if (params.get('from') !== 'sample') return;
+  let first = true;
+  try { first = !sessionStorage.getItem('ed_sample_to_mypage_v1'); sessionStorage.setItem('ed_sample_to_mypage_v1', '1'); } catch (e) { first = true; }
+  if (first) trackEvent('sample_to_mypage', { source: 'sample' });
+  params.delete('from');
+  try { history.replaceState(null, '', location.pathname + (params.toString() ? '?' + params : '') + location.hash); } catch (e) { /* URL はそのまま */ }
+})();
 function savedCountBucket(n) {
   if (n <= 0) return '0';
   if (n === 1) return '1';

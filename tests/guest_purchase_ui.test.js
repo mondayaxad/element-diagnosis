@@ -188,3 +188,30 @@ test('解析レポート：この端末に引き継げる購入がある時だ�
   assert.doesNotMatch(await q.locator('body').innerText(), /マイページに引き継ぐ/);
   await q.__ctx.close();
 });
+
+test('サンプルからマイページ：sample_to_mypage を1回だけ（入口だけ・ID なし）記録し、URL から from=sample を消す', { skip: skip() }, async () => {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const p = await ctx.newPage();
+  await p.addInitScript(() => {
+    window.__ev = JSON.parse(sessionStorage.getItem('__ev') || '[]');
+    window.gtag = function (kind, name, params) {
+      if (kind !== 'event') return;
+      window.__ev.push([name, params || {}]);
+      sessionStorage.setItem('__ev', JSON.stringify(window.__ev));
+    };
+  });
+  await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: 'window.supabase={createClient(){return {from(){const q=new Proxy({},{get(_t,k){if(k==="then")return (res)=>res({data:[],error:null});return ()=>q;}});return q;},rpc:async()=>({data:null,error:null}),auth:{getUser:async()=>({data:{user:null}}),getSession:async()=>({data:{session:null}}),onAuthStateChange(){return{data:{subscription:{unsubscribe(){}}}};}}};}};' }));
+  await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: previewPublicConfigJs() }));
+  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  await p.goto(base + '/mypage.html?from=sample');
+  await p.waitForSelector('#gateAuth', { state: 'attached' });
+  assert.equal(new URL(p.url()).search, '', 'from=sample を消す');
+  await p.goto(base + '/mypage.html?from=sample');
+  await p.waitForSelector('#gateAuth', { state: 'attached' });
+  const ev = await p.evaluate(() => window.__ev);
+  const hits = ev.filter((e) => e[0] === 'sample_to_mypage');
+  assert.equal(hits.length, 1, '同じタブでは1回だけ');
+  assert.deepEqual(hits[0][1], { source: 'sample' });
+  assert.doesNotMatch(JSON.stringify(ev), /[0-9a-f]{8}-[0-9a-f]{4}-|@/);
+  await ctx.close();
+});

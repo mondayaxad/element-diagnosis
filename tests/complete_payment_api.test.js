@@ -125,6 +125,15 @@ function assertNoForbidden(text, patterns, label) {
   for (const p of patterns) assert.doesNotMatch(text, p, `${label} に禁止情報（${p}）`);
 }
 
+// ================= Webhook のイベント名（Stripe で選ぶイベント＝実装したハンドラー＝SQL の記録の種類）
+test('Webhook：処理するイベントは5つだけで、一覧（CP.HANDLED_EVENTS）とハンドラーの名前が完全に一致する', () => {
+  const src = require('fs').readFileSync(path.join(__dirname, '..', 'api', 'stripe-webhook.js'), 'utf8');
+  const block = src.slice(src.indexOf('const HANDLERS = {'), src.indexOf('};', src.indexOf('const HANDLERS = {')));
+  const keys = [...block.matchAll(/'([a-z_.]+)':/g)].map((m) => m[1]);
+  assert.deepEqual(keys.sort(), [...CP.HANDLED_EVENTS].sort());
+  assert.deepEqual([...CP.HANDLED_EVENTS].sort(), ['charge.dispute.closed', 'charge.dispute.created', 'charge.refunded', 'checkout.session.completed', 'checkout.session.expired']);
+});
+
 // ================= lib/complete-payment.js
 test('署名：正しい本文だけ通る（1バイト変更・署名なし・形式違反・古い／未来の時刻・別の secret を拒否）', () => {
   const body = Buffer.from(JSON.stringify({ id: 'evt_test_123456789', type: 'checkout.session.completed' }));

@@ -41,9 +41,9 @@ test('サンプル：8ページ・noindex,nofollow,noarchive・script／form／i
   assert.equal(external.length, metaUrls.length, 'OGP の meta 以外に外部 URL があります');
 });
 
-test('サンプル：CTA は /mypage だけ（Stripe へ直接送らない）・作成の案内がある', () => {
+test('サンプル：CTA は /mypage?from=sample だけ（Stripe へ直接送らない）・作成の案内がある', () => {
   const hrefs = [...SAMPLE.matchAll(/href="([^"]*)"/g)].map((m) => m[1]).filter((h) => !h.startsWith('#'));
-  assert.deepEqual(hrefs, ['/mypage']);
+  assert.deepEqual(hrefs, ['/mypage?from=sample']);
   assert.doesNotMatch(SAMPLE, /stripe|checkout/i);
   assert.match(SAMPLE, /マイページをお持ちでない方も、ここから無料で作成できます。/);
 });
