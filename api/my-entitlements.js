@@ -166,10 +166,18 @@ function createHandler({ env, fetchImpl }) {
   }
 
   async function withComplete(conn, userId, sessionRows, purchasedHashes, payload) {
-    // Production（と Preview 以外）では応答を従来と同じにする（項目を足さない）
-    if (conn.appEnv !== 'preview') return payload;
+    // Preview・Production だけ（環境不明では応答を従来と同じにする）。complete 系の表が無い（migration 適用前）時は completeLookup: failed
+    if (conn.appEnv !== 'preview' && conn.appEnv !== 'production') return payload;
     try {
       const records = await buildCompleteRecords(conn, userId, sessionRows, purchasedHashes);
+      // 記録単位の解析権（¥1,000・¥3,000・引き継いだゲスト購入）も「解析レポート購入済み」に数える（旧 ¥1,000 と同じ扱い）
+      sessionRows.forEach((row) => {
+        const rec = row && records[row.id];
+        const a = one(row.diagnosis_answers);
+        if (rec && rec.analysisSource === 'record_entitlement' && row.diagnosis_version === 'ETI-2.0' && a && a.encoded_answers) {
+          payload.purchased_by_version[`ETI-2.0:${a.encoded_answers}`] = true;
+        }
+      });
       return Object.assign(payload, { completeLookup: 'ok', records });
     } catch (err) {
       console.error('my-entitlements complete lookup failed');

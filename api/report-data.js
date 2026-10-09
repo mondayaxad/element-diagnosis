@@ -146,6 +146,20 @@ function createHandler({ env, fetchImpl }) {
     for (const row of rows) {
       (PRODUCT_PERMISSIONS[row.product_type] || []).forEach((p) => permissions.add(p));
     }
+    // 記録単位の解析権（解析レポート ¥1,000・完全解析セット ¥3,000。complete_07）。
+    // 関数が無い環境（migration 適用前）では 404 になるため、旧 purchase_entitlements だけで判定する。
+    if (!permissions.has('core_analysis_access')) {
+      const rpc = await fetchImpl(`${conn.supabaseUrl}/rest/v1/rpc/complete_analysis_active_for_code_hash`, {
+        method: 'POST',
+        headers: { ...conn.adminHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_code_hash: diagnosisCodeHash }),
+      });
+      if (rpc.ok) {
+        if ((await rpc.json()) === true) permissions.add('core_analysis_access');
+      } else if (rpc.status !== 404) {
+        throw new Error(`record entitlement lookup failed: ${rpc.status}`);
+      }
+    }
     return permissions;
   }
 

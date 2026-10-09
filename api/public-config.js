@@ -45,6 +45,10 @@ function buildPublicConfig(env, { host } = {}) {
       supabaseUrl: sb.supabaseUrl,
       supabaseAnonKey: env.SUPABASE_ANON_KEY,
       projectRef: sb.projectRef,
+      // 解析レポート・完全解析の販売（サーバーの COMPLETE_SALES_OPEN と同じ値。Checkout API も同じ値で止める）
+      completeSalesOpen: env.COMPLETE_SALES_OPEN === 'true',
+      // 記録単位の権利 API（/api/my-entitlements の records）がある
+      completeApiReady: true,
     },
   };
 }

@@ -21,10 +21,10 @@ const { resolveAppEnv, requireServerEnv, requestHost, logEnvDenied } = require('
 const CE = require('../lib/complete-eligibility');
 const CP = require('../lib/complete-payment');
 const RJ = require('../lib/complete-report-job');
+const CA = require('../lib/complete-apply');
 
 const API = 'stripe-webhook';
 const MAX_BODY_BYTES = 512 * 1024;
-const ZERO_SHA = '0'.repeat(64);
 
 function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = () => Date.now(), waitUntil = RJ.defaultWaitUntil(), storageFactory = null }) {
   const stripeClients = new Map();
@@ -38,16 +38,17 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
 
   async function finish(conn, ev, status, code, orderId) {
     return CP.rpc(fetchImpl, conn, 'complete_webhook_finish', {
-      p_event_id: ev.id, p_event_type: ev.type, p_livemode: false, p_event_created: ev.createdAt,
+      p_event_id: ev.id, p_event_type: ev.type, p_livemode: CP.livemodeOf(conn), p_event_created: ev.createdAt,
       p_status: status, p_error_code: code, p_order_id: orderId || null,
     });
   }
 
   // Checkout Session を取り直し、完全解析の注文なら { session, orderId } を返す。違えば { notOurs } / { mismatch }。
-  async function sessionFor(stripe, sessionId, appEnv, expand) {
-    if (!CP.CHECKOUT_SESSION_RE.test(sessionId || '')) return { notOurs: true };
+  async function sessionFor(stripe, sessionId, conn, expand) {
+    const appEnv = conn.appEnv;
+    if (!CP.checkoutSessionIdOk(sessionId, conn.stripeMode)) return { notOurs: true };
     const session = await CP.stripeCall(() => stripe.checkout.sessions.retrieve(sessionId, expand ? { expand } : undefined));
-    if (!session || session.livemode !== false) return { mismatch: 'livemode_mismatch' };
+    if (!session || session.livemode !== CP.livemodeOf(conn)) return { mismatch: 'livemode_mismatch' };
     const meta = CP.checkoutMetadataOf(session, appEnv);
     if (!meta) return { notOurs: true };
     if (!meta.ok) return { mismatch: 'metadata_mismatch' };
@@ -55,63 +56,31 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
   }
 
   // PaymentIntent から完全解析の Checkout Session を探す（返金・dispute 用）
-  async function sessionForPaymentIntent(stripe, paymentIntentId, appEnv) {
+  async function sessionForPaymentIntent(stripe, paymentIntentId, conn) {
     if (!CP.PAYMENT_INTENT_RE.test(paymentIntentId || '')) return { notOurs: true };
     const list = await CP.stripeCall(() => stripe.checkout.sessions.list({ payment_intent: paymentIntentId, limit: 1 }));
     const s = list && Array.isArray(list.data) ? list.data[0] : null;
     if (!s) return { notOurs: true };
-    return sessionFor(stripe, s.id, appEnv);
+    return sessionFor(stripe, s.id, conn);
   }
 
   async function onCheckoutCompleted(conn, stripe, ev, obj) {
-    const found = await sessionFor(stripe, CP.idOf(obj), conn.appEnv, ['line_items']);
+    const found = await sessionFor(stripe, CP.idOf(obj), conn, ['line_items']);
     if (found.notOurs) return 'ignored:not_complete';
     if (found.mismatch) { await finish(conn, ev, 'ignored', found.mismatch); return `ignored:${found.mismatch}`; }
-    const { session, orderId } = found;
-    const orders = await CP.selectRows(fetchImpl, conn, `complete_orders?id=eq.${encodeURIComponent(orderId)}` +
-      '&select=id,offer,diagnosis_session_id,mentor_goal_catalog_version,mentor_goal_id');
-    const order = orders[0] || null;
-    let input = ZERO_SHA;
-    if (order) {
-      // 購入した Price が注文の offer の Price と一致すること（1行・数量1）
-      const items = session.line_items && Array.isArray(session.line_items.data) ? session.line_items.data : null;
-      const item = items && items.length === 1 ? items[0] : null;
-      const priceId = item && CP.idOf(item.price);
-      if (!item || item.quantity !== 1 || !priceId || priceId !== CP.priceIdFor(env, order.offer)) {
-        await finish(conn, ev, 'ignored', 'price_mismatch', order.id);
-        return 'ignored:price_mismatch';
-      }
-      const sid = encodeURIComponent(order.diagnosis_session_id);
-      const [sessions, answers, results] = await Promise.all([
-        CP.selectRows(fetchImpl, conn, `diagnosis_sessions?id=eq.${sid}&select=completed_at`),
-        CP.selectRows(fetchImpl, conn, `diagnosis_answers?session_id=eq.${sid}&select=encoded_answers`),
-        CP.selectRows(fetchImpl, conn, `diagnosis_results?session_id=eq.${sid}&select=diagnosis_version,item_set_version,scoring_version,` +
-          'translation_model_version,character_profile_version,mirror_model_version'),
-      ]);
-      const diagnosedDate = sessions[0] ? CP.jstDate(sessions[0].completed_at) : null;
-      if (!answers[0] || !results[0] || !diagnosedDate) throw new CP.PaymentError('record_data_missing', true);
-      input = CP.inputSha256({
-        encodedAnswers: answers[0].encoded_answers, result: results[0],
-        mentorGoalCatalogVersion: order.mentor_goal_catalog_version, mentorGoalId: order.mentor_goal_id, diagnosedDate,
-      });
-    }
-    const m = CP.MATERIALS;
-    return CP.rpc(fetchImpl, conn, 'complete_apply_payment', {
-      p_event_id: ev.id, p_event_created: ev.createdAt, p_livemode: false, p_order_id: orderId,
-      p_checkout_session_id: session.id, p_payment_intent_id: CP.idOf(session.payment_intent),
-      p_amount_total: session.amount_total, p_currency: session.currency, p_payment_status: session.payment_status,
-      p_content_version: m.contentVersion, p_template_version: m.templateVersion,
-      p_content_sha256: m.contentSha256, p_template_sha256: m.templateSha256, p_input_sha256: input,
+    // 解析レポート（¥1,000）・完全解析（¥3,000／¥2,000）の適用は、購入完了ページの問い合わせと同じ共通処理（lib/complete-apply.js）
+    return CA.applyPaidSession({
+      env, fetchImpl, conn, session: found.session, orderId: found.orderId, eventId: ev.id, eventCreatedIso: ev.createdAt,
     });
   }
 
   async function onCheckoutExpired(conn, stripe, ev, obj) {
-    const found = await sessionFor(stripe, CP.idOf(obj), conn.appEnv);
+    const found = await sessionFor(stripe, CP.idOf(obj), conn);
     if (found.notOurs) return 'ignored:not_complete';
     if (found.mismatch) { await finish(conn, ev, 'ignored', found.mismatch); return `ignored:${found.mismatch}`; }
     if (found.session.status !== 'expired') throw new CP.PaymentError('session_not_expired', true);
     return CP.rpc(fetchImpl, conn, 'complete_apply_checkout_expired', {
-      p_event_id: ev.id, p_event_created: ev.createdAt, p_livemode: false, p_order_id: found.orderId, p_checkout_session_id: found.session.id,
+      p_event_id: ev.id, p_event_created: ev.createdAt, p_livemode: CP.livemodeOf(conn), p_order_id: found.orderId, p_checkout_session_id: found.session.id,
     });
   }
 
@@ -124,12 +93,12 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
     const charge = await chargeOf(stripe, CP.idOf(obj));
     if (!charge) return 'ignored:not_complete';
     const pi = CP.idOf(charge.payment_intent);
-    const found = await sessionForPaymentIntent(stripe, pi, conn.appEnv);
+    const found = await sessionForPaymentIntent(stripe, pi, conn);
     if (found.notOurs) return 'ignored:not_complete';
-    const mismatch = found.mismatch || (charge.livemode !== false ? 'livemode_mismatch' : charge.currency !== 'jpy' ? 'currency_mismatch' : null);
+    const mismatch = found.mismatch || (charge.livemode !== CP.livemodeOf(conn) ? 'livemode_mismatch' : charge.currency !== 'jpy' ? 'currency_mismatch' : null);
     if (mismatch) { await finish(conn, ev, 'ignored', mismatch); return `ignored:${mismatch}`; }
     return CP.rpc(fetchImpl, conn, 'complete_apply_refund', {
-      p_event_id: ev.id, p_event_created: ev.createdAt, p_livemode: false, p_order_id: found.orderId,
+      p_event_id: ev.id, p_event_created: ev.createdAt, p_livemode: CP.livemodeOf(conn), p_order_id: found.orderId,
       p_payment_intent_id: pi, p_amount_refunded: Number.isInteger(charge.amount_refunded) ? charge.amount_refunded : null,
     });
   }
@@ -143,16 +112,16 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
       const charge = await chargeOf(stripe, CP.idOf(dispute && dispute.charge));
       pi = charge ? CP.idOf(charge.payment_intent) : null;
     }
-    const found = await sessionForPaymentIntent(stripe, pi, conn.appEnv);
+    const found = await sessionForPaymentIntent(stripe, pi, conn);
     if (found.notOurs) return 'ignored:not_complete';
     let action;
     if (ev.type === 'charge.dispute.created') action = 'opened';
     else if (dispute.status === 'won' || dispute.status === 'warning_closed') action = 'won';
     else if (dispute.status === 'lost') action = 'lost';
-    const mismatch = found.mismatch || (dispute.livemode !== false ? 'livemode_mismatch' : !action ? 'dispute_not_closed' : null);
+    const mismatch = found.mismatch || (dispute.livemode !== CP.livemodeOf(conn) ? 'livemode_mismatch' : !action ? 'dispute_not_closed' : null);
     if (mismatch) { await finish(conn, ev, 'ignored', mismatch); return `ignored:${mismatch}`; }
     return CP.rpc(fetchImpl, conn, 'complete_apply_dispute', {
-      p_event_id: ev.id, p_event_created: ev.createdAt, p_livemode: false, p_order_id: found.orderId,
+      p_event_id: ev.id, p_event_created: ev.createdAt, p_livemode: CP.livemodeOf(conn), p_order_id: found.orderId,
       p_payment_intent_id: pi, p_action: action,
     });
   }
@@ -171,15 +140,15 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
       res.setHeader('Allow', 'POST');
       return reply(res, 405, { error: 'method_not_allowed' });
     }
-    if (resolveAppEnv(env, { host: requestHost(req) }) !== 'preview') return reply(res, 404, { error: 'not_available' });
+    const appEnv0 = resolveAppEnv(env, { host: requestHost(req) });
+    if (appEnv0 !== 'preview' && appEnv0 !== 'production') return reply(res, 404, { error: 'not_available' });
     const guard = requireServerEnv(env, { host: requestHost(req), admin: true, stripe: true });
     if (!guard.ok) {
       const incident = logEnvDenied(API, guard, logger);
       return reply(res, 503, { error: 'service_unavailable', incident_id: incident });
     }
-    if (guard.appEnv !== 'preview' || guard.stripeMode !== 'test' || guard.projectRef !== env.SUPABASE_PREVIEW_PROJECT_REF) {
-      return reply(res, 404, { error: 'not_available' });
-    }
+    // Preview は Stripe Test・Preview の Supabase、Production は Stripe Live・本番の Supabase の組み合わせだけ
+    if (!CP.paymentEnvOk(guard, env)) return reply(res, 404, { error: 'not_available' });
     const secret = env.STRIPE_COMPLETE_WEBHOOK_SECRET;
     if (typeof secret !== 'string' || !secret.startsWith('whsec_')) {
       const incident = CE.incidentId();
@@ -209,7 +178,7 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
       return reply(res, 400, { error: 'invalid_request' });
     }
     // Live のイベントは Preview では扱わない（DB に書かない）
-    if (event.livemode !== false) {
+    if (event.livemode !== CP.livemodeOf(guard)) {
       const incident = CE.incidentId();
       CP.logError(logger, API, 'livemode_event', incident);
       return reply(res, 200, { received: true, result: 'ignored' });

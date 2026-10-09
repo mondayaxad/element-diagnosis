@@ -29,12 +29,14 @@ const ENV = {
   COMPLETE_CHECKOUT_ORIGIN: 'https://element-diagnosis-git-release-c-preview-nmkw0322-4497s-projects.vercel.app',
   STRIPE_COMPLETE_PRICE_DIRECT: 'price_test_direct3000',
   STRIPE_COMPLETE_PRICE_UPGRADE: 'price_test_upgrade2000',
+  STRIPE_PRICE_ANALYSIS: 'price_test_analysis1000',
   STRIPE_COMPLETE_WEBHOOK_SECRET: SECRET,
   COMPLETE_VIEW_TOKEN_SECRET: VIEW_SECRET,
 };
 const PRICES = {
   price_test_direct3000: { id: 'price_test_direct3000', active: true, livemode: false, currency: 'jpy', unit_amount: 3000, type: 'one_time' },
   price_test_upgrade2000: { id: 'price_test_upgrade2000', active: true, livemode: false, currency: 'jpy', unit_amount: 2000, type: 'one_time' },
+  price_test_analysis1000: { id: 'price_test_analysis1000', active: true, livemode: false, currency: 'jpy', unit_amount: 1000, type: 'one_time' },
 };
 const sha = (b) => crypto.createHash('sha256').update(b).digest('hex');
 
@@ -526,7 +528,7 @@ test('保存物が記録の SHA-256 と違う（改ざん・取り違え）な�
   await ctx.db.close();
 });
 
-test('設定不足・Production：閲覧の秘密値が無ければ 503、Production では発行も閲覧も 404', async () => {
+test('設定不足・環境不明：閲覧の秘密値が無ければ 503、環境不明では発行も閲覧も 404', async () => {
   const ctx = await setup({ env: { COMPLETE_VIEW_TOKEN_SECRET: undefined } });
   const p = await ctx.person();
   await paid(ctx, p);
@@ -540,7 +542,7 @@ test('設定不足・Production：閲覧の秘密値が無ければ 503、Produc
   await short.drain();
   assert.equal((await short.status(q, { method: 'POST' })).code, 503);
   assert.equal((await short.view('a'.repeat(80))).code, 503);
-  for (const env of [{ ...PROD_ENV, COMPLETE_VIEW_TOKEN_SECRET: VIEW_SECRET }, { ...ENV, VERCEL_ENV: undefined }]) {
+  for (const env of [{ ...ENV, VERCEL_ENV: 'development' }, { ...ENV, VERCEL_ENV: undefined }]) {
     const calls = [];
     const h = Status.createHandler({ env, fetchImpl: async (u) => { calls.push(u); throw new Error('no network'); }, logger: makeLogger(), waitUntil: () => {} });
     for (const req of [{ method: 'POST', headers: { authorization: 'Bearer x' }, body: { diagnosisSessionId: p.sessionId } }, { method: 'GET', headers: {}, query: { view: 'a'.repeat(80) } }]) {

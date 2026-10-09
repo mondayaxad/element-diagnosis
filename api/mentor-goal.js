@@ -155,8 +155,9 @@ function createHandler({ env, fetchImpl, logger = console }) {
       res.setHeader('Allow', 'GET, POST');
       return fail(res, 405, 'method_not_allowed');
     }
-    // Production（と環境不明）では存在しない扱い。Supabase へは接続しない。
-    if (resolveAppEnv(env, { host: requestHost(req) }) !== 'preview') {
+    // 環境不明では存在しない扱い。Supabase へは接続しない（Preview・Production だけ）。
+    const appEnv0 = resolveAppEnv(env, { host: requestHost(req) });
+    if (appEnv0 !== 'preview' && appEnv0 !== 'production') {
       return fail(res, 404, 'not_available');
     }
     const guard = requireServerEnv(env, { host: requestHost(req), admin: true, user: true });
@@ -164,7 +165,8 @@ function createHandler({ env, fetchImpl, logger = console }) {
       const incident = logEnvDenied('mentor-goal', guard, logger);
       return res.status(503).json({ error: 'service_unavailable', incident_id: incident });
     }
-    if (guard.appEnv !== 'preview' || !env.SUPABASE_PREVIEW_PROJECT_REF || guard.projectRef !== env.SUPABASE_PREVIEW_PROJECT_REF) {
+    const expectedRef = guard.appEnv === 'production' ? env.SUPABASE_PRODUCTION_PROJECT_REF : guard.appEnv === 'preview' ? env.SUPABASE_PREVIEW_PROJECT_REF : null;
+    if (!expectedRef || guard.projectRef !== expectedRef) {
       return fail(res, 404, 'not_available');
     }
 

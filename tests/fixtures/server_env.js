@@ -42,12 +42,14 @@ const PREVIEW_ENV = {
 };
 
 // ブラウザテスト用：/api/public-config?format=js の応答（Preview 設定）
-function previewPublicConfigJs() {
+// extra：{ completeSalesOpen: true } など（販売中の画面を試す時）
+function previewPublicConfigJs(extra = {}) {
   return `window.__ED_PUBLIC_CONFIG__ = Object.freeze(${JSON.stringify({
     appEnv: 'preview',
     supabaseUrl: PREVIEW_ENV.SUPABASE_URL,
     supabaseAnonKey: PREVIEW_ENV.SUPABASE_ANON_KEY,
     projectRef: PREVIEW_REF,
+    ...extra,
   })});`;
 }
 

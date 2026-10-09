@@ -77,13 +77,16 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
   }
 
   async function guardFor(req, opts) {
-    if (resolveAppEnv(env, { host: requestHost(req) }) !== 'preview') return { status: 404, body: { error: 'not_available' } };
+    const appEnv0 = resolveAppEnv(env, { host: requestHost(req) });
+    if (appEnv0 !== 'preview' && appEnv0 !== 'production') return { status: 404, body: { error: 'not_available' } };
     const guard = requireServerEnv(env, { host: requestHost(req), admin: true, ...opts });
     if (!guard.ok) {
       const incident = logEnvDenied(API, guard, logger);
       return { status: 503, body: { error: 'service_unavailable', incident_id: incident } };
     }
-    if (guard.appEnv !== 'preview' || guard.projectRef !== env.SUPABASE_PREVIEW_PROJECT_REF) return { status: 404, body: { error: 'not_available' } };
+    // Preview は Preview の Supabase、Production は本番の Supabase だけ（Ref の取り違えは存在しない扱い）
+    const expectedRef = guard.appEnv === 'production' ? env.SUPABASE_PRODUCTION_PROJECT_REF : guard.appEnv === 'preview' ? env.SUPABASE_PREVIEW_PROJECT_REF : null;
+    if (!expectedRef || guard.projectRef !== expectedRef) return { status: 404, body: { error: 'not_available' } };
     return { guard };
   }
 

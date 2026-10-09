@@ -11,7 +11,7 @@ const SRC_PATH = path.join(__dirname, '..', 'api', 'public-config.js');
 const { createHandler } = require(SRC_PATH);
 const { PROD_REF, PREVIEW_REF, PROD_ENV, PREVIEW_ENV, fakeJwt } = require('./fixtures/server_env');
 
-const ALLOWED_KEYS = ['appEnv', 'projectRef', 'supabaseAnonKey', 'supabaseUrl'];
+const ALLOWED_KEYS = ['appEnv', 'completeApiReady', 'completeSalesOpen', 'projectRef', 'supabaseAnonKey', 'supabaseUrl'];
 
 function call(env, { url = '/api/public-config', method = 'GET', host = 'element-diagnosis.example.test', query } = {}) {
   const res = {
@@ -45,7 +45,11 @@ test('Production：本番の URL・公開キー・環境名・Ref の4項目だ�
   assert.deepEqual(body, {
     appEnv: 'production', supabaseUrl: `https://${PROD_REF}.supabase.co`,
     supabaseAnonKey: PROD_ENV.SUPABASE_ANON_KEY, projectRef: PROD_REF,
+    completeSalesOpen: false, completeApiReady: true,
   });
+  // 販売フラグは COMPLETE_SALES_OPEN が文字列 'true' の時だけ true（秘密値ではない）
+  assert.equal(JSON.parse(call({ ...PROD_ENV, COMPLETE_SALES_OPEN: 'true' }).body).completeSalesOpen, true);
+  assert.equal(JSON.parse(call({ ...PROD_ENV, COMPLETE_SALES_OPEN: 'TRUE' }).body).completeSalesOpen, false);
 });
 
 test('Preview：Preview の4項目。環境変数にある秘密値はどれも応答に含めない', () => {

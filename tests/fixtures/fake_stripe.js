@@ -54,6 +54,13 @@ function fakeStripe({ prices = {} } = {}) {
           if (!(opts && Array.isArray(opts.expand) && opts.expand.includes('line_items'))) delete out.line_items;
           return out;
         }),
+        expire: async (id) => call('checkout.sessions.expire', () => {
+          const s = st.sessions[id];
+          if (!s) throw missing();
+          if (s.status !== 'open') throw stripeError('StripeInvalidRequestError', 400, 'checkout_session_not_open');
+          s.status = 'expired';
+          return clone(s);
+        }),
         list: async (q) => call('checkout.sessions.list', () => ({
           data: Object.values(st.sessions).filter((s) => s.payment_intent === q.payment_intent).slice(0, q.limit || 10).map(clone),
         })),

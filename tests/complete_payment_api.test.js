@@ -27,11 +27,14 @@ const SALES_ENV = {
   COMPLETE_CHECKOUT_ORIGIN: ORIGIN,
   STRIPE_COMPLETE_PRICE_DIRECT: 'price_test_direct3000',
   STRIPE_COMPLETE_PRICE_UPGRADE: 'price_test_upgrade2000',
+  STRIPE_PRICE_ANALYSIS: 'price_test_analysis1000',
   STRIPE_COMPLETE_WEBHOOK_SECRET: SECRET,
+  COMPLETE_VIEW_TOKEN_SECRET: 'x'.repeat(43),
 };
 const PRICES = {
   price_test_direct3000: { id: 'price_test_direct3000', active: true, livemode: false, currency: 'jpy', unit_amount: 3000, type: 'one_time' },
   price_test_upgrade2000: { id: 'price_test_upgrade2000', active: true, livemode: false, currency: 'jpy', unit_amount: 2000, type: 'one_time' },
+  price_test_analysis1000: { id: 'price_test_analysis1000', active: true, livemode: false, currency: 'jpy', unit_amount: 1000, type: 'one_time' },
 };
 
 function makeRes() {
@@ -227,8 +230,27 @@ test('Stripe の例外の分類：通信・5xx・429・処理中の冪等キー�
 });
 
 // ================= 環境・販売の開始
-test('Production・環境不明では Checkout・Webhook・状態確認は 404（外部へ接続しない）', async () => {
-  for (const env of [{ ...PROD_ENV, COMPLETE_SALES_OPEN: 'true', STRIPE_COMPLETE_WEBHOOK_SECRET: SECRET }, { ...SALES_ENV, VERCEL_ENV: undefined }, { ...SALES_ENV, VERCEL_ENV: 'development' }]) {
+test('Production（販売停止中）は Checkout が 503 sales_closed・ゲストの Checkout も 503（外部へ接続しない）', async () => {
+  const env = { ...PROD_ENV, STRIPE_COMPLETE_WEBHOOK_SECRET: SECRET };
+  const calls = [];
+  const stripe = fakeStripe({ prices: PRICES });
+  const deps = { env, fetchImpl: async (u) => { calls.push(u); throw new Error('no network'); }, stripeFactory: stripe.factory, logger: makeLogger() };
+  for (const req of [
+    { method: 'POST', headers: { authorization: 'Bearer x' }, body: { diagnosisSessionId: '11111111-1111-4111-8111-111111111111' } },
+    { method: 'POST', headers: {}, query: { op: 'guest-checkout' }, body: { offer: 'analysis', code: 'abcdefgh12' } },
+  ]) {
+    const res = makeRes();
+    await Checkout.createHandler(deps)(req, res);
+    assert.equal(res.code, 503);
+    assert.deepEqual(res.body, { error: 'sales_closed' });
+  }
+  assert.deepEqual(calls, []);
+  assert.deepEqual(stripe.st.calls, []);
+});
+
+test('Production の Ref・Stripe モードの取り違えと環境不明では Checkout・Webhook・状態確認は 404（外部へ接続しない）', async () => {
+  for (const env of [{ ...PROD_ENV, COMPLETE_SALES_OPEN: 'true', STRIPE_COMPLETE_WEBHOOK_SECRET: SECRET, SUPABASE_PRODUCTION_PROJECT_REF: undefined },
+    { ...SALES_ENV, VERCEL_ENV: undefined }, { ...SALES_ENV, VERCEL_ENV: 'development' }]) {
     const calls = [];
     const stripe = fakeStripe({ prices: PRICES });
     const deps = { env, fetchImpl: async (u) => { calls.push(u); throw new Error('no network'); }, stripeFactory: stripe.factory, logger: makeLogger() };
@@ -239,8 +261,14 @@ test('Production・環境不明では Checkout・Webhook・状態確認は 404�
     ]) {
       const res = makeRes();
       await h(req, res);
-      assert.equal(res.code, 404, `${env.VERCEL_ENV}`);
-      assert.deepEqual(res.body, { error: 'not_available' });
+      // 環境不明は 404、Production の設定の取り違えは環境ガードが 503（どちらも外部へ接続しない・fail-closed）
+      if (env.VERCEL_ENV === 'production') {
+        assert.equal(res.code, 503, `${env.VERCEL_ENV}`);
+        assert.equal(res.body.error, 'service_unavailable');
+      } else {
+        assert.equal(res.code, 404, `${env.VERCEL_ENV}`);
+        assert.deepEqual(res.body, { error: 'not_available' });
+      }
     }
     assert.deepEqual(calls, []);
     assert.deepEqual(stripe.st.calls, []);

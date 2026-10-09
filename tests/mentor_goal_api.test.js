@@ -98,15 +98,14 @@ const post = (fake, body, extra = {}, headers) => call({ fetchImpl: fake.fetchIm
   { method: 'POST', body, headers: headers || { host: 'x.vercel.app', authorization: 'Bearer good-token' } });
 
 // ---- 環境・入力 ----
-test('Production では 404 not_available（Supabase へ接続しない）', async () => {
+test('Production：本番の Supabase だけを使う（Preview の Supabase へ接続しない）', async () => {
   const f = fakeDb();
-  const { res } = await get(f, S1, { env: PROD_ENV });
-  assert.equal(res.code, 404);
-  assert.deepEqual(res.body, { error: 'not_available' });
-  assert.equal(f.calls.length, 0);
-  const p = await post(f, { diagnosisSessionId: S1, goalId: 'GOAL_PACE_01' }, { env: PROD_ENV });
-  assert.equal(p.res.code, 404);
-  assert.equal(f.calls.length, 0);
+  const urls = [];
+  const fetchImpl = async (url, opts) => { urls.push(url); return f.fetchImpl(url.replace(PROD_ENV.SUPABASE_URL, PREVIEW_ENV.SUPABASE_URL), opts); };
+  const res = makeRes();
+  await mentorGoal.createHandler({ env: PROD_ENV, fetchImpl, logger: { error() {} } })({ method: 'GET', headers: { host: 'x', authorization: 'Bearer good-token' }, query: { diagnosisSessionId: S1 } }, res);
+  assert.equal(res.code, 200);
+  assert.ok(urls.length > 0 && urls.every((u) => u.startsWith(PROD_ENV.SUPABASE_URL + '/')));
 });
 
 test('環境不明（VERCEL_ENV なし）も 404・Preview の設定不足は 503', async () => {
@@ -347,6 +346,20 @@ test('my-entitlements v2（Preview）：記録ごとの完全解析の状態', a
   assert.equal((await entitlements(f)).body.records[S1].analysisSource, 'record_entitlement');
 });
 
+test('my-entitlements v2：記録単位の解析権（¥1,000・¥3,000・引き継いだゲスト購入）だけでも「解析レポート購入済み」', async () => {
+  const S7 = '77777777-7777-4777-8777-777777777777';
+  const f = fakeDb();
+  f.db.diagnosis_sessions.push({ id: S7, user_id: U1, diagnosis_version: 'ETI-2.0', diagnosis_results: [{ ...RC1 }], diagnosis_answers: [{ encoded_answers: 'CODE7' }] });
+  f.db.record_entitlements = [{ user_id: U1, diagnosis_session_id: S7, right_type: 'analysis', status: 'active' }];
+  const res = await entitlements(f);
+  assert.equal(res.code, 200);
+  assert.equal(res.body.purchased_by_version['ETI-2.0:CODE7'], true);
+  assert.equal(res.body.records[S7].analysisSource, 'record_entitlement');
+  // 失効（返金）した解析権は数えない
+  f.db.record_entitlements[0].status = 'revoked';
+  assert.equal((await entitlements(f)).body.purchased_by_version['ETI-2.0:CODE7'], undefined);
+});
+
 test('my-entitlements v2：完全解析の読み取りに失敗しても ¥1,000 の購入状態は返す', async () => {
   const f = fakeDb({ failTables: ['record_entitlements'] });
   f.db.purchase_entitlements = [{ id: '9e000000-0000-4000-8000-000000000001', diagnosis_code_hash: sha('v2_CODE1'), status: 'active', product_type: 'core1' }];
@@ -355,7 +368,7 @@ test('my-entitlements v2：完全解析の読み取りに失敗しても ¥1,000
   assert.deepEqual(res.body, { purchased_by_version: { 'ETI-2.0:CODE1': true }, completeLookup: 'failed' });
 });
 
-test('my-entitlements v2：Production は従来どおり（完全解析の表を読まず、項目を足さない）', async () => {
+test('my-entitlements v2：Production も記録ごとの状態を返す（購入済みの判定は従来どおり・本番の Supabase だけ）', async () => {
   const f = fakeDb();
   f.db.purchase_entitlements = [{ id: '9e000000-0000-4000-8000-000000000001', diagnosis_code_hash: sha('v2_CODE1'), status: 'active', product_type: 'core1' }];
   const env = { ...PROD_ENV };
@@ -363,8 +376,6 @@ test('my-entitlements v2：Production は従来どおり（完全解析の表を
   const fetchImpl = async (url, opts) => f.fetchImpl(url.replace(PROD_ENV.SUPABASE_URL, PREVIEW_ENV.SUPABASE_URL), opts);
   await myEntitlements.createHandler({ env, fetchImpl })({ method: 'GET', headers: { host: 'x', authorization: 'Bearer good-token' } }, res);
   assert.equal(res.code, 200);
-  assert.deepEqual(res.body, { purchased_by_version: { 'ETI-2.0:CODE1': true } });
-  for (const t of ['record_entitlements', 'record_mentor_goals', 'complete_orders', 'complete_reports', 'complete_legacy_bindings']) {
-    assert.ok(!f.calls.some((c) => c.url.includes(`/rest/v1/${t}`)), t);
-  }
+  assert.deepEqual(res.body.purchased_by_version, { 'ETI-2.0:CODE1': true });
+  assert.ok(['ok', 'failed'].includes(res.body.completeLookup));
 });

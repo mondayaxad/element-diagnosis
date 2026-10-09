@@ -23,9 +23,17 @@
 const { resolveAppEnv, requireServerEnv, requestHost, logEnvDenied } = require('../lib/server-env');
 const CE = require('../lib/complete-eligibility');
 const CP = require('../lib/complete-payment');
+const GP = require('../lib/guest-purchase');
 
 const MAX_BODY_BYTES = 512;
 const API = 'complete-checkout';
+
+function queryOp(req) {
+  const q = req.query && typeof req.query.op === 'string' ? req.query.op : (() => {
+    try { return new URL(req.url || '/', 'http://x').searchParams.get('op'); } catch { return null; }
+  })();
+  return typeof q === 'string' && /^[a-z-]{3,32}$/.test(q) ? q : null;
+}
 
 function parseBody(req) {
   const raw = req.body;
@@ -42,8 +50,10 @@ function parseBody(req) {
   if (Buffer.byteLength(text, 'utf8') > MAX_BODY_BYTES) return { ok: false, tooLarge: true };
   if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return { ok: false };
   const keys = Object.keys(obj);
-  if (keys.length !== 1 || keys[0] !== 'diagnosisSessionId' || !CE.isUuid(obj.diagnosisSessionId)) return { ok: false };
-  return { ok: true, sessionId: obj.diagnosisSessionId };
+  // product：'analysis'（解析レポート ¥1,000）だけを受け付ける。省略時は完全解析（offer はサーバーが決める）
+  if (!keys.includes('diagnosisSessionId') || keys.some((k) => k !== 'diagnosisSessionId' && k !== 'product')
+      || !CE.isUuid(obj.diagnosisSessionId) || (keys.includes('product') && obj.product !== 'analysis')) return { ok: false };
+  return { ok: true, sessionId: obj.diagnosisSessionId, product: obj.product || 'complete' };
 }
 
 // DB の例外 → 応答
@@ -59,14 +69,19 @@ const ORDER_ERRORS = {
   complete_upgrade_requires_analysis: [409, 'legacy_purchase_verification_required'],
   complete_direct_not_allowed_after_analysis: [409, 'offer_changed'],
   complete_idempotency_conflict: [409, 'offer_changed'],
+  complete_analysis_already_purchased: [409, 'analysis_already_purchased'],
 };
 
-function createHandler({ env, fetchImpl, stripeFactory, logger = console }) {
+function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUntil, storageFactory = null, now }) {
   const stripeClients = new Map();
   function stripeFor(key) {
     if (!stripeClients.has(key)) stripeClients.set(key, stripeFactory(key));
     return stripeClients.get(key);
   }
+  const guestHandler = GP.createGuestHandler({
+    env, fetchImpl, stripeFor: () => stripeFor(env.STRIPE_SECRET_KEY), logger, storageFactory,
+    ...(waitUntil !== undefined ? { waitUntil } : {}), ...(now ? { now } : {}),
+  });
   function fail(res, status, code) {
     return res.status(status).json({ error: code });
   }
@@ -107,6 +122,7 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console }) {
     const boundHere = new Set(bindings.map((b) => b.legacy_entitlement_id));
     const goal = goals[0] || null;
     return {
+      diagnosisVersion: sessions[0].diagnosis_version,
       eligibility: CE.eligibilityOf(sessions[0].diagnosis_version, results[0] || null),
       onboardingCompleted: CE.isOnboardingComplete(profiles[0] && profiles[0].onboarding_status),
       goalSelected: !!(goal && CE.isMentorGoalId(goal.goal_id) && goal.goal_catalog_version === CE.MENTOR_CATALOG_VERSION),
@@ -125,7 +141,7 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console }) {
     if (!authEmail) return { bound: false, reason: 'auth_email_missing' };
     let reason = 'email_mismatch';
     for (const c of candidates) {
-      if (typeof c.stripe_checkout_session_id !== 'string' || !CP.CHECKOUT_SESSION_RE.test(c.stripe_checkout_session_id)) {
+      if (!CP.checkoutSessionIdOk(c.stripe_checkout_session_id, conn.stripeMode)) {
         reason = 'stripe_session_unavailable';
         continue;
       }
@@ -137,7 +153,7 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console }) {
         reason = 'stripe_session_unavailable';
         continue;
       }
-      if (!legacySession || legacySession.livemode !== false || legacySession.payment_status !== 'paid') {
+      if (!legacySession || legacySession.livemode !== CP.livemodeOf(conn) || legacySession.payment_status !== 'paid') {
         reason = 'purchase_not_eligible';
         continue;
       }
@@ -163,19 +179,21 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console }) {
       res.setHeader('Allow', 'POST');
       return fail(res, 405, 'method_not_allowed');
     }
-    // 1. 環境：Production（と環境不明）では存在しない扱い。外部へは接続しない。
-    if (resolveAppEnv(env, { host: requestHost(req) }) !== 'preview') return fail(res, 404, 'not_available');
+    // 1. 環境：Preview（Stripe Test）と Production（Stripe Live）の正しい組み合わせだけ。環境不明では存在しない扱い。
+    const appEnv0 = resolveAppEnv(env, { host: requestHost(req) });
+    if (appEnv0 !== 'preview' && appEnv0 !== 'production') return fail(res, 404, 'not_available');
     const guard = requireServerEnv(env, { host: requestHost(req), admin: true, user: true, stripe: true });
     if (!guard.ok) {
       const incident = logEnvDenied(API, guard, logger);
       return res.status(503).json({ error: 'service_unavailable', incident_id: incident });
     }
-    if (guard.appEnv !== 'preview' || guard.stripeMode !== 'test' || guard.projectRef !== env.SUPABASE_PREVIEW_PROJECT_REF) {
-      return fail(res, 404, 'not_available');
-    }
+    if (!CP.paymentEnvOk(guard, env)) return fail(res, 404, 'not_available');
+    // ゲスト購入・購入完了ページ・引き継ぎ（lib/guest-purchase.js）
+    const op = queryOp(req);
+    if (op) return guestHandler(op, req, res, guard);
     if (!CP.salesOpen(env)) return fail(res, 503, 'sales_closed');
-    const urls = CP.checkoutReturnUrls(env);
-    if (!urls || !CP.priceIdFor(env, 'direct_complete') || !CP.priceIdFor(env, 'analysis_upgrade')) {
+    const urls = CP.checkoutReturnUrls(env, guard.appEnv, 'user');
+    if (!urls || !CP.priceIdFor(env, 'direct_complete') || !CP.priceIdFor(env, 'analysis_upgrade') || !CP.priceIdFor(env, 'analysis')) {
       return failLogged(res, 503, 'service_unavailable', 'checkout_config_missing');
     }
 
@@ -201,13 +219,21 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console }) {
       const state = await loadState(guard, user.id, sessionId);
       if (!state) return fail(res, 404, 'record_not_found');
       if (!state.onboardingCompleted) return fail(res, 403, 'onboarding_required');
-      if (!state.eligibility.eligible) return fail(res, 422, 'not_eligible');
-      if (!state.goalSelected) return fail(res, 409, 'mentor_goal_required');
-      if (state.repurchaseBlocked) return fail(res, 409, 'repurchase_not_allowed');
 
       // 5. offer をサーバーが決める
       let offer = 'direct_complete';
-      if (state.hasAnalysis) {
+      if (parsed.product === 'analysis') {
+        // 解析レポート ¥1,000（ETI v2 の記録・未購入の時だけ。旧 ¥1,000・記録単位の解析権があれば DB が断る）
+        if (state.diagnosisVersion !== 'ETI-2.0') return fail(res, 422, 'not_eligible');
+        if (state.hasAnalysis || state.legacyCandidates.length) return fail(res, 409, 'analysis_already_purchased');
+        offer = 'analysis';
+      } else if (!state.eligibility.eligible) {
+        return fail(res, 422, 'not_eligible');
+      } else if (!state.goalSelected) {
+        return fail(res, 409, 'mentor_goal_required');
+      } else if (state.repurchaseBlocked) {
+        return fail(res, 409, 'repurchase_not_allowed');
+      } else if (state.hasAnalysis) {
         offer = 'analysis_upgrade';
       } else if (state.legacyCandidates.length) {
         const r = await tryBindLegacy(guard, stripe, user, sessionId, state.legacyCandidates);
@@ -219,29 +245,37 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console }) {
         offer = 'analysis_upgrade';
       }
 
-      // 6. 注文（決済待ちの注文があればそれを返す）
-      const rows = await CP.rpc(fetchImpl, guard, 'complete_create_order', {
-        p_user_id: user.id, p_diagnosis_session_id: sessionId, p_offer: offer,
-        p_idempotency_key: CP.orderIdempotencyKey(user.id, sessionId, offer, state.attempt),
-      });
-      const order = Array.isArray(rows) ? rows[0] : null;
-      if (!order || !CE.isUuid(order.order_id) || !CP.OFFER_AMOUNTS[order.offer]) return failLogged(res, 500, 'checkout_failed', 'order_invalid');
-      const amount = CP.OFFER_AMOUNTS[order.offer];
-
-      if (order.order_status === 'checkout_open') {
-        if (!order.checkout_session_id) return failLogged(res, 500, 'checkout_failed', 'order_session_missing');
-        const open = await CP.stripeCall(() => stripe.checkout.sessions.retrieve(order.checkout_session_id));
-        if (open && open.status === 'open' && CP.isStripeCheckoutUrl(open.url)) {
-          return res.status(200).json({ checkoutUrl: open.url, offer: order.offer, amount });
+      // 6. 注文（決済待ちの注文があればそれを返す）。offer が違う・Stripe の画面が閉じている決済待ちは、
+      //    Stripe の Session を閉じてから片付け、1回だけ作り直す（別の価格の画面を返さない）。
+      let order = null;
+      for (let attempt = state.attempt; attempt <= state.attempt + 1; attempt++) {
+        const rows = await CP.rpc(fetchImpl, guard, 'complete_create_order', {
+          p_user_id: user.id, p_diagnosis_session_id: sessionId, p_offer: offer,
+          p_idempotency_key: CP.orderIdempotencyKey(user.id, sessionId, offer, attempt),
+        });
+        order = Array.isArray(rows) ? rows[0] : null;
+        if (!order || !CE.isUuid(order.order_id) || !CP.OFFER_AMOUNTS[order.offer]) return failLogged(res, 500, 'checkout_failed', 'order_invalid');
+        if (order.order_status !== 'checkout_open' && !(order.order_status === 'created' && order.offer !== offer)) break;
+        let open = null;
+        if (order.order_status === 'checkout_open') {
+          if (!order.checkout_session_id) return failLogged(res, 500, 'checkout_failed', 'order_session_missing');
+          open = await CP.stripeCall(() => stripe.checkout.sessions.retrieve(order.checkout_session_id));
+          if (open && open.status === 'open' && order.offer === offer && CP.isStripeCheckoutUrl(open.url)) {
+            return res.status(200).json({ checkoutUrl: open.url, offer: order.offer, amount: CP.OFFER_AMOUNTS[order.offer] });
+          }
+          if (!open || open.status === 'complete') return fail(res, 409, 'checkout_in_progress');
+          if (open.status === 'open') await CP.stripeCall(() => stripe.checkout.sessions.expire(order.checkout_session_id));
         }
-        return fail(res, 409, 'checkout_in_progress');
+        if (attempt > state.attempt) return fail(res, 409, 'checkout_in_progress');
+        await CP.rpc(fetchImpl, guard, 'complete_cancel_open_order', { p_order_id: order.order_id, p_checkout_session_id: order.checkout_session_id || null });
       }
+      const amount = CP.OFFER_AMOUNTS[order.offer];
       if (order.order_status !== 'created') return failLogged(res, 500, 'checkout_failed', 'order_status_unexpected');
 
       // 7. Price を Stripe から取得して照合
       const priceId = CP.priceIdFor(env, order.offer);
       const price = await CP.stripeCall(() => stripe.prices.retrieve(priceId));
-      const priceProblem = CP.priceProblem(price, order.offer);
+      const priceProblem = CP.priceProblem(price, order.offer, guard.stripeMode);
       if (priceProblem) {
         await CP.rpc(fetchImpl, guard, 'complete_close_unopened_order', { p_order_id: order.order_id, p_status: 'canceled', p_failure_code: 'price_invalid' });
         return failLogged(res, 503, 'service_unavailable', priceProblem);
@@ -266,7 +300,7 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console }) {
         throw err;
       }
       const meta = CP.checkoutMetadataOf(session, guard.appEnv);
-      if (!session || !CP.CHECKOUT_SESSION_RE.test(session.id || '') || session.livemode !== false || !meta || !meta.ok
+      if (!session || !CP.checkoutSessionIdOk(session.id, guard.stripeMode) || session.livemode !== CP.livemodeOf(guard) || !meta || !meta.ok
           || meta.orderId !== order.order_id || !CP.isStripeCheckoutUrl(session.url)
           || !Number.isInteger(session.expires_at)) {
         return failLogged(res, 500, 'checkout_failed', 'checkout_session_invalid');

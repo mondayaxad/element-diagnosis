@@ -90,6 +90,19 @@ function createHandler({ env, fetchImpl }) {
     return rows.find((row) => CORE1_PRODUCT_TYPES.has(row.product_type)) || null;
   }
 
+  // 記録単位の解析権（complete_07：¥1,000・¥3,000・引き継いだゲスト購入）。表が無い環境（migration 適用前）では false。
+  async function hasRecordAnalysis(conn, userId, diagnosisSessionId) {
+    const url =
+      `${conn.supabaseUrl}/rest/v1/record_entitlements` +
+      `?diagnosis_session_id=eq.${encodeURIComponent(diagnosisSessionId)}` +
+      `&user_id=eq.${encodeURIComponent(userId)}&right_type=eq.analysis&status=eq.active&select=id`;
+    const res = await fetchImpl(url, { headers: conn.adminHeaders() });
+    if (res.status === 404) return false;
+    if (!res.ok) throw new Error(`record_entitlements lookup failed: ${res.status}`);
+    const rows = await res.json();
+    return Array.isArray(rows) && rows.length > 0;
+  }
+
   return async function handler(req, res) {
     // 環境ガード：Supabase へ接続する前に、環境・接続先・署名鍵を確かめる。
     const guard = requireServerEnv(env, { host: requestHost(req), admin: true, user: true, reportSecret: true });
@@ -144,7 +157,8 @@ function createHandler({ env, fetchImpl }) {
 
       const diagnosisVersion = session.diagnosis_version === 'ETI-2.0' ? 'ETI-2.0' : 'element-v1';
       const reference = diagnosisVersion === 'ETI-2.0' ? `v2_${code}` : code;
-      const entitlement = await fetchActiveCore1Entitlement(guard, hashDiagnosisCode(reference));
+      const entitlement = await fetchActiveCore1Entitlement(guard, hashDiagnosisCode(reference))
+        || (diagnosisVersion === 'ETI-2.0' && await hasRecordAnalysis(guard, userId, diagnosisSessionId));
       if (!entitlement) {
         res.status(403).json({ error: 'report_not_purchased' });
         return;

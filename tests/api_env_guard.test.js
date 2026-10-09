@@ -281,7 +281,7 @@ test('my-entitlements Production：本番の Supabase だけを使う', silenced
   await myEntitlements.createHandler({ env: PROD_ENV, fetchImpl: sb.fetchImpl })(
     { method: 'GET', headers: { authorization: 'Bearer good-token' } }, res);
   assert.equal(res.code, 200);
-  assert.deepEqual(res.body, { purchased_by_version: { 'ETI-2.0:ABCDEF': true } });
+  assert.deepEqual(res.body.purchased_by_version, { 'ETI-2.0:ABCDEF': true });
   assert.ok(sb.calls.every((c) => c.url.startsWith(PROD_ENV.SUPABASE_URL + '/')));
 }));
 
