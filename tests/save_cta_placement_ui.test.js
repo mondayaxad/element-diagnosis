@@ -468,18 +468,18 @@ test('マイページ：購入状態APIが失敗してもアコーディオン�
   assert.equal(await p.locator('#mpUpgradeTrigger').innerText(), '状態を確認');
   for (const i of [0, 1]) {
     const d = p.locator(`#mp-rec-${i}`);
-    await d.locator('summary').click();
+    await d.locator(':scope > summary').click();
     assert.equal(await d.evaluate((e) => e.open), true, 'open ' + i);
     assert.match(await d.innerText(), /この記録の購入状態を確認できませんでした/);
     assert.equal(await d.locator('.mp-notice button').innerText(), 'もう一度確認する');
     assert.equal(await d.locator('a[href*="buy.stripe"], button.is-pending, [data-session-id]').count(), 0, '購入・閲覧ボタンを出さない');
-    await d.locator('summary').click();
+    await d.locator(':scope > summary').click();
     assert.equal(await d.evaluate((e) => e.open), false, 'close ' + i);
   }
   // 再確認：API が回復すれば購入導線が戻る
   await p.unroute('**/api/my-entitlements');
   await p.route('**/api/my-entitlements', (r) => r.fulfill({ contentType: 'application/json', body: '{"purchased_by_version":{}}' }));
-  await p.locator('#mp-rec-0 summary').click();
+  await p.locator('#mp-rec-0 > summary').click();
   await p.locator('#mp-rec-0 .mp-notice button').click();
   await p.waitForSelector('#mp-rec-0 .mp-rec-actions', { state: 'attached' });
   assert.equal(await p.locator('#mpUpgradeTrigger').innerText(), 'アップグレード');
@@ -491,13 +491,13 @@ test('マイページ：記録内CTA（無料のみ／解析購入済み）と�
   // B＝解析レポート購入済み、A＝無料のみ
   const p = await mypage({ supa: { rows: [RB.row, RA.row] }, entitlements: purchasedFor(RB.code) });
   // A（無料のみ）
-  await p.locator('#mp-rec-1 summary').click();
+  await p.locator('#mp-rec-1 > summary').click();
   const a = p.locator('#mp-rec-1 .mp-rec-actions');
   const aBtns = await a.locator('a, button').allInnerTexts();
   assert.deepEqual(aBtns.map((t) => t.trim()), ['解析レポート　¥1,000', '完全解析 ¥3,000（準備中）']);
   assert.match(await a.locator('a').getAttribute('href'), /buy\.stripe\.com\/test_.*client_reference_id=v2_/);
   // B（解析レポート購入済み）
-  await p.locator('#mp-rec-0 summary').click();
+  await p.locator('#mp-rec-0 > summary').click();
   const b = p.locator('#mp-rec-0 .mp-rec-actions');
   assert.deepEqual((await b.locator('a, button').allInnerTexts()).map((t) => t.trim()), ['解析レポートを見る', '完全解析へアップグレード ¥2,000（準備中）']);
   // 準備中ボタン：button・disabled・href なし。強制クリックしても外部遷移・決済イベントなし
@@ -520,7 +520,7 @@ test('マイページ：記録内CTA（無料のみ／解析購入済み）と�
 
 test('マイページ：完全解析購入済みの記録は「解析レポートを見る」「完全解析を見る」', { skip: skip() }, async () => {
   const p = await mypage({ url: '/mypage.html?preview_entitlement=complete-ready', supa: { rows: [RB.row] } });
-  await p.locator('#mp-rec-0 summary').click();
+  await p.locator('#mp-rec-0 > summary').click();
   assert.deepEqual((await p.locator('#mp-rec-0 .mp-rec-actions button').allInnerTexts()).map((t) => t.trim()), ['解析レポートを見る', '完全解析を見る']);
   assert.equal(await p.locator('#mp-rec-0 button.is-pending').count(), 0);
   // 記録1件：右上は「完全解析を見る」。シートは記録を選ばせずに開く
@@ -567,8 +567,8 @@ test('マイページ：記録が複数なら、対象を選ぶまで購入導�
 test('マイページ：320／390／1280px で横スクロールしない（記録を開いた状態・シート）', { skip: skip() }, async () => {
   for (const width of [320, 390, 1280]) {
     const p = await mypage({ supa: { rows: [RB.row, RA.row] }, entitlements: purchasedFor(RB.code), width });
-    await p.locator('#mp-rec-0 summary').click();
-    await p.locator('#mp-rec-1 summary').click();
+    await p.locator('#mp-rec-0 > summary').click();
+    await p.locator('#mp-rec-1 > summary').click();
     const fits = () => p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth
       && Array.from(document.querySelectorAll('.mp-rec-actions *')).every((e) => e.getBoundingClientRect().right <= window.innerWidth + 0.5));
     assert.ok(await fits(), 'page ' + width);
@@ -589,12 +589,12 @@ test('マイページ：320／390／1280px で横スクロールしない（記�
 const actionTexts = (p, sel) => p.locator(`${sel} .mp-rec-actions`).locator('a, button').allInnerTexts().then((a) => a.map((t) => t.trim()));
 async function openLatestFold(p) {
   const d = p.locator('details.mp-latest-fold');
-  if (!(await d.evaluate((e) => e.open))) await d.locator('summary').click();
+  if (!(await d.evaluate((e) => e.open))) await d.locator(':scope > summary').click();
   return d;
 }
 async function openRecord(p, i) {
   const d = p.locator(`#mp-rec-${i}`);
-  if (!(await d.evaluate((e) => e.open))) await d.locator('summary').click();
+  if (!(await d.evaluate((e) => e.open))) await d.locator(':scope > summary').click();
   return d;
 }
 
@@ -643,7 +643,7 @@ test('LATEST RESULT：購入状態APIが失敗しても開閉でき、購入・�
   // THE RECORDS の同じ記録も同じ表示
   const r0 = await openRecord(p, 0);
   assert.equal(await r0.locator('.mp-notice button').innerText(), 'もう一度確認する');
-  await d.locator('summary').click();
+  await d.locator(':scope > summary').click();
   assert.equal(await d.evaluate((e) => e.open), false);
   await p.__ctx.close();
 });

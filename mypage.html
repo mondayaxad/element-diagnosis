@@ -996,6 +996,20 @@
   .ca-view.is-preparing .ca-view-status { border-style: dashed; color: var(--fg-dim); }
   .ca-view-note { margin: 0; font-size: 11.5px; color: var(--fg-dim); line-height: 1.6; overflow-wrap: anywhere; }
   .ca-view .mp-btn[aria-busy="true"] { opacity: .6; cursor: progress; }
+  /* 解析購入済みの記録内の完全解析の案内（320・390px でも横にはみ出さない） */
+  .mp-rec-actions > .ca-rec-guide { flex-basis: 100%; min-width: 0; margin-top: 4px; padding: 12px 14px 14px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--lc, #7ab8e8) 34%, var(--ca-line)); background: rgba(10, 12, 24, .5); overflow-wrap: anywhere; }
+  .ca-rec-guide-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
+  .ca-rec-guide-lead { margin: 8px 0 0; font-size: 14px; line-height: 1.7; color: var(--ca-title, var(--fg)); }
+  .ca-rec-guide-lens { margin: 2px 0 0; font-size: 11.5px; letter-spacing: .1em; color: var(--ca-muted, var(--fg-dim)); line-height: 1.7; }
+  .ca-rec-guide-more { margin-top: 10px; }
+  .ca-rec-guide-more > summary { display: flex; align-items: center; min-height: 44px; padding: 0 2px; cursor: pointer; font-size: 13px; color: var(--ca-view, var(--accent)); }
+  .ca-rec-guide-more > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .ca-rec-guide-body { padding: 2px 0 6px; }
+  .ca-guide-price { margin: 0 0 8px; font-size: 13px; line-height: 1.7; color: var(--ca-title, var(--fg)); }
+  .ca-rec-guide-action { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+  .ca-rec-guide-action > .mp-btn, .ca-rec-guide-action .ca-view > .mp-btn { flex: none; width: 100%; min-width: 0; white-space: normal; line-height: 1.5; }
+  .ca-rec-guide-action .ca-pending-note { margin: 0; }
+
 
 </style>
 </head>
@@ -1769,6 +1783,69 @@ function mpEntitlementUnknownHtml() {
 function mpRecordUnknownHtml() {
   return `<div class="mp-notice" role="status"><p>この記録の購入状態を確認できませんでした</p><button type="button" class="mp-btn full" onclick="mpRetryEntitlement(this)">もう一度確認する</button></div>`;
 }
+// ---- 解析購入済みの記録に出す「完全解析」の購入案内（Preview のみ。CompleteAnalysis.completeViewEnabled() と同じガード） ----
+// 記録ごとに、その記録自身の権利・保存データだけで決める（別の記録の状態は参照しない）。
+//   案内を出す：解析の権利あり・完全解析の生成に必要な保存データあり（v2 の100問）・完全解析の権利なし
+//   出さない　：完全解析の権利あり（既存の状態表示：準備中・見る・再確認・停止・失効）／完全解析の対象外（v1・旧版・回答不足など）／再購入不可
+//   kind：offer（購入できる）／unknown（状態を取得できない・未確定）／legacy（旧 ¥1,000 購入の確認中）／checkout（決済手続き中）
+function caGuideMode(r) {
+  if (!r || !r.purchased || !mpEntitlementOk || !caViewEnabled()) return null;
+  if (caKey(r).indexOf('complete_') === 0) return null;
+  if (!caIsEligible(r)) return null; // 真の対象外：購入案内は出さない
+  const st = caStateOf(r);
+  const sv = caServerOf(r);
+  // Preview の表示確認（?preview_entitlement=）、またはサーバーが完全解析の項目を返さない（lookup なし）：従来どおり、記録の保存データから
+  // 対象と金額を決める（権利は発行しない）。lookup が「失敗」の時は、下の「状態を取得できない」にする
+  if ((st && st.preview) || sv.lookup === 'none') {
+    const offer = CompleteAnalysis.pendingOfferFor(st);
+    return offer ? { kind: 'offer', offer } : null;
+  }
+  const view = caViewOf(r);
+  if (view) {
+    // 完全解析の権利が分かっている記録は、既存の状態表示のまま
+    if (view.kind !== 'retry' || (sv.complete && sv.complete.completeEntitlement)) return null;
+    return { kind: 'unknown', view };
+  }
+  if (sv.lookup !== 'ok') return { kind: 'unknown', view: null }; // 失敗（view が無いのは通常ありえない）
+  const o = caOfferOf(r);
+  if (o.kind === 'offer') return { kind: 'offer', offer: o.offer };
+  if (o.kind === 'legacy_pending') return { kind: 'legacy' };
+  if (o.kind === 'checkout_in_progress') return { kind: 'checkout' };
+  return null; // purchased／closed／ineligible／unknown
+}
+function caGuideHtml(r, g, pending) {
+  const id = encodeURIComponent(caRecordId(r));
+  const salesClosed = !(CompleteAnalysis.completeSalesOpen === true);
+  const disabled = (label, offer) => `<button type="button" class="mp-btn mp-btn-pending" disabled aria-disabled="true" data-pending-offer="${offer}">${label}</button>`;
+  const recheck = '<button type="button" class="mp-btn" onclick="mpRetryEntitlement(this)">もう一度確認する</button>';
+  let price = '';
+  let action = '';
+  let note = '';
+  if (g.kind === 'offer') {
+    price = `<p class="ca-guide-price">解析レポートをご購入済みの記録は、<b>追加 ${g.offer.price}</b> でご利用いただけます。</p>`;
+    // 目標の選択（Preview）は決済の前の手順。決済そのものは販売停止中は押せない（確認の画面でも「準備中」）
+    action = pending || CompleteAnalysis.pendingButtonHtml(g.offer, 'mp-btn mp-btn-pending');
+    note = salesClosed ? CA_PENDING_NOTE : '';
+  } else if (g.kind === 'unknown') {
+    action = disabled('完全解析（状態を確認中）', 'unavailable') + (g.view ? caViewHtml(r, g.view) : recheck);
+    note = '<p class="ca-pending-note" role="status">完全解析の状態を確認できていません。重複して購入しないよう、確認できるまでお申し込みいただけません。</p>';
+  } else if (g.kind === 'legacy') {
+    action = disabled('完全解析（権利を確認中）', 'unavailable') + recheck;
+    note = `<p class="ca-pending-note" role="status">${CompleteAnalysis.LEGACY_PENDING_TEXT}。確認が終わるまで、お申し込みいただけません。</p>`;
+  } else {
+    action = disabled('完全解析（決済手続き中）', 'unavailable');
+    note = '<p class="ca-pending-note" role="status">完全解析の決済手続き中です。</p>';
+  }
+  return `<div class="ca-rec-guide" data-ca-guide="${id}" data-ca-guide-kind="${g.kind}">
+      <div class="ca-rec-guide-head"><span class="ca-eyebrow">COMPLETE ANALYSIS｜完全解析</span><span class="ca-pages"><span class="ca-pages-ja">全46ページ</span><span class="ca-pages-en">COMPLETE RECORD</span></span></div>
+      <p class="ca-rec-guide-lead">三つの人物像が、ひとつの輪郭を結ぶ。</p>
+      <p class="ca-rec-guide-lens">MIRROR・HIDDEN SHAPE・MENTOR</p>
+      <details class="ca-rec-guide-more"><summary>完全解析の内容を見る</summary>
+        <div class="ca-rec-guide-body">${price}${caLensBlockHtml()}<p class="ca-meta">解析レポートの内容もすべて含まれます</p></div>
+      </details>
+      <div class="ca-rec-guide-action">${action}${note}</div>
+    </div>`;
+}
 // 記録の購入・閲覧導線（2026-10-07）。LATEST RESULT と THE RECORDS の両方がこの関数だけを使う
 // （文言・価格・状態判定をずらさないため）。引数の記録（diagnosis_session_id）だけを対象にする。
 //   購入状態を確認できない：購入・閲覧ボタンを出さず、「もう一度確認する」だけ
@@ -1787,11 +1864,15 @@ function mpRecordActionsHtml(r, source) {
   const pending = view ? caViewHtml(r, view)
     : caMentorMode(r) ? caRecordMentorHtml(r)
     : (offer ? CompleteAnalysis.pendingButtonHtml(offer, 'mp-btn mp-btn-pending') : '');
+  const guide = caGuideMode(r);
   const items = [];
   if (r.purchased) {
     items.push(purchasedReportButton(r.session, 'mp-btn primary', '解析レポートを見る'));
     if (caKey(r) === 'complete_ready') {
       items.push(`<button type="button" class="mp-btn" data-session-id="${encodeURIComponent(String((r.session && r.session.id) || ''))}" onclick="openPurchasedComplete(decodeURIComponent(this.dataset.sessionId), this)">完全解析を見る</button>`);
+    } else if (guide) {
+      // 解析購入済み・完全解析の権利なし（Preview）：購入案内（説明は常に表示、決済は状態で止める）。権利の確認が済むまでは決済を出さない
+      items.push(caGuideHtml(r, guide, pending));
     } else if (pending) {
       items.push(pending);
     }
@@ -2475,7 +2556,12 @@ function caViewRender(id) {
     if (decodeURIComponent(el.dataset.recActions || '') !== id) return;
     const src = el.dataset.recSource === 'latest' ? 'latest' : 'records';
     const had = active && el.contains(active);
+    const guideOpen = !!(el.querySelector('.ca-rec-guide-more') && el.querySelector('.ca-rec-guide-more').open);
     el.outerHTML = mpRecordActionsHtml(rec, src);
+    if (guideOpen) {
+      const again = document.querySelector(`[data-rec-actions="${encodeURIComponent(id)}"][data-rec-source="${src}"] .ca-rec-guide-more`);
+      if (again) again.open = true;
+    }
     if (had) refocus = src;
   });
   if (refocus) {
@@ -2619,6 +2705,7 @@ let caStep = 'overview';
 let caOpenedForMentor = false;
 let caMentorOpenWired = false;
 const caMentorData = new Map(); // diagnosis_session_id → GET /api/mentor-goal の応答
+let caAutoConfirm = false;
 let caMentorLoading = false;
 let caMentorBusy = false;
 let caMentorError = null;
@@ -2644,15 +2731,22 @@ function caMentorMode(r) {
 function caOfferLabel(offer) {
   return offer === CompleteAnalysis.OFFERS.upgrade ? `追加 ${offer.price}` : offer.price;
 }
+// 完全解析の販売中か（クライアントの定数 CompleteAnalysis.completeSalesOpen。サーバーの COMPLETE_SALES_OPEN と同時に切り替える）
+function caSalesOpen() { return caAvailable() && CompleteAnalysis.completeSalesOpen === true; }
 // 記録内の導線（LATEST RESULT／THE RECORDS で同じ内容）
+//   販売停止中：目標の選択を含め、申込の操作は無効の「準備中」ボタンだけ（説明と追加価格は別に表示する）
+//   販売中　　：目標が未選択なら「目標を選ぶ」、選択済みなら「決済の確認へ」（既存の確認の段階へ進む）
 function caRecordMentorHtml(r) {
   const o = caOfferOf(r);
   const sv = caServerOf(r);
   const id = encodeURIComponent(caRecordId(r));
   if (o.kind === 'offer') {
+    if (!caSalesOpen()) return CompleteAnalysis.pendingButtonHtml(o.offer, 'mp-btn mp-btn-pending');
     const up = o.offer === CompleteAnalysis.OFFERS.upgrade;
-    const chosen = sv.complete && sv.complete.mentorGoal ? '<p class="mp-rec-mentor">MENTOR 目標：選択済み</p>' : '';
-    return `<button type="button" class="mp-btn" data-mentor-open="${id}">${up ? `完全解析へ 追加${o.offer.price}：目標を選ぶ` : `完全解析 ${o.offer.price}：目標を選ぶ`}</button>${chosen}`;
+    const chosenGoal = !!(sv.complete && sv.complete.mentorGoal);
+    const chosen = chosenGoal ? '<p class="mp-rec-mentor">MENTOR 目標：選択済み</p>' : '';
+    const head = up ? `完全解析へ 追加${o.offer.price}` : `完全解析 ${o.offer.price}`;
+    return `<button type="button" class="mp-btn" data-mentor-open="${id}"${chosenGoal ? ' data-mentor-chosen="1"' : ''}>${head}：${chosenGoal ? '決済の確認へ' : '目標を選ぶ'}</button>${chosen}`;
   }
   if (o.kind === 'legacy_pending') return `<p class="mp-rec-mentor" role="status">${CompleteAnalysis.LEGACY_PENDING_TEXT}</p>`;
   if (o.kind === 'checkout_in_progress') return '<p class="mp-rec-mentor">完全解析の決済手続き中です</p>';
@@ -2694,8 +2788,10 @@ function caMentorOverviewHtml(r) {
       <h3 class="ca-title">完全解析</h3>
       ${caLensBlockHtml()}
       <div class="ca-price-row"><span class="ca-meta">${up ? `対象：${mpComboText(r)}／この診断記録` : '解析レポートの内容もすべて含まれます'}</span><span class="ca-price">${caOfferLabel(o.offer)}</span></div>
-      <button type="button" class="ca-btn ca-secondary-action" data-mentor-start="1">目標を選んで進む</button>
-      <p class="ca-pending-note">お支払いは準備中です。目標の選択と内容の確認まで進めます。</p>
+      ${caSalesOpen()
+        ? `<button type="button" class="ca-btn ca-secondary-action" data-mentor-start="1">目標を選んで進む</button>
+      <p class="ca-pending-note">お支払いは準備中です。目標の選択と内容の確認まで進めます。</p>`
+        : `${CompleteAnalysis.pendingButtonHtml(o.offer, 'ca-btn ca-secondary-action')}${CA_PENDING_NOTE}`}
     </section>`;
 }
 function caMentorSelectedGoal(data) {
@@ -2797,6 +2893,8 @@ async function caLoadMentor(r) {
     if (out.status === 200 && out.body && out.body.catalog) {
       caMentorData.set(id, out.body);
       caMentorError = null;
+      if (caAutoConfirm && out.body.selection && out.body.selection.goalId) caStep = 'confirm';
+      caAutoConfirm = false;
     } else {
       caMentorError = out.status === 404 && out.body.error === 'not_available'
         ? '現在、目標の選択はご利用いただけません。'
@@ -2884,7 +2982,9 @@ function caOpenSheet(opts) {
   const trigger = document.getElementById('mpUpgradeTrigger');
   if (!overlay || !body) return;
   caSelected = o.record || null;
-  caStep = o.step || 'overview';
+  // 目標が選択済みの記録の「決済の確認へ」：まず目標の段階で選択を読み込み、読み込めたら確認の段階へ進める
+  caAutoConfirm = o.step === 'confirm';
+  caStep = o.step === 'confirm' ? 'goal' : (o.step || 'overview');
   caOpenedForMentor = !!o.record;
   caMentorData.clear();
   caMentorError = null;
@@ -2969,7 +3069,7 @@ function caWireSheet(records) {
     const retry = t.closest('[data-mentor-retry]');
     const submit = t.closest('[data-mentor-submit]');
     const toConfirm = t.closest('[data-mentor-confirm]');
-    if (start) { caMentorError = null; caMentorPick = null; caGoStep('goal'); }
+    if (start) { if (!caSalesOpen()) return; caMentorError = null; caMentorPick = null; caGoStep('goal'); }
     else if (back) { caMentorError = null; caMentorPick = null; caGoStep(back.dataset.mentorBack === 'goal' ? 'goal' : 'overview'); }
     else if (retry) { caMentorError = null; caMentorData.delete(caRecordId(caSelected)); caGoStep('goal'); }
     else if (submit) caSubmitMentorGoal();
@@ -2989,7 +3089,7 @@ function caWireSheet(records) {
       if (!b) return;
       const id = decodeURIComponent(b.dataset.mentorOpen || '');
       const rec = caSheetRecords.find((x) => caRecordId(x) === id);
-      if (rec && caMentorMode(rec)) caOpenSheet({ record: rec, step: 'goal', returnFocus: b });
+      if (rec && caMentorMode(rec) && caSalesOpen()) caOpenSheet({ record: rec, step: b.dataset.mentorChosen === '1' ? 'confirm' : 'goal', returnFocus: b });
     });
   }
   // 対象の記録の選択・選び直し

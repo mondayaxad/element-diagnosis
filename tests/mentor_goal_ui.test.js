@@ -108,12 +108,19 @@ function world(over) {
   }, over || {});
 }
 
-async function open(w, { width = 390, height = 844 } = {}) {
+async function open(w, opts0 = {}) {
+  const opts = Object.assign({ salesOpen: true }, opts0); // 目標の選択〜確認の流れは販売中の表示（停止中の分岐は complete_record_guide_ui.test.js）
+  const { width = 390, height = 844 } = opts;
   const ctx = await browser.newContext({ viewport: { width, height } });
   const p = await ctx.newPage();
   p.setDefaultTimeout(8000);
   const errors = [];
   p.on('pageerror', (e) => errors.push(String(e)));
+  // 販売開始後の表示の確認用：complete-analysis.js の販売中の定数だけ差し替える（サーバー・Stripe には接続しない）
+  if (opts.salesOpen) {
+    await p.route(/\/complete-analysis\.js(\?.*)?$/, (r) => r.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(path.join(ROOT, 'complete-analysis.js'), 'utf8')
+      .replace('var CA_COMPLETE_API_READY = false;', 'var CA_COMPLETE_API_READY = true;').replace('var CA_COMPLETE_SALES_OPEN = false;', 'var CA_COMPLETE_SALES_OPEN = true;') }));
+  }
   await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: fakeSupabase(w.rows) }));
   await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: publicConfigJs(w.appEnv) }));
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
@@ -164,7 +171,10 @@ test('記録内の導線：direct ¥3,000 は「目標を選ぶ」、旧 ¥1,000
   const a = await actions(p, 'sess-A', 'records').innerText();
   assert.match(a, /既存の解析レポート購入を確認しています/);
   assert.doesNotMatch(a, /¥3,000|¥2,000/);
-  assert.equal(await p.locator('.mp-btn-pending').count(), 0, '準備中ボタンは MENTOR 導線に置き換わる');
+  // 準備中ボタンは MENTOR 導線に置き換わる。例外は旧購入の確認中の記録 A の案内だけ（権利の確認が終わるまで決済は無効：2026-10-09）
+  assert.equal(await p.locator('.mp-btn-pending').count(), 1);
+  assert.equal(await p.locator('.mp-btn-pending:not([disabled])').count(), 0);
+  assert.equal(await p.locator('[data-rec-actions="sess-A"] .mp-btn-pending').count(), 1);
   assert.deepEqual(p.__errors, []);
   await p.__ctx.close();
 });
@@ -211,7 +221,11 @@ test('シート：目標選択 → 送信（連打しても1回）→ 内容確�
   // 再読込（新しいページ）：保存した目標が DB（GET）から復元される
   const q = await open(w);
   assert.match(await actions(q, 'sess-B', 'records').innerText(), /MENTOR 目標：選択済み/);
+  // 選択済みの記録は、既存の内容確認の段階へ直接進む（「決済の確認へ」）。戻ると、保存した目標が選ばれている
+  assert.match(await actions(q, 'sess-B', 'records').innerText(), /決済の確認へ/);
   await actions(q, 'sess-B', 'records').locator('[data-mentor-open]').click();
+  await q.waitForSelector('#mpUpgradeBody .ca-confirm-list');
+  await q.click('#mpUpgradeBody [data-mentor-back="goal"]');
   await q.waitForSelector('#mpUpgradeBody input[name="ca-mentor-goal"]:checked');
   assert.equal(await q.locator('#mpUpgradeBody input[name="ca-mentor-goal"]:checked').getAttribute('value'), 'GOAL_RELATION_01');
   await q.__ctx.close();
@@ -224,6 +238,8 @@ test('再読込後も DB の選択が復元される。戻るで段階を戻り�
   const histBefore = await p.evaluate(() => history.length);
   const opener = actions(p, 'sess-B', 'latest').locator('[data-mentor-open]');
   await opener.click();
+  await p.waitForSelector('#mpUpgradeBody .ca-confirm-list'); // 選択済み：内容確認の段階へ直接
+  await p.click('#mpUpgradeBody [data-mentor-back="goal"]');
   await p.waitForSelector('#mpUpgradeBody input[name="ca-mentor-goal"]:checked');
   assert.equal(await p.locator('#mpUpgradeBody input[name="ca-mentor-goal"]:checked').getAttribute('value'), 'GOAL_PACE_01');
   // 同じ目標のままなら送信せずに確認へ
@@ -267,6 +283,8 @@ test('支払後ロック：radio は押せず、内容確認だけ', { skip: ski
   const w = world({ mentor: { 'sess-B': { goalId: 'GOAL_VISIBLE_01', locked: true } } });
   const p = await open(w);
   await actions(p, 'sess-B', 'latest').locator('[data-mentor-open]').click();
+  await p.waitForSelector('#mpUpgradeBody .ca-confirm-list'); // 選択済み：内容確認の段階へ直接
+  await p.click('#mpUpgradeBody [data-mentor-back="goal"]');
   await p.waitForSelector('#mpUpgradeBody input[name="ca-mentor-goal"]');
   assert.equal(await p.locator('#mpUpgradeBody input[name="ca-mentor-goal"]:not([disabled])').count(), 0);
   assert.match(await p.locator('#mpUpgradeBody').innerText(), /お支払い済みのため、目標は変更できません/);
@@ -335,7 +353,10 @@ test('完全解析の読み取り失敗・v2 の項目なしでは MENTOR を出
     if (over.completeLookup === 'failed') {
       // 完全解析の閲覧（2026-10-08）：状態を取得できない記録は、準備中ボタンの代わりに「もう一度確認する」
       assert.equal(await actions(p, 'sess-B', 'latest').locator('[data-ca-view-recheck]').count(), 1);
-      assert.equal(await p.locator('.mp-btn-pending').count(), 0);
+      // 解析購入済みの記録 A には、説明と「決済は無効のボタン」が出る（重複購入の防止）。無料の記録 B は従来どおり準備中ボタンなし
+      assert.equal(await p.locator('.mp-btn-pending').count(), 1);
+      assert.equal(await p.locator('.mp-btn-pending:not([disabled])').count(), 0);
+      assert.equal(await actions(p, 'sess-B', 'latest').locator('.mp-btn-pending').count(), 0);
     } else {
       assert.ok(await p.locator('.mp-btn-pending').count() >= 1, '従来の準備中ボタン');
     }
@@ -388,4 +409,66 @@ test('320・390・1280px：目標の段階・確認の段階で横スクロー�
     assert.deepEqual(await check(), { page: true, sheet: true }, `confirm ${width}`);
     await p.__ctx.close();
   }
+});
+
+// ================= 販売停止中／販売開始後の分岐（2026-10-09）
+// 販売停止中：目標の選択を含め、完全解析の申込の操作は無効の「準備中」。説明と追加価格は見える
+// 販売開始後：目標が未選択なら「目標を選ぶ」、選択済みなら「決済の確認へ」（既存の内容確認の段階）
+test('販売停止中：記録内もシートも、目標の選択を含めて申込の操作は無効の「準備中」。説明と価格は表示される', { skip: skip() }, async () => {
+  const w = world({ records: { 'sess-B': rec(), 'sess-A': rec({ analysisSource: 'record_entitlement' }) } });
+  const p = await open(w, { salesOpen: false });
+  assert.equal(await p.locator('[data-mentor-open]').count(), 0, '記録内に目標を選ぶ操作がない');
+  for (const [id, label] of [['sess-B', /完全解析 ¥3,000（準備中）/], ['sess-A', /完全解析へアップグレード ¥2,000（準備中）/]]) {
+    for (const src of (id === 'sess-B' ? ['latest', 'records'] : ['records'])) {
+      const b = actions(p, id, src).locator('button.mp-btn-pending');
+      assert.equal(await b.count(), 1, `${id} ${src}`);
+      assert.equal(await b.isDisabled(), true);
+      assert.match(await b.innerText(), label);
+      assert.equal(await b.getAttribute('onclick'), null);
+    }
+  }
+  // 購入済み（解析）の記録 A：説明と追加価格は見える
+  const g = p.locator('[data-rec-actions="sess-A"][data-rec-source="records"] [data-ca-guide]');
+  assert.match(await g.innerText(), /三つの人物像が、ひとつの輪郭を結ぶ。/);
+  await g.locator('summary').click();
+  assert.match(await g.locator('.ca-guide-price').innerText(), /追加 ¥2,000/);
+  // 右上の入口のシート：目標の選択（data-mentor-start）は出さず、無効の「準備中」と案内
+  await p.click('#mpUpgradeTrigger');
+  if (await p.locator('#mpUpgradeBody .ca-pick').count()) await p.click('#mpUpgradeBody [data-pick-index="0"]');
+  assert.equal(await p.locator('#mpUpgradeBody [data-mentor-start]').count(), 0);
+  const sb = p.locator('#mpUpgradeBody button.is-pending');
+  assert.equal(await sb.count() >= 1, true);
+  assert.equal(await sb.first().isDisabled(), true);
+  assert.match(await p.locator('#mpUpgradeBody').innerText(), /完全解析は準備中です。現在はお申し込みいただけません。/);
+  assert.equal(w.gets + w.posts.length, 0, '目標の API を呼ばない');
+  assert.deepEqual(p.__errors, []);
+  await p.__ctx.close();
+});
+
+test('販売開始後：目標が未選択なら「目標を選ぶ」、選択済みなら「決済の確認へ」で既存の内容確認の段階へ進む', { skip: skip() }, async () => {
+  const w = world({ records: { 'sess-B': rec({ mentorGoal: { goalId: CE.MENTOR_CATALOG.goals[1].goalId, goalCatalogVersion: CE.MENTOR_CATALOG_VERSION, selectedAt: '2026-10-07T00:00:00Z' } }), 'sess-A': rec({ analysisSource: 'record_entitlement' }) },
+    mentor: { 'sess-B': { goalId: CE.MENTOR_CATALOG.goals[1].goalId } } });
+  const p = await open(w, { salesOpen: true });
+  // 未選択（A）：目標を選ぶ
+  const a = actions(p, 'sess-A', 'records');
+  assert.match(await a.innerText(), /完全解析へ 追加¥2,000：目標を選ぶ/);
+  assert.equal(await a.locator('[data-mentor-open]').isEnabled(), true);
+  assert.equal(await a.locator('[data-mentor-chosen]').count(), 0);
+  // 選択済み（B）：決済の確認へ
+  const b = actions(p, 'sess-B', 'records');
+  assert.match(await b.innerText(), /完全解析 ¥3,000：決済の確認へ/);
+  assert.match(await b.innerText(), /MENTOR 目標：選択済み/);
+  await b.locator('[data-mentor-open]').click();
+  await p.waitForSelector('#mpUpgradeBody .ca-confirm-list');
+  assert.match(await p.locator('#mpUpgradeBody').innerText(), /内容を確認する/);
+  assert.match(await p.locator('#mpUpgradeBody').innerText(), new RegExp(CE.MENTOR_CATALOG.goals[1].label));
+  const pay = p.locator('#mpUpgradeBody button.is-pending[disabled]');
+  assert.equal(await pay.count(), 1, '決済は接続前のため、確認の画面の「決済へ進む（準備中）」は無効のまま');
+  assert.equal(w.posts.length, 0, '選択済みの目標は再送信しない');
+  // 未選択（A）は目標の段階から
+  await p.keyboard.press('Escape');
+  await a.locator('[data-mentor-open]').click();
+  await p.waitForSelector('#mpUpgradeBody input[name="ca-mentor-goal"]');
+  assert.deepEqual(p.__errors, []);
+  await p.__ctx.close();
 });

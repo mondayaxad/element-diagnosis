@@ -116,7 +116,8 @@ function statusBody(st) {
     report: st.report ? { status: st.report } : null, mentorGoal: null };
 }
 
-async function open(w, { width = 390, height = 844, query = '', clock = false } = {}) {
+async function open(w, opts = {}) {
+  const { width = 390, height = 844, query = '', clock = false } = opts;
   const ctx = await browser.newContext({ viewport: { width, height } });
   const p = await ctx.newPage();
   p.setDefaultTimeout(8000);
@@ -125,6 +126,11 @@ async function open(w, { width = 390, height = 844, query = '', clock = false } 
   p.on('pageerror', (e) => errors.push(String(e)));
   p.on('console', (m) => consoleLines.push(m.text()));
   if (clock) await p.clock.install();
+  // 販売開始後の表示の確認用：complete-analysis.js の販売中の定数だけ差し替える（サーバー・Stripe には接続しない）
+  if (opts.salesOpen) {
+    await p.route(/\/complete-analysis\.js(\?.*)?$/, (r) => r.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(path.join(ROOT, 'complete-analysis.js'), 'utf8')
+      .replace('var CA_COMPLETE_API_READY = false;', 'var CA_COMPLETE_API_READY = true;').replace('var CA_COMPLETE_SALES_OPEN = false;', 'var CA_COMPLETE_SALES_OPEN = true;') }));
+  }
   await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: fakeSupabase(w.rows) }));
   await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: publicConfigJs(w.appEnv) }));
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
@@ -426,9 +432,14 @@ test('320・390・1280px：全状態で横スクロールなし、操作は 44px
   }
 });
 
-test('Checkout のボタンは押せないまま（販売は閉じている）：権利なしの記録は従来の目標選択・準備中の導線', { skip: skip() }, async () => {
+test('Checkout のボタンは押せない：販売開始後も、権利なしの記録は目標の選択の導線だけ（決済へのリンクはない）。停止中は無効の準備中', { skip: skip() }, async () => {
   const w = world({ records: { 'sess-B': purchased(), 'sess-A': rec() } });
-  const p = await open(w);
+  const closed = await open(w);
+  const ac = actions(closed, 'sess-A', 'records');
+  assert.equal(await ac.locator('[data-mentor-open]').count(), 0, '販売停止中は目標を選ぶ操作もない');
+  assert.equal(await ac.locator('button.mp-btn-pending').isDisabled(), true);
+  await closed.__ctx.close();
+  const p = await open(w, { salesOpen: true });
   const a = actions(p, 'sess-A', 'records');
   assert.match(await a.innerText(), /目標を選ぶ/);
   assert.equal(await a.locator('[data-ca-view]').count(), 0);
