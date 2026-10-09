@@ -1,15 +1,9 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<!-- Google tag (gtag.js)
-     【Preview版：GA4送信を無効化】本番Measurement IDへPreview操作が混入しないよう、
-     外部スクリプトの読込とgtag('config', ...)による送信を止める。
-     既存コードが呼ぶgtag()自体はno-opとして残し、ReferenceErrorにしない。
-     本番反映時は、このコメントブロックを元のGA4読込へ戻すこと。 -->
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag() {} // Preview版：no-op。本番反映時に実装へ戻す。
-</script>
+<!-- GA4：js/ga.js が本番ドメインでだけ読み込む（Preview・ローカルでは送信しない）。
+     送る page_location は origin＋path だけ。イベントの値から記録 ID・メール・Stripe ID・トークンを落とす。 -->
+<script src="/js/ga.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>あなたの診断記録 — 元素診断</title>
@@ -1070,7 +1064,8 @@ const NATION_MEANING = {
   "モンド":"自由", "璃月":"契約", "稲妻":"永遠", "スメール":"知恵",
   "フォンテーヌ":"正義", "ナタ":"戦争", "スネージナヤ":"慈愛", "ナドクライ":"月光",
 };
-const STRIPE_URL_AUTO = 'https://buy.stripe.com/test_9B64gr9micjz9riccu3Nm00'; // release-c-preview専用：Stripeテスト用Payment Link
+// v1（旧版）の記録だけが使う Payment Link。本番ドメインでは本番のリンク、それ以外（Preview）はテスト用。
+const STRIPE_URL_AUTO = location.hostname === 'element-diagnosis-five.vercel.app' ? 'https://buy.stripe.com/3cIcMXdCy5VbavmgsK3Nm08' : 'https://buy.stripe.com/test_9B64gr9micjz9riccu3Nm00';
 // PreviewのStripeテスト決済→権利発行→v2レポート表示を実地確認するため有効化。
 // STRIPE_URL_AUTOはPreview専用テストPayment Linkであり、本番決済には接続しない。
 const V2_REPORT_SALES_ENABLED = true;
@@ -2561,7 +2556,6 @@ function caSheetShellHtml(records) {
 function caTrackParams(r, extra) {
   const st = caStateOf(r);
   return Object.assign({
-    diagnosis_session_id: String((r && r.session && r.session.id) || ''),
     source: 'mypage_header',
     latest_entitlement: caKey(r),
     preview_dummy: !!(st && st.preview),
@@ -2672,6 +2666,14 @@ async function caViewFetchStatus(id) {
   return { status: res.status, view: { kind: 'retry', note: CA_VIEW_NOTES.failed } };
 }
 const caViewFinal = (k) => k === 'ready' || k === 'suspended' || k === 'revoked' || k === 'login';
+// GA4：完全解析の生成の開始（作成中を確認）・完成・失敗を、記録ごとに1回だけ（記録 ID は送らない）
+const caGenTracked = new Set();
+function caTrackGeneration(id, kind) {
+  const name = kind === 'preparing' ? 'complete_generation_start' : kind === 'ready' ? 'complete_generation_ready' : kind === 'retry' ? 'complete_generation_failed' : null;
+  if (!name || caGenTracked.has(name + id)) return;
+  caGenTracked.add(name + id);
+  trackEvent(name, { source: 'mypage' });
+}
 // 一定の間隔で状態を確認する（最大60秒。無限には回さない）。期限が来たら手動の「もう一度確認する」へ
 async function caViewPoll(id) {
   const run = (caViewPolls.get(id) || 0) + 1;
@@ -2683,6 +2685,7 @@ async function caViewPoll(id) {
     if (caViewPolls.get(id) !== run || !document.querySelector(`[data-rec-actions="${encodeURIComponent(id)}"]`)) return;
     const { status, view } = await caViewFetchStatus(id);
     if (caViewPolls.get(id) !== run) return;
+    caTrackGeneration(id, status === 200 ? view.kind : null);
     if (caViewFinal(view.kind)) { caViewSet(id, view); return; }
     const cur = caViewStates.get(id);
     // 生成中は「準備しています」、生成の失敗（サーバーの状態）は「もう一度確認する」。通信の失敗は表示を変えずに次の確認へ
@@ -3012,6 +3015,7 @@ async function caSubmitMentorGoal() {
   caMentorBusy = false;
   if (caRecordId(caSelected) !== id) return;
   if (out.status === 200 && out.body.selection) {
+    trackEvent('complete_goal_select', { source: 'mypage' });
     data.selection = out.body.selection;
     data.locked = !!out.body.locked;
     data.changeAllowed = out.body.changeAllowed !== false;
@@ -3226,7 +3230,7 @@ async function openPurchasedComplete(diagnosisSessionId, button) {
     say('この記録の完全解析は、まだ開けません。');
     return;
   }
-  CompleteAnalysis.track('complete_report_open', { diagnosis_session_id: String(diagnosisSessionId), source: 'mypage_header', preview_dummy: !!st.preview });
+  CompleteAnalysis.track('complete_report_open', { source: 'mypage_header', preview_dummy: !!st.preview });
   if (st.preview) {
     // Preview fixture は表示確認用。閲覧先URLは発行しない
     say('Preview：完全解析の閲覧先はまだ接続していません（この記録だけが対象です）。');
@@ -3332,11 +3336,17 @@ async function init() {
   }
 
   // 決済から戻った直後：Webhook を待たずに、本人の決済待ちの注文を Stripe に問い合わせて反映する（冪等・失敗しても表示は続ける）
-  if (/(?:^|[?&])(complete=returned|complete_return=1)(?:&|$)/.test(location.search)) {
+  if (/(?:^|[?&])(complete=returned|complete_return=1|complete=canceled)(?:&|$)/.test(location.search)) {
+    const canceled = /complete=canceled/.test(location.search);
+    trackEvent('checkout_return', { state: canceled ? 'canceled' : 'returned', source: 'mypage' });
     try {
       const { data } = await supabaseClient.auth.getSession();
       const t = data && data.session ? data.session.access_token : null;
-      if (t) await fetch('/api/complete-checkout?op=user-reconcile', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` }, body: '{}' });
+      if (t && !canceled) {
+        const rr = await fetch('/api/complete-checkout?op=user-reconcile', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` }, body: '{}' });
+        const out = await rr.json().catch(() => ({}));
+        if (rr.ok && out.applied > 0) trackEvent('purchase_confirmed', { state: 'mypage' });
+      }
     } catch (e) { /* 反映の確認は記録の状態確認でも行う */ }
   }
   const result = await loadDiagnosisHistory(DIAGNOSIS_TYPE);

@@ -113,7 +113,7 @@
   async function openAnalysis(ref, source) {
     var r = await call('guest-report', { ref: ref });
     if (r.ok && r.body && typeof r.body.url === 'string' && r.body.url.indexOf('/report.html?token=') === 0) {
-      track('analysis_report_view', { source: source });
+      track('analysis_report_open', { source: source });
       global.location.assign(r.body.url);
       return true;
     }

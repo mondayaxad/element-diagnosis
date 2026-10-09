@@ -658,8 +658,44 @@ async function runSignedInFlow() {
   return reg;
 }
 
+/* GA4：ログインの開始・成功・失敗（方式だけを送る。メール・user ID は送らない）
+   ・開始：OAuth（google・x）とメールのコード送信の呼び出し時。開始した方式を sessionStorage に残す。
+   ・成功：その後のセッション確立（OAuth の戻り・メールのコード確認）。失敗：呼び出しのエラー・OAuth の戻りのエラー。 */
+const ED_LOGIN_KEY = 'ed_login_method_v1';
+(function edTrackLogin() {
+  const auth = supabaseClient && supabaseClient.auth;
+  if (!auth || auth.__edTracked) return;
+  const mark = (m) => { try { sessionStorage.setItem(ED_LOGIN_KEY, m); } catch (e) { /* 計測だけ */ } };
+  const wrap = (name, methodOf, phase) => {
+    const orig = auth[name];
+    if (typeof orig !== 'function') return;
+    auth[name] = async function (opts) {
+      const method = methodOf(opts);
+      if (phase === 'start') { mark(method); trackEvent('login_start', { method }); }
+      const r = await orig.apply(auth, arguments);
+      if (r && r.error) trackEvent('login_failed', { method, reason: phase === 'start' ? 'start_error' : 'verify_error' });
+      return r;
+    };
+  };
+  wrap('signInWithOAuth', (o) => (o && o.provider === 'x' ? 'x' : 'google'), 'start');
+  wrap('signInWithOtp', () => 'email', 'start');
+  wrap('verifyOtp', () => 'email', 'verify');
+  auth.__edTracked = true;
+  // OAuth の戻りのエラー（?error=… / #error=…）
+  if (/[?#&]error(_code)?=/.test(location.search + location.hash)) {
+    let m = null;
+    try { m = sessionStorage.getItem(ED_LOGIN_KEY); sessionStorage.removeItem(ED_LOGIN_KEY); } catch (e) { m = null; }
+    if (m) trackEvent('login_failed', { method: m, reason: 'provider_error' });
+  }
+})();
+
 let signedInFlowRunning = null;
 supabaseClient.auth.onAuthStateChange((event, session) => {
+  if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
+    let m = null;
+    try { m = sessionStorage.getItem(ED_LOGIN_KEY); sessionStorage.removeItem(ED_LOGIN_KEY); } catch (e) { m = null; }
+    if (m) trackEvent('login_success', { method: m });
+  }
   if (event === 'SIGNED_OUT') {
     resetRegistrationCheck();
     return;

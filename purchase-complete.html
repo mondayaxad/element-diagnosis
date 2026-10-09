@@ -124,6 +124,14 @@
     }
     list.innerHTML = purchases.map(cardHtml).join('');
     trackConfirmed(purchases);
+    // GA4：完全解析の生成の開始・完成・失敗（購入ごとに1回だけ。ref は送らない）
+    purchases.forEach(function (p) {
+      if (p.complete !== 'active') return;
+      var name = p.report === 'ready' ? 'complete_generation_ready' : p.report === 'failed' ? 'complete_generation_failed' : 'complete_generation_start';
+      var key = 'ed_pg_' + name + p.ref.slice(0, 12);
+      try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, '1'); } catch (e) { return; }
+      G.track(name, { source: 'purchase_complete' });
+    });
     var waiting = purchases.some(function (p) {
       return p.pending || (p.complete === 'active' && p.report !== 'ready' && p.report !== 'revoked');
     });

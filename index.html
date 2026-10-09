@@ -1,20 +1,12 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<!-- Google tag (gtag.js)
-     【Preview版：GA4送信を無効化】本番Measurement IDへPreview操作が混入しないよう、
-     外部スクリプトの読込とgtag('config', ...)による送信を止める。
-     既存コードが呼ぶgtag()自体はno-opとして残し、ReferenceErrorにしない。
-     本番反映時は、このコメントブロックを元のGA4読込へ戻すこと。 -->
+<!-- GA4：js/ga.js が本番ドメインでだけ読み込む（Preview・ローカルでは送信しない）。
+     送る page_location は origin＋path だけ。イベントの値から記録 ID・メール・Stripe ID・トークンを落とす。 -->
+<script src="/js/ga.js"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag() {} // Preview版：no-op。本番反映時に実装へ戻す。
-  // 【Preview版：このファイル内でStripe本番Payment Linkへ遷移させる箇所の分岐フラグ】
-  // Previewではtrue。本番デプロイ時はfalseへ変更する。
-  // ただし本番切替はこの値だけでは完了しない（GA4復元・mypage.htmlのStripeリンク・
-  // diagnosis-save.jsのSupabase接続・Vercel本番環境変数・V2_REPORT_SALES_ENABLED等、
-  // 複数ファイル・複数設定にまたがる）。正式な手順はPREVIEW_TO_PRODUCTION.mdを参照すること。
-  var IS_PREVIEW_BUILD = true;
+  // 本番ドメイン以外（Preview・ローカル）では true。Stripe の旧 Payment Link（v1）をテスト用に切り替える。
+  var IS_PREVIEW_BUILD = location.hostname !== 'element-diagnosis-five.vercel.app';
 </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -3074,7 +3066,7 @@ function initGuestPurchase(root, code, refs) {
       box.addEventListener('change', function (e) {
         if (e.target && e.target.name === 'guest-mentor-goal') {
           btn.disabled = false;
-          G.track('mentor_goal_select', { source: 'result', goal_selected: true });
+          G.track('complete_goal_select', { source: 'result' });
         }
       });
       if (btn) btn.onclick = function () {

@@ -115,6 +115,12 @@ function classifyErrorV2(error) {
 // エラー分類は上記classifyErrorV2()を使う（v2固有の1種類だけ追加し、残りは
 // 既存のclassifyError()、legacy-v1と共通のエラーコード体系をそのまま使う）。
 async function saveDiagnosisSessionV2(pending) {
+  const r = await saveDiagnosisSessionV2Inner(pending);
+  // GA4：保存の成功・失敗（失敗の種類だけ。回答・記録 ID は送らない）
+  if (typeof trackEvent === 'function') trackEvent(r.ok ? 'result_save_success' : 'result_save_failed', r.ok ? {} : { reason: String(r.errorKind || 'unknown') });
+  return r;
+}
+async function saveDiagnosisSessionV2Inner(pending) {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: 'not_authenticated', errorKind: 'auth' };
 

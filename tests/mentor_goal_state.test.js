@@ -51,12 +51,13 @@ test('完全解析の導線：サーバーの状態から決める（診断コ�
   assert.equal(CA.LEGACY_PENDING_TEXT, '既存の解析レポート購入を確認しています');
 });
 
-test('mypage：MENTOR の段階に計測（GA4）を追加しない・history を使わない・決済ボタンは押せない', () => {
+test('mypage：MENTOR の段階の計測は目標選択の1件だけ（目標・記録 ID を送らない）・history を使わない・停止中の決済ボタンは押せない', () => {
   const start = MYPAGE.indexOf('/* ---- MENTOR 目標の選択（2026-10-07）');
   const end = MYPAGE.indexOf('let caLastFocus = null;');
   assert.ok(start > 0 && end > start);
   const block = MYPAGE.slice(start, end);
-  assert.doesNotMatch(block, /\.track\(|trackEvent\(|gtag\(|dataLayer/);
+  const calls = block.match(/\.track\(|trackEvent\([^)]*\)|gtag\(|dataLayer/g) || [];
+  assert.deepEqual(calls, ["trackEvent('complete_goal_select', { source: 'mypage' })"]);
   assert.doesNotMatch(block, /pushState|replaceState|location\.hash/);
   assert.doesNotMatch(block, /console\.(log|error|warn)/);
   assert.match(block, /決済へ進む（準備中）<\/button>/);
