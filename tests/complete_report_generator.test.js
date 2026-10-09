@@ -34,7 +34,11 @@ const FIXTURE = require('./fixtures/complete_report_F01.json').input;
 // 2026-10-08 更新（判定規則4種の RC1 承認・CORE1-CONTENT-1.0.1）：8c5419b5… → 580923f8…。差分レビュー：生の HTML で4行・本文で4行だけ
 // （P33 の版 DOMAIN-EDITORIAL-0.1.0 → 1.0.0、P34 の「今後、分布と安定性の検証が必要です」→「確立された心理尺度ではありません」、
 // P34 の計算の注記の版と末尾を P33 の恒久的な注意書きへ、P39 の版の欄 DOMAIN-EDITORIAL-1.0.0・CONTENT-1.0.1）。他の 3,319 行は同一。
-const GOLDEN_SHA256 = '580923f812f27078ebace89809dc0888cbdec9ba1f0c16f7b6296fe5e199f022';
+// 2026-10-09 更新（TEMPLATE-46P-WEB-1.0.1）：580923f8… → d0baa50d…。差分レビュー：画像を除いた生の HTML で36行（12 fixture すべて同じ36行）。
+// 削除8行＝表紙の見出し「元素診断」・表紙の MODEL 行と「あなた｜日付｜46 ページ」行・P07 の（ETI-CHAR-2.1.0）・P08 の CORE1-HIDDEN-1.0.0・
+// P33 の（CORE1-DOMAIN-EDITORIAL-1.0.0）・P34 の「計算・採用軸・版」と「版：…」・P39 の版の欄。追加は、その置き換え後の行と web.css の
+// フッターの安全領域・表紙の欧文の CSS だけ。本文の文章・数値・順位は変えていない。
+const GOLDEN_SHA256 = 'd0baa50d14dcbc5b53c8d4231ff94a432b7b6bde5a15e101b1c3688845ec14b9';
 const GOAL_IDS = ['GOAL_VISIBLE_01', 'GOAL_BOUNDARY_01', 'GOAL_RELATION_01', 'GOAL_EXPLORE_01', 'GOAL_PACE_01'];
 const sha = (s) => crypto.createHash('sha256').update(s).digest('hex');
 const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -73,7 +77,7 @@ test.before(() => { base = G.generateCompleteReport(FIXTURE); });
 // ================= 素材・移動の検証
 test('素材ハッシュ（lib/complete-materials.json）がサーバー生成器の実ファイルと一致する', () => {
   assert.deepEqual(require('../lib/complete-materials.json'), computeMaterials());
-  assert.equal(CP.MATERIALS.templateVersion, 'CORE1-TEMPLATE-46P-WEB-1.0.0');
+  assert.equal(CP.MATERIALS.templateVersion, 'CORE1-TEMPLATE-46P-WEB-1.0.1');
   assert.equal(CP.MATERIALS.contentVersion, 'CORE1-CONTENT-1.0.1');
   assert.equal(base.contentSha256, CP.MATERIALS.contentSha256);
   assert.equal(base.templateSha256, CP.MATERIALS.templateSha256);
@@ -108,8 +112,18 @@ const APPROVED_PAGE_EDITS = [
   ['<span>今後、分布と安定性の検証が必要です</span>', '<span>確立された心理尺度ではありません</span>'],
   ['正式な心理尺度ではなく、本番公開前に回答分布と順位の安定性の検証が必要です。', '確立された心理尺度ではなく、能力値・才能量・人口比を示すものではありません。'],
 ];
-const approvedEdits = (s) => APPROVED_PAGE_EDITS.reduce((t, [a, b]) => t.split(a).join(b), s);
-test('全12 fixture：Web 版の46ページは prototypes の紙面と同一（違いは P39 の ID・生成日・版の欄、画像の埋め込み方、判定規則4種の承認で変えた表記・同点順だけ）', () => {
+// TEMPLATE-46P-WEB-1.0.1（2026-10-09）で変えた紙面：表紙の欧文見出し、表紙・P39 のメタ情報（診断日だけ）、紙面からの版の削除（P07・P08・P33・P34）
+const WEB_101_EDITS = [
+  [/<div>MODEL　[^<]*<\/div>\s*<div>あなた　｜　(\d{4}-\d{2}-\d{2})　｜　46 ページ<\/div>/g, '<div>診断日　$1</div>'],
+  ['<div class="cover-label">元素診断</div>', '<div class="cover-label">ELEMENT DIAGNOSIS</div>'],
+  ['ETI人物座標（ETI-CHAR-2.1.0）と資料タグ', 'ETI人物座標と資料タグ'],
+  [/<p class="small">CORE1-HIDDEN-\d+\.\d+\.\d+。各領域/g, '<p class="small">各領域'],
+  ['<b>ETI編集用派生指標（CORE1-DOMAIN-EDITORIAL-1.0.0）</b>', '<b>ETI編集用派生指標</b>'],
+  ['<div class="sp-k">計算・採用軸・版</div>', '<div class="sp-k">計算・採用軸</div>'],
+  [/。版：CORE1-DOMAIN-EDITORIAL-1\.0\.0。/g, '。'],
+];
+const approvedEdits = (s) => [...APPROVED_PAGE_EDITS, ...WEB_101_EDITS].reduce((t, [a, b]) => (a instanceof RegExp ? t.replace(a, b) : t.split(a).join(b)), s);
+test('全12 fixture：Web 版の46ページは prototypes の紙面と同一（違いは P39 の ID・生成日・版の欄、画像の埋め込み方、判定規則4種の承認で変えた表記・同点順、1.0.1 の表紙・版の削除だけ）', () => {
   const P = {
     calc: require(path.join(PROTO, 'src/calculate-result')), claims: require(path.join(PROTO, 'src/build-claims')),
     content: require(path.join(PROTO, 'src/content-store')), tpl: require(path.join(PROTO, 'src/templates/report-46p')),
@@ -181,9 +195,10 @@ test('RC1 の6つの版が完全一致しなければ生成しない（1つで�
   fails(() => G.generateCompleteReport({ ...FIXTURE, versions: { ...FIXTURE.versions, extra: 'x' } }), 'invalid_versions');
   const { mirror_model_version: _m, ...five } = FIXTURE.versions;
   fails(() => G.generateCompleteReport({ ...FIXTURE, versions: five }), 'invalid_versions');
-  // 版は HTML の最終ページに出る（6つ）
-  assert.match(base.html, /ETI-2\.0 · ITEM-2\.0\.0 · SCORE-2\.0\.0 · TRANS-2\.0\.0 · CHAR-2\.1\.0 · MIRROR-2\.1\.0/);
-  assert.match(base.html, /TEMPLATE-46P-WEB-1\.0\.0/);
+  // 版は DB・ハッシュ・manifest に残し、利用者向けの HTML には出さない（TEMPLATE-46P-WEB-1.0.1）
+  assert.equal(base.templateVersion, 'CORE1-TEMPLATE-46P-WEB-1.0.1');
+  assert.doesNotMatch(base.html, /(?:ETI|CORE1|ITEM|SCORE|TRANS|CHAR|MIRROR|HIDDEN|MENTOR|DOMAIN-EDITORIAL|CONTENT|TEMPLATE)-[0-9A-Z-]*\d+\.\d+/);
+  assert.doesNotMatch(base.html.replace(/<style>[\s\S]*?<\/style>/g, ''), /MODEL　|版：|計算・採用軸・版/); // CSS の注記（「46ページ版：」など）は対象外
 });
 
 test('5つの MENTOR 目標それぞれで生成でき、目標の文言はサーバーのカタログから入る（結果は目標ごとに違う）', () => {
@@ -253,7 +268,7 @@ test('入力を1つ変えると input hash と出力が変わる（回答1問・
   assert.equal(CP.jstDate('2026-10-03T14:59:59Z'), '2026-10-03');
   for (const bad of ['2026-10-04', 'yesterday', '', null, 1791200000000]) assert.equal(CP.jstIso(bad), null, String(bad));
   const edge = G.generateCompleteReport({ ...FIXTURE, diagnosedAt: '2026-10-03T15:00:00Z' });
-  assert.match(edge.html, /<div>あなた　｜　2026-10-04　｜　46 ページ<\/div>/);
+  assert.match(edge.html, /<div class="cover-meta">\s*<div>診断日　2026-10-04<\/div>\s*<\/div>/);
   assert.match(edge.html, /<span>診断日　2026-10-04<\/span>/);
   assert.equal(edge.inputSha256, base.inputSha256, '同じ JST の日付なら同じ入力ハッシュ');
   const prev = G.generateCompleteReport({ ...FIXTURE, diagnosedAt: '2026-10-03T14:59:59Z' });
@@ -343,7 +358,10 @@ test('出力：メール・UUID・Stripe ID・診断コード・本名・ID・�
   assert.ok(!text.includes(FIXTURE.encodedAnswers));
   assert.doesNotMatch(text, /complete-report|session_id|answers_hash|sha256:|生成日|サンプル（承認版）|CORE1-V4-AUDITED/);
   assert.doesNotMatch(text, /\$\{|\{\{|\}\}|\bundefined\b|\bNaN\b|\[object Object\]|>\s*null\s*</);
-  assert.match(text, /<div>あなた　｜　2026-10-04　｜　46 ページ<\/div>/);
+  // 表紙・P39 のメタ情報は「診断日 YYYY-MM-DD」だけ（呼称・ページ数・版を出さない）。本文の呼称は「あなた」
+  assert.match(text, /<div class="cover-meta">\s*<div>診断日　2026-10-04<\/div>\s*<\/div>/);
+  assert.match(text, /<div class="cp-meta"><span>診断日　2026-10-04<\/span><\/div>/);
+  assert.match(text, /あなた/);
 });
 
 test('HTML エスケープ：カタログの目標文言に記号があってもエスケープされる', () => {
@@ -442,7 +460,7 @@ async function measurePages(page) {
         && !el.matches('.mb-t,.sqbar,.ptrack,.rbar,.dc-bar,.dma-bar,.nv-bar,.mv-bar,.td-img,.cover-img');
     }).map((el) => String(el.className)).slice(0, 3));
     const st = document.createElement('style');
-    st.textContent = '.page-inner{bottom:auto !important}';
+    st.textContent = '.page-inner{bottom:auto !important;flex:0 0 auto !important}'; // 本文枠を中身の自然な高さにする（Web 版 1.0.1 は縦の流れで本文枠を伸ばすため、伸びも止める）
     document.head.appendChild(st);
     const rows = inners.map((inner, k) => {
       const ib = inner.getBoundingClientRect();
@@ -498,6 +516,80 @@ test('回帰：F05 の P08（HIDDEN SHAPE TOP10）の下端の図が本文枠に
     await browser.close();
   }
 });
+
+// ================= フッターの安全領域（TEMPLATE-46P-WEB-1.0.1）
+// Safari 実機で P03 の本文がフッターに重なった（2026-10-09）。紙面を「本文 → 安全領域 → フッター」の縦の流れにした。
+// 座標で、本文枠の中のすべての要素の下端が、フッターの上端より 1.5mm（--foot-safe）以上 上にあることを確かめる。
+const PX_PER_MM = 793.7 / 210;
+const FOOT_SAFE_PX = 1.5 * PX_PER_MM - 0.5; // 端数の誤差を 0.5px 見込む
+const STRESS_CSS = '<style>.page-inner p, .page-inner li, .page-inner span, .page-inner div { letter-spacing: .08em !important; } .page-inner p { line-height: 2.05 !important; }</style>';
+async function measureFooter(page) {
+  return page.evaluate(() => [...document.querySelectorAll('section.page')].map((pg) => {
+    const pr = pg.getBoundingClientRect(); const k = pr.width / 793.7; // zoom で縮小された表示を紙面の CSS px に戻す
+    const foot = pg.querySelector('.p-foot').getBoundingClientRect();
+    let maxB = -Infinity; let who = '';
+    pg.querySelector('.page-inner').querySelectorAll('*').forEach((el) => {
+      const r = el.getBoundingClientRect(); if (!r.width && !r.height) return;
+      if (r.bottom > maxB) { maxB = r.bottom; who = String(el.className || el.tagName).slice(0, 30); }
+    });
+    return { id: pg.id, gap: (foot.top - maxB) / k, footInPage: foot.bottom <= pr.bottom + 0.5 && foot.top >= pr.top, h: pr.height / k, top: pr.top, bottom: pr.bottom, who };
+  }));
+}
+async function footerRun(widths, inputs, { stress = false } = {}) {
+  const browser = await chromium.launch(process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {});
+  const rows = [];
+  try {
+    for (const width of widths) {
+      const mobile = width < 840;
+      const ctx = await browser.newContext({ viewport: { width, height: 800 }, isMobile: mobile, hasTouch: mobile, deviceScaleFactor: mobile ? 2 : 1 });
+      const page = await ctx.newPage();
+      for (const [id, input] of inputs) {
+        let html = G.generateCompleteReport(input).html;
+        if (stress) html = html.replace('</head>', `${STRESS_CSS}</head>`);
+        await page.setContent(html, { waitUntil: 'load' });
+        const m = await measureFooter(page);
+        assert.equal(m.length, 46, `${id} ${width}px`);
+        for (let i = 1; i < m.length; i++) assert.ok(m[i].top >= m[i - 1].bottom - 0.5, `${id} ${width}px ${m[i].id} が前のページに重なる`);
+        for (const r of m) rows.push({ fx: id, width, ...r });
+      }
+      await ctx.close();
+    }
+  } finally {
+    await browser.close();
+  }
+  return rows;
+}
+
+test('フッターの安全領域：全12 fixture × 46ページ × 320・390・1280px で、本文の最下端がフッターの上端より 1.5mm 以上 上にある（座標）', { skip: !chromium && 'Playwright がありません', timeout: 900000 }, async () => {
+  const rows = await footerRun([320, 390, 1280], fixtureInputs());
+  assert.equal(rows.length, 12 * 46 * 3);
+  for (const r of rows) {
+    assert.ok(r.gap >= FOOT_SAFE_PX, `${r.fx} ${r.width}px ${r.id}：本文の下端とフッターの間 ${r.gap.toFixed(1)}px（${r.who}）`);
+    assert.ok(r.footInPage, `${r.fx} ${r.width}px ${r.id}：フッターが紙面の外`);
+    assert.ok(r.h >= 1122, `${r.fx} ${r.width}px ${r.id}：紙面の高さ ${r.h.toFixed(1)}px が A4 より低い`);
+  }
+  // 原寸（1280px）では、全ページが A4 の高さのまま（紙面が伸びるのは、縮小表示で文字の折り返しが長くなった時だけ）
+  for (const r of rows.filter((x) => x.width === 1280)) assert.ok(Math.abs(r.h - 1123) <= 2, `${r.fx} ${r.id} の高さ ${r.h}`);
+});
+
+test('フッターの安全領域：overflow で隠さない（Web 版の CSS は、本文枠・フッター・紙面に overflow を足していない）', () => {
+  const css = fs.readFileSync(path.join(RC1, 'src/templates/web.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const block = css.slice(css.indexOf(':root { --foot-bottom'));
+  assert.match(block, /\.page \{ height: auto; min-height: var\(--page-h\); display: flex; flex-direction: column; \}/);
+  assert.match(block, /\.p-foot \{ position: relative;[^}]*margin: var\(--foot-safe\) var\(--pad-x\) var\(--foot-bottom\);/);
+  assert.doesNotMatch(block, /overflow|clip|max-height|text-overflow|line-clamp/);
+});
+
+for (const pid of ['p03', 'p08']) {
+  test(`回帰：F05 の ${pid.toUpperCase()} は 320・390・1280px で本文とフッターが重ならない（文字の幅・行間を広げても重ならない）`, { skip: !chromium && 'Playwright がありません', timeout: 300000 }, async () => {
+    const input = fixtureInputs().filter(([id]) => id === 'F05');
+    for (const stress of [false, true]) {
+      const rows = (await footerRun([320, 390, 1280], input, { stress })).filter((r) => r.id === pid);
+      assert.equal(rows.length, 3);
+      for (const r of rows) assert.ok(r.gap >= FOOT_SAFE_PX, `F05 ${pid} ${r.width}px stress=${stress}：${r.gap.toFixed(1)}px（${r.who}）`);
+    }
+  });
+}
 
 // ================= ブラウザ表示（JS なし・CSP あり）
 test('表示：320・390px はページ全体を画面幅に縮小（横スクロールなし・比率と順序を維持）、1280px は原寸。目次で移動でき、拡大を禁止しない', { skip: !chromium && 'Playwright がありません', timeout: 300000 }, async () => {

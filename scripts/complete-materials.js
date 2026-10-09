@@ -24,7 +24,7 @@ const GENERATOR_ROOT = 'api/_complete';
 const BASE = `${GENERATOR_ROOT}/rc1`;
 const OUT = 'lib/complete-materials.json';
 const CONTENT_VERSION = 'CORE1-CONTENT-1.0.1';
-const TEMPLATE_VERSION = 'CORE1-TEMPLATE-46P-WEB-1.0.0';
+const TEMPLATE_VERSION = 'CORE1-TEMPLATE-46P-WEB-1.0.1';
 
 function walk(root, rel) {
   const abs = path.join(root, rel);

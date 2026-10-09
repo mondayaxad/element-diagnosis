@@ -554,7 +554,7 @@ test('Webhook 支払い確定：注文 paid・MENTOR ロック・権利・comple
   assert.equal(await ctx.state(p.sessionId), 'paid|lock=true|ent=analysis:active,complete:active|rep=queued');
   const [report] = await ctx.db.rows('complete_reports');
   assert.equal(report.content_version, 'CORE1-CONTENT-1.0.1');
-  assert.equal(report.template_version, 'CORE1-TEMPLATE-46P-WEB-1.0.0');
+  assert.equal(report.template_version, 'CORE1-TEMPLATE-46P-WEB-1.0.1');
   assert.equal(report.template_version, CP.MATERIALS.templateVersion);
   assert.equal(report.content_sha256, CP.MATERIALS.contentSha256);
   assert.equal(report.template_sha256, CP.MATERIALS.templateSha256);

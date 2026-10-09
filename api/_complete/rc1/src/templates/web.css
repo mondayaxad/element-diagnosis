@@ -89,3 +89,24 @@ html, body { max-width: 100%; overflow-x: hidden; }
 .lc-row { padding-top: .8mm; padding-bottom: .8mm; }
 .lens-card { padding-top: 2.1mm; padding-bottom: 2.1mm; }
 .lcd-why { margin-bottom: 1mm; }
+
+/* ================= フッターの安全領域（Web 版・2026-10-09） =================
+   きっかけ：Safari 実機で P03 の本文がフッターに重なった（Chromium より文字の折り返しが長くなり、本文枠の下へ出た）。
+   方針：overflow で隠さない。紙面を「本文 → 安全領域 → フッター」の縦の流れにし、フッターは常に本文の下に置く。
+   ・本文が収まる環境では、本文枠・フッターの位置は従来と同じ（A4 の高さ 297mm、本文枠の下端は下から 13mm）。
+   ・フォント環境で本文が長くなった場合は、紙面が下へ伸びる（本文とフッターは重ならない）。
+   ・本文の下端とフッターの上端の間は、--foot-safe 以上あく。印刷では従来どおり A4 固定。 */
+:root { --foot-bottom: 7.5mm; --foot-h: 4mm; --foot-safe: 1.5mm; }
+@media screen {
+  .page { height: auto; min-height: var(--page-h); display: flex; flex-direction: column; }
+  .page-inner { position: relative; inset: auto; flex: 1 0 auto; margin: var(--pad-top) var(--pad-x) 0; }
+  .p-foot { position: relative; left: auto; right: auto; bottom: auto; flex: none; height: var(--foot-h); line-height: var(--foot-h); align-items: center;
+    margin: var(--foot-safe) var(--pad-x) var(--foot-bottom); }
+}
+
+/* ================= 表紙の欧文（2026-10-09） =================
+   タイプコード（ELSW-I など）は、旧解析レポート（report.html の ANBW-M）と同じ欧文セリフ体・太さ・字間。
+   旧版：font-family 'Noto Serif JP','Hiragino Mincho ProN',serif／font-weight 800／letter-spacing 3px（36px に対して .0833em）。
+   表紙上部の見出しは「ELEMENT DIAGNOSIS」（旧版の eyebrow と同じ欧文セリフ体）。 */
+.cover-page .cover-label { font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', serif; font-size: 10.5pt; letter-spacing: .32em; }
+.cover-code { font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', serif; font-weight: 800; letter-spacing: .0833em; }

@@ -55,7 +55,8 @@ function render(vm, K) {
   const ITEM = { element: (k) => K.elements.items[k], weapon: (k) => K.weapons.items[k], nation: (k) => K.nations.items[k] };
   const CH_EL = { '炎': '#e37551', '水': '#4da0d3', '氷': '#8ab4dc', '雷': '#b976ef', '風': '#57b885', '岩': '#ca9f51', '草': '#6dbd2f' };
   const TITLES = {};
-  const versions = `${S.versions.diagnosis} · ${S.versions.items.replace('ETI-', '')} · ${S.versions.scoring.replace('ETI-', '')} · ${S.versions.translation.replace('ETI-', '')} · ${S.versions.characters.replace('ETI-', '')} · ${S.versions.mirror.replace('ETI-', '')}`;
+  // 利用者向けの紙面には、モデル・素材・テンプレートの版を出さない（2026-10-09、TEMPLATE-46P-WEB-1.0.1）。版は DB・ハッシュ・manifest に残す
+  const diagDate = `診断日　${S.diagnosed_at.slice(0, 10)}`;
   const top = vm.top;
 
   function page(n, kind, theme, titleHtml, body, o = {}) {
@@ -128,8 +129,7 @@ function render(vm, K) {
       <div class="cover-combo"><span class="c-el">${E(cov.combo[0])}</span><b>×</b><span class="c-st">${E(cov.combo[1])}</span><b>×</b><span class="c-va">${E(cov.combo[2])}</span></div>
     </div>
     <div class="cover-meta">
-      <div>MODEL　${versions}</div>
-      <div>${E(S.display_name)}　｜　${S.diagnosed_at.slice(0, 10)}　｜　46 ページ</div>
+      <div>${diagDate}</div>
     </div>`, { head: false, kicker: 'COVER', toc: '表紙', style: `--cv1:${cov.bg[0]};--cv2:${cov.bg[1]};--cvg:${cov.bg[2]}` });
 
   // ================= P02 読み方（固定。版だけ動的） =================
@@ -254,7 +254,7 @@ function render(vm, K) {
     <div class="cr-grid">
       <div class="cr-list">${charRows(M10, 'mi', vm.lines.mirror)}</div>
       <aside class="cr-side">
-        <div class="sp-block"><div class="sp-k">この順位の読み方</div><p>今の数値の高さと配置を、そのまま映す人物像です。各行の一文は、ETI人物座標（ETI-CHAR-2.1.0）と資料タグから作った説明で、原作人物の全人格を断定するものではありません。${vm.p07.selectedNote ? vm.p07.selectedNote : ''}</p></div>
+        <div class="sp-block"><div class="sp-k">この順位の読み方</div><p>今の数値の高さと配置を、そのまま映す人物像です。各行の一文は、ETI人物座標と資料タグから作った説明で、原作人物の全人格を断定するものではありません。${vm.p07.selectedNote ? vm.p07.selectedNote : ''}</p></div>
         <div class="sp-block"><div class="sp-k">10人に反復するテーマ</div><p>${vm.p07.theme}</p></div>
         <div class="sp-block warn"><div class="sp-k">同じではない</div><p>一致する構造を借りて、自分を別の言葉で理解するための比較です。人物の物語や運命を重ねるものではありません。</p></div>
       </aside>
@@ -278,7 +278,7 @@ function render(vm, K) {
       <aside class="cr-side">
         <div class="sp-block"><div class="sp-k">MIRRORとの違い</div><p>${vm.p08.diffNote}</p></div>
         <div class="sp-block"><div class="sp-k">浮かび上がる形</div><p>${vm.p08.shape}</p></div>
-        <div class="sp-block"><div class="sp-k">このモデルについて</div><p class="small">${S.hidden.model}。各領域の山谷の形の近さを4：3：3で合わせたETI内部の形状類似モデルで、独立に検証された心理尺度ではありません。</p></div>
+        <div class="sp-block"><div class="sp-k">このモデルについて</div><p class="small">各領域の山谷の形の近さを4：3：3で合わせたETI内部の形状類似モデルで、独立に検証された心理尺度ではありません。</p></div>
       </aside>
     </div>
     <div class="top3-grid">${vm.p08.top3.map((x) => `<div class="t3"><div class="t3-h"><span>${pad(x.r.rank)}</span>${E(x.r.name)}</div><p>${x.text}</p></div>`).join('')}</div>
@@ -556,7 +556,7 @@ function render(vm, K) {
     <table class="dm-matrix"><thead><tr><th></th><th class="lp">気質 PERSONALITY</th><th class="ls">スタイル STYLE</th><th class="lv">価値観 VALUES</th></tr></thead><tbody>
       ${DM.items.map((d) => `<tr><th style="--c:${DC[d.key].color}">${d.label}</th>${['P', 'S', 'V'].map((L) => `<td>${d.axes.filter((x) => LAYER[x.axis] === L).map((x) => `${x.axis} ${NAME(x.axis)}`).join('・')}</td>`).join('')}</tr>`).join('')}
       <tr class="rest"><th>どれにも入らない軸</th><td colspan="3">${S.domains.excludedAxes.map((a) => `${a} ${NAME(a)}`).join('・')} ── 貢献の型ではなく、生活のリズムや規範との距離を表すため、ドメインには含めていません。</td></tr></tbody></table>
-    <div class="note-band"><b>ETI編集用派生指標（${S.domains.model}）</b>　ドメインは確立された心理尺度ではなく、ETIの20軸を貢献の観点で読むために編集上まとめたものです。能力値・才能量・人口比を示すものではありません。各軸は一つのドメインにだけ所属させ、重複させていません。</div>`,
+    <div class="note-band"><b>ETI編集用派生指標</b>　ドメインは確立された心理尺度ではなく、ETIの20軸を貢献の観点で読むために編集上まとめたものです。能力値・才能量・人口比を示すものではありません。各軸は一つのドメインにだけ所属させ、重複させていません。</div>`,
   { kicker: 'DOMAINS', sub: 'Contribution domains', toc: '四つの貢献ドメイン' });
   P[34] = page(34, 'navigation-page domain-page', 't-neutral', 'あなたのドメイン平均', `
     <p class="lead">${DM.lead34}</p>
@@ -570,7 +570,7 @@ function render(vm, K) {
       <p class="small">${DM.band34}</p></div>
     <div class="dm-read">
       <div class="nv-box"><div class="sp-k">読み方</div><p>${DM.read34}</p></div>
-      <div class="nv-box"><div class="sp-k">計算・採用軸・版</div><p>各ドメインに割り当てた4軸の単純平均を四捨五入した値。例：${DM.items[0].label}＝(${DM.items[0].axes.map((x) => x.value).join('＋')})÷4＝${DM.items[0].display}。版：${S.domains.model}。確立された心理尺度ではなく、能力値・才能量・人口比を示すものではありません。</p></div>
+      <div class="nv-box"><div class="sp-k">計算・採用軸</div><p>各ドメインに割り当てた4軸の単純平均を四捨五入した値。例：${DM.items[0].label}＝(${DM.items[0].axes.map((x) => x.value).join('＋')})÷4＝${DM.items[0].display}。確立された心理尺度ではなく、能力値・才能量・人口比を示すものではありません。</p></div>
     </div>`, { kicker: 'DOMAIN MEANS', sub: 'Simple means', toc: 'ドメイン平均' });
   const f35 = DM.flow35, topD = DC[f35[0].key];
   P[35] = page(35, 'navigation-page domain-page', 't-neutral', '周囲へ、どう貢献するか', `
@@ -665,7 +665,7 @@ function render(vm, K) {
     <div class="closing">
       <p class="cl-main">${c39.closing.join('<br>')}</p>
       <p class="cl-sub">このレポートは、何者になるべきかを命じる本ではありません。すでにある構造へ、精密な言葉を与えるための本です。</p>
-      <div class="cp-meta"><span>診断日　${S.diagnosed_at.slice(0, 10)}</span><span>${versions}</span><span>${[S.hidden.model, S.mentor.model, S.domains.model, S.versions.report_content_version, S.versions.report_template_version].map((x) => x.replace('CORE1-', '')).join(' · ')}</span></div>
+      <div class="cp-meta"><span>${diagDate}</span></div>
     </div>`, { head: false, kicker: 'YOUR COMPASS', toc: 'YOUR COMPASS' });
 
   // ================= P40–P42 カテゴリ辞典 =================

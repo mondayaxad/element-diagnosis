@@ -115,14 +115,16 @@ test('DOMAIN：同じ平均なら DOMAIN_MODEL.domains の定義順（英字順�
   assert.match(built.F04.domains.lead35, /理解・戦略、関係・統合へつながる/);
 });
 
-test('購入者向けの本文：版は 1.0.0、ドメインに「検証が必要」の表現を出さず、P33 と同じ恒久的な注意書き', () => {
+test('購入者向けの本文：ドメインに「検証が必要」の表現を出さず、P33 と同じ恒久的な注意書き。版は紙面に出さない（TEMPLATE-46P-WEB-1.0.1）', () => {
   for (const [k, vm] of Object.entries(built)) {
     const html = render(vm, K);
     assert.doesNotMatch(html, /0\.1\.0|CANDIDATE|検証が必要|本番公開前/, k);
-    assert.match(html, /ETI編集用派生指標（CORE1-DOMAIN-EDITORIAL-1\.0\.0）/, k);
+    assert.match(html, /<b>ETI編集用派生指標<\/b>/, k);
     assert.match(html, /<span>確立された心理尺度ではありません<\/span>/, k);
-    assert.match(html, /版：CORE1-DOMAIN-EDITORIAL-1\.0\.0。確立された心理尺度ではなく、能力値・才能量・人口比を示すものではありません。/, k);
-    assert.match(html, /DOMAIN-EDITORIAL-1\.0\.0 · CONTENT-1\.0\.1/, k);
+    assert.match(html, /÷4＝\d+。確立された心理尺度ではなく、能力値・才能量・人口比を示すものではありません。/, k);
+    // 版（DOMAIN-EDITORIAL・CONTENT など）は DB・ハッシュ・manifest に残し、紙面には出さない
+    assert.doesNotMatch(html.replace(/<style>[\s\S]*?<\/style>/g, ''), /DOMAIN-EDITORIAL-\d|CONTENT-\d|版：/, k); // CSS の注記は対象外
+    assert.equal(vm.snap.domains.model, 'CORE1-DOMAIN-EDITORIAL-1.0.0', k);
   }
 });
 

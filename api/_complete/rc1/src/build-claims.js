@@ -126,7 +126,7 @@ function buildClaims(snap) {
   const typeName = TYPE_NAME[top.element.key][top.weapon.key];
   if (!typeName || !NATION_CODE[top.nation.key]) { const e = new Error('STOP: type registry cannot reproduce code/name'); e.stop = 11; throw e; }
   const vm = { snap, typeCode, typeName, top, T, flat, claims };
-  vm.cover = { label: '元素診断', title: '完全解析｜CORE1', code: typeCode, name: typeName,
+  vm.cover = { label: 'ELEMENT DIAGNOSIS', title: '完全解析｜CORE1', code: typeCode, name: typeName,
     combo: [top.element.name, top.weapon.name, top.nation.name], image: T.element.visual.image, bg: T.element.visual.cover_bg, flatNation: flat };
   C('P01', 'TYPE', `${typeCode} ${typeName}`, { kind: 'calculated_fact', rule: 'TYPE_REGISTRY_INDEX_HTML', evidence: [
     { path: 'rankings.element[0].key', value: top.element.key }, { path: 'rankings.weapon[0].key', value: top.weapon.key }, { path: 'rankings.nation[0].key', value: top.nation.key }] });
