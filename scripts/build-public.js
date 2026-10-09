@@ -37,6 +37,8 @@ const PUBLIC_FILES = [
   'complete-analysis.js',
   'diagnosis-save.js',
   'ogp.jpeg',
+  'complete-sample.html',                                     // 完全解析サンプル（どこからもリンクしない・noindex）
+  'assets/ogp/ogp-top-20261009.jpg',                          // TOP・完全解析サンプルの OGP（1200×630）
   'robots.txt',
   'sitemap.xml',
   'js/ETI_v2_QUESTIONS_100.js',
@@ -131,6 +133,8 @@ function collectRefs(text, isHtml) {
     refs.add(v);
   };
   if (isHtml) {
+    // data-asset（生成物の画像の出どころの記録。読み込みはしない。画像本体は data: で埋め込み済み）は参照として数えない
+    text = text.replace(/\sdata-asset\s*=\s*"[^"]*"/gi, '');
     for (const m of text.matchAll(/\s(?:src|href|poster|data-src)\s*=\s*"([^"]*)"/gi)) add(m[1]);
     for (const m of text.matchAll(/\s(?:src|href|poster|data-src)\s*=\s*'([^']*)'/gi)) add(m[1]);
   }
