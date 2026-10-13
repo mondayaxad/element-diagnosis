@@ -1,6 +1,6 @@
 # 解析レポート・完全解析 運用手順書（Preview）
 
-対象：release-c-preview と Preview の Supabase（complete_01〜08 適用後）。本番では使わない（本番は別の承認・別の手順）。
+対象：release-c-preview と Preview の Supabase（complete_01〜09 適用後）。本番では使わない（本番は別の承認・別の手順）。
 
 共通の約束
 
@@ -129,6 +129,33 @@ select public.complete_admin_legacy_access(null, '<旧購入の cs_...>', 'revok
   4. 販売を再開する。
 - 金額・通貨・数量・一回払いのどれかが注文と違う支払いは、注文を `failed`（`amount_mismatch`）にして権利を付けない。Stripe で返金し、利用者に連絡する。
 
-## 5. 変えてはいけない設定
+## 5. 診断結果の固有リンク（/result#r=…）の保存期間と整理
+
+- 診断を完了すると、無料の診断結果をゲストの診断記録として保存し、固有リンクを1つ発行する（再診断ごとに別のリンク）。DB には秘密値の SHA-256 だけを保存する。
+- 保存期間：最後に開いた日から 180 日（開くたびに延長）。期限を過ぎたリンクは開けない（「この診断結果は開けません」）。
+- 固有リンクは無料の診断結果を開くだけ。解析レポート・完全解析の閲覧は、従来どおり毎回 DB で権利を確かめる（返金・停止はそのまま効く）。
+- 削除の依頼（「この診断結果を消してほしい」）：利用者からリンクを受け取らない（秘密値をチャット・メールに書かせない）。購入があれば購入の記録 ID から、無ければ期限切れの整理で消える旨を案内する。
+
+### 読み取りの確認
+
+```sql
+select count(*) as links,
+       count(*) filter (where expires_at > now()) as active,
+       count(*) filter (where expires_at <= now()) as expired
+  from public.result_resume_links;
+```
+
+### 整理（月に1回程度。自動では動かない）
+
+期限切れのリンクを消し、180 日より前に作られた、リンク・注文・権利・生成物・旧購入の結び付けの無いゲストの診断記録を消す。購入のある記録は消さない。
+
+```sql
+select * from public.complete_purge_result_links();
+```
+
+- 戻り値：消したリンクの数・消した記録の数。操作の前後に「読み取りの確認」を実行して控える。
+- 戻し（complete_09 を外す）：`docs/sql/complete_97_rollback_09_DRAFT_DO_NOT_RUN.sql`（発行済みのリンクはすべて開けなくなる。作った診断記録は残る）。
+
+## 6. 変えてはいけない設定
 
 - `REPORT_TOKEN_SECRET`・`COMPLETE_VIEW_TOKEN_SECRET` を販売中に変えない（発行済みの閲覧リンク、ゲスト購入の参照値（ref）・購入完了ページの表示が無効になる）。変える時は販売を止め、利用者への案内を用意してから。

@@ -49,7 +49,16 @@
     return { ok: res.ok, status: res.status, body: data || {} };
   }
 
-  function status(code) { return call('guest-status', code ? { code: code } : {}); }
+  // 診断結果の固有リンク（/result#r=<秘密値>）から開いた結果なら、その秘密値（購入をその記録に結び付ける。ログ・GA4 には出さない）
+  function resume() { var t = global.__edResumeToken; return typeof t === 'string' && /^[A-Za-z0-9_-]{43}$/.test(t) ? t : null; }
+  function status(code) {
+    var body = code ? { code: code } : {};
+    if (code && resume()) body.resume = resume();
+    return call('guest-status', body);
+  }
+  // 固有リンクの作成・照会（秘密値は URL のフラグメントにだけ置く。サーバーにはハッシュだけを保存）
+  function resultLink(code) { return call('result-link', { code: code }); }
+  function resultOpen(token) { return call('result-open', { token: token }); }
   // 決済をやり直す・Stripe の画面で戻った：この端末の未払いの決済を閉じる（支払い済みならそのまま反映される）
   function cancel() { return call('guest-cancel', {}); }
   function goals() { return call('guest-goals', {}); }
@@ -60,6 +69,7 @@
     track('checkout_start', { offer: offer, value: info && info.price, currency: 'JPY', source: source });
     var body = { offer: offer, code: code };
     if (goalId) body.goal = goalId;
+    if (resume()) body.resume = resume();
     var r = await call('guest-checkout', body);
     if (r.ok && r.body && typeof r.body.checkoutUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(r.body.checkoutUrl)) {
       track('checkout_redirect', { offer: offer, value: info && info.price, currency: 'JPY', source: source });
@@ -78,6 +88,8 @@
     checkout_in_progress: '決済の手続き中です。しばらくしてから、もう一度お試しください。',
     purchase_completed: 'お支払いは完了しています。購入した内容をご確認ください。',
     rights_suspended: 'この結果の購入は、現在確認中のためお申し込みいただけません。',
+    result_link_invalid: 'この診断結果のリンクを確認できませんでした。ページを読み込み直してください。',
+    claimed: 'この診断結果は、マイページに引き継ぎ済みです。マイページからお申し込みください。',
     legacy_purchase_not_eligible: 'この記録の解析レポートは、旧バージョンのため、完全解析はお申し込みいただけません。',
     not_eligible: 'この結果は対象外です。',
     network: '通信できませんでした。電波の良い場所で、もう一度お試しください。',
@@ -169,7 +181,7 @@
 
   global.EdGuestPurchase = {
     OFFERS: OFFERS, yen: yen, esc: esc, salesOpen: salesOpen, track: track,
-    status: status, cancel: cancel, goals: goals, checkout: checkout, errorText: errorText, claimErrorText: claimErrorText,
+    status: status, resultLink: resultLink, resultOpen: resultOpen, cancel: cancel, goals: goals, checkout: checkout, errorText: errorText, claimErrorText: claimErrorText,
     startClaim: startClaim, takeClaimIntent: takeClaimIntent, claimAll: claimAll, recover: recover,
     openAnalysis: openAnalysis, openComplete: openComplete, regenerate: regenerate, completeLabel: completeLabel,
   };

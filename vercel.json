@@ -1,5 +1,26 @@
 {
   "buildCommand": "node scripts/build-public.js",
   "outputDirectory": "dist",
-  "cleanUrls": true
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/result",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/result",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ]
 }

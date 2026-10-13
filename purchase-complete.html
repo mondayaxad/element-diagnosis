@@ -43,7 +43,7 @@
   <h1 id="pcTitle">ご購入の確認</h1>
   <p class="lead" id="pcLead">お支払いの状況を確認しています。</p>
   <div id="pcList" aria-live="polite"><p class="note"><span class="spinner" aria-hidden="true"></span>確認しています…</p></div>
-  <p class="links"><a href="/">元素診断のトップへ</a> ・ <a href="/mypage.html">マイページ</a></p>
+  <p class="links"><a id="pcResultLink" href="/" hidden>診断結果に戻る</a><span id="pcResultSep" hidden> ・ </span><a href="/">元素診断のトップへ</a> ・ <a href="/mypage.html">マイページ</a></p>
 </main>
 <script src="/js/nav-busy.js"></script>
 <script src="/js/guest-purchase.js"></script>
@@ -192,6 +192,17 @@
 
   // 戻る操作で（bfcache から）表示された：押したまま止まったボタンを残さず、最新の状態で描き直す
   window.addEventListener('pageshow', function (e) { if (e.persisted) { tries = 0; load(); } });
+
+  // この端末で最後に開いた診断結果の固有リンク（/result#r=）へ戻れるようにする（キャンセルの後もすぐ買い直せる）
+  (function resultLink() {
+    var t = null;
+    try { t = localStorage.getItem('ed_last_result_v1'); } catch (e) { t = null; }
+    if (!t || !/^[A-Za-z0-9_-]{43}$/.test(t)) return;
+    var a = document.getElementById('pcResultLink');
+    a.href = '/result#r=' + t;
+    a.hidden = false;
+    document.getElementById('pcResultSep').hidden = false;
+  })();
 
   start();
 })();

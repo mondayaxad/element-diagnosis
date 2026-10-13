@@ -88,6 +88,10 @@ test('vercel.json：build で dist を作り、dist だけを配信する（clea
   assert.equal(v.buildCommand, 'node scripts/build-public.js');
   assert.equal(v.outputDirectory, 'dist');
   assert.equal(v.cleanUrls, true);
+  // 診断結果の固有リンク（/result#r=）：index.html を返し、検索に載せない・Referer にパスより先を出さない
+  assert.deepEqual(v.rewrites, [{ source: '/result', destination: '/index.html' }]);
+  assert.deepEqual(v.headers, [{ source: '/result', headers: [
+    { key: 'X-Robots-Tag', value: 'noindex, nofollow' }, { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' }] }]);
   assert.match(fs.readFileSync(path.join(ROOT, '.gitignore'), 'utf8'), /^dist\/$/m);
 });
 

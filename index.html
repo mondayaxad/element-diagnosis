@@ -299,6 +299,13 @@
     .ca-guest-msg { margin: 8px 0 0; font-size: 11.5px; color: #d6a8b8; line-height: 1.7; }
     .ca-guest-msg:empty { display: none; }
     .ca-fold-note { margin: 10px 0 0; padding-left: 8px; border-left: 2px solid var(--ca-line); font-size: 11px; color: var(--ca-muted); line-height: 1.7; }
+    /* 診断結果の固有リンクの案内（控えめに） */
+    .resume-note { margin: 0 0 14px; padding: 10px 12px; border: 1px solid #1e3448; border-radius: 8px; font-size: 11.5px; line-height: 1.8; color: #8c9bbb; text-align: left; }
+    .resume-note[hidden] { display: none; }
+    .resume-err { margin: 48px 0; padding: 24px 18px; border: 1px solid #1e3448; border-radius: 10px; text-align: center; }
+    .resume-err-title { margin: 0; font-size: 16px; letter-spacing: .06em; color: #cfe0f8; }
+    .resume-err-body { margin: 12px 0 0; font-size: 12.5px; line-height: 1.8; color: #8c9bbb; }
+    .resume-err-link { display: inline-block; margin-top: 16px; padding: 10px 22px; border: 1px solid #2c4a6e; border-radius: 8px; color: #a8c8ec; text-decoration: none; font-size: 13px; }
     /* BEYOND THE RESULT：閉じた状態は静かな予告だけ（決済ボタンは出さない）。開いた時だけ、三つの小さな光点と細い線が現れる */
     .ca-reveal > summary { display: block; min-height: 0; padding: 16px 4px 12px; color: var(--ca-body); letter-spacing: .04em; }
     .ca-reveal > summary::after { content: none; }
@@ -1641,6 +1648,10 @@ function render() {
 // ?code=復元処理）で行われ、ここでは一切変更しない。
 function startNewDiagnosisV2() {
   answersV2 = {}; currentIdxV2 = 0; quizFocusIdxV2 = null;
+  // 前の結果の固有リンクは使わない（新しい診断には新しいリンクを作る）。/result から始めた時は TOP の URL へ戻す
+  window.__edResumeToken = null;
+  window.__resumeFresh = false;
+  if (/^\/result(\.html)?$/.test(location.pathname)) { try { history.replaceState(null, '', '/'); } catch (e) { /* そのまま */ } }
   window.__diagnosisVersion = 'ETI-2.0';
   window.__mirrorVersion = null; // 新規診断は最新のMIRROR版で計算する
   if (typeof gtag === 'function') gtag('event','quiz_start',{event_category:'diagnosis',diagnosis_version:'ETI-2.0'});
@@ -2163,6 +2174,10 @@ function showResultV2() {
   var order = getV2CanonicalOrder();
   if (isCompleteV2(order)) {
     if (typeof gtag === 'function') gtag('event','quiz_complete',{event_category:'diagnosis',value:getAnsweredCountV2(),diagnosis_version:'ETI-2.0'});
+    // 診断を完了した直後の結果：表示の後に固有リンク（/result#r=）を作る（診断ごとに別のリンク）
+    window.__resultNonce = (window.__resultNonce || 0) + 1;
+    window.__resumeFresh = true;
+    window.__edResumeToken = null;
     setPhase('result');
   }
 }
@@ -2659,6 +2674,7 @@ function renderResult(root) {
         </div>
       </div>
 
+      ${diagnosisVersion === 'ETI-2.0' ? '<p id="resumeNote" class="resume-note" role="note" hidden>この診断結果は、ブラウザの履歴からもう一度開けます。<br>URLを知っている人は結果を表示できるため、共有にはご注意ください。</p>' : ''}
       <div style="display:flex;gap:10px">
         <button onclick="startNewDiagnosisV2()"
           style="flex:1;background:transparent;border:1px solid #1e3448;color:#6a90b0;border-radius:8px;padding:12px;font-size:13px;cursor:pointer;font-family:inherit">
@@ -2734,6 +2750,7 @@ function renderResult(root) {
     lockUnlockAllBtn.insertAdjacentElement('afterend', gm);
   }
   if (guestFlow) initGuestPurchase(root, shortCode, { lockCtaBtns: lockCtaBtns, lockUnlockAllBtn: lockUnlockAllBtn });
+  if (diagnosisVersion === 'ETI-2.0') setupResumeLink(root, shortCode);
   // シェアボタンのイベント設定（直接2択）
   var saveImgBtn = root.querySelector('#saveImgBtn');
   if (saveImgBtn) {
@@ -3251,12 +3268,84 @@ function revealRestoredResult() {
   }
 }
 
+/* ===== 診断結果の固有リンク（/result#r=<秘密値>） =====
+   ・診断を完了した直後に、サーバーが保存値からゲストの診断記録を作り、秘密値（256bit）を返す。DB にはハッシュだけを保存する。
+   ・秘密値は URL のフラグメント（#r=）にだけ置く（HTTP のログ・Referer・GA4 には送られない）。履歴に残すため replaceState で書き換える。
+   ・リンクを知っている人は無料の結果を表示できる（有料レポートの閲覧は、従来どおり権利を毎回確かめる）。
+   ・作成に失敗しても、表示中の結果と購入の操作はそのまま使える。 */
+var RESUME_KEY = 'ed_last_result_v1';
+function resumeShowNote(root) {
+  var note = root && root.querySelector('#resumeNote');
+  if (note) note.hidden = false;
+}
+function resumeRemember(token) {
+  try { localStorage.setItem(RESUME_KEY, token); } catch (e) { /* 保存できなくても履歴から開ける */ }
+}
+function setupResumeLink(root, code) {
+  if (typeof EdGuestPurchase === 'undefined') return;
+  var token = window.__edResumeToken;
+  if (token) { resumeShowNote(root); return; }
+  if (!window.__resumeFresh) return; // 旧形式の ?code= から開いた結果などには作らない
+  var nonce = window.__resultNonce;
+  if (window.__resumeCreating === nonce) return;
+  window.__resumeCreating = nonce;
+  EdGuestPurchase.resultLink(code).then(function (r) {
+    var t = r && r.ok && r.body && r.body.token;
+    if (!t || !/^[A-Za-z0-9_-]{43}$/.test(t)) return; // 失敗しても表示・購入はそのまま
+    if (window.__resultNonce !== nonce || window.__phase !== 'result') return;
+    window.__edResumeToken = t;
+    try { history.replaceState(null, '', '/result#r=' + t); } catch (e) { /* 履歴を書き換えられない環境 */ }
+    resumeRemember(t);
+    resumeShowNote(document.getElementById('diagnosis-root'));
+  }).catch(function () { /* 一時的な失敗：何もしない */ });
+}
+function renderResumeError(kind) {
+  var root = document.getElementById('diagnosis-root');
+  if (!root) return;
+  var msg = kind === 'retry'
+    ? '<h2 class="resume-err-title">いまは診断結果を開けません</h2><p class="resume-err-body">時間をおいて、もう一度お試しください。</p>'
+    : '<h2 class="resume-err-title">この診断結果は開けません</h2><p class="resume-err-body">リンクが正しくないか、保存期間が過ぎています。</p>';
+  root.innerHTML = '<section class="resume-err" role="alert">' + msg + '<p><a class="resume-err-link" href="/">TOPへ</a></p></section>';
+}
+// /result#r=<秘密値> を開いた：保存時の版のまま、同じ診断結果を復元する（版が今の診断と違う時は開かない）
+function openResumeFromUrl() {
+  var meta = document.createElement('meta');
+  meta.name = 'robots'; meta.content = 'noindex,nofollow';
+  document.head.appendChild(meta);
+  var m = /(?:^#|&)r=([A-Za-z0-9_-]{43})(?:&|$)/.exec(location.hash || '');
+  if (!m || typeof EdGuestPurchase === 'undefined') { renderResumeError('invalid'); return; }
+  var token = m[1];
+  EdGuestPurchase.resultOpen(token).then(function (r) {
+    if (!r.ok) { renderResumeError(r.status === 404 || r.status === 400 ? 'invalid' : 'retry'); return; }
+    var b = r.body || {};
+    var v = b.versions || {};
+    var decoded = null;
+    try { decoded = b.diagnosisVersion === 'ETI-2.0' ? ETIv2.decodeAnswersV2(b.code, ETI_V2_QUESTIONS) : null; } catch (e) { decoded = null; }
+    if (!decoded || v.itemSetVersion !== ETI_V2_META.itemSetVersion || v.scoringVersion !== ETI_V2_META.scoringVersion) {
+      renderResumeError('invalid');
+      return;
+    }
+    answersV2 = decoded;
+    window.__diagnosisVersion = 'ETI-2.0';
+    // 保存時の MIRROR 版で表示する（今の版で計算し直さない）
+    window.__mirrorVersion = ETIv2MirrorResolver.versionFromUrlParam(ETIv2MirrorResolver.urlParamFor(v.mirrorModelVersion));
+    window.__edResumeToken = token;
+    window.__resumeFresh = false;
+    resumeRemember(token);
+    window.__phase = 'result';
+    render();
+    revealRestoredResult();
+  }).catch(function () { renderResumeError('retry'); });
+}
+
 /* ===== 初期化 ===== */
 window.addEventListener('DOMContentLoaded', function() {
   // URLの世代判定：
   //   ?dv=ETI-2.0&code=... → v2結果を復元
   //   ?code=... のみ（dv無し・dv!=ETI-2.0）→ 常にlegacy-v1として復元（後からv2へ推測変換しない）
   //   どちらも無い → 新規訪問（ETI v2を開始）
+  // 診断結果の固有リンク（/result#r=）
+  if (/^\/result(\.html)?$/.test(location.pathname)) { openResumeFromUrl(); return; }
   var params = new URLSearchParams(window.location.search);
   var savedCode = params.get('code');
   var dv = params.get('dv');
