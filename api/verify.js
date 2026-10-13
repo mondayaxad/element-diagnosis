@@ -281,7 +281,7 @@ function createHandler({ env, fetchImpl, stripeFactory }) {
       }
       if (!entitlementRow) {
         console.error('verify error: payment link retired, no recorded purchase', tail(sessionId), paymentIntentId ? 'pi' : 'no_pi');
-        res.status(410).send('この決済リンクでの販売は終了しました。お支払いが完了している場合は、お手数ですが @mondayaxad までご連絡ください（返金いたします）。');
+        res.status(410).send('この決済リンクでの販売は終了しました。お手数ですがお問い合わせください。');
         return;
       }
       // 記録済みの購入と、この決済の診断コード・商品が一致すること（別の診断結果のリンクへ流用させない）

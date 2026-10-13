@@ -170,7 +170,7 @@ test('記録内の導線：direct ¥3,000 は「目標を選ぶ」、旧 Payment
   assert.match(await latestB.innerText(), /完全解析 ¥3,000：目標を選ぶ/);
   assert.match(await actions(p, 'sess-B', 'records').innerText(), /完全解析 ¥3,000：目標を選ぶ/);
   const a = await actions(p, 'sess-A', 'records').innerText();
-  assert.match(a, /以前の決済リンクでのご購入のため、完全解析はお申し込みいただけません/);
+  assert.match(a, /この記録の解析レポートは、旧バージョンのため、完全解析はお申し込みいただけません。/);
   assert.doesNotMatch(a, /¥3,000|¥2,000|確認しています/);
   assert.equal(await p.locator('[data-rec-actions="sess-A"] [data-mentor-open], [data-rec-actions="sess-A"] [data-legacy-verify]').count(), 0);
   assert.equal(await p.locator('.mp-btn-pending:not([disabled])').count(), 0);

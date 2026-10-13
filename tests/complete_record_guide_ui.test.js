@@ -375,7 +375,7 @@ test('旧 Payment Link で解析レポートを購入した記録：完全解析
     const a = actions(p, ID(5), 'records');
     const t = await a.innerText();
     assert.match(t, /解析レポートを見る/);
-    assert.match(t, /以前の決済リンクでのご購入のため、完全解析はお申し込みいただけません/);
+    assert.match(t, /この記録の解析レポートは、旧バージョンのため、完全解析はお申し込みいただけません。/);
     assert.doesNotMatch(t, /¥2,000|¥3,000|確認しています|もう一度確認する/);
     assert.equal(await a.locator('[data-mentor-open], [data-legacy-verify], [data-complete-checkout]').count(), 0);
     assert.equal(await guide(p, 5).count(), 0);

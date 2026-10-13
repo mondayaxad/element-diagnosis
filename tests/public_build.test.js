@@ -157,3 +157,23 @@ test('公開物に旧 Payment Link（buy.stripe.com）が0件。テスト・SQL�
   const rel = files;
   assert.deepEqual(rel.filter((f) => /(^|\/)(tests?|docs|scripts|prototypes)\//.test(f) || /\.(sql|md)$/.test(f) || /RUNBOOK/i.test(f)), []);
 });
+
+// 旧購入の記録の案内・旧 Payment Link の販売終了の表示：古い文言と返金の約束を公開画面に出さない
+test('公開画面に旧文言（以前の決済リンク）・「返金いたします」「返金できます」が0件。新しい文言は公開物にある', () => {
+  const r = buildTo();
+  const OLD = /以前の決済リンクでのご購入のため|返金いたします|返金できます/;
+  const hits = [];
+  for (const f of B.walk(r.outDir)) {
+    if (!/\.(html|js|json|txt)$/.test(f)) continue;
+    if (OLD.test(fs.readFileSync(path.join(r.outDir, f), 'utf8'))) hits.push(f);
+  }
+  // API が返す画面（verify の販売終了など）も公開画面として確かめる
+  for (const f of B.walk(path.join(ROOT, 'api')).concat(B.walk(path.join(ROOT, 'lib')).map((x) => '../lib/' + x))) {
+    const abs = path.join(ROOT, 'api', f);
+    if (/\.js$/.test(f) && OLD.test(fs.readFileSync(abs, 'utf8'))) hits.push('api/' + f);
+  }
+  assert.deepEqual(hits, []);
+  const all = B.walk(r.outDir).filter((f) => /\.(html|js)$/.test(f)).map((f) => fs.readFileSync(path.join(r.outDir, f), 'utf8')).join('\n');
+  assert.ok(all.includes('この記録の解析レポートは、旧バージョンのため、完全解析はお申し込みいただけません。'));
+  assert.ok(fs.readFileSync(path.join(ROOT, 'api', 'verify.js'), 'utf8').includes('この決済リンクでの販売は終了しました。お手数ですがお問い合わせください。'));
+});

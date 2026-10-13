@@ -63,7 +63,7 @@
   };
   // 旧 ¥1,000 購入の本人確認が済むまでの表示（¥3,000・¥2,000 を出さない）
   // 旧 Payment Link で解析レポートを購入した記録の案内（完全解析は申し込めない。解析レポートは読める）
-  var CA_LEGACY_CLOSED_TEXT = 'この記録の解析レポートは以前の決済リンクでのご購入のため、完全解析はお申し込みいただけません。ご希望の場合はお問い合わせください。';
+  var CA_LEGACY_CLOSED_TEXT = 'この記録の解析レポートは、旧バージョンのため、完全解析はお申し込みいただけません。';
 
   var CA_OFFERS = {
     direct: { offer: 'direct_3000', price: '¥3,000', productId: 'core_complete_analysis' },

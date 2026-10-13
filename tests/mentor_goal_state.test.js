@@ -51,7 +51,7 @@ test('完全解析の導線：サーバーの状態から決める（診断コ�
   assert.deepEqual(kind(rec({ repurchaseBlocked: true })), { kind: 'closed' });
   assert.deepEqual(kind(rec({ completeEntitlement: 'active' })), { kind: 'purchased' });
   assert.equal(CA.LEGACY_PENDING_TEXT, undefined);
-  assert.match(CA.LEGACY_CLOSED_TEXT, /以前の決済リンクでのご購入のため、完全解析はお申し込みいただけません/);
+  assert.match(CA.LEGACY_CLOSED_TEXT, /この記録の解析レポートは、旧バージョンのため、完全解析はお申し込みいただけません。/);
 });
 
 test('mypage：MENTOR の段階の計測は目標選択の1件だけ（目標・記録 ID を送らない）・history を使わない・停止中の決済ボタンは押せない', () => {

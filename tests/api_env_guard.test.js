@@ -166,7 +166,8 @@ test('verify：記録の無い支払い（旧 Payment Link の販売終了後）
   await verify.createHandler({ env: PREVIEW_ENV, fetchImpl: sb.fetchImpl, stripeFactory: st.stripeFactory })(
     { method: 'GET', query: { session_id: 'cs_test_fakesession000001' }, headers: {} }, res);
   assert.equal(res.code, 410);
-  assert.match(String(res.body), /販売は終了しました/);
+  assert.equal(String(res.body), 'この決済リンクでの販売は終了しました。お手数ですがお問い合わせください。');
+  assert.doesNotMatch(String(res.body), /返金/);
   assert.equal(res.headers.Location, undefined);
   assert.ok(!sb.calls.some((c) => c.opts.method === 'POST'), '購入権を作らない');
   // 記録はあるが別の診断結果・別の商品の行：閲覧させない
