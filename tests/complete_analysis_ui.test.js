@@ -394,14 +394,19 @@ test('index：¥1,000主導線のあとに折りたたみ。閉じても¥1,000�
     foldY: document.querySelector('details.ca-fold').getBoundingClientRect().top,
   }));
   assert.ok(pos.foldY > pos.btnY, `¥1,000 より後（${pos.btnY} → ${pos.foldY}）`);
-  const foldBox = await fold.boundingBox();
-  assert.ok(foldBox.height >= 44 && foldBox.height <= 52, 'closed height ' + foldBox.height);
+  // 閉じた状態は静かな予告だけ（¥3,000・決済ボタン・サンプルは出さない）
+  const closed = await fold.locator('summary').innerText();
+  for (const s of ['BEYOND THE RESULT｜この先にあるもの', 'まだ、ここには現れていない輪郭があります。', '三つの人物像から、あなたをもう一段深く読む。', 'MIRROR・HIDDEN SHAPE・MENTOR', 'その先を見る']) assert.ok(closed.includes(s), s);
+  assert.doesNotMatch(closed, /¥3,000|¥2,000|完全解析との違い/);
+  assert.equal(await fold.locator('[data-ca-sample]').isVisible(), false);
   // 販売停止中（既定）は ¥1,000 も「準備中」で押せない
   assert.equal(await p.locator('#lockUnlockAllBtn').innerText().then((s) => s.trim()), '解析レポート（準備中）');
   assert.equal(await p.locator('#lockUnlockAllBtn').isDisabled(), true);
   await p.click('details.ca-fold > summary');
   const text = await fold.innerText();
-  for (const s of ['COMPLETE ANALYSIS｜完全解析', 'この結果を、46ページの一つの記録として残します。', 'MIRROR', '現在のあなたに近い10名', 'HIDDEN SHAPE', '表に出にくい一面に近い10名', 'MENTOR', 'これから伸ばす方向に近い10名', '解析レポートの内容も含まれます。', '¥3,000', '完全解析は準備中です']) assert.ok(text.includes(s), s);
+  for (const s of ['この結果が示すのは、あなたの核となる一面です。', 'あなたと重なる人物', 'まだ言葉になっていない内側の可能性', 'これから借りられる力を', '三つの視点からひとつの輪郭へ結びます。', '全46ページの完全解析', '8ページのサンプルを見る', '¥3,000', '完全解析は準備中です']) assert.ok(text.includes(s), s);
+  assert.equal(await fold.locator('[data-ca-sample]').getAttribute('href'), '/complete-sample');
+  assert.equal(await fold.locator('.ca-reveal-stars i').count(), 3);
   // 決済前のボタンに「見る」「開く」を使わない。押せない button（href なし）
   const cta = fold.locator('button.is-pending');
   const ctaText = (await cta.innerText()).trim();
@@ -410,7 +415,6 @@ test('index：¥1,000主導線のあとに折りたたみ。閉じても¥1,000�
   assert.equal(await cta.isDisabled(), true);
   assert.equal(await cta.getAttribute('href'), null);
   assert.equal(await fold.locator('a[href*="buy.stripe"], [data-preview-dummy]').count(), 0);
-  assert.equal(await fold.locator('.ca-lens').count(), 3);
   // 料金概要に¥3,000・ナラティブを出さない
   const html = await p.content();
   assert.ok(!html.includes('ナラティブ'));

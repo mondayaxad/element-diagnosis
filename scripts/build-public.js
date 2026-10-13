@@ -41,7 +41,7 @@ const PUBLIC_FILES = [
   'js/guest-purchase.js',
   'js/nav-busy.js',
   'js/ga.js',
-  'complete-sample.html',                                     // 完全解析サンプル（どこからもリンクしない・noindex）
+  'complete-sample.html',                                     // 完全解析サンプル（結果ページの完全解析の欄からだけリンク・noindex）
   'assets/ogp/ogp-top-20261009.jpg',                          // TOP・完全解析サンプルの OGP（1200×630）
   'robots.txt',
   'sitemap.xml',

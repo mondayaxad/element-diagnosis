@@ -138,6 +138,12 @@ test('完了ページ（販売中）：完全解析 ¥3,000 は目標を選ぶ�
   const p = await resultPage({ api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
   await p.click('details.ca-fold > summary');
   const fold = p.locator('details.ca-fold');
+  // 展開しただけでは目標の選択・決済を出さない。「まだ見えていない輪郭を読む ¥3,000」を押してから
+  const reveal = fold.locator('[data-reveal-offer="direct_complete"]');
+  await reveal.waitFor();
+  assert.equal((await reveal.innerText()).trim(), 'まだ見えていない輪郭を読む　¥3,000');
+  assert.equal(await fold.locator('[data-guest-buy]').count(), 0);
+  await reveal.click();
   await fold.locator('[data-guest-buy]').waitFor();
   assert.match(await fold.innerText(), /¥3,000/);
   const buy = fold.locator('[data-guest-buy="direct_complete"]');
@@ -158,8 +164,9 @@ test('完了ページ：この端末で解析レポート購入済みなら「�
   await p.waitForFunction(() => /解析レポートを読む/.test(document.querySelector('#lockUnlockAllBtn').textContent));
   await p.click('details.ca-fold > summary');
   const fold = p.locator('details.ca-fold');
+  await fold.locator('[data-reveal-offer="analysis_upgrade"]').click();
   await fold.locator('[data-guest-buy="analysis_upgrade"]').waitFor();
-  assert.match(await fold.innerText(), /追加 ¥2,000/);
+  assert.match(await fold.innerText(), /追加¥2,000/);
   await fold.locator('input[value="GOAL_PACE_01"]').check();
   await fold.locator('[data-guest-buy="analysis_upgrade"]').click();
   await p.waitForURL(/checkout\.stripe\.com/);
@@ -173,7 +180,7 @@ test('完了ページ（販売停止中）：¥1,000・¥3,000 とも「準備�
   assert.equal(await p.locator('#lockUnlockAllBtn').isDisabled(), true);
   await p.click('details.ca-fold > summary');
   await p.locator('details.ca-fold button.is-pending').waitFor();
-  assert.equal((await p.locator('details.ca-fold button.is-pending').innerText()).trim(), '完全解析 ¥3,000（準備中）');
+  assert.equal((await p.locator('details.ca-fold button.is-pending').innerText()).trim(), 'まだ見えていない輪郭を読む　¥3,000（準備中）');
   await p.locator('#lockUnlockAllBtn').click({ force: true });
   assert.equal(p.__calls.filter((c) => c.op === 'guest-checkout').length, 0);
   await p.__ctx.close();
@@ -296,7 +303,8 @@ test('完了ページ：決済待ち（決済画面を閉じた）は「決済�
   await reset.waitFor();
   assert.match(await p.locator('[data-guest-complete]').innerText(), /決済画面を閉じた場合は、やり直せます/);
   await reset.click();
-  await p.waitForSelector('[data-guest-buy]');
+  // 片付けた後は、すぐ買い直せる（申込の導線に戻る）
+  await p.waitForSelector('[data-reveal-offer="direct_complete"]');
   assert.deepEqual(p.__calls.filter((c) => c.op === 'guest-cancel').map((c) => c.body), [{}]);
   assert.ok(await noScroll(p));
   await p.__ctx.close();
@@ -325,4 +333,62 @@ test('購入完了ページ：確認を使い切ったら回り続ける表示�
   await p.waitForFunction(() => /確認に時間がかかっています/.test(document.body.innerText));
   assert.equal(await p.locator('.spinner').count(), 0);
   await p.__ctx.close();
+});
+
+// ================= A：BEYOND THE RESULT（完全解析の訴求）
+test('BEYOND THE RESULT：¥1,000 の主導線の下。閉じた状態は予告だけ・展開でサンプルと ¥3,000。320／390／1280px で重なり・はみ出しなし', { skip: skip() }, async () => {
+  for (const width of [320, 390, 1280]) {
+    const p = await resultPage({ width, api: { 'guest-status': [200, { salesOpen: true, purchases: [], codePurchased: false }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
+    await p.evaluate(() => { window.__ev = []; window.gtag = function () { window.__ev.push(Array.from(arguments)); }; });
+    const fold = p.locator('details.ca-reveal');
+    const btn = p.locator('#lockUnlockAllBtn');
+    const b1 = await btn.boundingBox();
+    const f1 = await fold.boundingBox();
+    assert.ok(f1.y >= b1.y + b1.height, `${width}: ¥1,000 の下（${b1.y + b1.height} ≤ ${f1.y}）`);
+    assert.ok(b1.height >= 44, `${width}: ¥1,000 の大きさを保つ`);
+    assert.equal(await fold.evaluate((d) => d.open), false);
+    await fold.locator('[data-reveal-offer]').waitFor({ state: 'attached' });
+    assert.equal(await fold.locator('[data-reveal-offer]').isVisible(), false, '閉じた状態に ¥3,000 の導線を見せない');
+    assert.equal(await fold.locator('[data-ca-sample]').isVisible(), false);
+    assert.doesNotMatch(await fold.locator('summary').innerText(), /¥/);
+    assert.equal(await noScroll(p), true, `${width}: 閉じた状態`);
+    await fold.locator('summary').click();
+    await fold.locator('[data-reveal-offer="direct_complete"]').waitFor();
+    assert.equal(await fold.locator('[data-ca-sample]').isVisible(), true);
+    assert.equal(await noScroll(p), true, `${width}: 開いた状態`);
+    // 本文・ボタンが横にはみ出さない（カードの内側に収まる）
+    const out = await p.evaluate(() => {
+      const vw = document.documentElement.clientWidth;
+      return Array.from(document.querySelectorAll('details.ca-reveal *')).filter((el) => { const r = el.getBoundingClientRect(); return r.width && (r.right > vw + 0.5 || r.left < -0.5); }).map((el) => el.className || el.tagName);
+    });
+    assert.deepEqual(out, [], `${width}: はみ出し`);
+    // 計測：展開・サンプル・¥3,000（匿名。記録 ID・URL・診断コードを含めない）
+    await p.route('**/complete-sample', (r) => r.fulfill({ contentType: 'text/html', body: '<p>sample</p>' }));
+    const [popup] = await Promise.all([p.waitForEvent('popup'), fold.locator('[data-ca-sample]').click()]);
+    await popup.close();
+    await fold.locator('[data-reveal-offer="direct_complete"]').click();
+    await fold.locator('[data-guest-buy]').waitFor();
+    const ev = await p.evaluate(() => window.__ev.filter((a) => a[0] === 'event').map((a) => [a[1], a[2]]));
+    const names = ev.map((e) => e[0]);
+    for (const n of ['complete_details_open', 'complete_sample_open', 'complete_offer_click']) assert.ok(names.includes(n), `${width}: ${n}`);
+    assert.doesNotMatch(JSON.stringify(ev), new RegExp(`${p.__code}|https?:|sess-|@`));
+    assert.deepEqual(p.__errors, []);
+    await p.__ctx.close();
+  }
+});
+
+test('BEYOND THE RESULT：展開時だけ光点と線が現れ、prefers-reduced-motion では動きを止める', { skip: skip() }, async () => {
+  for (const reduced of [false, true]) {
+    const p = await resultPage({ api: { 'guest-status': [200, { salesOpen: true, purchases: [], codePurchased: false }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
+    await p.emulateMedia({ reducedMotion: reduced ? 'reduce' : 'no-preference' });
+    await p.locator('details.ca-reveal summary').click();
+    const anim = await p.evaluate(() => Array.from(document.querySelectorAll('.ca-reveal-stars i')).map((i) => getComputedStyle(i).animationName));
+    assert.equal(anim.length, 3);
+    if (reduced) assert.deepEqual(anim, ['none', 'none', 'none']);
+    else assert.ok(anim.every((n) => n === 'ca-reveal-dot'), JSON.stringify(anim));
+    // 常時点滅しない（無限に繰り返さない）
+    const iter = await p.evaluate(() => getComputedStyle(document.querySelector('.ca-reveal-stars i')).animationIterationCount);
+    assert.equal(iter, '1');
+    await p.__ctx.close();
+  }
 });
