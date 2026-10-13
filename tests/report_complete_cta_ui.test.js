@@ -1,6 +1,6 @@
 // 解析レポート末尾の完全解析の案内（実データ）の試験（Playwright）。API はすべて差し替え。外部へは接続しない。
-//   ・ゲスト（この端末で ¥1,000 を購入）：追加 ¥2,000 の申込 → 同じ記録の結果ページで MENTOR 目標の選択を開く
-//     （この端末の固有リンクが同じ診断結果ならそれを使い、無ければ診断コードで開く）
+//   ・ゲスト（この端末で ¥1,000 を購入）：追加 ¥2,000 の申込 → このページで MENTOR 目標を選んで決済
+//     （この端末の固有リンクが同じ診断結果なら、決済をその記録に結び付ける）
 //   ・マイページ経由：マイページで申し込む導線。購入済み・決済中・確かめられない時は売らない
 //   実行: node --test tests/report_complete_cta_ui.test.js
 'use strict';
@@ -97,54 +97,66 @@ async function openReport(ctx) {
 }
 const box = (p) => p.locator('[data-report-complete]');
 
-test('ゲスト（解析レポート購入済み）：BEYOND THE REPORT・追加 ¥2,000 → 同じ記録の固有リンクの結果ページで目標の選択を開く → 決済はその記録に結び付く', { skip: skip() }, async () => {
+test('ゲスト（解析レポート購入済み）：BEYOND THE REPORT・三つの人物像の説明・追加 ¥2,000 → このページで MENTOR 目標を選んで決済（同じ記録の固有リンクに結び付く）', { skip: skip() }, async () => {
   const w = world();
   const ctx = await context(w, { lastResult: TOKEN });
   const p = await openReport(ctx);
   const sec = await p.locator('.ca-r-sec').innerText();
   assert.match(sec, /BEYOND THE REPORT｜この先にあるもの/);
   assert.match(sec, /このレポートが描いたのは、いまのあなたの輪郭。\s*その奥にある三つの人物像を、46ページで読み解く。/);
-  assert.match(sec, /MIRROR[\s\S]*HIDDEN SHAPE[\s\S]*MENTOR/);
-  assert.match(sec, /この解析レポートの内容は、すべて含まれます\s*追加 ¥2,000/);
-  assert.ok(!/¥3,000|¥1,000|購入状態を確認できない/.test(sec));
+  assert.match(sec, /MIRROR\s*いまのあなたに最も近い10名\s*20軸の配置が、いまのあなたに最も近い人物たちです。/);
+  assert.match(sec, /HIDDEN SHAPE\s*表に出にくい一面に近い10名\s*強さの順位ではなく、山と谷の「形」が近い人物たちです。/);
+  assert.match(sec, /MENTOR\s*これから伸ばす方向に近い10名\s*あなたが選ぶ目標に向けて、/);
+  assert.ok(!/すべて含まれます|¥3,000|¥1,000|購入状態を確認できない/.test(sec));
   const btn = box(p).locator('[data-report-upgrade]');
   assert.equal((await btn.innerText()).trim(), 'まだ見えていない輪郭を読む　追加¥2,000');
+  assert.match(await btn.evaluate((e) => getComputedStyle(e).backgroundImage), /linear-gradient/, 'グラデーションのボタン');
   assert.equal(await box(p).locator('a[href="/complete-sample"][target="_blank"]').count(), 1);
   assert.deepEqual(w.calls.find((c) => c.op === 'guest-status').body, { code: CODE }, 'この記録の購入状態を確かめる');
   await btn.click();
-  await p.waitForURL((u) => u.pathname === '/result');
-  // 結果ページ：欄が開き、MENTOR 目標の選択が出ている。URL の buy は消す（固有リンクは残す）
-  await p.waitForSelector('input[name="guest-mentor-goal"]');
-  assert.equal(new URL(p.url()).hash, '#r=' + TOKEN);
-  assert.equal(await p.locator('details.ca-reveal').evaluate((d) => d.open), true);
-  assert.match(await p.locator('[data-guest-complete]').innerText(), /まだ見えていない輪郭を読む　追加¥2,000/);
-  await p.locator('input[name="guest-mentor-goal"]').first().check();
-  await p.locator('[data-guest-buy]').click();
+  // このページの中で目標を選ぶ（結果ページへは移らない）
+  await p.waitForSelector('input[name="report-mentor-goal"]');
+  assert.equal(new URL(p.url()).pathname, '/report.html');
+  const buy = box(p).locator('[data-report-buy]');
+  assert.equal(await buy.isDisabled(), true, '目標を選ぶまで押せない');
+  await box(p).locator('input[name="report-mentor-goal"]').first().check();
+  await buy.click();
   await p.waitForURL(/checkout\.stripe\.com/);
   const co = w.calls.filter((c) => c.op === 'guest-checkout').map((c) => c.body);
   assert.equal(co.length, 1);
   assert.deepEqual([co[0].offer, co[0].code, co[0].resume, typeof co[0].goal], ['analysis_upgrade', CODE, TOKEN, 'string']);
-  // 計測：レポート側で1回だけ（source=analysis_report）。診断コード・秘密値を送らない
-  const ev = JSON.stringify(await p.evaluate(() => window.__ev).catch(() => []));
-  assert.ok(!ev.includes(CODE) && !ev.includes(TOKEN));
+  assert.ok(!w.calls.some((c) => c.url.includes(TOKEN)), '秘密値は本文だけ');
   assert.deepEqual(p.__errors, []);
   await ctx.close();
 });
 
-test('ゲスト：この端末に固有リンクが無い・別の診断結果のリンクなら、診断コードで結果ページを開いて目標の選択へ', { skip: skip() }, async () => {
+test('ゲスト：この端末に固有リンクが無い・別の診断結果のリンクなら、固有リンクを送らずに決済（診断コードとこの端末の購入で結び付く）。失敗はその場で表示', { skip: skip() }, async () => {
   for (const lastResult of [null, 'OtherResultTokenForAnotherDiagnosis_ABCDEFG']) {
     const w = world();
     if (lastResult) w.links[lastResult] = OTHER;
     const ctx = await context(w, { lastResult });
     const p = await openReport(ctx);
     await box(p).locator('[data-report-upgrade]').click();
-    await p.waitForSelector('input[name="guest-mentor-goal"]');
-    const u = new URL(p.url());
-    assert.deepEqual([u.pathname, u.searchParams.get('code'), u.hash], ['/', CODE, ''], String(lastResult));
-    assert.equal(w.calls.filter((c) => c.op === 'result-link').length, 0, '開き直した結果では新しいリンクを作らない');
+    await box(p).locator('input[name="report-mentor-goal"]').first().check();
+    await box(p).locator('[data-report-buy]').click();
+    await p.waitForURL(/checkout\.stripe\.com/);
+    const co = w.calls.filter((c) => c.op === 'guest-checkout').map((c) => c.body);
+    assert.deepEqual([co.length, co[0].offer, co[0].code, 'resume' in co[0]], [1, 'analysis_upgrade', CODE, false], String(lastResult));
     assert.deepEqual(p.__errors, []);
     await ctx.close();
   }
+  // 決済を作れない（例：販売停止）：その場で理由を出し、押し直せる
+  const w = world();
+  const ctx = await context(w);
+  await ctx.route('**/api/complete-checkout?op=guest-checkout', (r) => r.fulfill({ status: 503, contentType: 'application/json', body: '{"error":"sales_closed"}' }));
+  const p = await openReport(ctx);
+  await box(p).locator('[data-report-upgrade]').click();
+  await box(p).locator('input[name="report-mentor-goal"]').first().check();
+  await box(p).locator('[data-report-buy]').click();
+  await p.waitForFunction(() => /準備中/.test(document.querySelector('[data-report-msg]').textContent));
+  assert.equal(await box(p).locator('[data-report-buy]').isDisabled(), false);
+  assert.equal(new URL(p.url()).pathname, '/report.html');
+  await ctx.close();
 });
 
 test('購入済み・決済中・購入が見つからない・確かめられない・販売停止・マイページ経由の出し分け', { skip: skip() }, async () => {
@@ -154,7 +166,7 @@ test('購入済み・決済中・購入が見つからない・確かめられ�
     [{ purchases: [] }, /購入状態を確認できないため、購入導線は表示していません/, null],
     [{ statusCode: 503 }, /購入状態を確認できないため/, null],
     [{ salesOpen: false }, /追加¥2,000（準備中）[\s\S]*完全解析は準備中です/, 'button.is-pending[disabled]'],
-    [{ viewer: 'mypage' }, /追加 ¥2,000[\s\S]*マイページで完全解析を申し込む/, 'a[href="/mypage.html"]'],
+    [{ viewer: 'mypage' }, /マイページで申し込む　追加¥2,000/, 'a[href="/mypage.html"].is-offer'],
     [{ viewer: 'legacy' }, /購入状態を確認できないため/, null],
   ];
   for (const [over, re, sel] of cases) {
@@ -182,6 +194,13 @@ test('320・390・1280px：完全解析の案内が横にはみ出さない・�
     assert.deepEqual(over, [], String(width));
     const b = await box(p).locator('[data-report-upgrade]').boundingBox();
     assert.ok(b.height >= 44, String(width));
+    await box(p).locator('[data-report-upgrade]').click();
+    await p.waitForSelector('input[name="report-mentor-goal"]');
+    const over2 = await p.evaluate(() => Array.from(document.querySelectorAll('.ca-r-sec, .ca-r-sec *'))
+      .filter((e) => e.getBoundingClientRect().right > window.innerWidth + 0.5).map((e) => e.tagName + '.' + e.className));
+    assert.deepEqual(over2, [], '目標の選択：' + width);
+    const g = await box(p).locator('.ca-goal').first().boundingBox();
+    assert.ok(g.height >= 44, '目標の行：' + width);
     await ctx.close();
   }
 });

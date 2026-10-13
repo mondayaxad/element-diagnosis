@@ -113,6 +113,18 @@
   .ca-r-btn.is-pending { font-family:inherit; font-size:13px; color:#a3a6c4; border-style:dashed; cursor:not-allowed; }
   .ca-r-btn.is-view { border-color:color-mix(in srgb, var(--ca-view) 40%, var(--ca-line)); color:var(--ca-view); }
   .ca-r-note { margin-top:10px; padding-left:8px; border-left:2px solid var(--ca-line); font-size:11px; color:var(--ca-muted); line-height:1.7; }
+  .ca-lens-desc--strong { color:var(--ca-title); font-size:13px; }
+  .ca-lens-more { display:block; margin-top:4px; font-size:12px; line-height:1.85; color:var(--ca-muted); }
+  .ca-r-btn.is-offer { margin-top:20px; min-height:52px; border:none; color:#fff; font-weight:700; letter-spacing:0.06em; background:linear-gradient(120deg, #5b78c8 0%, #8a5fc0 50%, #c9a860 100%); box-shadow:0 6px 20px rgba(138,95,192,0.35); text-align:center; line-height:1.5; padding:10px 14px; }
+  .ca-r-btn.is-offer:disabled { opacity:0.55; cursor:default; box-shadow:none; }
+  .ca-r-goal-title { margin-top:16px; font-size:12px; letter-spacing:0.12em; color:var(--ca-gold); }
+  .ca-goal-list { border:0; margin:10px 0 0; padding:0; }
+  .ca-goal-list legend { font-size:12px; color:var(--ca-body); line-height:1.8; margin-bottom:6px; }
+  .ca-goal { display:flex; gap:10px; align-items:flex-start; min-height:44px; padding:10px 4px; border-bottom:1px solid var(--ca-line); cursor:pointer; }
+  .ca-goal input { margin-top:4px; width:18px; height:18px; flex:none; accent-color:#8a5fc0; }
+  .ca-goal b { display:block; font-size:13px; color:var(--ca-title); font-weight:700; }
+  .ca-goal span span { display:block; font-size:11.5px; color:var(--ca-muted); line-height:1.7; margin-top:2px; }
+  .ca-r-msg { margin-top:8px; font-size:12px; color:#e0a0a0; min-height:1em; }
   .ca-r-sample { display:inline-block; margin-top:12px; font-size:12px; letter-spacing:0.06em; color:#8fb4dc; text-decoration:none; border-bottom:1px solid #2c3a55; padding-bottom:1px; }
   .cover-dots { position:relative; width:220px; height:220px; margin:0 auto 20px; }
   .cover-dots svg { width:100%; height:100%; }
@@ -1691,7 +1703,7 @@ function completeAnalysisReportHtml(pal, results, diagnosisVersion) {
     body = `
         <div class="ca-eyebrow">BEYOND THE REPORT｜この先にあるもの</div>
         <p class="ca-lead">このレポートが描いたのは、いまのあなたの輪郭。<br>その奥にある三つの人物像を、46ページで読み解く。</p>
-        ${lenses}
+        ${reportLensListHtml()}
         <div data-report-complete><p class="ca-r-note">購入状態を確認しています…</p></div>`;
   } else {
     body = `${head}
@@ -1702,10 +1714,26 @@ function completeAnalysisReportHtml(pal, results, diagnosisVersion) {
       </div>`;
 }
 
-// 完全解析の案内（実データ）：レポートを開いた端末で購入状態を確かめ、¥2,000 の申込へつなぐ。
-//   ゲスト：この端末の購入（Cookie）で確かめる。申込は同じ記録の結果ページで MENTOR 目標を選んで決済へ
-//           （固有リンクがあればその記録、無ければ診断コードで開く）。
-//   マイページ経由：マイページの診断記録から申し込む。確かめられない時は売らない。
+// 三つの人物像（レポート末尾の案内用の詳しい説明。内容は完全解析のサンプルと同じ）
+var REPORT_LENSES = [
+  { key: 'mirror', en: 'MIRROR', head: 'いまのあなたに最も近い10名',
+    body: '20軸の配置が、いまのあなたに最も近い人物たちです。元素・武器・国家の結果名が違っていても、どこが重なり、どこが違うのかを一人ずつ読み解きます。' },
+  { key: 'hidden', en: 'HIDDEN SHAPE', head: '表に出にくい一面に近い10名',
+    body: '強さの順位ではなく、山と谷の「形」が近い人物たちです。数値の高さだけでは目立たなかった資質が、配置として何を意味するのかを示します。' },
+  { key: 'mentor', en: 'MENTOR', head: 'これから伸ばす方向に近い10名',
+    body: 'あなたが選ぶ目標に向けて、核を失わずに広げるための振る舞いを借りられる人物たちです。選んだ目標によって、顔ぶれと読み解く軸が変わります。' },
+];
+function reportLensListHtml() {
+  return '<ul class="ca-lens-list" aria-label="三つの人物像">' + REPORT_LENSES.map(function (l) {
+    return '<li class="ca-lens ca-lens--' + l.key + '"><span class="ca-lens-head"><span class="ca-lens-en">' + l.en + '</span></span>'
+      + '<span class="ca-lens-desc ca-lens-desc--strong">' + l.head + '</span>'
+      + '<span class="ca-lens-more">' + l.body + '</span></li>';
+  }).join('') + '</ul>';
+}
+
+// 完全解析の案内（実データ）：レポートを開いた端末で購入状態を確かめ、このページで MENTOR の目標を選んで ¥2,000 の決済へ。
+//   ゲスト：この端末の購入（Cookie）で確かめる。決済は同じ記録に結び付ける（この端末の固有リンクが同じ診断結果なら、それも送る）。
+//   マイページ経由：マイページの診断記録から申し込む。購入済み・決済中・確かめられない時は売らない。
 function initReportComplete(code, viewer) {
   var box = document.querySelector('[data-report-complete]');
   if (!box) return;
@@ -1713,15 +1741,14 @@ function initReportComplete(code, viewer) {
   var unknown = '<p class="ca-r-note">この記録の完全解析の購入状態を確認できないため、購入導線は表示していません。</p>';
   var sample = '<a class="ca-r-sample" href="/complete-sample" target="_blank" rel="noopener" data-ca-sample>完全解析のサンプルを見る</a>';
   if (!G || !code) { box.innerHTML = unknown; return; }
-  function price() {
-    return '<div class="ca-r-price"><span class="ca-meta">この解析レポートの内容は、すべて含まれます</span><span class="ca-price">追加 ' + G.yen(G.OFFERS.analysis_upgrade.price) + '</span></div>';
-  }
+  var price = G.yen(G.OFFERS.analysis_upgrade.price);
+  var label = 'まだ見えていない輪郭を読む　追加' + price;
   function bindSample() {
     var a = box.querySelector('[data-ca-sample]');
     if (a) a.addEventListener('click', function () { G.track('complete_sample_open', { source: 'analysis_report' }); });
   }
   if (viewer === 'mypage') {
-    box.innerHTML = price() + '<a class="ca-r-btn" href="/mypage.html" data-report-mypage>マイページで完全解析を申し込む</a>'
+    box.innerHTML = '<a class="ca-r-btn is-offer" href="/mypage.html" data-report-mypage>マイページで申し込む　追加' + price + '</a>'
       + '<p class="ca-r-note">マイページの診断記録から、MENTOR の目標を選んでお申し込みいただけます。</p>' + sample;
     bindSample();
     return;
@@ -1741,33 +1768,65 @@ function initReportComplete(code, viewer) {
       return;
     }
     if (mine.analysis !== 'active') { box.innerHTML = unknown; return; }
-    var label = 'まだ見えていない輪郭を読む　追加' + G.yen(G.OFFERS.analysis_upgrade.price);
     if (!G.salesOpen()) {
-      box.innerHTML = price() + '<button type="button" class="ca-r-btn is-pending" disabled aria-disabled="true">' + label + '（準備中）</button>'
+      box.innerHTML = '<button type="button" class="ca-r-btn is-pending" disabled aria-disabled="true">' + label + '（準備中）</button>'
         + '<p class="ca-r-note">完全解析は準備中です。現在はお申し込みいただけません。</p>';
       return;
     }
-    box.innerHTML = price() + '<button type="button" class="ca-r-btn" data-report-upgrade>' + label + '</button>'
-      + '<p class="ca-r-note">次の画面で MENTOR の目標を1つ選び、決済へ進みます。</p>' + sample;
+    box.innerHTML = '<button type="button" class="ca-r-btn is-offer" data-report-upgrade>' + label + '</button>' + sample;
     bindSample();
     var btn = box.querySelector('[data-report-upgrade]');
     btn.onclick = function () {
       btn.disabled = true;
       G.track('complete_offer_click', { offer: 'analysis_upgrade', source: 'analysis_report' });
-      reportGoToResult(G, code);
+      reportShowGoals(G, box, code, label);
     };
   }).catch(function () { box.innerHTML = unknown; });
 }
-// 同じ記録の結果ページへ（目標の選択を開いた状態で）。この端末の固有リンクが同じ診断結果なら、それを使う
-function reportGoToResult(G, code) {
+// MENTOR の目標を選んで決済へ（このページの中で）
+function reportShowGoals(G, box, code, label) {
+  box.innerHTML = '<p class="ca-r-note">読み込んでいます…</p>';
+  G.goals().then(function (gr) {
+    var goals = (gr && gr.ok && gr.body && gr.body.catalog && gr.body.catalog.goals) || [];
+    if (!goals.length) { box.innerHTML = '<p class="ca-r-note">目標の一覧を読み込めませんでした。再読み込みしてください。</p>'; return; }
+    box.innerHTML = '<p class="ca-r-goal-title">' + label + '</p>'
+      + '<fieldset class="ca-goal-list"><legend>MENTOR の目標を1つ選んでください（お支払いの後は変えられません）</legend>'
+      + goals.map(function (g) {
+        return '<label class="ca-goal"><input type="radio" name="report-mentor-goal" value="' + G.esc(g.goalId) + '"><span><b>' + G.esc(g.label) + '</b><span>' + G.esc(g.description || '') + '</span></span></label>';
+      }).join('') + '</fieldset>'
+      + '<button type="button" class="ca-r-btn is-offer" data-report-buy disabled>目標を選んで決済へ（追加' + G.yen(G.OFFERS.analysis_upgrade.price) + '）</button>'
+      + '<p class="ca-r-msg" data-report-msg role="status"></p>';
+    var buy = box.querySelector('[data-report-buy]');
+    var msg = box.querySelector('[data-report-msg]');
+    box.addEventListener('change', function (e) {
+      if (e.target && e.target.name === 'report-mentor-goal') { buy.disabled = false; G.track('complete_goal_select', { source: 'analysis_report' }); }
+    });
+    try { box.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* 古いブラウザ */ }
+    buy.onclick = function () {
+      var picked = box.querySelector('input[name="report-mentor-goal"]:checked');
+      if (!picked) return;
+      buy.disabled = true;
+      buy.textContent = '決済画面へ移動しています…';
+      if (msg) msg.textContent = '';
+      reportResumeFor(G, code).then(function () {
+        return G.checkout('analysis_upgrade', code, picked.value, 'analysis_report');
+      }).then(function (res) {
+        if (res && res.ok) return;
+        buy.disabled = false;
+        buy.textContent = '目標を選んで決済へ（追加' + G.yen(G.OFFERS.analysis_upgrade.price) + '）';
+        if (msg) msg.textContent = G.errorText(res && res.error);
+      });
+    };
+  });
+}
+// この端末の固有リンクが同じ診断結果なら、決済をその記録に結び付ける（違えば送らない。診断コードとこの端末の購入で結び付く）
+function reportResumeFor(G, code) {
   var t = null;
   try { t = localStorage.getItem('ed_last_result_v1'); } catch (e) { t = null; }
-  function byCode() { location.assign('/?dv=ETI-2.0&code=' + encodeURIComponent(code) + '#buy'); }
-  if (!t || !/^[A-Za-z0-9_-]{43}$/.test(t)) { byCode(); return; }
-  G.resultOpen(t).then(function (r) {
-    if (r && r.ok && r.body && r.body.code === code) location.assign('/result#r=' + t + '&buy=1');
-    else byCode();
-  }).catch(byCode);
+  if (!t || !/^[A-Za-z0-9_-]{43}$/.test(t)) return Promise.resolve();
+  return G.resultOpen(t).then(function (r) {
+    if (r && r.ok && r.body && r.body.code === code) window.__edResumeToken = t;
+  }).catch(function () { /* 送らない */ });
 }
 
 function renderFullReport(root, results, diagnosisCode) {

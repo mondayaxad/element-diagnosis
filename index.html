@@ -3041,13 +3041,6 @@ function completeAnalysisFoldHtml(itemSetVersion, diagnosisVersion) {
    ・購入済み（この端末）：解析レポートを読む／完全解析の状態。¥2,000 は同じ記録で解析レポートを購入済みの時だけ。
    ・販売停止中：価格は見せるが、ボタンは「準備中」で押せない。
    ・価格・権利はサーバーが決める（ここでは offer と目標だけを送る）。 */
-// 解析レポートから「追加 ¥2,000」で来たか（読み込み時の URL の # で判定。結果の固有リンク #r=…&buy=1 にも対応）
-window.__edAutoBuy = /(?:^#|&)buy(?:=1)?(?:&|$)/.test(location.hash || '');
-function edClearBuyHash() {
-  var h = (location.hash || '').replace(/(^#|&)buy(?:=1)?(?=&|$)/, '$1').replace(/^#&/, '#').replace(/&$/, '');
-  if (h === '#') h = '';
-  try { history.replaceState(history.state, '', location.pathname + location.search + h); } catch (e) { /* そのまま */ }
-}
 function initGuestPurchase(root, code, refs) {
   var G = EdGuestPurchase;
   var box = root.querySelector('[data-guest-complete]');
@@ -3131,15 +3124,6 @@ function initGuestPurchase(root, code, refs) {
       reveal.disabled = true;
       showGoals();
     };
-    // 解析レポートの「追加 ¥2,000」から来た（#buy・&buy=1）：欄を開き、目標の選択を出す（計測はレポート側で済み）
-    if (window.__edAutoBuy) {
-      window.__edAutoBuy = false;
-      edClearBuyHash();
-      var det = box.closest('details');
-      if (det) det.open = true;
-      if (offer === 'analysis_upgrade') { reveal.disabled = true; showGoals(); }
-      setTimeout(function () { try { (det || box).scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* 古いブラウザ */ } }, 60);
-    }
     function showGoals() {
     box.innerHTML = '<p class="ca-fold-note">読み込んでいます…</p>';
     G.goals().then(function (gr) {
