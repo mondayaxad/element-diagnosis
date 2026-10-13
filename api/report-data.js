@@ -27,11 +27,17 @@
 //      設定不足のときは 503（legacy_floor の保証も含めて止める。別の接続先へは切り替えない）
 //   9. トークンに環境名（env）があり、現在の環境と異なる場合は無効なトークンとして扱う（403）。
 //      env を持たない旧形式トークンは従来どおり受け付ける（後方互換）
+//  10. 閲覧のたびに、トークンの種類ごとの規則で DB の権利を確かめる（complete_08。D5・D6）。
+//      再発行トークン（マイページ・ゲスト）は記録（sid）・本人（uid）を持ち、その記録の有効な解析権だけを見る
+//      （同じ診断コードを持つ別の本人の権利は使わない）。旧購入は返金・取消・運営者の停止で読めなくなる。
+//      上の 3・4 は置き換え：DB を確かめられない時は 503（旧形式も含め、確かめずに表示しない）。
+//      応答は Cache-Control: private, no-store
 //
 // 署名検証・有効期限確認の中核ロジックは本番版から変更していない。
 
 const crypto = require('crypto');
 const { requireServerEnv, requestHost, logEnvDenied } = require('../lib/server-env');
+const PS = require('../lib/purchase-state');
 
 // Supabaseプロジェクト自体のURLは秘密情報ではないが、Preview環境ではPreview専用の
 // Supabaseプロジェクトへ向けるため、リクエストごとに環境ガードで検査した値だけを使う。
@@ -123,47 +129,86 @@ const PRODUCT_PERMISSIONS = {
   complete: ['core_analysis_access', 'journey_report_access'],
   core2_upgrade: ['journey_report_access'],
 };
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// トークンの種類（権利の確認方法が違う）
+//   mypage：マイページからの再発行（sid・uid 付き）。その本人の記録の解析権（lib/purchase-state.js と同じ規則）
+//   guest：ゲスト購入の端末からの再発行（sid 付き）。未引き継ぎのゲスト記録の有効な解析権
+//   verify：旧 ¥1,000 の決済完了（purchase ブロック付き）。同じ診断コードの有効な旧購入
+//   legacy_floor：旧形式（purchase も access_mode も無い）。旧購入が返金・取消・停止されていなければ読める
+//   それ以外（access_mode が不明・sid の無い再発行トークン）は受け付けない
+function tokenKind(data) {
+  if (data.access_mode === 'mypage_entitlement_reissue') {
+    return typeof data.sid === 'string' && UUID_RE.test(data.sid) && typeof data.uid === 'string' && UUID_RE.test(data.uid) ? 'mypage' : null;
+  }
+  if (data.access_mode === 'guest_entitlement_reissue') {
+    return typeof data.sid === 'string' && UUID_RE.test(data.sid) ? 'guest' : null;
+  }
+  if (data.access_mode !== undefined) return null;
+  return data.purchase ? 'verify' : 'legacy_floor';
+}
+
+function setNoStore(res) {
+  if (typeof res.setHeader === 'function') res.setHeader('Cache-Control', 'private, no-store');
+}
 
 function createHandler({ env, fetchImpl }) {
-  // service roleキーでpurchase_entitlementsを直接検索する（経路A：
-  // クライアントへ生テーブルを公開せず、このサーバー処理だけが読む）。
-  async function fetchDbPermissions(conn, diagnosisCodeHash) {
-    const url =
-      `${conn.supabaseUrl}/rest/v1/purchase_entitlements` +
-      `?diagnosis_code_hash=eq.${encodeURIComponent(diagnosisCodeHash)}` +
-      `&status=eq.active&select=product_type`;
-
-    // 管理者アクセス（ヘッダーはキーの形式に合わせて lib/server-env.js が作る）
-    const res = await fetchImpl(url, { headers: conn.adminHeaders() });
-
-    if (!res.ok) {
-      // 応答本文はログ・例外へ含めない（ステータスだけ）。
-      throw new Error(`purchase_entitlements lookup failed: ${res.status}`);
-    }
-
+  async function select(conn, path) {
+    const res = await fetchImpl(`${conn.supabaseUrl}/rest/v1/${path}`, { headers: conn.adminHeaders() });
+    // 応答本文はログ・例外へ含めない（ステータスだけ）。
+    if (!res.ok) throw new Error(`lookup failed: ${res.status}`);
     const rows = await res.json();
+    if (!Array.isArray(rows)) throw new Error('lookup failed');
+    return rows;
+  }
+
+  // 旧購入（purchase_entitlements）：診断コードのハッシュ単位。運営者が停止・取消したものは数えない（complete_08 §2）
+  async function legacyFacts(conn, hash) {
+    const [rows, blocked] = await Promise.all([
+      select(conn, `purchase_entitlements?diagnosis_code_hash=eq.${hash}&select=product_type,status`),
+      PS.blockedLegacyHashes((path) => select(conn, path), [hash]),
+    ]);
+    const isBlocked = blocked.has(hash);
     const permissions = new Set();
-    for (const row of rows) {
-      (PRODUCT_PERMISSIONS[row.product_type] || []).forEach((p) => permissions.add(p));
-    }
-    // 記録単位の解析権（解析レポート ¥1,000・完全解析セット ¥3,000。complete_07）。
-    // 関数が無い環境（migration 適用前）では 404 になるため、旧 purchase_entitlements だけで判定する。
-    if (!permissions.has('core_analysis_access')) {
-      const rpc = await fetchImpl(`${conn.supabaseUrl}/rest/v1/rpc/complete_analysis_active_for_code_hash`, {
-        method: 'POST',
-        headers: { ...conn.adminHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ p_code_hash: diagnosisCodeHash }),
-      });
-      if (rpc.ok) {
-        if ((await rpc.json()) === true) permissions.add('core_analysis_access');
-      } else if (rpc.status !== 404) {
-        throw new Error(`record entitlement lookup failed: ${rpc.status}`);
+    if (!isBlocked) {
+      for (const row of rows) {
+        if (row.status !== 'active') continue;
+        (PRODUCT_PERMISSIONS[row.product_type] || []).forEach((p) => permissions.add(p));
       }
     }
-    return permissions;
+    return { rows, blocked: isBlocked, permissions };
+  }
+
+  // 記録の診断コードのハッシュがトークンの診断コードと一致すること（別の記録・別の結果へ流用させない）
+  function sessionMatches(session, hash) {
+    return !!session && PS.keyOf(session) === hash;
+  }
+
+  async function permissionsFor(conn, kind, data, hash) {
+    const legacy = await legacyFacts(conn, hash);
+    const journey = legacy.permissions.has('journey_report_access');
+    if (kind === 'verify') return { core: legacy.permissions.has('core_analysis_access'), journey };
+    if (kind === 'legacy_floor') {
+      // 署名付きの旧形式リンク：旧購入の行が無い時代の発行分もあるため、行が無ければ従来どおり読める。
+      // 行があってどれも有効でない（返金・取消）、または運営者が停止・取消した場合は読めない（D6）
+      const refunded = legacy.rows.length > 0 && !legacy.rows.some((r) => r.status === 'active');
+      return { core: !legacy.blocked && !refunded, journey };
+    }
+    if (kind === 'mypage') {
+      const st = PS.computeStates(await PS.loadUserFacts((path) => select(conn, path), data.uid))[data.sid];
+      return { core: !!(st && st.analysisAccess && sessionMatches(st.record.session, hash)), journey };
+    }
+    // guest：未引き継ぎ（user_id が無い）ゲスト記録の、有効な解析権
+    const [sessions, rights] = await Promise.all([
+      select(conn, `diagnosis_sessions?id=eq.${data.sid}&select=id,user_id,diagnosis_version,diagnosis_answers(encoded_answers)`),
+      select(conn, `record_entitlements?diagnosis_session_id=eq.${data.sid}&right_type=eq.analysis&status=eq.active&select=user_id`),
+    ]);
+    const s = sessions[0];
+    return { core: !!(s && s.user_id == null && rights.some((r) => r.user_id == null) && sessionMatches(s, hash)), journey };
   }
 
   return async function handler(req, res) {
+    setNoStore(res);
     // 環境ガード：Supabase へ接続する前に、環境・接続先・署名鍵を確かめる。
     const guard = requireServerEnv(env, { host: requestHost(req), admin: true, reportSecret: true });
     if (!guard.ok) {
@@ -188,6 +233,12 @@ function createHandler({ env, fetchImpl }) {
       return;
     }
 
+    const kind = tokenKind(data);
+    if (!kind) {
+      res.status(403).json({ error: 'invalid_or_expired_token' });
+      return;
+    }
+
     // 新形式トークンは診断コードを復号する必要がある。復号に失敗した場合
     // （改ざん、鍵不一致等）は、署名検証は通っていても無効なトークンとして扱う。
     const diagnosisRef = parseDiagnosisReference(resolveDiagnosisCode(secret, data), data);
@@ -196,57 +247,36 @@ function createHandler({ env, fetchImpl }) {
       return;
     }
 
-    // legacy_floor：purchaseブロックが無い（＝旧形式の）トークンは、
-    // 署名検証に成功した時点でCORE1閲覧を保証する（後方互換）。
-    // purchaseブロックがある新形式トークンは、それ自体からは権限を導出しない
-    // （GA4計測専用のため）。
-    const floor = new Set();
-    // マイページからの再発行トークンはpurchaseブロックを持たないが、旧形式トークンではない。
-    // legacy_floorを適用するとDB権利確認を迂回してしまうため、access_modeで明確に除外する。
-    if (!data.purchase && data.access_mode !== 'mypage_entitlement_reissue') {
-      floor.add('core_analysis_access');
-    }
-
-    // DB検索に失敗しても、legacy_floorの保証（旧形式トークン＝CORE1）だけは
-    // 必ず維持する。DB由来の権限（新形式トークンの実際の購入内容）は
-    // 確認できない場合、安全側に倒して付与しない（空集合のまま扱う）。
-    // これにより、DB障害時に旧トークン保有者が一律500で締め出されることを防ぐ。
-    let dbPermissions = new Set();
-    let dbLookupFailed = false;
+    // 閲覧のたびに DB で権利を確かめる（期限内のトークン・旧形式のリンクでも省かない。D6）。
+    // 確かめられない時は表示しない（503。返金・停止後に読めてしまわないように）
+    let perms;
     try {
-      // v2は接頭辞を含めてハッシュ化されているため、表示用に接頭辞を外す前の
-      // referenceを使って購入権限を照合する。
-      const hash = hashDiagnosisCode(diagnosisRef.reference);
-      dbPermissions = await fetchDbPermissions(guard, hash);
+      // v2は接頭辞を含めてハッシュ化されているため、表示用に接頭辞を外す前のreferenceを使う。
+      perms = await permissionsFor(guard, kind, data, hashDiagnosisCode(diagnosisRef.reference));
     } catch (err) {
-      console.error('report-data error: entitlement lookup failed (falling back to legacy_floor only)', err && err.message);
-      dbLookupFailed = true;
+      console.error('report-data error: entitlement lookup failed', err && err.message);
+      res.status(503).json({ error: 'temporarily_unavailable' });
+      return;
     }
 
-    const finalPermissions = new Set([...floor, ...dbPermissions]);
+    if (!perms.core && !perms.journey) {
+      res.status(403).json({ error: 'not_entitled' });
+      return;
+    }
 
     const responseBody = {
       diagnosis_version: diagnosisRef.diagnosisVersion,
       entitlements: {
-        core_analysis_access: finalPermissions.has('core_analysis_access'),
-        journey_report_access: finalPermissions.has('journey_report_access'),
+        core_analysis_access: perms.core,
+        journey_report_access: perms.journey,
       },
       // GA4計測専用。閲覧権限には使わない。旧形式トークンではnull。
       purchase: data.purchase || null,
     };
 
     // 診断コード自体は、CORE1閲覧権限がある場合にのみレスポンスへ含める。
-    // report.html の表示ゲートはUI上の制御に過ぎず、このAPIを直接叩けば
-    // 権限が無くてもcodeだけは取得できてしまっていたため、
-    // データそのものをサーバー側で絞る（権限が無ければcodeを返さない）。
-    if (finalPermissions.has('core_analysis_access')) {
+    if (perms.core) {
       responseBody.code = diagnosisRef.code;
-    }
-
-    if (dbLookupFailed) {
-      // DB確認ができなかったことをクライアント側で識別できるようにする
-      // （現状report.htmlはこのフィールドを見ないが、将来の商品別表示制御のために残す）。
-      responseBody.degraded = true;
     }
 
     res.status(200).json(responseBody);
@@ -255,3 +285,4 @@ function createHandler({ env, fetchImpl }) {
 
 module.exports = createHandler({ env: process.env, fetchImpl: (...args) => fetch(...args) });
 module.exports.createHandler = createHandler;
+module.exports.tokenKind = tokenKind;

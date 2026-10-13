@@ -125,7 +125,7 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
       return failLogged(res, 503, 'service_unavailable', err.code);
     }
     if (!row || row.state !== 'ok' || row.report_id !== t.reportId || typeof row.storage_path !== 'string' || !RJ.OBJECT_KEY_RE.test(row.storage_path)) {
-      const code = row && row.state === 'not_ready' ? 'report_not_ready' : 'not_entitled';
+      const code = row && row.state === 'not_ready' ? 'report_not_ready' : (row && row.state === 'basis_inactive' ? 'basis_inactive' : 'not_entitled');
       return fail(res, code === 'report_not_ready' ? 409 : 403, code);
     }
     let body;
@@ -186,6 +186,8 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
         const rows = await CP.rpc(fetchImpl, guard, 'complete_report_for_view', { p_user_id: user.id, p_diagnosis_session_id: targetId });
         const row = Array.isArray(rows) ? rows[0] : null;
         if (!row || row.state === 'not_found' || row.state === 'not_entitled') return fail(res, 403, 'not_entitled');
+        // ¥2,000 の根拠（解析レポートの購入）が取消・停止中：完全解析の権利は残るが今は読めない（D5）
+        if (row.state === 'basis_inactive') return fail(res, 403, 'basis_inactive');
         if (row.state !== 'ok') {
           const reports = await CP.selectRows(fetchImpl, guard, `complete_reports?id=eq.${encodeURIComponent(row.report_id)}&select=id,status,attempts,max_attempts,next_retry_at,lease_expires_at`);
           if (RJ.isDue(reports[0], now())) recover(guard, reports[0].id);

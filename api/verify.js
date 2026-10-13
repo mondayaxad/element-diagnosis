@@ -35,6 +35,7 @@
 // 署名生成・TTL・リダイレクトの中核ロジックは本番版から変更していない。
 
 const crypto = require('crypto');
+const PS = require('../lib/purchase-state');
 const { requireServerEnv, requestHost, logEnvDenied, tail } = require('../lib/server-env');
 
 const TOKEN_TTL_MS = 100 * 365 * 24 * 60 * 60 * 1000; // 実質無期限（100年）
@@ -226,6 +227,8 @@ function createHandler({ env, fetchImpl, stripeFactory }) {
   }
 
   return async function handler(req, res) {
+    // 権利に関わる応答は共有キャッシュ・ブラウザのキャッシュに残さない（D6）
+    if (typeof res.setHeader === 'function') res.setHeader('Cache-Control', 'private, no-store');
     try {
       // 環境ガード：Stripe・Supabase へ接続する前に、環境・接続先・Stripe モード・署名鍵を確かめる。
       const guard = requireServerEnv(env, {
@@ -339,6 +342,25 @@ function createHandler({ env, fetchImpl, stripeFactory }) {
         return;
       }
 
+      // 返金・取消（行の status）・運営者の停止（legacy_access_blocks：complete_08 §2）の購入には、閲覧リンクを発行しない（D5・D6）。
+      // 停止の確認ができない時は発行しない（503）
+      let blocked;
+      try {
+        blocked = (await PS.blockedLegacyHashes(async (path) => {
+          const r = await fetchImpl(`${guard.supabaseUrl}/rest/v1/${path}`, { headers: guard.adminHeaders() });
+          if (!r.ok) throw new Error(`legacy_access_blocks lookup failed: ${r.status}`);
+          return r.json();
+        }, [diagnosisCodeHash])).has(diagnosisCodeHash);
+      } catch (err) {
+        console.error('verify error: access block lookup failed', err && err.message, tail(sessionId));
+        res.status(503).send('現在ご利用いただけません。時間をおいて再度お試しください。');
+        return;
+      }
+      if (entitlementRow.status !== 'active' || blocked) {
+        res.status(403).send('このご購入は、返金・取消などにより閲覧いただけません。お心当たりがない場合は @mondayaxad までご連絡ください。');
+        return;
+      }
+
       // GA4計測専用のpurchaseブロック。閲覧権限の判定には使わない
       // （権限判定は/api/report-data.js側でpurchase_entitlementsを直接見て行う）。
       const transactionId = crypto.createHash('sha256').update(sessionId).digest('hex').slice(0, 16);
@@ -364,7 +386,7 @@ function createHandler({ env, fetchImpl, stripeFactory }) {
       });
 
       // レポート表示ページへリダイレクト
-      res.writeHead(302, { Location: `/report.html?token=${encodeURIComponent(token)}` });
+      res.writeHead(302, { Location: `/report.html?token=${encodeURIComponent(token)}`, 'Cache-Control': 'private, no-store' });
       res.end();
     } catch (err) {
       console.error('verify error:', err && err.name ? err.name : 'unknown', err && err.type ? err.type : '');

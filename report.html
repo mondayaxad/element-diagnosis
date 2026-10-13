@@ -2064,7 +2064,17 @@ async function savePdf() {
   try {
     const res = await fetch('/api/report-data?token=' + encodeURIComponent(token));
     if (!res.ok) {
-      root.innerHTML = '<div class="err-box"><h2>リンクが無効です</h2><p>お手数ですが、決済完了時の画面から再度アクセスするか、@mondayaxad までご連絡ください。</p></div>';
+      // 閲覧のたびにサーバーが権利を確かめる。返金・取消・停止後は、期限内のリンクでも表示しない
+      var errBody = null;
+      try { errBody = await res.json(); } catch (e) { errBody = null; }
+      var errCode = errBody && errBody.error;
+      if (res.status === 503) {
+        root.innerHTML = '<div class="err-box"><h2>ただいま確認できません</h2><p>購入内容を確認できませんでした。時間をおいて、もう一度お試しください。</p></div>';
+      } else if (errCode === 'not_entitled') {
+        root.innerHTML = '<div class="err-box"><h2>このレポートはご覧いただけません</h2><p>ご購入を確認できませんでした（返金・取消などの場合を含みます）。購入済みの場合は、マイページからもう一度お開きください。お心当たりがない場合は @mondayaxad までご連絡ください。</p></div>';
+      } else {
+        root.innerHTML = '<div class="err-box"><h2>リンクが無効です</h2><p>リンクの有効期限が切れたか、正しくありません。マイページ、または購入した端末の画面からもう一度お開きください。お心当たりがない場合は @mondayaxad までご連絡ください。</p></div>';
+      }
       return;
     }
     const data = await res.json();

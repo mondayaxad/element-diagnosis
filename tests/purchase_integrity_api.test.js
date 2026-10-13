@@ -462,3 +462,217 @@ test('D2・D3：Google 等でも同じ確認済みメールなら引き継げる
   assert.equal((await ctx.op('guest-report', { ref: st.ref }, { cookie })).code, 409, '引き継ぎ後は Cookie では読めない');
   await ctx.db.close();
 });
+
+// ================= G3：閲覧のたびに権利を確かめる・返金・停止（C4・C9・D5・D6）
+const signReport = (payload) => {
+  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  return `${body}.${crypto.createHmac('sha256', ENV.REPORT_TOKEN_SECRET).update(body).digest('base64url')}`;
+};
+const encRef = (ref) => {
+  const key = Buffer.from(crypto.hkdfSync('sha256', ENV.REPORT_TOKEN_SECRET, Buffer.alloc(0), 'report-token-code-encryption-v1', 32));
+  const iv = crypto.randomBytes(12);
+  const c = crypto.createCipheriv('aes-256-gcm', key, iv);
+  const data = Buffer.concat([c.update(ref, 'utf8'), c.final()]);
+  return { iv: iv.toString('base64url'), tag: c.getAuthTag().toString('base64url'), data: data.toString('base64url') };
+};
+const urlOf = (payload) => `/report.html?token=${encodeURIComponent(signReport(payload))}`;
+// 完全解析の生成物を ready にする（生成の処理は別の試験）
+async function markReady(ctx, sid) {
+  const rep = (await ctx.rows('complete_reports')).find((r) => r.diagnosis_session_id === sid && r.status !== 'revoked');
+  await ctx.db.patch('complete_reports', rep.id, { status: 'ready', storage_path: `reports/${rep.id}/1-${'a'.repeat(32)}.html`, output_sha256: 'b'.repeat(64), ready_at: new Date().toISOString() });
+  return rep.id;
+}
+async function viewGet(ctx, viewUrl) {
+  const res = makeRes();
+  const h = Status.createHandler({ env: ctx.env, fetchImpl: ctx.db.fetchImpl, logger: ctx.logger, waitUntil: null,
+    storage: { download: async () => { throw Object.assign(new Error('x'), { code: 'not_in_test' }); } } });
+  await h({ method: 'GET', headers: {}, query: { view: viewUrl.split('view=')[1] } }, res);
+  return res;
+}
+async function chargeOf(ctx, cs) { return ctx.stripe.st.sessions[cs].payment_intent && Object.values(ctx.stripe.st.charges).find((c) => c.payment_intent === ctx.stripe.st.sessions[cs].payment_intent).id; }
+async function refund(ctx, cs, amount) {
+  const ch = await chargeOf(ctx, cs);
+  ctx.stripe.refund(ch, amount);
+  const w = await ctx.webhook({ type: 'charge.refunded', objectId: ch });
+  assert.equal(w.code, 200, JSON.stringify(w.body));
+}
+
+test('¥1,000 の返金：解析権は revoked。発行済みの閲覧リンク（期限内）も、新しいリンクも開けない。応答は private, no-store', { skip }, async () => {
+  const ctx = await setup();
+  const p = await person(ctx);
+  const { cs } = await payLoggedIn(ctx, p, { diagnosisSessionId: p.sessionId, product: 'analysis' });
+  const link = await ctx.reportLink(p.token, p.sessionId);
+  assert.equal(link.code, 200);
+  assert.equal(link.headers['cache-control'], 'private, no-store');
+  const before = await ctx.reportData(link.body.url);
+  assert.deepEqual([before.code, before.body.code, before.headers['cache-control']], [200, CODE_A, 'private, no-store']);
+  await refund(ctx, cs, 1000);
+  assert.deepEqual(await rightsOf(ctx, p.sessionId), ['analysis:revoked']);
+  const after = await ctx.reportData(link.body.url);
+  assert.deepEqual([after.code, after.body.error, after.body.code], [403, 'not_entitled', undefined]);
+  assert.equal(after.headers['cache-control'], 'private, no-store');
+  assert.deepEqual([(await ctx.reportLink(p.token, p.sessionId)).code], [403]);
+  // 返金後は ¥1,000 の再購入を出さない（返金済みの購入は「購入済み」のまま。運営者の判断で扱う）
+  const rec = (await ctx.entitlements(p.token)).body.records[p.sessionId];
+  assert.equal(rec.analysisSource, null);
+  await ctx.db.close();
+});
+
+test('¥2,000 の返金：完全解析だけ revoked。解析レポートは読める・完全解析の閲覧は発行済みの URL も含め不可', { skip }, async () => {
+  const ctx = await setup();
+  const p = await person(ctx);
+  await payLoggedIn(ctx, p, { diagnosisSessionId: p.sessionId, product: 'analysis' });
+  const { cs } = await payLoggedIn(ctx, p, { diagnosisSessionId: p.sessionId });
+  await markReady(ctx, p.sessionId);
+  const v = await ctx.status(p.token, p.sessionId, 'POST');
+  assert.equal(v.code, 200, JSON.stringify(v.body));
+  const link = await ctx.reportLink(p.token, p.sessionId);
+  await refund(ctx, cs, 2000);
+  assert.deepEqual(await rightsOf(ctx, p.sessionId), ['analysis:active', 'complete:revoked']);
+  assert.equal((await ctx.reportData(link.body.url)).code, 200, '解析レポートは読める');
+  assert.deepEqual([(await ctx.status(p.token, p.sessionId, 'POST')).code], [403]);
+  const old = await viewGet(ctx, v.body.viewUrl);
+  assert.deepEqual([old.code, old.body.error], [403, 'not_entitled']);
+  const rec = (await ctx.entitlements(p.token)).body.records[p.sessionId];
+  assert.deepEqual([rec.completeEntitlement, rec.repurchaseBlocked, rec.completeOffer], ['revoked', true, null]);
+  await ctx.db.close();
+});
+
+test('¥3,000 の返金：解析・完全解析とも revoked。両方の閲覧が、発行済みのリンクでも不可', { skip }, async () => {
+  const ctx = await setup();
+  const p = await person(ctx);
+  const { cs } = await payLoggedIn(ctx, p, { diagnosisSessionId: p.sessionId });
+  await markReady(ctx, p.sessionId);
+  const v = await ctx.status(p.token, p.sessionId, 'POST');
+  const link = await ctx.reportLink(p.token, p.sessionId);
+  assert.deepEqual([v.code, link.code, (await ctx.reportData(link.body.url)).code], [200, 200, 200]);
+  await refund(ctx, cs, 3000);
+  assert.deepEqual(await rightsOf(ctx, p.sessionId), ['analysis:revoked', 'complete:revoked']);
+  assert.equal((await ctx.reportData(link.body.url)).code, 403);
+  assert.equal((await viewGet(ctx, v.body.viewUrl)).code, 403);
+  assert.equal((await ctx.status(p.token, p.sessionId, 'POST')).code, 403);
+  await ctx.db.close();
+});
+
+test('¥2,000 の後に ¥1,000 だけ返金：完全解析の権利は残すが閲覧は止める（basis_inactive）。解析レポートは読めない', { skip }, async () => {
+  const ctx = await setup();
+  const p = await person(ctx);
+  const { cs: cs1 } = await payLoggedIn(ctx, p, { diagnosisSessionId: p.sessionId, product: 'analysis' });
+  await payLoggedIn(ctx, p, { diagnosisSessionId: p.sessionId });
+  await markReady(ctx, p.sessionId);
+  const v = await ctx.status(p.token, p.sessionId, 'POST');
+  assert.equal(v.code, 200);
+  await refund(ctx, cs1, 1000);
+  assert.deepEqual(await rightsOf(ctx, p.sessionId), ['analysis:revoked', 'complete:active']);
+  const post = await ctx.status(p.token, p.sessionId, 'POST');
+  assert.deepEqual([post.code, post.body.error], [403, 'basis_inactive']);
+  const old = await viewGet(ctx, v.body.viewUrl);
+  assert.deepEqual([old.code, old.body.error], [403, 'basis_inactive']);
+  const rec = (await ctx.entitlements(p.token)).body.records[p.sessionId];
+  assert.deepEqual([rec.completeEntitlement, rec.completeViewBlocked, rec.completeOffer], ['active', 'basis_inactive', null]);
+  assert.equal((await ctx.reportLink(p.token, p.sessionId)).code, 403);
+  await ctx.db.close();
+});
+
+test('ゲストの返金：Cookie の端末の閲覧リンク（発行済み）も開けない。引き継ぎ後はゲストのリンクを使えない', { skip }, async () => {
+  const ctx = await setup();
+  await guestBuy(ctx, { offer: 'analysis', code: CODE_A });
+  const st = (await ctx.op('guest-status', {})).body.purchases[0];
+  const g = await ctx.op('guest-report', { ref: st.ref });
+  assert.equal(g.code, 200);
+  assert.equal(g.headers['cache-control'], 'private, no-store, max-age=0');
+  assert.equal((await ctx.reportData(g.body.url)).code, 200);
+  // 引き継いだら、Cookie の端末で発行済みのリンクは使えない（権利はアカウントへ移った）
+  const token = 'tok-guest-refund';
+  await ctx.db.user({ email: 'owner@example.test', token });
+  assert.equal((await ctx.op('guest-claim', { ref: st.ref }, { token })).code, 200);
+  assert.equal((await ctx.reportData(g.body.url)).code, 403);
+  // 別のゲスト購入：返金で閲覧不可
+  const ctx2cs = await guestBuy(ctx, { offer: 'analysis', code: CODE_B }, 'b@example.test');
+  const st2 = (await ctx.op('guest-status', {})).body.purchases.find((x) => !x.claimed);
+  const g2 = await ctx.op('guest-report', { ref: st2.ref });
+  assert.equal((await ctx.reportData(g2.body.url)).code, 200);
+  await refund(ctx, ctx2cs, 1000);
+  assert.equal((await ctx.reportData(g2.body.url)).code, 403);
+  assert.equal((await ctx.op('guest-report', { ref: st2.ref })).code, 403);
+  await ctx.db.close();
+});
+
+test('未払いの Webhook（checkout.session.completed・payment_status=unpaid）：権利・生成物を作らない', { skip }, async () => {
+  const ctx = await setup();
+  const p = await person(ctx);
+  const r = await ctx.checkout(p.token, { diagnosisSessionId: p.sessionId });
+  const cs = ctx.csIdOf(r.body.checkoutUrl);
+  Object.assign(ctx.stripe.st.sessions[cs], { status: 'complete', payment_status: 'unpaid' });
+  const w = await ctx.webhook({ type: 'checkout.session.completed', objectId: cs });
+  assert.ok([200, 202].includes(w.code), JSON.stringify(w.body));
+  assert.deepEqual(await rightsOf(ctx, p.sessionId), []);
+  assert.equal((await ctx.rows('complete_reports')).length, 0);
+  assert.ok((await ctx.rows('complete_orders')).every((o) => o.status !== 'paid'));
+  assert.equal((await ctx.reportLink(p.token, p.sessionId)).code, 403);
+  await ctx.db.close();
+});
+
+test('閲覧リンクの流用：別の本人・別の記録・別の診断結果・不明な種類・sid の無い再発行トークンは開けない', { skip }, async () => {
+  const ctx = await setup();
+  const p = await person(ctx);
+  await payLoggedIn(ctx, p, { diagnosisSessionId: p.sessionId, product: 'analysis' });
+  const q = await person(ctx, { email: 'q@example.test', code: CODE_A }); // 同じ診断コード・未購入
+  const qb = await ctx.db.record({ userId: p.userId, code: CODE_B }); // 本人の別の結果（未購入）
+  const base = { exp: Date.now() + 60000, env: 'preview', diagnosis_version: 'ETI-2.0', access_mode: 'mypage_entitlement_reissue' };
+  const ok = await ctx.reportData(urlOf({ ...base, sid: p.sessionId, uid: p.userId, enc: encRef(`v2_${CODE_A}`) }));
+  assert.equal(ok.code, 200);
+  // 同じ診断コードの別の本人：権利を共有しない
+  assert.equal((await ctx.reportLink(q.token, q.sessionId)).code, 403);
+  assert.equal((await ctx.reportData(urlOf({ ...base, sid: q.sessionId, uid: q.userId, enc: encRef(`v2_${CODE_A}`) }))).code, 403);
+  // 他人の記録を自分の uid で
+  assert.equal((await ctx.reportData(urlOf({ ...base, sid: p.sessionId, uid: q.userId, enc: encRef(`v2_${CODE_A}`) }))).code, 403);
+  // 本人の別の結果（未購入）の診断コード
+  assert.equal((await ctx.reportData(urlOf({ ...base, sid: p.sessionId, uid: p.userId, enc: encRef(`v2_${CODE_B}`) }))).code, 403);
+  assert.equal((await ctx.reportData(urlOf({ ...base, sid: qb, uid: p.userId, enc: encRef(`v2_${CODE_B}`) }))).code, 403);
+  // sid の無い再発行トークン・不明な access_mode・ゲスト記録でない sid
+  assert.equal((await ctx.reportData(urlOf({ ...base, enc: encRef(`v2_${CODE_A}`) }))).code, 403);
+  assert.equal((await ctx.reportData(urlOf({ ...base, access_mode: 'admin', sid: p.sessionId, uid: p.userId, enc: encRef(`v2_${CODE_A}`) }))).code, 403);
+  assert.equal((await ctx.reportData(urlOf({ ...base, access_mode: 'guest_entitlement_reissue', sid: p.sessionId, enc: encRef(`v2_${CODE_A}`) }))).code, 403);
+  // 期限切れ
+  assert.equal((await ctx.reportData(urlOf({ ...base, exp: Date.now() - 1, sid: p.sessionId, uid: p.userId, enc: encRef(`v2_${CODE_A}`) }))).code, 403);
+  await ctx.db.close();
+});
+
+test('旧 ¥1,000：運営者が停止すると旧形式リンク・マイページとも閲覧不可、復帰で戻る。取消は最終。API のロールは操作できない', { skip }, async () => {
+  const ctx = await setup();
+  const code = 'CODE_LEGACY_BLOCK';
+  const p = await person(ctx, { email: 'buyer@example.test', code });
+  const legacyCs = ctx.stripe.legacySession({ email: 'buyer@example.test' });
+  await ctx.db.legacy({ code, stripeSessionId: legacyCs });
+  const floor = urlOf({ exp: Date.now() + 60000, code: `v2_${code}` });
+  const verifyTok = urlOf({ exp: Date.now() + 60000, env: 'preview', diagnosis_version: 'ETI-2.0', purchase: { transaction_id: 'x' }, enc: encRef(`v2_${code}`) });
+  assert.deepEqual([(await ctx.reportData(floor)).code, (await ctx.reportData(verifyTok)).code], [200, 200]);
+  assert.equal((await ctx.reportLink(p.token, p.sessionId)).code, 200);
+  const admin = (action, incident, reason = 'refund') => ctx.db.sql(
+    'select public.complete_admin_legacy_access(null, $1, $2, $3, $4) as r', [legacyCs, action, reason, incident]).then((r) => r[0].r);
+  assert.equal(await admin('suspend', 'aaaaaaaaaaa1'), 'suspended');
+  assert.equal(await admin('suspend', 'aaaaaaaaaaa1'), 'suspended', '同じ照合 ID の再実行は同じ結果');
+  assert.deepEqual([(await ctx.reportData(floor)).code, (await ctx.reportData(verifyTok)).code], [403, 403]);
+  assert.equal((await ctx.reportLink(p.token, p.sessionId)).code, 403);
+  const rec = (await ctx.entitlements(p.token)).body.records[p.sessionId];
+  assert.deepEqual([rec.legacyPurchasePending, rec.completeOffer], [false, 'direct_complete']);
+  // DB も停止中の旧購入を ¥2,000 の根拠に数えない
+  const up = await ctx.db.fetchImpl(`${ENV.SUPABASE_URL}/rest/v1/rpc/complete_create_order`, { method: 'POST', body: JSON.stringify({
+    p_user_id: p.userId, p_diagnosis_session_id: p.sessionId, p_offer: 'analysis_upgrade', p_idempotency_key: 'co_upgrade_while_blocked_1' }) });
+  assert.match((await up.json()).message, /complete_upgrade_requires_analysis/);
+  assert.equal(await admin('restore', 'aaaaaaaaaaa2', 'operator_error'), 'lifted');
+  assert.deepEqual([(await ctx.reportData(floor)).code, (await ctx.reportData(verifyTok)).code], [200, 200]);
+  assert.equal(await admin('revoke', 'aaaaaaaaaaa3'), 'revoked');
+  await assert.rejects(admin('restore', 'aaaaaaaaaaa4'), /legacy_access_revoked_is_final/);
+  assert.equal((await ctx.reportData(floor)).code, 403);
+  await assert.rejects(admin('suspend', 'aaaaaaaaaaa1'.replace('1', '9'), 'bogus'), /complete_admin_invalid_request/);
+  // API のロール（service_role）からは実行できない・記録の表は書けない
+  const r = await ctx.db.fetchImpl(`${ENV.SUPABASE_URL}/rest/v1/rpc/complete_admin_legacy_access`, { method: 'POST', body: JSON.stringify({
+    p_diagnosis_code_hash: null, p_stripe_checkout_session_id: legacyCs, p_action: 'restore', p_reason_code: 'refund', p_incident_id: 'bbbbbbbbbbb1' }) });
+  assert.equal(r.ok, false);
+  const ev = await ctx.db.sql('select action, result_status from public.legacy_access_events order by created_at');
+  assert.deepEqual(ev.map((e) => `${e.action}:${e.result_status}`), ['suspend:suspended', 'restore:lifted', 'revoke:revoked']);
+  await assert.rejects(ctx.db.sql('delete from public.legacy_access_events'), /legacy_access_events_immutable/);
+  await ctx.db.close();
+});

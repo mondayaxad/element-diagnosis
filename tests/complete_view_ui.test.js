@@ -326,6 +326,25 @@ test('suspended：「現在、完全解析を閲覧できません」／revoked�
   }
 });
 
+test('¥2,000 の根拠の解析レポートが返金された（basis_inactive）：閲覧ボタンを出さず、お問い合わせの案内。押した後の 403 basis_inactive も同じ', { skip: skip() }, async () => {
+  let w = world({ records: { 'sess-B': purchased({ completeViewBlocked: 'basis_inactive' }), 'sess-A': rec() } });
+  let p = await open(w);
+  for (const src of ['latest', 'records']) {
+    const box = actions(p, 'sess-B', src);
+    assert.equal(await box.locator('.ca-view-status').innerText(), '現在、完全解析を閲覧できません');
+    assert.match(await box.innerText(), /解析レポートの購入が取り消されたため/);
+    assert.equal(await box.locator('[data-ca-view-open]').count(), 0);
+    assert.doesNotMatch(await box.innerText(), /¥1,000|¥3,000|¥2,000/);
+  }
+  await p.__ctx.close();
+  w = world({ postReply: { status: 403, body: { error: 'basis_inactive' } } });
+  p = await open(w);
+  await actions(p, 'sess-B', 'latest').locator('[data-ca-view-open]').click();
+  await p.waitForSelector('[data-rec-actions="sess-B"][data-rec-source="latest"] .ca-view-note >> text=解析レポートの購入が取り消されたため');
+  assert.equal(w.viewHits, 0);
+  await p.__ctx.close();
+});
+
 test('押した後の応答：403 は権利の状態を確かめ直して案内、409 は準備中、401 はログイン案内、500／503 は再確認', { skip: skip() }, async () => {
   const click = (p) => actions(p, 'sess-B', 'latest').locator('[data-ca-view-open]').click();
   // 403（発行の直前に dispute で停止）→ GET で suspended を確認して案内

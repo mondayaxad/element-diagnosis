@@ -35,18 +35,18 @@ function json(status, body) {
 }
 
 // 偽の Supabase。呼ばれた URL を記録する。
-function fakeSupabase({ rows = {}, user = { id: 'user-1', email: 'owner@example.test' } } = {}) {
+function fakeSupabase({ rows = {}, user = { id: '11111111-1111-4111-8111-111111111111', email: 'owner@example.test' } } = {}) {
   const calls = [];
   const fetchImpl = async (url, opts = {}) => {
     calls.push({ url, opts });
     if (url.endsWith('/auth/v1/user')) return opts.headers.Authorization === 'Bearer good-token' ? json(200, user) : json(401, {});
     if (url.includes('/rest/v1/purchase_entitlements') && opts.method === 'POST') {
       const [row] = JSON.parse(opts.body);
-      return json(201, [{ ...row, id: 'ent-1' }]);
+      return json(201, [{ status: 'active', ...row, id: 'ent-1' }]);
     }
-    if (url.includes('/rest/v1/purchase_entitlements')) return json(200, rows.entitlements || []);
+    if (url.includes('/rest/v1/purchase_entitlements')) return json(200, (rows.entitlements || []).map((r) => ({ status: 'active', ...r })));
     if (url.includes('/rest/v1/diagnosis_sessions')) return json(200, rows.sessions || []);
-    if (url.includes('/rest/v1/profiles') && opts.method === 'PATCH') return json(200, [{ id: 'user-1' }]);
+    if (url.includes('/rest/v1/profiles') && opts.method === 'PATCH') return json(200, [{ id: '11111111-1111-4111-8111-111111111111' }]);
     if (url.includes('/rest/v1/profiles')) {
       return json(200, [{ onboarding_status: 'completed', newsletter_opted_in: true, newsletter_consent_version: subscribe.CONSENT_VERSION,
         newsletter_consent_source: 'registration_onboarding', newsletter_sync_status: 'pending', newsletter_sync_attempts: 0, newsletter_sync_attempted_at: null }]);
@@ -117,7 +117,7 @@ const HANDLERS = [
   ['my-entitlements', (env, sb) => myEntitlements.createHandler({ env, fetchImpl: sb.fetchImpl }),
     { method: 'GET', headers: { authorization: 'Bearer good-token' } }],
   ['my-report-link', (env, sb) => myReportLink.createHandler({ env, fetchImpl: sb.fetchImpl }),
-    { method: 'POST', headers: { authorization: 'Bearer good-token' }, body: { diagnosis_session_id: 's-1' } }],
+    { method: 'POST', headers: { authorization: 'Bearer good-token' }, body: { diagnosis_session_id: '22222222-2222-4222-8222-222222222222' } }],
   ['subscribe', (env, sb) => subscribe.createHandler({ env: { ...env, KIT_API_KEY: 'kit_fake' }, fetchImpl: sb.fetchImpl }),
     { method: 'POST', headers: { authorization: 'Bearer good-token' }, body: { consentVersion: subscribe.CONSENT_VERSION } }],
 ];
@@ -261,17 +261,23 @@ test('report-data：別環境のトークンは開けない（鍵が別なら署
 // ---- my-report-link・my-entitlements・subscribe：正常系は検査済みの接続先だけを使う ----
 test('my-report-link Preview：Preview の Supabase だけを使い、env=preview のトークンを発行する', silenced(async () => {
   const sb = fakeSupabase({ rows: {
-    sessions: [{ id: 's-1', diagnosis_version: 'ETI-2.0', diagnosis_answers: [{ encoded_answers: 'ABCDEF' }] }],
+    sessions: [{ id: '22222222-2222-4222-8222-222222222222', diagnosis_version: 'ETI-2.0', diagnosis_answers: [{ encoded_answers: 'ABCDEF' }] }],
     entitlements: [{ id: 'e-1', product_type: 'core1', diagnosis_code_hash: crypto.createHash('sha256').update('v2_ABCDEF').digest('hex') }],
   } });
   const res = makeRes();
   await myReportLink.createHandler({ env: PREVIEW_ENV, fetchImpl: sb.fetchImpl })(
-    { method: 'POST', headers: { authorization: 'Bearer good-token' }, body: { diagnosis_session_id: 's-1' } }, res);
+    { method: 'POST', headers: { authorization: 'Bearer good-token' }, body: { diagnosis_session_id: '22222222-2222-4222-8222-222222222222' } }, res);
   assert.equal(res.code, 200);
   assert.ok(sb.calls.every((c) => c.url.startsWith(PREVIEW_ENV.SUPABASE_URL + '/')));
   const token = decodeURIComponent(res.body.url.split('token=')[1]);
   assert.equal(decodeToken(token).env, 'preview');
-  assert.equal((await callReportData(PREVIEW_ENV, token)).res.code, 200);
+  // 閲覧のたびに、この本人・この記録の権利を確かめる（同じ DB の状態なら開ける）
+  const opened = await callReportData(PREVIEW_ENV, token, sb);
+  assert.equal(opened.res.code, 200);
+  assert.equal(opened.res.body.code, 'ABCDEF');
+  assert.equal(opened.res.headers['Cache-Control'], 'private, no-store');
+  // 権利の無い状態（別の DB の内容）では、期限内のトークンでも開けない
+  assert.equal((await callReportData(PREVIEW_ENV, token, fakeSupabase())).res.code, 403);
 }));
 
 test('my-entitlements Production：本番の Supabase だけを使う', silenced(async () => {
@@ -310,12 +316,12 @@ const SCENARIOS = {
   'my-entitlements': (env, sb) => [myEntitlements.createHandler({ env, fetchImpl: sb.fetchImpl }),
     { method: 'GET', headers: { authorization: 'Bearer good-token' } }, 200],
   'my-report-link': (env, sb) => [myReportLink.createHandler({ env, fetchImpl: sb.fetchImpl }),
-    { method: 'POST', headers: { authorization: 'Bearer good-token' }, body: { diagnosis_session_id: 's-1' } }, 200],
+    { method: 'POST', headers: { authorization: 'Bearer good-token' }, body: { diagnosis_session_id: '22222222-2222-4222-8222-222222222222' } }, 200],
   subscribe: (env, sb) => [subscribe.createHandler({ env: { ...env, KIT_API_KEY: 'kit_fake' }, fetchImpl: sb.fetchImpl }),
     { method: 'POST', headers: { authorization: 'Bearer good-token' }, body: { consentVersion: subscribe.CONSENT_VERSION } }, 200],
 };
 const SCENARIO_ROWS = {
-  sessions: [{ id: 's-1', diagnosis_version: 'ETI-2.0', diagnosis_answers: [{ encoded_answers: 'ABCDEF' }] }],
+  sessions: [{ id: '22222222-2222-4222-8222-222222222222', diagnosis_version: 'ETI-2.0', diagnosis_answers: [{ encoded_answers: 'ABCDEF' }] }],
   entitlements: [{ product_type: 'core1', diagnosis_code_hash: crypto.createHash('sha256').update('v2_ABCDEF').digest('hex') }],
 };
 

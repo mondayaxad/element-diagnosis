@@ -2697,6 +2697,7 @@ const CA_VIEW_NOTES = {
   suspended: 'お支払いについて確認中のため、閲覧を一時的に止めています。',
   revoked: '返金などにより、この記録の完全解析の権利は終了しています。',
   not_entitled: 'この記録の完全解析を閲覧する権利を確認できませんでした。',
+  basis_inactive: '解析レポートの購入が取り消されたため、完全解析をご覧いただけません。お問い合わせください。',
   login: 'ログインの有効期限が切れました。もう一度ログインしてから開いてください。',
 };
 function caViewEnabled() {
@@ -2724,7 +2725,7 @@ function caViewHtml(r, v) {
   } else if (v.kind === 'preparing') {
     body = status(T.preparing) + note;
   } else if (v.kind === 'suspended') {
-    body = status(T.suspended, `<p class="ca-view-note">${CA_VIEW_NOTES.suspended}</p>`);
+    body = status(T.suspended, `<p class="ca-view-note">${v.reason === 'basis_inactive' ? CA_VIEW_NOTES.basis_inactive : CA_VIEW_NOTES.suspended}</p>`);
   } else if (v.kind === 'revoked') {
     body = status(T.revoked, `<p class="ca-view-note">${CA_VIEW_NOTES.revoked}</p>`);
   } else if (v.kind === 'login') {
@@ -2844,6 +2845,7 @@ async function caViewOpen(id) {
   }
   if (status === 401) { caViewSet(id, { kind: 'login' }); return; }
   if (status === 409) { caViewSet(id, { kind: 'preparing', note: CA_VIEW_NOTES.generating }); caViewPoll(id); return; }
+  if (status === 403 && body && body.error === 'basis_inactive') { caViewSet(id, { kind: 'suspended', reason: 'basis_inactive' }); return; }
   if (status === 403) {
     // 権利の状態を確かめ直して、停止・失効の案内を出す
     const { view } = await caViewFetchStatus(id);

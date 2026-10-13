@@ -24,7 +24,7 @@ const PS = require('../lib/purchase-state');
 const MAX_BODY_BYTES = 1024;
 
 function setCommonHeaders(res) {
-  res.setHeader('Cache-Control', 'no-store, max-age=0');
+  res.setHeader('Cache-Control', 'private, no-store, max-age=0');
   res.setHeader('X-Content-Type-Options', 'nosniff');
 }
 

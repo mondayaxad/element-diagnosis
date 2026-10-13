@@ -240,6 +240,8 @@
     if (o.entitlement === 'revoked') return { kind: 'revoked' };
     if (o.entitlement === 'suspended') return { kind: 'suspended' };
     if (o.entitlement !== 'active') return { kind: 'none' };
+    // ¥2,000 の根拠（解析レポートの購入）が取消・停止中：完全解析は今は読めない（サーバーも拒否する）
+    if (o.viewBlocked === 'basis_inactive') return { kind: 'suspended', reason: 'basis_inactive' };
     if (o.reportStatus === 'revoked') return { kind: 'revoked' };
     if (o.reportStatus === 'ready') return { kind: 'ready' };
     if (o.reportStatus === 'failed') return { kind: 'retry' };
@@ -249,7 +251,7 @@
   function completeViewFromRecord(complete, lookup) {
     if (lookup === 'failed') return completeViewStateFor({ lookupFailed: true });
     if (lookup !== 'ok' || !complete || typeof complete !== 'object') return { kind: 'none' };
-    return completeViewStateFor({ entitlement: complete.completeEntitlement, reportStatus: complete.completeStatus });
+    return completeViewStateFor({ entitlement: complete.completeEntitlement, reportStatus: complete.completeStatus, viewBlocked: complete.completeViewBlocked });
   }
   // GET /api/complete-status の応答（本文）から
   function completeViewFromStatus(body) {

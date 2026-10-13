@@ -87,6 +87,7 @@ function createHandler({ env, fetchImpl }) {
   }
 
   return async function handler(req, res) {
+    if (typeof res.setHeader === 'function') res.setHeader('Cache-Control', 'private, no-store');
     // 環境ガード：Supabase へ接続する前に、環境・接続先・署名鍵を確かめる。
     const guard = requireServerEnv(env, { host: requestHost(req), admin: true, user: true, reportSecret: true });
     if (!guard.ok) {
@@ -153,6 +154,9 @@ function createHandler({ env, fetchImpl }) {
         env: appEnv,
         diagnosis_version: diagnosisVersion,
         access_mode: 'mypage_entitlement_reissue',
+        // 閲覧のたびに report-data.js がこの本人・この記録の権利を確かめる（期限内でも返金・停止後は読めない）
+        sid: diagnosisSessionId,
+        uid: userId,
         enc: encryptDiagnosisCode(secret, reference),
       });
 

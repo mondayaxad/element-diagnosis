@@ -168,7 +168,9 @@
       var o = await G.openComplete(t.getAttribute('data-open-complete'), 'purchase_complete');
       if (!o.ok) {
         t.disabled = false;
-        if (msg) msg.textContent = o.error === 'report_not_ready' ? '完全解析はまだ作成中です。少し待ってから開いてください。' : '完全解析を開けませんでした。もう一度お試しください。';
+        if (msg) msg.textContent = o.error === 'report_not_ready' ? '完全解析はまだ作成中です。少し待ってから開いてください。'
+          : o.error === 'basis_inactive' ? '解析レポートの購入が取り消されたため、完全解析をご覧いただけません。お問い合わせください。'
+          : '完全解析を開けませんでした。もう一度お試しください。';
       }
     }
   });

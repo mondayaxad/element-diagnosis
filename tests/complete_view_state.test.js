@@ -40,6 +40,9 @@ test('my-entitlements の記録・complete-status の応答から同じ規則で
   assert.equal(C.completeViewFromRecord(null, 'failed').kind, 'retry');
   assert.equal(C.completeViewFromRecord(null, 'ok').kind, 'none');
   assert.equal(C.completeViewFromRecord({ completeEntitlement: 'active', completeStatus: 'ready' }, 'none').kind, 'none', 'v2 の項目なし（Production の応答）');
+  // ¥2,000 の根拠（解析レポートの購入）が取消・停止中：権利は active でも見せない（D5）
+  assert.deepEqual({ ...C.completeViewFromRecord({ completeEntitlement: 'active', completeStatus: 'ready', completeViewBlocked: 'basis_inactive' }, 'ok') },
+    { kind: 'suspended', reason: 'basis_inactive' });
   assert.equal(C.completeViewFromStatus({ entitlements: { complete: 'active' }, report: { status: 'generating' } }).kind, 'preparing');
   assert.equal(C.completeViewFromStatus({ entitlements: { complete: 'active' }, report: null }).kind, 'preparing');
   assert.equal(C.completeViewFromStatus({ entitlements: { complete: null }, report: null }).kind, 'none');

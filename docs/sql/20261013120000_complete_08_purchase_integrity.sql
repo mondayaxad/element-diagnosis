@@ -16,6 +16,17 @@
 --   ・ロックの順：結果グループ（complete_result:<user>:<鍵>）→ 記録（complete_order:<記録>）→ 行。
 --     注文の作成と引き継ぎ（complete_transfer_guest_record）が同じ順で取る。
 --   ・API（lib/purchase-state.js）も同じ規則で offer を決める。ここは最終の防御。
+--
+-- §2 閲覧権の確認と旧 ¥1,000 の停止・復帰（D5・D6）
+--   ・legacy_access_blocks：運営者が旧 ¥1,000（診断コードのハッシュ単位）の閲覧を停止（suspended）・取消（revoked）した記録。
+--     取消は最終。停止は復帰（lifted）できる。既存の購入者は、行が無い限り今までどおり読める（一括で失効させない）。
+--     操作は complete_admin_legacy_access（SQL Editor で運営者が実行。API のロールには EXECUTE を与えない）。
+--     操作の記録は legacy_access_events（追記だけ。メール・Stripe ID・診断コードは入れない）。
+--   ・閲覧（report-data・verify・my-report-link・マイページの権利）は、停止・取消の旧購入を権利に数えない。
+--   ・¥2,000 の完全解析は、根拠（同じ記録の有効な解析権、または結び付けた有効な旧 ¥1,000）が有効な間だけ閲覧できる
+--     （complete_report_for_view の state = basis_inactive）。¥1,000 の返金・敗訴・停止で根拠が失われた時は、
+--     ¥2,000 の権利は残したまま閲覧を止める（返金するかは運営者が判断する。手順書を参照）。
+--   ・戻し：legacy_access_blocks・legacy_access_events を drop し、complete_report_for_view・注文の作成関数を complete_07 の本文で戻す。
 
 begin;
 
@@ -37,6 +48,61 @@ begin
     raise exception 'complete_01..07 are not applied';
   end if;
 end
+$$;
+
+-- ============================================================
+-- §2（表）旧 ¥1,000 の停止・取消（関数が参照するため、先に作る）
+-- ============================================================
+create table if not exists public.legacy_access_blocks (
+  diagnosis_code_hash  text primary key check (diagnosis_code_hash ~ '^[0-9a-f]{64}$'),
+  status               text not null check (status in ('suspended', 'revoked', 'lifted')),
+  reason_code          text not null check (reason_code in ('refund', 'chargeback', 'fraud', 'customer_request', 'operator_error')),
+  created_at           timestamptz not null default now(),
+  updated_at           timestamptz not null default now()
+);
+create table if not exists public.legacy_access_events (
+  id                   uuid primary key default gen_random_uuid(),
+  diagnosis_code_hash  text not null check (diagnosis_code_hash ~ '^[0-9a-f]{64}$'),
+  action               text not null check (action in ('suspend', 'revoke', 'restore')),
+  result_status        text not null check (result_status in ('suspended', 'revoked', 'lifted', 'noop')),
+  reason_code          text not null check (reason_code in ('refund', 'chargeback', 'fraud', 'customer_request', 'operator_error')),
+  incident_id          text not null unique check (incident_id ~ '^[0-9a-f]{12}$'),
+  created_at           timestamptz not null default now()
+);
+revoke all on table public.legacy_access_blocks, public.legacy_access_events from public, anon, authenticated, service_role;
+grant select on table public.legacy_access_blocks to service_role;
+alter table public.legacy_access_blocks enable row level security;
+alter table public.legacy_access_events enable row level security;
+-- ポリシーは作らない（service_role は RLS を迂回する。書き込みは運営者の関数だけ）
+
+create or replace function public.legacy_access_events_immutable()
+  returns trigger
+  language plpgsql
+  security invoker
+  set search_path = ''
+as $$
+begin
+  raise exception 'legacy_access_events_immutable' using errcode = '42501';
+end;
+$$;
+revoke all on function public.legacy_access_events_immutable() from public, anon, authenticated, service_role;
+create or replace trigger legacy_access_events_no_update
+  before update or delete on public.legacy_access_events
+  for each row execute function public.legacy_access_events_immutable();
+create or replace trigger legacy_access_events_no_truncate
+  before truncate on public.legacy_access_events
+  for each statement execute function public.legacy_access_events_immutable();
+
+-- 診断コードのハッシュの旧 ¥1,000 が停止・取消されているか
+create or replace function public.complete_legacy_blocked(p_diagnosis_code_hash text)
+  returns boolean
+  language sql
+  stable
+  security invoker
+  set search_path = ''
+as $$
+  select exists (select 1 from public.legacy_access_blocks k
+                  where k.diagnosis_code_hash = p_diagnosis_code_hash and k.status in ('suspended', 'revoked'))
 $$;
 
 -- ============================================================
@@ -122,7 +188,8 @@ as $$
                         where e.diagnosis_session_id = g.diagnosis_session_id and e.right_type = 'analysis')
             or exists (select 1 from public.complete_legacy_bindings b
                          join public.purchase_entitlements pe on pe.id = b.legacy_entitlement_id
-                        where b.diagnosis_session_id = g.diagnosis_session_id and b.user_id = p_user_id and pe.status = 'active')))
+                        where b.diagnosis_session_id = g.diagnosis_session_id and b.user_id = p_user_id and pe.status = 'active'
+                          and not public.complete_legacy_blocked(pe.diagnosis_code_hash))))
          or (p_kind = 'complete' and (
             exists (select 1 from public.complete_orders o
                      where o.diagnosis_session_id = g.diagnosis_session_id
@@ -135,7 +202,8 @@ as $$
                        and e.status in ('active', 'suspended'))
             or exists (select 1 from public.complete_legacy_bindings b
                          join public.purchase_entitlements pe on pe.id = b.legacy_entitlement_id
-                        where b.diagnosis_session_id = g.diagnosis_session_id and b.user_id = p_user_id and pe.status = 'active')))
+                        where b.diagnosis_session_id = g.diagnosis_session_id and b.user_id = p_user_id and pe.status = 'active'
+                          and not public.complete_legacy_blocked(pe.diagnosis_code_hash))))
        ))
 $$;
 
@@ -190,17 +258,19 @@ begin
   v_has_record_analysis := exists (select 1 from public.record_entitlements e
                                     where e.diagnosis_session_id = p_diagnosis_session_id
                                       and e.right_type = 'analysis' and e.status = 'active');
+  -- 旧 ¥1,000：運営者が停止・取消したもの（§2 legacy_access_blocks）は権利に数えない
   v_has_legacy_binding := not v_guest and exists (select 1 from public.complete_legacy_bindings b
                                    join public.purchase_entitlements pe on pe.id = b.legacy_entitlement_id
                                   where b.user_id = p_user_id and b.diagnosis_session_id = p_diagnosis_session_id
-                                    and pe.status = 'active');
+                                    and pe.status = 'active' and not public.complete_legacy_blocked(pe.diagnosis_code_hash));
   v_has_legacy_purchase := exists (
       select 1
         from public.diagnosis_answers a
         join public.purchase_entitlements pe
           on pe.diagnosis_code_hash = encode(sha256(convert_to(
                case when v_session.diagnosis_version = 'ETI-2.0' then 'v2_' || a.encoded_answers else a.encoded_answers end, 'UTF8')), 'hex')
-       where a.session_id = p_diagnosis_session_id and pe.status = 'active' and pe.product_type in ('core1', 'complete'));
+       where a.session_id = p_diagnosis_session_id and pe.status = 'active' and pe.product_type in ('core1', 'complete')
+         and not public.complete_legacy_blocked(pe.diagnosis_code_hash));
 
   -- 再購入の禁止（トリガーでも確かめる）
   if p_offer = 'analysis' then
@@ -520,6 +590,128 @@ grant execute on function public.complete_lock_result_group(uuid, uuid) to servi
 grant execute on function public.complete_result_group_has(uuid, uuid, text) to service_role;
 
 -- ============================================================
+-- §2 閲覧権の確認（D5・D6）
+-- ============================================================
+
+-- 完全解析の閲覧の権限確認（complete_07 の本文に、¥2,000 の根拠の確認を加えたもの）
+--   state：ok／not_found／not_entitled／not_ready／basis_inactive（¥2,000 の根拠の解析レポートの購入が取消・停止中）
+create or replace function public.complete_report_for_view(p_user_id uuid, p_diagnosis_session_id uuid)
+  returns table (state text, report_id uuid, storage_path text, output_sha256 text)
+  language plpgsql
+  security invoker
+  set search_path = ''
+as $$
+declare
+  v_report public.complete_reports%rowtype;
+  v_order public.complete_orders%rowtype;
+  v_entitled boolean;
+  v_basis_ok boolean;
+begin
+  select * into v_report from public.complete_reports r
+   where r.user_id is not distinct from p_user_id and r.diagnosis_session_id = p_diagnosis_session_id
+   order by r.created_at desc
+   limit 1;
+  if not found then
+    return query select 'not_found'::text, null::uuid, null::text, null::text;
+    return;
+  end if;
+  select * into v_order from public.complete_orders o
+   where o.id = v_report.source_order_id and o.user_id is not distinct from p_user_id;
+  v_entitled := exists (select 1 from public.record_entitlements e
+                         where e.source_order_id = v_report.source_order_id and e.user_id is not distinct from p_user_id
+                           and e.diagnosis_session_id = p_diagnosis_session_id and e.right_type = 'complete' and e.status = 'active');
+  if v_report.status = 'revoked' or v_report.revoked_at is not null or v_report.quarantined_at is not null
+     or v_order.status is distinct from 'paid' or not v_entitled then
+    return query select 'not_entitled'::text, null::uuid, null::text, null::text;
+    return;
+  end if;
+  if v_order.offer = 'analysis_upgrade' then
+    if v_order.analysis_basis = 'legacy_purchase_entitlement' then
+      v_basis_ok := exists (select 1 from public.complete_legacy_bindings b
+                              join public.purchase_entitlements pe on pe.id = b.legacy_entitlement_id
+                             where b.diagnosis_session_id = p_diagnosis_session_id and b.user_id is not distinct from p_user_id
+                               and pe.status = 'active' and not public.complete_legacy_blocked(pe.diagnosis_code_hash));
+    else
+      v_basis_ok := exists (select 1 from public.record_entitlements e
+                             where e.diagnosis_session_id = p_diagnosis_session_id and e.right_type = 'analysis' and e.status = 'active');
+    end if;
+    if not v_basis_ok then
+      return query select 'basis_inactive'::text, null::uuid, null::text, null::text;
+      return;
+    end if;
+  end if;
+  if v_report.status <> 'ready' or v_report.storage_path is null or v_report.output_sha256 is null then
+    return query select 'not_ready'::text, v_report.id, null::text, null::text;
+    return;
+  end if;
+  return query select 'ok'::text, v_report.id, v_report.storage_path, v_report.output_sha256;
+end;
+$$;
+
+-- 運営者の操作：旧 ¥1,000 の閲覧の停止（suspend）・取消（revoke・最終）・復帰（restore：停止だけを戻す）。
+--   対象は診断コードのハッシュ、または旧購入の Checkout Session ID（どちらか）。同じ照合 ID の再送は前回の結果を返す。
+--   SQL Editor で運営者が実行する（API のロールは実行できない）。戻り値：suspended／revoked／lifted／noop
+create or replace function public.complete_admin_legacy_access(p_diagnosis_code_hash text, p_stripe_checkout_session_id text,
+                                                               p_action text, p_reason_code text, p_incident_id text)
+  returns text
+  language plpgsql
+  security invoker
+  set search_path = ''
+as $$
+declare
+  v_hash text := p_diagnosis_code_hash;
+  v_prev public.legacy_access_events%rowtype;
+  v_cur public.legacy_access_blocks%rowtype;
+  v_result text;
+begin
+  if p_action is null or p_action not in ('suspend', 'revoke', 'restore')
+     or p_reason_code is null or p_reason_code not in ('refund', 'chargeback', 'fraud', 'customer_request', 'operator_error')
+     or p_incident_id is null or p_incident_id !~ '^[0-9a-f]{12}$' then
+    raise exception 'complete_admin_invalid_request' using errcode = '22023';
+  end if;
+  if v_hash is null and p_stripe_checkout_session_id is not null then
+    select pe.diagnosis_code_hash into v_hash from public.purchase_entitlements pe
+     where pe.stripe_checkout_session_id = p_stripe_checkout_session_id;
+  end if;
+  if v_hash is null or v_hash !~ '^[0-9a-f]{64}$' then
+    raise exception 'complete_admin_invalid_request' using errcode = '22023';
+  end if;
+  perform pg_advisory_xact_lock(hashtextextended('legacy_access:' || v_hash, 0));
+  select * into v_prev from public.legacy_access_events e where e.incident_id = p_incident_id;
+  if found then
+    if v_prev.diagnosis_code_hash <> v_hash or v_prev.action <> p_action then
+      raise exception 'complete_admin_incident_conflict' using errcode = '23505';
+    end if;
+    return v_prev.result_status;
+  end if;
+  select * into v_cur from public.legacy_access_blocks k where k.diagnosis_code_hash = v_hash;
+  if found and v_cur.status = 'revoked' and p_action <> 'revoke' then
+    raise exception 'legacy_access_revoked_is_final' using errcode = '42501';
+  end if;
+  if p_action = 'restore' then
+    if not found or v_cur.status = 'lifted' then
+      v_result := 'noop';
+    else
+      update public.legacy_access_blocks set status = 'lifted', reason_code = p_reason_code, updated_at = now() where diagnosis_code_hash = v_hash;
+      v_result := 'lifted';
+    end if;
+  else
+    v_result := case when p_action = 'suspend' then 'suspended' else 'revoked' end;
+    insert into public.legacy_access_blocks (diagnosis_code_hash, status, reason_code)
+    values (v_hash, v_result, p_reason_code)
+    on conflict (diagnosis_code_hash) do update set status = excluded.status, reason_code = excluded.reason_code, updated_at = now();
+  end if;
+  insert into public.legacy_access_events (diagnosis_code_hash, action, result_status, reason_code, incident_id)
+  values (v_hash, p_action, v_result, p_reason_code, p_incident_id);
+  return v_result;
+end;
+$$;
+
+revoke all on function public.complete_legacy_blocked(text) from public, anon, authenticated;
+grant execute on function public.complete_legacy_blocked(text) to service_role;
+revoke all on function public.complete_admin_legacy_access(text, text, text, text, text) from public, anon, authenticated, service_role;
+
+-- ============================================================
 -- 確認（変更はしない。期待と違えば全体を取り消す）
 -- ============================================================
 do $$
@@ -533,7 +725,9 @@ begin
       'public.complete_result_group_has(uuid, uuid, text)',
       'public.complete_create_order_internal(uuid, uuid, text, text, text)',
       'public.complete_apply_payment(text, timestamptz, boolean, uuid, text, text, integer, text, text, text, text, text, text, text)',
-      'public.complete_transfer_guest_record(uuid, uuid, text)'] loop
+      'public.complete_transfer_guest_record(uuid, uuid, text)',
+      'public.complete_legacy_blocked(text)',
+      'public.complete_report_for_view(uuid, uuid)'] loop
     if not has_function_privilege('service_role', f, 'EXECUTE') then raise exception 'service_role cannot execute %', f; end if;
     if has_function_privilege('anon', f, 'EXECUTE') or has_function_privilege('authenticated', f, 'EXECUTE') then
       raise exception 'anon or authenticated can execute %', f;
@@ -548,6 +742,26 @@ begin
   end if;
   if not exists (select 1 from pg_trigger where tgname = 'complete_orders_no_repurchase' and not tgisinternal) then
     raise exception 'complete_orders_no_repurchase trigger is missing';
+  end if;
+  -- §2：停止・取消の表は API から読むだけ。運営者の関数は API のロールから実行できない
+  if not has_table_privilege('service_role', 'public.legacy_access_blocks', 'SELECT')
+     or has_table_privilege('service_role', 'public.legacy_access_blocks', 'INSERT')
+     or has_table_privilege('service_role', 'public.legacy_access_blocks', 'UPDATE')
+     or has_table_privilege('service_role', 'public.legacy_access_events', 'SELECT')
+     or has_table_privilege('anon', 'public.legacy_access_blocks', 'SELECT')
+     or has_table_privilege('authenticated', 'public.legacy_access_blocks', 'SELECT') then
+    raise exception 'unexpected privileges on legacy_access tables';
+  end if;
+  if has_function_privilege('service_role', 'public.complete_admin_legacy_access(text, text, text, text, text)', 'EXECUTE')
+     or has_function_privilege('anon', 'public.complete_admin_legacy_access(text, text, text, text, text)', 'EXECUTE')
+     or has_function_privilege('authenticated', 'public.complete_admin_legacy_access(text, text, text, text, text)', 'EXECUTE') then
+    raise exception 'complete_admin_legacy_access must be operator only';
+  end if;
+  if exists (select 1 from pg_proc p where p.pronamespace = 'public'::regnamespace
+              and p.proname in ('complete_legacy_blocked', 'complete_admin_legacy_access', 'complete_report_for_view',
+                                'legacy_access_events_immutable')
+              and (p.prosecdef or p.proconfig is distinct from array['search_path=""'])) then
+    raise exception 'complete_08 §2 function is not security invoker with empty search_path';
   end if;
 end
 $$;

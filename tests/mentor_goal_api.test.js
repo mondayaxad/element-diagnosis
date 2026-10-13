@@ -121,7 +121,7 @@ test('環境不明（VERCEL_ENV なし）も 404・Preview の設定不足は 50
 test('応答ヘッダー：no-store・nosniff。GET・POST 以外は 405', async () => {
   const f = fakeDb();
   const { res } = await get(f);
-  assert.equal(res.headers['Cache-Control'], 'no-store, max-age=0');
+  assert.equal(res.headers['Cache-Control'], 'private, no-store, max-age=0');
   assert.equal(res.headers['X-Content-Type-Options'], 'nosniff');
   const r405 = await call({ fetchImpl: f.fetchImpl }, { method: 'PUT' });
   assert.equal(r405.res.code, 405);
@@ -337,7 +337,7 @@ test('my-entitlements v2（Preview）：記録ごとの完全解析の状態', a
   assert.equal(res.body.completeLookup, 'ok');
   const r = res.body.records;
   assert.deepEqual(Object.keys(r[S1]).sort(), ['analysisSource', 'checkoutInProgress', 'completeBlocked', 'completeEligible', 'completeEntitlement',
-    'completeOffer', 'completeStatus', 'duplicateOf', 'ineligibleReason', 'legacyPurchasePending', 'mentorGoal', 'mentorGoalLocked', 'repurchaseBlocked']);
+    'completeOffer', 'completeStatus', 'completeViewBlocked', 'duplicateOf', 'ineligibleReason', 'legacyPurchasePending', 'mentorGoal', 'mentorGoalLocked', 'repurchaseBlocked']);
   assert.equal(r[S1].completeEligible, true);
   assert.equal(r[S1].legacyPurchasePending, true, 'ハッシュ一致だけ：確認中');
   assert.equal(r[S1].analysisSource, null, 'ハッシュ一致だけでは ¥2,000 の根拠にしない');
