@@ -316,7 +316,12 @@ test('購入完了ページ（Stripe で戻った ?status=canceled）：未払�
 test('購入完了ページ：確認を使い切ったら回り続ける表示を止め、読み込み直しの案内を出す', { skip: skip() }, async () => {
   const p = await page('/purchase-complete', { clock: true, api: { 'guest-status': [200, { salesOpen: true, purchases: [{ ref: REF, analysis: null, complete: null, report: null, pending: true, claimed: false, canClaim: false, canUpgrade: false }] }] } });
   await p.waitForSelector('.spinner');
-  for (let i = 0; i < 12; i++) await p.clock.runFor(31000);
+  // 偽の時計を進める間に、実際の通信（状態の確認）が終わるのを待つ（負荷の高い時でも確認の回数を使い切るまで進める）
+  for (let i = 0; i < 40; i++) {
+    if (await p.evaluate(() => /確認に時間がかかっています/.test(document.body.innerText))) break;
+    await p.clock.runFor(31000);
+    await new Promise((r) => setTimeout(r, 100));
+  }
   await p.waitForFunction(() => /確認に時間がかかっています/.test(document.body.innerText));
   assert.equal(await p.locator('.spinner').count(), 0);
   await p.__ctx.close();
