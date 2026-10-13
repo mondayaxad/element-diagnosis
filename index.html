@@ -3093,10 +3093,12 @@ function initGuestPurchase(root, code, refs) {
       readAnalysisButton(refs.lockUnlockAllBtn, mine);
       refs.lockCtaBtns.forEach(function (b) { readAnalysisButton(b, mine); b.textContent = '解析レポートで読む'; });
     } else if (r.ok && r.body.codePurchased && refs.lockUnlockAllBtn) {
-      refs.lockUnlockAllBtn.textContent = 'この結果は購入済みです（マイページで読めます）';
+      // この結果は購入済みだが、このブラウザ（タブ）には購入の記録が無い：購入時のメールアドレスで確認すると読める
+      //   （二重購入を防ぐため ¥1,000 は売らない。iPhone のプライベートブラウズはタブごとに記録が分かれる）
+      refs.lockUnlockAllBtn.textContent = 'この結果は購入済みです（購入時のメールで読めます）';
       refs.lockUnlockAllBtn.disabled = false;
       refs.lockUnlockAllBtn.style.opacity = '';
-      refs.lockUnlockAllBtn.onclick = function () { location.assign('/mypage.html'); };
+      refs.lockUnlockAllBtn.onclick = function () { location.assign('/mypage.html#recover'); };
     }
     if (!box) return;
     if (!r.ok) {
@@ -3122,7 +3124,9 @@ function initGuestPurchase(root, code, refs) {
       return;
     }
     if (!mine && r.ok && r.body.codePurchased) {
-      box.innerHTML = '<p class="ca-fold-note">この結果は購入済みです。完全解析は、マイページの診断記録から選べます。</p><a class="ca-fold-btn" href="/mypage.html">マイページで記録を選ぶ</a>';
+      box.innerHTML = '<p class="ca-fold-note">この結果は、別のブラウザ（またはタブ）で購入されています。購入したブラウザで開くか、購入時のメールアドレスで確認すると、解析レポートを読めて、完全解析にも進めます。</p>'
+        + '<a class="ca-fold-btn" href="/mypage.html#recover" data-guest-recover>購入時のメールで確認する</a>'
+        + '<p class="ca-fold-note">ログインして購入した場合は、同じ方法でログインしてください。</p>';
       return;
     }
     var offer = hasAnalysis ? 'analysis_upgrade' : 'direct_complete';

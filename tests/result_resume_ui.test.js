@@ -80,7 +80,7 @@ async function wire(ctx, w) {
       return code ? send(200, { code, diagnosisVersion: 'ETI-2.0', versions: VERSIONS }) : send(404, { error: 'result_not_found' });
     }
     if (op === 'guest-cancel') return send(200, { closed: 1, paid: 0 });
-    if (op === 'guest-status') return send(200, { salesOpen: true, purchases: [], codePurchased: false });
+    if (op === 'guest-status') return send(200, { salesOpen: true, purchases: [], codePurchased: !!w.codePurchased });
     if (op === 'guest-goals') return send(...GOALS);
     if (op === 'guest-checkout') return send(200, { checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test_fake', offer: body.offer, amount: 1000 });
     return send(404, { error: 'not_found' });
@@ -310,5 +310,23 @@ test('結果ページ：¥1,000 の決済画面から支払わずに「戻る」
   for (let i = 0; i < 20 && cancels() < 2; i++) await p.waitForTimeout(100);
   assert.equal(cancels(), 2);
   assert.deepEqual(p.__errors, []);
+  await ctx.close();
+});
+
+test('購入済みの結果を、購入の記録が無いブラウザ・タブで開いた：売らずに「購入時のメールで確認する」へ案内する', { skip: skip() }, async () => {
+  const w = world({ codePurchased: true });
+  const ctx = await newContext();
+  await wire(ctx, w);
+  const p = await open(ctx, '/');
+  await complete(p);
+  await p.waitForFunction(() => /購入時のメールで読めます/.test(document.querySelector('#lockUnlockAllBtn').textContent));
+  assert.equal((await p.locator('#lockUnlockAllBtn').innerText()).trim(), 'この結果は購入済みです（購入時のメールで読めます）');
+  const box = p.locator('[data-guest-complete]');
+  assert.match(await box.textContent(), /別のブラウザ（またはタブ）で購入されています。購入したブラウザで開くか、購入時のメールアドレスで確認すると/);
+  assert.equal(await box.locator('a[href="/mypage.html#recover"]').textContent(), '購入時のメールで確認する');
+  assert.equal(await box.locator('[data-reveal-offer], [data-guest-buy]').count(), 0, '二重購入へ誘導しない');
+  await p.locator('#lockUnlockAllBtn').click();
+  await p.waitForURL((u) => u.pathname === '/mypage.html' && u.hash === '#recover');
+  assert.equal(w.calls.filter((c) => c.op === 'guest-checkout').length, 0);
   await ctx.close();
 });
