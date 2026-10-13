@@ -843,8 +843,6 @@ async function entitlements(ctx, token) {
   await MyEnt.createHandler({ env: ctx.env, fetchImpl: ctx.db.fetchImpl, logger: ctx.logger })({ method: 'GET', headers: { host: 'evil.example', ...(token ? { authorization: `Bearer ${token}` } : {}) } }, res);
   return res;
 }
-// 実 DB の試験用アダプタ（COMPLETE_DB_BACKEND）は PostgREST の埋め込み select を解釈しないため、my-entitlements の応答はメモリの擬似 DB でだけ確かめる
-const EMBED_OK = !process.env.COMPLETE_DB_BACKEND;
 const LV_FORBIDDEN = (p) => [/@/, /cs_test_/, /cs_live_/, /price_/, /sk_test_/, new RegExp(p.userId), new RegExp(p.sessionId)];
 
 test('legacy-verify：メール一致で結び付け → analysisSource=legacy_purchase_entitlement・¥2,000 の対象。販売停止中でも動き、Checkout・注文を作らない。再実行は冪等', async () => {
@@ -863,11 +861,9 @@ test('legacy-verify：メール一致で結び付け → analysisSource=legacy_p
     assert.equal(bindings[0].user_id, p.userId);
     assert.equal(bindings[0].diagnosis_session_id, p.sessionId);
     assert.equal(bindings[0].match_method, 'stripe_email_verified');
-    if (EMBED_OK) {
-      const after = await entitlements(ctx, p.token);
-      assert.equal(after.code, 200);
-      assert.equal(after.body.records[p.sessionId].analysisSource, 'legacy_purchase_entitlement');
-    }
+    const after = await entitlements(ctx, p.token);
+    assert.equal(after.code, 200);
+    assert.equal(after.body.records[p.sessionId].analysisSource, 'legacy_purchase_entitlement');
     // 冪等：2回目は already_bound・Stripe の旧 Session を取り直さない・行は増えない
     const retrieves = ctx.stripe.st.calls.filter((c) => c === 'checkout.sessions.retrieve').length;
     const r2 = await legacyVerify(ctx, p.token, { diagnosisSessionId: p.sessionId });
@@ -951,14 +947,16 @@ test('legacy-verify：別の記録・別の人に結び付け済みの購入は�
   const rows = await ctx.db.rows('complete_legacy_bindings');
   assert.equal(rows.length, 1);
   assert.equal(rows[0].diagnosis_session_id, a.sessionId);
-  // my-entitlements：結び付けた記録だけが legacy_purchase_entitlement
-  if (EMBED_OK) {
-    const ea = await entitlements(ctx, a.token);
-    assert.equal(ea.body.records[a.sessionId].analysisSource, 'legacy_purchase_entitlement');
-    assert.notEqual(ea.body.records[aSecond.sessionId].analysisSource, 'legacy_purchase_entitlement');
-    const eb = await entitlements(ctx, b.token);
-    assert.notEqual(eb.body.records[b.sessionId].analysisSource, 'legacy_purchase_entitlement');
-  }
+  // my-entitlements：結び付けは1記録だけ。同じ本人・同じ診断結果の別の記録は、表示の正本（a）にまとめる（D1。権利は共有・再課金しない）。
+  // 別の人には共有しない
+  const ea = await entitlements(ctx, a.token);
+  assert.equal(ea.body.records[a.sessionId].analysisSource, 'legacy_purchase_entitlement');
+  assert.equal(ea.body.records[a.sessionId].duplicateOf, null);
+  assert.equal(ea.body.records[aSecond.sessionId].duplicateOf, a.sessionId);
+  assert.equal(ea.body.records[aSecond.sessionId].completeOffer, 'analysis_upgrade');
+  const eb = await entitlements(ctx, b.token);
+  assert.notEqual(eb.body.records[b.sessionId].analysisSource, 'legacy_purchase_entitlement');
+  assert.equal(eb.body.records[b.sessionId].legacyPurchasePending, true, '別の人には結び付けず、確認待ちのまま');
   assert.equal(ctx.stripe.st.calls.includes('checkout.sessions.create'), false);
   await ctx.db.close();
 });

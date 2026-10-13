@@ -24,6 +24,7 @@ const { resolveAppEnv, requireServerEnv, requestHost, logEnvDenied } = require('
 const CE = require('../lib/complete-eligibility');
 const CP = require('../lib/complete-payment');
 const RJ = require('../lib/complete-report-job');
+const PS = require('../lib/purchase-state');
 
 const API = 'complete-status';
 const RIGHT_ORDER = ['active', 'suspended', 'revoked'];
@@ -171,16 +172,18 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
       sessionId = parsed.sessionId;
     }
 
-    const sid = encodeURIComponent(sessionId);
     const uid = encodeURIComponent(user.id);
     try {
-      const sessions = await CP.selectRows(fetchImpl, guard, `diagnosis_sessions?id=eq.${sid}&user_id=eq.${uid}&select=id`);
-      if (!sessions[0]) return fail(res, 404, 'record_not_found');
+      // 本人の記録だけ。同じ本人・同じ診断結果の記録は、権利の所在（target）の記録の状態・生成物を扱う（lib/purchase-state.js）
+      const st = PS.computeStates(await PS.loadUserFacts((path) => CP.selectRows(fetchImpl, guard, path), user.id))[sessionId];
+      if (!st) return fail(res, 404, 'record_not_found');
+      const targetId = st.target.id;
+      const sid = encodeURIComponent(targetId);
 
       if (req.method === 'POST') {
         // 閲覧 URL の発行：本人確認の後、毎回 DB で権利を確かめる
         if (!RJ.viewSecretOk(env.COMPLETE_VIEW_TOKEN_SECRET)) return failLogged(res, 503, 'service_unavailable', 'view_secret_missing');
-        const rows = await CP.rpc(fetchImpl, guard, 'complete_report_for_view', { p_user_id: user.id, p_diagnosis_session_id: sessionId });
+        const rows = await CP.rpc(fetchImpl, guard, 'complete_report_for_view', { p_user_id: user.id, p_diagnosis_session_id: targetId });
         const row = Array.isArray(rows) ? rows[0] : null;
         if (!row || row.state === 'not_found' || row.state === 'not_entitled') return fail(res, 403, 'not_entitled');
         if (row.state !== 'ok') {
@@ -188,7 +191,7 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
           if (RJ.isDue(reports[0], now())) recover(guard, reports[0].id);
           return fail(res, 409, 'report_not_ready');
         }
-        const issued = RJ.issueViewToken(env.COMPLETE_VIEW_TOKEN_SECRET, { reportId: row.report_id, userId: user.id, sessionId }, Math.floor(now() / 1000));
+        const issued = RJ.issueViewToken(env.COMPLETE_VIEW_TOKEN_SECRET, { reportId: row.report_id, userId: user.id, sessionId: targetId }, Math.floor(now() / 1000));
         return res.status(200).json({ viewUrl: `/api/complete-status?view=${issued.token}`, expiresIn: RJ.VIEW_TTL_SEC });
       }
 

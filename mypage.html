@@ -1910,7 +1910,10 @@ function caGuideHtml(r, g, pending) {
   let action = '';
   let note = '';
   if (g.kind === 'offer') {
-    price = `<p class="ca-guide-price">解析レポートをご購入済みの記録は、<b>追加 ${g.offer.price}</b> でご利用いただけます。</p>`;
+    // 解析レポートを購入済み（同じ診断結果）なら追加 ¥2,000、未購入なら解析レポートと完全解析をあわせて ¥3,000
+    price = g.offer === CompleteAnalysis.OFFERS.upgrade
+      ? `<p class="ca-guide-price">解析レポートをご購入済みの記録は、<b>追加 ${g.offer.price}</b> でご利用いただけます。</p>`
+      : `<p class="ca-guide-price">解析レポートと完全解析をあわせて <b>${g.offer.price}</b> でご利用いただけます。</p>`;
     // 目標の選択（Preview）は決済の前の手順。決済そのものは販売停止中は押せない（確認の画面でも「準備中」）
     action = pending || CompleteAnalysis.pendingButtonHtml(g.offer, 'mp-btn mp-btn-pending');
     note = salesClosed ? CA_PENDING_NOTE : '';
@@ -3344,8 +3347,14 @@ async function openPurchasedComplete(diagnosisSessionId, button) {
 /* ============================================================
    ページ全体
    ============================================================ */
+// 同じ本人・同じ診断結果の記録が複数ある時（ゲスト購入の引き継ぎ・保存のやり直し）は、表示の正本だけを出す
+// （サーバーの /api/my-entitlements が duplicateOf で正本を示す。記録そのものは消さない。購入・閲覧はサーバーが権利の所在へ回す）
+function mpWithoutSameResultDuplicates(sessions) {
+  const ids = new Set(sessions.map((s) => s && s.id));
+  return sessions.filter((s) => !(s && s.complete && s.complete.duplicateOf && ids.has(s.complete.duplicateOf)));
+}
 function renderMypage(root, sessions, userOrUid) {
-  const records = sessions
+  const records = mpWithoutSameResultDuplicates(sessions)
     .slice()
     .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
     .map(mpNormalize);

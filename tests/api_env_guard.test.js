@@ -52,6 +52,8 @@ function fakeSupabase({ rows = {}, user = { id: 'user-1', email: 'owner@example.
         newsletter_consent_source: 'registration_onboarding', newsletter_sync_status: 'pending', newsletter_sync_attempts: 0, newsletter_sync_attempted_at: null }]);
     }
     if (url.startsWith('https://api.kit.com')) return json(200, { subscribers: [] });
+    // 完全解析・記録単位の権利の表（lib/purchase-state.js が読む）：この試験では行が無い
+    if (/\/rest\/v1\/(record_entitlements|complete_orders|record_mentor_goals|complete_reports|complete_legacy_bindings|legacy_access_blocks)\?/.test(url)) return json(200, []);
     throw new Error('unexpected fetch ' + url);
   };
   return { calls, fetchImpl };
@@ -260,7 +262,7 @@ test('report-data：別環境のトークンは開けない（鍵が別なら署
 test('my-report-link Preview：Preview の Supabase だけを使い、env=preview のトークンを発行する', silenced(async () => {
   const sb = fakeSupabase({ rows: {
     sessions: [{ id: 's-1', diagnosis_version: 'ETI-2.0', diagnosis_answers: [{ encoded_answers: 'ABCDEF' }] }],
-    entitlements: [{ product_type: 'core1' }],
+    entitlements: [{ id: 'e-1', product_type: 'core1', diagnosis_code_hash: crypto.createHash('sha256').update('v2_ABCDEF').digest('hex') }],
   } });
   const res = makeRes();
   await myReportLink.createHandler({ env: PREVIEW_ENV, fetchImpl: sb.fetchImpl })(

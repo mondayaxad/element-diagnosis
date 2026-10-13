@@ -175,14 +175,19 @@ test('GET（保存済み・ロック・決済中・旧購入権）', async () =>
   assert.deepEqual(r.selection, { goalId: 'GOAL_PACE_01', goalCatalogVersion: CE.MENTOR_CATALOG_VERSION, selectedAt: '2026-10-07T00:00:00Z' });
   assert.equal(r.changeAllowed, true);
   for (const [status, inProgress] of [['created', true], ['checkout_open', true], ['paid', false], ['disputed', false]]) {
-    f.db.complete_orders = [{ diagnosis_session_id: S1, status }];
+    f.db.complete_orders = [{ user_id: U1, diagnosis_session_id: S1, offer: 'direct_complete', status }];
     r = (await get(f)).res.body;
     assert.equal(r.checkoutInProgress, inProgress, status);
     assert.equal(r.changeAllowed, false, status);
   }
   for (const status of ['expired', 'failed', 'canceled']) {
-    f.db.complete_orders = [{ diagnosis_session_id: S1, status }];
+    f.db.complete_orders = [{ user_id: U1, diagnosis_session_id: S1, offer: 'direct_complete', status }];
     assert.equal((await get(f)).res.body.changeAllowed, true, status);
+  }
+  // 解析レポート ¥1,000 の注文（支払済み・返金済み）は目標を固定しない（¥2,000 のために目標を選べる）
+  for (const status of ['paid', 'refunded']) {
+    f.db.complete_orders = [{ user_id: U1, diagnosis_session_id: S1, offer: 'analysis', status }];
+    assert.equal((await get(f)).res.body.changeAllowed, true, `analysis ${status}`);
   }
   f.db.complete_orders = [];
   f.db.record_mentor_goals[0].locked_at = '2026-10-07T01:00:00Z';
@@ -252,16 +257,21 @@ test('POST：支払後ロックは 409 mentor_goal_locked、created・checkout_o
   assert.deepEqual((await post(f, { diagnosisSessionId: S1, goalId: 'GOAL_VISIBLE_01' })).res.body, { error: 'mentor_goal_locked' });
   assert.equal((await post(f, { diagnosisSessionId: S1, goalId: 'GOAL_PACE_01' })).res.code, 200, 'ロック後も同じ目標の再送は 200');
   for (const status of ['created', 'checkout_open', 'paid', 'disputed']) {
-    const g = fakeDb({ record_mentor_goals: [{ ...base }], complete_orders: [{ diagnosis_session_id: S1, status }] });
+    const g = fakeDb({ record_mentor_goals: [{ ...base }], complete_orders: [{ user_id: U1, diagnosis_session_id: S1, offer: 'analysis_upgrade', status }] });
     const { res } = await post(g, { diagnosisSessionId: S1, goalId: 'GOAL_VISIBLE_01' });
     assert.equal(res.code, 409, status);
     assert.deepEqual(res.body, { error: 'checkout_in_progress' });
     assert.equal(g.writes.length, 0);
   }
   for (const status of ['expired', 'failed', 'canceled']) {
-    const g = fakeDb({ record_mentor_goals: [{ ...base }], complete_orders: [{ diagnosis_session_id: S1, status }] });
+    const g = fakeDb({ record_mentor_goals: [{ ...base }], complete_orders: [{ user_id: U1, diagnosis_session_id: S1, offer: 'analysis_upgrade', status }] });
     assert.equal((await post(g, { diagnosis_session_id: S1, diagnosisSessionId: S1, goalId: 'GOAL_VISIBLE_01' })).res.code, 200, status);
   }
+  // 新しい Checkout で解析レポート ¥1,000 を支払済みの記録：¥2,000 のための目標を選べる（C1）
+  const paidAnalysis = fakeDb({ record_mentor_goals: [{ ...base }], complete_orders: [{ user_id: U1, diagnosis_session_id: S1, offer: 'analysis', status: 'paid' }],
+    record_entitlements: [{ user_id: U1, diagnosis_session_id: S1, right_type: 'analysis', status: 'active' }] });
+  assert.equal((await post(paidAnalysis, { diagnosisSessionId: S1, goalId: 'GOAL_VISIBLE_01' })).res.code, 200);
+  assert.equal(paidAnalysis.writes.length, 1);
 });
 
 test('POST：DB トリガーの拒否（最終防御）を応答へ対応させる', async () => {
@@ -318,15 +328,16 @@ test('my-entitlements v2（Preview）：記録ごとの完全解析の状態', a
   ];
   f.db.complete_legacy_bindings = [{ diagnosis_session_id: S4, user_id: U1, legacy_entitlement_id: '9e000000-0000-4000-8000-000000000004' }];
   f.db.record_mentor_goals = [{ diagnosis_session_id: S4, user_id: U1, goal_id: 'GOAL_PACE_01', goal_catalog_version: CE.MENTOR_CATALOG_VERSION, selected_at: '2026-10-07T00:00:00Z', locked_at: null }];
-  f.db.complete_orders = [{ user_id: U1, diagnosis_session_id: S4, status: 'checkout_open' }, { user_id: U1, diagnosis_session_id: S6, status: 'refunded' }];
+  f.db.complete_orders = [{ user_id: U1, diagnosis_session_id: S4, offer: 'analysis_upgrade', status: 'checkout_open' },
+    { user_id: U1, diagnosis_session_id: S6, offer: 'direct_complete', status: 'refunded' }];
   f.db.record_entitlements = [{ user_id: U1, diagnosis_session_id: S6, right_type: 'complete', status: 'revoked' }];
   const res = await entitlements(f);
   assert.equal(res.code, 200);
   assert.deepEqual(res.body.purchased_by_version, { 'ETI-2.0:CODE1': true, 'ETI-2.0:CODE4': true });
   assert.equal(res.body.completeLookup, 'ok');
   const r = res.body.records;
-  assert.deepEqual(Object.keys(r[S1]).sort(), ['analysisSource', 'checkoutInProgress', 'completeEligible', 'completeEntitlement', 'completeStatus',
-    'ineligibleReason', 'legacyPurchasePending', 'mentorGoal', 'mentorGoalLocked', 'repurchaseBlocked']);
+  assert.deepEqual(Object.keys(r[S1]).sort(), ['analysisSource', 'checkoutInProgress', 'completeBlocked', 'completeEligible', 'completeEntitlement',
+    'completeOffer', 'completeStatus', 'duplicateOf', 'ineligibleReason', 'legacyPurchasePending', 'mentorGoal', 'mentorGoalLocked', 'repurchaseBlocked']);
   assert.equal(r[S1].completeEligible, true);
   assert.equal(r[S1].legacyPurchasePending, true, 'ハッシュ一致だけ：確認中');
   assert.equal(r[S1].analysisSource, null, 'ハッシュ一致だけでは ¥2,000 の根拠にしない');

@@ -259,6 +259,7 @@
 
   // サーバー（/api/my-entitlements v2 の records）の状態から、完全解析の導線を決める。
   //   unknown：状態を確認できない／purchased：完全解析権あり／closed：再購入不可（返金・失効・一時停止など）
+  //   repurchaseBlocked は「完全解析を購入済み」だけ（解析レポート ¥1,000 だけの購入では ¥2,000 へ進める）
   //   ineligible：販売対象外／checkout_in_progress：決済手続き中／legacy_pending：旧 ¥1,000 購入の確認中
   //   offer：direct（¥3,000）または upgrade（¥2,000。根拠は固定済みの旧購入権か記録単位の解析権だけ）
   function completeOfferFor(complete, lookup) {
@@ -268,6 +269,11 @@
     if (complete.completeEligible !== true) return { kind: 'ineligible', reason: complete.ineligibleReason || null };
     if (complete.checkoutInProgress) return { kind: 'checkout_in_progress' };
     if (complete.legacyPurchasePending) return { kind: 'legacy_pending' };
+    // 解析レポートの権利が一時停止中（dispute 中）：購入を出さない
+    if (complete.completeBlocked === 'rights_suspended') return { kind: 'closed' };
+    // サーバーが決めた offer（lib/purchase-state.js）を優先する。無い応答（旧形式）は解析権の根拠から決める
+    if (complete.completeOffer === 'analysis_upgrade') return { kind: 'offer', offer: CA_OFFERS.upgrade };
+    if (complete.completeOffer === 'direct_complete') return { kind: 'offer', offer: CA_OFFERS.direct };
     if (complete.analysisSource === 'legacy_purchase_entitlement' || complete.analysisSource === 'record_entitlement') {
       return { kind: 'offer', offer: CA_OFFERS.upgrade };
     }

@@ -25,6 +25,7 @@ const CE = require('../lib/complete-eligibility');
 const CP = require('../lib/complete-payment');
 const GP = require('../lib/guest-purchase');
 const LB = require('../lib/legacy-binding');
+const PS = require('../lib/purchase-state');
 
 const MAX_BODY_BYTES = 512;
 const API = 'complete-checkout';
@@ -71,6 +72,8 @@ const ORDER_ERRORS = {
   complete_direct_not_allowed_after_analysis: [409, 'offer_changed'],
   complete_idempotency_conflict: [409, 'offer_changed'],
   complete_analysis_already_purchased: [409, 'analysis_already_purchased'],
+  complete_same_result_checkout_open: [409, 'checkout_in_progress'],
+  complete_rights_suspended: [409, 'rights_suspended'],
 };
 
 function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUntil, storageFactory = null, now }) {
@@ -92,47 +95,21 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
     return res.status(status).json({ error: code, incident_id: incident });
   }
 
+  // 本人の記録の購入状態（lib/purchase-state.js：マイページ・目標の選択・閲覧と同じ規則）。本人の記録でなければ null。
   async function loadState(conn, userId, sessionId) {
-    const sid = encodeURIComponent(sessionId);
-    const uid = encodeURIComponent(userId);
-    const sessions = await CP.selectRows(fetchImpl, conn, `diagnosis_sessions?id=eq.${sid}&user_id=eq.${uid}&select=id,diagnosis_version`);
-    if (!sessions[0]) return null;
-    const [results, answers, profiles, goals, orders, rights, bindings] = await Promise.all([
-      CP.selectRows(fetchImpl, conn, `diagnosis_results?session_id=eq.${sid}&select=diagnosis_version,item_set_version,scoring_version,` +
-        'translation_model_version,character_profile_version,mirror_model_version'),
-      CP.selectRows(fetchImpl, conn, `diagnosis_answers?session_id=eq.${sid}&select=encoded_answers`),
-      CP.selectRows(fetchImpl, conn, `profiles?id=eq.${uid}&select=onboarding_status`),
-      CP.selectRows(fetchImpl, conn, `record_mentor_goals?diagnosis_session_id=eq.${sid}&user_id=eq.${uid}&select=goal_id,goal_catalog_version`),
-      CP.selectRows(fetchImpl, conn, `complete_orders?diagnosis_session_id=eq.${sid}&select=status`),
-      CP.selectRows(fetchImpl, conn, `record_entitlements?diagnosis_session_id=eq.${sid}&user_id=eq.${uid}&select=right_type,status`),
-      CP.selectRows(fetchImpl, conn, `complete_legacy_bindings?diagnosis_session_id=eq.${sid}&user_id=eq.${uid}&select=legacy_entitlement_id`),
-    ]);
-    const answer = answers[0] || null;
-    const hash = CE.legacyCodeHash(answer && answer.encoded_answers, sessions[0].diagnosis_version);
-    let legacy = [];
-    if (hash) {
-      legacy = await CP.selectRows(fetchImpl, conn,
-        `purchase_entitlements?diagnosis_code_hash=eq.${hash}&status=eq.active&product_type=in.(core1,complete)&select=id,stripe_checkout_session_id`);
-    }
-    let boundElsewhere = new Set();
-    if (legacy.length) {
-      const ids = legacy.map((l) => encodeURIComponent(l.id)).join(',');
-      const all = await CP.selectRows(fetchImpl, conn, `complete_legacy_bindings?legacy_entitlement_id=in.(${ids})&select=legacy_entitlement_id`);
-      boundElsewhere = new Set(all.map((b) => b.legacy_entitlement_id));
-    }
-    const boundHere = new Set(bindings.map((b) => b.legacy_entitlement_id));
-    const goal = goals[0] || null;
+    const facts = await PS.loadUserFacts((path) => CP.selectRows(fetchImpl, conn, path), userId);
+    const st = PS.computeStates(facts)[sessionId];
+    if (!st) return null;
+    const profiles = await CP.selectRows(fetchImpl, conn, `profiles?id=eq.${encodeURIComponent(userId)}&select=onboarding_status`);
+    const t = st.target;
     return {
-      diagnosisVersion: sessions[0].diagnosis_version,
-      eligibility: CE.eligibilityOf(sessions[0].diagnosis_version, results[0] || null),
+      st,
+      targetId: t.id,
+      diagnosisVersion: t.session.diagnosis_version,
+      eligibility: t.eligibility,
       onboardingCompleted: CE.isOnboardingComplete(profiles[0] && profiles[0].onboarding_status),
-      goalSelected: !!(goal && CE.isMentorGoalId(goal.goal_id) && goal.goal_catalog_version === CE.MENTOR_CATALOG_VERSION),
-      repurchaseBlocked: orders.some((o) => CE.REPURCHASE_BLOCKING_ORDER_STATUSES.includes(o.status))
-        || rights.some((r) => r.right_type === 'complete'),
-      hasAnalysis: rights.some((r) => r.right_type === 'analysis' && r.status === 'active')
-        || legacy.some((l) => boundHere.has(l.id)),
-      legacyCandidates: legacy.filter((l) => !boundElsewhere.has(l.id)),
-      attempt: orders.length,
+      goalSelected: !!(t.goal && CE.isMentorGoalId(t.goal.goal_id) && t.goal.goal_catalog_version === CE.MENTOR_CATALOG_VERSION),
+      attempt: facts.orders.filter((o) => o.diagnosis_session_id === t.id).length,
     };
   }
 
@@ -211,28 +188,33 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
 
     const stripe = stripeFor(env.STRIPE_SECRET_KEY);
     try {
-      // 4. 本人の記録と販売の前提
+      // 4. 本人の記録と販売の前提。同じ本人・同じ診断結果の記録は1つの権利として扱い、権利の所在（target）の記録で購入する
       const state = await loadState(guard, user.id, sessionId);
       if (!state) return fail(res, 404, 'record_not_found');
       if (!state.onboardingCompleted) return fail(res, 403, 'onboarding_required');
+      const st = state.st;
+      const targetId = state.targetId;
 
       // 5. offer をサーバーが決める
       let offer = 'direct_complete';
       if (parsed.product === 'analysis') {
-        // 解析レポート ¥1,000（ETI v2 の記録・未購入の時だけ。旧 ¥1,000・記録単位の解析権があれば DB が断る）
+        // 解析レポート ¥1,000（ETI v2 の記録・同じ診断結果で未購入の時だけ。旧 ¥1,000・解析権があれば DB も断る）
         if (state.diagnosisVersion !== 'ETI-2.0') return fail(res, 422, 'not_eligible');
-        if (state.hasAnalysis || state.legacyCandidates.length) return fail(res, 409, 'analysis_already_purchased');
+        if (st.analysisPurchased) return fail(res, 409, 'analysis_already_purchased');
         offer = 'analysis';
       } else if (!state.eligibility.eligible) {
         return fail(res, 422, 'not_eligible');
       } else if (!state.goalSelected) {
         return fail(res, 409, 'mentor_goal_required');
-      } else if (state.repurchaseBlocked) {
+      } else if (st.completeOwned) {
+        // 完全解析を購入済み（返金・dispute を含む）。解析レポートだけの購入（¥1,000）はここに数えない
         return fail(res, 409, 'repurchase_not_allowed');
-      } else if (state.hasAnalysis) {
+      } else if (st.analysisSource) {
         offer = 'analysis_upgrade';
-      } else if (state.legacyCandidates.length) {
-        const r = await tryBindLegacy(guard, stripe, user, sessionId);
+      } else if (st.analysisSuspended) {
+        return fail(res, 409, 'rights_suspended');
+      } else if (st.legacyPending) {
+        const r = await tryBindLegacy(guard, stripe, user, targetId);
         if (!r.bound) {
           const incident = CE.incidentId();
           CP.logError(logger, API, `legacy_${r.reason}`, incident);
@@ -246,8 +228,8 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
       let order = null;
       for (let attempt = state.attempt; attempt <= state.attempt + 1; attempt++) {
         const rows = await CP.rpc(fetchImpl, guard, 'complete_create_order', {
-          p_user_id: user.id, p_diagnosis_session_id: sessionId, p_offer: offer,
-          p_idempotency_key: CP.orderIdempotencyKey(user.id, sessionId, offer, attempt),
+          p_user_id: user.id, p_diagnosis_session_id: targetId, p_offer: offer,
+          p_idempotency_key: CP.orderIdempotencyKey(user.id, targetId, offer, attempt),
         });
         order = Array.isArray(rows) ? rows[0] : null;
         if (!order || !CE.isUuid(order.order_id) || !CP.OFFER_AMOUNTS[order.offer]) return failLogged(res, 500, 'checkout_failed', 'order_invalid');
@@ -267,6 +249,11 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
       }
       const amount = CP.OFFER_AMOUNTS[order.offer];
       if (order.order_status !== 'created') return failLogged(res, 500, 'checkout_failed', 'order_status_unexpected');
+      // 金額は offer からだけ決まる（¥2,000 のアップグレードを ¥3,000・¥1,000 で作らない）。Stripe へ問い合わせる前に確かめる
+      if (order.offer !== offer || amount !== CP.OFFER_AMOUNTS[offer]) {
+        await CP.rpc(fetchImpl, guard, 'complete_close_unopened_order', { p_order_id: order.order_id, p_status: 'canceled', p_failure_code: 'offer_mismatch' });
+        return failLogged(res, 409, 'offer_changed', 'offer_mismatch');
+      }
 
       // 7. Price を Stripe から取得して照合
       const priceId = CP.priceIdFor(env, order.offer);
@@ -300,6 +287,12 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
           || meta.orderId !== order.order_id || !CP.isStripeCheckoutUrl(session.url)
           || !Number.isInteger(session.expires_at)) {
         return failLogged(res, 500, 'checkout_failed', 'checkout_session_invalid');
+      }
+      // Stripe が作った決済画面の金額・通貨も、注文の金額と一致すること（違えば画面を閉じて注文を片付ける）
+      if (session.amount_total !== amount || session.currency !== 'jpy') {
+        try { await CP.stripeCall(() => stripe.checkout.sessions.expire(session.id)); } catch { /* 期限切れで閉じる */ }
+        await CP.rpc(fetchImpl, guard, 'complete_close_unopened_order', { p_order_id: order.order_id, p_status: 'failed', p_failure_code: 'amount_mismatch' });
+        return failLogged(res, 503, 'service_unavailable', 'checkout_amount_mismatch');
       }
       // 9. checkout_open を記録（失敗しても、次の要求で同じ Idempotency-Key から同じ Session を回収する）
       try {

@@ -1,5 +1,5 @@
 // テスト用の偽の Supabase（Auth・PostgREST・complete_04 の SQL 関数のメモリ上の模型）。外部へは接続しない。
-//   ・select は eq.・in.(…)・order=<列>.desc・select=<列,…> だけを解釈する。
+//   ・select は eq.・in.(…)・order=<列>.desc・select=<列,…,子の表(列,…)> だけを解釈する（子の表は session_id で結ぶ）。
 //   ・rpc は complete_04 の関数の主な規則を写したもの（正本は SQL。ローカル PG17 の試験では本物の関数で同じ試験を実行する）。
 //   ・failNext('rpc:<関数名>' | 'select:<表>' | 'auth') で次の1回を失敗させる（DB・Auth の一時的な失敗）。
 'use strict';
@@ -256,12 +256,36 @@ function createMemoryBackend() {
     return true;
   }
 
+  // select=<列>,<表>(<列>,…)：括弧の中の「,」では分けない。<表>(…) は session_id で結び付けた子の行の配列（PostgREST の埋め込み）
+  function splitSelect(v) {
+    const out = [];
+    let depth = 0;
+    let cur = '';
+    for (const ch of v) {
+      if (ch === '(') depth += 1;
+      if (ch === ')') depth -= 1;
+      if (ch === ',' && depth === 0) { out.push(cur); cur = ''; } else cur += ch;
+    }
+    if (cur) out.push(cur);
+    return out;
+  }
+  function project(row, cols) {
+    const o = {};
+    for (const c of cols) {
+      const m = /^([a-z_]+)\((.*)\)$/.exec(c);
+      if (m) {
+        const sub = splitSelect(m[2]);
+        o[m[1]] = (t[m[1]] || []).filter((x) => x.session_id === row.id).map((x) => project(x, sub));
+      } else o[c] = row[c] === undefined ? null : row[c];
+    }
+    return o;
+  }
   function selectFrom(table, params) {
     let rows = t[table] || [];
     let order = null;
     let cols = null;
     for (const [k, v] of params.entries()) {
-      if (k === 'select') { cols = v.split(','); continue; }
+      if (k === 'select') { cols = splitSelect(v); continue; }
       if (k === 'order') { order = v; continue; }
       if (v.startsWith('eq.')) rows = rows.filter((r) => String(r[k]) === v.slice(3));
       else if (v.startsWith('in.(')) { const set = v.slice(4, -1).split(','); rows = rows.filter((r) => set.includes(String(r[k]))); }
@@ -270,7 +294,7 @@ function createMemoryBackend() {
       const [col, dir] = order.split('.');
       rows = [...rows].sort((x, y) => (x[col] < y[col] ? -1 : x[col] > y[col] ? 1 : 0) * (dir === 'desc' ? -1 : 1));
     }
-    return rows.map((r) => (cols ? Object.fromEntries(cols.map((c) => [c, r[c] === undefined ? null : r[c]])) : { ...r }));
+    return rows.map((r) => (cols ? project(r, cols) : { ...r }));
   }
 
   async function fetchImpl(url, opts = {}) {
@@ -316,7 +340,7 @@ function createMemoryBackend() {
     // answers を渡すと、index.html と同じ保存値（answers_v2・encoded_answers・v2_scores 等）を作る（生成器の試験用）
     async record({ id = uuid(), userId, code = `CODE_${crypto.randomBytes(4).toString('hex')}`, versions = CE.RC1_REQUIRED_VERSIONS, goal = 'GOAL_PACE_01', answers = null, completedAt = now() }) {
       const saved = answers ? require('./report_data').savedRecord(answers) : null;
-      t.diagnosis_sessions.push({ id, user_id: userId, diagnosis_version: 'ETI-2.0', completed_at: completedAt, created_at: now() });
+      t.diagnosis_sessions.push({ id, user_id: userId, diagnosis_version: 'ETI-2.0', completed_at: completedAt, created_at: now(), guest_created_at: null });
       t.diagnosis_results.push({ session_id: id, ...versions, ...(saved ? { v2_scores: saved.v2_scores, v2_rankings: saved.v2_rankings, mirror_snapshot: saved.mirror_snapshot } : {}) });
       t.diagnosis_answers.push({ session_id: id, encoded_answers: saved ? saved.encoded_answers : code, answers_v2: saved ? saved.answers_v2 : {} });
       if (goal) t.record_mentor_goals.push({ diagnosis_session_id: id, user_id: userId, goal_catalog_version: CE.MENTOR_CATALOG_VERSION, goal_id: goal, selected_at: now(), locked_at: null });

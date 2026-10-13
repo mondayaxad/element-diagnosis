@@ -25,10 +25,12 @@
 //   ・¥2,000 の根拠（analysisSource）は、本人の記録へ固定済みの旧購入権（complete_legacy_bindings）か、
 //     記録単位の analysis 権（record_entitlements）だけ。診断コードのハッシュ一致だけの旧購入権は
 //     legacyPurchasePending（既存の購入を確認中）として返し、根拠にしない。
+//   ・判定は lib/purchase-state.js（completeOffer：analysis_upgrade／direct_complete、completeBlocked：購入できない理由、
+//     duplicateOf：同じ診断結果の表示の正本）。repurchaseBlocked は完全解析を購入済み（解析レポートだけの購入は含まない）。
 
 const crypto = require('crypto');
 const { requireServerEnv, requestHost, logEnvDenied } = require('../lib/server-env');
-const CE = require('../lib/complete-eligibility');
+const PS = require('../lib/purchase-state');
 
 function hashDiagnosisCode(diagnosisCode) {
   return crypto.createHash('sha256').update(diagnosisCode).digest('hex');
@@ -104,7 +106,9 @@ function createHandler({ env, fetchImpl }) {
     return purchasedHashes;
   }
 
-  // ---- 完全解析（v2・Preview だけ） ----
+  // ---- 完全解析（v2） ----
+  // 記録ごとの状態は lib/purchase-state.js（決済・目標の選択・閲覧と同じ規則）。同じ本人・同じ診断結果の記録は1つの権利として扱い、
+  // 表示の正本以外の記録には duplicateOf（正本の記録 ID）を付ける（マイページは正本だけを出す）。
   async function selectRows(conn, path) {
     const res = await fetchImpl(`${conn.supabaseUrl}/rest/v1/${path}`, { headers: conn.adminHeaders() });
     if (!res.ok) throw new Error(`complete lookup failed: ${res.status}`);
@@ -112,68 +116,18 @@ function createHandler({ env, fetchImpl }) {
     if (!Array.isArray(rows)) throw new Error('complete lookup failed');
     return rows;
   }
-  const one = (v) => (Array.isArray(v) ? (v[0] || null) : (v || null));
-  const ENTITLEMENT_RANK = { active: 3, suspended: 2, revoked: 1 };
-
-  async function buildCompleteRecords(conn, userId, sessionRows, purchasedHashes) {
-    const uid = encodeURIComponent(userId);
-    const [ents, goals, orders, reports, bindings] = await Promise.all([
-      selectRows(conn, `record_entitlements?user_id=eq.${uid}&select=diagnosis_session_id,right_type,status`),
-      selectRows(conn, `record_mentor_goals?user_id=eq.${uid}&select=diagnosis_session_id,goal_id,goal_catalog_version,selected_at,locked_at`),
-      selectRows(conn, `complete_orders?user_id=eq.${uid}&select=diagnosis_session_id,status`),
-      selectRows(conn, `complete_reports?user_id=eq.${uid}&select=diagnosis_session_id,status,created_at&order=created_at.desc`),
-      selectRows(conn, `complete_legacy_bindings?user_id=eq.${uid}&select=diagnosis_session_id,legacy_entitlement_id`),
-    ]);
-    // 固定済みの旧購入権が今も有効か（無効になった旧購入権は根拠にしない）
-    let activeBoundIds = new Set();
-    const boundIds = [...new Set(bindings.map((b) => b.legacy_entitlement_id))].filter(CE.isUuid);
-    if (boundIds.length) {
-      const live = await selectRows(conn,
-        `purchase_entitlements?id=in.(${boundIds.join(',')})&status=eq.active&product_type=in.(core1,complete)&select=id`);
-      activeBoundIds = new Set(live.map((r) => r.id));
-    }
-    const by = (rows) => rows.reduce((m, r) => { (m[r.diagnosis_session_id] = m[r.diagnosis_session_id] || []).push(r); return m; }, {});
-    const entsBy = by(ents), goalsBy = by(goals), ordersBy = by(orders), reportsBy = by(reports), bindBy = by(bindings);
-    const records = {};
-    sessionRows.forEach((row) => {
-      if (!row || !row.id) return;
-      const id = row.id;
-      const e = entsBy[id] || [];
-      const g = (goalsBy[id] || [])[0] || null;
-      const st = (ordersBy[id] || []).map((o) => o.status);
-      const rep = (reportsBy[id] || []).find((r) => r.status !== 'revoked') || (reportsBy[id] || [])[0] || null;
-      const completeRows = e.filter((x) => x.right_type === 'complete').sort((a, b) => (ENTITLEMENT_RANK[b.status] || 0) - (ENTITLEMENT_RANK[a.status] || 0));
-      const hasRecordAnalysis = e.some((x) => x.right_type === 'analysis' && x.status === 'active');
-      const hasBoundLegacy = (bindBy[id] || []).some((b) => activeBoundIds.has(b.legacy_entitlement_id));
-      const answers = one(row.diagnosis_answers);
-      const hash = CE.legacyCodeHash(answers && answers.encoded_answers, row.diagnosis_version);
-      const eligibility = CE.eligibilityOf(row.diagnosis_version, one(row.diagnosis_results));
-      records[id] = {
-        completeEligible: eligibility.eligible,
-        ineligibleReason: eligibility.reason,
-        mentorGoal: g && CE.isMentorGoalId(g.goal_id)
-          ? { goalId: g.goal_id, goalCatalogVersion: g.goal_catalog_version, selectedAt: g.selected_at } : null,
-        mentorGoalLocked: !!(g && g.locked_at),
-        checkoutInProgress: st.some((s) => CE.CHECKOUT_IN_PROGRESS_STATUSES.includes(s)),
-        completeEntitlement: completeRows.length ? completeRows[0].status : null,
-        completeStatus: rep ? rep.status : 'none',
-        analysisSource: hasRecordAnalysis ? 'record_entitlement' : (hasBoundLegacy ? 'legacy_purchase_entitlement' : null),
-        legacyPurchasePending: !!(hash && purchasedHashes.has(hash) && !hasBoundLegacy),
-        repurchaseBlocked: completeRows.length > 0 || st.some((s) => CE.REPURCHASE_BLOCKING_ORDER_STATUSES.includes(s)),
-      };
-    });
-    return records;
-  }
 
   async function withComplete(conn, userId, sessionRows, purchasedHashes, payload) {
     // Preview・Production だけ（環境不明では応答を従来と同じにする）。complete 系の表が無い（migration 適用前）時は completeLookup: failed
     if (conn.appEnv !== 'preview' && conn.appEnv !== 'production') return payload;
     try {
-      const records = await buildCompleteRecords(conn, userId, sessionRows, purchasedHashes);
+      const states = PS.computeStates(await PS.loadUserFacts((path) => selectRows(conn, path), userId));
+      const records = {};
+      Object.keys(states).forEach((id) => { records[id] = PS.publicRecordState(states[id]); });
       // 記録単位の解析権（¥1,000・¥3,000・引き継いだゲスト購入）も「解析レポート購入済み」に数える（旧 ¥1,000 と同じ扱い）
       sessionRows.forEach((row) => {
         const rec = row && records[row.id];
-        const a = one(row.diagnosis_answers);
+        const a = PS.one(row.diagnosis_answers);
         if (rec && rec.analysisSource === 'record_entitlement' && row.diagnosis_version === 'ETI-2.0' && a && a.encoded_answers) {
           payload.purchased_by_version[`ETI-2.0:${a.encoded_answers}`] = true;
         }

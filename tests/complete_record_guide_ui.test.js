@@ -518,3 +518,18 @@ for (const width of [320, 390]) {
     }
   });
 }
+
+test('同じ診断結果の記録が複数（D1）：表示の正本だけを出す（記録は消さない）。¥3,000 を「追加」と表示しない', { skip: skip() }, async () => {
+  // sess-2 は sess-3 と同じ診断結果（サーバーが duplicateOf で正本を示す）
+  const w = many({}, { [ID(2)]: rec({ duplicateOf: ID(3), analysisSource: 'record_entitlement', completeOffer: 'analysis_upgrade' }),
+    [ID(3)]: analysisOnly({ completeOffer: 'analysis_upgrade' }), [ID(5)]: rec({ completeOffer: 'direct_complete' }) }, [2, 3, 5]);
+  const p = await open(w);
+  assert.equal(await p.locator(`[data-rec-actions="${ID(2)}"]`).count(), 0, '重複の記録は出さない');
+  assert.ok(await p.locator(`[data-rec-actions="${ID(3)}"]`).count() >= 1, '正本は出す');
+  await p.evaluate(() => document.querySelectorAll('details.mp-rec, details.ca-rec-guide-more').forEach((d) => { d.open = true; }));
+  assert.match(await guide(p, 3, 'records').locator('.ca-guide-price').innerText(), /追加 ¥2,000/);
+  const price5 = await guide(p, 5, 'records').locator('.ca-guide-price').innerText();
+  assert.match(price5, /¥3,000/);
+  assert.doesNotMatch(price5, /追加/);
+  await p.__ctx.close();
+});

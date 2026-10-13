@@ -10,14 +10,9 @@
 
 const crypto = require('crypto');
 const { requireServerEnv, requestHost, logEnvDenied } = require('../lib/server-env');
+const PS = require('../lib/purchase-state');
 
 const REISSUED_TOKEN_TTL_MS = 15 * 60 * 1000;
-const CORE1_PRODUCT_TYPES = new Set(['core1', 'complete']);
-
-function hashDiagnosisCode(reference) {
-  return crypto.createHash('sha256').update(reference).digest('hex');
-}
-
 function signToken(secret, payloadObj) {
   const payload = Buffer.from(JSON.stringify(payloadObj)).toString('base64url');
   const sig = crypto.createHmac('sha256', secret).update(payload).digest('base64url');
@@ -76,31 +71,19 @@ function createHandler({ env, fetchImpl }) {
     return rows[0] || null;
   }
 
-  async function fetchActiveCore1Entitlement(conn, diagnosisCodeHash) {
-    const url =
-      `${conn.supabaseUrl}/rest/v1/purchase_entitlements` +
-      `?diagnosis_code_hash=eq.${encodeURIComponent(diagnosisCodeHash)}` +
-      `&status=eq.active` +
-      `&select=product_type`;
-    const res = await fetchImpl(url, { headers: conn.adminHeaders() });
-    if (!res.ok) {
-      throw new Error(`purchase_entitlements lookup failed: ${res.status}`);
-    }
+  async function selectRows(conn, path) {
+    const res = await fetchImpl(`${conn.supabaseUrl}/rest/v1/${path}`, { headers: conn.adminHeaders() });
+    if (!res.ok) throw new Error(`lookup failed: ${res.status}`);
     const rows = await res.json();
-    return rows.find((row) => CORE1_PRODUCT_TYPES.has(row.product_type)) || null;
+    if (!Array.isArray(rows)) throw new Error('lookup failed');
+    return rows;
   }
 
-  // 記録単位の解析権（complete_07：¥1,000・¥3,000・引き継いだゲスト購入）。表が無い環境（migration 適用前）では false。
-  async function hasRecordAnalysis(conn, userId, diagnosisSessionId) {
-    const url =
-      `${conn.supabaseUrl}/rest/v1/record_entitlements` +
-      `?diagnosis_session_id=eq.${encodeURIComponent(diagnosisSessionId)}` +
-      `&user_id=eq.${encodeURIComponent(userId)}&right_type=eq.analysis&status=eq.active&select=id`;
-    const res = await fetchImpl(url, { headers: conn.adminHeaders() });
-    if (res.status === 404) return false;
-    if (!res.ok) throw new Error(`record_entitlements lookup failed: ${res.status}`);
-    const rows = await res.json();
-    return Array.isArray(rows) && rows.length > 0;
+  // 解析レポートの閲覧権：同じ本人・同じ診断結果の記録のどれかに有効な解析権（記録単位・結び付けた旧購入）、
+  // または有効な旧 ¥1,000（診断コードのハッシュ一致）があること（lib/purchase-state.js と同じ規則）
+  async function hasAnalysisAccess(conn, userId, diagnosisSessionId) {
+    const st = PS.computeStates(await PS.loadUserFacts((path) => selectRows(conn, path), userId))[diagnosisSessionId];
+    return !!(st && st.analysisAccess);
   }
 
   return async function handler(req, res) {
@@ -157,8 +140,7 @@ function createHandler({ env, fetchImpl }) {
 
       const diagnosisVersion = session.diagnosis_version === 'ETI-2.0' ? 'ETI-2.0' : 'element-v1';
       const reference = diagnosisVersion === 'ETI-2.0' ? `v2_${code}` : code;
-      const entitlement = await fetchActiveCore1Entitlement(guard, hashDiagnosisCode(reference))
-        || (diagnosisVersion === 'ETI-2.0' && await hasRecordAnalysis(guard, userId, diagnosisSessionId));
+      const entitlement = await hasAnalysisAccess(guard, userId, diagnosisSessionId);
       if (!entitlement) {
         res.status(403).json({ error: 'report_not_purchased' });
         return;

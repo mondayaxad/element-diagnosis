@@ -12,13 +12,14 @@
 //     他人の記録と存在しない記録は同じ 404 record_not_found にする。
 //   - 目標はカタログ（CORE1-MENTOR-GOALS-1.0.0）の5つだけ。カタログの版はサーバーが決める。結果から自動で選ばない。
 //   - 選択の前提：登録完了（completed／legacy_exempt）・販売対象（RC1 の6つの版が完全一致）・支払後ロックなし・
-//     決済待ち／支払済みの注文（created・checkout_open・paid・disputed）なし。
+//     完全解析の決済待ち／支払済みの注文（created・checkout_open・paid・disputed）なし（解析レポート ¥1,000 の注文は数えない）。
 //     同じ目標の再送は書き込まずに 200（冪等）。DB のトリガー（complete_01・03）を最終の防御にする。
 //   - 応答・ログに記録 ID・目標の文面・個人情報を出さない。ログは理由コードと照合 ID だけ。
 //   - 環境ガード（lib/server-env.js）を Supabase へ接続する前に通す。
 'use strict';
 const { resolveAppEnv, requireServerEnv, requestHost, logEnvDenied } = require('../lib/server-env');
 const CE = require('../lib/complete-eligibility');
+const PS = require('../lib/purchase-state');
 
 const MAX_BODY_BYTES = 1024;
 
@@ -54,10 +55,6 @@ function queryParam(req, name) {
   try { return new URL(req.url || '/', 'http://x').searchParams.get(name); } catch { return null; }
 }
 
-function first(v) {
-  return Array.isArray(v) ? (v[0] || null) : (v || null);
-}
-
 function createHandler({ env, fetchImpl, logger = console }) {
   async function json(res) {
     try { return await res.json(); } catch { return null; }
@@ -79,43 +76,24 @@ function createHandler({ env, fetchImpl, logger = console }) {
   }
 
   // 記録と、目標の選択に必要な状態をまとめて読む。本人の記録でなければ null。
+  // 判定は lib/purchase-state.js（決済・マイページと同じ規則）。同じ本人・同じ診断結果の記録は、権利の所在（target）の記録の目標を扱う。
+  // 目標を変えられないのは、支払後のロック、または同じ記録に完全解析（¥3,000／¥2,000）の決済待ち・支払済みの注文がある時だけ
+  // （DB の record_mentor_goals_ownership と同じ。解析レポート ¥1,000 の注文は目標を固定しない）。
   async function loadState(conn, userId, sessionId) {
-    const sid = encodeURIComponent(sessionId);
-    const uid = encodeURIComponent(userId);
-    const sessions = await select(conn,
-      `diagnosis_sessions?id=eq.${sid}&user_id=eq.${uid}` +
-      '&select=id,diagnosis_version,diagnosis_results(diagnosis_version,item_set_version,scoring_version,' +
-      'translation_model_version,character_profile_version,mirror_model_version),diagnosis_answers(encoded_answers)');
-    const session = sessions[0];
-    if (!session) return null;
-    const [profiles, goals, orders, bindings] = await Promise.all([
-      select(conn, `profiles?id=eq.${uid}&select=onboarding_status`),
-      select(conn, `record_mentor_goals?diagnosis_session_id=eq.${sid}&user_id=eq.${uid}&select=goal_id,goal_catalog_version,selected_at,locked_at`),
-      select(conn, `complete_orders?diagnosis_session_id=eq.${sid}&select=status`),
-      select(conn, `complete_legacy_bindings?diagnosis_session_id=eq.${sid}&user_id=eq.${uid}&select=legacy_entitlement_id`),
-    ]);
-    const answers = first(session.diagnosis_answers);
-    const hash = CE.legacyCodeHash(answers && answers.encoded_answers, session.diagnosis_version);
-    let legacyIds = [];
-    if (hash) {
-      const legacy = await select(conn,
-        `purchase_entitlements?diagnosis_code_hash=eq.${hash}&status=eq.active&product_type=in.(core1,complete)&select=id`);
-      legacyIds = legacy.map((r) => r.id);
-    }
-    const boundIds = new Set(bindings.map((b) => b.legacy_entitlement_id));
-    const goal = goals[0] || null;
-    const statuses = orders.map((o) => o.status);
-    const eligibility = CE.eligibilityOf(session.diagnosis_version, first(session.diagnosis_results));
-    const locked = !!(goal && goal.locked_at);
-    const frozen = statuses.some((s) => CE.MENTOR_FROZEN_ORDER_STATUSES.includes(s));
+    const facts = await PS.loadUserFacts((path) => select(conn, path), userId);
+    const st = PS.computeStates(facts)[sessionId];
+    if (!st) return null;
+    const t = st.target;
+    const profiles = await select(conn, `profiles?id=eq.${encodeURIComponent(userId)}&select=onboarding_status`);
     return {
-      eligibility,
+      targetId: t.id,
+      eligibility: t.eligibility,
       onboardingCompleted: CE.isOnboardingComplete(profiles[0] && profiles[0].onboarding_status),
-      goal,
-      locked,
-      frozen,
-      checkoutInProgress: statuses.some((s) => CE.CHECKOUT_IN_PROGRESS_STATUSES.includes(s)),
-      legacyPurchasePending: legacyIds.length > 0 && !legacyIds.some((id) => boundIds.has(id)),
+      goal: t.goal,
+      locked: !!(t.goal && t.goal.locked_at),
+      frozen: t.mentorFrozen,
+      checkoutInProgress: !!st.openOrder,
+      legacyPurchasePending: st.legacyPending,
     };
   }
 
@@ -228,7 +206,7 @@ function createHandler({ env, fetchImpl, logger = console }) {
           Prefer: 'resolution=merge-duplicates,return=representation',
         }),
         body: JSON.stringify({
-          diagnosis_session_id: sessionId,
+          diagnosis_session_id: state.targetId,
           user_id: userId,
           goal_catalog_version: CE.MENTOR_CATALOG_VERSION,
           goal_id: goalId,
