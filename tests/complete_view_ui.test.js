@@ -113,7 +113,7 @@ function world(over) {
 function statusBody(st) {
   return { salesOpen: false, order: { status: 'paid', offer: 'direct_complete', amount: 3000 },
     entitlements: { analysis: st.entitlement === 'active' ? 'active' : null, complete: st.entitlement || null },
-    report: st.report ? { status: st.report } : null, mentorGoal: null };
+    report: st.report ? { status: st.report, regenerate: st.regenerate || null } : null, mentorGoal: null };
 }
 
 async function open(w, opts = {}) {
@@ -342,6 +342,43 @@ test('¥2,000 の根拠の解析レポートが返金された（basis_inactive�
   await actions(p, 'sess-B', 'latest').locator('[data-ca-view-open]').click();
   await p.waitForSelector('[data-rec-actions="sess-B"][data-rec-source="latest"] .ca-view-note >> text=解析レポートの購入が取り消されたため');
   assert.equal(w.viewHits, 0);
+  await p.__ctx.close();
+});
+
+test('C6：生成の最終の失敗は「完全解析を作成できませんでした」。「もう一度作成する」は1回だけ POST し、準備中→ready。上限後はお問い合わせ', { skip: skip() }, async () => {
+  let w = world({ records: { 'sess-B': purchased({ completeStatus: 'failed', completeRegenerate: 'available' }), 'sess-A': rec() },
+    postReply: { status: 202, body: { result: 'queued' } }, statusSeq: { 'sess-B': [{ code: 200, entitlement: 'active', report: 'ready' }] } });
+  let p = await open(w);
+  for (const src of ['latest', 'records']) {
+    const box = actions(p, 'sess-B', src);
+    assert.equal(await box.locator('.ca-view-status').innerText(), '完全解析を作成できませんでした');
+    assert.match(await box.innerText(), /追加のお支払いはありません/);
+    assert.equal(await box.locator('[data-ca-view-open]').count(), 0);
+    assert.doesNotMatch(await box.innerText(), /¥1,000|¥3,000|¥2,000|作成し直しています/);
+  }
+  const btn = actions(p, 'sess-B', 'latest').locator('[data-ca-view-regenerate]');
+  assert.equal(await btn.innerText(), 'もう一度作成する');
+  await btn.click();
+  await btn.click({ force: true }).catch(() => {});
+  await p.waitForSelector('[data-rec-actions="sess-B"][data-rec-source="latest"] [data-ca-view-open]', { timeout: 10000 });
+  assert.equal(w.posts.length, 1, '連打しても依頼は1回');
+  assert.deepEqual(w.posts[0].body, { diagnosisSessionId: 'sess-B', action: 'regenerate' });
+  assert.deepEqual(p.__errors, []);
+  await p.__ctx.close();
+  // 上限・作り直しても直らない失敗：ボタンなし・お問い合わせ
+  w = world({ records: { 'sess-B': purchased({ completeStatus: 'failed', completeRegenerate: 'operator' }), 'sess-A': rec() } });
+  p = await open(w);
+  const box = actions(p, 'sess-B', 'latest');
+  assert.equal(await box.locator('[data-ca-view-regenerate]').count(), 0);
+  assert.match(await box.innerText(), /@mondayaxad までご連絡ください/);
+  await p.__ctx.close();
+  // 押した後に 409（上限に達した）→ お問い合わせへ
+  w = world({ records: { 'sess-B': purchased({ completeStatus: 'failed', completeRegenerate: 'available' }), 'sess-A': rec() },
+    postReply: { status: 409, body: { error: 'regenerate_operator_required' } } });
+  p = await open(w);
+  await actions(p, 'sess-B', 'latest').locator('[data-ca-view-regenerate]').click();
+  await p.waitForSelector('[data-rec-actions="sess-B"][data-rec-source="latest"] .ca-view-note >> text=@mondayaxad までご連絡ください');
+  assert.equal(await actions(p, 'sess-B', 'latest').locator('[data-ca-view-regenerate]').count(), 0);
   await p.__ctx.close();
 });
 

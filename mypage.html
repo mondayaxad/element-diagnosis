@@ -2698,6 +2698,9 @@ const CA_VIEW_NOTES = {
   revoked: '返金などにより、この記録の完全解析の権利は終了しています。',
   not_entitled: 'この記録の完全解析を閲覧する権利を確認できませんでした。',
   basis_inactive: '解析レポートの購入が取り消されたため、完全解析をご覧いただけません。お問い合わせください。',
+  regenerate: 'お支払いは完了しています。同じご注文・同じ目標で、もう一度作成できます（追加のお支払いはありません）。',
+  operator: 'お支払いは完了しています。お手数ですが @mondayaxad までご連絡ください（追加のお支払いは不要です）。',
+  regenerate_failed: 'もう一度作成できませんでした。時間をおいて、もう一度お試しください。',
   login: 'ログインの有効期限が切れました。もう一度ログインしてから開いてください。',
 };
 function caViewEnabled() {
@@ -2728,6 +2731,11 @@ function caViewHtml(r, v) {
     body = status(T.suspended, `<p class="ca-view-note">${v.reason === 'basis_inactive' ? CA_VIEW_NOTES.basis_inactive : CA_VIEW_NOTES.suspended}</p>`);
   } else if (v.kind === 'revoked') {
     body = status(T.revoked, `<p class="ca-view-note">${CA_VIEW_NOTES.revoked}</p>`);
+  } else if (v.kind === 'failed') {
+    // 自動の再試行を使い切った生成の失敗：同じ注文で作り直す（追加の支払いなし）。上限の後はお問い合わせ
+    body = v.regenerate
+      ? status(T.failed, `<p class="ca-view-note">${CA_VIEW_NOTES.regenerate}</p>${note}<button type="button" class="mp-btn" data-ca-view-regenerate="${id}"${v.busy ? ' aria-disabled="true" aria-busy="true"' : ''}>${v.busy ? '作成を依頼しています…' : 'もう一度作成する'}</button>`)
+      : status(T.failed, `<p class="ca-view-note">${CA_VIEW_NOTES.operator}</p>`);
   } else if (v.kind === 'login') {
     body = `<p class="ca-view-note" role="status">${CA_VIEW_NOTES.login}</p><button type="button" class="mp-btn" data-ca-view-login="${id}" data-ca-view-focus>ログインし直す</button>`;
   } else {
@@ -2780,11 +2788,11 @@ async function caViewFetchStatus(id) {
   if (res.status === 401) return { status: 401, view: { kind: 'login' } };
   return { status: res.status, view: { kind: 'retry', note: CA_VIEW_NOTES.failed } };
 }
-const caViewFinal = (k) => k === 'ready' || k === 'suspended' || k === 'revoked' || k === 'login';
+const caViewFinal = (k) => k === 'ready' || k === 'suspended' || k === 'revoked' || k === 'login' || k === 'failed';
 // GA4：完全解析の生成の開始（作成中を確認）・完成・失敗を、記録ごとに1回だけ（記録 ID は送らない）
 const caGenTracked = new Set();
 function caTrackGeneration(id, kind) {
-  const name = kind === 'preparing' ? 'complete_generation_start' : kind === 'ready' ? 'complete_generation_ready' : kind === 'retry' ? 'complete_generation_failed' : null;
+  const name = kind === 'preparing' ? 'complete_generation_start' : kind === 'ready' ? 'complete_generation_ready' : (kind === 'retry' || kind === 'failed') ? 'complete_generation_failed' : null;
   if (!name || caGenTracked.has(name + id)) return;
   caGenTracked.add(name + id);
   trackEvent(name, { source: 'mypage' });
@@ -2855,6 +2863,35 @@ async function caViewOpen(id) {
   }
   caViewSet(id, { kind: 'retry', note: CA_VIEW_NOTES.open_failed });
 }
+// 生成の最終の失敗からの作り直し（同じ注文・目標。連打してもサーバーの生成は1つ）
+async function caViewRegenerate(id) {
+  const cur = caViewStates.get(id) || { kind: 'failed', regenerate: true };
+  if (cur.busy) return;
+  caViewSet(id, { kind: 'failed', regenerate: true, busy: true });
+  const token = await caViewAccessToken();
+  if (!token) { caViewSet(id, { kind: 'login' }); return; }
+  let res = null;
+  let body = null;
+  try {
+    res = await fetch('/api/complete-status', {
+      method: 'POST', cache: 'no-store',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ diagnosisSessionId: id, action: 'regenerate' }),
+    });
+    body = await res.json().catch(() => null);
+  } catch (e) { res = null; }
+  const status = res ? res.status : 0;
+  if (status === 202) {
+    trackEvent('complete_regenerate', { source: 'mypage' });
+    caViewSet(id, { kind: 'preparing', note: CA_VIEW_NOTES.generating });
+    caViewPoll(id);
+    return;
+  }
+  if (status === 200 && body && body.result === 'ready') { caViewSet(id, { kind: 'ready' }); return; }
+  if (status === 401) { caViewSet(id, { kind: 'login' }); return; }
+  if (status === 409) { caViewSet(id, { kind: 'failed', regenerate: false }); return; }
+  caViewSet(id, { kind: 'failed', regenerate: true, note: CA_VIEW_NOTES.regenerate_failed });
+}
 async function caViewRelogin() {
   try { await signOutUser(); } catch (e) { /* ログアウトに失敗してもログイン画面へ */ }
   await init();
@@ -2864,12 +2901,13 @@ function caViewWire() {
   if (caViewWired) return;
   caViewWired = true;
   document.addEventListener('click', (e) => {
-    const t = e.target && e.target.closest ? e.target.closest('[data-ca-view-open],[data-ca-view-recheck],[data-ca-view-login]') : null;
+    const t = e.target && e.target.closest ? e.target.closest('[data-ca-view-open],[data-ca-view-recheck],[data-ca-view-login],[data-ca-view-regenerate]') : null;
     // 処理中は aria-disabled（フォーカスを保つため disabled にしない）。押しても何もしない
     if (!t || t.disabled || t.getAttribute('aria-disabled') === 'true') return;
     if (t.dataset.caViewOpen) caViewOpen(decodeURIComponent(t.dataset.caViewOpen));
     else if (t.dataset.caViewRecheck) caViewRecheck(decodeURIComponent(t.dataset.caViewRecheck));
     else if (t.dataset.caViewLogin) caViewRelogin();
+    else if (t.dataset.caViewRegenerate) caViewRegenerate(decodeURIComponent(t.dataset.caViewRegenerate));
   });
 }
 // 決済からの戻り：全記録のうち、対象になり得る記録（決済手続き中・購入済みで未完成）だけを、それぞれ最大60秒確認する

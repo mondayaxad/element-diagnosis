@@ -329,12 +329,12 @@ test('状態確認（GET）で取り残し（queued）を見つけたら、応�
   await paid(ctx, p, { background: false }); // Webhook の後段起動が失われた
   let r = await ctx.status(p);
   assert.equal(r.code, 200);
-  assert.deepEqual(r.body.report, { status: 'queued' });
+  assert.deepEqual(r.body.report, { status: 'queued', regenerate: null });
   assert.equal(ctx.pending.length, 1);
   await ctx.drain();
   assert.equal((await reportOf(ctx, p)).status, 'ready');
   r = await ctx.status(p);
-  assert.deepEqual(r.body.report, { status: 'ready' });
+  assert.deepEqual(r.body.report, { status: 'ready', regenerate: null });
   assert.equal(ctx.pending.length, 0, 'ready なら回収しない');
   // lease の切れた generating も回収する
   const q = await ctx.person({ email: 'q@example.test', answers: variantAnswers(2) });
@@ -630,5 +630,118 @@ test('Webhook の応答は生成を待たない：後段起動が失敗しても
   await ctx.drain();
   rep = await reportOf(ctx, p);
   assert.equal(rep.status, 'ready');
+  await ctx.db.close();
+});
+
+// ================= 生成の最終の失敗からの回復（C6）。本物の SQL 関数（complete_08 §3）で実行する
+const pgOnly = process.env.COMPLETE_DB_BACKEND ? false : 'COMPLETE_DB_BACKEND（PG17・complete_01〜08）が無いため skip';
+async function regenerate(ctx, p, sessionId = p.sessionId) {
+  const res = makeRes();
+  await Status.createHandler({ env: ctx.env, fetchImpl: ctx.fetchImpl, logger: ctx.logger, waitUntil: (x) => ctx.pending.push(x) })(
+    { method: 'POST', headers: { authorization: `Bearer ${p.token}` }, body: { diagnosisSessionId: sessionId, action: 'regenerate' } }, res);
+  return res;
+}
+// 一時的な失敗を上限までくり返して、最終の失敗（stopped）にする
+async function failToFinal(ctx, id) {
+  let last;
+  for (let i = 0; i < 6; i++) {
+    ctx.storage.failNext('upload');
+    last = await ctx.process({ reportId: id });
+    if (last === 'stopped' || last === 'none') break;
+    await ctx.db.patch('complete_reports', id, { next_retry_at: new Date(Date.now() - 1000).toISOString() });
+  }
+  assert.equal(last, 'stopped');
+}
+
+test('C6：自動の再試行を使い切った失敗は「作成できませんでした」＋作り直し。同じ注文・目標で1つだけ再生成し、新しい注文・権利・請求は作らない', { skip: pgOnly }, async () => {
+  const ctx = await setup();
+  const p = await ctx.person();
+  const { csId } = await paid(ctx, p, { background: false });
+  const id = (await reportOf(ctx, p)).id;
+  await failToFinal(ctx, id);
+  const st = await ctx.status(p);
+  assert.deepEqual(st.body.report, { status: 'failed', regenerate: 'available' });
+  const before = { orders: (await ctx.db.rows('complete_orders')).length, rights: (await ctx.db.rows('record_entitlements')).length,
+    sessions: Object.keys(ctx.stripe.st.sessions).length, goal: (await reportOf(ctx, p)).mentor_goal_id };
+  // 連打・同時の依頼：生成物の行は1つ、作り直しの回数は1回
+  const [a, b] = await Promise.all([regenerate(ctx, p), regenerate(ctx, p)]);
+  assert.deepEqual([a.code, b.code], [202, 202]);
+  let rep = await reportOf(ctx, p);
+  assert.equal(rep.manual_retries, 1);
+  assert.equal(rep.id, id);
+  // Webhook の再送でも新しい生成物・注文を作らない
+  assert.equal((await ctx.webhook({ type: 'checkout.session.completed', objectId: csId })).code, 200);
+  await ctx.drain();
+  rep = await reportOf(ctx, p);
+  assert.equal(rep.status, 'ready');
+  assert.equal(rep.mentor_goal_id, before.goal);
+  assert.equal((await ctx.reports()).length, 1);
+  assert.equal(ctx.storage.objects.size, 1);
+  assert.deepEqual({ orders: (await ctx.db.rows('complete_orders')).length, rights: (await ctx.db.rows('record_entitlements')).length,
+    sessions: Object.keys(ctx.stripe.st.sessions).length, goal: rep.mentor_goal_id }, before);
+  assert.deepEqual((await ctx.status(p)).body.report, { status: 'ready', regenerate: null });
+  assert.deepEqual([(await regenerate(ctx, p)).code, (await regenerate(ctx, p)).body], [200, { result: 'ready' }]);
+  await ctx.db.close();
+});
+
+test('C6：作り直しは2回まで。その後と、作り直しても直らない失敗（入力の不一致）はお問い合わせ（409）。運営者は原因を直してから作り直せる', { skip: pgOnly }, async () => {
+  const ctx = await setup();
+  const p = await ctx.person();
+  await paid(ctx, p, { background: false });
+  const id = (await reportOf(ctx, p)).id;
+  await failToFinal(ctx, id);
+  for (let i = 0; i < 2; i++) {
+    // 作り直しても、また上限まで失敗する
+    ctx.storage.failNext('upload');
+    assert.equal((await regenerate(ctx, p)).code, 202);
+    await ctx.drain();
+    assert.equal((await reportOf(ctx, p)).status, 'failed');
+    await ctx.db.patch('complete_reports', id, { next_retry_at: new Date(Date.now() - 1000).toISOString() });
+    await failToFinal(ctx, id);
+  }
+  assert.equal((await reportOf(ctx, p)).manual_retries, 2);
+  assert.deepEqual((await ctx.status(p)).body.report, { status: 'failed', regenerate: 'operator' });
+  const r = await regenerate(ctx, p);
+  assert.deepEqual([r.code, r.body], [409, { error: 'regenerate_operator_required' }]);
+  // 運営者（SQL Editor）：上限に関係なく queued へ。同じ照合 ID の再送は同じ結果。API のロールは実行できない
+  const admin = (incident) => ctx.db.sql('select public.complete_admin_regenerate_report($1, $2) as r', [id, incident]).then((x) => x[0].r);
+  assert.equal(await admin('cccccccccc01'), 'requeued');
+  assert.equal(await admin('cccccccccc01'), 'requeued');
+  assert.equal(await admin('cccccccccc02'), 'noop', '最終の失敗でなければ何もしない');
+  const api = await ctx.db.fetchImpl(`${ctx.env.SUPABASE_URL}/rest/v1/rpc/complete_admin_regenerate_report`, { method: 'POST',
+    body: JSON.stringify({ p_report_id: id, p_incident_id: 'cccccccccc03' }) });
+  assert.equal(api.ok, false);
+  assert.equal(await ctx.process({ reportId: id }), 'ready');
+  // 入力の不一致（作り直しても直らない）
+  const q = await ctx.person({ email: 'q@example.test', answers: variantAnswers(1) });
+  await paid(ctx, q, { background: false });
+  const qid = (await reportOf(ctx, q)).id;
+  await ctx.db.patch('complete_reports', qid, { input_sha256: 'f'.repeat(64) });
+  assert.equal(await ctx.process({ reportId: qid }), 'stopped');
+  assert.deepEqual((await ctx.status(q)).body.report, { status: 'failed', regenerate: 'operator' });
+  assert.equal((await regenerate(ctx, q)).code, 409);
+  assert.equal((await reportOf(ctx, q)).manual_retries, 0);
+  await ctx.db.close();
+});
+
+test('C6：作り直しは本人だけ・権利がある間だけ。他人の記録は 404、返金後は 403。生成中・再試行待ちは何もしない（202 のまま1つ）', { skip: pgOnly }, async () => {
+  const ctx = await setup();
+  const p = await ctx.person();
+  const { chargeId } = await paid(ctx, p, { background: false });
+  const id = (await reportOf(ctx, p)).id;
+  // まだ queued（最終の失敗ではない）：回数を使わない
+  assert.equal((await regenerate(ctx, p)).code, 202);
+  assert.equal((await reportOf(ctx, p)).manual_retries, 0);
+  await ctx.drain();
+  await ctx.db.patch('complete_reports', id, { status: 'queued', storage_path: null, output_sha256: null, ready_at: null });
+  await failToFinal(ctx, id);
+  const other = await ctx.person({ email: 'other@example.test', answers: variantAnswers(2) });
+  assert.deepEqual([(await regenerate(ctx, other, p.sessionId)).code], [404]);
+  assert.equal((await reportOf(ctx, p)).manual_retries, 0);
+  ctx.stripe.refund(chargeId, 3000);
+  assert.equal((await ctx.webhook({ type: 'charge.refunded', objectId: chargeId })).code, 200);
+  const r = await regenerate(ctx, p);
+  assert.deepEqual([r.code, r.body], [403, { error: 'not_entitled' }]);
+  assert.equal((await reportOf(ctx, p)).status, 'revoked');
   await ctx.db.close();
 });

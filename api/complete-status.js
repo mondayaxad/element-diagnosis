@@ -6,6 +6,9 @@
 //          生成が取り残されていれば（queued・再試行時刻を過ぎた failed・lease の切れた generating）応答の後で生成を始める。
 //   POST /api/complete-status   Authorization: Bearer …   { "diagnosisSessionId": "<uuid>" }
 //        → 200 { viewUrl, expiresIn: 300 }   閲覧用の短時間 URL（この API の GET ?view=…）
+//   POST /api/complete-status   Authorization: Bearer …   { "diagnosisSessionId": "<uuid>", "action": "regenerate" }
+//        → 202 { result: 'queued' }／200 { result: 'ready' }／409 regenerate_operator_required（上限・作り直しても直らない失敗）
+//          生成の最終の失敗を、同じ支払済みの注文・目標で作り直す（新しい注文・権利・請求は作らない）
 //   GET  /api/complete-status?view=<token>   （ブラウザで開く。認証ヘッダーは使わない）
 //        → 200 text/html（46ページの完全解析レポート）
 //
@@ -57,8 +60,9 @@ function parseBody(req) {
   if (Buffer.byteLength(text, 'utf8') > MAX_BODY_BYTES) return { ok: false, tooLarge: true };
   if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return { ok: false };
   const keys = Object.keys(obj);
-  if (keys.length !== 1 || keys[0] !== 'diagnosisSessionId' || !CE.isUuid(obj.diagnosisSessionId)) return { ok: false };
-  return { ok: true, sessionId: obj.diagnosisSessionId };
+  if (!keys.every((k) => k === 'diagnosisSessionId' || k === 'action') || !CE.isUuid(obj.diagnosisSessionId)) return { ok: false };
+  if (obj.action !== undefined && obj.action !== 'regenerate') return { ok: false };
+  return { ok: true, sessionId: obj.diagnosisSessionId, action: obj.action || 'view' };
 }
 
 function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaultWaitUntil(), storageFactory = null, now = () => Date.now() }) {
@@ -163,6 +167,7 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
     if (!user) return undefined;
 
     let sessionId;
+    let action = 'view';
     if (req.method === 'GET') {
       sessionId = queryParam(req, 'diagnosisSessionId');
       if (!CE.isUuid(sessionId)) return fail(res, 400, 'invalid_request');
@@ -170,6 +175,7 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
       const parsed = parseBody(req);
       if (!parsed.ok) return fail(res, parsed.tooLarge ? 413 : 400, parsed.tooLarge ? 'payload_too_large' : 'invalid_request');
       sessionId = parsed.sessionId;
+      action = parsed.action;
     }
 
     const uid = encodeURIComponent(user.id);
@@ -179,6 +185,21 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
       if (!st) return fail(res, 404, 'record_not_found');
       const targetId = st.target.id;
       const sid = encodeURIComponent(targetId);
+
+      if (req.method === 'POST' && action === 'regenerate') {
+        // 生成の最終の失敗からの作り直し：同じ支払済みの注文・目標・生成物の行で（新しい注文・権利・請求は作らない）。
+        // DB が行をロックして最終の失敗の時だけ queued に戻すので、連打・同時の依頼でも生成は1つ
+        const result = await CP.rpc(fetchImpl, guard, 'complete_regenerate_report', { p_user_id: user.id, p_diagnosis_session_id: targetId });
+        if (result === 'requeued' || result === 'in_progress') {
+          const reports = await CP.selectRows(fetchImpl, guard, `complete_reports?diagnosis_session_id=eq.${sid}&user_id=eq.${uid}&select=id,status,attempts,max_attempts,next_retry_at,lease_expires_at&order=created_at.desc`);
+          if (reports[0] && RJ.isDue(reports[0], now())) recover(guard, reports[0].id);
+          return res.status(202).json({ result: 'queued' });
+        }
+        if (result === 'ready') return res.status(200).json({ result: 'ready' });
+        if (result === 'limit_reached' || result === 'operator_required') return fail(res, 409, 'regenerate_operator_required');
+        if (result === 'not_found') return fail(res, 404, 'report_not_found');
+        return fail(res, 403, 'not_entitled');
+      }
 
       if (req.method === 'POST') {
         // 閲覧 URL の発行：本人確認の後、毎回 DB で権利を確かめる
@@ -201,7 +222,7 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
         CP.selectRows(fetchImpl, guard, `complete_orders?diagnosis_session_id=eq.${sid}&user_id=eq.${uid}&select=status,offer,amount,created_at&order=created_at.desc`),
         CP.selectRows(fetchImpl, guard, `record_entitlements?diagnosis_session_id=eq.${sid}&user_id=eq.${uid}&select=right_type,status`),
         CP.selectRows(fetchImpl, guard, `complete_reports?diagnosis_session_id=eq.${sid}&user_id=eq.${uid}` +
-          '&select=id,status,attempts,max_attempts,next_retry_at,lease_expires_at,created_at&order=created_at.desc'),
+          '&select=id,status,attempts,max_attempts,next_retry_at,lease_expires_at,last_error_code,manual_retries,created_at&order=created_at.desc'),
         CP.selectRows(fetchImpl, guard, `record_mentor_goals?diagnosis_session_id=eq.${sid}&user_id=eq.${uid}&select=goal_id,goal_catalog_version,locked_at`),
       ]);
       const order = orders[0] || null;
@@ -213,7 +234,8 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
         salesOpen: CP.salesOpen(env),
         order: order ? { status: order.status, offer: order.offer, amount: order.amount } : null,
         entitlements: { analysis: rightStatus(rights, 'analysis'), complete: rightStatus(rights, 'complete') },
-        report: report ? { status: report.status } : null,
+        // regenerate：生成の最終の失敗の時だけ available（作り直せる）／operator（お問い合わせ）
+        report: report ? { status: report.status, regenerate: RJ.regenerateState(report, now()) } : null,
         mentorGoal: goal && CE.isMentorGoalId(goal.goal_id)
           ? { goalId: goal.goal_id, goalCatalogVersion: goal.goal_catalog_version, locked: !!goal.locked_at }
           : null,

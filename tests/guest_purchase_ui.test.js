@@ -169,6 +169,30 @@ test('購入完了ページ：生成中は状態を表示して確認を続け�
   await p.__ctx.close();
 });
 
+test('購入完了ページ：生成の最終の失敗は回り続けず「作成できませんでした」。「もう一度作成する」で作り直し→ready（C6）', { skip: skip() }, async () => {
+  let queued = false;
+  const p = await page('/purchase-complete', { api: {
+    'guest-status': () => [200, { salesOpen: true, purchases: [
+      { ref: REF, analysis: 'active', complete: 'active', report: queued ? 'ready' : 'failed', regenerate: queued ? null : 'available', pending: false, claimed: false, canClaim: true, canUpgrade: false }] }],
+    'guest-regenerate': () => { queued = true; return [202, { result: 'queued' }]; },
+  } });
+  await p.waitForFunction(() => /作成できませんでした/.test(document.body.innerText));
+  assert.equal(await p.locator('.spinner').count(), 0, '最終の失敗では回る表示を出さない');
+  assert.doesNotMatch(await p.locator('body').innerText(), /作成をやり直しています/);
+  assert.match(await p.locator('body').innerText(), /追加のお支払いはありません/);
+  await p.locator('[data-regenerate]').click();
+  await p.locator('[data-open-complete]').waitFor({ timeout: 6000 });
+  assert.deepEqual(p.__calls.filter((c) => c.op === 'guest-regenerate').map((c) => c.body), [{ ref: REF }]);
+  assert.deepEqual(p.__errors, []);
+  await p.__ctx.close();
+  // 上限：ボタンなし・お問い合わせ
+  const q = await page('/purchase-complete', { api: { 'guest-status': [200, { salesOpen: true, purchases: [
+    { ref: REF, analysis: 'active', complete: 'active', report: 'failed', regenerate: 'operator', pending: false, claimed: false, canClaim: true, canUpgrade: false }] }] } });
+  await q.waitForFunction(() => /@mondayaxad までご連絡ください/.test(document.body.innerText));
+  assert.equal(await q.locator('[data-regenerate]').count(), 0);
+  await q.__ctx.close();
+});
+
 test('購入完了ページ：この端末に購入が無い時は、同じ端末で開く案内と購入時メールでの引き継ぎ（マイページ）', { skip: skip() }, async () => {
   const p = await page('/purchase-complete?status=canceled', { api: { 'guest-status': [200, { salesOpen: true, purchases: [] }] } });
   await p.waitForFunction(() => /お手続きを中止しました/.test(document.body.innerText));

@@ -72,9 +72,14 @@
   function completeRow(p) {
     if (!p.complete) return '';
     var ready = p.complete === 'active' && p.report === 'ready';
-    var working = p.complete === 'active' && (p.report === 'queued' || p.report === 'generating' || p.report === 'failed' || !p.report);
-    return '<div class="row"><div><div class="row-name">完全解析</div><div class="row-state">' + (working ? '<span class="spinner" aria-hidden="true"></span>' : '') + G.esc(G.completeLabel(p)) + '</div></div>'
-      + (ready ? '<button type="button" class="btn" data-open-complete="' + G.esc(p.ref) + '">完全解析を読む</button>' : '') + '</div>';
+    var final = p.complete === 'active' && (p.regenerate === 'available' || p.regenerate === 'operator');
+    var working = p.complete === 'active' && !final && (p.report === 'queued' || p.report === 'generating' || p.report === 'failed' || !p.report);
+    var failedNote = !final ? '' : p.regenerate === 'available'
+      ? '<p class="note">お支払いは完了しています。同じご注文・同じ目標で、もう一度作成できます（追加のお支払いはありません）。</p>'
+      : '<p class="note">お支払いは完了しています。お手数ですが @mondayaxad までご連絡ください（追加のお支払いは不要です）。</p>';
+    return '<div class="row"><div><div class="row-name">完全解析</div><div class="row-state">' + (working ? '<span class="spinner" aria-hidden="true"></span>' : '') + G.esc(G.completeLabel(p)) + '</div>' + failedNote + '</div>'
+      + (ready ? '<button type="button" class="btn" data-open-complete="' + G.esc(p.ref) + '">完全解析を読む</button>' : '')
+      + (final && p.regenerate === 'available' ? '<button type="button" class="btn" data-regenerate="' + G.esc(p.ref) + '">もう一度作成する</button>' : '') + '</div>';
   }
   function claimBlock(p) {
     if (p.claimed) return '<div class="claim"><p class="note">この購入はマイページに引き継ぎ済みです。<a href="/mypage.html">マイページ</a>からご覧ください。</p></div>';
@@ -133,7 +138,7 @@
       G.track(name, { source: 'purchase_complete' });
     });
     var waiting = purchases.some(function (p) {
-      return p.pending || (p.complete === 'active' && p.report !== 'ready' && p.report !== 'revoked');
+      return p.pending || (p.complete === 'active' && p.report !== 'ready' && p.report !== 'revoked' && !p.regenerate);
     });
     if (waiting && tries < delays.length) setTimeout(load, delays[tries++]);
     else if (waiting) {
@@ -162,6 +167,15 @@
         t.disabled = false;
         if (msg) msg.textContent = '解析レポートを開けませんでした。もう一度お試しください。';
       }
+      return;
+    }
+    if (t.hasAttribute('data-regenerate')) {
+      var rg = await G.regenerate(t.getAttribute('data-regenerate'));
+      if (rg.ok) { tries = 0; load(); return; }
+      t.disabled = false;
+      if (msg) msg.textContent = rg.error === 'regenerate_operator_required'
+        ? '自動では作成できませんでした。お手数ですが @mondayaxad までご連絡ください（追加のお支払いは不要です）。'
+        : 'もう一度作成できませんでした。時間をおいて、もう一度お試しください。';
       return;
     }
     if (t.hasAttribute('data-open-complete')) {

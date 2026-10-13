@@ -27,6 +27,16 @@
 --     （complete_report_for_view の state = basis_inactive）。¥1,000 の返金・敗訴・停止で根拠が失われた時は、
 --     ¥2,000 の権利は残したまま閲覧を止める（返金するかは運営者が判断する。手順書を参照）。
 --   ・戻し：legacy_access_blocks・legacy_access_events を drop し、complete_report_for_view・注文の作成関数を complete_07 の本文で戻す。
+--
+-- §3 完全解析の生成の失敗からの回復（C6）
+--   ・自動の再試行を使い切った（または再試行しない失敗の）生成物は「失敗（最終）」。画面は「作成し直しています」のままにしない。
+--   ・complete_regenerate_report：本人（またはゲスト記録の秘密値を確かめた API）が、同じ支払済みの注文・同じ目標・同じ生成物の行で
+--     作り直しを依頼する（新しい注文・権利・請求は作らない）。行を FOR UPDATE で取り、最終の失敗の時だけ queued に戻すので、
+--     連打・同時の依頼・Webhook の再送でも生成は1つ。本人の依頼は1つの生成物につき 2 回まで（manual_retries）。
+--     入力・素材の不一致など、作り直しても直らない失敗は運営者へ（operator_required）。
+--   ・complete_admin_regenerate_report：運営者（SQL Editor）が原因を直した後に、回数の上限に関係なく queued に戻す。
+--     操作の記録は complete_report_admin_events（追記だけ）。API のロールは実行できない。
+--   ・戻し：complete_reports.manual_retries を drop、関数2つと complete_report_admin_events を drop。
 
 begin;
 
@@ -712,6 +722,148 @@ grant execute on function public.complete_legacy_blocked(text) to service_role;
 revoke all on function public.complete_admin_legacy_access(text, text, text, text, text) from public, anon, authenticated, service_role;
 
 -- ============================================================
+-- §3 完全解析の生成の失敗からの回復（C6）
+-- ============================================================
+alter table public.complete_reports add column if not exists manual_retries integer not null default 0;
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'complete_reports_manual_retries_range'
+                   and conrelid = 'public.complete_reports'::regclass) then
+    alter table public.complete_reports add constraint complete_reports_manual_retries_range check (manual_retries between 0 and 20);
+  end if;
+end
+$$;
+
+create table if not exists public.complete_report_admin_events (
+  id           uuid primary key default gen_random_uuid(),
+  report_id    uuid not null references public.complete_reports(id),
+  action       text not null check (action in ('regenerate')),
+  result       text not null check (result in ('requeued', 'noop')),
+  incident_id  text not null unique check (incident_id ~ '^[0-9a-f]{12}$'),
+  created_at   timestamptz not null default now()
+);
+revoke all on table public.complete_report_admin_events from public, anon, authenticated, service_role;
+alter table public.complete_report_admin_events enable row level security;
+create or replace trigger complete_report_admin_events_no_update
+  before update or delete on public.complete_report_admin_events
+  for each row execute function public.legacy_access_events_immutable();
+create or replace trigger complete_report_admin_events_no_truncate
+  before truncate on public.complete_report_admin_events
+  for each statement execute function public.legacy_access_events_immutable();
+
+-- 最終の失敗か（自動の再試行が残っていない）。lib/complete-report-job.js の finalFailure と同じ規則
+create or replace function public.complete_report_final_failure(p_status text, p_attempts integer, p_max_attempts integer,
+                                                                p_next_retry_at timestamptz, p_lease_expires_at timestamptz)
+  returns boolean
+  language sql
+  immutable
+  security invoker
+  set search_path = ''
+as $$
+  select (p_status = 'failed' and (p_next_retry_at is null or p_attempts >= p_max_attempts))
+      or (p_status = 'generating' and p_attempts >= p_max_attempts and p_lease_expires_at < now())
+$$;
+
+-- 本人（p_user_id）またはゲスト記録（p_user_id = null。API がゲストの秘密値を確かめてから呼ぶ）の作り直しの依頼。
+--   戻り値：requeued／in_progress（生成中・自動の再試行待ち）／ready／limit_reached／operator_required／not_entitled／not_found
+create or replace function public.complete_regenerate_report(p_user_id uuid, p_diagnosis_session_id uuid)
+  returns text
+  language plpgsql
+  security invoker
+  set search_path = ''
+as $$
+declare
+  v_id uuid;
+  v_report public.complete_reports%rowtype;
+begin
+  select r.id into v_id from public.complete_reports r
+   where r.user_id is not distinct from p_user_id and r.diagnosis_session_id = p_diagnosis_session_id
+   order by r.created_at desc
+   limit 1;
+  if v_id is null then
+    return 'not_found';
+  end if;
+  select * into v_report from public.complete_reports r where r.id = v_id for update;
+  if v_report.status = 'revoked' or v_report.revoked_at is not null or v_report.quarantined_at is not null
+     or not exists (select 1 from public.complete_orders o where o.id = v_report.source_order_id and o.status = 'paid')
+     or not exists (select 1 from public.record_entitlements e
+                     where e.source_order_id = v_report.source_order_id and e.user_id is not distinct from p_user_id
+                       and e.right_type = 'complete' and e.status = 'active') then
+    return 'not_entitled';
+  end if;
+  if v_report.status = 'ready' then
+    return 'ready';
+  end if;
+  if not public.complete_report_final_failure(v_report.status, v_report.attempts, v_report.max_attempts,
+                                              v_report.next_retry_at, v_report.lease_expires_at) then
+    return 'in_progress';
+  end if;
+  -- 作り直しても同じ結果になる失敗（入力・素材・固定値の不一致）は運営者が原因を確かめる
+  if v_report.last_error_code in ('materials_changed', 'input_mismatch', 'frozen_versions_mismatch', 'frozen_goal_mismatch',
+                                  'record_data_missing', 'report_not_found') then
+    return 'operator_required';
+  end if;
+  if v_report.manual_retries >= 2 then
+    return 'limit_reached';
+  end if;
+  update public.complete_reports
+     set status = 'queued', attempts = 0, next_retry_at = null, lease_token = null, lease_expires_at = null,
+         manual_retries = manual_retries + 1, updated_at = now()
+   where id = v_id;
+  return 'requeued';
+end;
+$$;
+
+-- 運営者の操作：原因を直した後に、最終の失敗の生成物を queued に戻す（回数の上限・失敗の種類に関係なく）。
+--   同じ照合 ID の再送は前回の結果。SQL Editor で実行する（API のロールは実行できない）。戻り値：requeued／noop
+create or replace function public.complete_admin_regenerate_report(p_report_id uuid, p_incident_id text)
+  returns text
+  language plpgsql
+  security invoker
+  set search_path = ''
+as $$
+declare
+  v_prev public.complete_report_admin_events%rowtype;
+  v_report public.complete_reports%rowtype;
+  v_result text;
+begin
+  if p_report_id is null or p_incident_id is null or p_incident_id !~ '^[0-9a-f]{12}$' then
+    raise exception 'complete_admin_invalid_request' using errcode = '22023';
+  end if;
+  select * into v_report from public.complete_reports r where r.id = p_report_id for update;
+  if not found then
+    raise exception 'complete_report_not_found' using errcode = '42501';
+  end if;
+  select * into v_prev from public.complete_report_admin_events e where e.incident_id = p_incident_id;
+  if found then
+    if v_prev.report_id <> p_report_id then
+      raise exception 'complete_admin_incident_conflict' using errcode = '23505';
+    end if;
+    return v_prev.result;
+  end if;
+  if v_report.status = 'revoked' or v_report.revoked_at is not null or v_report.quarantined_at is not null
+     or not public.complete_report_final_failure(v_report.status, v_report.attempts, v_report.max_attempts,
+                                                 v_report.next_retry_at, v_report.lease_expires_at) then
+    v_result := 'noop';
+  else
+    update public.complete_reports
+       set status = 'queued', attempts = 0, next_retry_at = null, lease_token = null, lease_expires_at = null, updated_at = now()
+     where id = p_report_id;
+    v_result := 'requeued';
+  end if;
+  insert into public.complete_report_admin_events (report_id, action, result, incident_id)
+  values (p_report_id, 'regenerate', v_result, p_incident_id);
+  return v_result;
+end;
+$$;
+
+revoke all on function public.complete_report_final_failure(text, integer, integer, timestamptz, timestamptz) from public, anon, authenticated;
+grant execute on function public.complete_report_final_failure(text, integer, integer, timestamptz, timestamptz) to service_role;
+revoke all on function public.complete_regenerate_report(uuid, uuid) from public, anon, authenticated;
+grant execute on function public.complete_regenerate_report(uuid, uuid) to service_role;
+revoke all on function public.complete_admin_regenerate_report(uuid, text) from public, anon, authenticated, service_role;
+
+-- ============================================================
 -- 確認（変更はしない。期待と違えば全体を取り消す）
 -- ============================================================
 do $$
@@ -727,7 +879,9 @@ begin
       'public.complete_apply_payment(text, timestamptz, boolean, uuid, text, text, integer, text, text, text, text, text, text, text)',
       'public.complete_transfer_guest_record(uuid, uuid, text)',
       'public.complete_legacy_blocked(text)',
-      'public.complete_report_for_view(uuid, uuid)'] loop
+      'public.complete_report_for_view(uuid, uuid)',
+      'public.complete_report_final_failure(text, integer, integer, timestamptz, timestamptz)',
+      'public.complete_regenerate_report(uuid, uuid)'] loop
     if not has_function_privilege('service_role', f, 'EXECUTE') then raise exception 'service_role cannot execute %', f; end if;
     if has_function_privilege('anon', f, 'EXECUTE') or has_function_privilege('authenticated', f, 'EXECUTE') then
       raise exception 'anon or authenticated can execute %', f;
@@ -751,6 +905,20 @@ begin
      or has_table_privilege('anon', 'public.legacy_access_blocks', 'SELECT')
      or has_table_privilege('authenticated', 'public.legacy_access_blocks', 'SELECT') then
     raise exception 'unexpected privileges on legacy_access tables';
+  end if;
+  -- §3
+  if has_function_privilege('service_role', 'public.complete_admin_regenerate_report(uuid, text)', 'EXECUTE')
+     or has_function_privilege('anon', 'public.complete_regenerate_report(uuid, uuid)', 'EXECUTE')
+     or has_function_privilege('authenticated', 'public.complete_regenerate_report(uuid, uuid)', 'EXECUTE')
+     or has_table_privilege('service_role', 'public.complete_report_admin_events', 'SELECT')
+     or not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'complete_reports'
+                     and column_name = 'manual_retries') then
+    raise exception 'complete_08 §3 objects or privileges are unexpected';
+  end if;
+  if exists (select 1 from pg_proc p where p.pronamespace = 'public'::regnamespace
+              and p.proname in ('complete_report_final_failure', 'complete_regenerate_report', 'complete_admin_regenerate_report')
+              and (p.prosecdef or p.proconfig is distinct from array['search_path=""'])) then
+    raise exception 'complete_08 §3 function is not security invoker with empty search_path';
   end if;
   if has_function_privilege('service_role', 'public.complete_admin_legacy_access(text, text, text, text, text)', 'EXECUTE')
      or has_function_privilege('anon', 'public.complete_admin_legacy_access(text, text, text, text, text)', 'EXECUTE')

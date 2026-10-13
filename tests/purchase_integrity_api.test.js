@@ -676,3 +676,28 @@ test('旧 ¥1,000：運営者が停止すると旧形式リンク・マイペー
   await assert.rejects(ctx.db.sql('delete from public.legacy_access_events'), /legacy_access_events_immutable/);
   await ctx.db.close();
 });
+
+// ================= G4：ゲストの生成の最終の失敗（C6）
+test('C6（ゲスト）：最終の失敗は「作成できませんでした」。この端末（Cookie）からだけ同じ注文で作り直せる。引き継ぎ後はマイページで', { skip }, async () => {
+  const ctx = await setup();
+  await guestBuy(ctx, { offer: 'direct_complete', code: CODE_A, goal: 'GOAL_PACE_01' });
+  const [rep] = await ctx.rows('complete_reports');
+  await ctx.db.patch('complete_reports', rep.id, { status: 'failed', attempts: rep.max_attempts, next_retry_at: null, last_error_code: 'storage_failed' });
+  let st = (await ctx.op('guest-status', {})).body.purchases[0];
+  assert.deepEqual([st.report, st.regenerate], ['failed', 'available']);
+  // Cookie の無い端末・別の端末からは作れない
+  assert.equal((await ctx.op('guest-regenerate', { ref: st.ref }, { cookie: '' })).code, 403);
+  const r = await ctx.op('guest-regenerate', { ref: st.ref });
+  assert.deepEqual([r.code, r.body], [202, { result: 'queued' }]);
+  const [after] = await ctx.rows('complete_reports');
+  assert.deepEqual([after.id, after.status, after.manual_retries, after.attempts], [rep.id, 'queued', 1, 0]);
+  assert.equal((await ctx.rows('complete_orders')).length, 1);
+  st = (await ctx.op('guest-status', {})).body.purchases[0];
+  assert.equal(st.regenerate, null);
+  // 引き継いだ後は、ゲストの操作では作れない
+  const token = 'tok-guest-regen';
+  await ctx.db.user({ email: 'owner@example.test', token });
+  assert.equal((await ctx.op('guest-claim', { ref: st.ref }, { token })).code, 200);
+  assert.equal((await ctx.op('guest-regenerate', { ref: st.ref })).code, 403);
+  await ctx.db.close();
+});

@@ -31,7 +31,7 @@ test('状態の対応：queued・generating は準備中、ready＋active は見
   assert.equal(k(undefined, 'ready'), 'none', '権利なしで生成物だけがあっても見せない');
   assert.equal(k('active', 'ready', true), 'retry');
   const T = C.VIEW_TEXT;
-  assert.deepEqual({ ...T }, { preparing: '完全解析を準備しています', ready: '完全解析を見る', retry: 'もう一度確認する', suspended: '現在、完全解析を閲覧できません', revoked: 'この完全解析は利用できません' });
+  assert.deepEqual({ ...T }, { preparing: '完全解析を準備しています', ready: '完全解析を見る', retry: 'もう一度確認する', suspended: '現在、完全解析を閲覧できません', revoked: 'この完全解析は利用できません', failed: '完全解析を作成できませんでした' });
 });
 
 test('my-entitlements の記録・complete-status の応答から同じ規則で決める', () => {

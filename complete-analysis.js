@@ -59,6 +59,7 @@
     retry: 'もう一度確認する',
     suspended: '現在、完全解析を閲覧できません',
     revoked: 'この完全解析は利用できません',
+    failed: '完全解析を作成できませんでした',
   };
   // 旧 ¥1,000 購入の本人確認が済むまでの表示（¥3,000・¥2,000 を出さない）
   var CA_LEGACY_PENDING_TEXT = '既存の解析レポート購入を確認しています';
@@ -233,7 +234,8 @@
   //   entitlement：完全解析権の状態（'active'／'suspended'／'revoked'／null）
   //   reportStatus：生成物の状態（'queued'／'generating'／'ready'／'failed'／'revoked'／'none'）
   //   lookupFailed：状態を取得できなかった
-  // 戻り値 kind：none（権利なし。目標選択・準備中の導線を維持）／preparing／ready／retry／suspended／revoked
+  //   regenerate：生成の最終の失敗（'available'：同じ注文で作り直せる／'operator'：お問い合わせ／null：自動の再試行中）
+  // 戻り値 kind：none（権利なし。目標選択・準備中の導線を維持）／preparing／ready／retry／suspended／revoked／failed
   function completeViewStateFor(v) {
     var o = v || {};
     if (o.lookupFailed) return { kind: 'retry' };
@@ -244,6 +246,8 @@
     if (o.viewBlocked === 'basis_inactive') return { kind: 'suspended', reason: 'basis_inactive' };
     if (o.reportStatus === 'revoked') return { kind: 'revoked' };
     if (o.reportStatus === 'ready') return { kind: 'ready' };
+    // 自動の再試行を使い切った失敗：「作成し直しています」のままにせず、作り直し（またはお問い合わせ）を案内する
+    if (o.regenerate === 'available' || o.regenerate === 'operator') return { kind: 'failed', regenerate: o.regenerate === 'available' };
     if (o.reportStatus === 'failed') return { kind: 'retry' };
     return { kind: 'preparing' }; // queued・generating・まだ生成物の行が無い
   }
@@ -251,12 +255,14 @@
   function completeViewFromRecord(complete, lookup) {
     if (lookup === 'failed') return completeViewStateFor({ lookupFailed: true });
     if (lookup !== 'ok' || !complete || typeof complete !== 'object') return { kind: 'none' };
-    return completeViewStateFor({ entitlement: complete.completeEntitlement, reportStatus: complete.completeStatus, viewBlocked: complete.completeViewBlocked });
+    return completeViewStateFor({ entitlement: complete.completeEntitlement, reportStatus: complete.completeStatus,
+      viewBlocked: complete.completeViewBlocked, regenerate: complete.completeRegenerate });
   }
   // GET /api/complete-status の応答（本文）から
   function completeViewFromStatus(body) {
     if (!body || typeof body !== 'object' || !body.entitlements) return completeViewStateFor({ lookupFailed: true });
-    return completeViewStateFor({ entitlement: body.entitlements.complete, reportStatus: body.report ? body.report.status : 'none' });
+    return completeViewStateFor({ entitlement: body.entitlements.complete, reportStatus: body.report ? body.report.status : 'none',
+      regenerate: body.report ? body.report.regenerate : null });
   }
 
   // サーバー（/api/my-entitlements v2 の records）の状態から、完全解析の導線を決める。

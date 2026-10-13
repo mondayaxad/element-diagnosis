@@ -337,7 +337,7 @@ test('my-entitlements v2（Preview）：記録ごとの完全解析の状態', a
   assert.equal(res.body.completeLookup, 'ok');
   const r = res.body.records;
   assert.deepEqual(Object.keys(r[S1]).sort(), ['analysisSource', 'checkoutInProgress', 'completeBlocked', 'completeEligible', 'completeEntitlement',
-    'completeOffer', 'completeStatus', 'completeViewBlocked', 'duplicateOf', 'ineligibleReason', 'legacyPurchasePending', 'mentorGoal', 'mentorGoalLocked', 'repurchaseBlocked']);
+    'completeOffer', 'completeRegenerate', 'completeStatus', 'completeViewBlocked', 'duplicateOf', 'ineligibleReason', 'legacyPurchasePending', 'mentorGoal', 'mentorGoalLocked', 'repurchaseBlocked']);
   assert.equal(r[S1].completeEligible, true);
   assert.equal(r[S1].legacyPurchasePending, true, 'ハッシュ一致だけ：確認中');
   assert.equal(r[S1].analysisSource, null, 'ハッシュ一致だけでは ¥2,000 の根拠にしない');

@@ -787,7 +787,7 @@ test('状態確認：認証が先・本人の記録だけ・Stripe ID・保存�
     salesOpen: true,
     order: { status: 'paid', offer: 'direct_complete', amount: 3000 },
     entitlements: { analysis: 'active', complete: 'active' },
-    report: { status: 'queued' },
+    report: { status: 'queued', regenerate: null },
     mentorGoal: { goalId: 'GOAL_PACE_01', goalCatalogVersion: CE.MENTOR_CATALOG_VERSION, locked: true },
   });
   const text = JSON.stringify(r.body);
@@ -928,7 +928,9 @@ test('legacy-verify：別の記録・別の人に結び付け済みの購入は�
   const ctx = await setup({ env: { COMPLETE_SALES_OPEN: 'false' } });
   const code = 'CODE_LV_SHARED';
   const a = await person(ctx, { email: 'buyer@example.test', code });
-  const aSecond = { token: a.token, userId: a.userId, sessionId: await ctx.db.record({ userId: a.userId, goal: 'GOAL_PACE_01', code }) };
+  // 2つ目の記録は後で診断した（同じミリ秒だと表示の正本の選び方が ID の順になるため、時刻を離す）
+  const aSecond = { token: a.token, userId: a.userId, sessionId: await ctx.db.record({ userId: a.userId, goal: 'GOAL_PACE_01', code,
+    completedAt: new Date(Date.now() + 60000).toISOString() }) };
   const b = await person(ctx, { email: 'buyer@example.test', code });
   await ctx.db.legacy({ code, stripeSessionId: ctx.stripe.legacySession({ email: 'buyer@example.test' }) });
   assert.deepEqual((await legacyVerify(ctx, a.token, { diagnosisSessionId: a.sessionId })).body, { result: 'bound' });

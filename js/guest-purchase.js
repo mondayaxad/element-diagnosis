@@ -144,11 +144,19 @@
     return { ok: false, error: r.body && r.body.error };
   }
 
+  // 生成の最終の失敗からの作り直し（同じ注文・目標。追加の支払いなし）
+  async function regenerate(ref) {
+    var r = await call('guest-regenerate', { ref: ref });
+    track(r.ok ? 'complete_regenerate' : 'complete_regenerate_failed', { source: 'purchase_complete', reason: r.ok ? null : (r.body && r.body.error) });
+    return { ok: r.ok, error: r.body && r.body.error };
+  }
+
   // 完全解析の状態の表示名
   function completeLabel(p) {
     if (!p || !p.complete) return null;
     if (p.complete === 'suspended') return '一時停止中';
     if (p.complete === 'revoked') return '失効';
+    if (p.regenerate === 'available' || p.regenerate === 'operator') return '作成できませんでした';
     switch (p.report) {
       case 'ready': return '閲覧できます';
       case 'failed': return '作成をやり直しています';
@@ -162,6 +170,6 @@
     OFFERS: OFFERS, yen: yen, esc: esc, salesOpen: salesOpen, track: track,
     status: status, cancel: cancel, goals: goals, checkout: checkout, errorText: errorText, claimErrorText: claimErrorText,
     startClaim: startClaim, takeClaimIntent: takeClaimIntent, claimAll: claimAll, recover: recover,
-    openAnalysis: openAnalysis, openComplete: openComplete, completeLabel: completeLabel,
+    openAnalysis: openAnalysis, openComplete: openComplete, regenerate: regenerate, completeLabel: completeLabel,
   };
 })(typeof window !== 'undefined' ? window : this);
