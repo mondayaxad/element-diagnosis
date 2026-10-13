@@ -4,8 +4,9 @@
 -- 【SQL Editor で実行する】表・関数・権限の追加を含むため、Supabase の API 経路（MCP）では適用しない。
 --   最後に migration 履歴（supabase_migrations.schema_migrations）へ1行を追加する（二度当てしても増えない）。
 -- 【本番では実行しない】本番は Production 用の別ファイルで行う。
--- 前提：complete_01〜08 適用済み・PostgreSQL 17 以上。
--- 既存の行は書き換えない・消さない（新しい表と関数の追加だけ）。
+-- 前提：onboarding_01・complete_01〜08 適用済み・PostgreSQL 17 以上。
+-- 既存の行は書き換えない・消さない（新しい表と関数の追加、登録完了の関数の版の更新だけ）。
+-- 旧版の complete_09（固有リンクの作成関数が 11 引数の版）を当てた DB にも、そのまま当てられる（作成関数を置き換える）。
 -- ============================================================
 --
 -- 方針
@@ -18,6 +19,12 @@
 --     購入のある記録は、購入の記録の保存方針（会計上・法令上必要な期間）に従い残す。
 --   ・RLS 有効・ポリシーなし。anon・authenticated は権限なし。service_role は関数を通じて作成・照会する（SELECT・INSERT・UPDATE のみ。DELETE なし）。
 --   ・関数はすべて SECURITY INVOKER・search_path = ''。整理の関数は運営者（SQL Editor）専用（API のロールは実行できない）。
+--   ・大量作成の防止：
+--       冪等：秘密値はブラウザが作り（256bit）、同じ秘密値での作成は同じリンクを返す（再送・連打で記録もリンクも増えない）。
+--       回数：接続元ごと（IP アドレスをサーバーの鍵で HMAC-SHA256 にした値。IP アドレスそのものは保存しない）に、
+--             10 分で 10 件・24 時間で 100 件まで。超えたら作らない（API は 429）。回数の行は 24 時間を過ぎたら消す。
+--   ・登録完了の同意版：プライバシーポリシーを 2026-10-13 版に改定（固有リンクの追記）。利用規約は 2026-10-07 のまま。
+--     今後の新規の同意だけを 2026-10-13 で記録する（既存の利用者の同意の記録は書き換えない）。
 --
 -- 戻し：complete_97_rollback_09_DRAFT_DO_NOT_RUN.sql（実行禁止の草案）。
 
@@ -36,7 +43,8 @@ begin
     raise exception 'postgresql 17 or later is required';
   end if;
   if to_regprocedure('public.complete_create_guest_record(jsonb, text, jsonb, jsonb, jsonb, text, text, text, text, text)') is null
-     or to_regclass('public.legacy_access_blocks') is null then
+     or to_regclass('public.legacy_access_blocks') is null
+     or to_regprocedure('public.complete_registration_onboarding(text, text, text)') is null then
     raise exception 'complete_01..08 are not applied';
   end if;
 end
@@ -56,28 +64,75 @@ grant select, insert, update on table public.result_resume_links to service_role
 alter table public.result_resume_links enable row level security;
 -- ポリシーは作らない（service_role は RLS を迂回する。anon・authenticated は権限なし）
 
+-- 1b. 作成の回数（接続元の鍵付きハッシュ × 1 分の区切り）。24 時間を過ぎた行は作成の時に消す
+create table if not exists public.result_link_rate (
+  rate_key  text not null check (rate_key ~ '^[0-9a-f]{64}$'),
+  bucket    timestamptz not null,
+  n         integer not null check (n > 0),
+  primary key (rate_key, bucket)
+);
+create index if not exists result_link_rate_bucket_idx on public.result_link_rate (bucket);
+revoke all on table public.result_link_rate from public, anon, authenticated, service_role;
+grant select, insert, update, delete on table public.result_link_rate to service_role;
+alter table public.result_link_rate enable row level security;
+
 -- 2. 作成：診断完了の時。無料結果の保存値でゲストの診断記録を作り、秘密値のハッシュを結び付ける
+--    同じ秘密値の再送は、同じ診断結果なら 'existing' を返すだけ（記録・リンク・回数を増やさない）。違う診断結果なら拒否する。
+--    新しく作る時だけ回数を数え、上限を超えたら complete_result_link_rate_limited（記録もリンクも作らない）。
+drop function if exists public.complete_create_result_link(text, jsonb, text, jsonb, jsonb, jsonb, text, text, text, text, text);
 create or replace function public.complete_create_result_link(
-    p_token_hash text,
+    p_token_hash text, p_rate_key text,
     p_answers_v2 jsonb, p_encoded_answers text, p_v2_scores jsonb, p_v2_rankings jsonb, p_mirror_snapshot jsonb,
     p_item_set_version text, p_scoring_version text, p_translation_model_version text,
     p_character_profile_version text, p_mirror_model_version text)
-  returns void
+  returns text
   language plpgsql
   security invoker
   set search_path = ''
 as $$
 declare
   v_id uuid;
+  v_sid uuid;
+  v_expires timestamptz;
+  v_short integer;
+  v_day integer;
 begin
-  if p_token_hash is null or p_token_hash !~ '^[0-9a-f]{64}$' then
+  if p_token_hash is null or p_token_hash !~ '^[0-9a-f]{64}$'
+     or p_rate_key is null or p_rate_key !~ '^[0-9a-f]{64}$'
+     or p_encoded_answers is null or p_encoded_answers !~ '^[0-9a-z]+$' or length(p_encoded_answers) not between 8 and 400 then
     raise exception 'complete_invalid_result_link' using errcode = '22023';
   end if;
+  -- 同じ秘密値の同時の作成を1つずつ処理する（二重に記録を作らない）
+  perform pg_advisory_xact_lock(hashtextextended('complete_result_link:' || p_token_hash, 0));
+  select l.diagnosis_session_id, l.expires_at into v_sid, v_expires
+    from public.result_resume_links l where l.token_hash = p_token_hash;
+  if v_sid is not null then
+    if v_expires > now() and exists (select 1 from public.diagnosis_answers a
+                                       where a.session_id = v_sid and a.encoded_answers = p_encoded_answers) then
+      return 'existing';
+    end if;
+    raise exception 'complete_result_link_conflict' using errcode = '23505';
+  end if;
+
+  -- 回数（同じ接続元の同時の作成を1つずつ数える）
+  perform pg_advisory_xact_lock(hashtextextended('complete_result_link_rate:' || p_rate_key, 0));
+  delete from public.result_link_rate r where r.bucket < now() - interval '24 hours';
+  select coalesce(sum(r.n) filter (where r.bucket >= now() - interval '10 minutes'), 0), coalesce(sum(r.n), 0)
+    into v_short, v_day
+    from public.result_link_rate r where r.rate_key = p_rate_key;
+  if v_short >= 10 or v_day >= 100 then
+    raise exception 'complete_result_link_rate_limited' using errcode = '54000';
+  end if;
+  insert into public.result_link_rate as r (rate_key, bucket, n)
+  values (p_rate_key, date_trunc('minute', now()), 1)
+  on conflict (rate_key, bucket) do update set n = r.n + 1;
+
   v_id := public.complete_create_guest_record(p_answers_v2, p_encoded_answers, p_v2_scores, p_v2_rankings, p_mirror_snapshot,
                                               p_item_set_version, p_scoring_version, p_translation_model_version,
                                               p_character_profile_version, p_mirror_model_version);
   insert into public.result_resume_links (token_hash, diagnosis_session_id, expires_at)
   values (p_token_hash, v_id, now() + interval '180 days');
+  return 'created';
 end;
 $$;
 
@@ -128,6 +183,7 @@ declare
 begin
   delete from public.result_resume_links l where l.expires_at <= now();
   get diagnostics v_links = row_count;
+  delete from public.result_link_rate r where r.bucket < now() - interval '24 hours';
   with doomed as (
     select s.id from public.diagnosis_sessions s
      where s.user_id is null and s.guest_created_at is not null and s.guest_created_at < now() - interval '180 days'
@@ -145,11 +201,70 @@ begin
 end;
 $$;
 
-revoke all on function public.complete_create_result_link(text, jsonb, text, jsonb, jsonb, jsonb, text, text, text, text, text) from public, anon, authenticated;
-grant execute on function public.complete_create_result_link(text, jsonb, text, jsonb, jsonb, jsonb, text, text, text, text, text) to service_role;
+revoke all on function public.complete_create_result_link(text, text, jsonb, text, jsonb, jsonb, jsonb, text, text, text, text, text) from public, anon, authenticated;
+grant execute on function public.complete_create_result_link(text, text, jsonb, text, jsonb, jsonb, jsonb, text, text, text, text, text) to service_role;
 revoke all on function public.complete_open_result_link(text) from public, anon, authenticated;
 grant execute on function public.complete_open_result_link(text) to service_role;
 revoke all on function public.complete_purge_result_links() from public, anon, authenticated, service_role;
+
+-- 5. 登録完了の同意版：プライバシーポリシーだけ 2026-10-13 にする（利用規約・お知らせメールの版は変えない）。
+--    onboarding_01 の関数の本文から、プライバシーポリシーの版の比較だけを変える（既存の行は書き換えない。権限は置き換えでも保たれる）。
+create or replace function public.complete_registration_onboarding(
+  p_terms_version text,
+  p_privacy_version text,
+  p_newsletter_consent_version text
+)
+  returns jsonb
+  language plpgsql
+  security definer
+  set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_status text;
+begin
+  if v_uid is null then
+    raise exception 'not_authenticated' using errcode = '28000';
+  end if;
+  if p_terms_version is distinct from '2026-10-07'
+     or p_privacy_version is distinct from '2026-10-13'
+     or p_newsletter_consent_version is distinct from '2026-10-07-v1' then
+    raise exception 'unsupported_consent_version' using errcode = '22023';
+  end if;
+
+  select onboarding_status into v_status from public.profiles where id = v_uid for update;
+  if not found then
+    raise exception 'profile_not_found' using errcode = 'P0002';
+  end if;
+
+  if v_status = 'required' then
+    update public.profiles
+       set onboarding_status          = 'completed',
+           onboarding_completed_at    = now(),
+           terms_accepted_at          = now(),
+           terms_version              = p_terms_version,
+           privacy_accepted_at        = now(),
+           privacy_version            = p_privacy_version,
+           newsletter_opted_in        = true,
+           newsletter_opted_in_at     = now(),
+           newsletter_consent_source  = 'registration_onboarding',
+           newsletter_consent_version = p_newsletter_consent_version,
+           newsletter_sync_status     = 'pending',
+           updated_at                 = now()
+     where id = v_uid;
+  elsif v_status <> 'completed' then
+    raise exception 'onboarding_not_required' using errcode = '22023';
+  end if;
+
+  return (
+    select jsonb_build_object(
+      'onboarding_status', onboarding_status,
+      'newsletter_sync_status', newsletter_sync_status)
+      from public.profiles where id = v_uid);
+end;
+$$;
+revoke all on function public.complete_registration_onboarding(text, text, text) from public, anon;
+grant execute on function public.complete_registration_onboarding(text, text, text) to authenticated;
 
 -- ============================================================
 -- 確認（変更はしない。期待と違えば全体を取り消す）
@@ -171,9 +286,23 @@ begin
   if has_function_privilege('service_role', 'public.complete_purge_result_links()', 'EXECUTE')
      or has_function_privilege('anon', 'public.complete_open_result_link(text)', 'EXECUTE')
      or has_function_privilege('authenticated', 'public.complete_open_result_link(text)', 'EXECUTE')
-     or has_function_privilege('anon', 'public.complete_create_result_link(text, jsonb, text, jsonb, jsonb, jsonb, text, text, text, text, text)', 'EXECUTE')
+     or has_function_privilege('anon', 'public.complete_create_result_link(text, text, jsonb, text, jsonb, jsonb, jsonb, text, text, text, text, text)', 'EXECUTE')
      or not has_function_privilege('service_role', 'public.complete_open_result_link(text)', 'EXECUTE') then
     raise exception 'unexpected privileges on complete_09 functions';
+  end if;
+  if not (select relrowsecurity from pg_class where oid = 'public.result_link_rate'::regclass)
+     or exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'result_link_rate')
+     or has_table_privilege('anon', 'public.result_link_rate', 'SELECT')
+     or has_table_privilege('authenticated', 'public.result_link_rate', 'SELECT') then
+    raise exception 'unexpected security on result_link_rate';
+  end if;
+  if to_regprocedure('public.complete_create_result_link(text, jsonb, text, jsonb, jsonb, jsonb, text, text, text, text, text)') is not null then
+    raise exception 'old complete_create_result_link remains';
+  end if;
+  if has_function_privilege('anon', 'public.complete_registration_onboarding(text, text, text)', 'EXECUTE')
+     or not has_function_privilege('authenticated', 'public.complete_registration_onboarding(text, text, text)', 'EXECUTE')
+     or position('2026-10-13' in pg_get_functiondef('public.complete_registration_onboarding(text, text, text)'::regprocedure)) = 0 then
+    raise exception 'unexpected complete_registration_onboarding';
   end if;
   if exists (select 1 from pg_proc p where p.pronamespace = 'public'::regnamespace
               and p.proname in ('complete_create_result_link', 'complete_open_result_link', 'complete_purge_result_links')

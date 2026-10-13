@@ -20,8 +20,7 @@ const ROOT = path.join(__dirname, '..');
 const { previewPublicConfigJs } = require('./fixtures/server_env');
 const CE = require('../lib/complete-eligibility');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.json': 'application/json', '.css': 'text/css', '.svg': 'image/svg+xml' };
-const TOKEN = 'Rz0kEnSecretValueForResumeLink_ABCDEFGHIJKL'; // 43文字（base64url）
-const TOKEN2 = 'Second0kEnSecretValueForResumeLink_abcdefgh';
+const TOKEN = 'Rz0kEnSecretValueForResumeLink_ABCDEFGHIJKL'; // 43文字（base64url）。サーバーに無い秘密値として使う
 const VERSIONS = { itemSetVersion: 'ETI-ITEM-2.0.0', scoringVersion: 'ETI-SCORE-2.0.0', translationModelVersion: 'ETI-TRANS-2.0.0',
   characterProfileVersion: 'ETI-CHAR-2.1.0', mirrorModelVersion: 'ETI-MIRROR-2.1.0' };
 
@@ -49,7 +48,7 @@ const GOALS = [200, { salesOpen: true, catalog: CE.MENTOR_CATALOG }];
 
 // world：サーバーの状態（固有リンクの秘密値 → 診断コード）
 function world(over) {
-  return Object.assign({ links: {}, nextTokens: [TOKEN, TOKEN2], linkFail: false, openStatus: null, calls: [] }, over || {});
+  return Object.assign({ links: {}, issued: [], linkStatus: null, linkDelay: 0, openStatus: null, calls: [] }, over || {});
 }
 async function newContext({ width = 390 } = {}) {
   return browser.newContext({ viewport: { width, height: 844 } });
@@ -60,17 +59,20 @@ async function wire(ctx, w) {
   await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
   await ctx.route(/cdnjs\.cloudflare\.com|googletagmanager|jsdelivr/, (r) => r.fulfill({ contentType: 'application/javascript', body: '' }));
   await ctx.route('https://checkout.stripe.com/**', (r) => r.fulfill({ contentType: 'text/html', body: '<p>stripe</p>' }));
-  await ctx.route('**/api/complete-checkout?op=*', (r) => {
+  await ctx.route('**/api/complete-checkout?op=*', async (r) => {
     const req = r.request();
     const op = new URL(req.url()).searchParams.get('op');
     const body = JSON.parse(req.postData() || '{}');
     w.calls.push({ op, body, url: req.url() });
     const send = (status, json) => r.fulfill({ status, contentType: 'application/json', body: JSON.stringify(json) });
     if (op === 'result-link') {
-      if (w.linkFail) return send(503, { error: 'service_unavailable', incident_id: 'abcdefabcdef' });
-      const t = w.nextTokens.shift();
-      w.links[t] = body.code;
-      return send(200, { token: t });
+      // 秘密値はブラウザが作る（応答には秘密値を含めない）。同じ秘密値の再送は 'existing'
+      if (w.linkDelay) await new Promise((ok) => setTimeout(ok, w.linkDelay));
+      if (w.linkStatus) return send(w.linkStatus, { error: w.linkStatus === 429 ? 'too_many_requests' : 'service_unavailable' });
+      if (w.links[body.token]) return send(200, { result: 'existing' });
+      w.issued.push(body.token);
+      w.links[body.token] = body.code;
+      return send(200, { result: 'created' });
     }
     if (op === 'result-open') {
       if (w.openStatus) return send(w.openStatus, { error: w.openStatus === 404 ? 'result_not_found' : 'service_unavailable' });
@@ -126,23 +128,26 @@ test('診断完了 → 固有リンク（/result#r=）→ 再読み込み・新�
   const p = await open(ctx, '/');
   const code = await complete(p);
   await p.waitForFunction(() => location.pathname === '/result' && location.hash.startsWith('#r='));
-  assert.equal(new URL(p.url()).hash, '#r=' + TOKEN);
+  const tk = w.issued[0];
+  assert.match(tk, /^[A-Za-z0-9_-]{43}$/);
+  assert.equal(Buffer.from(tk, 'base64url').length, 32, '256bit');
+  assert.equal(new URL(p.url()).hash, '#r=' + tk);
   assert.equal(new URL(p.url()).search, '', '問い合わせ文字列に何も入れない');
-  assert.deepEqual(w.calls.filter((c) => c.op === 'result-link').map((c) => c.body), [{ code }]);
+  assert.deepEqual(w.calls.filter((c) => c.op === 'result-link').map((c) => c.body), [{ code, token: tk }]);
   const note = p.locator('#resumeNote');
   await note.waitFor();
   assert.equal((await note.innerText()).replace(/\s+/g, ''), 'この診断結果は、ブラウザの履歴からもう一度開けます。URLを知っている人は結果を表示できるため、共有にはご注意ください。');
   const before = await resultText(p);
-  await assertNoSecret(p, w, TOKEN);
+  await assertNoSecret(p, w, tk);
   // 再読み込み
   await p.reload();
   await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
   assert.equal(await resultText(p), before, '同じ診断結果');
   assert.equal(await p.locator('meta[name="robots"][content*="noindex"]').count(), 1, 'noindex');
   assert.equal(w.calls.filter((c) => c.op === 'result-link').length, 1, '開き直しでは新しいリンクを作らない');
-  assert.deepEqual(w.calls.filter((c) => c.op === 'result-open').map((c) => c.body), [{ token: TOKEN }]);
+  assert.deepEqual(w.calls.filter((c) => c.op === 'result-open').map((c) => c.body), [{ token: tk }]);
   // 新しいタブ（ブックマーク・履歴相当）
-  const q = await open(ctx, `/result#r=${TOKEN}`);
+  const q = await open(ctx, `/result#r=${tk}`);
   await q.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
   assert.equal(await resultText(q), before);
   assert.equal(await q.locator('#resumeNote').isVisible(), true);
@@ -150,7 +155,7 @@ test('診断完了 → 固有リンク（/result#r=）→ 再読み込み・新�
   await q.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
   await q.locator('#lockUnlockAllBtn').click();
   await q.waitForURL(/checkout\.stripe\.com/);
-  assert.deepEqual(w.calls.filter((c) => c.op === 'guest-checkout').map((c) => c.body), [{ offer: 'analysis', code, resume: TOKEN }]);
+  assert.deepEqual(w.calls.filter((c) => c.op === 'guest-checkout').map((c) => c.body), [{ offer: 'analysis', code, resume: tk }]);
   assert.deepEqual(p.__errors.concat(q.__errors), []);
   await ctx.close();
 });
@@ -160,13 +165,22 @@ test('再診断はそれぞれ別の固有リンク。旧形式の ?code= から
   let ctx = await newContext();
   await wire(ctx, w);
   let p = await open(ctx, '/');
+  w.linkDelay = 400;
   await complete(p, 7);
-  await p.waitForFunction((t) => location.hash === '#r=' + t, TOKEN);
+  // 応答を待つ間の描き直し（連打・再表示）でも作成の要求は1回だけ
+  await p.evaluate(() => { render(); render(); }); // eslint-disable-line no-undef
+  await p.waitForFunction(() => location.hash.startsWith('#r='));
+  assert.equal(w.calls.filter((c) => c.op === 'result-link').length, 1);
+  assert.equal(new URL(p.url()).hash, '#r=' + w.issued[0]);
+  w.linkDelay = 0;
   await p.evaluate(() => startNewDiagnosisV2()); // eslint-disable-line no-undef
   assert.equal(new URL(p.url()).pathname, '/', '新しい診断を始めたら TOP の URL へ戻す');
   await complete(p, 3);
-  await p.waitForFunction((t) => location.hash === '#r=' + t, TOKEN2);
+  await p.waitForFunction((t) => location.hash.startsWith('#r=') && location.hash !== '#r=' + t, w.issued[0]);
   assert.equal(w.calls.filter((c) => c.op === 'result-link').length, 2);
+  assert.equal(w.issued.length, 2);
+  assert.notEqual(w.issued[0], w.issued[1], '再診断は別の秘密値');
+  assert.equal(new URL(p.url()).hash, '#r=' + w.issued[1]);
   await ctx.close();
   // ?code= から開いた結果（共有 URL など）：リンクを作らない
   w = world();
@@ -181,8 +195,8 @@ test('再診断はそれぞれ別の固有リンク。旧形式の ?code= から
   assert.equal(w.calls.filter((c) => c.op === 'result-link').length, 1);
   assert.equal(await q.locator('#resumeNote').isVisible(), false);
   await ctx.close();
-  // 作成に失敗（503）：URL は変えず、結果と ¥1,000 はそのまま
-  w = world({ linkFail: true });
+  // 作成に失敗（429：作成の回数の上限・503）：URL は変えず、結果と ¥1,000 はそのまま
+  w = world({ linkStatus: 429 });
   ctx = await newContext();
   await wire(ctx, w);
   p = await open(ctx, '/');
@@ -227,22 +241,23 @@ test('Stripe でキャンセルして戻っても、購入完了ページから�
   const p = await open(ctx, '/');
   const code = await complete(p);
   await p.waitForFunction(() => location.hash.startsWith('#r='));
+  const tk = w.issued[0];
   // キャンセルの戻り先（購入完了ページ）
   await ctx.route('**/api/complete-checkout?op=guest-cancel', (r) => r.fulfill({ contentType: 'application/json', body: '{"closed":1,"paid":0}' }));
   await p.goto(base + '/purchase-complete?status=canceled');
   const back = p.locator('#pcResultLink');
   await back.waitFor();
-  assert.equal(await back.getAttribute('href'), '/result#r=' + TOKEN);
+  assert.equal(await back.getAttribute('href'), '/result#r=' + tk);
   await back.click();
   await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
   await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
   await p.locator('#lockUnlockAllBtn').click();
   await p.waitForURL(/checkout\.stripe\.com/);
-  assert.deepEqual(w.calls.filter((c) => c.op === 'guest-checkout').map((c) => c.body), [{ offer: 'analysis', code, resume: TOKEN }]);
+  assert.deepEqual(w.calls.filter((c) => c.op === 'guest-checkout').map((c) => c.body), [{ offer: 'analysis', code, resume: tk }]);
   // ブラウザの「戻る」：結果の URL のまま
   await p.goBack();
   await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
-  assert.equal(new URL(p.url()).hash, '#r=' + TOKEN);
+  assert.equal(new URL(p.url()).hash, '#r=' + tk);
   await p.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })));
   assert.equal(await p.locator('#lockUnlockAllBtn').isDisabled(), false);
   await ctx.close();

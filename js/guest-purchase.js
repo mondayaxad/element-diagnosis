@@ -57,7 +57,17 @@
     return call('guest-status', body);
   }
   // 固有リンクの作成・照会（秘密値は URL のフラグメントにだけ置く。サーバーにはハッシュだけを保存）
-  function resultLink(code) { return call('result-link', { code: code }); }
+  // 秘密値（32バイトの乱数・base64url 43文字）はこの端末で作る。同じ診断の再送には同じ値を使う（サーバーは冪等）
+  function newResumeToken() {
+    var c = global.crypto;
+    if (!c || typeof c.getRandomValues !== 'function') return null;
+    var b = new Uint8Array(32);
+    c.getRandomValues(b);
+    var s = '';
+    for (var i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+    return global.btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function resultLink(code, token) { return call('result-link', { code: code, token: token }); }
   function resultOpen(token) { return call('result-open', { token: token }); }
   // 決済をやり直す・Stripe の画面で戻った：この端末の未払いの決済を閉じる（支払い済みならそのまま反映される）
   function cancel() { return call('guest-cancel', {}); }
@@ -181,7 +191,7 @@
 
   global.EdGuestPurchase = {
     OFFERS: OFFERS, yen: yen, esc: esc, salesOpen: salesOpen, track: track,
-    status: status, resultLink: resultLink, resultOpen: resultOpen, cancel: cancel, goals: goals, checkout: checkout, errorText: errorText, claimErrorText: claimErrorText,
+    status: status, resultLink: resultLink, newResumeToken: newResumeToken, resultOpen: resultOpen, cancel: cancel, goals: goals, checkout: checkout, errorText: errorText, claimErrorText: claimErrorText,
     startClaim: startClaim, takeClaimIntent: takeClaimIntent, claimAll: claimAll, recover: recover,
     openAnalysis: openAnalysis, openComplete: openComplete, regenerate: regenerate, completeLabel: completeLabel,
   };

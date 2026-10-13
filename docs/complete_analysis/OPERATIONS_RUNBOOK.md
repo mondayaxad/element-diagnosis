@@ -133,6 +133,7 @@ select public.complete_admin_legacy_access(null, '<旧購入の cs_...>', 'revok
 
 - 診断を完了すると、無料の診断結果をゲストの診断記録として保存し、固有リンクを1つ発行する（再診断ごとに別のリンク）。DB には秘密値の SHA-256 だけを保存する。
 - 保存期間：最後に開いた日から 180 日（開くたびに延長）。期限を過ぎたリンクは開けない（「この診断結果は開けません」）。
+- 大量作成の防止：秘密値はブラウザが作り、同じ秘密値の再送は同じリンクを返す（記録・リンクを増やさない）。接続元ごと（IP アドレスを `COMPLETE_VIEW_TOKEN_SECRET` から作った鍵で HMAC-SHA256 にした値。IP アドレスそのものは保存しない）に、10 分で 10 件・24 時間で 100 件を超えると作らない（API は 429。利用者には何も表示せず、結果の表示と購入はそのまま）。回数の行（`result_link_rate`）は 24 時間を過ぎたものから、作成の時と整理の時に消す。
 - 固有リンクは無料の診断結果を開くだけ。解析レポート・完全解析の閲覧は、従来どおり毎回 DB で権利を確かめる（返金・停止はそのまま効く）。
 - 削除の依頼（「この診断結果を消してほしい」）：利用者からリンクを受け取らない（秘密値をチャット・メールに書かせない）。購入があれば購入の記録 ID から、無ければ期限切れの整理で消える旨を案内する。
 
@@ -143,19 +144,23 @@ select count(*) as links,
        count(*) filter (where expires_at > now()) as active,
        count(*) filter (where expires_at <= now()) as expired
   from public.result_resume_links;
+-- 作成の回数（上限に当たっている接続元の数。接続元は鍵付きハッシュなので、誰かは分からない）
+select count(*) filter (where n10 >= 10) as limited_10min, count(*) filter (where n24 >= 100) as limited_24h
+  from (select rate_key, sum(n) filter (where bucket >= now() - interval '10 minutes') as n10, sum(n) as n24
+          from public.result_link_rate where bucket >= now() - interval '24 hours' group by rate_key) t;
 ```
 
 ### 整理（月に1回程度。自動では動かない）
 
-期限切れのリンクを消し、180 日より前に作られた、リンク・注文・権利・生成物・旧購入の結び付けの無いゲストの診断記録を消す。購入のある記録は消さない。
+期限切れのリンクと 24 時間を過ぎた作成の回数の行を消し、180 日より前に作られた、リンク・注文・権利・生成物・旧購入の結び付けの無いゲストの診断記録を消す。購入のある記録は消さない。
 
 ```sql
 select * from public.complete_purge_result_links();
 ```
 
 - 戻り値：消したリンクの数・消した記録の数。操作の前後に「読み取りの確認」を実行して控える。
-- 戻し（complete_09 を外す）：`docs/sql/complete_97_rollback_09_DRAFT_DO_NOT_RUN.sql`（発行済みのリンクはすべて開けなくなる。作った診断記録は残る）。
+- 戻し（complete_09 を外す）：`docs/sql/complete_97_rollback_09_DRAFT_DO_NOT_RUN.sql`（発行済みのリンクはすべて開けなくなる。作った診断記録は残る。登録完了で受け付けるプライバシーポリシーの版も 2026-10-07 に戻るため、アプリを先に戻す）。
 
 ## 6. 変えてはいけない設定
 
-- `REPORT_TOKEN_SECRET`・`COMPLETE_VIEW_TOKEN_SECRET` を販売中に変えない（発行済みの閲覧リンク、ゲスト購入の参照値（ref）・購入完了ページの表示が無効になる）。変える時は販売を止め、利用者への案内を用意してから。
+- `REPORT_TOKEN_SECRET`・`COMPLETE_VIEW_TOKEN_SECRET` を販売中に変えない（発行済みの閲覧リンク、ゲスト購入の参照値（ref）・購入完了ページの表示が無効になる。`COMPLETE_VIEW_TOKEN_SECRET` を変えると、固有リンクの作成の回数も数え直しになる）。変える時は販売を止め、利用者への案内を用意してから。

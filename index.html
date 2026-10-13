@@ -3288,10 +3288,16 @@ function setupResumeLink(root, code) {
   if (!window.__resumeFresh) return; // 旧形式の ?code= から開いた結果などには作らない
   var nonce = window.__resultNonce;
   if (window.__resumeCreating === nonce) return;
+  // 秘密値はこの診断（nonce）ごとに1つ。描き直し・再送でも同じ値を使う（サーバーは冪等。記録もリンクも増えない）
+  if (!window.__resumePending || window.__resumePending.nonce !== nonce) {
+    var fresh = EdGuestPurchase.newResumeToken ? EdGuestPurchase.newResumeToken() : null;
+    if (!fresh || !/^[A-Za-z0-9_-]{43}$/.test(fresh)) return;
+    window.__resumePending = { nonce: nonce, token: fresh };
+  }
+  var t = window.__resumePending.token;
   window.__resumeCreating = nonce;
-  EdGuestPurchase.resultLink(code).then(function (r) {
-    var t = r && r.ok && r.body && r.body.token;
-    if (!t || !/^[A-Za-z0-9_-]{43}$/.test(t)) return; // 失敗しても表示・購入はそのまま
+  EdGuestPurchase.resultLink(code, t).then(function (r) {
+    if (!r || !r.ok) return; // 失敗しても表示・購入はそのまま（同じ診断では作り直さない）
     if (window.__resultNonce !== nonce || window.__phase !== 'result') return;
     window.__edResumeToken = t;
     try { history.replaceState(null, '', '/result#r=' + t); } catch (e) { /* 履歴を書き換えられない環境 */ }

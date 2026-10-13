@@ -84,9 +84,9 @@ async function setup({ env = {} } = {}) {
       return res;
     },
     // ブラウザ（Cookie を保持する）として ?op= を呼ぶ
-    async op(op, body, { token, cookie } = {}) {
+    async op(op, body, { token, cookie, ip } = {}) {
       const res = makeRes();
-      const headers = { host: 'evil.example' };
+      const headers = { host: 'evil.example', 'x-real-ip': ip || '198.51.100.7' };
       const jar = cookie !== undefined ? cookie : ctx.cookie;
       if (jar) headers.cookie = jar;
       if (token) headers.authorization = `Bearer ${token}`;
@@ -94,6 +94,13 @@ async function setup({ env = {} } = {}) {
       const set = res.headers['set-cookie'];
       if (set && cookie === undefined) ctx.cookie = set.split(';')[0].endsWith('=') ? '' : set.split(';')[0];
       return res;
+    },
+    // 診断完了の固有リンク（秘密値はブラウザが作る）
+    async link(code, { ip } = {}) {
+      const t = crypto.randomBytes(32).toString('base64url');
+      const r = await ctx.op('result-link', { code, token: t }, { cookie: '', ip });
+      assert.equal(r.code, 200, JSON.stringify(r.body));
+      return t;
     },
     async webhook(opts) {
       const { req } = eventRequest({ secret: SECRET, ...opts });
@@ -811,11 +818,9 @@ test('並行（決定的）：記録のロックを持つ処理（引き継ぎ�
 const sha256hex = (t) => crypto.createHash('sha256').update(t).digest('hex');
 test('固有リンク：診断完了で発行（256bit・DB はハッシュだけ）→ 同じ診断結果を復元。不正・失効・削除済みは 404（情報を出さない）', { skip }, async () => {
   const ctx = await setup();
-  const r = await ctx.op('result-link', { code: CODE_A }, { cookie: '' });
-  assert.equal(r.code, 200, JSON.stringify(r.body));
-  const token = r.body.token;
-  assert.match(token, /^[A-Za-z0-9_-]{43}$/);
-  assert.equal(Buffer.from(token, 'base64url').length, 32);
+  const token = crypto.randomBytes(32).toString('base64url');
+  const r = await ctx.op('result-link', { code: CODE_A, token }, { cookie: '' });
+  assert.deepEqual([r.code, r.body], [200, { result: 'created' }], '応答に秘密値・記録 ID を返さない');
   const [link] = await ctx.rows('result_resume_links');
   assert.equal(link.token_hash, sha256hex(token));
   assert.ok(!JSON.stringify(await ctx.rows('result_resume_links')).includes(token), 'DB に秘密値そのものを保存しない');
@@ -831,8 +836,7 @@ test('固有リンク：診断完了で発行（256bit・DB はハッシュだ�
   assert.deepEqual(Object.keys(o.body).sort(), ['code', 'diagnosisVersion', 'versions']);
   assert.ok(!/[0-9a-f]{8}-[0-9a-f]{4}-/.test(JSON.stringify(o.body)), '記録 ID を返さない');
   // 2回目の診断は別のリンク
-  const r2 = await ctx.op('result-link', { code: CODE_B }, { cookie: '' });
-  assert.notEqual(r2.body.token, token);
+  const r2 = { body: { token: await ctx.link(CODE_B) } };
   assert.equal((await ctx.rows('result_resume_links')).length, 2);
   // 不正・失効・削除済み
   for (const bad of ['x'.repeat(43), crypto.randomBytes(32).toString('base64url')]) {
@@ -845,14 +849,14 @@ test('固有リンク：診断完了で発行（256bit・DB はハッシュだ�
   await ctx.db.sql('delete from public.diagnosis_sessions where id = (select diagnosis_session_id from public.result_resume_links where token_hash = $1)', [sha256hex(r2.body.token)]);
   assert.equal((await ctx.op('result-open', { token: r2.body.token })).code, 404, '削除済みの記録');
   // 不正な診断コードでは作らない
-  assert.equal((await ctx.op('result-link', { code: 'zz' })).code, 422);
+  assert.equal((await ctx.op('result-link', { code: '00000000', token: crypto.randomBytes(32).toString('base64url') })).code, 422);
   assert.ok(!ctx.logger.lines.join('\n').includes(token), 'ログに秘密値を出さない');
   await ctx.db.close();
 });
 
 test('固有リンクから ¥1,000：同じ記録に結び付く（新しい記録を作らない）。キャンセル後すぐ買い直せる。¥3,000 も同じ記録', { skip }, async () => {
   const ctx = await setup();
-  const token = (await ctx.op('result-link', { code: CODE_A }, { cookie: '' })).body.token;
+  const token = await ctx.link(CODE_A);
   const [linked] = await ctx.rows('result_resume_links');
   // 別の端末（Cookie なし）で固有リンクを開いて ¥1,000
   ctx.cookie = '';
@@ -873,7 +877,7 @@ test('固有リンクから ¥1,000：同じ記録に結び付く（新しい記
   assert.equal(up.code, 200, JSON.stringify(up.body));
   assert.ok((await ctx.rows('complete_orders')).every((o) => o.diagnosis_session_id === linked.diagnosis_session_id));
   // 別の記録の固有リンクを、別の診断コードで使わせない
-  const other = (await ctx.op('result-link', { code: CODE_B }, { cookie: '' })).body.token;
+  const other = await ctx.link(CODE_B);
   assert.deepEqual([(await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_A, resume: other })).code], [403]);
   // 固有リンクだけでは有料レポートを開けない（Cookie の無い別の端末）
   assert.equal((await ctx.op('guest-report', { ref: st.ref }, { cookie: '' })).code, 403);
@@ -882,7 +886,7 @@ test('固有リンクから ¥1,000：同じ記録に結び付く（新しい記
 
 test('固有リンク：引き継いだ後も同じ記録（重複しない）・無料結果は開ける・ゲストとしての購入は断る。返金後は有料部分を開けない', { skip }, async () => {
   const ctx = await setup();
-  const token = (await ctx.op('result-link', { code: CODE_A }, { cookie: '' })).body.token;
+  const token = await ctx.link(CODE_A);
   ctx.cookie = '';
   const c = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_A, resume: token });
   const cs = ctx.csIdOf(c.body.checkoutUrl);
@@ -908,8 +912,8 @@ test('固有リンク：引き継いだ後も同じ記録（重複しない）�
 
 test('固有リンクの整理（運営者）：期限切れのリンクと、購入の無い古いゲストの記録だけを消す。購入のある記録は残す。API のロールは実行できない', { skip }, async () => {
   const ctx = await setup();
-  const t1 = (await ctx.op('result-link', { code: CODE_A }, { cookie: '' })).body.token;
-  const t2 = (await ctx.op('result-link', { code: CODE_B }, { cookie: '' })).body.token;
+  const t1 = await ctx.link(CODE_A);
+  const t2 = await ctx.link(CODE_B);
   ctx.cookie = '';
   const c = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_B, resume: t2 });
   ctx.stripe.pay(ctx.csIdOf(c.body.checkoutUrl), { customer_details: { email: 'x@example.test' } });
@@ -924,5 +928,56 @@ test('固有リンクの整理（運営者）：期限切れのリンクと、�
   assert.equal(left.length, 1, '購入のある記録は残す');
   assert.equal((await ctx.rows('complete_orders'))[0].diagnosis_session_id, left[0].id);
   assert.equal((await ctx.op('result-open', { token: t1 })).code, 404);
+  await ctx.db.close();
+});
+
+test('固有リンクの大量作成の防止：同じ秘密値は冪等（連打・再送で記録もリンクも増えない）・入力の制限・接続元ごとに 10 分 10 件で 429・IP は保存もログもしない', { skip }, async () => {
+  const ctx = await setup();
+  const token = crypto.randomBytes(32).toString('base64url');
+  // 連打（同時）と再送：記録もリンクも1つ
+  const burst = await Promise.all([1, 2, 3, 4, 5].map(() => ctx.op('result-link', { code: CODE_A, token }, { cookie: '' })));
+  assert.deepEqual(burst.map((r) => r.code), [200, 200, 200, 200, 200]);
+  assert.deepEqual(burst.map((r) => r.body.result).sort(), ['created', 'existing', 'existing', 'existing', 'existing']);
+  assert.equal((await ctx.op('result-link', { code: CODE_A, token }, { cookie: '' })).body.result, 'existing');
+  assert.equal((await ctx.rows('diagnosis_sessions')).length, 1);
+  assert.equal((await ctx.rows('result_resume_links')).length, 1);
+  const [rate] = await ctx.rows('result_link_rate');
+  assert.equal(rate.n, 1, '冪等の再送は回数に数えない');
+  // 同じ秘密値で別の診断結果：断る（記録を増やさない）
+  assert.deepEqual([(await ctx.op('result-link', { code: CODE_B, token }, { cookie: '' })).code], [409]);
+  assert.equal((await ctx.rows('diagnosis_sessions')).length, 1);
+  // 入力の制限（必須・形式・余分な項目・大きさ）
+  for (const body of [{ code: CODE_A }, { token }, { code: CODE_A, token: 'short' }, { code: 'A!', token }, { code: CODE_A, token, extra: 1 }, { code: 1, token }]) {
+    assert.equal((await ctx.op('result-link', body, { cookie: '' })).code, 400, JSON.stringify(body));
+  }
+  assert.equal((await ctx.op('result-link', { code: 'a'.repeat(2000), token }, { cookie: '' })).code, 413);
+  assert.equal((await ctx.rows('diagnosis_sessions')).length, 1);
+  // 同じ接続元から 10 分で 10 件まで（1 件作成済み → あと 9 件）。11 件目は 429（記録もリンクも作らない）
+  for (let i = 0; i < 9; i++) await ctx.link(i % 2 ? CODE_A : CODE_B);
+  const over = await ctx.op('result-link', { code: CODE_A, token: crypto.randomBytes(32).toString('base64url') }, { cookie: '' });
+  assert.deepEqual([over.code, over.body.error, over.headers['retry-after']], [429, 'too_many_requests', '600']);
+  assert.equal((await ctx.rows('result_resume_links')).length, 10);
+  assert.equal((await ctx.rows('diagnosis_sessions')).length, 10);
+  // 作成済みの秘密値の再送は、上限の後でも同じリンクを返す（回数に数えない）
+  assert.equal((await ctx.op('result-link', { code: CODE_A, token }, { cookie: '' })).body.result, 'existing');
+  // 別の接続元は作れる（IPv6 は /64 で1つ）
+  await ctx.link(CODE_A, { ip: '2001:db8:1:2::10' });
+  await ctx.db.sql("update public.result_link_rate set bucket = bucket - interval '11 minutes'");
+  // 10 分を過ぎれば作れる。24 時間で 100 件まで
+  await ctx.link(CODE_A);
+  await ctx.db.sql("update public.result_link_rate set n = 99, bucket = now() - interval '2 hours' where n = 10");
+  assert.equal((await ctx.op('result-link', { code: CODE_A, token: crypto.randomBytes(32).toString('base64url') }, { cookie: '' })).code, 429, '24 時間で 100 件');
+  // 24 時間を過ぎた回数の行は消える
+  await ctx.db.sql("update public.result_link_rate set bucket = bucket - interval '25 hours'");
+  await ctx.link(CODE_B);
+  // IP アドレスそのものは DB にもログにも無い
+  const rows = JSON.stringify(await ctx.rows('result_link_rate'));
+  assert.ok(!rows.includes('198.51.100.7') && !rows.includes('2001:db8'), rows);
+  assert.ok((await ctx.rows('result_link_rate')).every((r) => /^[0-9a-f]{64}$/.test(r.rate_key)));
+  const log = ctx.logger.lines.join('\n');
+  assert.ok(!log.includes('198.51.100.7') && !log.includes(token), log);
+  // anon・authenticated は回数の表・リンクの表を読めない
+  const [priv] = await ctx.db.sql("select has_table_privilege('anon', 'public.result_link_rate', 'SELECT') as a, has_table_privilege('authenticated', 'public.result_link_rate', 'SELECT') as b, has_table_privilege('anon', 'public.result_resume_links', 'SELECT') as c");
+  assert.deepEqual([priv.a, priv.b, priv.c], [false, false, false]);
   await ctx.db.close();
 });

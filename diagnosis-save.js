@@ -122,7 +122,8 @@ function trackEvent(name, params) {
    メール案内専用のチェックボックスは設けない。配信内容は登録完了モーダルに明示する。
    ============================================================ */
 const REGISTRATION_TERMS_VERSION = '2026-10-07';
-const REGISTRATION_PRIVACY_VERSION = '2026-10-07';
+// プライバシーポリシーは 2026-10-13 版（診断結果の固有リンクを追記。complete_09 で DB の受け付ける版も 2026-10-13）
+const REGISTRATION_PRIVACY_VERSION = '2026-10-13';
 const NEWSLETTER_CONSENT_VERSION = '2026-10-07-v1';
 const NEWSLETTER_RETRY_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const NEWSLETTER_MAX_ATTEMPTS = 3;
