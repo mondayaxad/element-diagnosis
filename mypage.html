@@ -1922,7 +1922,7 @@ function caGuideHtml(r, g, pending) {
     action = disabled('完全解析（権利を確認中）', 'unavailable')
       + `<button type="button" class="mp-btn" data-legacy-verify="${caEsc(caRecordId(r))}">もう一度確認する</button>`;
     note = `<p class="ca-pending-note" role="status">${CompleteAnalysis.LEGACY_PENDING_TEXT}。確認が終わるまで、お申し込みいただけません。</p>`
-      + '<p class="ca-pending-note mp-legacy-msg" role="alert" hidden></p>';
+      + mpLegacyMsgHtml('ca-pending-note', r);
   } else {
     action = disabled('完全解析（決済手続き中）', 'unavailable');
     note = '<p class="ca-pending-note" role="status">完全解析の決済手続き中です。</p>';
@@ -1996,12 +1996,20 @@ const MP_LEGACY_VERIFY_TEXT = {
   legacy_purchase_unverifiable: 'この記録に対応する、お支払い済みの解析レポートの購入を確認できませんでした。',
   not_authenticated: 'ログインの有効期限が切れました。もう一度ログインしてください。',
 };
+// 確認できなかった理由は記録ごとに覚えておく。マイページはタブに戻るたびに（ログイン状態の通知 SIGNED_IN で）
+// 画面全体を描き直すため、ボタンの横に書いただけでは説明が消えてしまう。描き直しの時もここから表示する（端末内のメモリだけ・送信しない）。
+const mpLegacyVerifyMsg = new Map();
+function mpLegacyMsgHtml(cls, r) {
+  const text = mpLegacyVerifyMsg.get(caRecordId(r));
+  return `<p class="${cls} mp-legacy-msg" role="alert"${text ? '' : ' hidden'}>${text ? caEsc(text) : ''}</p>`;
+}
 async function mpLegacyVerify(button) {
   const id = button.getAttribute('data-legacy-verify');
   const msg = button.parentElement && button.parentElement.querySelector('.mp-legacy-msg');
   button.disabled = true;
   const prev = button.textContent;
   button.textContent = '確認中…';
+  mpLegacyVerifyMsg.delete(id);
   if (msg) { msg.hidden = true; msg.textContent = ''; }
   let code = null;
   try {
@@ -2020,9 +2028,18 @@ async function mpLegacyVerify(button) {
     code = 'network';
   }
   if (!code) { await init(); return; }
+  const text = MP_LEGACY_VERIFY_TEXT[code] || MP_LEGACY_VERIFY_TEXT.legacy_check_unavailable;
+  mpLegacyVerifyMsg.set(id, text);
+  // 確認中に画面が描き直されていても、今の画面にある同じ記録のボタン・説明へ反映する
+  document.querySelectorAll('[data-legacy-verify]').forEach((b) => {
+    if (b.getAttribute('data-legacy-verify') !== id) return;
+    if (b === button || b.textContent === '確認中…') { b.disabled = false; b.textContent = prev; }
+    const m = b.parentElement && b.parentElement.querySelector('.mp-legacy-msg');
+    if (m) { m.textContent = text; m.hidden = false; }
+  });
   button.disabled = false;
   button.textContent = prev;
-  if (msg) { msg.textContent = MP_LEGACY_VERIFY_TEXT[code] || MP_LEGACY_VERIFY_TEXT.legacy_check_unavailable; msg.hidden = false; }
+  if (msg) { msg.textContent = text; msg.hidden = false; }
 }
 document.addEventListener('click', (e) => {
   const b = e.target && e.target.closest && e.target.closest('[data-legacy-verify]');
@@ -2922,7 +2939,7 @@ function caMentorOverviewHtml(r) {
   if (o.kind === 'legacy_pending') {
     return `${target}${head}<p class="ca-mentor-note" role="status">${CompleteAnalysis.LEGACY_PENDING_TEXT}</p>`
       + `<button type="button" class="ca-btn ca-quiet-action" data-legacy-verify="${caEsc(caRecordId(r))}">もう一度確認する</button>`
-      + '<p class="ca-mentor-note mp-legacy-msg" role="alert" hidden></p>';
+      + mpLegacyMsgHtml('ca-mentor-note', r);
   }
   if (o.kind === 'checkout_in_progress') {
     return `${target}${head}<p class="ca-mentor-note" role="status">完全解析の決済手続き中です。</p>`;

@@ -448,6 +448,15 @@ test('権利確認中：確認できない理由は、内部の情報を出さ�
       assert.equal(await g.getAttribute('data-ca-guide-kind'), 'legacy', '状態は変えない');
       assert.equal(await g.locator('button:has-text("もう一度確認する")').isDisabled(), false, '再試行できる');
       assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${code} ${width}`);
+      // タブへ戻るとログイン状態の通知（SIGNED_IN）で画面全体が描き直される。描き直しても説明は消えない
+      await p.evaluate(() => window.refreshMypageHistory());
+      await p.waitForFunction((id) => {
+        document.querySelectorAll('details.mp-rec').forEach((d) => { d.open = true; });
+        const el = document.querySelector(`[data-rec-actions="${id}"][data-rec-source="records"] [data-ca-guide] .mp-legacy-msg`);
+        return el && !el.hidden && el.textContent.trim().length > 0;
+      }, ID(5));
+      assert.equal((await guide(p, 5, 'records').locator('.mp-legacy-msg').textContent()).trim(), text, `${code}：描き直しの後`);
+      assert.equal(await guide(p, 5, 'records').getAttribute('data-ca-guide-kind'), 'legacy');
       await p.__ctx.close();
     }
   }
