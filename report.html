@@ -1757,10 +1757,8 @@ function initReportComplete(code, viewer) {
   if (viewer !== 'guest') { box.innerHTML = unknown; return; }
   // このページから決済画面へ進み、支払わずに戻ってきた（戻る・再読み込み）：未払いの決済を閉じてから確かめる
   //   （支払い済みならそのまま反映される。閉じるのはこの端末の未払いの決済だけ）
-  var returned = false;
-  try { returned = sessionStorage.getItem(REPORT_CHECKOUT_KEY) === '1'; sessionStorage.removeItem(REPORT_CHECKOUT_KEY); } catch (e) { returned = false; }
   box.innerHTML = '<p class="ca-r-note">購入状態を確認しています…</p>';
-  (returned ? G.cancel().catch(function () { return null; }) : Promise.resolve()).then(function () { return G.status(code); }).then(function (r) {
+  G.releaseIfReturned().then(function () { return G.status(code); }).then(function (r) {
     var list = (r && r.ok && r.body && r.body.purchases) || [];
     var mine = list.filter(function (p) { return p.thisRecord; })[0] || null;
     if (!mine) { box.innerHTML = unknown; return; }
@@ -1797,7 +1795,6 @@ function initReportComplete(code, viewer) {
     };
   }).catch(function () { box.innerHTML = unknown; });
 }
-var REPORT_CHECKOUT_KEY = 'ed_report_checkout_v1';
 // 決済画面から「戻る」で戻った（ページがそのまま復元された）時も、未払いの決済を閉じて案内を描き直す
 var reportCompleteArgs = null;
 window.addEventListener('pageshow', function (e) {
@@ -1829,11 +1826,9 @@ function reportShowGoals(G, box, code, label) {
       buy.textContent = '決済画面へ移動しています…';
       if (msg) msg.textContent = '';
       reportResumeFor(G, code).then(function () {
-        try { sessionStorage.setItem(REPORT_CHECKOUT_KEY, '1'); } catch (e) { /* 印を残せなくても、やり直しのボタンで戻せる */ }
         return G.checkout('analysis_upgrade', code, picked.value, 'analysis_report');
       }).then(function (res) {
         if (res && res.ok) return;
-        try { sessionStorage.removeItem(REPORT_CHECKOUT_KEY); } catch (e) { /* なし */ }
         buy.disabled = false;
         buy.textContent = '目標を選んで決済へ（追加' + G.yen(G.OFFERS.analysis_upgrade.price) + '）';
         if (msg) msg.textContent = G.errorText(res && res.error);

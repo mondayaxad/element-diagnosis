@@ -53,6 +53,8 @@
   var G = window.EdGuestPurchase;
   var list = document.getElementById('pcList');
   var canceled = /(?:^|[?&])status=canceled(?:&|$)/.test(location.search);
+  // 決済画面へ進んだ印は、この戻り先で使い終える（中止は下で未払いの決済を閉じる。支払い済みは反映を待つ）
+  if (G && typeof G.consumeCheckoutMark === 'function') G.consumeCheckoutMark();
   // 戻り先の印（?status=canceled）は表示に使った後、URL から消す
   if (location.search) { try { history.replaceState(null, '', location.pathname); } catch (e) { /* 消せなくても表示は続ける */ } }
   if (canceled) {

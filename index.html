@@ -3041,8 +3041,18 @@ function completeAnalysisFoldHtml(itemSetVersion, diagnosisVersion) {
    ・購入済み（この端末）：解析レポートを読む／完全解析の状態。¥2,000 は同じ記録で解析レポートを購入済みの時だけ。
    ・販売停止中：価格は見せるが、ボタンは「準備中」で押せない。
    ・価格・権利はサーバーが決める（ここでは offer と目標だけを送る）。 */
+// 決済画面から支払わずに戻った（戻る＝ページの復元）：未払いの決済を閉じて、購入の欄を描き直す
+var lastGuestPurchaseArgs = null;
+window.addEventListener('pageshow', function (e) {
+  if (e.persisted && lastGuestPurchaseArgs && typeof EdGuestPurchase !== 'undefined' && EdGuestPurchase.consumeCheckoutMark()) {
+    EdGuestPurchase.cancel().catch(function () { return null; }).then(function () {
+      initGuestPurchase(lastGuestPurchaseArgs[0], lastGuestPurchaseArgs[1], lastGuestPurchaseArgs[2]);
+    });
+  }
+});
 function initGuestPurchase(root, code, refs) {
   var G = EdGuestPurchase;
+  lastGuestPurchaseArgs = [root, code, refs];
   var box = root.querySelector('[data-guest-complete]');
   var open = G.salesOpen();
   function goalPicker(goalsData, offer) {
@@ -3074,7 +3084,8 @@ function initGuestPurchase(root, code, refs) {
       G.openAnalysis(p.ref, 'result').then(function (ok) { if (!ok) { btn.disabled = false; } });
     };
   }
-  G.status(code).then(function (r) {
+  // 決済画面から支払わずに戻った（再読み込み・開き直し）：未払いの決済を閉じてから確かめる（支払い済みなら反映される）
+  G.releaseIfReturned().then(function () { return G.status(code); }).then(function (r) {
     var purchases = (r.ok && r.body.purchases) || [];
     var mine = purchases.filter(function (p) { return p.thisRecord; })[0] || null;
     var hasAnalysis = !!(mine && mine.analysis === 'active');

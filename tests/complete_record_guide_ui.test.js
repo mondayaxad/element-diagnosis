@@ -509,6 +509,34 @@ test('支払いから戻った（?complete=returned）：Stripe に問い合わ�
   await p.__ctx.close();
 });
 
+test('決済画面から支払わずに戻った（戻り先を通らない「戻る」・再読み込み）：中止と同じく未払いの決済を閉じる。支払いの戻り先では閉じない', { skip: skip() }, async () => {
+  for (const [query, expected] of [['', [{ cancel: true }]], ['?complete=returned', [{}]]]) {
+    const w = many({}, { [ID(5)]: analysisOnly() }, [5]);
+    const calls = [];
+    const p = await open(w, { query, routes: async (pg) => {
+      await pg.addInitScript(() => { if (!sessionStorage.getItem('__marked')) { sessionStorage.setItem('ed_mp_checkout_started_v1', '1'); sessionStorage.setItem('__marked', '1'); } });
+      await pg.route('**/api/complete-checkout?op=user-reconcile', (r) => {
+        calls.push(JSON.parse(r.request().postData() || '{}'));
+        r.fulfill({ contentType: 'application/json', body: JSON.stringify({ applied: 0, closed: 1 }) });
+      });
+    } });
+    assert.deepEqual(calls, expected, query || '(戻る)');
+    assert.equal(await p.evaluate(() => sessionStorage.getItem('ed_mp_checkout_started_v1')), null, '印は使い終える');
+    // 再読み込みでは繰り返さない
+    await p.reload();
+    await p.waitForSelector('.mp-latest', { state: 'attached' });
+    assert.equal(calls.filter((c) => c.cancel).length, query ? 0 : 1, '印の無い再読み込みでは閉じない');
+    assert.deepEqual(p.__errors, []);
+    await p.__ctx.close();
+  }
+  // 印が無ければ（普通に開いた）何もしない
+  const w = many({}, { [ID(5)]: analysisOnly() }, [5]);
+  let hits = 0;
+  const p = await open(w, { routes: (pg) => pg.route('**/api/complete-checkout?op=user-reconcile', (r) => { hits++; r.fulfill({ contentType: 'application/json', body: '{}' }); }) });
+  assert.equal(hits, 0);
+  await p.__ctx.close();
+});
+
 // ================= G5：タブ復帰・戻る・pageshow・スクロール（C7）
 const MENTOR_ROUTE = async (p) => {
   await p.route('**/api/mentor-goal**', (r) => {

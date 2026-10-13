@@ -1193,6 +1193,13 @@ function v2ReportCta(session, className, source, label) {
   return `<button type="button" class="${className}" data-analysis-checkout="${mpEsc(session.id)}" data-source="${mpEsc(source)}">${label}</button>`;
 }
 // サーバーの Checkout を作り、同じタブで Stripe の決済画面へ移動する（金額・offer はサーバーが決める）
+// この端末（タブ）から Stripe の決済画面へ進んだ印。支払わずに「戻る」・再読み込みで戻った時は、中止と同じく未払いの決済を閉じる
+const MP_CHECKOUT_MARK = 'ed_mp_checkout_started_v1';
+function mpConsumeCheckoutMark() {
+  let v = false;
+  try { v = sessionStorage.getItem(MP_CHECKOUT_MARK) === '1'; sessionStorage.removeItem(MP_CHECKOUT_MARK); } catch (e) { v = false; }
+  return v;
+}
 async function mpStartCheckout(body, source, offerLabel) {
   trackEvent('checkout_start', { offer: offerLabel, source });
   let token = null;
@@ -1208,6 +1215,7 @@ async function mpStartCheckout(body, source, offerLabel) {
   }
   if (res.ok && typeof out.checkoutUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(out.checkoutUrl)) {
     trackEvent('checkout_redirect', { offer: out.offer, value: out.amount, currency: 'JPY', source });
+    try { sessionStorage.setItem(MP_CHECKOUT_MARK, '1'); } catch (e) { /* 印が無くても「決済をやり直す」で戻せる */ }
     location.assign(out.checkoutUrl);
     return { ok: true };
   }
@@ -3444,8 +3452,11 @@ async function initOnce() {
   }
 
   // 決済から戻った直後：Webhook を待たずに、本人の決済待ちの注文を Stripe に問い合わせて反映する（冪等・失敗しても表示は続ける）
-  if (/(?:^|[?&])(complete=returned|complete_return=1|complete=canceled)(?:&|$)/.test(location.search)) {
-    const canceled = /complete=canceled/.test(location.search);
+  // 決済画面へ進んだ後に、戻り先（?complete=…）を通らずに戻った（戻る・再読み込み）：中止として扱う
+  const returnedFromCheckout = mpConsumeCheckoutMark();
+  const viaReturnUrl = /(?:^|[?&])(complete=returned|complete_return=1|complete=canceled)(?:&|$)/.test(location.search);
+  if (viaReturnUrl || returnedFromCheckout) {
+    const canceled = /complete=canceled/.test(location.search) || !viaReturnUrl;
     trackEvent('checkout_return', { state: canceled ? 'canceled' : 'returned', source: 'mypage' });
     try {
       const { data } = await supabaseClient.auth.getSession();
@@ -3600,7 +3611,12 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
   init();
 });
 // 戻る操作で（bfcache から）表示された：開いたままのシート・止まったスクロールを残さない
-window.addEventListener('pageshow', (e) => { if (e.persisted) mpReleaseScrollLockIfClosed(); });
+window.addEventListener('pageshow', (e) => {
+  if (!e.persisted) return;
+  mpReleaseScrollLockIfClosed();
+  // 決済画面から「戻る」で戻った（ページの復元）：未払いの決済を閉じて、記録の状態を取り直す
+  try { if (sessionStorage.getItem(MP_CHECKOUT_MARK) === '1') init(); } catch (err) { /* 再読み込みで取り直せる */ }
+});
 
 init();
 </script>

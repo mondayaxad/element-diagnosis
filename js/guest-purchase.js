@@ -71,6 +71,19 @@
   function resultOpen(token) { return call('result-open', { token: token }); }
   // 決済をやり直す・Stripe の画面で戻った：この端末の未払いの決済を閉じる（支払い済みならそのまま反映される）
   function cancel() { return call('guest-cancel', {}); }
+  // この端末から Stripe の決済画面へ進んだ印（タブ単位）。支払わずに「戻る」・再読み込みで戻った時に、
+  // 未払いの決済を閉じて「買っていない」状態へ戻すために使う（支払い済みの決済は閉じない。サーバーが反映する）
+  var CHECKOUT_MARK = 'ed_checkout_started_v1';
+  function markCheckout() { try { global.sessionStorage.setItem(CHECKOUT_MARK, '1'); } catch (e) { /* 印が無くても「決済をやり直す」で戻せる */ } }
+  function consumeCheckoutMark() {
+    var v = false;
+    try { v = global.sessionStorage.getItem(CHECKOUT_MARK) === '1'; global.sessionStorage.removeItem(CHECKOUT_MARK); } catch (e) { v = false; }
+    return v;
+  }
+  // 決済から戻ってきたなら未払いの決済を閉じる（戻っていなければ何もしない）。結果は使わない
+  function releaseIfReturned() {
+    return consumeCheckoutMark() ? cancel().catch(function () { return null; }) : Promise.resolve(null);
+  }
   function goals() { return call('guest-goals', {}); }
 
   // Checkout を作り、同じタブで Stripe の決済画面へ移動する
@@ -83,6 +96,7 @@
     var r = await call('guest-checkout', body);
     if (r.ok && r.body && typeof r.body.checkoutUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(r.body.checkoutUrl)) {
       track('checkout_redirect', { offer: offer, value: info && info.price, currency: 'JPY', source: source });
+      markCheckout();
       global.location.assign(r.body.checkoutUrl);
       return { ok: true };
     }
@@ -191,7 +205,7 @@
 
   global.EdGuestPurchase = {
     OFFERS: OFFERS, yen: yen, esc: esc, salesOpen: salesOpen, track: track,
-    status: status, resultLink: resultLink, newResumeToken: newResumeToken, resultOpen: resultOpen, cancel: cancel, goals: goals, checkout: checkout, errorText: errorText, claimErrorText: claimErrorText,
+    status: status, resultLink: resultLink, newResumeToken: newResumeToken, resultOpen: resultOpen, consumeCheckoutMark: consumeCheckoutMark, releaseIfReturned: releaseIfReturned, cancel: cancel, goals: goals, checkout: checkout, errorText: errorText, claimErrorText: claimErrorText,
     startClaim: startClaim, takeClaimIntent: takeClaimIntent, claimAll: claimAll, recover: recover,
     openAnalysis: openAnalysis, openComplete: openComplete, regenerate: regenerate, completeLabel: completeLabel,
   };

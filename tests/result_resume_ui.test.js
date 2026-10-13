@@ -79,6 +79,7 @@ async function wire(ctx, w) {
       const code = w.links[body.token];
       return code ? send(200, { code, diagnosisVersion: 'ETI-2.0', versions: VERSIONS }) : send(404, { error: 'result_not_found' });
     }
+    if (op === 'guest-cancel') return send(200, { closed: 1, paid: 0 });
     if (op === 'guest-status') return send(200, { salesOpen: true, purchases: [], codePurchased: false });
     if (op === 'guest-goals') return send(...GOALS);
     if (op === 'guest-checkout') return send(200, { checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test_fake', offer: body.offer, amount: 1000 });
@@ -277,4 +278,37 @@ test('320・390・1280px：固有リンクの案内・開けない時の表示�
     assert.ok(await q.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${width}: 開けない時`);
     await ctx.close();
   }
+});
+
+test('結果ページ：¥1,000 の決済画面から支払わずに「戻る」・再読み込みで戻ると、未払いの決済を閉じて、すぐ買える状態に戻る（購入済みとは扱わない）', { skip: skip() }, async () => {
+  const w = world();
+  const ctx = await newContext();
+  await wire(ctx, w);
+  const p = await open(ctx, '/');
+  await complete(p);
+  await p.waitForFunction(() => location.hash.startsWith('#r='));
+  await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
+  await p.locator('#lockUnlockAllBtn').click();
+  await p.waitForURL(/checkout\.stripe\.com/);
+  // 戻る（ページの復元・再読み込みのどちらでも）
+  await p.goBack();
+  await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
+  await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
+  const cancels = () => w.calls.filter((c) => c.op === 'guest-cancel').length;
+  for (let i = 0; i < 20 && cancels() < 1; i++) await p.waitForTimeout(100);
+  assert.equal(cancels(), 1, '戻った時に未払いの決済を閉じる');
+  assert.doesNotMatch(await p.locator('#lockUnlockAllBtn').innerText(), /購入済み|読む/);
+  // 印は使い終える：もう一度の再読み込みでは閉じない
+  await p.reload();
+  await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
+  await p.waitForTimeout(400);
+  assert.equal(cancels(), 1);
+  // 再読み込みで戻った場合も同じ（印があれば閉じる）
+  await p.evaluate(() => sessionStorage.setItem('ed_checkout_started_v1', '1'));
+  await p.reload();
+  await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
+  for (let i = 0; i < 20 && cancels() < 2; i++) await p.waitForTimeout(100);
+  assert.equal(cancels(), 2);
+  assert.deepEqual(p.__errors, []);
+  await ctx.close();
 });
