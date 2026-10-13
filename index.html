@@ -389,6 +389,7 @@
 <script src="js/registration-onboarding.js"></script>
 <!-- 完全解析（46ページ）の表示用状態。PREVIEW ONLY：購入権は発行しない -->
 <script src="complete-analysis.js"></script>
+<script src="js/nav-busy.js"></script>
 <script src="js/guest-purchase.js"></script>
 <script src="js/ETI_v2_QUESTIONS_100.js"></script>
 <script src="js/eti_v2_prototypes.js"></script>
@@ -2678,13 +2679,10 @@ function renderResult(root) {
   function startAnalysis(btn, label) {
     if (typeof gtag === 'function') gtag('event', label ? 'lock_cta_click' : 'unlock_all_click', label ? { event_category: 'conversion', label: label } : { event_category: 'conversion' });
     if (!guestFlow) { autoCopyAndProceed(applyData, stripeUrlWithCode()); return; }
-    btn.disabled = true;
-    var prev = btn.textContent;
-    btn.textContent = '決済画面へ移動しています…';
+    EdNavBusy.hold(btn, '決済画面へ移動しています…');
     EdGuestPurchase.checkout('analysis', shortCode, null, 'result_lock').then(function (r) {
-      if (r.ok) return;
-      btn.disabled = false;
-      btn.textContent = prev;
+      if (r.ok) { EdNavBusy.handoff(btn); return; }
+      EdNavBusy.release(btn);
       var m = root.querySelector('#guestAnalysisMsg');
       if (m) m.textContent = EdGuestPurchase.errorText(r.error);
     });
@@ -3081,13 +3079,10 @@ function initGuestPurchase(root, code, refs) {
       if (btn) btn.onclick = function () {
         var picked = box.querySelector('input[name="guest-mentor-goal"]:checked');
         if (!picked) return;
-        btn.disabled = true;
-        var prev = btn.textContent;
-        btn.textContent = '決済画面へ移動しています…';
+        EdNavBusy.hold(btn, '決済画面へ移動しています…');
         G.checkout(offer, code, picked.value, 'result_complete').then(function (res) {
-          if (res.ok) return;
-          btn.disabled = false;
-          btn.textContent = prev;
+          if (res.ok) { EdNavBusy.handoff(btn); return; }
+          EdNavBusy.release(btn);
           if (msg) msg.textContent = G.errorText(res.error);
         });
       };

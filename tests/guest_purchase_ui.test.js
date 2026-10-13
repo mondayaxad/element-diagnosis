@@ -90,6 +90,30 @@ test('完了ページ（販売中）：¥1,000 はゲストの Checkout（offer 
   await p.__ctx.close();
 });
 
+test('完了ページ（C7）：Stripe から「戻る」・タブ復帰・移動できなかった時に「決済画面へ移動しています…」のまま止めない', { skip: skip() }, async () => {
+  for (const width of [320, 390, 1280]) {
+    const p = await resultPage({ width, api: { 'guest-status': [200, { salesOpen: true, purchases: [], codePurchased: false }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
+    const btn = p.locator('#lockUnlockAllBtn');
+    const label = (await btn.innerText()).trim();
+    // 決済画面へ移れなかった（204）：移動を始めた印のまま → タブ復帰で戻る
+    await p.route('https://checkout.stripe.com/**', (r) => r.fulfill({ status: 204, body: '' }));
+    await btn.click();
+    await p.waitForFunction(() => document.querySelector('#lockUnlockAllBtn[data-nav-busy="away"]'));
+    assert.equal((await btn.innerText()).trim(), '決済画面へ移動しています…');
+    await p.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+    assert.equal((await btn.innerText()).trim(), label);
+    assert.equal(await btn.isDisabled(), false);
+    // bfcache からの表示（pageshow persisted）
+    await btn.click();
+    await p.waitForFunction(() => document.querySelector('#lockUnlockAllBtn[data-nav-busy="away"]'));
+    await p.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })));
+    assert.equal((await btn.innerText()).trim(), label, String(width));
+    assert.equal(await btn.isDisabled(), false);
+    assert.equal(await noScroll(p), true, String(width));
+    await p.__ctx.close();
+  }
+});
+
 test('完了ページ（販売中）：完全解析 ¥3,000 は目標を選ぶまで押せない → 目標つきで Checkout', { skip: skip() }, async () => {
   const p = await resultPage({ api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
   await p.click('details.ca-fold > summary');

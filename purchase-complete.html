@@ -45,6 +45,7 @@
   <div id="pcList" aria-live="polite"><p class="note"><span class="spinner" aria-hidden="true"></span>確認しています…</p></div>
   <p class="links"><a href="/">元素診断のトップへ</a> ・ <a href="/mypage.html">マイページ</a></p>
 </main>
+<script src="/js/nav-busy.js"></script>
 <script src="/js/guest-purchase.js"></script>
 <script>
 (function () {
@@ -188,6 +189,9 @@
       }
     }
   });
+
+  // 戻る操作で（bfcache から）表示された：押したまま止まったボタンを残さず、最新の状態で描き直す
+  window.addEventListener('pageshow', function (e) { if (e.persisted) { tries = 0; load(); } });
 
   start();
 })();

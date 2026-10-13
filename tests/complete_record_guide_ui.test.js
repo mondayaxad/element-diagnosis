@@ -20,10 +20,10 @@ const { PREVIEW_ENV, PREVIEW_REF } = require('./fixtures/server_env');
 const CE = require('../lib/complete-eligibility');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.mjs': 'application/javascript', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.json': 'application/json', '.css': 'text/css', '.svg': 'image/svg+xml', '.webp': 'image/webp' };
 
-function publicConfigJs(appEnv) {
-  return `window.__ED_PUBLIC_CONFIG__ = Object.freeze(${JSON.stringify({
+function publicConfigJs(appEnv, extra) {
+  return `window.__ED_PUBLIC_CONFIG__ = Object.freeze(${JSON.stringify(Object.assign({
     appEnv, supabaseUrl: PREVIEW_ENV.SUPABASE_URL, supabaseAnonKey: PREVIEW_ENV.SUPABASE_ANON_KEY, projectRef: PREVIEW_REF,
-  })});`;
+  }, extra || {}))});`;
 }
 function fakeSupabase(rows) {
   return `window.supabase = { createClient() {
@@ -46,7 +46,7 @@ function fakeSupabase(rows) {
     }
     return { from: builder, rpc: async () => ({ data: null, error: null }),
       auth: { getUser: async () => ({ data: { user } }), getSession: async () => ({ data: { session: { access_token: "t" } } }),
-        onAuthStateChange() { return { data: { subscription: { unsubscribe() {} } } }; }, signOut: async () => ({}) } };
+        onAuthStateChange(cb) { window.__edAuthCb = cb; return { data: { subscription: { unsubscribe() {} } } }; }, signOut: async () => ({}) } };
   } };`;
 }
 // 最新版（ETI v2）の記録は正本エンジンで計算した回答・結果から作る
@@ -131,10 +131,12 @@ async function open(w, opts = {}) {
       .replace('var CA_COMPLETE_API_READY = false;', 'var CA_COMPLETE_API_READY = true;').replace('var CA_COMPLETE_SALES_OPEN = false;', 'var CA_COMPLETE_SALES_OPEN = true;') }));
   }
   await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: fakeSupabase(w.rows) }));
-  await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: publicConfigJs(w.appEnv) }));
+  await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript',
+    body: publicConfigJs(w.appEnv, opts.publicSales ? { completeSalesOpen: true, completeApiReady: true } : null) }));
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
   await p.route(/cdnjs\.cloudflare\.com|googletagmanager/, (r) => r.fulfill({ contentType: 'application/javascript', body: '' }));
   await p.route('**/api/my-entitlements', (r) => {
+    w.entitlementHits = (w.entitlementHits || 0) + 1;
     const body = { purchased_by_version: w.purchased };
     if (w.completeLookup) body.completeLookup = w.completeLookup;
     if (w.completeLookup === 'ok') body.records = JSON.parse(JSON.stringify(w.records));
@@ -585,4 +587,119 @@ test('支払いから戻った（?complete=returned）：Stripe に問い合わ�
   }) });
   assert.deepEqual(calls, [{}]);
   await p.__ctx.close();
+});
+
+// ================= G5：タブ復帰・戻る・pageshow・スクロール（C7）
+const MENTOR_ROUTE = async (p) => {
+  await p.route('**/api/mentor-goal**', (r) => {
+    if (r.request().method() !== 'GET') return r.fulfill({ status: 500, contentType: 'application/json', body: '{"error":"unexpected"}' });
+    r.fulfill({ contentType: 'application/json', body: JSON.stringify({ catalog: CE.MENTOR_CATALOG, eligible: true, ineligibleReason: null, onboardingCompleted: true,
+      legacyPurchasePending: false, selection: null, locked: false, checkoutInProgress: false, changeAllowed: true }) });
+  });
+};
+const overflowOf = (p) => p.evaluate(() => [document.documentElement.style.overflow, document.body.style.overflow].join('|'));
+
+test('C7：同じ利用者の SIGNED_IN 再通知（タブ復帰）では描き直さない。開いたシート・選んだ目標・スクロールを保ち、閉じればスクロールが戻る・320／390／1280px', { skip: skip() }, async () => {
+  for (const width of [320, 390, 1280]) {
+    const w = many({}, { [ID(4)]: analysisOnly() }, [4]);
+    const p = await open(w, { width, height: 700, salesOpen: true, routes: MENTOR_ROUTE });
+    await p.waitForLoadState('networkidle');
+    const hits = w.entitlementHits;
+    const btn = guide(p, 4, 'records').locator('[data-mentor-open]');
+    await btn.scrollIntoViewIfNeeded();
+    const y0 = await p.evaluate(() => window.scrollY);
+    assert.ok(y0 > 50, `${width}: スクロールした位置で試す`);
+    await btn.click();
+    await p.waitForSelector('#mpUpgradeBody input[name="ca-mentor-goal"]');
+    await p.locator('#mpUpgradeBody input[name="ca-mentor-goal"]').nth(1).check();
+    assert.equal(await overflowOf(p), 'hidden|hidden');
+    // タブへ戻った：Supabase が同じ利用者の SIGNED_IN をもう一度通知する
+    await p.evaluate(() => window.__edAuthCb('SIGNED_IN', { user: { id: 'user-1' } }));
+    await p.waitForTimeout(400);
+    assert.equal(w.entitlementHits, hits, `${width}: 描き直さない（状態を取り直さない）`);
+    assert.equal(await p.locator('#mpUpgradeOverlay').isVisible(), true, `${width}: シートは開いたまま`);
+    assert.equal(await p.locator('#mpUpgradeBody input[name="ca-mentor-goal"]').nth(1).isChecked(), true, `${width}: 選んだ目標を保つ`);
+    // 閉じるとスクロールの固定が解け、元の位置へ戻る
+    await p.locator('#mpUpgradeClose').click();
+    assert.equal(await overflowOf(p), '|');
+    assert.ok(Math.abs((await p.evaluate(() => window.scrollY)) - y0) <= 2, `${width}: スクロール位置`);
+    // 本当に描き直す時（保存の完了・引き継ぎの後）にシートが開いていても、スクロールを止めたままにしない
+    await btn.click();
+    await p.waitForSelector('#mpUpgradeBody input[name="ca-mentor-goal"]');
+    // 画面上の位置（ボタンの表示位置）で比べる（上の内容の高さが変わると、ブラウザのスクロールの固定で scrollY は変わる）
+    const top1 = (await btn.boundingBox()).y;
+    await p.evaluate(() => window.refreshMypageHistory());
+    await p.waitForFunction(() => document.getElementById('mpUpgradeOverlay') && document.getElementById('mpUpgradeOverlay').hidden);
+    assert.equal(await overflowOf(p), '|', `${width}: 描き直した後にスクロールが止まったままにならない`);
+    await p.waitForLoadState('networkidle');
+    // 描き直しの後の画像・状態の読み込みでの揺れが収まってから比べる
+    let prev = null;
+    for (let i = 0; i < 20; i++) {
+      const y = await p.evaluate(() => window.scrollY);
+      if (y === prev) break;
+      prev = y;
+      await p.waitForTimeout(250);
+    }
+    const top2 = (await guide(p, 4, 'records').locator('[data-mentor-open]').boundingBox()).y;
+    assert.ok(Math.abs(top2 - top1) <= 40, `${width}: 描き直しても見ていた場所から動かさない ${top1}→${top2}`);
+    assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), String(width));
+    assert.deepEqual(p.__errors, []);
+    await p.__ctx.close();
+  }
+});
+
+test('C7：別の利用者の SIGNED_IN では描き直す。SIGNED_IN が描画中に重なっても描画は重ならない', { skip: skip() }, async () => {
+  const w = many({}, { [ID(4)]: analysisOnly() }, [4]);
+  const p = await open(w, { salesOpen: true, routes: MENTOR_ROUTE });
+  await p.waitForLoadState('networkidle');
+  const hits = w.entitlementHits;
+  await p.evaluate(() => { window.__edAuthCb('SIGNED_IN', { user: { id: 'user-2' } }); window.__edAuthCb('SIGNED_IN', { user: { id: 'user-2' } }); window.__edAuthCb('SIGNED_IN', null); });
+  await p.waitForFunction((h) => window.__mpRecords && document.querySelectorAll('[data-rec-actions]').length > 0, hits);
+  await p.waitForLoadState('networkidle');
+  assert.ok(w.entitlementHits - hits >= 1 && w.entitlementHits - hits <= 2, `描き直しは最大2回（実行中の1回＋後の1回）：${w.entitlementHits - hits}`);
+  assert.equal(await p.locator('.mp-latest').count(), 1);
+  assert.deepEqual(p.__errors, []);
+  await p.__ctx.close();
+});
+
+test('C7（iOS Safari 相当）：「決済画面へ移動しています…」のまま止めない。戻る（bfcache の pageshow）・タブ復帰・移動できなかった時に押せる状態へ戻す', { skip: skip() }, async () => {
+  for (const width of [320, 390, 1280]) {
+    const w = many({}, {}, []);
+    let stripe = 204; // 204：移動しない（決済画面へ移れなかった）
+    const p = await open(w, { width, publicSales: true, routes: async (pg) => {
+      await pg.route('**/api/complete-checkout', (r) => r.fulfill({ contentType: 'application/json',
+        body: JSON.stringify({ checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test_fake', offer: 'analysis', amount: 1000 }) }));
+      await pg.route('https://checkout.stripe.com/**', (r) => (stripe === 204 ? r.fulfill({ status: 204, body: '' })
+        : r.fulfill({ contentType: 'text/html', body: '<!doctype html><title>stripe</title><p>stripe</p>' })));
+    } });
+    await p.waitForLoadState('networkidle');
+    const btn = p.locator('[data-analysis-checkout]').first();
+    const label = await btn.innerText();
+    await btn.click();
+    await p.waitForFunction(() => { const b = document.querySelector('[data-analysis-checkout][data-nav-busy="away"]'); return !!b; });
+    assert.equal(await btn.innerText(), '決済画面へ移動しています…');
+    assert.equal(await btn.isDisabled(), true);
+    // タブを切り替えて戻った（visibilitychange）
+    await p.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+    assert.equal(await btn.innerText(), label, `${width}: タブ復帰で元の表示`);
+    assert.equal(await btn.isDisabled(), false);
+    // 戻る操作で bfcache から表示された（pageshow persisted）
+    await btn.click();
+    await p.waitForFunction(() => !!document.querySelector('[data-analysis-checkout][data-nav-busy="away"]'));
+    await p.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })));
+    assert.equal(await btn.innerText(), label, `${width}: pageshow で元の表示`);
+    assert.equal(await btn.isDisabled(), false);
+    assert.equal(await overflowOf(p), '|');
+    // 実際に決済画面へ移動して、ブラウザの「戻る」
+    stripe = 200;
+    await Promise.all([p.waitForURL(/checkout\.stripe\.com/), btn.click()]);
+    await p.goBack();
+    await p.waitForSelector('[data-analysis-checkout]', { state: 'attached' });
+    await p.evaluate(() => document.querySelectorAll('details.mp-latest-fold, details.mp-rec').forEach((d) => { d.open = true; }));
+    const back = p.locator('[data-analysis-checkout]').first();
+    assert.notEqual(await back.innerText(), '決済画面へ移動しています…', `${width}: 戻った後`);
+    assert.equal(await back.isDisabled(), false);
+    assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), String(width));
+    await p.__ctx.close();
+  }
 });

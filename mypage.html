@@ -18,6 +18,7 @@
 <script src="js/registration-onboarding.js"></script>
 <!-- 完全解析（46ページ）の表示用状態。PREVIEW ONLY：購入権は発行しない -->
 <script src="complete-analysis.js"></script>
+<script src="js/nav-busy.js"></script>
 <script src="js/guest-purchase.js"></script>
 <!-- eti_v2_save.jsは保存自体は行わないが（mypage.htmlは閲覧専用）、
      v2結果画面からGoogleログイン経由で戻ってきた際のpending保存
@@ -1241,14 +1242,12 @@ document.addEventListener('click', async (e) => {
   e.preventDefault();
   const analysis = btn.hasAttribute('data-analysis-checkout');
   const id = btn.getAttribute(analysis ? 'data-analysis-checkout' : 'data-complete-checkout');
-  btn.disabled = true;
-  const prev = btn.textContent;
-  btn.textContent = '決済画面へ移動しています…';
+  EdNavBusy.hold(btn, '決済画面へ移動しています…');
   const r = await mpStartCheckout(analysis ? { diagnosisSessionId: id, product: 'analysis' } : { diagnosisSessionId: id },
     btn.getAttribute('data-source') || 'mypage', analysis ? 'analysis' : 'complete');
-  if (r.ok) return;
-  btn.disabled = false;
-  btn.textContent = prev;
+  // 移動を始めた：戻る・タブ復帰では js/nav-busy.js が押せる状態へ戻す
+  if (r.ok) { EdNavBusy.handoff(btn); return; }
+  EdNavBusy.release(btn);
   let msg = btn.parentElement && btn.parentElement.querySelector('.mp-checkout-msg');
   if (!msg) {
     msg = document.createElement('p');
@@ -1347,9 +1346,7 @@ function purchasedReportButton(session, className, label) {
 
 async function openPurchasedReport(diagnosisSessionId, button) {
   if (!diagnosisSessionId || !button) return;
-  const originalLabel = button.textContent;
-  button.disabled = true;
-  button.textContent = 'レポートを準備中…';
+  EdNavBusy.hold(button, 'レポートを準備中…');
   const oldError = button.parentElement && button.parentElement.querySelector('.report-open-error');
   if (oldError) oldError.remove();
 
@@ -1374,14 +1371,14 @@ async function openPurchasedReport(diagnosisSessionId, button) {
     let reportUrl = body.url;
     if (button.dataset.mv) reportUrl += (reportUrl.indexOf('?') >= 0 ? '&' : '?') + 'mv=' + button.dataset.mv;
     navigateTo(reportUrl);
+    EdNavBusy.handoff(button);
   } catch (err) {
     console.error('purchased report open failed:', err);
     const message = document.createElement('p');
     message.className = 'report-open-error';
     message.textContent = 'レポートを開けませんでした。時間をおいて再度お試しください。';
     button.insertAdjacentElement('afterend', message);
-    button.disabled = false;
-    button.textContent = originalLabel;
+    EdNavBusy.release(button);
   }
 }
 
@@ -2275,7 +2272,7 @@ function mpRecordHtml(r, i) {
   else if (r.purchased) body = mpVizHtml(r) + mpInsightHtml(r) + caRecordCompleteHtml(r, false) + mpRecordActionsHtml(r, 'records');
   else body = mpVizHtml(r) + mpLockedHtml(r, 'records');
   return `
-    <details class="mp-rec state-${r.purchased ? 'insight' : 'record'}${caIsReady(r) ? ' is-complete' : ''}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}" id="mp-rec-${i}" ontoggle="if(this.open){trackEvent('diagnosis_history_open',{diagnosis_type:'${r.kind}'})}">
+    <details class="mp-rec state-${r.purchased ? 'insight' : 'record'}${caIsReady(r) ? ' is-complete' : ''}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}" id="mp-rec-${i}" ontoggle="if(this.dataset.restored){delete this.dataset.restored}else if(this.open){trackEvent('diagnosis_history_open',{diagnosis_type:'${r.kind}'})}">
       <summary>${r.purchased && mpEntitlementOk ? mpOrnHtml(r, r.color, MP_EL_GLOW_END[r.el] || r.color) : ''}
         <span class="d">${mpDate(r.date)}</span>
         <span class="c">${r.headline ? `<span class="el" style="color:${r.color}">${r.headline}</span>` : mpComboHtml(r)}</span>
@@ -2338,7 +2335,7 @@ function mpLoginMethodsHtml(user) {
 async function mpLinkProvider(btn) {
   const provider = btn && btn.dataset.provider;
   if (!provider) return;
-  btn.disabled = true;
+  EdNavBusy.hold(btn);
   const msg = document.getElementById('mpLoginMsg');
   if (msg) msg.textContent = '';
   const { error } = await linkAuthProvider(provider) || {};
@@ -2346,7 +2343,9 @@ async function mpLinkProvider(btn) {
   if (error) {
     console.error('link identity error:', error);
     if (msg) msg.textContent = authLinkErrorMessage(error);
-    btn.disabled = false;
+    EdNavBusy.release(btn);
+  } else {
+    EdNavBusy.handoff(btn);
   }
 }
 
@@ -3249,9 +3248,10 @@ function caOpenSheet(opts) {
   const tr = caSelected || caSheetRecords[0];
   if (tr && !caOpenedForMentor) CompleteAnalysis.track('mypage_upgrade_open', caTrackParams(tr));
 }
-function caCloseSheet() {
+function caCloseSheet(opts) {
   const overlay = document.getElementById('mpUpgradeOverlay');
   if (!overlay || overlay.hidden) return;
+  const silent = !!(opts && opts.silent); // 描き直しのために閉じる時は計測しない
   overlay.hidden = true;
   document.documentElement.style.overflow = '';
   document.body.style.overflow = '';
@@ -3260,7 +3260,7 @@ function caCloseSheet() {
   if (caLastFocus && typeof caLastFocus.focus === 'function') caLastFocus.focus({ preventScroll: true });
   if (Math.abs((window.scrollY || 0) - caScrollY) > 1) window.scrollTo(0, caScrollY);
   const tr = caSelected || caSheetRecords[0];
-  if (tr && !caOpenedForMentor) CompleteAnalysis.track('mypage_upgrade_close', caTrackParams(tr));
+  if (tr && !caOpenedForMentor && !silent) CompleteAnalysis.track('mypage_upgrade_close', caTrackParams(tr));
   caOpenedForMentor = false;
   caStep = 'overview';
 }
@@ -3394,9 +3394,7 @@ async function openPurchasedComplete(diagnosisSessionId, button) {
     say('Preview：完全解析の閲覧先はまだ接続していません（この記録だけが対象です）。');
     return;
   }
-  const originalLabel = button.textContent;
-  button.disabled = true;
-  button.textContent = '完全解析を準備中…';
+  EdNavBusy.hold(button, '完全解析を準備中…');
   try {
     const { data: { session: authSession } } = await supabaseClient.auth.getSession();
     const accessToken = authSession && authSession.access_token;
@@ -3409,11 +3407,11 @@ async function openPurchasedComplete(diagnosisSessionId, button) {
     const body = await response.json().catch(() => ({}));
     if (!response.ok || !body.url) throw new Error(body.error || 'complete_link_failed');
     navigateTo(body.url);
+    EdNavBusy.handoff(button);
   } catch (err) {
     console.error('complete report open failed:', err && err.message);
     say('完全解析を開けませんでした。時間をおいて再度お試しください。');
-    button.disabled = false;
-    button.textContent = originalLabel;
+    EdNavBusy.release(button);
   }
 }
 
@@ -3468,8 +3466,41 @@ function renderError(root) {
   root.innerHTML = `${logoutButtonHtml()}${pageHeaderHtml()}<div class="err">読み込みに失敗しました。時間をおいて再度お試しください。</div>`;
 }
 
-async function init() {
+// 表示中のマイページの利用者（ログイン画面・エラーの時は null）。同じ利用者の SIGNED_IN の再通知（タブへの復帰・
+// セッションの回復）では描き直さない：開いているシート・入力中の目標・エラー表示・スクロール位置を保つ（C7）
+let mpRenderedUserId = null;
+let mpInitRunning = null;
+let mpInitAgain = false;
+// init は同時に1つだけ。実行中に呼ばれたら、終わった後にもう1回だけ実行する（描画の重なりを防ぐ）
+function init() {
+  if (mpInitRunning) { mpInitAgain = true; return mpInitRunning; }
+  mpInitRunning = (async () => {
+    try {
+      do { mpInitAgain = false; await initOnce(); } while (mpInitAgain);
+    } finally {
+      mpInitRunning = null;
+      mpReleaseScrollLockIfClosed();
+    }
+  })();
+  return mpInitRunning;
+}
+// シート（オーバーレイ）が開いていないのにスクロールが止まったまま、を残さない
+function mpReleaseScrollLockIfClosed() {
+  const overlay = document.getElementById('mpUpgradeOverlay');
+  if (overlay && !overlay.hidden) return;
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
+}
+async function initOnce() {
   const root = document.getElementById('root');
+  // 描き直す前に、開いているシートを閉じる（スクロールの固定を解く）。同じ利用者なら描き直した後に元の位置へ戻す
+  caCloseSheet({ silent: true });
+  const keepScrollY = mpRenderedUserId ? (window.scrollY || 0) : null;
+  // 開いていた折りたたみ（LATEST RESULT・THE RECORDS）も、同じ利用者なら描き直した後に開き直す
+  const openFolds = keepScrollY === null ? [] : Array.from(document.querySelectorAll('details.mp-rec[open], details.mp-latest-fold[open]'))
+    .map((d) => (d.classList.contains('mp-latest-fold') ? 'latest' : d.id)).filter(Boolean);
+  const renderedBefore = mpRenderedUserId;
+  mpRenderedUserId = null;
   // 結果ページで保存を始めて認証から戻ってきた：マイページは表示せず、結果ページへ戻す（diagnosis-save.js）
   if (window.__edReturningToResult) {
     root.innerHTML = '<p class="empty">診断結果のページへ戻っています…</p>';
@@ -3526,11 +3557,20 @@ async function init() {
   }
   if (result.sessions.length === 0) {
     renderEmpty(root, user);
+    mpRenderedUserId = user.id;
     mpGuestPurchaseFlow(root);
     return;
   }
   mpEntitlementOk = mpEntitlementCheckedOk(result.sessions);
   renderMypage(root, result.sessions, user);
+  mpRenderedUserId = user.id;
+  if (keepScrollY !== null && renderedBefore === user.id) {
+    openFolds.forEach((key) => {
+      const d = key === 'latest' ? document.querySelector('details.mp-latest-fold') : document.getElementById(key);
+      if (d && !d.open) { d.dataset.restored = '1'; d.open = true; } // 計測（diagnosis_history_open）はしない
+    });
+    window.scrollTo(0, keepScrollY);
+  }
   mpGuestPurchaseFlow(root);
   // お知らせメール（Kit）の同期は、登録完了と診断の保存の後に diagnosis-save.js の runSignedInFlow() が行う。
 }
@@ -3639,9 +3679,15 @@ async function mpRecoverFlow(root, token) {
   };
 }
 
-supabaseClient.auth.onAuthStateChange((event) => {
-  if (event === 'SIGNED_IN') init();
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  if (event !== 'SIGNED_IN') return;
+  // 同じ利用者の再通知（タブへの復帰など）では描き直さない。#recover（購入時メールでの確認）は照合へ進むため描き直す
+  const uid = session && session.user ? session.user.id : null;
+  if (uid && uid === mpRenderedUserId && location.hash !== '#recover') return;
+  init();
 });
+// 戻る操作で（bfcache から）表示された：開いたままのシート・止まったスクロールを残さない
+window.addEventListener('pageshow', (e) => { if (e.persisted) mpReleaseScrollLockIfClosed(); });
 
 init();
 </script>
