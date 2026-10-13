@@ -828,3 +828,150 @@ test('応答・ログ・metadata に禁止情報が無い（一連の決済・�
   }
   await ctx.db.close();
 });
+
+// ================= 旧 ¥1,000 の確認だけの操作（?op=legacy-verify）：Checkout・注文を作らずに結び付ける
+const MyEnt = require(path.join(__dirname, '..', 'api', 'my-entitlements.js'));
+async function legacyVerify(ctx, token, body, { env } = {}) {
+  const h = env ? Checkout.createHandler({ env: { ...ctx.env, ...env }, fetchImpl: ctx.db.fetchImpl, stripeFactory: ctx.stripe.factory, logger: ctx.logger, waitUntil: null }) : null;
+  const res = makeRes();
+  const req = { method: 'POST', query: { op: 'legacy-verify' }, headers: { host: 'evil.example', ...(token ? { authorization: `Bearer ${token}` } : {}) }, body };
+  if (h) await h(req, res); else await Checkout.createHandler({ env: ctx.env, fetchImpl: ctx.db.fetchImpl, stripeFactory: ctx.stripe.factory, logger: ctx.logger, waitUntil: null })(req, res);
+  return res;
+}
+async function entitlements(ctx, token) {
+  const res = makeRes();
+  await MyEnt.createHandler({ env: ctx.env, fetchImpl: ctx.db.fetchImpl, logger: ctx.logger })({ method: 'GET', headers: { host: 'evil.example', ...(token ? { authorization: `Bearer ${token}` } : {}) } }, res);
+  return res;
+}
+// 実 DB の試験用アダプタ（COMPLETE_DB_BACKEND）は PostgREST の埋め込み select を解釈しないため、my-entitlements の応答はメモリの擬似 DB でだけ確かめる
+const EMBED_OK = !process.env.COMPLETE_DB_BACKEND;
+const LV_FORBIDDEN = (p) => [/@/, /cs_test_/, /cs_live_/, /price_/, /sk_test_/, new RegExp(p.userId), new RegExp(p.sessionId)];
+
+test('legacy-verify：メール一致で結び付け → analysisSource=legacy_purchase_entitlement・¥2,000 の対象。販売停止中でも動き、Checkout・注文を作らない。再実行は冪等', async () => {
+  for (const salesOpen of ['false', 'true']) {
+    const ctx = await setup({ env: { COMPLETE_SALES_OPEN: salesOpen } });
+    const code = `CODE_LV_MATCH_${salesOpen}`;
+    const p = await person(ctx, { email: 'Buyer@Example.test', code });
+    const legacyId = await ctx.db.legacy({ code, stripeSessionId: ctx.stripe.legacySession({ email: ' buyer@example.TEST ' }) });
+    // （ハッシュ一致だけの「確認中」表示は tests/mentor_goal_api.test.js で確かめる）
+    const r = await legacyVerify(ctx, p.token, { diagnosisSessionId: p.sessionId });
+    assert.equal(r.code, 200, JSON.stringify(r.body));
+    assert.deepEqual(r.body, { result: 'bound' });
+    const bindings = await ctx.db.rows('complete_legacy_bindings');
+    assert.equal(bindings.length, 1);
+    assert.equal(bindings[0].legacy_entitlement_id, legacyId);
+    assert.equal(bindings[0].user_id, p.userId);
+    assert.equal(bindings[0].diagnosis_session_id, p.sessionId);
+    assert.equal(bindings[0].match_method, 'stripe_email_verified');
+    if (EMBED_OK) {
+      const after = await entitlements(ctx, p.token);
+      assert.equal(after.code, 200);
+      assert.equal(after.body.records[p.sessionId].analysisSource, 'legacy_purchase_entitlement');
+    }
+    // 冪等：2回目は already_bound・Stripe の旧 Session を取り直さない・行は増えない
+    const retrieves = ctx.stripe.st.calls.filter((c) => c === 'checkout.sessions.retrieve').length;
+    const r2 = await legacyVerify(ctx, p.token, { diagnosisSessionId: p.sessionId });
+    assert.deepEqual([r2.code, r2.body], [200, { result: 'already_bound' }]);
+    assert.equal(ctx.stripe.st.calls.filter((c) => c === 'checkout.sessions.retrieve').length, retrieves);
+    assert.equal((await ctx.db.rows('complete_legacy_bindings')).length, 1);
+    // Checkout Session・注文・支払いを作らない
+    assert.equal(ctx.stripe.st.calls.includes('checkout.sessions.create'), false);
+    assert.deepEqual(await ctx.db.rows('complete_orders'), []);
+    assert.deepEqual(await ctx.db.rows('record_entitlements'), []);
+    for (const body of [r.body, r2.body]) assertNoForbidden(JSON.stringify(body), LV_FORBIDDEN(p), '応答');
+    assertNoForbidden(ctx.logger.lines.join('\n'), [...FORBIDDEN(ctx), ...LV_FORBIDDEN(p)], 'ログ');
+    // 販売中なら、続く Checkout は ¥2,000（upgrade）
+    if (salesOpen === 'true') {
+      const c = await ctx.checkout(p.token, { diagnosisSessionId: p.sessionId });
+      assert.equal(c.code, 200, JSON.stringify(c.body));
+      assert.equal(c.body.offer, 'analysis_upgrade');
+      assert.equal(c.body.amount, 2000);
+      const [order] = await ctx.order(p.sessionId);
+      assert.equal(order.analysis_basis, 'legacy_purchase_entitlement');
+    }
+    await ctx.db.close();
+  }
+});
+
+test('legacy-verify：確認できない理由を区別して返す（結び付けない・Checkout を作らない・メール／Stripe ID／記録 ID を出さない）', async () => {
+  const cases = [
+    ['email_mismatch', { auth: 'buyer@example.test', purchase: 'someone@example.test' }, 409, 'legacy_email_mismatch'],
+    ['auth_missing', { auth: null, purchase: 'buyer@example.test' }, 403, 'legacy_email_missing'],
+    ['auth_unconfirmed', { auth: 'buyer@example.test', confirmed: false, purchase: 'buyer@example.test' }, 403, 'legacy_email_unconfirmed'],
+    ['unpaid', { auth: 'buyer@example.test', purchase: 'buyer@example.test', paid: false }, 409, 'legacy_purchase_not_paid'],
+    ['livemode_mismatch', { auth: 'buyer@example.test', purchase: 'buyer@example.test', livemode: true }, 409, 'legacy_purchase_unverifiable'],
+    ['purchase_email_missing', { auth: 'buyer@example.test', purchase: undefined }, 409, 'legacy_purchase_unverifiable'],
+    ['session_missing', { auth: 'buyer@example.test', missing: true }, 409, 'legacy_purchase_unverifiable'],
+    ['stripe_transient', { auth: 'buyer@example.test', purchase: 'buyer@example.test', transient: true }, 503, 'legacy_check_unavailable'],
+    ['no_purchase', { auth: 'buyer@example.test', none: true }, 404, 'legacy_purchase_not_found'],
+  ];
+  for (const [name, opts, code, error] of cases) {
+    const ctx = await setup({ env: { COMPLETE_SALES_OPEN: 'false' } });
+    const diag = `CODE_LV_${name}`;
+    const p = await person(ctx, { email: opts.auth, confirmed: opts.confirmed !== false, code: diag });
+    if (!opts.none) {
+      const sid = opts.missing ? 'cs_test_missingsession000' : ctx.stripe.legacySession({ email: opts.purchase, paid: opts.paid !== false, livemode: !!opts.livemode });
+      await ctx.db.legacy({ code: diag, stripeSessionId: sid });
+    }
+    if (opts.transient) ctx.stripe.fail('checkout.sessions.retrieve', stripeError('StripeConnectionError', 0));
+    const r = await legacyVerify(ctx, p.token, { diagnosisSessionId: p.sessionId });
+    assert.equal(r.code, code, `${name}: ${JSON.stringify(r.body)}`);
+    assert.equal(r.body.error, error, name);
+    assert.deepEqual(await ctx.db.rows('complete_legacy_bindings'), [], `${name}：結び付けない`);
+    assert.deepEqual(await ctx.db.rows('complete_orders'), [], `${name}：注文を作らない`);
+    assert.equal(ctx.stripe.st.calls.includes('checkout.sessions.create'), false, `${name}：Checkout を作らない`);
+    assertNoForbidden(JSON.stringify(r.body), LV_FORBIDDEN(p), `${name} の応答`);
+    assertNoForbidden(ctx.logger.lines.join('\n'), [...FORBIDDEN(ctx), ...LV_FORBIDDEN(p)], `${name} のログ`);
+    // 一時的な失敗の後は、同じ操作で結び付けられる
+    if (opts.transient) assert.deepEqual((await legacyVerify(ctx, p.token, { diagnosisSessionId: p.sessionId })).body, { result: 'bound' });
+    await ctx.db.close();
+  }
+});
+
+test('legacy-verify：別の記録・別の人に結び付け済みの購入は流用しない（409）。他人の記録・認証なし・入力不正は拒否', async () => {
+  const ctx = await setup({ env: { COMPLETE_SALES_OPEN: 'false' } });
+  const code = 'CODE_LV_SHARED';
+  const a = await person(ctx, { email: 'buyer@example.test', code });
+  const aSecond = { token: a.token, userId: a.userId, sessionId: await ctx.db.record({ userId: a.userId, goal: 'GOAL_PACE_01', code }) };
+  const b = await person(ctx, { email: 'buyer@example.test', code });
+  await ctx.db.legacy({ code, stripeSessionId: ctx.stripe.legacySession({ email: 'buyer@example.test' }) });
+  assert.deepEqual((await legacyVerify(ctx, a.token, { diagnosisSessionId: a.sessionId })).body, { result: 'bound' });
+  // 同じ人の別記録・別の人（同じ診断コード・同じメール）には流用しない
+  for (const [name, p] of [['same_user_other_record', aSecond], ['other_user', b]]) {
+    const r = await legacyVerify(ctx, p.token, { diagnosisSessionId: p.sessionId });
+    assert.deepEqual([r.code, r.body], [409, { error: 'legacy_bound_elsewhere' }], name);
+  }
+  // 他人の記録は存在しない扱い
+  const other = await legacyVerify(ctx, b.token, { diagnosisSessionId: a.sessionId });
+  assert.deepEqual([other.code, other.body], [404, { error: 'record_not_found' }]);
+  assert.equal((await legacyVerify(ctx, null, { diagnosisSessionId: a.sessionId })).code, 401);
+  assert.equal((await legacyVerify(ctx, 'tok-unknown', { diagnosisSessionId: a.sessionId })).code, 401);
+  assert.equal((await legacyVerify(ctx, a.token, { diagnosisSessionId: 'not-a-uuid' })).code, 400);
+  assert.equal((await legacyVerify(ctx, a.token, { diagnosisSessionId: a.sessionId, product: 'analysis' })).code, 400);
+  const rows = await ctx.db.rows('complete_legacy_bindings');
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].diagnosis_session_id, a.sessionId);
+  // my-entitlements：結び付けた記録だけが legacy_purchase_entitlement
+  if (EMBED_OK) {
+    const ea = await entitlements(ctx, a.token);
+    assert.equal(ea.body.records[a.sessionId].analysisSource, 'legacy_purchase_entitlement');
+    assert.notEqual(ea.body.records[aSecond.sessionId].analysisSource, 'legacy_purchase_entitlement');
+    const eb = await entitlements(ctx, b.token);
+    assert.notEqual(eb.body.records[b.sessionId].analysisSource, 'legacy_purchase_entitlement');
+  }
+  assert.equal(ctx.stripe.st.calls.includes('checkout.sessions.create'), false);
+  await ctx.db.close();
+});
+
+test('my-entitlements：成功・失敗とも Cache-Control: private, no-store', async () => {
+  const ctx = await setup();
+  const p = await person(ctx, { code: 'CODE_LV_CACHE' });
+  for (const token of [p.token, null, 'tok-unknown']) {
+    const r = await entitlements(ctx, token);
+    assert.equal(r.headers['Cache-Control'], 'private, no-store', `${token ? 'token' : 'none'} → ${r.code}`);
+  }
+  const bad = makeRes();
+  await MyEnt.createHandler({ env: {}, fetchImpl: ctx.db.fetchImpl, logger: ctx.logger })({ method: 'GET', headers: {} }, bad);
+  assert.equal(bad.headers['Cache-Control'], 'private, no-store');
+  await ctx.db.close();
+});

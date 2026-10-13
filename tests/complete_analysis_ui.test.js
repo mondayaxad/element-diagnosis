@@ -387,8 +387,14 @@ test('index：¥1,000主導線のあとに折りたたみ。閉じても¥1,000�
   const fold = p.locator('details.ca-fold');
   assert.equal(await fold.count(), 1);
   assert.equal(await fold.evaluate((d) => d.open), false);
-  const btnY = (await p.locator('#lockUnlockAllBtn').boundingBox()).y, foldBox = await fold.boundingBox();
-  assert.ok(foldBox.y > btnY, '¥1,000 より後');
+  // 負荷が高いと結果の描き直しと計測が重なるため、読み込みが落ち着いてから同じフレームで両方の位置を測る
+  await p.waitForLoadState('networkidle');
+  const pos = await p.evaluate(() => ({
+    btnY: document.querySelector('#lockUnlockAllBtn').getBoundingClientRect().top,
+    foldY: document.querySelector('details.ca-fold').getBoundingClientRect().top,
+  }));
+  assert.ok(pos.foldY > pos.btnY, `¥1,000 より後（${pos.btnY} → ${pos.foldY}）`);
+  const foldBox = await fold.boundingBox();
   assert.ok(foldBox.height >= 44 && foldBox.height <= 52, 'closed height ' + foldBox.height);
   // 販売停止中（既定）は ¥1,000 も「準備中」で押せない
   assert.equal(await p.locator('#lockUnlockAllBtn').innerText().then((s) => s.trim()), '解析レポート（準備中）');

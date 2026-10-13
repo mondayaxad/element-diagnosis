@@ -24,6 +24,7 @@ const { resolveAppEnv, requireServerEnv, requestHost, logEnvDenied } = require('
 const CE = require('../lib/complete-eligibility');
 const CP = require('../lib/complete-payment');
 const GP = require('../lib/guest-purchase');
+const LB = require('../lib/legacy-binding');
 
 const MAX_BODY_BYTES = 512;
 const API = 'complete-checkout';
@@ -135,42 +136,36 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
     };
   }
 
-  // 旧 ¥1,000 の購入を、購入時メールと Auth の確認済みメールで照合して結び付ける。結び付けたら true。
-  async function tryBindLegacy(conn, stripe, user, sessionId, candidates) {
-    const authEmail = CP.normalizeEmail(user.email);
-    if (!authEmail) return { bound: false, reason: 'auth_email_missing' };
-    let reason = 'email_mismatch';
-    for (const c of candidates) {
-      if (!CP.checkoutSessionIdOk(c.stripe_checkout_session_id, conn.stripeMode)) {
-        reason = 'stripe_session_unavailable';
-        continue;
-      }
-      let legacySession;
-      try {
-        legacySession = await CP.stripeCall(() => stripe.checkout.sessions.retrieve(c.stripe_checkout_session_id));
-      } catch (err) {
-        if (err.transient) throw err;
-        reason = 'stripe_session_unavailable';
-        continue;
-      }
-      if (!legacySession || legacySession.livemode !== CP.livemodeOf(conn) || legacySession.payment_status !== 'paid') {
-        reason = 'purchase_not_eligible';
-        continue;
-      }
-      const purchaseEmail = CP.normalizeEmail(legacySession.customer_details && legacySession.customer_details.email);
-      if (!purchaseEmail) { reason = 'stripe_session_unavailable'; continue; }
-      if (purchaseEmail !== authEmail) continue;
-      try {
-        await CP.rpc(fetchImpl, conn, 'complete_bind_legacy_purchase', {
-          p_user_id: user.id, p_diagnosis_session_id: sessionId, p_legacy_entitlement_id: c.id, p_match_method: 'stripe_email_verified',
-        });
-        return { bound: true };
-      } catch (err) {
-        if (err.transient) throw err;
-        reason = 'binding_conflict';
-      }
+  // 旧 ¥1,000 の購入を、購入時メールと Auth の確認済みメールで照合して結び付ける（lib/legacy-binding.js と共通）。
+  // Checkout の直前の防御的な確認として残す。結び付けたら（結び付け済みも）true。
+  async function tryBindLegacy(conn, stripe, user, sessionId) {
+    const r = await LB.verifyLegacyForRecord({ fetchImpl, conn, stripe, user, sessionId });
+    return r.status === 'bound' || r.status === 'already_bound' ? { bound: true } : { bound: false, reason: r.status };
+  }
+
+  // 旧 ¥1,000 の確認だけ（?op=legacy-verify）。ログイン必須・本人の記録だけ。販売停止中でも動く。
+  // Stripe Checkout Session も注文も作らない（課金を始めない）。応答は結果か理由コードだけ。
+  async function legacyVerify(req, res, guard) {
+    const token = CP.bearerToken(req);
+    if (!token) return fail(res, 401, 'not_authenticated');
+    let user;
+    try {
+      user = await CP.authUser(fetchImpl, guard, token);
+    } catch (err) {
+      return failLogged(res, 503, 'service_unavailable', err.code);
     }
-    return { bound: false, reason };
+    if (!user) return fail(res, 401, 'not_authenticated');
+    const parsed = parseBody(req);
+    if (!parsed.ok || parsed.product !== 'complete') return fail(res, parsed.tooLarge ? 413 : 400, parsed.tooLarge ? 'payload_too_large' : 'invalid_request');
+    try {
+      const r = await LB.verifyLegacyForRecord({ fetchImpl, conn: guard, stripe: stripeFor(env.STRIPE_SECRET_KEY), user, sessionId: parsed.sessionId });
+      const [status, body] = LB.VERIFY_RESPONSES[r.status] || [500, { error: 'request_failed' }];
+      if (status >= 400 && status !== 404) CP.logError(logger, API, `legacy_verify_${r.status}`, CE.incidentId());
+      return res.status(status).json(body);
+    } catch (err) {
+      if (err instanceof CP.PaymentError && err.transient) return failLogged(res, 503, 'legacy_check_unavailable', err.code);
+      return failLogged(res, 500, 'request_failed', err instanceof CP.PaymentError ? err.code : 'internal_error');
+    }
   }
 
   return async function handler(req, res) {
@@ -190,6 +185,7 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
     if (!CP.paymentEnvOk(guard, env)) return fail(res, 404, 'not_available');
     // ゲスト購入・購入完了ページ・引き継ぎ（lib/guest-purchase.js）
     const op = queryOp(req);
+    if (op === 'legacy-verify') return legacyVerify(req, res, guard);
     if (op) return guestHandler(op, req, res, guard);
     if (!CP.salesOpen(env)) return fail(res, 503, 'sales_closed');
     const urls = CP.checkoutReturnUrls(env, guard.appEnv, 'user');
@@ -236,7 +232,7 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
       } else if (state.hasAnalysis) {
         offer = 'analysis_upgrade';
       } else if (state.legacyCandidates.length) {
-        const r = await tryBindLegacy(guard, stripe, user, sessionId, state.legacyCandidates);
+        const r = await tryBindLegacy(guard, stripe, user, sessionId);
         if (!r.bound) {
           const incident = CE.incidentId();
           CP.logError(logger, API, `legacy_${r.reason}`, incident);

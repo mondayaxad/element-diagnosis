@@ -1918,8 +1918,11 @@ function caGuideHtml(r, g, pending) {
     action = disabled('完全解析（状態を確認中）', 'unavailable') + (g.view ? caViewHtml(r, g.view) : recheck);
     note = '<p class="ca-pending-note" role="status">完全解析の状態を確認できていません。重複して購入しないよう、確認できるまでお申し込みいただけません。</p>';
   } else if (g.kind === 'legacy') {
-    action = disabled('完全解析（権利を確認中）', 'unavailable') + recheck;
-    note = `<p class="ca-pending-note" role="status">${CompleteAnalysis.LEGACY_PENDING_TEXT}。確認が終わるまで、お申し込みいただけません。</p>`;
+    // 旧 ¥1,000 の購入をこの記録へ結び付ける確認（POST ?op=legacy-verify）を行ってから、購入状態を取り直す
+    action = disabled('完全解析（権利を確認中）', 'unavailable')
+      + `<button type="button" class="mp-btn" data-legacy-verify="${caEsc(caRecordId(r))}">もう一度確認する</button>`;
+    note = `<p class="ca-pending-note" role="status">${CompleteAnalysis.LEGACY_PENDING_TEXT}。確認が終わるまで、お申し込みいただけません。</p>`
+      + '<p class="ca-pending-note mp-legacy-msg" role="alert" hidden></p>';
   } else {
     action = disabled('完全解析（決済手続き中）', 'unavailable');
     note = '<p class="ca-pending-note" role="status">完全解析の決済手続き中です。</p>';
@@ -1977,6 +1980,54 @@ function mpRecordActionsHtml(r, source) {
   const rid = String((r.session && r.session.id) || '');
   return `<div class="mp-rec-actions" data-rec-actions="${encodeURIComponent(rid)}" data-rec-source="${source === 'latest' ? 'latest' : 'records'}">${items.join('')}</div>`;
 }
+/* 旧 ¥1,000（Payment Link）の購入の確認：購入時のメールとログイン中の確認済みメールが一致すれば、この記録へ結び付ける。
+   成功したら購入状態を取り直す（追加 ¥2,000 の案内に変わる）。失敗は理由ごとの説明だけを出す（内部の情報は出さない）。
+   決済は始めない（サーバーは Stripe Checkout Session も注文も作らない）。 */
+const MP_LEGACY_VERIFY_TEXT = {
+  legacy_email_mismatch: '購入時に使用したメールアドレスのアカウントでログインしてください。',
+  legacy_email_missing: '確認済みのメールアドレスでログインしてください。',
+  legacy_email_unconfirmed: '確認済みのメールアドレスでログインしてください。',
+  legacy_check_unavailable: '購入状況を確認できませんでした。時間をおいてもう一度お試しください。',
+  service_unavailable: '購入状況を確認できませんでした。時間をおいてもう一度お試しください。',
+  network: '購入状況を確認できませんでした。時間をおいてもう一度お試しください。',
+  legacy_bound_elsewhere: 'この購入は別の診断記録に紐付いています。',
+  legacy_purchase_not_paid: 'この記録に対応する、お支払い済みの解析レポートの購入を確認できませんでした。',
+  legacy_purchase_not_found: 'この記録に対応する、お支払い済みの解析レポートの購入を確認できませんでした。',
+  legacy_purchase_unverifiable: 'この記録に対応する、お支払い済みの解析レポートの購入を確認できませんでした。',
+  not_authenticated: 'ログインの有効期限が切れました。もう一度ログインしてください。',
+};
+async function mpLegacyVerify(button) {
+  const id = button.getAttribute('data-legacy-verify');
+  const msg = button.parentElement && button.parentElement.querySelector('.mp-legacy-msg');
+  button.disabled = true;
+  const prev = button.textContent;
+  button.textContent = '確認中…';
+  if (msg) { msg.hidden = true; msg.textContent = ''; }
+  let code = null;
+  try {
+    const { data } = await supabaseClient.auth.getSession();
+    const token = data && data.session ? data.session.access_token : null;
+    if (!token) code = 'not_authenticated';
+    else {
+      const res = await fetch('/api/complete-checkout?op=legacy-verify', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ diagnosisSessionId: id }),
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) code = out.error || 'legacy_check_unavailable';
+    }
+  } catch (e) {
+    code = 'network';
+  }
+  if (!code) { await init(); return; }
+  button.disabled = false;
+  button.textContent = prev;
+  if (msg) { msg.textContent = MP_LEGACY_VERIFY_TEXT[code] || MP_LEGACY_VERIFY_TEXT.legacy_check_unavailable; msg.hidden = false; }
+}
+document.addEventListener('click', (e) => {
+  const b = e.target && e.target.closest && e.target.closest('[data-legacy-verify]');
+  if (b && !b.disabled) { e.preventDefault(); mpLegacyVerify(b); }
+});
 async function mpRetryEntitlement(button) {
   if (button) { button.disabled = true; button.textContent = '確認中…'; }
   await init();
@@ -2869,7 +2920,9 @@ function caMentorOverviewHtml(r) {
     : `<div class="ca-state-head"><div class="ca-eyebrow">ANALYSIS OBSERVED</div><h2 class="ca-lead" id="latest-upgrade-title">構造と解釈まで観測されています</h2></div>
        ${purchasedReportButton(r.session, 'ca-btn ca-view-action', '解析レポートを見る')}`;
   if (o.kind === 'legacy_pending') {
-    return `${target}${head}<p class="ca-mentor-note" role="status">${CompleteAnalysis.LEGACY_PENDING_TEXT}</p>`;
+    return `${target}${head}<p class="ca-mentor-note" role="status">${CompleteAnalysis.LEGACY_PENDING_TEXT}</p>`
+      + `<button type="button" class="ca-btn ca-quiet-action" data-legacy-verify="${caEsc(caRecordId(r))}">もう一度確認する</button>`
+      + '<p class="ca-mentor-note mp-legacy-msg" role="alert" hidden></p>';
   }
   if (o.kind === 'checkout_in_progress') {
     return `${target}${head}<p class="ca-mentor-note" role="status">完全解析の決済手続き中です。</p>`;

@@ -186,6 +186,8 @@ function createHandler({ env, fetchImpl }) {
   }
 
   return async function handler(req, res) {
+    // 本人ごとの購入権の情報：共有キャッシュにも、ブラウザの再検証（304）にも依存しない（成功・失敗とも）
+    if (typeof res.setHeader === 'function') res.setHeader('Cache-Control', 'private, no-store');
     // 環境ガード：Supabase へ接続する前に、環境・接続先を確かめる。
     const guard = requireServerEnv(env, { host: requestHost(req), admin: true, user: true });
     if (!guard.ok) {
