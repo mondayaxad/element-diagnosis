@@ -77,6 +77,12 @@ async function context(w, { width = 390, lastResult } = {}) {
     if (op === 'guest-goals') return send(200, { salesOpen: true, catalog: CE.MENTOR_CATALOG });
     if (op === 'guest-checkout') return send(200, { checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test_fake', offer: body.offer, amount: 2000 });
     if (op === 'result-link') return send(200, { result: 'created' });
+    if (op === 'guest-cancel') {
+      // 未払いの決済を閉じる（支払い済みにはしない）
+      const open = w.purchases.filter((x) => x.pending).length;
+      w.purchases = w.purchases.map((x) => Object.assign({}, x, { pending: false }));
+      return send(200, { closed: open, paid: 0 });
+    }
     return send(404, { error: 'not_found' });
   });
   await ctx.addInitScript((t) => {
@@ -162,7 +168,7 @@ test('ゲスト：この端末に固有リンクが無い・別の診断結果�
 test('購入済み・決済中・購入が見つからない・確かめられない・販売停止・マイページ経由の出し分け', { skip: skip() }, async () => {
   const cases = [
     [{ purchases: [mine({ complete: 'active', canUpgrade: false })] }, /完全解析は購入済みです/, 'a[href="/purchase-complete"]'],
-    [{ purchases: [mine({ pending: true })] }, /お支払いを確認しています/, 'a[href="/purchase-complete"]'],
+    [{ purchases: [mine({ pending: true })] }, /お支払いがまだ完了していません。決済画面を閉じた場合は、やり直せます。/, '[data-report-reset]'],
     [{ purchases: [] }, /購入状態を確認できないため、購入導線は表示していません/, null],
     [{ statusCode: 503 }, /購入状態を確認できないため/, null],
     [{ salesOpen: false }, /追加¥2,000（準備中）[\s\S]*完全解析は準備中です/, 'button.is-pending[disabled]'],
@@ -203,4 +209,32 @@ test('320・390・1280px：完全解析の案内が横にはみ出さない・�
     assert.ok(g.height >= 44, '目標の行：' + width);
     await ctx.close();
   }
+});
+
+test('決済画面から支払わずに戻る：戻る（ページの復元）・再読み込み・やり直しのボタンのどれでも、未払いの決済を閉じて ¥2,000 を選び直せる（購入済みとは扱わない）', { skip: skip() }, async () => {
+  // 1) 決済画面へ進んで「戻る」
+  let w = world();
+  let ctx = await context(w);
+  let p = await openReport(ctx);
+  await box(p).locator('[data-report-upgrade]').click();
+  await box(p).locator('input[name="report-mentor-goal"]').first().check();
+  // 決済を作った時点で、サーバーは未払いの決済（pending）を持つ
+  await ctx.route('**/api/complete-checkout?op=guest-checkout', (r) => { w.purchases = [mine({ pending: true })]; w.calls.push({ op: 'guest-checkout', body: JSON.parse(r.request().postData()), url: r.request().url() }); r.fulfill({ contentType: 'application/json', body: JSON.stringify({ checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test_fake' }) }); });
+  await box(p).locator('[data-report-buy]').click();
+  await p.waitForURL(/checkout\.stripe\.com/);
+  await p.goBack();
+  await p.waitForSelector('[data-report-upgrade]');
+  assert.equal(w.calls.filter((c) => c.op === 'guest-cancel').length, 1, '戻った時に未払いの決済を閉じる');
+  assert.doesNotMatch(await box(p).innerText(), /購入状況を見る|購入済み/);
+  assert.deepEqual(p.__errors, []);
+  await ctx.close();
+  // 2) 未払いのまま別の時に開いた：やり直しのボタン → 閉じて選び直せる
+  w = world({ purchases: [mine({ pending: true })] });
+  ctx = await context(w);
+  p = await openReport(ctx);
+  assert.equal(w.calls.filter((c) => c.op === 'guest-cancel').length, 0, '自分で決済へ進んでいない時は勝手に閉じない');
+  await box(p).locator('[data-report-reset]').click();
+  await p.waitForSelector('[data-report-upgrade]');
+  assert.equal(w.calls.filter((c) => c.op === 'guest-cancel').length, 1);
+  await ctx.close();
 });
