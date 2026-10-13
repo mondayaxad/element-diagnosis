@@ -109,6 +109,16 @@ select public.complete_admin_legacy_access(null, '<旧購入の cs_...>', 'revok
 
 ---
 
-## 4. 変えてはいけない設定
+## 4. Price ID（STRIPE_PRICE_ANALYSIS・STRIPE_COMPLETE_PRICE_DIRECT・STRIPE_COMPLETE_PRICE_UPGRADE）を変える時（C8）
+
+- 支払いの反映は、注文の行（Checkout を作った時点の offer・金額・通貨・Stripe のモード）を正本にして照合する。環境変数の Price ID は照合に使わないため、決済の途中で Price ID を変えても、正しく支払われた注文は反映される。
+- それでも、決済の途中では変えない（決済画面を開いている人がいない時間に変える）。手順：
+  1. 販売を止める（`COMPLETE_SALES_OPEN=false`）→ 再デプロイ。
+  2. 決済待ちの注文が無いことを確かめる：`select count(*) from public.complete_orders where status in ('created', 'checkout_open');`（0 になるまで待つ。Checkout の期限は 24 時間）
+  3. 新しい Price（同じ金額・JPY・一回払い）を作り、環境変数を差し替える → 再デプロイ。
+  4. 販売を再開する。
+- 金額・通貨・数量・一回払いのどれかが注文と違う支払いは、注文を `failed`（`amount_mismatch`）にして権利を付けない。Stripe で返金し、利用者に連絡する。
+
+## 5. 変えてはいけない設定
 
 - `REPORT_TOKEN_SECRET`・`COMPLETE_VIEW_TOKEN_SECRET` を販売中に変えない（発行済みの閲覧リンク、ゲスト購入の参照値（ref）・購入完了ページの表示が無効になる）。変える時は販売を止め、利用者への案内を用意してから。

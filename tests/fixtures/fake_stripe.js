@@ -38,11 +38,15 @@ function fakeStripe({ prices = {} } = {}) {
           if (!price) throw missing();
           const id = rid('cs_test_');
           st.sessions[id] = {
-            id, object: 'checkout.session', livemode: false, status: 'open', payment_status: 'unpaid',
+            id, object: 'checkout.session', livemode: false, mode: params.mode || 'payment', status: 'open', payment_status: 'unpaid',
             url: `https://checkout.stripe.com/c/pay/${id}`, expires_at: Math.floor(Date.now() / 1000) + 86400,
             amount_total: price.unit_amount, currency: price.currency, metadata: clone(params.metadata || {}),
             payment_intent: null, customer_details: null,
-            line_items: { data: params.line_items.map((li) => ({ price: { id: li.price }, quantity: li.quantity })) },
+            // Stripe の line item：Price は作成時点の内容（後で Price の設定を変えても、この決済の値は変わらない）
+            line_items: { data: params.line_items.map((li) => {
+              const pr = st.prices[li.price] || { id: li.price };
+              return { price: clone(pr), quantity: li.quantity, amount_total: (pr.unit_amount || 0) * li.quantity, currency: pr.currency };
+            }) },
           };
           if (key) st.idem[key] = { id, sig };
           return clone(st.sessions[id]);

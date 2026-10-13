@@ -713,6 +713,23 @@ test('Webhook：Stripe・DB の一時的な失敗は failed を記録して 500 
   await ctx.db.close();
 });
 
+test('C8：Checkout の後に環境変数の Price ID を変えても、その時点の価格で正しく支払われた注文は paid になる（注文の行が正本）', async () => {
+  const ctx = await setup();
+  const p = await person(ctx);
+  const paid = await openAndPay(ctx, p);
+  // 決済の途中で運営者が Price ID を差し替えた（新しい Price は同じ金額でも別 ID）
+  ctx.env.STRIPE_COMPLETE_PRICE_DIRECT = 'price_test_direct3000_v2';
+  ctx.stripe.st.prices.price_test_direct3000_v2 = { ...ctx.stripe.st.prices.price_test_direct3000, id: 'price_test_direct3000_v2' };
+  const r = await ctx.webhook({ type: 'checkout.session.completed', objectId: paid.csId });
+  assert.deepEqual([r.code, r.body], [200, { received: true, result: 'processed' }]);
+  assert.match(await ctx.state(p.sessionId), /^paid\|lock=true\|ent=analysis:active,complete:active\|rep=queued$/);
+  // 新しい Checkout は新しい Price ID で作る
+  const q = await person(ctx, { email: 'q@example.test' });
+  assert.equal((await ctx.checkout(q.token, { diagnosisSessionId: q.sessionId })).code, 200);
+  assert.deepEqual(ctx.stripe.st.lastCreate.params.line_items, [{ price: 'price_test_direct3000_v2', quantity: 1 }]);
+  await ctx.db.close();
+});
+
 test('Webhook：恒久的な不一致（金額・Price・metadata）は ignored・200（権利なし）', async () => {
   // 金額違い：注文は failed
   let ctx = await setup();
@@ -723,16 +740,25 @@ test('Webhook：恒久的な不一致（金額・Price・metadata）は ignored�
   assert.deepEqual([r.code, r.body], [200, { received: true, result: 'ignored' }]);
   assert.equal(await ctx.state(p.sessionId), 'failed|lock=false|ent=none|rep=none');
   await ctx.db.close();
-  // Price 違い（注文の offer の Price ではない）
-  ctx = await setup();
-  p = await person(ctx);
-  paid = await openAndPay(ctx, p);
-  ctx.stripe.st.sessions[paid.csId].line_items.data[0].price.id = 'price_test_upgrade2000';
-  r = await ctx.webhook({ type: 'checkout.session.completed', objectId: paid.csId });
-  assert.deepEqual([r.code, r.body.result], [200, 'ignored']);
-  assert.equal(await ctx.state(p.sessionId), 'checkout_open|lock=false|ent=none|rep=none');
-  assert.equal((await ctx.db.rows('stripe_webhook_events'))[0].error_code, 'price_mismatch');
-  await ctx.db.close();
+  // 決済の中身が注文と違う（line item の金額・数量・一回払いでない）：注文は failed（決済待ちのまま残さない）・権利なし
+  for (const [name, mutate] of [
+    ['item_amount', (s) => { Object.assign(s.line_items.data[0], { amount_total: 2000 }); s.line_items.data[0].price.unit_amount = 2000; }],
+    ['quantity', (s) => { s.line_items.data[0].quantity = 2; }],
+    ['two_items', (s) => { s.line_items.data.push(JSON.parse(JSON.stringify(s.line_items.data[0]))); }],
+    ['currency', (s) => { s.line_items.data[0].currency = 'usd'; }],
+    ['mode', (s) => { s.mode = 'subscription'; }],
+    ['recurring_price', (s) => { s.line_items.data[0].price.type = 'recurring'; }],
+  ]) {
+    ctx = await setup();
+    p = await person(ctx);
+    paid = await openAndPay(ctx, p);
+    mutate(ctx.stripe.st.sessions[paid.csId]);
+    r = await ctx.webhook({ type: 'checkout.session.completed', objectId: paid.csId });
+    assert.deepEqual([r.code, r.body.result], [200, 'ignored'], name);
+    assert.equal(await ctx.state(p.sessionId), 'failed|lock=false|ent=none|rep=none', name);
+    assert.equal((await ctx.db.rows('stripe_webhook_events'))[0].error_code, 'amount_mismatch', name);
+    await ctx.db.close();
+  }
   // metadata 違い（env が production・項目の追加）
   for (const meta of [{ env: 'production' }, { extra: 'x' }, { order_id: 'not-a-uuid' }]) {
     ctx = await setup();
