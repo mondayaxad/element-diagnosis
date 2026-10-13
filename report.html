@@ -113,6 +113,7 @@
   .ca-r-btn.is-pending { font-family:inherit; font-size:13px; color:#a3a6c4; border-style:dashed; cursor:not-allowed; }
   .ca-r-btn.is-view { border-color:color-mix(in srgb, var(--ca-view) 40%, var(--ca-line)); color:var(--ca-view); }
   .ca-r-note { margin-top:10px; padding-left:8px; border-left:2px solid var(--ca-line); font-size:11px; color:var(--ca-muted); line-height:1.7; }
+  .ca-r-sample { display:inline-block; margin-top:12px; font-size:12px; letter-spacing:0.06em; color:#8fb4dc; text-decoration:none; border-bottom:1px solid #2c3a55; padding-bottom:1px; }
   .cover-dots { position:relative; width:220px; height:220px; margin:0 auto 20px; }
   .cover-dots svg { width:100%; height:100%; }
   .sec-img { width:100%; aspect-ratio:16/9; border-radius:10px; margin:16px 0; overflow:hidden; position:relative; }
@@ -128,6 +129,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <!-- 完全解析（46ページ）の表示用状態。PREVIEW ONLY：購入権は発行しない -->
 <script src="complete-analysis.js"></script>
+<script src="/api/public-config?format=js"></script>
 <script src="js/guest-purchase.js"></script>
 <script src="js/ETI_v2_QUESTIONS_100.js"></script>
 <script src="js/eti_v2_prototypes.js"></script>
@@ -1684,6 +1686,13 @@ function completeAnalysisReportHtml(pal, results, diagnosisVersion) {
         <p class="ca-state">完全解析が保存されています</p>
         <button type="button" class="ca-r-btn" onclick="CompleteAnalysis.track('complete_report_open',{source:'analysis_report',preview_dummy:true});var n=this.nextElementSibling;if(n)n.hidden=false;">この記録の完全解析を開く</button>
         <p class="ca-r-note" hidden>Preview：完全解析の閲覧先はまだ接続していません。</p>`;
+  } else if (!name) {
+    // 実データ：購入状態はこの後に確かめて、[data-report-complete] を描き替える（initReportComplete）
+    body = `
+        <div class="ca-eyebrow">BEYOND THE REPORT｜この先にあるもの</div>
+        <p class="ca-lead">このレポートが描いたのは、いまのあなたの輪郭。<br>その奥にある三つの人物像を、46ページで読み解く。</p>
+        ${lenses}
+        <div data-report-complete><p class="ca-r-note">購入状態を確認しています…</p></div>`;
   } else {
     body = `${head}
         ${lenses}
@@ -1691,6 +1700,74 @@ function completeAnalysisReportHtml(pal, results, diagnosisVersion) {
   }
   return `<div class="sec ca-r-sec" style="border-color:${pal.p}35;--ca-state:${pal.light}">${body}
       </div>`;
+}
+
+// 完全解析の案内（実データ）：レポートを開いた端末で購入状態を確かめ、¥2,000 の申込へつなぐ。
+//   ゲスト：この端末の購入（Cookie）で確かめる。申込は同じ記録の結果ページで MENTOR 目標を選んで決済へ
+//           （固有リンクがあればその記録、無ければ診断コードで開く）。
+//   マイページ経由：マイページの診断記録から申し込む。確かめられない時は売らない。
+function initReportComplete(code, viewer) {
+  var box = document.querySelector('[data-report-complete]');
+  if (!box) return;
+  var G = (typeof EdGuestPurchase !== 'undefined') ? EdGuestPurchase : null;
+  var unknown = '<p class="ca-r-note">この記録の完全解析の購入状態を確認できないため、購入導線は表示していません。</p>';
+  var sample = '<a class="ca-r-sample" href="/complete-sample" target="_blank" rel="noopener" data-ca-sample>完全解析のサンプルを見る</a>';
+  if (!G || !code) { box.innerHTML = unknown; return; }
+  function price() {
+    return '<div class="ca-r-price"><span class="ca-meta">この解析レポートの内容は、すべて含まれます</span><span class="ca-price">追加 ' + G.yen(G.OFFERS.analysis_upgrade.price) + '</span></div>';
+  }
+  function bindSample() {
+    var a = box.querySelector('[data-ca-sample]');
+    if (a) a.addEventListener('click', function () { G.track('complete_sample_open', { source: 'analysis_report' }); });
+  }
+  if (viewer === 'mypage') {
+    box.innerHTML = price() + '<a class="ca-r-btn" href="/mypage.html" data-report-mypage>マイページで完全解析を申し込む</a>'
+      + '<p class="ca-r-note">マイページの診断記録から、MENTOR の目標を選んでお申し込みいただけます。</p>' + sample;
+    bindSample();
+    return;
+  }
+  if (viewer !== 'guest') { box.innerHTML = unknown; return; }
+  G.status(code).then(function (r) {
+    var list = (r && r.ok && r.body && r.body.purchases) || [];
+    var mine = list.filter(function (p) { return p.thisRecord; })[0] || null;
+    if (!mine) { box.innerHTML = unknown; return; }
+    if (mine.complete) {
+      box.innerHTML = '<p class="ca-r-note">この記録の完全解析は購入済みです（' + G.esc(G.completeLabel(mine)) + '）。</p>'
+        + '<a class="ca-r-btn" href="/purchase-complete">購入した内容を見る</a>';
+      return;
+    }
+    if (mine.pending) {
+      box.innerHTML = '<p class="ca-r-note">お支払いを確認しています。</p><a class="ca-r-btn" href="/purchase-complete">購入状況を見る</a>';
+      return;
+    }
+    if (mine.analysis !== 'active') { box.innerHTML = unknown; return; }
+    var label = 'まだ見えていない輪郭を読む　追加' + G.yen(G.OFFERS.analysis_upgrade.price);
+    if (!G.salesOpen()) {
+      box.innerHTML = price() + '<button type="button" class="ca-r-btn is-pending" disabled aria-disabled="true">' + label + '（準備中）</button>'
+        + '<p class="ca-r-note">完全解析は準備中です。現在はお申し込みいただけません。</p>';
+      return;
+    }
+    box.innerHTML = price() + '<button type="button" class="ca-r-btn" data-report-upgrade>' + label + '</button>'
+      + '<p class="ca-r-note">次の画面で MENTOR の目標を1つ選び、決済へ進みます。</p>' + sample;
+    bindSample();
+    var btn = box.querySelector('[data-report-upgrade]');
+    btn.onclick = function () {
+      btn.disabled = true;
+      G.track('complete_offer_click', { offer: 'analysis_upgrade', source: 'analysis_report' });
+      reportGoToResult(G, code);
+    };
+  }).catch(function () { box.innerHTML = unknown; });
+}
+// 同じ記録の結果ページへ（目標の選択を開いた状態で）。この端末の固有リンクが同じ診断結果なら、それを使う
+function reportGoToResult(G, code) {
+  var t = null;
+  try { t = localStorage.getItem('ed_last_result_v1'); } catch (e) { t = null; }
+  function byCode() { location.assign('/?dv=ETI-2.0&code=' + encodeURIComponent(code) + '#buy'); }
+  if (!t || !/^[A-Za-z0-9_-]{43}$/.test(t)) { byCode(); return; }
+  G.resultOpen(t).then(function (r) {
+    if (r && r.ok && r.body && r.body.code === code) location.assign('/result#r=' + t + '&buy=1');
+    else byCode();
+  }).catch(byCode);
 }
 
 function renderFullReport(root, results, diagnosisCode) {
@@ -2158,6 +2235,7 @@ async function savePdf() {
       // 旧ナラティブ販売欄は完全解析の案内へ置換済み（申込コードの表示は廃止）。
       // renderFullReport へは、v1/v2どちらも接頭辞を付けない生のcodeのまま渡す（今回の変更対象外）。
       renderFullReport(root, resultsV2, code);
+      initReportComplete(code, data.viewer);
       if (typeof gtag === 'function') gtag('event', 'analysis_report_view', { diagnosis_version: 'ETI-2.0' });
       return;
     }

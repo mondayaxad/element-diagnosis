@@ -55,13 +55,17 @@ test('サンプル：OGP は新しい画像の絶対 URL・summary_large_image',
   assert.match(SAMPLE, /<meta property="og:url" content="https:\/\/element-diagnosis-five\.vercel\.app\/complete-sample">/);
 });
 
-test('サンプルは結果ページの完全解析の欄からだけリンクする（マイページ・ナビ・sitemap・タイプページからはリンクしない）', () => {
-  for (const p of ['mypage.html', 'report.html', 'privacy.html', 'terms.html', 'sitemap.xml', 'robots.txt', 'complete-analysis.js']) {
+test('サンプルは結果ページと解析レポートの完全解析の欄からだけリンクする（マイページ・ナビ・sitemap・タイプページからはリンクしない）', () => {
+  for (const p of ['mypage.html', 'privacy.html', 'terms.html', 'sitemap.xml', 'robots.txt', 'complete-analysis.js']) {
     assert.doesNotMatch(read(p), /complete-sample/, `${p} がサンプルを参照しています`);
   }
   const index = read('index.html');
   assert.equal((index.match(/complete-sample/g) || []).length, 1, 'index は完全解析の欄の1か所だけ');
   assert.match(index, /href="\/complete-sample" target="_blank" rel="noopener" data-ca-sample/);
+  // 解析レポート：末尾の完全解析の案内（追加 ¥2,000）の1か所だけ
+  const report = read('report.html');
+  assert.equal((report.match(/complete-sample/g) || []).length, 1, 'report は完全解析の案内の1か所だけ');
+  assert.match(report, /href="\/complete-sample" target="_blank" rel="noopener" data-ca-sample/);
   for (const f of fs.readdirSync(path.join(ROOT, 'type'))) {
     assert.doesNotMatch(read(`type/${f}`), /complete-sample/);
   }

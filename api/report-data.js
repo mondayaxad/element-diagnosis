@@ -275,8 +275,11 @@ function createHandler({ env, fetchImpl }) {
     };
 
     // 診断コード自体は、CORE1閲覧権限がある場合にのみレスポンスへ含める。
+    // viewer：このリンクの発行元（guest＝ゲスト購入の端末・mypage＝マイページ・legacy＝旧形式）。
+    //   レポート末尾の完全解析の案内を出し分けるためだけに使う（権利の判定には使わない。記録 ID・本人は返さない）
     if (perms.core) {
       responseBody.code = diagnosisRef.code;
+      responseBody.viewer = kind === 'guest' ? 'guest' : kind === 'mypage' ? 'mypage' : 'legacy';
     }
 
     res.status(200).json(responseBody);
