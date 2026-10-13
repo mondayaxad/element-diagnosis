@@ -1942,7 +1942,7 @@ async function savePdf() {
   btn.textContent = '生成中…（数秒お待ちください）';
   btn.disabled = true;
 
-  var hideEls = document.querySelectorAll('#pdfSaveBtn, .lock-cta, a[href*="stripe"], a[href*="buy.stripe"]');
+  var hideEls = document.querySelectorAll('#pdfSaveBtn, .lock-cta');
   var prevDisplay = [];
   hideEls.forEach(function(el){ prevDisplay.push(el.style.display); el.style.display = 'none'; });
 

@@ -701,3 +701,108 @@ test('C6（ゲスト）：最終の失敗は「作成できませんでした」
   assert.equal((await ctx.op('guest-regenerate', { ref: st.ref })).code, 403);
   await ctx.db.close();
 });
+
+// ================= G7：ロックの順・並行実行（C9）
+const GP = require('../lib/guest-purchase');
+test('ロックの順：支払いの確定は 結果グループ → 記録 → 注文の行 の順に取る（注文の作成・引き継ぎと同じ順）', () => {
+  const sql = require('fs').readFileSync(require('path').join(__dirname, '..', 'docs', 'sql', '20261013120000_complete_08_purchase_integrity.sql'), 'utf8');
+  const body = (name) => {
+    const i = sql.lastIndexOf(`create or replace function public.${name}(`);
+    return sql.slice(i, sql.indexOf('\n$$;', i));
+  };
+  for (const fn of ['complete_apply_payment', 'complete_create_order_internal', 'complete_transfer_guest_record']) {
+    const b = body(fn);
+    const group = b.indexOf('complete_lock_result_group(');
+    const record = b.indexOf("'complete_order:'");
+    // 行に触れる最初の操作（行のロック、または注文の追加）
+    const firstRow = [b.search(/for update/), b.search(/insert into public\.complete_orders/)].filter((x) => x >= 0);
+    const row = Math.min(...firstRow);
+    assert.ok(group > 0 && record > group && row > record, `${fn}: group ${group} < record ${record} < row ${row}`);
+  }
+});
+
+test('並行：引き継ぎと支払いの確定（Webhook の再送）が重なっても、デッドロックせず1つの状態に揃う', { skip }, async () => {
+  const ctx = await setup();
+  const token = 'tok-concurrent-owner';
+  const owner = await ctx.db.user({ email: 'owner@example.test', token });
+  for (let i = 0; i < 6; i++) {
+    const code = savedRecord(variantAnswers(10 + i)).encoded_answers;
+    ctx.cookie = '';
+    const r = await ctx.op('guest-checkout', { offer: 'analysis', code });
+    assert.equal(r.code, 200, JSON.stringify(r.body));
+    const cs = ctx.csIdOf(r.body.checkoutUrl);
+    ctx.stripe.pay(cs, { customer_details: { email: 'owner@example.test' } });
+    const order = (await ctx.rows('complete_orders')).find((o) => o.stripe_checkout_session_id === cs);
+    const ref = GP.refOf(ctx.env, order.id);
+    // 引き継ぎ（Stripe へ問い合わせて適用 → 本人へ移す）と、同じ決済の Webhook を2回、同時に
+    const [claim, w1, w2] = await Promise.all([
+      ctx.op('guest-claim', { ref }, { token }),
+      ctx.webhook({ type: 'checkout.session.completed', objectId: cs }),
+      ctx.webhook({ type: 'checkout.session.completed', objectId: cs }),
+    ]);
+    // 一時的な失敗（取り直し）は Stripe の再送で反映される。デッドロック（db_error）は起きない
+    for (const w of [w1, w2]) assert.ok([200, 500, 503].includes(w.code), JSON.stringify(w.body));
+    if (claim.code !== 200) {
+      assert.ok([409, 503].includes(claim.code), JSON.stringify(claim.body));
+      assert.equal((await ctx.op('guest-claim', { ref }, { token })).code, 200);
+    }
+    assert.equal((await ctx.webhook({ type: 'checkout.session.completed', objectId: cs })).code, 200);
+    const o = (await ctx.rows('complete_orders')).find((x) => x.id === order.id);
+    assert.deepEqual([o.status, o.user_id], ['paid', owner], `回 ${i}`);
+    const rights = (await ctx.rows('record_entitlements')).filter((e) => e.source_order_id === order.id);
+    assert.deepEqual(rights.map((e) => `${e.right_type}:${e.status}:${e.user_id === owner}`), ['analysis:active:true'], `回 ${i}`);
+  }
+  assert.ok(!ctx.logger.lines.some((l) => /db_error|deadlock/.test(l)), ctx.logger.lines.filter((l) => /db_error|deadlock/.test(l)).join('\n'));
+  await ctx.db.close();
+});
+
+test('並行：同じ診断結果の2つの記録で、支払いの確定と別の記録の注文の作成が重なっても、デッドロックせず二重に買えない', { skip }, async () => {
+  const ctx = await setup();
+  for (let i = 0; i < 6; i++) {
+    const code = savedRecord(variantAnswers(30 + i)).encoded_answers;
+    const p = await person(ctx, { email: `p${i}@example.test`, code });
+    const second = await ctx.db.record({ userId: p.userId, code, completedAt: new Date(Date.now() + 60000).toISOString() });
+    const r = await ctx.checkout(p.token, { diagnosisSessionId: p.sessionId, product: 'analysis' });
+    assert.equal(r.code, 200);
+    const cs = ctx.csIdOf(r.body.checkoutUrl);
+    ctx.stripe.pay(cs);
+    const [w, other] = await Promise.all([
+      ctx.webhook({ type: 'checkout.session.completed', objectId: cs }),
+      ctx.checkout(p.token, { diagnosisSessionId: second, product: 'analysis' }),
+    ]);
+    assert.equal(w.code, 200, JSON.stringify(w.body));
+    assert.ok([409].includes(other.code), `回 ${i}: ${other.code} ${JSON.stringify(other.body)}`);
+    const paid = (await ctx.rows('complete_orders')).filter((o) => o.user_id === p.userId && o.status === 'paid');
+    assert.equal(paid.length, 1, `回 ${i}`);
+  }
+  assert.ok(!ctx.logger.lines.some((l) => /db_error|deadlock/.test(l)));
+  await ctx.db.close();
+});
+
+test('並行（決定的）：記録のロックを持つ処理（引き継ぎ・注文の作成）が注文の行を取る時、支払いの確定は記録のロックを先に待つ（デッドロックしない）', { skip }, async () => {
+  const ctx = await setup();
+  const p = await person(ctx);
+  const r = await ctx.checkout(p.token, { diagnosisSessionId: p.sessionId, product: 'analysis' });
+  const cs = ctx.csIdOf(r.body.checkoutUrl);
+  ctx.stripe.pay(cs);
+  const order = (await ctx.rows('complete_orders'))[0];
+  const s1 = await ctx.db.session();
+  try {
+    // 引き継ぎ・注文の作成と同じ順：記録のロック → 注文の行
+    await s1.query('begin');
+    await s1.query("set local lock_timeout = '5s'");
+    await s1.query("select pg_advisory_xact_lock(hashtextextended('complete_order:' || $1::text, 0))", [p.sessionId]);
+    const applying = ctx.webhook({ type: 'checkout.session.completed', objectId: cs });
+    await new Promise((res) => setTimeout(res, 500)); // 支払いの確定がロックを待つところまで進める
+    const t0 = Date.now();
+    await s1.query('select id from public.complete_orders where id = $1 for update', [order.id]);
+    assert.ok(Date.now() - t0 < 900, '注文の行はすぐ取れる（支払いの確定は記録のロックを待っていて、行を持っていない）');
+    await s1.query('commit');
+    const w = await applying;
+    assert.equal(w.code, 200, JSON.stringify(w.body));
+  } finally {
+    await s1.end().catch(() => {});
+  }
+  assert.equal((await ctx.rows('complete_orders'))[0].status, 'paid');
+  await ctx.db.close();
+});

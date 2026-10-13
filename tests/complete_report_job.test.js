@@ -745,3 +745,21 @@ test('C6：作り直しは本人だけ・権利がある間だけ。他人の記
   assert.equal((await reportOf(ctx, p)).status, 'revoked');
   await ctx.db.close();
 });
+
+test('C9：生成と引き継ぎが重なり、記録と生成物の本人が一時的に食い違っても、止めずに再試行して ready になる', async () => {
+  const ctx = await setup();
+  const p = await ctx.person();
+  const other = await ctx.person({ email: 'other@example.test', answers: variantAnswers(3) });
+  await paid(ctx, p, { background: false });
+  const id = (await reportOf(ctx, p)).id;
+  // 引き継ぎの途中を読んだ状態（生成物の本人だけが先に変わった）
+  await ctx.db.patch('complete_reports', id, { user_id: other.userId });
+  assert.equal(await ctx.process({ reportId: id }), 'failed');
+  let rep = await reportOf(ctx, p);
+  assert.deepEqual([rep.status, rep.last_error_code, !!rep.next_retry_at], ['failed', 'record_owner_changed', true], '再試行の予定あり（最終の失敗ではない）');
+  assert.equal(RJ.regenerateState(rep), null);
+  // 引き継ぎが終わった（本人が揃った）後の再試行で ready
+  await ctx.db.patch('complete_reports', id, { user_id: p.userId, next_retry_at: new Date(Date.now() - 1000).toISOString() });
+  assert.equal(await ctx.process({ reportId: id }), 'ready');
+  await ctx.db.close();
+});

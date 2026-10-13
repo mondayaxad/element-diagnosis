@@ -103,6 +103,7 @@
     margin-bottom: 24px;
   }
   .mp-checkout-msg { font-size: 11.5px; color: #d6a8b8; line-height: 1.7; margin: 6px 0 0; }
+  .mp-legacy-retired { font-size: 12px; color: var(--fg-dim); line-height: 1.7; margin: 6px 0 0; }
   .mp-claim { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 4px; padding: 14px 16px; margin: 0 0 16px; font-size: 12.5px; line-height: 1.8; color: var(--fg); }
   .mp-claim p { margin: 0 0 8px; }
   .mp-claim .mp-claim-note { font-size: 11px; color: var(--fg-dim); }
@@ -1065,10 +1066,9 @@ const NATION_MEANING = {
   "モンド":"自由", "璃月":"契約", "稲妻":"永遠", "スメール":"知恵",
   "フォンテーヌ":"正義", "ナタ":"戦争", "スネージナヤ":"慈愛", "ナドクライ":"月光",
 };
-// v1（旧版）の記録だけが使う Payment Link。本番ドメインでは本番のリンク、それ以外（Preview）はテスト用。
-const STRIPE_URL_AUTO = location.hostname === 'element-diagnosis-five.vercel.app' ? 'https://buy.stripe.com/3cIcMXdCy5VbavmgsK3Nm08' : 'https://buy.stripe.com/test_9B64gr9micjz9riccu3Nm00';
-// PreviewのStripeテスト決済→権利発行→v2レポート表示を実地確認するため有効化。
-// STRIPE_URL_AUTOはPreview専用テストPayment Linkであり、本番決済には接続しない。
+// 旧版（legacy-v1）の結果の新規販売は終了（D4）。旧 Payment Link は使わない。購入済みの方の閲覧は従来どおり。
+const MP_LEGACY_RETIRED_TEXT = 'この結果は現在の解析商品の対象外です。最新の元素診断を受けてください。';
+// ETI v2 の解析レポート ¥1,000 はサーバーが作る Checkout（販売の開閉は公開設定の completeSalesOpen）
 const V2_REPORT_SALES_ENABLED = true;
 
 // 【重要な修正】trackEvent()・savedCountBucket()は、mypage.html内で11箇所・1箇所
@@ -1177,30 +1177,20 @@ function v2TopName(ranking) {
   if (!ranking || !ranking.length) return null;
   return ranking[0];
 }
-function purchaseReference(session) {
-  if (!session || !session.encodedAnswers) return null;
-  return session.isV2 ? `v2_${session.encodedAnswers}` : session.encodedAnswers;
-}
-function purchaseUrlFor(session) {
-  const reference = purchaseReference(session);
-  return reference
-    ? STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(reference)
-    : STRIPE_URL_AUTO;
-}
+
 // 販売の開閉はサーバーの COMPLETE_SALES_OPEN（公開設定の completeSalesOpen）だけで決める
 function mpSalesOpen() {
   const c = window.__ED_PUBLIC_CONFIG__;
   return !!(c && c.completeSalesOpen === true);
 }
-// 解析レポート ¥1,000：記録 ID があればサーバーが作る Checkout（POST /api/complete-checkout）。販売停止中は「準備中」
-function v2ReportCta(stripeUrl, className, source, label, sessionId) {
-  if (!V2_REPORT_SALES_ENABLED || !mpSalesOpen()) {
+// 解析レポート ¥1,000：ETI v2 の記録だけ、サーバーが作る Checkout（POST /api/complete-checkout）。販売停止中は「準備中」。
+// 旧版（legacy-v1）の記録は販売の対象外（Payment Link・新しい Checkout のどちらにも進めない）
+function v2ReportCta(session, className, source, label) {
+  if (!session || !session.isV2) return `<p class="mp-legacy-retired" role="note">${MP_LEGACY_RETIRED_TEXT}</p>`;
+  if (!V2_REPORT_SALES_ENABLED || !mpSalesOpen() || !session.id) {
     return `<button type="button" class="${className} mp-pending-analysis" disabled aria-disabled="true" style="opacity:0.6;cursor:not-allowed">解析レポート（準備中）</button>`;
   }
-  if (sessionId) {
-    return `<button type="button" class="${className}" data-analysis-checkout="${mpEsc(sessionId)}" data-source="${mpEsc(source)}">${label}</button>`;
-  }
-  return `<a href="${stripeUrl}" target="_blank" rel="noopener" class="${className}" onclick="trackEvent('mypage_unlock_click',{source:'${source}'})">${label}</a>`;
+  return `<button type="button" class="${className}" data-analysis-checkout="${mpEsc(session.id)}" data-source="${mpEsc(source)}">${label}</button>`;
 }
 // サーバーの Checkout を作り、同じタブで Stripe の決済画面へ移動する（金額・offer はサーバーが決める）
 async function mpStartCheckout(body, source, offerLabel) {
@@ -1407,7 +1397,7 @@ async function handleLogoutClick() {
    MY ARCHIVE — マイページ最終仕様の表示層
    データ取得（loadDiagnosisHistory）・購入判定（session.purchased）・
    購入済みレポートの再発行（openPurchasedReport → /api/my-report-link）・
-   決済導線（purchaseUrlFor）・ログアウト（handleLogoutClick）は既存のものを
+   決済導線（v2ReportCta：サーバーの Checkout）・ログアウト（handleLogoutClick）は既存のものを
    そのまま使い、ここでは「何をどう見せるか」だけを組み立てる。
    外部スクリプトとの名前衝突を避けるため、新規の定数・関数は MP_ / mp 接頭辞。
    ============================================================ */
@@ -1975,7 +1965,7 @@ function mpRecordActionsHtml(r, source) {
     const svc = caServerOf(r).complete;
     const hasComplete = !!(view && ((svc && svc.completeEntitlement) || view.kind !== 'retry'));
     if (!hasComplete) {
-      items.push(v2ReportCta(purchaseUrlFor(r.session), 'mp-btn primary', source === 'latest' ? 'latest' : 'records', `解析レポート　${MP_REPORT_PRICE}`, r.session && r.session.id));
+      items.push(v2ReportCta(r.session, 'mp-btn primary', source === 'latest' ? 'latest' : 'records', `解析レポート　${MP_REPORT_PRICE}`));
     }
     if (pending) items.push(pending);
   }
@@ -2528,7 +2518,7 @@ function caAnalysisCardHtml(r) {
         <p class="ca-body">この結果の内側にある、考え方・動き方・選び方を観測します。</p>
         ${caObservationGridHtml(r)}
         <div class="ca-price-row"><span class="ca-meta">この記録の解析レポート</span><span class="ca-price">${MP_REPORT_PRICE}</span></div>
-        <div data-ca-cta="analysis_checkout_click">${v2ReportCta(purchaseUrlFor(r.session), 'ca-btn ca-primary-action', 'mypage_header', 'この記録の分析を見る', r.session && r.session.id)}</div>
+        <div data-ca-cta="analysis_checkout_click">${v2ReportCta(r.session, 'ca-btn ca-primary-action', 'mypage_header', 'この記録の分析を見る')}</div>
       </section>`;
 }
 // 既存の RE-DIAGNOSIS へ案内する（新しい導線は作らない）
@@ -3031,7 +3021,7 @@ function caMentorOverviewHtml(r) {
       <div class="ca-price-row"><span class="ca-meta">${up ? `対象：${mpComboText(r)}／この診断記録` : '解析レポートの内容もすべて含まれます'}</span><span class="ca-price">${caOfferLabel(o.offer)}</span></div>
       ${caSalesOpen()
         ? `<button type="button" class="ca-btn ca-secondary-action" data-mentor-start="1">目標を選んで進む</button>
-      <p class="ca-pending-note">お支払いは準備中です。目標の選択と内容の確認まで進めます。</p>`
+      <p class="ca-pending-note">目標を選ぶと、内容と金額を確認してから決済へ進めます。</p>`
         : `${CompleteAnalysis.pendingButtonHtml(o.offer, 'ca-btn ca-secondary-action')}${CA_PENDING_NOTE}`}
     </section>`;
 }
@@ -3350,10 +3340,10 @@ function caWireSheet(records) {
     const next = body && caFocusables(body)[0];
     if (next) next.focus(); else { const c = document.getElementById('mpUpgradeClose'); if (c) c.focus(); }
   });
-  // CTA の計測（既存の解析レポート導線だけ。完全解析は準備中のため押せない）
+  // CTA の計測（解析レポートの導線。導線はリンクではなくボタン（サーバーの Checkout）なので、ボタンも対象にする）
   overlay.addEventListener('click', (e) => {
-    const a = e.target.closest && e.target.closest('a');
-    if (!a) return;
+    const a = e.target.closest && e.target.closest('a, button');
+    if (!a || a.disabled) return;
     const wrap = a.closest('[data-ca-cta]');
     const name = a.dataset.caCta || (wrap && wrap.dataset.caCta);
     if (!name) return;

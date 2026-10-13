@@ -75,3 +75,28 @@ test('ページの計測呼び出しに記録 ID・user ID・メール・トー�
     assert.doesNotMatch(s, /googletagmanager\.com\/gtag\/js/, f);
   }
 });
+
+// C9：計測の不足（2件）
+test('ゲストの完全解析の閲覧は、マイページと同じ complete_report_open（入口は source）。閲覧 URL・ref は送らない', async () => {
+  const sent = [];
+  const win = {
+    gtag: (...a) => sent.push(a),
+    location: { assign: () => {} },
+    fetch: async () => ({ ok: true, status: 200, json: async () => ({ viewUrl: '/api/complete-status?view=TOKENVALUE', expiresIn: 300 }) }),
+  };
+  const ctx = { window: win, fetch: win.fetch, JSON, Date, String, Object, Math, setTimeout };
+  vm.createContext(ctx);
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'js/guest-purchase.js'), 'utf8').replace(/\(typeof window !== 'undefined' \? window : this\)\s*;?\s*$/, '(window);'), ctx);
+  const r = await win.EdGuestPurchase.openComplete('0123456789abcdef0123', 'purchase_complete');
+  assert.equal(r.ok, true);
+  assert.deepEqual(sent.map((a) => [a[0], a[1], JSON.parse(JSON.stringify(a[2]))]), [['event', 'complete_report_open', { source: 'purchase_complete' }]]);
+  assert.doesNotMatch(JSON.stringify(sent), /TOKENVALUE|0123456789abcdef0123|view=/);
+});
+
+test('マイページの解析レポートの案内（シート）：導線はボタン（サーバーの Checkout）でも analysis_checkout_click を数える', () => {
+  const html = fs.readFileSync(path.join(ROOT, 'mypage.html'), 'utf8');
+  const m = html.match(/CTA の計測[\s\S]{0,200}?closest\('([^']+)'\)/);
+  assert.ok(m, 'CTA の計測の処理');
+  assert.ok(m[1].split(',').map((x) => x.trim()).includes('button'), `ボタンも対象：${m[1]}`);
+  assert.match(html, /data-ca-cta="analysis_checkout_click">\$\{v2ReportCta\(/);
+});

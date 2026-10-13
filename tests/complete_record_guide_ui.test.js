@@ -703,3 +703,54 @@ test('C7（iOS Safari 相当）：「決済画面へ移動しています…」�
     await p.__ctx.close();
   }
 });
+
+// ================= G7：旧版の販売終了・販売中の文言・計測（D4・C9）
+test('D4：旧版（legacy-v1）の未購入の記録には購入導線を出さず「対象外・最新の診断へ」の案内。ETI v2 の記録はサーバーの Checkout・320／1280px', { skip: skip() }, async () => {
+  for (const width of [320, 1280]) {
+    const legacy = JSON.parse(JSON.stringify(ROWS[2].row));
+    legacy.diagnosis_version = 'element-v1'; legacy.item_set_version = null; legacy.diagnosis_results[0].item_set_version = null;
+    const rowsL = ROWS.map((r) => (r.row.id === ID(3) ? legacy : r.row));
+    const w = many({ rows: rowsL, records: Object.fromEntries(ROWS.map((r) => [r.row.id, rec(r.row.id === ID(3) ? { completeEligible: false, ineligibleReason: 'legacy_version' } : {})])) });
+    const p = await open(w, { width, publicSales: true });
+    const a3 = actions(p, ID(3), 'records');
+    assert.equal(await a3.locator('[data-analysis-checkout]').count(), 0);
+    assert.equal((await a3.locator('.mp-legacy-retired').innerText()).trim(), 'この結果は現在の解析商品の対象外です。最新の元素診断を受けてください。');
+    assert.equal(await actions(p, ID(2), 'records').locator('[data-analysis-checkout]').count(), 1, 'ETI v2 は販売中');
+    assert.equal(await p.locator('a[href*="stripe.com"]').count(), 0);
+    assert.doesNotMatch(await p.content(), /buy\.stripe\.com/);
+    assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), String(width));
+    await p.__ctx.close();
+  }
+});
+
+test('C9：販売中の完全解析の案内に「お支払いは準備中です」を出さない。解析レポートの案内のボタンで analysis_checkout_click を数える', { skip: skip() }, async () => {
+  const w = many({}, { [ID(1)]: analysisOnly() }, [1]);
+  const p = await open(w, { salesOpen: true, publicSales: true, routes: MENTOR_ROUTE });
+  await p.locator('#mpUpgradeTrigger').click();
+  // 記録が複数ある時は、まず対象の記録を選ぶ
+  await p.waitForSelector('#mpUpgradeBody [data-pick-index], #mpUpgradeBody .ca-card');
+  if (await p.locator('#mpUpgradeBody [data-pick-index="0"]').count()) await p.locator('#mpUpgradeBody [data-pick-index="0"]').click();
+  await p.waitForSelector('#mpUpgradeBody .ca-card');
+  const body = await p.locator('#mpUpgradeBody').innerText();
+  assert.doesNotMatch(body, /お支払いは準備中です/);
+  assert.match(body, /目標を選ぶと、内容と金額を確認してから決済へ進めます。/);
+  await p.locator('#mpUpgradeClose').click();
+  await p.__ctx.close();
+  // 未購入の記録：シートの解析レポートのボタン（サーバーの Checkout）を押すと計測する（記録 ID・URL は送らない）
+  const w2 = many({}, {}, []);
+  const q = await open(w2, { publicSales: true, routes: async (pg) => {
+    // 計測の呼び出しを記録する（Preview では GA4 を読み込まないため、gtag を先に置く）
+    await pg.addInitScript(() => { window.__ev = []; window.gtag = function () { window.__ev.push(Array.from(arguments)); }; });
+    await pg.route('**/api/complete-checkout', (r) => r.fulfill({ status: 503, contentType: 'application/json', body: '{"error":"service_unavailable"}' }));
+  } });
+  await q.locator('#mpUpgradeTrigger').click();
+  await q.waitForSelector('#mpUpgradeBody [data-pick-index], #mpUpgradeBody .ca-card');
+  if (await q.locator('#mpUpgradeBody [data-pick-index="0"]').count()) await q.locator('#mpUpgradeBody [data-pick-index="0"]').click();
+  const btn = q.locator('#mpUpgradeBody [data-ca-cta="analysis_checkout_click"] [data-analysis-checkout]');
+  await btn.click();
+  await q.waitForFunction(() => window.__ev.some((a) => a[0] === 'event' && a[1] === 'analysis_checkout_click'));
+  const ev = await q.evaluate(() => JSON.stringify(window.__ev.filter((a) => a[0] === 'event' && a[1] === 'analysis_checkout_click').map((a) => a[2])));
+  assert.equal(JSON.parse(ev).length, 1, '1回だけ');
+  assert.doesNotMatch(ev, /sess-|http|view=/);
+  await q.__ctx.close();
+});

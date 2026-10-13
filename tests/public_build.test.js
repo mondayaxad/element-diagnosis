@@ -141,3 +141,19 @@ test('検出：許可リストのファイルが無い', () => {
   const r = buildTo({ files: [...B.PUBLIC_FILES, 'js/does-not-exist.js'] });
   assert.ok(hasProblem(r, /許可リストのファイルがありません: js\/does-not-exist\.js/), r.problems.join('\n'));
 });
+
+// D4：旧 Payment Link（buy.stripe.com）は公開物のどこにも無い。テスト・SQL・手順書も公開しない
+test('公開物に旧 Payment Link（buy.stripe.com）が0件。テスト・SQL・手順書・資料を含まない', () => {
+  const r = buildTo();
+  const files = B.walk(r.outDir); // dist からの相対パス
+  assert.ok(files.includes('report_sample.html') && files.includes('index.html') && files.includes('mypage.html'));
+  const hits = [];
+  for (const f of files) {
+    if (!/\.(html|js|json|txt|xml|css|md)$/.test(f)) continue;
+    const text = fs.readFileSync(path.join(r.outDir, f), 'utf8');
+    if (/buy\.stripe\.com|plink_[A-Za-z0-9]|payment_link/i.test(text)) hits.push(f);
+  }
+  assert.deepEqual(hits, []);
+  const rel = files;
+  assert.deepEqual(rel.filter((f) => /(^|\/)(tests?|docs|scripts|prototypes)\//.test(f) || /\.(sql|md)$/.test(f) || /RUNBOOK/i.test(f)), []);
+});

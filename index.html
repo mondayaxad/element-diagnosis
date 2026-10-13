@@ -2646,27 +2646,15 @@ function renderResult(root) {
         </button>
       </div>
     </section>`;
-  // ロックパターンのCTA配線（自動化版 ¥1,000・診断コードをclient_reference_idとして付与）
-  // 【本番/Preview切り替え】IS_PREVIEW_BUILD（<head>で定義）がtrueの間は、v1のCORE1購入も
-  // 必ずStripeテストリンクを使う。本番デプロイ時のCORE1リンク切替はIS_PREVIEW_BUILDの変更で
-  // 反映されるが、それだけで本番切替が完了するわけではない（他の設定はPREVIEW_TO_PRODUCTION.md参照）。
-  // v2はV2_REPORT_SALES_ENABLED=falseの間、Stripeへ一切遷移させず「準備中」表示にする
-  // （mypage.htmlのv2ReportCtaと同じ制御をここでも行う）。有効化後はv2_<code>を送る。
-  var STRIPE_URL_AUTO_PROD = 'https://buy.stripe.com/3cIcMXdCy5VbavmgsK3Nm08';
-  var STRIPE_URL_AUTO_TEST = 'https://buy.stripe.com/test_9B64gr9micjz9riccu3Nm00'; // release-c-preview専用：Stripeテスト用Payment Link（mypage.htmlと同一）
-  var STRIPE_URL_AUTO = IS_PREVIEW_BUILD ? STRIPE_URL_AUTO_TEST : STRIPE_URL_AUTO_PROD;
-  // PreviewのStripeテスト決済→権利発行→v2レポート表示を実地確認するため有効化。
-  // IS_PREVIEW_BUILD=trueのため、遷移先はテストPayment Linkだけになる。
+  // ロックパターンの CTA 配線。ETI v2：サーバーが作る Checkout（ゲスト購入・登録不要）。販売停止中（COMPLETE_SALES_OPEN）は「準備中」。
+  // 旧版（legacy-v1）の結果：新規販売は終了（D4）。旧 Payment Link にも新しい Checkout にも進めず、対象外の案内だけを出す
+  // （購入済みの方の閲覧は、購入時のリンク・マイページから従来どおり）。
   var V2_REPORT_SALES_ENABLED = true; // mypage.htmlと必ず同一値を維持すること。
-  function stripeUrlWithCode() {
-    var ref = diagnosisVersion === 'ETI-2.0' ? ('v2_' + shortCode) : shortCode;
-    return STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(ref);
-  }
-  // ETI v2：サーバーが作る Checkout（ゲスト購入・登録不要）。販売停止中（COMPLETE_SALES_OPEN）は「準備中」。
-  // v1：従来の Payment Link（販売停止中は同じく「準備中」）。
-  var guestFlow = diagnosisVersion === 'ETI-2.0' && typeof EdGuestPurchase !== 'undefined';
+  var LEGACY_RETIRED_TEXT = 'この結果は現在の解析商品の対象外です。最新の元素診断を受けてください。';
+  var legacyResult = diagnosisVersion !== 'ETI-2.0';
+  var guestFlow = !legacyResult && typeof EdGuestPurchase !== 'undefined';
   var salesOpenNow = typeof EdGuestPurchase !== 'undefined' && EdGuestPurchase.salesOpen();
-  var v2SalesLocked = !salesOpenNow || (diagnosisVersion === 'ETI-2.0' && !guestFlow);
+  var v2SalesLocked = !salesOpenNow || !guestFlow;
   var lockCtaBtns = root.querySelectorAll('.lock-cta');
   var lockUnlockAllBtn = root.querySelector('#lockUnlockAllBtn');
   function lockPending(btn) {
@@ -2678,7 +2666,7 @@ function renderResult(root) {
   }
   function startAnalysis(btn, label) {
     if (typeof gtag === 'function') gtag('event', label ? 'lock_cta_click' : 'unlock_all_click', label ? { event_category: 'conversion', label: label } : { event_category: 'conversion' });
-    if (!guestFlow) { autoCopyAndProceed(applyData, stripeUrlWithCode()); return; }
+    if (!guestFlow) return;
     EdNavBusy.hold(btn, '決済画面へ移動しています…');
     EdGuestPurchase.checkout('analysis', shortCode, null, 'result_lock').then(function (r) {
       if (r.ok) { EdNavBusy.handoff(btn); return; }
@@ -2687,12 +2675,30 @@ function renderResult(root) {
       if (m) m.textContent = EdGuestPurchase.errorText(r.error);
     });
   }
+  function lockRetired(btn) {
+    btn.textContent = '解析レポートの対象外です';
+    btn.style.opacity = '0.6';
+    btn.style.cursor = 'not-allowed';
+    btn.disabled = true;
+    btn.onclick = function(e) { e.preventDefault(); };
+  }
+  if (legacyResult && lockUnlockAllBtn) {
+    var lr = document.createElement('p');
+    lr.className = 'ca-guest-msg';
+    lr.id = 'legacyRetiredNote';
+    lr.setAttribute('role', 'note');
+    lr.textContent = LEGACY_RETIRED_TEXT;
+    lockUnlockAllBtn.insertAdjacentElement('afterend', lr);
+  }
   lockCtaBtns.forEach(function(btn) {
+    if (legacyResult) { lockRetired(btn); return; }
     if (v2SalesLocked) { lockPending(btn); return; }
     btn.onclick = function() { startAnalysis(btn, btn.getAttribute('data-label')); };
   });
   if (lockUnlockAllBtn) {
-    if (v2SalesLocked) {
+    if (legacyResult) {
+      lockRetired(lockUnlockAllBtn);
+    } else if (v2SalesLocked) {
       lockPending(lockUnlockAllBtn);
     } else {
       lockUnlockAllBtn.onclick = function() { startAnalysis(lockUnlockAllBtn, null); };
@@ -3090,12 +3096,6 @@ function initGuestPurchase(root, code, refs) {
   });
 }
 
-function autoCopyAndProceed(data, url) {
-  // 計測を送信してからStripeへ遷移（自動連携のため、コピー操作は不要）
-  if (typeof gtag === 'function') gtag('event', 'auto_copy_success', { event_category: 'conversion' });
-  window.open(url, '_blank');
-}
-
 /* ===== BASIS ===== */
 function renderBasis(root) {
   const ACCENT = '#7ab8e8';
@@ -3438,7 +3438,6 @@ document.addEventListener('DOMContentLoaded', function() {
   window.prevQ = prevQ;
   window.showResult = showResult;
   window.setPhase = setPhase;
-  window.autoCopyAndProceed = autoCopyAndProceed;
   window.render = render;
   window.saveShareImage = saveShareImage;
   window.tweetShareResult = tweetShareResult;

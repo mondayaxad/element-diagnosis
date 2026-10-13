@@ -415,7 +415,8 @@ begin
 end;
 $$;
 
--- 支払い確定（complete_07 の本文に、期限切れ後の支払いの確認を結果グループへ広げたもの）
+-- 支払い確定（complete_07 の本文に、期限切れ後の支払いの確認を結果グループへ広げ、ロックの順を
+--   結果グループ → 記録 → 注文の行 に揃えたもの。complete_create_order_internal・complete_transfer_guest_record と同じ順）
 create or replace function public.complete_apply_payment(
     p_event_id text, p_event_created timestamptz, p_livemode boolean,
     p_order_id uuid, p_checkout_session_id text, p_payment_intent_id text,
@@ -432,16 +433,26 @@ declare
   v_res public.diagnosis_results%rowtype;
   v_code text;
   v_kinds text[];
+  v_sid uuid;
+  v_uid uuid;
 begin
   if not public.complete_webhook_gate(p_event_id, v_type, p_livemode, p_event_created) then
     return 'duplicate';
   end if;
-  select * into v_order from public.complete_orders o where o.id = p_order_id for update;
+  -- ロックの順（全関数で共通）：結果グループ → 記録（complete_order:<記録>）→ 行（注文 → 記録 → 権利・生成物）。
+  -- 注文の行を先に取ると、記録のロックを持って注文の行を待つ引き継ぎ・注文の作成と循環する（デッドロック）
+  select o.diagnosis_session_id, o.user_id into v_sid, v_uid from public.complete_orders o where o.id = p_order_id;
   if not found then
     perform public.complete_webhook_finish(p_event_id, v_type, p_livemode, p_event_created, 'ignored', 'order_not_found');
     return 'ignored:order_not_found';
   end if;
-  perform pg_advisory_xact_lock(hashtextextended('complete_order:' || v_order.diagnosis_session_id::text, 0));
+  perform public.complete_lock_result_group(v_uid, v_sid);
+  perform pg_advisory_xact_lock(hashtextextended('complete_order:' || v_sid::text, 0));
+  select * into v_order from public.complete_orders o where o.id = p_order_id for update;
+  -- ロックを待つ間に引き継がれた（注文の本人が変わった）：取り直しのため一時的な失敗にする（Webhook の再送・次の確認で反映）
+  if v_order.user_id is distinct from v_uid then
+    raise exception 'complete_retry_later' using errcode = '40001';
+  end if;
 
   v_code := case
     when p_payment_status is distinct from 'paid' then 'payment_not_paid'

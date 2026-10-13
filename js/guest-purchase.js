@@ -137,7 +137,8 @@
   async function openComplete(ref, source) {
     var r = await call('guest-view', { ref: ref });
     if (r.ok && r.body && typeof r.body.viewUrl === 'string' && r.body.viewUrl.indexOf('/api/complete-status?view=') === 0) {
-      track('complete_view', { source: source });
+      // マイページの閲覧と同じイベント名（complete_report_open）で数える（入口は source で分ける）
+      track('complete_report_open', { source: source });
       global.location.assign(r.body.viewUrl);
       return { ok: true };
     }
