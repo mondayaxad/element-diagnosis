@@ -78,7 +78,7 @@
     checkout_in_progress: '決済の手続き中です。しばらくしてから、もう一度お試しください。',
     purchase_completed: 'お支払いは完了しています。購入した内容をご確認ください。',
     rights_suspended: 'この結果の購入は、現在確認中のためお申し込みいただけません。',
-    legacy_purchase_verification_required: '以前のご購入を確認しています。マイページからお試しください。',
+    legacy_purchase_not_eligible: 'この結果の解析レポートは以前の決済リンクでのご購入のため、完全解析はお申し込みいただけません。お問い合わせください。',
     not_eligible: 'この結果は対象外です。',
     network: '通信できませんでした。電波の良い場所で、もう一度お試しください。',
   };

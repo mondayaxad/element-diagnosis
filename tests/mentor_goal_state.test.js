@@ -41,14 +41,17 @@ test('完全解析の導線：サーバーの状態から決める（診断コ�
   assert.deepEqual(kind(null), { kind: 'unknown' });
   assert.equal(kind(rec()).kind, 'offer');
   assert.equal(kind(rec()).offer.offer, 'direct_3000');
-  assert.equal(kind(rec({ analysisSource: 'legacy_purchase_entitlement' })).offer.offer, 'upgrade_2000');
+  // 旧 Payment Link の購入は根拠にしない（古い応答の値が来ても ¥2,000 にしない）
+  assert.equal(kind(rec({ analysisSource: 'legacy_purchase_entitlement' })).offer.offer, 'direct_3000');
   assert.equal(kind(rec({ analysisSource: 'record_entitlement' })).offer.offer, 'upgrade_2000');
-  assert.deepEqual(kind(rec({ legacyPurchasePending: true })), { kind: 'legacy_pending' });
+  assert.equal(kind(rec({ legacyPurchasePending: true })).kind, 'offer', '確認中の表示は廃止');
+  assert.deepEqual(kind(rec({ completeBlocked: 'legacy_purchase_not_eligible' })), { kind: 'closed', reason: 'legacy' });
   assert.deepEqual(kind(rec({ checkoutInProgress: true })), { kind: 'checkout_in_progress' });
   assert.deepEqual(kind(rec({ completeEligible: false, ineligibleReason: 'version_mismatch' })), { kind: 'ineligible', reason: 'version_mismatch' });
   assert.deepEqual(kind(rec({ repurchaseBlocked: true })), { kind: 'closed' });
   assert.deepEqual(kind(rec({ completeEntitlement: 'active' })), { kind: 'purchased' });
-  assert.equal(CA.LEGACY_PENDING_TEXT, '既存の解析レポート購入を確認しています');
+  assert.equal(CA.LEGACY_PENDING_TEXT, undefined);
+  assert.match(CA.LEGACY_CLOSED_TEXT, /以前の決済リンクでのご購入のため、完全解析はお申し込みいただけません/);
 });
 
 test('mypage：MENTOR の段階の計測は目標選択の1件だけ（目標・記録 ID を送らない）・history を使わない・停止中の決済ボタンは押せない', () => {

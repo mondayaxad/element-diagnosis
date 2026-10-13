@@ -31,6 +31,8 @@
 //   9. 発行するトークンに環境名（env）を入れる。REPORT_TOKEN_SECRET は環境ごとに別の値にする前提で、
 //      万一同じ値でも、別環境のトークンを report-data.js が受け付けない。
 //  10. ログに Session ID 全文・Supabase の応答本文を出さない（末尾だけ）。
+//  11. 旧 Payment Link の販売は終了。purchase_entitlements へ新しい行は作らず、記録済みの購入（返金・停止されていないもの）
+//      にだけ閲覧リンクを出し直す。記録の無い支払いは 410 でお問い合わせへ案内する。上の 3・4 は置き換え。
 //
 // 署名生成・TTL・リダイレクトの中核ロジックは本番版から変更していない。
 
@@ -154,7 +156,7 @@ function createHandler({ env, fetchImpl, stripeFactory }) {
     return stripeClients.get(key);
   }
 
-  // service roleキーでpurchase_entitlementsを検索する（既存行の再利用のため）。
+  // service roleキーでpurchase_entitlementsを検索する（記録済みの旧購入だけを閲覧に使う。新しい行は作らない）。
   async function findExistingEntitlement(conn, sessionId) {
     const url =
       `${conn.supabaseUrl}/rest/v1/purchase_entitlements` +
@@ -166,64 +168,6 @@ function createHandler({ env, fetchImpl, stripeFactory }) {
     }
     const rows = await res.json();
     return rows[0] || null;
-  }
-
-  // service roleキーでpurchase_entitlementsへ新規INSERTする（upsertではない）。
-  // 既存行がある場合は絶対に上書きしない設計にするため、通常のINSERTのみを行い、
-  // 一意制約違反（同時アクセスによる競合）はconflict:trueとして呼び出し元へ伝える。
-  async function insertEntitlement(conn, row) {
-    const url = `${conn.supabaseUrl}/rest/v1/purchase_entitlements`;
-    const res = await fetchImpl(url, {
-      method: 'POST',
-      headers: {
-        ...conn.adminHeaders(),
-        'Content-Type': 'application/json',
-        Prefer: 'return=representation',
-      },
-      body: JSON.stringify([row]),
-    });
-
-    if (res.status === 409) {
-      // stripe_checkout_session_id のUNIQUE制約違反。
-      // ほぼ同時に2回リクエストが来た場合など。呼び出し元が既存行を再取得する。
-      return { conflict: true };
-    }
-    if (!res.ok) {
-      throw new Error(`purchase_entitlements insert failed: ${res.status}`);
-    }
-    const rows = await res.json();
-    return { conflict: false, row: rows[0] };
-  }
-
-  // 既存行があればそれをそのまま再利用し（statusを含めて一切変更しない）、
-  // 無ければ新規にINSERTする。将来status運用（返金・取消時の無効化等）が始まった際、
-  // 無効化済みの行を「決済URLへの再アクセス」だけで active に戻してしまわないための設計。
-  async function getOrCreateEntitlement(conn, { diagnosisCodeHash, sessionId, paymentIntentId, productType, amount, currency }) {
-    const existing = await findExistingEntitlement(conn, sessionId);
-    if (existing) {
-      return existing;
-    }
-
-    const insertResult = await insertEntitlement(conn, {
-      diagnosis_code_hash: diagnosisCodeHash,
-      stripe_checkout_session_id: sessionId,
-      stripe_payment_intent_id: paymentIntentId,
-      product_type: productType,
-      amount: amount,
-      currency: currency,
-      status: 'active',
-    });
-
-    if (!insertResult.conflict) {
-      return insertResult.row;
-    }
-
-    // 競合：ほぼ同時に別のリクエストが先にINSERTした。その行を再取得して使う。
-    const afterConflict = await findExistingEntitlement(conn, sessionId);
-    if (!afterConflict) {
-      throw new Error('entitlement insert conflicted but no existing row found on re-fetch');
-    }
-    return afterConflict;
   }
 
   return async function handler(req, res) {
@@ -325,20 +269,25 @@ function createHandler({ env, fetchImpl, stripeFactory }) {
           ? session.payment_intent
           : (session.payment_intent && session.payment_intent.id) || null;
 
+      // 旧 Payment Link の販売は終了（新しい購入権は作らない）。記録済みの購入だけ、閲覧リンクを出し直す。
+      // 記録の無い支払い（廃止後に旧リンクで支払われた等）は閲覧させず、お問い合わせへ案内する（運営者が返金する）。
       let entitlementRow;
       try {
-        entitlementRow = await getOrCreateEntitlement(guard, {
-          diagnosisCodeHash,
-          sessionId,
-          paymentIntentId,
-          productType,
-          amount: session.amount_total,
-          currency: actualCurrency,
-        });
+        entitlementRow = await findExistingEntitlement(guard, sessionId);
       } catch (err) {
-        // entitlementsの記録・取得に失敗した場合はトークンを発行しない
-        console.error('verify error: entitlement get-or-create failed', err && err.message, tail(sessionId));
-        res.status(500).send('購入情報の記録に失敗しました。お手数ですがサポートまでご連絡ください。');
+        console.error('verify error: entitlement lookup failed', err && err.message, tail(sessionId));
+        res.status(503).send('現在ご利用いただけません。時間をおいて再度お試しください。');
+        return;
+      }
+      if (!entitlementRow) {
+        console.error('verify error: payment link retired, no recorded purchase', tail(sessionId), paymentIntentId ? 'pi' : 'no_pi');
+        res.status(410).send('この決済リンクでの販売は終了しました。お支払いが完了している場合は、お手数ですが @mondayaxad までご連絡ください（返金いたします）。');
+        return;
+      }
+      // 記録済みの購入と、この決済の診断コード・商品が一致すること（別の診断結果のリンクへ流用させない）
+      if (entitlementRow.diagnosis_code_hash !== diagnosisCodeHash || entitlementRow.product_type !== productType) {
+        console.error('verify error: recorded purchase mismatch', tail(sessionId));
+        res.status(403).send('このご購入は確認できませんでした。お心当たりがない場合は @mondayaxad までご連絡ください。');
         return;
       }
 

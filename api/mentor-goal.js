@@ -93,7 +93,7 @@ function createHandler({ env, fetchImpl, logger = console }) {
       locked: !!(t.goal && t.goal.locked_at),
       frozen: t.mentorFrozen,
       checkoutInProgress: !!st.openOrder,
-      legacyPurchasePending: st.legacyPending,
+      legacyPurchasePending: false, // 旧購入の確認（結び付け）は廃止
     };
   }
 

@@ -102,7 +102,8 @@ function world(over) {
     rows: [B.row, A.row],
     purchased: { [`ETI-2.0:${A.code}`]: true },
     completeLookup: 'ok',
-    records: { 'sess-B': rec(), 'sess-A': rec({ legacyPurchasePending: true }) },
+    // sess-A：旧 Payment Link で解析レポートを購入した記録（完全解析は対象外）
+    records: { 'sess-B': rec(), 'sess-A': rec({ completeBlocked: 'legacy_purchase_not_eligible' }) },
     mentor: {}, // id → { goalId, locked, frozen }
     posts: [], gets: 0, postReply: null,
   }, over || {});
@@ -162,19 +163,17 @@ async function open(w, opts0 = {}) {
 const actions = (p, id, src) => p.locator(`[data-rec-actions="${id}"][data-rec-source="${src}"]`);
 const events = (p) => p.evaluate(() => (window.dataLayer || []).filter((a) => a && a[0] === 'event').map((a) => [a[1], a[2] || {}]));
 
-test('記録内の導線：direct ¥3,000 は「目標を選ぶ」、旧 ¥1,000 の確認中は ¥3,000・¥2,000 を出さない', { skip: skip() }, async () => {
+test('記録内の導線：direct ¥3,000 は「目標を選ぶ」、旧 Payment Link の購入の記録は ¥3,000・¥2,000 を出さず対象外の案内', { skip: skip() }, async () => {
   const w = world();
   const p = await open(w);
   const latestB = actions(p, 'sess-B', 'latest');
   assert.match(await latestB.innerText(), /完全解析 ¥3,000：目標を選ぶ/);
   assert.match(await actions(p, 'sess-B', 'records').innerText(), /完全解析 ¥3,000：目標を選ぶ/);
   const a = await actions(p, 'sess-A', 'records').innerText();
-  assert.match(a, /既存の解析レポート購入を確認しています/);
-  assert.doesNotMatch(a, /¥3,000|¥2,000/);
-  // 準備中ボタンは MENTOR 導線に置き換わる。例外は旧購入の確認中の記録 A の案内だけ（権利の確認が終わるまで決済は無効：2026-10-09）
-  assert.equal(await p.locator('.mp-btn-pending').count(), 1);
+  assert.match(a, /以前の決済リンクでのご購入のため、完全解析はお申し込みいただけません/);
+  assert.doesNotMatch(a, /¥3,000|¥2,000|確認しています/);
+  assert.equal(await p.locator('[data-rec-actions="sess-A"] [data-mentor-open], [data-rec-actions="sess-A"] [data-legacy-verify]').count(), 0);
   assert.equal(await p.locator('.mp-btn-pending:not([disabled])').count(), 0);
-  assert.equal(await p.locator('[data-rec-actions="sess-A"] .mp-btn-pending').count(), 1);
   assert.deepEqual(p.__errors, []);
   await p.__ctx.close();
 });
@@ -331,8 +330,8 @@ test('送信の失敗：409（決済手続き中）は読み取り表示へ、50
   await p.__ctx.close();
 });
 
-test('upgrade（固定済みの旧購入権）は 追加¥2,000、内容確認も 追加 ¥2,000', { skip: skip() }, async () => {
-  const w = world({ records: { 'sess-B': rec(), 'sess-A': rec({ analysisSource: 'legacy_purchase_entitlement' }) } });
+test('upgrade（新しい Checkout の ¥1,000 を購入済み）は 追加¥2,000、内容確認も 追加 ¥2,000', { skip: skip() }, async () => {
+  const w = world({ records: { 'sess-B': rec(), 'sess-A': rec({ analysisSource: 'record_entitlement', completeOffer: 'analysis_upgrade' }) } });
   const p = await open(w);
   const a = actions(p, 'sess-A', 'records');
   assert.match(await a.innerText(), /完全解析へ 追加¥2,000：目標を選ぶ/);

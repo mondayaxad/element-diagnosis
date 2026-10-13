@@ -76,8 +76,9 @@ select o.offer, o.amount, o.status, o.created_at, e.right_type, e.status as righ
 ## 3. 旧 ¥1,000（Payment Link の購入）の停止・取消・復帰（D5・D6）
 
 旧購入は Stripe の Webhook の対象外のため、返金・不正の時は運営者が止める。既存の購入者は、止めない限り今までどおり読める（一括では失効させない）。
+旧購入は解析レポートの閲覧だけに使う。完全解析（¥2,000）の根拠にはしない（新診断の記録に旧購入がある時も、完全解析は申し込めない）。
 
-- 停止（suspend）：閲覧・¥2,000 の根拠・マイページの権利から外す。復帰できる。
+- 停止（suspend）：閲覧・マイページの権利から外す。復帰できる。
 - 取消（revoke）：停止と同じ。最終（復帰できない）。
 - 復帰（restore）：停止を戻す。
 - 理由コード：`refund`・`chargeback`・`fraud`・`customer_request`・`operator_error`。
@@ -104,8 +105,17 @@ select public.complete_admin_legacy_access(null, '<旧購入の cs_...>', 'revok
 ```
 
 - 同じ診断結果の旧購入は、診断コードのハッシュ単位でまとめて止まる。
-- その旧購入を根拠にした ¥2,000 の完全解析は、停止中は閲覧できない（`basis_inactive`）。¥2,000 の扱いは §2 と同じ。
 - 記録：`select action, result_status, reason_code, incident_id, created_at from public.legacy_access_events order by created_at desc limit 20;`（追記だけ・書き換え不可）
+
+---
+
+### 旧 Payment Link の廃止
+
+- 販売は新しい Checkout だけ。`/api/verify`（旧 Payment Link の戻り先）は新しい購入権を作らない。記録済みの購入にだけ閲覧リンクを出し直し、記録の無い支払いは「販売終了・お問い合わせ」（410）を表示する。
+- Stripe の Payment Link（本番用・テスト用）を無効にする：Stripe Dashboard → Payment Links → 各リンク →「無効にする」。
+  - テスト用（Preview）：いつでもよい。
+  - 本番用：本番の main が結果ページで旧 Payment Link を使っている間は無効にしない（本番の購入ボタンが壊れる）。本番の販売を止める時、または release-c を本番に出す時に無効にする。
+- 無効にした後に旧リンクで支払われた場合（無効にする直前に開いていた画面など）：`/api/verify` は 410。Stripe で返金し、利用者に連絡する。
 
 ---
 

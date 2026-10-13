@@ -76,6 +76,8 @@ function paidSession({ price, livemode }) {
   });
 }
 
+// 記録済みの旧購入（旧 Payment Link の購入は記録済みの行だけを閲覧に使う。verify は新しい行を作らない）
+const RECORDED = { product_type: 'core1', status: 'active', diagnosis_code_hash: crypto.createHash('sha256').update('v2_ABCDEF').digest('hex') };
 function decodeToken(token) {
   return JSON.parse(Buffer.from(token.split('.')[0], 'base64url').toString());
 }
@@ -142,8 +144,8 @@ for (const [apiName, make, req] of HANDLERS) {
 }
 
 // ---- verify：Stripe のモード ----
-test('verify Preview：Test の Session で Preview の Supabase にだけ記録し、トークンに env=preview を入れる', silenced(async () => {
-  const sb = fakeSupabase();
+test('verify Preview：記録済みの購入だけ、Preview の Supabase を読んでトークン（env=preview）を出し直す。新しい行は作らない', silenced(async () => {
+  const sb = fakeSupabase({ rows: { entitlements: [RECORDED] } });
   const st = fakeStripe(paidSession({ price: TEST_CORE1_PRICE, livemode: false }));
   const res = makeRes();
   await verify.createHandler({ env: PREVIEW_ENV, fetchImpl: sb.fetchImpl, stripeFactory: st.stripeFactory })(
@@ -154,6 +156,25 @@ test('verify Preview：Test の Session で Preview の Supabase にだけ記録
   assert.ok(sb.calls.every((c) => c.url.startsWith(PREVIEW_ENV.SUPABASE_URL + '/')), 'Preview の Supabase だけ');
   const token = decodeURIComponent(res.headers.Location.split('token=')[1]);
   assert.equal(decodeToken(token).env, 'preview');
+  assert.ok(!sb.calls.some((c) => c.opts.method === 'POST'), '購入権を作らない');
+}));
+
+test('verify：記録の無い支払い（旧 Payment Link の販売終了後）は 410 でお問い合わせへ。購入権を作らず、閲覧リンクも出さない', silenced(async () => {
+  const sb = fakeSupabase();
+  const st = fakeStripe(paidSession({ price: TEST_CORE1_PRICE, livemode: false }));
+  const res = makeRes();
+  await verify.createHandler({ env: PREVIEW_ENV, fetchImpl: sb.fetchImpl, stripeFactory: st.stripeFactory })(
+    { method: 'GET', query: { session_id: 'cs_test_fakesession000001' }, headers: {} }, res);
+  assert.equal(res.code, 410);
+  assert.match(String(res.body), /販売は終了しました/);
+  assert.equal(res.headers.Location, undefined);
+  assert.ok(!sb.calls.some((c) => c.opts.method === 'POST'), '購入権を作らない');
+  // 記録はあるが別の診断結果・別の商品の行：閲覧させない
+  const other = fakeSupabase({ rows: { entitlements: [{ ...RECORDED, diagnosis_code_hash: 'f'.repeat(64) }] } });
+  const r2 = makeRes();
+  await verify.createHandler({ env: PREVIEW_ENV, fetchImpl: other.fetchImpl, stripeFactory: st.stripeFactory })(
+    { method: 'GET', query: { session_id: 'cs_test_fakesession000001' }, headers: {} }, r2);
+  assert.equal(r2.code, 403);
 }));
 
 test('verify Preview：Live の Session ID（cs_live_）は Stripe・Supabase へ問い合わせずに拒否', silenced(async () => {
@@ -197,7 +218,7 @@ for (const [name, env] of [
 }
 
 test('verify Production：制限付きキー rk_live_ を Live と判定し、Live の Price 表で処理する（以前は Test と誤判定）', silenced(async () => {
-  const sb = fakeSupabase();
+  const sb = fakeSupabase({ rows: { entitlements: [RECORDED] } });
   const st = fakeStripe(paidSession({ price: LIVE_CORE1_PRICE, livemode: true }));
   const res = makeRes();
   const env = { ...PROD_ENV, STRIPE_SECRET_KEY: 'rk_live_fake_restricted' };
@@ -229,7 +250,7 @@ async function callReportData(env, token, sb = fakeSupabase({ rows: { entitlemen
 }
 
 test('report-data：Preview で発行したトークンは Preview で開ける。Preview の Supabase だけを読む', silenced(async () => {
-  const sb = fakeSupabase();
+  const sb = fakeSupabase({ rows: { entitlements: [RECORDED] } });
   const st = fakeStripe(paidSession({ price: TEST_CORE1_PRICE, livemode: false }));
   const vres = makeRes();
   await verify.createHandler({ env: PREVIEW_ENV, fetchImpl: sb.fetchImpl, stripeFactory: st.stripeFactory })(

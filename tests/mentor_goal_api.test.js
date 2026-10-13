@@ -193,10 +193,8 @@ test('GET（保存済み・ロック・決済中・旧購入権）', async () =>
   f.db.record_mentor_goals[0].locked_at = '2026-10-07T01:00:00Z';
   r = (await get(f)).res.body;
   assert.equal(r.locked, true); assert.equal(r.changeAllowed, false);
-  // 旧 ¥1,000：ハッシュが一致するだけなら確認中、本人の記録へ固定済みなら確認中ではない
+  // 旧 Payment Link の購入（ハッシュ一致）：確認（結び付け）は廃止したため、確認中にはならない
   f.db.purchase_entitlements = [{ id: '9e000000-0000-4000-8000-000000000001', diagnosis_code_hash: sha('v2_CODE1'), status: 'active', product_type: 'core1' }];
-  assert.equal((await get(f)).res.body.legacyPurchasePending, true);
-  f.db.complete_legacy_bindings = [{ diagnosis_session_id: S1, user_id: U1, legacy_entitlement_id: '9e000000-0000-4000-8000-000000000001' }];
   assert.equal((await get(f)).res.body.legacyPurchasePending, false);
 });
 
@@ -339,10 +337,12 @@ test('my-entitlements v2（Preview）：記録ごとの完全解析の状態', a
   assert.deepEqual(Object.keys(r[S1]).sort(), ['analysisSource', 'checkoutInProgress', 'completeBlocked', 'completeEligible', 'completeEntitlement',
     'completeOffer', 'completeRegenerate', 'completeStatus', 'completeViewBlocked', 'duplicateOf', 'ineligibleReason', 'legacyPurchasePending', 'mentorGoal', 'mentorGoalLocked', 'repurchaseBlocked']);
   assert.equal(r[S1].completeEligible, true);
-  assert.equal(r[S1].legacyPurchasePending, true, 'ハッシュ一致だけ：確認中');
+  // 旧 Payment Link の購入は ¥2,000 の根拠にしない（確認中にもしない）。完全解析は出さない
+  assert.equal(r[S1].legacyPurchasePending, false);
   assert.equal(r[S1].analysisSource, null, 'ハッシュ一致だけでは ¥2,000 の根拠にしない');
+  assert.deepEqual([r[S1].completeOffer, r[S1].completeBlocked], [null, 'legacy_purchase_not_eligible']);
   assert.equal(r[S4].legacyPurchasePending, false);
-  assert.equal(r[S4].analysisSource, 'legacy_purchase_entitlement');
+  assert.equal(r[S4].analysisSource, null, '結び付け済みの旧購入も根拠にしない');
   assert.equal(r[S4].checkoutInProgress, true);
   assert.deepEqual(r[S4].mentorGoal, { goalId: 'GOAL_PACE_01', goalCatalogVersion: CE.MENTOR_CATALOG_VERSION, selectedAt: '2026-10-07T00:00:00Z' });
   assert.equal(r[S5].completeEligible, false);

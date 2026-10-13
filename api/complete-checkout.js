@@ -9,10 +9,9 @@
 //   - 本文は diagnosisSessionId だけを受け付ける（金額・Price・user ID・目標 ID などは受け取らない。他の項目があれば 400）。
 //   - offer（direct ¥3,000／upgrade ¥2,000）と Price はサーバーが決める。Price は Stripe から取得して
 //     有効・JPY・金額・Test・一回払いを照合する。
-//   - 旧 ¥1,000 の購入（診断コードのハッシュが一致）が未結び付けなら、購入時の Checkout Session を Stripe から取り直し、
-//     購入時メールと Auth の確認済みメールが一致した時だけ complete_04 の結び付けを行って upgrade にする。
-//     不一致・メールなし・取得できない場合は legacy_purchase_verification_required（¥3,000 へ誘導しない）。
-//     メールは DB・ログに保存しない。
+//   - upgrade（¥2,000）の根拠は、新しい Checkout で買った解析レポートの権利（記録単位）だけ。
+//     旧 Payment Link の購入（purchase_entitlements）は根拠にしない。新診断の記録に旧購入がある時は
+//     legacy_purchase_not_eligible（完全解析を出さない）。旧購入の確認（?op=legacy-verify）は廃止（410）。
 //   - 注文は complete_create_order（記録ごとに直列化・決済待ちの注文を返す）。Stripe の Idempotency-Key は注文 ID から固定し、
 //     Checkout 作成後に DB の checkout_open 記録が失敗しても、次の要求で同じ Session を回収する。
 //   - Checkout はカードだけ。customer_email は渡さない。metadata は order_id・app・env だけ。
@@ -24,7 +23,6 @@ const { resolveAppEnv, requireServerEnv, requestHost, logEnvDenied } = require('
 const CE = require('../lib/complete-eligibility');
 const CP = require('../lib/complete-payment');
 const GP = require('../lib/guest-purchase');
-const LB = require('../lib/legacy-binding');
 const PS = require('../lib/purchase-state');
 
 const MAX_BODY_BYTES = 512;
@@ -67,8 +65,8 @@ const ORDER_ERRORS = {
   complete_mentor_goal_required: [409, 'mentor_goal_required'],
   complete_mentor_goal_mismatch: [409, 'mentor_goal_required'],
   complete_repurchase_not_allowed: [409, 'repurchase_not_allowed'],
-  complete_legacy_purchase_pending: [409, 'legacy_purchase_verification_required'],
-  complete_upgrade_requires_analysis: [409, 'legacy_purchase_verification_required'],
+  complete_legacy_purchase_pending: [409, 'legacy_purchase_not_eligible'],
+  complete_upgrade_requires_analysis: [409, 'offer_changed'],
   complete_direct_not_allowed_after_analysis: [409, 'offer_changed'],
   complete_idempotency_conflict: [409, 'offer_changed'],
   complete_analysis_already_purchased: [409, 'analysis_already_purchased'],
@@ -113,38 +111,6 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
     };
   }
 
-  // 旧 ¥1,000 の購入を、購入時メールと Auth の確認済みメールで照合して結び付ける（lib/legacy-binding.js と共通）。
-  // Checkout の直前の防御的な確認として残す。結び付けたら（結び付け済みも）true。
-  async function tryBindLegacy(conn, stripe, user, sessionId) {
-    const r = await LB.verifyLegacyForRecord({ fetchImpl, conn, stripe, user, sessionId });
-    return r.status === 'bound' || r.status === 'already_bound' ? { bound: true } : { bound: false, reason: r.status };
-  }
-
-  // 旧 ¥1,000 の確認だけ（?op=legacy-verify）。ログイン必須・本人の記録だけ。販売停止中でも動く。
-  // Stripe Checkout Session も注文も作らない（課金を始めない）。応答は結果か理由コードだけ。
-  async function legacyVerify(req, res, guard) {
-    const token = CP.bearerToken(req);
-    if (!token) return fail(res, 401, 'not_authenticated');
-    let user;
-    try {
-      user = await CP.authUser(fetchImpl, guard, token);
-    } catch (err) {
-      return failLogged(res, 503, 'service_unavailable', err.code);
-    }
-    if (!user) return fail(res, 401, 'not_authenticated');
-    const parsed = parseBody(req);
-    if (!parsed.ok || parsed.product !== 'complete') return fail(res, parsed.tooLarge ? 413 : 400, parsed.tooLarge ? 'payload_too_large' : 'invalid_request');
-    try {
-      const r = await LB.verifyLegacyForRecord({ fetchImpl, conn: guard, stripe: stripeFor(env.STRIPE_SECRET_KEY), user, sessionId: parsed.sessionId });
-      const [status, body] = LB.VERIFY_RESPONSES[r.status] || [500, { error: 'request_failed' }];
-      if (status >= 400 && status !== 404) CP.logError(logger, API, `legacy_verify_${r.status}`, CE.incidentId());
-      return res.status(status).json(body);
-    } catch (err) {
-      if (err instanceof CP.PaymentError && err.transient) return failLogged(res, 503, 'legacy_check_unavailable', err.code);
-      return failLogged(res, 500, 'request_failed', err instanceof CP.PaymentError ? err.code : 'internal_error');
-    }
-  }
-
   return async function handler(req, res) {
     CP.setCommonHeaders(res);
     if (req.method !== 'POST') {
@@ -162,7 +128,8 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
     if (!CP.paymentEnvOk(guard, env)) return fail(res, 404, 'not_available');
     // ゲスト購入・購入完了ページ・引き継ぎ（lib/guest-purchase.js）
     const op = queryOp(req);
-    if (op === 'legacy-verify') return legacyVerify(req, res, guard);
+    // 旧 ¥1,000（Payment Link）の購入の確認・結び付けは廃止（旧購入は完全解析の根拠にしない）
+    if (op === 'legacy-verify') return fail(res, 410, 'legacy_verification_retired');
     if (op) return guestHandler(op, req, res, guard);
     if (!CP.salesOpen(env)) return fail(res, 503, 'sales_closed');
     const urls = CP.checkoutReturnUrls(env, guard.appEnv, 'user');
@@ -213,14 +180,9 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
         offer = 'analysis_upgrade';
       } else if (st.analysisSuspended) {
         return fail(res, 409, 'rights_suspended');
-      } else if (st.legacyPending) {
-        const r = await tryBindLegacy(guard, stripe, user, targetId);
-        if (!r.bound) {
-          const incident = CE.incidentId();
-          CP.logError(logger, API, `legacy_${r.reason}`, incident);
-          return res.status(409).json({ error: 'legacy_purchase_verification_required', incident_id: incident });
-        }
-        offer = 'analysis_upgrade';
+      } else if (st.completeBlocked === 'legacy_purchase_not_eligible') {
+        // 旧 Payment Link で解析レポートを購入した新診断の記録：完全解析は出さない（旧購入は根拠にしない。DB も断る）
+        return fail(res, 409, 'legacy_purchase_not_eligible');
       }
 
       // 6. 注文（決済待ちの注文があればそれを返す）。offer が違う・Stripe の画面が閉じている決済待ちは、

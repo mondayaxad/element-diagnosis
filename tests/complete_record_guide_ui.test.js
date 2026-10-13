@@ -368,100 +368,20 @@ test('状態取得に失敗：説明は見えるが決済はできない（重�
   await p.__ctx.close();
 });
 
-test('権利確認中（旧 ¥1,000 購入の確認中）：説明は見えるが決済はできない。確認が終わると追加 ¥2,000 の導線に切り替わる', { skip: skip() }, async () => {
-  const w = many({}, { [ID(5)]: rec({ legacyPurchasePending: true }) }, [5]);
-  const p = await open(w);
-  let g = guide(p, 5, 'records');
-  assert.equal(await g.getAttribute('data-ca-guide-kind'), 'legacy');
-  assert.match(await g.innerText(), /COMPLETE ANALYSIS｜完全解析[\s\S]*三つの人物像が、ひとつの輪郭を結ぶ。/);
-  assert.match(await g.innerText(), /既存の解析レポート購入を確認しています/);
-  assert.equal(await g.locator('button.mp-btn-pending').isDisabled(), true);
-  assert.doesNotMatch(await g.innerText(), /¥2,000|¥3,000|目標を選ぶ/);
-  assert.equal(await g.locator('[data-mentor-open]').count(), 0);
-  await assertNoPayAction(p, 5);
-  // 「もう一度確認する」：POST ?op=legacy-verify（本人のトークン・記録 ID だけ）→ 結び付けたら購入状態を取り直す
-  const verifies = [];
-  await p.route('**/api/complete-checkout?op=legacy-verify', (r) => {
-    verifies.push({ body: JSON.parse(r.request().postData()), auth: r.request().headers().authorization || '' });
-    w.records[ID(5)] = rec({ analysisSource: 'legacy_purchase_entitlement', legacyPurchasePending: false });
-    r.fulfill({ contentType: 'application/json', body: JSON.stringify({ result: 'bound' }) });
-  });
-  await p.waitForLoadState('networkidle'); // 読み込み直後の描き直しが終わってから押す
-  await g.locator('button:has-text("もう一度確認する")').click();
-  // 再確認は画面全体を描き直す（ログイン状態の通知で、もう一度描き直されることもある）。描き直しが落ち着いた状態を待つ
-  await p.waitForFunction((id) => {
-    document.querySelectorAll('details.mp-rec').forEach((d) => { d.open = true; });
-    const el = document.querySelector(`[data-rec-actions="${id}"][data-rec-source="records"] [data-ca-guide]`);
-    const btn = el && el.querySelector('button.mp-btn-pending');
-    const price = el && el.querySelector('.ca-guide-price');
-    return el && el.dataset.caGuideKind === 'offer' && btn && btn.disabled
-      && /完全解析へアップグレード ¥2,000（準備中）/.test(btn.textContent) // 販売停止中は無効の準備中
-      && price && /追加 ¥2,000/.test(price.textContent);
-  }, ID(5));
-  g = guide(p, 5, 'records');
-  assert.equal(await g.getAttribute('data-ca-guide-kind'), 'offer');
-  assert.deepEqual(verifies.map((v) => v.body), [{ diagnosisSessionId: ID(5) }]);
-  assert.match(verifies[0].auth, /^Bearer /);
-  await p.__ctx.close();
-});
-
-test('権利確認中 → 確認成功（販売中）：同じ記録で追加 ¥2,000 の「目標を選ぶ」へ進める。別記録の権利は流用しない', { skip: skip() }, async () => {
-  const w = many({}, { [ID(5)]: rec({ legacyPurchasePending: true }), [ID(4)]: rec({ legacyPurchasePending: true }) }, [5, 4]);
-  const p = await open(w, { salesOpen: true });
-  await p.route('**/api/complete-checkout?op=legacy-verify', (r) => {
-    const id = JSON.parse(r.request().postData()).diagnosisSessionId;
-    w.records[id] = rec({ analysisSource: 'legacy_purchase_entitlement', legacyPurchasePending: false });
-    r.fulfill({ contentType: 'application/json', body: JSON.stringify({ result: 'bound' }) });
-  });
-  await guide(p, 5, 'records').locator('button:has-text("もう一度確認する")').click();
-  await p.waitForSelector('.mp-rec');
-  await p.evaluate(() => document.querySelectorAll('details.mp-rec').forEach((d) => { d.open = true; }));
-  // 再取得の後の描き直しが終わるまで待つ（追加 ¥2,000 と「目標を選ぶ」がそろった状態）
-  await p.waitForFunction((id) => {
-    const el = document.querySelector(`[data-rec-actions="${id}"][data-rec-source="records"] [data-ca-guide]`);
-    return el && el.dataset.caGuideKind === 'offer' && /¥2,000/.test(el.textContent) && el.querySelectorAll('[data-mentor-open]').length === 1;
-  }, ID(5));
-  // 確認していない別の記録（4）は確認中のまま（記録 5 の権利を流用しない）
-  assert.equal(await guide(p, 4, 'records').getAttribute('data-ca-guide-kind'), 'legacy');
-  await p.__ctx.close();
-});
-
-test('権利確認中：確認できない理由は、内部の情報を出さずに説明だけ（購入済みと誤認させない）・320／390／1280px', { skip: skip() }, async () => {
-  const cases = [
-    ['legacy_email_mismatch', 409, '購入時に使用したメールアドレスのアカウントでログインしてください。'],
-    ['legacy_email_missing', 403, '確認済みのメールアドレスでログインしてください。'],
-    ['legacy_email_unconfirmed', 403, '確認済みのメールアドレスでログインしてください。'],
-    ['legacy_check_unavailable', 503, '購入状況を確認できませんでした。時間をおいてもう一度お試しください。'],
-    ['legacy_bound_elsewhere', 409, 'この購入は別の診断記録に紐付いています。'],
-    ['legacy_purchase_not_paid', 409, 'この記録に対応する、お支払い済みの解析レポートの購入を確認できませんでした。'],
-    ['legacy_purchase_not_found', 404, 'この記録に対応する、お支払い済みの解析レポートの購入を確認できませんでした。'],
-  ];
-  for (const [code, status, text] of cases) {
-    for (const width of code === 'legacy_email_mismatch' ? [320, 390, 1280] : [390]) {
-      const w = many({}, { [ID(5)]: rec({ legacyPurchasePending: true }) }, [5]);
-      const p = await open(w, { width });
-      const g = guide(p, 5, 'records');
-      await p.route('**/api/complete-checkout?op=legacy-verify', (r) => r.fulfill({ status, contentType: 'application/json', body: JSON.stringify({ error: code }) }));
-      await p.waitForLoadState('networkidle'); // 読み込み直後の描き直しが終わってから押す
-      await g.locator('button:has-text("もう一度確認する")').click();
-      const msg = g.locator('.mp-legacy-msg');
-      await msg.waitFor({ state: 'visible' });
-      assert.equal((await msg.innerText()).trim(), text, code);
-      assert.doesNotMatch(await g.innerText(), /¥2,000|@|cs_test_|price_/, code);
-      assert.equal(await g.getAttribute('data-ca-guide-kind'), 'legacy', '状態は変えない');
-      assert.equal(await g.locator('button:has-text("もう一度確認する")').isDisabled(), false, '再試行できる');
-      assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${code} ${width}`);
-      // タブへ戻るとログイン状態の通知（SIGNED_IN）で画面全体が描き直される。描き直しても説明は消えない
-      await p.evaluate(() => window.refreshMypageHistory());
-      await p.waitForFunction((id) => {
-        document.querySelectorAll('details.mp-rec').forEach((d) => { d.open = true; });
-        const el = document.querySelector(`[data-rec-actions="${id}"][data-rec-source="records"] [data-ca-guide] .mp-legacy-msg`);
-        return el && !el.hidden && el.textContent.trim().length > 0;
-      }, ID(5));
-      assert.equal((await guide(p, 5, 'records').locator('.mp-legacy-msg').textContent()).trim(), text, `${code}：描き直しの後`);
-      assert.equal(await guide(p, 5, 'records').getAttribute('data-ca-guide-kind'), 'legacy');
-      await p.__ctx.close();
-    }
+test('旧 Payment Link で解析レポートを購入した記録：完全解析は対象外の案内だけ（確認・¥2,000・¥3,000 を出さない）。解析レポートは読める・320／390／1280px', { skip: skip() }, async () => {
+  for (const width of [320, 390, 1280]) {
+    const w = many({}, { [ID(5)]: rec({ completeBlocked: 'legacy_purchase_not_eligible' }) }, [5]);
+    const p = await open(w, { width, salesOpen: true });
+    const a = actions(p, ID(5), 'records');
+    const t = await a.innerText();
+    assert.match(t, /解析レポートを見る/);
+    assert.match(t, /以前の決済リンクでのご購入のため、完全解析はお申し込みいただけません/);
+    assert.doesNotMatch(t, /¥2,000|¥3,000|確認しています|もう一度確認する/);
+    assert.equal(await a.locator('[data-mentor-open], [data-legacy-verify], [data-complete-checkout]').count(), 0);
+    assert.equal(await guide(p, 5).count(), 0);
+    assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), String(width));
+    assert.deepEqual(p.__errors, []);
+    await p.__ctx.close();
   }
 });
 
@@ -501,8 +421,8 @@ test('Preview 以外の既存の表示は変えない：案内ブロックは出
 });
 
 for (const width of [320, 390]) {
-  test(`${width}px：案内（offer・状態取得失敗・権利確認中）を開いても横スクロール・ボタンのはみ出しがない`, { skip: skip() }, async () => {
-    const w = many({}, { [ID(2)]: analysisOnly(), [ID(3)]: rec({ legacyPurchasePending: true }) }, [2, 3, 5]);
+  test(`${width}px：案内（offer・状態取得失敗・旧決済リンクの購入）を開いても横スクロール・ボタンのはみ出しがない`, { skip: skip() }, async () => {
+    const w = many({}, { [ID(2)]: analysisOnly(), [ID(3)]: rec({ completeBlocked: 'legacy_purchase_not_eligible' }) }, [2, 3, 5]);
     // 5件目は rec() のまま（offer の根拠なし＝direct の確認）。別に、状態取得失敗の世界も確かめる
     for (const world2 of [w, many({ completeLookup: 'failed' }, {}, [2, 5])]) {
       const p = await open(world2, { width });
