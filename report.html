@@ -1767,25 +1767,15 @@ function initReportComplete(code, viewer) {
         + '<a class="ca-r-btn" href="/purchase-complete">購入した内容を見る</a>';
       return;
     }
-    if (mine.pending) {
-      // 決済画面を開いたまま・閉じた：やり直せる（未払いの決済を閉じて、もう一度選べる。支払い済みならそのまま反映される）
-      box.innerHTML = '<p class="ca-r-note">お支払いがまだ完了していません。決済画面を閉じた場合は、やり直せます。</p>'
-        + '<button type="button" class="ca-r-btn is-offer" data-report-reset>決済をやり直す</button>'
-        + '<a class="ca-r-sample" href="/purchase-complete">お支払い済みの場合：購入状況を見る</a>';
-      var reset = box.querySelector('[data-report-reset]');
-      reset.onclick = function () {
-        reset.disabled = true;
-        G.cancel().catch(function () { return null; }).then(function () { initReportComplete(code, viewer); });
-      };
-      return;
-    }
     if (mine.analysis !== 'active') { box.innerHTML = unknown; return; }
     if (!G.salesOpen()) {
       box.innerHTML = '<button type="button" class="ca-r-btn is-pending" disabled aria-disabled="true">' + label + '（準備中）</button>'
         + '<p class="ca-r-note">完全解析は準備中です。現在はお申し込みいただけません。</p>';
       return;
     }
-    box.innerHTML = '<button type="button" class="ca-r-btn is-offer" data-report-upgrade>' + label + '</button>' + sample;
+    // 未払いの決済が残っていても、買っていない扱いで申し込める（サーバーが古い決済画面を閉じるか、同じ画面を返す。支払い済みなら作らない）
+    var unpaid = mine.pending ? '<p class="ca-r-note">前回のお手続きは完了していません（お支払いは発生していません）。もう一度お申し込みいただけます。</p>' : '';
+    box.innerHTML = unpaid + '<button type="button" class="ca-r-btn is-offer" data-report-upgrade>' + label + '</button>' + sample;
     bindSample();
     var btn = box.querySelector('[data-report-upgrade]');
     btn.onclick = function () {

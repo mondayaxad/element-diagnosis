@@ -168,7 +168,6 @@ test('ゲスト：この端末に固有リンクが無い・別の診断結果�
 test('購入済み・決済中・購入が見つからない・確かめられない・販売停止・マイページ経由の出し分け', { skip: skip() }, async () => {
   const cases = [
     [{ purchases: [mine({ complete: 'active', canUpgrade: false })] }, /完全解析は購入済みです/, 'a[href="/purchase-complete"]'],
-    [{ purchases: [mine({ pending: true })] }, /お支払いがまだ完了していません。決済画面を閉じた場合は、やり直せます。/, '[data-report-reset]'],
     [{ purchases: [] }, /購入状態を確認できないため、購入導線は表示していません/, null],
     [{ statusCode: 503 }, /購入状態を確認できないため/, null],
     [{ salesOpen: false }, /追加¥2,000（準備中）[\s\S]*完全解析は準備中です/, 'button.is-pending[disabled]'],
@@ -211,7 +210,7 @@ test('320・390・1280px：完全解析の案内が横にはみ出さない・�
   }
 });
 
-test('決済画面から支払わずに戻る：戻る（ページの復元）・再読み込み・やり直しのボタンのどれでも、未払いの決済を閉じて ¥2,000 を選び直せる（購入済みとは扱わない）', { skip: skip() }, async () => {
+test('決済画面から支払わずに戻る：戻る（ページの復元）・再読み込みで未払いの決済を閉じる。残っていても ¥2,000 を申し込める（購入済みとは扱わない）', { skip: skip() }, async () => {
   // 1) 決済画面へ進んで「戻る」
   let w = world();
   let ctx = await context(w);
@@ -228,13 +227,16 @@ test('決済画面から支払わずに戻る：戻る（ページの復元）�
   assert.doesNotMatch(await box(p).innerText(), /購入状況を見る|購入済み/);
   assert.deepEqual(p.__errors, []);
   await ctx.close();
-  // 2) 未払いのまま別の時に開いた：やり直しのボタン → 閉じて選び直せる
+  // 2) 未払いのまま別の時に開いた（印なし）：勝手に閉じず、買っていない扱いで申込の導線を出す
   w = world({ purchases: [mine({ pending: true })] });
   ctx = await context(w);
   p = await openReport(ctx);
   assert.equal(w.calls.filter((c) => c.op === 'guest-cancel').length, 0, '自分で決済へ進んでいない時は勝手に閉じない');
-  await box(p).locator('[data-report-reset]').click();
-  await p.waitForSelector('[data-report-upgrade]');
-  assert.equal(w.calls.filter((c) => c.op === 'guest-cancel').length, 1);
+  assert.match(await box(p).innerText(), /前回のお手続きは完了していません（お支払いは発生していません）。もう一度お申し込みいただけます。/);
+  await box(p).locator('[data-report-upgrade]').click();
+  await box(p).locator('input[name="report-mentor-goal"]').first().check();
+  await box(p).locator('[data-report-buy]').click();
+  await p.waitForURL(/checkout\.stripe\.com/);
+  assert.equal(w.calls.filter((c) => c.op === 'guest-checkout').length, 1);
   await ctx.close();
 });

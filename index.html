@@ -3111,18 +3111,6 @@ function initGuestPurchase(root, code, refs) {
         + '<a class="ca-fold-btn" href="/purchase-complete">購入した内容を見る</a>';
       return;
     }
-    if (mine && mine.pending) {
-      // 決済画面を閉じた・戻った場合は、未払いの決済を閉じて選び直せる（支払い済みならそのまま反映される）
-      box.innerHTML = '<p class="ca-fold-note">お支払いを確認しています。決済画面を閉じた場合は、やり直せます。</p>'
-        + '<a class="ca-fold-btn" href="/purchase-complete">購入状況を見る</a>'
-        + '<button type="button" class="ca-fold-btn ca-fold-btn-quiet" data-guest-reset>決済をやり直す</button>';
-      var reset = box.querySelector('[data-guest-reset]');
-      reset.onclick = function () {
-        reset.disabled = true;
-        G.cancel().then(function () { initGuestPurchase(root, code, refs); });
-      };
-      return;
-    }
     if (!mine && r.ok && r.body.codePurchased) {
       box.innerHTML = '<p class="ca-fold-note">この結果は、別のブラウザ（またはタブ）で購入されています。購入したブラウザで開くか、購入時のメールアドレスで確認すると、解析レポートを読めて、完全解析にも進めます。</p>'
         + '<a class="ca-fold-btn" href="/mypage.html#recover" data-guest-recover>購入時のメールで確認する</a>'
@@ -3132,7 +3120,9 @@ function initGuestPurchase(root, code, refs) {
     var offer = hasAnalysis ? 'analysis_upgrade' : 'direct_complete';
     if (!open) { box.innerHTML = pendingHtml(offer); return; }
     // 申込の導線（押した後に MENTOR 目標を選んで決済へ）。展開しただけでは目標の選択・決済を出さない
-    box.innerHTML = '<button type="button" class="ca-fold-btn" data-reveal-offer="' + offer + '">' + offerLabel(offer) + '</button>';
+    // 未払いの決済が残っていても、買っていない扱いで申し込める（サーバーが古い決済画面を閉じるか、同じ画面を返す。支払い済みなら作らない）
+    box.innerHTML = (mine && mine.pending ? '<p class="ca-fold-note">前回のお手続きは完了していません（お支払いは発生していません）。もう一度お申し込みいただけます。</p>' : '')
+      + '<button type="button" class="ca-fold-btn" data-reveal-offer="' + offer + '">' + offerLabel(offer) + '</button>';
     var reveal = box.querySelector('[data-reveal-offer]');
     reveal.onclick = function () {
       G.track('complete_offer_click', { offer: offer, source: 'result' });

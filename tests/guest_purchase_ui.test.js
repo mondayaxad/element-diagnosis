@@ -292,20 +292,18 @@ test('サンプルからマイページ：sample_to_mypage を1回だけ（入�
   await ctx.close();
 });
 
-test('完了ページ：決済待ち（決済画面を閉じた）は「決済をやり直す」で未払いの決済を閉じ、選び直せる（C3）', { skip: skip() }, async () => {
-  let pending = true;
+test('完了ページ：未払いの決済が残っていても買っていない扱い。申込の導線をそのまま出し、そこから申し込める（C3）', { skip: skip() }, async () => {
   const p = await resultPage({ api: {
-    'guest-status': (b) => [200, { salesOpen: true, purchases: pending ? [{ ref: REF, analysis: null, complete: null, report: null, pending: true, claimed: false, canClaim: false, canUpgrade: false, thisRecord: true }] : [], codePurchased: false }],
-    'guest-cancel': () => { pending = false; return [200, { closed: 1, paid: 0 }]; },
+    'guest-status': () => [200, { salesOpen: true, purchases: [{ ref: REF, analysis: null, complete: null, report: null, pending: true, claimed: false, canClaim: false, canUpgrade: false, thisRecord: true }], codePurchased: false }],
     'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
   await p.evaluate(() => { const d = document.querySelector('details.ca-fold'); if (d) d.open = true; });
-  const reset = p.locator('[data-guest-reset]');
-  await reset.waitFor();
-  assert.match(await p.locator('[data-guest-complete]').innerText(), /決済画面を閉じた場合は、やり直せます/);
-  await reset.click();
-  // 片付けた後は、すぐ買い直せる（申込の導線に戻る）
-  await p.waitForSelector('[data-reveal-offer="direct_complete"]');
-  assert.deepEqual(p.__calls.filter((c) => c.op === 'guest-cancel').map((c) => c.body), [{}]);
+  const offer = p.locator('[data-reveal-offer="direct_complete"]');
+  await offer.waitFor();
+  const text = await p.locator('[data-guest-complete]').innerText();
+  assert.match(text, /前回のお手続きは完了していません（お支払いは発生していません）。もう一度お申し込みいただけます。/);
+  assert.doesNotMatch(text, /購入状況を見る|購入済み/);
+  await offer.click();
+  await p.waitForSelector('input[name="guest-mentor-goal"]');
   assert.ok(await noScroll(p));
   await p.__ctx.close();
 });
