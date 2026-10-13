@@ -40,7 +40,7 @@ test.before(async () => {
 test.after(async () => { if (browser) await browser.close(); if (server) server.close(); });
 
 // api：op ごとの応答（関数なら body を受け取って [status, json] を返す）
-async function page(url, { width = 390, salesOpen = true, api = {} } = {}) {
+async function page(url, { width = 390, salesOpen = true, api = {}, clock = false } = {}) {
   const ctx = await browser.newContext({ viewport: { width, height: 844 } });
   const p = await ctx.newPage();
   p.setDefaultTimeout(8000);
@@ -60,6 +60,7 @@ async function page(url, { width = 390, salesOpen = true, api = {} } = {}) {
     const [status, json] = typeof h === 'function' ? h(body) : h || [404, { error: 'not_found' }];
     r.fulfill({ status, contentType: 'application/json', body: JSON.stringify(json) });
   });
+  if (clock) await p.clock.install();
   await p.goto(base + url);
   p.__ctx = ctx; p.__errors = errors; p.__calls = calls;
   return p;
@@ -214,4 +215,41 @@ test('サンプルからマイページ：sample_to_mypage を1回だけ（入�
   assert.deepEqual(hits[0][1], { source: 'sample' });
   assert.doesNotMatch(JSON.stringify(ev), /[0-9a-f]{8}-[0-9a-f]{4}-|@/);
   await ctx.close();
+});
+
+test('完了ページ：決済待ち（決済画面を閉じた）は「決済をやり直す」で未払いの決済を閉じ、選び直せる（C3）', { skip: skip() }, async () => {
+  let pending = true;
+  const p = await resultPage({ api: {
+    'guest-status': (b) => [200, { salesOpen: true, purchases: pending ? [{ ref: REF, analysis: null, complete: null, report: null, pending: true, claimed: false, canClaim: false, canUpgrade: false, thisRecord: true }] : [], codePurchased: false }],
+    'guest-cancel': () => { pending = false; return [200, { closed: 1, paid: 0 }]; },
+    'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
+  await p.evaluate(() => { const d = document.querySelector('details.ca-fold'); if (d) d.open = true; });
+  const reset = p.locator('[data-guest-reset]');
+  await reset.waitFor();
+  assert.match(await p.locator('[data-guest-complete]').innerText(), /決済画面を閉じた場合は、やり直せます/);
+  await reset.click();
+  await p.waitForSelector('[data-guest-buy]');
+  assert.deepEqual(p.__calls.filter((c) => c.op === 'guest-cancel').map((c) => c.body), [{}]);
+  assert.ok(await noScroll(p));
+  await p.__ctx.close();
+});
+
+test('購入完了ページ（Stripe で戻った ?status=canceled）：未払いの決済を閉じてから表示・URL から印を消す（C3）', { skip: skip() }, async () => {
+  const p = await page('/purchase-complete?status=canceled', { api: {
+    'guest-cancel': [200, { closed: 1, paid: 0 }], 'guest-status': [200, { salesOpen: true, purchases: [] }] } });
+  await p.waitForFunction(() => /ご購入を確認できませんでした/.test(document.body.innerText));
+  const ops = p.__calls.map((c) => c.op);
+  assert.deepEqual(ops.slice(0, 2), ['guest-cancel', 'guest-status']);
+  assert.match(await p.locator('#pcTitle').innerText(), /中止/);
+  assert.equal(await p.evaluate(() => location.search), '');
+  await p.__ctx.close();
+});
+
+test('購入完了ページ：確認を使い切ったら回り続ける表示を止め、読み込み直しの案内を出す', { skip: skip() }, async () => {
+  const p = await page('/purchase-complete', { clock: true, api: { 'guest-status': [200, { salesOpen: true, purchases: [{ ref: REF, analysis: null, complete: null, report: null, pending: true, claimed: false, canClaim: false, canUpgrade: false }] }] } });
+  await p.waitForSelector('.spinner');
+  for (let i = 0; i < 12; i++) await p.clock.runFor(31000);
+  await p.waitForFunction(() => /確認に時間がかかっています/.test(document.body.innerText));
+  assert.equal(await p.locator('.spinner').count(), 0);
+  await p.__ctx.close();
 });

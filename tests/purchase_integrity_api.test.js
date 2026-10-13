@@ -322,3 +322,143 @@ test('同じ診断コードでも別の本人には権利を共有しない（¥
   assert.equal(r.code, 200, JSON.stringify(r.body));
   await ctx.db.close();
 });
+
+// ================= G2：ゲスト注文・引き継ぎ・キャンセル（C2・C3・C5・D2・D3）
+async function guestBuy(ctx, body, email = 'owner@example.test') {
+  const r = await ctx.op('guest-checkout', body);
+  assert.equal(r.code, 200, JSON.stringify(r.body));
+  const cs = ctx.csIdOf(r.body.checkoutUrl);
+  ctx.stripe.pay(cs, { customer_details: { email } });
+  await ctx.op('guest-status', {});
+  return cs;
+}
+
+test('C2：¥1,000 の後に ¥2,000 を始めて中止・放置しても、支払済みの注文で引き継げる（同じ秘密値の再実行は冪等）', { skip }, async () => {
+  const ctx = await setup();
+  await guestBuy(ctx, { offer: 'analysis', code: CODE_A });
+  // ¥2,000 を始めて中止（Stripe の画面で戻る）→ もう一度始めて放置（開いたまま）
+  const up1 = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_PACE_01' });
+  assert.equal(up1.code, 200);
+  assert.deepEqual((await ctx.op('guest-cancel', {})).body, { closed: 1, paid: 0 });
+  const up2 = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_PACE_01' });
+  assert.equal(up2.code, 200);
+  const st = (await ctx.op('guest-status', { code: CODE_A })).body.purchases.find((x) => x.thisRecord);
+  assert.deepEqual([st.canClaim, st.pending], [true, true], '決済待ちがあっても引き継ぎを出す');
+  const token = 'tok-owner-c2';
+  const userId = await ctx.db.user({ email: 'owner@example.test', token });
+  const c = await ctx.op('guest-claim', { ref: st.ref }, { token });
+  assert.deepEqual([c.code, c.body], [200, { result: 'claimed' }]);
+  // 放置した ¥2,000 の画面は閉じ、注文は期限切れ。権利は解析だけ（重複なし）
+  assert.equal(ctx.stripe.st.sessions[ctx.csIdOf(up2.body.checkoutUrl)].status, 'expired');
+  const orders = await ctx.rows('complete_orders');
+  assert.deepEqual(orders.map((o) => `${o.offer}:${o.status}`).sort(), ['analysis:paid', 'analysis_upgrade:expired', 'analysis_upgrade:expired']);
+  assert.ok(orders.every((o) => o.user_id === userId));
+  const sid = orders[0].diagnosis_session_id;
+  assert.deepEqual(await rightsOf(ctx, sid), ['analysis:active']);
+  // マイページで ¥2,000 へ進める
+  assert.equal((await ctx.entitlements(token)).body.records[sid].completeOffer, 'analysis_upgrade');
+  await ctx.db.close();
+});
+
+test('C3（ゲスト）：Stripe で戻った・閉じた決済はすぐ買い直せる。支払いと重なった時は二重に請求しない', { skip }, async () => {
+  const ctx = await setup();
+  const r1 = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_A });
+  const cs1 = ctx.csIdOf(r1.body.checkoutUrl);
+  // 戻り先（?status=canceled）での片付け：未払いの画面を閉じ、注文は expired
+  assert.deepEqual((await ctx.op('guest-cancel', {})).body, { closed: 1, paid: 0 });
+  assert.equal(ctx.stripe.st.sessions[cs1].status, 'expired');
+  assert.equal((await ctx.rows('complete_orders'))[0].status, 'expired');
+  const s = (await ctx.op('guest-status', { code: CODE_A })).body.purchases[0];
+  assert.equal(s.pending, false);
+  // すぐ買い直せる（新しい画面）
+  const r2 = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_A });
+  assert.equal(r2.code, 200);
+  assert.notEqual(r2.body.checkoutUrl, r1.body.checkoutUrl);
+  // 「決済をやり直す」と支払いが重なった（Stripe 側では支払い済み）：閉じずに適用し、新しい注文は作らない
+  ctx.stripe.pay(ctx.csIdOf(r2.body.checkoutUrl), { customer_details: { email: 'x@example.test' } });
+  assert.deepEqual((await ctx.op('guest-cancel', {})).body, { closed: 0, paid: 1 });
+  const again = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_A });
+  assert.equal(again.code, 409);
+  assert.equal((await ctx.rows('complete_orders')).filter((o) => o.status === 'paid').length, 1);
+  await ctx.db.close();
+});
+
+test('C3（ログイン）：マイページへ戻った（中止）・「決済をやり直す」で決済待ちを片付け、すぐ買い直せる', { skip }, async () => {
+  const ctx = await setup();
+  const p = await person(ctx);
+  const r1 = await ctx.checkout(p.token, { diagnosisSessionId: p.sessionId, product: 'analysis' });
+  assert.equal((await ctx.entitlements(p.token)).body.records[p.sessionId].checkoutInProgress, true);
+  // ?complete=canceled から：user-reconcile { cancel: true }
+  const back = await ctx.op('user-reconcile', { cancel: true }, { token: p.token });
+  assert.deepEqual([back.code, back.body], [200, { applied: 0, closed: 1 }]);
+  assert.equal(ctx.stripe.st.sessions[ctx.csIdOf(r1.body.checkoutUrl)].status, 'expired');
+  assert.equal((await ctx.entitlements(p.token)).body.records[p.sessionId].checkoutInProgress, false);
+  // もう一度始めて放置 → 「決済をやり直す」
+  const r2 = await ctx.checkout(p.token, { diagnosisSessionId: p.sessionId, product: 'analysis' });
+  assert.equal(r2.code, 200);
+  const reset = await ctx.op('user-checkout-reset', { diagnosisSessionId: p.sessionId }, { token: p.token });
+  assert.deepEqual([reset.code, reset.body], [200, { result: 'reset' }]);
+  const r3 = await ctx.checkout(p.token, { diagnosisSessionId: p.sessionId, product: 'analysis' });
+  assert.equal(r3.code, 200);
+  // 支払い済みの決済を「やり直す」：適用して終わる（新しい請求なし）
+  ctx.stripe.pay(ctx.csIdOf(r3.body.checkoutUrl));
+  const done = await ctx.op('user-checkout-reset', { diagnosisSessionId: p.sessionId }, { token: p.token });
+  assert.deepEqual(done.body, { result: 'paid' });
+  assert.deepEqual(await rightsOf(ctx, p.sessionId), ['analysis:active']);
+  // 他人の記録・入力不正
+  const q = await person(ctx, { email: 'q@example.test', code: CODE_B });
+  assert.equal((await ctx.op('user-checkout-reset', { diagnosisSessionId: p.sessionId }, { token: q.token })).code, 404);
+  assert.equal((await ctx.op('user-checkout-reset', { diagnosisSessionId: 'x' }, { token: p.token })).code, 400);
+  assert.equal((await ctx.op('user-reconcile', { cancel: 'yes' }, { token: p.token })).code, 400);
+  await ctx.db.close();
+});
+
+test('C5：戻って MENTOR 目標を変えたら古い画面を使わず、新しい目標で決済。支払い後に固定される目標は支払った注文の目標', { skip }, async () => {
+  const ctx = await setup();
+  const a = await ctx.op('guest-checkout', { offer: 'direct_complete', code: CODE_A, goal: 'GOAL_PACE_01' });
+  assert.equal(a.code, 200);
+  const same = await ctx.op('guest-checkout', { offer: 'direct_complete', code: CODE_A, goal: 'GOAL_PACE_01' });
+  assert.equal(same.body.checkoutUrl, a.body.checkoutUrl, '同じ目標なら同じ画面');
+  const b = await ctx.op('guest-checkout', { offer: 'direct_complete', code: CODE_A, goal: 'GOAL_VISIBLE_01' });
+  assert.equal(b.code, 200);
+  assert.notEqual(b.body.checkoutUrl, a.body.checkoutUrl);
+  assert.equal(ctx.stripe.st.sessions[ctx.csIdOf(a.body.checkoutUrl)].status, 'expired');
+  // 古い画面は支払えない（Stripe で閉じた）。新しい画面で支払う
+  ctx.stripe.pay(ctx.csIdOf(b.body.checkoutUrl), { customer_details: { email: 'x@example.test' } });
+  await ctx.op('guest-status', {});
+  const orders = await ctx.rows('complete_orders');
+  assert.deepEqual(orders.map((o) => `${o.mentor_goal_id}:${o.status}`).sort(), ['GOAL_PACE_01:canceled', 'GOAL_VISIBLE_01:paid']);
+  const [goal] = await ctx.rows('record_mentor_goals');
+  assert.equal(goal.goal_id, 'GOAL_VISIBLE_01');
+  assert.ok(goal.locked_at);
+  const [report] = await ctx.rows('complete_reports');
+  assert.equal(report.mentor_goal_id, 'GOAL_VISIBLE_01');
+  await ctx.db.close();
+});
+
+test('D2・D3：Google 等でも同じ確認済みメールなら引き継げる。共有端末で別のメールの人へは移らない。Cookie 消失は OTP で復旧（決済待ちがあっても）', { skip }, async () => {
+  const ctx = await setup();
+  await guestBuy(ctx, { offer: 'analysis', code: CODE_A }, 'Owner@Example.test');
+  const st = (await ctx.op('guest-status', {})).body.purchases[0];
+  // 共有端末：同じブラウザで別の人（別のメール）がログインしても移らない
+  const other = 'tok-shared-other';
+  await ctx.db.user({ email: 'family@example.test', token: other });
+  assert.deepEqual((await ctx.op('guest-claim', { ref: st.ref }, { token: other })).body, { error: 'claim_email_mismatch' });
+  // メール未確認のアカウント
+  const unconfirmed = 'tok-unconfirmed';
+  await ctx.db.user({ email: 'owner@example.test', confirmed: false, token: unconfirmed });
+  assert.deepEqual((await ctx.op('guest-claim', { ref: st.ref }, { token: unconfirmed })).body, { error: 'claim_email_unconfirmed' });
+  // Cookie を失い、別端末で ¥2,000 を始めたわけではないが決済待ちを作ってから、メール OTP で復旧する
+  const cookie = ctx.cookie;
+  await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_PACE_01' });
+  ctx.cookie = '';
+  const nowSec = Math.floor(Date.now() / 1000);
+  const b = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+  const otp = `${b({ alg: 'HS256' })}.${b({ sub: 'x', amr: [{ method: 'otp', timestamp: nowSec - 20 }] })}.sig`;
+  const owner = await ctx.db.user({ email: 'owner@example.test', token: otp });
+  const r = await ctx.op('guest-recover', {}, { token: otp });
+  assert.deepEqual([r.code, r.body], [200, { claimed: 1, skipped: 0 }]);
+  assert.ok((await ctx.rows('diagnosis_sessions')).every((s) => s.user_id === owner));
+  assert.equal((await ctx.op('guest-report', { ref: st.ref }, { cookie })).code, 409, '引き継ぎ後は Cookie では読めない');
+  await ctx.db.close();
+});

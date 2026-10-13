@@ -62,8 +62,20 @@ function jwtWith(claims) {
   return `${b({ alg: 'HS256', typ: 'JWT' })}.${b(claims)}.${crypto.randomBytes(16).toString('base64url')}`;
 }
 
+// 失敗した試験でも DB を閉じる（接続が残って試験の実行が終わらないのを防ぐ）
+const OPEN = [];
+test.afterEach(async () => {
+  while (OPEN.length) {
+    const db = OPEN.pop();
+    if (!db.__closed) await db.close().catch(() => {});
+  }
+});
+
 async function setup({ env = {} } = {}) {
   const db = await require(BACKEND).createBackend();
+  const close0 = db.close.bind(db);
+  db.close = async () => { if (db.__closed) return; db.__closed = true; await close0(); };
+  OPEN.push(db);
   const stripe = fakeStripe({ prices: JSON.parse(JSON.stringify(PRICES)) });
   const logger = makeLogger();
   const fullEnv = { ...ENV, ...env };
@@ -249,7 +261,7 @@ test('アップグレードは同じブラウザの解析購入が必要・別�
   await ctx.db.close();
 });
 
-test('引き継ぎ：ログイン必須・支払済みだけ・1回限り（同じ人は冪等・別の人は 409）・改ざん／期限切れ／未払いは拒否', { skip }, async () => {
+test('引き継ぎ：ログイン必須・購入時メールと同じ確認済みメールだけ・支払済みだけ・1回限り（同じ人は冪等・別の人は 409）・改ざん／期限切れは拒否', { skip }, async () => {
   const ctx = await setup();
   await buy(ctx, { offer: 'analysis', code: CODE_A });
   const st = await ctx.op('guest-status', {});
@@ -257,12 +269,23 @@ test('引き継ぎ：ログイン必須・支払済みだけ・1回限り（同�
   const original = ctx.cookie;
   const tokA = 'tok-claim-a';
   const tokB = 'tok-claim-b';
-  const userA = await ctx.db.user({ email: 'a@example.test', token: tokA });
+  const tokOther = 'tok-claim-other-mail';
+  const tokNoMail = 'tok-claim-no-mail';
+  const userA = await ctx.db.user({ email: 'Guest.Buyer@example.test', token: tokA }); // 購入時メールと同じ（大文字小文字は区別しない）
   await ctx.db.user({ email: 'b@example.test', token: tokB });
+  await ctx.db.user({ email: 'someone@example.test', token: tokOther });
+  await ctx.db.user({ email: null, token: tokNoMail });
   assert.equal((await ctx.op('guest-claim', { ref })).code, 401);
   // 改ざんした秘密値
   const tampered = original.replace(/\.([A-Za-z0-9_-])/, (m, c) => `.${c === 'A' ? 'B' : 'A'}`);
   assert.equal((await ctx.op('guest-claim', { ref }, { token: tokA, cookie: tampered })).code, 403);
+  // 別のメールのアカウント・メールの無いアカウントへは移さない（Cookie だけでは引き継がない。共有端末で別人へ移らない）
+  const other = await ctx.op('guest-claim', { ref }, { token: tokOther });
+  assert.deepEqual([other.code, other.body], [403, { error: 'claim_email_mismatch' }]);
+  const noMail = await ctx.op('guest-claim', { ref }, { token: tokNoMail });
+  assert.deepEqual([noMail.code, noMail.body], [403, { error: 'claim_email_required' }]);
+  assert.equal((await ctx.rows('diagnosis_sessions'))[0].user_id, null, '移っていない');
+  assert.equal((await ctx.op('guest-report', { ref })).code, 200, '購入したブラウザでは Cookie で読める');
   // 引き継ぎ
   const c1 = await ctx.op('guest-claim', { ref }, { token: tokA });
   assert.deepEqual([c1.code, c1.body], [200, { result: 'claimed' }]);
@@ -277,17 +300,15 @@ test('引き継ぎ：ログイン必須・支払済みだけ・1回限り（同�
   assert.deepEqual([steal.code, steal.body.error], [409, 'claim_conflict']);
   // 引き継ぎ後は Cookie で閲覧できない（マイページで見る）
   assert.equal((await ctx.op('guest-report', { ref }, { cookie: original })).code, 409);
-  // マイページの購入済み判定（/api/my-entitlements）は tests/mentor_goal_api.test.js で確かめる（入れ子の select のため）
   assert.ok((await ctx.rows('record_entitlements')).some((e) => e.user_id === userA && e.right_type === 'analysis' && e.status === 'active'));
 
-  // 未払い（決済待ち）・期限切れ
+  // 未払い（決済待ち）は引き継げる購入として出さない。支払い後の期限切れは 410
   ctx.cookie = '';
   await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_B });
   const pend = (await ctx.op('guest-status', {})).body.purchases[0];
   assert.equal(pend.canClaim, false);
-  assert.equal((await ctx.op('guest-claim', { ref: pend.ref }, { token: tokB })).code, 409);
   const cs = Object.keys(ctx.stripe.st.sessions).pop();
-  ctx.stripe.pay(cs, { customer_details: { email: 'x@example.test' } });
+  ctx.stripe.pay(cs, { customer_details: { email: 'b@example.test' } });
   await ctx.op('guest-status', {});
   const ord = (await ctx.rows('complete_orders')).find((o) => o.user_id === null && o.status === 'paid');
   await ctx.db.patch('complete_orders', ord.id, { claim_expires_at: new Date(Date.now() - 1000).toISOString() });

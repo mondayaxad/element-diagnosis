@@ -1927,8 +1927,10 @@ function caGuideHtml(r, g, pending) {
     note = `<p class="ca-pending-note" role="status">${CompleteAnalysis.LEGACY_PENDING_TEXT}。確認が終わるまで、お申し込みいただけません。</p>`
       + mpLegacyMsgHtml('ca-pending-note', r);
   } else {
-    action = disabled('完全解析（決済手続き中）', 'unavailable');
-    note = '<p class="ca-pending-note" role="status">完全解析の決済手続き中です。</p>';
+    action = disabled('完全解析（決済手続き中）', 'unavailable')
+      + `<button type="button" class="mp-btn" data-checkout-reset="${caEsc(caRecordId(r))}">決済をやり直す</button>`;
+    note = '<p class="ca-pending-note" role="status">決済の手続き中です。決済画面を閉じた場合は、やり直せます（お支払い済みなら、そのまま反映されます）。</p>'
+      + '<p class="ca-pending-note mp-reset-msg" role="alert" hidden></p>';
   }
   return `<div class="ca-rec-guide" data-ca-guide="${id}" data-ca-guide-kind="${g.kind}">
       <div class="ca-rec-guide-head"><span class="ca-eyebrow">COMPLETE ANALYSIS｜完全解析</span><span class="ca-pages"><span class="ca-pages-ja">全46ページ</span><span class="ca-pages-en">COMPLETE RECORD</span></span></div>
@@ -2047,6 +2049,35 @@ async function mpLegacyVerify(button) {
 document.addEventListener('click', (e) => {
   const b = e.target && e.target.closest && e.target.closest('[data-legacy-verify]');
   if (b && !b.disabled) { e.preventDefault(); mpLegacyVerify(b); }
+});
+/* 決済をやり直す（POST ?op=user-checkout-reset）：この記録の未払いの決済画面を閉じてから、購入状態を取り直す。
+   支払い済みだった時はそのまま反映される（二重に請求しない）。 */
+async function mpCheckoutReset(button) {
+  const id = button.getAttribute('data-checkout-reset');
+  const msg = button.parentElement && button.parentElement.querySelector('.mp-reset-msg');
+  button.disabled = true;
+  const prev = button.textContent;
+  button.textContent = '確認中…';
+  let ok = false;
+  try {
+    const { data } = await supabaseClient.auth.getSession();
+    const token = data && data.session ? data.session.access_token : null;
+    if (token) {
+      const res = await fetch('/api/complete-checkout?op=user-checkout-reset', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ diagnosisSessionId: id }),
+      });
+      ok = res.ok;
+    }
+  } catch (e) { ok = false; }
+  if (ok) { caCloseSheet(); await init(); return; }
+  button.disabled = false;
+  button.textContent = prev;
+  if (msg) { msg.textContent = '決済の状態を確認できませんでした。時間をおいて、もう一度お試しください。'; msg.hidden = false; }
+}
+document.addEventListener('click', (e) => {
+  const b = e.target && e.target.closest && e.target.closest('[data-checkout-reset]');
+  if (b && !b.disabled) { e.preventDefault(); mpCheckoutReset(b); }
 });
 async function mpRetryEntitlement(button) {
   if (button) { button.disabled = true; button.textContent = '確認中…'; }
@@ -2945,7 +2976,9 @@ function caMentorOverviewHtml(r) {
       + mpLegacyMsgHtml('ca-mentor-note', r);
   }
   if (o.kind === 'checkout_in_progress') {
-    return `${target}${head}<p class="ca-mentor-note" role="status">完全解析の決済手続き中です。</p>`;
+    return `${target}${head}<p class="ca-mentor-note" role="status">決済の手続き中です。決済画面を閉じた場合は、やり直せます。</p>`
+      + `<button type="button" class="ca-btn ca-quiet-action" data-checkout-reset="${caEsc(caRecordId(r))}">決済をやり直す</button>`
+      + '<p class="ca-mentor-note mp-reset-msg" role="alert" hidden></p>';
   }
   if (o.kind === 'purchased' || o.kind === 'closed') {
     return `${target}${head}<p class="ca-mentor-note" role="status">${o.kind === 'purchased' ? 'この記録の完全解析は、お申し込み済みです。' : 'この記録の完全解析は、新たにお申し込みいただけません。'}</p>`;
@@ -3433,12 +3466,18 @@ async function init() {
     try {
       const { data } = await supabaseClient.auth.getSession();
       const t = data && data.session ? data.session.access_token : null;
-      if (t && !canceled) {
-        const rr = await fetch('/api/complete-checkout?op=user-reconcile', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` }, body: '{}' });
+      // 戻った（支払い）：Stripe に問い合わせて反映する。中止（canceled）：未払いの決済画面を閉じて、すぐ買い直せるようにする
+      if (t) {
+        const rr = await fetch('/api/complete-checkout?op=user-reconcile', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+          body: canceled ? '{"cancel":true}' : '{}' });
         const out = await rr.json().catch(() => ({}));
         if (rr.ok && out.applied > 0) trackEvent('purchase_confirmed', { state: 'mypage' });
       }
     } catch (e) { /* 反映の確認は記録の状態確認でも行う */ }
+    // 中止の印は使った後に URL から消す（再読み込み・再描画で繰り返さない。?complete=returned は生成状態の確認で消す）
+    if (canceled) {
+      try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) { /* 消せなくても表示は続ける */ }
+    }
   }
   const result = await loadDiagnosisHistory(DIAGNOSIS_TYPE);
   if (!result.ok) {
@@ -3500,10 +3539,10 @@ async function mpGuestPurchaseFlow(root) {
     const run = async () => {
       const rs = await G.claimAll(await mpAccessToken(), claimable);
       const ok = rs.filter((x) => x.ok).length;
-      const conflict = rs.some((x) => x.error === 'claim_conflict');
+      const firstError = (rs.find((x) => !x.ok) || {}).error;
       mpClaimBox(root, ok
         ? `<p>✓ この端末の購入（${ok}件）をマイページに引き継ぎました。</p><p class="mp-claim-note">診断記録と購入済みのレポートを、いつでも見返せます。</p>`
-        : `<p>${conflict ? 'この購入は、別のアカウントに引き継ぎ済みです。' : '購入を引き継げませんでした。時間をおいて、もう一度お試しください。'}</p>`);
+        : `<p>${mpEsc(G.claimErrorText(firstError))}</p>`);
       if (ok) setTimeout(() => { mpGuestFlowBusy = false; init(); }, 1200);
     };
     if (intent) { await run(); return; }

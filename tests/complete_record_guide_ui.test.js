@@ -163,6 +163,7 @@ async function open(w, opts = {}) {
     if (w.postReply) return r.fulfill({ status: w.postReply.status, contentType: 'application/json', body: JSON.stringify(w.postReply.body) });
     return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ viewUrl: `/api/complete-status?view=${TOKEN}`, expiresIn: 300 }) });
   });
+  if (opts.routes) await opts.routes(p);
   await p.goto(base + '/mypage.html' + query);
   await p.waitForSelector('.mp-latest', { state: 'attached' });
   await p.evaluate(() => document.querySelectorAll('details.mp-latest-fold, details.mp-rec').forEach((d) => { d.open = true; }));
@@ -468,7 +469,9 @@ test('決済手続き中：案内は出るが決済は無効', { skip: skip() },
   const g = guide(p, 2, 'records');
   assert.equal(await g.getAttribute('data-ca-guide-kind'), 'checkout');
   assert.equal(await g.locator('button.mp-btn-pending').isDisabled(), true);
-  assert.match(await g.innerText(), /完全解析の決済手続き中です/);
+  assert.match(await g.innerText(), /決済の手続き中です。決済画面を閉じた場合は、やり直せます/);
+  // 決済へ進める操作は無い（やり直しは決済を始めない）
+  assert.equal(await g.locator('a[href]').count(), 0);
   await p.__ctx.close();
 });
 
@@ -531,5 +534,55 @@ test('同じ診断結果の記録が複数（D1）：表示の正本だけを出
   const price5 = await guide(p, 5, 'records').locator('.ca-guide-price').innerText();
   assert.match(price5, /¥3,000/);
   assert.doesNotMatch(price5, /追加/);
+  await p.__ctx.close();
+});
+
+test('決済手続き中：「決済をやり直す」で未払いの決済を閉じ、購入状態を取り直す（C3）・320／1280px', { skip: skip() }, async () => {
+  for (const width of [320, 1280]) {
+    const w = many({}, { [ID(5)]: analysisOnly({ checkoutInProgress: true }) }, [5]);
+    const p = await open(w, { width, salesOpen: true });
+    const resets = [];
+    await p.route('**/api/complete-checkout?op=user-checkout-reset', (r) => {
+      resets.push({ body: JSON.parse(r.request().postData()), auth: r.request().headers().authorization || '' });
+      w.records[ID(5)] = analysisOnly({ completeOffer: 'analysis_upgrade' });
+      r.fulfill({ contentType: 'application/json', body: JSON.stringify({ result: 'reset' }) });
+    });
+    const g = guide(p, 5, 'records');
+    assert.match(await g.innerText(), /決済画面を閉じた場合は、やり直せます/);
+    await p.waitForLoadState('networkidle');
+    await g.locator('button:has-text("決済をやり直す")').click();
+    await p.waitForFunction((id) => {
+      document.querySelectorAll('details.mp-rec').forEach((d) => { d.open = true; });
+      const el = document.querySelector(`[data-rec-actions="${id}"][data-rec-source="records"] [data-ca-guide]`);
+      return el && el.dataset.caGuideKind === 'offer';
+    }, ID(5));
+    assert.deepEqual(resets.map((x) => x.body), [{ diagnosisSessionId: ID(5) }]);
+    assert.match(resets[0].auth, /^Bearer /);
+    assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), String(width));
+    await p.__ctx.close();
+  }
+});
+
+test('Stripe で戻った（?complete=canceled）：未払いの決済画面を閉じる（user-reconcile cancel）・URL から印を消す（C3）', { skip: skip() }, async () => {
+  const w = many({}, { [ID(5)]: analysisOnly() }, [5]);
+  const calls = [];
+  const p = await open(w, { query: '?complete=canceled', routes: (pg) => pg.route('**/api/complete-checkout?op=user-reconcile', (r) => {
+    calls.push({ body: JSON.parse(r.request().postData() || '{}'), auth: r.request().headers().authorization || '' });
+    r.fulfill({ contentType: 'application/json', body: JSON.stringify({ applied: 0, closed: 1 }) });
+  }) });
+  assert.deepEqual(calls.map((c) => c.body), [{ cancel: true }]);
+  assert.match(calls[0].auth, /^Bearer /);
+  assert.equal(await p.evaluate(() => location.search), '');
+  await p.__ctx.close();
+});
+
+test('支払いから戻った（?complete=returned）：Stripe に問い合わせるだけ（決済画面は閉じない）', { skip: skip() }, async () => {
+  const w = many({}, { [ID(5)]: analysisOnly() }, [5]);
+  const calls = [];
+  const p = await open(w, { query: '?complete=returned', routes: (pg) => pg.route('**/api/complete-checkout?op=user-reconcile', (r) => {
+    calls.push(JSON.parse(r.request().postData() || '{}'));
+    r.fulfill({ contentType: 'application/json', body: JSON.stringify({ applied: 1, closed: 0 }) });
+  }) });
+  assert.deepEqual(calls, [{}]);
   await p.__ctx.close();
 });

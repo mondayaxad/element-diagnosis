@@ -284,6 +284,7 @@
     .ca-fold-price .ca-meta { margin: 0; }
     .ca-fold-price .ca-price { flex: none; white-space: nowrap; font-size: 16px; letter-spacing: .06em; color: var(--ca-gold); }
     .ca-fold-btn { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 46px; margin-top: 10px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--el, #7ab8e8) 45%, var(--ca-line)); background: transparent; color: var(--ca-title); font-family: inherit; font-size: 14px; letter-spacing: .08em; text-decoration: none; }
+    .ca-fold-btn-quiet { border-color: var(--ca-line); color: var(--ca-muted, #8a93a8); font-size: 13px; cursor: pointer; }
     .ca-fold-btn:focus-visible { outline: 2px solid #7ab8e8; outline-offset: 2px; }
     /* 準備中（決済未接続）：押せないことが分かる見た目。button 既定の文字指定を打ち消す */
     .ca-fold-btn.is-pending { font-family: inherit; font-size: 13px; letter-spacing: .06em; color: #9aa8c6; background: transparent; border-style: dashed; cursor: not-allowed; opacity: 1; }
@@ -3049,7 +3050,15 @@ function initGuestPurchase(root, code, refs) {
       return;
     }
     if (mine && mine.pending) {
-      box.innerHTML = '<p class="ca-fold-note">お支払いを確認しています。</p><a class="ca-fold-btn" href="/purchase-complete">購入状況を見る</a>';
+      // 決済画面を閉じた・戻った場合は、未払いの決済を閉じて選び直せる（支払い済みならそのまま反映される）
+      box.innerHTML = '<p class="ca-fold-note">お支払いを確認しています。決済画面を閉じた場合は、やり直せます。</p>'
+        + '<a class="ca-fold-btn" href="/purchase-complete">購入状況を見る</a>'
+        + '<button type="button" class="ca-fold-btn ca-fold-btn-quiet" data-guest-reset>決済をやり直す</button>';
+      var reset = box.querySelector('[data-guest-reset]');
+      reset.onclick = function () {
+        reset.disabled = true;
+        G.cancel().then(function () { initGuestPurchase(root, code, refs); });
+      };
       return;
     }
     if (!mine && r.ok && r.body.codePurchased) {

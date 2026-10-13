@@ -136,6 +136,17 @@
       return p.pending || (p.complete === 'active' && p.report !== 'ready' && p.report !== 'revoked');
     });
     if (waiting && tries < delays.length) setTimeout(load, delays[tries++]);
+    else if (waiting) {
+      // 確認の回数を使い切った：回り続ける表示を止め、後で確かめられることを伝える
+      list.querySelectorAll('.spinner').forEach(function (sp) { sp.remove(); });
+      list.insertAdjacentHTML('beforeend', '<p class="note">確認に時間がかかっています。しばらくしてから、このページを読み込み直してください。</p>');
+    }
+  }
+
+  // 決済画面で「戻る」を選んだ：未払いの決済を閉じてから状況を表示する（すぐ買い直せる。支払い済みならそのまま反映される）
+  async function start() {
+    if (canceled) { try { await G.cancel(); } catch (e) { /* 閉じられなくても状況は表示する */ } }
+    load();
   }
 
   list.addEventListener('click', async function (e) {
@@ -162,7 +173,7 @@
     }
   });
 
-  load();
+  start();
 })();
 </script>
 </body>

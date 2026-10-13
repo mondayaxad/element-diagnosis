@@ -50,6 +50,8 @@
   }
 
   function status(code) { return call('guest-status', code ? { code: code } : {}); }
+  // 決済をやり直す・Stripe の画面で戻った：この端末の未払いの決済を閉じる（支払い済みならそのまま反映される）
+  function cancel() { return call('guest-cancel', {}); }
   function goals() { return call('guest-goals', {}); }
 
   // Checkout を作り、同じタブで Stripe の決済画面へ移動する
@@ -74,11 +76,24 @@
     upgrade_requires_analysis: 'この端末では、この結果の解析レポートの購入を確認できませんでした。',
     repurchase_not_allowed: 'この結果の完全解析は購入済みです。',
     checkout_in_progress: '決済の手続き中です。しばらくしてから、もう一度お試しください。',
+    purchase_completed: 'お支払いは完了しています。購入した内容をご確認ください。',
+    rights_suspended: 'この結果の購入は、現在確認中のためお申し込みいただけません。',
     legacy_purchase_verification_required: '以前のご購入を確認しています。マイページからお試しください。',
     not_eligible: 'この結果は対象外です。',
     network: '通信できませんでした。電波の良い場所で、もう一度お試しください。',
   };
   function errorText(code) { return ERROR_TEXT[code] || 'お手続きを開始できませんでした。時間をおいて、もう一度お試しください。'; }
+
+  // 引き継ぎ（マイページへ移す）の結果の説明。メールアドレスそのものは表示しない
+  var CLAIM_TEXT = {
+    claim_email_mismatch: '購入時に使用したメールアドレスのアカウントでログインしてください。別のメールアドレスのアカウントへは引き継げません。',
+    claim_email_required: '購入時のメールアドレスで「メールで続ける」からログインすると、引き継げます。',
+    claim_email_unconfirmed: '確認済みのメールアドレスでログインしてください（「メールで続ける」から確認できます）。',
+    claim_conflict: 'この購入は、別のアカウントに引き継ぎ済みです。',
+    claim_expired: '引き継ぎの期限が過ぎています。購入時のメールアドレスで「メールで続ける」からログインすると、確認して引き継げます。',
+    claim_not_paid: 'お支払いを確認できた購入がありません。',
+  };
+  function claimErrorText(code) { return CLAIM_TEXT[code] || '購入を引き継げませんでした。時間をおいて、もう一度お試しください。'; }
 
   // 引き継ぎ：ログイン方法の選択はマイページで行う（Google・X・メールのどれでも同じページへ戻る）。
   // 「引き継ぐ」を押した印だけを sessionStorage に残す（秘密値ではない。Cookie の秘密値はサーバーだけが読む）。
@@ -145,7 +160,7 @@
 
   global.EdGuestPurchase = {
     OFFERS: OFFERS, yen: yen, esc: esc, salesOpen: salesOpen, track: track,
-    status: status, goals: goals, checkout: checkout, errorText: errorText,
+    status: status, cancel: cancel, goals: goals, checkout: checkout, errorText: errorText, claimErrorText: claimErrorText,
     startClaim: startClaim, takeClaimIntent: takeClaimIntent, claimAll: claimAll, recover: recover,
     openAnalysis: openAnalysis, openComplete: openComplete, completeLabel: completeLabel,
   };
