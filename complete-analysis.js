@@ -281,6 +281,8 @@
     if (complete.completeBlocked === 'legacy_purchase_not_eligible') return { kind: 'closed', reason: 'legacy' };
     // 解析レポートの権利が一時停止中（dispute 中）：購入を出さない
     if (complete.completeBlocked === 'rights_suspended') return { kind: 'closed' };
+    // 異議申し立てで負けた解析レポートの記録：この記録では申し込めない（サーバーと DB が断る）
+    if (complete.completeBlocked === 'repurchase_not_allowed') return { kind: 'closed' };
     // サーバーが決めた offer（lib/purchase-state.js）を優先する。無い応答（旧形式）は解析権の根拠から決める
     if (complete.completeOffer === 'analysis_upgrade') return { kind: 'offer', offer: CA_OFFERS.upgrade };
     if (complete.completeOffer === 'direct_complete') return { kind: 'offer', offer: CA_OFFERS.direct };

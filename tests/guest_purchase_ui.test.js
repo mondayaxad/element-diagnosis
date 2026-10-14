@@ -612,3 +612,12 @@ test('再監査：購入状態の確認が止まっても、8秒で申込の導�
   await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled, null, { timeout: 12000 });
   await p.__ctx.close();
 });
+
+test('購入完了ページ：支払いを確認できていない決済は、いちばん新しい1件だけ「確認しています」と出す（以前に閉じなかった別の結果の決済を出さない）', { skip: skip() }, async () => {
+  const pend = (ref, at) => ({ ref, analysis: null, complete: null, report: null, pending: true, claimed: false, canClaim: false, canUpgrade: false, purchasedAt: at });
+  const p = await page('/purchase-complete', { api: { 'guest-status': [200, { salesOpen: true, purchases: [
+    pend('a1a1a1a1a1a1a1a1a1a1', '2026-10-14T01:00:00.000Z'), pend('b2b2b2b2b2b2b2b2b2b2', '2026-10-14T03:00:00.000Z')] }] } });
+  await p.waitForFunction(() => /お支払いを確認しています/.test(document.body.innerText));
+  assert.equal(await p.locator('.card').count(), 1);
+  await p.__ctx.close();
+});

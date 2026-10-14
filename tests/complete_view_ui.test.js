@@ -347,15 +347,16 @@ test('suspended：「現在、完全解析を閲覧できません」／revoked�
   }
 });
 
-test('¥2,000 の根拠の解析レポートが返金された（basis_inactive）：閲覧ボタンを出さず、お問い合わせの案内。押した後の 403 basis_inactive も同じ', { skip: skip() }, async () => {
+test('¥2,000 の根拠の解析レポートが返金された（basis_inactive）：閲覧ボタンを出さず、解析レポート（¥1,000）の申込で読める案内。押した後の 403 basis_inactive も同じ', { skip: skip() }, async () => {
   let w = world({ records: { 'sess-B': purchased({ completeViewBlocked: 'basis_inactive' }), 'sess-A': rec() } });
   let p = await open(w);
   for (const src of ['latest', 'records']) {
     const box = actions(p, 'sess-B', src);
     assert.equal(await box.locator('.ca-view-status').innerText(), '現在、完全解析を閲覧できません');
-    assert.match(await box.innerText(), /解析レポートの購入が取り消されたため/);
+    assert.match(await box.innerText(), /解析レポートの購入が取り消されたため[\s\S]*解析レポート（¥1,000）をお申し込みいただくと、ご覧いただけます/);
+    assert.doesNotMatch(await box.innerText(), /お問い合わせください/);
     assert.equal(await box.locator('[data-ca-view-open]').count(), 0);
-    assert.doesNotMatch(await box.innerText(), /¥1,000|¥3,000|¥2,000/);
+    assert.doesNotMatch(await box.innerText(), /¥3,000|¥2,000/);
   }
   await p.__ctx.close();
   w = world({ postReply: { status: 403, body: { error: 'basis_inactive' } } });

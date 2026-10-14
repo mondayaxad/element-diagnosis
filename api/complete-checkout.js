@@ -75,6 +75,7 @@ const ORDER_ERRORS = {
 };
 
 function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUntil, storageFactory = null, now }) {
+  const nowMs = now || (() => Date.now());
   const stripeClients = new Map();
   function stripeFor(key) {
     if (!stripeClients.has(key)) stripeClients.set(key, stripeFactory(key));
@@ -164,6 +165,9 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
       // この端末の Cookie に、同じ診断結果の未引き継ぎの支払い済みのゲスト購入がある：アカウントで重ねて売らない（先に引き継ぐ）
       const code = (PS.one(st.record.session.diagnosis_answers) || {}).encoded_answers;
       if (code && await guestHandler.cookieOwnsCode(req, guard, code, user.email)) return fail(res, 409, 'guest_purchase_unclaimed');
+      // 別の端末・消えた Cookie でも：このアカウントのメールで支払った未引き継ぎのゲストの購入があれば、重ねて売らない
+      //   （マイページの案内から、購入時メールの確認で引き継ぐ）
+      if (code && await guestHandler.emailOwnsCode(guard, user.email, code)) return fail(res, 409, 'guest_purchase_unclaimed');
 
       // 5. offer をサーバーが決める
       let offer = 'direct_complete';
@@ -194,9 +198,12 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
         '&select=id,diagnosis_session_id,offer,status,stripe_checkout_session_id,user_id,created_at'))
         .filter((o) => o.diagnosis_session_id !== targetId);
       const cookieOpen = code ? await guestHandler.cookieOpenForCode(req, guard, code) : [];
-      const closedOthers = await guestHandler.closeOpenOrders(guard, groupOpen.concat(cookieOpen));
-      if (closedOthers === 'paid') return fail(res, 409, 'purchase_completed');
-      if (closedOthers === 'busy') return fail(res, 409, 'checkout_in_progress');
+      const closedGroup = await guestHandler.closeOpenOrders(guard, groupOpen);
+      if (closedGroup === 'paid') return fail(res, 409, 'purchase_completed');
+      const closedCookie = await guestHandler.closeOpenOrders(guard, cookieOpen);
+      // この端末のログインなしの画面で払い済みだった：ゲストの購入として反映した（アカウントへは引き継ぎで移す）
+      if (closedCookie === 'paid') return fail(res, 409, 'guest_purchase_completed');
+      if (closedGroup === 'busy' || closedCookie === 'busy') return fail(res, 409, 'checkout_in_progress');
 
       // 6. 注文（決済待ちの注文があればそれを返す）。offer が違う・Stripe の画面が閉じている決済待ちは、
       //    Stripe の Session を閉じてから片付け、1回だけ作り直す（別の価格の画面を返さない）。
@@ -216,8 +223,17 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
           replaced += 1;
           continue;
         }
+        // 作ったまま 4 分を過ぎた注文（Stripe・DB の一時的な失敗で画面を渡せなかった）：片付けて次の鍵で作り直す。
+        //   画面の URL は渡していない（渡すのは checkout_open にした後だけ）。期限（作成から 35 分）が近い画面を作らない
+        if (!order.created && order.order_status === 'created' && replaced < 5
+            && nowMs() - await guestHandler.orderCreatedAt(guard, order.order_id) > 4 * 60 * 1000) {
+          await CP.rpc(fetchImpl, guard, 'complete_close_unopened_order', { p_order_id: order.order_id, p_status: 'canceled', p_failure_code: 'stale' });
+          replaced += 1;
+          continue;
+        }
         if (order.order_status !== 'checkout_open' && !(order.order_status === 'created' && order.offer !== offer)) break;
         let open = null;
+        let settled = false;
         if (order.order_status === 'checkout_open') {
           if (!order.checkout_session_id) return failLogged(res, 500, 'checkout_failed', 'order_session_missing');
           open = await CP.stripeCall(() => stripe.checkout.sessions.retrieve(order.checkout_session_id));
@@ -230,11 +246,18 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
             return fail(res, 409, r === 'paid' ? 'purchase_completed' : 'checkout_in_progress');
           }
           if (!open) return fail(res, 409, 'checkout_in_progress');
-          if (open.status === 'open') await CP.stripeCall(() => stripe.checkout.sessions.expire(order.checkout_session_id));
+          if (open.status === 'open') {
+            // 閉じる間に支払いが完了した：反映して、購入済みとして返す（エラーにしない）
+            const r = await guestHandler.settleOrder(guard, { id: order.order_id, status: 'checkout_open', stripe_checkout_session_id: order.checkout_session_id, user_id: user.id },
+              { expireIfOpen: true, closeAs: 'canceled' });
+            if (r === 'paid') return fail(res, 409, 'purchase_completed');
+            if (r === 'open' || r === null) return fail(res, 409, 'checkout_in_progress');
+            settled = true; // 閉じて片付けた（canceled・expired）
+          }
         }
         if (cancelled) return fail(res, 409, 'checkout_in_progress');
         cancelled = true;
-        await CP.rpc(fetchImpl, guard, 'complete_cancel_open_order', { p_order_id: order.order_id, p_checkout_session_id: order.checkout_session_id || null });
+        if (!settled) await CP.rpc(fetchImpl, guard, 'complete_cancel_open_order', { p_order_id: order.order_id, p_checkout_session_id: order.checkout_session_id || null });
       }
       const amount = CP.OFFER_AMOUNTS[order.offer];
       if (order.order_status !== 'created') return failLogged(res, 500, 'checkout_failed', 'order_status_unexpected');
@@ -293,7 +316,20 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
           p_order_id: order.order_id, p_checkout_session_id: session.id, p_expires_at: new Date(session.expires_at * 1000).toISOString(),
         });
       } catch (err) {
+        // 注文がもう決済待ちでない（返金・異議申し立て・引き継ぎで片付けた）：作った画面は渡さず、Stripe で閉じる
+        if (err && err.code === 'complete_order_not_open') {
+          try { await CP.stripeCall(() => stripe.checkout.sessions.expire(session.id)); } catch { /* 35 分で切れる */ }
+          return fail(res, 409, 'offer_changed');
+        }
         return failLogged(res, 503, 'service_unavailable', `checkout_record_${err.code || 'failed'}`);
+      }
+      // 作っている間に ¥1,000 の返金・異議申し立てが入った：根拠の無い ¥2,000 の画面は渡さない（閉じて片付ける）
+      if (!(await guestHandler.upgradeBasisStillActive(guard, order, session))) return fail(res, 409, 'offer_changed');
+      // 同時に別のタブ（ゲスト）で、この画面より前に作られた同じ結果の画面を閉じる（払える画面は1つ。後の画面はその申込が閉じる）
+      if (code) {
+        const mineAt = await guestHandler.orderCreatedAt(guard, order.order_id);
+        const older = (await guestHandler.cookieOpenForCode(req, guard, code)).filter((o) => Date.parse(o.created_at) < mineAt);
+        if (older.length) await guestHandler.closeOpenOrders(guard, older);
       }
       return res.status(200).json({ checkoutUrl: session.url, offer: order.offer, amount });
     } catch (err) {

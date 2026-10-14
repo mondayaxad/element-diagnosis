@@ -1234,7 +1234,8 @@ const MP_CHECKOUT_ERRORS = {
   onboarding_required: '登録を完了してから、もう一度お試しください。',
   not_authenticated: 'ログインの有効期限が切れました。もう一度ログインしてください。',
   network: '通信できませんでした。電波の良い場所で、もう一度お試しください。',
-  guest_purchase_unclaimed: 'この端末に、この結果のログインなしの購入があります。先にマイページへ引き継いでください（重ねてお支払いいただかないため）。',
+  guest_purchase_unclaimed: 'この結果は、ログインなしで購入済みです。先にマイページへ引き継いでください（重ねてお支払いいただかないため）。',
+  guest_purchase_completed: 'この端末のログインなしの決済で、お支払いが完了していました。購入時のメールアドレスで確認すると、マイページへ引き継げます。',
   purchase_completed: 'お支払いは完了しています。表示を更新します。',
   rights_suspended: 'この記録の購入は、現在確認中のためお申し込みいただけません。',
   offer_changed: '購入状況が変わったため、お申込み内容を更新します。もう一度お選びください。',
@@ -1265,7 +1266,7 @@ document.addEventListener('click', async (e) => {
     btn.insertAdjacentElement('afterend', msg);
   }
   msg.textContent = mpCheckoutErrorText(r.error);
-  if (r.error === 'guest_purchase_unclaimed') {
+  if (r.error === 'guest_purchase_unclaimed' || r.error === 'guest_purchase_completed') {
     msg.insertAdjacentHTML('beforeend', ' <a href="/mypage.html#recover">購入時のメールアドレスで確認して引き継ぐ</a>');
   }
   if (MP_REFRESH_ERRORS.includes(r.error)) setTimeout(() => { init(); }, 1800);
@@ -1925,14 +1926,9 @@ function caGuideHtml(r, g, pending) {
     // 目標の選択（Preview）は決済の前の手順。決済そのものは販売停止中は押せない（確認の画面でも「準備中」）
     action = pending || CompleteAnalysis.pendingButtonHtml(g.offer, 'mp-btn mp-btn-pending');
     note = salesClosed ? CA_PENDING_NOTE : '';
-  } else if (g.kind === 'unknown') {
+  } else {
     action = disabled('完全解析（状態を確認中）', 'unavailable') + (g.view ? caViewHtml(r, g.view) : recheck);
     note = '<p class="ca-pending-note" role="status">完全解析の状態を確認できていません。重複して購入しないよう、確認できるまでお申し込みいただけません。</p>';
-  } else {
-    action = disabled('完全解析（決済手続き中）', 'unavailable')
-      + `<button type="button" class="mp-btn" data-checkout-reset="${caEsc(caRecordId(r))}">決済をやり直す</button>`;
-    note = '<p class="ca-pending-note" role="status">決済の手続き中です。決済画面を閉じた場合は、やり直せます（お支払い済みなら、そのまま反映されます）。</p>'
-      + '<p class="ca-pending-note mp-reset-msg" role="alert" hidden></p>';
   }
   return `<div class="ca-rec-guide" data-ca-guide="${id}" data-ca-guide-kind="${g.kind}">
       <div class="ca-rec-guide-head"><span class="ca-eyebrow">COMPLETE ANALYSIS｜完全解析</span><span class="ca-pages"><span class="ca-pages-ja">全46ページ</span><span class="ca-pages-en">COMPLETE RECORD</span></span></div>
@@ -2643,7 +2639,7 @@ const CA_VIEW_NOTES = {
   suspended: 'お支払いについて確認中のため、閲覧を一時的に止めています。',
   revoked: '返金などにより、この記録の完全解析の権利は終了しています。',
   not_entitled: 'この記録の完全解析を閲覧する権利を確認できませんでした。',
-  basis_inactive: '解析レポートの購入が取り消されたため、完全解析をご覧いただけません。お問い合わせください。',
+  basis_inactive: '解析レポートの購入が取り消されたため、完全解析をご覧いただけません。解析レポート（¥1,000）をお申し込みいただくと、ご覧いただけます。',
   regenerate: 'お支払いは完了しています。同じご注文・同じ目標で、もう一度作成できます（追加のお支払いはありません）。',
   operator: 'お支払いは完了しています。お手数ですが @mondayaxad までご連絡ください（追加のお支払いは不要です）。',
   regenerate_failed: 'もう一度作成できませんでした。時間をおいて、もう一度お試しください。',

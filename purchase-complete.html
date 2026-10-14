@@ -131,6 +131,11 @@
       return;
     }
     var purchases = (r.body.purchases || []);
+    // 支払いを確認できていない決済（権利の無い決済待ち）は、いちばん新しい1件だけ出す（今戻ってきた決済）。
+    //   この端末で以前に開いて閉じなかった、別の結果の決済を「お支払いを確認しています」と見せない
+    var pendingOnly = function (p) { return p.pending && !p.analysis && !p.complete; };
+    var newestPending = purchases.filter(pendingOnly).sort(function (a, b) { return (b.purchasedAt || '') < (a.purchasedAt || '') ? -1 : 1; })[0] || null;
+    purchases = purchases.filter(function (p) { return !pendingOnly(p) || p === newestPending; });
     if (tries === 0) G.track('checkout_return', { state: canceled ? 'canceled' : purchases.length ? 'found' : 'none' });
     if (!purchases.length) {
       if (!canceled) document.getElementById('pcLead').textContent = '';
@@ -204,7 +209,7 @@
       if (!o.ok) {
         t.disabled = false;
         if (msg) msg.textContent = o.error === 'report_not_ready' ? '完全解析はまだ作成中です。少し待ってから開いてください。'
-          : o.error === 'basis_inactive' ? '解析レポートの購入が取り消されたため、完全解析をご覧いただけません。お問い合わせください。'
+          : o.error === 'basis_inactive' ? '解析レポートの購入が取り消されたため、完全解析をご覧いただけません。解析レポート（¥1,000）をお申し込みいただくと、ご覧いただけます。'
           : '完全解析を開けませんでした。もう一度お試しください。';
       }
     }

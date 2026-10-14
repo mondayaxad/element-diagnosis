@@ -3187,7 +3187,8 @@ function initGuestPurchase(root, code, refs, opts) {
       if (st.analysisAccess) setLock('mypage');
       else setLock('hold', null, st.analysisPurchased ? '解析レポートは現在確認中です' : 'マイページでご確認ください');
       var note;
-      if (st.completeEntitlement === 'active') note = '<p class="ca-fold-note">この結果の完全解析は購入済みです。</p><a class="ca-fold-btn" href="/mypage.html">マイページで完全解析を見る</a>';
+      if (st.completeViewBlocked === 'basis_inactive') note = '<p class="ca-fold-note">完全解析をお読みいただくには、解析レポート（¥1,000）が必要です。マイページの診断記録からお申し込みいただけます。</p><a class="ca-fold-btn" href="/mypage.html">マイページで申し込む</a>';
+      else if (st.completeEntitlement === 'active') note = '<p class="ca-fold-note">この結果の完全解析は購入済みです。</p><a class="ca-fold-btn" href="/mypage.html">マイページで完全解析を見る</a>';
       else if (st.completeOffer === 'analysis_upgrade') note = '<p class="ca-fold-note">この結果の解析レポートは購入済みです。完全解析は、マイページの診断記録から追加 ¥2,000 でお申し込みいただけます。</p><a class="ca-fold-btn" href="/mypage.html">マイページで完全解析へ　追加¥2,000</a>';
       else if (st.completeBlocked === 'legacy_purchase_not_eligible') note = '<p class="ca-fold-note">この記録の解析レポートは、旧バージョンのため、完全解析はお申し込みいただけません。</p>';
       else if (st.completeBlocked === 'repurchase_not_allowed' || st.completeBlocked === 'rights_suspended') note = '<p class="ca-fold-note">この記録の購入は、現在お申し込みいただけません。詳しくはマイページの診断記録でご確認いただくか、@mondayaxad までお問い合わせください。</p><a class="ca-fold-btn" href="/mypage.html">マイページで開く</a>';

@@ -39,6 +39,13 @@
   運営者が Stripe で返金し、利用者に連絡する。
   - 読み取りの確認：`select error_code, count(*) from public.stripe_webhook_events where error_code in ('live_order_conflict', 'basis_inactive') group by 1;`
   - 反映しなかった支払いの注文は `failed`（`failure_code` が同じ理由）になり、その記録の次の申込・引き継ぎを止めない。
+- ¥1,000 を返金する前に、その記録に反映待ちの ¥2,000 が無いことを確かめる（¥2,000 を払った直後・Webhook の反映前に ¥1,000 を返金すると、
+  ¥2,000 は根拠が無いとして反映されない）。読み取りの確認：
+  `select id, status, created_at from public.complete_orders where diagnosis_session_id = '<記録 ID>' and offer = 'analysis_upgrade' and status in ('created', 'checkout_open');`
+  行があれば、Stripe でその決済画面の状態を確かめ、支払い済みなら反映を待ってから返金する。
+- 同じ人・同じ診断結果で、解析レポートを二重に払ってしまった時（ログインなしの購入を引き継ぐ前に、別の端末でもう一度払った等）の返金は、
+  完全解析（¥2,000）を持たない方の記録の ¥1,000 を返金する。¥2,000 の根拠の記録の ¥1,000 を返金すると、その完全解析が読めなくなる。
+  通常は起きない：アカウントの確認済みメールで払った未引き継ぎの購入がある結果は、マイページ・結果ページとも重ねて売らない（`guest_purchase_unclaimed`）。
 - 返金・取消で完全解析を持たなくなった記録は、支払いで固定した MENTOR 目標の固定を外して選び直せる（`complete_release_mentor_goal_lock`）。
 - 引き継ぎ：この端末の購入の秘密値＋ログイン中の確認済みメールが、その記録の支払いのどれかの購入時メールと一致する時、または購入時メールの OTP。
   マイページを開くと自動で引き継ぐ。ログイン中に結果ページから買う時は、決済画面のメールにアカウントの確認済みメールが入る。

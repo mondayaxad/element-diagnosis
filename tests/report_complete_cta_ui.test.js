@@ -280,3 +280,12 @@ test('監査：ゲストの解析レポートの末尾：状態の確認に失�
   assert.match(await box(p2).innerText(), /マイページに引き継ぎ済みです[\s\S]*マイページで開く/);
   await c2.close();
 });
+
+test('ゲスト：¥2,000 を返金した記録（完全解析は失効）は「購入済み」と出さず、追加 ¥2,000 を申し込める', { skip: skip() }, async () => {
+  const w = world({ purchases: [mine({ complete: 'revoked', report: 'revoked', canUpgrade: true })] });
+  const ctx = await context(w);
+  const p = await openReport(ctx);
+  await box(p).locator('[data-report-upgrade]').waitFor();
+  assert.doesNotMatch(await box(p).innerText(), /購入済みです/);
+  await ctx.close();
+});

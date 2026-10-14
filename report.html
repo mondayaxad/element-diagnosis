@@ -1811,7 +1811,7 @@ function initReportComplete(code, viewer, mypageComplete) {
       return;
     }
     var mine = list.filter(function (p) { return p.thisRecord; })[0] || null;
-    if (mine && mine.complete) {
+    if (mine && (mine.complete === 'active' || mine.complete === 'suspended')) {
       box.innerHTML = '<p class="ca-r-note">この記録の完全解析は購入済みです（' + G.esc(G.completeLabel(mine)) + '）。</p>'
         + '<a class="ca-r-btn" href="/purchase-complete">購入した内容を見る</a>' + mypageSave;
       bindMypageSave(mine);

@@ -112,7 +112,7 @@ function createHandler({ env, fetchImpl }) {
         resultStates[`ETI-2.0:${a.encoded_answers}`] = {
           analysisAccess: rec.analysisAccess, analysisPurchased: rec.analysisPurchased, legacyAnalysis: rec.legacyAnalysis,
           completeOffer: rec.completeOffer, completeBlocked: rec.completeBlocked, completeEntitlement: rec.completeEntitlement,
-          completeStatus: rec.completeStatus, checkoutInProgress: rec.checkoutInProgress,
+          completeStatus: rec.completeStatus, checkoutInProgress: rec.checkoutInProgress, completeViewBlocked: rec.completeViewBlocked,
         };
       });
       payload.result_states = resultStates;
