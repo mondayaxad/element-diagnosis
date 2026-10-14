@@ -22,12 +22,14 @@
   function back(e) {
     e.preventDefault();
     var dest = destination();
+    var leaving = false;
+    window.addEventListener('pagehide', function () { leaving = true; }, { once: true });
     try { window.close(); } catch (err) { /* 閉じられない時は下で移動する */ }
     // 閉じられなかった時だけ移動する（閉じている途中・非表示になった時は移動しない）
     setTimeout(function () {
-      if (window.closed || document.visibilityState === 'hidden') return;
+      if (leaving || window.closed || document.visibilityState === 'hidden') return;
       location.assign(dest);
-    }, 500);
+    }, 1000);
   }
   document.querySelectorAll('[data-sample-return]').forEach(function (a) {
     a.setAttribute('href', destination());
