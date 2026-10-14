@@ -36,10 +36,15 @@ function fakeStripe({ prices = {} } = {}) {
           }
           const price = st.prices[params.line_items[0].price];
           if (!price) throw missing();
+          // Stripe：expires_at は作成から 30 分〜24 時間（範囲外は invalid_request_error）
+          const nowSec = Math.floor(Date.now() / 1000);
+          if (params.expires_at !== undefined && (!Number.isInteger(params.expires_at) || params.expires_at < nowSec + 30 * 60 || params.expires_at > nowSec + 86400)) {
+            throw stripeError('StripeInvalidRequestError', 400, 'parameter_invalid_integer');
+          }
           const id = rid('cs_test_');
           st.sessions[id] = {
             id, object: 'checkout.session', livemode: false, mode: params.mode || 'payment', status: 'open', payment_status: 'unpaid',
-            url: `https://checkout.stripe.com/c/pay/${id}`, expires_at: Math.floor(Date.now() / 1000) + 86400,
+            url: `https://checkout.stripe.com/c/pay/${id}`, expires_at: params.expires_at !== undefined ? params.expires_at : Math.floor(Date.now() / 1000) + 86400,
             amount_total: price.unit_amount, currency: price.currency, metadata: clone(params.metadata || {}),
             payment_intent: null, customer_details: null,
             // Stripe の line item：Price は作成時点の内容（後で Price の設定を変えても、この決済の値は変わらない）

@@ -174,11 +174,12 @@ test('GET（保存済み・ロック・決済中・旧購入権）', async () =>
   let r = (await get(f)).res.body;
   assert.deepEqual(r.selection, { goalId: 'GOAL_PACE_01', goalCatalogVersion: CE.MENTOR_CATALOG_VERSION, selectedAt: '2026-10-07T00:00:00Z' });
   assert.equal(r.changeAllowed, true);
-  for (const [status, inProgress] of [['created', true], ['checkout_open', true], ['paid', false], ['disputed', false]]) {
+  // 決済中の画面だけ（created・checkout_open）：変えられる（マイページが画面を閉じてから送る）。支払い済みは変えられない
+  for (const [status, inProgress, allowed] of [['created', true, true], ['checkout_open', true, true], ['paid', false, false], ['disputed', false, false]]) {
     f.db.complete_orders = [{ user_id: U1, diagnosis_session_id: S1, offer: 'direct_complete', status }];
     r = (await get(f)).res.body;
     assert.equal(r.checkoutInProgress, inProgress, status);
-    assert.equal(r.changeAllowed, false, status);
+    assert.equal(r.changeAllowed, allowed, status);
   }
   for (const status of ['expired', 'failed', 'canceled']) {
     f.db.complete_orders = [{ user_id: U1, diagnosis_session_id: S1, offer: 'direct_complete', status }];
@@ -258,16 +259,16 @@ test('POST：旧版・結果なし・版違いは 422 not_eligible（理由つ�
   assert.deepEqual((await post(f, { diagnosisSessionId: S1, goalId: 'GOAL_UNKNOWN_99' })).res.body, { error: 'unknown_goal' });
 });
 
-test('POST：支払後ロックは 409 mentor_goal_locked、created・checkout_open・paid・disputed は 409 checkout_in_progress', async () => {
+test('POST：支払後ロック・paid・disputed は 409 mentor_goal_locked、決済中の画面（created・checkout_open）は 409 checkout_in_progress（画面を閉じてから送り直す）', async () => {
   const base = { diagnosis_session_id: S1, user_id: U1, goal_id: 'GOAL_PACE_01', goal_catalog_version: CE.MENTOR_CATALOG_VERSION, selected_at: '2026-10-07T00:00:00Z', locked_at: null };
   const f = fakeDb({ record_mentor_goals: [{ ...base, locked_at: '2026-10-07T01:00:00Z' }] });
   assert.deepEqual((await post(f, { diagnosisSessionId: S1, goalId: 'GOAL_VISIBLE_01' })).res.body, { error: 'mentor_goal_locked' });
   assert.equal((await post(f, { diagnosisSessionId: S1, goalId: 'GOAL_PACE_01' })).res.code, 200, 'ロック後も同じ目標の再送は 200');
-  for (const status of ['created', 'checkout_open', 'paid', 'disputed']) {
+  for (const [status, error] of [['created', 'checkout_in_progress'], ['checkout_open', 'checkout_in_progress'], ['paid', 'mentor_goal_locked'], ['disputed', 'mentor_goal_locked']]) {
     const g = fakeDb({ record_mentor_goals: [{ ...base }], complete_orders: [{ user_id: U1, diagnosis_session_id: S1, offer: 'analysis_upgrade', status }] });
     const { res } = await post(g, { diagnosisSessionId: S1, goalId: 'GOAL_VISIBLE_01' });
     assert.equal(res.code, 409, status);
-    assert.deepEqual(res.body, { error: 'checkout_in_progress' });
+    assert.deepEqual(res.body, { error }, status);
     assert.equal(g.writes.length, 0);
   }
   for (const status of ['expired', 'failed', 'canceled']) {

@@ -269,7 +269,7 @@
   // サーバー（/api/my-entitlements v2 の records）の状態から、完全解析の導線を決める。
   //   unknown：状態を確認できない／purchased：完全解析権あり／closed：再購入不可（返金・失効・一時停止など）
   //   repurchaseBlocked は「完全解析を購入済み」だけ（解析レポート ¥1,000 だけの購入では ¥2,000 へ進める）
-  //   ineligible：販売対象外／checkout_in_progress：決済手続き中
+  //   ineligible：販売対象外
   //   closed（reason: 'legacy'）：旧 Payment Link で解析レポートを購入した記録（旧購入は完全解析の根拠にしない）
   //   offer：direct（¥3,000）または upgrade（¥2,000。根拠は新しい Checkout で買った記録単位の解析権だけ）
   function completeOfferFor(complete, lookup) {
@@ -277,7 +277,7 @@
     if (complete.completeEntitlement === 'active') return { kind: 'purchased' };
     if (complete.repurchaseBlocked) return { kind: 'closed' };
     if (complete.completeEligible !== true) return { kind: 'ineligible', reason: complete.ineligibleReason || null };
-    if (complete.checkoutInProgress) return { kind: 'checkout_in_progress' };
+    // 決済中（未払いの開いた画面）は申込を止めない（申込の時にサーバーが古い画面を閉じてから作る）
     if (complete.completeBlocked === 'legacy_purchase_not_eligible') return { kind: 'closed', reason: 'legacy' };
     // 解析レポートの権利が一時停止中（dispute 中）：購入を出さない
     if (complete.completeBlocked === 'rights_suspended') return { kind: 'closed' };

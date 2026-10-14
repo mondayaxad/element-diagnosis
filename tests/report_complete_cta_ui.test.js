@@ -239,7 +239,7 @@ test('決済画面から支払わずに戻る：戻る（ページの復元）�
   ctx = await context(w);
   p = await openReport(ctx);
   assert.equal(w.calls.filter((c) => c.op === 'guest-cancel').length, 0, '自分で決済へ進んでいない時は勝手に閉じない');
-  assert.match(await box(p).innerText(), /前回のお手続きは完了していません。お支払いが済んでいる場合は、自動で反映されます。もう一度お申し込みいただけます。/);
+  assert.doesNotMatch(await box(p).innerText(), /前回のお手続き|手続き中/, '案内の文言は出さない');
   await box(p).locator('[data-report-upgrade]').click();
   await box(p).locator('input[name="report-mentor-goal"]').first().check();
   await box(p).locator('[data-report-buy]').click();
@@ -252,7 +252,6 @@ test('監査：マイページから開いた解析レポートの末尾は、�
   const cases = [
     ['owned', /完全解析は購入済みです[\s\S]*購入した内容を見る/],
     ['owned_inactive', /現在ご覧いただけません[\s\S]*マイページで確認する/],
-    ['checkout_in_progress', /決済の手続き中です[\s\S]*決済をやり直す[\s\S]*マイページで開く/],
     ['legacy', /旧バージョンのため、完全解析はお申し込みいただけません/],
     ['suspended', /現在確認中のためお申し込みいただけません/],
   ];

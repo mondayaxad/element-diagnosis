@@ -186,6 +186,18 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
       }
       // 旧 Payment Link の購入は価格の判断に使わない（画面は結び付け済みの旧購入の記録に申込を出さないが、ここでは断らない）
 
+      // 払える決済画面は、1人・1診断結果につき常に1つだけ：同じ診断結果の別の記録と、この端末のゲストの決済中の画面を
+      //   Stripe で先に閉じる（¥1,000 の画面を開いたまま ¥3,000 を選んだ等でも、選んだ方を買える。古い画面では支払えない）。
+      //   支払い済みだった画面は反映して、新しく売らない。この記録の決済中は、下の注文の作成で同じ規則で扱う
+      const groupOpen = (await CP.selectRows(fetchImpl, guard, `complete_orders?diagnosis_session_id=in.(${st.memberIds.join(',')})` +
+        `&user_id=eq.${encodeURIComponent(user.id)}&status=in.(created,checkout_open)` +
+        '&select=id,diagnosis_session_id,offer,status,stripe_checkout_session_id,user_id,created_at'))
+        .filter((o) => o.diagnosis_session_id !== targetId);
+      const cookieOpen = code ? await guestHandler.cookieOpenForCode(req, guard, code) : [];
+      const closedOthers = await guestHandler.closeOpenOrders(guard, groupOpen.concat(cookieOpen));
+      if (closedOthers === 'paid') return fail(res, 409, 'purchase_completed');
+      if (closedOthers === 'busy') return fail(res, 409, 'checkout_in_progress');
+
       // 6. 注文（決済待ちの注文があればそれを返す）。offer が違う・Stripe の画面が閉じている決済待ちは、
       //    Stripe の Session を閉じてから片付け、1回だけ作り直す（別の価格の画面を返さない）。
       let order = null;
@@ -232,6 +244,9 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
         return failLogged(res, 409, 'offer_changed', 'offer_mismatch');
       }
 
+      const expiresAt = await guestHandler.orderExpiresAt(guard, order.order_id);
+      if (!expiresAt) return failLogged(res, 500, 'checkout_failed', 'order_invalid');
+
       // 7. Price を Stripe から取得して照合
       const priceId = CP.priceIdFor(env, order.offer);
       const price = await CP.stripeCall(() => stripe.prices.retrieve(priceId));
@@ -251,6 +266,7 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
           success_url: urls.successUrl,
           cancel_url: urls.cancelUrl,
           locale: 'ja',
+          expires_at: expiresAt,
           metadata: { order_id: order.order_id, app: CP.APP, env: guard.appEnv },
         }, { idempotencyKey: CP.stripeIdempotencyKey(order.order_id) }));
       } catch (err) {

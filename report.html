@@ -1782,7 +1782,6 @@ function initReportComplete(code, viewer, mypageComplete) {
     var mpNotes = {
       owned: '<p class="ca-r-note">この記録の完全解析は購入済みです。</p><a class="ca-r-btn" href="/mypage.html" data-report-mypage>購入した内容を見る</a>',
       owned_inactive: '<p class="ca-r-note">この記録の完全解析は、現在ご覧いただけません（確認中・返金など）。詳しくはマイページの診断記録でご確認ください。</p><a class="ca-r-btn" href="/mypage.html" data-report-mypage>マイページで確認する</a>',
-      checkout_in_progress: '<p class="ca-r-note">この記録の決済の手続き中です。決済画面を閉じた場合は、マイページの診断記録の「決済をやり直す」からやり直せます。</p><a class="ca-r-btn" href="/mypage.html" data-report-mypage>マイページで開く</a>',
       legacy: '<p class="ca-r-note">この記録の解析レポートは、旧バージョンのため、完全解析はお申し込みいただけません。</p>',
       suspended: '<p class="ca-r-note">この記録の購入は、現在確認中のためお申し込みいただけません。</p>',
     };
@@ -1828,8 +1827,7 @@ function initReportComplete(code, viewer, mypageComplete) {
     }
     if (!G.salesOpen()) { box.innerHTML = pendingHtml(); return; }
     // 未払いの決済が残っていても、買っていない扱いで申し込める（サーバーが古い決済画面を閉じるか、同じ画面を返す。支払い済みなら作らない）
-    var unpaid = mine.pending ? '<p class="ca-r-note">前回のお手続きは完了していません。お支払いが済んでいる場合は、自動で反映されます。もう一度お申し込みいただけます。</p>' : '';
-    box.innerHTML = unpaid + '<button type="button" class="ca-r-btn is-offer" data-report-upgrade>' + label + '</button>'
+    box.innerHTML = '<button type="button" class="ca-r-btn is-offer" data-report-upgrade>' + label + '</button>'
       + '<p class="ca-r-note">この解析レポートをお持ちの方は、追加' + upPrice + 'で完全解析（全46ページ）をお読みいただけます。</p>' + sample + mypageSave;
     bindSample();
     bindMypageSave(mine);

@@ -3179,18 +3179,18 @@ function initGuestPurchase(root, code, refs, opts) {
     // ログイン中でアカウントの状態を確かめられない時・この端末の状態を確かめられない時も、申込の導線は出す
     //   （申込の時にサーバーが本人のアカウントとこの端末の購入を確かめ、購入済みなら重ねて売らない。買えることを優先する）
     var st = account && account.known ? account.state : null;
-    // ログイン中の本人がこの結果を購入済み・決済中・旧購入：マイページで読む・申し込む（ゲストとして重ねて売らない）
+    // ログイン中の本人がこの結果を購入済み・旧購入：マイページで読む・申し込む（ゲストとして重ねて売らない）
+    //   決済中（未払いの開いた画面）だけなら、ここで申し込める（サーバーが古い画面を閉じてから、選んだ方の画面を作る）
     var liveC = !!(st && (st.completeEntitlement === 'active' || st.completeEntitlement === 'suspended'));
-    if (st && (st.analysisPurchased || st.analysisAccess || st.legacyAnalysis || liveC || st.checkoutInProgress
+    if (st && (st.analysisPurchased || st.analysisAccess || st.legacyAnalysis || liveC
         || st.completeBlocked === 'repurchase_not_allowed' || st.completeBlocked === 'rights_suspended')) {
       if (st.analysisAccess) setLock('mypage');
-      else setLock('hold', null, st.analysisPurchased ? '解析レポートは現在確認中です' : (st.checkoutInProgress ? '購入の手続き中です（マイページ）' : 'マイページでご確認ください'));
+      else setLock('hold', null, st.analysisPurchased ? '解析レポートは現在確認中です' : 'マイページでご確認ください');
       var note;
       if (st.completeEntitlement === 'active') note = '<p class="ca-fold-note">この結果の完全解析は購入済みです。</p><a class="ca-fold-btn" href="/mypage.html">マイページで完全解析を見る</a>';
       else if (st.completeOffer === 'analysis_upgrade') note = '<p class="ca-fold-note">この結果の解析レポートは購入済みです。完全解析は、マイページの診断記録から追加 ¥2,000 でお申し込みいただけます。</p><a class="ca-fold-btn" href="/mypage.html">マイページで完全解析へ　追加¥2,000</a>';
       else if (st.completeBlocked === 'legacy_purchase_not_eligible') note = '<p class="ca-fold-note">この記録の解析レポートは、旧バージョンのため、完全解析はお申し込みいただけません。</p>';
       else if (st.completeBlocked === 'repurchase_not_allowed' || st.completeBlocked === 'rights_suspended') note = '<p class="ca-fold-note">この記録の購入は、現在お申し込みいただけません。詳しくはマイページの診断記録でご確認いただくか、@mondayaxad までお問い合わせください。</p><a class="ca-fold-btn" href="/mypage.html">マイページで開く</a>';
-      else if (st.checkoutInProgress) note = '<p class="ca-fold-note">この結果の決済の手続き中です。決済画面を閉じた場合は、マイページの診断記録から「決済をやり直す」でやり直せます。</p><a class="ca-fold-btn" href="/mypage.html">マイページで開く</a>';
       else note = '<p class="ca-fold-note">この結果の購入状況は、マイページの診断記録からご確認いただけます。</p><a class="ca-fold-btn" href="/mypage.html">マイページで開く</a>';
       mypageBox(note);
       return;
@@ -3224,8 +3224,7 @@ function initGuestPurchase(root, code, refs, opts) {
     var offer = mine && mine.canUpgrade ? 'analysis_upgrade' : 'direct_complete';
     if (analysisActive && offer !== 'analysis_upgrade') { box.innerHTML = ''; return; }
     if (!open) { box.innerHTML = pendingHtml(offer); return; }
-    box.innerHTML = (mine && mine.pending ? '<p class="ca-fold-note">前回のお手続きは完了していません。お支払いが済んでいる場合は、自動で反映されます。もう一度お申し込みいただけます。</p>' : '')
-      + (offer === 'analysis_upgrade' ? '<p class="ca-fold-note">この結果の解析レポートは購入済みです。完全解析は追加 ¥2,000 でお申し込みいただけます。</p>' : '')
+    box.innerHTML = (offer === 'analysis_upgrade' ? '<p class="ca-fold-note">この結果の解析レポートは購入済みです。完全解析は追加 ¥2,000 でお申し込みいただけます。</p>' : '')
       + '<button type="button" class="ca-fold-btn" data-reveal-offer="' + offer + '">' + offerLabel(offer) + '</button>';
     var reveal = box.querySelector('[data-reveal-offer]');
     reveal.onclick = function () {

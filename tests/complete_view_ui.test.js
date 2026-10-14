@@ -595,7 +595,7 @@ test('引き継げない（購入時と別のメールのアカウント）：�
 });
 
 // 総当たり：サーバーが返す記録の状態ごとに、マイページの記録の導線が正しいか（購入済みに購入を求めない・未購入は買える）
-test('総当たり（マイページ）：未購入／解析レポートだけ／完全解析まで／旧購入／決済の手続き中／確認できない／同じ結果の重複記録', { skip: skip() }, async () => {
+test('総当たり（マイページ）：未購入／解析レポートだけ／完全解析まで／旧購入／決済中の画面が残る／確認できない／同じ結果の重複記録', { skip: skip() }, async () => {
   const B2 = { ...B.row, id: 'sess-B2', completed_at: '2026-10-02T10:00:00Z' }; // 同じ結果をもう一度保存した記録
   const owned = { [`ETI-2.0:${B.code}`]: true };
   const cases = [
@@ -606,14 +606,15 @@ test('総当たり（マイページ）：未購入／解析レポートだけ�
       must: [/解析レポートを見る/, /完全解析を見る/], mustNot: [/¥1,000/, /¥2,000/, /¥3,000/] },
     { name: '旧購入（本人に結び付け済み）', purchased: owned, rec: rec({ analysisAccess: true, legacyAnalysis: true, completeBlocked: 'legacy_purchase_not_eligible' }),
       must: [/解析レポートを見る/, /旧バージョンのため、完全解析はお申し込みいただけません/], mustNot: [/¥1,000/, /¥2,000/, /¥3,000/] },
-    { name: '決済の手続き中（解析レポートあり）', purchased: owned, rec: rec({ analysisSource: 'record_entitlement', analysisAccess: true, analysisPurchased: true, checkoutInProgress: true, completeBlocked: 'checkout_in_progress' }),
-      must: [/解析レポートを見る/, /決済の手続き中/], mustNot: [/¥1,000/, /¥3,000/] },
+    // 決済中の画面が残っていても、申込を止めない（申込の時にサーバーが古い画面を閉じる）。「手続き中」とは出さない
+    { name: '¥2,000 の決済中の画面が残る（解析レポートあり）', purchased: owned, rec: rec({ analysisSource: 'record_entitlement', analysisAccess: true, analysisPurchased: true, checkoutInProgress: true, completeOffer: 'analysis_upgrade' }),
+      must: [/解析レポートを見る/, /追加\s*¥2,000/], mustNot: [/¥1,000/, /¥3,000/, /手続き中|やり直/] },
     { name: '解析レポートが確認中（異議申し立て中）', purchased: {}, rec: rec({ analysisPurchased: true, completeBlocked: 'rights_suspended' }),
       must: [/解析レポートは、現在確認中です/], mustNot: [/¥1,000/, /¥2,000/, /¥3,000/] },
     { name: '¥2,000 の後に ¥1,000 だけ返金（完全解析の根拠なし）', purchased: {}, rec: purchased({ completeViewBlocked: 'basis_inactive', completeBlocked: 'repurchase_not_allowed' }),
       must: [/解析レポート\s*¥1,000（完全解析を読むために必要です）/], mustNot: [/¥3,000/] },
-    { name: '¥3,000 の決済を放置（未購入）', purchased: {}, rec: rec({ checkoutInProgress: true, completeBlocked: 'checkout_in_progress' }),
-      must: [/決済手続き中です/, /決済をやり直す/], mustNot: [/¥3,000/] },
+    { name: '¥3,000 の決済中の画面が残る（未購入）', purchased: {}, rec: rec({ checkoutInProgress: true, completeOffer: 'direct_complete' }),
+      must: [/解析レポート\s*¥1,000/, /¥3,000/], mustNot: [/手続き中|やり直/] },
     { name: '¥3,000 を返金（もう一度買える）', purchased: {}, rec: rec({ completeEntitlement: 'revoked', completeStatus: 'revoked', repurchaseBlocked: false, completeOffer: 'direct_complete' }),
       must: [/解析レポート\s*¥1,000/, /¥3,000/], mustNot: [/利用できません|権利は終了/] },
     { name: '確認できない（サーバーは購入済みの印を返せない）', purchased: {}, completeLookup: 'failed', rec: rec(), must: [/購入状態を確認できませんでした/], mustNot: [/¥1,000/, /¥2,000/, /¥3,000/] },

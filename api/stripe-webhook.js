@@ -22,6 +22,7 @@ const CE = require('../lib/complete-eligibility');
 const CP = require('../lib/complete-payment');
 const RJ = require('../lib/complete-report-job');
 const CA = require('../lib/complete-apply');
+const GP = require('../lib/guest-purchase');
 
 const API = 'stripe-webhook';
 const MAX_BODY_BYTES = 512 * 1024;
@@ -34,6 +35,18 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
   }
   function reply(res, status, body) {
     return res.status(status).json(body);
+  }
+  const guestHandler = GP.createGuestHandler({
+    env, fetchImpl, stripeFor: () => stripeFor(env.STRIPE_SECRET_KEY), logger, storageFactory, waitUntil, now,
+  });
+  // 返金・異議申し立ての後：解析レポートの権利が止まった記録の、追加 ¥2,000 の決済中の画面を閉じる（根拠の無い ¥2,000 を払わせない）。
+  //   閉じられなくても Webhook は失敗にしない（画面は 35 分で切れる。支払われても反映しない）
+  async function closeUpgrades(conn, orderId) {
+    try {
+      await guestHandler.closeUpgradesAfterBasisChange(conn, orderId);
+    } catch (err) {
+      CP.logError(logger, API, `close_upgrades_${err.code || 'failed'}`, CE.incidentId());
+    }
   }
 
   async function finish(conn, ev, status, code, orderId) {
@@ -97,10 +110,12 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
     if (found.notOurs) return 'ignored:not_complete';
     const mismatch = found.mismatch || (charge.livemode !== CP.livemodeOf(conn) ? 'livemode_mismatch' : charge.currency !== 'jpy' ? 'currency_mismatch' : null);
     if (mismatch) { await finish(conn, ev, 'ignored', mismatch); return `ignored:${mismatch}`; }
-    return CP.rpc(fetchImpl, conn, 'complete_apply_refund', {
+    const result = await CP.rpc(fetchImpl, conn, 'complete_apply_refund', {
       p_event_id: ev.id, p_event_created: ev.createdAt, p_livemode: CP.livemodeOf(conn), p_order_id: found.orderId,
       p_payment_intent_id: pi, p_amount_refunded: Number.isInteger(charge.amount_refunded) ? charge.amount_refunded : null,
     });
+    await closeUpgrades(conn, found.orderId);
+    return result;
   }
 
   async function onDispute(conn, stripe, ev, obj) {
@@ -120,10 +135,12 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
     else if (dispute.status === 'lost') action = 'lost';
     const mismatch = found.mismatch || (dispute.livemode !== CP.livemodeOf(conn) ? 'livemode_mismatch' : !action ? 'dispute_not_closed' : null);
     if (mismatch) { await finish(conn, ev, 'ignored', mismatch); return `ignored:${mismatch}`; }
-    return CP.rpc(fetchImpl, conn, 'complete_apply_dispute', {
+    const result = await CP.rpc(fetchImpl, conn, 'complete_apply_dispute', {
       p_event_id: ev.id, p_event_created: ev.createdAt, p_livemode: CP.livemodeOf(conn), p_order_id: found.orderId,
       p_payment_intent_id: pi, p_action: action,
     });
+    if (action !== 'won') await closeUpgrades(conn, found.orderId);
+    return result;
   }
 
   const HANDLERS = {

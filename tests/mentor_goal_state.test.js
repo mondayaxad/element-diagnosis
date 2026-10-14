@@ -46,7 +46,9 @@ test('完全解析の導線：サーバーの状態から決める（診断コ�
   assert.equal(kind(rec({ analysisSource: 'record_entitlement' })).offer.offer, 'upgrade_2000');
   assert.equal(kind(rec({ legacyPurchasePending: true })).kind, 'offer', '確認中の表示は廃止');
   assert.deepEqual(kind(rec({ completeBlocked: 'legacy_purchase_not_eligible' })), { kind: 'closed', reason: 'legacy' });
-  assert.deepEqual(kind(rec({ checkoutInProgress: true })), { kind: 'checkout_in_progress' });
+  // 決済中の画面が残っていても申込を止めない（申込の時にサーバーが古い画面を閉じる）
+  assert.equal(kind(rec({ checkoutInProgress: true })).offer.offer, 'direct_3000');
+  assert.equal(kind(rec({ checkoutInProgress: true, analysisSource: 'record_entitlement' })).offer.offer, 'upgrade_2000');
   assert.deepEqual(kind(rec({ completeEligible: false, ineligibleReason: 'version_mismatch' })), { kind: 'ineligible', reason: 'version_mismatch' });
   assert.deepEqual(kind(rec({ repurchaseBlocked: true })), { kind: 'closed' });
   assert.deepEqual(kind(rec({ completeEntitlement: 'active' })), { kind: 'purchased' });

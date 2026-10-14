@@ -474,3 +474,24 @@ test('販売開始後：目標が未選択なら「目標を選ぶ」、選択�
   assert.deepEqual(p.__errors, []);
   await p.__ctx.close();
 });
+
+test('決済中の画面が残ったまま目標を変える：画面を閉じて（決済をやり直す）から送り直し、内容確認へ進む（「手続き中」と出さない）', { skip: skip() }, async () => {
+  const w = world({ postReply: { status: 409, body: { error: 'checkout_in_progress' } } });
+  const p = await open(w);
+  const resets = [];
+  await p.route('**/api/complete-checkout?op=user-checkout-reset', (r) => {
+    resets.push(JSON.parse(r.request().postData() || '{}'));
+    w.postReply = null; // 画面を閉じたので、次の送信は保存できる
+    r.fulfill({ contentType: 'application/json', body: JSON.stringify({ result: 'reset' }) });
+  });
+  await actions(p, 'sess-B', 'latest').locator('[data-mentor-open]').click();
+  await p.waitForSelector('#mpUpgradeBody input[name="ca-mentor-goal"]');
+  await p.locator('#mpUpgradeBody label.ca-goal-option').first().click();
+  await p.click('#mpUpgradeBody [data-mentor-submit]');
+  await p.waitForSelector('#mpUpgradeBody [data-mentor-back="goal"]');
+  assert.deepEqual(resets, [{ diagnosisSessionId: 'sess-B' }]);
+  assert.equal(w.posts.length, 2, '閉じてから1回だけ送り直す');
+  assert.doesNotMatch(await p.locator('#mpUpgradeBody').innerText(), /手続き中/);
+  assert.deepEqual(p.__errors, []);
+  await p.__ctx.close();
+});

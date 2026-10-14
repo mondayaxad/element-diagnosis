@@ -399,7 +399,7 @@ test('サンプルからマイページ：sample_to_mypage を1回だけ（入�
   await ctx.close();
 });
 
-test('完了ページ：未払いの決済が残っていても買っていない扱い。申込の導線をそのまま出し、そこから申し込める（C3）', { skip: skip() }, async () => {
+test('完了ページ：未払いの決済が残っていても買っていない扱い。案内の文言は出さず、申込の導線をそのまま出し、そこから申し込める（C3）', { skip: skip() }, async () => {
   const p = await resultPage({ api: {
     'guest-status': () => [200, { salesOpen: true, purchases: [{ ref: REF, analysis: null, complete: null, report: null, pending: true, claimed: false, canClaim: false, canUpgrade: false, thisRecord: true }] }],
     'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
@@ -407,8 +407,7 @@ test('完了ページ：未払いの決済が残っていても買っていな�
   const offer = p.locator('[data-reveal-offer="direct_complete"]');
   await offer.waitFor();
   const text = await p.locator('[data-guest-complete]').innerText();
-  assert.match(text, /前回のお手続きは完了していません。お支払いが済んでいる場合は、自動で反映されます。もう一度お申し込みいただけます。/);
-  assert.doesNotMatch(text, /購入状況を見る|購入済み/);
+  assert.doesNotMatch(text, /前回のお手続き|手続き中|購入状況を見る|購入済み/);
   await offer.click();
   await p.waitForSelector('input[name="guest-mentor-goal"]');
   assert.ok(await noScroll(p));
@@ -536,12 +535,11 @@ test('監査：購入状態を確かめるまで ¥1,000 は押せない（確�
   await p.__ctx.close();
 });
 
-test('監査：ログイン中の結果ページは、アカウントの状態で出し分ける（完全解析まで・旧購入・決済中）。¥1,000・¥3,000 を出さない', { skip: skip() }, async () => {
+test('監査：ログイン中の結果ページは、アカウントの状態で出し分ける（完全解析まで・旧購入・異議申し立て）。¥1,000・¥3,000 を出さない', { skip: skip() }, async () => {
   const code = await codeOf();
   const cases = [
     [ST({ analysisAccess: true, analysisPurchased: true, completeEntitlement: 'active', completeBlocked: 'repurchase_not_allowed', completeStatus: 'ready' }), /完全解析は購入済みです[\s\S]*マイページで完全解析を見る/],
     [ST({ analysisAccess: true, legacyAnalysis: true, completeBlocked: 'legacy_purchase_not_eligible' }), /旧バージョンのため、完全解析はお申し込みいただけません/],
-    [ST({ checkoutInProgress: true, completeBlocked: 'checkout_in_progress' }), /決済の手続き中です[\s\S]*決済をやり直す/],
     // 再々監査：異議申し立てで返金された ¥3,000（権利は取り消し・注文は disputed）。押しても進めない ¥3,000 を出さない
     [ST({ completeEntitlement: 'revoked', completeStatus: 'revoked', completeOffer: 'direct_complete', completeBlocked: 'repurchase_not_allowed' }), /現在お申し込みいただけません[\s\S]*マイページで開く/],
   ];
@@ -576,6 +574,19 @@ test('監査：申込で「購入済み」（409）が返ったら、購入欄�
   await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
   await p.locator('#lockUnlockAllBtn').click();
   await p.waitForFunction(() => document.querySelector('#lockUnlockAllBtn').textContent.trim() === '解析レポートを読む', null, { timeout: 6000 });
+  await p.__ctx.close();
+});
+
+test('ログイン中・アカウントに決済中の画面だけが残る：「手続き中」と出さず、¥1,000・¥3,000 を買える（申込の時にサーバーが古い画面を閉じる）', { skip: skip() }, async () => {
+  const code = await codeOf();
+  const p = await page('/', { user: true, resultStates: { ['ETI-2.0:' + code]: ST({ checkoutInProgress: true, completeOffer: 'direct_complete' }) },
+    api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-checkout': CHECKOUT } });
+  await p.goto(`${base}/?dv=ETI-2.0&code=${code}`);
+  await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
+  assert.doesNotMatch(await p.locator('#lockUnlockAllBtn').innerText(), /手続き中|マイページ/);
+  await p.click('details.ca-fold > summary');
+  await p.locator('[data-reveal-offer="direct_complete"]').waitFor();
+  assert.doesNotMatch(await p.locator('details.ca-fold').innerText(), /手続き中|やり直/);
   await p.__ctx.close();
 });
 

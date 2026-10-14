@@ -1907,7 +1907,6 @@ function caGuideMode(r) {
   if (sv.lookup !== 'ok') return { kind: 'unknown', view: null }; // 失敗（view が無いのは通常ありえない）
   const o = caOfferOf(r);
   if (o.kind === 'offer') return { kind: 'offer', offer: o.offer };
-  if (o.kind === 'checkout_in_progress') return { kind: 'checkout' };
   return null; // purchased／closed／ineligible／unknown
 }
 function caGuideHtml(r, g, pending) {
@@ -2937,12 +2936,6 @@ function caRecordMentorHtml(r) {
     return `<button type="button" class="mp-btn" data-mentor-open="${id}"${chosenGoal ? ' data-mentor-chosen="1"' : ''}>${head}：${chosenGoal ? '決済の確認へ' : '目標を選ぶ'}</button>${chosen}`;
   }
   if (o.kind === 'closed' && o.reason === 'legacy') return `<p class="mp-rec-mentor" role="status">${CompleteAnalysis.LEGACY_CLOSED_TEXT}</p>`;
-  if (o.kind === 'checkout_in_progress') {
-    // 決済画面を閉じた・放置した時に、この記録の行からやり直せる（Stripe の画面が期限切れになるまで待たせない）
-    return '<p class="mp-rec-mentor">完全解析の決済手続き中です</p>'
-      + `<button type="button" class="mp-btn" data-checkout-reset="${caEsc(caRecordId(r))}">決済をやり直す</button>`
-      + '<p class="mp-rec-mentor mp-reset-msg" role="alert" hidden></p>';
-  }
   return '';
 }
 // 目標の選択後に、同じ記録の LATEST RESULT と THE RECORDS の表示をそろえる
@@ -2959,17 +2952,12 @@ function caMentorOverviewHtml(r) {
   const k = caKey(r);
   if (k !== 'free' && k !== 'analysis') return null;
   const o = caOfferOf(r);
-  if (!['offer', 'checkout_in_progress', 'closed', 'purchased'].includes(o.kind)) return null;
+  if (!['offer', 'closed', 'purchased'].includes(o.kind)) return null;
   const target = caTargetHtml(r);
   const head = k === 'free'
     ? `<h2 class="ca-lead" id="latest-upgrade-title">この記録に、もう一つ深い観測を加える。</h2>${caAnalysisCardHtml(r)}`
     : `<div class="ca-state-head"><div class="ca-eyebrow">ANALYSIS OBSERVED</div><h2 class="ca-lead" id="latest-upgrade-title">構造と解釈まで観測されています</h2></div>
        ${purchasedReportButton(r.session, 'ca-btn ca-view-action', '解析レポートを見る')}`;
-  if (o.kind === 'checkout_in_progress') {
-    return `${target}${head}<p class="ca-mentor-note" role="status">決済の手続き中です。決済画面を閉じた場合は、やり直せます。</p>`
-      + `<button type="button" class="ca-btn ca-quiet-action" data-checkout-reset="${caEsc(caRecordId(r))}">決済をやり直す</button>`
-      + '<p class="ca-mentor-note mp-reset-msg" role="alert" hidden></p>';
-  }
   if (o.kind === 'purchased' || o.kind === 'closed') {
     const closedText = o.reason === 'legacy' ? CompleteAnalysis.LEGACY_CLOSED_TEXT : 'この記録の完全解析は、新たにお申し込みいただけません。';
     return `${target}${head}<p class="ca-mentor-note" role="status">${o.kind === 'purchased' ? 'この記録の完全解析は、お申し込み済みです。' : closedText}</p>`;
@@ -3102,6 +3090,22 @@ async function caLoadMentor(r) {
   }
   if (caRecordId(caSelected) === id && caStep !== 'overview') { caRenderSheet(); caFocusStep(); }
 }
+// この記録の未払いの決済画面を閉じる（POST ?op=user-checkout-reset）。'reset'・'none'・'paid'（支払い済みだった）／null（閉じられなかった）
+async function caResetCheckout(id) {
+  try {
+    const { data } = await supabaseClient.auth.getSession();
+    const token = data && data.session ? data.session.access_token : null;
+    if (!token) return null;
+    const res = await fetch('/api/complete-checkout?op=user-checkout-reset', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ diagnosisSessionId: id }),
+    });
+    const body = await res.json().catch(() => ({}));
+    return res.ok && body && typeof body.result === 'string' ? body.result : null;
+  } catch (e) {
+    return null;
+  }
+}
 async function caSubmitMentorGoal() {
   if (caMentorBusy) return; // 二重送信の防止
   const r = caSelected;
@@ -3117,6 +3121,12 @@ async function caSubmitMentorGoal() {
   let out;
   try {
     out = await caMentorRequest('POST', '', { diagnosisSessionId: id, goalId });
+    // 完全解析の決済画面が開いたまま：その画面を閉じてから、もう一度送る（目標を変えて買える。古い目標の画面では支払えない）
+    if (out.status === 409 && out.body && out.body.error === 'checkout_in_progress') {
+      const reset = await caResetCheckout(id);
+      if (reset === 'paid') { caMentorBusy = false; caCloseSheet(); await init(); return; }
+      if (reset) out = await caMentorRequest('POST', '', { diagnosisSessionId: id, goalId });
+    }
   } catch (e) {
     out = { status: 0, body: {} };
   }

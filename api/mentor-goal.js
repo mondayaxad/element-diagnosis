@@ -77,7 +77,8 @@ function createHandler({ env, fetchImpl, logger = console }) {
 
   // 記録と、目標の選択に必要な状態をまとめて読む。本人の記録でなければ null。
   // 判定は lib/purchase-state.js（決済・マイページと同じ規則）。同じ本人・同じ診断結果の記録は、権利の所在（target）の記録の目標を扱う。
-  // 目標を変えられないのは、支払後のロック、または同じ記録に完全解析（¥3,000／¥2,000）の決済待ち・支払済みの注文がある時だけ
+  // 目標を変えられないのは、支払後のロック、または同じ記録に完全解析（¥3,000／¥2,000）の支払済みの注文がある時だけ。
+  // 決済待ちの画面だけなら、マイページが画面を閉じてから変える（409 checkout_in_progress → 決済をやり直す → 送り直す）
   // （DB の record_mentor_goals_ownership と同じ。解析レポート ¥1,000 の注文は目標を固定しない）。
   async function loadState(conn, userId, sessionId) {
     const facts = await PS.loadUserFacts((path) => select(conn, path), userId);
@@ -91,9 +92,11 @@ function createHandler({ env, fetchImpl, logger = console }) {
       onboardingCompleted: CE.isOnboardingComplete(profiles[0] && profiles[0].onboarding_status),
       goal: t.goal,
       // 支払いで固定した目標でも、返金・取消で完全解析を持たなくなった記録は選び直せる（complete_11）
-      locked: !!(t.goal && t.goal.locked_at && (st.completeOwned || t.mentorFrozen)),
-      staleLock: !!(t.goal && t.goal.locked_at && !st.completeOwned && !t.mentorFrozen),
-      frozen: t.mentorFrozen,
+      locked: !!(t.goal && t.goal.locked_at && (st.completeOwned || t.mentorPaidFrozen)),
+      staleLock: !!(t.goal && t.goal.locked_at && !st.completeOwned && !t.mentorPaidFrozen),
+      frozen: t.mentorPaidFrozen,
+      // 完全解析の決済中の画面がある：変える前に画面を閉じる（マイページが「決済をやり直す」で閉じてから送り直す）
+      openCheckout: t.mentorFrozen && !t.mentorPaidFrozen,
       checkoutInProgress: !!st.openOrder,
       legacyPurchasePending: false, // 旧購入の確認（結び付け）は廃止
     };
@@ -197,7 +200,8 @@ function createHandler({ env, fetchImpl, logger = console }) {
       return res.status(200).json(Object.assign({ unchanged: true }, view(state)));
     }
     if (state.locked) return fail(res, 409, 'mentor_goal_locked');
-    if (state.frozen) return fail(res, 409, 'checkout_in_progress');
+    if (state.frozen) return fail(res, 409, 'mentor_goal_locked');
+    if (state.openCheckout) return fail(res, 409, 'checkout_in_progress');
     if (state.staleLock) {
       try {
         const r = await fetchImpl(`${guard.supabaseUrl}/rest/v1/rpc/complete_release_mentor_goal_lock`, {
