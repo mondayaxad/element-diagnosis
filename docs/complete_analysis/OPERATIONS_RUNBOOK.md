@@ -33,6 +33,8 @@
   根拠の解析権が無い ¥2,000）は権利を付けず、`stripe_webhook_events.error_code` が `live_order_conflict`／`basis_inactive` になる。
   運営者が Stripe で返金し、利用者に連絡する。
   - 読み取りの確認：`select error_code, count(*) from public.stripe_webhook_events where error_code in ('live_order_conflict', 'basis_inactive') group by 1;`
+  - 反映しなかった支払いの注文は `failed`（`failure_code` が同じ理由）になり、その記録の次の申込・引き継ぎを止めない。
+- 返金・取消で完全解析を持たなくなった記録は、支払いで固定した MENTOR 目標の固定を外して選び直せる（`complete_release_mentor_goal_lock`）。
 - 引き継ぎ：この端末の購入の秘密値＋ログイン中の確認済みメールが、その記録の支払いのどれかの購入時メールと一致する時、または購入時メールの OTP。
   マイページを開くと自動で引き継ぐ。ログイン中に結果ページから買う時は、決済画面のメールにアカウントの確認済みメールが入る。
 

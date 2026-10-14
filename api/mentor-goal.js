@@ -90,7 +90,9 @@ function createHandler({ env, fetchImpl, logger = console }) {
       eligibility: t.eligibility,
       onboardingCompleted: CE.isOnboardingComplete(profiles[0] && profiles[0].onboarding_status),
       goal: t.goal,
-      locked: !!(t.goal && t.goal.locked_at),
+      // 支払いで固定した目標でも、返金・取消で完全解析を持たなくなった記録は選び直せる（complete_11）
+      locked: !!(t.goal && t.goal.locked_at && (st.completeOwned || t.mentorFrozen)),
+      staleLock: !!(t.goal && t.goal.locked_at && !st.completeOwned && !t.mentorFrozen),
       frozen: t.mentorFrozen,
       checkoutInProgress: !!st.openOrder,
       legacyPurchasePending: false, // 旧購入の確認（結び付け）は廃止
@@ -196,6 +198,18 @@ function createHandler({ env, fetchImpl, logger = console }) {
     }
     if (state.locked) return fail(res, 409, 'mentor_goal_locked');
     if (state.frozen) return fail(res, 409, 'checkout_in_progress');
+    if (state.staleLock) {
+      try {
+        const r = await fetchImpl(`${guard.supabaseUrl}/rest/v1/rpc/complete_release_mentor_goal_lock`, {
+          method: 'POST', headers: Object.assign({}, guard.adminHeaders(), { 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ p_user_id: userId, p_diagnosis_session_id: state.targetId }),
+        });
+        if (!r.ok) return failLogged(res, 503, 'save_failed');
+        if ((await json(r)) !== true) return fail(res, 409, 'mentor_goal_locked');
+      } catch {
+        return failLogged(res, 503, 'save_failed');
+      }
+    }
 
     let written;
     try {

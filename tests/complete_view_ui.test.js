@@ -273,11 +273,12 @@ test('決済からの戻り（complete_return=1）：2秒→3秒→5秒の間隔
   await p.clock.runFor(1900);
   assert.equal(w.gets.length, 0);
   await p.clock.runFor(200);
-  await p.waitForFunction(() => true);
-  await new Promise((r) => setTimeout(r, 200));
+  // 確認の通信が届くまで（実時間で）待つ。決め打ちの待ち時間にしない（負荷の高い時に早く数えない）
+  const until = async (n) => { for (let i = 0; i < 100 && w.gets.length < n; i++) await new Promise((r) => setTimeout(r, 30)); };
+  await until(1);
   assert.equal(w.gets.length, 1, '2秒後に1回目');
   await p.clock.runFor(3000);
-  await new Promise((r) => setTimeout(r, 200));
+  await until(2);
   assert.equal(w.gets.length, 2, '3秒後に2回目');
   await p.clock.runFor(5000);
   await p.waitForSelector('[data-rec-actions="sess-B"][data-rec-source="latest"] [data-ca-view-open]');
@@ -613,6 +614,8 @@ test('総当たり（マイページ）：未購入／解析レポートだけ�
       must: [/解析レポート\s*¥1,000（完全解析を読むために必要です）/], mustNot: [/¥3,000/] },
     { name: '¥3,000 の決済を放置（未購入）', purchased: {}, rec: rec({ checkoutInProgress: true, completeBlocked: 'checkout_in_progress' }),
       must: [/決済手続き中です/, /決済をやり直す/], mustNot: [/¥3,000/] },
+    { name: '¥3,000 を返金（もう一度買える）', purchased: {}, rec: rec({ completeEntitlement: 'revoked', completeStatus: 'revoked', repurchaseBlocked: false, completeOffer: 'direct_complete' }),
+      must: [/解析レポート\s*¥1,000/, /¥3,000/], mustNot: [/利用できません|権利は終了/] },
     { name: '確認できない（サーバーは購入済みの印を返せない）', purchased: {}, completeLookup: 'failed', rec: rec(), must: [/購入状態を確認できませんでした/], mustNot: [/¥1,000/, /¥2,000/, /¥3,000/] },
   ];
   for (const c of cases) {

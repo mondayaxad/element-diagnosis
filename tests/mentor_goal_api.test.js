@@ -191,8 +191,17 @@ test('GET（保存済み・ロック・決済中・旧購入権）', async () =>
   }
   f.db.complete_orders = [];
   f.db.record_mentor_goals[0].locked_at = '2026-10-07T01:00:00Z';
+  // 支払いで固定した目標：完全解析を持つ間は変えられない
+  f.db.complete_orders = [{ user_id: U1, diagnosis_session_id: S1, offer: 'direct_complete', status: 'paid' }];
+  f.db.record_entitlements = [{ user_id: U1, diagnosis_session_id: S1, right_type: 'complete', status: 'active' }];
   r = (await get(f)).res.body;
   assert.equal(r.locked, true); assert.equal(r.changeAllowed, false);
+  // 返金で完全解析を持たなくなった：選び直せる（complete_11）
+  f.db.complete_orders = [{ user_id: U1, diagnosis_session_id: S1, offer: 'direct_complete', status: 'refunded' }];
+  f.db.record_entitlements = [{ user_id: U1, diagnosis_session_id: S1, right_type: 'complete', status: 'revoked' }];
+  r = (await get(f)).res.body;
+  assert.equal(r.locked, false); assert.equal(r.changeAllowed, true);
+  f.db.complete_orders = []; f.db.record_entitlements = [];
   // 旧 Payment Link の購入（ハッシュ一致）：確認（結び付け）は廃止したため、確認中にはならない
   f.db.purchase_entitlements = [{ id: '9e000000-0000-4000-8000-000000000001', diagnosis_code_hash: sha('v2_CODE1'), status: 'active', product_type: 'core1' }];
   assert.equal((await get(f)).res.body.legacyPurchasePending, false);

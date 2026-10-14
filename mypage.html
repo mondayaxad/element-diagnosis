@@ -1981,7 +1981,8 @@ function mpRecordActionsHtml(r, source) {
     const svc = caServerOf(r).complete;
     // ¥2,000 の後に ¥1,000 だけ返金（完全解析の根拠が無い）：解析レポートを買い直すと完全解析も読める
     const basisInactive = !!(svc && svc.completeViewBlocked === 'basis_inactive');
-    const hasComplete = !basisInactive && !!(view && ((svc && svc.completeEntitlement) || view.kind !== 'retry'));
+    const liveComplete = !!(svc && (svc.completeEntitlement === 'active' || svc.completeEntitlement === 'suspended'));
+    const hasComplete = !basisInactive && !!(view && (liveComplete || view.kind !== 'retry'));
     if (svc && svc.analysisPurchased) {
       // 解析レポートは購入済みだが、今は読めない（異議申し立ての確認中など）：¥1,000 を出さない（購入済みに重ねて売らない）
       items.push('<p class="mp-rec-mentor" role="status">この記録の解析レポートは、現在確認中です。</p>');
@@ -2660,7 +2661,10 @@ function caViewOf(r) {
   const id = caRecordId(r);
   if (!id) return null;
   const local = caViewStates.get(id);
-  const v = local || CompleteAnalysis.completeViewFromRecord(caServerOf(r).complete, caServerOf(r).lookup);
+  const sv = caServerOf(r).complete;
+  // 返金・取消で失効し、もう一度買える記録（再購入の禁止なし）：失効の表示ではなく、購入の導線を出す（complete_11）
+  if (!local && sv && sv.completeEntitlement === 'revoked' && !sv.repurchaseBlocked) return null;
+  const v = local || CompleteAnalysis.completeViewFromRecord(sv, caServerOf(r).lookup);
   return v && v.kind !== 'none' ? v : null;
 }
 function caViewHtml(r, v) {

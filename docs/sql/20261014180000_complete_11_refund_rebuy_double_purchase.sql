@@ -6,6 +6,7 @@
 -- 前提：complete_01〜10 適用済み・PostgreSQL 17 以上。
 -- 既存の行は書き換えない・消さない（関数の置き換えと、生成物の重複防止の索引の置き換えだけ）。
 -- 戻し：complete_95_rollback_11_DRAFT_DO_NOT_RUN.sql（実行禁止の草案）。
+-- 既に一度当てた後でも、この修正版をそのまま上から実行できる（関数は置き換え・索引は作り直し・履歴は増えない）。
 -- ============================================================
 --
 -- 方針（「購入済み」の数え方を1つにする）
@@ -18,6 +19,11 @@
 --     ¥3,000 なのに同じ記録・同じ結果に有効な解析権がある。¥2,000 なのに支払いの時点で根拠の解析権が有効でない。
 --   ・反映しなかった注文（期限切れ・片付け済み）への異議申し立ては、記録だけ残す（Webhook を失敗させ続けない）。
 --   ・完全解析の生成物の重複防止の索引から失効（revoked）を外す（返金の後の買い直しで、同じ材料の生成物を作れるように）。
+--   ・ゲストの注文（complete_create_guest_order）も同じ数え方にする。返金の後の買い直しでは、前回の支払いで固定した MENTOR 目標の固定を外す
+--     （complete_release_mentor_goal_lock：有効な完全解析の権利も、決済待ち・支払済み・異議申し立て中の完全解析の注文も無い時だけ。
+--      record_mentor_goals_guard は、この関数が立てる印の時だけ固定を外すことを許す）。
+--   ・反映しなかった支払いの注文（決済中のまま）は failed にする（その記録の次の申込・引き継ぎを止めない）。
+--   ・解析レポートの支払いで異議申し立てに負けた（申し立て中の）記録では ¥3,000 も売らない。
 
 begin;
 
@@ -153,6 +159,12 @@ begin
     if p_offer = 'direct_complete' and public.complete_result_group_has(p_user_id, p_diagnosis_session_id, 'analysis_active') then
       raise exception 'complete_direct_not_allowed_after_analysis' using errcode = '42501';
     end if;
+  end if;
+  -- 解析レポートの支払いで異議申し立てに負けた（または申し立て中の）記録では ¥3,000 を売らない（complete_11）
+  if p_offer = 'direct_complete' and exists (select 1 from public.complete_orders o
+                                              where o.diagnosis_session_id = p_diagnosis_session_id
+                                                and o.offer = 'analysis' and o.status = 'disputed') then
+    raise exception 'complete_repurchase_not_allowed' using errcode = '42501';
   end if;
   -- 解析権が一時停止中（dispute 中）の記録では ¥3,000 を作らない（解析権を重ねて作らない）
   if p_offer = 'direct_complete' and exists (select 1 from public.record_entitlements e
@@ -340,6 +352,10 @@ begin
                     where e.diagnosis_session_id = v_order.diagnosis_session_id and e.right_type = 'analysis'
                       and e.status in ('active', 'suspended'))
            or public.complete_result_group_has(v_order.user_id, v_order.diagnosis_session_id, 'analysis_active'))) then
+    -- 決済中の注文のまま残さない（その記録の次の申込・引き継ぎを止めない。運営者の返金は failed からも記録できる）
+    if v_order.status in ('created', 'checkout_open') then
+      update public.complete_orders set status = 'failed', failure_code = 'live_order_conflict', updated_at = now() where id = v_order.id;
+    end if;
     perform public.complete_webhook_finish(p_event_id, v_type, p_livemode, p_event_created, 'ignored', 'live_order_conflict', v_order.id);
     return 'ignored:live_order_conflict';
   end if;
@@ -347,6 +363,9 @@ begin
   if v_order.offer = 'analysis_upgrade' and not exists (
        select 1 from public.record_entitlements e
         where e.diagnosis_session_id = v_order.diagnosis_session_id and e.right_type = 'analysis' and e.status = 'active') then
+    if v_order.status in ('created', 'checkout_open') then
+      update public.complete_orders set status = 'failed', failure_code = 'basis_inactive', updated_at = now() where id = v_order.id;
+    end if;
     perform public.complete_webhook_finish(p_event_id, v_type, p_livemode, p_event_created, 'ignored', 'basis_inactive', v_order.id);
     return 'ignored:basis_inactive';
   end if;
@@ -490,6 +509,99 @@ end;
 $$;
 
 
+create or replace function public.record_mentor_goals_guard()
+  returns trigger
+  language plpgsql
+  set search_path = ''
+as $$
+begin
+  -- 目標の固定を外す（complete_release_mentor_goal_lock だけが、同じトランザクションの中で印を立てて行う。complete_11）
+  if current_setting('app.complete_goal_release', true) = 'on' and old.locked_at is not null and new.locked_at is null
+     and new.goal_id is not distinct from old.goal_id and new.user_id is not distinct from old.user_id then
+    new.updated_at := now();
+    return new;
+  end if;
+  if old.locked_at is not null and (
+       new.goal_id is distinct from old.goal_id
+    or new.goal_catalog_version is distinct from old.goal_catalog_version
+    or new.selected_at is distinct from old.selected_at
+    or new.locked_at is distinct from old.locked_at
+    or (new.user_id is distinct from old.user_id
+        and not (old.user_id is null and new.user_id is not null and current_setting('app.complete_claim', true) = 'on'))) then
+    raise exception 'mentor_goal_locked' using errcode = '42501';
+  end if;
+  new.updated_at := now();
+  return new;
+end;
+$$;
+
+-- 目標の固定を外す（complete_11）：返金・取消で、その記録に有効な完全解析の権利も、決済待ち・支払済み・異議申し立て中の
+--   完全解析の注文も無い時だけ。外した時 true。同じ記録のロック（complete_order:<記録>）の中で行う
+create or replace function public.complete_release_mentor_goal_lock(p_user_id uuid, p_diagnosis_session_id uuid)
+  returns boolean
+  language plpgsql
+  security invoker
+  set search_path = ''
+as $$
+declare
+  v_done boolean := false;
+begin
+  perform pg_advisory_xact_lock(hashtextextended('complete_order:' || p_diagnosis_session_id::text, 0));
+  if exists (select 1 from public.record_entitlements e
+              where e.diagnosis_session_id = p_diagnosis_session_id and e.right_type = 'complete' and e.status in ('active', 'suspended'))
+     or exists (select 1 from public.complete_orders o
+                 where o.diagnosis_session_id = p_diagnosis_session_id and o.offer in ('direct_complete', 'analysis_upgrade')
+                   and o.status in ('created', 'checkout_open', 'paid', 'disputed')) then
+    return false;
+  end if;
+  perform set_config('app.complete_goal_release', 'on', true);
+  update public.record_mentor_goals g set locked_at = null
+   where g.diagnosis_session_id = p_diagnosis_session_id and g.user_id is not distinct from p_user_id and g.locked_at is not null;
+  v_done := found;
+  perform set_config('app.complete_goal_release', 'off', true);
+  return v_done;
+end;
+$$;
+
+create or replace function public.complete_create_guest_order(p_diagnosis_session_id uuid, p_offer text, p_idempotency_key text,
+                                                              p_claim_secret_hash text, p_goal_id text)
+  returns table (order_id uuid, order_status text, offer text, checkout_session_id text, created boolean)
+  language plpgsql
+  security invoker
+  set search_path = ''
+as $$
+begin
+  if p_offer in ('direct_complete', 'analysis_upgrade') then
+    if p_goal_id is null or p_goal_id not in ('GOAL_VISIBLE_01', 'GOAL_BOUNDARY_01', 'GOAL_RELATION_01', 'GOAL_EXPLORE_01', 'GOAL_PACE_01') then
+      raise exception 'complete_mentor_goal_required' using errcode = '42501';
+    end if;
+    perform pg_advisory_xact_lock(hashtextextended('complete_order:' || p_diagnosis_session_id::text, 0));
+    if not exists (select 1 from public.diagnosis_sessions s
+                    where s.id = p_diagnosis_session_id and s.user_id is null and s.guest_created_at is not null) then
+      raise exception 'complete_record_not_found' using errcode = '42501';
+    end if;
+    -- 完全解析を購入済みの記録では、目標に触れる前に断る（ロック済みの目標の書き換えを試みない）
+    if exists (select 1 from public.complete_orders o
+                where o.diagnosis_session_id = p_diagnosis_session_id
+                  and o.offer in ('direct_complete', 'analysis_upgrade') and o.status in ('paid', 'disputed'))
+       or exists (select 1 from public.record_entitlements e
+                   where e.diagnosis_session_id = p_diagnosis_session_id and e.right_type = 'complete'
+                     and e.status in ('active', 'suspended')) then
+      raise exception 'complete_repurchase_not_allowed' using errcode = '42501';
+    end if;
+    -- 返金の後の買い直し：前回の支払いで固定した目標の固定を外してから選び直す（complete_11）
+    perform public.complete_release_mentor_goal_lock(null, p_diagnosis_session_id);
+    insert into public.record_mentor_goals (diagnosis_session_id, user_id, goal_catalog_version, goal_id, selected_at)
+    values (p_diagnosis_session_id, null, 'CORE1-MENTOR-GOALS-1.0.0', p_goal_id, now())
+    on conflict (diagnosis_session_id) do update
+      set goal_id = excluded.goal_id, goal_catalog_version = excluded.goal_catalog_version, selected_at = excluded.selected_at;
+  elsif p_goal_id is not null then
+    raise exception 'complete_invalid_offer' using errcode = '22023';
+  end if;
+  return query select * from public.complete_create_order_internal(null, p_diagnosis_session_id, p_offer, p_idempotency_key, p_claim_secret_hash);
+end;
+$$;
+
 -- 生成物の重複防止：失効した生成物は数えない（返金の後の買い直し）
 drop index if exists public.complete_reports_same_version_uq;
 create unique index complete_reports_same_version_uq
@@ -506,6 +618,11 @@ grant execute on function public.complete_apply_payment(text, timestamptz, boole
 revoke all on function public.complete_apply_dispute(text, timestamptz, boolean, uuid, text, text) from public, anon, authenticated;
 grant execute on function public.complete_apply_dispute(text, timestamptz, boolean, uuid, text, text) to service_role;
 revoke all on function public.complete_orders_no_repurchase() from public, anon, authenticated;
+revoke all on function public.record_mentor_goals_guard() from public, anon, authenticated;
+revoke all on function public.complete_release_mentor_goal_lock(uuid, uuid) from public, anon, authenticated;
+grant execute on function public.complete_release_mentor_goal_lock(uuid, uuid) to service_role;
+revoke all on function public.complete_create_guest_order(uuid, text, text, text, text) from public, anon, authenticated;
+grant execute on function public.complete_create_guest_order(uuid, text, text, text, text) to service_role;
 
 -- ============================================================
 -- 確認（変更はしない。期待と違えば全体を取り消す）
@@ -517,7 +634,8 @@ begin
   foreach v_body in array array[
     pg_get_functiondef('public.complete_result_group_has(uuid, uuid, text)'::regprocedure),
     pg_get_functiondef('public.complete_create_order_internal(uuid, uuid, text, text, text)'::regprocedure),
-    pg_get_functiondef('public.complete_orders_no_repurchase()'::regprocedure)] loop
+    pg_get_functiondef('public.complete_orders_no_repurchase()'::regprocedure),
+    pg_get_functiondef('public.complete_create_guest_order(uuid, text, text, text, text)'::regprocedure)] loop
     if position($q$'paid', 'disputed', 'refunded'$q$ in v_body) > 0 then
       raise exception 'refunded orders still count as purchased';
     end if;
@@ -525,6 +643,12 @@ begin
   v_body := pg_get_functiondef('public.complete_apply_payment(text, timestamptz, boolean, uuid, text, text, integer, text, text, text, text, text, text, text)'::regprocedure);
   if position('basis_inactive' in v_body) = 0 or position('analysis_active' in v_body) = 0 then
     raise exception 'complete_apply_payment conflict checks missing';
+  end if;
+  if position('complete_release_mentor_goal_lock' in pg_get_functiondef('public.complete_create_guest_order(uuid, text, text, text, text)'::regprocedure)) = 0
+     or position('complete_goal_release' in pg_get_functiondef('public.record_mentor_goals_guard()'::regprocedure)) = 0
+     or not has_function_privilege('service_role', 'public.complete_release_mentor_goal_lock(uuid, uuid)', 'EXECUTE')
+     or has_function_privilege('anon', 'public.complete_release_mentor_goal_lock(uuid, uuid)', 'EXECUTE') then
+    raise exception 'mentor goal release not installed';
   end if;
   if position('order_not_applied' in pg_get_functiondef('public.complete_apply_dispute(text, timestamptz, boolean, uuid, text, text)'::regprocedure)) = 0 then
     raise exception 'complete_apply_dispute not updated';
@@ -543,7 +667,7 @@ begin
   end if;
   if exists (select 1 from pg_proc p where p.pronamespace = 'public'::regnamespace
               and p.proname in ('complete_result_group_has', 'complete_create_order_internal', 'complete_orders_no_repurchase',
-                                'complete_apply_payment', 'complete_apply_dispute')
+                                'complete_apply_payment', 'complete_apply_dispute', 'complete_create_guest_order', 'complete_release_mentor_goal_lock')
               and (p.prosecdef or p.proconfig is distinct from array['search_path=""'])) then
     raise exception 'complete_11 function is not security invoker with empty search_path';
   end if;

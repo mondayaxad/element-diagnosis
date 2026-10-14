@@ -1,7 +1,7 @@
 -- ============================================================
 -- complete_95：complete_11（20261014180000_complete_11_refund_rebuy_double_purchase）の戻し【実行禁止・草案】2026-10-14。Preview 専用。
 -- 使う時：complete_11 を当てた後に、アプリを complete_11 より前の commit へ戻す時だけ（先にアプリを戻してから実行する）。
--- 戻すもの：関数5つ（complete_10・08・04 の本文）と、生成物の重複防止の索引（失効も数える元の索引）。
+-- 戻すもの：関数7つ（complete_10・08・07・04 の本文）・目標の固定を外す関数の削除・生成物の重複防止の索引（失効も数える元の索引）。
 --   返金の後に買い直した生成物（失効の行と同じ材料の行）があると、元の索引を作れずに全体が取り消される
 --   （その時は件数を控えて運営者が判断する。この SQL では行を消さない）。
 -- 読み取りの確認：select count(*) from public.complete_reports group by diagnosis_session_id, generator_release, content_sha256, template_sha256, input_sha256 having count(*) > 1;
@@ -437,6 +437,64 @@ begin
 end;
 $$;
 
+
+create or replace function public.record_mentor_goals_guard()
+  returns trigger
+  language plpgsql
+  set search_path = ''
+as $$
+begin
+  if old.locked_at is not null and (
+       new.goal_id is distinct from old.goal_id
+    or new.goal_catalog_version is distinct from old.goal_catalog_version
+    or new.selected_at is distinct from old.selected_at
+    or new.locked_at is distinct from old.locked_at
+    or (new.user_id is distinct from old.user_id
+        and not (old.user_id is null and new.user_id is not null and current_setting('app.complete_claim', true) = 'on'))) then
+    raise exception 'mentor_goal_locked' using errcode = '42501';
+  end if;
+  new.updated_at := now();
+  return new;
+end;
+$$;
+
+create or replace function public.complete_create_guest_order(p_diagnosis_session_id uuid, p_offer text, p_idempotency_key text,
+                                                              p_claim_secret_hash text, p_goal_id text)
+  returns table (order_id uuid, order_status text, offer text, checkout_session_id text, created boolean)
+  language plpgsql
+  security invoker
+  set search_path = ''
+as $$
+begin
+  if p_offer in ('direct_complete', 'analysis_upgrade') then
+    if p_goal_id is null or p_goal_id not in ('GOAL_VISIBLE_01', 'GOAL_BOUNDARY_01', 'GOAL_RELATION_01', 'GOAL_EXPLORE_01', 'GOAL_PACE_01') then
+      raise exception 'complete_mentor_goal_required' using errcode = '42501';
+    end if;
+    perform pg_advisory_xact_lock(hashtextextended('complete_order:' || p_diagnosis_session_id::text, 0));
+    if not exists (select 1 from public.diagnosis_sessions s
+                    where s.id = p_diagnosis_session_id and s.user_id is null and s.guest_created_at is not null) then
+      raise exception 'complete_record_not_found' using errcode = '42501';
+    end if;
+    -- 完全解析を購入済みの記録では、目標に触れる前に断る（ロック済みの目標の書き換えを試みない）
+    if exists (select 1 from public.complete_orders o
+                where o.diagnosis_session_id = p_diagnosis_session_id
+                  and o.offer in ('direct_complete', 'analysis_upgrade') and o.status in ('paid', 'disputed', 'refunded'))
+       or exists (select 1 from public.record_entitlements e
+                   where e.diagnosis_session_id = p_diagnosis_session_id and e.right_type = 'complete') then
+      raise exception 'complete_repurchase_not_allowed' using errcode = '42501';
+    end if;
+    insert into public.record_mentor_goals (diagnosis_session_id, user_id, goal_catalog_version, goal_id, selected_at)
+    values (p_diagnosis_session_id, null, 'CORE1-MENTOR-GOALS-1.0.0', p_goal_id, now())
+    on conflict (diagnosis_session_id) do update
+      set goal_id = excluded.goal_id, goal_catalog_version = excluded.goal_catalog_version, selected_at = excluded.selected_at;
+  elsif p_goal_id is not null then
+    raise exception 'complete_invalid_offer' using errcode = '22023';
+  end if;
+  return query select * from public.complete_create_order_internal(null, p_diagnosis_session_id, p_offer, p_idempotency_key, p_claim_secret_hash);
+end;
+$$;
+
+drop function if exists public.complete_release_mentor_goal_lock(uuid, uuid);
 
 drop index if exists public.complete_reports_same_version_uq;
 create unique index complete_reports_same_version_uq

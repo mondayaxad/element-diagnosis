@@ -163,7 +163,7 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
       const targetId = state.targetId;
       // この端末の Cookie に、同じ診断結果の未引き継ぎの支払い済みのゲスト購入がある：アカウントで重ねて売らない（先に引き継ぐ）
       const code = (PS.one(st.record.session.diagnosis_answers) || {}).encoded_answers;
-      if (code && await guestHandler.cookieOwnsCode(req, guard, code)) return fail(res, 409, 'guest_purchase_unclaimed');
+      if (code && await guestHandler.cookieOwnsCode(req, guard, code, user.email)) return fail(res, 409, 'guest_purchase_unclaimed');
 
       // 5. offer をサーバーが決める
       let offer = 'direct_complete';

@@ -3064,7 +3064,7 @@ window.addEventListener('pageshow', function (e) {
 });
 // 申込の結果が「購入済み・状態が変わった」の時は、購入の欄を描き直す（古いボタンを残さない）
 var ED_REFRESH_ERRORS = ['analysis_already_purchased', 'upgrade_available', 'upgrade_not_available', 'repurchase_not_allowed',
-  'rights_suspended', 'purchase_completed', 'claimed', 'owned_in_account', 'checkout_in_progress'];
+  'rights_suspended', 'purchase_completed', 'claimed', 'owned_in_account', 'checkout_in_progress', 'offer_changed'];
 function edRefreshAfter(error) {
   if (ED_REFRESH_ERRORS.indexOf(error) < 0 || !lastGuestPurchaseArgs) return;
   setTimeout(function () { initGuestPurchase(lastGuestPurchaseArgs[0], lastGuestPurchaseArgs[1], lastGuestPurchaseArgs[2], { keepMessage: true }); }, 1800);
@@ -3170,14 +3170,18 @@ function initGuestPurchase(root, code, refs, opts) {
   if (lockMsg && !(opts && opts.keepMessage)) lockMsg.textContent = '';
   mypageBox('<p class="ca-fold-note">購入状態を確認しています…</p>');
   // 決済画面から支払わずに戻った（再読み込み・開き直し）：未払いの決済を閉じてから確かめる（支払い済みなら反映される）
-  Promise.all([G.releaseIfReturned().then(function () { return G.status(code); }), edAccountPurchase(code)]).then(function (res) {
+  // 確かめる通信が止まった時（電波など）：8秒で待つのをやめ、未購入として申込の導線を出す（申込の時にサーバーが確かめ直す）
+  var timeout = function (p, fallback) { return Promise.race([p, new Promise(function (r) { setTimeout(function () { r(fallback); }, 8000); })]); };
+  Promise.all([timeout(G.releaseIfReturned().then(function () { return G.status(code); }), { ok: false, body: {} }),
+    timeout(edAccountPurchase(code), null)]).then(function (res) {
     var r = res[0];
     var account = res[1];
     // ログイン中でアカウントの状態を確かめられない時・この端末の状態を確かめられない時も、申込の導線は出す
     //   （申込の時にサーバーが本人のアカウントとこの端末の購入を確かめ、購入済みなら重ねて売らない。買えることを優先する）
     var st = account && account.known ? account.state : null;
     // ログイン中の本人がこの結果を購入済み・決済中・旧購入：マイページで読む・申し込む（ゲストとして重ねて売らない）
-    if (st && (st.analysisPurchased || st.analysisAccess || st.legacyAnalysis || st.completeEntitlement || st.checkoutInProgress)) {
+    var liveC = !!(st && (st.completeEntitlement === 'active' || st.completeEntitlement === 'suspended'));
+    if (st && (st.analysisPurchased || st.analysisAccess || st.legacyAnalysis || liveC || st.checkoutInProgress)) {
       if (st.analysisAccess) setLock('mypage');
       else setLock('hold', null, st.analysisPurchased ? '解析レポートは現在確認中です' : '購入の手続き中です（マイページ）');
       var note;
@@ -3201,11 +3205,16 @@ function initGuestPurchase(root, code, refs, opts) {
     var analysisActive = !!(mine && mine.analysis === 'active');
     var completeLive = !!(mine && (mine.complete === 'active' || mine.complete === 'suspended'));
     if (analysisActive) setLock('read', readGuest(mine));
+    else if (mine && mine.needsAnalysis && open) setLock('buy');
     else if (mine && (mine.analysis === 'suspended' || completeLive)) setLock('hold', null, '解析レポートは現在確認中です');
     else if (open) setLock('buy');
     else setLock('hold', null, '解析レポート（準備中）');
     if (!box) return;
-    if (completeLive) { box.innerHTML = completeOwnedHtml(mine); wireCompleteOwned(mine); return; }
+    if (completeLive) {
+      box.innerHTML = completeOwnedHtml(mine) + (mine.needsAnalysis ? '<p class="ca-fold-note">完全解析をお読みいただくには、解析レポート（¥1,000）が必要です。上の解析レポートからお申し込みいただけます。</p>' : '');
+      wireCompleteOwned(mine);
+      return;
+    }
     if (mine && mine.analysis === 'suspended') {
       box.innerHTML = '<p class="ca-fold-note">この結果の購入は、現在確認中のためお申し込みいただけません。</p>';
       return;

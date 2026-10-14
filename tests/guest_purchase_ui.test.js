@@ -576,3 +576,26 @@ test('監査：申込で「購入済み」（409）が返ったら、購入欄�
   await p.waitForFunction(() => document.querySelector('#lockUnlockAllBtn').textContent.trim() === '解析レポートを読む', null, { timeout: 6000 });
   await p.__ctx.close();
 });
+
+test('再監査：ログイン中に ¥3,000 を返金した結果：「手続き中」と出さず、¥1,000・¥3,000 を買える', { skip: skip() }, async () => {
+  const code = await codeOf();
+  const p = await page('/', { user: true, resultStates: { ['ETI-2.0:' + code]: ST({ completeEntitlement: 'revoked', completeStatus: 'revoked', completeOffer: 'direct_complete' }) },
+    api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-checkout': CHECKOUT } });
+  await p.goto(`${base}/?dv=ETI-2.0&code=${code}`);
+  await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
+  assert.doesNotMatch(await p.locator('#lockUnlockAllBtn').innerText(), /手続き中|マイページ/);
+  await p.click('details.ca-fold > summary');
+  await p.locator('[data-reveal-offer="direct_complete"]').waitFor();
+  await p.__ctx.close();
+});
+
+test('再監査：購入状態の確認が止まっても、8秒で申込の導線を出す（申込の時にサーバーが確かめ直す）', { skip: skip() }, async () => {
+  const p = await page('/', { api: { 'guest-checkout': CHECKOUT } });
+  await p.route('**/api/complete-checkout?op=guest-status', () => { /* 応答しない */ });
+  const code = await p.evaluate(() => { const a = {}; ETI_V2_QUESTIONS.forEach((q, i) => { a[q.id] = ((i * 7) % 5) - 2; }); return ETIv2.encodeAnswersV2(a, ETI_V2_QUESTIONS); });
+  await p.goto(`${base}/?dv=ETI-2.0&code=${code}`);
+  await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
+  assert.equal(await p.locator('#lockUnlockAllBtn').isDisabled(), true);
+  await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled, null, { timeout: 12000 });
+  await p.__ctx.close();
+});
