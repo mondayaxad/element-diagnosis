@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src 'none'; script-src 'none'; connect-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src 'none'; script-src 'self'; connect-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
 <title>完全解析サンプル — ELEMENT DIAGNOSIS</title>
 <style>:root{
@@ -340,10 +340,17 @@ html,body{ max-width: 100%; overflow-x: hidden; }
 .sample-cta h2{font-size:clamp(15px,2.2vw,17px);font-weight:500;letter-spacing:.12em}
 .sample-cta p{margin:6px auto 12px;max-width:38em;color:var(--sm-mute);font-size:12px;line-height:1.8;letter-spacing:.04em}
 .sample-cta a{display:inline-flex;min-height:40px;align-items:center;justify-content:center;padding:8px 20px;border:1px solid color-mix(in srgb,var(--sm-a) 45%,transparent);border-radius:4px;background:transparent;color:var(--sm-a-soft);text-decoration:none;font-size:12.5px;font-weight:400;letter-spacing:.14em}
+.sample-cta a.sample-return,.sample-return-top a{border-color:transparent;background:linear-gradient(90deg,#6d4bb0,#a06ad8);color:#fff;font-weight:500}
+.sample-return-top{margin:12px 0 0}
+.sample-return-top a{display:inline-flex;min-height:44px;align-items:center;justify-content:center;padding:8px 22px;border-radius:4px;text-decoration:none;font-size:12.5px;letter-spacing:.14em}
+.sample-cta .sample-mypage{margin:14px auto 0;font-size:11.5px}
+.sample-cta .sample-mypage a{display:inline;min-height:0;padding:0;border:0;text-decoration:underline;letter-spacing:.04em}
+.sample-cta a.sample-return{min-height:44px}
 .sample-cta a:hover,.sample-cta a:focus-visible{background:rgba(185,138,240,.12);outline:2px solid var(--sm-a-soft);outline-offset:3px}
 @media screen and (max-width:520px){.sample-intro,.sample-cta{padding:14px 14px}
-.sample-cta a{width:100%}}
-@media print{.sample-intro,.sample-cta{display:none}
+.sample-cta a{width:100%}
+.sample-cta .sample-mypage a{width:auto}}
+@media print{.sample-intro,.sample-cta,.sample-return-top{display:none}
 .sample-mark{color:rgba(40,55,70,.42)}}</style>
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="description" content="元素診断 CORE I 完全解析レポートの表示サンプル（8ページ版）。">
@@ -368,6 +375,7 @@ html,body{ max-width: 100%; overflow-x: hidden; }
     <p>製品版は全46ページ</p>
     <p>実際の内容は診断結果ごとに異なる</p>
   </div>
+  <p class="sample-return-top"><a href="/" data-sample-return>申し込みに戻る</a></p>
   <details open="open"><summary>サンプル目次（8ページ）</summary><ol><li><a href="#sample-01"><span>01</span>表紙</a></li><li><a href="#sample-02"><span>02</span>あなたの核</a></li><li><a href="#sample-03"><span>03</span>三層統合</a></li><li><a href="#sample-04"><span>04</span>MIRROR 上位3名との交わり</a></li><li><a href="#sample-05"><span>05</span>HIDDEN SHAPE 上位3名との交わり</a></li><li><a href="#sample-06"><span>06</span>MENTOR 上位3名から借りられるもの</a></li><li><a href="#sample-07"><span>07</span>あなたのドメイン平均</a></li><li><a href="#sample-08"><span>08</span>YOUR COMPASS</a></li></ol></details>
 </div></nav><main class="pages">
 
@@ -599,7 +607,9 @@ html,body{ max-width: 100%; overflow-x: hidden; }
 </main>
 <aside class="sample-cta" aria-label="完全解析の案内">
   <h2>あなた自身の輪郭を、46ページで読む。</h2>
-  <p>完全解析は、診断記録ごとにマイページから選べます。<br>マイページをお持ちでない方も、ここから無料で作成できます。</p>
-  <a href="/mypage?from=sample">マイページで記録を選ぶ</a>
-</aside></body>
+  <p>お申し込みは、元のページ（診断結果・解析レポート）の申込欄から。<br>価格は購入状況に合わせて決まります（未購入は ¥3,000、解析レポートをお持ちの方は追加 ¥2,000）。</p>
+  <a class="sample-return" href="/" data-sample-return>申し込みに戻る</a>
+  <p class="sample-mypage">マイページに保存した記録から申し込む方：<a href="/mypage?from=sample">マイページで記録を選ぶ</a>（マイページをお持ちでない方も、ここから無料で作成できます。）</p>
+</aside>
+<script src="/js/sample-return.js"></script></body>
 </html>

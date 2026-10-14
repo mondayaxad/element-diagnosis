@@ -27,11 +27,11 @@ function jpegSize(buf) {
   throw new Error('SOF が見つかりません');
 }
 
-test('サンプル：8ページ・noindex,nofollow,noarchive・script／form／iframe なし', () => {
+test('サンプル：8ページ・noindex,nofollow,noarchive・同じサイトの「申し込みに戻る」の script 1本だけ・form／iframe なし', () => {
   assert.equal((SAMPLE.match(/<section class="page/g) || []).length, 8);
   assert.match(SAMPLE, /<meta name="robots" content="noindex,nofollow,noarchive">/);
-  assert.doesNotMatch(SAMPLE, /<script|<form|<iframe|<object|<embed|<link\b|\son[a-z]+\s*=/i);
-  assert.match(SAMPLE, /script-src 'none'/);
+  assert.doesNotMatch(SAMPLE.replace('<script src="/js/sample-return.js"></script>', ''), /<script|<form|<iframe|<object|<embed|<link\b|\son[a-z]+\s*=/i);
+  assert.match(SAMPLE, /script-src 'self'/);
   // 外部への読み込み（src・url()）が無い。http(s) は OGP の meta だけ
   assert.doesNotMatch(SAMPLE, /\ssrc\s*=\s*["']?https?:/i);
   assert.doesNotMatch(SAMPLE, /url\(\s*["']?https?:/i);
@@ -41,11 +41,16 @@ test('サンプル：8ページ・noindex,nofollow,noarchive・script／form／i
   assert.equal(external.length, metaUrls.length, 'OGP の meta 以外に外部 URL があります');
 });
 
-test('サンプル：CTA は /mypage?from=sample だけ（Stripe へ直接送らない）・作成の案内がある', () => {
+test('サンプル：CTA は「申し込みに戻る」（上下2か所）とマイページだけ（このページでは決済しない・Stripe へ直接送らない）', () => {
   const hrefs = [...SAMPLE.matchAll(/href="([^"]*)"/g)].map((m) => m[1]).filter((h) => !h.startsWith('#'));
-  assert.deepEqual(hrefs, ['/mypage?from=sample']);
+  assert.deepEqual(hrefs, ['/', '/', '/mypage?from=sample']);
+  assert.equal((SAMPLE.match(/data-sample-return/g) || []).length, 2);
   assert.doesNotMatch(SAMPLE, /stripe|checkout/i);
   assert.match(SAMPLE, /マイページをお持ちでない方も、ここから無料で作成できます。/);
+  // スクリプトは同じサイトの1本だけ・通信は禁止のまま
+  assert.match(SAMPLE, /script-src 'self'; connect-src 'none'/);
+  assert.deepEqual([...SAMPLE.matchAll(/<script[^>]*src="([^"]+)"/g)].map((m) => m[1]), ['/js/sample-return.js']);
+  assert.doesNotMatch(read('js/sample-return.js'), /fetch|XMLHttpRequest|sendBeacon|gtag/);
 });
 
 test('サンプル：OGP は新しい画像の絶対 URL・summary_large_image', () => {
@@ -61,11 +66,11 @@ test('サンプルは結果ページと解析レポートの完全解析の欄�
   }
   const index = read('index.html');
   assert.equal((index.match(/complete-sample/g) || []).length, 1, 'index は完全解析の欄の1か所だけ');
-  assert.match(index, /href="\/complete-sample" target="_blank" rel="noopener" data-ca-sample/);
+  assert.match(index, /href="\/complete-sample\?from=result" target="_blank" rel="noopener" data-ca-sample/);
   // 解析レポート：末尾の完全解析の案内（追加 ¥2,000）の1か所だけ
   const report = read('report.html');
   assert.equal((report.match(/complete-sample/g) || []).length, 1, 'report は完全解析の案内の1か所だけ');
-  assert.match(report, /href="\/complete-sample" target="_blank" rel="noopener" data-ca-sample/);
+  assert.match(report, /href="\/complete-sample\?from=report" target="_blank" rel="noopener" data-ca-sample/);
   for (const f of fs.readdirSync(path.join(ROOT, 'type'))) {
     assert.doesNotMatch(read(`type/${f}`), /complete-sample/);
   }

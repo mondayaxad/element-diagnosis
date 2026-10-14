@@ -405,7 +405,7 @@ test('index：¥1,000主導線のあとに折りたたみ。閉じても¥1,000�
   await p.click('details.ca-fold > summary');
   const text = await fold.innerText();
   for (const s of ['この結果が示すのは、あなたの核となる一面です。', 'あなたと重なる人物', 'まだ言葉になっていない内側の可能性', 'これから借りられる力を', '三つの視点からひとつの輪郭へ結びます。', '全46ページの完全解析', '8ページのサンプルを見る', '¥3,000', '完全解析は準備中です']) assert.ok(text.includes(s), s);
-  assert.equal(await fold.locator('[data-ca-sample]').getAttribute('href'), '/complete-sample');
+  assert.equal(await fold.locator('[data-ca-sample]').getAttribute('href'), '/complete-sample?from=result');
   assert.equal(await fold.locator('.ca-reveal-stars i').count(), 3);
   // 決済前のボタンに「見る」「開く」を使わない。押せない button（href なし）
   const cta = fold.locator('button.is-pending');

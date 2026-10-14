@@ -1748,7 +1748,7 @@ function initReportComplete(code, viewer, mypageComplete) {
   reportCompleteArgs = [code, viewer, mypageComplete];
   var G = (typeof EdGuestPurchase !== 'undefined') ? EdGuestPurchase : null;
   var unknown = '<p class="ca-r-note">この記録の完全解析の購入状態を確認できないため、購入導線は表示していません。</p>';
-  var sample = '<a class="ca-r-sample" href="/complete-sample" target="_blank" rel="noopener" data-ca-sample>完全解析のサンプルを見る</a>';
+  var sample = '<a class="ca-r-sample" href="/complete-sample?from=report" target="_blank" rel="noopener" data-ca-sample>完全解析のサンプルを見る</a>';
   if (!G || !code) { box.innerHTML = unknown; return; }
   // 解析レポートの末尾は、追加 ¥2,000 だけを売る（¥3,000 は出さない）。サーバーが確かめた権利だけで決める
   //   ・この記録の解析レポートを新 Checkout で購入済み（ゲスト：この端末の Cookie の秘密値で確かめた記録／マイページ：本人の記録）：追加 ¥2,000

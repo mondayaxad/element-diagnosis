@@ -40,6 +40,7 @@ const PUBLIC_FILES = [
   'purchase-complete.html',                                   // 購入完了ページ（Stripe の戻り先。noindex）
   'js/guest-purchase.js',
   'js/nav-busy.js',
+  'js/sample-return.js',                                       // 完全解析サンプルの「申し込みに戻る」
   'js/ga.js',
   'complete-sample.html',                                     // 完全解析サンプル（結果ページの完全解析の欄からだけリンク・noindex）
   'assets/ogp/ogp-top-20261009.jpg',                          // TOP・完全解析サンプルの OGP（1200×630）
