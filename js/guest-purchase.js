@@ -86,6 +86,16 @@
   }
   function goals() { return call('guest-goals', {}); }
 
+  // ログイン中の本人のアクセストークン（このページに Supabase がある時だけ。無い・取れない時は null）
+  async function accountToken() {
+    try {
+      if (typeof supabaseClient === 'undefined' || !supabaseClient || supabaseClient.unavailable || !supabaseClient.auth) return null;
+      var s = await supabaseClient.auth.getSession();
+      return (s && s.data && s.data.session && s.data.session.access_token) || null;
+    } catch (e) {
+      return null;
+    }
+  }
   // Checkout を作り、同じタブで Stripe の決済画面へ移動する
   async function checkout(offer, code, goalId, source) {
     var info = OFFERS[offer];
@@ -93,7 +103,9 @@
     var body = { offer: offer, code: code };
     if (goalId) body.goal = goalId;
     if (resume()) body.resume = resume();
-    var r = await call('guest-checkout', body);
+    // ログイン中なら本人のトークンを添える（サーバーが決済画面のメール欄にアカウントの確認済みメールを入れ、
+    //   マイページで確実に引き継げるようにする。価格・権利には使わない。取れない時は添えずに進む）
+    var r = await call('guest-checkout', body, { token: await accountToken() });
     if (r.ok && r.body && typeof r.body.checkoutUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(r.body.checkoutUrl)) {
       track('checkout_redirect', { offer: offer, value: info && info.price, currency: 'JPY', source: source });
       markCheckout();

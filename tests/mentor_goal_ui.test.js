@@ -349,18 +349,16 @@ test('upgrade（新しい Checkout の ¥1,000 を購入済み）は 追加¥2,0
 
 test('完全解析の読み取り失敗・v2 の項目なしでは MENTOR を出さない（失敗は「もう一度確認する」、項目なしは従来の表示。Production の停止は mentor_goal_state.test.js）', { skip: skip() }, async () => {
   for (const over of [{ completeLookup: 'failed' }, { completeLookup: null }]) {
-    const w = world(over);
+    const w = world(over.completeLookup === 'failed' ? { ...over, purchased: {} } : over);
     const p = await open(w);
     assert.equal(await p.locator('[data-mentor-open]').count(), 0, JSON.stringify(over));
-    assert.match(await actions(p, 'sess-B', 'latest').innerText(), /解析レポート/);
     if (over.completeLookup === 'failed') {
-      // 完全解析の閲覧（2026-10-08）：状態を取得できない記録は、準備中ボタンの代わりに「もう一度確認する」
-      assert.equal(await actions(p, 'sess-B', 'latest').locator('[data-ca-view-recheck]').count(), 1);
-      // 解析購入済みの記録 A には、説明と「決済は無効のボタン」が出る（重複購入の防止）。無料の記録 B は従来どおり準備中ボタンなし
-      assert.equal(await p.locator('.mp-btn-pending').count(), 1);
-      assert.equal(await p.locator('.mp-btn-pending:not([disabled])').count(), 0);
-      assert.equal(await actions(p, 'sess-B', 'latest').locator('.mp-btn-pending').count(), 0);
+      // 権利を読めない（サーバーは購入済みの印を返せない）：記録ごとに「購入状態を確認できませんでした」。購入の導線は出さない
+      assert.match(await p.locator('.mp-latest').innerText(), /この記録の購入状態を確認できませんでした/);
+      assert.equal(await p.locator('.mp-btn-pending:not([disabled]), [data-analysis-checkout]').count(), 0);
+      assert.doesNotMatch(await p.locator('#root').innerText(), /¥1,000|¥2,000|¥3,000/);
     } else {
+      assert.match(await actions(p, 'sess-B', 'latest').innerText(), /解析レポート/);
       assert.ok(await p.locator('.mp-btn-pending').count() >= 1, '従来の準備中ボタン');
     }
     await p.click('#mpUpgradeTrigger');

@@ -1140,7 +1140,9 @@ async function mpRunObservedEntitlementCheck(original, self, args, sessions) {
     if (probe === null && url.indexOf('/api/my-entitlements') !== -1) {
       // 本体（attachPurchasedStatus）より先に登録されるため、本文を読む前にclone()できる。probeは決してrejectしない。
       probe = p.then(res => res.ok
-        ? res.clone().json().then(b => !!(b && b.purchased_by_version && typeof b.purchased_by_version === 'object'))
+        // 購入の判定は記録の権利の表から行う（complete_10）。その読み取りに失敗した時（completeLookup: failed）は、
+        //   購入済みを未購入と描かないよう「確認できなかった」扱いにする（購入の導線を出さない）
+        ? res.clone().json().then(b => !!(b && b.purchased_by_version && typeof b.purchased_by_version === 'object' && b.completeLookup !== 'failed'))
         : false).catch(() => false);
     }
     return p;

@@ -19,9 +19,9 @@ const { PREVIEW_ENV, PREVIEW_REF } = require('./fixtures/server_env');
 const CE = require('../lib/complete-eligibility');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.mjs': 'application/javascript', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.json': 'application/json', '.css': 'text/css', '.svg': 'image/svg+xml', '.webp': 'image/webp' };
 
-function publicConfigJs(appEnv) {
+function publicConfigJs(appEnv, extra) {
   return `window.__ED_PUBLIC_CONFIG__ = Object.freeze(${JSON.stringify({
-    appEnv, supabaseUrl: PREVIEW_ENV.SUPABASE_URL, supabaseAnonKey: PREVIEW_ENV.SUPABASE_ANON_KEY, projectRef: PREVIEW_REF,
+    appEnv, supabaseUrl: PREVIEW_ENV.SUPABASE_URL, supabaseAnonKey: PREVIEW_ENV.SUPABASE_ANON_KEY, projectRef: PREVIEW_REF, ...(extra || {}),
   })});`;
 }
 function fakeSupabase(rows) {
@@ -132,7 +132,7 @@ async function open(w, opts = {}) {
       .replace('var CA_COMPLETE_API_READY = false;', 'var CA_COMPLETE_API_READY = true;').replace('var CA_COMPLETE_SALES_OPEN = false;', 'var CA_COMPLETE_SALES_OPEN = true;') }));
   }
   await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: fakeSupabase(w.rows) }));
-  await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: publicConfigJs(w.appEnv) }));
+  await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: publicConfigJs(w.appEnv, opts.publicSales ? { completeSalesOpen: true, completeApiReady: true } : null) }));
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
   await p.route(/cdnjs\.cloudflare\.com|googletagmanager/, (r) => r.fulfill({ contentType: 'application/javascript', body: '' }));
   // ゲスト購入（この端末の Cookie）：w.guest がある試験だけ。guest-claim の後は w.afterClaim の状態を返す
@@ -320,12 +320,15 @@ test('failed／状態取得失敗：「もう一度確認する」。押すと�
   assert.equal(await actions(p, 'sess-B', 'records').locator('[data-ca-view-open]').count(), 1, 'THE RECORDS も同期');
   await p.__ctx.close();
 
-  // my-entitlements の完全解析の読み取りに失敗 → 「もう一度確認する」。確認で 503 なら再確認のまま
-  const w2 = world({ completeLookup: 'failed', statusSeq: { 'sess-B': [{ code: 503 }] } });
+  // my-entitlements の権利の読み取りに失敗 → 記録ごとに「購入状態を確認できませんでした／もう一度確認する」（購入の導線なし）
+  const w2 = world({ completeLookup: 'failed', purchased: {} });
   const p2 = await open(w2);
-  await actions(p2, 'sess-B', 'latest').locator('[data-ca-view-recheck]').click();
-  await p2.waitForSelector('[data-rec-actions="sess-B"][data-rec-source="latest"] .ca-view-note >> text=状態を確認できませんでした');
-  assert.equal(await actions(p2, 'sess-B', 'latest').locator('[data-ca-view-recheck]').isDisabled(), false);
+  assert.match(await p2.locator('.mp-latest').innerText(), /この記録の購入状態を確認できませんでした/);
+  assert.doesNotMatch(await p2.locator('#root').innerText(), /¥1,000|¥2,000|¥3,000/);
+  // 読めるようになってから「もう一度確認する」：完全解析を見る へ
+  w2.completeLookup = 'ok';
+  await p2.locator('.mp-latest .mp-notice button').click();
+  await p2.waitForSelector('[data-rec-actions="sess-B"][data-rec-source="latest"] [data-ca-view-open]');
   await p2.__ctx.close();
 });
 
@@ -587,5 +590,45 @@ test('引き継げない（購入時と別のメールのアカウント）：�
   assert.match(await p.locator('#mpClaimBox').innerText(), /購入時に使用したメールアドレスのアカウントでログインしてください/);
   assert.equal(await p.locator('#mpClaimBtn').count(), 0);
   assert.equal(w.claimed, undefined);
+  await p.__ctx.close();
+});
+
+// 総当たり：サーバーが返す記録の状態ごとに、マイページの記録の導線が正しいか（購入済みに購入を求めない・未購入は買える）
+test('総当たり（マイページ）：未購入／解析レポートだけ／完全解析まで／旧購入／決済の手続き中／確認できない／同じ結果の重複記録', { skip: skip() }, async () => {
+  const B2 = { ...B.row, id: 'sess-B2', completed_at: '2026-10-02T10:00:00Z' }; // 同じ結果をもう一度保存した記録
+  const owned = { [`ETI-2.0:${B.code}`]: true };
+  const cases = [
+    { name: '未購入', purchased: {}, rec: rec({ completeOffer: 'direct_complete' }), must: [/解析レポート\s*¥1,000/, /¥3,000/], mustNot: [/解析レポートを見る/, /完全解析を見る/] },
+    { name: '解析レポートだけ', purchased: owned, rec: rec({ analysisSource: 'record_entitlement', analysisAccess: true, analysisPurchased: true, completeOffer: 'analysis_upgrade' }),
+      must: [/解析レポートを見る/, /追加\s*¥2,000/], mustNot: [/¥1,000/, /¥3,000/] },
+    { name: '完全解析まで', purchased: owned, rec: purchased({ analysisAccess: true, analysisPurchased: true, completeBlocked: 'repurchase_not_allowed' }),
+      must: [/解析レポートを見る/, /完全解析を見る/], mustNot: [/¥1,000/, /¥2,000/, /¥3,000/] },
+    { name: '旧購入（本人に結び付け済み）', purchased: owned, rec: rec({ analysisAccess: true, legacyAnalysis: true, completeBlocked: 'legacy_purchase_not_eligible' }),
+      must: [/解析レポートを見る/, /旧バージョンのため、完全解析はお申し込みいただけません/], mustNot: [/¥1,000/, /¥2,000/, /¥3,000/] },
+    { name: '決済の手続き中（解析レポートあり）', purchased: owned, rec: rec({ analysisSource: 'record_entitlement', analysisAccess: true, analysisPurchased: true, checkoutInProgress: true, completeBlocked: 'checkout_in_progress' }),
+      must: [/解析レポートを見る/, /決済の手続き中/], mustNot: [/¥1,000/, /¥3,000/] },
+    { name: '確認できない（サーバーは購入済みの印を返せない）', purchased: {}, completeLookup: 'failed', rec: rec(), must: [/購入状態を確認できませんでした/], mustNot: [/¥1,000/, /¥2,000/, /¥3,000/] },
+  ];
+  for (const c of cases) {
+    for (const width of [320, 390, 1280]) {
+      const w = world({ rows: [B.row], purchased: c.purchased, completeLookup: c.completeLookup || 'ok', records: { 'sess-B': c.rec } });
+      const p = await open(w, { width, salesOpen: true, publicSales: true });
+      // 確認できない時は、記録の導線の代わりに「確認できませんでした」の案内だけを出す
+      const t = c.completeLookup === 'failed' ? await p.locator('.mp-latest').innerText() : await actions(p, 'sess-B', 'latest').innerText();
+      for (const re of c.must) assert.match(t, re, `${c.name}（${width}px）：${t}`);
+      for (const re of c.mustNot) assert.doesNotMatch(t, re, `${c.name}（${width}px）：${t}`);
+      assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${c.name}（${width}px）：横にはみ出さない`);
+      assert.deepEqual(p.__errors, [], c.name);
+      await p.__ctx.close();
+    }
+  }
+  // 同じ結果の重複記録（保存した記録＋引き継いだ記録）：正本の1つだけを出し、どちらにも購入を求めない
+  const w = world({ rows: [B2, B.row], purchased: owned, records: {
+    'sess-B2': purchased({ analysisAccess: true, analysisPurchased: true }), 'sess-B': purchased({ analysisAccess: true, analysisPurchased: true, duplicateOf: 'sess-B2' }) } });
+  const p = await open(w, { salesOpen: true, publicSales: true });
+  const all = await p.locator('#root').innerText();
+  assert.doesNotMatch(all, /¥1,000|¥2,000|¥3,000/);
+  assert.equal(await p.locator('[data-rec-actions="sess-B"]').count(), 0, '重複の記録は出さない');
+  assert.ok(await p.locator('[data-rec-actions="sess-B2"]').count() >= 1);
   await p.__ctx.close();
 });

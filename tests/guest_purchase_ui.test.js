@@ -439,13 +439,15 @@ test('BEYOND THE RESULT：¥1,000 の主導線の下。閉じた状態は予告�
     const p = await resultPage({ width, api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
     await p.evaluate(() => { window.__ev = []; window.gtag = function () { window.__ev.push(Array.from(arguments)); }; });
     const fold = p.locator('details.ca-reveal');
-    const btn = p.locator('#lockUnlockAllBtn');
-    const b1 = await btn.boundingBox();
-    const f1 = await fold.boundingBox();
+    // 購入状態の確認が終わって購入の欄が描かれてから、2つの位置を同じ時点で測る（描き替えの途中で測らない）
+    await fold.locator('[data-reveal-offer]').waitFor({ state: 'attached' });
+    const { b1, f1 } = await p.evaluate(() => {
+      const r = (el) => { const x = el.getBoundingClientRect(); return { y: x.top + window.scrollY, height: x.height }; };
+      return { b1: r(document.querySelector('#lockUnlockAllBtn')), f1: r(document.querySelector('details.ca-reveal')) };
+    });
     assert.ok(f1.y >= b1.y + b1.height, `${width}: ¥1,000 の下（${b1.y + b1.height} ≤ ${f1.y}）`);
     assert.ok(b1.height >= 44, `${width}: ¥1,000 の大きさを保つ`);
     assert.equal(await fold.evaluate((d) => d.open), false);
-    await fold.locator('[data-reveal-offer]').waitFor({ state: 'attached' });
     assert.equal(await fold.locator('[data-reveal-offer]').isVisible(), false, '閉じた状態に ¥3,000 の導線を見せない');
     assert.equal(await fold.locator('[data-ca-sample]').isVisible(), false);
     assert.doesNotMatch(await fold.locator('summary').innerText(), /¥/);

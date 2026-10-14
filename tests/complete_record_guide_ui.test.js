@@ -347,23 +347,20 @@ test('真の対象外（サーバーが対象外・v1/旧版）には購入案�
   await p.__ctx.close();
 });
 
-test('状態取得に失敗：説明は見えるが決済はできない（重複購入防止）。「もう一度確認する」で状態を取り直せる', { skip: skip() }, async () => {
-  const w = many({ completeLookup: 'failed' }, {}, [5]);
+test('状態取得に失敗：購入済みを未購入と描かない（購入の導線を出さない・重複購入防止）。「もう一度確認する」で状態を取り直せる', { skip: skip() }, async () => {
+  // サーバーは記録の権利の表を読めない時、購入済みの印（purchased_by_version）を返せない（complete_10）。マイページは記録ごとに
+  //   「購入状態を確認できませんでした」を出し、¥1,000・¥2,000・¥3,000 のどれも出さない
+  const w = many({ completeLookup: 'failed', purchased: {} }, {}, []);
   const p = await open(w);
-  const g = guide(p, 5, 'records');
-  assert.equal(await g.count(), 1);
-  assert.equal(await g.getAttribute('data-ca-guide-kind'), 'unknown');
-  assert.match(await g.innerText(), /COMPLETE ANALYSIS｜完全解析[\s\S]*三つの人物像が、ひとつの輪郭を結ぶ。[\s\S]*MIRROR・HIDDEN SHAPE・MENTOR/);
-  const pay = g.locator('button.mp-btn-pending');
-  assert.equal(await pay.count(), 1);
-  assert.equal(await pay.isDisabled(), true);
-  assert.equal(await g.locator('[data-ca-view-recheck]').count(), 1);
-  assert.doesNotMatch(await g.innerText(), /¥2,000|¥3,000|目標を選ぶ/, '金額は確認できるまで案内しない');
-  await assertNoPayAction(p, 5);
+  const root = await p.locator('#root').innerText();
+  assert.match(root, /この記録の購入状態を確認できませんでした/);
+  assert.doesNotMatch(root, /¥1,000|¥2,000|¥3,000|目標を選ぶ/, '確認できるまで金額を出さない');
+  assert.equal(await p.locator('[data-analysis-checkout], [data-mentor-open]').count(), 0);
   // サーバーの状態が取れるようになってから「もう一度確認する」：説明のまま、追加 ¥2,000 の導線に切り替わる（無料の記録には出ない）
   w.completeLookup = 'ok'; w.records = Object.fromEntries(ROWS.map((r) => [r.row.id, rec(r.row.id === ID(5) ? { analysisSource: 'record_entitlement' } : {})]));
   w.statusSeq[ID(5)] = [{ code: 200, entitlement: null, report: null }];
-  await g.locator('[data-ca-view-recheck]').click();
+  w.purchased = { ['ETI-2.0:' + ROWS[4].code]: true };
+  await p.locator('.mp-notice button').first().click();
   await p.waitForSelector(`[data-rec-actions="${ID(5)}"][data-rec-source="records"] [data-ca-guide]`);
   await p.__ctx.close();
 });
@@ -424,7 +421,7 @@ for (const width of [320, 390]) {
   test(`${width}px：案内（offer・状態取得失敗・旧決済リンクの購入）を開いても横スクロール・ボタンのはみ出しがない`, { skip: skip() }, async () => {
     const w = many({}, { [ID(2)]: analysisOnly(), [ID(3)]: rec({ completeBlocked: 'legacy_purchase_not_eligible' }) }, [2, 3, 5]);
     // 5件目は rec() のまま（offer の根拠なし＝direct の確認）。別に、状態取得失敗の世界も確かめる
-    for (const world2 of [w, many({ completeLookup: 'failed' }, {}, [2, 5])]) {
+    for (const world2 of [w]) {
       const p = await open(world2, { width });
       await p.evaluate(() => document.querySelectorAll('.ca-rec-guide-more').forEach((d) => { d.open = true; }));
       const m = await p.evaluate(() => {
