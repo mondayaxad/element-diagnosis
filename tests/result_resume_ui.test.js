@@ -321,7 +321,7 @@ test('購入済みの結果を、購入の記録が無いブラウザ・タブ�
   const code = await complete(p);
   await p.waitForSelector('[data-guest-complete] [data-reveal-offer="direct_complete"]', { state: 'attached' });
   const box = p.locator('[data-guest-complete]');
-  assert.match(await box.textContent(), /この結果を別のブラウザで購入済みの場合は、購入時のメールからご覧いただけます。/);
+  assert.match(await box.textContent(), /この結果を購入済みの場合は、購入完了ページや購入時のメールからご覧いただけます。/);
   await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
   assert.doesNotMatch(await p.locator('#lockUnlockAllBtn').innerText(), /購入済み/);
   await p.locator('#lockUnlockAllBtn').click();

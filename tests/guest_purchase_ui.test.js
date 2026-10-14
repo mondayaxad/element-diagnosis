@@ -40,18 +40,31 @@ test.before(async () => {
 test.after(async () => { if (browser) await browser.close(); if (server) server.close(); });
 
 // api：op ごとの応答（関数なら body を受け取って [status, json] を返す）
-async function page(url, { width = 390, salesOpen = true, api = {}, clock = false } = {}) {
+// user：ログイン中の本人として開く（supabase の代用品が本人とセッションを返す）。purchased：/api/my-entitlements の購入済みの診断コード
+// reportData：/api/report-data の応答（解析レポートのページ用）
+async function page(url, { width = 390, salesOpen = true, api = {}, clock = false, user = false, purchased = [], reportData = null } = {}) {
   const ctx = await browser.newContext({ viewport: { width, height: 844 } });
   const p = await ctx.newPage();
   p.setDefaultTimeout(8000);
   const errors = [];
   const calls = [];
   p.on('pageerror', (e) => errors.push(String(e)));
-  await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: 'window.supabase={createClient(){return {from(){const q=new Proxy({},{get(_t,k){if(k==="then")return (res)=>res({data:[],error:null});return ()=>q;}});return q;},rpc:async()=>({data:null,error:null}),auth:{getUser:async()=>({data:{user:null}}),getSession:async()=>({data:{session:null}}),onAuthStateChange(){return{data:{subscription:{unsubscribe(){}}}};}}};}};' }));
+  const userJs = user ? '{id:"11111111-1111-4111-8111-111111111111"}' : 'null';
+  const sessionJs = user ? '{access_token:"tok-user",user:{id:"11111111-1111-4111-8111-111111111111"}}' : 'null';
+  await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: 'window.supabase={createClient(){return {from(){const q=new Proxy({},{get(_t,k){if(k==="then")return (res)=>res({data:[],error:null});return ()=>q;}});return q;},rpc:async()=>({data:null,error:null}),auth:{getUser:async()=>({data:{user:' + userJs + '}}),getSession:async()=>({data:{session:' + sessionJs + '}}),onAuthStateChange(){return{data:{subscription:{unsubscribe(){}}}};}}};}};' }));
+  await p.route('**/api/my-entitlements', (r) => {
+    calls.push({ op: 'my-entitlements', auth: r.request().headers().authorization || '' });
+    const keys = {};
+    purchased.forEach((c) => { keys['ETI-2.0:' + c] = true; });
+    r.fulfill({ contentType: 'application/json', body: JSON.stringify({ purchased_by_version: keys }) });
+  });
+  if (reportData) await p.route('**/api/report-data**', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify(reportData) }));
   await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: previewPublicConfigJs(salesOpen ? { completeSalesOpen: true, completeApiReady: true } : { completeApiReady: true }) }));
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
   await p.route(/cdnjs\.cloudflare\.com|googletagmanager|jsdelivr/, (r) => r.fulfill({ contentType: 'application/javascript', body: '' }));
   await p.route('https://checkout.stripe.com/**', (r) => r.fulfill({ contentType: 'text/html', body: '<p>stripe</p>' }));
+  // ログイン中として開く時は、supabase-js の代用品を CDN の空の応答より優先する（後から登録した route が先に使われる）
+  if (user) await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: 'window.supabase={createClient(){return {from(){const q=new Proxy({},{get(_t,k){if(k==="then")return (res)=>res({data:[],error:null});return ()=>q;}});return q;},rpc:async()=>({data:null,error:null}),auth:{getUser:async()=>({data:{user:' + userJs + '}}),getSession:async()=>({data:{session:' + sessionJs + '}}),onAuthStateChange(){return{data:{subscription:{unsubscribe(){}}}};}}};}};' }));
   await p.route('**/api/complete-checkout?op=*', (r) => {
     const op = new URL(r.request().url()).searchParams.get('op');
     const body = JSON.parse(r.request().postData() || '{}');
@@ -157,20 +170,38 @@ test('完了ページ（販売中）：完全解析 ¥3,000 は目標を選ぶ�
   await p.__ctx.close();
 });
 
-test('完了ページ：この端末で解析レポート購入済みなら「解析レポートを読む」と追加 ¥2,000（同じ記録）', { skip: skip() }, async () => {
+test('完了ページ（ログインなし）：この端末で購入済みでも「読む」に切り替えず、¥1,000・¥3,000 を申し込める（閲覧は購入完了ページ・メールの案内）', { skip: skip() }, async () => {
   const purchases = [{ ref: REF, analysis: 'active', complete: null, report: null, pending: false, claimed: false, canClaim: true, canUpgrade: true, thisRecord: true }];
-  const p = await resultPage({ api: { 'guest-status': [200, { salesOpen: true, purchases }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT,
-    'guest-report': [200, { url: '/report.html?token=fake', expiresIn: 900 }] } });
-  await p.waitForFunction(() => /解析レポートを読む/.test(document.querySelector('#lockUnlockAllBtn').textContent));
+  const p = await resultPage({ api: { 'guest-status': [200, { salesOpen: true, purchases }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
   await p.click('details.ca-fold > summary');
   const fold = p.locator('details.ca-fold');
-  await fold.locator('[data-reveal-offer="analysis_upgrade"]').click();
-  await fold.locator('[data-guest-buy="analysis_upgrade"]').waitFor();
-  assert.match(await fold.innerText(), /追加¥2,000/);
-  await fold.locator('input[value="GOAL_PACE_01"]').check();
-  await fold.locator('[data-guest-buy="analysis_upgrade"]').click();
+  await fold.locator('[data-reveal-offer="direct_complete"]').waitFor();
+  assert.match(await fold.innerText(), /この結果を購入済みの場合は、購入完了ページや購入時のメールからご覧いただけます。/);
+  assert.equal(await fold.locator('a[href="/purchase-complete"]').count(), 1);
+  assert.equal(await fold.locator('[data-reveal-offer="analysis_upgrade"]').count(), 0, '¥2,000 は解析レポートから');
+  assert.doesNotMatch(await p.locator('#lockUnlockAllBtn').innerText(), /読む|購入済み/);
+  await p.locator('#lockUnlockAllBtn').click();
   await p.waitForURL(/checkout\.stripe\.com/);
-  assert.deepEqual(p.__calls.filter((c) => c.op === 'guest-checkout').map((c) => c.body), [{ offer: 'analysis_upgrade', code: p.__code, goal: 'GOAL_PACE_01' }]);
+  assert.deepEqual(p.__calls.filter((c) => c.op === 'guest-checkout').map((c) => c.body), [{ offer: 'analysis', code: p.__code }]);
+  assert.equal(p.__calls.filter((c) => c.op === 'my-entitlements').length, 0, 'ログインしていなければマイページの権利は見ない');
+  await p.__ctx.close();
+});
+
+test('完了ページ（ログイン中・マイページから過去の結果を開いた）：本人が購入済みなら「解析レポートを読む（マイページ）」・完全解析もマイページから（二重に決済しない）', { skip: skip() }, async () => {
+  const p0 = await page('/');
+  const code = await p0.evaluate(() => { const a = {}; ETI_V2_QUESTIONS.forEach((q, i) => { a[q.id] = ((i * 7) % 5) - 2; }); return ETIv2.encodeAnswersV2(a, ETI_V2_QUESTIONS); });
+  await p0.__ctx.close();
+  const p = await page('/', { user: true, purchased: [code], api: { 'guest-status': [200, { salesOpen: true, purchases: [], codePurchased: true }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
+  await p.goto(`${base}/?dv=ETI-2.0&code=${code}`);
+  await p.waitForFunction(() => /解析レポートを読む（マイページ）/.test(document.querySelector('#lockUnlockAllBtn').textContent));
+  await p.click('details.ca-fold > summary');
+  const fold = p.locator('details.ca-fold');
+  assert.match(await fold.innerText(), /この結果は購入済みです。解析レポート・完全解析は、マイページの診断記録からご覧いただけます。/);
+  assert.equal(await fold.locator('[data-reveal-offer]').count(), 0);
+  assert.match(p.__calls.find((c) => c.op === 'my-entitlements').auth, /^Bearer /);
+  await p.locator('#lockUnlockAllBtn').click();
+  await p.waitForURL((u) => u.pathname === '/mypage.html');
+  assert.equal(p.__calls.filter((c) => c.op === 'guest-checkout').length, 0);
   await p.__ctx.close();
 });
 
@@ -253,15 +284,22 @@ test('購入完了ページ：この端末に購入が無い時は、同じ端�
   await p.__ctx.close();
 });
 
-test('解析レポート：この端末に引き継げる購入がある時だけ、最後に控えめな「マイページに引き継ぐ」', { skip: skip() }, async () => {
-  const purchases = [{ ref: REF, analysis: 'active', complete: null, report: null, pending: false, claimed: false, canClaim: true, canUpgrade: true }];
-  const p = await page('/report.html?token=fake', { api: { 'guest-status': [200, { salesOpen: true, purchases }] } });
-  await p.waitForFunction(() => /この購入をマイページに引き継ぐ/.test(document.body.innerText), null, { timeout: 15000 });
-  assert.match(await p.locator('body').innerText(), /ログインすると、この診断記録と購入済みレポートをいつでも見返せます。/);
+test('解析レポート：完全解析の欄から「マイページに保存する」。この端末の購入は引き継ぎへ、無ければ購入時のメールの確認へ', { skip: skip() }, async () => {
+  const p0 = await page('/');
+  const code = await p0.evaluate(() => { const a = {}; ETI_V2_QUESTIONS.forEach((q, i) => { a[q.id] = ((i * 7) % 5) - 2; }); return ETIv2.encodeAnswersV2(a, ETI_V2_QUESTIONS); });
+  await p0.__ctx.close();
+  const reportData = { diagnosis_version: 'ETI-2.0', entitlements: { core_analysis_access: true, journey_report_access: false }, purchase: null, code, viewer: 'guest' };
+  const purchases = [{ ref: REF, analysis: 'active', complete: null, report: null, pending: false, claimed: false, canClaim: true, canUpgrade: true, thisRecord: true }];
+  const p = await page('/report.html?token=fake', { reportData, api: { 'guest-status': [200, { salesOpen: true, purchases }] } });
+  const save = p.locator('[data-report-mypage-save]');
+  await save.waitFor();
+  assert.equal((await save.innerText()).trim(), 'マイページに保存する（ログイン）');
+  await save.click();
+  await p.waitForURL((u) => u.pathname === '/mypage.html' && u.hash === '');
   await p.__ctx.close();
-  const q = await page('/report.html?token=fake', { api: { 'guest-status': [200, { salesOpen: true, purchases: [] }] } });
-  await q.waitForTimeout(2500);
-  assert.doesNotMatch(await q.locator('body').innerText(), /マイページに引き継ぐ/);
+  const q = await page('/report.html?token=fake', { reportData, api: { 'guest-status': [200, { salesOpen: true, purchases: [] }] } });
+  await q.locator('[data-report-mypage-save]').click();
+  await q.waitForURL((u) => u.pathname === '/mypage.html' && u.hash === '#recover');
   await q.__ctx.close();
 });
 

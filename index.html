@@ -3041,6 +3041,24 @@ function completeAnalysisFoldHtml(itemSetVersion, diagnosisVersion) {
    ・購入済み（この端末）：解析レポートを読む／完全解析の状態。¥2,000 は同じ記録で解析レポートを購入済みの時だけ。
    ・販売停止中：価格は見せるが、ボタンは「準備中」で押せない。
    ・価格・権利はサーバーが決める（ここでは offer と目標だけを送る）。 */
+// ログイン中の本人の購入（この診断結果の解析レポート）を確かめる。ログインしていない・確かめられない時は null
+function edAccountPurchase(code) {
+  if (typeof getCurrentUser !== 'function' || typeof supabaseClient === 'undefined' || !supabaseClient || supabaseClient.unavailable) return Promise.resolve(null);
+  return getCurrentUser().then(function (user) {
+    if (!user) return null;
+    return supabaseClient.auth.getSession().then(function (s) {
+      var token = s && s.data && s.data.session && s.data.session.access_token;
+      if (!token) return null;
+      return fetch('/api/my-entitlements', { headers: { Authorization: 'Bearer ' + token } }).then(function (res) {
+        if (!res.ok) return { loggedIn: true, analysis: false };
+        return res.json().then(function (body) {
+          var keys = (body && body.purchased_by_version) || {};
+          return { loggedIn: true, analysis: !!keys['ETI-2.0:' + code] };
+        });
+      });
+    });
+  }).catch(function () { return null; });
+}
 // 決済画面から支払わずに戻った（戻る＝ページの復元）：未払いの決済を閉じて、購入の欄を描き直す
 var lastGuestPurchaseArgs = null;
 window.addEventListener('pageshow', function (e) {
@@ -3073,41 +3091,36 @@ function initGuestPurchase(root, code, refs) {
     return '<button type="button" class="ca-fold-btn is-pending" disabled aria-disabled="true">' + offerLabel(offer) + '（準備中）</button>'
       + '<p class="ca-fold-note">完全解析は準備中です。現在はお申し込みいただけません。</p>';
   }
-  function readAnalysisButton(btn, p) {
+  function mypageReadButton(btn) {
     if (!btn) return;
-    btn.textContent = '解析レポートを読む →';
+    btn.textContent = '解析レポートを読む（マイページ）';
     btn.disabled = false;
     btn.style.opacity = '';
     btn.style.cursor = 'pointer';
-    btn.onclick = function () {
-      btn.disabled = true;
-      G.openAnalysis(p.ref, 'result').then(function (ok) { if (!ok) { btn.disabled = false; } });
-    };
+    btn.onclick = function (e) { e.preventDefault(); location.assign('/mypage.html'); };
   }
   // 決済画面から支払わずに戻った（再読み込み・開き直し）：未払いの決済を閉じてから確かめる（支払い済みなら反映される）
-  G.releaseIfReturned().then(function () { return G.status(code); }).then(function (r) {
-    var purchases = (r.ok && r.body.purchases) || [];
-    var mine = purchases.filter(function (p) { return p.thisRecord; })[0] || null;
-    var hasAnalysis = !!(mine && mine.analysis === 'active');
-    if (hasAnalysis) {
-      readAnalysisButton(refs.lockUnlockAllBtn, mine);
-      refs.lockCtaBtns.forEach(function (b) { readAnalysisButton(b, mine); b.textContent = '解析レポートで読む'; });
-    }
-    if (!box) return;
-    // 購入状態を確かめられない時も売る（ログインなしの購入は、買えることを優先する。価格・権利はサーバーが決める）
-    if (mine && mine.complete) {
-      box.innerHTML = '<p class="ca-fold-note">この結果の完全解析は購入済みです（' + G.esc(G.completeLabel(mine)) + '）。</p>'
-        + '<a class="ca-fold-btn" href="/purchase-complete">購入した内容を見る</a>';
+  Promise.all([G.releaseIfReturned().then(function () { return G.status(code); }), edAccountPurchase(code)]).then(function (res) {
+    var r = res[0];
+    var account = res[1];
+    // ログイン中（マイページから過去の結果を開いた等）：本人の購入はマイページで読む・申し込む（二重に決済しない）
+    if (account && account.analysis) {
+      mypageReadButton(refs.lockUnlockAllBtn);
+      refs.lockCtaBtns.forEach(function (b) { mypageReadButton(b); b.textContent = '解析レポートで読む'; });
+      if (box) box.innerHTML = '<p class="ca-fold-note">この結果は購入済みです。解析レポート・完全解析は、マイページの診断記録からご覧いただけます。</p>'
+        + '<a class="ca-fold-btn" href="/mypage.html">マイページで記録を開く</a>';
       return;
     }
-    var offer = hasAnalysis ? 'analysis_upgrade' : 'direct_complete';
+    // ログインしていない：この画面では購入済みでも「読む」に切り替えない（閲覧は購入時のメール・購入完了ページから）。
+    //   ¥1,000・¥3,000 は常に申し込める（ログインなしでは同じ人か確かめられない。買えることを優先する）。¥2,000 は解析レポートから
+    var purchases = (r.ok && r.body.purchases) || [];
+    var mine = purchases.filter(function (p) { return p.thisRecord; })[0] || null;
+    if (!box) return;
+    var offer = 'direct_complete';
     if (!open) { box.innerHTML = pendingHtml(offer); return; }
-    // 申込の導線（押した後に MENTOR 目標を選んで決済へ）。展開しただけでは目標の選択・決済を出さない
-    // 未払いの決済が残っていても、買っていない扱いで申し込める（サーバーが古い決済画面を閉じるか、同じ画面を返す。支払い済みなら作らない）
-    // 別のブラウザ（タブ）などで購入済みかもしれない時も売る（ログインなしでは同じ人か確かめられない。買えることを優先する）
-    var elsewhere = !mine && r.ok && r.body.codePurchased
-      ? '<p class="ca-fold-note">この結果を別のブラウザで購入済みの場合は、購入時のメールからご覧いただけます。</p>' : '';
-    box.innerHTML = elsewhere + (mine && mine.pending ? '<p class="ca-fold-note">前回のお手続きは完了していません（お支払いは発生していません）。もう一度お申し込みいただけます。</p>' : '')
+    var bought = (mine && (mine.analysis === 'active' || mine.complete)) || (!mine && r.ok && r.body.codePurchased);
+    box.innerHTML = (bought ? '<p class="ca-fold-note">この結果を購入済みの場合は、<a href="/purchase-complete">購入完了ページ</a>や購入時のメールからご覧いただけます。</p>' : '')
+      + (mine && mine.pending ? '<p class="ca-fold-note">前回のお手続きは完了していません（お支払いは発生していません）。もう一度お申し込みいただけます。</p>' : '')
       + '<button type="button" class="ca-fold-btn" data-reveal-offer="' + offer + '">' + offerLabel(offer) + '</button>';
     var reveal = box.querySelector('[data-reveal-offer]');
     reveal.onclick = function () {

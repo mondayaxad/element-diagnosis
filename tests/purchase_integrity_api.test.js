@@ -384,9 +384,11 @@ test('C3（ゲスト）：Stripe で戻った・閉じた決済はすぐ買い�
   // 「決済をやり直す」と支払いが重なった（Stripe 側では支払い済み）：閉じずに適用し、新しい注文は作らない
   ctx.stripe.pay(ctx.csIdOf(r2.body.checkoutUrl), { customer_details: { email: 'x@example.test' } });
   assert.deepEqual((await ctx.op('guest-cancel', {})).body, { closed: 0, paid: 1 });
-  const again = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_A });
-  assert.equal(again.code, 409);
   assert.equal((await ctx.rows('complete_orders')).filter((o) => o.status === 'paid').length, 1);
+  // ログインなしの結果ページは購入済みでも「読む」に切り替えないため、改めて申し込まれたら新しい記録で売る（前の支払いは1件のまま）
+  const again = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_A });
+  assert.equal(again.code, 200, JSON.stringify(again.body));
+  assert.equal(new Set((await ctx.rows('complete_orders')).map((o) => o.diagnosis_session_id)).size, 2);
   await ctx.db.close();
 });
 
@@ -880,8 +882,8 @@ test('固有リンクから ¥1,000：同じ記録に結び付く（新しい記
   const other = await ctx.link(CODE_B);
   const [otherLink] = (await ctx.rows('result_resume_links')).filter((l) => l.token_hash === sha256hex(other));
   const misuse = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_A, resume: other });
-  assert.equal(misuse.code, 409, 'この端末の記録は解析レポートを購入済み');
-  assert.equal((await ctx.rows('complete_orders')).filter((o) => o.diagnosis_session_id === otherLink.diagnosis_session_id).length, 0);
+  assert.equal(misuse.code, 200, '断らない（この端末の記録は購入済みのため、新しい記録で売る）');
+  assert.equal((await ctx.rows('complete_orders')).filter((o) => o.diagnosis_session_id === otherLink.diagnosis_session_id).length, 0, '違う診断結果の記録には結び付けない');
   // 固有リンクだけでは有料レポートを開けない（Cookie の無い別の端末）
   assert.equal((await ctx.op('guest-report', { ref: st.ref }, { cookie: '' })).code, 403);
   await ctx.db.close();
