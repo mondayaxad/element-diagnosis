@@ -3474,6 +3474,10 @@ async function initOnce() {
       try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) { /* 消せなくても表示は続ける */ }
     }
   }
+  // この端末のゲスト購入（Cookie）を、記録を描く前に引き継ぐ。押すまで待つと、結果ページから保存した同じ結果の記録が
+  //   未購入に見えて、もう一度購入を求めてしまう（買い直し・二重決済の原因）。引き継ぎはサーバーが Cookie の秘密値と
+  //   「ログイン中の確認済みメール＝購入時のメール」を確かめた時だけ行う（共有端末の別の人へは移らない）
+  const claimOutcome = await mpClaimBeforeRender();
   const result = await loadDiagnosisHistory(DIAGNOSIS_TYPE);
   if (!result.ok) {
     renderError(root);
@@ -3482,7 +3486,8 @@ async function initOnce() {
   if (result.sessions.length === 0) {
     renderEmpty(root, user);
     mpRenderedUserId = user.id;
-    mpGuestPurchaseFlow(root);
+    mpShowClaimOutcome(root, claimOutcome);
+    mpGuestPurchaseFlow(root, claimOutcome);
     return;
   }
   mpEntitlementOk = mpEntitlementCheckedOk(result.sessions);
@@ -3495,7 +3500,8 @@ async function initOnce() {
     });
     window.scrollTo(0, keepScrollY);
   }
-  mpGuestPurchaseFlow(root);
+  mpShowClaimOutcome(root, claimOutcome);
+  mpGuestPurchaseFlow(root, claimOutcome);
   // お知らせメール（Kit）の同期は、登録完了と診断の保存の後に diagnosis-save.js の runSignedInFlow() が行う。
 }
 // eti_v2_save.js（Googleログイン復帰後、v2のpending保存が完了した時点）から
@@ -3528,7 +3534,39 @@ function mpClaimBox(root, html) {
   box.innerHTML = html;
   return box;
 }
-async function mpGuestPurchaseFlow(root) {
+// 記録を描く前の引き継ぎ（#recover の時は購入時メールでの確認へ回すため行わない）。
+//   null：引き継げる購入が無い・確かめられない／{ claimed, error }：引き継いだ件数と、引き継げなかった時の理由
+async function mpClaimBeforeRender() {
+  if (typeof EdGuestPurchase === 'undefined' || location.hash === '#recover') return null;
+  try {
+    const G = EdGuestPurchase;
+    const token = await mpAccessToken();
+    if (!token) return null;
+    const st = await G.status();
+    const claimable = st.ok ? (st.body.purchases || []).filter((p) => p.canClaim) : [];
+    if (!claimable.length) return null;
+    G.takeClaimIntent(); // 「引き継ぐ」を押して来た印は使い終える
+    G.track('claim_start', { source: 'mypage_auto' });
+    const rs = await G.claimAll(token, claimable);
+    return { claimed: rs.filter((x) => x.ok).length, error: (rs.find((x) => !x.ok) || {}).error || null };
+  } catch (e) {
+    return null;
+  }
+}
+function mpShowClaimOutcome(root, outcome) {
+  if (!outcome || typeof EdGuestPurchase === 'undefined') return;
+  const G = EdGuestPurchase;
+  if (outcome.claimed > 0) {
+    mpClaimBox(root, `<p>✓ この端末の購入（${outcome.claimed}件）をマイページに引き継ぎました。</p><p class="mp-claim-note">診断記録と購入済みのレポートを、いつでも見返せます。</p>`);
+    return;
+  }
+  if (outcome.error) {
+    // 引き継げなかった（別のメールのアカウント等）：購入時のメールアドレスでの確認へ案内する（ここでは売り直さない）
+    mpClaimBox(root, `<p>${mpEsc(G.claimErrorText(outcome.error))}</p>`
+      + '<p class="mp-claim-note"><a href="/mypage.html#recover">購入時のメールアドレスで確認して引き継ぐ</a></p>');
+  }
+}
+async function mpGuestPurchaseFlow(root, claimOutcome) {
   if (mpGuestFlowBusy || typeof EdGuestPurchase === 'undefined') return;
   mpGuestFlowBusy = true;
   try {
@@ -3537,6 +3575,8 @@ async function mpGuestPurchaseFlow(root) {
     const token = await mpAccessToken();
     if (!token) return;
     if (location.hash === '#recover') { await mpRecoverFlow(root, token); return; }
+    // 記録を描く前に引き継ぎを試した（結果は mpShowClaimOutcome で表示済み）
+    if (claimOutcome) return;
     const st = await G.status();
     const claimable = st.ok ? (st.body.purchases || []).filter((p) => p.canClaim) : [];
     if (!claimable.length) return;

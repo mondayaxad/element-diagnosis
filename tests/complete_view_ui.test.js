@@ -135,7 +135,24 @@ async function open(w, opts = {}) {
   await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: publicConfigJs(w.appEnv) }));
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
   await p.route(/cdnjs\.cloudflare\.com|googletagmanager/, (r) => r.fulfill({ contentType: 'application/javascript', body: '' }));
+  // ゲスト購入（この端末の Cookie）：w.guest がある試験だけ。guest-claim の後は w.afterClaim の状態を返す
+  if (w.guest) {
+    await p.route('**/api/complete-checkout?op=*', (r) => {
+      const op = new URL(r.request().url()).searchParams.get('op');
+      w.calls.push({ op, at: w.calls.length });
+      const send = (status, json) => r.fulfill({ status, contentType: 'application/json', body: JSON.stringify(json) });
+      if (op === 'guest-status') return send(200, { salesOpen: true, purchases: w.claimed ? [] : w.guest.purchases });
+      if (op === 'guest-claim') {
+        if (w.guest.claimError) return send(403, { error: w.guest.claimError });
+        w.claimed = true;
+        if (w.afterClaim) Object.assign(w, w.afterClaim);
+        return send(200, { result: 'claimed' });
+      }
+      return send(404, { error: 'not_found' });
+    });
+  }
   await p.route('**/api/my-entitlements', (r) => {
+    if (w.calls) w.calls.push({ op: 'my-entitlements', at: w.calls.length });
     const body = { purchased_by_version: w.purchased };
     if (w.completeLookup) body.completeLookup = w.completeLookup;
     if (w.completeLookup === 'ok') body.records = JSON.parse(JSON.stringify(w.records));
@@ -535,5 +552,40 @@ test('戻りの確認：対象が5件あっても同時に確認するのは最�
   assert.equal(w.gets.length, 5, '各記録1回（ready で終わる）');
   await advance(p, 30000);
   assert.equal(w.gets.length, 5);
+  await p.__ctx.close();
+});
+
+// ゲストで ¥3,000 を購入 → 結果ページからマイページを作成（同じ結果の記録が保存される）→ マイページ：
+//   記録を描く前にこの端末の購入を引き継ぐ（押すのを待たない）。もう一度購入を求めない
+test('ゲスト購入の後にマイページを作成：記録を描く前に自動で引き継ぎ、¥1,000・¥3,000 を求めない（解析レポート・完全解析を見る）', { skip: skip() }, async () => {
+  const w = world({
+    rows: [B.row], calls: [],
+    purchased: {}, records: { 'sess-B': rec({ completeOffer: 'direct_complete' }) },
+    guest: { purchases: [{ ref: 'a1b2c3d4e5f6a7b8c9d0', analysis: 'active', complete: 'active', report: 'ready', pending: false, claimed: false, canClaim: true, canUpgrade: false }] },
+    afterClaim: { purchased: { [`ETI-2.0:${B.code}`]: true }, records: { 'sess-B': purchased({ analysisAccess: true, analysisPurchased: true }) } },
+  });
+  const p = await open(w);
+  await p.waitForFunction(() => /マイページに引き継ぎました/.test(document.body.innerText));
+  const claimAt = w.calls.find((c) => c.op === 'guest-claim').at;
+  const entAt = w.calls.find((c) => c.op === 'my-entitlements').at;
+  assert.ok(claimAt < entAt, '購入状態を読む前に引き継ぐ');
+  const text = await p.locator('#root').innerText();
+  assert.match(text, /完全解析を見る/);
+  assert.doesNotMatch(text, /¥1,000|¥3,000|追加 ?¥2,000/, '購入済みの記録に購入を求めない');
+  assert.equal(w.calls.filter((c) => c.op === 'guest-claim').length, 1);
+  assert.deepEqual(p.__errors, []);
+  await p.__ctx.close();
+});
+
+test('引き継げない（購入時と別のメールのアカウント）：理由と購入時メールでの確認を出し、勝手に移さない', { skip: skip() }, async () => {
+  const w = world({
+    rows: [B.row], calls: [], records: { 'sess-B': rec({ completeOffer: 'direct_complete' }) },
+    guest: { claimError: 'claim_email_mismatch', purchases: [{ ref: 'a1b2c3d4e5f6a7b8c9d0', analysis: 'active', complete: null, report: null, pending: false, claimed: false, canClaim: true, canUpgrade: true }] },
+  });
+  const p = await open(w);
+  await p.waitForSelector('#mpClaimBox a[href="/mypage.html#recover"]');
+  assert.match(await p.locator('#mpClaimBox').innerText(), /購入時に使用したメールアドレスのアカウントでログインしてください/);
+  assert.equal(await p.locator('#mpClaimBtn').count(), 0);
+  assert.equal(w.claimed, undefined);
   await p.__ctx.close();
 });

@@ -603,7 +603,9 @@ test('C7：別の利用者の SIGNED_IN では描き直す。SIGNED_IN が描画
   const hits = w.entitlementHits;
   await p.evaluate(() => { window.__edAuthCb('SIGNED_IN', { user: { id: 'user-2' } }); window.__edAuthCb('SIGNED_IN', { user: { id: 'user-2' } }); window.__edAuthCb('SIGNED_IN', null); });
   await p.waitForFunction((h) => window.__mpRecords && document.querySelectorAll('[data-rec-actions]').length > 0, hits);
-  await p.waitForLoadState('networkidle');
+  // 描き直しは、記録を描く前の引き継ぎの確認（この端末の購入）の後に状態を読む：読みに来るまで待ってから数える
+  for (let t = 0; t < 80 && w.entitlementHits === hits; t++) await new Promise((r) => setTimeout(r, 50));
+  await new Promise((r) => setTimeout(r, 800));
   assert.ok(w.entitlementHits - hits >= 1 && w.entitlementHits - hits <= 2, `描き直しは最大2回（実行中の1回＋後の1回）：${w.entitlementHits - hits}`);
   assert.equal(await p.locator('.mp-latest').count(), 1);
   assert.deepEqual(p.__errors, []);
