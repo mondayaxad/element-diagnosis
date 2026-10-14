@@ -161,6 +161,9 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
       if (!state.onboardingCompleted) return fail(res, 403, 'onboarding_required');
       const st = state.st;
       const targetId = state.targetId;
+      // この端末の Cookie に、同じ診断結果の未引き継ぎの支払い済みのゲスト購入がある：アカウントで重ねて売らない（先に引き継ぐ）
+      const code = (PS.one(st.record.session.diagnosis_answers) || {}).encoded_answers;
+      if (code && await guestHandler.cookieOwnsCode(req, guard, code)) return fail(res, 409, 'guest_purchase_unclaimed');
 
       // 5. offer をサーバーが決める
       let offer = 'direct_complete';
@@ -201,7 +204,12 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
           if (open && open.status === 'open' && order.offer === offer && CP.isStripeCheckoutUrl(open.url)) {
             return res.status(200).json({ checkoutUrl: open.url, offer: order.offer, amount: CP.OFFER_AMOUNTS[order.offer] });
           }
-          if (!open || open.status === 'complete') return fail(res, 409, 'checkout_in_progress');
+          if (open && open.status === 'complete') {
+            // Stripe では支払い済みで、反映（Webhook）がまだ：ここで反映してから、購入済みとして返す（もう一度売らない）
+            const r = await guestHandler.settleOrder(guard, { id: order.order_id, status: 'checkout_open', stripe_checkout_session_id: order.checkout_session_id, user_id: user.id });
+            return fail(res, 409, r === 'paid' ? 'purchase_completed' : 'checkout_in_progress');
+          }
+          if (!open) return fail(res, 409, 'checkout_in_progress');
           if (open.status === 'open') await CP.stripeCall(() => stripe.checkout.sessions.expire(order.checkout_session_id));
         }
         if (attempt > state.attempt) return fail(res, 409, 'checkout_in_progress');

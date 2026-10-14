@@ -192,9 +192,15 @@ function createHandler({ env, fetchImpl }) {
     if (kind === 'mypage') {
       const st = PS.computeStates(await PS.loadUserFacts((path) => select(conn, path), data.uid))[data.sid];
       const core = !!(st && st.analysisAccess && sessionMatches(st.record.session, hash));
-      // レポート末尾の案内（owned＝完全解析を購入済み・analysis_upgrade＝追加 ¥2,000 を申し込める・null＝出さない）。
-      //   この本人・この記録の権利からサーバーが決める（参照元・URL では決めない）
-      const complete = !core ? null : st.completeOwned ? 'owned' : st.completeOffer === 'analysis_upgrade' ? 'analysis_upgrade' : null;
+      // レポート末尾の案内。この本人・この記録の権利からサーバーが決める（参照元・URL では決めない）：
+      //   owned（完全解析を有効に持つ）／owned_inactive（購入済みだが停止・返金などで今は読めない）／analysis_upgrade（追加 ¥2,000）／
+      //   checkout_in_progress（決済の手続き中）／legacy（旧バージョン）／suspended（確認中）／null（出さない）
+      const complete = !core ? null
+        : st.completeOwned ? (st.completeEntitlement === 'active' && !st.target.basisInactive ? 'owned' : 'owned_inactive')
+        : st.completeOffer === 'analysis_upgrade' ? 'analysis_upgrade'
+        : st.completeBlocked === 'checkout_in_progress' ? 'checkout_in_progress'
+        : st.completeBlocked === 'legacy_purchase_not_eligible' ? 'legacy'
+        : st.completeBlocked === 'rights_suspended' ? 'suspended' : null;
       return { core, journey: false, complete };
     }
     // guest：未引き継ぎ（user_id が無い）ゲスト記録の、有効な解析権

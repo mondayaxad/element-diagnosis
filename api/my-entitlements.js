@@ -102,6 +102,20 @@ function createHandler({ env, fetchImpl }) {
           payload.purchased_by_version[`${version}:${a.encoded_answers}`] = true;
         }
       });
+      // 診断結果ごとの状態（結果ページで、ログイン中の本人の購入に合わせて「読む・見る・追加 ¥2,000」を出すため）。
+      //   本人が保存している診断コードだけをキーにし、記録 ID・注文は含めない。同じ結果の記録が複数なら表示の正本の状態
+      const resultStates = {};
+      sessionRows.forEach((row) => {
+        const rec = row && records[row.id];
+        const a = PS.one(row.diagnosis_answers);
+        if (!rec || rec.duplicateOf || !a || !a.encoded_answers || row.diagnosis_version !== 'ETI-2.0') return;
+        resultStates[`ETI-2.0:${a.encoded_answers}`] = {
+          analysisAccess: rec.analysisAccess, analysisPurchased: rec.analysisPurchased, legacyAnalysis: rec.legacyAnalysis,
+          completeOffer: rec.completeOffer, completeBlocked: rec.completeBlocked, completeEntitlement: rec.completeEntitlement,
+          completeStatus: rec.completeStatus, checkoutInProgress: rec.checkoutInProgress,
+        };
+      });
+      payload.result_states = resultStates;
       return Object.assign(payload, { completeLookup: 'ok', records });
     } catch (err) {
       console.error('my-entitlements complete lookup failed');

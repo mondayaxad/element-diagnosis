@@ -70,7 +70,7 @@ test('サンプルは結果ページと解析レポートの完全解析の欄�
   // 解析レポート：末尾の完全解析の案内（追加 ¥2,000）の1か所だけ
   const report = read('report.html');
   assert.equal((report.match(/complete-sample/g) || []).length, 1, 'report は完全解析の案内の1か所だけ');
-  assert.match(report, /href="\/complete-sample\?from=report" target="_blank" rel="noopener" data-ca-sample/);
+  assert.match(report, /href="\/complete-sample\?from=' \+ \(viewer === 'mypage' \? 'mypage' : 'report'\) \+ '" target="_blank" rel="noopener" data-ca-sample/);
   for (const f of fs.readdirSync(path.join(ROOT, 'type'))) {
     assert.doesNotMatch(read(`type/${f}`), /complete-sample/);
   }

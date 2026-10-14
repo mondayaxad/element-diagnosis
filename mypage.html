@@ -1234,7 +1234,16 @@ const MP_CHECKOUT_ERRORS = {
   onboarding_required: '登録を完了してから、もう一度お試しください。',
   not_authenticated: 'ログインの有効期限が切れました。もう一度ログインしてください。',
   network: '通信できませんでした。電波の良い場所で、もう一度お試しください。',
+  guest_purchase_unclaimed: 'この端末に、この結果のログインなしの購入があります。先にマイページへ引き継いでください（重ねてお支払いいただかないため）。',
+  purchase_completed: 'お支払いは完了しています。表示を更新します。',
+  rights_suspended: 'この記録の購入は、現在確認中のためお申し込みいただけません。',
+  offer_changed: '購入状況が変わったため、お申込み内容を更新します。もう一度お選びください。',
+  not_eligible: 'この記録は、完全解析の対象外です。',
+  record_not_found: 'この記録を確認できませんでした。ページを読み込み直してください。',
 };
+// 申込の結果が「購入済み・状態が変わった」の時は、記録の表示を取り直す（古いボタンを残さない）
+const MP_REFRESH_ERRORS = ['analysis_already_purchased', 'repurchase_not_allowed', 'checkout_in_progress', 'purchase_completed',
+  'rights_suspended', 'offer_changed', 'legacy_purchase_not_eligible'];
 function mpCheckoutErrorText(code) { return MP_CHECKOUT_ERRORS[code] || 'お手続きを開始できませんでした。時間をおいて、もう一度お試しください。'; }
 document.addEventListener('click', async (e) => {
   const btn = e.target && e.target.closest && e.target.closest('[data-analysis-checkout], [data-complete-checkout]');
@@ -1256,6 +1265,10 @@ document.addEventListener('click', async (e) => {
     btn.insertAdjacentElement('afterend', msg);
   }
   msg.textContent = mpCheckoutErrorText(r.error);
+  if (r.error === 'guest_purchase_unclaimed') {
+    msg.insertAdjacentHTML('beforeend', ' <a href="/mypage.html#recover">購入時のメールアドレスで確認して引き継ぐ</a>');
+  }
+  if (MP_REFRESH_ERRORS.includes(r.error)) setTimeout(() => { init(); }, 1800);
 });
 function v2ClosenessLine(label, ranking, purchased) {
   const top = v2TopName(ranking);
@@ -1966,9 +1979,15 @@ function mpRecordActionsHtml(r, source) {
     // 完全解析の権利がある記録には、解析レポート ¥1,000 の購入導線を出さない（完全解析が内包する）。
     // 完全解析の状態を読み取れなかった時（権利の有無が不明）だけは、従来どおり ¥1,000 の導線を残す
     const svc = caServerOf(r).complete;
-    const hasComplete = !!(view && ((svc && svc.completeEntitlement) || view.kind !== 'retry'));
-    if (!hasComplete) {
-      items.push(v2ReportCta(r.session, 'mp-btn primary', source === 'latest' ? 'latest' : 'records', `解析レポート　${MP_REPORT_PRICE}`));
+    // ¥2,000 の後に ¥1,000 だけ返金（完全解析の根拠が無い）：解析レポートを買い直すと完全解析も読める
+    const basisInactive = !!(svc && svc.completeViewBlocked === 'basis_inactive');
+    const hasComplete = !basisInactive && !!(view && ((svc && svc.completeEntitlement) || view.kind !== 'retry'));
+    if (svc && svc.analysisPurchased) {
+      // 解析レポートは購入済みだが、今は読めない（異議申し立ての確認中など）：¥1,000 を出さない（購入済みに重ねて売らない）
+      items.push('<p class="mp-rec-mentor" role="status">この記録の解析レポートは、現在確認中です。</p>');
+    } else if (!hasComplete) {
+      items.push(v2ReportCta(r.session, 'mp-btn primary', source === 'latest' ? 'latest' : 'records',
+        basisInactive ? `解析レポート　${MP_REPORT_PRICE}（完全解析を読むために必要です）` : `解析レポート　${MP_REPORT_PRICE}`));
     }
     if (pending) items.push(pending);
   }
@@ -2914,7 +2933,12 @@ function caRecordMentorHtml(r) {
     return `<button type="button" class="mp-btn" data-mentor-open="${id}"${chosenGoal ? ' data-mentor-chosen="1"' : ''}>${head}：${chosenGoal ? '決済の確認へ' : '目標を選ぶ'}</button>${chosen}`;
   }
   if (o.kind === 'closed' && o.reason === 'legacy') return `<p class="mp-rec-mentor" role="status">${CompleteAnalysis.LEGACY_CLOSED_TEXT}</p>`;
-  if (o.kind === 'checkout_in_progress') return '<p class="mp-rec-mentor">完全解析の決済手続き中です</p>';
+  if (o.kind === 'checkout_in_progress') {
+    // 決済画面を閉じた・放置した時に、この記録の行からやり直せる（Stripe の画面が期限切れになるまで待たせない）
+    return '<p class="mp-rec-mentor">完全解析の決済手続き中です</p>'
+      + `<button type="button" class="mp-btn" data-checkout-reset="${caEsc(caRecordId(r))}">決済をやり直す</button>`
+      + '<p class="mp-rec-mentor mp-reset-msg" role="alert" hidden></p>';
+  }
   return '';
 }
 // 目標の選択後に、同じ記録の LATEST RESULT と THE RECORDS の表示をそろえる

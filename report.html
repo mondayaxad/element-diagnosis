@@ -1748,7 +1748,8 @@ function initReportComplete(code, viewer, mypageComplete) {
   reportCompleteArgs = [code, viewer, mypageComplete];
   var G = (typeof EdGuestPurchase !== 'undefined') ? EdGuestPurchase : null;
   var unknown = '<p class="ca-r-note">この記録の完全解析の購入状態を確認できないため、購入導線は表示していません。</p>';
-  var sample = '<a class="ca-r-sample" href="/complete-sample?from=report" target="_blank" rel="noopener" data-ca-sample>完全解析のサンプルを見る</a>';
+  // サンプルの「申し込みに戻る」の戻り先（マイページから開いた解析レポートはマイページへ）
+  var sample = '<a class="ca-r-sample" href="/complete-sample?from=' + (viewer === 'mypage' ? 'mypage' : 'report') + '" target="_blank" rel="noopener" data-ca-sample>完全解析のサンプルを見る</a>';
   if (!G || !code) { box.innerHTML = unknown; return; }
   // 解析レポートの末尾は、追加 ¥2,000 だけを売る（¥3,000 は出さない）。サーバーが確かめた権利だけで決める
   //   ・この記録の解析レポートを新 Checkout で購入済み（ゲスト：この端末の Cookie の秘密値で確かめた記録／マイページ：本人の記録）：追加 ¥2,000
@@ -1777,10 +1778,15 @@ function initReportComplete(code, viewer, mypageComplete) {
       + '<p class="ca-r-note">完全解析は準備中です。現在はお申し込みいただけません。</p>';
   }
   if (viewer === 'mypage') {
-    if (mypageComplete === 'owned') {
-      box.innerHTML = '<p class="ca-r-note">この記録の完全解析は購入済みです。</p><a class="ca-r-btn" href="/mypage.html" data-report-mypage>購入した内容を見る</a>';
-      return;
-    }
+    // サーバーが本人の記録で確かめた状態ごとに、次の一手を出す（ここでは売らない状態でも行き止まりにしない）
+    var mpNotes = {
+      owned: '<p class="ca-r-note">この記録の完全解析は購入済みです。</p><a class="ca-r-btn" href="/mypage.html" data-report-mypage>購入した内容を見る</a>',
+      owned_inactive: '<p class="ca-r-note">この記録の完全解析は、現在ご覧いただけません（確認中・返金など）。詳しくはマイページの診断記録でご確認ください。</p><a class="ca-r-btn" href="/mypage.html" data-report-mypage>マイページで確認する</a>',
+      checkout_in_progress: '<p class="ca-r-note">この記録の決済の手続き中です。決済画面を閉じた場合は、マイページの診断記録の「決済をやり直す」からやり直せます。</p><a class="ca-r-btn" href="/mypage.html" data-report-mypage>マイページで開く</a>',
+      legacy: '<p class="ca-r-note">この記録の解析レポートは、旧バージョンのため、完全解析はお申し込みいただけません。</p>',
+      suspended: '<p class="ca-r-note">この記録の購入は、現在確認中のためお申し込みいただけません。</p>',
+    };
+    if (mpNotes[mypageComplete]) { box.innerHTML = mpNotes[mypageComplete]; return; }
     if (mypageComplete !== 'analysis_upgrade') { box.innerHTML = unknown; return; }
     if (!G.salesOpen()) { box.innerHTML = pendingHtml(); return; }
     box.innerHTML = '<a class="ca-r-btn is-offer" href="/mypage.html" data-report-mypage>マイページで申し込む　追加' + upPrice + '</a>'
@@ -1793,7 +1799,18 @@ function initReportComplete(code, viewer, mypageComplete) {
   //   （支払い済みならそのまま反映される。閉じるのはこの端末の未払いの決済だけ）
   box.innerHTML = '<p class="ca-r-note">購入状態を確認しています…</p>';
   G.releaseIfReturned().then(function () { return G.status(code); }).then(function (r) {
+    if (!r || !r.ok) {
+      // 状態の確認に失敗した（通信など）：この端末で購入が無いとは言わず、もう一度確かめられるようにする
+      box.innerHTML = '<p class="ca-r-note">購入状態を確認できませんでした。</p><button type="button" class="ca-r-btn" data-report-retry>もう一度確認する</button>' + sample;
+      bindSample();
+      box.querySelector('[data-report-retry]').onclick = function () { initReportComplete(code, viewer, mypageComplete); };
+      return;
+    }
     var list = (r && r.ok && r.body && r.body.purchases) || [];
+    if (!list.some(function (p) { return p.thisRecord; }) && r.body.claimedThisResult) {
+      box.innerHTML = '<p class="ca-r-note">この記録の購入は、マイページに引き継ぎ済みです。完全解析のお申し込み・閲覧はマイページからどうぞ。</p><a class="ca-r-btn" href="/mypage.html">マイページで開く</a>';
+      return;
+    }
     var mine = list.filter(function (p) { return p.thisRecord; })[0] || null;
     if (mine && mine.complete) {
       box.innerHTML = '<p class="ca-r-note">この記録の完全解析は購入済みです（' + G.esc(G.completeLabel(mine)) + '）。</p>'
@@ -1811,7 +1828,7 @@ function initReportComplete(code, viewer, mypageComplete) {
     }
     if (!G.salesOpen()) { box.innerHTML = pendingHtml(); return; }
     // 未払いの決済が残っていても、買っていない扱いで申し込める（サーバーが古い決済画面を閉じるか、同じ画面を返す。支払い済みなら作らない）
-    var unpaid = mine.pending ? '<p class="ca-r-note">前回のお手続きは完了していません（お支払いは発生していません）。もう一度お申し込みいただけます。</p>' : '';
+    var unpaid = mine.pending ? '<p class="ca-r-note">前回のお手続きは完了していません。お支払いが済んでいる場合は、自動で反映されます。もう一度お申し込みいただけます。</p>' : '';
     box.innerHTML = unpaid + '<button type="button" class="ca-r-btn is-offer" data-report-upgrade>' + label + '</button>'
       + '<p class="ca-r-note">この解析レポートをお持ちの方は、追加' + upPrice + 'で完全解析（全46ページ）をお読みいただけます。</p>' + sample + mypageSave;
     bindSample();
@@ -1860,6 +1877,11 @@ function reportShowGoals(G, box, code, label) {
         buy.disabled = false;
         buy.textContent = '目標を選んで決済へ（追加' + G.yen(G.OFFERS.analysis_upgrade.price) + '）';
         if (msg) msg.textContent = G.errorText(res && res.error);
+        // 購入済み・状態が変わった：案内を描き直す（古いボタンを残さない）
+        if (['analysis_already_purchased', 'upgrade_available', 'upgrade_not_available', 'repurchase_not_allowed', 'rights_suspended',
+             'purchase_completed', 'claimed', 'owned_in_account'].indexOf(res && res.error) >= 0 && reportCompleteArgs) {
+          setTimeout(function () { initReportComplete(reportCompleteArgs[0], reportCompleteArgs[1], reportCompleteArgs[2]); }, 1800);
+        }
       });
     };
   });

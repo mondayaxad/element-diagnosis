@@ -69,7 +69,7 @@ async function context(w, { width = 390, lastResult } = {}) {
     const body = JSON.parse(req.postData() || '{}');
     w.calls.push({ op, body, url: req.url() });
     const send = (status, json) => r.fulfill({ status, contentType: 'application/json', body: JSON.stringify(json) });
-    if (op === 'guest-status') return w.statusCode !== 200 ? send(w.statusCode, { error: 'service_unavailable' }) : send(200, { salesOpen: w.salesOpen, purchases: w.purchases });
+    if (op === 'guest-status') return w.statusCode !== 200 ? send(w.statusCode, { error: 'service_unavailable' }) : send(200, { salesOpen: w.salesOpen, purchases: w.purchases, ...(w.claimedThisResult ? { claimedThisResult: true } : {}) });
     if (op === 'result-open') {
       const code = Object.prototype.hasOwnProperty.call(w.links, body.token) ? (w.links[body.token] || CODE) : null;
       return code ? send(200, { code, diagnosisVersion: 'ETI-2.0', versions: VERSIONS }) : send(404, { error: 'result_not_found' });
@@ -239,11 +239,45 @@ test('決済画面から支払わずに戻る：戻る（ページの復元）�
   ctx = await context(w);
   p = await openReport(ctx);
   assert.equal(w.calls.filter((c) => c.op === 'guest-cancel').length, 0, '自分で決済へ進んでいない時は勝手に閉じない');
-  assert.match(await box(p).innerText(), /前回のお手続きは完了していません（お支払いは発生していません）。もう一度お申し込みいただけます。/);
+  assert.match(await box(p).innerText(), /前回のお手続きは完了していません。お支払いが済んでいる場合は、自動で反映されます。もう一度お申し込みいただけます。/);
   await box(p).locator('[data-report-upgrade]').click();
   await box(p).locator('input[name="report-mentor-goal"]').first().check();
   await box(p).locator('[data-report-buy]').click();
   await p.waitForURL(/checkout\.stripe\.com/);
   assert.equal(w.calls.filter((c) => c.op === 'guest-checkout').length, 1);
   await ctx.close();
+});
+
+test('監査：マイページから開いた解析レポートの末尾は、サーバーが確かめた理由ごとに次の一手を出す（行き止まりにしない）', { skip: skip() }, async () => {
+  const cases = [
+    ['owned', /完全解析は購入済みです[\s\S]*購入した内容を見る/],
+    ['owned_inactive', /現在ご覧いただけません[\s\S]*マイページで確認する/],
+    ['checkout_in_progress', /決済の手続き中です[\s\S]*決済をやり直す[\s\S]*マイページで開く/],
+    ['legacy', /旧バージョンのため、完全解析はお申し込みいただけません/],
+    ['suspended', /現在確認中のためお申し込みいただけません/],
+  ];
+  for (const [complete, re] of cases) {
+    const w = world({ viewer: 'mypage', complete });
+    const ctx = await context(w);
+    const p = await openReport(ctx);
+    assert.match(await box(p).innerText(), re, complete);
+    assert.equal(await box(p).locator('[data-report-upgrade]').count(), 0, complete);
+    await ctx.close();
+  }
+});
+
+test('監査：ゲストの解析レポートの末尾：状態の確認に失敗したら「もう一度確認する」・引き継ぎ済みならマイページへ', { skip: skip() }, async () => {
+  const w = world({ statusCode: 503 });
+  const ctx = await context(w);
+  const p = await openReport(ctx);
+  assert.match(await box(p).innerText(), /購入状態を確認できませんでした/);
+  w.statusCode = 200;
+  await box(p).locator('[data-report-retry]').click();
+  await box(p).locator('[data-report-upgrade]').waitFor();
+  await ctx.close();
+  const w2 = world({ purchases: [], claimedThisResult: true });
+  const c2 = await context(w2);
+  const p2 = await openReport(c2);
+  assert.match(await box(p2).innerText(), /マイページに引き継ぎ済みです[\s\S]*マイページで開く/);
+  await c2.close();
 });

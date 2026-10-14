@@ -50,7 +50,8 @@ test('申込欄から別のタブで開いたサンプル：「申し込みに�
   const errors = [];
   popup.on('pageerror', (e) => errors.push(String(e)));
   assert.equal(await popup.locator('[data-sample-return]').count(), 2, '上部と末尾');
-  const closed = popup.waitForEvent('close');
+  await popup.locator('.sample-cta [data-sample-return][data-ready="1"]').waitFor({ state: 'attached' });
+  const closed = popup.waitForEvent('close', { timeout: 15000 });
   await popup.locator('.sample-cta [data-sample-return]').click();
   await closed;
   assert.equal(new URL(opener.url()).pathname, '/opener.html');

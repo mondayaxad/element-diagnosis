@@ -233,7 +233,7 @@ test('ゲストの追加 ¥2,000：この端末（Cookie の秘密値）で確�
   const s = (await ctx.op('guest-status', { code: CODE_A })).body.purchases.find((x) => x.thisRecord);
   assert.deepEqual([s.analysis, s.complete, s.report, s.canUpgrade], ['active', 'active', 'queued', false]);
   // 完全解析を購入済み：¥2,000・¥3,000・¥1,000 とも断る
-  for (const [offer, goal, err] of [['analysis_upgrade', 'GOAL_PACE_01', 'upgrade_not_available'], ['direct_complete', 'GOAL_PACE_01', 'repurchase_not_allowed'], ['analysis', undefined, 'repurchase_not_allowed']]) {
+  for (const [offer, goal, err] of [['analysis_upgrade', 'GOAL_PACE_01', 'repurchase_not_allowed'], ['direct_complete', 'GOAL_PACE_01', 'repurchase_not_allowed'], ['analysis', undefined, 'repurchase_not_allowed']]) {
     const r = await ctx.op('guest-checkout', goal ? { offer, code: CODE_A, goal } : { offer, code: CODE_A });
     assert.deepEqual([r.code, r.body.error], [409, err], offer);
   }
@@ -300,7 +300,9 @@ test('引き継ぎ：ログイン必須・購入時メールと同じ確認済�
   // 引き継ぎ
   const c1 = await ctx.op('guest-claim', { ref }, { token: tokA });
   assert.deepEqual([c1.code, c1.body], [200, { result: 'claimed' }]);
-  assert.equal(ctx.cookie, '', '引き継いだ秘密値は Cookie から外す');
+  // 引き継いだ記録の秘密値は Cookie に残す（権利・閲覧には使えない。この端末で「引き継ぎ済み」と案内し、ゲストとして売り直さないため）
+  assert.notEqual(ctx.cookie, '');
+  assert.deepEqual([(await ctx.op('guest-report', { ref })).code, (await ctx.op('guest-report', { ref })).body.error], [409, 'claimed']);
   const [session] = await ctx.rows('diagnosis_sessions');
   assert.equal(session.user_id, userA);
   for (const t of ['complete_orders', 'record_entitlements']) assert.ok((await ctx.rows(t)).every((x) => x.user_id === userA), t);

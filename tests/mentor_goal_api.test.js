@@ -351,8 +351,10 @@ test('my-entitlements v2（Preview）：記録ごとの完全解析の状態', a
   assert.deepEqual(r[S4].mentorGoal, { goalId: 'GOAL_PACE_01', goalCatalogVersion: CE.MENTOR_CATALOG_VERSION, selectedAt: '2026-10-07T00:00:00Z' });
   assert.equal(r[S5].completeEligible, false);
   assert.equal(r[S5].ineligibleReason, 'legacy_version');
-  assert.equal(r[S6].repurchaseBlocked, true);
+  // ¥3,000 を返金済み（注文 refunded・権利 revoked）：購入済みに数えない。もう一度 ¥3,000 を申し込める（complete_11）
+  assert.equal(r[S6].repurchaseBlocked, false);
   assert.equal(r[S6].completeEntitlement, 'revoked');
+  assert.equal(r[S6].completeOffer, 'direct_complete');
   // 固定済みでも旧購入権が無効になっていれば根拠にしない
   f.db.purchase_entitlements[1].status = 'revoked_for_test';
   assert.equal((await entitlements(f)).body.records[S4].analysisSource, null);

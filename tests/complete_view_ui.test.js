@@ -607,6 +607,12 @@ test('総当たり（マイページ）：未購入／解析レポートだけ�
       must: [/解析レポートを見る/, /旧バージョンのため、完全解析はお申し込みいただけません/], mustNot: [/¥1,000/, /¥2,000/, /¥3,000/] },
     { name: '決済の手続き中（解析レポートあり）', purchased: owned, rec: rec({ analysisSource: 'record_entitlement', analysisAccess: true, analysisPurchased: true, checkoutInProgress: true, completeBlocked: 'checkout_in_progress' }),
       must: [/解析レポートを見る/, /決済の手続き中/], mustNot: [/¥1,000/, /¥3,000/] },
+    { name: '解析レポートが確認中（異議申し立て中）', purchased: {}, rec: rec({ analysisPurchased: true, completeBlocked: 'rights_suspended' }),
+      must: [/解析レポートは、現在確認中です/], mustNot: [/¥1,000/, /¥2,000/, /¥3,000/] },
+    { name: '¥2,000 の後に ¥1,000 だけ返金（完全解析の根拠なし）', purchased: {}, rec: purchased({ completeViewBlocked: 'basis_inactive', completeBlocked: 'repurchase_not_allowed' }),
+      must: [/解析レポート\s*¥1,000（完全解析を読むために必要です）/], mustNot: [/¥3,000/] },
+    { name: '¥3,000 の決済を放置（未購入）', purchased: {}, rec: rec({ checkoutInProgress: true, completeBlocked: 'checkout_in_progress' }),
+      must: [/決済手続き中です/, /決済をやり直す/], mustNot: [/¥3,000/] },
     { name: '確認できない（サーバーは購入済みの印を返せない）', purchased: {}, completeLookup: 'failed', rec: rec(), must: [/購入状態を確認できませんでした/], mustNot: [/¥1,000/, /¥2,000/, /¥3,000/] },
   ];
   for (const c of cases) {

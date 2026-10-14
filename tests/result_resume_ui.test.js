@@ -260,7 +260,8 @@ test('Stripe でキャンセルして戻っても、購入完了ページから�
   await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
   assert.equal(new URL(p.url()).hash, '#r=' + tk);
   await p.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })));
-  assert.equal(await p.locator('#lockUnlockAllBtn').isDisabled(), false);
+  // 戻る・進むで復元された結果ページは、購入状態を確かめ直してから押せる
+  await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
   await ctx.close();
 });
 

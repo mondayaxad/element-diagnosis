@@ -39,9 +39,9 @@ const VIEW_CSP = "default-src 'none'; style-src 'unsafe-inline'; img-src data:; 
 const MYPAGE_FOOTER = '<aside aria-label="マイページ" style="max-width:640px;margin:48px auto 64px;padding:20px 18px;border:1px solid #2a2440;border-radius:12px;'
   + 'text-align:center;font-family:inherit;background:rgba(20,16,36,.6)">'
   + '<p style="margin:0 0 12px;font-size:13px;line-height:1.9;color:#b9b2d6">マイページを作成すると、この診断記録と完全解析を、いつでも見返せます。</p>'
-  + '<a href="/mypage.html#recover" style="display:inline-block;min-height:44px;line-height:44px;padding:0 18px;border-radius:8px;color:#fff;'
+  + '<a href="/mypage.html" style="display:inline-block;min-height:44px;line-height:44px;padding:0 18px;border-radius:8px;color:#fff;'
   + 'text-decoration:none;font-size:13px;letter-spacing:.06em;background:linear-gradient(120deg,#5b78c8 0%,#8a5fc0 50%,#c9a860 100%)">'
-  + 'マイページを作成する（購入時のメールで確認）</a></aside>';
+  + 'マイページを作成する（この購入を引き継ぎます）</a></aside>';
 function withMypageFooter(body) {
   const html = Buffer.isBuffer(body) ? body.toString('utf8') : String(body);
   const i = html.lastIndexOf('</body>');

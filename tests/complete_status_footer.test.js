@@ -7,12 +7,12 @@ const fs = require('fs');
 const path = require('path');
 const { withMypageFooter } = require('../api/complete-status.js');
 
-test('最下部（</body> の直前）に1回だけ「マイページを作成する（購入時のメールで確認）」を足す。同じタブのリンクだけ（スクリプト・別タブなし）', () => {
+test('最下部（</body> の直前）に1回だけ「マイページを作成する（この購入を引き継ぎます）」を足す。同じタブのリンクだけ（スクリプト・別タブなし）', () => {
   const html = Buffer.from('<!doctype html><html><body><main>REPORT</main></body></html>', 'utf8');
   const out = withMypageFooter(html);
-  assert.equal((out.match(/マイページを作成する（購入時のメールで確認）/g) || []).length, 1);
+  assert.equal((out.match(/マイページを作成する（この購入を引き継ぎます）/g) || []).length, 1);
   assert.ok(out.indexOf('</main>') < out.indexOf('マイページを作成する') && out.indexOf('マイページを作成する') < out.lastIndexOf('</body>'));
-  assert.match(out, /<a href="\/mypage\.html#recover"/);
+  assert.match(out, /<a href="\/mypage\.html"/);
   assert.match(out, /マイページを作成すると、この診断記録と完全解析を、いつでも見返せます。/);
   assert.doesNotMatch(out, /<script|target=|onclick|javascript:/i);
   assert.ok(out.startsWith('<!doctype html><html><body><main>REPORT</main>'), '本文は変えない');
