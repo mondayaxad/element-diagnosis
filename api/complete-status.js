@@ -35,6 +35,19 @@ const MAX_BODY_BYTES = 512;
 const VIEW_CSP = "default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src 'none'; script-src 'none'; connect-src 'none'; "
   + "frame-src 'none'; form-action 'none'; base-uri 'none'; frame-ancestors 'none'; sandbox";
 
+// 完全解析の最下部の「マイページを作成する」（同じタブで開くリンクだけ。CSP の sandbox で別タブ・スクリプトは使えない）
+const MYPAGE_FOOTER = '<aside aria-label="マイページ" style="max-width:640px;margin:48px auto 64px;padding:20px 18px;border:1px solid #2a2440;border-radius:12px;'
+  + 'text-align:center;font-family:inherit;background:rgba(20,16,36,.6)">'
+  + '<p style="margin:0 0 12px;font-size:13px;line-height:1.9;color:#b9b2d6">マイページを作成すると、この診断記録と完全解析を、いつでも見返せます。</p>'
+  + '<a href="/mypage.html#recover" style="display:inline-block;min-height:44px;line-height:44px;padding:0 18px;border-radius:8px;color:#fff;'
+  + 'text-decoration:none;font-size:13px;letter-spacing:.06em;background:linear-gradient(120deg,#5b78c8 0%,#8a5fc0 50%,#c9a860 100%)">'
+  + 'マイページを作成する（購入時のメールで確認）</a></aside>';
+function withMypageFooter(body) {
+  const html = Buffer.isBuffer(body) ? body.toString('utf8') : String(body);
+  const i = html.lastIndexOf('</body>');
+  return i < 0 ? html + MYPAGE_FOOTER : html.slice(0, i) + MYPAGE_FOOTER + html.slice(i);
+}
+
 function queryParam(req, name) {
   if (req.query && typeof req.query[name] === 'string') return req.query[name];
   try { return new URL(req.url || '/', 'http://x').searchParams.get(name); } catch { return null; }
@@ -141,6 +154,8 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
     if (require('crypto').createHash('sha256').update(body).digest('hex') !== row.output_sha256) {
       return failLogged(res, 500, 'report_unavailable', 'output_hash_mismatch');
     }
+    // ログインなしの購入（ゲスト）で開いた時だけ、最下部にマイページの作成への導線を足す（保存した生成物は変えない。照合の後に足す）
+    if (t.userId == null) body = withMypageFooter(body);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Content-Security-Policy', VIEW_CSP);
     res.setHeader('X-Frame-Options', 'DENY');
@@ -248,3 +263,4 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
 
 module.exports = createHandler({ env: process.env, fetchImpl: (...args) => fetch(...args) });
 module.exports.createHandler = createHandler;
+module.exports.withMypageFooter = withMypageFooter;
