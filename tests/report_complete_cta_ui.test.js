@@ -168,8 +168,6 @@ test('ゲスト：この端末に固有リンクが無い・別の診断結果�
 test('購入済み・決済中・購入が見つからない・確かめられない・販売停止・マイページ経由の出し分け', { skip: skip() }, async () => {
   const cases = [
     [{ purchases: [mine({ complete: 'active', canUpgrade: false })] }, /完全解析は購入済みです/, 'a[href="/purchase-complete"]'],
-    [{ purchases: [] }, /購入状態を確認できないため、購入導線は表示していません/, null],
-    [{ statusCode: 503 }, /購入状態を確認できないため/, null],
     [{ salesOpen: false }, /追加¥2,000（準備中）[\s\S]*完全解析は準備中です/, 'button.is-pending[disabled]'],
     [{ viewer: 'mypage' }, /マイページで申し込む　追加¥2,000/, 'a[href="/mypage.html"].is-offer'],
     [{ viewer: 'legacy' }, /購入状態を確認できないため/, null],
@@ -239,4 +237,20 @@ test('決済画面から支払わずに戻る：戻る（ページの復元）�
   await p.waitForURL(/checkout\.stripe\.com/);
   assert.equal(w.calls.filter((c) => c.op === 'guest-checkout').length, 1);
   await ctx.close();
+});
+
+test('この端末に購入の記録が無い（メール等のリンクから別のブラウザで開いた）・確かめられない時も ¥2,000 を買える：レポートのリンクの値を添えて決済', { skip: skip() }, async () => {
+  for (const over of [{ purchases: [] }, { statusCode: 503 }]) {
+    const w = world(over);
+    const ctx = await context(w);
+    const p = await openReport(ctx);
+    await box(p).locator('[data-report-upgrade]').click();
+    await box(p).locator('input[name="report-mentor-goal"]').first().check();
+    await box(p).locator('[data-report-buy]').click();
+    await p.waitForURL(/checkout\.stripe\.com/);
+    const co = w.calls.filter((c) => c.op === 'guest-checkout').map((c) => c.body);
+    assert.deepEqual([co.length, co[0].offer, co[0].code, co[0].report], [1, 'analysis_upgrade', CODE, 'x'], JSON.stringify(over));
+    assert.ok(w.calls.every((c) => !c.url.includes('token=')), 'レポートのリンクの値は本文だけで送る');
+    await ctx.close();
+  }
 });

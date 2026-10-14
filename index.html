@@ -3092,36 +3092,22 @@ function initGuestPurchase(root, code, refs) {
     if (hasAnalysis) {
       readAnalysisButton(refs.lockUnlockAllBtn, mine);
       refs.lockCtaBtns.forEach(function (b) { readAnalysisButton(b, mine); b.textContent = '解析レポートで読む'; });
-    } else if (r.ok && r.body.codePurchased && refs.lockUnlockAllBtn) {
-      // この結果は購入済みだが、このブラウザ（タブ）には購入の記録が無い：購入時のメールアドレスで確認すると読める
-      //   （二重購入を防ぐため ¥1,000 は売らない。iPhone のプライベートブラウズはタブごとに記録が分かれる）
-      refs.lockUnlockAllBtn.textContent = 'この結果は購入済みです（購入時のメールで読めます）';
-      refs.lockUnlockAllBtn.disabled = false;
-      refs.lockUnlockAllBtn.style.opacity = '';
-      refs.lockUnlockAllBtn.onclick = function () { location.assign('/mypage.html#recover'); };
     }
     if (!box) return;
-    if (!r.ok) {
-      // 購入状態を確認できない：¥3,000 へ誘導しない（購入済みの方へ重ねて売らない）
-      box.innerHTML = '<p class="ca-fold-note">この結果の購入状態を確認できないため、完全解析の購入導線は表示していません。</p>';
-      return;
-    }
+    // 購入状態を確かめられない時も売る（ログインなしの購入は、買えることを優先する。価格・権利はサーバーが決める）
     if (mine && mine.complete) {
       box.innerHTML = '<p class="ca-fold-note">この結果の完全解析は購入済みです（' + G.esc(G.completeLabel(mine)) + '）。</p>'
         + '<a class="ca-fold-btn" href="/purchase-complete">購入した内容を見る</a>';
-      return;
-    }
-    if (!mine && r.ok && r.body.codePurchased) {
-      box.innerHTML = '<p class="ca-fold-note">この結果は、別のブラウザ（またはタブ）で購入されています。購入したブラウザで開くか、購入時のメールアドレスで確認すると、解析レポートを読めて、完全解析にも進めます。</p>'
-        + '<a class="ca-fold-btn" href="/mypage.html#recover" data-guest-recover>購入時のメールで確認する</a>'
-        + '<p class="ca-fold-note">ログインして購入した場合は、同じ方法でログインしてください。</p>';
       return;
     }
     var offer = hasAnalysis ? 'analysis_upgrade' : 'direct_complete';
     if (!open) { box.innerHTML = pendingHtml(offer); return; }
     // 申込の導線（押した後に MENTOR 目標を選んで決済へ）。展開しただけでは目標の選択・決済を出さない
     // 未払いの決済が残っていても、買っていない扱いで申し込める（サーバーが古い決済画面を閉じるか、同じ画面を返す。支払い済みなら作らない）
-    box.innerHTML = (mine && mine.pending ? '<p class="ca-fold-note">前回のお手続きは完了していません（お支払いは発生していません）。もう一度お申し込みいただけます。</p>' : '')
+    // 別のブラウザ（タブ）などで購入済みかもしれない時も売る（ログインなしでは同じ人か確かめられない。買えることを優先する）
+    var elsewhere = !mine && r.ok && r.body.codePurchased
+      ? '<p class="ca-fold-note">この結果を別のブラウザで購入済みの場合は、購入時のメールからご覧いただけます。</p>' : '';
+    box.innerHTML = elsewhere + (mine && mine.pending ? '<p class="ca-fold-note">前回のお手続きは完了していません（お支払いは発生していません）。もう一度お申し込みいただけます。</p>' : '')
       + '<button type="button" class="ca-fold-btn" data-reveal-offer="' + offer + '">' + offerLabel(offer) + '</button>';
     var reveal = box.querySelector('[data-reveal-offer]');
     reveal.onclick = function () {

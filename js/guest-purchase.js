@@ -87,12 +87,14 @@
   function goals() { return call('guest-goals', {}); }
 
   // Checkout を作り、同じタブで Stripe の決済画面へ移動する
-  async function checkout(offer, code, goalId, source) {
+  // extra.report：解析レポートの閲覧リンクの値（¥2,000 をその記録に結び付ける。別のブラウザで開いたレポートからでも買える）
+  async function checkout(offer, code, goalId, source, extra) {
     var info = OFFERS[offer];
     track('checkout_start', { offer: offer, value: info && info.price, currency: 'JPY', source: source });
     var body = { offer: offer, code: code };
     if (goalId) body.goal = goalId;
     if (resume()) body.resume = resume();
+    if (extra && typeof extra.report === 'string' && extra.report) body.report = extra.report;
     var r = await call('guest-checkout', body);
     if (r.ok && r.body && typeof r.body.checkoutUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(r.body.checkoutUrl)) {
       track('checkout_redirect', { offer: offer, value: info && info.price, currency: 'JPY', source: source });

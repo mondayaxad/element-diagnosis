@@ -313,20 +313,19 @@ test('結果ページ：¥1,000 の決済画面から支払わずに「戻る」
   await ctx.close();
 });
 
-test('購入済みの結果を、購入の記録が無いブラウザ・タブで開いた：売らずに「購入時のメールで確認する」へ案内する', { skip: skip() }, async () => {
+test('購入済みの結果を、購入の記録が無いブラウザ・タブで開いた：ログインなしの購入は買えることを優先し、¥1,000・¥3,000 をそのまま売る（購入時のメールの案内だけ添える）', { skip: skip() }, async () => {
   const w = world({ codePurchased: true });
   const ctx = await newContext();
   await wire(ctx, w);
   const p = await open(ctx, '/');
-  await complete(p);
-  await p.waitForFunction(() => /購入時のメールで読めます/.test(document.querySelector('#lockUnlockAllBtn').textContent));
-  assert.equal((await p.locator('#lockUnlockAllBtn').innerText()).trim(), 'この結果は購入済みです（購入時のメールで読めます）');
+  const code = await complete(p);
+  await p.waitForSelector('[data-guest-complete] [data-reveal-offer="direct_complete"]', { state: 'attached' });
   const box = p.locator('[data-guest-complete]');
-  assert.match(await box.textContent(), /別のブラウザ（またはタブ）で購入されています。購入したブラウザで開くか、購入時のメールアドレスで確認すると/);
-  assert.equal(await box.locator('a[href="/mypage.html#recover"]').textContent(), '購入時のメールで確認する');
-  assert.equal(await box.locator('[data-reveal-offer], [data-guest-buy]').count(), 0, '二重購入へ誘導しない');
+  assert.match(await box.textContent(), /この結果を別のブラウザで購入済みの場合は、購入時のメールからご覧いただけます。/);
+  await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
+  assert.doesNotMatch(await p.locator('#lockUnlockAllBtn').innerText(), /購入済み/);
   await p.locator('#lockUnlockAllBtn').click();
-  await p.waitForURL((u) => u.pathname === '/mypage.html' && u.hash === '#recover');
-  assert.equal(w.calls.filter((c) => c.op === 'guest-checkout').length, 0);
+  await p.waitForURL(/checkout\.stripe\.com/);
+  assert.deepEqual(w.calls.filter((c) => c.op === 'guest-checkout').map((c) => [c.body.offer, c.body.code]), [['analysis', code]]);
   await ctx.close();
 });

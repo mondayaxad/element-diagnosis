@@ -1761,20 +1761,20 @@ function initReportComplete(code, viewer) {
   G.releaseIfReturned().then(function () { return G.status(code); }).then(function (r) {
     var list = (r && r.ok && r.body && r.body.purchases) || [];
     var mine = list.filter(function (p) { return p.thisRecord; })[0] || null;
-    if (!mine) { box.innerHTML = unknown; return; }
-    if (mine.complete) {
+    // この端末に購入の記録が無い（メール等のリンクから別のブラウザで開いた）・確かめられない時も売る：
+    //   このレポートのリンク自体が解析レポートの購入を示すため、¥2,000 はリンクの記録に結び付ける（サーバーが署名を確かめる）
+    if (mine && mine.complete) {
       box.innerHTML = '<p class="ca-r-note">この記録の完全解析は購入済みです（' + G.esc(G.completeLabel(mine)) + '）。</p>'
         + '<a class="ca-r-btn" href="/purchase-complete">購入した内容を見る</a>';
       return;
     }
-    if (mine.analysis !== 'active') { box.innerHTML = unknown; return; }
     if (!G.salesOpen()) {
       box.innerHTML = '<button type="button" class="ca-r-btn is-pending" disabled aria-disabled="true">' + label + '（準備中）</button>'
         + '<p class="ca-r-note">完全解析は準備中です。現在はお申し込みいただけません。</p>';
       return;
     }
     // 未払いの決済が残っていても、買っていない扱いで申し込める（サーバーが古い決済画面を閉じるか、同じ画面を返す。支払い済みなら作らない）
-    var unpaid = mine.pending ? '<p class="ca-r-note">前回のお手続きは完了していません（お支払いは発生していません）。もう一度お申し込みいただけます。</p>' : '';
+    var unpaid = mine && mine.pending ? '<p class="ca-r-note">前回のお手続きは完了していません（お支払いは発生していません）。もう一度お申し込みいただけます。</p>' : '';
     box.innerHTML = unpaid + '<button type="button" class="ca-r-btn is-offer" data-report-upgrade>' + label + '</button>' + sample;
     bindSample();
     var btn = box.querySelector('[data-report-upgrade]');
@@ -1816,7 +1816,8 @@ function reportShowGoals(G, box, code, label) {
       buy.textContent = '決済画面へ移動しています…';
       if (msg) msg.textContent = '';
       reportResumeFor(G, code).then(function () {
-        return G.checkout('analysis_upgrade', code, picked.value, 'analysis_report');
+        var reportToken = new URLSearchParams(location.search).get('token') || '';
+        return G.checkout('analysis_upgrade', code, picked.value, 'analysis_report', { report: reportToken });
       }).then(function (res) {
         if (res && res.ok) return;
         buy.disabled = false;

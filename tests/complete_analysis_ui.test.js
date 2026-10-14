@@ -422,11 +422,12 @@ test('index：¥1,000主導線のあとに折りたたみ。閉じても¥1,000�
   await p.__ctx.close();
 });
 
-test('index：Preview指定なしでは購入状態不明として¥3,000CTAを出さない／JS無しでも details で到達できる', { skip: skip() }, async () => {
+test('index：購入状態を確かめられない時も申込の導線は出す（ログインなしの購入は買えることを優先）・旧 Payment Link は無い／JS無しでも details で到達できる', { skip: skip() }, async () => {
   const p = await indexResult(null);
   await p.click('details.ca-fold > summary');
   assert.equal(await p.locator('details.ca-fold a[href*="buy.stripe"]').count(), 0);
-  assert.match(await p.locator('details.ca-fold').innerText(), /購入状態を確認できないため/);
+  await p.waitForFunction(() => /まだ見えていない輪郭を読む/.test(document.querySelector('details.ca-fold').innerText));
+  assert.doesNotMatch(await p.locator('details.ca-fold').innerText(), /購入状態を確認できないため/);
   assert.equal(await p.locator('details.ca-fold > summary').evaluate((s) => s.parentElement.tagName), 'DETAILS');
   await p.__ctx.close();
 });
