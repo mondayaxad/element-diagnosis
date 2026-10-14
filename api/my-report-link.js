@@ -79,8 +79,8 @@ function createHandler({ env, fetchImpl }) {
     return rows;
   }
 
-  // 解析レポートの閲覧権：同じ本人・同じ診断結果の記録のどれかに有効な解析権（記録単位・結び付けた旧購入）、
-  // または有効な旧 ¥1,000（診断コードのハッシュ一致）があること（lib/purchase-state.js と同じ規則）
+  // 解析レポートの閲覧権：同じ本人・同じ診断結果の記録のどれかに、新 Checkout の有効な解析権、または本人に結び付け済みの
+  // 有効な旧購入があること（lib/purchase-state.js と同じ規則。診断コードのハッシュの一致だけの旧購入は数えない：complete_10）
   async function hasAnalysisAccess(conn, userId, diagnosisSessionId) {
     const st = PS.computeStates(await PS.loadUserFacts((path) => selectRows(conn, path), userId))[diagnosisSessionId];
     return !!(st && st.analysisAccess);

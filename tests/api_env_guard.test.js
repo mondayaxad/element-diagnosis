@@ -52,7 +52,9 @@ function fakeSupabase({ rows = {}, user = { id: '11111111-1111-4111-8111-1111111
         newsletter_consent_source: 'registration_onboarding', newsletter_sync_status: 'pending', newsletter_sync_attempts: 0, newsletter_sync_attempted_at: null }]);
     }
     if (url.startsWith('https://api.kit.com')) return json(200, { subscribers: [] });
-    // 完全解析・記録単位の権利の表（lib/purchase-state.js が読む）：この試験では行が無い
+    // 完全解析・記録単位の権利の表（lib/purchase-state.js が読む）：rights（record_entitlements）・bindings（complete_legacy_bindings）だけ指定できる
+    if (url.includes('/rest/v1/record_entitlements?')) return json(200, rows.rights || []);
+    if (url.includes('/rest/v1/complete_legacy_bindings?')) return json(200, rows.bindings || []);
     if (/\/rest\/v1\/(record_entitlements|complete_orders|record_mentor_goals|complete_reports|complete_legacy_bindings|legacy_access_blocks)\?/.test(url)) return json(200, []);
     throw new Error('unexpected fetch ' + url);
   };
@@ -284,7 +286,8 @@ test('report-data：別環境のトークンは開けない（鍵が別なら署
 test('my-report-link Preview：Preview の Supabase だけを使い、env=preview のトークンを発行する', silenced(async () => {
   const sb = fakeSupabase({ rows: {
     sessions: [{ id: '22222222-2222-4222-8222-222222222222', diagnosis_version: 'ETI-2.0', diagnosis_answers: [{ encoded_answers: 'ABCDEF' }] }],
-    entitlements: [{ id: 'e-1', product_type: 'core1', diagnosis_code_hash: crypto.createHash('sha256').update('v2_ABCDEF').digest('hex') }],
+    // 新 Checkout の解析権（記録単位）。診断コードのハッシュだけの旧購入は根拠にしない（complete_10）
+    rights: [{ diagnosis_session_id: '22222222-2222-4222-8222-222222222222', user_id: '11111111-1111-4111-8111-111111111111', right_type: 'analysis', status: 'active', created_at: '2026-10-14T00:00:00Z' }],
   } });
   const res = makeRes();
   await myReportLink.createHandler({ env: PREVIEW_ENV, fetchImpl: sb.fetchImpl })(
@@ -304,8 +307,10 @@ test('my-report-link Preview：Preview の Supabase だけを使い、env=previe
 
 test('my-entitlements Production：本番の Supabase だけを使う', silenced(async () => {
   const sb = fakeSupabase({ rows: {
-    sessions: [{ diagnosis_version: 'ETI-2.0', diagnosis_answers: [{ encoded_answers: 'ABCDEF' }] }],
-    entitlements: [{ diagnosis_code_hash: crypto.createHash('sha256').update('v2_ABCDEF').digest('hex'), product_type: 'core1' }],
+    sessions: [{ id: '22222222-2222-4222-8222-222222222222', diagnosis_version: 'ETI-2.0', diagnosis_answers: [{ encoded_answers: 'ABCDEF' }] }],
+    // 本人に結び付け済みの旧購入（閲覧のためだけ）
+    entitlements: [{ id: '33333333-3333-4333-8333-333333333333', diagnosis_code_hash: crypto.createHash('sha256').update('v2_ABCDEF').digest('hex'), product_type: 'core1' }],
+    bindings: [{ diagnosis_session_id: '22222222-2222-4222-8222-222222222222', legacy_entitlement_id: '33333333-3333-4333-8333-333333333333', user_id: '11111111-1111-4111-8111-111111111111' }],
   } });
   const res = makeRes();
   await myEntitlements.createHandler({ env: PROD_ENV, fetchImpl: sb.fetchImpl })(
@@ -313,6 +318,29 @@ test('my-entitlements Production：本番の Supabase だけを使う', silenced
   assert.equal(res.code, 200);
   assert.deepEqual(res.body.purchased_by_version, { 'ETI-2.0:ABCDEF': true });
   assert.ok(sb.calls.every((c) => c.url.startsWith(PROD_ENV.SUPABASE_URL + '/')));
+}));
+
+test('my-entitlements・my-report-link：診断コードのハッシュが一致するだけの旧購入（同じ回答の別人の購入）は、本人の購入にしない', silenced(async () => {
+  const rows = {
+    sessions: [{ id: '22222222-2222-4222-8222-222222222222', diagnosis_version: 'ETI-2.0', diagnosis_answers: [{ encoded_answers: 'ABCDEF' }] }],
+    entitlements: [{ id: '33333333-3333-4333-8333-333333333333', diagnosis_code_hash: crypto.createHash('sha256').update('v2_ABCDEF').digest('hex'), product_type: 'core1' }],
+  };
+  const sb = fakeSupabase({ rows });
+  const res = makeRes();
+  await myEntitlements.createHandler({ env: PREVIEW_ENV, fetchImpl: sb.fetchImpl })({ method: 'GET', headers: { authorization: 'Bearer good-token' } }, res);
+  assert.equal(res.code, 200);
+  assert.deepEqual(res.body.purchased_by_version, {});
+  const rec = res.body.records['22222222-2222-4222-8222-222222222222'];
+  assert.equal(rec.analysisAccess, false);
+  assert.equal(rec.analysisPurchased, false);
+  assert.equal(rec.legacyAnalysis, false);
+  assert.notEqual(rec.completeBlocked, 'legacy_purchase_not_eligible');
+  // 旧購入は ID（本人の結び付け）でだけ読み、診断コードのハッシュで探さない
+  assert.ok(!sb.calls.some((c) => c.url.includes('purchase_entitlements?diagnosis_code_hash')));
+  const link = makeRes();
+  await myReportLink.createHandler({ env: PREVIEW_ENV, fetchImpl: fakeSupabase({ rows }).fetchImpl })(
+    { method: 'POST', headers: { authorization: 'Bearer good-token' }, body: { diagnosis_session_id: '22222222-2222-4222-8222-222222222222' } }, link);
+  assert.equal(link.code, 403);
 }));
 
 test('subscribe Preview：Preview の Supabase だけを読む（Kit は許可リストのメールだけ）', silenced(async () => {
@@ -345,6 +373,7 @@ const SCENARIOS = {
 const SCENARIO_ROWS = {
   sessions: [{ id: '22222222-2222-4222-8222-222222222222', diagnosis_version: 'ETI-2.0', diagnosis_answers: [{ encoded_answers: 'ABCDEF' }] }],
   entitlements: [{ product_type: 'core1', diagnosis_code_hash: crypto.createHash('sha256').update('v2_ABCDEF').digest('hex') }],
+  rights: [{ diagnosis_session_id: '22222222-2222-4222-8222-222222222222', user_id: '11111111-1111-4111-8111-111111111111', right_type: 'analysis', status: 'active', created_at: '2026-10-14T00:00:00Z' }],
 };
 
 function supabaseCalls(sb, env) {

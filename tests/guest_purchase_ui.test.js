@@ -91,7 +91,7 @@ const CHECKOUT = (b) => [200, { checkoutUrl: 'https://checkout.stripe.com/c/pay/
 const noScroll = (p) => p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
 test('完了ページ（販売中）：¥1,000 はゲストの Checkout（offer と診断コードだけ）。同じタブで Stripe へ', { skip: skip() }, async () => {
-  const p = await resultPage({ api: { 'guest-status': [200, { salesOpen: true, purchases: [], codePurchased: false }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
+  const p = await resultPage({ api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
   const btn = p.locator('#lockUnlockAllBtn');
   assert.equal((await btn.innerText()).trim(), '全てのロックを解除する →');
   assert.match(await p.content(), /登録不要。お支払いの後、このブラウザですぐにお読みいただけます。/);
@@ -105,7 +105,7 @@ test('完了ページ（販売中）：¥1,000 はゲストの Checkout（offer 
 
 test('完了ページ（C7）：Stripe から「戻る」・タブ復帰・移動できなかった時に「決済画面へ移動しています…」のまま止めない', { skip: skip() }, async () => {
   for (const width of [320, 390, 1280]) {
-    const p = await resultPage({ width, api: { 'guest-status': [200, { salesOpen: true, purchases: [], codePurchased: false }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
+    const p = await resultPage({ width, api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
     const btn = p.locator('#lockUnlockAllBtn');
     const label = (await btn.innerText()).trim();
     // 決済画面へ移れなかった（204）：移動を始めた印のまま → タブ復帰で戻る
@@ -129,7 +129,7 @@ test('完了ページ（C7）：Stripe から「戻る」・タブ復帰・移�
 
 test('D4：旧版（legacy-v1）の結果には旧 Payment Link も新しい Checkout も出さず、対象外と最新の診断への案内（販売中でも）', { skip: skip() }, async () => {
   for (const width of [320, 1280]) {
-    const p = await page('/', { width, api: { 'guest-status': [200, { salesOpen: true, purchases: [], codePurchased: false }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
+    const p = await page('/', { width, api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
     const legacyCode = await p.evaluate(() => { const a = {}; for (let i = 0; i < QUESTIONS.length; i++) a[i] = (i % 5) - 2; return encodeAnswers(a); });
     await p.goto(`${base}/?code=${legacyCode}`);
     await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
@@ -170,20 +170,51 @@ test('完了ページ（販売中）：完全解析 ¥3,000 は目標を選ぶ�
   await p.__ctx.close();
 });
 
-test('完了ページ（ログインなし）：この端末で購入済みでも「読む」に切り替えず、¥1,000・¥3,000 を申し込める（閲覧は購入完了ページ・メールの案内）', { skip: skip() }, async () => {
+test('完了ページ（ログインなし）：この端末で同じ記録の解析レポートを購入済み → 解析レポートを読む・追加 ¥2,000 だけ（¥1,000・¥3,000 は出さない）', { skip: skip() }, async () => {
   const purchases = [{ ref: REF, analysis: 'active', complete: null, report: null, pending: false, claimed: false, canClaim: true, canUpgrade: true, thisRecord: true }];
-  const p = await resultPage({ api: { 'guest-status': [200, { salesOpen: true, purchases }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
+  const p = await resultPage({ api: { 'guest-status': [200, { salesOpen: true, purchases }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT,
+    'guest-report': [200, { url: '/report.html?token=fake.token' }] } });
+  await p.waitForFunction(() => document.querySelector('#lockUnlockAllBtn').textContent.trim() === '解析レポートを読む');
+  assert.equal(await p.locator('#lockPrice').isHidden(), true, '¥1,000 の価格を出さない');
   await p.click('details.ca-fold > summary');
   const fold = p.locator('details.ca-fold');
-  await fold.locator('[data-reveal-offer="direct_complete"]').waitFor();
-  assert.match(await fold.innerText(), /この結果を購入済みの場合は、購入完了ページや購入時のメールからご覧いただけます。/);
-  assert.equal(await fold.locator('a[href="/purchase-complete"]').count(), 1);
-  assert.equal(await fold.locator('[data-reveal-offer="analysis_upgrade"]').count(), 0, '¥2,000 は解析レポートから');
-  assert.doesNotMatch(await p.locator('#lockUnlockAllBtn').innerText(), /読む|購入済み/);
-  await p.locator('#lockUnlockAllBtn').click();
+  await fold.locator('[data-reveal-offer="analysis_upgrade"]').waitFor();
+  assert.equal(await fold.locator('[data-reveal-offer="direct_complete"]').count(), 0, '¥3,000 は出さない');
+  assert.match(await fold.innerText(), /追加¥2,000/);
+  await fold.locator('[data-reveal-offer="analysis_upgrade"]').click();
+  await fold.locator('input[name="guest-mentor-goal"]').first().check();
+  await fold.locator('[data-guest-buy]').click();
   await p.waitForURL(/checkout\.stripe\.com/);
-  assert.deepEqual(p.__calls.filter((c) => c.op === 'guest-checkout').map((c) => c.body), [{ offer: 'analysis', code: p.__code }]);
+  assert.deepEqual(p.__calls.filter((c) => c.op === 'guest-checkout').map((c) => [c.body.offer, c.body.code === p.__code]), [['analysis_upgrade', true]]);
   assert.equal(p.__calls.filter((c) => c.op === 'my-entitlements').length, 0, 'ログインしていなければマイページの権利は見ない');
+  await p.__ctx.close();
+});
+
+test('完了ページ（ログインなし）：解析レポートを読む → 解析レポートのページを開く（この画面でロックを外さない）', { skip: skip() }, async () => {
+  const purchases = [{ ref: REF, analysis: 'active', complete: null, report: null, pending: false, claimed: false, canClaim: true, canUpgrade: true, thisRecord: true }];
+  const p = await resultPage({ api: { 'guest-status': [200, { salesOpen: true, purchases }], 'guest-report': [200, { url: '/report.html?token=fake.token' }] } });
+  await p.route('**/report.html?token=*', (r) => r.fulfill({ contentType: 'text/html', body: '<p>report</p>' }));
+  await p.waitForFunction(() => document.querySelector('#lockUnlockAllBtn').textContent.trim() === '解析レポートを読む');
+  await p.locator('#lockUnlockAllBtn').click();
+  await p.waitForURL(/\/report\.html\?token=/);
+  assert.deepEqual(p.__calls.filter((c) => c.op === 'guest-report').map((c) => c.body), [{ ref: REF }]);
+  assert.equal(p.__calls.filter((c) => c.op === 'guest-checkout').length, 0);
+  await p.__ctx.close();
+});
+
+test('完了ページ（ログインなし）：完全解析を購入済み → 解析レポートを読む・完全解析を見る（購入の導線は出さない）', { skip: skip() }, async () => {
+  const purchases = [{ ref: REF, analysis: 'active', complete: 'active', report: 'ready', pending: false, claimed: false, canClaim: true, canUpgrade: false, thisRecord: true }];
+  const p = await resultPage({ api: { 'guest-status': [200, { salesOpen: true, purchases }] } });
+  await p.waitForFunction(() => document.querySelector('#lockUnlockAllBtn').textContent.trim() === '解析レポートを読む');
+  await p.click('details.ca-fold > summary');
+  const fold = p.locator('details.ca-fold');
+  await fold.locator('[data-guest-view]').waitFor();
+  assert.match(await fold.innerText(), /完全解析は購入済みです/);
+  assert.equal(await fold.locator('[data-reveal-offer]').count(), 0);
+  for (const w of [320, 390, 1280]) {
+    await p.setViewportSize({ width: w, height: 844 });
+    assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${w}px で横にはみ出さない`);
+  }
   await p.__ctx.close();
 });
 
@@ -191,7 +222,7 @@ test('完了ページ（ログイン中・マイページから過去の結果�
   const p0 = await page('/');
   const code = await p0.evaluate(() => { const a = {}; ETI_V2_QUESTIONS.forEach((q, i) => { a[q.id] = ((i * 7) % 5) - 2; }); return ETIv2.encodeAnswersV2(a, ETI_V2_QUESTIONS); });
   await p0.__ctx.close();
-  const p = await page('/', { user: true, purchased: [code], api: { 'guest-status': [200, { salesOpen: true, purchases: [], codePurchased: true }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
+  const p = await page('/', { user: true, purchased: [code], api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
   await p.goto(`${base}/?dv=ETI-2.0&code=${code}`);
   await p.waitForFunction(() => /解析レポートを読む（マイページ）/.test(document.querySelector('#lockUnlockAllBtn').textContent));
   await p.click('details.ca-fold > summary');
@@ -209,7 +240,7 @@ test('完了ページ（ログイン中）：前の結果を購入済みでも�
   const p0 = await page('/');
   const [codeA, codeB] = await p0.evaluate(() => [7, 3].map((k) => { const a = {}; ETI_V2_QUESTIONS.forEach((q, i) => { a[q.id] = ((i * k) % 5) - 2; }); return ETIv2.encodeAnswersV2(a, ETI_V2_QUESTIONS); }));
   await p0.__ctx.close();
-  const p = await page('/', { user: true, purchased: [codeA], api: { 'guest-status': [200, { salesOpen: true, purchases: [], codePurchased: false }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
+  const p = await page('/', { user: true, purchased: [codeA], api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
   await p.goto(`${base}/?dv=ETI-2.0&code=${codeB}`);
   await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
   await p.click('details.ca-fold > summary');
@@ -243,7 +274,8 @@ test('購入完了ページ：すぐ読めるボタン・完全解析の状態�
     const text = await p.locator('main').innerText();
     assert.match(text, /ご購入ありがとうございます/);
     assert.match(text, /解析レポートを読む/);
-    assert.match(text, /完全解析を読む/);
+    assert.match(text, /完全解析を見る/);
+    assert.doesNotMatch(text, /¥[0-9]/, '購入完了ページでは売らない');
     assert.match(text, /この購入をマイページに引き継ぐ/);
     assert.match(text, /ログインすると、この診断記録と購入済みレポートをいつでも見返せます。/);
     assert.doesNotMatch(await p.content(), UUID_RE);
@@ -259,7 +291,7 @@ test('購入完了ページ：すぐ読めるボタン・完全解析の状態�
   await p.__ctx.close();
 });
 
-test('購入完了ページ：生成中は状態を表示して確認を続け、ready で「完全解析を読む」', { skip: skip() }, async () => {
+test('購入完了ページ：生成中は状態を表示して確認を続け、ready で「完全解析を見る」', { skip: skip() }, async () => {
   let n = 0;
   const p = await page('/purchase-complete', { api: { 'guest-status': () => [200, { salesOpen: true, purchases: [
     { ref: REF, analysis: 'active', complete: 'active', report: n++ < 1 ? 'generating' : 'ready', pending: false, claimed: false, canClaim: true, canUpgrade: false }] }] } });
@@ -314,8 +346,11 @@ test('解析レポート：完全解析の欄から「マイページに保存�
   await save.click();
   await p.waitForURL((u) => u.pathname === '/mypage.html' && u.hash === '');
   await p.__ctx.close();
+  // この端末で購入を確かめられない：決済は出さず、購入時のメールの確認へ
   const q = await page('/report.html?token=fake', { reportData, api: { 'guest-status': [200, { salesOpen: true, purchases: [] }] } });
-  await q.locator('[data-report-mypage-save]').click();
+  await q.locator('[data-report-complete] a[href="/mypage.html#recover"]').waitFor();
+  assert.equal(await q.locator('[data-report-upgrade], [data-report-buy]').count(), 0);
+  await q.locator('[data-report-complete] a[href="/mypage.html#recover"]').click();
   await q.waitForURL((u) => u.pathname === '/mypage.html' && u.hash === '#recover');
   await q.__ctx.close();
 });
@@ -349,7 +384,7 @@ test('サンプルからマイページ：sample_to_mypage を1回だけ（入�
 
 test('完了ページ：未払いの決済が残っていても買っていない扱い。申込の導線をそのまま出し、そこから申し込める（C3）', { skip: skip() }, async () => {
   const p = await resultPage({ api: {
-    'guest-status': () => [200, { salesOpen: true, purchases: [{ ref: REF, analysis: null, complete: null, report: null, pending: true, claimed: false, canClaim: false, canUpgrade: false, thisRecord: true }], codePurchased: false }],
+    'guest-status': () => [200, { salesOpen: true, purchases: [{ ref: REF, analysis: null, complete: null, report: null, pending: true, claimed: false, canClaim: false, canUpgrade: false, thisRecord: true }] }],
     'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
   await p.evaluate(() => { const d = document.querySelector('details.ca-fold'); if (d) d.open = true; });
   const offer = p.locator('[data-reveal-offer="direct_complete"]');
@@ -401,7 +436,7 @@ test('購入完了ページ：確認を使い切ったら回り続ける表示�
 // ================= A：BEYOND THE RESULT（完全解析の訴求）
 test('BEYOND THE RESULT：¥1,000 の主導線の下。閉じた状態は予告だけ・展開でサンプルと ¥3,000。320／390／1280px で重なり・はみ出しなし', { skip: skip() }, async () => {
   for (const width of [320, 390, 1280]) {
-    const p = await resultPage({ width, api: { 'guest-status': [200, { salesOpen: true, purchases: [], codePurchased: false }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
+    const p = await resultPage({ width, api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
     await p.evaluate(() => { window.__ev = []; window.gtag = function () { window.__ev.push(Array.from(arguments)); }; });
     const fold = p.locator('details.ca-reveal');
     const btn = p.locator('#lockUnlockAllBtn');
@@ -442,7 +477,7 @@ test('BEYOND THE RESULT：¥1,000 の主導線の下。閉じた状態は予告�
 
 test('BEYOND THE RESULT：展開時だけ光点と線が現れ、prefers-reduced-motion では動きを止める', { skip: skip() }, async () => {
   for (const reduced of [false, true]) {
-    const p = await resultPage({ api: { 'guest-status': [200, { salesOpen: true, purchases: [], codePurchased: false }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
+    const p = await resultPage({ api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
     await p.emulateMedia({ reducedMotion: reduced ? 'reduce' : 'no-preference' });
     await p.locator('details.ca-reveal summary').click();
     const anim = await p.evaluate(() => Array.from(document.querySelectorAll('.ca-reveal-stars i')).map((i) => getComputedStyle(i).animationName));

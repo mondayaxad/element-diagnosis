@@ -799,25 +799,22 @@ test('応答・ログ・metadata に禁止情報が無い（一連の決済・�
   await ctx.db.close();
 });
 
-// ================= 旧 Payment Link の購入（purchase_entitlements）は完全解析の根拠にしない
-test('旧 Payment Link の購入がある新診断の記録：解析レポートは読めるが、完全解析（¥2,000・¥3,000）も ¥1,000 も出さない。旧購入の確認は廃止（410）', async () => {
+// ================= 旧 Payment Link の購入（purchase_entitlements）は新 Checkout の判断に使わない（complete_10）
+test('同じ診断結果の旧 Payment Link の購入（本人に結び付けていない＝同じ回答の別人の購入かもしれない）：本人の購入にせず、¥1,000・¥3,000 を売る。旧購入の確認は廃止（410）', async () => {
   const ctx = await setup();
   const code = 'CODE_LEGACY_LINK';
   const p = await person(ctx, { email: 'buyer@example.test', code });
-  await ctx.db.legacy({ code, stripeSessionId: ctx.stripe.legacySession({ email: 'buyer@example.test' }) });
-  const rec = (await entitlements(ctx, p.token)).body.records[p.sessionId];
-  assert.deepEqual([rec.analysisSource, rec.legacyPurchasePending, rec.completeOffer, rec.completeBlocked, rec.repurchaseBlocked],
-    [null, false, null, 'legacy_purchase_not_eligible', false]);
-  const before = ctx.stripe.st.calls.length;
-  const c = await ctx.checkout(p.token, { diagnosisSessionId: p.sessionId });
-  assert.deepEqual([c.code, c.body.error], [409, 'legacy_purchase_not_eligible']);
-  const a = await ctx.checkout(p.token, { diagnosisSessionId: p.sessionId, product: 'analysis' });
-  assert.deepEqual([a.code, a.body.error], [409, 'analysis_already_purchased']);
+  await ctx.db.legacy({ code, stripeSessionId: ctx.stripe.legacySession({ email: 'other@example.test' }) });
+  const ent = (await entitlements(ctx, p.token)).body;
+  const rec = ent.records[p.sessionId];
+  assert.deepEqual([rec.analysisSource, rec.analysisAccess, rec.analysisPurchased, rec.legacyAnalysis, rec.completeOffer, rec.completeBlocked, rec.repurchaseBlocked],
+    [null, false, false, false, 'direct_complete', null, false]);
+  assert.deepEqual(ent.purchased_by_version, {}, '別人の旧購入で「購入済み」にしない');
   const lv = await legacyVerify(ctx, p.token, { diagnosisSessionId: p.sessionId });
   assert.deepEqual([lv.code, lv.body], [410, { error: 'legacy_verification_retired' }]);
-  assert.equal(ctx.stripe.st.calls.length, before, 'Stripe に問い合わせない（旧購入の照合をしない）');
-  assert.equal((await ctx.db.rows('complete_legacy_bindings')).length, 0);
-  assert.equal((await ctx.order(p.sessionId)).length, 0);
+  assert.equal((await ctx.db.rows('complete_legacy_bindings')).length, 0, '推測で結び付けない');
+  const c = await ctx.checkout(p.token, { diagnosisSessionId: p.sessionId });
+  assert.deepEqual([c.code, c.body.offer, c.body.amount], [200, 'direct_complete', 3000]);
   await ctx.db.close();
 });
 

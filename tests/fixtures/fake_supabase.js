@@ -62,17 +62,11 @@ function createMemoryBackend() {
       const pending = mine.find((o) => ['created', 'checkout_open'].includes(o.status));
       if (pending) return [{ order_id: pending.id, order_status: pending.status, offer: pending.offer, checkout_session_id: pending.stripe_checkout_session_id, created: false }];
       const hasRight = t.record_entitlements.some((e) => e.user_id === a.p_user_id && e.diagnosis_session_id === s.id && e.right_type === 'analysis' && e.status === 'active');
-      const hasBinding = t.complete_legacy_bindings.some((b) => b.user_id === a.p_user_id && b.diagnosis_session_id === s.id
-        && t.purchase_entitlements.some((p) => p.id === b.legacy_entitlement_id && p.status === 'active'));
+      // 旧 Payment Link の購入（purchase_entitlements・complete_legacy_bindings）は新 Checkout の判断に使わない（complete_10）
       let basis = null;
       if (a.p_offer === 'direct_complete') {
-        if (hasRight || hasBinding) raise('complete_direct_not_allowed_after_analysis');
-        const ref = refOf(s);
-        if (ref && t.purchase_entitlements.some((p) => p.status === 'active' && ['core1', 'complete'].includes(p.product_type) && p.diagnosis_code_hash === sha(ref))) {
-          raise('complete_legacy_purchase_pending');
-        }
+        if (hasRight) raise('complete_direct_not_allowed_after_analysis');
       } else if (hasRight) basis = 'record_entitlement';
-      else if (hasBinding) basis = 'legacy_purchase_entitlement';
       else raise('complete_upgrade_requires_analysis');
       const goal = t.record_mentor_goals.find((g) => g.diagnosis_session_id === s.id && g.user_id === a.p_user_id);
       if (!goal) raise('complete_mentor_goal_required');

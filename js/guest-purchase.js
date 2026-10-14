@@ -11,7 +11,7 @@
   var OFFERS = {
     analysis: { label: '解析レポート', price: 1000 },
     direct_complete: { label: '完全解析セット', price: 3000 },
-    analysis_upgrade: { label: '完全解析（解析レポート購入者向け・マイページだけ）', price: 2000 },
+    analysis_upgrade: { label: '完全解析（解析レポート購入者向けの追加）', price: 2000 },
   };
   var CLAIM_INTENT_KEY = 'ed_claim_intent_v1';
 
@@ -108,6 +108,8 @@
     sales_closed: '現在、お申し込みを受け付けていません（準備中）。',
     analysis_already_purchased: 'この結果の解析レポートは購入済みです。購入した端末、またはマイページからご覧いただけます。',
     upgrade_requires_analysis: 'この端末では、この結果の解析レポートの購入を確認できませんでした。',
+    upgrade_not_available: 'この端末では、この結果の解析レポートの購入を確認できなかったため、追加のお申し込みはできません。購入時のメール、またはマイページからご確認ください。',
+    upgrade_available: 'この結果の解析レポートは購入済みです。完全解析は追加 ¥2,000 でお申し込みいただけます。',
     repurchase_not_allowed: 'この結果の完全解析は購入済みです。',
     checkout_in_progress: '決済の手続き中です。しばらくしてから、もう一度お試しください。',
     purchase_completed: 'お支払いは完了しています。購入した内容をご確認ください。',

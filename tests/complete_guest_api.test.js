@@ -187,7 +187,7 @@ test('購入完了ページ：Webhook より先でも Stripe に問い合わせ�
   assert.equal(s1.code, 200);
   assert.equal(s1.body.purchases.length, 1);
   const pu = s1.body.purchases[0];
-  assert.deepEqual([pu.analysis, pu.complete, pu.pending, pu.canClaim, pu.canUpgrade], ['active', null, false, true, false], '追加 ¥2,000 はマイページだけ');
+  assert.deepEqual([pu.analysis, pu.complete, pu.pending, pu.canClaim, pu.canUpgrade], ['active', null, false, true, true], 'この端末で確かめた解析レポートの記録は追加 ¥2,000 を申し込める');
   assert.match(pu.ref, /^[0-9a-f]{20}$/);
   // 解析レポートの閲覧リンク → report-data が記録単位の解析権で code を返す
   const link = await ctx.op('guest-report', { ref: pu.ref });
@@ -214,28 +214,36 @@ test('購入完了ページ：Webhook より先でも Stripe に問い合わせ�
   await ctx.db.close();
 });
 
-test('ゲストの完全解析は ¥3,000 だけ（追加 ¥2,000 はマイページだけ）：解析レポートを買った結果でも ¥3,000 は新しい記録で解析＋完全解析', { skip }, async () => {
+test('ゲストの追加 ¥2,000：この端末（Cookie の秘密値）で確かめた解析レポートの記録に、同じ記録で完全解析を付ける。重ね買いは断る', { skip }, async () => {
   const ctx = await setup();
   await buy(ctx, { offer: 'analysis', code: CODE_A });
   await ctx.op('guest-status', {});
-  // ゲストの ¥2,000 は受け付けない（入力の誤り）
-  const up = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_PACE_01' });
-  assert.deepEqual([up.code, up.body.error], [400, 'invalid_request']);
-  const noGoal = await ctx.op('guest-checkout', { offer: 'direct_complete', code: CODE_A });
+  const noGoal = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_A });
   assert.equal(noGoal.code, 400);
-  // 同じ診断結果の ¥3,000：解析レポートの記録には積まず、新しい記録で
-  await buy(ctx, { offer: 'direct_complete', code: CODE_A, goal: 'GOAL_PACE_01' });
-  assert.equal(ctx.stripe.st.lastCreate.params.line_items[0].price, 'price_test_direct3000');
-  assert.equal((await ctx.rows('diagnosis_sessions')).length, 2);
-  const s = (await ctx.op('guest-status', { code: CODE_A })).body.purchases;
-  assert.ok(s.some((x) => x.complete === 'active' && x.analysis === 'active' && x.report === 'queued'));
-  // 違う診断結果の ¥3,000
+  // 同じ記録の ¥1,000・¥3,000 は断る（画面は ¥2,000 を出す）。新しい記録も作らない
+  const a2 = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_A });
+  assert.deepEqual([a2.code, a2.body.error], [409, 'analysis_already_purchased']);
+  const d2 = await ctx.op('guest-checkout', { offer: 'direct_complete', code: CODE_A, goal: 'GOAL_PACE_01' });
+  assert.deepEqual([d2.code, d2.body.error], [409, 'upgrade_available']);
+  assert.equal((await ctx.rows('diagnosis_sessions')).length, 1);
+  // ¥2,000：同じ記録（記録を増やさない）・サーバーが選んだ ¥2,000 の Price
+  await buy(ctx, { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_PACE_01' });
+  assert.equal(ctx.stripe.st.lastCreate.params.line_items[0].price, 'price_test_upgrade2000');
+  assert.equal((await ctx.rows('diagnosis_sessions')).length, 1);
+  const s = (await ctx.op('guest-status', { code: CODE_A })).body.purchases.find((x) => x.thisRecord);
+  assert.deepEqual([s.analysis, s.complete, s.report, s.canUpgrade], ['active', 'active', 'queued', false]);
+  // 完全解析を購入済み：¥2,000・¥3,000・¥1,000 とも断る
+  for (const [offer, goal, err] of [['analysis_upgrade', 'GOAL_PACE_01', 'upgrade_not_available'], ['direct_complete', 'GOAL_PACE_01', 'repurchase_not_allowed'], ['analysis', undefined, 'repurchase_not_allowed']]) {
+    const r = await ctx.op('guest-checkout', goal ? { offer, code: CODE_A, goal } : { offer, code: CODE_A });
+    assert.deepEqual([r.code, r.body.error], [409, err], offer);
+  }
+  const orders = await ctx.rows('complete_orders');
+  assert.deepEqual(orders.filter((o) => o.status === 'paid').map((o) => `${o.offer}:${o.amount}:${o.analysis_basis}`).sort(),
+    ['analysis:1000:null', 'analysis_upgrade:2000:record_entitlement']);
+  // 違う診断結果の ¥3,000（別の記録・解析＋完全解析）
   await buy(ctx, { offer: 'direct_complete', code: CODE_B, goal: 'GOAL_EXPLORE_01' });
   const b = (await ctx.op('guest-status', { code: CODE_B })).body.purchases.find((x) => x.thisRecord);
-  assert.deepEqual([b.analysis, b.complete, b.report], ['active', 'active', 'queued']);
-  const orders = await ctx.rows('complete_orders');
-  assert.deepEqual(orders.filter((o) => o.status === 'paid').map((o) => `${o.offer}:${o.amount}`).sort(),
-    ['analysis:1000', 'direct_complete:3000', 'direct_complete:3000']);
+  assert.deepEqual([b.analysis, b.complete, b.report, b.canUpgrade], ['active', 'active', 'queued', false]);
   // 完全解析の閲覧：生成前は 409 report_not_ready
   assert.equal((await ctx.op('guest-view', { ref: b.ref })).code, 409);
   // Cookie の無いブラウザでは何も見えない・ref だけでは開けない
@@ -243,12 +251,16 @@ test('ゲストの完全解析は ¥3,000 だけ（追加 ¥2,000 はマイペ�
   await ctx.db.close();
 });
 
-test('ゲストの ¥2,000 は無い・別の offer に切り替えると前の Stripe 画面を閉じる', { skip }, async () => {
+test('ゲストの ¥2,000 は、この端末で解析レポートの購入を確かめられる時だけ。別の offer に切り替えると前の Stripe 画面を閉じる', { skip }, async () => {
   const ctx = await setup();
   const up = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_C, goal: 'GOAL_PACE_01' });
-  assert.deepEqual([up.code, up.body.error], [400, 'invalid_request'], 'ゲストの ¥2,000 は無い');
+  assert.deepEqual([up.code, up.body.error], [409, 'upgrade_not_available'], '購入を確かめられない時は ¥2,000 を作らない');
+  assert.equal((await ctx.rows('complete_orders')).length, 0);
   const a = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_C });
   assert.equal(a.code, 200);
+  // 未払いの解析レポートでは ¥2,000 は作らない
+  const up2 = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_C, goal: 'GOAL_PACE_01' });
+  assert.deepEqual([up2.code, up2.body.error], [409, 'upgrade_not_available']);
   const again = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_C });
   assert.equal(again.body.checkoutUrl, a.body.checkoutUrl, '同じ offer は同じ画面');
   const d = await ctx.op('guest-checkout', { offer: 'direct_complete', code: CODE_C, goal: 'GOAL_PACE_01' });

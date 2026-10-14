@@ -21,25 +21,15 @@
 //     records: { "<diagnosis_session_id>": { completeEligible, ineligibleReason, mentorGoal, mentorGoalLocked,
 //       checkoutInProgress, completeEntitlement, completeStatus, analysisSource, legacyPurchasePending, repurchaseBlocked } } }
 //   ・完全解析の表の読み取りに失敗しても、従来の purchased_by_version は返す（completeLookup = "failed"・records なし）。
-//   ・Production では完全解析の表を読まず、応答も従来と同じ（completeLookup・records を付けない）。
-//   ・¥2,000 の根拠（analysisSource）は、本人の記録へ固定済みの旧購入権（complete_legacy_bindings）か、
-//     記録単位の analysis 権（record_entitlements）だけ。診断コードのハッシュ一致だけの旧購入権は
-//     legacyPurchasePending（既存の購入を確認中）として返し、根拠にしない。
+//   ・¥2,000 の根拠（analysisSource）は、記録単位の新 Checkout の analysis 権（record_entitlements）だけ（旧購入は根拠にしない）。
+//   ・ETI-2.0 の purchased_by_version は、本人の記録の権利（lib/purchase-state.js の analysisAccess）だけで決める
+//     （complete_10・2026-10-14）。診断コードのハッシュの一致だけの旧購入は、同じ回答の別人の購入の場合があるため数えない。
+//     element-v1 も同じ（本人に結び付け済みの旧購入だけ）。署名付きの旧リンク（メール・購入完了）での閲覧は変えない。
 //   ・判定は lib/purchase-state.js（completeOffer：analysis_upgrade／direct_complete、completeBlocked：購入できない理由、
 //     duplicateOf：同じ診断結果の表示の正本）。repurchaseBlocked は完全解析を購入済み（解析レポートだけの購入は含まない）。
 
-const crypto = require('crypto');
 const { requireServerEnv, requestHost, logEnvDenied } = require('../lib/server-env');
 const PS = require('../lib/purchase-state');
-
-function hashDiagnosisCode(diagnosisCode) {
-  return crypto.createHash('sha256').update(diagnosisCode).digest('hex');
-}
-
-// product_type → CORE1閲覧権限を持つかどうか（report-data.jsのPRODUCT_PERMISSIONSと同じ考え方）。
-// CORE2のみの購入はCORE1のロックを解除しない。
-// 旧購入者へのv2無料配布方針は撤回済み。core1_v2_repassを新規権利として扱わない。
-const CORE1_PRODUCT_TYPES = new Set(['core1', 'complete']);
 
 function createHandler({ env, fetchImpl }) {
   // アクセストークンを検証し、本人のuser_idを取得する（GoTrueの/auth/v1/userを使用。
@@ -85,27 +75,6 @@ function createHandler({ env, fetchImpl }) {
     return codes;
   }
 
-  async function fetchPurchasedHashes(conn, hashes) {
-    if (hashes.length === 0) return new Set();
-    const url =
-      `${conn.supabaseUrl}/rest/v1/purchase_entitlements` +
-      `?diagnosis_code_hash=in.(${hashes.join(',')})` +
-      `&status=eq.active&select=diagnosis_code_hash,product_type`;
-
-    const res = await fetchImpl(url, { headers: conn.adminHeaders() });
-    if (!res.ok) {
-      throw new Error(`purchase_entitlements lookup failed: ${res.status}`);
-    }
-    const rows = await res.json();
-    const purchasedHashes = new Set();
-    rows.forEach((row) => {
-      if (CORE1_PRODUCT_TYPES.has(row.product_type)) {
-        purchasedHashes.add(row.diagnosis_code_hash);
-      }
-    });
-    return purchasedHashes;
-  }
-
   // ---- 完全解析（v2） ----
   // 記録ごとの状態は lib/purchase-state.js（決済・目標の選択・閲覧と同じ規則）。同じ本人・同じ診断結果の記録は1つの権利として扱い、
   // 表示の正本以外の記録には duplicateOf（正本の記録 ID）を付ける（マイページは正本だけを出す）。
@@ -117,19 +86,20 @@ function createHandler({ env, fetchImpl }) {
     return rows;
   }
 
-  async function withComplete(conn, userId, sessionRows, purchasedHashes, payload) {
+  async function withComplete(conn, userId, sessionRows, payload) {
     // Preview・Production だけ（環境不明では応答を従来と同じにする）。complete 系の表が無い（migration 適用前）時は completeLookup: failed
     if (conn.appEnv !== 'preview' && conn.appEnv !== 'production') return payload;
     try {
       const states = PS.computeStates(await PS.loadUserFacts((path) => selectRows(conn, path), userId));
       const records = {};
       Object.keys(states).forEach((id) => { records[id] = PS.publicRecordState(states[id]); });
-      // 記録単位の解析権（¥1,000・¥3,000・引き継いだゲスト購入）も「解析レポート購入済み」に数える（旧 ¥1,000 と同じ扱い）
+      // 本人の記録の解析権（¥1,000・¥3,000・引き継いだゲスト購入・本人に結び付け済みの旧購入）だけ
       sessionRows.forEach((row) => {
         const rec = row && records[row.id];
         const a = PS.one(row.diagnosis_answers);
-        if (rec && rec.analysisSource === 'record_entitlement' && row.diagnosis_version === 'ETI-2.0' && a && a.encoded_answers) {
-          payload.purchased_by_version[`ETI-2.0:${a.encoded_answers}`] = true;
+        if (rec && rec.analysisAccess && a && a.encoded_answers) {
+          const version = row.diagnosis_version === 'ETI-2.0' ? 'ETI-2.0' : 'element-v1';
+          payload.purchased_by_version[`${version}:${a.encoded_answers}`] = true;
         }
       });
       return Object.assign(payload, { completeLookup: 'ok', records });
@@ -165,30 +135,8 @@ function createHandler({ env, fetchImpl }) {
       }
 
       const sessionRows = [];
-      const codes = await fetchOwnDiagnosisCodes(guard, userId, sessionRows);
-      if (codes.length === 0) {
-        res.status(200).json(await withComplete(guard, userId, sessionRows, new Set(), { purchased_by_version: {} }));
-        return;
-      }
-
-      const hashByKey = {};
-      codes.forEach((entry) => {
-        const key = `${entry.diagnosisVersion}:${entry.code}`;
-        hashByKey[key] = hashDiagnosisCode(entry.reference);
-      });
-      const hashes = Object.values(hashByKey);
-
-      const purchasedHashes = await fetchPurchasedHashes(guard, hashes);
-
-      const purchasedByVersion = {};
-      codes.forEach((entry) => {
-        const key = `${entry.diagnosisVersion}:${entry.code}`;
-        if (purchasedHashes.has(hashByKey[key])) {
-          purchasedByVersion[key] = true;
-        }
-      });
-
-      res.status(200).json(await withComplete(guard, userId, sessionRows, purchasedHashes, { purchased_by_version: purchasedByVersion }));
+      await fetchOwnDiagnosisCodes(guard, userId, sessionRows);
+      res.status(200).json(await withComplete(guard, userId, sessionRows, { purchased_by_version: {} }));
     } catch (err) {
       console.error('my-entitlements error:', err && err.message);
       res.status(500).json({ error: 'lookup_failed' });

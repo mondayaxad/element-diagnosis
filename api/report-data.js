@@ -134,7 +134,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 // トークンの種類（権利の確認方法が違う）
 //   mypage：マイページからの再発行（sid・uid 付き）。その本人の記録の解析権（lib/purchase-state.js と同じ規則）
 //   guest：ゲスト購入の端末からの再発行（sid 付き）。未引き継ぎのゲスト記録の有効な解析権
-//   verify：旧 ¥1,000 の決済完了（purchase ブロック付き）。同じ診断コードの有効な旧購入
+//   verify：旧 ¥1,000 の決済完了（purchase ブロック付き・決済の確認の時に署名）。同じ診断コードの有効な旧購入
 //   legacy_floor：旧形式（purchase も access_mode も無い）。旧購入が返金・取消・停止されていなければ読める
 //   それ以外（access_mode が不明・sid の無い再発行トークン）は受け付けない
 function tokenKind(data) {
@@ -184,19 +184,18 @@ function createHandler({ env, fetchImpl }) {
     return !!session && PS.keyOf(session) === hash;
   }
 
+  // 旧購入を診断コードのハッシュで読むのは、署名付きの旧リンク（verify・legacy_floor：決済の完了・発行の時に署名した、
+  //   所有の根拠のあるリンク）だけ。マイページ・ゲストの再発行（mypage・guest）は、その本人の記録の権利だけで決める
+  //   （同じ回答の別人の旧購入を数えない。complete_10・2026-10-14）
   async function permissionsFor(conn, kind, data, hash) {
-    const legacy = await legacyFacts(conn, hash);
-    const journey = legacy.permissions.has('journey_report_access');
-    if (kind === 'verify') return { core: legacy.permissions.has('core_analysis_access'), journey };
-    if (kind === 'legacy_floor') {
-      // 署名付きの旧形式リンク：旧購入の行が無い時代の発行分もあるため、行が無ければ従来どおり読める。
-      // 行があってどれも有効でない（返金・取消）、または運営者が停止・取消した場合は読めない（D6）
-      const refunded = legacy.rows.length > 0 && !legacy.rows.some((r) => r.status === 'active');
-      return { core: !legacy.blocked && !refunded, journey };
-    }
+    if (kind === 'verify' || kind === 'legacy_floor') return legacyPermissions(conn, kind, hash);
     if (kind === 'mypage') {
       const st = PS.computeStates(await PS.loadUserFacts((path) => select(conn, path), data.uid))[data.sid];
-      return { core: !!(st && st.analysisAccess && sessionMatches(st.record.session, hash)), journey };
+      const core = !!(st && st.analysisAccess && sessionMatches(st.record.session, hash));
+      // レポート末尾の案内（owned＝完全解析を購入済み・analysis_upgrade＝追加 ¥2,000 を申し込める・null＝出さない）。
+      //   この本人・この記録の権利からサーバーが決める（参照元・URL では決めない）
+      const complete = !core ? null : st.completeOwned ? 'owned' : st.completeOffer === 'analysis_upgrade' ? 'analysis_upgrade' : null;
+      return { core, journey: false, complete };
     }
     // guest：未引き継ぎ（user_id が無い）ゲスト記録の、有効な解析権
     const [sessions, rights] = await Promise.all([
@@ -204,7 +203,19 @@ function createHandler({ env, fetchImpl }) {
       select(conn, `record_entitlements?diagnosis_session_id=eq.${data.sid}&right_type=eq.analysis&status=eq.active&select=user_id`),
     ]);
     const s = sessions[0];
-    return { core: !!(s && s.user_id == null && rights.some((r) => r.user_id == null) && sessionMatches(s, hash)), journey };
+    return { core: !!(s && s.user_id == null && rights.some((r) => r.user_id == null) && sessionMatches(s, hash)), journey: false };
+  }
+
+  async function legacyPermissions(conn, kind, hash) {
+    const legacy = await legacyFacts(conn, hash);
+    const journey = legacy.permissions.has('journey_report_access');
+    if (kind === 'verify') return { core: legacy.permissions.has('core_analysis_access'), journey };
+    {
+      // 署名付きの旧形式リンク：旧購入の行が無い時代の発行分もあるため、行が無ければ従来どおり読める。
+      // 行があってどれも有効でない（返金・取消）、または運営者が停止・取消した場合は読めない（D6）
+      const refunded = legacy.rows.length > 0 && !legacy.rows.some((r) => r.status === 'active');
+      return { core: !legacy.blocked && !refunded, journey };
+    }
   }
 
   return async function handler(req, res) {
@@ -280,6 +291,7 @@ function createHandler({ env, fetchImpl }) {
     if (perms.core) {
       responseBody.code = diagnosisRef.code;
       responseBody.viewer = kind === 'guest' ? 'guest' : kind === 'mypage' ? 'mypage' : 'legacy';
+      if (kind === 'mypage') responseBody.complete = perms.complete || null;
     }
 
     res.status(200).json(responseBody);

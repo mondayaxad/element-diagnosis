@@ -165,7 +165,7 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
       // 5. offer をサーバーが決める
       let offer = 'direct_complete';
       if (parsed.product === 'analysis') {
-        // 解析レポート ¥1,000（ETI v2 の記録・同じ診断結果で未購入の時だけ。旧 ¥1,000・解析権があれば DB も断る）
+        // 解析レポート ¥1,000（ETI v2 の記録・本人の同じ診断結果で新 Checkout の解析を未購入の時だけ。旧購入では断らない）
         if (state.diagnosisVersion !== 'ETI-2.0') return fail(res, 422, 'not_eligible');
         if (st.analysisPurchased) return fail(res, 409, 'analysis_already_purchased');
         offer = 'analysis';
@@ -180,10 +180,8 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
         offer = 'analysis_upgrade';
       } else if (st.analysisSuspended) {
         return fail(res, 409, 'rights_suspended');
-      } else if (st.completeBlocked === 'legacy_purchase_not_eligible') {
-        // 旧 Payment Link で解析レポートを購入した新診断の記録：完全解析は出さない（旧購入は根拠にしない。DB も断る）
-        return fail(res, 409, 'legacy_purchase_not_eligible');
       }
+      // 旧 Payment Link の購入は価格の判断に使わない（画面は結び付け済みの旧購入の記録に申込を出さないが、ここでは断らない）
 
       // 6. 注文（決済待ちの注文があればそれを返す）。offer が違う・Stripe の画面が閉じている決済待ちは、
       //    Stripe の Session を閉じてから片付け、1回だけ作り直す（別の価格の画面を返さない）。

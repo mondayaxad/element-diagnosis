@@ -18,6 +18,7 @@
   .wrap { max-width:480px; margin:0 auto; padding:32px 18px 80px; }
   .state-box { text-align:center; padding:80px 20px; color:#8878a8; font-size:13px; line-height:2; }
   .spinner { width:28px; height:28px; border:2px solid #2a2240; border-top-color:#a888d8; border-radius:50%; margin:0 auto 18px; animation:spin 0.8s linear infinite; }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation:none; } }
   @keyframes spin { to { transform:rotate(360deg); } }
   .err-box { text-align:center; padding:80px 20px; }
   .err-box h2 { color:#e8b8a0; font-size:16px; margin-bottom:12px; }
@@ -57,10 +58,13 @@
   .domain-block h4 { font-size:13px; color:#e0c8ff; margin-bottom:8px; }
 
   /* リングチャート（因子の重要度） */
-  .ring-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:18px 0 20px; }
-  .ring-item { text-align:center; }
+  /* 320px 幅：4つの円が横にはみ出さないよう、列の最小幅を 0 にし、円は列の幅まで縮める（最大 76px） */
+  .ring-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin:18px 0 20px; }
+  .ring-item { text-align:center; min-width:0; }
+  .ring-item svg { display:block; width:100%; max-width:76px; height:auto; margin:0 auto; }
+  @media (max-width:360px) { .ring-grid { gap:6px; } }
   .ring-item .pctnum { font-size:15px; font-weight:700; }
-  .ring-item .ringlabel { font-size:10px; color:#9bb0a2; margin-top:6px; line-height:1.4; }
+  .ring-item .ringlabel { font-size:10px; color:#9bb0a2; margin-top:6px; line-height:1.4; overflow-wrap:anywhere; }
   .sw-list { margin-top:14px; }
   .sw-section-label { font-size:12.5px; font-weight:700; margin:16px 0 10px; display:flex; align-items:center; gap:6px; }
   .sw-row { display:flex; gap:11px; padding:12px 0; border-bottom:1px solid #1c1830; align-items:flex-start; }
@@ -1734,21 +1738,25 @@ function reportLensListHtml() {
 }
 
 // 完全解析の案内（実データ）：
-//   ログインなし（ゲスト）：このページで MENTOR の目標を選んで ¥3,000 の決済へ（追加 ¥2,000 はマイページに登録した人だけ）。
-//                          この端末で完全解析を購入済みなら「購入した内容を見る」。
-//   マイページ経由：マイページの診断記録から追加 ¥2,000 で申し込む。
-function initReportComplete(code, viewer) {
+//   追加 ¥2,000 だけを売る（¥3,000 は出さない。価格はマイページの有無で変えない）。
+//   ログインなし（ゲスト）：この端末の Cookie で同じ記録の解析レポートを確かめられた時だけ、このページで MENTOR の目標を選んで ¥2,000 の決済へ。
+//                          完全解析を購入済みなら「購入した内容を見る」。確かめられない時は決済を出さない（購入時のメールの確認へ）。
+//   マイページ経由：サーバーが本人の記録で確かめた状態（report-data の complete）で、マイページで申し込む・購入した内容を見る。
+function initReportComplete(code, viewer, mypageComplete) {
   var box = document.querySelector('[data-report-complete]');
   if (!box) return;
-  reportCompleteArgs = [code, viewer];
+  reportCompleteArgs = [code, viewer, mypageComplete];
   var G = (typeof EdGuestPurchase !== 'undefined') ? EdGuestPurchase : null;
   var unknown = '<p class="ca-r-note">この記録の完全解析の購入状態を確認できないため、購入導線は表示していません。</p>';
   var sample = '<a class="ca-r-sample" href="/complete-sample" target="_blank" rel="noopener" data-ca-sample>完全解析のサンプルを見る</a>';
   if (!G || !code) { box.innerHTML = unknown; return; }
-  // ログインなし：完全解析は ¥3,000 の1種類だけ（追加 ¥2,000 はマイページに登録した人だけ）
-  var price = G.yen(G.OFFERS.direct_complete.price);
-  var label = 'まだ見えていない輪郭を読む　' + price;
+  // 解析レポートの末尾は、追加 ¥2,000 だけを売る（¥3,000 は出さない）。サーバーが確かめた権利だけで決める
+  //   ・この記録の解析レポートを新 Checkout で購入済み（ゲスト：この端末の Cookie の秘密値で確かめた記録／マイページ：本人の記録）：追加 ¥2,000
+  //   ・完全解析を購入済み：購入した内容を見る
+  //   ・確かめられない：決済の導線は出さない（購入時のメールアドレスでマイページに登録すると、確認して申し込める）
+  //   価格はマイページの有無で変えない。申込の時にもサーバーがもう一度確かめる
   var upPrice = G.yen(G.OFFERS.analysis_upgrade.price);
+  var label = 'まだ見えていない輪郭を読む　追加' + upPrice;
   // マイページに保存する（ログインすると、この記録と購入をいつでも見返せる）。この端末の購入なら引き継ぎ、無ければメールで確認して引き継ぐ
   var mypageSave = '<p class="ca-r-mypage"><a href="/mypage.html" data-report-mypage-save>マイページに保存する（ログイン）</a></p>';
   function bindMypageSave(mine) {
@@ -1764,7 +1772,17 @@ function initReportComplete(code, viewer) {
     var a = box.querySelector('[data-ca-sample]');
     if (a) a.addEventListener('click', function () { G.track('complete_sample_open', { source: 'analysis_report' }); });
   }
+  function pendingHtml() {
+    return '<button type="button" class="ca-r-btn is-pending" disabled aria-disabled="true">' + label + '（準備中）</button>'
+      + '<p class="ca-r-note">完全解析は準備中です。現在はお申し込みいただけません。</p>';
+  }
   if (viewer === 'mypage') {
+    if (mypageComplete === 'owned') {
+      box.innerHTML = '<p class="ca-r-note">この記録の完全解析は購入済みです。</p><a class="ca-r-btn" href="/mypage.html" data-report-mypage>購入した内容を見る</a>';
+      return;
+    }
+    if (mypageComplete !== 'analysis_upgrade') { box.innerHTML = unknown; return; }
+    if (!G.salesOpen()) { box.innerHTML = pendingHtml(); return; }
     box.innerHTML = '<a class="ca-r-btn is-offer" href="/mypage.html" data-report-mypage>マイページで申し込む　追加' + upPrice + '</a>'
       + '<p class="ca-r-note">マイページの診断記録から、MENTOR の目標を選んでお申し込みいただけます。</p>' + sample;
     bindSample();
@@ -1777,28 +1795,31 @@ function initReportComplete(code, viewer) {
   G.releaseIfReturned().then(function () { return G.status(code); }).then(function (r) {
     var list = (r && r.ok && r.body && r.body.purchases) || [];
     var mine = list.filter(function (p) { return p.thisRecord; })[0] || null;
-    // この端末に購入の記録が無い・確かめられない時も ¥3,000 を売る（ログインなしの購入は買えることを優先する）
     if (mine && mine.complete) {
       box.innerHTML = '<p class="ca-r-note">この記録の完全解析は購入済みです（' + G.esc(G.completeLabel(mine)) + '）。</p>'
         + '<a class="ca-r-btn" href="/purchase-complete">購入した内容を見る</a>' + mypageSave;
       bindMypageSave(mine);
       return;
     }
-    if (!G.salesOpen()) {
-      box.innerHTML = '<button type="button" class="ca-r-btn is-pending" disabled aria-disabled="true">' + label + '（準備中）</button>'
-        + '<p class="ca-r-note">完全解析は準備中です。現在はお申し込みいただけません。</p>';
+    if (!mine || !mine.canUpgrade) {
+      // この端末で、この記録の解析レポートの購入を確かめられない：¥2,000 の決済は出さない
+      box.innerHTML = '<p class="ca-r-note">この端末では、この記録の解析レポートの購入を確認できないため、追加のお申し込みはできません。'
+        + '購入時のメールアドレスでマイページに登録すると、購入を確認してお申し込みいただけます。</p>'
+        + '<p class="ca-r-mypage"><a href="/mypage.html#recover">購入時のメールアドレスで確認する</a></p>' + sample;
+      bindSample();
       return;
     }
+    if (!G.salesOpen()) { box.innerHTML = pendingHtml(); return; }
     // 未払いの決済が残っていても、買っていない扱いで申し込める（サーバーが古い決済画面を閉じるか、同じ画面を返す。支払い済みなら作らない）
-    var unpaid = mine && mine.pending ? '<p class="ca-r-note">前回のお手続きは完了していません（お支払いは発生していません）。もう一度お申し込みいただけます。</p>' : '';
+    var unpaid = mine.pending ? '<p class="ca-r-note">前回のお手続きは完了していません（お支払いは発生していません）。もう一度お申し込みいただけます。</p>' : '';
     box.innerHTML = unpaid + '<button type="button" class="ca-r-btn is-offer" data-report-upgrade>' + label + '</button>'
-      + '<p class="ca-r-note">マイページに登録すると、解析レポートをお持ちの方は追加' + upPrice + 'でお申し込みいただけます。</p>' + sample + mypageSave;
+      + '<p class="ca-r-note">この解析レポートをお持ちの方は、追加' + upPrice + 'で完全解析（全46ページ）をお読みいただけます。</p>' + sample + mypageSave;
     bindSample();
     bindMypageSave(mine);
     var btn = box.querySelector('[data-report-upgrade]');
     btn.onclick = function () {
       btn.disabled = true;
-      G.track('complete_offer_click', { offer: 'direct_complete', source: 'analysis_report' });
+      G.track('complete_offer_click', { offer: 'analysis_upgrade', source: 'analysis_report' });
       reportShowGoals(G, box, code, label);
     };
   }).catch(function () { box.innerHTML = unknown; });
@@ -1806,7 +1827,7 @@ function initReportComplete(code, viewer) {
 // 決済画面から「戻る」で戻った（ページがそのまま復元された）時も、未払いの決済を閉じて案内を描き直す
 var reportCompleteArgs = null;
 window.addEventListener('pageshow', function (e) {
-  if (e.persisted && reportCompleteArgs) initReportComplete(reportCompleteArgs[0], reportCompleteArgs[1]);
+  if (e.persisted && reportCompleteArgs) initReportComplete(reportCompleteArgs[0], reportCompleteArgs[1], reportCompleteArgs[2]);
 });
 // MENTOR の目標を選んで決済へ（このページの中で）
 function reportShowGoals(G, box, code, label) {
@@ -1819,24 +1840,25 @@ function reportShowGoals(G, box, code, label) {
       + goals.map(function (g) {
         return '<label class="ca-goal"><input type="radio" name="report-mentor-goal" value="' + G.esc(g.goalId) + '"><span><b>' + G.esc(g.label) + '</b><span>' + G.esc(g.description || '') + '</span></span></label>';
       }).join('') + '</fieldset>'
-      + '<button type="button" class="ca-r-btn is-offer" data-report-buy disabled>目標を選んで決済へ（' + G.yen(G.OFFERS.direct_complete.price) + '）</button>'
+      + '<button type="button" class="ca-r-btn is-offer" data-report-buy disabled>目標を選んで決済へ（追加' + G.yen(G.OFFERS.analysis_upgrade.price) + '）</button>'
       + '<p class="ca-r-msg" data-report-msg role="status"></p>';
     var buy = box.querySelector('[data-report-buy]');
     var msg = box.querySelector('[data-report-msg]');
     box.addEventListener('change', function (e) {
       if (e.target && e.target.name === 'report-mentor-goal') { buy.disabled = false; G.track('complete_goal_select', { source: 'analysis_report' }); }
     });
-    try { box.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* 古いブラウザ */ }
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    try { box.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' }); } catch (e) { /* 古いブラウザ */ }
     buy.onclick = function () {
       var picked = box.querySelector('input[name="report-mentor-goal"]:checked');
       if (!picked) return;
       buy.disabled = true;
       buy.textContent = '決済画面へ移動しています…';
       if (msg) msg.textContent = '';
-      G.checkout('direct_complete', code, picked.value, 'analysis_report').then(function (res) {
+      G.checkout('analysis_upgrade', code, picked.value, 'analysis_report').then(function (res) {
         if (res && res.ok) return;
         buy.disabled = false;
-        buy.textContent = '目標を選んで決済へ（' + G.yen(G.OFFERS.direct_complete.price) + '）';
+        buy.textContent = '目標を選んで決済へ（追加' + G.yen(G.OFFERS.analysis_upgrade.price) + '）';
         if (msg) msg.textContent = G.errorText(res && res.error);
       });
     };
@@ -2308,7 +2330,7 @@ async function savePdf() {
       // 旧ナラティブ販売欄は完全解析の案内へ置換済み（申込コードの表示は廃止）。
       // renderFullReport へは、v1/v2どちらも接頭辞を付けない生のcodeのまま渡す（今回の変更対象外）。
       renderFullReport(root, resultsV2, code);
-      initReportComplete(code, data.viewer);
+      initReportComplete(code, data.viewer, data.complete || null);
       if (typeof gtag === 'function') gtag('event', 'analysis_report_view', { diagnosis_version: 'ETI-2.0' });
       return;
     }

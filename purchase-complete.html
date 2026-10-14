@@ -33,6 +33,8 @@
   .msg:empty { display:none; }
   .spinner { display:inline-block; width:12px; height:12px; border:1.5px solid #3a3058; border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; vertical-align:-2px; margin-right:6px; }
   @keyframes spin { to { transform:rotate(360deg); } }
+  /* 動きを減らす設定：回転を止める（「確認しています」の文言は残る） */
+  @media (prefers-reduced-motion: reduce) { .spinner { animation:none; } }
   .links { margin-top:28px; font-size:12px; color:var(--sub); }
   .links a { color:var(--sub); }
   @media (max-width:360px) { .row { flex-wrap:wrap; } .row .btn { width:100%; } }
@@ -74,11 +76,14 @@
     var pad = function (n) { return (n < 10 ? '0' : '') + n; };
     return '<p class="note pc-at">' + d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ' のご購入</p>';
   }
+  // 閲覧の導線だけ（このページでは売らない）。¥1,000：解析レポートを読む／¥3,000：解析レポートを読む・完全解析を見る／
+  //   追加 ¥2,000：完全解析を見る・解析レポートに戻る（完全解析を先に出す）
   function analysisRow(p) {
     if (!p.analysis) return '';
     var ok = p.analysis === 'active';
+    var label = p.lastOffer === 'analysis_upgrade' ? '解析レポートに戻る' : '解析レポートを読む';
     return '<div class="row"><div><div class="row-name">解析レポート</div><div class="row-state">' + (ok ? '読めます' : p.analysis === 'suspended' ? '一時停止中' : '失効') + '</div></div>'
-      + (ok ? '<button type="button" class="btn" data-open-analysis="' + G.esc(p.ref) + '">解析レポートを読む</button>' : '') + '</div>';
+      + (ok ? '<button type="button" class="btn" data-open-analysis="' + G.esc(p.ref) + '">' + label + '</button>' : '') + '</div>';
   }
   function completeRow(p) {
     if (!p.complete) return '';
@@ -89,7 +94,7 @@
       ? '<p class="note">お支払いは完了しています。同じご注文・同じ目標で、もう一度作成できます（追加のお支払いはありません）。</p>'
       : '<p class="note">お支払いは完了しています。お手数ですが @mondayaxad までご連絡ください（追加のお支払いは不要です）。</p>';
     return '<div class="row"><div><div class="row-name">完全解析</div><div class="row-state">' + (working ? '<span class="spinner" aria-hidden="true"></span>' : '') + G.esc(G.completeLabel(p)) + '</div>' + failedNote + '</div>'
-      + (ready ? '<button type="button" class="btn" data-open-complete="' + G.esc(p.ref) + '">完全解析を読む</button>' : '')
+      + (ready ? '<button type="button" class="btn" data-open-complete="' + G.esc(p.ref) + '">完全解析を見る</button>' : '')
       + (final && p.regenerate === 'available' ? '<button type="button" class="btn" data-regenerate="' + G.esc(p.ref) + '">もう一度作成する</button>' : '') + '</div>';
   }
   function claimBlock(p) {
@@ -102,7 +107,8 @@
     if (p.pending && !p.analysis && !p.complete) {
       return '<div class="card"><p class="note"><span class="spinner" aria-hidden="true"></span>お支払いを確認しています…</p></div>';
     }
-    return '<div class="card">' + purchasedAtLine(p) + analysisRow(p) + completeRow(p) + '<p class="msg" data-msg></p>' + claimBlock(p) + '</div>';
+    var rows = p.lastOffer === 'analysis_upgrade' ? completeRow(p) + analysisRow(p) : analysisRow(p) + completeRow(p);
+    return '<div class="card">' + purchasedAtLine(p) + rows + '<p class="msg" data-msg></p>' + claimBlock(p) + '</div>';
   }
 
   // GA4：支払いを確認できた購入を1回だけ（同じ購入の再表示では送らない）
@@ -139,6 +145,10 @@
       document.getElementById('pcLead').textContent = 'このページから、すぐにお読みいただけます。';
     }
     list.innerHTML = purchases.map(cardHtml).join('');
+    // 追加 ¥2,000 だけの購入：戻り先は解析レポート（カードの「解析レポートに戻る」）。診断結果への戻りは出さない
+    var onlyUpgrade = purchases.every(function (p) { return p.lastOffer === 'analysis_upgrade'; });
+    var rl = document.getElementById('pcResultLink');
+    if (onlyUpgrade && rl) { rl.hidden = true; document.getElementById('pcResultSep').hidden = true; }
     trackConfirmed(purchases);
     // GA4：完全解析の生成の開始・完成・失敗（購入ごとに1回だけ。ref は送らない）
     purchases.forEach(function (p) {

@@ -321,7 +321,7 @@ test('my-entitlements v2（Preview）：記録ごとの完全解析の状態', a
     { id: S6, user_id: U1, diagnosis_version: 'ETI-2.0', diagnosis_results: [{ ...RC1 }], diagnosis_answers: [{ encoded_answers: 'CODE6' }] },
   );
   f.db.purchase_entitlements = [
-    { id: '9e000000-0000-4000-8000-000000000001', diagnosis_code_hash: sha('v2_CODE1'), status: 'active', product_type: 'core1' }, // S1：未確認の旧購入
+    { id: '9e000000-0000-4000-8000-000000000001', diagnosis_code_hash: sha('v2_CODE1'), status: 'active', product_type: 'core1' }, // S1：結び付けていない旧購入（同じ回答の別人かもしれない）
     { id: '9e000000-0000-4000-8000-000000000004', diagnosis_code_hash: sha('v2_CODE4'), status: 'active', product_type: 'core1' }, // S4：固定済み
   ];
   f.db.complete_legacy_bindings = [{ diagnosis_session_id: S4, user_id: U1, legacy_entitlement_id: '9e000000-0000-4000-8000-000000000004' }];
@@ -331,16 +331,20 @@ test('my-entitlements v2（Preview）：記録ごとの完全解析の状態', a
   f.db.record_entitlements = [{ user_id: U1, diagnosis_session_id: S6, right_type: 'complete', status: 'revoked' }];
   const res = await entitlements(f);
   assert.equal(res.code, 200);
-  assert.deepEqual(res.body.purchased_by_version, { 'ETI-2.0:CODE1': true, 'ETI-2.0:CODE4': true });
+  // 本人に結び付け済みの旧購入（S4）だけ。ハッシュ一致だけの旧購入（S1）は本人の購入にしない（complete_10）
+  assert.deepEqual(res.body.purchased_by_version, { 'ETI-2.0:CODE4': true });
   assert.equal(res.body.completeLookup, 'ok');
   const r = res.body.records;
-  assert.deepEqual(Object.keys(r[S1]).sort(), ['analysisSource', 'checkoutInProgress', 'completeBlocked', 'completeEligible', 'completeEntitlement',
-    'completeOffer', 'completeRegenerate', 'completeStatus', 'completeViewBlocked', 'duplicateOf', 'ineligibleReason', 'legacyPurchasePending', 'mentorGoal', 'mentorGoalLocked', 'repurchaseBlocked']);
+  assert.deepEqual(Object.keys(r[S1]).sort(), ['analysisAccess', 'analysisPurchased', 'analysisSource', 'checkoutInProgress', 'completeBlocked', 'completeEligible', 'completeEntitlement',
+    'completeOffer', 'completeRegenerate', 'completeStatus', 'completeViewBlocked', 'duplicateOf', 'ineligibleReason', 'legacyAnalysis', 'legacyPurchasePending', 'mentorGoal', 'mentorGoalLocked', 'repurchaseBlocked']);
   assert.equal(r[S1].completeEligible, true);
-  // 旧 Payment Link の購入は ¥2,000 の根拠にしない（確認中にもしない）。完全解析は出さない
+  // ハッシュ一致だけの旧購入：本人の購入にしない。¥2,000 の根拠にも、¥3,000 の禁止にもしない
   assert.equal(r[S1].legacyPurchasePending, false);
   assert.equal(r[S1].analysisSource, null, 'ハッシュ一致だけでは ¥2,000 の根拠にしない');
-  assert.deepEqual([r[S1].completeOffer, r[S1].completeBlocked], [null, 'legacy_purchase_not_eligible']);
+  assert.deepEqual([r[S1].analysisAccess, r[S1].analysisPurchased, r[S1].legacyAnalysis], [false, false, false]);
+  assert.deepEqual([r[S1].completeOffer, r[S1].completeBlocked], ['direct_complete', null]);
+  // 結び付け済みの旧購入：読めるが、新 Checkout の購入済みにはしない
+  assert.deepEqual([r[S4].analysisAccess, r[S4].analysisPurchased, r[S4].legacyAnalysis], [true, false, true]);
   assert.equal(r[S4].legacyPurchasePending, false);
   assert.equal(r[S4].analysisSource, null, '結び付け済みの旧購入も根拠にしない');
   assert.equal(r[S4].checkoutInProgress, true);
@@ -371,17 +375,17 @@ test('my-entitlements v2：記録単位の解析権（¥1,000・¥3,000・引き
   assert.equal((await entitlements(f)).body.purchased_by_version['ETI-2.0:CODE7'], undefined);
 });
 
-test('my-entitlements v2：完全解析の読み取りに失敗しても ¥1,000 の購入状態は返す', async () => {
+test('my-entitlements v2：権利の読み取りに失敗した時は completeLookup: failed（購入済みを推測しない。購入の可否はサーバーが決済の時に確かめる）', async () => {
   const f = fakeDb({ failTables: ['record_entitlements'] });
   f.db.purchase_entitlements = [{ id: '9e000000-0000-4000-8000-000000000001', diagnosis_code_hash: sha('v2_CODE1'), status: 'active', product_type: 'core1' }];
   const res = await entitlements(f);
   assert.equal(res.code, 200);
-  assert.deepEqual(res.body, { purchased_by_version: { 'ETI-2.0:CODE1': true }, completeLookup: 'failed' });
+  assert.deepEqual(res.body, { purchased_by_version: {}, completeLookup: 'failed' });
 });
 
-test('my-entitlements v2：Production も記録ごとの状態を返す（購入済みの判定は従来どおり・本番の Supabase だけ）', async () => {
+test('my-entitlements v2：Production も記録ごとの状態を返す（購入済みは本人の記録の権利・本番の Supabase だけ）', async () => {
   const f = fakeDb();
-  f.db.purchase_entitlements = [{ id: '9e000000-0000-4000-8000-000000000001', diagnosis_code_hash: sha('v2_CODE1'), status: 'active', product_type: 'core1' }];
+  f.db.record_entitlements = [{ user_id: U1, diagnosis_session_id: S1, right_type: 'analysis', status: 'active' }];
   const env = { ...PROD_ENV };
   const res = makeRes();
   const fetchImpl = async (url, opts) => f.fetchImpl(url.replace(PROD_ENV.SUPABASE_URL, PREVIEW_ENV.SUPABASE_URL), opts);

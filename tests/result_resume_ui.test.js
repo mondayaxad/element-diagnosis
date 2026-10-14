@@ -80,7 +80,7 @@ async function wire(ctx, w) {
       return code ? send(200, { code, diagnosisVersion: 'ETI-2.0', versions: VERSIONS }) : send(404, { error: 'result_not_found' });
     }
     if (op === 'guest-cancel') return send(200, { closed: 1, paid: 0 });
-    if (op === 'guest-status') return send(200, { salesOpen: true, purchases: [], codePurchased: !!w.codePurchased });
+    if (op === 'guest-status') return send(200, { salesOpen: true, purchases: [] });
     if (op === 'guest-goals') return send(...GOALS);
     if (op === 'guest-checkout') return send(200, { checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test_fake', offer: body.offer, amount: 1000 });
     return send(404, { error: 'not_found' });
@@ -313,15 +313,15 @@ test('結果ページ：¥1,000 の決済画面から支払わずに「戻る」
   await ctx.close();
 });
 
-test('購入済みの結果を、購入の記録が無いブラウザ・タブで開いた：ログインなしの購入は買えることを優先し、¥1,000・¥3,000 をそのまま売る（購入時のメールの案内だけ添える）', { skip: skip() }, async () => {
-  const w = world({ codePurchased: true });
+test('同じ診断結果を別の人・別の端末が購入済みでも、この端末に記録が無ければ未購入として ¥1,000・¥3,000 を売る（別の人の購入を表示しない）', { skip: skip() }, async () => {
+  const w = world();
   const ctx = await newContext();
   await wire(ctx, w);
   const p = await open(ctx, '/');
   const code = await complete(p);
   await p.waitForSelector('[data-guest-complete] [data-reveal-offer="direct_complete"]', { state: 'attached' });
   const box = p.locator('[data-guest-complete]');
-  assert.match(await box.textContent(), /この結果を購入済みの場合は、購入完了ページや購入時のメールからご覧いただけます。/);
+  assert.doesNotMatch(await box.textContent(), /購入済み/);
   await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
   assert.doesNotMatch(await p.locator('#lockUnlockAllBtn').innerText(), /購入済み/);
   await p.locator('#lockUnlockAllBtn').click();
