@@ -28,6 +28,7 @@
   .claim { margin-top:14px; padding-top:12px; border-top:1px solid var(--line); }
   .claim .btn { background:transparent; border-color:var(--line); color:var(--sub); font-size:12px; }
   .note { font-size:11.5px; color:var(--dim); margin:6px 0 0; }
+  .pc-at { margin:0 0 10px; letter-spacing:.04em; }
   .msg { font-size:12px; color:#d6a8b8; margin:8px 0 0; min-height:0; }
   .msg:empty { display:none; }
   .spinner { display:inline-block; width:12px; height:12px; border:1.5px solid #3a3058; border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; vertical-align:-2px; margin-right:6px; }
@@ -66,6 +67,13 @@
   var tries = 0;
   var busy = false;
 
+  // 購入の日時（このブラウザに複数の購入がある時に見分ける）
+  function purchasedAtLine(p) {
+    var d = p.purchasedAt ? new Date(p.purchasedAt) : null;
+    if (!d || isNaN(d.getTime())) return '';
+    var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+    return '<p class="note pc-at">' + d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ' のご購入</p>';
+  }
   function analysisRow(p) {
     if (!p.analysis) return '';
     var ok = p.analysis === 'active';
@@ -94,7 +102,7 @@
     if (p.pending && !p.analysis && !p.complete) {
       return '<div class="card"><p class="note"><span class="spinner" aria-hidden="true"></span>お支払いを確認しています…</p></div>';
     }
-    return '<div class="card">' + analysisRow(p) + completeRow(p) + '<p class="msg" data-msg></p>' + claimBlock(p) + '</div>';
+    return '<div class="card">' + purchasedAtLine(p) + analysisRow(p) + completeRow(p) + '<p class="msg" data-msg></p>' + claimBlock(p) + '</div>';
   }
 
   // GA4：支払いを確認できた購入を1回だけ（同じ購入の再表示では送らない）

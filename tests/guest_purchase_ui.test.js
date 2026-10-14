@@ -363,6 +363,16 @@ test('完了ページ：未払いの決済が残っていても買っていな�
   await p.__ctx.close();
 });
 
+test('購入完了ページ：このブラウザに複数の購入がある時は、購入の日時で見分けられる', { skip: skip() }, async () => {
+  const one = (at) => ({ ref: REF, analysis: 'active', complete: null, report: null, pending: false, claimed: false, canClaim: true, canUpgrade: true, purchasedAt: at });
+  const p = await page('/purchase-complete', { api: { 'guest-status': [200, { salesOpen: true, purchases: [one('2026-10-13T22:08:58.000Z'), one('2026-10-14T01:42:35.000Z')] }] } });
+  await p.waitForFunction(() => document.querySelectorAll('.pc-at').length === 2);
+  const lines = await p.locator('.pc-at').allInnerTexts();
+  assert.ok(lines.every((t) => /^\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2} のご購入$/.test(t.trim())), lines.join('|'));
+  assert.notEqual(lines[0], lines[1]);
+  await p.__ctx.close();
+});
+
 test('購入完了ページ（Stripe で戻った ?status=canceled）：未払いの決済を閉じてから表示・URL から印を消す（C3）', { skip: skip() }, async () => {
   const p = await page('/purchase-complete?status=canceled', { api: {
     'guest-cancel': [200, { closed: 1, paid: 0 }], 'guest-status': [200, { salesOpen: true, purchases: [] }] } });

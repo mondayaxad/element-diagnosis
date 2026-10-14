@@ -1009,11 +1009,19 @@ test('ログインなしの購入は買えることを優先：別のブラウ�
   const b = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_A }, { cookie: '' });
   assert.equal(b.code, 200, JSON.stringify(b.body));
   assert.equal((await ctx.rows('diagnosis_sessions')).length, 2);
-  // ブラウザ C（Cookie なし）で解析レポートを開いて ¥2,000：リンクの記録（A）に結び付く
+  // ブラウザ D で ¥2,000 の決済を始めて放置（この決済は D の Cookie にしか無い）
+  const stale = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_VISIBLE_01', report: reportToken }, { cookie: '' });
+  assert.equal(stale.code, 200, JSON.stringify(stale.body));
+  // ブラウザ C（Cookie なし）で解析レポートを開いて ¥2,000：D の未払いの決済を閉じてから、リンクの記録（A）に結び付く
   const up = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_PACE_01', report: reportToken }, { cookie: '' });
   assert.equal(up.code, 200, JSON.stringify(up.body));
-  const upOrder = (await ctx.rows('complete_orders')).find((o) => o.offer === 'analysis_upgrade');
-  assert.equal(upOrder.diagnosis_session_id, recA);
+  const ups = (await ctx.rows('complete_orders')).filter((o) => o.offer === 'analysis_upgrade');
+  assert.deepEqual(ups.map((o) => o.status).sort(), ['canceled', 'checkout_open']);
+  assert.ok(ups.every((o) => o.diagnosis_session_id === recA));
+  assert.equal(ctx.stripe.st.sessions[ctx.csIdOf(stale.body.checkoutUrl)].status, 'expired', '放置された決済画面は閉じる');
+  // 購入の日時（同じブラウザに複数の購入がある時に見分ける）
+  const at = (await ctx.op('guest-status', {}, { cookie: cookieA })).body.purchases[0].purchasedAt;
+  assert.match(at, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/);
   // 改ざん・別の環境・違う診断結果・¥2,000 以外では使えない
   const forged = reportToken.slice(0, -2) + (reportToken.endsWith('AA') ? 'BB' : 'AA');
   for (const [body, code] of [
