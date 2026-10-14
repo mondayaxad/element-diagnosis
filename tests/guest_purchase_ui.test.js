@@ -542,6 +542,8 @@ test('監査：ログイン中の結果ページは、アカウントの状態�
     [ST({ analysisAccess: true, analysisPurchased: true, completeEntitlement: 'active', completeBlocked: 'repurchase_not_allowed', completeStatus: 'ready' }), /完全解析は購入済みです[\s\S]*マイページで完全解析を見る/],
     [ST({ analysisAccess: true, legacyAnalysis: true, completeBlocked: 'legacy_purchase_not_eligible' }), /旧バージョンのため、完全解析はお申し込みいただけません/],
     [ST({ checkoutInProgress: true, completeBlocked: 'checkout_in_progress' }), /決済の手続き中です[\s\S]*決済をやり直す/],
+    // 再々監査：異議申し立てで返金された ¥3,000（権利は取り消し・注文は disputed）。押しても進めない ¥3,000 を出さない
+    [ST({ completeEntitlement: 'revoked', completeStatus: 'revoked', completeOffer: 'direct_complete', completeBlocked: 'repurchase_not_allowed' }), /現在お申し込みいただけません[\s\S]*マイページで開く/],
   ];
   for (const [st, re] of cases) {
     const p = await page('/', { user: true, resultStates: { ['ETI-2.0:' + code]: st }, api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-checkout': CHECKOUT } });

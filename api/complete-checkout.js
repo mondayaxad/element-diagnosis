@@ -189,13 +189,21 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
       // 6. 注文（決済待ちの注文があればそれを返す）。offer が違う・Stripe の画面が閉じている決済待ちは、
       //    Stripe の Session を閉じてから片付け、1回だけ作り直す（別の価格の画面を返さない）。
       let order = null;
-      for (let attempt = state.attempt; attempt <= state.attempt + 1; attempt++) {
+      let replaced = 0;
+      let cancelled = false;
+      for (let attempt = state.attempt; attempt <= state.attempt + 1 + replaced; attempt++) {
         const rows = await CP.rpc(fetchImpl, guard, 'complete_create_order', {
           p_user_id: user.id, p_diagnosis_session_id: targetId, p_offer: offer,
           p_idempotency_key: CP.orderIdempotencyKey(user.id, targetId, offer, attempt),
         });
         order = Array.isArray(rows) ? rows[0] : null;
         if (!order || !CE.isUuid(order.order_id) || !CP.OFFER_AMOUNTS[order.offer]) return failLogged(res, 500, 'checkout_failed', 'order_invalid');
+        // 同じ鍵で前に作った注文が、もう終わっている（返金・期限切れ・中止・失敗）：次の鍵で作り直す（返金の後の買い直し・申込の切り替えの後）。
+        //   鍵は「記録の注文の数」から作るため、切り替えで1つ先の鍵を使った後は、次の申込で同じ鍵になることがある
+        if (!order.created && ['refunded', 'expired', 'canceled', 'failed'].includes(order.order_status) && replaced < 5) {
+          replaced += 1;
+          continue;
+        }
         if (order.order_status !== 'checkout_open' && !(order.order_status === 'created' && order.offer !== offer)) break;
         let open = null;
         if (order.order_status === 'checkout_open') {
@@ -212,7 +220,8 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
           if (!open) return fail(res, 409, 'checkout_in_progress');
           if (open.status === 'open') await CP.stripeCall(() => stripe.checkout.sessions.expire(order.checkout_session_id));
         }
-        if (attempt > state.attempt) return fail(res, 409, 'checkout_in_progress');
+        if (cancelled) return fail(res, 409, 'checkout_in_progress');
+        cancelled = true;
         await CP.rpc(fetchImpl, guard, 'complete_cancel_open_order', { p_order_id: order.order_id, p_checkout_session_id: order.checkout_session_id || null });
       }
       const amount = CP.OFFER_AMOUNTS[order.offer];

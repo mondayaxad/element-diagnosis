@@ -1740,3 +1740,53 @@ test('再監査：解析レポートの支払いで異議申し立てに負け�
   assert.match((await res.json()).message, /complete_repurchase_not_allowed|complete_mentor_goal_required/);
   await ctx.db.close();
 });
+
+test('再々監査：申込の切り替え（¥1,000 → ¥3,000 → ¥1,000）の後に支払い・返金しても、同じ記録でもう一度買える（前の注文の鍵と重ならない）', { skip }, async () => {
+  const ctx = await setup();
+  const p = await person(ctx);
+  const body = { diagnosisSessionId: p.sessionId, product: 'analysis' };
+  const r1 = await ctx.checkout(p.token, body);
+  assert.equal(r1.code, 200);
+  const r2 = await ctx.checkout(p.token, { diagnosisSessionId: p.sessionId });
+  assert.deepEqual([r2.code, r2.body.amount], [200, 3000], JSON.stringify(r2.body));
+  const a = await payLoggedIn(ctx, p, body);
+  assert.equal(a.r.body.amount, 1000);
+  await refund(ctx, a.cs, 1000);
+  const again = await payLoggedIn(ctx, p, body);
+  assert.equal(again.r.body.amount, 1000);
+  assert.deepEqual(await rightsOf(ctx, p.sessionId), ['analysis:active', 'analysis:revoked']);
+  // 期限切れの後も同じ（Stripe で期限切れになった ¥3,000 を開き直す）
+  const q = await person(ctx, { email: 'q@example.test', code: CODE_B });
+  const d1 = await ctx.checkout(q.token, { diagnosisSessionId: q.sessionId });
+  const e1 = await ctx.checkout(q.token, { diagnosisSessionId: q.sessionId, product: 'analysis' });
+  assert.equal(e1.code, 200);
+  ctx.stripe.st.sessions[ctx.csIdOf(e1.body.checkoutUrl)].status = 'expired';
+  await ctx.webhook({ type: 'checkout.session.expired', objectId: ctx.csIdOf(e1.body.checkoutUrl) });
+  const d2 = await ctx.checkout(q.token, { diagnosisSessionId: q.sessionId });
+  assert.deepEqual([d2.code, d2.body.amount], [200, 3000], JSON.stringify(d2.body));
+  assert.equal(d1.code, 200);
+  await ctx.db.close();
+});
+
+test('再々監査：Cookie の上限を超えた時、決済中の注文の印より先に、閉じた未払いの注文の印を外す', { skip }, async () => {
+  const ctx = await setup();
+  ctx.cookie = '';
+  const open = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_A });
+  assert.equal(open.code, 200);
+  for (let i = 0; i < 14; i++) {
+    const r = await ctx.op('guest-checkout', { offer: 'analysis', code: savedRecord(variantAnswers(30 + i)).encoded_answers });
+    assert.equal(r.code, 200);
+    // この注文だけ Stripe で期限切れ（guest-cancel はこの端末の決済中をすべて閉じるため使わない）
+    const cs = ctx.csIdOf(r.body.checkoutUrl);
+    ctx.stripe.st.sessions[cs].status = 'expired';
+    assert.equal((await ctx.webhook({ type: 'checkout.session.expired', objectId: cs })).code, 200);
+  }
+  const st = (await ctx.op('guest-status', { code: CODE_A })).body.purchases.find((x) => x.thisRecord);
+  assert.ok(st && st.pending === true, JSON.stringify(st));
+  // 決済中の注文の支払いが届けば、この端末で読める
+  ctx.stripe.pay(ctx.csIdOf(open.body.checkoutUrl));
+  await ctx.webhook({ type: 'checkout.session.completed', objectId: ctx.csIdOf(open.body.checkoutUrl) });
+  const after = (await ctx.op('guest-status', { code: CODE_A })).body.purchases.find((x) => x.thisRecord);
+  assert.equal(after.analysis, 'active');
+  await ctx.db.close();
+});
