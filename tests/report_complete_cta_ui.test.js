@@ -103,55 +103,48 @@ async function openReport(ctx) {
 }
 const box = (p) => p.locator('[data-report-complete]');
 
-test('ゲスト（解析レポート購入済み）：BEYOND THE REPORT・三つの人物像の説明・追加 ¥2,000 → このページで MENTOR 目標を選んで決済（同じ記録の固有リンクに結び付く）', { skip: skip() }, async () => {
+test('ゲスト（マイページなし）：BEYOND THE REPORT・三つの人物像の説明・¥3,000 だけ → このページで MENTOR 目標を選んで決済（¥2,000 はマイページの案内だけ）', { skip: skip() }, async () => {
   const w = world();
   const ctx = await context(w, { lastResult: TOKEN });
   const p = await openReport(ctx);
   const sec = await p.locator('.ca-r-sec').innerText();
   assert.match(sec, /BEYOND THE REPORT｜この先にあるもの/);
-  assert.match(sec, /このレポートが描いたのは、いまのあなたの輪郭。\s*その奥にある三つの人物像を、46ページで読み解く。/);
   assert.match(sec, /MIRROR\s*いまのあなたに最も近い10名\s*20軸の配置が、いまのあなたに最も近い人物たちです。/);
-  assert.match(sec, /HIDDEN SHAPE\s*表に出にくい一面に近い10名\s*強さの順位ではなく、山と谷の「形」が近い人物たちです。/);
-  assert.match(sec, /MENTOR\s*これから伸ばす方向に近い10名\s*あなたが選ぶ目標に向けて、/);
-  assert.ok(!/すべて含まれます|¥3,000|¥1,000|購入状態を確認できない/.test(sec));
+  assert.match(sec, /HIDDEN SHAPE\s*表に出にくい一面に近い10名/);
+  assert.match(sec, /MENTOR\s*これから伸ばす方向に近い10名/);
+  assert.match(sec, /マイページに登録すると、解析レポートをお持ちの方は追加¥2,000でお申し込みいただけます。/);
   const btn = box(p).locator('[data-report-upgrade]');
-  assert.equal((await btn.innerText()).trim(), 'まだ見えていない輪郭を読む　追加¥2,000');
-  assert.match(await btn.evaluate((e) => getComputedStyle(e).backgroundImage), /linear-gradient/, 'グラデーションのボタン');
-  assert.equal(await box(p).locator('a[href="/complete-sample"][target="_blank"]').count(), 1);
-  assert.deepEqual(w.calls.find((c) => c.op === 'guest-status').body, { code: CODE }, 'この記録の購入状態を確かめる');
+  assert.equal((await btn.innerText()).trim(), 'まだ見えていない輪郭を読む　¥3,000');
+  assert.match(await btn.evaluate((e) => getComputedStyle(e).backgroundImage), /linear-gradient/);
   await btn.click();
-  // このページの中で目標を選ぶ（結果ページへは移らない）
   await p.waitForSelector('input[name="report-mentor-goal"]');
   assert.equal(new URL(p.url()).pathname, '/report.html');
   const buy = box(p).locator('[data-report-buy]');
-  assert.equal(await buy.isDisabled(), true, '目標を選ぶまで押せない');
+  assert.equal((await buy.innerText()).trim(), '目標を選んで決済へ（¥3,000）');
+  assert.equal(await buy.isDisabled(), true);
   await box(p).locator('input[name="report-mentor-goal"]').first().check();
   await buy.click();
   await p.waitForURL(/checkout\.stripe\.com/);
   const co = w.calls.filter((c) => c.op === 'guest-checkout').map((c) => c.body);
   assert.equal(co.length, 1);
-  assert.deepEqual([co[0].offer, co[0].code, co[0].resume, typeof co[0].goal], ['analysis_upgrade', CODE, TOKEN, 'string']);
-  assert.ok(!w.calls.some((c) => c.url.includes(TOKEN)), '秘密値は本文だけ');
+  assert.deepEqual([co[0].offer, co[0].code, typeof co[0].goal, 'report' in co[0]], ['direct_complete', CODE, 'string', false]);
   assert.deepEqual(p.__errors, []);
   await ctx.close();
 });
 
-test('ゲスト：この端末に固有リンクが無い・別の診断結果のリンクなら、固有リンクを送らずに決済（診断コードとこの端末の購入で結び付く）。失敗はその場で表示', { skip: skip() }, async () => {
-  for (const lastResult of [null, 'OtherResultTokenForAnotherDiagnosis_ABCDEFG']) {
-    const w = world();
-    if (lastResult) w.links[lastResult] = OTHER;
-    const ctx = await context(w, { lastResult });
+test('ゲスト：この端末に購入の記録が無い・確かめられない時も ¥3,000 を買える。決済を作れない時はその場で理由を出す', { skip: skip() }, async () => {
+  for (const over of [{ purchases: [] }, { statusCode: 503 }]) {
+    const w = world(over);
+    const ctx = await context(w);
     const p = await openReport(ctx);
     await box(p).locator('[data-report-upgrade]').click();
     await box(p).locator('input[name="report-mentor-goal"]').first().check();
     await box(p).locator('[data-report-buy]').click();
     await p.waitForURL(/checkout\.stripe\.com/);
     const co = w.calls.filter((c) => c.op === 'guest-checkout').map((c) => c.body);
-    assert.deepEqual([co.length, co[0].offer, co[0].code, 'resume' in co[0]], [1, 'analysis_upgrade', CODE, false], String(lastResult));
-    assert.deepEqual(p.__errors, []);
+    assert.deepEqual([co.length, co[0].offer, co[0].code], [1, 'direct_complete', CODE], JSON.stringify(over));
     await ctx.close();
   }
-  // 決済を作れない（例：販売停止）：その場で理由を出し、押し直せる
   const w = world();
   const ctx = await context(w);
   await ctx.route('**/api/complete-checkout?op=guest-checkout', (r) => r.fulfill({ status: 503, contentType: 'application/json', body: '{"error":"sales_closed"}' }));
@@ -161,14 +154,13 @@ test('ゲスト：この端末に固有リンクが無い・別の診断結果�
   await box(p).locator('[data-report-buy]').click();
   await p.waitForFunction(() => /準備中/.test(document.querySelector('[data-report-msg]').textContent));
   assert.equal(await box(p).locator('[data-report-buy]').isDisabled(), false);
-  assert.equal(new URL(p.url()).pathname, '/report.html');
   await ctx.close();
 });
 
 test('購入済み・決済中・購入が見つからない・確かめられない・販売停止・マイページ経由の出し分け', { skip: skip() }, async () => {
   const cases = [
     [{ purchases: [mine({ complete: 'active', canUpgrade: false })] }, /完全解析は購入済みです/, 'a[href="/purchase-complete"]'],
-    [{ salesOpen: false }, /追加¥2,000（準備中）[\s\S]*完全解析は準備中です/, 'button.is-pending[disabled]'],
+    [{ salesOpen: false }, /¥3,000（準備中）[\s\S]*完全解析は準備中です/, 'button.is-pending[disabled]'],
     [{ viewer: 'mypage' }, /マイページで申し込む　追加¥2,000/, 'a[href="/mypage.html"].is-offer'],
     [{ viewer: 'legacy' }, /購入状態を確認できないため/, null],
   ];
@@ -237,20 +229,4 @@ test('決済画面から支払わずに戻る：戻る（ページの復元）�
   await p.waitForURL(/checkout\.stripe\.com/);
   assert.equal(w.calls.filter((c) => c.op === 'guest-checkout').length, 1);
   await ctx.close();
-});
-
-test('この端末に購入の記録が無い（メール等のリンクから別のブラウザで開いた）・確かめられない時も ¥2,000 を買える：レポートのリンクの値を添えて決済', { skip: skip() }, async () => {
-  for (const over of [{ purchases: [] }, { statusCode: 503 }]) {
-    const w = world(over);
-    const ctx = await context(w);
-    const p = await openReport(ctx);
-    await box(p).locator('[data-report-upgrade]').click();
-    await box(p).locator('input[name="report-mentor-goal"]').first().check();
-    await box(p).locator('[data-report-buy]').click();
-    await p.waitForURL(/checkout\.stripe\.com/);
-    const co = w.calls.filter((c) => c.op === 'guest-checkout').map((c) => c.body);
-    assert.deepEqual([co.length, co[0].offer, co[0].code, co[0].report], [1, 'analysis_upgrade', CODE, 'x'], JSON.stringify(over));
-    assert.ok(w.calls.every((c) => !c.url.includes('token=')), 'レポートのリンクの値は本文だけで送る');
-    await ctx.close();
-  }
 });

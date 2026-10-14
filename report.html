@@ -1733,9 +1733,10 @@ function reportLensListHtml() {
   }).join('') + '</ul>';
 }
 
-// 完全解析の案内（実データ）：レポートを開いた端末で購入状態を確かめ、このページで MENTOR の目標を選んで ¥2,000 の決済へ。
-//   ゲスト：この端末の購入（Cookie）で確かめる。決済は同じ記録に結び付ける（この端末の固有リンクが同じ診断結果なら、それも送る）。
-//   マイページ経由：マイページの診断記録から申し込む。購入済み・決済中・確かめられない時は売らない。
+// 完全解析の案内（実データ）：
+//   ログインなし（ゲスト）：このページで MENTOR の目標を選んで ¥3,000 の決済へ（追加 ¥2,000 はマイページに登録した人だけ）。
+//                          この端末で完全解析を購入済みなら「購入した内容を見る」。
+//   マイページ経由：マイページの診断記録から追加 ¥2,000 で申し込む。
 function initReportComplete(code, viewer) {
   var box = document.querySelector('[data-report-complete]');
   if (!box) return;
@@ -1744,8 +1745,10 @@ function initReportComplete(code, viewer) {
   var unknown = '<p class="ca-r-note">この記録の完全解析の購入状態を確認できないため、購入導線は表示していません。</p>';
   var sample = '<a class="ca-r-sample" href="/complete-sample" target="_blank" rel="noopener" data-ca-sample>完全解析のサンプルを見る</a>';
   if (!G || !code) { box.innerHTML = unknown; return; }
-  var price = G.yen(G.OFFERS.analysis_upgrade.price);
-  var label = 'まだ見えていない輪郭を読む　追加' + price;
+  // ログインなし：完全解析は ¥3,000 の1種類だけ（追加 ¥2,000 はマイページに登録した人だけ）
+  var price = G.yen(G.OFFERS.direct_complete.price);
+  var label = 'まだ見えていない輪郭を読む　' + price;
+  var upPrice = G.yen(G.OFFERS.analysis_upgrade.price);
   // マイページに保存する（ログインすると、この記録と購入をいつでも見返せる）。この端末の購入なら引き継ぎ、無ければメールで確認して引き継ぐ
   var mypageSave = '<p class="ca-r-mypage"><a href="/mypage.html" data-report-mypage-save>マイページに保存する（ログイン）</a></p>';
   function bindMypageSave(mine) {
@@ -1762,7 +1765,7 @@ function initReportComplete(code, viewer) {
     if (a) a.addEventListener('click', function () { G.track('complete_sample_open', { source: 'analysis_report' }); });
   }
   if (viewer === 'mypage') {
-    box.innerHTML = '<a class="ca-r-btn is-offer" href="/mypage.html" data-report-mypage>マイページで申し込む　追加' + price + '</a>'
+    box.innerHTML = '<a class="ca-r-btn is-offer" href="/mypage.html" data-report-mypage>マイページで申し込む　追加' + upPrice + '</a>'
       + '<p class="ca-r-note">マイページの診断記録から、MENTOR の目標を選んでお申し込みいただけます。</p>' + sample;
     bindSample();
     return;
@@ -1774,8 +1777,7 @@ function initReportComplete(code, viewer) {
   G.releaseIfReturned().then(function () { return G.status(code); }).then(function (r) {
     var list = (r && r.ok && r.body && r.body.purchases) || [];
     var mine = list.filter(function (p) { return p.thisRecord; })[0] || null;
-    // この端末に購入の記録が無い（メール等のリンクから別のブラウザで開いた）・確かめられない時も売る：
-    //   このレポートのリンク自体が解析レポートの購入を示すため、¥2,000 はリンクの記録に結び付ける（サーバーが署名を確かめる）
+    // この端末に購入の記録が無い・確かめられない時も ¥3,000 を売る（ログインなしの購入は買えることを優先する）
     if (mine && mine.complete) {
       box.innerHTML = '<p class="ca-r-note">この記録の完全解析は購入済みです（' + G.esc(G.completeLabel(mine)) + '）。</p>'
         + '<a class="ca-r-btn" href="/purchase-complete">購入した内容を見る</a>' + mypageSave;
@@ -1789,13 +1791,14 @@ function initReportComplete(code, viewer) {
     }
     // 未払いの決済が残っていても、買っていない扱いで申し込める（サーバーが古い決済画面を閉じるか、同じ画面を返す。支払い済みなら作らない）
     var unpaid = mine && mine.pending ? '<p class="ca-r-note">前回のお手続きは完了していません（お支払いは発生していません）。もう一度お申し込みいただけます。</p>' : '';
-    box.innerHTML = unpaid + '<button type="button" class="ca-r-btn is-offer" data-report-upgrade>' + label + '</button>' + sample + mypageSave;
+    box.innerHTML = unpaid + '<button type="button" class="ca-r-btn is-offer" data-report-upgrade>' + label + '</button>'
+      + '<p class="ca-r-note">マイページに登録すると、解析レポートをお持ちの方は追加' + upPrice + 'でお申し込みいただけます。</p>' + sample + mypageSave;
     bindSample();
     bindMypageSave(mine);
     var btn = box.querySelector('[data-report-upgrade]');
     btn.onclick = function () {
       btn.disabled = true;
-      G.track('complete_offer_click', { offer: 'analysis_upgrade', source: 'analysis_report' });
+      G.track('complete_offer_click', { offer: 'direct_complete', source: 'analysis_report' });
       reportShowGoals(G, box, code, label);
     };
   }).catch(function () { box.innerHTML = unknown; });
@@ -1816,7 +1819,7 @@ function reportShowGoals(G, box, code, label) {
       + goals.map(function (g) {
         return '<label class="ca-goal"><input type="radio" name="report-mentor-goal" value="' + G.esc(g.goalId) + '"><span><b>' + G.esc(g.label) + '</b><span>' + G.esc(g.description || '') + '</span></span></label>';
       }).join('') + '</fieldset>'
-      + '<button type="button" class="ca-r-btn is-offer" data-report-buy disabled>目標を選んで決済へ（追加' + G.yen(G.OFFERS.analysis_upgrade.price) + '）</button>'
+      + '<button type="button" class="ca-r-btn is-offer" data-report-buy disabled>目標を選んで決済へ（' + G.yen(G.OFFERS.direct_complete.price) + '）</button>'
       + '<p class="ca-r-msg" data-report-msg role="status"></p>';
     var buy = box.querySelector('[data-report-buy]');
     var msg = box.querySelector('[data-report-msg]');
@@ -1830,26 +1833,14 @@ function reportShowGoals(G, box, code, label) {
       buy.disabled = true;
       buy.textContent = '決済画面へ移動しています…';
       if (msg) msg.textContent = '';
-      reportResumeFor(G, code).then(function () {
-        var reportToken = new URLSearchParams(location.search).get('token') || '';
-        return G.checkout('analysis_upgrade', code, picked.value, 'analysis_report', { report: reportToken });
-      }).then(function (res) {
+      G.checkout('direct_complete', code, picked.value, 'analysis_report').then(function (res) {
         if (res && res.ok) return;
         buy.disabled = false;
-        buy.textContent = '目標を選んで決済へ（追加' + G.yen(G.OFFERS.analysis_upgrade.price) + '）';
+        buy.textContent = '目標を選んで決済へ（' + G.yen(G.OFFERS.direct_complete.price) + '）';
         if (msg) msg.textContent = G.errorText(res && res.error);
       });
     };
   });
-}
-// この端末の固有リンクが同じ診断結果なら、決済をその記録に結び付ける（違えば送らない。診断コードとこの端末の購入で結び付く）
-function reportResumeFor(G, code) {
-  var t = null;
-  try { t = localStorage.getItem('ed_last_result_v1'); } catch (e) { t = null; }
-  if (!t || !/^[A-Za-z0-9_-]{43}$/.test(t)) return Promise.resolve();
-  return G.resultOpen(t).then(function (r) {
-    if (r && r.ok && r.body && r.body.code === code) window.__edResumeToken = t;
-  }).catch(function () { /* 送らない */ });
 }
 
 function renderFullReport(root, results, diagnosisCode) {

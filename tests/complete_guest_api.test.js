@@ -187,7 +187,7 @@ test('購入完了ページ：Webhook より先でも Stripe に問い合わせ�
   assert.equal(s1.code, 200);
   assert.equal(s1.body.purchases.length, 1);
   const pu = s1.body.purchases[0];
-  assert.deepEqual([pu.analysis, pu.complete, pu.pending, pu.canClaim, pu.canUpgrade], ['active', null, false, true, true]);
+  assert.deepEqual([pu.analysis, pu.complete, pu.pending, pu.canClaim, pu.canUpgrade], ['active', null, false, true, false], '追加 ¥2,000 はマイページだけ');
   assert.match(pu.ref, /^[0-9a-f]{20}$/);
   // 解析レポートの閲覧リンク → report-data が記録単位の解析権で code を返す
   const link = await ctx.op('guest-report', { ref: pu.ref });
@@ -214,40 +214,39 @@ test('購入完了ページ：Webhook より先でも Stripe に問い合わせ�
   await ctx.db.close();
 });
 
-test('ゲスト ¥2,000（同じ記録・同じブラウザ）→ 完全解析 queued。¥3,000 は別の記録で解析＋完全解析', { skip }, async () => {
+test('ゲストの完全解析は ¥3,000 だけ（追加 ¥2,000 はマイページだけ）：解析レポートを買った結果でも ¥3,000 は新しい記録で解析＋完全解析', { skip }, async () => {
   const ctx = await setup();
   await buy(ctx, { offer: 'analysis', code: CODE_A });
   await ctx.op('guest-status', {});
-  const noGoal = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_A });
+  // ゲストの ¥2,000 は受け付けない（入力の誤り）
+  const up = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_PACE_01' });
+  assert.deepEqual([up.code, up.body.error], [400, 'invalid_request']);
+  const noGoal = await ctx.op('guest-checkout', { offer: 'direct_complete', code: CODE_A });
   assert.equal(noGoal.code, 400);
-  await buy(ctx, { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_PACE_01' });
-  assert.equal(ctx.stripe.st.lastCreate.params.line_items[0].price, 'price_test_upgrade2000');
-  const s = await ctx.op('guest-status', { code: CODE_A });
-  const mine = s.body.purchases.find((x) => x.thisRecord);
-  assert.deepEqual([mine.analysis, mine.complete, mine.report, mine.canUpgrade], ['active', 'active', 'queued', false]);
-  assert.equal((await ctx.rows('diagnosis_sessions')).length, 1, '同じ記録に積む');
-  // 同じ記録の ¥2,000 の再購入・¥1,000 の再購入はできない
-  assert.equal((await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_PACE_01' })).code, 409);
-  // ¥3,000（別の記録）
+  // 同じ診断結果の ¥3,000：解析レポートの記録には積まず、新しい記録で
+  await buy(ctx, { offer: 'direct_complete', code: CODE_A, goal: 'GOAL_PACE_01' });
+  assert.equal(ctx.stripe.st.lastCreate.params.line_items[0].price, 'price_test_direct3000');
+  assert.equal((await ctx.rows('diagnosis_sessions')).length, 2);
+  const s = (await ctx.op('guest-status', { code: CODE_A })).body.purchases;
+  assert.ok(s.some((x) => x.complete === 'active' && x.analysis === 'active' && x.report === 'queued'));
+  // 違う診断結果の ¥3,000
   await buy(ctx, { offer: 'direct_complete', code: CODE_B, goal: 'GOAL_EXPLORE_01' });
-  const s2 = await ctx.op('guest-status', { code: CODE_B });
-  const b = s2.body.purchases.find((x) => x.thisRecord);
+  const b = (await ctx.op('guest-status', { code: CODE_B })).body.purchases.find((x) => x.thisRecord);
   assert.deepEqual([b.analysis, b.complete, b.report], ['active', 'active', 'queued']);
   const orders = await ctx.rows('complete_orders');
   assert.deepEqual(orders.filter((o) => o.status === 'paid').map((o) => `${o.offer}:${o.amount}`).sort(),
-    ['analysis:1000', 'analysis_upgrade:2000', 'direct_complete:3000']);
+    ['analysis:1000', 'direct_complete:3000', 'direct_complete:3000']);
   // 完全解析の閲覧：生成前は 409 report_not_ready
   assert.equal((await ctx.op('guest-view', { ref: b.ref })).code, 409);
   // Cookie の無いブラウザでは何も見えない・ref だけでは開けない
-  const other = await ctx.op('guest-report', { ref: b.ref }, { cookie: '' });
-  assert.equal(other.code, 403);
+  assert.equal((await ctx.op('guest-report', { ref: b.ref }, { cookie: '' })).code, 403);
   await ctx.db.close();
 });
 
-test('アップグレードは同じブラウザの解析購入が必要・別の offer に切り替えると前の Stripe 画面を閉じる', { skip }, async () => {
+test('ゲストの ¥2,000 は無い・別の offer に切り替えると前の Stripe 画面を閉じる', { skip }, async () => {
   const ctx = await setup();
   const up = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_C, goal: 'GOAL_PACE_01' });
-  assert.deepEqual([up.code, up.body.error], [409, 'upgrade_requires_analysis']);
+  assert.deepEqual([up.code, up.body.error], [400, 'invalid_request'], 'ゲストの ¥2,000 は無い');
   const a = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_C });
   assert.equal(a.code, 200);
   const again = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_C });
