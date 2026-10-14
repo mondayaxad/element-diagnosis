@@ -1030,3 +1030,20 @@ test('ログインなしの購入は買えることを優先：別のブラウ�
   assert.ok(!ctx.logger.lines.join('\n').includes(reportToken));
   await ctx.db.close();
 });
+
+test('違う診断結果なら買える：ログイン中（マイページ）は前の結果の購入に関係なく ¥1,000・¥3,000 を作れる。同じ診断結果は重ねて売らない', { skip }, async () => {
+  const ctx = await setup();
+  const p = await person(ctx, { code: CODE_A });
+  await payLoggedIn(ctx, p, { diagnosisSessionId: p.sessionId, product: 'analysis' });
+  // 再診断で違う結果の記録
+  const other = await ctx.db.record({ userId: p.userId, code: CODE_B, goal: 'GOAL_PACE_01' });
+  const a = await ctx.checkout(p.token, { diagnosisSessionId: other, product: 'analysis' });
+  assert.equal(a.code, 200, JSON.stringify(a.body));
+  ctx.stripe.pay(ctx.csIdOf(a.body.checkoutUrl), {});
+  await ctx.webhook({ type: 'checkout.session.completed', objectId: ctx.csIdOf(a.body.checkoutUrl) });
+  assert.deepEqual(await rightsOf(ctx, other), ['analysis:active']);
+  // 同じ結果をもう一度保存した記録：重ねて売らない
+  const same = await ctx.db.record({ userId: p.userId, code: CODE_A, goal: 'GOAL_PACE_01' });
+  assert.equal((await ctx.checkout(p.token, { diagnosisSessionId: same, product: 'analysis' })).code, 409);
+  await ctx.db.close();
+});

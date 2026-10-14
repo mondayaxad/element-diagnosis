@@ -205,6 +205,23 @@ test('完了ページ（ログイン中・マイページから過去の結果�
   await p.__ctx.close();
 });
 
+test('完了ページ（ログイン中）：前の結果を購入済みでも、違う診断結果ならそのまま ¥1,000・¥3,000 を買える', { skip: skip() }, async () => {
+  const p0 = await page('/');
+  const [codeA, codeB] = await p0.evaluate(() => [7, 3].map((k) => { const a = {}; ETI_V2_QUESTIONS.forEach((q, i) => { a[q.id] = ((i * k) % 5) - 2; }); return ETIv2.encodeAnswersV2(a, ETI_V2_QUESTIONS); }));
+  await p0.__ctx.close();
+  const p = await page('/', { user: true, purchased: [codeA], api: { 'guest-status': [200, { salesOpen: true, purchases: [], codePurchased: false }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
+  await p.goto(`${base}/?dv=ETI-2.0&code=${codeB}`);
+  await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
+  await p.click('details.ca-fold > summary');
+  await p.locator('details.ca-fold [data-reveal-offer="direct_complete"]').waitFor();
+  assert.ok(p.__calls.some((c) => c.op === 'my-entitlements'), '本人の購入を確かめた');
+  assert.doesNotMatch(await p.locator('#lockUnlockAllBtn').innerText(), /マイページ|購入済み/);
+  await p.locator('#lockUnlockAllBtn').click();
+  await p.waitForURL(/checkout\.stripe\.com/);
+  assert.deepEqual(p.__calls.filter((c) => c.op === 'guest-checkout').map((c) => c.body), [{ offer: 'analysis', code: codeB }]);
+  await p.__ctx.close();
+});
+
 test('完了ページ（販売停止中）：¥1,000・¥3,000 とも「準備中」で押せない・Checkout を呼ばない', { skip: skip() }, async () => {
   const p = await resultPage({ salesOpen: false, api: { 'guest-status': [200, { salesOpen: false, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
   assert.equal((await p.locator('#lockUnlockAllBtn').innerText()).trim(), '解析レポート（準備中）');
