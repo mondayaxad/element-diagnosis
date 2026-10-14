@@ -1432,3 +1432,29 @@ test('総当たり：ログイン中に結果ページから買う（ゲスト�
   }
   await ctx.db.close();
 });
+
+test('総当たり：¥1,000 と追加 ¥2,000 を別のメールで払った：どちらかのメールのアカウントへ引き継げる（この端末・購入時メールの確認とも）。どちらでもないメールには移らない', { skip }, async () => {
+  for (const method of ['cookie', 'email_otp']) {
+    const ctx = await setup();
+    ctx.cookie = '';
+    const a = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_A });
+    ctx.stripe.pay(ctx.csIdOf(a.body.checkoutUrl), { customer_details: { email: 'first@example.test' } });
+    await ctx.op('guest-status', {});
+    const u = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_PACE_01' });
+    ctx.stripe.pay(ctx.csIdOf(u.body.checkoutUrl), { customer_details: { email: 'second@example.test' } });
+    await ctx.op('guest-status', {});
+    const ref = (await ctx.op('guest-status', {})).body.purchases[0].ref;
+    // どちらでもないメール：移らない
+    const stranger = `tok-${crypto.randomBytes(6).toString('hex')}`;
+    await ctx.db.user({ email: 'stranger@example.test', token: stranger });
+    assert.deepEqual((await ctx.op('guest-claim', { ref }, { token: stranger })).body, { error: 'claim_email_mismatch' });
+    // 2つ目の支払いのメールのアカウント
+    const token = method === 'cookie' ? `tok-${crypto.randomBytes(6).toString('hex')}` : otpToken();
+    const userId = await ctx.db.user({ email: 'second@example.test', token });
+    if (method === 'cookie') assert.equal((await ctx.op('guest-claim', { ref }, { token })).code, 200);
+    else assert.equal((await ctx.op('guest-recover', {}, { token, cookie: '' })).body.claimed, 1);
+    const rights = (await ctx.rows('record_entitlements')).filter((e) => e.user_id === userId).map((e) => `${e.right_type}:${e.status}`).sort();
+    assert.deepEqual(rights, ['analysis:active', 'complete:active'], method);
+    await ctx.db.close();
+  }
+});
