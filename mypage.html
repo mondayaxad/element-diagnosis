@@ -1359,8 +1359,8 @@ function renderEmpty(root, user) {
     <div class="empty">
       まだ保存された診断記録がありません。<br>
       診断結果画面の「結果を保存」から記録できます。
-      <p class="empty-hint">以前ほかの方法（Google・X・メール）で保存した記録は、そのときと同じ方法でログインすると表示されます。</p>
-      <p class="empty-hint" data-empty-purchase-note>ログインなしで購入した方：購入時のメールアドレスでログインすると、自動で引き継がれます。別のメールアドレスでログインしている時は、<a href="/mypage.html#recover">購入時のメールアドレスで確認して引き継ぐ</a>から引き継げます。</p>
+      <p class="empty-hint">以前ほかの方法${mpOtherMethodsText()}で保存した記録は、そのときと同じ方法でログインすると表示されます。</p>
+      <p class="empty-hint" data-empty-purchase-note>ログインなしで購入した方：購入時のメールアドレスでログインすると、自動で引き継がれます。別のメールアドレス・X でログインしている時は、<a href="/mypage.html#recover">購入時のメールアドレスで確認して引き継ぐ</a>から引き継げます。</p>
     </div>
     ${user ? mpAccountHtml(user) : ''}
     ${caSheetShellHtml([])}
@@ -1430,6 +1430,11 @@ async function handleLogoutClick() {
   // 計算結果を含むpendingDiagnosis_v2を残さない。期限確認（readPendingDiagnosisV2）
   // ではなく、有効期限内かどうかに関わらず明示的に削除する。
   if (typeof clearPendingDiagnosisV2 === 'function') clearPendingDiagnosisV2();
+  // 旧版（v1）の保存待ち・結果ページへの戻り先・引き継ぎの印・購入時メールでの確認の印も残さない
+  //   （共有の端末で、次にログインした人のアカウントへ前の人の診断が保存・引き継がれないように）
+  if (typeof clearPendingDiagnosis === 'function') clearPendingDiagnosis();
+  if (typeof clearSaveReturn === 'function') clearSaveReturn();
+  try { sessionStorage.removeItem('ed_claim_intent_v1'); sessionStorage.removeItem('ed_recover_verified_v1'); } catch (e) { /* noop */ }
   // 認証済みデータを画面から消し、ログイン画面（renderGate）へ戻す。
   navigateTo(location.pathname);
 }
@@ -1520,6 +1525,11 @@ function mpComboHtml(r) {
 }
 
 // DB由来の文字列をinnerHTMLへ入れる前に必ず通す（自分のデータであっても安全側に倒す）
+// 使えるログイン方法の名前（案内の文に使う。公開 Auth 設定で有効な方法だけ）
+function mpOtherMethodsText() {
+  const names = (typeof authOAuthLabels === 'function' ? authOAuthLabels() : []).concat(['メール']);
+  return `（${names.join('・')}）`;
+}
 function mpEsc(v) {
   if (v === null || v === undefined) return v;
   return String(v).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
@@ -2287,7 +2297,11 @@ function mpLoginMethodsHtml(user) {
       ? `<div class="mp-login-row"><span>${p.label}</span><span><span class="mp-login-on">✓ 連携済み</span>${unlinkBtn}</span></div>`
       : `<div class="mp-login-row"><span>${p.label}</span><button type="button" class="mp-login-btn" data-provider="${p.provider}" onclick="mpLinkProvider(this)">${p.label}を連携する</button></div>`);
   });
-  const notice = (typeof AUTH_RETURN_ERROR !== 'undefined' && AUTH_RETURN_ERROR) ? authLinkErrorMessage(AUTH_RETURN_ERROR) : '';
+  if (mpLoginNotice === null) {
+    const err = typeof takeAuthReturnError === 'function' ? takeAuthReturnError() : null;
+    mpLoginNotice = err ? authLinkErrorMessage(err) : '';
+  }
+  const notice = mpLoginNotice;
   const canLink = AUTH_LINKABLE_PROVIDERS.some((p) => !linked.has(p.provider) && authProviderEnabled(p.provider));
   // 使えるログイン方法を読めたら、この欄だけ描き直す（読む前は連携ボタンを出さない）
   if (typeof authEnabledProviders === 'function') {
@@ -3451,6 +3465,7 @@ function renderError(root) {
 // 表示中のマイページの利用者（ログイン画面・エラーの時は null）。同じ利用者の SIGNED_IN の再通知（タブへの復帰・
 // セッションの回復）では描き直さない：開いているシート・入力中の目標・エラー表示・スクロール位置を保つ（C7）
 let mpRenderedUserId = null;
+let mpLoginNotice = null; // ログイン方法の連携から戻った時の案内（読み込みごとに1回だけ決める）
 let mpInitRunning = null;
 let mpInitAgain = false;
 // init は同時に1つだけ。実行中に呼ばれたら、終わった後にもう1回だけ実行する（描画の重なりを防ぐ）
@@ -3496,6 +3511,9 @@ async function initOnce() {
     try { intentNote = sessionStorage.getItem('ed_claim_intent_v1') ? 'ログインすると、この端末の購入をマイページに引き継ぎます。' : ''; } catch (e) { intentNote = ''; }
     if (location.hash === '#recover') intentNote = '購入時のメールアドレスで「メールで続ける」からログインすると、その購入を引き継げます。';
     renderGate(root);
+    // OAuth（Google・X）から戻ってログインできなかった：理由を出す（ログイン画面に黙って戻さない）
+    const returnError = typeof takeAuthReturnError === 'function' ? takeAuthReturnError() : null;
+    if (returnError) intentNote = authSignInErrorMessage(returnError) + (intentNote ? ` ${intentNote}` : '');
     if (intentNote) { const g = document.getElementById('gateMsg'); if (g) g.textContent = intentNote; }
     return;
   }
@@ -3547,8 +3565,8 @@ async function initOnce() {
   if (result.sessions.length === 0) {
     renderEmpty(root, user);
     mpRenderedUserId = user.id;
-    mpShowClaimOutcome(root, claimOutcome);
-    mpGuestPurchaseFlow(root, claimOutcome);
+    mpShowClaimOutcome(root, claimOutcome, user);
+    mpGuestPurchaseFlow(root, claimOutcome, user);
     return;
   }
   mpEntitlementOk = mpEntitlementCheckedOk(result.sessions);
@@ -3561,8 +3579,8 @@ async function initOnce() {
     });
     window.scrollTo(0, keepScrollY);
   }
-  mpShowClaimOutcome(root, claimOutcome);
-  mpGuestPurchaseFlow(root, claimOutcome);
+  mpShowClaimOutcome(root, claimOutcome, user);
+  mpGuestPurchaseFlow(root, claimOutcome, user);
   // お知らせメール（Kit）の同期は、登録完了と診断の保存の後に diagnosis-save.js の runSignedInFlow() が行う。
 }
 // eti_v2_save.js（Googleログイン復帰後、v2のpending保存が完了した時点）から
@@ -3592,15 +3610,16 @@ function mpClaimBox(root, html) {
   box.innerHTML = html;
   return box;
 }
-// 記録を描く前の引き継ぎ（#recover の時は購入時メールでの確認へ回すため行わない）。
-//   ①この端末の Cookie の購入（Cookie の秘密値＋確認済みメール＝購入時メール）
-//   ②購入時のメールアドレスでの引き継ぎ：ログイン中の確認済みメール（6桁コード・Google 等）で払った、未引き継ぎの購入を
-//     開くたびに自動で引き継ぐ（Cookie の無い別の端末・別のブラウザでも、購入時のメールで登録すれば開くだけで購入済みになる）。
-//     サーバーが購入時メールと照合する。メールの無いログイン（X 等）では移さない
+// 記録を描く前の引き継ぎ。
+//   ①この端末の Cookie の購入（Cookie の秘密値＋このサービスが確かめたメール＝購入時メール）。#recover でも行う
+//     （解析レポートの「購入時のメールアドレスで確認する」から来ても、この端末の購入はそのまま引き継ぐ）
+//   ②購入時のメールアドレスでの引き継ぎ：ログイン中の確かめたメール（6桁コード・Google）で払った、未引き継ぎの購入を
+//     開くたびに自動で引き継ぐ（#recover の時は mpRecoverFlow が行い、結果をその画面で示す）。
+//     サーバーが購入時メールと照合する。X 等のメール・別のメールの支払いを含む記録では移さない
 //   null：引き継げる購入が無い・確かめられない／{ claimed, error, recovered }
-let mpAutoRecover = null; // { key, promise }：同じ読み込み・同じ利用者の再描画（SIGNED_IN と初期描画の重なり）で2回呼ばない
+let mpAutoRecover = null; // { key, promise, shown }：同じ読み込み・同じ利用者の再描画で2回呼ばない・同じ結果を2回出さない
 async function mpClaimBeforeRender() {
-  if (typeof EdGuestPurchase === 'undefined' || location.hash === '#recover') return null;
+  if (typeof EdGuestPurchase === 'undefined') return null;
   try {
     const G = EdGuestPurchase;
     const token = await mpAccessToken();
@@ -3614,11 +3633,15 @@ async function mpClaimBeforeRender() {
       const rs = await G.claimAll(token, claimable);
       out = { claimed: rs.filter((x) => x.ok).length, error: (rs.find((x) => !x.ok) || {}).error || null };
     }
+    if (location.hash === '#recover') return out;
     const key = mpJwtSub(token);
-    if (!mpAutoRecover || mpAutoRecover.key !== key) mpAutoRecover = { key, promise: G.recover(token) };
+    if (!mpAutoRecover || mpAutoRecover.key !== key) mpAutoRecover = { key, promise: G.recover(token), shown: false };
     const r = await mpAutoRecover.promise;
     const n = r && r.ok && r.body ? (r.body.claimed || 0) : 0;
     if (n > 0) {
+      // 引き継いだ件数の案内は1回だけ（同じ読み込みでの描き直しでは出さない）
+      if (mpAutoRecover.shown) return out;
+      mpAutoRecover.shown = true;
       G.track('claim_success', { method: 'recover_auto' });
       // この端末の購入で引き継げなかった理由（別のメール等）は、購入時メールで引き継げたので出さない
       return Object.assign(out || { claimed: 0 }, { recovered: n, error: null });
@@ -3631,24 +3654,52 @@ async function mpClaimBeforeRender() {
 function mpJwtSub(token) {
   try { return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).sub || ''; } catch (e) { return ''; }
 }
-function mpShowClaimOutcome(root, outcome) {
-  if (!outcome || typeof EdGuestPurchase === 'undefined') return;
+// ログイン中のアカウント（方法と、伏せたメールアドレス）。引き継ぎの案内の先頭に出す（どのアカウントに引き継ぐか分かるように）
+function mpMaskEmail(email) {
+  const m = /^([^@]+)@(.+)$/.exec(String(email || ''));
+  if (!m) return '';
+  const local = m[1].length <= 2 ? m[1].slice(0, 1) + '*' : m[1].slice(0, 2) + '***';
+  return `${local}@${m[2]}`;
+}
+function mpAccountLine(user) {
+  if (!user) return '';
+  const providers = authLinkedProviders(user);
+  const names = [providers.has('email') ? 'メール' : null, providers.has('google') ? 'Google' : null, providers.has('x') ? 'X' : null].filter(Boolean);
+  const mail = mpMaskEmail(user.email);
+  return `<p class="mp-claim-note" data-claim-account>ログイン中のアカウント：${mpEsc(names.join('・') || 'ログイン中')}${mail ? `（${mpEsc(mail)}）` : ''}</p>`;
+}
+// 引き継げなかった理由ごとの次の一手（同じ画面への行き来にしない）
+function mpClaimErrorHtml(code) {
   const G = EdGuestPurchase;
+  const text = `<p>${mpEsc(G.claimErrorText(code))}</p>`;
+  if (code === 'claim_conflict') return text + '<p class="mp-claim-note">引き継ぎ先のアカウント（購入時のメールアドレスのアカウントの場合があります）でログインすると、ご覧いただけます。</p>';
+  if (code === 'claim_not_paid') return text;
+  if (code === 'claim_mixed_email') return text + '<p class="mp-claim-note">ご不明点があれば <a href="https://x.com/mondayaxad" target="_blank" rel="noopener">@mondayaxad</a> までご連絡ください。</p>';
+  if (code === 'checkout_in_progress' || code === 'claim_email_unknown' || code === 'network' || !code) {
+    return text + '<p><button type="button" data-mp-claim-retry>もう一度確認する</button></p>';
+  }
+  return text + '<p class="mp-claim-note"><a href="/mypage.html#recover">購入時のメールアドレスで確認する</a></p>';
+}
+function mpBindClaimRetry(box) {
+  const b = box && box.querySelector('[data-mp-claim-retry]');
+  if (b) b.onclick = () => { b.disabled = true; init(); };
+}
+function mpShowClaimOutcome(root, outcome, user) {
+  if (!outcome || typeof EdGuestPurchase === 'undefined') return;
   if (outcome.recovered > 0) {
-    mpClaimBox(root, `<p>✓ 購入時のメールアドレスで確認した購入（${outcome.recovered}件）を、マイページに引き継ぎました。</p><p class="mp-claim-note">診断記録と購入済みのレポートを、いつでも見返せます。</p>`);
+    mpClaimBox(root, mpAccountLine(user) + `<p>✓ 購入時のメールアドレスで確認した購入（${outcome.recovered}件）を、マイページに引き継ぎました。</p><p class="mp-claim-note">診断記録と購入済みのレポートを、いつでも見返せます。</p>`);
     return;
   }
   if (outcome.claimed > 0) {
-    mpClaimBox(root, `<p>✓ この端末の購入（${outcome.claimed}件）をマイページに引き継ぎました。</p><p class="mp-claim-note">診断記録と購入済みのレポートを、いつでも見返せます。</p>`);
+    mpClaimBox(root, mpAccountLine(user) + `<p>✓ この端末の購入（${outcome.claimed}件）をマイページに引き継ぎました。</p><p class="mp-claim-note">診断記録と購入済みのレポートを、いつでも見返せます。</p>`);
     return;
   }
   if (outcome.error) {
-    // 引き継げなかった（別のメールのアカウント等）：購入時のメールアドレスでの確認へ案内する（ここでは売り直さない）
-    mpClaimBox(root, `<p>${mpEsc(G.claimErrorText(outcome.error))}</p>`
-      + '<p class="mp-claim-note"><a href="/mypage.html#recover">購入時のメールアドレスで確認して引き継ぐ</a></p>');
+    // 引き継げなかった：理由ごとの次の一手を出す（ここでは売り直さない）
+    mpBindClaimRetry(mpClaimBox(root, mpAccountLine(user) + mpClaimErrorHtml(outcome.error)));
   }
 }
-async function mpGuestPurchaseFlow(root, claimOutcome) {
+async function mpGuestPurchaseFlow(root, claimOutcome, user) {
   if (mpGuestFlowBusy || typeof EdGuestPurchase === 'undefined') return;
   mpGuestFlowBusy = true;
   try {
@@ -3656,7 +3707,12 @@ async function mpGuestPurchaseFlow(root, claimOutcome) {
     const intent = G.takeClaimIntent();
     const token = await mpAccessToken();
     if (!token) return;
-    if (location.hash === '#recover') { await mpRecoverFlow(root, token); return; }
+    if (location.hash === '#recover') {
+      // この端末の購入を引き継げた：購入時メールでの確認は要らない（結果は mpShowClaimOutcome で表示済み）
+      if (claimOutcome && claimOutcome.claimed > 0) { mpClearRecoverHash(); return; }
+      await mpRecoverFlow(root, token, user);
+      return;
+    }
     // 記録を描く前に引き継ぎを試した（結果は mpShowClaimOutcome で表示済み）
     if (claimOutcome) return;
     const st = await G.status();
@@ -3666,13 +3722,14 @@ async function mpGuestPurchaseFlow(root, claimOutcome) {
       const rs = await G.claimAll(await mpAccessToken(), claimable);
       const ok = rs.filter((x) => x.ok).length;
       const firstError = (rs.find((x) => !x.ok) || {}).error;
-      mpClaimBox(root, ok
+      const box = mpClaimBox(root, mpAccountLine(user) + (ok
         ? `<p>✓ この端末の購入（${ok}件）をマイページに引き継ぎました。</p><p class="mp-claim-note">診断記録と購入済みのレポートを、いつでも見返せます。</p>`
-        : `<p>${mpEsc(G.claimErrorText(firstError))}</p>`);
+        : mpClaimErrorHtml(firstError)));
+      mpBindClaimRetry(box);
       if (ok) setTimeout(() => { mpGuestFlowBusy = false; init(); }, 1200);
     };
     if (intent) { await run(); return; }
-    const box = mpClaimBox(root, `<p>この端末に、マイページへ引き継げる購入があります（${claimable.length}件）。</p>`
+    const box = mpClaimBox(root, mpAccountLine(user) + `<p>この端末に、マイページへ引き継げる購入があります（${claimable.length}件）。</p>`
       + '<p class="mp-claim-note">引き継ぐと、この診断記録と購入済みのレポートを、このアカウントでいつでも見返せます。</p>'
       + '<button type="button" id="mpClaimBtn">この購入をマイページに引き継ぐ</button>');
     box.querySelector('#mpClaimBtn').onclick = (e) => { e.target.disabled = true; G.track('claim_start', { source: 'mypage' }); run(); };
@@ -3680,44 +3737,116 @@ async function mpGuestPurchaseFlow(root, claimOutcome) {
     mpGuestFlowBusy = false;
   }
 }
-async function mpRecoverFlow(root, token) {
+function mpForgetRecoverVerified() {
+  try { sessionStorage.removeItem(MP_RECOVER_VERIFIED_KEY); } catch (e) { /* noop */ }
+}
+function mpClearRecoverHash() {
+  mpForgetRecoverVerified();
+  try { if (location.hash === '#recover') history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* そのまま */ }
+}
+// 購入時メールでの確認（#recover）。6桁コードで確認した直後は、確認できたこと・いまのアカウント・結果を示し、
+//   同じ入力の画面には戻さない（見つからなかった時も、別のメールで確かめ直すか、マイページへ戻るかを選べる）
+const MP_RECOVER_VERIFIED_KEY = 'ed_recover_verified_v1';
+async function mpRecoverFlow(root, token, user) {
   const G = EdGuestPurchase;
-  // まず、いまログインしているアカウントの確認済みメールで引き継ぐ（購入時と同じメールならこれで済む）
-  G.track('claim_start', { source: 'recover' });
+  let justVerified = false;
+  try {
+    // 印は、結果の画面から次の一手を選ぶまで残す（ログインの切り替えで描き直しが重なっても、同じ結果の画面を出す）
+    const v = sessionStorage.getItem(MP_RECOVER_VERIFIED_KEY);
+    justVerified = !!(v && Date.now() - Number(v) < 15 * 60 * 1000);
+  } catch (e) { justVerified = false; }
+  G.track('claim_start', { source: justVerified ? 'recover_verified' : 'recover' });
   const r = await G.recover(token);
+  const account = mpAccountLine(user);
   if (r.ok && r.body.claimed > 0) {
-    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* そのまま */ }
-    mpClaimBox(root, `<p>✓ 購入時のメールアドレスで確認した購入（${r.body.claimed}件）を、マイページに引き継ぎました。</p>`);
+    mpClearRecoverHash();
+    mpClaimBox(root, account + `<p>✓ 購入時のメールアドレスで確認した購入（${r.body.claimed}件）を、マイページに引き継ぎました。</p>`);
     setTimeout(() => { init(); }, 1200);
     return;
   }
-  // このアカウントのメールでは見つからない（購入時と別のメールでログイン中・メールの無いログイン）：購入時のメールアドレスで確認する
-  const box = mpClaimBox(root, (r.ok ? '<p>このアカウントのメールアドレスでは、引き継げる購入は見つかりませんでした。</p>' : '')
+  const mixed = r.ok ? (r.body.mixed || 0) : 0;
+  const skipped = r.ok ? Math.max(0, (r.body.skipped || 0) - mixed) : 0;
+  // 見つからなかった理由（このアカウントの確かめたメールでの照合の結果）
+  let outcome;
+  if (!r.ok) {
+    outcome = r.body && r.body.error === 'network' ? null : `<p>${mpEsc(G.claimErrorText(r.body && r.body.error))}</p>`;
+    if (r.status === 0 || (r.body && r.body.error === 'network') || !r.body) {
+      mpBindClaimRetry(mpClaimBox(root, account + mpClaimErrorHtml('network')));
+      return;
+    }
+  } else if (mixed > 0) {
+    outcome = `<p>${mpEsc(G.claimErrorText('claim_mixed_email'))}</p>`;
+  } else if (skipped > 0) {
+    outcome = '<p>購入は見つかりましたが、決済の手続き中か、別のアカウントに引き継ぎ済みのため、引き継げませんでした。少し待ってから、もう一度お試しください。</p>';
+  } else {
+    outcome = justVerified
+      ? '<p>このメールアドレスで支払われた、引き継げる購入は見つかりませんでした。</p>'
+      : '<p>このアカウントのメールアドレスでは、引き継げる購入は見つかりませんでした。</p>';
+  }
+  if (justVerified) {
+    // 6桁コードでの確認は済んだ：同じ入力の画面ではなく、結果と次の一手を出す
+    const box = mpClaimBox(root, '<p>✓ メールアドレスの確認が完了しました。いまは、このメールアドレスのアカウントでログインしています。</p>'
+      + account + outcome
+      + '<p><button type="button" data-mp-recover-again>別のメールアドレスで確認する</button> <button type="button" data-mp-recover-done>マイページへ</button></p>');
+    box.querySelector('[data-mp-recover-again]').onclick = () => { mpForgetRecoverVerified(); mpRecoverForm(root, user, account, ''); };
+    box.querySelector('[data-mp-recover-done]').onclick = () => { mpClearRecoverHash(); box.remove(); init(); };
+    return;
+  }
+  mpRecoverForm(root, user, account, outcome || '');
+}
+function mpRecoverForm(root, user, account, outcome) {
+  const box = mpClaimBox(root, account + outcome
     + '<p>購入時のメールアドレスで、購入を引き継ぎます。</p>'
-    + '<p class="mp-claim-note">Stripe の決済画面で入力したメールアドレスに、6桁のコードを送ります。コードでログインすると、そのメールアドレスのアカウントに引き継ぎます。</p>'
-    + '<input type="email" id="mpRecoverEmail" autocomplete="email" placeholder="購入時のメールアドレス"><button type="button" id="mpRecoverSend">コードを送る</button>'
-    + '<div id="mpRecoverCode" hidden><input type="text" id="mpRecoverOtp" inputmode="numeric" maxlength="6" placeholder="6桁のコード"><button type="button" id="mpRecoverVerify">確認して引き継ぐ</button></div>'
-    + '<p class="mp-claim-note" id="mpRecoverMsg"></p>');
+    + '<p class="mp-claim-note">Stripe の決済画面で入力したメールアドレスに、6桁のコードを送ります。コードで確認すると、そのメールアドレスのアカウントにログインが切り替わり、そのアカウントに引き継ぎます。'
+    + 'いまのアカウントの記録は、元の方法でログインすると表示されます。</p>'
+    + '<input type="email" id="mpRecoverEmail" autocomplete="email" inputmode="email" placeholder="購入時のメールアドレス"><button type="button" id="mpRecoverSend">コードを送る</button>'
+    + '<div id="mpRecoverCode" hidden><input type="text" id="mpRecoverOtp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6桁のコード"><button type="button" id="mpRecoverVerify">確認して引き継ぐ</button></div>'
+    + '<p class="mp-claim-note" id="mpRecoverMsg" role="alert"></p>'
+    + '<p class="mp-claim-note"><button type="button" data-mp-recover-done>マイページへ戻る</button></p>');
   const msg = box.querySelector('#mpRecoverMsg');
-  box.querySelector('#mpRecoverSend').onclick = async (e) => {
-    const email = box.querySelector('#mpRecoverEmail').value.trim();
+  const emailInput = box.querySelector('#mpRecoverEmail');
+  const otpInput = box.querySelector('#mpRecoverOtp');
+  const send = box.querySelector('#mpRecoverSend');
+  const verify = box.querySelector('#mpRecoverVerify');
+  box.querySelector('[data-mp-recover-done]').onclick = () => { mpClearRecoverHash(); box.remove(); init(); };
+  const doSend = async () => {
+    const email = emailInput.value.trim();
     if (!isValidEmailForOtp(email)) { msg.textContent = 'メールアドレスを確認してください。'; return; }
-    e.target.disabled = true;
+    // いまのアカウントのメールアドレス：照合は済んでいる（コードを送っても結果は同じ）
+    if (user && user.email && email.toLowerCase() === String(user.email).trim().toLowerCase()) {
+      msg.textContent = 'いまログイン中のアカウントのメールアドレスです。このメールアドレスで支払われた、引き継げる購入はありませんでした。購入時に別のメールアドレスを使った場合は、そのアドレスを入力してください。';
+      return;
+    }
+    send.disabled = true;
     const err = await sendEmailOtp(email);
-    e.target.disabled = false;
+    send.disabled = false;
     if (err) { msg.textContent = authErrorMessage(err, 'send'); return; }
     box.querySelector('#mpRecoverCode').hidden = false;
     msg.textContent = 'コードを送りました。メールに届いた6桁のコードを入力してください。';
+    otpInput.focus();
   };
-  box.querySelector('#mpRecoverVerify').onclick = async (e) => {
-    const email = box.querySelector('#mpRecoverEmail').value.trim();
-    const code = box.querySelector('#mpRecoverOtp').value.trim();
+  const doVerify = async () => {
+    if (verify.disabled) return;
+    const email = emailInput.value.trim();
+    const code = otpInput.value.trim();
     if (!/^\d{6}$/.test(code)) { msg.textContent = '6桁のコードを入力してください。'; return; }
-    e.target.disabled = true;
+    verify.disabled = true;
+    // 確認できた後の再描画（SIGNED_IN → init）で、結果の画面を出すための印（秘密値ではない）
+    try { sessionStorage.setItem(MP_RECOVER_VERIFIED_KEY, String(Date.now())); } catch (e) { /* 印が無くても照合は行う */ }
     const err = await verifyEmailOtp(email, code);
-    if (err) { e.target.disabled = false; msg.textContent = authErrorMessage(err, 'verify'); return; }
-    // ログインが切り替わると onAuthStateChange(SIGNED_IN) → init() が #recover のまま再実行し、上の照合へ進む
+    if (err) {
+      try { sessionStorage.removeItem(MP_RECOVER_VERIFIED_KEY); } catch (e) { /* noop */ }
+      verify.disabled = false; msg.textContent = authErrorMessage(err, 'verify'); return;
+    }
+    msg.textContent = '確認しました。購入を探しています…';
+    // ログインが切り替わると onAuthStateChange(SIGNED_IN) → init() が #recover のまま再実行し、照合へ進む。
+    //   同じアカウントのまま（切り替わらない）でも照合へ進めるよう、ここでも描き直す
+    setTimeout(() => { if (location.hash === '#recover') init(); }, 1500);
   };
+  send.onclick = doSend;
+  verify.onclick = doVerify;
+  emailInput.onkeydown = (e) => { if (e.key === 'Enter') doSend(); };
+  otpInput.onkeydown = (e) => { if (e.key === 'Enter') doVerify(); };
 }
 
 supabaseClient.auth.onAuthStateChange((event, session) => {

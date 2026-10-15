@@ -1889,7 +1889,7 @@ function reportShowGoals(G, box, code, label) {
         if (res && res.ok) return;
         buy.disabled = false;
         buy.textContent = '目標を選んで決済へ（追加' + G.yen(G.OFFERS.analysis_upgrade.price) + '）';
-        if (msg) msg.textContent = G.errorText(res && res.error);
+        if (msg) msg.innerHTML = G.errorHtml(res && res.error);
         // 購入済み・状態が変わった：案内を描き直す（古いボタンを残さない）
         if (['analysis_already_purchased', 'upgrade_available', 'upgrade_not_available', 'repurchase_not_allowed', 'rights_suspended',
              'purchase_completed', 'claimed', 'owned_in_account'].indexOf(res && res.error) >= 0 && reportCompleteArgs) {

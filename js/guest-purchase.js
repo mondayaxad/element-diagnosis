@@ -131,25 +131,39 @@
     legacy_purchase_not_eligible: 'この記録の解析レポートは、旧バージョンのため、完全解析はお申し込みいただけません。',
     not_eligible: 'この結果は対象外です。',
     owned_in_account: 'この結果は、ログイン中のマイページで購入済みです。マイページからご覧・お申し込みください。',
-    guest_purchase_unclaimed: 'このメールアドレスで購入済みの、引き継ぎ前の購入があります。マイページで購入時のメールアドレスを確認すると、引き継いでご覧いただけます（重ねてお支払いいただかないため）。',
+    guest_purchase_unclaimed: 'このアカウントのメールアドレスで支払われた、引き継ぎ前の購入があります。マイページで引き継いでからご覧ください（重ねてお支払いいただかないため）。',
     purchase_email_mismatch: 'この端末の購入は、別のメールアドレスで購入されています。購入時のメールアドレスのアカウントでログインするか、ログアウトしてからお申し込みください。',
     mentor_goal_required: 'MENTOR の目標を選んでから、もう一度お試しください。',
     offer_changed: '購入状況が変わりました。表示を更新します。',
     network: '通信できませんでした。電波の良い場所で、もう一度お試しください。',
   };
   function errorText(code) { return ERROR_TEXT[code] || 'お手続きを開始できませんでした。時間をおいて、もう一度お試しください。'; }
+  // 申込の結果の案内（HTML）。マイページで引き継ぐ・開く必要がある時は、マイページへのリンクを付ける（文だけで止めない）
+  var ERROR_LINK = {
+    guest_purchase_unclaimed: ['/mypage.html', 'マイページを開いて引き継ぐ'],
+    purchase_email_mismatch: ['/mypage.html#recover', '購入時のメールアドレスで確認する'],
+    claimed: ['/mypage.html', 'マイページで開く'],
+    owned_in_account: ['/mypage.html', 'マイページで開く'],
+  };
+  function escHtml(v) { return String(v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function errorHtml(code) {
+    var link = ERROR_LINK[code];
+    return escHtml(errorText(code)) + (link ? ' <a href="' + link[0] + '">' + escHtml(link[1]) + '</a>' : '');
+  }
 
   // 引き継ぎ（マイページへ移す）の結果の説明。メールアドレスそのものは表示しない
   var CLAIM_TEXT = {
     claim_email_mismatch: '購入時に使用したメールアドレスのアカウントでログインしてください。別のメールアドレスのアカウントへは引き継げません。',
-    claim_email_required: '購入時のメールアドレスで「メールで続ける」からログインすると、引き継げます。',
-    claim_email_unconfirmed: '確認済みのメールアドレスでログインしてください（「メールで続ける」から確認できます）。',
+    claim_email_required: 'このログイン方法ではメールアドレスを確認できないため、自動では引き継げません。「購入時のメールアドレスで確認する」から、6桁のコードで確認してください。',
+    claim_email_unconfirmed: 'このアカウントのメールアドレスは未確認のため、自動では引き継げません。「購入時のメールアドレスで確認する」から、6桁のコードで確認してください。',
     claim_conflict: 'この購入は、別のアカウントに引き継ぎ済みです。',
-    claim_expired: '引き継ぎの期限が過ぎています。購入時のメールアドレスで「メールで続ける」からログインすると、確認して引き継げます。',
+    claim_expired: '引き継ぎの期限が過ぎています。「購入時のメールアドレスで確認する」から、6桁のコードで確認すると引き継げます。',
     claim_not_paid: 'お支払いを確認できた購入がありません。',
     checkout_in_progress: 'この購入の決済の手続きが残っています。少し待ってから、もう一度お試しください。',
     onboarding_required: '登録を完了してから、もう一度お試しください。',
-    email_otp_required: '購入時のメールアドレスに届く6桁のコードでログインすると、引き継げます。',
+    email_otp_required: 'このログイン方法（X など）のメールアドレスでは、自動では引き継げません。「購入時のメールアドレスで確認する」から、6桁のコードで確認すると引き継げます。',
+    claim_mixed_email: 'この購入は、複数のメールアドレスで支払われているため、自動ではマイページに引き継げません。購入したこの端末（ブラウザ）では、引き続きご覧いただけます。',
+    claim_email_unknown: '購入時のメールアドレスを確認できませんでした。時間をおいて、もう一度お試しください。',
   };
   function claimErrorText(code) { return CLAIM_TEXT[code] || '購入を引き継げませんでした。時間をおいて、もう一度お試しください。'; }
 
@@ -227,7 +241,7 @@
 
   global.EdGuestPurchase = {
     OFFERS: OFFERS, yen: yen, esc: esc, salesOpen: salesOpen, track: track,
-    status: status, resultLink: resultLink, newResumeToken: newResumeToken, resultOpen: resultOpen, consumeCheckoutMark: consumeCheckoutMark, releaseIfReturned: releaseIfReturned, cancel: cancel, goals: goals, checkout: checkout, errorText: errorText, claimErrorText: claimErrorText,
+    status: status, resultLink: resultLink, newResumeToken: newResumeToken, resultOpen: resultOpen, consumeCheckoutMark: consumeCheckoutMark, releaseIfReturned: releaseIfReturned, cancel: cancel, goals: goals, checkout: checkout, errorText: errorText, errorHtml: errorHtml, claimErrorText: claimErrorText,
     startClaim: startClaim, takeClaimIntent: takeClaimIntent, claimAll: claimAll, recover: recover,
     openAnalysis: openAnalysis, openComplete: openComplete, regenerate: regenerate, completeLabel: completeLabel,
   };

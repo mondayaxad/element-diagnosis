@@ -404,6 +404,21 @@ if (AUTH_RETURN_ERROR && typeof history !== 'undefined' && history.replaceState)
   try { history.replaceState(null, '', window.location.pathname); } catch (e) { /* noop */ }
 }
 
+// OAuth から戻った時のエラーの案内は1回だけ出す（描き直すたびに同じ案内を出し続けない）
+let authReturnErrorShown = false;
+function takeAuthReturnError() {
+  if (!AUTH_RETURN_ERROR || authReturnErrorShown) return null;
+  authReturnErrorShown = true;
+  return AUTH_RETURN_ERROR;
+}
+// ログイン（未ログインの画面）で戻った時のエラーの案内
+function authSignInErrorMessage(err) {
+  const code = (err && (err.code || err.error_code)) || '';
+  const text = ((err && (err.description || err.message)) || '').toLowerCase();
+  if (/access_denied/.test(code)) return 'ログインを中止しました。';
+  if (/email/.test(text)) return 'このアカウントからメールアドレスを受け取れなかったため、ログインできませんでした。別の方法でお試しください。';
+  return 'ログインできませんでした。時間をおいて、もう一度お試しいただくか、別の方法でお試しください。';
+}
 function authLinkErrorMessage(err) {
   const code = (err && (err.code || err.error_code)) || '';
   const text = ((err && (err.description || err.message)) || '').toLowerCase();
@@ -420,5 +435,5 @@ function authLinkErrorMessage(err) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { signInWithX, sendEmailOtp, verifyEmailOtp, isValidEmailForOtp, authErrorMessage, authEmailUnavailableMessage,
     authEnabledProviders, authProviderEnabled, AUTH_PROVIDERS_FALLBACK,
-    authLinkedProviders, authLinkErrorMessage, AUTH_LINKABLE_PROVIDERS, canUnlinkAuthProvider, authUnlinkErrorMessage };
+    authLinkedProviders, authLinkErrorMessage, authSignInErrorMessage, takeAuthReturnError, AUTH_LINKABLE_PROVIDERS, canUnlinkAuthProvider, authUnlinkErrorMessage };
 }

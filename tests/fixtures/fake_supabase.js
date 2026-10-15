@@ -325,8 +325,9 @@ function createMemoryBackend() {
     fetchImpl,
     calls,
     failNext(key) { failures.push(key); },
-    async user({ id = uuid(), email = null, confirmed = true, onboarding = 'completed', token } = {}) {
-      users[id] = { id, email, email_confirmed_at: email && confirmed ? now() : null };
+    // provider：ログイン方法（'email'＝6桁コード・'google'・'x'）。メールがあれば、その方法の identity にメールを持たせる
+    async user({ id = uuid(), email = null, confirmed = true, onboarding = 'completed', token, provider = 'email' } = {}) {
+      users[id] = { id, email, email_confirmed_at: email && confirmed ? now() : null, identities: email ? [{ provider, identity_data: { email, email_verified: confirmed } }] : [{ provider: provider === 'email' ? 'x' : provider, identity_data: {} }] };
       t.profiles.push({ id, onboarding_status: onboarding });
       if (token) tokens[token] = id;
       return id;

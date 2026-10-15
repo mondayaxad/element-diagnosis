@@ -140,7 +140,9 @@
     purchases = purchases.filter(function (p) { return !pendingOnly(p) || p === newestPending; });
     if (tries === 0) G.track('checkout_return', { state: canceled ? 'canceled' : purchases.length ? 'found' : 'none' });
     if (!purchases.length) {
-      if (!canceled) document.getElementById('pcLead').textContent = '';
+      // 中止して戻った（購入なし）：引き継ぎの案内は出さない（何も買っていない）
+      if (canceled) { list.innerHTML = ''; return; }
+      document.getElementById('pcLead').textContent = '';
       list.innerHTML = '<div class="card"><p class="row-name">この端末では、ご購入を確認できませんでした。</p>'
         + '<p class="note">購入したときと同じ端末・ブラウザで開いてください。マイページに引き継いだ購入は、マイページからご覧いただけます。</p>'
         + '<p class="note">端末を変えた・ブラウザのデータを消した場合は、マイページで購入時のメールアドレスを確認すると引き継げます。</p>'

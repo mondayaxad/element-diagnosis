@@ -347,14 +347,74 @@ test('Cookie を失った時の復旧：ログイン中の確認済みメール�
   assert.deepEqual([(await ctx.op('guest-recover', {}, { token: unconfirmed })).body.error], ['claim_email_unconfirmed']);
   assert.deepEqual([(await ctx.op('guest-recover', {}, { token: noEmail })).body.error], ['claim_email_required']);
   const wrong = await ctx.op('guest-recover', {}, { token: other });
-  assert.deepEqual([wrong.code, wrong.body], [200, { claimed: 0, skipped: 0 }]);
+  assert.deepEqual([wrong.code, wrong.body], [200, { claimed: 0, skipped: 0, mixed: 0 }]);
   const ok = await ctx.op('guest-recover', {}, { token: google });
-  assert.deepEqual([ok.code, ok.body], [200, { claimed: 1, skipped: 0 }]);
+  assert.deepEqual([ok.code, ok.body], [200, { claimed: 1, skipped: 0, mixed: 0 }]);
   const [session] = await ctx.rows('diagnosis_sessions');
   assert.equal(session.user_id, owner);
   assert.ok((await ctx.rows('complete_reports')).every((r) => r.user_id === owner));
   const again = await ctx.op('guest-recover', {}, { token: google });
-  assert.deepEqual(again.body, { claimed: 0, skipped: 0 });
+  assert.deepEqual(again.body, { claimed: 0, skipped: 0, mixed: 0 });
+  await ctx.db.close();
+});
+
+test('購入時メールが分かれた記録（¥1,000 を B・¥2,000 を C のメール）は、Cookie・購入時メールのどちらでも、どのアカウントへも自動では移さない（complete_12）。X のメールでは移さない', { skip }, async () => {
+  const ctx = await setup();
+  await buy(ctx, { offer: 'analysis', code: CODE_A }, { email: 'b@example.test' });
+  const st = await ctx.op('guest-status', {});
+  const ref = st.body.purchases[0].ref;
+  // ログインなしの ¥2,000：Stripe の決済画面のメールを、¥1,000 を払った時のメールに固定する
+  const up = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_PACE_01' });
+  assert.equal(up.code, 200, JSON.stringify(up.body));
+  assert.equal(ctx.stripe.st.lastCreate.params.customer_email, 'b@example.test');
+  assert.doesNotMatch(JSON.stringify(up.body), /example\.test/, '応答にメールを出さない');
+  // 固定の前に作られた記録の再現：¥2,000 を別のメール（C）で払う
+  ctx.stripe.pay(ctx.csIdOf(up.body.checkoutUrl), { customer_details: { email: 'c@example.test' } });
+  await ctx.op('guest-status', {});
+  const tokB = 'tok-mixed-b';
+  const tokC = 'tok-mixed-c';
+  const tokX = 'tok-mixed-x';
+  await ctx.db.user({ email: 'b@example.test', token: tokB });
+  await ctx.db.user({ email: 'c@example.test', token: tokC });
+  await ctx.db.user({ email: 'b@example.test', token: tokX, provider: 'x' });
+  const byCookie = await ctx.op('guest-claim', { ref }, { token: tokB });
+  assert.deepEqual([byCookie.code, byCookie.body], [409, { error: 'claim_mixed_email' }]);
+  const byCookieC = await ctx.op('guest-claim', { ref }, { token: tokC });
+  assert.deepEqual([byCookieC.code, byCookieC.body], [409, { error: 'claim_mixed_email' }]);
+  for (const tok of [tokB, tokC]) {
+    const r = await ctx.op('guest-recover', {}, { token: tok, cookie: '' });
+    assert.equal(r.code, 200);
+    assert.equal(r.body.claimed, 0);
+    assert.equal(r.body.mixed, 1);
+  }
+  // X のメール（このサービスが持ち主だと確かめていない）では、Cookie・購入時メールとも移さない
+  assert.deepEqual((await ctx.op('guest-recover', {}, { token: tokX, cookie: '' })).body, { error: 'email_otp_required' });
+  assert.deepEqual((await ctx.op('guest-claim', { ref }, { token: tokX })).body, { error: 'email_otp_required' });
+  assert.equal((await ctx.rows('diagnosis_sessions'))[0].user_id, null, 'どこへも移っていない');
+  assert.ok((await ctx.rows('complete_orders')).every((o) => o.user_id === null));
+  // 購入したブラウザでは、引き続き Cookie で読める
+  assert.equal((await ctx.op('guest-report', { ref })).code, 200);
+  await ctx.db.close();
+});
+
+test('購入時メールが1つの記録：DB の移す処理でも、別のメールの支払いが入った記録は断る（確かめてから移すまでの間の支払い）', { skip }, async () => {
+  const ctx = await setup();
+  await buy(ctx, { offer: 'analysis', code: CODE_A }, { email: 'b@example.test' });
+  await ctx.op('guest-status', {});
+  const up = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_PACE_01' });
+  ctx.stripe.pay(ctx.csIdOf(up.body.checkoutUrl), { customer_details: { email: 'c@example.test' } });
+  await ctx.op('guest-status', {});
+  const [session] = await ctx.rows('diagnosis_sessions');
+  const userB = await ctx.db.user({ email: 'b@example.test' });
+  for (const method of ['cookie', 'email_otp']) {
+    const r = await ctx.db.fetchImpl(`${ctx.env.SUPABASE_URL}/rest/v1/rpc/complete_transfer_guest_record`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_user_id: userB, p_diagnosis_session_id: session.id, p_method: method }),
+    });
+    assert.equal(r.status >= 400, true, method);
+    assert.match(JSON.stringify(await r.json()), /complete_claim_mixed_email/, method);
+  }
+  assert.equal((await ctx.rows('diagnosis_sessions'))[0].user_id, null);
   await ctx.db.close();
 });
 

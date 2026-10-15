@@ -164,10 +164,12 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
       const targetId = state.targetId;
       // この端末の Cookie に、同じ診断結果の未引き継ぎの支払い済みのゲスト購入がある：アカウントで重ねて売らない（先に引き継ぐ）
       const code = (PS.one(st.record.session.diagnosis_answers) || {}).encoded_answers;
-      if (code && await guestHandler.cookieOwnsCode(req, guard, code, user.email)) return fail(res, 409, 'guest_purchase_unclaimed');
+      if (code && user.email && await guestHandler.cookieOwnsCode(req, guard, code, user.email)) return fail(res, 409, 'guest_purchase_unclaimed');
       // 別の端末・消えた Cookie でも：このアカウントのメールで支払った未引き継ぎのゲストの購入があれば、重ねて売らない
       //   （マイページの案内から、購入時メールの確認で引き継ぐ）
-      if (code && await guestHandler.emailOwnsCode(guard, user.email, code)) return fail(res, 409, 'guest_purchase_unclaimed');
+      //   引き継げる購入（購入時メールが1つに揃い、このメール）の時だけ止める（引き継げない購入で止めると買えない）。X 等のメールでも止め、
+      //   マイページの「購入時のメールアドレスで確認する」（6桁コード）から引き継いでもらう（同じ物を二重に払わせない）
+      if (code && user.email && await guestHandler.emailOwnsCode(guard, user.email, code)) return fail(res, 409, 'guest_purchase_unclaimed');
 
       // 5. offer をサーバーが決める
       let offer = 'direct_complete';

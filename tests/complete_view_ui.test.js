@@ -28,7 +28,9 @@ function publicConfigJs(appEnv, extra) {
 function fakeSupabase(rows, opts = {}) {
   return `window.supabase = { createClient() {
     const DYN = ${opts.dynamic ? 'true' : 'false'};
-    const user = { id: "user-1", email: "owner@example.test" };
+    const user = { id: "user-1", email: "owner@example.test", identities: [{ provider: "email", identity_data: { email: "owner@example.test" } }] };
+    const listeners = [];
+    window.__otp = [];
     const rows = ${JSON.stringify(rows)};
     function builder(table) {
       let one = false;
@@ -48,7 +50,9 @@ function fakeSupabase(rows, opts = {}) {
     }
     return { from: builder, rpc: async () => ({ data: null, error: null }),
       auth: { getUser: async () => ({ data: { user } }), getSession: async () => ({ data: { session: { access_token: ${JSON.stringify(opts.token || 't')} } } }),
-        onAuthStateChange() { return { data: { subscription: { unsubscribe() {} } } }; }, signOut: async () => ({}) } };
+        onAuthStateChange(cb) { listeners.push(cb); return { data: { subscription: { unsubscribe() {} } } }; }, signOut: async () => ({}),
+        signInWithOtp: async ({ email }) => { window.__otp.push('send:' + email); return { error: null }; },
+        verifyOtp: async ({ email }) => { window.__otp.push('verify:' + email); setTimeout(() => listeners.forEach((cb) => cb('SIGNED_IN', { user })), 0); return { error: null }; } } };
   } };`;
 }
 // 最新版（ETI v2）の記録は正本エンジンで計算した回答・結果から作る
@@ -152,7 +156,7 @@ async function open(w, opts = {}) {
         const n = w.recoverable || 0;
         w.recoverable = 0;
         if (n && w.afterRecover) Object.assign(w, w.afterRecover);
-        return send(200, { claimed: n, skipped: 0 });
+        return send(200, { claimed: n, skipped: w.recoverMixed || 0, mixed: w.recoverMixed || 0 });
       }
       if (op === 'guest-claim') {
         if (w.guest.claimError) return send(403, { error: w.guest.claimError });
@@ -605,6 +609,62 @@ test('引き継げない（購入時と別のメールのアカウント）：�
   assert.equal(await p.locator('#mpClaimBtn').count(), 0);
   assert.equal(w.claimed, undefined);
   await p.__ctx.close();
+});
+
+test('購入時メールでの確認（#recover）：いまのメールにはコードを送らない。コードで確認した後は、同じ入力の画面に戻さず、確認できたこと・ログイン中のアカウント・見つからなかったことと次の一手を出す', { skip: skip() }, async () => {
+  const w = world({ rows: [], calls: [], guest: { purchases: [] } });
+  const p = await open(w, { query: '#recover', empty: true });
+  await p.waitForSelector('#mpRecoverEmail');
+  assert.match(await p.locator('#mpClaimBox').innerText(), /ログイン中のアカウント：メール（ow\*\*\*@example\.test）/);
+  assert.doesNotMatch(await p.locator('#mpClaimBox').innerText(), /owner@example/, 'メールアドレスをそのまま出さない');
+  assert.match(await p.locator('#mpClaimBox').innerText(), /ログインが切り替わり/);
+  await p.fill('#mpRecoverEmail', 'Owner@example.test');
+  await p.click('#mpRecoverSend');
+  await p.waitForFunction(() => /いまログイン中のアカウントのメールアドレスです/.test(document.getElementById('mpRecoverMsg').textContent));
+  assert.deepEqual(await p.evaluate(() => window.__otp), [], 'いまのメールにはコードを送らない');
+  await p.fill('#mpRecoverEmail', 'buyer@example.test');
+  await p.click('#mpRecoverSend');
+  await p.waitForSelector('#mpRecoverOtp', { state: 'visible' });
+  await p.fill('#mpRecoverOtp', '123456');
+  await p.click('#mpRecoverVerify');
+  await p.waitForFunction(() => /メールアドレスの確認が完了しました/.test(document.body.innerText));
+  const text = await p.locator('#mpClaimBox').innerText();
+  assert.match(text, /このメールアドレスで支払われた、引き継げる購入は見つかりませんでした/);
+  assert.equal(await p.locator('#mpRecoverEmail').count(), 0, '同じ入力の画面に戻さない');
+  await p.waitForTimeout(1800); // 描き直しが重なっても、結果の画面のまま
+  assert.match(await p.locator('#mpClaimBox').innerText(), /メールアドレスの確認が完了しました/);
+  await p.click('[data-mp-recover-again]');
+  await p.waitForSelector('#mpRecoverEmail');
+  await p.click('[data-mp-recover-done]');
+  await p.waitForFunction(() => location.hash === '' && !document.getElementById('mpRecoverEmail'));
+  assert.deepEqual(p.__errors, []);
+  await p.__ctx.close();
+});
+
+test('購入時メールでの確認（#recover）：複数のメールで支払われた記録は「自動では引き継げない」と案内する（見つからなかったとは言わない）', { skip: skip() }, async () => {
+  const w = world({ rows: [], calls: [], guest: { purchases: [] }, recoverMixed: 1 });
+  const p = await open(w, { query: '#recover', empty: true });
+  await p.waitForSelector('#mpRecoverEmail');
+  const text = await p.locator('#mpClaimBox').innerText();
+  assert.match(text, /複数のメールアドレスで支払われているため、自動ではマイページに引き継げません/);
+  assert.doesNotMatch(text, /見つかりませんでした/);
+  await p.__ctx.close();
+});
+
+test('引き継げなかった理由ごとの次の一手：複数のメールの購入は問い合わせ先、手続き中は「もう一度確認する」（購入時メールへの行き来にしない）', { skip: skip() }, async () => {
+  for (const [code, re, recoverLink, retry] of [['claim_mixed_email', /複数のメールアドレス/, 0, 0], ['checkout_in_progress', /決済の手続き/, 0, 1], ['claim_conflict', /別のアカウントに引き継ぎ済み/, 0, 0], ['email_otp_required', /6桁のコード/, 1, 0]]) {
+    const w = world({
+      rows: [B.row], calls: [], records: { 'sess-B': rec({ completeOffer: 'direct_complete' }) },
+      guest: { claimError: code, purchases: [{ ref: 'a1b2c3d4e5f6a7b8c9d0', analysis: 'active', complete: null, report: null, pending: false, claimed: false, canClaim: true, canUpgrade: true }] },
+    });
+    const p = await open(w);
+    await p.waitForSelector('#mpClaimBox');
+    await p.waitForFunction((r) => new RegExp(r).test(document.getElementById('mpClaimBox').innerText), re.source);
+    assert.equal(await p.locator('#mpClaimBox a[href="/mypage.html#recover"]').count(), recoverLink, code);
+    assert.equal(await p.locator('#mpClaimBox [data-mp-claim-retry]').count(), retry, code);
+    assert.match(await p.locator('#mpClaimBox').innerText(), /ログイン中のアカウント/, code);
+    await p.__ctx.close();
+  }
 });
 
 // 総当たり：サーバーが返す記録の状態ごとに、マイページの記録の導線が正しいか（購入済みに購入を求めない・未購入は買える）

@@ -131,8 +131,7 @@ test('完了ページ（C7）：Stripe から「戻る」・タブ復帰・移�
     const statusCalls = p.__calls.filter((c) => c.op === 'guest-status').length;
     await p.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })));
     // 戻る操作で復元された：購入の欄を描き直す（確かめ直してから、また押せる）
-    await p.waitForFunction(() => true);
-    for (let i = 0; i < 100 && p.__calls.filter((c) => c.op === 'guest-status').length === statusCalls; i++) await new Promise((r) => setTimeout(r, 30));
+      for (let i = 0; i < 100 && p.__calls.filter((c) => c.op === 'guest-status').length === statusCalls; i++) await new Promise((r) => setTimeout(r, 30));
     await p.waitForFunction((l) => { const b = document.querySelector('#lockUnlockAllBtn'); return !b.disabled && b.textContent.trim() === l; }, label);
     assert.equal((await btn.innerText()).trim(), label, String(width));
     assert.equal(await btn.isDisabled(), false);
@@ -342,12 +341,18 @@ test('購入完了ページ：生成の最終の失敗は回り続けず「作�
 });
 
 test('購入完了ページ：この端末に購入が無い時は、同じ端末で開く案内と購入時メールでの引き継ぎ（マイページ）', { skip: skip() }, async () => {
-  const p = await page('/purchase-complete?status=canceled', { api: { 'guest-status': [200, { salesOpen: true, purchases: [] }] } });
-  await p.waitForFunction(() => /お手続きを中止しました/.test(document.body.innerText));
-  assert.match(await p.locator('main').innerText(), /購入したときと同じ端末・ブラウザで開いてください/);
+  const p = await page('/purchase-complete', { api: { 'guest-status': [200, { salesOpen: true, purchases: [] }] } });
+  await p.waitForFunction(() => /購入したときと同じ端末・ブラウザで開いてください/.test(document.body.innerText));
   assert.equal(await p.locator('a[href="/mypage.html#recover"]').count(), 1);
-  assert.equal(new URL(p.url()).search, '', '戻り先の印を URL から消す');
   await p.__ctx.close();
+  // 中止して戻った（購入なし）：何も買っていないため、引き継ぎの案内は出さない
+  const q = await page('/purchase-complete?status=canceled', { api: { 'guest-status': [200, { salesOpen: true, purchases: [] }] } });
+  await q.waitForFunction(() => /お手続きを中止しました/.test(document.body.innerText));
+  await new Promise((r) => setTimeout(r, 400));
+  assert.doesNotMatch(await q.locator('main').innerText(), /購入したときと同じ端末|マイページで購入を引き継ぐ/);
+  assert.equal(await q.locator('a[href="/mypage.html#recover"]').count(), 0);
+  assert.equal(new URL(q.url()).search, '', '戻り先の印を URL から消す');
+  await q.__ctx.close();
 });
 
 test('解析レポートの下部からいつでもマイページへ引き継げる：この端末の購入は「この購入をマイページに引き継ぐ」、確かめられない時も購入時のメールアドレスで登録へ。購入時メールで引き継がれると明示', { skip: skip() }, async () => {
@@ -437,7 +442,9 @@ test('購入完了ページ：このブラウザに複数の購入がある時�
 test('購入完了ページ（Stripe で戻った ?status=canceled）：未払いの決済を閉じてから表示・URL から印を消す（C3）', { skip: skip() }, async () => {
   const p = await page('/purchase-complete?status=canceled', { api: {
     'guest-cancel': [200, { closed: 1, paid: 0 }], 'guest-status': [200, { salesOpen: true, purchases: [] }] } });
-  await p.waitForFunction(() => /ご購入を確認できませんでした/.test(document.body.innerText));
+  await p.waitForFunction(() => /お手続きを中止しました/.test(document.body.innerText));
+  await p.waitForFunction(() => true);
+  for (let i = 0; i < 40 && p.__calls.filter((c) => c.op === 'guest-status').length === 0; i++) await new Promise((r) => setTimeout(r, 100));
   const ops = p.__calls.map((c) => c.op);
   assert.deepEqual(ops.slice(0, 2), ['guest-cancel', 'guest-status']);
   assert.match(await p.locator('#pcTitle').innerText(), /中止/);

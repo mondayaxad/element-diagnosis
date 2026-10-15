@@ -2830,7 +2830,15 @@ function renderResult(root) {
       recordCard.setAttribute('data-state', state);
       recordCard.innerHTML = html;
       var btn = recordCard.querySelector('#recordSaveBtn');
-      if (btn) btn.onclick = function () { onRecordSaveClick(state); };
+      if (btn) btn.onclick = async function () {
+        // ログインが切れていたら、Google へ直行せず、ログイン方法の選択（Google・X・メール）へ戻す
+        if (state === 'error') {
+          var signedIn = true;
+          try { var sess = await supabaseClient.auth.getSession(); signedIn = !!(sess && sess.data && sess.data.session); } catch (e) { signedIn = true; }
+          if (!signedIn) { renderRecordCard('signed_out'); return; }
+        }
+        onRecordSaveClick(state);
+      };
       var recheck = recordCard.querySelector('#recordRecheckBtn');
       if (recheck) recheck.onclick = function () { recheck.disabled = true; decideRecordState(); };
       var authBox = recordCard.querySelector('#recordAuth');
@@ -2858,7 +2866,9 @@ function renderResult(root) {
 
     // X ログイン：Google のときに保存関数が行うのと同じ pending 退避（既存の関数をそのまま使う）をしてから
     // X へ遷移する。復帰先は /mypage.html で、保存は既存の onAuthStateChange が行う。
-    var onRecordSaveWithX = function () {
+    var onRecordSaveWithX = async function () {
+      // X が使えない時は、保存待ち・戻り先の印を残さずに止める（印だけ残ると、後の別のログインで古い結果ページへ戻される）
+      if (!(await authEnsureProvider('x'))) return { error: AUTH_PROVIDER_DISABLED_ERROR };
       // 認証後は一度 /mypage.html へ戻り、そこからこの結果ページの保存カードへ戻る（diagnosis-save.js）
       rememberSaveReturn(buildResultUrl(shortCode, diagnosisVersion));
       if (isV2Record) {
@@ -3131,7 +3141,7 @@ function initGuestPurchase(root, code, refs, opts) {
     G.checkout('analysis', code, null, 'result_lock').then(function (r) {
       if (r.ok) { EdNavBusy.handoff(btn); return; }
       EdNavBusy.release(btn);
-      if (lockMsg) lockMsg.textContent = G.errorText(r.error);
+      if (lockMsg) lockMsg.innerHTML = G.errorHtml(r.error);
       edRefreshAfter(r.error);
     });
   }
@@ -3253,7 +3263,7 @@ function initGuestPurchase(root, code, refs, opts) {
         G.checkout(offer, code, picked.value, 'result_complete').then(function (res) {
           if (res.ok) { EdNavBusy.handoff(btn); return; }
           EdNavBusy.release(btn);
-          if (msg) msg.textContent = G.errorText(res.error);
+          if (msg) msg.innerHTML = G.errorHtml(res.error);
           edRefreshAfter(res.error);
         });
       };

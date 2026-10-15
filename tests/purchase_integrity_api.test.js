@@ -470,7 +470,7 @@ test('D2・D3：Google 等でも同じ確認済みメールなら引き継げる
   const otp = `${b({ alg: 'HS256' })}.${b({ sub: 'x', amr: [{ method: 'otp', timestamp: nowSec - 20 }] })}.sig`;
   const owner = await ctx.db.user({ email: 'owner@example.test', token: otp });
   const r = await ctx.op('guest-recover', {}, { token: otp });
-  assert.deepEqual([r.code, r.body], [200, { claimed: 1, skipped: 0 }]);
+  assert.deepEqual([r.code, r.body], [200, { claimed: 1, skipped: 0, mixed: 0 }]);
   // 支払済みの記録は本人へ（決済待ちの ¥3,000 は新しい記録で、まだ支払っていないため引き継がない）
   const paidSids = new Set((await ctx.rows('complete_orders')).filter((o) => o.status === 'paid').map((o) => o.diagnosis_session_id));
   assert.ok((await ctx.rows('diagnosis_sessions')).filter((x) => paidSids.has(x.id)).every((x) => x.user_id === owner));
@@ -1435,29 +1435,35 @@ test('総当たり：ログイン中に結果ページから買う（ゲスト�
   await ctx.db.close();
 });
 
-test('総当たり：¥1,000 と追加 ¥2,000 を別のメールで払った：どちらかのメールのアカウントへ引き継げる（この端末・購入時メールの確認とも）。どちらでもないメールには移らない', { skip }, async () => {
+test('総当たり：¥1,000 と追加 ¥2,000 を別のメールで払った（固定の前の記録）：どちらのメールのアカウントへも自動では移さない（この端末・購入時メールの確認とも。complete_12）。購入した端末では読める', { skip }, async () => {
   for (const method of ['cookie', 'email_otp']) {
-    const ctx = await setup();
-    ctx.cookie = '';
-    const a = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_A });
-    ctx.stripe.pay(ctx.csIdOf(a.body.checkoutUrl), { customer_details: { email: 'first@example.test' } });
-    await ctx.op('guest-status', {});
-    const u = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_PACE_01' });
-    ctx.stripe.pay(ctx.csIdOf(u.body.checkoutUrl), { customer_details: { email: 'second@example.test' } });
-    await ctx.op('guest-status', {});
-    const ref = (await ctx.op('guest-status', {})).body.purchases[0].ref;
-    // どちらでもないメール：移らない
-    const stranger = `tok-${crypto.randomBytes(6).toString('hex')}`;
-    await ctx.db.user({ email: 'stranger@example.test', token: stranger });
-    assert.deepEqual((await ctx.op('guest-claim', { ref }, { token: stranger })).body, { error: 'claim_email_mismatch' });
-    // 2つ目の支払いのメールのアカウント
-    const token = method === 'cookie' ? `tok-${crypto.randomBytes(6).toString('hex')}` : otpToken();
-    const userId = await ctx.db.user({ email: 'second@example.test', token });
-    if (method === 'cookie') assert.equal((await ctx.op('guest-claim', { ref }, { token })).code, 200);
-    else assert.equal((await ctx.op('guest-recover', {}, { token, cookie: '' })).body.claimed, 1);
-    const rights = (await ctx.rows('record_entitlements')).filter((e) => e.user_id === userId).map((e) => `${e.right_type}:${e.status}`).sort();
-    assert.deepEqual(rights, ['analysis:active', 'complete:active'], method);
-    await ctx.db.close();
+    for (const who of ['first@example.test', 'second@example.test', 'stranger@example.test']) {
+      const ctx = await setup();
+      ctx.cookie = '';
+      const a = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_A });
+      ctx.stripe.pay(ctx.csIdOf(a.body.checkoutUrl), { customer_details: { email: 'first@example.test' } });
+      await ctx.op('guest-status', {});
+      const u = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_PACE_01' });
+      // ログインなしの ¥2,000 は、決済画面のメールを ¥1,000 のメールに固定する
+      assert.equal(ctx.stripe.st.lastCreate.params.customer_email, 'first@example.test');
+      ctx.stripe.pay(ctx.csIdOf(u.body.checkoutUrl), { customer_details: { email: 'second@example.test' } });
+      await ctx.op('guest-status', {});
+      const ref = (await ctx.op('guest-status', {})).body.purchases[0].ref;
+      const token = method === 'cookie' ? `tok-${crypto.randomBytes(6).toString('hex')}` : otpToken();
+      await ctx.db.user({ email: who, token });
+      if (method === 'cookie') {
+        const r = await ctx.op('guest-claim', { ref }, { token });
+        // どのメールのアカウントでも「複数のメールで支払われた記録」と案内する（移らない）
+        assert.deepEqual(r.body, { error: 'claim_mixed_email' }, `${method} ${who}`);
+      } else {
+        const r = await ctx.op('guest-recover', {}, { token, cookie: '' });
+        assert.equal(r.body.claimed, 0, `${method} ${who}`);
+        assert.equal(r.body.mixed, who === 'stranger@example.test' ? 0 : 1, `${method} ${who}`);
+      }
+      assert.ok((await ctx.rows('record_entitlements')).every((e) => e.user_id === null), `${method} ${who}：移っていない`);
+      assert.equal((await ctx.op('guest-report', { ref })).code, 200, '購入した端末では読める');
+      await ctx.db.close();
+    }
   }
 });
 
@@ -2071,13 +2077,13 @@ test('Cookie の無い端末：ゲストで ¥1,000 → ¥2,000 を払い、購�
   // 別のメールのアカウントには移らない
   const other = `tok-${crypto.randomBytes(6).toString('hex')}`;
   await ctx.db.user({ email: 'other@example.test', token: other });
-  assert.deepEqual((await ctx.op('guest-recover', {}, { token: other, cookie: '' })).body, { claimed: 0, skipped: 0 });
+  assert.deepEqual((await ctx.op('guest-recover', {}, { token: other, cookie: '' })).body, { claimed: 0, skipped: 0, mixed: 0 });
   assert.equal((await ctx.op('guest-recover', {}, { token, cookie: '' })).body.claimed, 1);
   const rights = (await ctx.rows('record_entitlements')).filter((e) => e.user_id === userId).map((e) => `${e.right_type}:${e.status}`).sort();
   assert.deepEqual(rights, ['analysis:active', 'complete:active']);
   const recs = Object.values((await ctx.entitlements(token)).body.records);
   assert.equal(recs.length, 1);
   assert.deepEqual([recs[0].analysisAccess, recs[0].completeEntitlement], [true, 'active']);
-  assert.deepEqual((await ctx.op('guest-recover', {}, { token, cookie: '' })).body, { claimed: 0, skipped: 0 }, '引き継いだ後は 0（何度呼んでも同じ）');
+  assert.deepEqual((await ctx.op('guest-recover', {}, { token, cookie: '' })).body, { claimed: 0, skipped: 0, mixed: 0 }, '引き継いだ後は 0（何度呼んでも同じ）');
   await ctx.db.close();
 });
