@@ -2059,3 +2059,29 @@ test('Cookie の上限：引き継ぎ済みの記録の印は、決済中の注�
   assert.deepEqual([again.code, again.body.error], [409, 'claimed']);
   await ctx.db.close();
 });
+
+test('Cookie の無い端末：ゲストで ¥1,000 → ¥2,000 を払い、購入時メールの6桁コードで新しくログイン → 引き継げる購入の数が分かり、引き継ぐと両方が購入済み', { skip }, async () => {
+  const ctx = await setup();
+  ctx.cookie = '';
+  await guestBuy(ctx, { offer: 'analysis', code: CODE_A }, 'Buyer@Example.test');
+  await guestBuy(ctx, { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_PACE_01' }, 'buyer@example.test');
+  // 別のブラウザ（Cookie なし）。購入時メール（大文字小文字の違いは同じ）で、6桁コードでログインした新しいアカウント
+  const token = otpToken();
+  const userId = await ctx.db.user({ email: 'buyer@example.test', token });
+  const check = await ctx.op('guest-recover-check', {}, { token, cookie: '' });
+  assert.deepEqual([check.code, check.body], [200, { available: 1 }]);
+  // 別のメールのアカウントには、数も出さない
+  const other = `tok-${crypto.randomBytes(6).toString('hex')}`;
+  await ctx.db.user({ email: 'other@example.test', token: other });
+  assert.deepEqual((await ctx.op('guest-recover-check', {}, { token: other, cookie: '' })).body, { available: 0 });
+  // 調べるだけでは移らない
+  assert.equal((await ctx.rows('record_entitlements')).filter((e) => e.user_id === userId).length, 0);
+  assert.equal((await ctx.op('guest-recover', {}, { token, cookie: '' })).body.claimed, 1);
+  const rights = (await ctx.rows('record_entitlements')).filter((e) => e.user_id === userId).map((e) => `${e.right_type}:${e.status}`).sort();
+  assert.deepEqual(rights, ['analysis:active', 'complete:active']);
+  const recs = Object.values((await ctx.entitlements(token)).body.records);
+  assert.equal(recs.length, 1);
+  assert.deepEqual([recs[0].analysisAccess, recs[0].completeEntitlement], [true, 'active']);
+  assert.deepEqual((await ctx.op('guest-recover-check', {}, { token, cookie: '' })).body, { available: 0 }, '引き継いだ後は 0');
+  await ctx.db.close();
+});

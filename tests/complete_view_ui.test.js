@@ -24,8 +24,10 @@ function publicConfigJs(appEnv, extra) {
     appEnv, supabaseUrl: PREVIEW_ENV.SUPABASE_URL, supabaseAnonKey: PREVIEW_ENV.SUPABASE_ANON_KEY, projectRef: PREVIEW_REF, ...(extra || {}),
   })});`;
 }
-function fakeSupabase(rows) {
+// opts.token：ログインのアクセストークン（メール OTP の時刻 amr を持つ JWT）／opts.dynamic：記録をテストの状態（/__fake-rows）から読む
+function fakeSupabase(rows, opts = {}) {
   return `window.supabase = { createClient() {
+    const DYN = ${opts.dynamic ? 'true' : 'false'};
     const user = { id: "user-1", email: "owner@example.test" };
     const rows = ${JSON.stringify(rows)};
     function builder(table) {
@@ -33,6 +35,7 @@ function fakeSupabase(rows) {
       const q = new Proxy({}, { get(_t, k) {
         if (k === 'then') return (res, rej) => {
           let out;
+          if (table === 'diagnosis_sessions' && DYN) return fetch('/__fake-rows').then((x) => x.json()).then((rs) => ({ data: one ? (rs[0] || null) : rs, error: null })).then(res, rej);
           if (table === 'diagnosis_sessions') out = { data: one ? (rows[0] || null) : rows, error: null };
           else if (table === 'profiles') out = { data: { onboarding_status: 'completed', newsletter_sync_status: 'synced', newsletter_sync_attempts: 1, newsletter_sync_attempted_at: null }, error: null };
           else out = { data: one ? null : [], error: null };
@@ -44,7 +47,7 @@ function fakeSupabase(rows) {
       return q;
     }
     return { from: builder, rpc: async () => ({ data: null, error: null }),
-      auth: { getUser: async () => ({ data: { user } }), getSession: async () => ({ data: { session: { access_token: "t" } } }),
+      auth: { getUser: async () => ({ data: { user } }), getSession: async () => ({ data: { session: { access_token: ${JSON.stringify(opts.token || 't')} } } }),
         onAuthStateChange() { return { data: { subscription: { unsubscribe() {} } } }; }, signOut: async () => ({}) } };
   } };`;
 }
@@ -131,7 +134,8 @@ async function open(w, opts = {}) {
     await p.route(/\/complete-analysis\.js(\?.*)?$/, (r) => r.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(path.join(ROOT, 'complete-analysis.js'), 'utf8')
       .replace('var CA_COMPLETE_API_READY = false;', 'var CA_COMPLETE_API_READY = true;').replace('var CA_COMPLETE_SALES_OPEN = false;', 'var CA_COMPLETE_SALES_OPEN = true;') }));
   }
-  await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: fakeSupabase(w.rows) }));
+  await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: fakeSupabase(w.rows, { token: w.token, dynamic: !!w.dynamicRows }) }));
+  await p.route('**/__fake-rows', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify(w.rows) }));
   await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: publicConfigJs(w.appEnv, opts.publicSales ? { completeSalesOpen: true, completeApiReady: true } : null) }));
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
   await p.route(/cdnjs\.cloudflare\.com|googletagmanager/, (r) => r.fulfill({ contentType: 'application/javascript', body: '' }));
@@ -142,6 +146,14 @@ async function open(w, opts = {}) {
       w.calls.push({ op, at: w.calls.length });
       const send = (status, json) => r.fulfill({ status, contentType: 'application/json', body: JSON.stringify(json) });
       if (op === 'guest-status') return send(200, { salesOpen: true, purchases: w.claimed ? [] : w.guest.purchases });
+      // Cookie の無い端末：購入時メールでの引き継ぎ（guest-recover）と、引き継げる購入の数（guest-recover-check）
+      if (op === 'guest-recover') {
+        const n = w.recoverable || 0;
+        w.recoverable = 0;
+        if (n && w.afterRecover) Object.assign(w, w.afterRecover);
+        return send(200, { claimed: n, skipped: 0 });
+      }
+      if (op === 'guest-recover-check') return send(200, { available: w.recoverable || 0 });
       if (op === 'guest-claim') {
         if (w.guest.claimError) return send(403, { error: w.guest.claimError });
         w.claimed = true;
@@ -182,7 +194,7 @@ async function open(w, opts = {}) {
     return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ viewUrl: `/api/complete-status?view=${TOKEN}`, expiresIn: 300 }) });
   });
   await p.goto(base + '/mypage.html' + query);
-  await p.waitForSelector('.mp-latest', { state: 'attached' });
+  await p.waitForSelector(opts.empty ? '.empty' : '.mp-latest', { state: 'attached' });
   await p.evaluate(() => document.querySelectorAll('details.mp-latest-fold, details.mp-rec').forEach((d) => { d.open = true; }));
   p.__errors = errors; p.__console = consoleLines; p.__ctx = ctx;
   return p;
@@ -641,5 +653,44 @@ test('総当たり（マイページ）：未購入／解析レポートだけ�
   assert.doesNotMatch(all, /¥1,000|¥2,000|¥3,000/);
   assert.equal(await p.locator('[data-rec-actions="sess-B"]').count(), 0, '重複の記録は出さない');
   assert.ok(await p.locator('[data-rec-actions="sess-B2"]').count() >= 1);
+  await p.__ctx.close();
+});
+
+// ================= Cookie の無い端末：購入時メールの6桁コードでログインした直後は、マイページを開くだけで引き継ぐ
+const jwtWith = (amr) => ['eyJhbGciOiJIUzI1NiJ9', Buffer.from(JSON.stringify({ sub: 'user-1', amr })).toString('base64url'), 'sig'].join('.');
+const nowSec = () => Math.floor(Date.now() / 1000);
+
+test('Cookie の無い端末：購入時メールの6桁コードでログイン直後（10分以内）は、開くだけで引き継ぎ、記録を描く前に解析レポート・完全解析を購入済みで表示（1回だけ）', { skip: skip() }, async () => {
+  const w = world({ rows: [], dynamicRows: true, calls: [], token: jwtWith([{ method: 'otp', timestamp: nowSec() - 30 }]),
+    guest: { purchases: [] }, recoverable: 1, records: {},
+    afterRecover: { rows: [B.row], purchased: { [`ETI-2.0:${B.code}`]: true }, records: { 'sess-B': purchased({ analysisAccess: true, analysisPurchased: true }) } } });
+  const p = await open(w);
+  await p.waitForFunction(() => /購入時のメールアドレスで確認した購入（1件）を、マイページに引き継ぎました/.test(document.body.innerText));
+  const text = await p.locator('#root').innerText();
+  assert.doesNotMatch(text, /まだ保存された診断記録がありません/);
+  assert.match(text, /完全解析を見る/);
+  assert.doesNotMatch(text, /¥1,000|¥3,000|追加 ?¥2,000/);
+  const recAt = w.calls.find((c) => c.op === 'guest-recover').at;
+  const entAt = w.calls.find((c) => c.op === 'my-entitlements').at;
+  assert.ok(recAt < entAt, '購入状態を読む前に引き継ぐ');
+  assert.equal(w.calls.filter((c) => c.op === 'guest-recover').length, 1);
+  assert.deepEqual(p.__errors, []);
+  await p.__ctx.close();
+});
+
+test('Cookie の無い端末：ログインから10分を過ぎた・Google 等のログインでは自動で移さず、そのメールの購入がある時だけ6桁コードでの確認を案内（記録0件でも）', { skip: skip() }, async () => {
+  for (const amr of [[{ method: 'otp', timestamp: nowSec() - 3600 }], [{ method: 'oauth', timestamp: nowSec() - 10 }]]) {
+    const w = world({ rows: [], calls: [], token: jwtWith(amr), guest: { purchases: [] }, recoverable: 1, records: {} });
+    const p = await open(w, { empty: true });
+    await p.waitForSelector('#mpClaimBox a[href="/mypage.html#recover"]');
+    assert.match(await p.locator('#mpClaimBox').innerText(), /引き継ぎ前の購入があります（1件）/);
+    assert.equal(w.calls.filter((c) => c.op === 'guest-recover').length, 0, '自動では移さない');
+    await p.__ctx.close();
+  }
+  // そのメールの購入が無い：案内を出さない
+  const w = world({ rows: [], calls: [], token: jwtWith([{ method: 'oauth', timestamp: nowSec() - 10 }]), guest: { purchases: [] }, recoverable: 0, records: {} });
+  const p = await open(w, { empty: true });
+  await p.waitForFunction(() => /まだ保存された診断記録がありません/.test(document.body.innerText));
+  assert.equal(await p.locator('#mpClaimBox').count(), 0);
   await p.__ctx.close();
 });

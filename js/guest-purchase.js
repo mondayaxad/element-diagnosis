@@ -176,6 +176,10 @@
     }
     return results;
   }
+  async function recoverCheck(token) {
+    var r = await call('guest-recover-check', {}, { token: token });
+    return r.ok && r.body && Number.isInteger(r.body.available) ? r.body.available : 0;
+  }
   async function recover(token) {
     var r = await call('guest-recover', {}, { token: token });
     track(r.ok ? 'claim_success' : 'claim_failed', { method: 'email_otp', reason: r.ok ? null : (r.body && r.body.error) });
@@ -228,7 +232,7 @@
   global.EdGuestPurchase = {
     OFFERS: OFFERS, yen: yen, esc: esc, salesOpen: salesOpen, track: track,
     status: status, resultLink: resultLink, newResumeToken: newResumeToken, resultOpen: resultOpen, consumeCheckoutMark: consumeCheckoutMark, releaseIfReturned: releaseIfReturned, cancel: cancel, goals: goals, checkout: checkout, errorText: errorText, claimErrorText: claimErrorText,
-    startClaim: startClaim, takeClaimIntent: takeClaimIntent, claimAll: claimAll, recover: recover,
+    startClaim: startClaim, takeClaimIntent: takeClaimIntent, claimAll: claimAll, recover: recover, recoverCheck: recoverCheck,
     openAnalysis: openAnalysis, openComplete: openComplete, regenerate: regenerate, completeLabel: completeLabel,
   };
 })(typeof window !== 'undefined' ? window : this);

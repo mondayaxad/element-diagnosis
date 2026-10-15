@@ -3571,27 +3571,69 @@ function mpClaimBox(root, html) {
   return box;
 }
 // 記録を描く前の引き継ぎ（#recover の時は購入時メールでの確認へ回すため行わない）。
-//   null：引き継げる購入が無い・確かめられない／{ claimed, error }：引き継いだ件数と、引き継げなかった時の理由
+//   ①この端末の Cookie の購入（Cookie の秘密値＋確認済みメール＝購入時メール）
+//   ②Cookie の無い端末：購入時メールの6桁コードでログインした直後（10分以内）なら、そのメールで払った購入を自動で引き継ぐ
+//     （サーバーが購入時メールと照合する。開くだけで、解析レポート・完全解析を購入済みで表示する）
+//   ③それ以外のログイン（10分を過ぎた・Google 等）：そのメールで払った未引き継ぎの購入がある時だけ、6桁コードでの確認を案内する
+//   null：引き継げる購入が無い・確かめられない／{ claimed, error, recovered, recoverable }
+let mpAutoRecover = null; // { key, promise }：同じログインの再描画（SIGNED_IN と初期描画の重なり）で2回呼ばない
+function mpFreshEmailOtp(token) {
+  const a = mpJwtAmr(token).find((x) => x && x.method === 'otp' && Date.now() / 1000 - x.timestamp < 600);
+  return a ? String(a.timestamp) : null;
+}
 async function mpClaimBeforeRender() {
   if (typeof EdGuestPurchase === 'undefined' || location.hash === '#recover') return null;
   try {
     const G = EdGuestPurchase;
     const token = await mpAccessToken();
     if (!token) return null;
+    let out = null;
     const st = await G.status();
     const claimable = st.ok ? (st.body.purchases || []).filter((p) => p.canClaim) : [];
-    if (!claimable.length) return null;
-    G.takeClaimIntent(); // 「引き継ぐ」を押して来た印は使い終える
-    G.track('claim_start', { source: 'mypage_auto' });
-    const rs = await G.claimAll(token, claimable);
-    return { claimed: rs.filter((x) => x.ok).length, error: (rs.find((x) => !x.ok) || {}).error || null };
+    if (claimable.length) {
+      G.takeClaimIntent(); // 「引き継ぐ」を押して来た印は使い終える
+      G.track('claim_start', { source: 'mypage_auto' });
+      const rs = await G.claimAll(token, claimable);
+      out = { claimed: rs.filter((x) => x.ok).length, error: (rs.find((x) => !x.ok) || {}).error || null };
+    }
+    const otpAt = mpFreshEmailOtp(token);
+    if (otpAt) {
+      const key = `${mpJwtSub(token)}:${otpAt}`;
+      if (!mpAutoRecover || mpAutoRecover.key !== key) {
+        G.track('claim_start', { source: 'mypage_auto_recover' });
+        mpAutoRecover = { key, promise: G.recover(token) };
+      }
+      const r = await mpAutoRecover.promise;
+      const n = r && r.ok && r.body ? (r.body.claimed || 0) : 0;
+      if (n > 0) return Object.assign(out || { claimed: 0, error: null }, { recovered: n, error: out && out.claimed ? out.error : null });
+      return out;
+    }
+    if (!out || !out.claimed) {
+      const available = await G.recoverCheck(token);
+      if (available > 0) return Object.assign(out || { claimed: 0, error: null }, { recoverable: available });
+    }
+    return out;
   } catch (e) {
     return null;
   }
 }
+function mpJwtSub(token) {
+  try { return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).sub || ''; } catch (e) { return ''; }
+}
 function mpShowClaimOutcome(root, outcome) {
   if (!outcome || typeof EdGuestPurchase === 'undefined') return;
   const G = EdGuestPurchase;
+  if (outcome.recovered > 0) {
+    mpClaimBox(root, `<p>✓ 購入時のメールアドレスで確認した購入（${outcome.recovered}件）を、マイページに引き継ぎました。</p><p class="mp-claim-note">診断記録と購入済みのレポートを、いつでも見返せます。</p>`);
+    return;
+  }
+  if (outcome.recoverable > 0 && !(outcome.claimed > 0)) {
+    // このメールで払った、引き継ぎ前の購入がある（Cookie の無い端末・ログインから時間が経った・Google 等）：6桁コードで確認して引き継ぐ
+    mpClaimBox(root, `<p>このメールアドレスで購入した、マイページへの引き継ぎ前の購入があります（${outcome.recoverable}件）。</p>`
+      + '<p class="mp-claim-note">購入時のメールアドレスに届く6桁のコードで確認すると、マイページに引き継げます。</p>'
+      + '<p class="mp-claim-note"><a href="/mypage.html#recover" data-mp-recover-link>6桁のコードで確認して引き継ぐ</a></p>');
+    return;
+  }
   if (outcome.claimed > 0) {
     mpClaimBox(root, `<p>✓ この端末の購入（${outcome.claimed}件）をマイページに引き継ぎました。</p><p class="mp-claim-note">診断記録と購入済みのレポートを、いつでも見返せます。</p>`);
     return;
@@ -3686,6 +3728,8 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
   if (uid && uid === mpRenderedUserId && location.hash !== '#recover') return;
   init();
 });
+// 同じページの「#recover」へのリンク（購入時メールでの確認）：ページは読み込み直されないため、ここで確認の画面へ進める
+window.addEventListener('hashchange', () => { if (location.hash === '#recover') init(); });
 // 戻る操作で（bfcache から）表示された：開いたままのシート・止まったスクロールを残さない
 window.addEventListener('pageshow', (e) => {
   if (!e.persisted) return;
