@@ -150,7 +150,9 @@
     var o = opts || {};
     if (o.analysisKnown !== true) return makeState({ entitlementStatus: 'unknown', diagnosisSessionId: o.diagnosisSessionId });
     if (CA_COMPLETE_SALES_OPEN && !CA_COMPLETE_API_READY) return makeState({ entitlementStatus: 'unknown', diagnosisSessionId: o.diagnosisSessionId });
-    return makeState({ entitlementStatus: 'ok', analysisAccess: o.analysisAccess === true, diagnosisSessionId: o.diagnosisSessionId });
+    // 完全解析の権利（サーバーの /api/my-entitlements が本人の記録で確かめた値）があれば、その状態も持つ
+    return makeState({ entitlementStatus: 'ok', analysisAccess: o.analysisAccess === true, diagnosisSessionId: o.diagnosisSessionId,
+      completeAccess: o.completeAccess === true, completeStatus: o.completeAccess === true ? (o.completeStatus || 'generating') : 'none' });
   }
 
   // ---- mypage 右上の入口を出すか ----

@@ -690,3 +690,20 @@ test('引き継げる購入が無い・メールの無いログイン（X 等）
     await p.__ctx.close();
   }
 });
+
+test('完全解析を購入済みの記録：右上の入口は「完全解析を見る」、シートも購入済み（完全解析を見る）で表示し、押すと閲覧へ進む（未購入のように見せない）', { skip: skip() }, async () => {
+  const w = world({ rows: [B.row], purchased: { [`ETI-2.0:${B.code}`]: true }, records: { 'sess-B': purchased({ analysisAccess: true, analysisPurchased: true }) } });
+  const p = await open(w);
+  const trigger = p.locator('#mpUpgradeTrigger');
+  assert.equal((await trigger.innerText()).trim(), '完全解析を見る');
+  await trigger.click();
+  const body = p.locator('#mpUpgradeBody');
+  await body.locator('[data-session-id="sess-B"]').filter({ hasText: '完全解析を見る' }).first().waitFor();
+  const t = await body.innerText();
+  assert.match(t, /この記録の完全解析が保存されています/);
+  assert.doesNotMatch(t, /お申し込み済みです|構造と解釈まで観測されています|¥2,000|¥3,000/);
+  await body.locator('[data-session-id="sess-B"]').filter({ hasText: '完全解析を見る' }).first().click();
+  await p.waitForFunction(() => /COMPLETE VIEW/.test(document.body.innerText));
+  assert.ok(w.viewHits >= 1);
+  await p.__ctx.close();
+});

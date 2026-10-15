@@ -1966,7 +1966,10 @@ function mpRecordActionsHtml(r, source) {
   const items = [];
   if (r.purchased) {
     items.push(purchasedReportButton(r.session, 'mp-btn primary', '解析レポートを見る'));
-    if (caKey(r) === 'complete_ready') {
+    if (view) {
+      // 完全解析の権利が分かっている記録：閲覧・準備中・作り直しの表示（サーバーの状態）
+      items.push(pending);
+    } else if (caKey(r) === 'complete_ready') {
       items.push(`<button type="button" class="mp-btn" data-session-id="${encodeURIComponent(String((r.session && r.session.id) || ''))}" onclick="openPurchasedComplete(decodeURIComponent(this.dataset.sessionId), this)">完全解析を見る</button>`);
     } else if (guide) {
       // 解析購入済み・完全解析の権利なし（Preview）：購入案内（説明は常に表示、決済は状態で止める）。権利の確認が済むまでは決済を出さない
@@ -2378,8 +2381,15 @@ function caApplyStates(records) {
       // 表示の確認用に、既存の INSIGHT／LOCKED 表示も同じ fixture に揃える（権利は発行しない）
       if (st.entitlementStatus === 'ok') r.purchased = st.analysisAccess;
     } else {
-      // 解析レポートの購入状態（/api/my-entitlements）を確認できた記録だけ free／analysis。完全解析は販売前のため未購入で確定
-      st = CompleteAnalysis.realState({ analysisKnown: mpEntitlementOk, analysisAccess: r.purchased === true, diagnosisSessionId: id });
+      // 解析レポートの購入状態（/api/my-entitlements）を確認できた記録だけ free／analysis。
+      //   完全解析の権利（有効）があれば、生成の状態で complete_ready／complete_generating／complete_failed（右上の入口・シートも購入済みで表示）
+      const svc0 = caServerOf(r);
+      const cAct = svc0.lookup === 'ok' && svc0.complete && svc0.complete.completeEntitlement === 'active';
+      const rep = cAct ? svc0.complete.completeStatus : null;
+      const cStatus = rep === 'ready' ? 'ready'
+        : (rep === 'failed' && (svc0.complete.completeRegenerate === 'available' || svc0.complete.completeRegenerate === 'operator')) ? 'failed' : 'generating';
+      st = CompleteAnalysis.realState({ analysisKnown: mpEntitlementOk, analysisAccess: r.purchased === true || cAct, diagnosisSessionId: id,
+        completeAccess: cAct, completeStatus: cAct ? cStatus : 'none' });
     }
     // 不適格な記録（旧版など）は、Preview 指定があっても完全解析の状態・購入導線を成立させない。
     // サーバー（/api/my-entitlements v2）の判定がある記録は、それを正とする（RC1 の6つの版の完全一致）。
@@ -3332,6 +3342,7 @@ async function caRecheck(button) {
 
 // 完全解析を開く：対象記録の diagnosis_session_id だけを使う。
 // 将来API：POST /api/my-complete-report-link（本人所有・complete権・ready をサーバーで確認し、短命URLを返す）。未実装。
+// 右上のシート・記録の「完全解析を見る」：この記録の権利を確かめてから、記録の閲覧と同じ処理（/api/complete-status の閲覧）で開く
 async function openPurchasedComplete(diagnosisSessionId, button) {
   if (!diagnosisSessionId || !button) return;
   const old = button.parentElement && button.parentElement.querySelector('.ca-msg');
@@ -3355,25 +3366,7 @@ async function openPurchasedComplete(diagnosisSessionId, button) {
     say('Preview：完全解析の閲覧先はまだ接続していません（この記録だけが対象です）。');
     return;
   }
-  EdNavBusy.hold(button, '完全解析を準備中…');
-  try {
-    const { data: { session: authSession } } = await supabaseClient.auth.getSession();
-    const accessToken = authSession && authSession.access_token;
-    if (!accessToken) throw new Error('not_authenticated');
-    const response = await fetch('/api/my-complete-report-link', {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ diagnosisSessionId: String(diagnosisSessionId) }),
-    });
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok || !body.url) throw new Error(body.error || 'complete_link_failed');
-    navigateTo(body.url);
-    EdNavBusy.handoff(button);
-  } catch (err) {
-    console.error('complete report open failed:', err && err.message);
-    say('完全解析を開けませんでした。時間をおいて再度お試しください。');
-    EdNavBusy.release(button);
-  }
+  caViewOpen(String(diagnosisSessionId));
 }
 
 /* ============================================================
