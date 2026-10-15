@@ -130,6 +130,8 @@
   .ca-goal span span { display:block; font-size:11.5px; color:var(--ca-muted); line-height:1.7; margin-top:2px; }
   .ca-r-msg { margin-top:8px; font-size:12px; color:#e0a0a0; min-height:1em; }
   .ca-r-mypage { margin-top:14px; font-size:12px; }
+  .ca-r-inherit { margin-top:28px; padding-top:20px; border-top:1px solid rgba(255,255,255,.08); }
+  .ca-r-inherit .ca-r-note b { font-weight:600; }
   .ca-r-mypage a { color:#a89cc8; text-decoration:none; border-bottom:1px solid #3a3058; padding-bottom:1px; }
   .ca-r-sample { display:inline-block; margin-top:12px; font-size:12px; letter-spacing:0.06em; color:#8fb4dc; text-decoration:none; border-bottom:1px solid #2c3a55; padding-bottom:1px; }
   .cover-dots { position:relative; width:220px; height:220px; margin:0 auto 20px; }
@@ -1710,7 +1712,8 @@ function completeAnalysisReportHtml(pal, results, diagnosisVersion) {
         <div class="ca-eyebrow">BEYOND THE REPORT｜この先にあるもの</div>
         <p class="ca-lead">このレポートが描いたのは、いまのあなたの輪郭。<br>その奥にある三つの人物像を、46ページで読み解く。</p>
         ${reportLensListHtml()}
-        <div data-report-complete><p class="ca-r-note">購入状態を確認しています…</p></div>`;
+        <div data-report-complete><p class="ca-r-note">購入状態を確認しています…</p></div>
+        <div data-report-inherit></div>`;
   } else {
     body = `${head}
         ${lenses}
@@ -1758,16 +1761,26 @@ function initReportComplete(code, viewer, mypageComplete) {
   //   価格はマイページの有無で変えない。申込の時にもサーバーがもう一度確かめる
   var upPrice = G.yen(G.OFFERS.analysis_upgrade.price);
   var label = 'まだ見えていない輪郭を読む　追加' + upPrice;
-  // マイページに保存する（ログインすると、この記録と購入をいつでも見返せる）。この端末の購入なら引き継ぎ、無ければメールで確認して引き継ぐ
-  var mypageSave = '<p class="ca-r-mypage"><a href="/mypage.html" data-report-mypage-save>マイページに保存する（ログイン）</a></p>';
-  function bindMypageSave(mine) {
-    var a = box.querySelector('[data-report-mypage-save]');
-    if (!a) return;
-    a.addEventListener('click', function (e) {
-      e.preventDefault();
-      if (mine && mine.canClaim) G.startClaim('analysis_report');
-      else location.assign('/mypage.html#recover');
-    });
+  // マイページへの引き継ぎは、購入したレポートの下部の [data-report-inherit] にいつでも出す（renderReportInherit）
+  var mypageSave = '';
+  function bindMypageSave() {}
+  // 購入したレポートの下部：いつでもマイページへ引き継げる（ゲストの閲覧）。
+  //   この端末の購入（Cookie）なら「この購入をマイページに引き継ぐ」（ログインすると、この端末の購入を引き継ぐ）、
+  //   確かめられない時も、購入時のメールアドレスでマイページに登録（ログイン）すれば自動で引き継がれる
+  function renderReportInherit(mine, claimedThisResult) {
+    var el = document.querySelector('[data-report-inherit]');
+    if (!el || viewer !== 'guest') return;
+    if (!mine && claimedThisResult) { el.innerHTML = ''; return; } // 引き継ぎ済み（上の案内でマイページへ）
+    if (mine && mine.claimed) { el.innerHTML = '<div class="ca-r-inherit"><p class="ca-r-note">この記録の購入は、マイページに引き継ぎ済みです。</p><a class="ca-r-btn" href="/mypage.html">マイページで開く</a></div>'; return; }
+    var note = '<p class="ca-r-note"><b>購入時のメールアドレス</b>でマイページに登録（ログイン）すると、この記録と購入済みのレポートがマイページに引き継がれ、いつでも見返せます。'
+      + 'この端末でなくても、購入時のメールアドレスでログインすれば自動で引き継がれます。</p>';
+    var action = mine && mine.canClaim
+      ? '<button type="button" class="ca-r-btn" data-report-inherit-claim>この購入をマイページに引き継ぐ</button>'
+      : '<a class="ca-r-btn" href="/mypage.html" data-report-inherit-mypage>購入時のメールアドレスでマイページに登録する</a>';
+    el.innerHTML = '<div class="ca-r-inherit"><div class="ca-eyebrow">MY PAGE｜マイページに引き継ぐ</div>' + note + action
+      + '<p class="ca-r-mypage"><a href="/mypage.html#recover">別のメールアドレスでログインしている方は、購入時のメールアドレスで確認する</a></p></div>';
+    var b = el.querySelector('[data-report-inherit-claim]');
+    if (b) b.onclick = function () { b.disabled = true; G.startClaim('analysis_report'); };
   }
   function bindSample() {
     var a = box.querySelector('[data-ca-sample]');
@@ -1801,11 +1814,13 @@ function initReportComplete(code, viewer, mypageComplete) {
     if (!r || !r.ok) {
       // 状態の確認に失敗した（通信など）：この端末で購入が無いとは言わず、もう一度確かめられるようにする
       box.innerHTML = '<p class="ca-r-note">購入状態を確認できませんでした。</p><button type="button" class="ca-r-btn" data-report-retry>もう一度確認する</button>' + sample;
+      renderReportInherit(null, false);
       bindSample();
       box.querySelector('[data-report-retry]').onclick = function () { initReportComplete(code, viewer, mypageComplete); };
       return;
     }
     var list = (r && r.ok && r.body && r.body.purchases) || [];
+    renderReportInherit(list.filter(function (p) { return p.thisRecord; })[0] || null, !!r.body.claimedThisResult);
     if (!list.some(function (p) { return p.thisRecord; }) && r.body.claimedThisResult) {
       box.innerHTML = '<p class="ca-r-note">この記録の購入は、マイページに引き継ぎ済みです。完全解析のお申し込み・閲覧はマイページからどうぞ。</p><a class="ca-r-btn" href="/mypage.html">マイページで開く</a>';
       return;

@@ -148,12 +148,12 @@ async function open(w, opts = {}) {
       if (op === 'guest-status') return send(200, { salesOpen: true, purchases: w.claimed ? [] : w.guest.purchases });
       // Cookie の無い端末：購入時メールでの引き継ぎ（guest-recover）と、引き継げる購入の数（guest-recover-check）
       if (op === 'guest-recover') {
+        if (w.recoverError) return send(403, { error: w.recoverError });
         const n = w.recoverable || 0;
         w.recoverable = 0;
         if (n && w.afterRecover) Object.assign(w, w.afterRecover);
         return send(200, { claimed: n, skipped: 0 });
       }
-      if (op === 'guest-recover-check') return send(200, { available: w.recoverable || 0 });
       if (op === 'guest-claim') {
         if (w.guest.claimError) return send(403, { error: w.guest.claimError });
         w.claimed = true;
@@ -660,37 +660,33 @@ test('総当たり（マイページ）：未購入／解析レポートだけ�
 const jwtWith = (amr) => ['eyJhbGciOiJIUzI1NiJ9', Buffer.from(JSON.stringify({ sub: 'user-1', amr })).toString('base64url'), 'sig'].join('.');
 const nowSec = () => Math.floor(Date.now() / 1000);
 
-test('Cookie の無い端末：購入時メールの6桁コードでログイン直後（10分以内）は、開くだけで引き継ぎ、記録を描く前に解析レポート・完全解析を購入済みで表示（1回だけ）', { skip: skip() }, async () => {
-  const w = world({ rows: [], dynamicRows: true, calls: [], token: jwtWith([{ method: 'otp', timestamp: nowSec() - 30 }]),
-    guest: { purchases: [] }, recoverable: 1, records: {},
-    afterRecover: { rows: [B.row], purchased: { [`ETI-2.0:${B.code}`]: true }, records: { 'sess-B': purchased({ analysisAccess: true, analysisPurchased: true }) } } });
-  const p = await open(w);
-  await p.waitForFunction(() => /購入時のメールアドレスで確認した購入（1件）を、マイページに引き継ぎました/.test(document.body.innerText));
-  const text = await p.locator('#root').innerText();
-  assert.doesNotMatch(text, /まだ保存された診断記録がありません/);
-  assert.match(text, /完全解析を見る/);
-  assert.doesNotMatch(text, /¥1,000|¥3,000|追加 ?¥2,000/);
-  const recAt = w.calls.find((c) => c.op === 'guest-recover').at;
-  const entAt = w.calls.find((c) => c.op === 'my-entitlements').at;
-  assert.ok(recAt < entAt, '購入状態を読む前に引き継ぐ');
-  assert.equal(w.calls.filter((c) => c.op === 'guest-recover').length, 1);
-  assert.deepEqual(p.__errors, []);
-  await p.__ctx.close();
-});
-
-test('Cookie の無い端末：ログインから10分を過ぎた・Google 等のログインでは自動で移さず、そのメールの購入がある時だけ6桁コードでの確認を案内（記録0件でも）', { skip: skip() }, async () => {
-  for (const amr of [[{ method: 'otp', timestamp: nowSec() - 3600 }], [{ method: 'oauth', timestamp: nowSec() - 10 }]]) {
-    const w = world({ rows: [], calls: [], token: jwtWith(amr), guest: { purchases: [] }, recoverable: 1, records: {} });
-    const p = await open(w, { empty: true });
-    await p.waitForSelector('#mpClaimBox a[href="/mypage.html#recover"]');
-    assert.match(await p.locator('#mpClaimBox').innerText(), /引き継ぎ前の購入があります（1件）/);
-    assert.equal(w.calls.filter((c) => c.op === 'guest-recover').length, 0, '自動では移さない');
+test('Cookie の無い端末：購入時のメールアドレスでログイン（6桁コード・Google、時間が経っても）すると、マイページを開くだけで引き継ぎ、記録を描く前に購入済みで表示（1回だけ）', { skip: skip() }, async () => {
+  for (const amr of [[{ method: 'otp', timestamp: nowSec() - 30 }], [{ method: 'otp', timestamp: nowSec() - 86400 }], [{ method: 'oauth', timestamp: nowSec() - 10 }]]) {
+    const w = world({ rows: [], dynamicRows: true, calls: [], token: jwtWith(amr), guest: { purchases: [] }, recoverable: 1, records: {},
+      afterRecover: { rows: [B.row], purchased: { [`ETI-2.0:${B.code}`]: true }, records: { 'sess-B': purchased({ analysisAccess: true, analysisPurchased: true }) } } });
+    const p = await open(w);
+    await p.waitForFunction(() => /購入時のメールアドレスで確認した購入（1件）を、マイページに引き継ぎました/.test(document.body.innerText));
+    const text = await p.locator('#root').innerText();
+    assert.doesNotMatch(text, /まだ保存された診断記録がありません/);
+    assert.match(text, /完全解析を見る/);
+    assert.doesNotMatch(text, /¥1,000|¥3,000|追加 ?¥2,000/);
+    const recAt = w.calls.find((c) => c.op === 'guest-recover').at;
+    const entAt = w.calls.find((c) => c.op === 'my-entitlements').at;
+    assert.ok(recAt < entAt, '購入状態を読む前に引き継ぐ');
+    assert.equal(w.calls.filter((c) => c.op === 'guest-recover').length, 1);
+    assert.deepEqual(p.__errors, []);
     await p.__ctx.close();
   }
-  // そのメールの購入が無い：案内を出さない
-  const w = world({ rows: [], calls: [], token: jwtWith([{ method: 'oauth', timestamp: nowSec() - 10 }]), guest: { purchases: [] }, recoverable: 0, records: {} });
-  const p = await open(w, { empty: true });
-  await p.waitForFunction(() => /まだ保存された診断記録がありません/.test(document.body.innerText));
-  assert.equal(await p.locator('#mpClaimBox').count(), 0);
-  await p.__ctx.close();
+});
+
+test('引き継げる購入が無い・メールの無いログイン（X 等）：何も移さず、記録0件の画面に購入時メールでの引き継ぎの案内を出す', { skip: skip() }, async () => {
+  for (const over of [{ recoverable: 0 }, { recoverError: 'claim_email_required' }]) {
+    const w = world(Object.assign({ rows: [], calls: [], token: jwtWith([{ method: 'oauth', timestamp: nowSec() - 10 }]), guest: { purchases: [] }, records: {} }, over));
+    const p = await open(w, { empty: true });
+    await p.waitForFunction(() => /まだ保存された診断記録がありません/.test(document.body.innerText));
+    assert.match(await p.locator('[data-empty-purchase-note]').innerText(), /購入時のメールアドレスでログインすると、自動で引き継がれます/);
+    assert.equal(await p.locator('[data-empty-purchase-note] a[href="/mypage.html#recover"]').count(), 1);
+    assert.equal(await p.locator('#mpClaimBox').count(), 0);
+    await p.__ctx.close();
+  }
 });

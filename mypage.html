@@ -173,6 +173,8 @@
     font-family: inherit;
     white-space: nowrap;
   }
+  .gate-note { font-size: 12px; line-height: 1.8; color: var(--fg-dim); margin: 10px 0 0; }
+  .gate-note b { color: var(--fg); font-weight: 600; }
   .gate-msg {
     font-size: 11.5px;
     color: var(--accent);
@@ -1298,6 +1300,7 @@ function renderGate(root, message) {
     <div class="gate" id="historyGateArea">
       <p class="gate-title">マイページを作成・ログイン</p>
       <p>はじめての方は、Google・X・メールのいずれかで無料で作成できます。<br>以前に保存した方は、保存したときと同じ方法でログインしてください。</p>
+      <p class="gate-note" data-gate-purchase-note>ログインなしで購入した方は、<b>購入時のメールアドレス</b>で作成・ログインすると、購入した解析レポート・完全解析がマイページに自動で引き継がれます（購入した端末でなくても引き継げます）。</p>
       <div id="gateAuth"></div>
       <div class="gate-msg" id="gateMsg">${message || ''}</div>
     </div>
@@ -1344,6 +1347,7 @@ function renderEmpty(root, user) {
       まだ保存された診断記録がありません。<br>
       診断結果画面の「結果を保存」から記録できます。
       <p class="empty-hint">以前ほかの方法（Google・X・メール）で保存した記録は、そのときと同じ方法でログインすると表示されます。</p>
+      <p class="empty-hint" data-empty-purchase-note>ログインなしで購入した方：購入時のメールアドレスでログインすると、自動で引き継がれます。別のメールアドレスでログインしている時は、<a href="/mypage.html#recover">購入時のメールアドレスで確認して引き継ぐ</a>から引き継げます。</p>
     </div>
     ${user ? mpAccountHtml(user) : ''}
     ${caSheetShellHtml([])}
@@ -3554,9 +3558,6 @@ let mpGuestFlowBusy = false;
 async function mpAccessToken() {
   try { const { data } = await supabaseClient.auth.getSession(); return data && data.session ? data.session.access_token : null; } catch (e) { return null; }
 }
-function mpJwtAmr(token) {
-  try { return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).amr || []; } catch (e) { return []; }
-}
 function mpClaimBox(root, html) {
   let box = document.getElementById('mpClaimBox');
   if (!box) {
@@ -3572,15 +3573,11 @@ function mpClaimBox(root, html) {
 }
 // 記録を描く前の引き継ぎ（#recover の時は購入時メールでの確認へ回すため行わない）。
 //   ①この端末の Cookie の購入（Cookie の秘密値＋確認済みメール＝購入時メール）
-//   ②Cookie の無い端末：購入時メールの6桁コードでログインした直後（10分以内）なら、そのメールで払った購入を自動で引き継ぐ
-//     （サーバーが購入時メールと照合する。開くだけで、解析レポート・完全解析を購入済みで表示する）
-//   ③それ以外のログイン（10分を過ぎた・Google 等）：そのメールで払った未引き継ぎの購入がある時だけ、6桁コードでの確認を案内する
-//   null：引き継げる購入が無い・確かめられない／{ claimed, error, recovered, recoverable }
-let mpAutoRecover = null; // { key, promise }：同じログインの再描画（SIGNED_IN と初期描画の重なり）で2回呼ばない
-function mpFreshEmailOtp(token) {
-  const a = mpJwtAmr(token).find((x) => x && x.method === 'otp' && Date.now() / 1000 - x.timestamp < 600);
-  return a ? String(a.timestamp) : null;
-}
+//   ②購入時のメールアドレスでの引き継ぎ：ログイン中の確認済みメール（6桁コード・Google 等）で払った、未引き継ぎの購入を
+//     開くたびに自動で引き継ぐ（Cookie の無い別の端末・別のブラウザでも、購入時のメールで登録すれば開くだけで購入済みになる）。
+//     サーバーが購入時メールと照合する。メールの無いログイン（X 等）では移さない
+//   null：引き継げる購入が無い・確かめられない／{ claimed, error, recovered }
+let mpAutoRecover = null; // { key, promise }：同じ読み込み・同じ利用者の再描画（SIGNED_IN と初期描画の重なり）で2回呼ばない
 async function mpClaimBeforeRender() {
   if (typeof EdGuestPurchase === 'undefined' || location.hash === '#recover') return null;
   try {
@@ -3596,21 +3593,14 @@ async function mpClaimBeforeRender() {
       const rs = await G.claimAll(token, claimable);
       out = { claimed: rs.filter((x) => x.ok).length, error: (rs.find((x) => !x.ok) || {}).error || null };
     }
-    const otpAt = mpFreshEmailOtp(token);
-    if (otpAt) {
-      const key = `${mpJwtSub(token)}:${otpAt}`;
-      if (!mpAutoRecover || mpAutoRecover.key !== key) {
-        G.track('claim_start', { source: 'mypage_auto_recover' });
-        mpAutoRecover = { key, promise: G.recover(token) };
-      }
-      const r = await mpAutoRecover.promise;
-      const n = r && r.ok && r.body ? (r.body.claimed || 0) : 0;
-      if (n > 0) return Object.assign(out || { claimed: 0, error: null }, { recovered: n, error: out && out.claimed ? out.error : null });
-      return out;
-    }
-    if (!out || !out.claimed) {
-      const available = await G.recoverCheck(token);
-      if (available > 0) return Object.assign(out || { claimed: 0, error: null }, { recoverable: available });
+    const key = mpJwtSub(token);
+    if (!mpAutoRecover || mpAutoRecover.key !== key) mpAutoRecover = { key, promise: G.recover(token) };
+    const r = await mpAutoRecover.promise;
+    const n = r && r.ok && r.body ? (r.body.claimed || 0) : 0;
+    if (n > 0) {
+      G.track('claim_success', { method: 'recover_auto' });
+      // この端末の購入で引き継げなかった理由（別のメール等）は、購入時メールで引き継げたので出さない
+      return Object.assign(out || { claimed: 0 }, { recovered: n, error: null });
     }
     return out;
   } catch (e) {
@@ -3625,13 +3615,6 @@ function mpShowClaimOutcome(root, outcome) {
   const G = EdGuestPurchase;
   if (outcome.recovered > 0) {
     mpClaimBox(root, `<p>✓ 購入時のメールアドレスで確認した購入（${outcome.recovered}件）を、マイページに引き継ぎました。</p><p class="mp-claim-note">診断記録と購入済みのレポートを、いつでも見返せます。</p>`);
-    return;
-  }
-  if (outcome.recoverable > 0 && !(outcome.claimed > 0)) {
-    // このメールで払った、引き継ぎ前の購入がある（Cookie の無い端末・ログインから時間が経った・Google 等）：6桁コードで確認して引き継ぐ
-    mpClaimBox(root, `<p>このメールアドレスで購入した、マイページへの引き継ぎ前の購入があります（${outcome.recoverable}件）。</p>`
-      + '<p class="mp-claim-note">購入時のメールアドレスに届く6桁のコードで確認すると、マイページに引き継げます。</p>'
-      + '<p class="mp-claim-note"><a href="/mypage.html#recover" data-mp-recover-link>6桁のコードで確認して引き継ぐ</a></p>');
     return;
   }
   if (outcome.claimed > 0) {
@@ -3678,23 +3661,18 @@ async function mpGuestPurchaseFlow(root, claimOutcome) {
 }
 async function mpRecoverFlow(root, token) {
   const G = EdGuestPurchase;
-  const fresh = mpJwtAmr(token).some((a) => a && a.method === 'otp' && Date.now() / 1000 - a.timestamp < 600);
-  if (fresh) {
-    G.track('claim_start', { source: 'recover' });
-    const r = await G.recover(token);
+  // まず、いまログインしているアカウントの確認済みメールで引き継ぐ（購入時と同じメールならこれで済む）
+  G.track('claim_start', { source: 'recover' });
+  const r = await G.recover(token);
+  if (r.ok && r.body.claimed > 0) {
     try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* そのまま */ }
-    if (r.ok && r.body.claimed > 0) {
-      mpClaimBox(root, `<p>✓ 購入時のメールアドレスで確認した購入（${r.body.claimed}件）を、マイページに引き継ぎました。</p>`);
-      setTimeout(() => { init(); }, 1200);
-    } else if (r.ok) {
-      mpClaimBox(root, '<p>このメールアドレスで、引き継げる購入は見つかりませんでした。</p><p class="mp-claim-note">購入時に Stripe の決済画面で入力したメールアドレスでお試しください。すでに引き継ぎ済みの購入は、引き継いだアカウントでご覧いただけます。</p>');
-    } else {
-      mpClaimBox(root, '<p>確認できませんでした。もう一度お試しください。</p>');
-    }
+    mpClaimBox(root, `<p>✓ 購入時のメールアドレスで確認した購入（${r.body.claimed}件）を、マイページに引き継ぎました。</p>`);
+    setTimeout(() => { init(); }, 1200);
     return;
   }
-  // メール OTP でのログインがまだ（Google・X でログイン中など）：購入時のメールアドレスで確認する
-  const box = mpClaimBox(root, '<p>購入時のメールアドレスで、購入を引き継ぎます。</p>'
+  // このアカウントのメールでは見つからない（購入時と別のメールでログイン中・メールの無いログイン）：購入時のメールアドレスで確認する
+  const box = mpClaimBox(root, (r.ok ? '<p>このアカウントのメールアドレスでは、引き継げる購入は見つかりませんでした。</p>' : '')
+    + '<p>購入時のメールアドレスで、購入を引き継ぎます。</p>'
     + '<p class="mp-claim-note">Stripe の決済画面で入力したメールアドレスに、6桁のコードを送ります。コードでログインすると、そのメールアドレスのアカウントに引き継ぎます。</p>'
     + '<input type="email" id="mpRecoverEmail" autocomplete="email" placeholder="購入時のメールアドレス"><button type="button" id="mpRecoverSend">コードを送る</button>'
     + '<div id="mpRecoverCode" hidden><input type="text" id="mpRecoverOtp" inputmode="numeric" maxlength="6" placeholder="6桁のコード"><button type="button" id="mpRecoverVerify">確認して引き継ぐ</button></div>'

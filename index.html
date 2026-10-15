@@ -2670,6 +2670,7 @@ function renderResult(root) {
           <p style="text-align:center;color:#c0a860;font-size:11px;margin-top:8px;font-weight:600">
             ${diagnosisVersion === 'ETI-2.0' ? '✓ 登録不要。お支払いの後、このブラウザですぐにお読みいただけます。' : '✓ 決済完了後、自動的にレポートページへ移動します。'}
           </p>
+          ${diagnosisVersion === 'ETI-2.0' ? '<p data-purchase-email-note style="text-align:center;color:var(--rx-tertiary);font-size:11px;line-height:1.7;margin-top:4px">購入時のメールアドレスでマイページに登録すると、購入した内容はマイページに引き継がれ、別の端末からも見返せます。</p>' : ''}
           ${completeAnalysisFoldHtml(diagnosisVersion === 'ETI-2.0' && results.raw && results.raw.meta ? results.raw.meta.itemSetVersion : null, diagnosisVersion)}
         </div>
       </div>

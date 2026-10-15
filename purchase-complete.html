@@ -99,9 +99,11 @@
   }
   function claimBlock(p) {
     if (p.claimed) return '<div class="claim"><p class="note">この購入はマイページに引き継ぎ済みです。<a href="/mypage.html">マイページ</a>からご覧ください。</p></div>';
-    if (!p.canClaim) return '';
-    return '<div class="claim"><button type="button" class="btn" data-claim>この購入をマイページに引き継ぐ</button>'
-      + '<p class="note">ログインすると、この診断記録と購入済みレポートをいつでも見返せます。</p></div>';
+    // 購入時のメールアドレスでマイページに登録（ログイン）すると引き継がれる：この端末からはボタンで、別の端末からはログインするだけで
+    var emailNote = '<p class="note">購入時のメールアドレスでマイページに登録（ログイン）すると、この購入はマイページに引き継がれます。'
+      + 'この端末でなくても、購入時のメールアドレスでログインすれば自動で引き継がれます。</p>';
+    if (!p.canClaim) return (p.analysis || p.complete) ? '<div class="claim">' + emailNote + '</div>' : '';
+    return '<div class="claim"><button type="button" class="btn" data-claim>この購入をマイページに引き継ぐ</button>' + emailNote + '</div>';
   }
   function cardHtml(p) {
     if (p.pending && !p.analysis && !p.complete) {

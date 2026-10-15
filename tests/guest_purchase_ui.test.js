@@ -294,7 +294,7 @@ test('購入完了ページ：すぐ読めるボタン・完全解析の状態�
     assert.match(text, /完全解析を見る/);
     assert.doesNotMatch(text, /¥[0-9]/, '購入完了ページでは売らない');
     assert.match(text, /この購入をマイページに引き継ぐ/);
-    assert.match(text, /ログインすると、この診断記録と購入済みレポートをいつでも見返せます。/);
+    assert.match(text, /購入時のメールアドレスでマイページに登録（ログイン）すると、この購入はマイページに引き継がれます。この端末でなくても、購入時のメールアドレスでログインすれば自動で引き継がれます。/);
     assert.doesNotMatch(await p.content(), UUID_RE);
     assert.ok(await noScroll(p), 'width ' + width);
     // ログイン方法は押した時だけ（ここではマイページへ移動する）
@@ -350,19 +350,24 @@ test('購入完了ページ：この端末に購入が無い時は、同じ端�
   await p.__ctx.close();
 });
 
-test('解析レポート：完全解析の欄から「マイページに保存する」。この端末の購入は引き継ぎへ、無ければ購入時のメールの確認へ', { skip: skip() }, async () => {
+test('解析レポートの下部からいつでもマイページへ引き継げる：この端末の購入は「この購入をマイページに引き継ぐ」、確かめられない時も購入時のメールアドレスで登録へ。購入時メールで引き継がれると明示', { skip: skip() }, async () => {
   const p0 = await page('/');
   const code = await p0.evaluate(() => { const a = {}; ETI_V2_QUESTIONS.forEach((q, i) => { a[q.id] = ((i * 7) % 5) - 2; }); return ETIv2.encodeAnswersV2(a, ETI_V2_QUESTIONS); });
   await p0.__ctx.close();
   const reportData = { diagnosis_version: 'ETI-2.0', entitlements: { core_analysis_access: true, journey_report_access: false }, purchase: null, code, viewer: 'guest' };
   const purchases = [{ ref: REF, analysis: 'active', complete: null, report: null, pending: false, claimed: false, canClaim: true, canUpgrade: true, thisRecord: true }];
   const p = await page('/report.html?token=fake', { reportData, api: { 'guest-status': [200, { salesOpen: true, purchases }] } });
-  const save = p.locator('[data-report-mypage-save]');
+  const save = p.locator('[data-report-inherit-claim]');
   await save.waitFor();
-  assert.equal((await save.innerText()).trim(), 'マイページに保存する（ログイン）');
+  assert.equal((await save.innerText()).trim(), 'この購入をマイページに引き継ぐ');
+  assert.match(await p.locator('[data-report-inherit]').innerText(), /購入時のメールアドレスでマイページに登録（ログイン）すると[\s\S]*引き継がれ/);
   await save.click();
   await p.waitForURL((u) => u.pathname === '/mypage.html' && u.hash === '');
   await p.__ctx.close();
+  // 状態の確認に失敗しても、下部の引き継ぎは出す
+  const f = await page('/report.html?token=fake', { reportData, api: { 'guest-status': [503, { error: 'service_unavailable' }] } });
+  await f.locator('[data-report-inherit] a[href="/mypage.html"]').waitFor();
+  await f.__ctx.close();
   // この端末で購入を確かめられない：決済は出さず、購入時のメールの確認へ
   const q = await page('/report.html?token=fake', { reportData, api: { 'guest-status': [200, { salesOpen: true, purchases: [] }] } });
   await q.locator('[data-report-complete] a[href="/mypage.html#recover"]').waitFor();
@@ -370,6 +375,11 @@ test('解析レポート：完全解析の欄から「マイページに保存�
   await q.locator('[data-report-complete] a[href="/mypage.html#recover"]').click();
   await q.waitForURL((u) => u.pathname === '/mypage.html' && u.hash === '#recover');
   await q.__ctx.close();
+  // この端末で確かめられない時も、下部から購入時のメールアドレスでの登録へ進める
+  const q2 = await page('/report.html?token=fake', { reportData, api: { 'guest-status': [200, { salesOpen: true, purchases: [] }] } });
+  await q2.locator('[data-report-inherit-mypage]').waitFor();
+  assert.equal(await q2.locator('[data-report-inherit-mypage]').getAttribute('href'), '/mypage.html');
+  await q2.__ctx.close();
 });
 
 test('サンプルからマイページ：sample_to_mypage を1回だけ（入口だけ・ID なし）記録し、URL から from=sample を消す', { skip: skip() }, async () => {

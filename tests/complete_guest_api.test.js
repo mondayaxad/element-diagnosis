@@ -330,34 +330,31 @@ test('引き継ぎ：ログイン必須・購入時メールと同じ確認済�
   await ctx.db.close();
 });
 
-test('Cookie を失った時の復旧：メール OTP（10分以内）＋購入時メールの一致だけ。OTP 以外のログイン・メールの一致だけでは引き継がない', { skip }, async () => {
+test('Cookie を失った時の復旧：ログイン中の確認済みメール（6桁コード・Google 等。時間が経っても）＋購入時メールの一致で引き継ぐ。未確認のメール・メールなし・別のメールでは移さない', { skip }, async () => {
   const ctx = await setup();
   await buy(ctx, { offer: 'direct_complete', code: CODE_A, goal: 'GOAL_PACE_01' }, { email: 'Owner@Example.test' });
   await ctx.op('guest-status', {});
   ctx.cookie = '';
   const now = Math.floor(Date.now() / 1000);
-  const oauth = jwtWith({ sub: 'x', amr: [{ method: 'oauth', timestamp: now }] });
-  const oldOtp = jwtWith({ sub: 'x', amr: [{ method: 'otp', timestamp: now - 3600 }] });
-  const otp = jwtWith({ sub: 'x', amr: [{ method: 'otp', timestamp: now - 30 }] });
-  const otherOtp = jwtWith({ sub: 'y', amr: [{ method: 'otp', timestamp: now - 30 }] });
-  const owner = await ctx.db.user({ email: 'owner@example.test', token: oauth });
-  await ctx.db.user({ id: crypto.randomUUID(), email: 'someone@example.test', token: otherOtp });
-  // 同じ人の別トークン（OTP の古さ・方式だけを変える）
-  const ownerOld = await ctx.db.user({ email: 'owner@example.test', token: oldOtp });
-  const ownerOtp = await ctx.db.user({ email: 'owner@example.test', token: otp });
-  assert.deepEqual([(await ctx.op('guest-recover', {}, { token: oauth })).body.error], ['email_otp_required']);
-  assert.deepEqual([(await ctx.op('guest-recover', {}, { token: oldOtp })).body.error], ['email_otp_required']);
-  const wrong = await ctx.op('guest-recover', {}, { token: otherOtp });
+  const unconfirmed = jwtWith({ sub: 'u', amr: [{ method: 'otp', timestamp: now }] });
+  const noEmail = jwtWith({ sub: 'n', amr: [{ method: 'oauth', timestamp: now }] });
+  const other = jwtWith({ sub: 'y', amr: [{ method: 'otp', timestamp: now - 30 }] });
+  const google = jwtWith({ sub: 'g', amr: [{ method: 'oauth', timestamp: now - 86400 }] });
+  await ctx.db.user({ email: 'owner@example.test', confirmed: false, token: unconfirmed });
+  await ctx.db.user({ email: null, token: noEmail });
+  await ctx.db.user({ email: 'someone@example.test', token: other });
+  const owner = await ctx.db.user({ email: 'owner@example.test', token: google });
+  assert.deepEqual([(await ctx.op('guest-recover', {}, { token: unconfirmed })).body.error], ['claim_email_unconfirmed']);
+  assert.deepEqual([(await ctx.op('guest-recover', {}, { token: noEmail })).body.error], ['claim_email_required']);
+  const wrong = await ctx.op('guest-recover', {}, { token: other });
   assert.deepEqual([wrong.code, wrong.body], [200, { claimed: 0, skipped: 0 }]);
-  const ok = await ctx.op('guest-recover', {}, { token: otp });
+  const ok = await ctx.op('guest-recover', {}, { token: google });
   assert.deepEqual([ok.code, ok.body], [200, { claimed: 1, skipped: 0 }]);
   const [session] = await ctx.rows('diagnosis_sessions');
-  assert.equal(session.user_id, ownerOtp);
-  assert.ok((await ctx.rows('complete_orders')).every((o) => o.claim_method === 'email_otp'));
-  assert.ok((await ctx.rows('complete_reports')).every((r) => r.user_id === ownerOtp));
-  const again = await ctx.op('guest-recover', {}, { token: otp });
+  assert.equal(session.user_id, owner);
+  assert.ok((await ctx.rows('complete_reports')).every((r) => r.user_id === owner));
+  const again = await ctx.op('guest-recover', {}, { token: google });
   assert.deepEqual(again.body, { claimed: 0, skipped: 0 });
-  assert.ok(owner && ownerOld);
   await ctx.db.close();
 });
 
