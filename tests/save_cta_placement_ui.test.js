@@ -112,8 +112,9 @@ test.after(async () => { if (browser) await browser.close(); if (server) server.
 // hint：端末ヒントを最初から入れておくか／pendingV2：未保存の v2 診断を最初から入れておくか（文字列ならその診断コード）
 // seed：最初に入れておく localStorage／entitlements：/api/my-entitlements の応答
 // authSettings：Supabase の公開 Auth 設定（/auth/v1/settings）の external。'fail' は取得の失敗（500）。既定は Google・X・メールとも有効
+// xAuthorize：公開設定に 'x' が無い時の、ログイン開始（/auth/v1/authorize?provider=x）の応答。'redirect'＝有効（302）／'disabled'＝400／'fail'＝通信の失敗
 const AUTH_ALL = { email: true, google: true, x: true };
-async function openPage(url, { supa = {}, hint = false, pendingV2 = false, seed = {}, width = 390, height = 844, entitlements, salesOpen = false, authSettings = AUTH_ALL } = {}) {
+async function openPage(url, { supa = {}, hint = false, pendingV2 = false, seed = {}, width = 390, height = 844, entitlements, salesOpen = false, authSettings = AUTH_ALL, xAuthorize = 'disabled' } = {}) {
   const ctx = await browser.newContext({ viewport: { width, height } });
   const p = await ctx.newPage();
   p.setDefaultTimeout(8000);
@@ -126,6 +127,14 @@ async function openPage(url, { supa = {}, hint = false, pendingV2 = false, seed 
   await p.route('**/auth/v1/settings', (r) => (authSettings === 'fail'
     ? r.fulfill({ status: 500, contentType: 'application/json', body: '{"msg":"unavailable"}' })
     : r.fulfill({ contentType: 'application/json', body: JSON.stringify({ external: authSettings, disable_signup: false }) })));
+  const authorizeCalls = [];
+  await p.route('**/auth/v1/authorize?*', (r) => {
+    authorizeCalls.push(new URL(r.request().url()).searchParams.get('provider'));
+    if (xAuthorize === 'fail') return r.abort();
+    return xAuthorize === 'redirect'
+      ? r.fulfill({ status: 302, headers: { location: 'https://x.example.test/i/oauth2/authorize' }, body: '' })
+      : r.fulfill({ status: 400, contentType: 'application/json', body: '{"code":400,"error_code":"validation_failed","msg":"Unsupported provider: provider is not enabled"}' });
+  });
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
   await p.route(/cdnjs\.cloudflare\.com|googletagmanager/, (r) => r.fulfill({ contentType: 'application/javascript', body: '' }));
   await p.route(/buy\.stripe\.com/, (r) => r.fulfill({ contentType: 'text/html', body: '<p>stripe</p>' }));
@@ -142,7 +151,7 @@ async function openPage(url, { supa = {}, hint = false, pendingV2 = false, seed 
     Object.keys(seed).forEach((k) => localStorage.setItem(k, typeof seed[k] === 'function' ? seed[k]() : seed[k]));
   }, { hint, pendingV2, seed, HINT });
   await p.goto(base + url);
-  p.__ctx = ctx; p.__errors = errors; p.__popups = popups; p.__gtag = gtagEvents;
+  p.__ctx = ctx; p.__errors = errors; p.__popups = popups; p.__gtag = gtagEvents; p.__authorize = authorizeCalls;
   return p;
 }
 
@@ -770,6 +779,27 @@ test('ログイン方法：無効な方法は、ボタン以外の入口（旧�
   const v2 = await q.evaluate(async () => { window.__log.length = 0; const res = await signInWithGoogleV2(); return { oauth: window.__log.includes('oauth'), err: !!(res && res.error) }; });
   assert.deepEqual(v2, { oauth: false, err: true });
   await q.__ctx.close();
+});
+
+test('ログイン方法：公開設定に x の項目が無い Supabase では、ログイン開始の応答で X を判定する（302＝出す／400・失敗＝出さない）', { skip: skip() }, async () => {
+  const noX = { email: true, google: true, twitter: false };
+  for (const c of [{ xAuthorize: 'redirect', x: true }, { xAuthorize: 'disabled', x: false }, { xAuthorize: 'fail', x: false }]) {
+    const m = await openPage('/mypage.html', { supa: { signedIn: false }, authSettings: noX, xAuthorize: c.xAuthorize });
+    await m.waitForSelector('#gateAuth [data-au="email"]');
+    await m.waitForTimeout(500);
+    assert.deepEqual(await shown(m, '#gateAuth'), { google: true, x: c.x, email: true }, `マイページ ${c.xAuthorize}`);
+    assert.equal(m.url().startsWith(base), true, '問い合わせで画面を移動しない');
+    assert.deepEqual([...new Set(m.__authorize)], ['x'], 'X だけを問い合わせる（旧 twitter は使わない）');
+    assert.deepEqual(m.__errors, [], c.xAuthorize);
+    await m.__ctx.close();
+  }
+  // 公開設定に x の項目がある時は問い合わせない
+  const k = await openPage('/mypage.html', { supa: { signedIn: false }, authSettings: { email: true, google: true, x: false }, xAuthorize: 'redirect' });
+  await k.waitForSelector('#gateAuth [data-au="email"]');
+  await k.waitForTimeout(400);
+  assert.equal(await k.locator('#gateAuth [data-au="x"]').count(), 0);
+  assert.deepEqual(k.__authorize, []);
+  await k.__ctx.close();
 });
 
 test('ログイン方法：メールOTPのログインは、Google・X が無効でもそのまま使える', { skip: skip() }, async () => {

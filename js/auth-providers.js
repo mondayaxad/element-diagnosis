@@ -42,13 +42,32 @@ function authEnabledProviders() {
       const body = await res.json();
       const ext = body && body.external;
       if (!ext || typeof ext !== 'object') return AUTH_PROVIDERS_FALLBACK;
-      // X は現行の provider 'x'（OAuth 2.0）だけ。旧 'twitter'（OAuth 1.0a）は使わない
-      return Object.freeze({ email: true, google: ext.google === true, x: ext.x === true });
+      // X は現行の provider 'x'（OAuth 2.0）だけ。旧 'twitter'（OAuth 1.0a）は使わない。
+      // 公開設定に 'x' の項目が無い Supabase（GoTrue v2.197 など）では、ログイン開始の URL が
+      // 移動（3xx）を返すかで判定する（無効なら 400 provider is not enabled）
+      const x = Object.prototype.hasOwnProperty.call(ext, 'x') ? ext.x === true : await authProbeProvider(cfg, 'x');
+      return Object.freeze({ email: true, google: ext.google === true, x: x });
     } catch (e) {
       return AUTH_PROVIDERS_FALLBACK;
     }
   })().then((v) => { authProvidersState = v; return v; });
   return authProvidersPromise;
+}
+// ログイン開始の URL を、画面を移動せずに問い合わせる。移動（opaqueredirect）なら有効、
+// 400・通信の失敗・時間切れは無効（安全側）。外部の画面へは行かず、設定の値も読まない。
+async function authProbeProvider(cfg, provider) {
+  const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+  const timer = ctl ? setTimeout(() => ctl.abort(), AUTH_PROVIDERS_TIMEOUT_MS) : null;
+  try {
+    const res = await fetch(cfg.supabaseUrl + '/auth/v1/authorize?provider=' + encodeURIComponent(provider), {
+      headers: { apikey: cfg.supabaseAnonKey }, redirect: 'manual', signal: ctl ? ctl.signal : undefined,
+    });
+    return !!res && (res.type === 'opaqueredirect' || (res.status >= 300 && res.status < 400));
+  } catch (e) {
+    return false;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 // 同期の判定（読む前・読めない時は false＝出さない）
 function authProviderEnabled(provider) {
