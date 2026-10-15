@@ -66,6 +66,7 @@ function fakeSupabase({ signedIn = true, status = 'completed', profileError = fa
         verifyOtp: async () => { window.__log.push('otp:verify'); user = { id: 'user-1', email: 'owner@example.test' }; cbs.forEach((cb) => cb('SIGNED_IN', { access_token: 't' })); return { error: null }; },
         signOut: async () => { window.__log.push('signOut'); user = null; cbs.forEach((cb) => cb('SIGNED_OUT', null)); return {}; },
         signInWithOAuth: async (o) => { window.__log.push('oauth'); window.__log.push('oauth:' + new URL(o.options.redirectTo).pathname); return { error: null }; },
+        linkIdentity: async () => { window.__log.push('link'); return { error: null }; },
       } };
   } };`;
 }
@@ -110,7 +111,9 @@ test.after(async () => { if (browser) await browser.close(); if (server) server.
 
 // hint：端末ヒントを最初から入れておくか／pendingV2：未保存の v2 診断を最初から入れておくか（文字列ならその診断コード）
 // seed：最初に入れておく localStorage／entitlements：/api/my-entitlements の応答
-async function openPage(url, { supa = {}, hint = false, pendingV2 = false, seed = {}, width = 390, height = 844, entitlements, salesOpen = false } = {}) {
+// authSettings：Supabase の公開 Auth 設定（/auth/v1/settings）の external。'fail' は取得の失敗（500）。既定は Google・X・メールとも有効
+const AUTH_ALL = { email: true, google: true, x: true };
+async function openPage(url, { supa = {}, hint = false, pendingV2 = false, seed = {}, width = 390, height = 844, entitlements, salesOpen = false, authSettings = AUTH_ALL } = {}) {
   const ctx = await browser.newContext({ viewport: { width, height } });
   const p = await ctx.newPage();
   p.setDefaultTimeout(8000);
@@ -120,6 +123,9 @@ async function openPage(url, { supa = {}, hint = false, pendingV2 = false, seed 
   await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: fakeSupabase(supa) }));
   // salesOpen：販売中の表示（公開設定の completeSalesOpen。サーバー・Stripe には接続しない）
   await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: previewPublicConfigJs(salesOpen ? { completeSalesOpen: true, completeApiReady: true } : {}) }));
+  await p.route('**/auth/v1/settings', (r) => (authSettings === 'fail'
+    ? r.fulfill({ status: 500, contentType: 'application/json', body: '{"msg":"unavailable"}' })
+    : r.fulfill({ contentType: 'application/json', body: JSON.stringify({ external: authSettings, disable_signup: false }) })));
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
   await p.route(/cdnjs\.cloudflare\.com|googletagmanager/, (r) => r.fulfill({ contentType: 'application/javascript', body: '' }));
   await p.route(/buy\.stripe\.com/, (r) => r.fulfill({ contentType: 'text/html', body: '<p>stripe</p>' }));
@@ -688,4 +694,91 @@ test('LATEST RESULT：320／390／1280px で横スクロールしない（最新
       await p.__ctx.close();
     }
   }
+});
+
+
+// ================= 使えるログイン方法（Supabase の公開 Auth 設定）：すべての入口で同じ判定
+const AUTH_CASES = [
+  { name: 'メールだけ有効', settings: { email: true, google: false, x: false }, google: false, x: false },
+  { name: 'メール＋Google', settings: { email: true, google: true, x: false }, google: true, x: false },
+  { name: 'メール＋Google＋X', settings: { email: true, google: true, x: true }, google: true, x: true },
+  { name: '公開 Auth 設定の取得に失敗', settings: 'fail', google: false, x: false },
+];
+const shown = async (p, scope) => ({
+  google: await p.locator(`${scope} [data-au="google"]`).count() > 0,
+  x: await p.locator(`${scope} [data-au="x"]`).count() > 0,
+  email: await p.locator(`${scope} [data-au="email"]`).count() > 0,
+});
+
+test('ログイン方法：マイページのログイン画面・結果の保存のログイン選択で、有効な方法だけを出す（取得の失敗はメールだけ）', { skip: skip() }, async () => {
+  for (const c of AUTH_CASES) {
+    // マイページ（ログイン画面）
+    const m = await openPage('/mypage.html', { supa: { signedIn: false }, authSettings: c.settings });
+    await m.waitForSelector('#gateAuth [data-au="email"]');
+    await m.waitForTimeout(400);
+    assert.deepEqual(await shown(m, '#gateAuth'), { google: c.google, x: c.x, email: true }, `マイページ ${c.name}`);
+    const lead = await m.locator('[data-gate-methods]').innerText();
+    if (!c.google && !c.x) assert.match(lead, /メールで無料で作成できます/, c.name);
+    else assert.doesNotMatch(lead, c.x ? /^$/ : /X/, c.name);
+    assert.equal(await m.locator('#gateAuth .au-or').count(), c.google || c.x ? 1 : 0, `「または」${c.name}`);
+    assert.deepEqual(m.__errors, [], c.name);
+    await m.__ctx.close();
+    // 結果ページの「保存」のログイン選択
+    const r = await indexResult({ supa: { signedIn: false }, authSettings: c.settings });
+    await r.locator('#recordLoginBtn').click();
+    await r.waitForSelector('#recordCard #recordAuth [data-au="email"]');
+    await r.waitForTimeout(400);
+    assert.deepEqual(await shown(r, '#recordAuth'), { google: c.google, x: c.x, email: true }, `結果の保存 ${c.name}`);
+    await r.__ctx.close();
+  }
+});
+
+test('ログイン方法：マイページの「ログイン方法」欄は、有効な方法だけ「連携する」を出す（取得の失敗は連携ボタンなし）', { skip: skip() }, async () => {
+  for (const c of AUTH_CASES) {
+    const m = await openPage('/mypage.html', { supa: { rows: [RB.row] }, authSettings: c.settings });
+    await m.waitForSelector('#mpLogin', { state: 'attached' });
+    await m.waitForTimeout(500);
+    const box = m.locator('#mpLogin');
+    assert.equal(await box.locator('[data-provider="google"].mp-login-btn').count(), c.google ? 1 : 0, `Google ${c.name}`);
+    assert.equal(await box.locator('[data-provider="x"].mp-login-btn').count(), c.x ? 1 : 0, `X ${c.name}`);
+    const html = await box.innerHTML();
+    assert.doesNotMatch(html, /client_id|secret|user-1/i, 'ID・秘密値を HTML に出さない');
+    await m.__ctx.close();
+  }
+});
+
+test('ログイン方法：無効な方法は、ボタン以外の入口（旧版の保存・v2 の保存・X・連携）から呼ばれても Supabase へ進めない', { skip: skip() }, async () => {
+  for (const c of AUTH_CASES) {
+    const p = await openPage('/mypage.html', { supa: { signedIn: false }, authSettings: c.settings });
+    await p.waitForSelector('#gateAuth [data-au="email"]');
+    const r = await p.evaluate(async () => {
+      window.__log.length = 0;
+      await signInWithGoogle(); // 旧版（v1）の保存・マイページの Google
+      const g = window.__log.filter((x) => x === 'oauth').length;
+      const x = await signInWithX();
+      const xl = window.__log.filter((v) => v === 'oauth').length - g;
+      const link = await linkAuthProvider('google');
+      return { google: g, x: xl, xErr: !!(x && x.error), linkErr: !!(link && link.error && link.error.code === 'provider_disabled') };
+    }).catch((e) => ({ err: String(e) }));
+    assert.equal(r.google, c.google ? 1 : 0, `Google ${c.name} ${JSON.stringify(r)}`);
+    assert.equal(r.x, c.x ? 1 : 0, `X ${c.name}`);
+    if (!c.google) assert.equal(r.linkErr, true, `連携 ${c.name}`);
+    await p.__ctx.close();
+  }
+  // v2 の保存の Google（結果ページ）
+  const q = await indexResult({ supa: { signedIn: false }, authSettings: { email: true, google: false, x: false } });
+  const v2 = await q.evaluate(async () => { window.__log.length = 0; const res = await signInWithGoogleV2(); return { oauth: window.__log.includes('oauth'), err: !!(res && res.error) }; });
+  assert.deepEqual(v2, { oauth: false, err: true });
+  await q.__ctx.close();
+});
+
+test('ログイン方法：メールOTPのログインは、Google・X が無効でもそのまま使える', { skip: skip() }, async () => {
+  const p = await openPage('/mypage.html', { supa: { signedIn: false, rows: [] }, authSettings: { email: true, google: false, x: false } });
+  await p.locator('#gateAuth [data-au="email"]').click();
+  await p.fill('#auEmail', 'owner@example.test');
+  await p.click('#auSend');
+  await p.waitForSelector('#auCode');
+  await p.fill('#auCode', '123456');
+  await p.waitForFunction(() => window.__log.includes('otp:verify'));
+  await p.__ctx.close();
 });

@@ -15,7 +15,60 @@
 const AUTH_OTP_LENGTH = 6;
 const AUTH_OTP_RESEND_SEC = 60;
 
-function signInWithX(redirectTo) {
+// ---- 使えるログイン方法（全画面の共通判定） ----
+// Supabase の公開 Auth 設定（/auth/v1/settings。公開キーだけで読める）から、いま有効な方法を読む。
+// Google・X は有効な時だけボタンを出す（無効な方法を押すと Supabase が 400 provider is not enabled を返すため）。
+// 読めない・形が違う・時間内に返らない時は、安全側としてメールだけ。メールは常に出す（基本のログイン方法）。
+// 設定の値（Client ID・Secret）は公開設定に含まれず、ここでも扱わない。
+const AUTH_PROVIDERS_FALLBACK = Object.freeze({ email: true, google: false, x: false });
+const AUTH_PROVIDERS_TIMEOUT_MS = 5000;
+let authProvidersPromise = null;
+let authProvidersState = null; // 読めた結果（読む前・読めない間は null）
+function authEnabledProviders() {
+  if (authProvidersPromise) return authProvidersPromise;
+  authProvidersPromise = (async () => {
+    try {
+      const cfg = typeof publicSupabaseConfig !== 'undefined' ? publicSupabaseConfig : null;
+      if (!cfg || !cfg.supabaseUrl || !cfg.supabaseAnonKey) return AUTH_PROVIDERS_FALLBACK;
+      const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+      const timer = ctl ? setTimeout(() => ctl.abort(), AUTH_PROVIDERS_TIMEOUT_MS) : null;
+      let res;
+      try {
+        res = await fetch(cfg.supabaseUrl + '/auth/v1/settings', { headers: { apikey: cfg.supabaseAnonKey }, signal: ctl ? ctl.signal : undefined });
+      } finally {
+        if (timer) clearTimeout(timer);
+      }
+      if (!res || !res.ok) return AUTH_PROVIDERS_FALLBACK;
+      const body = await res.json();
+      const ext = body && body.external;
+      if (!ext || typeof ext !== 'object') return AUTH_PROVIDERS_FALLBACK;
+      // X は現行の provider 'x'（OAuth 2.0）だけ。旧 'twitter'（OAuth 1.0a）は使わない
+      return Object.freeze({ email: true, google: ext.google === true, x: ext.x === true });
+    } catch (e) {
+      return AUTH_PROVIDERS_FALLBACK;
+    }
+  })().then((v) => { authProvidersState = v; return v; });
+  return authProvidersPromise;
+}
+// 同期の判定（読む前・読めない時は false＝出さない）
+function authProviderEnabled(provider) {
+  if (provider === 'email') return true;
+  return !!(authProvidersState && authProvidersState[provider] === true);
+}
+// 有効な OAuth の方法の名前（案内の文に使う）
+function authOAuthLabels() {
+  return [authProviderEnabled('google') ? 'Google' : null, authProviderEnabled('x') ? 'X' : null].filter(Boolean);
+}
+// 無効な方法でログイン・連携を始めない（ボタンを隠しても、別の入口から呼ばれた時の守り）
+async function authEnsureProvider(provider) {
+  const p = await authEnabledProviders();
+  return p[provider] === true;
+}
+const AUTH_PROVIDER_DISABLED_ERROR = Object.freeze({ code: 'provider_disabled', message: 'provider is not enabled' });
+if (typeof window !== 'undefined') authEnabledProviders();
+
+async function signInWithX(redirectTo) {
+  if (!(await authEnsureProvider('x'))) return { error: AUTH_PROVIDER_DISABLED_ERROR };
   return supabaseClient.auth.signInWithOAuth({
     provider: 'x',
     options: { redirectTo: redirectTo || window.location.origin + '/mypage.html' },
@@ -47,10 +100,15 @@ function isValidEmailForOtp(email) {
 // Supabase のエラーを利用者向けの文に変える（詳細はconsoleへ）
 // 送信の失敗は、Supabase の送信上限（429）でもメール送信サービス側の上限・障害（5xx）でも
 // 利用者には区別がつかず、しばらく復旧しないことがあるため、Google / X へ案内する。
-const AUTH_EMAIL_UNAVAILABLE_MSG = 'いまメールでのログインが混み合っています。Google または X でのログインをお試しください。';
+function authEmailUnavailableMessage() {
+  const names = authOAuthLabels();
+  return names.length
+    ? `いまメールでのログインが混み合っています。${names.join(' または ')} でのログインをお試しください。`
+    : 'いまメールでのログインが混み合っています。時間をおいて、もう一度お試しください。';
+}
 function authErrorMessage(error, phase) {
   if (phase === 'verify') return 'コードが正しくないか、有効期限が切れています。';
-  return AUTH_EMAIL_UNAVAILABLE_MSG;
+  return authEmailUnavailableMessage();
 }
 
 const AUTH_ICON_GOOGLE = '<svg viewBox="0 0 18 18" width="16" height="16" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.97 10.72A5.4 5.4 0 0 1 3.68 9c0-.6.1-1.18.29-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.05l3.01-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg>';
@@ -109,13 +167,20 @@ function renderAuthChoices(container, h) {
   const handlers = h || {};
   const choose = m => { if (typeof handlers.onChoose === 'function') handlers.onChoose(m); };
 
-  const providerButtonsHtml = () => `
-        <button type="button" class="au-btn au-google" data-au="google"${handlers.googleButtonId ? ` id="${handlers.googleButtonId}"` : ''}>${AUTH_ICON_GOOGLE}Googleで続ける</button>
-        <button type="button" class="au-btn au-x" data-au="x">${AUTH_ICON_X}Xで続ける</button>`;
+  // Google・X は、公開 Auth 設定で有効な時だけ出す（authEnabledProviders の共通判定）
+  const providerButtonsHtml = () => (authProviderEnabled('google')
+    ? `
+        <button type="button" class="au-btn au-google" data-au="google"${handlers.googleButtonId ? ` id="${handlers.googleButtonId}"` : ''}>${AUTH_ICON_GOOGLE}Googleで続ける</button>` : '')
+    + (authProviderEnabled('x') ? `
+        <button type="button" class="au-btn au-x" data-au="x">${AUTH_ICON_X}Xで続ける</button>` : '');
+  let view = 'choices';
+  let lastMessage = '';
 
   function wireProviderButtons() {
-    container.querySelector('[data-au="google"]').onclick = () => { choose('google'); handlers.onGoogle(); };
-    container.querySelector('[data-au="x"]').onclick = async (ev) => {
+    const g = container.querySelector('[data-au="google"]');
+    if (g) g.onclick = () => { choose('google'); handlers.onGoogle(); };
+    const xb = container.querySelector('[data-au="x"]');
+    if (xb) xb.onclick = async (ev) => {
       choose('x');
       ev.currentTarget.disabled = true;
       const { error } = await (handlers.onX ? handlers.onX() : signInWithX()) || {};
@@ -127,9 +192,12 @@ function renderAuthChoices(container, h) {
   }
 
   function showChoices(message) {
+    view = 'choices';
+    lastMessage = message || '';
+    const providers = providerButtonsHtml();
     container.innerHTML = `
-      <div class="au">${providerButtonsHtml()}
-        <div class="au-or">または</div>
+      <div class="au">${providers}
+        ${providers ? '<div class="au-or">または</div>' : ''}
         <button type="button" class="au-btn" data-au="email">${AUTH_ICON_MAIL}メールで続ける</button>
         <p class="au-msg" role="alert">${message ? escapeAuthHtml(message) : ''}</p>
       </div>`;
@@ -139,9 +207,10 @@ function renderAuthChoices(container, h) {
 
   // メール送信に失敗したとき：Google / X を前面に出す（メール欄に留めない）
   function showEmailUnavailable(email) {
+    view = 'email-unavailable';
     container.innerHTML = `
       <div class="au" data-au-state="email-unavailable">
-        <p class="au-msg au-msg-info" role="alert">${escapeAuthHtml(AUTH_EMAIL_UNAVAILABLE_MSG)}</p>${providerButtonsHtml()}
+        <p class="au-msg au-msg-info" role="alert">${escapeAuthHtml(authEmailUnavailableMessage())}</p>${providerButtonsHtml()}
         <div class="au-sub"><button type="button" class="au-link" id="auRetryEmail">メールでもう一度試す</button></div>
       </div>`;
     wireProviderButtons();
@@ -149,6 +218,7 @@ function renderAuthChoices(container, h) {
   }
 
   function showEmailInput(prefill, message) {
+    view = 'email';
     container.innerHTML = `
       <div class="au">
         <p class="au-note">メールアドレスに、6桁の確認コードを送ります。<br>パスワードは使いません。</p>
@@ -181,6 +251,7 @@ function renderAuthChoices(container, h) {
   }
 
   function showCodeInput(email) {
+    view = 'code';
     container.innerHTML = `
       <div class="au">
         <p class="au-note"><b>${escapeAuthHtml(email)}</b> に<br>6桁の確認コードを送りました。</p>
@@ -236,6 +307,12 @@ function renderAuthChoices(container, h) {
   }
 
   showChoices();
+  // 公開 Auth 設定を読めたら、選択の画面のまま描き直す（入力中のメール・コードの画面は変えない）
+  if (!authProvidersState) {
+    authEnabledProviders().then(() => {
+      if (view === 'choices' && container.isConnected && container.querySelector('[data-au="email"]')) showChoices(lastMessage);
+    });
+  }
 }
 
 // ---- ログイン方法の連携（マイページ） ----
@@ -258,7 +335,8 @@ function authLinkedProviders(user) {
   return set;
 }
 
-function linkAuthProvider(provider) {
+async function linkAuthProvider(provider) {
+  if (!(await authEnsureProvider(provider))) return { error: AUTH_PROVIDER_DISABLED_ERROR };
   return supabaseClient.auth.linkIdentity({
     provider: provider,
     options: { redirectTo: window.location.origin + '/mypage.html' },
@@ -321,6 +399,7 @@ function authLinkErrorMessage(err) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { signInWithX, sendEmailOtp, verifyEmailOtp, isValidEmailForOtp, authErrorMessage, AUTH_EMAIL_UNAVAILABLE_MSG,
+  module.exports = { signInWithX, sendEmailOtp, verifyEmailOtp, isValidEmailForOtp, authErrorMessage, authEmailUnavailableMessage,
+    authEnabledProviders, authProviderEnabled, AUTH_PROVIDERS_FALLBACK,
     authLinkedProviders, authLinkErrorMessage, AUTH_LINKABLE_PROVIDERS, canUnlinkAuthProvider, authUnlinkErrorMessage };
 }

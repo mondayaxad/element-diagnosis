@@ -707,3 +707,48 @@ test('完全解析を購入済みの記録：右上の入口は「完全解析�
   assert.ok(w.viewHits >= 1);
   await p.__ctx.close();
 });
+
+test('記録一覧：診断結果（長い国家名・武器名を含む）と NEW・COMPLETE 等の札が重ならない・切れない・横にはみ出さない（320／390／1280px）', { skip: skip() }, async () => {
+  const rows = [1, 2, 4, 5, 6, 8].map((k, i) => v2Row(`sess-${k}`, `2026-10-0${i + 1}T10:00:00Z`, k).row);
+  const records = Object.fromEntries(rows.map((r) => [r.id, purchased({ analysisAccess: true, analysisPurchased: true })]));
+  for (const width of [320, 390, 1280]) {
+    const w = world({ rows, records, purchased: Object.fromEntries(rows.map((r) => [`ETI-2.0:${r.diagnosis_answers[0].encoded_answers}`, true])) });
+    const p = await open(w, { width });
+    const check = async (label) => p.evaluate(() => {
+      const bad = [];
+      const de = document.documentElement;
+      if (de.scrollWidth > de.clientWidth + 1) bad.push(`横スクロール ${de.scrollWidth} > ${de.clientWidth}`);
+      document.querySelectorAll('details.mp-rec > summary').forEach((s, i) => {
+        const c = s.querySelector('.c');
+        if (!c) return;
+        if (c.scrollWidth > c.clientWidth + 1) bad.push(`${i}：診断結果が切れる`);
+        const range = document.createRange();
+        range.selectNodeContents(c);
+        const textRects = Array.from(range.getClientRects());
+        const sr = s.getBoundingClientRect();
+        s.querySelectorAll('.mp-chip').forEach((chip) => {
+          const r = chip.getBoundingClientRect();
+          if (r.right > sr.right + 1 || r.left < sr.left - 1) bad.push(`${i}：札 ${chip.textContent} がはみ出す`);
+          textRects.forEach((t) => {
+            const ov = Math.min(t.right, r.right) - Math.max(t.left, r.left) > 1 && Math.min(t.bottom, r.bottom) - Math.max(t.top, r.top) > 1;
+            if (ov) bad.push(`${i}：「${c.textContent.trim()}」と札 ${chip.textContent} が重なる`);
+          });
+        });
+      });
+      return bad;
+    });
+    assert.ok(await p.locator('details.mp-rec .mp-chip.complete').count() > 0, 'COMPLETE の札がある');
+    assert.deepEqual(await check(), [], `${width}px（実際の記録）`);
+    // いちばん長い組み合わせと、すべての札が並ぶ時
+    await p.evaluate(() => {
+      document.querySelectorAll('details.mp-rec > summary').forEach((s) => {
+        const el = s.querySelector('.c .el') || s.querySelector('.c');
+        el.textContent = '水 × 両手剣 × スネージナヤ';
+        const row = s.querySelector('.mp-chip-row');
+        row.innerHTML = '<span class="mp-chip new">NEW</span><span class="mp-chip complete">COMPLETE</span><span class="mp-chip legacy">旧版</span>';
+      });
+    });
+    assert.deepEqual(await check(), [], `${width}px（最長の組み合わせ＋すべての札）`);
+    await p.__ctx.close();
+  }
+});

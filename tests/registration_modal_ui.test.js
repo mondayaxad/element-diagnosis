@@ -268,6 +268,8 @@ async function mypageWith(status) {
   await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: fakeSupabase(status) }));
   await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: previewPublicConfigJs() }));
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  // Supabase の公開 Auth 設定：Google・X・メールとも有効（ログイン方法のボタンの判定）
+  await p.route('**/auth/v1/settings', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ external: { email: true, google: true, x: true } }) }));
   await p.route(/cdnjs\.cloudflare\.com|googletagmanager/, (r) => r.fulfill({ contentType: 'application/javascript', body: '' }));
   await p.route('**/api/my-entitlements', (r) => r.fulfill({ contentType: 'application/json', body: '{"purchased_by_version":{}}' }));
   await p.route('**/api/subscribe', (r) => { subscribeCalls.push(1); r.fulfill({ status: 502, contentType: 'application/json', body: '{"error":"kit_error"}' }); });

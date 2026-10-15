@@ -430,6 +430,11 @@ async function attachPurchasedStatus(sessions) {
    ============================================================ */
 
 async function signInWithGoogle() {
+  // Google が無効な Supabase では始めない（js/auth-providers.js の共通判定。ボタンも出さない）
+  if (typeof authEnsureProvider === 'function' && !(await authEnsureProvider('google'))) {
+    console.error('Google sign-in error: provider_disabled');
+    return;
+  }
   const { error } = await supabaseClient.auth.signInWithOAuth({
     provider: 'google',
     // 結果コードのクエリへ戻す必要はない。回答一式はpendingDiagnosis_v1へ

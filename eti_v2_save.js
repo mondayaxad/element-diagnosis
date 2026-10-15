@@ -154,7 +154,9 @@ async function saveDiagnosisSessionV2(pending) {
 // 復帰後は、mypage.html側でも読み込まれるeti_v2_save.jsのonAuthStateChangeが
 // pendingDiagnosis_v2を検出して保存し、保存完了後はmypage自身の履歴表示に
 // その結果がそのまま反映される。
-function signInWithGoogleV2() {
+async function signInWithGoogleV2() {
+  // Google が無効な Supabase では始めない（js/auth-providers.js の共通判定。ボタンも出さない）
+  if (typeof authEnsureProvider === 'function' && !(await authEnsureProvider('google'))) return { error: AUTH_PROVIDER_DISABLED_ERROR };
   return supabaseClient.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: window.location.origin + '/mypage.html' },

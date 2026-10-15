@@ -702,7 +702,10 @@
   .mp-rec > summary { list-style: none; cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-height: 48px; padding: 12px 14px; font-size: 12.5px; }
   .mp-rec > summary::-webkit-details-marker { display: none; }
   .mp-rec > summary .d { color: var(--fg-dim); font-size: 11.5px; flex: 0 0 auto; }
-  .mp-rec > summary .c { flex: 1; min-width: 0; word-break: keep-all; }
+  /* 診断結果（元素 × 武器 × 国家）と札（NEW・COMPLETE 等）を重ねない：結果は 11em を目安に幅を取り、足りなければ札が次の行へ回る。
+     それでも入らない狭い画面では、結果の中で折り返す（はみ出して札の下に潜らない） */
+  .mp-rec > summary .c { flex: 1 1 11em; min-width: 0; word-break: keep-all; overflow-wrap: anywhere; }
+  .mp-rec > summary .mp-chip-row { flex: 0 1 auto; min-width: 0; }
   .mp-rec > summary .c .el { font-weight: 700; }
   .mp-rec > summary::after { content: '⌄'; color: var(--fg-dim); font-size: 13px; }
   .mp-rec[open] > summary::after { content: '⌃'; }
@@ -1299,7 +1302,7 @@ function renderGate(root, message) {
     ${pageHeaderHtml()}
     <div class="gate" id="historyGateArea">
       <p class="gate-title">マイページを作成・ログイン</p>
-      <p>はじめての方は、Google・X・メールのいずれかで無料で作成できます。<br>以前に保存した方は、保存したときと同じ方法でログインしてください。</p>
+      <p data-gate-methods>はじめての方は、${mpAuthMethodsText()}で無料で作成できます。<br>以前に保存した方は、保存したときと同じ方法でログインしてください。</p>
       <p class="gate-note" data-gate-purchase-note>ログインなしで購入した方は、<b>購入時のメールアドレス</b>で作成・ログインすると、購入した解析レポート・完全解析がマイページに自動で引き継がれます（購入した端末でなくても引き継げます）。</p>
       <div id="gateAuth"></div>
       <div class="gate-msg" id="gateMsg">${message || ''}</div>
@@ -1311,6 +1314,16 @@ function renderGate(root, message) {
     onGoogle: () => signInWithGoogle(),
     googleButtonId: 'gateGoogleBtn',
   });
+  // 使えるログイン方法を読めたら、案内の文もそろえる（ボタンは renderAuthChoices が描き直す）
+  authEnabledProviders().then(() => {
+    const el = document.querySelector('[data-gate-methods]');
+    if (el) el.innerHTML = `はじめての方は、${mpAuthMethodsText()}で無料で作成できます。<br>以前に保存した方は、保存したときと同じ方法でログインしてください。`;
+  });
+}
+// いま使えるログイン方法の名前（Google・X は公開 Auth 設定で有効な時だけ）
+function mpAuthMethodsText() {
+  const names = (typeof authOAuthLabels === 'function' ? authOAuthLabels() : []).concat(['メール']);
+  return names.length > 1 ? `${names.join('・')}のいずれか` : 'メール';
 }
 
 // renderGateOtpInput() は旧メールOTP UI（未使用）。現在のメールOTPは js/auth-providers.js の renderAuthChoices() が描く。
@@ -2266,6 +2279,8 @@ function mpLoginMethodsHtml(user) {
     rows.push(`<div class="mp-login-row"><span>メール${user.email ? `（${mpEsc(user.email)}）` : ''}</span><span class="mp-login-on">✓ 利用中</span></div>`);
   }
   AUTH_LINKABLE_PROVIDERS.forEach(p => {
+    // 連携済みの方法は表示する。未連携の方法は、公開 Auth 設定で有効な時だけ「連携する」を出す
+    if (!linked.has(p.provider) && !authProviderEnabled(p.provider)) return;
     const unlinkBtn = canUnlinkAuthProvider(user, p.provider)
       ? ` <button type="button" class="mp-login-unlink" data-provider="${p.provider}" data-label="${p.label}" onclick="mpUnlinkProvider(this)">解除</button>` : '';
     rows.push(linked.has(p.provider)
@@ -2273,10 +2288,23 @@ function mpLoginMethodsHtml(user) {
       : `<div class="mp-login-row"><span>${p.label}</span><button type="button" class="mp-login-btn" data-provider="${p.provider}" onclick="mpLinkProvider(this)">${p.label}を連携する</button></div>`);
   });
   const notice = (typeof AUTH_RETURN_ERROR !== 'undefined' && AUTH_RETURN_ERROR) ? authLinkErrorMessage(AUTH_RETURN_ERROR) : '';
+  const canLink = AUTH_LINKABLE_PROVIDERS.some((p) => !linked.has(p.provider) && authProviderEnabled(p.provider));
+  // 使えるログイン方法を読めたら、この欄だけ描き直す（読む前は連携ボタンを出さない）
+  if (typeof authEnabledProviders === 'function') {
+    authEnabledProviders().then(() => {
+      const el = document.getElementById('mpLogin');
+      if (el && !el.dataset.providersApplied) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = mpLoginMethodsHtml(user).trim();
+        const next = tmp.firstElementChild;
+        if (next) { next.dataset.providersApplied = '1'; el.replaceWith(next); }
+      }
+    });
+  }
   return `
         <div class="mp-login" id="mpLogin">
           <div class="mp-login-title">ログイン方法</div>
-          <div class="mp-login-note">ほかの方法も連携しておくと、次からどの方法でログインしても、この記録を見られます。</div>
+          ${canLink ? '<div class="mp-login-note">ほかの方法も連携しておくと、次からどの方法でログインしても、この記録を見られます。</div>' : ''}
           ${rows.join('')}
           <div class="mp-login-msg" id="mpLoginMsg" role="alert">${mpEsc(notice)}</div>
         </div>`;
