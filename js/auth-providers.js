@@ -125,8 +125,37 @@ function authEmailUnavailableMessage() {
     ? `いまメールでのログインが混み合っています。${names.join(' または ')} でのログインをお試しください。`
     : 'いまメールでのログインが混み合っています。時間をおいて、もう一度お試しください。';
 }
+// 送信・確認の失敗の種類（第17節）。Supabase の error.code / status で分ける（文言の一致では判定しない）
+//   request_limit：短い間の送り直し（同じアドレスへの再送の間隔）。しばらく待てば送れる
+//   hourly_limit ：1時間あたりのメール送信の上限。1時間ほど待つか、Google / X
+//   expired      ：コードの期限切れ・誤り（Supabase は両方を otp_expired で返す）
+//   unavailable  ：それ以外の送信の失敗（メール送信サービスの障害など）
+function authOtpErrorKind(error, phase) {
+  const code = String((error && (error.code || error.error_code)) || '');
+  const status = Number(error && error.status);
+  if (phase === 'verify') return code === 'over_request_rate_limit' || status === 429 ? 'request_limit' : 'expired';
+  if (code === 'over_email_send_rate_limit') return 'hourly_limit';
+  if (code === 'over_request_rate_limit' || status === 429) return 'request_limit';
+  return 'unavailable';
+}
+// 再送までの秒数（Supabase の文「…after 37 seconds」から。読めなければ既定の間隔）
+function authOtpRetryAfter(error) {
+  const m = /(\d+)\s*seconds?/.exec(String((error && error.message) || ''));
+  const n = m ? Number(m[1]) : NaN;
+  return n > 0 && n <= 3600 ? n : AUTH_OTP_RESEND_SEC;
+}
 function authErrorMessage(error, phase) {
-  if (phase === 'verify') return 'コードが正しくないか、有効期限が切れています。';
+  const kind = authOtpErrorKind(error, phase);
+  if (kind === 'expired') return 'コードが正しくないか、有効期限が切れています。最新のメールに届いたコードを入力してください。';
+  if (kind === 'request_limit') return phase === 'verify'
+    ? '短い間に何度も確認しました。少し待ってから、もう一度お試しください。'
+    : '短い間に何度も送信しました。少し待ってから、もう一度お試しください。届いているコードがあれば、そのまま入力できます。';
+  if (kind === 'hourly_limit') {
+    const names = authOAuthLabels();
+    return 'メールの送信回数の上限に達しました。1時間ほど待ってから、もう一度お試しください。'
+      + (names.length ? `すぐにログインする場合は ${names.join(' または ')} をお使いください。` : '')
+      + '届いているコードがあれば、そのまま入力できます。';
+  }
   return authEmailUnavailableMessage();
 }
 
@@ -258,7 +287,10 @@ function renderAuthChoices(container, h) {
       send.disabled = true; send.textContent = '送信中…'; msg.textContent = '';
       const error = await sendEmailOtp(email);
       if (error) {
-        console.error('email OTP send error:', error);
+        console.error('email OTP send error:', error && error.code ? error.code : 'unknown');
+        const kind = authOtpErrorKind(error, 'send');
+        // 送信の上限：直前に送ったコードが届いている場合があるため、コードの入力へ進める（入力欄に留めない）
+        if (kind === 'request_limit' || kind === 'hourly_limit') { showCodeInput(email, authErrorMessage(error, 'send'), authOtpRetryAfter(error)); return; }
         showEmailUnavailable(email);
         return;
       }
@@ -269,7 +301,8 @@ function renderAuthChoices(container, h) {
     input.focus();
   }
 
-  function showCodeInput(email) {
+  // コードの入力（誤り・期限切れ・429 でもこの画面のまま。同じ入力では自動で送り直さない）
+  function showCodeInput(email, firstMessage, waitSec) {
     view = 'code';
     container.innerHTML = `
       <div class="au">
@@ -278,7 +311,8 @@ function renderAuthChoices(container, h) {
           <input class="au-input au-code" id="auCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="${AUTH_OTP_LENGTH}" placeholder="000000" aria-label="確認コード">
           <button type="button" class="au-btn" id="auVerify">ログイン</button>
         </div>
-        <p class="au-msg" role="alert"></p>
+        <p class="au-msg" role="alert">${firstMessage ? escapeAuthHtml(firstMessage) : ''}</p>
+        <p class="au-note au-resend-wait" id="auResendWait" aria-live="polite"></p>
         <div class="au-sub">
           <button type="button" class="au-link" id="auResend" disabled>コードを再送する</button>
           <button type="button" class="au-link" id="auChange">メールアドレスを変える</button>
@@ -290,38 +324,58 @@ function renderAuthChoices(container, h) {
     const resend = container.querySelector('#auResend');
     container.querySelector('#auChange').onclick = () => showEmailInput(email);
 
-    let left = AUTH_OTP_RESEND_SEC;
+    const wait = container.querySelector('#auResendWait');
+    // 再送までの残り時間（「あとN秒で再送できます」）。時刻で数える（タブが裏にあっても狂わない）
+    let until = Date.now() + (waitSec || AUTH_OTP_RESEND_SEC) * 1000;
+    let timer = null;
     const tick = () => {
       if (!container.contains(resend)) return;
-      if (left <= 0) { resend.disabled = false; resend.textContent = 'コードを再送する'; return; }
-      resend.textContent = `コードを再送する（${left}秒）`; left -= 1; setTimeout(tick, 1000);
+      const left = Math.ceil((until - Date.now()) / 1000);
+      if (left <= 0) { resend.disabled = false; wait.textContent = ''; return; }
+      resend.disabled = true;
+      wait.textContent = `あと${left}秒で再送できます`;
+      timer = setTimeout(tick, 1000);
     };
     tick();
     resend.onclick = async () => {
+      if (resend.disabled) return;
       resend.disabled = true; msg.textContent = '';
       const error = await sendEmailOtp(email);
-      if (error) { console.error('email OTP resend error:', error); msg.textContent = authErrorMessage(error, 'send'); }
-      else msg.textContent = '';
-      left = AUTH_OTP_RESEND_SEC; tick();
+      let next = AUTH_OTP_RESEND_SEC;
+      if (error) {
+        console.error('email OTP resend error:', error && error.code ? error.code : 'unknown');
+        msg.textContent = authErrorMessage(error, 'send');
+        next = authOtpRetryAfter(error);
+      } else {
+        msg.textContent = '新しいコードを送りました。最新のメールに届いたコードを入力してください。';
+        lastTried = '';
+      }
+      if (timer) clearTimeout(timer);
+      until = Date.now() + next * 1000; tick();
     };
 
-    const submit = async () => {
+    // 最後に確認したコード：失敗した同じコードは、入力が変わるまで自動では送り直さない（押した時は送る）
+    let lastTried = '';
+    const submit = async (auto) => {
       if (verify.disabled) return;
       const token = input.value.replace(/\D/g, '');
       if (token.length !== AUTH_OTP_LENGTH) { msg.textContent = `${AUTH_OTP_LENGTH}桁のコードを入力してください。`; return; }
+      if (auto === true && token === lastTried) return;
+      lastTried = token;
       verify.disabled = true; verify.textContent = '確認中…'; msg.textContent = '';
       const error = await verifyEmailOtp(email, token);
       if (error) {
-        console.error('email OTP verify error:', error);
+        console.error('email OTP verify error:', error && error.code ? error.code : 'unknown');
         verify.disabled = false; verify.textContent = 'ログイン';
         msg.textContent = authErrorMessage(error, 'verify');
+        if (container.contains(input)) { input.focus(); input.select(); }
         return;
       }
       if (typeof handlers.onEmailSignedIn === 'function') handlers.onEmailSignedIn();
     };
-    verify.onclick = submit;
-    input.oninput = () => { if (input.value.replace(/\D/g, '').length === AUTH_OTP_LENGTH) submit(); };
-    input.onkeydown = e => { if (e.key === 'Enter') submit(); };
+    verify.onclick = () => submit(false);
+    input.oninput = () => { if (input.value.replace(/\D/g, '').length === AUTH_OTP_LENGTH) submit(true); };
+    input.onkeydown = e => { if (e.key === 'Enter') submit(false); };
     input.focus();
   }
 
