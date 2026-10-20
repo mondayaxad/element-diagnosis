@@ -2205,7 +2205,7 @@ async function savePdf() {
   const token = params.get('token');
 
   if (!token) {
-    root.innerHTML = '<div class="err-box"><h2>リンクが正しくありません</h2><p>決済完了後の画面から、正しいリンクでアクセスしてください。</p></div>';
+    root.innerHTML = '<div class="err-box"><h2>リンクが正しくありません</h2><p>購入したレポートのリンク（URL）から開いてください。マイページに登録したレポートは、<a href="/mypage.html">マイページ</a>から開けます。</p><p><a href="/">元素診断のトップへ</a></p></div>';
     return;
   }
 

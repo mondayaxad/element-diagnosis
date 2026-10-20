@@ -75,6 +75,10 @@ function authProviderEnabled(provider) {
   return !!(authProvidersState && authProvidersState[provider] === true);
 }
 // 有効な OAuth の方法の名前（案内の文に使う）
+// アプリの中のブラウザ（LINE・Instagram・Facebook・X）：Google は埋め込みのブラウザでのログインを断る（disallowed_useragent）
+function authInAppBrowser() {
+  try { return /\bLine\/|Instagram|FBAN|FBAV|Twitter/i.test(navigator.userAgent || ''); } catch (e) { return false; }
+}
 function authOAuthLabels() {
   return [authProviderEnabled('google') ? 'Google' : null, authProviderEnabled('x') ? 'X' : null].filter(Boolean);
 }
@@ -222,7 +226,8 @@ function renderAuthChoices(container, h) {
   // Google・X は、公開 Auth 設定で有効な時だけ出す（authEnabledProviders の共通判定）
   const providerButtonsHtml = () => (authProviderEnabled('google')
     ? `
-        <button type="button" class="au-btn au-google" data-au="google"${handlers.googleButtonId ? ` id="${handlers.googleButtonId}"` : ''}>${AUTH_ICON_GOOGLE}Googleで続ける</button>` : '')
+        <button type="button" class="au-btn au-google" data-au="google"${handlers.googleButtonId ? ` id="${handlers.googleButtonId}"` : ''}>${AUTH_ICON_GOOGLE}Googleで続ける</button>`
+        + (authInAppBrowser() ? '<p class="au-inapp" role="note" style="margin:6px 0 0;font-size:12px;line-height:1.7;color:#b9b2d6">アプリの中のブラウザでは、Google でログインできないことがあります。Safari などのブラウザで開くか、メールで続けてください。</p>' : '') : '')
     + (authProviderEnabled('x') ? `
         <button type="button" class="au-btn au-x" data-au="x">${AUTH_ICON_X}Xで続ける</button>` : '');
   let view = 'choices';

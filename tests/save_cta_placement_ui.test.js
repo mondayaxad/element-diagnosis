@@ -633,7 +633,9 @@ test('LATEST RESULT：4状態で THE RECORDS の同じ記録と同じ購入・�
       return !!(acts && row && (acts.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING));
     });
     assert.ok(order, 'actions before 結果を見る/Xシェア ' + c.name);
-    assert.match(await p.locator('.mp-latest-fold .mp-btn-row').innerText(), /結果を見る[\s\S]*Xシェア/);
+    // 「結果を見る」は折りたたみの外（いつでも見える）。シェアは折りたたみの中
+    assert.match(await p.locator('.mp-latest-view').innerText(), /結果を見る/);
+    assert.match(await p.locator('.mp-latest-fold .mp-btn-row').innerText(), /Xシェア/);
     // 完全解析を見る は最新記録（B）が対象
     if (c.name === 'complete') assert.equal(await p.locator('.mp-latest-fold').getByText('完全解析を見る').getAttribute('data-session-id'), 'sess-B');
     if (c.name === 'analysis') assert.equal(await p.locator('.mp-latest-fold').getByText('解析レポートを読む').getAttribute('data-session-id'), 'sess-B');

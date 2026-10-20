@@ -585,8 +585,8 @@
 <footer>
   <p class="footer-copy">元素診断 — An original personality framework inspired by Genshin Impact. For entertainment purposes. © マンデーアクスト / @mondayaxad</p>
   <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-top:16px">
-    <a href="javascript:void(0)" onclick="document.getElementById('privacy').style.display='flex'" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">プライバシーポリシー</a>
-    <a href="javascript:void(0)" onclick="document.getElementById('terms').style.display='flex'" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">利用規約</a>
+    <a href="/privacy.html" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">プライバシーポリシー</a>
+    <a href="/terms.html" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">利用規約</a>
     <a href="javascript:void(0)" onclick="document.getElementById('about').style.display='flex'" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">運営者情報</a>
     <a href="https://x.com/mondayaxad" target="_blank" rel="noopener" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">お問い合わせ</a>
   </div>
@@ -1683,6 +1683,7 @@ function render() {
 // ?code=復元処理）で行われ、ここでは一切変更しない。
 function startNewDiagnosisV2() {
   answersV2 = {}; currentIdxV2 = 0; quizFocusIdxV2 = null;
+  clearQuizProgressV2();
   // 前の結果の固有リンクは使わない（新しい診断には新しいリンクを作る）。/result から始めた時は TOP の URL へ戻す
   window.__edResumeToken = null;
   window.__resumeFresh = false;
@@ -2028,7 +2029,24 @@ function getV2QuestionsById() {
 let currentIdxV2 = 0; // ページ先頭のcanonical order内インデックス（0,5,10,...）
 let quizFocusIdxV2 = null; // フォーカス中のitem_id
 
+// 診断の途中経過（このタブだけ）：再読み込み・戻る操作で回答を失わない。結果を出したら消す
+var QUIZ_PROGRESS_KEY = 'ed_quiz_progress_v2';
+function saveQuizProgressV2() {
+  try { sessionStorage.setItem(QUIZ_PROGRESS_KEY, JSON.stringify({ a: answersV2, i: currentIdxV2, at: Date.now() })); } catch (e) { /* 保存できなくても続ける */ }
+}
+function clearQuizProgressV2() { try { sessionStorage.removeItem(QUIZ_PROGRESS_KEY); } catch (e) { /* noop */ } }
+function restoreQuizProgressV2() {
+  try {
+    var v = JSON.parse(sessionStorage.getItem(QUIZ_PROGRESS_KEY) || 'null');
+    if (!v || typeof v.a !== 'object' || !v.a || Date.now() - Number(v.at) > 6 * 3600 * 1000) return false;
+    var n = Object.keys(v.a).length;
+    if (!n) return false;
+    answersV2 = v.a; currentIdxV2 = Number(v.i) || 0; quizFocusIdxV2 = null;
+    return true;
+  } catch (e) { return false; }
+}
 function renderQuizV2(root) {
+  saveQuizProgressV2();
   var order = getV2CanonicalOrder();
   var byId = getV2QuestionsById();
   var pageStart = currentIdxV2;
@@ -2213,6 +2231,7 @@ function showResultV2() {
     window.__resultNonce = (window.__resultNonce || 0) + 1;
     window.__resumeFresh = true;
     window.__edResumeToken = null;
+    clearQuizProgressV2();
     setPhase('result');
   }
 }
@@ -2797,7 +2816,9 @@ function renderResult(root) {
   var copyUrlBtn = root.querySelector('#copyUrlBtn');
   if (copyUrlBtn) {
     copyUrlBtn.onclick = function() {
-      var url = buildResultUrl(shortCode, diagnosisVersion);
+      // この結果の固有リンク（/result#r=）があればそれを。無ければ従来の形
+      var url = window.__edResumeToken && /^[A-Za-z0-9_-]{43}$/.test(window.__edResumeToken)
+        ? location.origin + '/result#r=' + window.__edResumeToken : buildResultUrl(shortCode, diagnosisVersion);
       var originalText = copyUrlBtn.innerHTML;
       function showCopied() {
         copyUrlBtn.innerHTML = '✓ コピーしました（このURLで、いつでも同じ結果に戻れます）';
@@ -3568,6 +3589,7 @@ function renderResumeError(kind) {
     ? '<h2 class="resume-err-title">いまは診断結果を開けません</h2><p class="resume-err-body">時間をおいて、もう一度お試しください。</p>'
     : '<h2 class="resume-err-title">この診断結果は開けません</h2><p class="resume-err-body">リンクが正しくないか、保存期間が過ぎています。</p>';
   root.innerHTML = '<section class="resume-err" role="alert">' + msg + '<p><a class="resume-err-link" href="/">TOPへ</a></p></section>';
+  try { root.scrollIntoView({ block: 'start' }); } catch (e) { /* noop */ } // ヒーローの下に隠れて見落とさない
 }
 // /result#r=<秘密値> を開いた：保存時の版のまま、同じ診断結果を復元する（版が今の診断と違う時は開かない）
 function openResumeFromUrl() {
@@ -3642,6 +3664,10 @@ window.addEventListener('DOMContentLoaded', function() {
     }
   }
   window.__diagnosisVersion = 'ETI-2.0';
+  // 診断の途中で再読み込み・戻った：このタブの途中経過から続ける
+  if (restoreQuizProgressV2()) { window.__mirrorVersion = null; setPhase('quiz'); return; }
+  // マイページの「もう一度、診断する」（?start=1）：すぐに診断を始める
+  if (params.get('start') === '1') { try { history.replaceState(null, '', '/'); } catch (e) { /* そのまま */ } startNewDiagnosisV2(); return; }
   window.__phase = 'intro';
   render();
 });

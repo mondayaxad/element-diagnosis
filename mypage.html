@@ -1386,7 +1386,8 @@ function renderEmpty(root, user) {
     ${pageHeaderHtml()}
     <div class="empty">
       まだ保存された診断記録がありません。<br>
-      診断結果画面の「結果を保存」から記録できます。
+      診断結果の画面の「この結果を診断記録に保存する」から記録できます。
+      <p><a href="/?start=1" class="mp-btn">診断をはじめる ›</a></p>
       <p class="empty-hint">以前ほかの方法${mpOtherMethodsText()}で保存した記録は、そのときと同じ方法でログインすると表示されます。</p>
       <p class="empty-hint" data-empty-purchase-note>購入したレポートは、レポートのリンク（購入完了ページ・レポートの最下部）の「マイページに登録する」から、このマイページに追加できます。</p>
     </div>
@@ -2415,12 +2416,12 @@ function mpLatestHtml(r) {
           </div>
         </div>
         ${mpVizHtml(r)}
+        ${viewBtn ? `<div class="mp-btn-row mp-latest-view">${viewBtn}</div>` : ''}
         <details class="mp-latest-fold">
           <summary>${r.purchased ? '深く読み解いた内容を見る' : mpEntitlementOk ? 'まだ読み解いていない部分を見る' : 'この記録の詳細を見る'}</summary>
           <div class="mp-latest-fold-body">
             ${state}
             <div class="mp-btn-row">
-              ${viewBtn}
               ${shareBtn}
             </div>
           </div>
@@ -2518,7 +2519,7 @@ function mpRediagHtml() {
     <section class="mp-sec mp-rediag" aria-labelledby="mp-rediag-h">
       <div class="mp-sec-head" id="mp-rediag-h" style="justify-content:center"><span class="mp-sec-en">RE-DIAGNOSIS</span></div>
       <p class="mp-rediag-copy">今のあなたは、あの日と同じだろうか。</p>
-      <a href="/?dv=ETI-2.0" class="mp-btn full" onclick="trackEvent('mypage_rediagnosis_click',{})">↻ もう一度、診断する ›</a>
+      <a href="/?start=1" class="mp-btn full" onclick="trackEvent('mypage_rediagnosis_click',{})">↻ もう一度、診断する ›</a>
       <p class="mp-rediag-note">新しい診断は、今のあなたの新しい記録として別に保存されます。これまでの記録と、購入済みの解析レポートはそのまま残ります。</p>
     </section>`;
 }
