@@ -2188,7 +2188,9 @@ async function savePdf() {
     // 診断コードのページは付けない（旧ナラティブ販売の申込コードの案内は廃止。PDF に回答の符号・秘密値・ID を入れない）
 
     pdf.save('元素診断_解析レポート.pdf');
-    say('PDFを保存しました。');
+    // アプリの中のブラウザ（LINE・Instagram など）はファイルの保存に対応していないことがある
+    say(/\bLine\/|Instagram|FBAN|FBAV|Twitter/i.test(navigator.userAgent || '')
+      ? 'PDFを保存しました。保存されない時は、Chrome や Safari で開いてお試しください。' : 'PDFを保存しました。');
   } catch (e) {
     console.error(e);
     say('PDFを作成できませんでした。少し時間をおいて、もう一度お試しください。');
