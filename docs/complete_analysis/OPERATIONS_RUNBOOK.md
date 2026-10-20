@@ -2,6 +2,8 @@
 
 対象：release-c-preview と Preview の Supabase（complete_01〜11 適用後）。本番では使わない（本番は別の承認・別の手順）。
 
+> **complete_13（2026-10-20）以降**：価格・入口・マイページの決め方は `REPORT_LINKS_RUNBOOK.md` が正本。下の「0.」の追加 ¥2,000・引き継ぎ・1つだけの決済画面は廃止した（既存の購入の閲覧・返金・生成の作り直しの節は引き続き使う）。
+
 共通の約束
 
 - SQL は Supabase の SQL Editor で、運営者が1文ずつ実行する。API のロール（service_role）には、ここで使う運営者の関数を実行する権限が無い。
