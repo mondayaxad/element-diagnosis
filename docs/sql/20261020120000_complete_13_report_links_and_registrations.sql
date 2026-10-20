@@ -408,7 +408,7 @@ grant execute on function public.complete_apply_link_payment(text, timestamptz, 
 
 -- 10. アカウントへの閲覧の登録（有効な納品だけ。同じアカウント・同じ納品は1件）
 create or replace function public.complete_register_delivery(p_user_id uuid, p_link_token_hash text)
-  returns table (result text, delivery_id uuid)
+  returns table (reg_result text, reg_delivery uuid)
   language plpgsql
   security invoker
   set search_path = ''
