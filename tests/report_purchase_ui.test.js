@@ -133,6 +133,7 @@ const BUY_OK = (b) => [200, { checkoutUrl: 'https://checkout.stripe.com/c/pay/cs
 const RESULT_API = (extra) => Object.assign({
   'result-open': (b) => (b.token === RESUME ? [200, { code: V2(7).code, diagnosisVersion: 'ETI-2.0', versions: VERSIONS }] : [404, { error: 'result_not_found' }]),
   'buy-context': [200, { context: CTX, summary: SUMMARY, eligible: { analysis: true, complete: true } }],
+  'buy-summary': [200, { summary: SUMMARY, eligible: { analysis: true, complete: true } }],
   'guest-goals': [200, GOALS],
   buy: BUY_OK,
 }, extra || {});
@@ -211,6 +212,17 @@ test('診断結果：サンプルへは同じタブ・購入対象トークン�
   assert.equal(u.search, '');
   assert.doesNotMatch(p.url(), UUID_RE);
   await p.__ctx.close();
+  // 解析レポートのサンプル：診断結果から開くと、この診断結果の申込（解析レポート）に変わる（「まず元素診断を受ける」のままにしない）
+  for (const product of ['analysis', 'complete']) {
+    const r = await resultPage();
+    const link = r.locator(`[data-buy-sample="${product}"]`);
+    assert.equal(await link.count(), 1, product);
+    await link.click();
+    await r.waitForURL(product === 'analysis' ? /report_sample/ : /complete-sample/);
+    await r.waitForSelector(`[data-sample-buy] [data-buy="${product}"]`);
+    assert.doesNotMatch(await r.locator('[data-sample-buy]').innerText(), /まず元素診断を受ける/);
+    await r.__ctx.close();
+  }
   const q = await resultPage({ salesOpen: false });
   assert.equal(await q.locator('[data-buy-complete]').isDisabled(), true);
   assert.match(await q.locator('[data-buy-complete]').innerText(), /準備中/);
@@ -265,6 +277,21 @@ test('サンプル：直接開くと「まず元素診断を受ける」だけ�
 });
 
 // ================= 購入完了ページ
+test('サンプル：URL からトークンを消した後も、同じタブの再読み込み・決済画面からの「戻る」で同じ診断結果の申込のまま（「まず元素診断を受ける」に戻らない）', { skip: skip() }, async () => {
+  for (const [pg, product] of [['/report_sample.html', 'analysis'], ['/complete-sample.html', 'complete']]) {
+    const s = await open(`${pg}#c=${CTX}&from=result`, { api: RESULT_API({ 'buy-summary': [200, { summary: SUMMARY, eligible: { analysis: true, complete: true } }] }) });
+    await s.waitForSelector(`[data-sample-buy] [data-buy="${product}"]`);
+    assert.equal(new URL(s.url()).hash, '');
+    await s.reload();
+    await s.waitForSelector(`[data-sample-buy] [data-buy="${product}"]`);
+    assert.doesNotMatch(await s.locator('[data-sample-buy]').innerText(), /まず元素診断を受ける/);
+    // 押した後（移動中の印）でも、bfcache からの復元で押せる状態へ戻る
+    await s.evaluate((p) => { document.querySelector(`[data-sample-buy] [data-buy="${p}"]`).setAttribute('data-busy', 'away'); window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })); }, product);
+    assert.equal(await s.locator(`[data-sample-buy] [data-buy="${product}"][data-busy]`).count(), 0);
+    await s.__ctx.close();
+  }
+});
+
 test('購入完了：受け取り専用（状態・開く・リンクのコピー・PDF の案内・登録）。ほかの商品の申込は出さない', { skip: skip() }, async () => {
   const p = await open('/purchase-complete?status=returned', { api: { deliveries: [200, { purchases: [
     { product: 'analysis', state: 'active', link: LINK_A, purchasedOn: '2026-10-20' },

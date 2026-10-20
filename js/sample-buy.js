@@ -11,8 +11,20 @@
   var B = window.EdBuy;
   var box = document.querySelector('[data-sample-buy]');
   if (!B || !box) return;
+  // 購入対象トークンは、このタブの sessionStorage にも置く（URL からは消すため。決済画面から「戻る」・再読み込みでも同じ記録で申し込める）
+  var KEY = 'ed_sample_ctx';
+  var CTX_TTL_MS = 23 * 3600 * 1000; // トークンの有効期限（24時間）より短く
   var context = B.readFragment('c');
-  var from = B.readFragment('from') === 'mypage' ? 'mypage' : 'result';
+  var fromRaw = B.readFragment('from');
+  if (B.contextOk(context)) {
+    try { sessionStorage.setItem(KEY, JSON.stringify({ c: context, from: fromRaw, at: Date.now() })); } catch (e) { /* 保存できなくても続ける */ }
+  } else if (!context) {
+    try {
+      var saved = JSON.parse(sessionStorage.getItem(KEY) || 'null');
+      if (saved && B.contextOk(saved.c) && Date.now() - saved.at < CTX_TTL_MS) { context = saved.c; fromRaw = saved.from; }
+    } catch (e) { /* 読めない時は購入の対象なし */ }
+  }
+  var from = fromRaw === 'mypage' ? 'mypage' : 'result';
   var subject = from === 'mypage' ? 'この記録' : 'この診断結果';
   var source = from === 'mypage' ? 'mypage_sample' : 'result_sample';
   var page = box.getAttribute('data-sample-buy') === 'complete' ? 'complete' : 'analysis';
@@ -103,7 +115,7 @@
           a.setAttribute('data-busy', '1');
           msg.textContent = '';
           B.start({ context: context, product: a.getAttribute('data-buy'), source: source }).then(function (res) {
-            if (res.ok) return;
+            if (res.ok) { a.setAttribute('data-busy', 'away'); return; }
             a.removeAttribute('data-busy');
             if (!res.silent) msg.textContent = B.errorText(res.error);
           });
@@ -111,4 +123,12 @@
       });
     });
   });
+  // 決済画面から「戻る」（bfcache から復元）・タブへの復帰：押したボタンを、もう一度押せる状態へ戻す
+  function releaseBusy(onlyAway) {
+    document.querySelectorAll('[data-buy][data-busy]').forEach(function (a) {
+      if (!onlyAway || a.getAttribute('data-busy') === 'away') a.removeAttribute('data-busy');
+    });
+  }
+  window.addEventListener('pageshow', function (e) { if (e.persisted) releaseBusy(false); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') releaseBusy(true); });
 })();
