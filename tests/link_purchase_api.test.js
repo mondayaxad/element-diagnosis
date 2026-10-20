@@ -169,6 +169,7 @@ test('A ¥1,000：診断結果の記録で購入→支払い→購入完了ペ�
   const orders = await ctx.rows('complete_orders');
   assert.deepEqual(orders.map((o) => `${o.buyer}:${o.offer}:${o.amount}:${o.status}:${o.user_id}`), ['link:analysis:1000:paid:null']);
   assert.equal(ctx.stripe.st.lastCreate.params.customer_email, undefined, '購入時メールを入れない（本人の判定に使わない）');
+  assert.match(ctx.stripe.st.lastCreate.params.custom_text.submit.message, /^解析レポート（1,000円・税込）。.*すぐにお読みいただけます。.*返品・返金はお受けしていません/, '決済画面（最終確認画面）に価格・提供の時期・返品の決まり');
   // 固有リンクを開く（Cookie の無いブラウザでも開ける）
   const o = await ctx.op('link-open', { token: p.link, open: true }, { cookie: '' });
   assert.equal(o.code, 200, JSON.stringify(o.body));
@@ -192,6 +193,7 @@ test('B ¥3,000：MENTOR 目標が必須・注文に固定。支払い→生成�
   assert.deepEqual((await ctx.op('buy', { context, product: 'complete', attempt: attemptId() })).body, { error: 'mentor_goal_required' });
   assert.deepEqual((await ctx.op('buy', { context, product: 'analysis', goal: 'GOAL_PACE_01', attempt: attemptId() })).body, { error: 'invalid_request' });
   await buyAndPay(ctx, context, 'complete', { goal: 'GOAL_EXPLORE_01' });
+  assert.match(ctx.stripe.st.lastCreate.params.custom_text.submit.message, /^完全解析（3,000円・税込）。解析レポートとは別の商品.*MENTOR の目標は、お支払いの後は変更できません。.*返品・返金はお受けしていません/);
   const [order] = await ctx.rows('complete_orders');
   assert.deepEqual([order.offer, order.amount, order.mentor_goal_id], ['direct_complete', 3000, 'GOAL_EXPLORE_01']);
   assert.deepEqual(await ctx.rows('record_mentor_goals'), [], '記録の目標の表は使わない（注文に固定）');
