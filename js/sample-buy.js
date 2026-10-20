@@ -89,23 +89,29 @@
   }
 
   box.innerHTML = '<p>' + subject + 'を確かめています…</p>';
-  if (!context) noContext();
-  else {
-    fillSlot(context);
+  function check() {
+    box.innerHTML = '<p>' + subject + 'を確かめています…</p>';
     B.summary(context).then(function (r) {
-      // 確かめられた時だけ、このタブに残す（受け取った時刻のまま）。期限切れ・見つからない時は消す（次に開いた時に残さない）
+      // 確かめられた時・一時的な失敗の時は、このタブに残す（受け取った時刻のまま。読み込み直してもやり直せる）。
+      //   期限切れ・見つからない時だけ消す（次に開いた時に残さない）
+      var gone = r.status === 404 || r.status === 410;
       try {
-        if (r.ok) sessionStorage.setItem(KEY, JSON.stringify({ c: context, from: fromRaw, at: savedAt }));
-        else sessionStorage.removeItem(KEY);
+        if (gone) sessionStorage.removeItem(KEY);
+        else sessionStorage.setItem(KEY, JSON.stringify({ c: context, from: fromRaw, at: savedAt }));
       } catch (e) { /* 保存できなくても続ける */ }
-      render(r);
+      render(r, !gone);
     });
   }
+  if (!context) noContext();
+  else { fillSlot(context); check(); }
 
-  function render(r) {
+  function render(r, canRetry) {
     if (!r.ok) {
       box.innerHTML = '<h2>' + subject + 'で読む</h2><p>' + B.esc(B.errorText(r.body && r.body.error)) + '</p>'
+        + (canRetry ? '<p><button type="button" class="sample-return" data-sample-retry>もう一度確かめる</button></p>' : '')
         + '<a class="sample-return" href="' + B.esc(backHref()) + '" data-sample-back>元の画面に戻る</a>';
+      var again = box.querySelector('[data-sample-retry]');
+      if (again) again.onclick = check;
       return;
     }
     var s = r.body.summary || {};

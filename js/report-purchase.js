@@ -48,10 +48,15 @@
     var headers = { 'Content-Type': 'application/json' };
     if (o.token) headers.Authorization = 'Bearer ' + o.token;
     var res;
+    // 応答が無いまま待ち続けない（15秒で通信の失敗として扱い、各画面の「もう一度」へ）
+    var ctl = typeof AbortController === 'function' ? new AbortController() : null;
+    var timer = ctl ? setTimeout(function () { ctl.abort(); }, 15000) : null;
     try {
-      res = await fetch(API + op, { method: 'POST', credentials: 'same-origin', headers: headers, body: JSON.stringify(body || {}), referrerPolicy: 'no-referrer' });
+      res = await fetch(API + op, { method: 'POST', credentials: 'same-origin', headers: headers, body: JSON.stringify(body || {}), referrerPolicy: 'no-referrer', signal: ctl ? ctl.signal : undefined });
     } catch (e) {
       return { ok: false, status: 0, body: { error: 'network' } };
+    } finally {
+      if (timer) clearTimeout(timer);
     }
     var data = null;
     try { data = await res.json(); } catch (e) { data = null; }
@@ -235,9 +240,10 @@
   // マイページへの登録：秘密値はこのタブの sessionStorage にだけ置き、マイページ（ログインの後も含む）で登録する
   function startRegister(token, source, opts) {
     if (!TOKEN_RE.test(String(token || ''))) return false;
-    session(function (s) { s.setItem(REGISTER_KEY, JSON.stringify({ t: token, at: Date.now() })); });
+    var saved = session(function (s) { s.setItem(REGISTER_KEY, JSON.stringify({ t: token, at: Date.now() })); return true; });
     track('report_register_start', { source: source });
-    if (!(opts && opts.stay)) global.location.assign('/mypage.html');
+    // このタブに控えを置けない設定（Safari のプライベートなど）：マイページの URL の # で渡す（マイページはすぐに消す）
+    if (!(opts && opts.stay)) global.location.assign(saved ? '/mypage.html' : '/mypage.html#reg=' + token);
     return true;
   }
   function takeRegisterIntent() {
@@ -268,6 +274,10 @@
   }
   // 登録の予定（期限内のものだけ）。期限切れは消す
   function peekRegisterIntent() { return registerIntentAt() !== null; }
+  function peekRegisterToken() {
+    if (registerIntentAt() === null) return null;
+    try { var v = JSON.parse(session(function (s) { return s.getItem(REGISTER_KEY); }) || 'null'); return v && TOKEN_RE.test(String(v.t || '')) ? v.t : null; } catch (e) { return null; }
+  }
   function registerIntentAt() {
     var raw = session(function (s) { return s.getItem(REGISTER_KEY); });
     try {
@@ -332,7 +342,7 @@
     contextFromResume: contextFromResume, contextFromRecord: contextFromRecord, summary: summary, contextOk: contextOk,
     sampleHref: sampleHref, readFragment: readFragment, start: start, returnPath: returnPath, goalDialog: goalDialog,
     linkUrl: linkUrl, rememberLink: rememberLink, rememberedLink: rememberedLink, openLink: openLink,
-    startRegister: startRegister, takeRegisterIntent: takeRegisterIntent, peekRegisterIntent: peekRegisterIntent, registerIntentAt: registerIntentAt, markBuyFromMypage: markBuyFromMypage, clearBuyFromMypage: clearBuyFromMypage, takeBuyFromMypage: takeBuyFromMypage, register: register,
+    startRegister: startRegister, takeRegisterIntent: takeRegisterIntent, peekRegisterIntent: peekRegisterIntent, peekRegisterToken: peekRegisterToken, registerIntentAt: registerIntentAt, markBuyFromMypage: markBuyFromMypage, clearBuyFromMypage: clearBuyFromMypage, takeBuyFromMypage: takeBuyFromMypage, register: register,
     copyText: copyText, myReports: myReports, myOpen: myOpen, myRegenerate: myRegenerate, accountToken: accountToken,
   };
 })(typeof window !== 'undefined' ? window : this);

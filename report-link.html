@@ -124,8 +124,9 @@
       if (r.ok && r.body && typeof r.body.url === 'string' && r.body.url.charAt(0) === '/') {
         B.track(b.product === 'complete' ? 'complete_report_open' : 'analysis_report_open', { source: 'report_link' });
         // この固有リンクから開いた印：開いた閲覧 URL と組で控える（レポートの画面は、自分の URL と一致した時だけ、この固有リンクを使う）
-        try { sessionStorage.setItem(VIA_KEY, JSON.stringify({ t: token, url: r.body.url })); } catch (e) { /* 戻せなくても読める */ }
-        location.replace(r.body.url);
+        try { sessionStorage.setItem(VIA_KEY, JSON.stringify({ t: token, url: r.body.url })); } catch (e) { /* 下の # で渡す */ }
+        // 解析レポート：このタブに控えを置けない設定でも固有リンクを使えるよう、# にも付ける（サーバーへは送られない）
+        location.replace(r.body.url + (r.body.url.indexOf('/report.html') === 0 ? '#t=' + token : ''));
         return;
       }
       render(r.ok && r.body ? r.body : b, true); // 開けなかった：最新の状態（返金など）で示す
@@ -189,7 +190,7 @@
   function load() {
     B.openLink(token, false).then(function (r) {
       if (r.ok) { render(r.body); return; }
-      if (r.status === 404) {
+      if (r.status === 404 && r.body && r.body.error === 'link_not_found') {
         box.innerHTML = '<div class="card"><p class="state">このリンクでは、レポートを開けませんでした。新しいリンクが発行されたか、URLの一部が欠けているのかもしれません。</p>'
           + '<p class="note">新しいリンクをお持ちの場合は、そちらを開いてください。ご不明点は <a href="https://x.com/mondayaxad" target="_blank" rel="noopener">@mondayaxad</a> までご連絡ください。</p></div>';
         return;

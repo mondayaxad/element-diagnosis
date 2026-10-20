@@ -2056,7 +2056,8 @@ async function mpRegisterNow(token) {
   const error = (r.body && r.body.error) || (r.status === 0 ? 'network' : 'unknown');
   EdBuy.track('report_register_failed', { reason: error });
   // link：登録できなくても、購入したレポートをすぐ開けるように（マイページから申し込んだ時は、入口のページを通らずに来ている）
-  return { ok: false, error, token: error === 'network' || error === 'service_unavailable' ? token : null, link: error === 'link_not_found' ? null : token };
+  const transient = error === 'network' || error === 'service_unavailable' || r.status === 429 || r.status >= 500;
+  return { ok: false, error, token: transient ? token : null, link: error === 'link_not_found' ? null : token };
 }
 let mpRegisterDone = null; // 「このアカウントに登録する」の結果（描き直した後に示す）
 // 示している登録の結果・確かめの欄：描き直し（ログインの通知が重なった時など）でも消さない。閉じる・次の予定で入れ替える
@@ -2079,15 +2080,30 @@ function mpRegisterLoginMarked() {
     return at !== null && sessionStorage.getItem(MP_REGISTER_LOGIN_KEY) === String(at);
   } catch (e) { return false; }
 }
+// このタブに控えを置けない設定（Safari のプライベートなど）では、登録の予定が URL の #reg= で届く。読んだらすぐ URL から消す
+let mpHashRegister = (() => {
+  const m = /(?:^#|&)reg=([A-Za-z0-9_-]{43})(?:&|$)/.exec(location.hash || '');
+  if (m) { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* そのまま */ } }
+  return m ? m[1] : null;
+})();
 async function mpRegisterFromIntent() {
   if (mpRegisterDone) { const done = mpRegisterDone; mpRegisterDone = null; return done; }
   if (typeof EdBuy === 'undefined') return null;
+  if (mpHashRegister) { const t = mpHashRegister; mpHashRegister = null; return { confirm: true, token: t }; }
   const viaLogin = mpRegisterLoginMarked();
+  // この登録のためにログインした・マイページから買った：そのまま登録する。登録できた時だけ予定を消す
+  //   （失敗した時は予定と印を残す。読み込み直すと登録をやり直し、購入したレポートへの道を失わない）
+  if (viaLogin) {
+    const pending = EdBuy.peekRegisterToken();
+    if (!pending) { mpRegisterLoginMark(false); return null; }
+    const out = await mpRegisterNow(pending);
+    if (out.ok) { EdBuy.takeRegisterIntent(); mpRegisterLoginMark(false); }
+    else if (out.error !== 'link_not_found') out.link = out.link || pending;
+    return out;
+  }
   const token = EdBuy.takeRegisterIntent();
   mpRegisterLoginMark(false);
   if (!token) return null;
-  // この登録のためにログインした：そのまま登録する
-  if (viaLogin) return mpRegisterNow(token);
   // 以前からこのブラウザに残っていたログイン：黙って使わない。通常どおりログインの画面から登録する（今のアカウントも選べる）
   return { confirm: true, token };
 }

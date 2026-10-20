@@ -120,6 +120,10 @@ function isValidEmailForOtp(email) {
 // 送信の失敗は、Supabase の送信上限（429）でもメール送信サービス側の上限・障害（5xx）でも
 // 利用者には区別がつかず、しばらく復旧しないことがあるため、Google / X へ案内する。
 function authEmailUnavailableMessage() {
+  // ログインの部品（supabase-js）自体を読み込めなかった：混雑ではない。通信・拡張機能を確かめて読み込み直す
+  if (typeof supabaseClient !== 'undefined' && supabaseClient && supabaseClient.unavailable) {
+    return 'ログインの準備ができませんでした。通信や拡張機能（広告ブロックなど）をご確認のうえ、ページを読み込み直してください。';
+  }
   const names = authOAuthLabels();
   return names.length
     ? `いまメールでのログインが混み合っています。${names.join(' または ')} でのログインをお試しください。`
