@@ -115,6 +115,7 @@
   .ca-r-btn:focus-visible { outline:2px solid #a888d8; outline-offset:2px; }
   .ca-r-btn { display:flex; align-items:center; justify-content:center; width:100%; min-height:46px; margin-top:12px; border-radius:8px; border:1px solid #6a5a94; background:transparent; color:var(--ca-title); font-family:inherit; font-size:14px; letter-spacing:0.08em; text-decoration:none; cursor:pointer; }
   .ca-r-btn.is-pending { font-family:inherit; font-size:13px; color:#a3a6c4; border-style:dashed; cursor:not-allowed; }
+  .ca-r-btn.ca-r-register { display:inline-flex; width:auto; min-height:0; margin:0 0 16px; padding:10px 20px; border-radius:6px; font-size:12px; color:#8878a8; border-color:#3a3050; letter-spacing:normal; }
   .ca-r-btn.is-view { border-color:color-mix(in srgb, var(--ca-view) 40%, var(--ca-line)); color:var(--ca-view); }
   .ca-r-note { margin-top:10px; padding-left:8px; border-left:2px solid var(--ca-line); font-size:11px; color:var(--ca-muted); line-height:1.7; }
   .ca-lens-desc--strong { color:var(--ca-title); font-size:13px; }
@@ -1726,8 +1727,8 @@ function completeAnalysisReportHtml(pal, results, diagnosisVersion) {
         <div class="ca-eyebrow">BEYOND THE REPORT｜この先にあるもの</div>
         <p class="ca-lead">このレポートが描いたのは、いまのあなたの輪郭。<br>その奥にある三つの人物像を、46ページで読み解く。</p>
         ${typeof EdLens !== 'undefined' ? EdLens.mapHtml({ color: pal.p }) : reportLensListHtml()}
-        <div data-report-complete><p class="ca-r-note">購入状態を確認しています…</p></div>
-        <div data-report-inherit></div>`;
+        <div data-report-complete data-pdf-skip></div>
+        <div data-report-inherit data-pdf-skip></div>`;
   } else {
     body = `${head}
         ${lenses}
@@ -1755,33 +1756,33 @@ function reportLensListHtml() {
 }
 
 // 完全解析の案内（実データ・complete_13）：完全解析は別の商品 ¥3,000（追加 ¥2,000 は廃止）。
-// 解析レポート（固有リンク・登録）の最下部：マイページに登録する・完全解析の説明とサンプル・この診断結果で完全解析を作成する ¥3,000・
-//   共有の注意・PDF 保存の案内。固有リンクの秘密値は、入口のページ（/report-link）がこのタブの sessionStorage に控えたもの
+// 解析レポート（固有リンク・登録）：完全解析の欄は、サンプルと「この診断結果で完全解析を作成する ¥3,000」だけ。
+//   「マイページに登録する」は完全解析の欄に置かず、最下部の PDF の保存の隣（[data-report-register-slot]）に置く。
+//   注釈（PDF・共有・別商品）は出さない（世界観を保つ。条件は決済画面・規約で示す）。
+//   固有リンクの秘密値は、入口のページ（/report-link）がこのタブの sessionStorage に控えたもの
 function renderDeliveryFooter(box) {
   var B = window.EdBuy;
   var inherit = document.querySelector('[data-report-inherit]');
   if (inherit) inherit.innerHTML = '';
-  if (!B) { box.innerHTML = ''; return; }
+  var regSlot = document.querySelector('[data-report-register-slot]');
+  if (regSlot) regSlot.innerHTML = '';
+  box.innerHTML = '';
+  if (!B) return;
   var token = B.rememberedLink();
-  var notes = '<p class="ca-r-note">' + B.esc(B.PDF_NOTICE) + '</p><p class="ca-r-note">' + B.esc(B.SHARE_NOTICE) + '</p>';
-  if (!token) {
-    box.innerHTML = '<p class="ca-r-note">購入したレポートのリンク（URL）から開くと、マイページへの登録・完全解析のお申し込みができます。</p>' + notes;
-    return;
-  }
-  box.innerHTML = '<p class="ca-r-note">確認しています…</p>';
+  if (!token) return;
   B.openLink(token, false).then(function (r) {
     var b = r.ok ? r.body : {};
     var ctx = b.context;
     var open = B.salesOpen() && B.contextOk(ctx);
-    var html = '<button type="button" class="ca-r-btn" data-report-register>マイページに登録する</button>'
-      + '<p class="ca-r-note" data-complete-notice>' + B.esc(B.COMPLETE_NOTICE) + '</p>'
-      + (B.contextOk(ctx) ? '<a class="ca-r-sample" href="' + B.esc(B.sampleHref('complete', ctx, 'report')) + '" data-ca-sample>完全解析のサンプルを見る</a>' : '')
+    if (regSlot) {
+      regSlot.innerHTML = '<button type="button" class="ca-r-btn ca-r-register" data-report-register>マイページに登録する</button>';
+      var reg = regSlot.querySelector('[data-report-register]');
+      reg.onclick = function () { reg.disabled = true; B.startRegister(token, 'analysis_report'); };
+    }
+    box.innerHTML = (B.contextOk(ctx) ? '<a class="ca-r-sample" href="' + B.esc(B.sampleHref('complete', ctx, 'report')) + '" data-ca-sample>完全解析のサンプルを見る</a>' : '')
       + (open ? '<button type="button" class="ca-r-btn is-offer" data-report-buy-complete><span class="ed-sky-main">まだ見えていない輪郭を読む</span><span class="ed-sky-sub">この診断結果で完全解析を作成する ' + B.yen(B.PRODUCTS.complete.price) + '</span></button>'
         : '<button type="button" class="ca-r-btn is-pending" disabled aria-disabled="true">完全解析 ' + B.yen(B.PRODUCTS.complete.price) + '（準備中）</button>')
-      + '<p class="ca-guest-msg" data-buy-msg role="status"></p>' + notes;
-    box.innerHTML = html;
-    var reg = box.querySelector('[data-report-register]');
-    reg.onclick = function () { reg.disabled = true; B.startRegister(token, 'analysis_report'); };
+      + '<p class="ca-guest-msg" data-buy-msg role="status"></p>';
     var buy = box.querySelector('[data-report-buy-complete]');
     if (buy) buy.onclick = function () {
       var msg = box.querySelector('[data-buy-msg]');
@@ -1800,19 +1801,15 @@ function initReportComplete(code, viewer, mypageComplete) {
   if (viewer === 'delivery') { renderDeliveryFooter(box); return; }
   // 以前の仕組みの解析レポート（マイページの本人の権利・ゲストの購入）：¥2,000 の追加は廃止（complete_13）。
   //   完全解析は別の商品（¥3,000）として、マイページの記録・診断結果のページから申し込む。ここでは購入の判定をしない
-  var B = window.EdBuy;
   var inherit = document.querySelector('[data-report-inherit]');
   if (inherit) inherit.innerHTML = '';
-  var notice = B ? '<p class="ca-r-note" data-complete-notice>' + B.esc(B.COMPLETE_NOTICE) + '</p>' : '';
-  var pdf = B ? '<p class="ca-r-note">' + B.esc(B.PDF_NOTICE) + '</p>' : '';
   var sample = '<a class="ca-r-sample" href="/complete-sample.html" data-ca-sample>完全解析のサンプルを見る</a>';
   if (viewer === 'mypage') {
-    box.innerHTML = notice + sample
-      + '<a class="ca-r-btn is-offer" href="/mypage.html" data-report-mypage>マイページでこの記録の完全解析を作成する ¥3,000</a>' + pdf;
+    box.innerHTML = sample
+      + '<a class="ca-r-btn is-offer" href="/mypage.html" data-report-mypage>マイページでこの記録の完全解析を作成する ¥3,000</a>';
     return;
   }
-  box.innerHTML = notice + sample
-    + '<p class="ca-r-note">完全解析のお申し込みは、診断結果のページ、またはマイページに保存した記録から行えます。</p>' + pdf;
+  box.innerHTML = sample;
 }
 // 決済画面から「戻る」で戻った（ページがそのまま復元された）時も、未払いの決済を閉じて案内を描き直す
 var reportCompleteArgs = null;
@@ -2048,7 +2045,9 @@ function renderFullReport(root, results, diagnosisCode) {
       <div style="text-align:center;padding:30px 10px;color:#5a4d75;font-size:11px;line-height:2">
         <button id="pdfSaveBtn" onclick="savePdf()" style="background:transparent;border:1px solid #3a3050;color:#8878a8;border-radius:6px;padding:10px 20px;font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:16px">
           🖨️ このレポートをPDFで保存する
-        </button><br>
+        </button>
+        <p id="pdfMsg" role="status" data-pdf-skip style="margin:0 0 12px;color:#b8a8d8;font-size:12px;line-height:1.8"></p>
+        <div data-report-register-slot data-pdf-skip></div>
         ここまでが、解析レポートの全内容です。<br>
         ご不明点があれば <a href="https://x.com/mondayaxad" style="color:${pal.light}">@mondayaxad</a> までご連絡ください。
       </div>
@@ -2059,9 +2058,13 @@ function renderFullReport(root, results, diagnosisCode) {
 async function savePdf() {
   var btn = document.getElementById('pdfSaveBtn');
   var wrap = document.querySelector('.wrap');
-  if (!wrap) { alert('レポートがまだ表示されていません。'); return; }
+  // 失敗はボタンの下に静かに示す（ブラウザの警告ダイアログは使わない）
+  var msg = document.getElementById('pdfMsg');
+  function say(t) { if (msg) msg.textContent = t; }
+  say('');
+  if (!wrap) { say('レポートの表示を待ってから、もう一度お試しください。'); return; }
   if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
-    alert('PDF機能の読み込みに失敗しました。通信環境を確認し、ページを再読み込みしてから、もう一度お試しください。');
+    say('PDFの準備ができませんでした。ページを読み込み直してから、もう一度お試しください。');
     return;
   }
   var originalText = btn.textContent;
@@ -2085,7 +2088,9 @@ async function savePdf() {
     // 画像化の倍率：iPhone（Safari）の canvas の上限（約1,677万ピクセル）・Chrome の1辺の上限（32,767px）を超えないよう、
     //   余裕を持って 1,500万ピクセル・1辺 30,000px 以内に抑える（超えると白紙・失敗になる）。通常は 2 倍、長いレポートでは下げる
     var pdfScale = Math.min(2, Math.sqrt(15000000 / Math.max(1, wrap.offsetWidth * wrap.scrollHeight)), 30000 / Math.max(1, wrap.scrollHeight));
-    var canvas = await html2canvas(wrap, { scale: pdfScale, backgroundColor: '#050408', useCORS: true });
+    // 申込・登録の欄は PDF に入れない（html2canvas が読めない色の指定〔color-mix〕を含むため。入れると生成に失敗する）
+    var canvas = await html2canvas(wrap, { scale: pdfScale, backgroundColor: '#050408', useCORS: true,
+      ignoreElements: function (el) { return !!(el.hasAttribute && el.hasAttribute('data-pdf-skip')); } });
     var scaleFactor = canvas.width / wrap.offsetWidth; // DOM px → canvas px 変換係数
 
     var pdfWidth = 210, pageHeightMm = 297;
@@ -2151,7 +2156,7 @@ async function savePdf() {
     pdf.save('元素診断_解析レポート.pdf');
   } catch (e) {
     console.error(e);
-    alert('PDFの生成に失敗しました。お手数ですが、時間をおいて再度お試しいただくか、@mondayaxad までご連絡ください。');
+    say('PDFを作成できませんでした。少し時間をおいて、もう一度お試しください。');
   } finally {
     hideEls.forEach(function(el,i){ el.style.display = prevDisplay[i]; });
     btn.textContent = originalText;

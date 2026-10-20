@@ -1528,13 +1528,14 @@ function renderFullReport(root, results, diagnosisCode) {
         <p class="desc">このレポートが描いたのは、いまのあなたの輪郭です。その奥には、まだ言葉になっていない一面と、これから借りられる力が眠っています。</p>
         <p class="desc">完全解析では、<strong style="color:#eef4ee">三つの人物像</strong>から、あなたをもう一段深く読みます。元素・武器・国家と20軸を横断し、組み合わせ、活かし方、過剰に働いたときのサインまでを、<strong style="color:#e8d8a0">全46ページ</strong>の記録に結びます。</p>
         <div data-sample-lens-map></div>
-        <div class="beyond-cta" data-sample-complete-slot></div>
+        <div class="beyond-cta" data-sample-complete-slot data-pdf-skip></div>
       </div>
 
       <div style="text-align:center;padding:30px 10px;color:#5a4d75;font-size:11px;line-height:2">
         <button id="pdfSaveBtn" onclick="savePdf()" style="background:transparent;border:1px solid #3a3050;color:#8878a8;border-radius:6px;padding:10px 20px;font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:16px">
           🖨️ このレポートをPDFで保存する
-        </button><br>
+        </button>
+        <p id="pdfMsg" role="status" data-pdf-skip style="margin:0 0 12px;color:#b8a8d8;font-size:12px;line-height:1.8"></p>
         ここまでが、解析レポートの全内容です。<br>
         ご不明点があれば <a href="https://x.com/mondayaxad" style="color:${pal.light}">@mondayaxad</a> までご連絡ください。
       </div>
@@ -1545,9 +1546,13 @@ function renderFullReport(root, results, diagnosisCode) {
 async function savePdf() {
   var btn = document.getElementById('pdfSaveBtn');
   var wrap = document.querySelector('.wrap');
-  if (!wrap) { alert('レポートがまだ表示されていません。'); return; }
+  // 失敗はボタンの下に静かに示す（ブラウザの警告ダイアログは使わない）
+  var msg = document.getElementById('pdfMsg');
+  function say(t) { if (msg) msg.textContent = t; }
+  say('');
+  if (!wrap) { say('レポートの表示を待ってから、もう一度お試しください。'); return; }
   if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
-    alert('PDF機能の読み込みに失敗しました。通信環境を確認し、ページを再読み込みしてから、もう一度お試しください。');
+    say('PDFの準備ができませんでした。ページを読み込み直してから、もう一度お試しください。');
     return;
   }
   var originalText = btn.textContent;
@@ -1571,7 +1576,9 @@ async function savePdf() {
     // 画像化の倍率：iPhone（Safari）の canvas の上限（約1,677万ピクセル）・Chrome の1辺の上限（32,767px）を超えないよう、
     //   余裕を持って 1,500万ピクセル・1辺 30,000px 以内に抑える（超えると白紙・失敗になる）。通常は 2 倍、長いレポートでは下げる
     var pdfScale = Math.min(2, Math.sqrt(15000000 / Math.max(1, wrap.offsetWidth * wrap.scrollHeight)), 30000 / Math.max(1, wrap.scrollHeight));
-    var canvas = await html2canvas(wrap, { scale: pdfScale, backgroundColor: '#050408', useCORS: true });
+    // 申込・登録の欄は PDF に入れない（html2canvas が読めない色の指定〔color-mix〕を含むため。入れると生成に失敗する）
+    var canvas = await html2canvas(wrap, { scale: pdfScale, backgroundColor: '#050408', useCORS: true,
+      ignoreElements: function (el) { return !!(el.hasAttribute && el.hasAttribute('data-pdf-skip')); } });
     var scaleFactor = canvas.width / wrap.offsetWidth; // DOM px → canvas px 変換係数
 
     var pdfWidth = 210, pageHeightMm = 297;
@@ -1658,7 +1665,7 @@ async function savePdf() {
     pdf.save('元素診断_解析レポート.pdf');
   } catch (e) {
     console.error(e);
-    alert('PDFの生成に失敗しました。お手数ですが、時間をおいて再度お試しいただくか、@mondayaxad までご連絡ください。');
+    say('PDFを作成できませんでした。少し時間をおいて、もう一度お試しください。');
   } finally {
     hideEls.forEach(function(el,i){ el.style.display = prevDisplay[i]; });
     btn.textContent = originalText;
@@ -1721,7 +1728,7 @@ async function savePdf() {
   @media print { .beyond-cta { display:none; } }
   @media print { .sample-cta { display:none; } }
 </style>
-<aside class="sample-cta" aria-label="お申し込み" data-sample-buy="analysis">
+<aside class="sample-cta" aria-label="お申し込み" data-sample-buy="analysis" data-pdf-skip>
   <h2>あなた自身の診断結果で読む</h2>
   <p>お申し込みには、あなたの診断結果が必要です。<a href="/">まず元素診断を受ける</a></p>
 </aside>

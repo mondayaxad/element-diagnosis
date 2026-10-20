@@ -2039,10 +2039,8 @@ async function mpMergeReports(sessions) {
   });
 }
 // レポートのリンクからの登録（ログインの後も、このタブで続ける）。秘密値は URL・GA4・ログに出さない
-async function mpRegisterFromIntent() {
-  if (typeof EdBuy === 'undefined') return null;
-  const token = EdBuy.takeRegisterIntent();
-  if (!token) return null;
+//   ログイン済みのアカウントへ黙って登録しない：どのアカウントに登録するかを示し、押した時だけ登録する（別のアカウントも選べる）
+async function mpRegisterNow(token) {
   const r = await EdBuy.register(token);
   if (r.ok && r.body && (r.body.result === 'registered' || r.body.result === 'already')) {
     EdBuy.track('report_register_done', { result: r.body.result, product: r.body.product === 'complete' ? 'complete' : 'analysis' });
@@ -2052,14 +2050,40 @@ async function mpRegisterFromIntent() {
   EdBuy.track('report_register_failed', { reason: error });
   return { ok: false, error, token: error === 'network' || error === 'service_unavailable' ? token : null };
 }
+let mpRegisterDone = null; // 「このアカウントに登録する」の結果（描き直した後に示す）
+function mpRegisterFromIntent() {
+  if (mpRegisterDone) { const done = mpRegisterDone; mpRegisterDone = null; return done; }
+  if (typeof EdBuy === 'undefined') return null;
+  const token = EdBuy.takeRegisterIntent();
+  return token ? { confirm: true, token } : null;
+}
+function mpRegisterConfirm(root, out, user) {
+  const box = mpClaimBox(root, '<p>購入したレポートを、このマイページに登録しますか？</p>'
+    + mpAccountLine(user)
+    + '<p><button type="button" class="mp-btn primary" data-register-go>このアカウントに登録する</button></p>'
+    + '<p><button type="button" class="mp-btn" data-register-switch>別のアカウントで登録する</button> <button type="button" class="mp-btn" data-register-cancel>登録しない</button></p>');
+  box.querySelector('[data-register-go]').onclick = async (e) => {
+    e.currentTarget.disabled = true;
+    mpRegisterDone = await mpRegisterNow(out.token);
+    await init(); // 登録したレポートを記録に反映して描き直し、結果を示す
+  };
+  // 別のアカウント：登録の印をこのタブに戻してからログアウトし、ログインの画面へ（ログインの後に、もう一度確かめる）
+  box.querySelector('[data-register-switch]').onclick = async () => {
+    EdBuy.startRegister(out.token, 'mypage_switch', { stay: true });
+    try { await signOutUser(); } catch (e) { /* ログアウトに失敗してもログイン画面へ */ }
+    await init();
+  };
+  box.querySelector('[data-register-cancel]').onclick = () => { box.remove(); };
+}
 const MP_REGISTER_ERRORS = {
   link_not_found: 'このレポートのリンクは無効です（再発行された・または誤ったリンクです）。登録できませんでした。',
   link_inactive: 'このレポートは、返金・停止などのため現在ご覧いただけないため、登録できませんでした。',
   payment_pending: 'お支払いの確認が済んでいないため、まだ登録できません。少し時間をおいて、レポートのリンクからもう一度お試しください。',
   not_authenticated: 'ログインの確認ができませんでした。もう一度ログインしてから、レポートのリンクの「マイページに登録する」をお試しください。',
 };
-function mpShowRegisterOutcome(root, out) {
+function mpShowRegisterOutcome(root, out, user) {
   if (!out) return;
+  if (out.confirm) { mpRegisterConfirm(root, out, user); return; }
   const name = out.product === 'complete' ? '完全解析' : '解析レポート';
   const html = out.ok
     ? `<p>${out.result === 'already' ? `この${name}は、このマイページに登録済みです。` : `${name}を、このマイページに登録しました。`}</p>`
@@ -2093,11 +2117,11 @@ function mpBuyButtonHtml(r, product, cls, source) {
   if (!isA && !mpCompleteEligible(r)) return '<p class="mp-rec-mentor" role="note">完全解析（全46ページ）は、最新版の100問で診断した記録が対象です。</p>';
   if (!mpSalesOpen() || !s.id || (isA && !V2_REPORT_SALES_ENABLED)) {
     return `<button type="button" class="${cls} is-pending" disabled aria-disabled="true" style="opacity:0.6;cursor:not-allowed">${isA ? name : `${name} ${price}`}（準備中）</button>`
-      + (isA || /\bca-btn\b/.test(cls) ? '' : `<p class="mp-rec-note">${mpEsc(EdBuy.COMPLETE_NOTICE)}</p>`);
+     ;
   }
   const attr = isA ? 'data-analysis-checkout' : 'data-complete-checkout';
   return `<button type="button" class="${cls}" ${attr}="${mpEsc(s.id)}" data-source="${mpEsc(source)}">${name}　${price}</button>`
-    + (isA || /\bca-btn\b/.test(cls) ? '' : `<p class="mp-rec-note">${mpEsc(EdBuy.COMPLETE_NOTICE)}</p>`)
+   
     + `<a class="mp-rec-sample" href="#" data-mp-sample="${product}" data-record="${mpEsc(s.id)}">${name}のサンプルを見る</a>`;
 }
 function mpReadButtonHtml(d, cls, label) {
@@ -2232,7 +2256,7 @@ function mpLockedHtml(r, where) {
         <ul class="mp-seen-list"><li>元素・武器・国家の判定結果</li><li>近しいキャラクター1名</li></ul>
       </div>
       <div class="mp-locked-title">まだ読み解いていないもの</div>
-      ${rows.map(([t, cap, d]) => `<div class="mp-locked-row" data-domain="${d}"><span class="txt"><span class="t">${t}</span><span class="cap">${cap}</span><span class="ghost" aria-hidden="true"></span></span><span class="lk" aria-label="未解析">🔒</span></div>`).join('')}
+      ${rows.map(([t, cap, d]) => `<div class="mp-locked-row" data-domain="${d}"><span class="txt"><span class="t">${t}</span><span class="cap">${cap}</span><span class="ghost" aria-hidden="true"></span></span></div>`).join('')}
       <p class="mp-rec-cta-note">この記録には、まだ知らない自分があります。</p>
       ${mpRecordActionsHtml(r, isLatest ? 'latest' : 'records')}
     </div>`;
@@ -2325,7 +2349,7 @@ function mpLatestHtml(r) {
         <div class="mp-latest-main">
           ${mpEmblemHtml(r, 'lg')}
           <div class="mp-latest-info">
-            <div class="mp-chip-row"><span class="mp-chip">${mpDate(r.date)}</span><span class="mp-chip new">NEW</span>${mpEntitlementOk && !r.purchased ? '<span class="mp-chip locked" title="まだ読み解いていない記録">LOCKED</span>' : ''}${caIsReady(r) ? '<span class="mp-chip complete">COMPLETE</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}</div>
+            <div class="mp-chip-row"><span class="mp-chip">${mpDate(r.date)}</span><span class="mp-chip new">NEW</span>${caIsReady(r) ? '<span class="mp-chip complete">COMPLETE</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}</div>
             ${r.code ? `<div class="mp-latest-code"><b class="mp-typecode mp-gt" style="color:${mpElText(r.el)};--gc:${mpElText(r.el)}">${r.code}</b><span class="mp-gt" style="color:${mpElText(r.el)};--gc:${mpElText(r.el)};opacity:.85">${r.typeName}</span></div>` : ''}
             <div class="mp-latest-combo">${mpComboHtml(r)}</div>
           </div>
@@ -2362,7 +2386,7 @@ function mpCollectionHtml(records) {
             ${mpEmblemHtml(r)}
             <span class="nm" style="color:${mpElText(r.el)}">${r.name}</span>
             <span class="dt">${mpDate(r.date)}</span>
-            ${caIsReady(r) ? '<span class="st complete">COMPLETE</span>' : r.purchased ? '<span class="st insight">INSIGHT</span>' : mpEntitlementOk ? '<span class="st" title="まだ読み解いていない記録">LOCKED</span>' : ''}
+            ${caIsReady(r) ? '<span class="st complete">COMPLETE</span>' : r.purchased ? '<span class="st insight">INSIGHT</span>' : mpEntitlementOk ? '' : ''}
           </button>`).join('')}
       </div>
       ${records.length >= 4 ? `<button type="button" class="mp-col-next" onclick="mpCollectionNext()" aria-label="記録章の続きを見る（全${records.length}件）">›</button>` : ''}
@@ -2396,7 +2420,7 @@ function mpRecordHtml(r, i) {
   const detailLink = r.resultUrl
     ? `<a href="${r.resultUrl}" class="mp-detail-link" onclick="trackEvent('mypage_view_result_click',{source:'records'})">当時の診断結果を見る →</a>`
     : '';
-  const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${mpEntitlementOk && !r.purchased ? '<span class="mp-chip locked" title="まだ読み解いていない記録">LOCKED</span>' : ''}${caIsReady(r) ? '<span class="mp-chip complete">COMPLETE</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
+  const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${caIsReady(r) ? '<span class="mp-chip complete">COMPLETE</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
   let body;
   // 開閉（<details>）は購入状態APIと無関係。確認できなかった記録も開けて、中に再確認を出す
   if (!mpEntitlementOk) body = mpVizHtml(r) + mpRecordActionsHtml(r, 'records');
@@ -2733,7 +2757,6 @@ function caSheetBodyHtml(r) {
         <div class="ca-card-head"><span class="ca-eyebrow">COMPLETE ANALYSIS</span><span class="ca-pages"><span class="ca-pages-ja">全46ページ</span><span class="ca-pages-en">COMPLETE RECORD</span></span></div>
         <h3 class="ca-title">完全解析</h3>
         <p class="ca-body">三つの人物像から、この結果の全体を統合します。</p>
-        <p class="ca-body" data-complete-notice>${mpEsc(EdBuy.COMPLETE_NOTICE)}</p>
         ${caLensBlockHtml()}
         <div class="ca-price-row"><span class="ca-meta">この記録の完全解析（解析レポートとは別の商品）</span><span class="ca-price">¥3,000</span></div>
         <div class="mp-rec-row" data-rec-product="complete">${mpCompleteRowHtml(r, 'ca-btn ca-secondary-action', 'mypage_header')}</div>
@@ -3685,7 +3708,7 @@ async function initOnce() {
   //   「ログイン中の確認済みメール＝購入時のメール」を確かめた時だけ行う（共有端末の別の人へは移らない）
   // 購入時メール・Cookie による自動の引き継ぎは行わない（complete_13）。購入したレポートは、レポートの固有リンクから明示的に登録する
   const claimOutcome = null;
-  const registerOutcome = await mpRegisterFromIntent();
+  const registerOutcome = mpRegisterFromIntent();
   const result = await loadDiagnosisHistory(DIAGNOSIS_TYPE);
   if (result.ok) await mpMergeReports(result.sessions);
   if (!result.ok) {
@@ -3695,7 +3718,7 @@ async function initOnce() {
   if (result.sessions.length === 0) {
     renderEmpty(root, user);
     mpRenderedUserId = user.id;
-    mpShowRegisterOutcome(root, registerOutcome);
+    mpShowRegisterOutcome(root, registerOutcome, user);
     return;
   }
   mpEntitlementOk = mpEntitlementCheckedOk(result.sessions);
@@ -3708,7 +3731,7 @@ async function initOnce() {
     });
     window.scrollTo(0, keepScrollY);
   }
-  mpShowRegisterOutcome(root, registerOutcome);
+  mpShowRegisterOutcome(root, registerOutcome, user);
   // お知らせメール（Kit）の同期は、登録完了と診断の保存の後に diagnosis-save.js の runSignedInFlow() が行う。
 }
 // eti_v2_save.js（Googleログイン復帰後、v2のpending保存が完了した時点）から

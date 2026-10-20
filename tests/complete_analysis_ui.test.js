@@ -137,7 +137,7 @@ test('mypage：右上入口は LATEST RESULT より上・追従しない・間�
   // LATEST RESULT の次の section は YOUR COLLECTION（新規バナーなし）
   assert.equal(await p.evaluate(() => document.querySelector('[aria-labelledby="mp-latest-h"]').nextElementSibling.getAttribute('aria-labelledby')), 'mp-col-h');
   assert.equal(await p.locator('.mp-stat-en').allInnerTexts().then((a) => a.join(',')), 'RECORDS,INSIGHTS');
-  assert.ok(await p.locator('.mp-latest .mp-chip.locked').count() === 1, 'LOCKED 体系を維持');
+  assert.equal(await p.locator('.mp-chip.locked, .st').filter({ hasText: 'LOCKED' }).count(), 0, 'LOCKED の表記はマイページで使わない');
   // スクロールしても追従しない
   await p.mouse.wheel(0, 1200); await p.waitForTimeout(100);
   const after = await t.boundingBox();
@@ -158,7 +158,8 @@ test('mypage free：解析¥1,000が主（塗り）、完全¥3,000は副（枠�
   assert.ok(await p.evaluate(() => document.activeElement.hasAttribute('data-repick')));
   const text = await sheetText(p);
   assert.ok(text.indexOf('解析レポート') < text.indexOf('完全解析　') || text.indexOf('STRUCTURE') < text.indexOf('COMPLETE ANALYSIS'));
-  for (const s of [...COMBO_B.split(' × '), 'MIRROR', '現在のあなたに近い人物像', 'HIDDEN SHAPE', '表に出にくい一面に近い人物像', 'MENTOR', 'これから伸ばす方向に近い人物像', '10名', 'CHARACTERS', '全46ページ', 'COMPLETE RECORD', '気質', '価値観', '人物像', '近しいキャラクター4名', '解析レポートとは別の商品', '完全解析は、解析レポートとは異なる内容を扱う別商品です。解析レポートの本文は含まれません。']) assert.ok(text.includes(s), s);
+  for (const s of [...COMBO_B.split(' × '), 'MIRROR', '現在のあなたに近い人物像', 'HIDDEN SHAPE', '表に出にくい一面に近い人物像', 'MENTOR', 'これから伸ばす方向に近い人物像', '10名', 'CHARACTERS', '全46ページ', 'COMPLETE RECORD', '気質', '価値観', '人物像', '近しいキャラクター4名', '解析レポートとは別の商品']) assert.ok(text.includes(s), s);
+  assert.ok(!text.includes('解析レポートの本文は含まれません'), '注釈を出さない');
   assert.ok(!text.includes('解析レポートの内容もすべて含まれます'), 'A を含むとは書かない（complete_13）');
   // 観測項目は箇条書き（li・チェック・鍵）ではなく区画で示す
   assert.equal(await p.locator('#mpUpgradeBody .ca-observation-item').count(), 4);
@@ -234,7 +235,7 @@ test('mypage 実データ（Preview指定なし）：未購入者にも右上入
   assert.equal(await body.locator('.ca-pick').count(), 2);
   // 既存の集計・LOCKED 表示は変わらない
   assert.equal(await p.locator('.mp-stat-en').allInnerTexts().then((x) => x.join(',')), 'RECORDS,INSIGHTS');
-  assert.equal(await p.locator('.mp-latest .mp-chip.locked').count(), 1);
+  assert.equal(await p.locator('.mp-latest .mp-chip.locked').count(), 0, 'LOCKED の表記を出さない');
   // 無効な指定値も「指定なし」と同じ扱い
   const q = await page('/mypage.html?preview_entitlement=bogus');
   await q.waitForSelector('.mp-latest', { state: 'attached' });

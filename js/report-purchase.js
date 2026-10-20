@@ -129,7 +129,6 @@
       wrap.setAttribute('aria-modal', 'true');
       wrap.setAttribute('aria-labelledby', 'edbGoalTitle');
       wrap.innerHTML = '<div class="edb-panel"><h2 id="edbGoalTitle" class="edb-title">完全解析 ' + yen(PRODUCTS.complete.price) + '</h2>'
-        + '<p class="edb-note" data-edb-notice>' + esc(COMPLETE_NOTICE) + '</p>'
         + '<div data-edb-goals><p class="edb-note">目標の一覧を読み込んでいます…</p></div>'
         + '<p class="edb-msg" role="alert"></p>'
         + '<div class="edb-actions"><button type="button" class="edb-btn" data-edb-go disabled>目標を選んで決済へ（' + yen(PRODUCTS.complete.price) + '）</button>'
@@ -208,11 +207,11 @@
   function rememberedLink() { var t = session(function (s) { return s.getItem(LINK_KEY); }); return TOKEN_RE.test(String(t || '')) ? t : null; }
   function openLink(token, open) { return call('link-open', { token: token, open: !!open }); }
   // マイページへの登録：秘密値はこのタブの sessionStorage にだけ置き、マイページ（ログインの後も含む）で登録する
-  function startRegister(token, source) {
+  function startRegister(token, source, opts) {
     if (!TOKEN_RE.test(String(token || ''))) return false;
     session(function (s) { s.setItem(REGISTER_KEY, JSON.stringify({ t: token, at: Date.now() })); });
     track('report_register_start', { source: source });
-    global.location.assign('/mypage.html');
+    if (!(opts && opts.stay)) global.location.assign('/mypage.html');
     return true;
   }
   function takeRegisterIntent() {

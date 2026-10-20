@@ -69,8 +69,7 @@
   }
   function fillSlot(c) {
     if (page !== 'analysis' || !slot) return;
-    slot.innerHTML = '<p class="beyond-notice" data-sample-complete-note>' + B.esc(B.COMPLETE_NOTICE) + '</p>'
-      + completeSampleLink(c)
+    slot.innerHTML = completeSampleLink(c)
       + (c ? '<div data-complete-offer></div>'
         : '<p class="beyond-notice">お申し込みには、あなた自身の診断結果が必要です。元素診断を受けると、結果のページから、その診断結果で完全解析をお申し込みいただけます。</p>');
   }
@@ -119,7 +118,6 @@
       box.innerHTML = '<h2>' + subject + 'で読む</h2>'
         + (facts ? '<p data-sample-facts>' + facts + '</p>' : '')
         + '<div class="ed-sky-wrap">' + skyBtn('complete', 'まだ見えていない輪郭を読む', subject + 'の完全解析　全46ページ　¥3,000' + pend, open && el.complete) + '</div>'
-        + '<p data-sample-complete-note>' + B.esc(B.COMPLETE_NOTICE) + '</p>'
         + '<p class="ca-guest-msg" data-buy-msg role="status"></p>'
         + '<p class="sample-mypage"><a href="' + B.esc(backHref()) + '" data-sample-back>元の画面に戻る</a></p>';
     } else {

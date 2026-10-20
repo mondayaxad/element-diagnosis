@@ -186,10 +186,10 @@ test('診断結果：A ¥1,000・B ¥3,000 を常に出し、A は購入対象�
 
 test('診断結果：B は共通の MENTOR 目標の選択を通ってから op=buy（目標は注文に固定）。購入前に「別商品・本文は含まれない」を示す。やめると決済しない', { skip: skip() }, async () => {
   const p = await resultPage();
-  assert.match(await p.locator('body').innerText(), /完全解析は、解析レポートとは異なる内容を扱う別商品です。解析レポートの本文は含まれません。/);
+  assert.doesNotMatch(await p.locator('body').innerText(), /解析レポートの本文は含まれません/, '注釈を出さない（条件は決済画面で示す）');
   await p.click('[data-buy-complete]');
   await p.waitForSelector('.edb-dialog input[name="edb-goal"]');
-  assert.match(await p.locator('.edb-dialog').innerText(), /解析レポートの本文は含まれません/);
+  assert.doesNotMatch(await p.locator('.edb-dialog').innerText(), /解析レポートの本文は含まれません/);
   await p.click('[data-edb-cancel]');
   assert.equal(await p.locator('.edb-dialog').count(), 0);
   assert.equal(p.__calls.filter((c) => c.op === 'buy').length, 0, 'やめると申し込まない');
@@ -316,7 +316,7 @@ test('戻る（bfcache）で押せる状態へ戻した完全解析のボタン�
   await p.__ctx.close();
 });
 
-test('購入完了：受け取り専用（状態・開く・リンクのコピー・PDF の案内・登録）。ほかの商品の申込は出さない', { skip: skip() }, async () => {
+test('購入完了：受け取り専用（状態・開く・リンクのコピー・登録。注釈なし）。ほかの商品の申込は出さない', { skip: skip() }, async () => {
   const p = await open('/purchase-complete?status=returned', { api: { deliveries: [200, { purchases: [
     { product: 'analysis', state: 'active', link: LINK_A, purchasedOn: '2026-10-20' },
     { product: 'complete', state: 'active', link: LINK_B, purchasedOn: '2026-10-20', report: { status: 'generating' } },
@@ -326,8 +326,7 @@ test('購入完了：受け取り専用（状態・開く・リンクのコピ�
   assert.match(text, /解析レポートを開く/);
   assert.match(text, /完全解析を開く/);
   assert.match(text, /完全解析を作成しています/);
-  assert.match(text, /PDFとして端末に保存できます/);
-  assert.match(text, /別のアカウントにも何度でも登録できます/);
+  assert.doesNotMatch(text, /PDFとして端末に保存できます|別のアカウントにも何度でも登録できます/, '注釈を出さない');
   assert.equal(await p.locator('[data-register]').count(), 2);
   assert.equal(await p.locator('[data-copy]').count(), 2);
   assert.equal((text.match(PRICE_RE) || []).length, 0, '価格・申込の導線を出さない');
@@ -344,14 +343,14 @@ test('購入完了：受け取り専用（状態・開く・リンクのコピ�
 });
 
 // ================= レポート固有リンク
-test('固有リンク：開くたびに状態を確かめ、読む・コピー・登録・共有の注意。返金後は読めない。無効なリンクは無効と示す', { skip: skip() }, async () => {
+test('固有リンク：開くたびに状態を確かめ、読む・コピー・登録（注釈なし）。返金後は読めない。無効なリンクは無効と示す', { skip: skip() }, async () => {
   const active = { product: 'analysis', state: 'active', purchasedOn: '2026-10-20', summary: SUMMARY };
   const p = await open('/report-link#t=' + LINK_A, { api: { 'link-open': (b) => (b.open ? [200, { ...active, url: '/report.html?token=view' }] : [200, active]) } });
   await p.waitForSelector('[data-open]');
   const text = await p.locator('#rlBox').innerText();
   assert.match(text, /解析レポートを読む/);
   assert.match(text, /マイページに登録する/);
-  assert.match(text, /別のアカウントにも何度でも登録できます/);
+  assert.doesNotMatch(text, /別のアカウントにも何度でも登録できます/, '注釈を出さない');
   assert.doesNotMatch(text, /¥/);
   await p.click('[data-open]');
   await p.waitForURL(/report\.html\?token=view/);
@@ -501,8 +500,12 @@ test('登録：リンクの秘密値（このタブの sessionStorage）でロ�
   const seed = `sessionStorage.setItem('ed_register_v1', JSON.stringify({ t: '${LINK_A}', at: Date.now() }));`;
   for (const [result, re] of [['registered', /このマイページに登録しました/], ['already', /登録済みです/]]) {
     const p = await mypage([DEL('analysis', 'active')], { init: seed, api: { 'link-register': [200, { result, product: 'analysis' }] } });
-    await p.waitForSelector('#mpClaimBox');
-    assert.match(await p.locator('#mpClaimBox').innerText(), re);
+    // ログイン中のアカウントへ黙って登録しない：どのアカウントかを示し、押した時だけ登録する
+    await p.waitForSelector('#mpClaimBox [data-register-go]');
+    assert.match(await p.locator('#mpClaimBox').innerText(), /ログイン中のアカウント/);
+    assert.equal(p.__calls.filter((c) => c.op === 'link-register').length, 0, '確認の前に登録しない');
+    await p.click('#mpClaimBox [data-register-go]');
+    await p.waitForFunction((src) => { const b = document.getElementById('mpClaimBox'); return !!b && new RegExp(src).test(b.innerText); }, re.source);
     const reg = p.__calls.filter((c) => c.op === 'link-register');
     assert.deepEqual(reg.map((c) => c.body), [{ token: LINK_A }]);
     assert.ok(reg[0].auth.startsWith('Bearer '));
@@ -519,22 +522,61 @@ test('登録：リンクの秘密値（このタブの sessionStorage）でロ�
 });
 
 // ================= 解析レポートの最下部
-test('解析レポート（固有リンク）の最下部：登録・B の説明とサンプル・「この診断結果で完全解析を作成する ¥3,000」・共有の注意・PDF。¥2,000 なし', { skip: skip() }, async () => {
+test('解析レポート（固有リンク）の最下部：完全解析の欄はサンプルと「この診断結果で完全解析を作成する ¥3,000」だけ。「マイページに登録する」は PDF の保存の隣。注釈なし。¥2,000 なし', { skip: skip() }, async () => {
+  const p = await reportDelivery();
+  const box = await p.locator('[data-report-complete]').innerText();
+  assert.match(box, /この診断結果で完全解析を作成する ¥3,000/);
+  assert.doesNotMatch(box, /マイページに登録する/, '登録は完全解析の欄に置かない');
+  assert.equal(await p.locator('[data-report-register-slot] [data-report-register]').count(), 1);
+  assert.doesNotMatch(await p.locator('body').innerText(), /解析レポートの本文は含まれません|別のアカウントにも何度でも登録できます|PDFとして端末に保存できます/, '注釈を出さない');
+  assert.doesNotMatch(await p.locator('body').innerText(), /¥2,000|追加 ?¥2/);
+  await p.__ctx.close();
+});
+async function reportDelivery(opts = {}) {
   const p = await open('/report.html?token=view', {
     init: `sessionStorage.setItem('ed_report_link_v1', '${LINK_A}');`,
     api: { 'link-open': [200, { product: 'analysis', state: 'active', context: CTX, summary: SUMMARY }], 'guest-goals': [200, GOALS], buy: BUY_OK },
   });
+  if (opts.pdfLibs) {
+    await p.route(/html2canvas/, (r) => r.fulfill({ contentType: 'application/javascript', path: opts.pdfLibs.h2c }));
+    await p.route(/jspdf/, (r) => r.fulfill({ contentType: 'application/javascript', path: opts.pdfLibs.jspdf }));
+  }
   await p.route('**/api/report-data**', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ code: V2(7).code, diagnosis_version: 'ETI-2.0', entitlements: { core_analysis_access: true }, viewer: 'delivery' }) }));
   await p.reload();
   await p.waitForSelector('[data-report-buy-complete]');
-  const box = await p.locator('[data-report-complete]').innerText();
-  assert.match(box, /マイページに登録する/);
-  assert.match(box, /この診断結果で完全解析を作成する ¥3,000/);
-  assert.match(box, /解析レポートの本文は含まれません/);
-  assert.match(box, /別のアカウントにも何度でも登録できます/);
-  assert.match(box, /PDFとして端末に保存できます/);
-  assert.doesNotMatch(await p.locator('body').innerText(), /¥2,000|追加 ?¥2/);
+  return p;
+}
+// PDF：申込・登録の欄（html2canvas が読めない color-mix を含む）を外して作る。失敗してもブラウザの警告ダイアログを出さない
+//   本物の html2canvas・jsPDF が要る（PDF_LIBS_DIR に cdnjs と同じ版を置いた時だけ動かす）
+const PDF_LIBS = process.env.PDF_LIBS_DIR ? { h2c: `${process.env.PDF_LIBS_DIR}/html2canvas.min.js`, jspdf: `${process.env.PDF_LIBS_DIR}/jspdf.umd.min.js` } : null;
+test('解析レポート：PDF を保存できる（申込・登録の欄があっても失敗しない）。警告ダイアログを出さない', { skip: skip() || (PDF_LIBS ? false : 'PDF_LIBS_DIR が無いため skip'), timeout: 120000 }, async () => {
+  const p = await reportDelivery({ pdfLibs: PDF_LIBS });
+  let dialog = null;
+  p.on('dialog', (d) => { dialog = d.message(); d.dismiss(); });
+  const dl = p.waitForEvent('download', { timeout: 90000 });
+  await p.click('#pdfSaveBtn');
+  const file = await dl;
+  assert.equal(require('fs').readFileSync(await file.path()).subarray(0, 4).toString(), '%PDF');
+  assert.equal(dialog, null);
+  assert.equal(await p.locator('#pdfMsg').innerText(), '');
   await p.__ctx.close();
+});
+
+test('解析レポートのサンプル：PDF を保存できる（申込の欄・完全解析のボタンがあっても失敗しない）', { skip: skip() || (PDF_LIBS ? false : 'PDF_LIBS_DIR が無いため skip'), timeout: 120000 }, async () => {
+  const s = await open(`/report_sample.html#c=${CTX}&from=result`, { api: RESULT_API({ 'buy-summary': [200, { summary: SUMMARY, eligible: { analysis: true, complete: true } }] }) });
+  await s.route(/html2canvas/, (r) => r.fulfill({ contentType: 'application/javascript', path: PDF_LIBS.h2c }));
+  await s.route(/jspdf/, (r) => r.fulfill({ contentType: 'application/javascript', path: PDF_LIBS.jspdf }));
+  await s.goto(s.url().split('#')[0] + `#c=${CTX}&from=result`);
+  await s.reload();
+  await s.waitForSelector('.beyond-sec [data-buy="complete"]');
+  let dialog = null;
+  s.on('dialog', (d) => { dialog = d.message(); d.dismiss(); });
+  const dl = s.waitForEvent('download', { timeout: 90000 });
+  await s.click('#pdfSaveBtn');
+  const file = await dl;
+  assert.equal(require('fs').readFileSync(await file.path()).subarray(0, 4).toString(), '%PDF');
+  assert.equal(dialog, null);
+  await s.__ctx.close();
 });
 
 // ================= OTP（第17節）
