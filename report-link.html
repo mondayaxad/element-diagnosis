@@ -41,8 +41,8 @@
 <body>
 <main class="wrap">
   <p class="eyebrow">ELEMENT DIAGNOSIS</p>
-  <h1 id="rlTitle">購入したレポート</h1>
-  <p class="lead" id="rlLead">このページのリンク（URL）が、購入したレポートの入口です。期限はありません。</p>
+  <h1 id="rlTitle">レポートを開いています</h1>
+  <p class="lead" id="rlLead" hidden>このページのリンク（URL）が、購入したレポートの入口です。期限はありません。</p>
   <div id="rlBox" aria-live="polite"><p class="note"><span class="spinner" aria-hidden="true"></span>確認しています…</p></div>
   <p class="links"><a href="/">元素診断のトップへ</a> ・ <a href="/mypage.html">マイページ</a></p>
 </main>
@@ -97,9 +97,25 @@
     var r = box.querySelector('[data-register]');
     if (r) r.onclick = function () { r.disabled = true; B.startRegister(token, 'report_link'); };
   }
-  function render(b) {
+  // 読める状態：中継の画面を出さず、そのままレポートを開く（固有リンクのアドレスはレポートの画面が引き継ぐ）
+  function readable(b) { return b.state === 'active' && (b.product !== 'complete' || (b.report && b.report.status === 'ready')); }
+  function openNow(b) {
+    B.openLink(token, true).then(function (r) {
+      if (r.ok && r.body && typeof r.body.url === 'string' && r.body.url.charAt(0) === '/') {
+        B.track(b.product === 'complete' ? 'complete_report_open' : 'analysis_report_open', { source: 'report_link' });
+        // この固有リンクから開いた印（レポートの画面が、アドレスバーをこの固有リンクに戻す。マイページから開いた時は戻さない）
+        try { sessionStorage.setItem('ed_report_via_link_v1', token); } catch (e) { /* 戻せなくても読める */ }
+        location.replace(r.body.url);
+        return;
+      }
+      render(b, true);
+    });
+  }
+  function render(b, openFailed) {
+    if (readable(b) && !openFailed) { openNow(b); return; }
     var name = NAMES[b.product] || 'レポート';
     document.getElementById('rlTitle').textContent = name;
+    document.getElementById('rlLead').hidden = false;
     var html = '<div class="card">' + factsHtml(b);
     if (b.state === 'active') {
       if (b.product === 'complete' && (!b.report || b.report.status !== 'ready')) {
@@ -122,6 +138,7 @@
       html += '<p class="state">このレポートは、' + why + '現在ご覧いただけません。</p>'
         + '<p class="note">端末に保存したPDFは、そのまま残ります。ご不明点は <a href="https://x.com/mondayaxad" target="_blank" rel="noopener">@mondayaxad</a> までご連絡ください。</p>';
     }
+    if (openFailed) html += '<p class="msg" role="status">レポートを開けませんでした。時間をおいて、もう一度お試しください。</p>';
     html += '</div>';
     box.innerHTML = html;
     bindTools();

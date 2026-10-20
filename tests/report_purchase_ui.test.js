@@ -365,20 +365,31 @@ test('購入完了：決済から戻った時（?cs=）は、今の購入のレ�
 });
 
 // ================= レポート固有リンク
-test('固有リンク：開くたびに状態を確かめ、読む・コピー・登録（注釈なし）。返金後は読めない。無効なリンクは無効と示す', { skip: skip() }, async () => {
+test('固有リンク：開くたびに状態を確かめ、読める時は中継の画面を出さずにそのままレポートへ（アドレスは固有リンクのまま）。返金後は読めない。無効なリンクは無効と示す', { skip: skip() }, async () => {
   const active = { product: 'analysis', state: 'active', purchasedOn: '2026-10-20', summary: SUMMARY };
   const p = await open('/report-link#t=' + LINK_A, { api: { 'link-open': (b) => (b.open ? [200, { ...active, url: '/report.html?token=view' }] : [200, active]) } });
-  await p.waitForSelector('[data-open]');
-  const text = await p.locator('#rlBox').innerText();
-  assert.match(text, /解析レポートを読む/);
-  assert.match(text, /マイページに登録する/);
-  assert.doesNotMatch(text, /別のアカウントにも何度でも登録できます/, '注釈を出さない');
-  assert.doesNotMatch(text, /¥/);
-  await p.click('[data-open]');
-  await p.waitForURL(/report\.html\?token=view/);
-  assert.deepEqual(p.__calls.filter((c) => c.op === 'link-open').map((c) => c.body), [{ token: LINK_A, open: false }, { token: LINK_A, open: true }]);
+  await p.route('**/api/report-data**', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ code: V2(7).code, diagnosis_version: 'ETI-2.0', entitlements: { core_analysis_access: true }, viewer: 'delivery' }) }));
+  // レポートの画面が開いた後、アドレスバーは期限のない固有リンクに戻る
+  await p.waitForSelector('[data-report-register-slot] [data-report-register]');
+  assert.equal(new URL(p.url()).pathname, '/report-link');
+  assert.equal(new URL(p.url()).hash, '#t=' + LINK_A);
+  assert.equal(await p.locator('#rlBox').count(), 0, '中継の画面（入口のカード）を経由しない');
+  assert.deepEqual(p.__calls.filter((c) => c.op === 'link-open').map((c) => c.body).slice(0, 2), [{ token: LINK_A, open: false }, { token: LINK_A, open: true }]);
   assertNoSecrets(p, [LINK_A]);
   await p.__ctx.close();
+  // マイページから開いた時（固有リンクからでない）は、アドレスを書き換えない
+  const m = await open('/report.html?token=view', { init: `sessionStorage.setItem('ed_report_link_v1', '${LINK_A}');`, api: { 'link-open': [200, { ...active, context: CTX }] } });
+  await m.route('**/api/report-data**', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ code: V2(7).code, diagnosis_version: 'ETI-2.0', entitlements: { core_analysis_access: true }, viewer: 'delivery' }) }));
+  await m.reload();
+  await m.waitForSelector('[data-report-register-slot] [data-report-register]');
+  assert.equal(new URL(m.url()).pathname, '/report.html');
+  await m.__ctx.close();
+  // 作成中の完全解析：入口のカードで状態を示す（読めるまで待つ）
+  const g = await open('/report-link#t=' + LINK_B, { api: { 'link-open': [200, { product: 'complete', state: 'active', summary: SUMMARY, report: { status: 'generating' } }] } });
+  await g.waitForSelector('.state');
+  assert.match(await g.locator('#rlBox').innerText(), /完全解析を作成しています/);
+  assert.match(await g.locator('#rlBox').innerText(), /マイページに登録する/);
+  await g.__ctx.close();
   const r = await open('/report-link#t=' + LINK_A, { api: { 'link-open': [200, { ...active, state: 'refunded' }] } });
   await r.waitForSelector('.state');
   assert.match(await r.locator('#rlBox').innerText(), /返金のため現在ご覧いただけません/);

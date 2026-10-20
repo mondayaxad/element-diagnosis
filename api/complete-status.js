@@ -42,18 +42,13 @@ const MYPAGE_FOOTER = '<aside aria-label="マイページ" style="max-width:640p
   + '<a href="/mypage.html" style="display:inline-block;min-height:44px;line-height:44px;padding:0 18px;border-radius:8px;color:#fff;'
   + 'text-decoration:none;font-size:13px;letter-spacing:.06em;background:linear-gradient(120deg,#5b78c8 0%,#8a5fc0 50%,#c9a860 100%)">'
   + 'マイページを作成する（この購入を引き継ぎます）</a></aside>';
-// レポート固有リンク・マイページの登録から開いた完全解析の最下部（complete_13）：マイページへの登録・共有の注意・PDF 保存の案内。
+// レポート固有リンク・マイページの登録から開いた完全解析の最下部（complete_13）：マイページへの登録だけ（注釈は出さない）。
 //   固有リンクの秘密値はこの HTML に入れない（入口のページがこのタブの sessionStorage に持つ）。印刷（PDF）には出さない
 const DELIVERY_FOOTER = '<aside aria-label="このレポートについて" class="ed-delivery-footer" style="max-width:640px;margin:48px auto 64px;padding:20px 18px;'
   + 'border:1px solid #2a2440;border-radius:12px;text-align:center;font-family:inherit;background:rgba(20,16,36,.6)">'
   + '<style>@media print{.ed-delivery-footer{display:none!important}}</style>'
   + '<a href="/report-link.html#register" style="display:inline-block;min-height:44px;line-height:44px;padding:0 18px;border-radius:8px;color:#fff;'
-  + 'text-decoration:none;font-size:13px;letter-spacing:.06em;background:linear-gradient(120deg,#5b78c8 0%,#8a5fc0 50%,#c9a860 100%)">マイページに登録する</a>'
-  + '<p style="margin:16px 0 0;font-size:12px;line-height:1.9;color:#b9b2d6">このレポートは、PDFとして端末に保存できます。ブラウザの共有（またはメニュー）から「プリント」を選び、'
-  + '「PDF」として保存してください。端末変更やサービス終了に備え、購入後にPDFを保存してください。</p>'
-  + '<p style="margin:12px 0 0;font-size:11.5px;line-height:1.9;color:#8f88ad">このレポートのリンクから、診断結果と購入内容をマイページに登録できます。'
-  + 'リンクは登録後も有効で、別のアカウントにも何度でも登録できます。共有する場合はご注意ください。</p>'
-  + '<p style="margin:12px 0 0;font-size:12px"><a href="/report-link.html" style="color:#c9a860">このレポートの入口に戻る</a></p></aside>';
+  + 'text-decoration:none;font-size:13px;letter-spacing:.06em;background:#6a52b0;border:1px solid #8a72d0">マイページに登録する</a></aside>';
 function withDeliveryFooter(body) {
   const html = Buffer.isBuffer(body) ? body.toString('utf8') : String(body);
   const i = html.lastIndexOf('</body>');
@@ -164,6 +159,12 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
     if (!t.ok) {
       const incident = CE.incidentId();
       CP.logError(logger, API, t.reason, incident);
+      // ブラウザで開き直した（再読み込み・戻る）：レポートの入口へ。入口がこのタブの固有リンクから開き直す
+      if (/text\/html/.test(String((req.headers && req.headers.accept) || ''))) {
+        res.setHeader('Cache-Control', 'no-store');
+        res.setHeader('Location', '/report-link');
+        return res.status(302).end();
+      }
       return res.status(t.reason === 'token_expired' ? 410 : 403).json({ error: t.reason === 'token_expired' ? 'view_link_expired' : 'view_link_invalid', incident_id: incident });
     }
     let row;

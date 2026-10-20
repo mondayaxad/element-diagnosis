@@ -1770,6 +1770,10 @@ function renderDeliveryFooter(box) {
   if (!B) return;
   var token = B.rememberedLink();
   if (!token) return;
+  // 固有リンクから開いた時：アドレスバーを期限のない固有リンクに戻す（コピー・ブックマーク・再読み込みで、そのまま開ける）
+  try {
+    if (sessionStorage.getItem('ed_report_via_link_v1') === token) history.replaceState(null, '', '/report-link#t=' + token);
+  } catch (e) { /* そのまま */ }
   B.openLink(token, false).then(function (r) {
     var b = r.ok ? r.body : {};
     var ctx = b.context;
