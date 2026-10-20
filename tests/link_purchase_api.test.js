@@ -169,6 +169,12 @@ test('A ¥1,000：診断結果の記録で購入→支払い→購入完了ペ�
   const orders = await ctx.rows('complete_orders');
   assert.deepEqual(orders.map((o) => `${o.buyer}:${o.offer}:${o.amount}:${o.status}:${o.user_id}`), ['link:analysis:1000:paid:null']);
   assert.equal(ctx.stripe.st.lastCreate.params.customer_email, undefined, '購入時メールを入れない（本人の判定に使わない）');
+  // 決済の後は、購入したレポートの固有リンクへそのまま戻る。同じリンクを Stripe の請求書（購入者へのメール）にも載せる
+  const created = ctx.stripe.st.lastCreate.params;
+  assert.match(created.success_url, new RegExp(`^https://[^/]+/report-link#t=${p.link}$`));
+  assert.equal(created.invoice_creation.enabled, true);
+  assert.ok(created.invoice_creation.invoice_data.description.includes(created.success_url));
+  assert.match(created.invoice_creation.invoice_data.description, /^解析レポートのURL（期限なし）/);
   assert.match(ctx.stripe.st.lastCreate.params.custom_text.submit.message, /^解析レポート（1,000円・税込）。.*すぐにお読みいただけます。.*返品・返金はお受けしていません/, '決済画面（最終確認画面）に価格・提供の時期・返品の決まり');
   // 固有リンクを開く（Cookie の無いブラウザでも開ける）
   const o = await ctx.op('link-open', { token: p.link, open: true }, { cookie: '' });
