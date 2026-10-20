@@ -9,14 +9,14 @@
 
   function hold(btn, label) {
     if (!btn) return;
-    if (!btn.hasAttribute('data-nav-busy')) btn.setAttribute('data-nav-label', btn.textContent);
+    if (!btn.hasAttribute('data-nav-busy')) btn.setAttribute('data-nav-label', btn.innerHTML); // 2段の文言（span）も保つ
     btn.setAttribute('data-nav-busy', 'pending');
     btn.disabled = true;
     if (label) btn.textContent = label;
   }
   function release(btn) {
     if (!btn || !btn.hasAttribute('data-nav-busy')) return;
-    if (btn.hasAttribute('data-nav-label')) btn.textContent = btn.getAttribute('data-nav-label');
+    if (btn.hasAttribute('data-nav-label')) btn.innerHTML = btn.getAttribute('data-nav-label');
     btn.removeAttribute('data-nav-busy');
     btn.removeAttribute('data-nav-label');
     btn.disabled = false;

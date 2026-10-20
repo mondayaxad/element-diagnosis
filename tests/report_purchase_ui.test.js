@@ -159,7 +159,8 @@ test('診断結果：A ¥1,000・B ¥3,000 を常に出し、A は購入対象�
   for (const signedIn of [false, true]) {
     const p = await resultPage({ signedIn });
     const html = await p.locator('body').innerText();
-    assert.match(html, /完全解析　全46ページ　¥3,000/);
+    // 図の下の完全解析のボタン：「まだ見えていない輪郭を読む」と価格だけ（「完全解析　全46ページ」は出さない）
+    assert.deepEqual(await p.locator('[data-buy-complete] span').allInnerTexts(), ['まだ見えていない輪郭を読む', '¥3,000']);
     // ブラウザの履歴・タブで自分の結果を見分けられる題名（元素×武器×国家・タイプ名）
     assert.match(await p.title(), /^診断結果 .+×.+×.+・.+（[A-Z]{4}-[A-Z]）｜元素診断$/);
     assert.match(html, /解析レポートのサンプルを見る/);
@@ -244,18 +245,22 @@ test('サンプル：直接開くと「まず元素診断を受ける」だけ�
     // 完全解析のサンプル：完全解析だけ。解析レポートのサンプル：解析レポートが主・完全解析は折りたたみの中
     await s.waitForSelector(isB ? '[data-buy="complete"]' : '[data-buy="analysis"]');
     const text = await s.locator('[data-sample-buy]').innerText();
-    assert.match(text, /元素 風/);
     if (isB) {
+      assert.match(text, /元素 風/);
       assert.match(text, /まだ見えていない輪郭を読む[\s\S]*この診断結果の完全解析　全46ページ　¥3,000/);
       assert.equal(await s.locator('[data-buy="analysis"]').count(), 0, '完全解析のサンプルに解析レポートの申込を出さない');
     } else {
       assert.match(text, /この診断結果で、解析レポートを読む/);
-      assert.match(text, /解析レポート　¥1,000/);
+      assert.match(text, /¥1,000/);
+      assert.doesNotMatch(text, /元素 風|完全解析/, '解析レポートの申込欄は最小限（ボタンと戻る）');
+      // 申込欄は「この先にあるもの」（完全解析の案内）の上。完全解析のボタンは控えめな見た目
+      assert.equal(await s.evaluate(() => !!(document.querySelector('[data-sample-buy]').compareDocumentPosition(document.querySelector('.beyond-sec')) & Node.DOCUMENT_POSITION_FOLLOWING)), true);
+      assert.equal(await s.locator('.beyond-sec [data-buy="complete"].is-quiet').count(), 1);
       assert.equal(await s.locator('[data-sample-buy] [data-buy="complete"]').count(), 0, '末尾の申込欄は解析レポートだけ');
       // 完全解析は、本文の「この先にあるもの」（旧ナラティブレポートの紹介を置き換えた欄）で、図・説明・サンプルと一緒に案内する
       const beyond = s.locator('.beyond-sec');
       assert.equal(await s.getByText('NARRATIVE REPORT').count(), 0);
-      assert.match(await beyond.innerText(), /まだ見えていない輪郭を読む[\s\S]*全46ページ[\s\S]*¥3,000/);
+      assert.match(await beyond.innerText(), /全46ページ[\s\S]*まだ見えていない輪郭を読む[\s\S]*完全解析　¥3,000/);
       assert.equal(await beyond.locator('.edl-map img.edl-img').count(), 1);
       assert.equal(await beyond.locator('.edl-legend .edl-item').count(), 3);
       assert.equal(await beyond.locator('[data-buy="complete"]').count(), 1);
@@ -290,6 +295,25 @@ test('サンプル：URL からトークンを消した後も、同じタブの�
     assert.equal(await s.locator(`[data-sample-buy] [data-buy="${product}"][data-busy]`).count(), 0);
     await s.__ctx.close();
   }
+});
+
+test('サンプル：URL にもタブにも購入の対象が無い時は、このブラウザで最後に開いた診断結果から作り直して申し込める（申し込めない状態を作らない）', { skip: skip() }, async () => {
+  for (const [pg, product] of [['/report_sample.html', 'analysis'], ['/complete-sample.html', 'complete']]) {
+    const s = await open(pg, { api: RESULT_API({ 'buy-summary': [200, { summary: SUMMARY, eligible: { analysis: true, complete: true } }] }),
+      init: `try { localStorage.setItem('ed_last_result_v1', ${JSON.stringify(RESUME)}); } catch (e) {}` });
+    await s.waitForSelector(`[data-sample-buy] [data-buy="${product}"]`);
+    const ctxCall = s.__calls.find((c) => c.op === 'buy-context');
+    assert.equal(ctxCall && ctxCall.body.resume, RESUME);
+    assert.doesNotMatch(await s.locator('[data-sample-buy]').innerText(), /まず元素診断を受ける/);
+    await s.__ctx.close();
+  }
+});
+
+test('戻る（bfcache）で押せる状態へ戻した完全解析のボタンは、2段の文言（span）のまま', { skip: skip() }, async () => {
+  const p = await resultPage();
+  await p.evaluate(() => { const b = document.querySelector('[data-buy-complete]'); EdNavBusy.hold(b, '決済画面へ移動しています…'); EdNavBusy.release(b); });
+  assert.deepEqual(await p.locator('[data-buy-complete] span').allInnerTexts(), ['まだ見えていない輪郭を読む', '¥3,000']);
+  await p.__ctx.close();
 });
 
 test('購入完了：受け取り専用（状態・開く・リンクのコピー・PDF の案内・登録）。ほかの商品の申込は出さない', { skip: skip() }, async () => {
