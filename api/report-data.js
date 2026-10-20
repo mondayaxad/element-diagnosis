@@ -141,6 +141,10 @@ function tokenKind(data) {
   if (data.access_mode === 'mypage_entitlement_reissue') {
     return typeof data.sid === 'string' && UUID_RE.test(data.sid) && typeof data.uid === 'string' && UUID_RE.test(data.uid) ? 'mypage' : null;
   }
+  // レポート固有リンク・マイページの登録（complete_13）：納品（did）と記録（sid）を持つ。閲覧のたびに納品と注文の状態を確かめる
+  if (data.access_mode === 'delivery') {
+    return typeof data.did === 'string' && UUID_RE.test(data.did) && typeof data.sid === 'string' && UUID_RE.test(data.sid) ? 'delivery' : null;
+  }
   if (data.access_mode === 'guest_entitlement_reissue') {
     return typeof data.sid === 'string' && UUID_RE.test(data.sid) ? 'guest' : null;
   }
@@ -203,6 +207,16 @@ function createHandler({ env, fetchImpl }) {
       return { core, journey: false, complete };
     }
     // guest：未引き継ぎ（user_id が無い）ゲスト記録の、有効な解析権
+    if (kind === 'delivery') {
+      const [dels, sessions] = await Promise.all([
+        select(conn, `report_deliveries?id=eq.${data.did}&select=status,order_id,product,diagnosis_session_id`),
+        select(conn, `diagnosis_sessions?id=eq.${data.sid}&select=id,user_id,diagnosis_version,diagnosis_answers(encoded_answers)`),
+      ]);
+      const d = dels[0];
+      if (!d || d.status !== 'active' || d.product !== 'analysis' || d.diagnosis_session_id !== data.sid) return { core: false, journey: false };
+      const orders = await select(conn, `complete_orders?id=eq.${d.order_id}&select=status`);
+      return { core: !!(orders[0] && orders[0].status === 'paid' && sessionMatches(sessions[0], hash)), journey: false };
+    }
     const [sessions, rights] = await Promise.all([
       select(conn, `diagnosis_sessions?id=eq.${data.sid}&select=id,user_id,diagnosis_version,diagnosis_answers(encoded_answers)`),
       select(conn, `record_entitlements?diagnosis_session_id=eq.${data.sid}&right_type=eq.analysis&status=eq.active&select=user_id`),
@@ -295,7 +309,7 @@ function createHandler({ env, fetchImpl }) {
     //   レポート末尾の完全解析の案内を出し分けるためだけに使う（権利の判定には使わない。記録 ID・本人は返さない）
     if (perms.core) {
       responseBody.code = diagnosisRef.code;
-      responseBody.viewer = kind === 'guest' ? 'guest' : kind === 'mypage' ? 'mypage' : 'legacy';
+      responseBody.viewer = kind === 'guest' ? 'guest' : kind === 'mypage' ? 'mypage' : kind === 'delivery' ? 'delivery' : 'legacy';
       if (kind === 'mypage') responseBody.complete = perms.complete || null;
     }
 

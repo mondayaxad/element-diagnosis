@@ -42,6 +42,23 @@ const MYPAGE_FOOTER = '<aside aria-label="マイページ" style="max-width:640p
   + '<a href="/mypage.html" style="display:inline-block;min-height:44px;line-height:44px;padding:0 18px;border-radius:8px;color:#fff;'
   + 'text-decoration:none;font-size:13px;letter-spacing:.06em;background:linear-gradient(120deg,#5b78c8 0%,#8a5fc0 50%,#c9a860 100%)">'
   + 'マイページを作成する（この購入を引き継ぎます）</a></aside>';
+// レポート固有リンク・マイページの登録から開いた完全解析の最下部（complete_13）：マイページへの登録・共有の注意・PDF 保存の案内。
+//   固有リンクの秘密値はこの HTML に入れない（入口のページがこのタブの sessionStorage に持つ）。印刷（PDF）には出さない
+const DELIVERY_FOOTER = '<aside aria-label="このレポートについて" class="ed-delivery-footer" style="max-width:640px;margin:48px auto 64px;padding:20px 18px;'
+  + 'border:1px solid #2a2440;border-radius:12px;text-align:center;font-family:inherit;background:rgba(20,16,36,.6)">'
+  + '<style>@media print{.ed-delivery-footer{display:none!important}}</style>'
+  + '<a href="/report-link.html#register" style="display:inline-block;min-height:44px;line-height:44px;padding:0 18px;border-radius:8px;color:#fff;'
+  + 'text-decoration:none;font-size:13px;letter-spacing:.06em;background:linear-gradient(120deg,#5b78c8 0%,#8a5fc0 50%,#c9a860 100%)">マイページに登録する</a>'
+  + '<p style="margin:16px 0 0;font-size:12px;line-height:1.9;color:#b9b2d6">このレポートは、PDFとして端末に保存できます。ブラウザの共有（またはメニュー）から「プリント」を選び、'
+  + '「PDF」として保存してください。端末変更やサービス終了に備え、購入後にPDFを保存してください。</p>'
+  + '<p style="margin:12px 0 0;font-size:11.5px;line-height:1.9;color:#8f88ad">このレポートのリンクから、診断結果と購入内容をマイページに登録できます。'
+  + 'リンクは登録後も有効で、別のアカウントにも何度でも登録できます。共有する場合はご注意ください。</p>'
+  + '<p style="margin:12px 0 0;font-size:12px"><a href="/report-link.html" style="color:#c9a860">このレポートの入口に戻る</a></p></aside>';
+function withDeliveryFooter(body) {
+  const html = Buffer.isBuffer(body) ? body.toString('utf8') : String(body);
+  const i = html.lastIndexOf('</body>');
+  return i < 0 ? html + DELIVERY_FOOTER : html.slice(0, i) + DELIVERY_FOOTER + html.slice(i);
+}
 function withMypageFooter(body) {
   const html = Buffer.isBuffer(body) ? body.toString('utf8') : String(body);
   const i = html.lastIndexOf('</body>');
@@ -122,6 +139,21 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
     return user;
   }
 
+  // 納品（レポート固有リンク・マイページの登録）からの閲覧：開くたびに、納品が active・注文が paid・生成物が ready であることを確かめる
+  async function deliveryViewRow(conn, t) {
+    const dels = await CP.selectRows(fetchImpl, conn, `report_deliveries?id=eq.${encodeURIComponent(t.deliveryId)}&select=status,order_id,report_id,product,diagnosis_session_id`);
+    const d = dels[0];
+    if (!d || d.status !== 'active' || d.product !== 'complete' || d.report_id !== t.reportId || d.diagnosis_session_id !== t.sessionId) return { state: 'not_entitled' };
+    const [orders, reports] = await Promise.all([
+      CP.selectRows(fetchImpl, conn, `complete_orders?id=eq.${encodeURIComponent(d.order_id)}&select=status`),
+      CP.selectRows(fetchImpl, conn, `complete_reports?id=eq.${encodeURIComponent(t.reportId)}&select=id,status,storage_path,output_sha256,revoked_at,quarantined_at`),
+    ]);
+    const r = reports[0];
+    if (!orders[0] || orders[0].status !== 'paid' || !r || r.status === 'revoked' || r.revoked_at || r.quarantined_at) return { state: 'not_entitled' };
+    if (r.status !== 'ready' || !r.storage_path || !r.output_sha256) return { state: 'not_ready', report_id: r.id };
+    return { state: 'ok', report_id: r.id, storage_path: r.storage_path, output_sha256: r.output_sha256 };
+  }
+
   // ---- 閲覧（GET ?view=）
   async function view(req, res) {
     res.setHeader('Referrer-Policy', 'no-referrer');
@@ -136,8 +168,12 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
     }
     let row;
     try {
-      const rows = await CP.rpc(fetchImpl, g.guard, 'complete_report_for_view', { p_user_id: t.userId, p_diagnosis_session_id: t.sessionId });
-      row = Array.isArray(rows) ? rows[0] : null;
+      if (t.deliveryId) {
+        row = await deliveryViewRow(g.guard, t);
+      } else {
+        const rows = await CP.rpc(fetchImpl, g.guard, 'complete_report_for_view', { p_user_id: t.userId, p_diagnosis_session_id: t.sessionId });
+        row = Array.isArray(rows) ? rows[0] : null;
+      }
     } catch (err) {
       return failLogged(res, 503, 'service_unavailable', err.code);
     }
@@ -155,7 +191,8 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
       return failLogged(res, 500, 'report_unavailable', 'output_hash_mismatch');
     }
     // ログインなしの購入（ゲスト）で開いた時だけ、最下部にマイページの作成への導線を足す（保存した生成物は変えない。照合の後に足す）
-    if (t.userId == null) body = withMypageFooter(body);
+    if (t.deliveryId) body = withDeliveryFooter(body);
+    else if (t.userId == null) body = withMypageFooter(body);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Content-Security-Policy', VIEW_CSP);
     res.setHeader('X-Frame-Options', 'DENY');

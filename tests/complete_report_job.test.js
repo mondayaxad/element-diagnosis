@@ -73,7 +73,7 @@ async function setup({ env = {} } = {}) {
   let clock = null;
   const now = () => (clock === null ? Date.now() : clock);
   const deps = { env: fullEnv, fetchImpl, stripeFactory: stripe.factory, logger, waitUntil, now };
-  const checkoutH = Checkout.createHandler(deps);
+  const checkoutH = Checkout.createHandler({ ...deps, retiredRoutesForTests: true });
   const webhookH = Webhook.createHandler(deps);
   // 後段起動が失われた場合（waitUntil が使えない・関数が止まった）を作るための Webhook
   const webhookNoBg = Webhook.createHandler({ ...deps, waitUntil: null });
@@ -593,7 +593,8 @@ test('閲覧トークン：期限は300秒・中身は暗号化・改ざんは�
   const t0 = 1_800_000_000;
   const { token, expiresAt } = RJ.issueViewToken(VIEW_SECRET, ids, t0);
   assert.equal(expiresAt, t0 + 300);
-  assert.deepEqual(RJ.readViewToken(VIEW_SECRET, token, t0), { ok: true, ...ids, expiresAt: t0 + 300 });
+  // deliveryId：固有リンク・マイページの登録から開いた時だけ（complete_13）。本人の権利の閲覧では null
+  assert.deepEqual(RJ.readViewToken(VIEW_SECRET, token, t0), { ok: true, ...ids, deliveryId: null, expiresAt: t0 + 300 });
   assert.equal(RJ.readViewToken(VIEW_SECRET, token, t0 + 300).ok, true);
   assert.equal(RJ.readViewToken(VIEW_SECRET, token, t0 + 301).reason, 'token_expired');
   assert.equal(RJ.readViewToken(crypto.randomBytes(32).toString('base64url'), token, t0).reason, 'token_invalid');

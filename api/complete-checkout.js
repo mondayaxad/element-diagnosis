@@ -23,9 +23,13 @@ const { resolveAppEnv, requireServerEnv, requestHost, logEnvDenied } = require('
 const CE = require('../lib/complete-eligibility');
 const CP = require('../lib/complete-payment');
 const GP = require('../lib/guest-purchase');
+const LP = require('../lib/link-purchase');
 const PS = require('../lib/purchase-state');
 
 const MAX_BODY_BYTES = 512;
+// 旧経路（マイページの旧 Checkout・ゲストの旧 Checkout・引き継ぎ）は呼ばない（complete_13）。旧処理は戻し（rollback）のために残す。
+//   retiredRoutesForTests：既存の試験が、旧経路で作った注文（既存の購入）の Webhook・返金・dispute を確かめるためだけの切り替え。
+//   公開の関数（module.exports）は常に false で作る（環境変数・要求からは変えられない）
 const API = 'complete-checkout';
 
 function queryOp(req) {
@@ -74,7 +78,8 @@ const ORDER_ERRORS = {
   complete_rights_suspended: [409, 'rights_suspended'],
 };
 
-function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUntil, storageFactory = null, now }) {
+function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUntil, storageFactory = null, now, retiredRoutesForTests = false }) {
+  const RETIRED_FALLTHROUGH = retiredRoutesForTests === true;
   const nowMs = now || (() => Date.now());
   const stripeClients = new Map();
   function stripeFor(key) {
@@ -82,6 +87,11 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
     return stripeClients.get(key);
   }
   const guestHandler = GP.createGuestHandler({
+    env, fetchImpl, stripeFor: () => stripeFor(env.STRIPE_SECRET_KEY), logger, storageFactory,
+    ...(waitUntil !== undefined ? { waitUntil } : {}), ...(now ? { now } : {}),
+  });
+  // 新しい購入の経路（complete_13：2商品・レポート固有リンク・マイページへの登録）
+  const linkHandler = LP.createLinkHandler({
     env, fetchImpl, stripeFor: () => stripeFor(env.STRIPE_SECRET_KEY), logger, storageFactory,
     ...(waitUntil !== undefined ? { waitUntil } : {}), ...(now ? { now } : {}),
   });
@@ -131,7 +141,15 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
     const op = queryOp(req);
     // 旧 ¥1,000（Payment Link）の購入の確認・結び付けは廃止（旧購入は完全解析の根拠にしない）
     if (op === 'legacy-verify') return fail(res, 410, 'legacy_verification_retired');
+    if (op && LP.OPS.has(op)) return linkHandler(op, req, res, guard);
+    // 旧経路の申込（ゲストの旧 Checkout・追加 ¥2,000・マイページの旧 Checkout）は廃止（complete_13）。
+    //   申込は op=buy（全入口で共通）だけ。旧経路の閲覧・状態の確認（guest-status 等）は既存の購入のために残す
+    if (op === 'guest-checkout' && !RETIRED_FALLTHROUGH) return fail(res, 410, 'checkout_retired');
+    // 購入の引き継ぎ（Cookie の秘密値・購入時メールの照合で diagnosis_sessions.user_id を移す）も廃止（complete_13）。
+    //   マイページへは、レポートの固有リンクからの登録（op=link-register：閲覧の追加だけ。所有者は変えない）
+    if ((op === 'guest-claim' || op === 'guest-recover') && !RETIRED_FALLTHROUGH) return fail(res, 410, 'transfer_retired');
     if (op) return guestHandler(op, req, res, guard);
+    if (!RETIRED_FALLTHROUGH) return fail(res, 410, 'checkout_retired');
     if (!CP.salesOpen(env)) return fail(res, 503, 'sales_closed');
     const urls = CP.checkoutReturnUrls(env, guard.appEnv, 'user');
     if (!urls || !CP.priceIdFor(env, 'direct_complete') || !CP.priceIdFor(env, 'analysis_upgrade') || !CP.priceIdFor(env, 'analysis')) {
