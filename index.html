@@ -299,6 +299,43 @@
     .ca-guest-msg { margin: 8px 0 0; font-size: 11.5px; color: #d6a8b8; line-height: 1.7; }
     .ca-guest-msg:empty { display: none; }
     .ca-fold-note { margin: 10px 0 0; padding-left: 8px; border-left: 2px solid var(--ca-line); font-size: 11px; color: var(--ca-muted); line-height: 1.7; }
+    /* 完全解析の申込（グラデーションで主の操作と分かるように） */
+    .ca-fold-btn-buy { flex-direction: column; gap: 2px; min-height: 58px; padding: 8px 12px; border: 0; color: #fff; cursor: pointer;
+      background: linear-gradient(120deg, #5b78c8 0%, #8a5fc0 50%, #c9a860 100%); box-shadow: 0 6px 20px rgba(138, 95, 192, .28); }
+    .ca-fold-btn-buy .ca-buy-main { font-size: 15px; font-weight: 600; letter-spacing: .1em; }
+    .ca-fold-btn-buy .ca-buy-sub { font-size: 11.5px; letter-spacing: .06em; opacity: .92; }
+    .ca-fold-btn-buy[disabled] { background: transparent; color: #9aa8c6; box-shadow: none; border: 1px dashed var(--ca-line); }
+    /* サンプルへの導線 */
+    .ca-sample-link { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--ca-gold) 45%, var(--ca-line));
+      border-radius: 10px; background: rgba(201, 168, 96, .06); color: var(--ca-title); text-decoration: none; }
+    .ca-sample-link:focus-visible { outline: 2px solid #7ab8e8; outline-offset: 2px; }
+    .ca-sample-icon { flex: none; width: 30px; height: 36px; border: 1px solid var(--ca-gold); border-radius: 3px; position: relative; background: linear-gradient(180deg, rgba(201,168,96,.18), transparent); }
+    .ca-sample-icon::before, .ca-sample-icon::after { content: ''; position: absolute; left: 6px; right: 6px; height: 1px; background: var(--ca-gold); opacity: .7; }
+    .ca-sample-icon::before { top: 10px; } .ca-sample-icon::after { top: 16px; }
+    .ca-sample-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .ca-sample-text b { font-size: 13.5px; font-weight: 600; letter-spacing: .06em; }
+    .ca-sample-text small { font-size: 11px; color: var(--ca-muted); line-height: 1.6; }
+    .ca-sample-go { flex: none; color: var(--ca-gold); font-size: 14px; }
+    /* 三つの人物像の図 */
+    .ca-map { margin: 16px 0 0; padding: 14px 12px 12px; border: 1px solid var(--ca-line); border-radius: 12px; background: rgba(255,255,255,.015); }
+    .ca-map-core { display: flex; flex-direction: column; align-items: center; margin: 0 auto 4px; width: max-content; padding: 6px 16px; border: 1px solid var(--ca-line); border-radius: 999px; }
+    .ca-map-core-en { font-size: 9.5px; letter-spacing: .24em; color: var(--ca-muted); }
+    .ca-map-core-ja { font-size: 12.5px; color: var(--ca-title); letter-spacing: .08em; }
+    .ca-map-lenses { list-style: none; margin: 0; padding: 0 0 0 14px; position: relative; }
+    .ca-map-lenses::before { content: ''; position: absolute; left: 4px; top: 0; bottom: 22px; width: 1px; background: var(--ca-line); }
+    .ca-map-lens { position: relative; margin-top: 10px; padding: 10px 10px 8px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--lens-c) 40%, transparent);
+      background: color-mix(in srgb, var(--lens-c) 8%, transparent); }
+    .ca-map-lens::before { content: ''; position: absolute; left: -10px; top: 20px; width: 10px; height: 1px; background: color-mix(in srgb, var(--lens-c) 60%, transparent); }
+    .ca-map--mirror { --lens-c: var(--ca-mirror); } .ca-map--hidden { --lens-c: var(--ca-hidden); } .ca-map--mentor { --lens-c: var(--ca-mentor); }
+    .ca-map-head { display: flex; align-items: baseline; gap: 8px; }
+    .ca-map-en { font-size: 12px; letter-spacing: .16em; color: var(--lens-c); font-weight: 600; }
+    .ca-map-ja { font-size: 11.5px; color: var(--ca-body); }
+    .ca-map-count { margin-left: auto; font-size: 13px; color: var(--ca-title); letter-spacing: .04em; }
+    .ca-map-people { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; margin: 8px 0 4px; max-width: 260px; }
+    .ca-map-people svg { width: 100%; height: auto; fill: var(--lens-c); opacity: .85; }
+    .ca-map-desc { margin: 0; font-size: 11.5px; color: var(--ca-muted); line-height: 1.6; }
+    .ca-map-sum { margin: 12px 0 0; font-size: 11.5px; color: var(--ca-body); line-height: 1.8; text-align: center; }
+    .ca-map-sum b { color: var(--ca-gold); font-weight: 600; }
     /* 診断結果の固有リンクの案内（控えめに） */
     .resume-note { margin: 0 0 14px; padding: 10px 12px; border: 1px solid #1e3448; border-radius: 8px; font-size: 11.5px; line-height: 1.8; color: #8c9bbb; text-align: left; }
     .resume-note[hidden] { display: none; }
@@ -1631,8 +1668,11 @@ let jumpQueue = null; // ジャンプボタンを押した時点の未回答リ�
 
 function getAnsweredCount() { return Object.keys(answers).length; }
 
+// ブラウザの履歴・タブで自分の診断結果を見分けられるよう、結果の画面では題名に結果を入れる（それ以外の画面は元の題名）
+var ED_BASE_TITLE = document.title;
 function render() {
   const phase = window.__phase || 'intro';
+  if (phase !== 'result') document.title = ED_BASE_TITLE;
   const root = document.getElementById('diagnosis-root');
   if (!root) return;
   const isV2 = window.__diagnosisVersion === 'ETI-2.0';
@@ -2197,6 +2237,7 @@ function renderResult(root) {
   // MIRROR（最も近しいキャラクター）。v2は版ごとの選択結果、legacyは従来どおり1位。
   const top1 = (diagnosisVersion === 'ETI-2.0' && results.mirror) ? results.mirror : results.charMatches[0];
   const ACCENT = '#7ab8e8';
+  try { document.title = `診断結果 ${topEl}×${topW}×${topNat}・${typeName(topEl, topW)}（${typeCode(topEl, topW, topNat)}）｜元素診断`; } catch (e) { /* 題名は変えなくても表示は続ける */ }
   // 暗い背景で読める固有色（元素・武器）。国家は淡い金で統一
   const elT = rxText(elC), wT = rxText(wC), natT = 'var(--rx-nation)';
 
@@ -2997,6 +3038,27 @@ function renderResult(root) {
    ¥1,000の主導線より前・料金概要には出さない。<details> なのでJSが無くても内容へ到達できる。
    完全解析の権利APIが無い間は状態を unknown とし、購入CTAを出さない（freeと推測しない）。
    ?preview_entitlement= は Preview でのみ有効（complete-analysis.js のガード）。 */
+// 三つの人物像（MIRROR・HIDDEN SHAPE・MENTOR）を図で示す：中心の「あなたの結果」から三つの視点へ、各10名の人物像
+var CA_LENS_MAP = [
+  { key: 'mirror', en: 'MIRROR', ja: 'いまのあなた', desc: '現在のあなたに近い人物像' },
+  { key: 'hidden', en: 'HIDDEN SHAPE', ja: '隠れた一面', desc: '表に出にくい一面に近い人物像' },
+  { key: 'mentor', en: 'MENTOR', ja: 'これからのあなた', desc: 'これから伸ばす方向に近い人物像' },
+];
+function caLensMapHtml() {
+  var person = '<svg viewBox="0 0 12 14" aria-hidden="true"><circle cx="6" cy="4" r="3"/><path d="M0.8 14c0-3.3 2.3-5.6 5.2-5.6s5.2 2.3 5.2 5.6z"/></svg>';
+  var people = new Array(11).join(person);
+  return '<figure class="ca-map" aria-label="三つの視点で各10名、合わせて30名の人物像からあなたを読み解きます">'
+    + '<div class="ca-map-core"><span class="ca-map-core-en">YOUR RESULT</span><span class="ca-map-core-ja">あなたの診断結果</span></div>'
+    + '<ol class="ca-map-lenses">'
+    + CA_LENS_MAP.map(function (l) {
+      return '<li class="ca-map-lens ca-map--' + l.key + '"><div class="ca-map-head"><span class="ca-map-en">' + l.en + '</span>'
+        + '<span class="ca-map-ja">' + l.ja + '</span><span class="ca-map-count">10名</span></div>'
+        + '<div class="ca-map-people">' + people + '</div><p class="ca-map-desc">' + l.desc + '</p></li>';
+    }).join('')
+    + '</ol>'
+    + '<figcaption class="ca-map-sum"><b>3つの視点 × 各10名 ＝ 30名</b>の人物像から、元素・武器・国家と20軸を横断して、ひとつの輪郭に統合します。</figcaption>'
+    + '</figure>';
+}
 function completeAnalysisFoldHtml(itemSetVersion, diagnosisVersion) {
   var CA = (typeof CompleteAnalysis !== 'undefined') ? CompleteAnalysis : null;
   // 完全解析の適格性：旧版（element-v1）など、46ページ生成の入力契約を満たさない結果には折りたたみ自体を出さない
@@ -3012,7 +3074,7 @@ function completeAnalysisFoldHtml(itemSetVersion, diagnosisVersion) {
   if (!name && diagnosisVersion === 'ETI-2.0' && typeof EdGuestPurchase !== 'undefined') {
     // 全ての状態で同じ導線（ログイン・購入の有無で変えない）：完全解析 ¥3,000（目標の選択は共通の画面。js/report-purchase.js）
     cta = '<div data-report-buy="complete"><p class="ca-fold-note" data-complete-notice>' + (typeof EdBuy !== 'undefined' ? EdBuy.esc(EdBuy.COMPLETE_NOTICE) : '') + '</p>'
-      + '<button type="button" class="ca-fold-btn" data-buy-complete>まだ見えていない輪郭を読む　完全解析 ¥3,000</button>'
+      + '<button type="button" class="ca-fold-btn ca-fold-btn-buy" data-buy-complete><span class="ca-buy-main">まだ見えていない輪郭を読む</span><span class="ca-buy-sub">完全解析（全46ページ）¥3,000</span></button>'
       + '<p class="ca-guest-msg" data-buy-msg role="status"></p></div>';
   } else if (offer) {
     var isUp = offer.offer === 'upgrade_2000';
@@ -3033,11 +3095,12 @@ function completeAnalysisFoldHtml(itemSetVersion, diagnosisVersion) {
     + '</summary>'
     + '<div class="ca-fold-body">'
     + '<div class="ca-reveal-stars" aria-hidden="true"><i></i><i></i><i></i></div>'
-    + '<p class="ca-body">この結果が示すのは、あなたの核となる一面です。</p>'
-    + '<p class="ca-body">完全解析では、<br>あなたと重なる人物、<br>まだ言葉になっていない内側の可能性、<br>これから借りられる力を、<br>三つの視点からひとつの輪郭へ結びます。</p>'
+    + '<p class="ca-body">この結果が示すのは、あなたの核となる一面です。完全解析では、三つの視点それぞれで10名ずつ、あなたに重なる人物像を選び、ひとつの輪郭へ結びます。</p>'
+    + caLensMapHtml()
     + '<p class="ca-reveal-pages">全46ページの完全解析</p>'
-    + '<a class="ca-fold-btn ca-fold-btn-quiet" href="/complete-sample.html#from=result" data-ca-sample data-buy-sample="complete"'
-    + ' onclick="if(typeof CompleteAnalysis!==\'undefined\')CompleteAnalysis.track(\'complete_sample_open\',{source:\'index\'})">8ページのサンプルを見る</a>'
+    + '<a class="ca-sample-link" href="/complete-sample.html#from=result" data-ca-sample data-buy-sample="complete"'
+    + ' onclick="if(typeof CompleteAnalysis!==\'undefined\')CompleteAnalysis.track(\'complete_sample_open\',{source:\'index\'})">'
+    + '<span class="ca-sample-icon" aria-hidden="true"></span><span class="ca-sample-text"><b>完全解析のサンプルを読む</b><small>全46ページのうち8ページを、実際の紙面のまま公開しています</small></span><span class="ca-sample-go" aria-hidden="true">→</span></a>'
     + cta
     + '</div></details>';
 }
@@ -3147,7 +3210,7 @@ function initReportPurchase(root, code, refs) {
   }
   var cb = root.querySelector('[data-buy-complete]');
   if (cb) {
-    if (!open) { cb.disabled = true; cb.classList.add('is-pending'); cb.setAttribute('aria-disabled', 'true'); cb.textContent = 'まだ見えていない輪郭を読む　完全解析 ¥3,000（準備中）'; }
+    if (!open) { cb.disabled = true; cb.classList.add('is-pending'); cb.setAttribute('aria-disabled', 'true'); cb.innerHTML = '<span class="ca-buy-main">まだ見えていない輪郭を読む</span><span class="ca-buy-sub">完全解析（全46ページ）¥3,000（準備中）</span>'; }
     else cb.onclick = function () { buy('complete', cb, root.querySelector('[data-buy-msg]'), 'result'); };
   }
   root.querySelectorAll('[data-buy-sample]').forEach(function (a) {

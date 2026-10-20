@@ -13,6 +13,8 @@
   var from = B.readFragment('from') === 'mypage' ? 'mypage' : 'result';
   var subject = from === 'mypage' ? 'この記録' : 'この診断結果';
   var source = from === 'mypage' ? 'mypage_sample' : 'result_sample';
+  // このサンプルの商品：完全解析のサンプルは完全解析だけ。解析レポートのサンプルは解析レポートが主で、完全解析は折りたたみの中
+  var page = box.getAttribute('data-sample-buy') === 'complete' ? 'complete' : 'analysis';
 
   function backHref() { return from === 'mypage' ? '/mypage.html' : '/'; }
   // 元の画面へ：同じタブで開いたので履歴で戻る（履歴が無い時はマイページ・トップへ）
@@ -47,17 +49,24 @@
       s.nation ? '国家 ' + s.nation : null, s.mirror ? 'MIRROR ' + s.mirror : null,
     ].filter(Boolean).map(B.esc).join('　');
     var open = B.salesOpen();
-    function btn(product) {
+    function btn(product, quiet) {
       var info = B.PRODUCTS[product];
       var ok = open && (product === 'complete' ? el.complete : el.analysis);
       var label = subject + 'で' + info.label + 'を作成する ' + B.yen(info.price);
-      return '<a class="sample-return" href="#" data-buy="' + product + '"' + (ok ? '' : ' aria-disabled="true" style="opacity:.55;pointer-events:none"') + '>'
+      return '<a class="sample-return' + (quiet ? ' sample-buy-sub' : '') + '" href="#" data-buy="' + product + '"' + (ok ? '' : ' aria-disabled="true" style="opacity:.55;pointer-events:none"') + '>'
         + B.esc(label) + (open ? '' : '（準備中）') + '</a>';
     }
+    var offers = page === 'complete'
+      ? '<div style="display:grid;gap:10px;justify-items:center">' + btn('complete') + '</div>'
+        + '<p data-sample-complete-note>' + B.esc(B.COMPLETE_NOTICE) + '</p>'
+      : '<div style="display:grid;gap:10px;justify-items:center">' + btn('analysis') + '</div>'
+        + '<details class="sample-more" data-sample-more><summary>完全解析（別商品・全46ページ）も見る</summary>'
+        + '<p data-sample-complete-note>' + B.esc(B.COMPLETE_NOTICE) + '</p>'
+        + '<p>三つの視点（MIRROR・HIDDEN SHAPE・MENTOR）で各10名の人物像から、あなたの輪郭を読み解きます。</p>'
+        + '<div style="display:grid;gap:10px;justify-items:center">' + btn('complete', true) + '</div></details>';
     box.innerHTML = '<h2>' + subject + 'で読む</h2>'
       + (facts ? '<p data-sample-facts>' + facts + '</p>' : '')
-      + '<div style="display:grid;gap:10px;justify-items:center">' + btn('analysis') + btn('complete') + '</div>'
-      + '<p data-sample-complete-note>' + B.esc(B.COMPLETE_NOTICE) + '</p>'
+      + offers
       + '<p class="ca-guest-msg" data-buy-msg role="status"></p>'
       + '<p class="sample-mypage"><a href="' + B.esc(backHref()) + '" data-sample-back>元の画面に戻る</a></p>';
     var msg = box.querySelector('[data-buy-msg]');

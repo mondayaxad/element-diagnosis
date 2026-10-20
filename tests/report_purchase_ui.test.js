@@ -158,7 +158,9 @@ test('診断結果：A ¥1,000・B ¥3,000 を常に出し、A は購入対象�
   for (const signedIn of [false, true]) {
     const p = await resultPage({ signedIn });
     const html = await p.locator('body').innerText();
-    assert.match(html, /完全解析 ¥3,000/);
+    assert.match(html, /完全解析（全46ページ）¥3,000/);
+    // ブラウザの履歴・タブで自分の結果を見分けられる題名（元素×武器×国家・タイプ名）
+    assert.match(await p.title(), /^診断結果 .+×.+×.+・.+（[A-Z]{4}-[A-Z]）｜元素診断$/);
     assert.match(html, /解析レポートのサンプルを見る/);
     assert.doesNotMatch(html, /¥2,000|追加 ?¥|アップグレード/);
     await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
@@ -216,7 +218,7 @@ test('診断結果：サンプルへは同じタブ・購入対象トークン�
 });
 
 // ================= サンプル
-test('サンプル：直接開くと「まず元素診断を受ける」だけ（申込なし）。購入対象トークン付きは記録の概要と A・B の申込。トークンは URL から消す', { skip: skip() }, async () => {
+test('サンプル：直接開くと「まず元素診断を受ける」だけ（申込なし）。購入対象トークン付きは記録の概要と、そのサンプルの商品の申込（解析レポートのサンプルは完全解析を折りたたみの中に）。トークンは URL から消す', { skip: skip() }, async () => {
   for (const pg of ['/complete-sample.html', '/report_sample.html']) {
     const d = await open(pg, { api: RESULT_API() });
     await d.waitForSelector('[data-sample-buy] a.sample-return');
@@ -225,16 +227,31 @@ test('サンプル：直接開くと「まず元素診断を受ける」だけ�
     assert.doesNotMatch(t, /作成する/);
     assert.equal(d.__calls.filter((c) => c.op === 'buy-summary' || c.op === 'buy').length, 0);
     await d.__ctx.close();
-    const s = await open(`${pg}#c=${CTX}&from=result`, { api: RESULT_API({ 'buy-summary': [200, { summary: SUMMARY, eligible: { analysis: true, complete: true } }] }) });
-    await s.waitForSelector('[data-buy="analysis"]');
+    const s = await open(`${pg}#c=${CTX}&from=result`, { api: RESULT_API({ 'buy-summary': [200, { summary: SUMMARY, eligible: { analysis: true, complete: true } }] }), init: () => { window.__goalPick = true; } });
+    const isB = pg.startsWith('/complete');
+    // 完全解析のサンプル：完全解析だけ。解析レポートのサンプル：解析レポートが主・完全解析は折りたたみの中
+    await s.waitForSelector(isB ? '[data-buy="complete"]' : '[data-buy="analysis"]');
     const text = await s.locator('[data-sample-buy]').innerText();
-    assert.match(text, /この診断結果で解析レポートを作成する ¥1,000/);
-    assert.match(text, /この診断結果で完全解析を作成する ¥3,000/);
     assert.match(text, /元素 風/);
+    if (isB) {
+      assert.match(text, /この診断結果で完全解析を作成する ¥3,000/);
+      assert.equal(await s.locator('[data-buy="analysis"]').count(), 0, '完全解析のサンプルに解析レポートの申込を出さない');
+    } else {
+      assert.match(text, /この診断結果で解析レポートを作成する ¥1,000/);
+      assert.equal(await s.locator('[data-sample-more]').evaluate((d) => d.open), false, '完全解析は閉じた折りたたみの中');
+      assert.equal(await s.locator('[data-sample-more] [data-buy="complete"]').count(), 1);
+      assert.equal(await s.locator('[data-sample-more] [data-buy="complete"]').isVisible(), false);
+    }
     assert.equal(new URL(s.url()).hash, '', 'トークンを URL から消す');
-    await s.click('[data-buy="analysis"]');
+    const product = isB ? 'complete' : 'analysis';
+    await s.click(`[data-buy="${product}"]`);
+    if (isB) {
+      await s.waitForSelector('.edb-dialog input[name="edb-goal"]');
+      await s.locator('.edb-dialog input[name="edb-goal"]').first().check();
+      await s.click('[data-edb-go]');
+    }
     await s.waitForURL(/checkout\.stripe\.com/);
-    assert.deepEqual(s.__calls.filter((c) => c.op === 'buy').map((c) => [c.body.product, c.body.context, c.body.source]), [['analysis', CTX, 'result_sample']]);
+    assert.deepEqual(s.__calls.filter((c) => c.op === 'buy').map((c) => [c.body.product, c.body.context, c.body.source]), [[product, CTX, 'result_sample']]);
     assert.deepEqual(s.__errors, []);
     await s.__ctx.close();
   }

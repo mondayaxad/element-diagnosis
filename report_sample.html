@@ -1685,9 +1685,13 @@ async function savePdf() {
   .sample-cta a.sample-return { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:8px 18px; border-radius:8px;
     color:#fff; text-decoration:none; background:linear-gradient(120deg,#5b78c8 0%,#8a5fc0 50%,#c9a860 100%); }
   @media (max-width:520px) { .sample-cta a.sample-return { width:100%; } }
+  /* 完全解析（別商品）は折りたたみの中。主の操作（解析レポート）より控えめに */
+  .sample-cta .sample-more { margin:14px 0 0; padding:10px 12px; border:1px solid #2a2440; border-radius:8px; text-align:left; }
+  .sample-cta .sample-more > summary { cursor:pointer; min-height:32px; color:#c9a860; font-size:12.5px; letter-spacing:.04em; }
+  .sample-cta a.sample-return.sample-buy-sub { background:transparent; border:1px solid #8a5fc0; color:#e6e2f2; }
   @media print { .sample-cta { display:none; } }
 </style>
-<aside class="sample-cta" aria-label="お申し込み" data-sample-buy>
+<aside class="sample-cta" aria-label="お申し込み" data-sample-buy="analysis">
   <h2>あなた自身の診断結果で読む</h2>
   <p>お申し込みには、あなたの診断結果が必要です。<a href="/">まず元素診断を受ける</a></p>
 </aside>
