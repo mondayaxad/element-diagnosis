@@ -299,12 +299,25 @@
     .ca-guest-msg { margin: 8px 0 0; font-size: 11.5px; color: #d6a8b8; line-height: 1.7; }
     .ca-guest-msg:empty { display: none; }
     .ca-fold-note { margin: 10px 0 0; padding-left: 8px; border-left: 2px solid var(--ca-line); font-size: 11px; color: var(--ca-muted); line-height: 1.7; }
-    /* 完全解析の申込（グラデーションで主の操作と分かるように） */
-    .ca-fold-btn-buy { flex-direction: column; gap: 2px; min-height: 58px; padding: 8px 12px; border: 0; color: #fff; cursor: pointer;
-      background: linear-gradient(120deg, #5b78c8 0%, #8a5fc0 50%, #c9a860 100%); box-shadow: 0 6px 20px rgba(138, 95, 192, .28); }
-    .ca-fold-btn-buy .ca-buy-main { font-size: 15px; font-weight: 600; letter-spacing: .1em; }
-    .ca-fold-btn-buy .ca-buy-sub { font-size: 11.5px; letter-spacing: .06em; opacity: .92; }
+    /* 完全解析の申込：夜空に元素の光がさす宝石の色（元素診断の世界観。結果の元素色 --el を差し色に） */
+    .ca-fold-btn-buy { position: relative; overflow: hidden; flex-direction: column; gap: 3px; min-height: 60px; padding: 10px 14px; cursor: pointer; color: #f3ead2;
+      border: 1px solid rgba(214, 189, 132, .55);
+      background:
+        radial-gradient(1.2px 1.2px at 14% 28%, rgba(255,255,255,.75) 50%, transparent 52%),
+        radial-gradient(1px 1px at 33% 74%, rgba(255,255,255,.5) 50%, transparent 52%),
+        radial-gradient(1.3px 1.3px at 78% 30%, rgba(255,248,220,.7) 50%, transparent 52%),
+        radial-gradient(1px 1px at 91% 70%, rgba(255,255,255,.45) 50%, transparent 52%),
+        radial-gradient(130% 170% at 0% 0%, color-mix(in srgb, var(--el, #7ab8e8) 46%, transparent) 0%, transparent 58%),
+        radial-gradient(90% 140% at 100% 100%, rgba(201, 168, 96, .38) 0%, transparent 60%),
+        linear-gradient(115deg, #0f1630 0%, #1d2147 42%, #31285a 70%, #4a3a52 100%);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 0 22px color-mix(in srgb, var(--el, #7ab8e8) 22%, transparent); }
+    .ca-fold-btn-buy::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,240,200,.12) 48%, transparent 66%); transform: translateX(-100%); animation: ca-buy-sheen 5.5s ease-in-out infinite; pointer-events: none; }
+    @keyframes ca-buy-sheen { 0%, 62% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+    @media (prefers-reduced-motion: reduce) { .ca-fold-btn-buy::after { animation: none; display: none; } }
+    .ca-fold-btn-buy .ca-buy-main { font-size: 15px; font-weight: 600; letter-spacing: .14em; text-shadow: 0 0 12px rgba(255, 236, 190, .35); }
+    .ca-fold-btn-buy .ca-buy-sub { font-size: 11.5px; letter-spacing: .12em; color: #d6bd84; }
     .ca-fold-btn-buy[disabled] { background: transparent; color: #9aa8c6; box-shadow: none; border: 1px dashed var(--ca-line); }
+    .ca-fold-btn-buy[disabled]::after { display: none; }
     /* サンプルへの導線 */
     .ca-sample-link { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--ca-gold) 45%, var(--ca-line));
       border-radius: 10px; background: rgba(201, 168, 96, .06); color: var(--ca-title); text-decoration: none; }
@@ -316,26 +329,6 @@
     .ca-sample-text b { font-size: 13.5px; font-weight: 600; letter-spacing: .06em; }
     .ca-sample-text small { font-size: 11px; color: var(--ca-muted); line-height: 1.6; }
     .ca-sample-go { flex: none; color: var(--ca-gold); font-size: 14px; }
-    /* 三つの人物像の図 */
-    .ca-map { margin: 16px 0 0; padding: 14px 12px 12px; border: 1px solid var(--ca-line); border-radius: 12px; background: rgba(255,255,255,.015); }
-    .ca-map-core { display: flex; flex-direction: column; align-items: center; margin: 0 auto 4px; width: max-content; padding: 6px 16px; border: 1px solid var(--ca-line); border-radius: 999px; }
-    .ca-map-core-en { font-size: 9.5px; letter-spacing: .24em; color: var(--ca-muted); }
-    .ca-map-core-ja { font-size: 12.5px; color: var(--ca-title); letter-spacing: .08em; }
-    .ca-map-lenses { list-style: none; margin: 0; padding: 0 0 0 14px; position: relative; }
-    .ca-map-lenses::before { content: ''; position: absolute; left: 4px; top: 0; bottom: 22px; width: 1px; background: var(--ca-line); }
-    .ca-map-lens { position: relative; margin-top: 10px; padding: 10px 10px 8px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--lens-c) 40%, transparent);
-      background: color-mix(in srgb, var(--lens-c) 8%, transparent); }
-    .ca-map-lens::before { content: ''; position: absolute; left: -10px; top: 20px; width: 10px; height: 1px; background: color-mix(in srgb, var(--lens-c) 60%, transparent); }
-    .ca-map--mirror { --lens-c: var(--ca-mirror); } .ca-map--hidden { --lens-c: var(--ca-hidden); } .ca-map--mentor { --lens-c: var(--ca-mentor); }
-    .ca-map-head { display: flex; align-items: baseline; gap: 8px; }
-    .ca-map-en { font-size: 12px; letter-spacing: .16em; color: var(--lens-c); font-weight: 600; }
-    .ca-map-ja { font-size: 11.5px; color: var(--ca-body); }
-    .ca-map-count { margin-left: auto; font-size: 13px; color: var(--ca-title); letter-spacing: .04em; }
-    .ca-map-people { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; margin: 8px 0 4px; max-width: 260px; }
-    .ca-map-people svg { width: 100%; height: auto; fill: var(--lens-c); opacity: .85; }
-    .ca-map-desc { margin: 0; font-size: 11.5px; color: var(--ca-muted); line-height: 1.6; }
-    .ca-map-sum { margin: 12px 0 0; font-size: 11.5px; color: var(--ca-body); line-height: 1.8; text-align: center; }
-    .ca-map-sum b { color: var(--ca-gold); font-weight: 600; }
     /* 診断結果の固有リンクの案内（控えめに） */
     .resume-note { margin: 0 0 14px; padding: 10px 12px; border: 1px solid #1e3448; border-radius: 8px; font-size: 11.5px; line-height: 1.8; color: #8c9bbb; text-align: left; }
     .resume-note[hidden] { display: none; }
@@ -460,6 +453,7 @@
 <script src="js/nav-busy.js"></script>
 <script src="js/guest-purchase.js"></script>
 <script src="js/report-purchase.js"></script>
+<script src="js/lens-constellation.js"></script>
 <script src="js/ETI_v2_QUESTIONS_100.js"></script>
 <script src="js/eti_v2_prototypes.js"></script>
 <script src="js/eti_v2_engine.js"></script>
@@ -2714,7 +2708,7 @@ function renderResult(root) {
           </p>
           ${diagnosisVersion === 'ETI-2.0' ? '<p data-purchase-link-note style="text-align:center;color:var(--rx-tertiary);font-size:11px;line-height:1.7;margin-top:4px">お支払いの後、レポートのリンク（URL）が発行されます。そのリンクからいつでも読めて、マイページにも登録できます。</p>'
             + '<p style="text-align:center;margin:6px 0 0"><a href="/report_sample.html#from=result" data-buy-sample="analysis" style="color:var(--rx-tertiary);font-size:11.5px">解析レポートのサンプルを見る</a></p>' : ''}
-          ${completeAnalysisFoldHtml(diagnosisVersion === 'ETI-2.0' && results.raw && results.raw.meta ? results.raw.meta.itemSetVersion : null, diagnosisVersion)}
+          ${completeAnalysisFoldHtml(diagnosisVersion === 'ETI-2.0' && results.raw && results.raw.meta ? results.raw.meta.itemSetVersion : null, diagnosisVersion, elC)}
         </div>
       </div>
 
@@ -3038,28 +3032,7 @@ function renderResult(root) {
    ¥1,000の主導線より前・料金概要には出さない。<details> なのでJSが無くても内容へ到達できる。
    完全解析の権利APIが無い間は状態を unknown とし、購入CTAを出さない（freeと推測しない）。
    ?preview_entitlement= は Preview でのみ有効（complete-analysis.js のガード）。 */
-// 三つの人物像（MIRROR・HIDDEN SHAPE・MENTOR）を図で示す：中心の「あなたの結果」から三つの視点へ、各10名の人物像
-var CA_LENS_MAP = [
-  { key: 'mirror', en: 'MIRROR', ja: 'いまのあなた', desc: '現在のあなたに近い人物像' },
-  { key: 'hidden', en: 'HIDDEN SHAPE', ja: '隠れた一面', desc: '表に出にくい一面に近い人物像' },
-  { key: 'mentor', en: 'MENTOR', ja: 'これからのあなた', desc: 'これから伸ばす方向に近い人物像' },
-];
-function caLensMapHtml() {
-  var person = '<svg viewBox="0 0 12 14" aria-hidden="true"><circle cx="6" cy="4" r="3"/><path d="M0.8 14c0-3.3 2.3-5.6 5.2-5.6s5.2 2.3 5.2 5.6z"/></svg>';
-  var people = new Array(11).join(person);
-  return '<figure class="ca-map" aria-label="三つの視点で各10名、合わせて30名の人物像からあなたを読み解きます">'
-    + '<div class="ca-map-core"><span class="ca-map-core-en">YOUR RESULT</span><span class="ca-map-core-ja">あなたの診断結果</span></div>'
-    + '<ol class="ca-map-lenses">'
-    + CA_LENS_MAP.map(function (l) {
-      return '<li class="ca-map-lens ca-map--' + l.key + '"><div class="ca-map-head"><span class="ca-map-en">' + l.en + '</span>'
-        + '<span class="ca-map-ja">' + l.ja + '</span><span class="ca-map-count">10名</span></div>'
-        + '<div class="ca-map-people">' + people + '</div><p class="ca-map-desc">' + l.desc + '</p></li>';
-    }).join('')
-    + '</ol>'
-    + '<figcaption class="ca-map-sum"><b>3つの視点 × 各10名 ＝ 30名</b>の人物像から、元素・武器・国家と20軸を横断して、ひとつの輪郭に統合します。</figcaption>'
-    + '</figure>';
-}
-function completeAnalysisFoldHtml(itemSetVersion, diagnosisVersion) {
+function completeAnalysisFoldHtml(itemSetVersion, diagnosisVersion, elColor) {
   var CA = (typeof CompleteAnalysis !== 'undefined') ? CompleteAnalysis : null;
   // 完全解析の適格性：旧版（element-v1）など、46ページ生成の入力契約を満たさない結果には折りたたみ自体を出さない
   var elig = CA ? CA.completeEligibility({ diagnosisVersion: diagnosisVersion, itemSetVersion: itemSetVersion, answersComplete: !!itemSetVersion }) : { eligible: false };
@@ -3074,7 +3047,7 @@ function completeAnalysisFoldHtml(itemSetVersion, diagnosisVersion) {
   if (!name && diagnosisVersion === 'ETI-2.0' && typeof EdGuestPurchase !== 'undefined') {
     // 全ての状態で同じ導線（ログイン・購入の有無で変えない）：完全解析 ¥3,000（目標の選択は共通の画面。js/report-purchase.js）
     cta = '<div data-report-buy="complete"><p class="ca-fold-note" data-complete-notice>' + (typeof EdBuy !== 'undefined' ? EdBuy.esc(EdBuy.COMPLETE_NOTICE) : '') + '</p>'
-      + '<button type="button" class="ca-fold-btn ca-fold-btn-buy" data-buy-complete><span class="ca-buy-main">まだ見えていない輪郭を読む</span><span class="ca-buy-sub">完全解析（全46ページ）¥3,000</span></button>'
+      + '<button type="button" class="ca-fold-btn ca-fold-btn-buy" data-buy-complete><span class="ca-buy-main">まだ見えていない輪郭を読む</span><span class="ca-buy-sub">完全解析　全46ページ　¥3,000</span></button>'
       + '<p class="ca-guest-msg" data-buy-msg role="status"></p></div>';
   } else if (offer) {
     var isUp = offer.offer === 'upgrade_2000';
@@ -3086,7 +3059,8 @@ function completeAnalysisFoldHtml(itemSetVersion, diagnosisVersion) {
     cta = '<p class="ca-fold-note">この結果の購入状態を確認できないため、完全解析の購入導線は表示していません。</p>';
   }
   // BEYOND THE RESULT：閉じた状態は予告だけ（¥3,000 の決済ボタンは出さない）。開いた後に、サンプルと申込の導線を出す
-  return '<details class="ca-fold ca-reveal" ontoggle="if(this.open&&typeof CompleteAnalysis!==\'undefined\')CompleteAnalysis.track(\'complete_details_open\',{source:\'index\',preview_dummy:' + (!!offer) + '})">'
+  var elStyle = /^#[0-9a-fA-F]{3,8}$/.test(String(elColor || '')) ? ' style="--el:' + elColor + '"' : '';
+  return '<details class="ca-fold ca-reveal"' + elStyle + ' ontoggle="if(this.open&&typeof CompleteAnalysis!==\'undefined\')CompleteAnalysis.track(\'complete_details_open\',{source:\'index\',preview_dummy:' + (!!offer) + '})">'
     + '<summary>'
     + '<span class="ca-reveal-eyebrow">BEYOND THE RESULT｜この先にあるもの</span>'
     + '<span class="ca-reveal-lead">まだ、ここには現れていない輪郭があります。<br>三つの人物像から、あなたをもう一段深く読む。</span>'
@@ -3095,12 +3069,13 @@ function completeAnalysisFoldHtml(itemSetVersion, diagnosisVersion) {
     + '</summary>'
     + '<div class="ca-fold-body">'
     + '<div class="ca-reveal-stars" aria-hidden="true"><i></i><i></i><i></i></div>'
-    + '<p class="ca-body">この結果が示すのは、あなたの核となる一面です。完全解析では、三つの視点それぞれで10名ずつ、あなたに重なる人物像を選び、ひとつの輪郭へ結びます。</p>'
-    + caLensMapHtml()
+    + '<p class="ca-body">この結果が示すのは、あなたの核となる一面です。</p>'
+    + '<p class="ca-body">完全解析では、<br>あなたと重なる人物、<br>まだ言葉になっていない内側の可能性、<br>これから借りられる力を、<br>三つの視点からひとつの輪郭へ結びます。</p>'
+    + (typeof EdLens !== 'undefined' ? EdLens.mapHtml({ color: elColor }) : '')
     + '<p class="ca-reveal-pages">全46ページの完全解析</p>'
     + '<a class="ca-sample-link" href="/complete-sample.html#from=result" data-ca-sample data-buy-sample="complete"'
     + ' onclick="if(typeof CompleteAnalysis!==\'undefined\')CompleteAnalysis.track(\'complete_sample_open\',{source:\'index\'})">'
-    + '<span class="ca-sample-icon" aria-hidden="true"></span><span class="ca-sample-text"><b>完全解析のサンプルを読む</b><small>全46ページのうち8ページを、実際の紙面のまま公開しています</small></span><span class="ca-sample-go" aria-hidden="true">→</span></a>'
+    + '<span class="ca-sample-icon" aria-hidden="true"></span><span class="ca-sample-text"><b>完全解析のサンプルを読む</b><small>実際の46ページから、8ページをそのまま抜き出しています</small></span><span class="ca-sample-go" aria-hidden="true">→</span></a>'
     + cta
     + '</div></details>';
 }
@@ -3210,7 +3185,7 @@ function initReportPurchase(root, code, refs) {
   }
   var cb = root.querySelector('[data-buy-complete]');
   if (cb) {
-    if (!open) { cb.disabled = true; cb.classList.add('is-pending'); cb.setAttribute('aria-disabled', 'true'); cb.innerHTML = '<span class="ca-buy-main">まだ見えていない輪郭を読む</span><span class="ca-buy-sub">完全解析（全46ページ）¥3,000（準備中）</span>'; }
+    if (!open) { cb.disabled = true; cb.classList.add('is-pending'); cb.setAttribute('aria-disabled', 'true'); cb.innerHTML = '<span class="ca-buy-main">まだ見えていない輪郭を読む</span><span class="ca-buy-sub">完全解析　全46ページ　¥3,000（準備中）</span>'; }
     else cb.onclick = function () { buy('complete', cb, root.querySelector('[data-buy-msg]'), 'result'); };
   }
   root.querySelectorAll('[data-buy-sample]').forEach(function (a) {

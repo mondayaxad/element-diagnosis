@@ -57,7 +57,8 @@ test('サンプル（complete_13）：上部は「元の画面に戻る」、末
   // 申込欄：直接開いた時は申し込まない（購入対象トークンが無い）
   const buy = read('js/sample-buy.js');
   assert.match(buy, /まず元素診断を受ける/);
-  assert.match(buy, /if \(!B\.contextOk\(context\)\)/);
+  assert.match(buy, /var hasContext = B\.contextOk\(context\);/);
+  assert.match(buy, /if \(!hasContext\) \{/);
 });
 
 

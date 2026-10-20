@@ -158,7 +158,7 @@ test('診断結果：A ¥1,000・B ¥3,000 を常に出し、A は購入対象�
   for (const signedIn of [false, true]) {
     const p = await resultPage({ signedIn });
     const html = await p.locator('body').innerText();
-    assert.match(html, /完全解析（全46ページ）¥3,000/);
+    assert.match(html, /完全解析　全46ページ　¥3,000/);
     // ブラウザの履歴・タブで自分の結果を見分けられる題名（元素×武器×国家・タイプ名）
     assert.match(await p.title(), /^診断結果 .+×.+×.+・.+（[A-Z]{4}-[A-Z]）｜元素診断$/);
     assert.match(html, /解析レポートのサンプルを見る/);
@@ -234,13 +234,19 @@ test('サンプル：直接開くと「まず元素診断を受ける」だけ�
     const text = await s.locator('[data-sample-buy]').innerText();
     assert.match(text, /元素 風/);
     if (isB) {
-      assert.match(text, /この診断結果で完全解析を作成する ¥3,000/);
+      assert.match(text, /まだ見えていない輪郭を読む[\s\S]*この診断結果の完全解析　全46ページ　¥3,000/);
       assert.equal(await s.locator('[data-buy="analysis"]').count(), 0, '完全解析のサンプルに解析レポートの申込を出さない');
     } else {
-      assert.match(text, /この診断結果で解析レポートを作成する ¥1,000/);
-      assert.equal(await s.locator('[data-sample-more]').evaluate((d) => d.open), false, '完全解析は閉じた折りたたみの中');
-      assert.equal(await s.locator('[data-sample-more] [data-buy="complete"]').count(), 1);
-      assert.equal(await s.locator('[data-sample-more] [data-buy="complete"]').isVisible(), false);
+      assert.match(text, /この診断結果で、解析レポートを読む/);
+      assert.match(text, /解析レポート　¥1,000/);
+      assert.equal(await s.locator('[data-sample-buy] [data-buy="complete"]').count(), 0, '末尾の申込欄は解析レポートだけ');
+      // 完全解析は、本文の「この先にあるもの」（旧ナラティブレポートの紹介を置き換えた欄）で、図・説明・サンプルと一緒に案内する
+      const beyond = s.locator('.beyond-sec');
+      assert.equal(await s.getByText('NARRATIVE REPORT').count(), 0);
+      assert.match(await beyond.innerText(), /まだ見えていない輪郭を読む[\s\S]*全46ページ[\s\S]*¥3,000/);
+      assert.equal(await beyond.locator('.edl-map svg .edl-orbit').count(), 3);
+      assert.equal(await beyond.locator('[data-buy="complete"]').count(), 1);
+      assert.match(await beyond.locator('[data-sample-complete-link]').getAttribute('href'), /^\/complete-sample\.html#c=/);
     }
     assert.equal(new URL(s.url()).hash, '', 'トークンを URL から消す');
     const product = isB ? 'complete' : 'analysis';

@@ -1,7 +1,9 @@
 // js/sample-buy.js
 // サンプルページ（解析レポート・完全解析）の申込欄（complete_13）。
 //   ・診断結果ページ・マイページから開いた時：URL のフラグメント（#c=<購入対象トークン>&from=result|mypage）の記録で申し込む。
-//     記録の概要（日付・元素・武器・国家・MIRROR）を示し、「この診断結果で（この記録で）…を作成する」の2つの導線を出す。
+//   ・完全解析のサンプル：完全解析の申込だけ。
+//   ・解析レポートのサンプル：末尾の申込欄は解析レポートだけ。完全解析は、レポート本文の「この先にあるもの」の欄で、
+//     三つの人物像の図・説明と一緒に案内する（[data-sample-lens-map]・[data-sample-complete-slot]）。
 //   ・直接開いた時（購入の対象が無い）：申し込まない。まず元素診断を受ける案内だけ。
 //   ・サンプルは記録を作らない・複製しない（購入の対象は元の記録だけ）。トークン・記録 ID・回答は URL のクエリ・GA4 に出さない。
 (function () {
@@ -13,10 +15,38 @@
   var from = B.readFragment('from') === 'mypage' ? 'mypage' : 'result';
   var subject = from === 'mypage' ? 'この記録' : 'この診断結果';
   var source = from === 'mypage' ? 'mypage_sample' : 'result_sample';
-  // このサンプルの商品：完全解析のサンプルは完全解析だけ。解析レポートのサンプルは解析レポートが主で、完全解析は折りたたみの中
   var page = box.getAttribute('data-sample-buy') === 'complete' ? 'complete' : 'analysis';
+  var slot = document.querySelector('[data-sample-complete-slot]');
+  var hasContext = B.contextOk(context);
 
   function backHref() { return from === 'mypage' ? '/mypage.html' : '/'; }
+  // 申込のボタン（夜空に元素の光がさす色。2段の文言）
+  function skyBtn(product, main, sub, enabled) {
+    return '<a class="sample-return ed-sky-btn" href="#" data-buy="' + product + '"' + (enabled ? '' : ' aria-disabled="true"') + '>'
+      + '<span class="ed-sky-main">' + B.esc(main) + '</span><span class="ed-sky-sub">' + B.esc(sub) + '</span></a>';
+  }
+  function completeSampleLink() {
+    var href = B.sampleHref('complete', hasContext ? context : null, from);
+    return '<a class="beyond-sample" href="' + B.esc(href) + '" data-sample-complete-link>'
+      + '<span class="beyond-sample-icon" aria-hidden="true"></span><span class="beyond-sample-text"><b>完全解析のサンプルを読む</b>'
+      + '<small>実際の46ページから、8ページをそのまま抜き出しています</small></span><span aria-hidden="true">→</span></a>';
+  }
+  // 解析レポートのサンプル：本文の「この先にあるもの」に、三つの人物像の図と完全解析の案内を入れる
+  if (page === 'analysis') {
+    var map = document.querySelector('[data-sample-lens-map]');
+    if (map && window.EdLens) {
+      var sec = map.closest('.sec');
+      var color = sec ? getComputedStyle(sec).getPropertyValue('--el').trim() : '';
+      map.innerHTML = window.EdLens.mapHtml({ color: color });
+    }
+    if (slot) {
+      slot.innerHTML = '<p class="beyond-notice" data-sample-complete-note>' + B.esc(B.COMPLETE_NOTICE) + '</p>'
+        + completeSampleLink()
+        + (hasContext ? '<div data-complete-offer></div>'
+          : '<p class="beyond-notice">お申し込みには、あなた自身の診断結果が必要です。元素診断を受けると、結果のページから、その診断結果で完全解析をお申し込みいただけます。</p>');
+    }
+  }
+
   // 元の画面へ：同じタブで開いたので履歴で戻る（履歴が無い時はマイページ・トップへ）
   box.addEventListener('click', function (e) {
     var a = e.target && e.target.closest ? e.target.closest('[data-sample-back]') : null;
@@ -24,7 +54,7 @@
     e.preventDefault();
     if (history.length > 1) history.back(); else location.assign(backHref());
   });
-  if (!B.contextOk(context)) {
+  if (!hasContext) {
     box.innerHTML = '<h2>あなた自身の診断結果で読む</h2>'
       + '<p>お申し込みには、あなたの診断結果が必要です。まず元素診断を受けてください。診断が終わると、結果のページからこのサンプルへ進み、その診断結果でお申し込みいただけます。</p>'
       + '<a class="sample-return" href="/">まず元素診断を受ける</a>'
@@ -34,7 +64,7 @@
   // 戻る：この画面の URL からトークンを外す（共有・ブックマークで他の人に渡らないように。このタブの中では保持する）
   try { history.replaceState(null, '', location.pathname); } catch (e) { /* そのまま */ }
 
-  box.innerHTML = '<p>' + subject + 'を確認しています…</p>';
+  box.innerHTML = '<p>' + subject + 'を確かめています…</p>';
   B.summary(context).then(function (r) {
     if (!r.ok) {
       box.innerHTML = '<h2>' + subject + 'で読む</h2><p>' + B.esc(B.errorText(r.body && r.body.error)) + '</p>'
@@ -49,37 +79,34 @@
       s.nation ? '国家 ' + s.nation : null, s.mirror ? 'MIRROR ' + s.mirror : null,
     ].filter(Boolean).map(B.esc).join('　');
     var open = B.salesOpen();
-    function btn(product, quiet) {
-      var info = B.PRODUCTS[product];
-      var ok = open && (product === 'complete' ? el.complete : el.analysis);
-      var label = subject + 'で' + info.label + 'を作成する ' + B.yen(info.price);
-      return '<a class="sample-return' + (quiet ? ' sample-buy-sub' : '') + '" href="#" data-buy="' + product + '"' + (ok ? '' : ' aria-disabled="true" style="opacity:.55;pointer-events:none"') + '>'
-        + B.esc(label) + (open ? '' : '（準備中）') + '</a>';
-    }
-    var offers = page === 'complete'
-      ? '<div style="display:grid;gap:10px;justify-items:center">' + btn('complete') + '</div>'
-        + '<p data-sample-complete-note>' + B.esc(B.COMPLETE_NOTICE) + '</p>'
-      : '<div style="display:grid;gap:10px;justify-items:center">' + btn('analysis') + '</div>'
-        + '<details class="sample-more" data-sample-more><summary>完全解析（別商品・全46ページ）も見る</summary>'
-        + '<p data-sample-complete-note>' + B.esc(B.COMPLETE_NOTICE) + '</p>'
-        + '<p>三つの視点（MIRROR・HIDDEN SHAPE・MENTOR）で各10名の人物像から、あなたの輪郭を読み解きます。</p>'
-        + '<div style="display:grid;gap:10px;justify-items:center">' + btn('complete', true) + '</div></details>';
+    var pend = open ? '' : '（準備中）';
+    var aBtn = skyBtn('analysis', subject + 'で、解析レポートを読む', '解析レポート　¥1,000' + pend, open && el.analysis);
+    var bBtn = skyBtn('complete', 'まだ見えていない輪郭を読む', subject + 'の完全解析　全46ページ　¥3,000' + pend, open && el.complete);
     box.innerHTML = '<h2>' + subject + 'で読む</h2>'
       + (facts ? '<p data-sample-facts>' + facts + '</p>' : '')
-      + offers
+      + (page === 'complete'
+        ? '<div class="ed-sky-wrap">' + bBtn + '</div><p data-sample-complete-note>' + B.esc(B.COMPLETE_NOTICE) + '</p>'
+        : '<div class="ed-sky-wrap">' + aBtn + '</div>'
+          + (slot ? '<p class="sample-mypage">完全解析（別商品）は、レポートの「この先にあるもの」でご案内しています。</p>' : ''))
       + '<p class="ca-guest-msg" data-buy-msg role="status"></p>'
       + '<p class="sample-mypage"><a href="' + B.esc(backHref()) + '" data-sample-back>元の画面に戻る</a></p>';
-    var msg = box.querySelector('[data-buy-msg]');
-    box.querySelectorAll('[data-buy]').forEach(function (a) {
-      a.addEventListener('click', function (e) {
-        e.preventDefault();
-        if (a.getAttribute('aria-disabled') === 'true' || a.getAttribute('data-busy')) return;
-        a.setAttribute('data-busy', '1');
-        msg.textContent = '';
-        B.start({ context: context, product: a.getAttribute('data-buy'), source: source }).then(function (res) {
-          if (res.ok) return;
-          a.removeAttribute('data-busy');
-          if (!res.silent) msg.textContent = B.errorText(res.error);
+    // 解析レポートのサンプル：完全解析の申込は本文の欄に置く
+    var offer = slot && page === 'analysis' ? slot.querySelector('[data-complete-offer]') : null;
+    if (offer) offer.innerHTML = '<div class="ed-sky-wrap">' + bBtn + '</div><p class="ca-guest-msg" data-buy-msg role="status"></p>';
+    [box, offer].forEach(function (root) {
+      if (!root) return;
+      var msg = root.querySelector('[data-buy-msg]');
+      root.querySelectorAll('[data-buy]').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+          e.preventDefault();
+          if (a.getAttribute('aria-disabled') === 'true' || a.getAttribute('data-busy')) return;
+          a.setAttribute('data-busy', '1');
+          msg.textContent = '';
+          B.start({ context: context, product: a.getAttribute('data-buy'), source: source }).then(function (res) {
+            if (res.ok) return;
+            a.removeAttribute('data-busy');
+            if (!res.silent) msg.textContent = B.errorText(res.error);
+          });
         });
       });
     });

@@ -1521,14 +1521,14 @@ function renderFullReport(root, results, diagnosisCode) {
         ${buildOverviewSection_v3(results, pal)}
       </div>
 
-      <div class="sec" style="border-color:#c0a86050;background:linear-gradient(135deg,${pal.dark}30,#0e0c18)">
-        <div class="eyebrow" style="color:#c0a860">NARRATIVE REPORT</div>
-        <div class="sec-title" style="color:#e8d8a0">ここから先は、データではなく物語です</div>
-        <p class="desc">ここまでの分析は、全て100問の回答スコアから、確定的なロジックで導かれたものです。ナラティブレポートは、ここに<strong style="color:#eef4ee">あなたのXの投稿</strong>を重ね、マンデー本人が、より深くあなたの気質・動機・価値観を考察し、あなただけの言葉で一篇を書き下ろします。</p>
-        <p class="desc">さらに、4つの層（動機・気質・キャラクター・ナラティブ）が交わった先に立ち現れる、あなただけの<strong style="color:#e8d8a0">固有天賦</strong>もお渡しします。</p>
-
-        <!-- 旧商品（ナラティブレポート）の Payment Link・申込コードは撤去（D4：旧 Checkout の販売終了） -->
-        <p class="desc" style="text-align:center;margin-top:18px;color:#8878a8">このページは表示例です。ナラティブレポートの受付は終了しました。</p>
+      <!-- この先にあるもの：完全解析（別商品・全46ページ）。旧商品（ナラティブレポート）の紹介は撤去 -->
+      <div class="sec beyond-sec" style="border-color:#c0a86055;--el:${pal.p};background:radial-gradient(120% 80% at 50% 0%, ${pal.p}22 0%, transparent 60%),linear-gradient(160deg,${pal.dark}38,#0b0915 70%)">
+        <div class="eyebrow" style="color:#c0a860">BEYOND THE REPORT｜この先にあるもの</div>
+        <div class="sec-title" style="color:#e8d8a0">まだ、ここには現れていない輪郭があります</div>
+        <p class="desc">このレポートが描いたのは、いまのあなたの輪郭です。その奥には、まだ言葉になっていない一面と、これから借りられる力が眠っています。</p>
+        <p class="desc">完全解析では、<strong style="color:#eef4ee">三つの人物像</strong>から、あなたをもう一段深く読みます。元素・武器・国家と20軸を横断し、組み合わせ、活かし方、過剰に働いたときのサインまでを、<strong style="color:#e8d8a0">全46ページ</strong>の記録に結びます。</p>
+        <div data-sample-lens-map></div>
+        <div class="beyond-cta" data-sample-complete-slot></div>
       </div>
 
       <div style="text-align:center;padding:30px 10px;color:#5a4d75;font-size:11px;line-height:2">
@@ -1685,10 +1685,35 @@ async function savePdf() {
   .sample-cta a.sample-return { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:8px 18px; border-radius:8px;
     color:#fff; text-decoration:none; background:linear-gradient(120deg,#5b78c8 0%,#8a5fc0 50%,#c9a860 100%); }
   @media (max-width:520px) { .sample-cta a.sample-return { width:100%; } }
-  /* 完全解析（別商品）は折りたたみの中。主の操作（解析レポート）より控えめに */
-  .sample-cta .sample-more { margin:14px 0 0; padding:10px 12px; border:1px solid #2a2440; border-radius:8px; text-align:left; }
-  .sample-cta .sample-more > summary { cursor:pointer; min-height:32px; color:#c9a860; font-size:12.5px; letter-spacing:.04em; }
-  .sample-cta a.sample-return.sample-buy-sub { background:transparent; border:1px solid #8a5fc0; color:#e6e2f2; }
+  /* 申込のボタン：夜空に元素の光がさす宝石の色（元素診断の世界観） */
+  .sample-cta .ed-sky-wrap, .beyond-cta .ed-sky-wrap { display:grid; gap:10px; justify-items:center; margin:12px 0 6px; }
+  a.sample-return.ed-sky-btn { position:relative; overflow:hidden; display:flex; flex-direction:column; gap:3px; width:100%; max-width:440px; min-height:60px; padding:10px 16px; box-sizing:border-box;
+    border:1px solid rgba(214,189,132,.55); border-radius:8px; color:#f3ead2; text-decoration:none; letter-spacing:.1em;
+    background:
+      radial-gradient(1.2px 1.2px at 14% 28%, rgba(255,255,255,.75) 50%, transparent 52%),
+      radial-gradient(1px 1px at 33% 74%, rgba(255,255,255,.5) 50%, transparent 52%),
+      radial-gradient(1.3px 1.3px at 78% 30%, rgba(255,248,220,.7) 50%, transparent 52%),
+      radial-gradient(1px 1px at 91% 70%, rgba(255,255,255,.45) 50%, transparent 52%),
+      radial-gradient(130% 170% at 0% 0%, color-mix(in srgb, var(--el, #8a6bd0) 46%, transparent) 0%, transparent 58%),
+      radial-gradient(90% 140% at 100% 100%, rgba(201,168,96,.38) 0%, transparent 60%),
+      linear-gradient(115deg, #0f1630 0%, #1d2147 42%, #31285a 70%, #4a3a52 100%);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 0 22px color-mix(in srgb, var(--el, #8a6bd0) 22%, transparent); }
+  a.sample-return.ed-sky-btn .ed-sky-main { font-size:14.5px; font-weight:600; letter-spacing:.12em; text-shadow:0 0 12px rgba(255,236,190,.35); }
+  a.sample-return.ed-sky-btn .ed-sky-sub { font-size:11.5px; letter-spacing:.1em; color:#d6bd84; font-weight:400; }
+  a.sample-return.ed-sky-btn[aria-disabled="true"] { opacity:.55; pointer-events:none; }
+  /* この先にあるもの（完全解析の案内） */
+  .beyond-sec .desc strong { font-weight:600; }
+  .beyond-sec .sec-title { text-wrap:balance; word-break:auto-phrase; }
+  .beyond-cta { margin-top:18px; }
+  .beyond-notice { margin:10px 0; padding-left:10px; border-left:2px solid #2d2944; font-size:11.5px; line-height:1.8; color:#9a92b4; }
+  .beyond-sample { display:flex; align-items:center; gap:12px; margin:12px 0 0; padding:12px 14px; border:1px solid rgba(201,168,96,.45); border-radius:10px; background:rgba(201,168,96,.06); color:#e6e1f2; text-decoration:none; text-align:left; }
+  .beyond-sample-icon { flex:none; width:30px; height:36px; border:1px solid #c9a860; border-radius:3px; position:relative; background:linear-gradient(180deg,rgba(201,168,96,.18),transparent); }
+  .beyond-sample-icon::before, .beyond-sample-icon::after { content:''; position:absolute; left:6px; right:6px; height:1px; background:#c9a860; opacity:.7; }
+  .beyond-sample-icon::before { top:10px; } .beyond-sample-icon::after { top:16px; }
+  .beyond-sample-text { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .beyond-sample-text b { font-size:13.5px; font-weight:600; letter-spacing:.06em; }
+  .beyond-sample-text small { font-size:11px; color:#9a92b4; line-height:1.6; }
+  @media print { .beyond-cta { display:none; } }
   @media print { .sample-cta { display:none; } }
 </style>
 <aside class="sample-cta" aria-label="お申し込み" data-sample-buy="analysis">
@@ -1697,6 +1722,7 @@ async function savePdf() {
 </aside>
 <script src="/api/public-config?format=js"></script>
 <script src="/js/report-purchase.js"></script>
+<script src="/js/lens-constellation.js"></script>
 <script src="/js/sample-buy.js"></script>
 </body>
 </html>

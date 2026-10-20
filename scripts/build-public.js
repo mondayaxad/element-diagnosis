@@ -40,6 +40,7 @@ const PUBLIC_FILES = [
   'purchase-complete.html',                                   // 購入完了ページ（Stripe の戻り先。noindex）
   'report-link.html',                                         // レポート固有リンクの入口（#t=。noindex・no-referrer）
   'js/report-purchase.js',                                    // 申込・固有リンク・マイページへの登録（全入口で共通）
+  'js/lens-constellation.js',                                 // 完全解析の三つの人物像の図（宝石の惑星と星の軌道）
   'js/sample-buy.js',                                         // サンプルページの申込欄
   'js/guest-purchase.js',
   'js/nav-busy.js',

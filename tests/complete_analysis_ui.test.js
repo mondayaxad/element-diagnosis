@@ -344,10 +344,10 @@ test('index：¥1,000主導線のあとに折りたたみ。閉じても¥1,000�
   assert.equal(await p.locator('#lockUnlockAllBtn').isDisabled(), true);
   await p.click('details.ca-fold > summary');
   const text = await fold.innerText();
-  for (const s of ['この結果が示すのは、あなたの核となる一面です。', '三つの視点それぞれで10名ずつ', 'あなたの診断結果', 'MIRROR', 'HIDDEN SHAPE', 'MENTOR', '3つの視点 × 各10名 ＝ 30名', '全46ページの完全解析', '完全解析のサンプルを読む', '全46ページのうち8ページ', '¥3,000', '準備中']) assert.ok(text.includes(s), s);
-  // 三つの視点の図：各10名の人物を、色で見分けられる形で示す
-  assert.equal(await fold.locator('.ca-map-lens').count(), 3);
-  assert.deepEqual(await fold.locator('.ca-map-lens').evaluateAll((els) => els.map((e) => e.querySelectorAll('.ca-map-people svg').length)), [10, 10, 10]);
+  for (const s of ['この結果が示すのは、あなたの核となる一面です。', 'あなたと重なる人物', 'まだ言葉になっていない内側の可能性', 'これから借りられる力を', '三つの視点からひとつの輪郭へ結びます。', 'いまのあなたに最も近い10名', '表に出にくい一面に近い10名', 'これから伸ばす方向に近い10名', '三つの視点、三十の人物像。', '全46ページの完全解析', '完全解析のサンプルを読む', '8ページをそのまま抜き出しています', '¥3,000', '準備中']) assert.ok(text.includes(s), s);
+  // 三つの人物像の図：あなたの元素の宝石を中心に、三つの軌道に10の星ずつ（色で見分けられる）
+  assert.equal(await fold.locator('.edl-map svg .edl-orbit').count(), 3);
+  assert.deepEqual(await fold.locator('.edl-map svg .edl-orbit').evaluateAll((els) => els.map((e) => e.querySelectorAll('.edl-star').length)), [10, 10, 10]);
   assert.equal(await fold.locator('[data-ca-sample]').getAttribute('href'), '/complete-sample.html#from=result');
   assert.equal(await fold.locator('.ca-reveal-stars i').count(), 3);
   // 決済前のボタンに「見る」「開く」を使わない。押せない button（href なし）

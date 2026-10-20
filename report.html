@@ -119,7 +119,19 @@
   .ca-r-note { margin-top:10px; padding-left:8px; border-left:2px solid var(--ca-line); font-size:11px; color:var(--ca-muted); line-height:1.7; }
   .ca-lens-desc--strong { color:var(--ca-title); font-size:13px; }
   .ca-lens-more { display:block; margin-top:4px; font-size:12px; line-height:1.85; color:var(--ca-muted); }
-  .ca-r-btn.is-offer { margin-top:20px; min-height:52px; border:none; color:#fff; font-weight:700; letter-spacing:0.06em; background:linear-gradient(120deg, #5b78c8 0%, #8a5fc0 50%, #c9a860 100%); box-shadow:0 6px 20px rgba(138,95,192,0.35); text-align:center; line-height:1.5; padding:10px 14px; }
+  /* 完全解析の申込：夜空に元素の光がさす宝石の色（元素診断の世界観） */
+  .ca-r-btn.is-offer { flex-direction:column; gap:3px; margin-top:20px; min-height:60px; color:#f3ead2; font-weight:600; letter-spacing:0.1em; text-align:center; line-height:1.5; padding:10px 14px;
+    border:1px solid rgba(214,189,132,.55);
+    background:
+      radial-gradient(1.2px 1.2px at 14% 28%, rgba(255,255,255,.75) 50%, transparent 52%),
+      radial-gradient(1px 1px at 33% 74%, rgba(255,255,255,.5) 50%, transparent 52%),
+      radial-gradient(1.3px 1.3px at 78% 30%, rgba(255,248,220,.7) 50%, transparent 52%),
+      radial-gradient(130% 170% at 0% 0%, color-mix(in srgb, var(--el, #8a6bd0) 46%, transparent) 0%, transparent 58%),
+      radial-gradient(90% 140% at 100% 100%, rgba(201,168,96,.38) 0%, transparent 60%),
+      linear-gradient(115deg, #0f1630 0%, #1d2147 42%, #31285a 70%, #4a3a52 100%);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.04), 0 0 22px color-mix(in srgb, var(--el, #8a6bd0) 22%, transparent); }
+  .ca-r-btn.is-offer .ed-sky-main { font-size:15px; letter-spacing:.14em; text-shadow:0 0 12px rgba(255,236,190,.35); }
+  .ca-r-btn.is-offer .ed-sky-sub { font-size:11.5px; font-weight:400; letter-spacing:.08em; color:#d6bd84; }
   .ca-r-btn.is-offer:disabled { opacity:0.55; cursor:default; box-shadow:none; }
   .ca-r-goal-title { margin-top:16px; font-size:12px; letter-spacing:0.12em; color:var(--ca-gold); }
   .ca-goal-list { border:0; margin:10px 0 0; padding:0; }
@@ -152,6 +164,7 @@
 <script src="/api/public-config?format=js"></script>
 <script src="js/guest-purchase.js"></script>
 <script src="js/report-purchase.js"></script>
+<script src="js/lens-constellation.js"></script>
 <script src="js/ETI_v2_QUESTIONS_100.js"></script>
 <script src="js/eti_v2_prototypes.js"></script>
 <script src="js/eti_v2_engine.js"></script>
@@ -1712,7 +1725,7 @@ function completeAnalysisReportHtml(pal, results, diagnosisVersion) {
     body = `
         <div class="ca-eyebrow">BEYOND THE REPORT｜この先にあるもの</div>
         <p class="ca-lead">このレポートが描いたのは、いまのあなたの輪郭。<br>その奥にある三つの人物像を、46ページで読み解く。</p>
-        ${reportLensListHtml()}
+        ${typeof EdLens !== 'undefined' ? EdLens.mapHtml({ color: pal.p }) : reportLensListHtml()}
         <div data-report-complete><p class="ca-r-note">購入状態を確認しています…</p></div>
         <div data-report-inherit></div>`;
   } else {
@@ -1763,7 +1776,7 @@ function renderDeliveryFooter(box) {
     var html = '<button type="button" class="ca-r-btn" data-report-register>マイページに登録する</button>'
       + '<p class="ca-r-note" data-complete-notice>' + B.esc(B.COMPLETE_NOTICE) + '</p>'
       + (B.contextOk(ctx) ? '<a class="ca-r-sample" href="' + B.esc(B.sampleHref('complete', ctx, 'report')) + '" data-ca-sample>完全解析のサンプルを見る</a>' : '')
-      + (open ? '<button type="button" class="ca-r-btn is-offer" data-report-buy-complete>この診断結果で完全解析を作成する ' + B.yen(B.PRODUCTS.complete.price) + '</button>'
+      + (open ? '<button type="button" class="ca-r-btn is-offer" data-report-buy-complete><span class="ed-sky-main">まだ見えていない輪郭を読む</span><span class="ed-sky-sub">この診断結果で完全解析を作成する ' + B.yen(B.PRODUCTS.complete.price) + '</span></button>'
         : '<button type="button" class="ca-r-btn is-pending" disabled aria-disabled="true">完全解析 ' + B.yen(B.PRODUCTS.complete.price) + '（準備中）</button>')
       + '<p class="ca-guest-msg" data-buy-msg role="status"></p>' + notes;
     box.innerHTML = html;
