@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<script src="/js/ga.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<title>購入したレポート — 元素診断</title>
+<style>
+  :root { --bg:#07070f; --panel:#0e0b18; --line:#241d3a; --fg:#e6e2f2; --sub:#9a92b4; --dim:#6f6888; --accent:#b98af0; --gold:#d6bd84; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font-family:'Noto Serif JP','Hiragino Mincho ProN',serif; line-height:1.9; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:520px; margin:0 auto; padding:40px 16px 72px; }
+  .eyebrow { font-size:10.5px; letter-spacing:.32em; color:var(--accent); margin:0 0 8px; }
+  h1 { font-size:20px; font-weight:600; letter-spacing:.08em; margin:0 0 6px; }
+  .lead { font-size:12.5px; color:var(--sub); margin:0 0 20px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:18px 18px 16px; margin-bottom:16px; overflow-wrap:anywhere; }
+  .facts { display:grid; grid-template-columns:auto 1fr; gap:2px 12px; font-size:12.5px; margin:0 0 12px; }
+  .facts dt { color:var(--dim); } .facts dd { margin:0; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:8px 18px; border-radius:6px;
+    border:1px solid color-mix(in srgb, var(--accent) 55%, transparent); background:rgba(185,138,240,.12); color:var(--fg);
+    font-family:inherit; font-size:13px; letter-spacing:.06em; cursor:pointer; text-decoration:none; }
+  .btn.main { width:100%; border:0; color:#fff; background:linear-gradient(120deg,#5b78c8 0%,#8a5fc0 50%,#c9a860 100%); }
+  .btn.sub { background:transparent; border-color:var(--line); color:var(--sub); font-size:12.5px; }
+  .btn[disabled] { opacity:.55; cursor:default; }
+  .btn:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+  .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
+  .actions .btn.sub { flex:1 1 12em; }
+  .note { font-size:11.5px; color:var(--dim); margin:8px 0 0; }
+  .state { font-size:12.5px; color:var(--sub); margin:0 0 10px; }
+  .msg { font-size:12px; color:#d6a8b8; margin:8px 0 0; }
+  .msg:empty { display:none; }
+  .spinner { display:inline-block; width:12px; height:12px; border:1.5px solid #3a3058; border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; vertical-align:-2px; margin-right:6px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation:none; } }
+  .links { margin-top:28px; font-size:12px; color:var(--sub); }
+  .links a { color:var(--sub); }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <p class="eyebrow">ELEMENT DIAGNOSIS</p>
+  <h1 id="rlTitle">購入したレポート</h1>
+  <p class="lead" id="rlLead">このページのリンク（URL）が、購入したレポートの入口です。期限はありません。</p>
+  <div id="rlBox" aria-live="polite"><p class="note"><span class="spinner" aria-hidden="true"></span>確認しています…</p></div>
+  <p class="links"><a href="/">元素診断のトップへ</a> ・ <a href="/mypage.html">マイページ</a></p>
+</main>
+<script src="/js/report-purchase.js"></script>
+<script>
+(function () {
+  'use strict';
+  var B = window.EdBuy;
+  var box = document.getElementById('rlBox');
+  var NAMES = { analysis: '解析レポート', complete: '完全解析' };
+  // 固有リンクの秘密値：URL のフラグメント（#t=）。完全解析の最下部から戻った時は、このタブに控えた値を使う
+  var fromHash = B.readFragment('t');
+  var token = /^[A-Za-z0-9_-]{43}$/.test(String(fromHash || '')) ? fromHash : B.rememberedLink();
+  var wantRegister = /(?:^#|&)register(?:&|$)/.test(location.hash || '');
+  if (!token) {
+    box.innerHTML = '<div class="card"><p class="state">レポートのリンクを確認できませんでした。</p>'
+      + '<p class="note">購入完了ページでコピーしたリンク（URL）を、そのまま開いてください。リンクを無くした場合は、お支払いの確認のうえで再発行します。'
+      + '<a href="https://x.com/mondayaxad" target="_blank" rel="noopener">@mondayaxad</a> までご連絡ください。</p></div>';
+    return;
+  }
+  B.rememberLink(token);
+  // 秘密値を URL に残す（ブックマーク・コピーできるように）。#register の時だけ #t= の形に戻す
+  if (!fromHash) { try { history.replaceState(null, '', '/report-link#t=' + token); } catch (e) { /* そのまま */ } }
+  if (wantRegister) { B.startRegister(token, 'report_footer'); return; }
+
+  var polls = 0;
+  function factsHtml(b) {
+    var s = b.summary || {};
+    var rows = [];
+    if (b.purchasedOn) rows.push(['購入日', b.purchasedOn]);
+    if (s.diagnosedOn) rows.push(['診断日', s.diagnosedOn]);
+    if (s.element) rows.push(['元素', s.element]);
+    if (s.weapon) rows.push(['武器', s.weapon]);
+    if (s.nation) rows.push(['国家', s.nation]);
+    if (s.mirror) rows.push(['MIRROR', s.mirror]);
+    return rows.length ? '<dl class="facts">' + rows.map(function (r) { return '<dt>' + B.esc(r[0]) + '</dt><dd>' + B.esc(r[1]) + '</dd>'; }).join('') + '</dl>' : '';
+  }
+  function toolsHtml() {
+    return '<div class="actions"><button type="button" class="btn sub" data-copy>このリンクをコピー</button>'
+      + '<button type="button" class="btn sub" data-register>マイページに登録する</button></div>'
+      + '<p class="note">' + B.esc(B.PDF_NOTICE) + '</p>'
+      + '<p class="note">' + B.esc(B.SHARE_NOTICE) + '</p>'
+      + '<p class="msg" data-msg role="status"></p>';
+  }
+  function bindTools() {
+    var msg = box.querySelector('[data-msg]');
+    var c = box.querySelector('[data-copy]');
+    if (c) c.onclick = function () {
+      B.copyText(B.linkUrl(token)).then(function (ok) {
+        if (msg) msg.textContent = ok ? 'リンクをコピーしました。大切に保管してください。' : 'コピーできませんでした。アドレスバーの URL を控えてください。';
+      });
+      B.track('report_link_copy', { source: 'report_link' });
+    };
+    var r = box.querySelector('[data-register]');
+    if (r) r.onclick = function () { r.disabled = true; B.startRegister(token, 'report_link'); };
+  }
+  function render(b) {
+    var name = NAMES[b.product] || 'レポート';
+    document.getElementById('rlTitle').textContent = name;
+    var html = '<div class="card">' + factsHtml(b);
+    if (b.state === 'active') {
+      if (b.product === 'complete' && (!b.report || b.report.status !== 'ready')) {
+        var failed = b.report && b.report.status === 'failed';
+        html += failed
+          ? '<p class="state">完全解析を作成できませんでした。</p>' + (b.report.regenerate === 'available'
+            ? '<button type="button" class="btn main" data-regenerate>もう一度作成する</button>'
+            : '<p class="note">運営者が確認して作成し直します。お手数ですが <a href="https://x.com/mondayaxad" target="_blank" rel="noopener">@mondayaxad</a> までご連絡ください。</p>')
+          : '<p class="state"><span class="spinner" aria-hidden="true"></span>完全解析を作成しています。数分かかることがあります。</p>';
+      } else {
+        html += '<button type="button" class="btn main" data-open>' + name + 'を読む</button>';
+      }
+      html += toolsHtml();
+    } else if (b.state === 'pending') {
+      html += '<p class="state"><span class="spinner" aria-hidden="true"></span>お支払いを確認しています。</p>';
+    } else if (b.state === 'closed') {
+      html += '<p class="state">お支払いが完了していないため、このレポートはまだありません。</p>';
+    } else {
+      var why = b.state === 'refunded' ? '返金のため' : b.state === 'suspended' ? 'お支払いの確認中のため' : '停止されているため';
+      html += '<p class="state">このレポートは、' + why + '現在ご覧いただけません。</p>'
+        + '<p class="note">端末に保存したPDFは、そのまま残ります。ご不明点は <a href="https://x.com/mondayaxad" target="_blank" rel="noopener">@mondayaxad</a> までご連絡ください。</p>';
+    }
+    html += '</div>';
+    box.innerHTML = html;
+    bindTools();
+    var open = box.querySelector('[data-open]');
+    if (open) open.onclick = function () {
+      open.disabled = true;
+      B.openLink(token, true).then(function (r) {
+        if (r.ok && r.body && typeof r.body.url === 'string' && r.body.url.charAt(0) === '/') {
+          B.track(b.product === 'complete' ? 'complete_report_open' : 'analysis_report_open', { source: 'report_link' });
+          location.assign(r.body.url);
+          return;
+        }
+        open.disabled = false;
+        var m = box.querySelector('[data-msg]');
+        if (m) m.textContent = 'レポートを開けませんでした。時間をおいて、もう一度お試しください。';
+      });
+    };
+    var regen = box.querySelector('[data-regenerate]');
+    if (regen) regen.onclick = function () {
+      regen.disabled = true;
+      B.call('link-regenerate', { token: token }).then(function () { setTimeout(load, 1500); });
+    };
+    var waiting = b.state === 'pending' || (b.state === 'active' && b.product === 'complete' && b.report && b.report.status === 'generating');
+    if (waiting && polls < 60) { polls += 1; setTimeout(load, 5000); }
+  }
+  function load() {
+    B.openLink(token, false).then(function (r) {
+      if (r.ok) { render(r.body); return; }
+      if (r.status === 404) {
+        box.innerHTML = '<div class="card"><p class="state">このリンクは無効です（再発行された・または誤ったリンクです）。</p>'
+          + '<p class="note">新しいリンクをお持ちの場合は、そちらを開いてください。ご不明点は <a href="https://x.com/mondayaxad" target="_blank" rel="noopener">@mondayaxad</a> までご連絡ください。</p></div>';
+        return;
+      }
+      box.innerHTML = '<div class="card"><p class="state">確認できませんでした。</p><button type="button" class="btn sub" data-retry>もう一度確認する</button></div>';
+      box.querySelector('[data-retry]').onclick = load;
+    });
+  }
+  load();
+})();
+</script>
+</body>
+</html>

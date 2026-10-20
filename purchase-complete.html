@@ -48,192 +48,101 @@
   <div id="pcList" aria-live="polite"><p class="note"><span class="spinner" aria-hidden="true"></span>確認しています…</p></div>
   <p class="links"><a id="pcResultLink" href="/" hidden>診断結果に戻る</a><span id="pcResultSep" hidden> ・ </span><a href="/">元素診断のトップへ</a> ・ <a href="/mypage.html">マイページ</a></p>
 </main>
-<script src="/js/nav-busy.js"></script>
-<script src="/js/guest-purchase.js"></script>
+<script src="/js/report-purchase.js"></script>
 <script>
+// 購入完了ページ（complete_13）：購入した商品を受け取るための画面。別の商品の申込は出さない。
+//   この端末で購入したレポート（HttpOnly の Cookie の秘密値）を、Stripe に支払いを確かめてから示す。
+//   支払い済み：レポートを開く・固有リンクをコピー・PDF 保存の案内・マイページに登録する。完全解析は作成の状態も。
 (function () {
   'use strict';
-  var G = window.EdGuestPurchase;
+  var B = window.EdBuy;
   var list = document.getElementById('pcList');
   var canceled = /(?:^|[?&])status=canceled(?:&|$)/.test(location.search);
-  // 決済画面へ進んだ印は、この戻り先で使い終える（中止は下で未払いの決済を閉じる。支払い済みは反映を待つ）
-  if (G && typeof G.consumeCheckoutMark === 'function') G.consumeCheckoutMark();
-  // 戻り先の印（?status=canceled）は表示に使った後、URL から消す
-  if (location.search) { try { history.replaceState(null, '', location.pathname); } catch (e) { /* 消せなくても表示は続ける */ } }
+  var NAMES = { analysis: '解析レポート', complete: '完全解析' };
+  var tries = 0;
   if (canceled) {
     document.getElementById('pcTitle').textContent = 'お手続きを中止しました';
-    document.getElementById('pcLead').textContent = 'お支払いは行われていません。診断結果のページから、いつでもお申し込みいただけます。';
+    document.getElementById('pcLead').textContent = 'お支払いは行われていません。もう一度お申し込みいただけます。';
+    var back = document.getElementById('pcResultLink');
+    // 戻り先：この端末で申込を始めた画面。分からない時は、この端末で最後に開いた診断結果の固有リンク（/result#r=）
+    var last = null;
+    try { last = localStorage.getItem('ed_last_result_v1'); } catch (e) { last = null; }
+    var rp = B.returnPath();
+    back.href = rp !== '/' ? rp : (/^[A-Za-z0-9_-]{43}$/.test(String(last || '')) ? '/result#r=' + last : '/');
+    back.textContent = 'お申し込みの画面に戻る';
+    back.hidden = false;
+    document.getElementById('pcResultSep').hidden = false;
   }
+  // 戻り先の印は URL から消す（再読み込みで繰り返さない）
+  if (location.search) { try { history.replaceState(null, '', location.pathname); } catch (e) { /* そのまま */ } }
 
-  var delays = [2000, 3000, 5000, 8000, 13000, 20000, 30000];
-  var tries = 0;
-  var busy = false;
-
-  // 購入の日時（このブラウザに複数の購入がある時に見分ける）
-  function purchasedAtLine(p) {
-    var d = p.purchasedAt ? new Date(p.purchasedAt) : null;
-    if (!d || isNaN(d.getTime())) return '';
-    var pad = function (n) { return (n < 10 ? '0' : '') + n; };
-    return '<p class="note pc-at">' + d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ' のご購入</p>';
-  }
-  // 閲覧の導線だけ（このページでは売らない）。¥1,000：解析レポートを読む／¥3,000：解析レポートを読む・完全解析を見る／
-  //   追加 ¥2,000：完全解析を見る・解析レポートに戻る（完全解析を先に出す）
-  function analysisRow(p) {
-    if (!p.analysis) return '';
-    var ok = p.analysis === 'active';
-    var label = p.lastOffer === 'analysis_upgrade' ? '解析レポートに戻る' : '解析レポートを読む';
-    return '<div class="row"><div><div class="row-name">解析レポート</div><div class="row-state">' + (ok ? '読めます' : p.analysis === 'suspended' ? '一時停止中' : '失効') + '</div></div>'
-      + (ok ? '<button type="button" class="btn" data-open-analysis="' + G.esc(p.ref) + '">' + label + '</button>' : '') + '</div>';
-  }
-  function completeRow(p) {
-    if (!p.complete) return '';
-    var ready = p.complete === 'active' && p.report === 'ready';
-    var final = p.complete === 'active' && (p.regenerate === 'available' || p.regenerate === 'operator');
-    var working = p.complete === 'active' && !final && (p.report === 'queued' || p.report === 'generating' || p.report === 'failed' || !p.report);
-    var failedNote = !final ? '' : p.regenerate === 'available'
-      ? '<p class="note">お支払いは完了しています。同じご注文・同じ目標で、もう一度作成できます（追加のお支払いはありません）。</p>'
-      : '<p class="note">お支払いは完了しています。お手数ですが @mondayaxad までご連絡ください（追加のお支払いは不要です）。</p>';
-    return '<div class="row"><div><div class="row-name">完全解析</div><div class="row-state">' + (working ? '<span class="spinner" aria-hidden="true"></span>' : '') + G.esc(G.completeLabel(p)) + '</div>' + failedNote + '</div>'
-      + (ready ? '<button type="button" class="btn" data-open-complete="' + G.esc(p.ref) + '">完全解析を見る</button>' : '')
-      + (final && p.regenerate === 'available' ? '<button type="button" class="btn" data-regenerate="' + G.esc(p.ref) + '">もう一度作成する</button>' : '') + '</div>';
-  }
-  function claimBlock(p) {
-    if (p.claimed) return '<div class="claim"><p class="note">この購入はマイページに引き継ぎ済みです。<a href="/mypage.html">マイページ</a>からご覧ください。</p></div>';
-    // 購入時のメールアドレスでマイページに登録（ログイン）すると引き継がれる：この端末からはボタンで、別の端末からはログインするだけで
-    var emailNote = '<p class="note">購入時のメールアドレスでマイページに登録（ログイン）すると、この購入はマイページに引き継がれます。'
-      + 'この端末でなくても、購入時のメールアドレスでログインすれば自動で引き継がれます。</p>';
-    if (!p.canClaim) return (p.analysis || p.complete) ? '<div class="claim">' + emailNote + '</div>' : '';
-    return '<div class="claim"><button type="button" class="btn" data-claim>この購入をマイページに引き継ぐ</button>' + emailNote + '</div>';
-  }
-  function cardHtml(p) {
-    if (p.pending && !p.analysis && !p.complete) {
-      return '<div class="card"><p class="note"><span class="spinner" aria-hidden="true"></span>お支払いを確認しています…</p></div>';
+  function itemHtml(p, i) {
+    var name = NAMES[p.product] || 'レポート';
+    var head = '<p class="row-name">' + name + '</p>' + (p.purchasedOn ? '<p class="note pc-at">購入日 ' + B.esc(p.purchasedOn) + '</p>' : '');
+    if (p.state === 'pending') return '<div class="card">' + head + '<p class="row-state"><span class="spinner" aria-hidden="true"></span>お支払いを確認しています。</p></div>';
+    if (p.state !== 'active' || !p.link) {
+      return '<div class="card">' + head + '<p class="row-state">このレポートは現在ご覧いただけません（返金・お支払いの確認中・停止）。端末に保存したPDFはそのまま残ります。</p></div>';
     }
-    var rows = p.lastOffer === 'analysis_upgrade' ? completeRow(p) + analysisRow(p) : analysisRow(p) + completeRow(p);
-    return '<div class="card">' + purchasedAtLine(p) + rows + '<p class="msg" data-msg></p>' + claimBlock(p) + '</div>';
-  }
-
-  // GA4：支払いを確認できた購入を1回だけ（同じ購入の再表示では送らない）
-  function trackConfirmed(purchases) {
-    purchases.forEach(function (p) {
-      if (p.pending || (!p.analysis && !p.complete)) return;
-      var key = 'ed_pc_' + p.ref.slice(0, 12) + (p.complete ? 'c' : 'a');
-      try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch (e) { return; }
-      G.track('purchase_confirmed', { state: p.complete ? 'complete' : 'analysis' });
-    });
-  }
-
-  async function load() {
-    if (busy) return;
-    busy = true;
-    var r = await G.status();
-    busy = false;
-    if (!r.ok) {
-      list.innerHTML = '<div class="card"><p class="note">購入状況を確認できませんでした。</p><button type="button" class="btn" data-retry>もう一度確認する</button></div>';
-      return;
+    var report = '';
+    if (p.product === 'complete' && p.report && p.report.status !== 'ready') {
+      report = p.report.status === 'failed'
+        ? '<p class="row-state">完全解析を作成できませんでした。レポートの入口から作り直せます。</p>'
+        : '<p class="row-state"><span class="spinner" aria-hidden="true"></span>完全解析を作成しています。数分かかることがあります。</p>';
     }
-    var purchases = (r.body.purchases || []);
-    // 支払いを確認できていない決済（権利の無い決済待ち）は、いちばん新しい1件だけ出す（今戻ってきた決済）。
-    //   この端末で以前に開いて閉じなかった、別の結果の決済を「お支払いを確認しています」と見せない
-    var pendingOnly = function (p) { return p.pending && !p.analysis && !p.complete; };
-    var newestPending = purchases.filter(pendingOnly).sort(function (a, b) { return (b.purchasedAt || '') < (a.purchasedAt || '') ? -1 : 1; })[0] || null;
-    purchases = purchases.filter(function (p) { return !pendingOnly(p) || p === newestPending; });
-    if (tries === 0) G.track('checkout_return', { state: canceled ? 'canceled' : purchases.length ? 'found' : 'none' });
-    if (!purchases.length) {
-      // 中止して戻った（購入なし）：引き継ぎの案内は出さない（何も買っていない）
+    return '<div class="card" data-item="' + i + '">' + head + report
+      + '<a class="btn" style="width:100%;margin:6px 0 0" href="/report-link#t=' + p.link + '" data-open>' + name + 'を開く</a>'
+      + '<div class="claim"><button type="button" class="btn" data-copy>リンクをコピー</button> <button type="button" class="btn" data-register>マイページに登録する</button></div>'
+      + '<p class="note">このページのボタンで開くレポートのリンク（URL）が、期限のない入口です。必ずコピーして保管してください。</p>'
+      + '<p class="note">' + B.esc(B.PDF_NOTICE) + '</p>'
+      + '<p class="note">' + B.esc(B.SHARE_NOTICE) + '</p>'
+      + '<p class="msg" data-msg role="status"></p></div>';
+  }
+  function render(purchases) {
+    // 支払いを確かめられない古い決済（閉じた・期限切れ）は出さない。決済待ちは、いちばん新しい1件だけ（今戻ってきた決済）
+    var shown = purchases.filter(function (p) { return p.state !== 'closed'; });
+    var firstPending = shown.findIndex(function (p) { return p.state === 'pending'; });
+    shown = shown.filter(function (p, i) { return p.state !== 'pending' || i === firstPending; });
+    if (!shown.length) {
       if (canceled) { list.innerHTML = ''; return; }
       document.getElementById('pcLead').textContent = '';
       list.innerHTML = '<div class="card"><p class="row-name">この端末では、ご購入を確認できませんでした。</p>'
-        + '<p class="note">購入したときと同じ端末・ブラウザで開いてください。マイページに引き継いだ購入は、マイページからご覧いただけます。</p>'
-        + '<p class="note">端末を変えた・ブラウザのデータを消した場合は、マイページで購入時のメールアドレスを確認すると引き継げます。</p>'
-        + '<p style="margin:12px 0 0"><a class="btn" href="/mypage.html#recover">マイページで購入を引き継ぐ</a></p></div>';
+        + '<p class="note">購入したときと同じ端末・ブラウザで開いてください。購入後にコピーしたレポートのリンク（URL）からも開けます。</p>'
+        + '<p class="note">リンクを無くした場合は、お支払いの確認のうえで再発行します。<a href="https://x.com/mondayaxad" target="_blank" rel="noopener">@mondayaxad</a> までご連絡ください。</p></div>';
       return;
     }
     if (!canceled) {
       document.getElementById('pcTitle').textContent = 'ご購入ありがとうございます';
-      document.getElementById('pcLead').textContent = 'このページから、すぐにお読みいただけます。';
+      document.getElementById('pcLead').textContent = 'レポートを開き、リンクのコピーとPDFの保存をおすすめします。';
     }
-    list.innerHTML = purchases.map(cardHtml).join('');
-    // 追加 ¥2,000 だけの購入：戻り先は解析レポート（カードの「解析レポートに戻る」）。診断結果への戻りは出さない
-    var onlyUpgrade = purchases.every(function (p) { return p.lastOffer === 'analysis_upgrade'; });
-    var rl = document.getElementById('pcResultLink');
-    if (onlyUpgrade && rl) { rl.hidden = true; document.getElementById('pcResultSep').hidden = true; }
-    trackConfirmed(purchases);
-    // GA4：完全解析の生成の開始・完成・失敗（購入ごとに1回だけ。ref は送らない）
-    purchases.forEach(function (p) {
-      if (p.complete !== 'active') return;
-      var name = p.report === 'ready' ? 'complete_generation_ready' : p.report === 'failed' ? 'complete_generation_failed' : 'complete_generation_start';
-      var key = 'ed_pg_' + name + p.ref.slice(0, 12);
-      try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, '1'); } catch (e) { return; }
-      G.track(name, { source: 'purchase_complete' });
+    list.innerHTML = shown.map(itemHtml).join('');
+    list.querySelectorAll('[data-item]').forEach(function (el) {
+      var p = shown[Number(el.getAttribute('data-item'))];
+      var msg = el.querySelector('[data-msg]');
+      el.querySelector('[data-open]').addEventListener('click', function () { B.rememberLink(p.link); B.track('report_link_open', { product: p.product, source: 'purchase_complete' }); });
+      el.querySelector('[data-copy]').onclick = function () {
+        B.copyText(B.linkUrl(p.link)).then(function (ok) { msg.textContent = ok ? 'リンクをコピーしました。大切に保管してください。' : 'コピーできませんでした。「開く」で開いたページの URL を控えてください。'; });
+      };
+      el.querySelector('[data-register]').onclick = function (e) { e.target.disabled = true; B.startRegister(p.link, 'purchase_complete'); };
     });
-    var waiting = purchases.some(function (p) {
-      return p.pending || (p.complete === 'active' && p.report !== 'ready' && p.report !== 'revoked' && !p.regenerate);
-    });
-    if (waiting && tries < delays.length) setTimeout(load, delays[tries++]);
-    else if (waiting) {
-      // 確認の回数を使い切った：回り続ける表示を止め、後で確かめられることを伝える
-      list.querySelectorAll('.spinner').forEach(function (sp) { sp.remove(); });
-      list.insertAdjacentHTML('beforeend', '<p class="note">確認に時間がかかっています。しばらくしてから、このページを読み込み直してください。</p>');
+    var waiting = shown.some(function (p) { return p.state === 'pending' || (p.state === 'active' && p.product === 'complete' && p.report && p.report.status === 'generating'); });
+    if (waiting) {
+      if (tries < 40) { tries += 1; setTimeout(load, tries < 6 ? 3000 : 15000); }
+      else list.insertAdjacentHTML('beforeend', '<p class="note">確認に時間がかかっています。少し待ってから、このページを読み込み直してください。</p>');
     }
   }
-
-  // 決済画面で「戻る」を選んだ：未払いの決済を閉じてから状況を表示する（すぐ買い直せる。支払い済みならそのまま反映される）
-  async function start() {
-    if (canceled) { try { await G.cancel(); } catch (e) { /* 閉じられなくても状況は表示する */ } }
-    load();
+  function load() {
+    B.call('deliveries', {}).then(function (r) {
+      if (!r.ok) {
+        list.innerHTML = '<div class="card"><p class="note">購入状況を確認できませんでした。</p><button type="button" class="btn" data-retry>もう一度確認する</button></div>';
+        list.querySelector('[data-retry]').onclick = function () { tries = 0; load(); };
+        return;
+      }
+      if (tries === 0) B.track('checkout_return', { state: canceled ? 'canceled' : 'returned' });
+      render(r.body.purchases || []);
+    });
   }
-
-  list.addEventListener('click', async function (e) {
-    var t = e.target.closest('button');
-    if (!t) return;
-    var card = t.closest('.card');
-    var msg = card && card.querySelector('[data-msg]');
-    if (t.hasAttribute('data-retry')) { load(); return; }
-    if (t.hasAttribute('data-claim')) { G.startClaim('purchase_complete'); return; }
-    t.disabled = true;
-    if (t.hasAttribute('data-open-analysis')) {
-      if (!(await G.openAnalysis(t.getAttribute('data-open-analysis'), 'purchase_complete'))) {
-        t.disabled = false;
-        if (msg) msg.textContent = '解析レポートを開けませんでした。もう一度お試しください。';
-      }
-      return;
-    }
-    if (t.hasAttribute('data-regenerate')) {
-      var rg = await G.regenerate(t.getAttribute('data-regenerate'));
-      if (rg.ok) { tries = 0; load(); return; }
-      t.disabled = false;
-      if (msg) msg.textContent = rg.error === 'regenerate_operator_required'
-        ? '自動では作成できませんでした。お手数ですが @mondayaxad までご連絡ください（追加のお支払いは不要です）。'
-        : 'もう一度作成できませんでした。時間をおいて、もう一度お試しください。';
-      return;
-    }
-    if (t.hasAttribute('data-open-complete')) {
-      var o = await G.openComplete(t.getAttribute('data-open-complete'), 'purchase_complete');
-      if (!o.ok) {
-        t.disabled = false;
-        if (msg) msg.textContent = o.error === 'report_not_ready' ? '完全解析はまだ作成中です。少し待ってから開いてください。'
-          : o.error === 'basis_inactive' ? '解析レポートの購入が取り消されたため、完全解析をご覧いただけません。解析レポート（¥1,000）をお申し込みいただくと、ご覧いただけます。'
-          : '完全解析を開けませんでした。もう一度お試しください。';
-      }
-    }
-  });
-
-  // 戻る操作で（bfcache から）表示された：押したまま止まったボタンを残さず、最新の状態で描き直す
   window.addEventListener('pageshow', function (e) { if (e.persisted) { tries = 0; load(); } });
-
-  // この端末で最後に開いた診断結果の固有リンク（/result#r=）へ戻れるようにする（キャンセルの後もすぐ買い直せる）
-  (function resultLink() {
-    var t = null;
-    try { t = localStorage.getItem('ed_last_result_v1'); } catch (e) { t = null; }
-    if (!t || !/^[A-Za-z0-9_-]{43}$/.test(t)) return;
-    var a = document.getElementById('pcResultLink');
-    a.href = '/result#r=' + t;
-    a.hidden = false;
-    document.getElementById('pcResultSep').hidden = false;
-  })();
-
-  start();
+  load();
 })();
 </script>
 </body>
