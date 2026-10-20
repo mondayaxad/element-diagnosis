@@ -150,7 +150,7 @@ test('診断完了 → 固有リンク（/result#r=）→ 再読み込み・新�
   assert.deepEqual(w.calls.filter((c) => c.op === 'result-link').map((c) => c.body), [{ code, token: tk }]);
   const note = p.locator('#resumeNote');
   await note.waitFor();
-  assert.equal((await note.innerText()).replace(/\s+/g, ''), 'この診断結果は、ブラウザの履歴からもう一度開けます。URLを知っている人は結果を表示できるため、共有にはご注意ください。');
+  assert.equal((await note.innerText()).replace(/\s+/g, ''), 'この診断結果は、ブラウザの履歴からもう一度開けます。');
   const before = await resultText(p);
   await assertNoSecret(p, w, tk);
   // 再読み込み

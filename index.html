@@ -2704,7 +2704,7 @@ function renderResult(root) {
             全てのロックを解除する →
           </button>
           <p style="text-align:center;color:#c0a860;font-size:11px;margin-top:8px;font-weight:600">
-            ${diagnosisVersion === 'ETI-2.0' ? '✓ 登録不要。お支払いの後、このブラウザですぐにお読みいただけます。' : '✓ 決済完了後、自動的にレポートページへ移動します。'}
+            ${diagnosisVersion === 'ETI-2.0' ? '✓ 登録不要。お支払いの後、すぐにお読みいただけます。' : '✓ 決済完了後、自動的にレポートページへ移動します。'}
           </p>
           ${diagnosisVersion === 'ETI-2.0' ? '<p data-purchase-link-note style="text-align:center;color:var(--rx-tertiary);font-size:11px;line-height:1.7;margin-top:4px">お支払いの後、レポートのリンク（URL）が発行されます。そのリンクからいつでも読めて、マイページにも登録できます。</p>'
             + '<p style="text-align:center;margin:6px 0 0"><a href="/report_sample.html#from=result" data-buy-sample="analysis" style="color:var(--rx-tertiary);font-size:11.5px">解析レポートのサンプルを見る</a></p>' : ''}
@@ -2712,7 +2712,7 @@ function renderResult(root) {
         </div>
       </div>
 
-      ${diagnosisVersion === 'ETI-2.0' ? '<p id="resumeNote" class="resume-note" role="note" hidden>この診断結果は、ブラウザの履歴からもう一度開けます。<br>URLを知っている人は結果を表示できるため、共有にはご注意ください。</p>' : ''}
+      ${diagnosisVersion === 'ETI-2.0' ? '<p id="resumeNote" class="resume-note" role="note" hidden>この診断結果は、ブラウザの履歴からもう一度開けます。</p>' : ''}
       <div style="display:flex;gap:10px">
         <button onclick="startNewDiagnosisV2()"
           style="flex:1;background:transparent;border:1px solid #1e3448;color:#6a90b0;border-radius:8px;padding:12px;font-size:13px;cursor:pointer;font-family:inherit">
@@ -3180,8 +3180,10 @@ function initReportPurchase(root, code, refs) {
       EdNavBusy.hold(btn, '決済画面へ移動しています…');
       edResultContext(root, code).then(function (c) {
         if (!c) { EdNavBusy.release(btn); if (msgEl) msgEl.textContent = '購入の準備ができませんでした。通信を確かめて、もう一度押してください。'; return; }
-        return B.start({ context: c, product: product, goal: goal, source: source }).then(function (r) {
+        // マイページの記録（#rec=）から開いた結果：支払いの後、マイページに登録して戻る
+        return B.start({ context: c, product: product, goal: goal, source: source, fromMypage: !!edRecordFromUrl() }).then(function (r) {
           if (r.ok) { EdNavBusy.handoff(btn); return; }
+          if (r.error === 'in_progress') return; // 先の申込が決済画面へ移動中（押せない表示のまま）
           EdNavBusy.release(btn);
           if (!r.silent && msgEl) msgEl.textContent = B.errorText(r.error);
         });

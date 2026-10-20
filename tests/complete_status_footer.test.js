@@ -20,9 +20,10 @@ test('最下部（</body> の直前）に1回だけ「マイページを作成�
   assert.ok(withMypageFooter('<main>x</main>').endsWith('</aside>'));
 });
 
-test('閲覧の処理：ゲスト（本人なし）の時だけ足す。照合（SHA-256）の後に足す', () => {
+test('閲覧の処理：固有リンクから開いた時だけ登録の欄を足す（照合〔SHA-256〕の後）。以前のゲスト購入の「引き継ぎ」の案内は足さない（廃止）', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', 'api', 'complete-status.js'), 'utf8');
   const hashAt = src.indexOf("digest('hex') !== row.output_sha256");
-  const footerAt = src.indexOf('if (t.userId == null) body = withMypageFooter(body);');
+  const footerAt = src.indexOf("if (t.deliveryId && queryParam(req, 'src') === 'link') body = withDeliveryFooter(body, queryParam(req, 'view'));");
   assert.ok(hashAt > 0 && footerAt > hashAt);
+  assert.equal(src.indexOf('body = withMypageFooter(body)'), -1);
 });

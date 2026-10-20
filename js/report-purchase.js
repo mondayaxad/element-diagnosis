@@ -102,13 +102,13 @@
 
   // ---- 申込の結果の説明
   var ERROR_TEXT = {
-    sales_closed: '現在、お申し込みを受け付けていません（準備中）。',
-    context_expired: '購入の対象を確かめられませんでした。元の画面からもう一度お進みください。',
+    sales_closed: 'ただいま、お申し込みの準備を整えています。',
+    context_expired: 'この診断結果を確かめられませんでした。元の画面からもう一度お進みください。',
     record_not_found: 'この診断記録を確かめられませんでした。元の画面からもう一度お進みください。',
-    not_eligible: 'この診断結果は対象外です。',
+    not_eligible: 'この診断結果では、このレポートをお作りできません（最新版の100問の結果が対象です）。',
     mentor_goal_required: 'MENTOR の目標を選んでください。',
     offer_retired: 'この商品は現在お申し込みいただけません。',
-    purchase_completed: 'お支払いは完了しています。レポートのリンク（またはお送りした請求書のメール）からお開きください。',
+    purchase_completed: 'お支払いは完了しています。レポートのリンク（または Stripe から届いた請求書のメール）からお開きください。',
     too_many_attempts: 'お申し込みの回数が多いため、少し時間をおいてからお試しください。',
     network: '通信できませんでした。電波の良い場所で、もう一度お試しください。',
   };
@@ -186,6 +186,7 @@
   }
   async function startOnce(opts) {
     var o = opts || {};
+    clearBuyFromMypage(); // 前の申込の印を残さない
     var info = PRODUCTS[o.product];
     if (!info) return { ok: false, error: 'invalid_request' };
     if (!contextOk(o.context)) return { ok: false, error: 'context_expired' };
@@ -211,6 +212,8 @@
     if (r.ok && r.body && typeof r.body.checkoutUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(r.body.checkoutUrl)) {
       track('checkout_redirect', { product: o.product, value: info.price, currency: 'JPY', source: o.source });
       session(function (s) { s.setItem(RETURN_KEY, global.location.pathname + global.location.search + global.location.hash); });
+      // マイページから申し込んだ時だけ、決済画面へ移る直前に印を付ける（ほかの入口・失敗した申込には残さない）
+      if (o.fromMypage) markBuyFromMypage(r.body.linkRef);
       global.location.assign(r.body.checkoutUrl);
       return { ok: true };
     }
@@ -246,10 +249,22 @@
   }
   // マイページから申し込んだ印（このタブ）：支払いの後、レポートの入口がこのマイページへの登録に進む
   var BUY_MYPAGE_KEY = 'ed_buy_from_mypage_v1';
-  function markBuyFromMypage() { session(function (s) { s.setItem(BUY_MYPAGE_KEY, String(Date.now())); }); }
-  function takeBuyFromMypage() {
-    var v = session(function (s) { var x = s.getItem(BUY_MYPAGE_KEY); s.removeItem(BUY_MYPAGE_KEY); return x; });
-    return !!v && Date.now() - Number(v) < 2 * 60 * 60 * 1000;
+  //   印は、この購入の固有リンクの目印（サーバーが返すハッシュの先頭）と組。戻ってきた固有リンクが同じ時だけ登録に進む
+  function markBuyFromMypage(ref) {
+    if (!/^[0-9a-f]{16}$/.test(String(ref || ''))) return;
+    session(function (s) { s.setItem(BUY_MYPAGE_KEY, JSON.stringify({ at: Date.now(), ref: ref })); });
+  }
+  function clearBuyFromMypage() { session(function (s) { s.removeItem(BUY_MYPAGE_KEY); }); }
+  async function takeBuyFromMypage(token) {
+    var raw = session(function (s) { var x = s.getItem(BUY_MYPAGE_KEY); s.removeItem(BUY_MYPAGE_KEY); return x; });
+    var v = null;
+    try { v = JSON.parse(raw || 'null'); } catch (e) { v = null; }
+    if (!v || !v.ref || Date.now() - Number(v.at) > 2 * 60 * 60 * 1000) return false;
+    try {
+      var buf = await global.crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(token)));
+      var hex = Array.prototype.map.call(new Uint8Array(buf), function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+      return hex.slice(0, 16) === v.ref;
+    } catch (e) { return false; }
   }
   // 登録の予定（期限内のものだけ）。期限切れは消す
   function peekRegisterIntent() { return registerIntentAt() !== null; }
@@ -317,7 +332,7 @@
     contextFromResume: contextFromResume, contextFromRecord: contextFromRecord, summary: summary, contextOk: contextOk,
     sampleHref: sampleHref, readFragment: readFragment, start: start, returnPath: returnPath, goalDialog: goalDialog,
     linkUrl: linkUrl, rememberLink: rememberLink, rememberedLink: rememberedLink, openLink: openLink,
-    startRegister: startRegister, takeRegisterIntent: takeRegisterIntent, peekRegisterIntent: peekRegisterIntent, registerIntentAt: registerIntentAt, markBuyFromMypage: markBuyFromMypage, takeBuyFromMypage: takeBuyFromMypage, register: register,
+    startRegister: startRegister, takeRegisterIntent: takeRegisterIntent, peekRegisterIntent: peekRegisterIntent, registerIntentAt: registerIntentAt, markBuyFromMypage: markBuyFromMypage, clearBuyFromMypage: clearBuyFromMypage, takeBuyFromMypage: takeBuyFromMypage, register: register,
     copyText: copyText, myReports: myReports, myOpen: myOpen, myRegenerate: myRegenerate, accountToken: accountToken,
   };
 })(typeof window !== 'undefined' ? window : this);

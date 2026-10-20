@@ -400,7 +400,7 @@ test('固有リンク：開くたびに状態を確かめ、読める時は中�
   await r.__ctx.close();
   const n = await open('/report-link#t=' + LINK_A, { api: { 'link-open': [404, { error: 'link_not_found' }] } });
   await n.waitForSelector('.state');
-  assert.match(await n.locator('#rlBox').innerText(), /このリンクは無効です/);
+  assert.match(await n.locator('#rlBox').innerText(), /このリンクでは、レポートを開けませんでした/);
   await n.__ctx.close();
 });
 
@@ -568,12 +568,25 @@ test('登録：リンクの秘密値（このタブの sessionStorage）でロ�
 });
 
 test('マイページの記録から申し込んで支払いから戻った：レポートの入口からマイページへ移り、確かめずにこのアカウントへ登録する（買っていない表示のまま残さない）', { skip: skip() }, async () => {
-  const seed = `if (location.pathname === '/report-link') sessionStorage.setItem('ed_buy_from_mypage_v1', String(Date.now()));`;
+  // 印はこの購入の固有リンクの目印（ハッシュの先頭16桁）と組
+  const ref = require('crypto').createHash('sha256').update(LINK_A).digest('hex').slice(0, 16);
+  const seed = `if (location.pathname === '/report-link') sessionStorage.setItem('ed_buy_from_mypage_v1', JSON.stringify({ at: Date.now(), ref: '${ref}' }));`;
   const p = await open('/report-link#t=' + LINK_A, { init: seed, signedIn: true, rows: [], api: { 'link-register': [200, { result: 'registered', product: 'analysis' }], 'my-reports': [200, { reports: [], records: [] }], 'link-open': [200, { product: 'analysis', state: 'active' }] } });
   await p.waitForURL((u) => u.pathname === '/mypage.html' || u.pathname === '/mypage');
   await p.waitForFunction(() => /このマイページに登録しました/.test((document.getElementById('mpClaimBox') || {}).innerText || ''));
   assert.deepEqual(p.__calls.filter((c) => c.op === 'link-register').map((c) => c.body), [{ token: LINK_A }]);
   assert.equal(await p.evaluate(() => sessionStorage.getItem('ed_buy_from_mypage_v1')), null);
+  await p.__ctx.close();
+});
+
+test('マイページから申し込んだ印が残っていても、違う固有リンク（人から受け取ったリンクなど）は登録せず、そのまま開く', { skip: skip() }, async () => {
+  const ref = require('crypto').createHash('sha256').update(LINK_A).digest('hex').slice(0, 16);
+  const seed = `if (location.pathname === '/report-link') sessionStorage.setItem('ed_buy_from_mypage_v1', JSON.stringify({ at: Date.now(), ref: '${ref}' }));`;
+  const p = await open('/report-link#t=' + LINK_B, { init: seed, api: { 'link-open': [200, { product: 'complete', state: 'active', summary: SUMMARY, report: { status: 'generating' } }] } });
+  await p.waitForSelector('.state');
+  assert.equal(new URL(p.url()).pathname, '/report-link');
+  assert.equal(p.__calls.filter((c) => c.op === 'link-register').length, 0);
+  assert.equal(await p.evaluate(() => sessionStorage.getItem('ed_register_v1')), null);
   await p.__ctx.close();
 });
 

@@ -119,10 +119,10 @@ async function setup({ env = {} } = {}) {
       await statusH(req, res);
       return res;
     },
-    async view(urlOrToken, headers = {}) {
+    async view(urlOrToken, headers = {}, extra = {}) {
       const token = urlOrToken.startsWith('/api/') ? new URL(urlOrToken, 'https://x').searchParams.get('view') : urlOrToken;
       const res = makeRes();
-      await statusH({ method: 'GET', headers, query: { view: token } }, res);
+      await statusH({ method: 'GET', headers, query: { view: token, ...extra } }, res);
       return res;
     },
     async reports() { return db.rows('complete_reports'); },
@@ -429,9 +429,11 @@ test('期限切れ（300秒後）・改ざん・形式違反のトークンは�
   const expired = await ctx.view(token);
   assert.deepEqual([expired.code, expired.body.error], [410, 'view_link_expired']);
   // ブラウザで開き直した（再読み込み・戻る）：レポートの入口へ戻す（入口がこのタブの固有リンクから開き直す）
+  //   マイページ・以前の仕組みから開いた閲覧はマイページへ。固有リンクから開いた閲覧（src=link）は入口へ（このトークンで照らし合わせる）
   const nav = await ctx.view(token, { accept: 'text/html,application/xhtml+xml' });
-  assert.equal(nav.code, 302);
-  assert.equal(nav.headers.location, `/report-link#v=${encodeURIComponent(token)}`);
+  assert.deepEqual([nav.code, nav.headers.location], [302, '/mypage.html']);
+  const viaLink = await ctx.view(token, { accept: 'text/html' }, { src: 'link' });
+  assert.deepEqual([viaLink.code, viaLink.headers.location], [302, `/report-link#v=${encodeURIComponent(token)}`]);
   // エラー応答・照合 ID・ログにトークンを含めない
   assert.deepEqual(Object.keys(expired.body).sort(), ['error', 'incident_id']);
   assert.ok(!JSON.stringify(expired.body).includes(token.slice(0, 16)));

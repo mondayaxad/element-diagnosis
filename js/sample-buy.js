@@ -20,20 +20,27 @@
   var savedAt = Date.now();
   if (!B.contextOk(context)) {
     context = null;
-    try {
+    // このタブの控えは、URL に何も無い時（再読み込み・決済画面から戻った時）だけ使う。
+    //   新しく開いた（#from= はあるが #c= が無い＝購入の準備ができなかった）時は、前に見た別の記録を出さない
+    if (location.hash && location.hash !== '#') { try { sessionStorage.removeItem(KEY); } catch (e) { /* noop */ } }
+    else try {
       var saved = JSON.parse(sessionStorage.getItem(KEY) || 'null');
       if (saved && B.contextOk(saved.c) && Date.now() - saved.at < CTX_TTL_MS) { context = saved.c; fromRaw = saved.from; savedAt = saved.at; }
     } catch (e) { /* 読めない時は購入の対象なし */ }
   }
-  var from = fromRaw === 'mypage' ? 'mypage' : 'result';
+  var from = fromRaw === 'mypage' ? 'mypage' : fromRaw === 'report' ? 'report' : 'result';
   var subject = from === 'mypage' ? 'この記録' : 'この診断結果';
-  var source = from === 'mypage' ? 'mypage_sample' : 'result_sample';
+  var source = from === 'mypage' ? 'mypage_sample' : from === 'report' ? 'report_sample' : 'result_sample';
   var page = box.getAttribute('data-sample-buy') === 'complete' ? 'complete' : 'analysis';
   var slot = document.querySelector('[data-sample-complete-slot]');
   // 戻る：この画面の URL からトークンを外す（共有・ブックマークで他の人に渡らないように。このタブの中では保持する）
   if (B.readFragment('c')) { try { history.replaceState(null, '', location.pathname); } catch (e) { /* そのまま */ } }
 
-  function backHref() { return from === 'mypage' ? '/mypage.html' : '/'; }
+  function backHref() {
+    if (from === 'mypage') return '/mypage.html';
+    var link = from === 'report' ? B.rememberedLink() : null; // 解析レポートから：開いていたレポートの固有リンクへ
+    return link ? '/report-link#t=' + link : '/';
+  }
   // 申込のボタン（夜空の色。2段の文言）。sub：主の申込より控えめな見た目（完全解析を解析レポートのサンプルで案内する時）
   function skyBtn(product, main, sub, enabled, quiet) {
     return '<a class="sample-return ed-sky-btn' + (quiet ? ' is-quiet' : '') + '" href="#" data-buy="' + product + '"' + (enabled ? '' : ' aria-disabled="true"') + '>'
@@ -137,8 +144,8 @@
           if (a.getAttribute('aria-disabled') === 'true' || a.getAttribute('data-busy')) return;
           a.setAttribute('data-busy', '1');
           msg.textContent = '';
-          if (from === 'mypage') B.markBuyFromMypage(); // マイページの記録から：支払いの後、マイページに登録して戻る
-          B.start({ context: context, product: a.getAttribute('data-buy'), source: source }).then(function (res) {
+          // マイページの記録から：支払いの後、マイページに登録して戻る
+          B.start({ context: context, product: a.getAttribute('data-buy'), source: source, fromMypage: from === 'mypage' }).then(function (res) {
             if (res.ok) { a.setAttribute('data-busy', 'away'); return; }
             a.removeAttribute('data-busy');
             if (!res.silent) msg.textContent = B.errorText(res.error);

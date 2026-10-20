@@ -75,12 +75,18 @@
   if (!fromHash) { try { history.replaceState(null, '', '/report-link#t=' + token); } catch (e) { /* そのまま */ } }
   if (wantRegister) { B.startRegister(token, 'report_footer'); return; }
   // マイページから申し込んで支払いから戻った：このレポートをマイページに登録して戻る（申し込んだ本人のログインのまま。確かめを挟まない）
-  if (fromHash && B.takeBuyFromMypage()) {
-    B.startRegister(token, 'mypage_buy', { stay: true });
-    try { sessionStorage.setItem('ed_register_login_v1', String(B.registerIntentAt())); } catch (e) { /* 印が無ければ、マイページで確かめる */ }
-    location.replace('/mypage.html');
-    return;
-  }
+  //   （印はこの購入の固有リンクの目印と組。違う固有リンク〔人から受け取ったリンクなど〕では登録に進まない）
+  // 同じタブで別の固有リンクに変えた（# だけの移動）：読み込み直して、そのリンクで開き直す
+  window.addEventListener('hashchange', function () { if (B.readFragment('t') !== token) location.reload(); });
+  (fromHash ? B.takeBuyFromMypage(token) : Promise.resolve(false)).then(function (mine) {
+    if (mine) {
+      B.startRegister(token, 'mypage_buy', { stay: true });
+      try { sessionStorage.setItem('ed_register_login_v1', String(B.registerIntentAt())); } catch (e) { /* 印が無ければ、マイページで確かめる */ }
+      location.replace('/mypage.html');
+      return;
+    }
+    load();
+  });
 
   var polls = 0;
   function factsHtml(b) {
@@ -134,7 +140,8 @@
     if (b.state === 'active') {
       if (b.product === 'complete' && (!b.report || b.report.status !== 'ready')) {
         var failed = b.report && b.report.status === 'failed';
-        html += failed
+        if (b.report && b.report.status === 'revoked') html += '<p class="state">この完全解析は、現在ご覧いただけません。ご不明点は <a href="https://x.com/mondayaxad" target="_blank" rel="noopener">@mondayaxad</a> までご連絡ください。</p>';
+        else html += failed
           ? '<p class="state">完全解析を作成できませんでした。</p>' + (b.report.regenerate === 'available'
             ? '<button type="button" class="btn main" data-regenerate>もう一度作成する</button>'
             : '<p class="note">運営者が確認して作成し直します。お手数ですが <a href="https://x.com/mondayaxad" target="_blank" rel="noopener">@mondayaxad</a> までご連絡ください。</p>')
@@ -183,15 +190,14 @@
     B.openLink(token, false).then(function (r) {
       if (r.ok) { render(r.body); return; }
       if (r.status === 404) {
-        box.innerHTML = '<div class="card"><p class="state">このリンクは無効です（再発行された・または誤ったリンクです）。</p>'
+        box.innerHTML = '<div class="card"><p class="state">このリンクでは、レポートを開けませんでした。新しいリンクが発行されたか、URLの一部が欠けているのかもしれません。</p>'
           + '<p class="note">新しいリンクをお持ちの場合は、そちらを開いてください。ご不明点は <a href="https://x.com/mondayaxad" target="_blank" rel="noopener">@mondayaxad</a> までご連絡ください。</p></div>';
         return;
       }
-      box.innerHTML = '<div class="card"><p class="state">確認できませんでした。</p><button type="button" class="btn sub" data-retry>もう一度確認する</button></div>';
+      box.innerHTML = '<div class="card"><p class="state">いまは状態を確かめられませんでした。少し時間をおいて、もう一度お試しください。</p><button type="button" class="btn sub" data-retry>もう一度確認する</button></div>';
       box.querySelector('[data-retry]').onclick = load;
     });
   }
-  load();
 })();
 </script>
 </body>

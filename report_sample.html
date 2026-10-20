@@ -1553,7 +1553,7 @@ async function savePdf() {
     return;
   }
   var originalText = btn.textContent;
-  btn.textContent = '生成中…（数秒お待ちください）';
+  btn.textContent = 'PDFを整えています…';
   btn.disabled = true;
 
   var hideEls = document.querySelectorAll('#pdfSaveBtn, .lock-cta');

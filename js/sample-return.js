@@ -16,7 +16,12 @@
   function from() { return FROM; }
   function destination() {
     if (from() === 'mypage') return '/mypage.html';
-    if (from() === 'report') return '/purchase-complete';
+    if (from() === 'report') {
+      // 解析レポートから：このタブで開いていたレポートの固有リンクへ（無ければ購入完了ページ）。レポートからは Referer が無い
+      var link = null;
+      try { link = sessionStorage.getItem('ed_report_link_v1'); } catch (e) { link = null; }
+      return link && RESUME_RE.test(link) ? '/report-link#t=' + link : '/purchase-complete';
+    }
     var t = null;
     try { t = localStorage.getItem('ed_last_result_v1'); } catch (e) { t = null; }
     return t && RESUME_RE.test(t) ? '/result#r=' + t : '/';

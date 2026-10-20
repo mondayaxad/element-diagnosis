@@ -86,10 +86,10 @@
     var head = '<p class="row-name">' + name + '</p>' + (p.purchasedOn ? '<p class="note pc-at">購入日 ' + B.esc(p.purchasedOn) + '</p>' : '');
     if (p.state === 'pending') return '<div class="card">' + head + '<p class="row-state"><span class="spinner" aria-hidden="true"></span>お支払いを確認しています。</p></div>';
     if (p.state === 'active' && !p.link) {
-      return '<div class="card">' + head + '<p class="row-state">このレポートのリンクは新しいものに変わっています。新しいリンク（またはお送りした請求書のメール）からお開きください。</p></div>';
+      return '<div class="card">' + head + '<p class="row-state">このレポートのリンクは新しいものに変わっています。新しいリンク（または Stripe から届いた請求書のメール）からお開きください。</p></div>';
     }
     if (p.state !== 'active' || !p.link) {
-      return '<div class="card">' + head + '<p class="row-state">このレポートは現在ご覧いただけません（返金・お支払いの確認中・停止）。端末に保存したPDFはそのまま残ります。</p></div>';
+      return '<div class="card">' + head + '<p class="row-state">このレポートは、返金や停止のため、現在ご覧いただけません。端末に保存したPDFはそのまま残ります。</p></div>';
     }
     var report = '';
     if (p.product === 'complete' && p.report && p.report.status !== 'ready') {
@@ -104,6 +104,7 @@
       + '<p class="msg" data-msg role="status"></p></div>';
   }
   function render(purchases) {
+    if (canceled) { list.innerHTML = ''; return; } // 中止の画面には、ほかの購入を並べない（中止した注文を買ったように見せない）
     // 今の購入：そのレポートのリンクの入口へ進む（このページを介さない）
     var cur = purchases.filter(function (p) { return p.current && p.link; })[0];
     if (cur) {
@@ -124,7 +125,7 @@
     }
     if (!canceled) {
       document.getElementById('pcTitle').textContent = 'ご購入ありがとうございます';
-      document.getElementById('pcLead').textContent = 'レポートを開き、リンクのコピーとPDFの保存をおすすめします。';
+      document.getElementById('pcLead').textContent = 'レポートを開き、リンクを控えておいてください。';
     }
     list.innerHTML = shown.map(itemHtml).join('');
     list.querySelectorAll('[data-item]').forEach(function (el) {
@@ -145,7 +146,8 @@
   function load() {
     B.call('deliveries', currentSession ? { session: currentSession } : {}).then(function (r) {
       if (!r.ok) {
-        list.innerHTML = '<div class="card"><p class="note">購入状況を確認できませんでした。</p><button type="button" class="btn" data-retry>もう一度確認する</button></div>';
+        document.getElementById('pcLead').textContent = '';
+        list.innerHTML = '<div class="card"><p class="note">いまは購入の状況を確かめられませんでした。少し時間をおいて、もう一度お試しください。</p><button type="button" class="btn" data-retry>もう一度確認する</button></div>';
         list.querySelector('[data-retry]').onclick = function () { tries = 0; load(); };
         return;
       }

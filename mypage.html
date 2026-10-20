@@ -1287,9 +1287,10 @@ document.addEventListener('click', async (e) => {
     say(EdBuy.errorText(c.body && c.body.error === 'not_authenticated' ? 'context_expired' : (c.body && c.body.error)));
     return;
   }
-  EdBuy.markBuyFromMypage(); // 支払いの後、このマイページに登録して戻る
-  const r = await EdBuy.start({ context: c.body.context, product, goal, source: btn.getAttribute('data-source') || 'mypage_history' });
+  // fromMypage：支払いの後、このマイページに登録して戻る
+  const r = await EdBuy.start({ context: c.body.context, product, goal, source: btn.getAttribute('data-source') || 'mypage_history', fromMypage: true });
   if (r.ok) { EdNavBusy.handoff(btn); return; }
+  if (r.error === 'in_progress') return; // 先の申込が決済画面へ移動中（押せない表示のまま）
   EdNavBusy.release(btn);
   if (!r.silent) say(EdBuy.errorText(r.error));
 });
@@ -2054,7 +2055,8 @@ async function mpRegisterNow(token) {
   }
   const error = (r.body && r.body.error) || (r.status === 0 ? 'network' : 'unknown');
   EdBuy.track('report_register_failed', { reason: error });
-  return { ok: false, error, token: error === 'network' || error === 'service_unavailable' ? token : null };
+  // link：登録できなくても、購入したレポートをすぐ開けるように（マイページから申し込んだ時は、入口のページを通らずに来ている）
+  return { ok: false, error, token: error === 'network' || error === 'service_unavailable' ? token : null, link: error === 'link_not_found' ? null : token };
 }
 let mpRegisterDone = null; // 「このアカウントに登録する」の結果（描き直した後に示す）
 // 示している登録の結果・確かめの欄：描き直し（ログインの通知が重なった時など）でも消さない。閉じる・次の予定で入れ替える
@@ -2112,8 +2114,8 @@ function mpRegisterConfirm(root, out, user) {
   box.querySelector('[data-register-cancel]').onclick = () => { mpRegisterShown = null; box.remove(); };
 }
 const MP_REGISTER_ERRORS = {
-  link_not_found: 'このレポートのリンクは無効です（再発行された・または誤ったリンクです）。登録できませんでした。',
-  link_inactive: 'このレポートは、返金・停止などのため現在ご覧いただけないため、登録できませんでした。',
+  link_not_found: 'このリンクでは、レポートを登録できませんでした。新しいリンクが発行されたか、URLの一部が欠けているのかもしれません。',
+  link_inactive: '返金や停止のため、このレポートは現在ご覧いただけません。登録もできませんでした。',
   payment_pending: 'お支払いの確認が済んでいないため、まだ登録できません。少し時間をおいて、レポートのリンクからもう一度お試しください。',
   not_authenticated: 'ログインの確認ができませんでした。もう一度ログインしてから、レポートのリンクの「マイページに登録する」をお試しください。',
 };
@@ -2124,7 +2126,8 @@ function mpShowRegisterOutcome(root, out, user) {
   const html = out.ok
     ? `<p>${out.result === 'already' ? `この${name}は、このマイページに登録済みです。` : `${name}を、このマイページに登録しました。`}</p>`
     : `<p>${mpEsc(MP_REGISTER_ERRORS[out.error] || '登録できませんでした。時間をおいて、レポートのリンクの「マイページに登録する」からもう一度お試しください。')}</p>`
-      + (out.token ? '<button type="button" class="mp-btn" data-register-retry>もう一度登録する</button>' : '');
+      + (out.token ? '<button type="button" class="mp-btn" data-register-retry>もう一度登録する</button>' : '')
+      + (out.link && /^[A-Za-z0-9_-]{43}$/.test(out.link) ? ` <a class="mp-btn" href="/report-link#t=${out.link}">購入したレポートを開く</a>` : '');
   const box = mpClaimBox(root, html);
   const retry = box.querySelector('[data-register-retry]');
   if (retry) retry.onclick = async () => { retry.disabled = true; mpRegisterDone = await mpRegisterNow(out.token); mpRegisterShown = null; await init(); };
@@ -2188,7 +2191,7 @@ function mpCompleteRowHtml(r, cls, source) {
           ? `<button type="button" class="${cls}" data-mp-regenerate="${mpEsc(d.delivery)}">もう一度作成する</button>`
           : '<p class="mp-rec-note">運営者が確認して作成し直します。お手数ですが @mondayaxad までご連絡ください（追加のお支払いは不要です）。</p>');
     }
-    return `<p class="mp-rec-mentor" role="status">完全解析を作成しています。数分かかることがあります。</p><button type="button" class="mp-btn" data-mp-refresh>状態を更新</button>`;
+    return `<p class="mp-rec-mentor" role="status">完全解析を作成しています。数分かかることがあります。</p><button type="button" class="mp-btn" data-mp-refresh>もう一度確かめる</button>`;
   }
   const legacy = mpLegacyCompleteView(r);
   if (legacy) return caViewHtml(r, legacy);
@@ -3699,7 +3702,7 @@ async function initOnce() {
   if (!user) {
     // 購入の引き継ぎ（購入完了ページ・解析レポートの「マイページに引き継ぐ」）・購入時メールでの復旧から来た時の案内
     let intentNote = '';
-    try { intentNote = sessionStorage.getItem('ed_claim_intent_v1') ? 'ログインすると、この端末の購入をマイページに引き継ぎます。' : ''; } catch (e) { intentNote = ''; }
+    intentNote = ''; // この端末の購入の引き継ぎは廃止（complete_13）。購入したレポートは、レポートのリンクから登録する
     if (typeof EdBuy !== 'undefined' && EdBuy.peekRegisterIntent()) {
       intentNote = 'ログイン（または新規登録）すると、購入したレポートをこのマイページに登録します。';
       mpRegisterLoginMark(true); // ログインの後は、そのアカウントへ登録する

@@ -165,7 +165,9 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
       if (/text\/html/.test(String((req.headers && req.headers.accept) || ''))) {
         res.setHeader('Cache-Control', 'no-store');
         // 閲覧トークンを渡す：入口のページは、このトークンで開いた固有リンク（このタブの控え）だけを開き直す
-        res.setHeader('Location', `/report-link#v=${encodeURIComponent(String(queryParam(req, 'view') || '').slice(0, 2048))}`);
+        //   固有リンクから開いた閲覧（src=link）だけ入口へ。マイページ・以前の仕組みから開いた閲覧は、マイページへ戻す
+        res.setHeader('Location', queryParam(req, 'src') === 'link'
+          ? `/report-link#v=${encodeURIComponent(String(queryParam(req, 'view') || '').slice(0, 2048))}` : '/mypage.html');
         return res.status(302).end();
       }
       return res.status(t.reason === 'token_expired' ? 410 : 403).json({ error: t.reason === 'token_expired' ? 'view_link_expired' : 'view_link_invalid', incident_id: incident });
@@ -196,7 +198,7 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
     }
     // ログインなしの購入（ゲスト）で開いた時だけ、最下部にマイページの作成への導線を足す（保存した生成物は変えない。照合の後に足す）
     if (t.deliveryId && queryParam(req, 'src') === 'link') body = withDeliveryFooter(body, queryParam(req, 'view'));
-    else if (t.userId == null) body = withMypageFooter(body);
+    // 以前のゲスト購入の閲覧：マイページへの引き継ぎは廃止（complete_13）。最下部には何も足さない
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Content-Security-Policy', VIEW_CSP);
     res.setHeader('X-Frame-Options', 'DENY');

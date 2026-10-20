@@ -1786,6 +1786,11 @@ function renderDeliveryFooter(box) {
   if (!token) { renderMypageFooter(box); return; }
   // 固有リンクから開いた時：アドレスバーを期限のない固有リンクに戻す（コピー・ブックマーク・再読み込みで、そのまま開ける）
   try { history.replaceState(null, '', '/report-link#t=' + token); } catch (e) { /* そのまま */ }
+  // 同じタブで別の固有リンクに変えた（# だけの移動）：読み込み直して、そのリンクを開く（表示中のレポートと取り違えない）
+  if (!window.__reportHashWatch) {
+    window.__reportHashWatch = true;
+    window.addEventListener('hashchange', function () { if (location.hash !== '#t=' + token) location.reload(); });
+  }
   B.openLink(token, false).then(function (r) {
     if (!r.ok) {
       box.innerHTML = '<p class="ca-guest-msg" role="status">購入の状況を確かめられませんでした。ページを読み込み直してください。</p>';
@@ -2083,7 +2088,7 @@ async function savePdf() {
     return;
   }
   var originalText = btn.textContent;
-  btn.textContent = '生成中…（数秒お待ちください）';
+  btn.textContent = 'PDFを整えています…';
   btn.disabled = true;
 
   var hideEls = document.querySelectorAll('#pdfSaveBtn, .lock-cta');
