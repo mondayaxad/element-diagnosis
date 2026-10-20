@@ -69,6 +69,7 @@ const PUBLIC_FILES = [
 const PUBLIC_DIRS = [
   { dir: 'type', ext: '.html' },                               // タイプ解説（sitemap・index からリンク）
   { dir: 'assets/result', ext: '.webp' },                      // 結果画面の図（index が名前で組み立てる）
+  { dir: 'assets/complete', ext: '.webp' },                    // 完全解析の三つの人物像の図（js/lens-constellation.js）
   { dir: 'assets/emblems/2026-autumn/record', ext: '.png' },   // マイページの記録エンブレム
   { dir: 'assets/emblems/2026-autumn/awakened', ext: '.png' }, // マイページの覚醒エンブレム
   { dir: 'assets/ogp/backgrounds', ext: '.jpg' },              // api/og-image が自サイトから取得する背景

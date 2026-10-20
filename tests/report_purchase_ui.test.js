@@ -244,7 +244,8 @@ test('サンプル：直接開くと「まず元素診断を受ける」だけ�
       const beyond = s.locator('.beyond-sec');
       assert.equal(await s.getByText('NARRATIVE REPORT').count(), 0);
       assert.match(await beyond.innerText(), /まだ見えていない輪郭を読む[\s\S]*全46ページ[\s\S]*¥3,000/);
-      assert.equal(await beyond.locator('.edl-map svg .edl-orbit').count(), 3);
+      assert.equal(await beyond.locator('.edl-map img.edl-img').count(), 1);
+      assert.equal(await beyond.locator('.edl-legend .edl-item').count(), 3);
       assert.equal(await beyond.locator('[data-buy="complete"]').count(), 1);
       assert.match(await beyond.locator('[data-sample-complete-link]').getAttribute('href'), /^\/complete-sample\.html#c=/);
     }

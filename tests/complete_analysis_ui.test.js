@@ -345,9 +345,12 @@ test('index：¥1,000主導線のあとに折りたたみ。閉じても¥1,000�
   await p.click('details.ca-fold > summary');
   const text = await fold.innerText();
   for (const s of ['この結果が示すのは、あなたの核となる一面です。', 'あなたと重なる人物', 'まだ言葉になっていない内側の可能性', 'これから借りられる力を', '三つの視点からひとつの輪郭へ結びます。', 'いまのあなたに最も近い10名', '表に出にくい一面に近い10名', 'これから伸ばす方向に近い10名', '三つの視点、三十の人物像。', '全46ページの完全解析', '完全解析のサンプルを読む', '8ページをそのまま抜き出しています', '¥3,000', '準備中']) assert.ok(text.includes(s), s);
-  // 三つの人物像の図：あなたの元素の宝石を中心に、三つの軌道に10の星ずつ（色で見分けられる）
-  assert.equal(await fold.locator('.edl-map svg .edl-orbit').count(), 3);
-  assert.deepEqual(await fold.locator('.edl-map svg .edl-orbit').evaluateAll((els) => els.map((e) => e.querySelectorAll('.edl-star').length)), [10, 10, 10]);
+  // 三つの人物像の図（同じサイトの画像・代替テキストあり）と、三つの視点の説明
+  const img = fold.locator('.edl-map img.edl-img');
+  assert.equal(await img.count(), 1);
+  assert.match(await img.getAttribute('src'), /^\/assets\/complete\/lens-map-840\.webp$/);
+  assert.match(await img.getAttribute('alt'), /MIRROR[\s\S]*HIDDEN SHAPE[\s\S]*MENTOR/);
+  assert.equal(await fold.locator('.edl-legend .edl-item').count(), 3);
   assert.equal(await fold.locator('[data-ca-sample]').getAttribute('href'), '/complete-sample.html#from=result');
   assert.equal(await fold.locator('.ca-reveal-stars i').count(), 3);
   // 決済前のボタンに「見る」「開く」を使わない。押せない button（href なし）
