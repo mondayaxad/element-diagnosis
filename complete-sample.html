@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src 'none'; script-src 'self'; connect-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src 'none'; script-src 'self'; connect-src 'self'; frame-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
 <title>完全解析サンプル — ELEMENT DIAGNOSIS</title>
 <style>:root{
@@ -375,7 +375,7 @@ html,body{ max-width: 100%; overflow-x: hidden; }
     <p>製品版は全46ページ</p>
     <p>実際の内容は診断結果ごとに異なる</p>
   </div>
-  <p class="sample-return-top"><a href="/" data-sample-return>申し込みに戻る</a></p>
+  <p class="sample-return-top"><a href="/" data-sample-return>元の画面に戻る</a></p>
   <details open="open"><summary>サンプル目次（8ページ）</summary><ol><li><a href="#sample-01"><span>01</span>表紙</a></li><li><a href="#sample-02"><span>02</span>あなたの核</a></li><li><a href="#sample-03"><span>03</span>三層統合</a></li><li><a href="#sample-04"><span>04</span>MIRROR 上位3名との交わり</a></li><li><a href="#sample-05"><span>05</span>HIDDEN SHAPE 上位3名との交わり</a></li><li><a href="#sample-06"><span>06</span>MENTOR 上位3名から借りられるもの</a></li><li><a href="#sample-07"><span>07</span>あなたのドメイン平均</a></li><li><a href="#sample-08"><span>08</span>YOUR COMPASS</a></li></ol></details>
 </div></nav><main class="pages">
 
@@ -605,11 +605,12 @@ html,body{ max-width: 100%; overflow-x: hidden; }
   <footer class="p-foot"><span>ELEMENT DIAGNOSIS · CORE I 完全解析レポート</span><span class="p-map">YOUR COMPASS</span><span class="p-count">08 / 08</span></footer>
 </section>
 </main>
-<aside class="sample-cta" aria-label="完全解析の案内">
+<aside class="sample-cta" aria-label="お申し込み" data-sample-buy>
   <h2>あなた自身の輪郭を、46ページで読む。</h2>
-  <p>お申し込みは、元のページ（診断結果・解析レポート）の申込欄から。<br>価格は購入状況に合わせて決まります（未購入は ¥3,000、解析レポートをお持ちの方は追加 ¥2,000）。</p>
-  <a class="sample-return" href="/" data-sample-return>申し込みに戻る</a>
-  <p class="sample-mypage">マイページに保存した記録から申し込む方：<a href="/mypage?from=sample">マイページで記録を選ぶ</a>（マイページをお持ちでない方も、ここから無料で作成できます。）</p>
+  <p>お申し込みには、あなたの診断結果が必要です。<a href="/">まず元素診断を受ける</a></p>
 </aside>
-<script src="/js/sample-return.js"></script></body>
+<script src="/js/sample-return.js"></script>
+<script src="/api/public-config?format=js"></script>
+<script src="/js/report-purchase.js"></script>
+<script src="/js/sample-buy.js"></script></body>
 </html>

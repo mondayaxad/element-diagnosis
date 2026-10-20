@@ -422,6 +422,7 @@
 <script src="complete-analysis.js"></script>
 <script src="js/nav-busy.js"></script>
 <script src="js/guest-purchase.js"></script>
+<script src="js/report-purchase.js"></script>
 <script src="js/ETI_v2_QUESTIONS_100.js"></script>
 <script src="js/eti_v2_prototypes.js"></script>
 <script src="js/eti_v2_engine.js"></script>
@@ -2670,7 +2671,8 @@ function renderResult(root) {
           <p style="text-align:center;color:#c0a860;font-size:11px;margin-top:8px;font-weight:600">
             ${diagnosisVersion === 'ETI-2.0' ? '✓ 登録不要。お支払いの後、このブラウザですぐにお読みいただけます。' : '✓ 決済完了後、自動的にレポートページへ移動します。'}
           </p>
-          ${diagnosisVersion === 'ETI-2.0' ? '<p data-purchase-email-note style="text-align:center;color:var(--rx-tertiary);font-size:11px;line-height:1.7;margin-top:4px">購入時のメールアドレスでマイページに登録すると、購入した内容はマイページに引き継がれ、別の端末からも見返せます。</p>' : ''}
+          ${diagnosisVersion === 'ETI-2.0' ? '<p data-purchase-link-note style="text-align:center;color:var(--rx-tertiary);font-size:11px;line-height:1.7;margin-top:4px">お支払いの後、レポートのリンク（URL）が発行されます。そのリンクからいつでも読めて、マイページにも登録できます。</p>'
+            + '<p style="text-align:center;margin:6px 0 0"><a href="/report_sample.html#from=result" data-buy-sample="analysis" style="color:var(--rx-tertiary);font-size:11.5px">解析レポートのサンプルを見る</a></p>' : ''}
           ${completeAnalysisFoldHtml(diagnosisVersion === 'ETI-2.0' && results.raw && results.raw.meta ? results.raw.meta.itemSetVersion : null, diagnosisVersion)}
         </div>
       </div>
@@ -2738,7 +2740,8 @@ function renderResult(root) {
     gm.setAttribute('role', 'status');
     lockUnlockAllBtn.insertAdjacentElement('afterend', gm);
   }
-  if (guestFlow) initGuestPurchase(root, shortCode, { lockCtaBtns: lockCtaBtns, lockUnlockAllBtn: lockUnlockAllBtn, lockPrice: root.querySelector('#lockPrice') });
+  // 解析レポート ¥1,000・完全解析 ¥3,000（complete_13）：ログイン・この端末の購入の有無で、価格・導線を変えない
+  if (guestFlow) initReportPurchase(root, shortCode, { lockCtaBtns: lockCtaBtns, lockUnlockAllBtn: lockUnlockAllBtn });
   if (diagnosisVersion === 'ETI-2.0') setupResumeLink(root, shortCode);
   // シェアボタンのイベント設定（直接2択）
   var saveImgBtn = root.querySelector('#saveImgBtn');
@@ -3007,7 +3010,10 @@ function completeAnalysisFoldHtml(itemSetVersion, diagnosisVersion) {
   var cta;
   // 実データ（Preview の状態指定なし）：ゲスト購入の欄（js/guest-purchase.js。この端末の購入状態を確かめてから描く）
   if (!name && diagnosisVersion === 'ETI-2.0' && typeof EdGuestPurchase !== 'undefined') {
-    cta = '<div data-guest-complete><p class="ca-fold-note">購入状態を確認しています…</p></div>';
+    // 全ての状態で同じ導線（ログイン・購入の有無で変えない）：完全解析 ¥3,000（目標の選択は共通の画面。js/report-purchase.js）
+    cta = '<div data-report-buy="complete"><p class="ca-fold-note" data-complete-notice>' + (typeof EdBuy !== 'undefined' ? EdBuy.esc(EdBuy.COMPLETE_NOTICE) : '') + '</p>'
+      + '<button type="button" class="ca-fold-btn" data-buy-complete>まだ見えていない輪郭を読む　完全解析 ¥3,000</button>'
+      + '<p class="ca-guest-msg" data-buy-msg role="status"></p></div>';
   } else if (offer) {
     var isUp = offer.offer === 'upgrade_2000';
     cta = CA.pendingButtonHtml(offer, 'ca-fold-btn')
@@ -3030,7 +3036,7 @@ function completeAnalysisFoldHtml(itemSetVersion, diagnosisVersion) {
     + '<p class="ca-body">この結果が示すのは、あなたの核となる一面です。</p>'
     + '<p class="ca-body">完全解析では、<br>あなたと重なる人物、<br>まだ言葉になっていない内側の可能性、<br>これから借りられる力を、<br>三つの視点からひとつの輪郭へ結びます。</p>'
     + '<p class="ca-reveal-pages">全46ページの完全解析</p>'
-    + '<a class="ca-fold-btn ca-fold-btn-quiet" href="/complete-sample?from=result" target="_blank" rel="noopener" data-ca-sample'
+    + '<a class="ca-fold-btn ca-fold-btn-quiet" href="/complete-sample.html#from=result" data-ca-sample data-buy-sample="complete"'
     + ' onclick="if(typeof CompleteAnalysis!==\'undefined\')CompleteAnalysis.track(\'complete_sample_open\',{source:\'index\'})">8ページのサンプルを見る</a>'
     + cta
     + '</div></details>';
@@ -3079,6 +3085,79 @@ var ED_REFRESH_ERRORS = ['analysis_already_purchased', 'upgrade_available', 'upg
 function edRefreshAfter(error) {
   if (ED_REFRESH_ERRORS.indexOf(error) < 0 || !lastGuestPurchaseArgs) return;
   setTimeout(function () { initGuestPurchase(lastGuestPurchaseArgs[0], lastGuestPurchaseArgs[1], lastGuestPurchaseArgs[2], { keepMessage: true }); }, 1800);
+}
+/* 診断結果ページの申込（complete_13）。購入の対象は、この診断結果の記録（診断結果の固有リンク #r= の記録）。
+   ・常に 解析レポート ¥1,000・完全解析 ¥3,000（ログイン・購入済みかどうかで変えない。再購入も受け付ける）。
+   ・購入対象トークンは押した時に作る（固有リンクの作成を待つ）。サンプルへは同じタブで、トークンをフラグメントで渡す。 */
+var edCtxCache = null;
+function edWaitResume(ms) {
+  return new Promise(function (resolve) {
+    var started = Date.now();
+    (function tick() {
+      if (window.__edResumeToken) return resolve(window.__edResumeToken);
+      if (Date.now() - started > ms) return resolve(null);
+      setTimeout(tick, 200);
+    })();
+  });
+}
+function edResultContext(root, code) {
+  var t = window.__edResumeToken;
+  if (edCtxCache && t && edCtxCache.token === t && Date.now() - edCtxCache.at < 6 * 3600 * 1000) return Promise.resolve(edCtxCache.context);
+  // 固有リンクの作成に失敗していた：一度だけ作り直す（同じ診断の秘密値のまま。サーバーは冪等）
+  if (!t && window.__resumeCreating === window.__resultNonce && window.__resumePending) { window.__resumeCreating = null; setupResumeLink(root, code); }
+  return edWaitResume(8000).then(function (token) {
+    if (!token) return null;
+    return EdBuy.contextFromResume(token).then(function (r) {
+      if (!r.ok || !r.body || !EdBuy.contextOk(r.body.context)) return null;
+      edCtxCache = { token: token, context: r.body.context, at: Date.now() };
+      return r.body.context;
+    });
+  });
+}
+function initReportPurchase(root, code, refs) {
+  if (typeof EdBuy === 'undefined') return;
+  var B = EdBuy;
+  var open = B.salesOpen();
+  function buy(product, btn, msgEl, source) {
+    if (msgEl) msgEl.textContent = '';
+    var pickGoal = product === 'complete' ? B.goalDialog() : Promise.resolve(null);
+    pickGoal.then(function (goal) {
+      if (product === 'complete' && !goal) return;
+      EdNavBusy.hold(btn, '決済画面へ移動しています…');
+      edResultContext(root, code).then(function (c) {
+        if (!c) { EdNavBusy.release(btn); if (msgEl) msgEl.textContent = '購入の準備ができませんでした。ページを読み込み直してから、もう一度お試しください。'; return; }
+        return B.start({ context: c, product: product, goal: goal, source: source }).then(function (r) {
+          if (r.ok) { EdNavBusy.handoff(btn); return; }
+          EdNavBusy.release(btn);
+          if (!r.silent && msgEl) msgEl.textContent = B.errorText(r.error);
+        });
+      });
+    });
+  }
+  var lockMsg = document.getElementById('guestAnalysisMsg');
+  var aBtns = [refs.lockUnlockAllBtn].concat(Array.prototype.slice.call(refs.lockCtaBtns || [])).filter(Boolean);
+  if (open) {
+    aBtns.forEach(function (btn) {
+      btn.onclick = function (e) {
+        e.preventDefault();
+        if (typeof gtag === 'function') gtag('event', btn === refs.lockUnlockAllBtn ? 'unlock_all_click' : 'lock_cta_click', { event_category: 'conversion' });
+        buy('analysis', btn, lockMsg, btn === refs.lockUnlockAllBtn ? 'result' : 'result_lock');
+      };
+    });
+  }
+  var cb = root.querySelector('[data-buy-complete]');
+  if (cb) {
+    if (!open) { cb.disabled = true; cb.classList.add('is-pending'); cb.setAttribute('aria-disabled', 'true'); cb.textContent = 'まだ見えていない輪郭を読む　完全解析 ¥3,000（準備中）'; }
+    else cb.onclick = function () { buy('complete', cb, root.querySelector('[data-buy-msg]'), 'result'); };
+  }
+  root.querySelectorAll('[data-buy-sample]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var product = a.getAttribute('data-buy-sample');
+      B.track(product === 'complete' ? 'complete_sample_open' : 'analysis_sample_open', { source: 'result' });
+      edResultContext(root, code).then(function (c) { location.assign(B.sampleHref(product, c, 'result')); });
+    });
+  });
 }
 function initGuestPurchase(root, code, refs, opts) {
   var G = EdGuestPurchase;

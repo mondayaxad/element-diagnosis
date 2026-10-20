@@ -9,10 +9,12 @@
 (function () {
   'use strict';
   var RESUME_RE = /^[A-Za-z0-9_-]{43}$/;
-  function from() {
-    var m = /(?:^|[?&])from=(result|report|mypage)(?:&|$)/.exec(location.search);
+  // 入口（?from= または #from=。サンプルの申込欄が URL を書き換える前に、読み込んだ時点で読む）
+  var FROM = (function () {
+    var m = /(?:^|[?&])from=(result|report|mypage)(?:&|$)/.exec(location.search) || /(?:^#|&)from=(result|report|mypage)(?:&|$)/.exec(location.hash);
     return m ? m[1] : null;
-  }
+  })();
+  function from() { return FROM; }
   function destination() {
     if (from() === 'mypage') return '/mypage.html';
     if (from() === 'report') return '/purchase-complete';
