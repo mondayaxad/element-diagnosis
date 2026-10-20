@@ -132,8 +132,11 @@
     if (openDialog) return openDialog;
     var trigger = global.document.activeElement;
     openDialog = new Promise(function (resolveRaw) {
+      // ダイアログの外（背景）は操作・読み上げの対象から外す（Tab で背景へ出ない）
+      var inerted = [];
       function resolve(v) {
         openDialog = null;
+        inerted.forEach(function (el) { el.removeAttribute('inert'); });
         global.document.removeEventListener('keydown', onKey, true);
         try { if (trigger && trigger.focus) trigger.focus(); } catch (e) { /* noop */ }
         resolveRaw(v);
@@ -157,12 +160,13 @@
       var msg = wrap.querySelector('.edb-msg');
       wrap.querySelector('[data-edb-cancel]').onclick = function () { closeDialog(wrap); resolve(null); };
       d.addEventListener('keydown', onKey, true);
+      Array.prototype.forEach.call(d.body.children, function (el) { if (el !== wrap && !el.hasAttribute('inert')) { el.setAttribute('inert', ''); inerted.push(el); } });
       wrap.setAttribute('tabindex', '-1');
       try { wrap.focus(); } catch (e) { /* noop */ }
       loadGoals().then(function (r) {
         var goals = (r.ok && r.body && r.body.catalog && r.body.catalog.goals) || [];
         var box = wrap.querySelector('[data-edb-goals]');
-        if (!goals.length) { box.innerHTML = '<p class="edb-note">目標の一覧を読み込めませんでした。時間をおいて、もう一度お試しください。</p>'; return; }
+        if (!goals.length) { box.innerHTML = ''; msg.textContent = '目標の一覧を読み込めませんでした。時間をおいて、もう一度お試しください。'; return; }
         box.innerHTML = '<fieldset class="edb-goals"><legend>MENTOR の目標を1つ選んでください（お支払いの後は変えられません）</legend>'
           + goals.map(function (g) {
             return '<label class="edb-goal"><input type="radio" name="edb-goal" value="' + esc(g.goalId) + '"><span><b>' + esc(g.label) + '</b><span>' + esc(g.description || '') + '</span></span></label>';
@@ -327,7 +331,7 @@
       '.edb-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}',
       '.edb-btn{min-height:44px;padding:0 18px;border-radius:8px;border:0;color:#fff;font:inherit;font-size:13px;letter-spacing:.04em;cursor:pointer;background:linear-gradient(120deg,#5b78c8 0%,#8a5fc0 50%,#c9a860 100%)}',
       '.edb-btn[disabled]{opacity:.55;cursor:default}',
-      '.edb-link{background:none;border:0;color:#8aa3c8;font:inherit;font-size:12.5px;text-decoration:underline;cursor:pointer;padding:8px}',
+      '.edb-link{background:none;border:0;color:#8aa3c8;font:inherit;font-size:12.5px;text-decoration:underline;cursor:pointer;padding:8px;min-height:44px}',
     ].join('\n');
     d.head.appendChild(s);
   }

@@ -122,12 +122,26 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
     };
   }
 
+  function crossSiteRequest(req) {
+    const h = req.headers || {};
+    const type = String(h['content-type'] || '');
+    if (type && !/^application\/json\b/i.test(type)) return true;
+    if (String(h['sec-fetch-site'] || '') === 'cross-site') return true;
+    const origin = h.origin;
+    if (origin && origin !== 'null') {
+      try { if (new URL(origin).host !== requestHost(req)) return true; } catch (e) { return true; }
+    } else if (origin === 'null') return true;
+    return false;
+  }
   return async function handler(req, res) {
     CP.setCommonHeaders(res);
     if (req.method !== 'POST') {
       res.setHeader('Allow', 'POST');
       return fail(res, 405, 'method_not_allowed');
     }
+    // 0. 他のサイトからの送信（フォームの POST など）を断る：JSON 以外の本文・別のサイトの Origin・ブラウザが cross-site と示す要求
+    //   （購入の Cookie〔SameSite=Lax〕は届かないが、応答の Set-Cookie でこの端末の購入の控えを上書きさせない）
+    if (crossSiteRequest(req)) return fail(res, 403, 'forbidden');
     // 1. 環境：Preview（Stripe Test）と Production（Stripe Live）の正しい組み合わせだけ。環境不明では存在しない扱い。
     const appEnv0 = resolveAppEnv(env, { host: requestHost(req) });
     if (appEnv0 !== 'preview' && appEnv0 !== 'production') return fail(res, 404, 'not_available');

@@ -193,7 +193,7 @@ Production 移行時に追加・変更が要るものは §5 の手順に書く�
 |---|---|---|
 | 配信（Vercel） | Vercel の Instant Rollback で、Production を `dpl_CpDyP24t8u4xRE7eCSkb1JvphV8Z` に戻す。再ビルドは不要 | main `5f06246` の配信物（P1） |
 | コード（Git） | main の merge コミットを `git revert -m 1 <merge>` で打ち消す。履歴の書き換え・force push はしない。必要なら `backup/prod-main-20261009` から比較する | `5f06246` |
-| 販売 | `COMPLETE_SALES_OPEN` を削除する（未登録＝閉じる）。Stripe の Webhook endpoint を無効にする | 販売停止 |
+| 販売 | `COMPLETE_SALES_OPEN` を削除する（未登録＝閉じる）。**Stripe の Webhook endpoint は有効のまま**（無効にすると、返金・異議申し立てで閲覧が止まらず、決済中の注文の反映も遅れる） | 販売停止 |
 | DB（migration 適用中・直後で利用者の書き込みが無い） | `docs/sql/complete_99_rollback_DRAFT_DO_NOT_RUN.sql` を、その時点の内容で見直し、承認を得てから運営者が実行する。**注文・権利・生成物が1件でもあれば、表は残して機能だけ止める**（販売停止＋閲覧停止） | §4 の「適用前」の指紋と一致すること |
 | DB（データの破損） | 使い捨て環境へ S1〜S3 を復元し、壊れた行だけを ID 指定で戻す。Production 全体の上書き復元は、運営者の最終判断がある場合だけ（それ以降の利用者の書き込みが失われるため） | S2 のデータ |
 | Storage | S6 から、対象オブジェクトだけを同じパスへ戻す。bucket の公開設定は public=false のまま | S6 の SHA-256 一覧 |

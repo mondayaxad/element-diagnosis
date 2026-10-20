@@ -627,7 +627,7 @@ test('解析レポート：PDF を保存できる（申込・登録の欄があ�
   const file = await dl;
   assert.equal(require('fs').readFileSync(await file.path()).subarray(0, 4).toString(), '%PDF');
   assert.equal(dialog, null);
-  assert.equal(await p.locator('#pdfMsg').innerText(), '');
+  assert.equal(await p.locator('#pdfMsg').innerText(), 'PDFを保存しました。');
   await p.__ctx.close();
 });
 

@@ -3047,7 +3047,7 @@ function completeAnalysisFoldHtml(itemSetVersion, diagnosisVersion, elColor) {
   if (!name && diagnosisVersion === 'ETI-2.0' && typeof EdGuestPurchase !== 'undefined') {
     // 全ての状態で同じ導線（ログイン・購入の有無で変えない）：完全解析 ¥3,000（目標の選択は共通の画面。js/report-purchase.js）
     cta = '<div data-report-buy="complete">'
-      + '<button type="button" class="ca-fold-btn ca-fold-btn-buy" data-buy-complete><span class="ca-buy-main">まだ見えていない輪郭を読む</span><span class="ca-buy-sub">¥3,000</span></button>'
+      + '<button type="button" class="ca-fold-btn ca-fold-btn-buy" data-buy-complete aria-label="完全解析 ¥3,000（まだ見えていない輪郭を読む）"><span class="ca-buy-main">まだ見えていない輪郭を読む</span><span class="ca-buy-sub">¥3,000</span></button>'
       + '<p class="ca-guest-msg" data-buy-msg role="status"></p></div>';
   } else if (offer) {
     var isUp = offer.offer === 'upgrade_2000';

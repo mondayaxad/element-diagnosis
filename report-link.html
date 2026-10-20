@@ -8,7 +8,7 @@
 <meta name="referrer" content="no-referrer">
 <title>購入したレポート — 元素診断</title>
 <style>
-  :root { --bg:#07070f; --panel:#0e0b18; --line:#241d3a; --fg:#e6e2f2; --sub:#9a92b4; --dim:#6f6888; --accent:#b98af0; --gold:#d6bd84; }
+  :root { --bg:#07070f; --panel:#0e0b18; --line:#241d3a; --fg:#e6e2f2; --sub:#9a92b4; --dim:#8a83a3; --accent:#b98af0; --gold:#d6bd84; }
   * { box-sizing: border-box; }
   body { margin:0; background:var(--bg); color:var(--fg); font-family:'Noto Serif JP','Hiragino Mincho ProN',serif; line-height:1.9; -webkit-font-smoothing:antialiased; }
   .wrap { max-width:520px; margin:0 auto; padding:40px 16px 72px; }
@@ -132,11 +132,24 @@
       render(r.ok && r.body ? r.body : b, true); // 開けなかった：最新の状態（返金など）で示す
     });
   }
+  // 購入の計測（GA4）：支払いの直後に開いた時だけ・このブラウザで1回（再読み込みで重ねない）
+  function trackPurchase(b) {
+    var c = b && b.conversion;
+    if (!c || !/^[0-9a-f]{20}$/.test(String(c.transactionId || '')) || typeof window.gtag !== 'function') return;
+    var key = 'ed_conv_' + c.transactionId;
+    try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch (e) { /* 保存できない時も1回送る */ }
+    window.gtag('event', 'purchase', { transaction_id: c.transactionId, value: c.value, currency: 'JPY', product: b.product });
+  }
   function render(b, openFailed) {
+    trackPurchase(b);
     if (readable(b) && !openFailed) { openNow(b); return; }
     var name = NAMES[b.product] || 'レポート';
     document.getElementById('rlTitle').textContent = name;
     document.getElementById('rlLead').hidden = false;
+    // 状態が変わっていなければ描き直さない（コピーの後のフォーカス・「コピーしました」を消さない。読み上げを繰り返さない）
+    var sig = [b.product, b.state, b.report && b.report.status, b.report && b.report.regenerate, !!openFailed].join('|');
+    if (sig === lastSig && box.querySelector('.card')) { schedule(b); return; }
+    lastSig = sig;
     var html = '<div class="card">' + factsHtml(b);
     if (b.state === 'active') {
       if (b.product === 'complete' && (!b.report || b.report.status !== 'ready')) {
@@ -183,9 +196,13 @@
       regen.disabled = true;
       B.call('link-regenerate', { token: token }).then(function () { setTimeout(load, 1500); });
     };
+    schedule(b);
+  }
+  var lastSig = null;
+  function schedule(b) {
     var waiting = b.state === 'pending' || (b.state === 'active' && b.product === 'complete' && b.report && b.report.status === 'generating');
-    if (waiting && polls < 60) { polls += 1; setTimeout(load, 5000); }
-    else if (waiting) box.querySelector('.card').insertAdjacentHTML('beforeend', '<p class="note">確認に時間がかかっています。少し待ってから、このページを読み込み直してください。</p>');
+    if (waiting && polls < 60) { polls += 1; setTimeout(load, polls <= 6 ? 5000 : 15000); }
+    else if (waiting && !box.querySelector('[data-slow]')) box.querySelector('.card').insertAdjacentHTML('beforeend', '<p class="note" data-slow>確認に時間がかかっています。少し待ってから、このページを読み込み直してください。</p>');
   }
   function load() {
     B.openLink(token, false).then(function (r) {

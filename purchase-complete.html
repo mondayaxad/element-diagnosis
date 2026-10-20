@@ -8,7 +8,7 @@
 <meta name="referrer" content="no-referrer">
 <title>ご購入の確認 — 元素診断</title>
 <style>
-  :root { --bg:#07070f; --panel:#0e0b18; --line:#241d3a; --fg:#e6e2f2; --sub:#9a92b4; --dim:#6f6888; --accent:#b98af0; --gold:#d6bd84; }
+  :root { --bg:#07070f; --panel:#0e0b18; --line:#241d3a; --fg:#e6e2f2; --sub:#9a92b4; --dim:#8a83a3; --accent:#b98af0; --gold:#d6bd84; }
   * { box-sizing: border-box; }
   body { margin:0; background:var(--bg); color:var(--fg); font-family:'Noto Serif JP','Hiragino Mincho ProN',serif; line-height:1.9; -webkit-font-smoothing:antialiased; }
   .wrap { max-width:520px; margin:0 auto; padding:40px 16px 72px; }
@@ -103,6 +103,7 @@
       + '<p class="note">このページのボタンで開くレポートのリンク（URL）が、期限のない入口です。必ずコピーして保管してください。</p>'
       + '<p class="msg" data-msg role="status"></p></div>';
   }
+  var lastSig = null;
   function render(purchases) {
     if (canceled) { list.innerHTML = ''; return; } // 中止の画面には、ほかの購入を並べない（中止した注文を買ったように見せない）
     // 今の購入：そのレポートのリンクの入口へ進む（このページを介さない）
@@ -127,6 +128,10 @@
       document.getElementById('pcTitle').textContent = 'ご購入ありがとうございます';
       document.getElementById('pcLead').textContent = 'レポートを開き、リンクを控えておいてください。';
     }
+    // 状態が変わっていなければ描き直さない（コピーの後のフォーカス・「コピーしました」を消さない）
+    var sig = shown.map(function (p) { return [p.product, p.state, p.report && p.report.status, !!p.link].join(':'); }).join('|');
+    if (sig !== lastSig || !list.querySelector('[data-item]')) {
+    lastSig = sig;
     list.innerHTML = shown.map(itemHtml).join('');
     list.querySelectorAll('[data-item]').forEach(function (el) {
       var p = shown[Number(el.getAttribute('data-item'))];
@@ -137,6 +142,7 @@
       };
       el.querySelector('[data-register]').onclick = function (e) { e.target.disabled = true; B.startRegister(p.link, 'purchase_complete'); };
     });
+    }
     var waiting = shown.some(function (p) { return p.state === 'active' && p.product === 'complete' && p.report && p.report.status === 'generating'; });
     if (waiting) {
       if (tries < 40) { tries += 1; setTimeout(load, tries < 6 ? 3000 : 15000); }
@@ -155,8 +161,8 @@
       render(r.body.purchases || []);
     });
   }
-  window.addEventListener('pageshow', function (e) { if (e.persisted) { tries = 0; load(); } });
-  load();
+  window.addEventListener('pageshow', function (e) { if (e.persisted && !canceled) { tries = 0; load(); } });
+  if (!canceled) load(); // 中止の画面では、ほかの購入を並べないので問い合わせない
 })();
 </script>
 </body>

@@ -115,7 +115,7 @@
   .ca-r-btn:focus-visible { outline:2px solid #a888d8; outline-offset:2px; }
   .ca-r-btn { display:flex; align-items:center; justify-content:center; width:100%; min-height:46px; margin-top:12px; border-radius:8px; border:1px solid #6a5a94; background:transparent; color:var(--ca-title); font-family:inherit; font-size:14px; letter-spacing:0.08em; text-decoration:none; cursor:pointer; }
   .ca-r-btn.is-pending { font-family:inherit; font-size:13px; color:#a3a6c4; border-style:dashed; cursor:not-allowed; }
-  .ca-r-btn.ca-r-register { display:inline-flex; width:auto; min-height:0; margin:0 0 16px; padding:10px 20px; border-radius:6px; font-size:12.5px; color:#fff; background:#6a52b0; border-color:#8a72d0; letter-spacing:.04em; }
+  .ca-r-btn.ca-r-register { display:inline-flex; width:auto; min-height:44px; margin:0 0 16px; padding:10px 20px; border-radius:6px; font-size:12.5px; color:#fff; background:#6a52b0; border-color:#8a72d0; letter-spacing:.04em; }
   .ca-r-btn.is-view { border-color:color-mix(in srgb, var(--ca-view) 40%, var(--ca-line)); color:var(--ca-view); }
   .ca-r-note { margin-top:10px; padding-left:8px; border-left:2px solid var(--ca-line); font-size:11px; color:var(--ca-muted); line-height:1.7; }
   .ca-lens-desc--strong { color:var(--ca-title); font-size:13px; }
@@ -2077,8 +2077,8 @@ function renderFullReport(root, results, diagnosisCode) {
       ${completeAnalysisReportHtml(pal, results, diagnosisVersion)}
 
       <div style="text-align:center;padding:30px 10px;color:#5a4d75;font-size:11px;line-height:2">
-        <button id="pdfSaveBtn" onclick="savePdf()" style="background:transparent;border:1px solid #3a3050;color:#8878a8;border-radius:6px;padding:10px 20px;font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:16px">
-          🖨️ このレポートをPDFで保存する
+        <button id="pdfSaveBtn" onclick="savePdf()" style="min-height:44px;background:transparent;border:1px solid #3a3050;color:#8878a8;border-radius:6px;padding:10px 20px;font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:16px">
+          <span aria-hidden="true">🖨️</span> このレポートをPDFで保存する
         </button>
         <p id="pdfMsg" role="status" data-pdf-skip style="margin:0 0 12px;color:#b8a8d8;font-size:12px;line-height:1.8"></p>
         <div data-report-register-slot data-pdf-skip></div>
@@ -2188,6 +2188,7 @@ async function savePdf() {
     // 診断コードのページは付けない（旧ナラティブ販売の申込コードの案内は廃止。PDF に回答の符号・秘密値・ID を入れない）
 
     pdf.save('元素診断_解析レポート.pdf');
+    say('PDFを保存しました。');
   } catch (e) {
     console.error(e);
     say('PDFを作成できませんでした。少し時間をおいて、もう一度お試しください。');

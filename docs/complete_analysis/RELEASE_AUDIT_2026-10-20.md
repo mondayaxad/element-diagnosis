@@ -39,3 +39,31 @@
 | 3 | マイページ（ログイン中）の記録から ¥1,000 をテスト購入 → マイページに戻り「登録しました」・その記録に「解析レポートを読む」 | Google・X の本物のログインと Stripe の往復 |
 | 4 | 1 で開いたレポートの「マイページに登録する」→ ログイン画面（または「ログインして登録する」）→ X または Google でログイン → 登録される。別のアカウントでも同じリンクを登録できる | 本物の OAuth |
 | 5 | マイページの「結果を見る」→ 結果ページから ¥1,000 に進める（決済画面が出たら閉じてよい） | 本物のログイン状態 |
+
+## 3回目の監査（運営・アクセシビリティ・悪用・サイト全体）で決めたこと・残ったこと
+
+### 直したもの
+- 購入の計測：Stripe からレポートへ直接戻る形でも、GA4 の `purchase` を記録する（支払いから3時間以内に固有リンクから開いた時・このブラウザで1回・transaction_id は注文から作った参照）。
+- 運営者のリンク再発行で、古いリンクで登録したマイページの閲覧も止める（**complete_14 の移行。Preview の SQL Editor で適用が必要**）。
+- 返金・停止した納品だけの記録は、登録したアカウントへ回答・結果を返さない・購入の対象にしない。
+- 他のサイトからのフォーム送信（CSRF）を断る（JSON 以外・別 Origin・cross-site）。
+- 購入完了ページで、閉じた注文に Stripe へ問い合わせない・中止の画面では問い合わせない。固有リンクの入口の確認の間隔を延ばす。
+- アクセシビリティ：コピーの後に描き直しでフォーカス・表示が消えない、目標の画面の外を操作できない（inert）、文字の濃さ（AA）、押せる大きさ 44px、PDF の保存の後に「PDFを保存しました。」、読み上げの名前。
+- 手順書：販売を止める時も Webhook は有効のまま。決済画面の期限は 35 分。
+
+### 運営者の判断が必要なもの（未対応）
+1. **規約・特商法・プライバシーの公開**（下書き済み）。本番の販売の前に必要。公開の時は、同意の版（diagnosis-save.js）と DB の確認（complete_09）も同じリリースで変える。購入の入口から特商法へのリンクも付ける。
+2. **アカウント削除の依頼への対応**：購入の記録がある利用者は、DB の参照（削除の制限）のため、今の手順（ユーザーの削除）では消せない。
+   「回答・結果を匿名化し、注文・支払いの記録は会計のために残す・保存した完全解析のファイルを消す・納品を止める」手順を決めて作る必要がある。
+3. **購入後の案内の追加**（注釈を外した方針と相反するため、運営者の判断）：
+   - 解析レポートの最下部に「このレポートのリンクをコピー」（リンクが鍵であること・請求書のメールにも届くこと）
+   - 完全解析の最下部に「PDFとして残すときは、共有から「プリント」」
+   - 作成中の表示に「このページを閉じても、作成は続きます。」
+4. **GA4 の設定**：拡張計測の「ブラウザの履歴に基づくページの変更」を無効にする（アドレスを書き換えるページで、リンクの # が送られないように）。
+5. **購入の作りすぎの対策（接続元・アカウントごとの上限）**：今は記録ごとに1時間20件。記録を大量に作る悪用には、接続元ごとの上限（DB の追加）が要る。本番の前に入れるかを決める。
+
+### 本番の前に必要な設定（Production）
+- 環境変数：`VERCEL_ENV`（自動）・`SUPABASE_URL`・`SUPABASE_EXPECTED_PROJECT_REF`・`SUPABASE_PRODUCTION_PROJECT_REF`・`SUPABASE_PREVIEW_PROJECT_REF`・`SUPABASE_SECRET_KEY`・`SUPABASE_ANON_KEY`・`STRIPE_SECRET_KEY`（live）・`STRIPE_MODE=live`・`STRIPE_COMPLETE_WEBHOOK_SECRET`・`STRIPE_PRICE_ANALYSIS`・`STRIPE_COMPLETE_PRICE_DIRECT`・`COMPLETE_CHECKOUT_ORIGIN`・`REPORT_TOKEN_SECRET`（本番用の新しい値）・`COMPLETE_VIEW_TOKEN_SECRET`（本番用の新しい値）・`KIT_API_KEY`。販売の開始で `COMPLETE_SALES_OPEN=true`。足りないと API は 503（閉じる側に倒れる）。
+- Stripe（live）：Webhook の送り先 `https://element-diagnosis-five.vercel.app/api/stripe-webhook`、イベントは `checkout.session.completed`・`checkout.session.expired`・`charge.refunded`・`charge.dispute.created`・`charge.dispute.closed` だけ。価格（¥1,000・¥3,000、JPY・一回払い）。カスタマーへのメール（成功した支払い・請求書）を有効。公開情報（屋号・問い合わせ先・規約・特商法の URL）。明細の表記。
+- DB：本番用の移行（complete_13・14 は Preview 専用。`stripe_mode` を本番の値で作る）。
+- 監視：毎日、`stripe_webhook_events` の失敗・`complete_reports` の失敗・1時間以上の決済待ちを SQL で確かめる（ログは短期間しか残らない）。

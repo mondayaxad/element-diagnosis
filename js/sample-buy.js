@@ -43,7 +43,7 @@
   }
   // 申込のボタン（夜空の色。2段の文言）。sub：主の申込より控えめな見た目（完全解析を解析レポートのサンプルで案内する時）
   function skyBtn(product, main, sub, enabled, quiet) {
-    return '<a class="sample-return ed-sky-btn' + (quiet ? ' is-quiet' : '') + '" href="#" data-buy="' + product + '"' + (enabled ? '' : ' aria-disabled="true"') + '>'
+    return '<a class="sample-return ed-sky-btn' + (quiet ? ' is-quiet' : '') + '" href="#" role="button" data-buy="' + product + '"' + (enabled ? '' : ' aria-disabled="true"') + '>'
       + '<span class="ed-sky-main">' + B.esc(main) + '</span><span class="ed-sky-sub">' + B.esc(sub) + '</span></a>';
   }
   function completeSampleLink(c) {
@@ -145,6 +145,7 @@
       if (!root) return;
       var msg = root.querySelector('[data-buy-msg]');
       root.querySelectorAll('[data-buy]').forEach(function (a) {
+        a.addEventListener('keydown', function (e) { if (e.key === ' ') { e.preventDefault(); a.click(); } }); // ボタンとして Space でも押せる
         a.addEventListener('click', function (e) {
           e.preventDefault();
           if (a.getAttribute('aria-disabled') === 'true' || a.getAttribute('data-busy')) return;

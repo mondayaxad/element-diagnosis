@@ -1529,8 +1529,8 @@ function renderFullReport(root, results, diagnosisCode) {
       </div>
 
       <div style="text-align:center;padding:30px 10px;color:#5a4d75;font-size:11px;line-height:2">
-        <button id="pdfSaveBtn" onclick="savePdf()" style="background:transparent;border:1px solid #3a3050;color:#8878a8;border-radius:6px;padding:10px 20px;font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:16px">
-          🖨️ このレポートをPDFで保存する
+        <button id="pdfSaveBtn" onclick="savePdf()" style="min-height:44px;background:transparent;border:1px solid #3a3050;color:#8878a8;border-radius:6px;padding:10px 20px;font-size:12px;cursor:pointer;font-family:inherit;margin-bottom:16px">
+          <span aria-hidden="true">🖨️</span> このレポートをPDFで保存する
         </button>
         <p id="pdfMsg" role="status" data-pdf-skip style="margin:0 0 12px;color:#b8a8d8;font-size:12px;line-height:1.8"></p>
         ここまでが、解析レポートの全内容です。<br>
@@ -1660,6 +1660,7 @@ async function savePdf() {
     }
 
     pdf.save('元素診断_解析レポート.pdf');
+    say('PDFを保存しました。');
   } catch (e) {
     console.error(e);
     say('PDFを作成できませんでした。少し時間をおいて、もう一度お試しください。');

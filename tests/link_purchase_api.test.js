@@ -84,9 +84,9 @@ async function setup({ env = {} } = {}) {
   const ctx = {
     db, stripe, logger, env: fullEnv, bodies, cookie: '', pending, storage,
     // ブラウザ（Cookie を保持する）として呼ぶ
-    async op(op, body, { token, cookie } = {}) {
+    async op(op, body, { token, cookie, extra } = {}) {
       const res = makeRes();
-      const headers = { host: 'evil.example' };
+      const headers = { host: 'evil.example', ...(extra || {}) };
       const jar = cookie !== undefined ? cookie : ctx.cookie;
       if (jar) headers.cookie = jar;
       if (token) headers.authorization = `Bearer ${token}`;
@@ -232,6 +232,27 @@ test('決済画面の作りすぎを防ぐ：同じ診断記録で1時間に20�
   const over = await ctx.op('buy', { context, product: 'analysis', attempt: attemptId(), source: 'result' });
   assert.deepEqual([over.code, over.body.error], [429, 'too_many_attempts']);
   assert.equal(ctx.stripe.st.calls.filter((c) => c === 'checkout.sessions.create' || (c && c.name === 'checkout.sessions.create')).length, calls);
+  await ctx.db.close();
+});
+
+test('他のサイトからの送信（フォームの POST・別の Origin・cross-site）は断り、この端末の購入の控え（Cookie）を書き換えない', { skip }, async () => {
+  const ctx = await setup();
+  const { context } = await resultContext(ctx);
+  const body = { context, product: 'analysis', attempt: attemptId(), source: 'result' };
+  for (const extra of [
+    { 'content-type': 'application/x-www-form-urlencoded', origin: 'https://attacker.example' },
+    { 'content-type': 'application/json', origin: 'https://attacker.example' },
+    { 'content-type': 'application/json', 'sec-fetch-site': 'cross-site' },
+    { 'content-type': 'text/plain' },
+    { 'content-type': 'application/json', origin: 'null' },
+  ]) {
+    const r = await ctx.op('buy', body, { extra });
+    assert.deepEqual([r.code, r.body.error], [403, 'forbidden'], JSON.stringify(extra));
+    assert.equal(r.headers['set-cookie'], undefined);
+  }
+  // 同じサイトからの JSON は通る
+  const ok = await ctx.op('buy', body, { extra: { 'content-type': 'application/json', origin: 'https://evil.example', 'sec-fetch-site': 'same-origin' } });
+  assert.equal(ok.code, 200, JSON.stringify(ok.body));
   await ctx.db.close();
 });
 
@@ -417,6 +438,18 @@ test('マイページへの登録：ログイン必須・同じアカウント�
     assert.match(o.body.url, /^\/report\.html\?token=/);
     assert.equal((await ctx.reportData(o.body.url)).code, 200);
   }
+  // 運営者がリンクを再発行すると、古いリンクで登録したアカウントの閲覧も止まる（complete_14）。新しいリンクで登録し直せる
+  const [delivery] = await ctx.rows('report_deliveries');
+  const fresh = crypto.randomBytes(32).toString('base64url');
+  await ctx.db.sql(`select public.complete_admin_reissue_delivery($1, $2)`, [delivery.id, LP.tokenHash(fresh)]);
+  for (const tok of [tok1, tok2]) {
+    const m = await ctx.op('my-reports', {}, { token: tok, cookie: '' });
+    assert.deepEqual([m.body.reports.length, m.body.records.length], [0, 0]);
+    assert.equal((await ctx.op('my-report-open', { delivery: delivery.id }, { token: tok, cookie: '' })).code, 404);
+  }
+  assert.deepEqual((await ctx.op('link-register', { token: fresh }, { token: tok1, cookie: '' })).body, { result: 'registered', product: 'analysis' });
+  assert.equal((await ctx.op('link-register', { token: p.link }, { token: tok2, cookie: '' })).code, 404, '古いリンクでは登録し直せない');
+  await ctx.op('link-register', { token: fresh }, { token: tok2, cookie: '' });
   // 登録していないアカウントは開けない
   const tok3 = 'tok-reg-3';
   await ctx.db.user({ email: 'three@example.test', token: tok3 });
@@ -431,6 +464,10 @@ test('マイページへの登録：ログイン必須・同じアカウント�
     assert.equal(m.body.reports[0].state, 'refunded');
     const o = await ctx.op('my-report-open', { delivery: m.body.reports[0].delivery }, { token: tok, cookie: '' });
     assert.equal(o.body.url, null);
+    // 止まった納品だけの記録：回答・結果の保存値を返さない。購入の対象にもならない
+    assert.equal(m.body.records.length, 0);
+    const [sess] = await ctx.rows('diagnosis_sessions');
+    assert.equal((await ctx.op('buy-context', { record: sess.id }, { token: tok, cookie: '' })).code, 404);
   }
   await ctx.db.close();
 });
