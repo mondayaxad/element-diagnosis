@@ -299,16 +299,25 @@
     .ca-guest-msg { margin: 8px 0 0; font-size: 11.5px; color: #d6a8b8; line-height: 1.7; }
     .ca-guest-msg:empty { display: none; }
     .ca-fold-note { margin: 10px 0 0; padding-left: 8px; border-left: 2px solid var(--ca-line); font-size: 11px; color: var(--ca-muted); line-height: 1.7; }
-    /* 完全解析の申込：夜空の色。主の申込（解析レポート）より控えめに（星・光の流れは使わない） */
-    .ca-fold-btn-buy { flex-direction: column; gap: 2px; min-height: 56px; padding: 9px 14px; cursor: pointer; color: #e4dcc8;
-      border: 1px solid rgba(214, 189, 132, .32);
+    /* 完全解析の申込：夜空に元素の光がさす宝石の色（元素診断の世界観。結果の元素色 --el を差し色に） */
+    .ca-fold-btn-buy { position: relative; overflow: hidden; flex-direction: column; gap: 3px; min-height: 60px; padding: 10px 14px; cursor: pointer; color: #f3ead2;
+      border: 1px solid rgba(214, 189, 132, .55);
       background:
-        radial-gradient(120% 160% at 0% 0%, color-mix(in srgb, var(--el, #7ab8e8) 16%, transparent) 0%, transparent 60%),
-        linear-gradient(115deg, #10152a 0%, #171a33 55%, #211d33 100%); }
-    .ca-fold-btn-buy:hover { border-color: rgba(214, 189, 132, .5); }
-    .ca-fold-btn-buy .ca-buy-main { font-size: 14.5px; font-weight: 600; letter-spacing: .14em; }
-    .ca-fold-btn-buy .ca-buy-sub { font-size: 11.5px; letter-spacing: .12em; color: #bfa978; }
-    .ca-fold-btn-buy[disabled] { background: transparent; color: #9aa8c6; border: 1px dashed var(--ca-line); }
+        radial-gradient(1.2px 1.2px at 14% 28%, rgba(255,255,255,.75) 50%, transparent 52%),
+        radial-gradient(1px 1px at 33% 74%, rgba(255,255,255,.5) 50%, transparent 52%),
+        radial-gradient(1.3px 1.3px at 78% 30%, rgba(255,248,220,.7) 50%, transparent 52%),
+        radial-gradient(1px 1px at 91% 70%, rgba(255,255,255,.45) 50%, transparent 52%),
+        radial-gradient(130% 170% at 0% 0%, color-mix(in srgb, var(--el, #7ab8e8) 46%, transparent) 0%, transparent 58%),
+        radial-gradient(90% 140% at 100% 100%, rgba(201, 168, 96, .38) 0%, transparent 60%),
+        linear-gradient(115deg, #0f1630 0%, #1d2147 42%, #31285a 70%, #4a3a52 100%);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 0 22px color-mix(in srgb, var(--el, #7ab8e8) 22%, transparent); }
+    .ca-fold-btn-buy::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,240,200,.12) 48%, transparent 66%); transform: translateX(-100%); animation: ca-buy-sheen 5.5s ease-in-out infinite; pointer-events: none; }
+    @keyframes ca-buy-sheen { 0%, 62% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+    @media (prefers-reduced-motion: reduce) { .ca-fold-btn-buy::after { animation: none; display: none; } }
+    .ca-fold-btn-buy .ca-buy-main { font-size: 15px; font-weight: 600; letter-spacing: .14em; text-shadow: 0 0 12px rgba(255, 236, 190, .35); }
+    .ca-fold-btn-buy .ca-buy-sub { font-size: 11.5px; letter-spacing: .12em; color: #d6bd84; }
+    .ca-fold-btn-buy[disabled] { background: transparent; color: #9aa8c6; box-shadow: none; border: 1px dashed var(--ca-line); }
+    .ca-fold-btn-buy[disabled]::after { display: none; }
     /* サンプルへの導線 */
     .ca-sample-link { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--ca-gold) 45%, var(--ca-line));
       border-radius: 10px; background: rgba(201, 168, 96, .06); color: var(--ca-title); text-decoration: none; }
