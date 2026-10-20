@@ -1568,7 +1568,10 @@ async function savePdf() {
       return { top: top, bottom: top + r.height };
     });
 
-    var canvas = await html2canvas(wrap, { scale: 2, backgroundColor: '#050408', useCORS: true });
+    // 画像化の倍率：iPhone（Safari）の canvas の上限（約1,677万ピクセル）・Chrome の1辺の上限（32,767px）を超えないよう、
+    //   余裕を持って 1,500万ピクセル・1辺 30,000px 以内に抑える（超えると白紙・失敗になる）。通常は 2 倍、長いレポートでは下げる
+    var pdfScale = Math.min(2, Math.sqrt(15000000 / Math.max(1, wrap.offsetWidth * wrap.scrollHeight)), 30000 / Math.max(1, wrap.scrollHeight));
+    var canvas = await html2canvas(wrap, { scale: pdfScale, backgroundColor: '#050408', useCORS: true });
     var scaleFactor = canvas.width / wrap.offsetWidth; // DOM px → canvas px 変換係数
 
     var pdfWidth = 210, pageHeightMm = 297;
@@ -1673,5 +1676,23 @@ async function savePdf() {
   renderFullReport(root, results, code);
 })();
 </script>
+<style>
+  .sample-cta { max-width:640px; margin:24px auto 48px; padding:18px 16px; border:1px solid #2a2440; border-radius:10px; background:rgba(20,16,36,.6);
+    color:#c9c2e0; font-size:12.5px; line-height:1.9; text-align:center; box-sizing:border-box; }
+  .sample-cta h2 { margin:0 0 8px; font-size:16px; letter-spacing:.08em; color:#e6e2f2; }
+  .sample-cta p { margin:6px 0; }
+  .sample-cta a { color:#c9a860; }
+  .sample-cta a.sample-return { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:8px 18px; border-radius:8px;
+    color:#fff; text-decoration:none; background:linear-gradient(120deg,#5b78c8 0%,#8a5fc0 50%,#c9a860 100%); }
+  @media (max-width:520px) { .sample-cta a.sample-return { width:100%; } }
+  @media print { .sample-cta { display:none; } }
+</style>
+<aside class="sample-cta" aria-label="お申し込み" data-sample-buy>
+  <h2>あなた自身の診断結果で読む</h2>
+  <p>お申し込みには、あなたの診断結果が必要です。<a href="/">まず元素診断を受ける</a></p>
+</aside>
+<script src="/api/public-config?format=js"></script>
+<script src="/js/report-purchase.js"></script>
+<script src="/js/sample-buy.js"></script>
 </body>
 </html>
