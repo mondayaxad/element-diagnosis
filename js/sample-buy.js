@@ -2,8 +2,7 @@
 // サンプルページ（解析レポート・完全解析）の申込欄（complete_13）。
 //   ・診断結果ページ・マイページから開いた時：URL のフラグメント（#c=<購入対象トークン>&from=result|mypage）の記録で申し込む。
 //     URL からは消し、このタブの sessionStorage に残す（再読み込み・決済画面からの「戻る」でも同じ記録で申し込める）。
-//   ・フラグメントもタブの記録も無い時：このブラウザで最後に開いた診断結果（結果ページが保存する固有リンクの秘密値）から、
-//     購入対象トークンを作り直す（診断結果へ戻ってから開いても、申し込めないことが無いように）。
+//   ・端末に残った別の診断結果（localStorage）は使わない（共有の端末で、別の人の記録を買わせない）。
 //   ・完全解析のサンプル：完全解析の申込だけ。
 //   ・解析レポートのサンプル：解析レポートの申込（主）を、レポート本文の「この先にあるもの」（完全解析の案内）の直前に置く。
 //     完全解析は、その下で三つの人物像の図・説明と一緒に、控えめなボタンで案内する（[data-sample-lens-map]・[data-sample-complete-slot]）。
@@ -15,16 +14,16 @@
   var box = document.querySelector('[data-sample-buy]');
   if (!B || !box) return;
   var KEY = 'ed_sample_ctx';
-  var LAST_RESULT_KEY = 'ed_last_result_v1'; // index.html の RESUME_KEY と同じ
-  var CTX_TTL_MS = 23 * 3600 * 1000; // トークンの有効期限（24時間）より短く
+  var CTX_TTL_MS = 12 * 3600 * 1000; // トークンの有効期限（24時間）より十分短く（受け取った時刻から数える）
   var context = B.readFragment('c');
   var fromRaw = B.readFragment('from');
+  var savedAt = Date.now();
   if (!B.contextOk(context)) {
     context = null;
     try {
       var saved = JSON.parse(sessionStorage.getItem(KEY) || 'null');
-      if (saved && B.contextOk(saved.c) && Date.now() - saved.at < CTX_TTL_MS) { context = saved.c; fromRaw = saved.from; }
-    } catch (e) { /* 読めない時は次の手段へ */ }
+      if (saved && B.contextOk(saved.c) && Date.now() - saved.at < CTX_TTL_MS) { context = saved.c; fromRaw = saved.from; savedAt = saved.at; }
+    } catch (e) { /* 読めない時は購入の対象なし */ }
   }
   var from = fromRaw === 'mypage' ? 'mypage' : 'result';
   var subject = from === 'mypage' ? 'この記録' : 'この診断結果';
@@ -45,15 +44,6 @@
     return '<a class="beyond-sample" href="' + B.esc(href) + '" data-sample-complete-link>'
       + '<span class="beyond-sample-icon" aria-hidden="true"></span><span class="beyond-sample-text"><b>完全解析のサンプルを読む</b>'
       + '<small>実際の46ページから、8ページをそのまま抜き出しています</small></span><span aria-hidden="true">→</span></a>';
-  }
-  // このブラウザで最後に開いた診断結果から、購入対象トークンを作る（無ければ null）
-  function contextFromLastResult() {
-    var last = null;
-    try { last = localStorage.getItem(LAST_RESULT_KEY); } catch (e) { /* 読めない */ }
-    if (!last) return Promise.resolve(null);
-    return B.contextFromResume(last).then(function (r) {
-      return r && r.ok && r.body && B.contextOk(r.body.context) ? r.body.context : null;
-    }, function () { return null; });
   }
 
   // 解析レポートのサンプル：申込欄を「この先にあるもの」の直前へ。本文に三つの人物像の図を入れる
@@ -79,7 +69,9 @@
     var a = e.target && e.target.closest ? e.target.closest('[data-sample-back]') : null;
     if (!a) return;
     e.preventDefault();
-    if (history.length > 1) history.back(); else location.assign(backHref());
+    var internal = false;
+    internal = String(document.referrer || '').indexOf(location.origin + '/') === 0;
+    if (internal && history.length > 1) history.back(); else location.assign(backHref());
   });
   function noContext() {
     fillSlot(null);
@@ -90,13 +82,18 @@
   }
 
   box.innerHTML = '<p>' + subject + 'を確かめています…</p>';
-  (context ? Promise.resolve(context) : contextFromLastResult()).then(function (c) {
-    if (!c) { noContext(); return; }
-    context = c;
-    try { sessionStorage.setItem(KEY, JSON.stringify({ c: c, from: fromRaw, at: Date.now() })); } catch (e) { /* 保存できなくても続ける */ }
-    fillSlot(c);
-    return B.summary(c).then(render);
-  });
+  if (!context) noContext();
+  else {
+    fillSlot(context);
+    B.summary(context).then(function (r) {
+      // 確かめられた時だけ、このタブに残す（受け取った時刻のまま）。期限切れ・見つからない時は消す（次に開いた時に残さない）
+      try {
+        if (r.ok) sessionStorage.setItem(KEY, JSON.stringify({ c: context, from: fromRaw, at: savedAt }));
+        else sessionStorage.removeItem(KEY);
+      } catch (e) { /* 保存できなくても続ける */ }
+      render(r);
+    });
+  }
 
   function render(r) {
     if (!r.ok) {
@@ -140,6 +137,7 @@
           if (a.getAttribute('aria-disabled') === 'true' || a.getAttribute('data-busy')) return;
           a.setAttribute('data-busy', '1');
           msg.textContent = '';
+          if (from === 'mypage') B.markBuyFromMypage(); // マイページの記録から：支払いの後、マイページに登録して戻る
           B.start({ context: context, product: a.getAttribute('data-buy'), source: source }).then(function (res) {
             if (res.ok) { a.setAttribute('data-busy', 'away'); return; }
             a.removeAttribute('data-busy');

@@ -8,6 +8,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const { pipeFile } = require('./fixtures/serve_file');
 const { previewPublicConfigJs } = require('./fixtures/server_env');
 
 let chromium = null;
@@ -101,7 +102,7 @@ test.before(async () => {
     if (fs.existsSync(f) && fs.statSync(f).isDirectory()) f = path.join(f, 'index.html');
     if (!fs.existsSync(f)) { res.writeHead(404); return res.end(); }
     res.writeHead(200, { 'Content-Type': TYPES[path.extname(f)] || 'application/octet-stream' });
-    fs.createReadStream(f).pipe(res);
+    pipeFile(f, res);
   });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   base = `http://127.0.0.1:${server.address().port}`;

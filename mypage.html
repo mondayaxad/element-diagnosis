@@ -10,7 +10,7 @@
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous"></script>
 <!-- Supabase の接続先（環境ごと）。diagnosis-save.js より前に同期で読み込む。取得できなければログイン・保存を止める -->
 <script src="/api/public-config?format=js"></script>
 <script src="diagnosis-save.js"></script>
@@ -1287,6 +1287,7 @@ document.addEventListener('click', async (e) => {
     say(EdBuy.errorText(c.body && c.body.error === 'not_authenticated' ? 'context_expired' : (c.body && c.body.error)));
     return;
   }
+  EdBuy.markBuyFromMypage(); // 支払いの後、このマイページに登録して戻る
   const r = await EdBuy.start({ context: c.body.context, product, goal, source: btn.getAttribute('data-source') || 'mypage_history' });
   if (r.ok) { EdNavBusy.handoff(btn); return; }
   EdNavBusy.release(btn);
@@ -1723,6 +1724,11 @@ const MP_KINDS = {
     },
   },
 };
+// マイページから開く結果のリンク：記録 ID をフラグメントで渡す（結果ページで、この記録を購入の対象にする。共有の URL には付けない）
+function mpResultHref(r) {
+  const id = String((r && r.session && r.session.id) || '');
+  return r.resultUrl + (r.session && r.session.isV2 && /^[0-9a-f-]{36}$/i.test(id) ? '#rec=' + id : '');
+}
 function mpNormalize(s) {
   const kind = MP_KINDS[s.diagnosisType] ? s.diagnosisType : 'element';
   return MP_KINDS[kind].normalize(s);
@@ -2051,13 +2057,25 @@ async function mpRegisterNow(token) {
   return { ok: false, error, token: error === 'network' || error === 'service_unavailable' ? token : null };
 }
 let mpRegisterDone = null; // 「このアカウントに登録する」の結果（描き直した後に示す）
+// 示している登録の結果・確かめの欄：描き直し（ログインの通知が重なった時など）でも消さない。閉じる・次の予定で入れ替える
+let mpRegisterShown = null;
+async function mpRegisterOutcomeForRender() {
+  const fresh = await mpRegisterFromIntent();
+  if (fresh) mpRegisterShown = fresh;
+  return mpRegisterShown;
+}
 // 登録のためにログインの画面を通った印（このタブ）。ログインの後は、そのアカウントへ登録する（通常の登録の流れ）
 const MP_REGISTER_LOGIN_KEY = 'ed_register_login_v1';
+// 印は登録の予定の時刻と組にする（古い印で、新しい予定を確かめずに登録しない）
 function mpRegisterLoginMark(on) {
-  try { if (on) sessionStorage.setItem(MP_REGISTER_LOGIN_KEY, '1'); else sessionStorage.removeItem(MP_REGISTER_LOGIN_KEY); } catch (e) { /* 保存できなくても続ける */ }
+  const at = on && typeof EdBuy !== 'undefined' ? EdBuy.registerIntentAt() : null;
+  try { if (at !== null) sessionStorage.setItem(MP_REGISTER_LOGIN_KEY, String(at)); else sessionStorage.removeItem(MP_REGISTER_LOGIN_KEY); } catch (e) { /* 保存できなくても続ける */ }
 }
 function mpRegisterLoginMarked() {
-  try { return sessionStorage.getItem(MP_REGISTER_LOGIN_KEY) === '1'; } catch (e) { return false; }
+  try {
+    const at = typeof EdBuy !== 'undefined' ? EdBuy.registerIntentAt() : null;
+    return at !== null && sessionStorage.getItem(MP_REGISTER_LOGIN_KEY) === String(at);
+  } catch (e) { return false; }
 }
 async function mpRegisterFromIntent() {
   if (mpRegisterDone) { const done = mpRegisterDone; mpRegisterDone = null; return done; }
@@ -2080,15 +2098,18 @@ function mpRegisterConfirm(root, out, user) {
   box.querySelector('[data-register-login]').onclick = async (e) => {
     e.currentTarget.disabled = true;
     EdBuy.startRegister(out.token, 'mypage_login', { stay: true });
-    try { await signOutUser(); } catch (err) { /* ログアウトに失敗してもログイン画面へ */ }
+    mpRegisterShown = null;
+    if (typeof clearPendingDiagnosisV2 === 'function') clearPendingDiagnosisV2();
+    try { await signOutUser({ scope: 'local' }); } catch (err) { /* ログアウトに失敗してもログイン画面へ */ }
     await init();
   };
   box.querySelector('[data-register-go]').onclick = async (e) => {
     e.currentTarget.disabled = true;
     mpRegisterDone = await mpRegisterNow(out.token);
+    mpRegisterShown = null;
     await init(); // 登録したレポートを記録に反映して描き直し、結果を示す
   };
-  box.querySelector('[data-register-cancel]').onclick = () => { box.remove(); };
+  box.querySelector('[data-register-cancel]').onclick = () => { mpRegisterShown = null; box.remove(); };
 }
 const MP_REGISTER_ERRORS = {
   link_not_found: 'このレポートのリンクは無効です（再発行された・または誤ったリンクです）。登録できませんでした。',
@@ -2106,7 +2127,7 @@ function mpShowRegisterOutcome(root, out, user) {
       + (out.token ? '<button type="button" class="mp-btn" data-register-retry>もう一度登録する</button>' : '');
   const box = mpClaimBox(root, html);
   const retry = box.querySelector('[data-register-retry]');
-  if (retry) retry.onclick = () => { EdBuy.startRegister(out.token, 'mypage_retry'); };
+  if (retry) retry.onclick = async () => { retry.disabled = true; mpRegisterDone = await mpRegisterNow(out.token); mpRegisterShown = null; await init(); };
 }
 function mpAnalysisDelivery(r) { return (r && r.session && r.session.analysisDelivery) || null; }
 function mpCompleteDelivery(r) { return (r && r.session && r.session.completeDelivery) || null; }
@@ -2151,6 +2172,8 @@ function mpAnalysisRowHtml(r, cls, source) {
   const lsv = caServerOf(r).complete;
   if (lsv && lsv.analysisPurchased) return '<p class="mp-rec-mentor" role="status">この記録の解析レポートは、現在確認中です。</p>';
   const stopped = d && MP_STOPPED[d.state] ? `<p class="mp-rec-mentor" role="status">${MP_STOPPED[d.state]}</p>` : '';
+  // 確認中・リンクの再発行（停止）は買い直させない（二重のお支払いを防ぐ）。返金の後だけ、もう一度買える
+  if (d && (d.state === 'suspended' || d.state === 'revoked')) return stopped;
   return stopped + mpBuyButtonHtml(r, 'analysis', cls, source);
 }
 // 完全解析（B）の行
@@ -2172,6 +2195,7 @@ function mpCompleteRowHtml(r, cls, source) {
   const lsv = caServerOf(r).complete;
   const stopped = d && MP_STOPPED[d.state] ? `<p class="mp-rec-mentor" role="status">${MP_STOPPED[d.state]}</p>`
     : lsv && lsv.completeEntitlement === 'revoked' ? '<p class="mp-rec-mentor" role="status">返金などにより、以前の完全解析は終了しています。もう一度お申し込みいただけます。</p>' : '';
+  if (d && (d.state === 'suspended' || d.state === 'revoked')) return stopped; // 買い直させない（二重のお支払いを防ぐ）
   return stopped + mpBuyButtonHtml(r, 'complete', cls, source);
 }
 function mpRecordActionsHtml(r, source) {
@@ -2187,6 +2211,8 @@ function mpRecordActionsHtml(r, source) {
 // 登録したレポートを開く（開くたびにサーバーが支払い・返金・停止を確かめる）
 async function mpOpenDelivery(button) {
   const id = button.getAttribute('data-mp-open');
+  // マイページから開くレポートは、固有リンクの控えを使わない（以前このタブで開いた別の固有リンクと取り違えない）
+  try { sessionStorage.removeItem('ed_report_via_link_v1'); } catch (e) { /* 消せなくても、レポートの画面が URL で照らし合わせる */ }
   EdNavBusy.hold(button, 'レポートを準備中…');
   const old = button.parentElement && button.parentElement.querySelector('.report-open-error');
   if (old) old.remove();
@@ -2345,7 +2371,7 @@ function mpArchiveHtml(records) {
 // 購入済み＝解析レポートを読む > 結果を見る > Xシェア（控えめ）。再診断は下のRE-DIAGNOSIS。
 function mpLatestHtml(r) {
   const viewBtn = r.resultUrl
-    ? `<a href="${r.resultUrl}" class="mp-btn" onclick="trackEvent('mypage_view_result_click',{source:'latest'})">結果を見る ›</a>`
+    ? `<a href="${mpEsc(mpResultHref(r))}" class="mp-btn" onclick="trackEvent('mypage_view_result_click',{source:'latest'})">結果を見る ›</a>`
     : `<span class="mp-btn" aria-disabled="true">結果を見る ›</span>`;
   const shareBtn = `<button type="button" class="mp-btn${r.purchased ? ' ghost' : ''}" onclick="mpShare(0)"><span aria-hidden="true">𝕏</span> Xシェア</button>`;
   let state;
@@ -2433,7 +2459,7 @@ function mpOpenRecord(i) {
 //   確認不可：無料情報 → 視覚要約 → 中立表示（購入導線なし）
 function mpRecordHtml(r, i) {
   const detailLink = r.resultUrl
-    ? `<a href="${r.resultUrl}" class="mp-detail-link" onclick="trackEvent('mypage_view_result_click',{source:'records'})">当時の診断結果を見る →</a>`
+    ? `<a href="${mpEsc(mpResultHref(r))}" class="mp-detail-link" onclick="trackEvent('mypage_view_result_click',{source:'records'})">当時の診断結果を見る →</a>`
     : '';
   const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${caIsReady(r) ? '<span class="mp-chip complete">COMPLETE</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
   let body;
@@ -3726,11 +3752,12 @@ async function initOnce() {
   //   「ログイン中の確認済みメール＝購入時のメール」を確かめた時だけ行う（共有端末の別の人へは移らない）
   // 購入時メール・Cookie による自動の引き継ぎは行わない（complete_13）。購入したレポートは、レポートの固有リンクから明示的に登録する
   const claimOutcome = null;
-  const registerOutcome = await mpRegisterFromIntent();
+  const registerOutcome = await mpRegisterOutcomeForRender();
   const result = await loadDiagnosisHistory(DIAGNOSIS_TYPE);
   if (result.ok) await mpMergeReports(result.sessions);
   if (!result.ok) {
     renderError(root);
+    mpShowRegisterOutcome(root, registerOutcome, user);
     return;
   }
   if (result.sessions.length === 0) {

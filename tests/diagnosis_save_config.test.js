@@ -48,7 +48,8 @@ test('直書きの Supabase URL・公開キーが無い（本番・旧プロジ�
 test('index.html・mypage.html：public-config を supabase-js の後、diagnosis-save.js の前に同期で読む', () => {
   for (const f of ['index.html', 'mypage.html']) {
     const html = fs.readFileSync(path.join(ROOT, f), 'utf8');
-    const lib = html.indexOf('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>');
+    // supabase-js は版を固定し、SRI（integrity）を付けて読む
+    const lib = html.search(/<script src="https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@2\.\d+\.\d+\/dist\/umd\/supabase\.js" integrity="sha384-[A-Za-z0-9+/=]+" crossorigin="anonymous"><\/script>/);
     const cfg = html.indexOf('<script src="/api/public-config?format=js"></script>');
     const save = html.indexOf('<script src="diagnosis-save.js"></script>');
     assert.ok(lib >= 0 && cfg > lib && save > cfg, f);

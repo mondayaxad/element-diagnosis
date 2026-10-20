@@ -65,6 +65,7 @@
   var NAMES = { analysis: '解析レポート', complete: '完全解析' };
   var tries = 0;
   if (canceled) {
+    try { sessionStorage.removeItem('ed_buy_from_mypage_v1'); } catch (e) { /* noop */ }
     document.getElementById('pcTitle').textContent = 'お手続きを中止しました';
     document.getElementById('pcLead').textContent = 'お支払いは行われていません。もう一度お申し込みいただけます。';
     var back = document.getElementById('pcResultLink');
@@ -84,6 +85,9 @@
     var name = NAMES[p.product] || 'レポート';
     var head = '<p class="row-name">' + name + '</p>' + (p.purchasedOn ? '<p class="note pc-at">購入日 ' + B.esc(p.purchasedOn) + '</p>' : '');
     if (p.state === 'pending') return '<div class="card">' + head + '<p class="row-state"><span class="spinner" aria-hidden="true"></span>お支払いを確認しています。</p></div>';
+    if (p.state === 'active' && !p.link) {
+      return '<div class="card">' + head + '<p class="row-state">このレポートのリンクは新しいものに変わっています。新しいリンク（またはお送りした請求書のメール）からお開きください。</p></div>';
+    }
     if (p.state !== 'active' || !p.link) {
       return '<div class="card">' + head + '<p class="row-state">このレポートは現在ご覧いただけません（返金・お支払いの確認中・停止）。端末に保存したPDFはそのまま残ります。</p></div>';
     }

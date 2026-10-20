@@ -430,7 +430,8 @@ test('期限切れ（300秒後）・改ざん・形式違反のトークンは�
   assert.deepEqual([expired.code, expired.body.error], [410, 'view_link_expired']);
   // ブラウザで開き直した（再読み込み・戻る）：レポートの入口へ戻す（入口がこのタブの固有リンクから開き直す）
   const nav = await ctx.view(token, { accept: 'text/html,application/xhtml+xml' });
-  assert.deepEqual([nav.code, nav.headers.location], [302, '/report-link']);
+  assert.equal(nav.code, 302);
+  assert.equal(nav.headers.location, `/report-link#v=${encodeURIComponent(token)}`);
   // エラー応答・照合 ID・ログにトークンを含めない
   assert.deepEqual(Object.keys(expired.body).sort(), ['error', 'incident_id']);
   assert.ok(!JSON.stringify(expired.body).includes(token.slice(0, 16)));

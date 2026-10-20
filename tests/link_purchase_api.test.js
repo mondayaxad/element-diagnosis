@@ -110,7 +110,8 @@ async function setup({ env = {} } = {}) {
     },
     async view(url) {
       const res = makeRes();
-      await statusH({ method: 'GET', headers: { host: 'evil.example' }, query: { view: url.split('view=')[1] } }, res);
+      const q = new URL(url, 'https://x').searchParams;
+      await statusH({ method: 'GET', headers: { host: 'evil.example' }, query: Object.fromEntries(q.entries()) }, res);
       return res;
     },
     async drain() { while (pending.length) await pending.shift(); },
@@ -217,6 +218,20 @@ test('購入完了ページへ戻った時（cs=今の決済）：今の購入�
   assert.equal(stranger.body.purchases.filter((x) => x.current).length, 0);
   assert.equal((await ctx.op('deliveries', { session: 'not-a-session' })).code, 400);
   assert.ok(left.cs !== paid.cs);
+  await ctx.db.close();
+});
+
+test('決済画面の作りすぎを防ぐ：同じ診断記録で1時間に20件まで。21件目は 429（Stripe を呼ばない）', { skip }, async () => {
+  const ctx = await setup();
+  const { context } = await resultContext(ctx);
+  for (let i = 0; i < 20; i += 1) {
+    const r = await ctx.op('buy', { context, product: 'analysis', attempt: attemptId(), source: 'result' });
+    assert.equal(r.code, 200, `${i}: ${JSON.stringify(r.body)}`);
+  }
+  const calls = ctx.stripe.st.calls.filter((c) => c === 'checkout.sessions.create' || (c && c.name === 'checkout.sessions.create')).length;
+  const over = await ctx.op('buy', { context, product: 'analysis', attempt: attemptId(), source: 'result' });
+  assert.deepEqual([over.code, over.body.error], [429, 'too_many_attempts']);
+  assert.equal(ctx.stripe.st.calls.filter((c) => c === 'checkout.sessions.create' || (c && c.name === 'checkout.sessions.create')).length, calls);
   await ctx.db.close();
 });
 

@@ -158,8 +158,8 @@
   .cover { break-after: page; }
 }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <!-- 完全解析（46ページ）の表示用状態。PREVIEW ONLY：購入権は発行しない -->
 <script src="complete-analysis.js"></script>
 <script src="/api/public-config?format=js"></script>
@@ -1708,7 +1708,7 @@ function completeAnalysisReportHtml(pal, results, diagnosisVersion) {
     body = `${head}
         ${lenses}
         <p class="ca-body">${CA.INTEGRATION_TEXT}</p>
-        <div class="ca-r-price"><span class="ca-meta">完全解析は、解析レポートとは異なる内容を扱う別商品です。解析レポートの本文は含まれません。</span><span class="ca-price">${up.price}</span></div>
+        <div class="ca-r-price"><span class="ca-meta">完全解析</span><span class="ca-price">${up.price}</span></div>
         <!-- 決済は未接続（2026-10-07）：押せない「準備中」。href・決済イベントなし -->
         ${CA.pendingButtonHtml(up, 'ca-r-btn')}
         <p class="ca-r-note">完全解析は準備中です。現在はお申し込みいただけません。</p>`;
@@ -1760,6 +1760,11 @@ function reportLensListHtml() {
 //   「マイページに登録する」は完全解析の欄に置かず、最下部の PDF の保存の隣（[data-report-register-slot]）に置く。
 //   注釈（PDF・共有・別商品）は出さない（世界観を保つ。条件は決済画面・規約で示す）。
 //   固有リンクの秘密値は、入口のページ（/report-link）がこのタブの sessionStorage に控えたもの
+var REPORT_SAMPLE_LINK = '<a class="ca-r-sample" href="/complete-sample.html" data-ca-sample>完全解析のサンプルを見る</a>';
+// マイページから開いた解析レポートの最下部：完全解析の申込はマイページの記録から
+function renderMypageFooter(box) {
+  box.innerHTML = REPORT_SAMPLE_LINK + '<a class="ca-r-btn is-offer" href="/mypage.html" data-report-mypage>マイページでこの記録の完全解析を作成する ¥3,000</a>';
+}
 function renderDeliveryFooter(box) {
   var B = window.EdBuy;
   var inherit = document.querySelector('[data-report-inherit]');
@@ -1768,14 +1773,25 @@ function renderDeliveryFooter(box) {
   if (regSlot) regSlot.innerHTML = '';
   box.innerHTML = '';
   if (!B) return;
-  var token = B.rememberedLink();
-  if (!token) return;
+  // この画面を開いた固有リンク：入口のページが {t, url} で控えたもののうち、URL（閲覧トークン）がこの画面と同じ時だけ。
+  //   マイページから開いた・別のレポートを開いた後のタブ：固有リンクを使わない（取り違えた記録で登録・購入しない）
+  // 一度決めた固有リンクは、この画面の間は保つ（アドレスを書き換えた後の描き直し・戻る〔bfcache〕でも同じ）
+  var token = window.__reportLinkToken || null;
+  if (!token) try {
+    var via = JSON.parse(sessionStorage.getItem('ed_report_via_link_v1') || 'null');
+    if (via && /^[A-Za-z0-9_-]{43}$/.test(String(via.t || '')) && typeof via.url === 'string'
+      && via.url.slice(via.url.indexOf('?')) === location.search && via.url.indexOf('?') > 0) token = via.t;
+  } catch (e) { token = null; }
+  window.__reportLinkToken = token;
+  if (!token) { renderMypageFooter(box); return; }
   // 固有リンクから開いた時：アドレスバーを期限のない固有リンクに戻す（コピー・ブックマーク・再読み込みで、そのまま開ける）
-  try {
-    if (sessionStorage.getItem('ed_report_via_link_v1') === token) history.replaceState(null, '', '/report-link#t=' + token);
-  } catch (e) { /* そのまま */ }
+  try { history.replaceState(null, '', '/report-link#t=' + token); } catch (e) { /* そのまま */ }
   B.openLink(token, false).then(function (r) {
-    var b = r.ok ? r.body : {};
+    if (!r.ok) {
+      box.innerHTML = '<p class="ca-guest-msg" role="status">購入の状況を確かめられませんでした。ページを読み込み直してください。</p>';
+      return;
+    }
+    var b = r.body || {};
     var ctx = b.context;
     var open = B.salesOpen() && B.contextOk(ctx);
     if (regSlot) {
@@ -1807,13 +1823,8 @@ function initReportComplete(code, viewer, mypageComplete) {
   //   完全解析は別の商品（¥3,000）として、マイページの記録・診断結果のページから申し込む。ここでは購入の判定をしない
   var inherit = document.querySelector('[data-report-inherit]');
   if (inherit) inherit.innerHTML = '';
-  var sample = '<a class="ca-r-sample" href="/complete-sample.html" data-ca-sample>完全解析のサンプルを見る</a>';
-  if (viewer === 'mypage') {
-    box.innerHTML = sample
-      + '<a class="ca-r-btn is-offer" href="/mypage.html" data-report-mypage>マイページでこの記録の完全解析を作成する ¥3,000</a>';
-    return;
-  }
-  box.innerHTML = sample;
+  if (viewer === 'mypage') { renderMypageFooter(box); return; }
+  box.innerHTML = REPORT_SAMPLE_LINK;
 }
 // 決済画面から「戻る」で戻った（ページがそのまま復元された）時も、未払いの決済を閉じて案内を描き直す
 var reportCompleteArgs = null;

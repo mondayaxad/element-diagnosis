@@ -453,8 +453,8 @@ async function getCurrentUser() {
   return user;
 }
 
-async function signOutUser() {
-  await supabaseClient.auth.signOut();
+async function signOutUser(opts) {
+  await supabaseClient.auth.signOut(opts);
 }
 
 /* ============================================================

@@ -14,6 +14,7 @@ for (const p of ['playwright', '/opt/node22/lib/node_modules/playwright']) {
   try { ({ chromium } = require(p)); break; } catch (e) { /* 次を試す */ }
 }
 const ROOT = path.join(__dirname, '..');
+const { pipeFile } = require('./fixtures/serve_file');
 const { previewPublicConfigJs } = require('./fixtures/server_env');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.mjs': 'application/javascript', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.json': 'application/json', '.css': 'text/css', '.svg': 'image/svg+xml' };
 
@@ -84,7 +85,7 @@ test.before(async () => {
     if (fs.existsSync(f) && fs.statSync(f).isDirectory()) f = path.join(f, 'index.html');
     if (!fs.existsSync(f)) { res.writeHead(404); return res.end(); }
     res.writeHead(200, { 'Content-Type': TYPES[path.extname(f)] || 'application/octet-stream' });
-    fs.createReadStream(f).pipe(res);
+    pipeFile(f, res);
   });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   base = `http://127.0.0.1:${server.address().port}`;
@@ -341,7 +342,7 @@ test('index：¥1,000主導線のあとに折りたたみ。閉じても¥1,000�
   assert.doesNotMatch(closed, /¥3,000|¥2,000|完全解析との違い/);
   assert.equal(await fold.locator('[data-ca-sample]').isVisible(), false);
   // 販売停止中（既定）は ¥1,000 も「準備中」で押せない
-  assert.equal(await p.locator('#lockUnlockAllBtn').innerText().then((s) => s.trim()), '解析レポート（準備中）');
+  assert.equal(await p.locator('#lockUnlockAllBtn').innerText().then((s) => s.trim()), '解析レポート ¥1,000（準備中）');
   assert.equal(await p.locator('#lockUnlockAllBtn').isDisabled(), true);
   await p.click('details.ca-fold > summary');
   const text = await fold.innerText();

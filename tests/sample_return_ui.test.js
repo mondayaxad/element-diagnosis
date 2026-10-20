@@ -3,6 +3,7 @@
 //   ・閉じられない（直接開いた）：解析レポートから → 購入完了ページ／診断結果から → この端末の最後の固有リンク（無ければトップ）
 //   実行: node --test tests/sample_return_ui.test.js
 'use strict';
+const { pipeFile } = require('./fixtures/serve_file');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('http');
@@ -33,7 +34,7 @@ test.before(async () => {
       return res.end('<p>other</p>');
     }
     res.writeHead(200, { 'Content-Type': TYPES[path.extname(f)] || 'application/octet-stream' });
-    fs.createReadStream(f).pipe(res);
+    pipeFile(f, res);
   });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   base = `http://127.0.0.1:${server.address().port}`;

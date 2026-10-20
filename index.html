@@ -439,7 +439,7 @@
     }
   }
   </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous"></script>
 <!-- Supabase の接続先（環境ごと）。diagnosis-save.js より前に同期で読み込む。取得できなければログイン・保存を止める -->
 <script src="/api/public-config?format=js"></script>
 <!-- 診断完了ページ：ページを開いただけでは登録完了（規約）モーダルを出さない。認証復帰後に保存する
@@ -2736,7 +2736,7 @@ function renderResult(root) {
   var lockCtaBtns = root.querySelectorAll('.lock-cta');
   var lockUnlockAllBtn = root.querySelector('#lockUnlockAllBtn');
   function lockPending(btn) {
-    btn.textContent = '解析レポート（準備中）';
+    btn.textContent = '解析レポート ¥1,000（準備中）';
     btn.style.opacity = '0.6';
     btn.style.cursor = 'not-allowed';
     btn.disabled = true;
@@ -3138,11 +3138,27 @@ function edWaitResume(ms) {
     })();
   });
 }
+// マイページから開いた結果（/?dv=ETI-2.0&code=…#rec=<記録 ID>）：固有リンクは作らず、ログイン中の本人の記録を購入の対象にする
+function edRecordFromUrl() {
+  var m = /(?:^#|&)rec=([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:&|$)/i.exec(location.hash || '');
+  return m ? m[1] : null;
+}
 function edResultContext(root, code) {
   var t = window.__edResumeToken;
+  var rec = !t && !window.__resumeFresh ? edRecordFromUrl() : null;
+  if (rec && EdBuy.contextFromRecord) {
+    if (edCtxCache && edCtxCache.token === 'rec:' + rec && Date.now() - edCtxCache.at < 6 * 3600 * 1000) return Promise.resolve(edCtxCache.context);
+    return EdBuy.contextFromRecord(rec).then(function (r) {
+      if (!r.ok || !r.body || !EdBuy.contextOk(r.body.context)) return null;
+      edCtxCache = { token: 'rec:' + rec, context: r.body.context, at: Date.now() };
+      return r.body.context;
+    }, function () { return null; });
+  }
   if (edCtxCache && t && edCtxCache.token === t && Date.now() - edCtxCache.at < 6 * 3600 * 1000) return Promise.resolve(edCtxCache.context);
   // 固有リンクの作成に失敗していた：一度だけ作り直す（同じ診断の秘密値のまま。サーバーは冪等）
   if (!t && window.__resumeCreating === window.__resultNonce && window.__resumePending) { window.__resumeCreating = null; setupResumeLink(root, code); }
+  // 固有リンクの無い結果（?dv=ETI-2.0&code= で開いた共有・ブックマーク）：押した時に、この結果の固有リンクを作って購入の対象にする
+  if (!t && !window.__resumeFresh && !window.__resumePending && window.__diagnosisVersion === 'ETI-2.0') { window.__resumeFresh = true; setupResumeLink(root, code); }
   return edWaitResume(8000).then(function (token) {
     if (!token) return null;
     return EdBuy.contextFromResume(token).then(function (r) {
@@ -3163,7 +3179,7 @@ function initReportPurchase(root, code, refs) {
       if (product === 'complete' && !goal) return;
       EdNavBusy.hold(btn, '決済画面へ移動しています…');
       edResultContext(root, code).then(function (c) {
-        if (!c) { EdNavBusy.release(btn); if (msgEl) msgEl.textContent = '購入の準備ができませんでした。ページを読み込み直してから、もう一度お試しください。'; return; }
+        if (!c) { EdNavBusy.release(btn); if (msgEl) msgEl.textContent = '購入の準備ができませんでした。通信を確かめて、もう一度押してください。'; return; }
         return B.start({ context: c, product: product, goal: goal, source: source }).then(function (r) {
           if (r.ok) { EdNavBusy.handoff(btn); return; }
           EdNavBusy.release(btn);
@@ -3339,7 +3355,7 @@ function initGuestPurchase(root, code, refs, opts) {
     else if (mine && mine.needsAnalysis && open) setLock('buy');
     else if (mine && (mine.analysis === 'suspended' || completeLive)) setLock('hold', null, '解析レポートは現在確認中です');
     else if (open) setLock('buy');
-    else setLock('hold', null, '解析レポート（準備中）');
+    else setLock('hold', null, '解析レポート ¥1,000（準備中）');
     if (!box) return;
     if (completeLive) {
       box.innerHTML = completeOwnedHtml(mine) + (mine.needsAnalysis ? '<p class="ca-fold-note">完全解析をお読みいただくには、解析レポート（¥1,000）が必要です。上の解析レポートからお申し込みいただけます。</p>' : '');

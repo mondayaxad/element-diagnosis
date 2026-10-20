@@ -1,14 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-FDN7NYZW9D"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-FDN7NYZW9D');
-</script>
+<!-- GA4：js/ga.js が本番ドメインでだけ読み込む（Preview・ローカルでは送信しない。URL は origin＋path だけ・# の購入対象トークンを送らない） -->
+<script src="/js/ga.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>元素診断 解析レポート</title>
@@ -58,8 +52,11 @@
   .domain-block h4 { font-size:13px; color:#e0c8ff; margin-bottom:8px; }
 
   /* リングチャート（因子の重要度） */
-  .ring-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:18px 0 20px; }
-  .ring-item { text-align:center; }
+  /* 320px 幅：4つの円が横にはみ出さないよう、列の最小幅を 0 にし、円は列の幅まで縮める（最大 76px） */
+  .ring-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin:18px 0 20px; }
+  .ring-item { text-align:center; min-width:0; }
+  .ring-item svg { display:block; width:100%; max-width:76px; height:auto; margin:0 auto; }
+  @media (max-width:360px) { .ring-grid { gap:6px; } }
   .ring-item .pctnum { font-size:15px; font-weight:700; }
   .ring-item .ringlabel { font-size:10px; color:#9bb0a2; margin-top:6px; line-height:1.4; }
   .sw-list { margin-top:14px; }
@@ -101,8 +98,8 @@
   .cover { break-after: page; }
 }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
 <div style="background:linear-gradient(90deg,#5a4490,#8a5fc0);color:#fff;text-align:center;padding:12px 16px;font-size:13px;font-weight:700;letter-spacing:1px">
@@ -1727,6 +1724,8 @@ async function savePdf() {
   .beyond-sample-text small { font-size:11px; color:#9a92b4; line-height:1.6; }
   @media print { .beyond-cta { display:none; } }
   @media print { .sample-cta { display:none; } }
+  /* 申込を押した後（決済画面へ移動中）：押せないことが分かる見た目 */
+  [data-buy][data-busy] { opacity:.6; pointer-events:none; }
 </style>
 <aside class="sample-cta" aria-label="お申し込み" data-sample-buy="analysis" data-pdf-skip>
   <h2>あなた自身の診断結果で読む</h2>

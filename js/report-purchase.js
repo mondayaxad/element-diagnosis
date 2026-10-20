@@ -108,7 +108,8 @@
     not_eligible: 'この診断結果は対象外です。',
     mentor_goal_required: 'MENTOR の目標を選んでください。',
     offer_retired: 'この商品は現在お申し込みいただけません。',
-    purchase_completed: 'お支払いは完了しています。購入完了ページでご確認ください。',
+    purchase_completed: 'お支払いは完了しています。レポートのリンク（またはお送りした請求書のメール）からお開きください。',
+    too_many_attempts: 'お申し込みの回数が多いため、少し時間をおいてからお試しください。',
     network: '通信できませんでした。電波の良い場所で、もう一度お試しください。',
   };
   function errorText(code) { return ERROR_TEXT[code] || 'お手続きを開始できませんでした。時間をおいて、もう一度お試しください。'; }
@@ -120,8 +121,20 @@
     return goalsCache;
   }
   function closeDialog(el) { if (el && el.parentNode) el.parentNode.removeChild(el); try { global.document.body.style.overflow = ''; } catch (e) { /* noop */ } }
+  // 目標の選択は同時に1つだけ（二度押し・Enter の連打で重ねて開かない。開いている間の呼び出しは同じ結果を待つ）
+  var openDialog = null;
   function goalDialog() {
-    return new Promise(function (resolve) {
+    if (openDialog) return openDialog;
+    var trigger = global.document.activeElement;
+    openDialog = new Promise(function (resolveRaw) {
+      function resolve(v) {
+        openDialog = null;
+        global.document.removeEventListener('keydown', onKey, true);
+        try { if (trigger && trigger.focus) trigger.focus(); } catch (e) { /* noop */ }
+        resolveRaw(v);
+      }
+      // Escape：読み込み中・読み込めなかった時も、ダイアログの外にフォーカスがある時も閉じる
+      function onKey(e) { if (e.key === 'Escape') { e.preventDefault(); closeDialog(wrap); resolve(null); } }
       var d = global.document;
       var wrap = d.createElement('div');
       wrap.className = 'edb-dialog';
@@ -138,7 +151,9 @@
       var go = wrap.querySelector('[data-edb-go]');
       var msg = wrap.querySelector('.edb-msg');
       wrap.querySelector('[data-edb-cancel]').onclick = function () { closeDialog(wrap); resolve(null); };
-      wrap.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeDialog(wrap); resolve(null); } });
+      d.addEventListener('keydown', onKey, true);
+      wrap.setAttribute('tabindex', '-1');
+      try { wrap.focus(); } catch (e) { /* noop */ }
       loadGoals().then(function (r) {
         var goals = (r.ok && r.body && r.body.catalog && r.body.catalog.goals) || [];
         var box = wrap.querySelector('[data-edb-goals]');
@@ -157,11 +172,19 @@
         resolve(picked.value);
       };
     });
+    return openDialog;
   }
 
   // ---- 申込（全ての入口で共通）。成功すると同じタブで Stripe の決済画面へ移動する
   //   attempt：この購入操作の識別子（同じ操作の再試行は同じ値。サーバーは同じ注文・同じ決済画面を返す）
-  async function start(opts) {
+  // 申込は同時に1つだけ（どの入口のボタンでも、二度押しで注文を2つ作らない）
+  var starting = null;
+  function start(opts) {
+    if (starting) return starting.then(function () { return { ok: false, error: 'in_progress', silent: true }; });
+    starting = startOnce(opts).then(function (r) { starting = null; return r; }, function (e) { starting = null; throw e; });
+    return starting;
+  }
+  async function startOnce(opts) {
     var o = opts || {};
     var info = PRODUCTS[o.product];
     if (!info) return { ok: false, error: 'invalid_request' };
@@ -221,9 +244,23 @@
       return v && TOKEN_RE.test(String(v.t || '')) && Date.now() - Number(v.at) < 2 * 60 * 60 * 1000 ? v.t : null;
     } catch (e) { return null; }
   }
-  function peekRegisterIntent() {
+  // マイページから申し込んだ印（このタブ）：支払いの後、レポートの入口がこのマイページへの登録に進む
+  var BUY_MYPAGE_KEY = 'ed_buy_from_mypage_v1';
+  function markBuyFromMypage() { session(function (s) { s.setItem(BUY_MYPAGE_KEY, String(Date.now())); }); }
+  function takeBuyFromMypage() {
+    var v = session(function (s) { var x = s.getItem(BUY_MYPAGE_KEY); s.removeItem(BUY_MYPAGE_KEY); return x; });
+    return !!v && Date.now() - Number(v) < 2 * 60 * 60 * 1000;
+  }
+  // 登録の予定（期限内のものだけ）。期限切れは消す
+  function peekRegisterIntent() { return registerIntentAt() !== null; }
+  function registerIntentAt() {
     var raw = session(function (s) { return s.getItem(REGISTER_KEY); });
-    try { var v = JSON.parse(raw || 'null'); return !!(v && TOKEN_RE.test(String(v.t || ''))); } catch (e) { return false; }
+    try {
+      var v = JSON.parse(raw || 'null');
+      if (v && TOKEN_RE.test(String(v.t || '')) && Date.now() - Number(v.at) < 2 * 60 * 60 * 1000) return Number(v.at);
+    } catch (e) { /* 下で消す */ }
+    if (raw) session(function (s) { s.removeItem(REGISTER_KEY); });
+    return null;
   }
   async function register(token) { return call('link-register', { token: token }, { token: await accountToken() }); }
   async function copyText(text) {
@@ -280,7 +317,7 @@
     contextFromResume: contextFromResume, contextFromRecord: contextFromRecord, summary: summary, contextOk: contextOk,
     sampleHref: sampleHref, readFragment: readFragment, start: start, returnPath: returnPath, goalDialog: goalDialog,
     linkUrl: linkUrl, rememberLink: rememberLink, rememberedLink: rememberedLink, openLink: openLink,
-    startRegister: startRegister, takeRegisterIntent: takeRegisterIntent, peekRegisterIntent: peekRegisterIntent, register: register,
+    startRegister: startRegister, takeRegisterIntent: takeRegisterIntent, peekRegisterIntent: peekRegisterIntent, registerIntentAt: registerIntentAt, markBuyFromMypage: markBuyFromMypage, takeBuyFromMypage: takeBuyFromMypage, register: register,
     copyText: copyText, myReports: myReports, myOpen: myOpen, myRegenerate: myRegenerate, accountToken: accountToken,
   };
 })(typeof window !== 'undefined' ? window : this);

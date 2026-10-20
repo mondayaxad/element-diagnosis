@@ -16,6 +16,7 @@ for (const p of ['playwright', '/opt/node22/lib/node_modules/playwright']) {
 }
 const skip = () => (chromium ? false : 'playwright がありません');
 const ROOT = path.join(__dirname, '..');
+const { pipeFile } = require('./fixtures/serve_file');
 const { previewPublicConfigJs } = require('./fixtures/server_env');
 const CE = require('../lib/complete-eligibility');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.mjs': 'application/javascript', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.json': 'application/json', '.css': 'text/css', '.svg': 'image/svg+xml' };
@@ -88,7 +89,7 @@ test.before(async () => {
     if (!fs.existsSync(f) && fs.existsSync(f + '.html')) f += '.html';
     if (!fs.existsSync(f)) { res.writeHead(404); return res.end(); }
     res.writeHead(200, { 'Content-Type': TYPES[path.extname(f)] || 'application/octet-stream' });
-    fs.createReadStream(f).pipe(res);
+    pipeFile(f, res);
   });
   await new Promise((r) => server.listen(0, '127.0.0.1', r));
   base = `http://127.0.0.1:${server.address().port}`;
@@ -297,14 +298,13 @@ test('サンプル：URL からトークンを消した後も、同じタブの�
   }
 });
 
-test('サンプル：URL にもタブにも購入の対象が無い時は、このブラウザで最後に開いた診断結果から作り直して申し込める（申し込めない状態を作らない）', { skip: skip() }, async () => {
-  for (const [pg, product] of [['/report_sample.html', 'analysis'], ['/complete-sample.html', 'complete']]) {
-    const s = await open(pg, { api: RESULT_API({ 'buy-summary': [200, { summary: SUMMARY, eligible: { analysis: true, complete: true } }] }),
+test('サンプル：URL にもタブにも購入の対象が無い時は、端末に残った別の診断結果（localStorage）を使わない（共有の端末で別の人の記録を買わせない）', { skip: skip() }, async () => {
+  for (const pg of ['/report_sample.html', '/complete-sample.html']) {
+    const s = await open(pg + '#from=result', { api: RESULT_API({ 'buy-summary': [200, { summary: SUMMARY, eligible: { analysis: true, complete: true } }] }),
       init: `try { localStorage.setItem('ed_last_result_v1', ${JSON.stringify(RESUME)}); } catch (e) {}` });
-    await s.waitForSelector(`[data-sample-buy] [data-buy="${product}"]`);
-    const ctxCall = s.__calls.find((c) => c.op === 'buy-context');
-    assert.equal(ctxCall && ctxCall.body.resume, RESUME);
-    assert.doesNotMatch(await s.locator('[data-sample-buy]').innerText(), /まず元素診断を受ける/);
+    await s.waitForSelector('[data-sample-buy] a.sample-return');
+    assert.match(await s.locator('[data-sample-buy]').innerText(), /まず元素診断を受ける/);
+    assert.equal(s.__calls.filter((c) => c.op === 'buy-context' || c.op === 'buy-summary').length, 0);
     await s.__ctx.close();
   }
 });
@@ -377,11 +377,14 @@ test('固有リンク：開くたびに状態を確かめ、読める時は中�
   assert.deepEqual(p.__calls.filter((c) => c.op === 'link-open').map((c) => c.body).slice(0, 2), [{ token: LINK_A, open: false }, { token: LINK_A, open: true }]);
   assertNoSecrets(p, [LINK_A]);
   await p.__ctx.close();
-  // マイページから開いた時（固有リンクからでない）は、アドレスを書き換えない
-  const m = await open('/report.html?token=view', { init: `sessionStorage.setItem('ed_report_link_v1', '${LINK_A}');`, api: { 'link-open': [200, { ...active, context: CTX }] } });
+  // マイページから開いた時（固有リンクからでない）：このタブに以前開いた別の固有リンクが残っていても使わない
+  //   （アドレスを書き換えない・その固有リンクで登録・購入しない。完全解析はマイページの記録から）
+  const m = await open('/report.html?token=other', { init: `sessionStorage.setItem('ed_report_link_v1', '${LINK_A}'); sessionStorage.setItem('ed_report_via_link_v1', JSON.stringify({ t: '${LINK_A}', url: '/report.html?token=view' }));`, api: { 'link-open': [200, { ...active, context: CTX }] } });
   await m.route('**/api/report-data**', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ code: V2(7).code, diagnosis_version: 'ETI-2.0', entitlements: { core_analysis_access: true }, viewer: 'delivery' }) }));
   await m.reload();
-  await m.waitForSelector('[data-report-register-slot] [data-report-register]');
+  await m.waitForSelector('[data-report-mypage]');
+  assert.equal(await m.locator('[data-report-register]').count(), 0);
+  assert.equal(m.__calls.filter((c) => c.op === 'link-open').length, 0);
   assert.equal(new URL(m.url()).pathname, '/report.html');
   await m.__ctx.close();
   // 作成中の完全解析：入口のカードで状態を示す（読めるまで待つ）
@@ -549,7 +552,7 @@ test('登録：リンクの秘密値（このタブの sessionStorage）でロ�
     await p.__ctx.close();
   }
   // 登録のためにログインの画面を通った後（このタブの印）：確かめずに、そのアカウントへ登録する（通常の登録の流れ）
-  const viaLogin = await mypage([DEL('analysis', 'active')], { init: seed + `sessionStorage.setItem('ed_register_login_v1', '1');`, api: { 'link-register': [200, { result: 'registered', product: 'analysis' }] } });
+  const viaLogin = await mypage([DEL('analysis', 'active')], { init: `(() => { const at = Date.now(); sessionStorage.setItem('ed_register_v1', JSON.stringify({ t: '${LINK_A}', at })); sessionStorage.setItem('ed_register_login_v1', String(at)); })();`, api: { 'link-register': [200, { result: 'registered', product: 'analysis' }] } });
   await viaLogin.waitForFunction(() => /このマイページに登録しました/.test((document.getElementById('mpClaimBox') || {}).innerText || ''));
   assert.equal(viaLogin.__calls.filter((c) => c.op === 'link-register').length, 1);
   assert.equal(await viaLogin.locator('[data-register-login]').count(), 0);
@@ -560,8 +563,18 @@ test('登録：リンクの秘密値（このタブの sessionStorage）でロ�
   await g.waitForSelector('#gateAuth');
   assert.match(await g.locator('#historyGateArea').innerText(), /購入したレポートをこのマイページに登録します/);
   assert.equal(JSON.parse(await g.evaluate(() => sessionStorage.getItem('ed_register_v1'))).t, LINK_A);
-  assert.equal(await g.evaluate(() => sessionStorage.getItem('ed_register_login_v1')), '1', 'ログインの後は、そのアカウントへ登録する印');
+  assert.equal(await g.evaluate(() => sessionStorage.getItem('ed_register_login_v1')), String(await g.evaluate(() => JSON.parse(sessionStorage.getItem('ed_register_v1')).at)), 'ログインの後は、その登録の予定へ登録する印（予定の時刻と組）');
   await g.__ctx.close();
+});
+
+test('マイページの記録から申し込んで支払いから戻った：レポートの入口からマイページへ移り、確かめずにこのアカウントへ登録する（買っていない表示のまま残さない）', { skip: skip() }, async () => {
+  const seed = `if (location.pathname === '/report-link') sessionStorage.setItem('ed_buy_from_mypage_v1', String(Date.now()));`;
+  const p = await open('/report-link#t=' + LINK_A, { init: seed, signedIn: true, rows: [], api: { 'link-register': [200, { result: 'registered', product: 'analysis' }], 'my-reports': [200, { reports: [], records: [] }], 'link-open': [200, { product: 'analysis', state: 'active' }] } });
+  await p.waitForURL((u) => u.pathname === '/mypage.html' || u.pathname === '/mypage');
+  await p.waitForFunction(() => /このマイページに登録しました/.test((document.getElementById('mpClaimBox') || {}).innerText || ''));
+  assert.deepEqual(p.__calls.filter((c) => c.op === 'link-register').map((c) => c.body), [{ token: LINK_A }]);
+  assert.equal(await p.evaluate(() => sessionStorage.getItem('ed_buy_from_mypage_v1')), null);
+  await p.__ctx.close();
 });
 
 // ================= 解析レポートの最下部
@@ -577,7 +590,7 @@ test('解析レポート（固有リンク）の最下部：完全解析の欄�
 });
 async function reportDelivery(opts = {}) {
   const p = await open('/report.html?token=view', {
-    init: `sessionStorage.setItem('ed_report_link_v1', '${LINK_A}');`,
+    init: `sessionStorage.setItem('ed_report_link_v1', '${LINK_A}'); sessionStorage.setItem('ed_report_via_link_v1', JSON.stringify({ t: '${LINK_A}', url: '/report.html?token=view' }));`,
     api: { 'link-open': [200, { product: 'analysis', state: 'active', context: CTX, summary: SUMMARY }], 'guest-goals': [200, GOALS], buy: BUY_OK },
   });
   if (opts.pdfLibs) {

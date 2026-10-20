@@ -47,12 +47,14 @@ const MYPAGE_FOOTER = '<aside aria-label="マイページ" style="max-width:640p
 const DELIVERY_FOOTER = '<aside aria-label="このレポートについて" class="ed-delivery-footer" style="max-width:640px;margin:48px auto 64px;padding:20px 18px;'
   + 'border:1px solid #2a2440;border-radius:12px;text-align:center;font-family:inherit;background:rgba(20,16,36,.6)">'
   + '<style>@media print{.ed-delivery-footer{display:none!important}}</style>'
-  + '<a href="/report-link.html#register" style="display:inline-block;min-height:44px;line-height:44px;padding:0 18px;border-radius:8px;color:#fff;'
+  + '<a href="__REGISTER_HREF__" style="display:inline-block;min-height:44px;line-height:44px;padding:0 18px;border-radius:8px;color:#fff;'
   + 'text-decoration:none;font-size:13px;letter-spacing:.06em;background:#6a52b0;border:1px solid #8a72d0">マイページに登録する</a></aside>';
-function withDeliveryFooter(body) {
+// 登録先は、この閲覧 URL を開いた固有リンク（入口のページがこのタブに控えた {t, url} と、閲覧トークンで照らし合わせる）
+function withDeliveryFooter(body, viewToken) {
   const html = Buffer.isBuffer(body) ? body.toString('utf8') : String(body);
+  const footer = DELIVERY_FOOTER.replace('__REGISTER_HREF__', `/report-link#register&amp;v=${encodeURIComponent(viewToken)}`);
   const i = html.lastIndexOf('</body>');
-  return i < 0 ? html + DELIVERY_FOOTER : html.slice(0, i) + DELIVERY_FOOTER + html.slice(i);
+  return i < 0 ? html + footer : html.slice(0, i) + footer + html.slice(i);
 }
 function withMypageFooter(body) {
   const html = Buffer.isBuffer(body) ? body.toString('utf8') : String(body);
@@ -162,7 +164,8 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
       // ブラウザで開き直した（再読み込み・戻る）：レポートの入口へ。入口がこのタブの固有リンクから開き直す
       if (/text\/html/.test(String((req.headers && req.headers.accept) || ''))) {
         res.setHeader('Cache-Control', 'no-store');
-        res.setHeader('Location', '/report-link');
+        // 閲覧トークンを渡す：入口のページは、このトークンで開いた固有リンク（このタブの控え）だけを開き直す
+        res.setHeader('Location', `/report-link#v=${encodeURIComponent(String(queryParam(req, 'view') || '').slice(0, 2048))}`);
         return res.status(302).end();
       }
       return res.status(t.reason === 'token_expired' ? 410 : 403).json({ error: t.reason === 'token_expired' ? 'view_link_expired' : 'view_link_invalid', incident_id: incident });
@@ -192,7 +195,7 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
       return failLogged(res, 500, 'report_unavailable', 'output_hash_mismatch');
     }
     // ログインなしの購入（ゲスト）で開いた時だけ、最下部にマイページの作成への導線を足す（保存した生成物は変えない。照合の後に足す）
-    if (t.deliveryId) body = withDeliveryFooter(body);
+    if (t.deliveryId && queryParam(req, 'src') === 'link') body = withDeliveryFooter(body, queryParam(req, 'view'));
     else if (t.userId == null) body = withMypageFooter(body);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Content-Security-Policy', VIEW_CSP);

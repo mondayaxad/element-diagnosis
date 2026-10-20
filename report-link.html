@@ -53,20 +53,34 @@
   var B = window.EdBuy;
   var box = document.getElementById('rlBox');
   var NAMES = { analysis: '解析レポート', complete: '完全解析' };
-  // 固有リンクの秘密値：URL のフラグメント（#t=）。完全解析の最下部から戻った時は、このタブに控えた値を使う
+  // 固有リンクの秘密値：URL のフラグメント（#t=）。
+  //   完全解析の画面から戻った時（#v=<閲覧トークン>）は、このタブで「その閲覧 URL を開いた固有リンク」だけを使う
+  //   （同じタブで別のレポートを開いていても、取り違えない）
+  var VIA_KEY = 'ed_report_via_link_v1';
+  function viaLink() { try { var v = JSON.parse(sessionStorage.getItem(VIA_KEY) || 'null'); return v && /^[A-Za-z0-9_-]{43}$/.test(String(v.t || '')) && typeof v.url === 'string' ? v : null; } catch (e) { return null; } }
   var fromHash = B.readFragment('t');
-  var token = /^[A-Za-z0-9_-]{43}$/.test(String(fromHash || '')) ? fromHash : B.rememberedLink();
+  var viewHint = B.readFragment('v');
+  var via = viaLink();
+  var token = /^[A-Za-z0-9_-]{43}$/.test(String(fromHash || '')) ? fromHash
+    : (viewHint && via && via.url.indexOf('view=' + decodeURIComponent(viewHint)) >= 0 ? via.t : null);
   var wantRegister = /(?:^#|&)register(?:&|$)/.test(location.hash || '');
   if (!token) {
-    box.innerHTML = '<div class="card"><p class="state">レポートのリンクを確認できませんでした。</p>'
-      + '<p class="note">購入完了ページでコピーしたリンク（URL）を、そのまま開いてください。リンクを無くした場合は、お支払いの確認のうえで再発行します。'
-      + '<a href="https://x.com/mondayaxad" target="_blank" rel="noopener">@mondayaxad</a> までご連絡ください。</p></div>';
+    document.getElementById('rlTitle').textContent = 'レポートを開く';
+    box.innerHTML = '<div class="card"><p class="state">購入したレポートのリンク（URL）から開いてください。</p>'
+      + '<p class="note">リンクは、お支払いの後に届いた請求書のメールにも記載しています。マイページに登録したレポートは、<a href="/mypage.html">マイページ</a>から開けます。</p></div>';
     return;
   }
   B.rememberLink(token);
   // 秘密値を URL に残す（ブックマーク・コピーできるように）。#register の時だけ #t= の形に戻す
   if (!fromHash) { try { history.replaceState(null, '', '/report-link#t=' + token); } catch (e) { /* そのまま */ } }
   if (wantRegister) { B.startRegister(token, 'report_footer'); return; }
+  // マイページから申し込んで支払いから戻った：このレポートをマイページに登録して戻る（申し込んだ本人のログインのまま。確かめを挟まない）
+  if (fromHash && B.takeBuyFromMypage()) {
+    B.startRegister(token, 'mypage_buy', { stay: true });
+    try { sessionStorage.setItem('ed_register_login_v1', String(B.registerIntentAt())); } catch (e) { /* 印が無ければ、マイページで確かめる */ }
+    location.replace('/mypage.html');
+    return;
+  }
 
   var polls = 0;
   function factsHtml(b) {
@@ -103,12 +117,12 @@
     B.openLink(token, true).then(function (r) {
       if (r.ok && r.body && typeof r.body.url === 'string' && r.body.url.charAt(0) === '/') {
         B.track(b.product === 'complete' ? 'complete_report_open' : 'analysis_report_open', { source: 'report_link' });
-        // この固有リンクから開いた印（レポートの画面が、アドレスバーをこの固有リンクに戻す。マイページから開いた時は戻さない）
-        try { sessionStorage.setItem('ed_report_via_link_v1', token); } catch (e) { /* 戻せなくても読める */ }
+        // この固有リンクから開いた印：開いた閲覧 URL と組で控える（レポートの画面は、自分の URL と一致した時だけ、この固有リンクを使う）
+        try { sessionStorage.setItem(VIA_KEY, JSON.stringify({ t: token, url: r.body.url })); } catch (e) { /* 戻せなくても読める */ }
         location.replace(r.body.url);
         return;
       }
-      render(b, true);
+      render(r.ok && r.body ? r.body : b, true); // 開けなかった：最新の状態（返金など）で示す
     });
   }
   function render(b, openFailed) {
@@ -138,10 +152,10 @@
       html += '<p class="state">このレポートは、' + why + '現在ご覧いただけません。</p>'
         + '<p class="note">端末に保存したPDFは、そのまま残ります。ご不明点は <a href="https://x.com/mondayaxad" target="_blank" rel="noopener">@mondayaxad</a> までご連絡ください。</p>';
     }
-    if (openFailed) html += '<p class="msg" role="status">レポートを開けませんでした。時間をおいて、もう一度お試しください。</p>';
     html += '</div>';
     box.innerHTML = html;
     bindTools();
+    if (openFailed && readable(b)) { var fm = box.querySelector('[data-msg]'); if (fm) fm.textContent = 'レポートを開けませんでした。時間をおいて、もう一度お試しください。'; }
     var open = box.querySelector('[data-open]');
     if (open) open.onclick = function () {
       open.disabled = true;
@@ -163,6 +177,7 @@
     };
     var waiting = b.state === 'pending' || (b.state === 'active' && b.product === 'complete' && b.report && b.report.status === 'generating');
     if (waiting && polls < 60) { polls += 1; setTimeout(load, 5000); }
+    else if (waiting) box.querySelector('.card').insertAdjacentHTML('beforeend', '<p class="note">確認に時間がかかっています。少し待ってから、このページを読み込み直してください。</p>');
   }
   function load() {
     B.openLink(token, false).then(function (r) {

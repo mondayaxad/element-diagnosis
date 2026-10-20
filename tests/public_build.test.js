@@ -91,11 +91,18 @@ test('vercel.json：build で dist を作り、dist だけを配信する（clea
   // 診断結果の固有リンク（/result#r=）：index.html を返し、検索に載せない・Referer にパスより先を出さない
   // cleanUrls では /index.html を宛先にできない（404）。TOP（/）へ書き換える
   assert.deepEqual(v.rewrites, [{ source: '/result', destination: '/' }]);
-  assert.deepEqual(v.headers, [{ source: '/result', headers: [
-    { key: 'X-Robots-Tag', value: 'noindex, nofollow' }, { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' }] },
-  // レポート固有リンク（/report-link#t=）：検索に載せない・Referer を送らない・端末やプロキシに保存しない（complete_13）
-  { source: '/report-link', headers: [
-    { key: 'X-Robots-Tag', value: 'noindex, nofollow' }, { key: 'Referrer-Policy', value: 'no-referrer' }, { key: 'Cache-Control', value: 'private, no-store' }] }]);
+  const byPath = (src) => v.headers.filter((h) => h.source === src).flatMap((h) => h.headers).reduce((o, h) => Object.assign(o, { [h.key]: h.value }), {});
+  // 全ページ（API を除く）：MIME の推測をさせない・他サイトに枠で埋め込ませない・Referer は origin まで
+  assert.deepEqual(byPath('/((?!api/).*)'), { 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "frame-ancestors 'none'", 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'strict-origin-when-cross-origin' });
+  // 診断結果の固有リンク（/result#r=）：検索に載せない・Referer にパスより先を出さない
+  assert.deepEqual(byPath('/result'), { 'X-Robots-Tag': 'noindex, nofollow', 'Referrer-Policy': 'strict-origin-when-cross-origin' });
+  // レポート固有リンク・解析レポート・購入完了：検索に載せない・Referer を送らない・端末やプロキシに保存しない（complete_13）
+  for (const src of ['/report-link', '/report', '/purchase-complete']) {
+    assert.deepEqual(byPath(src), { 'X-Robots-Tag': 'noindex, nofollow', 'Referrer-Policy': 'no-referrer', 'Cache-Control': 'private, no-store' }, src);
+  }
+  for (const src of ['/mypage', '/complete-sample']) assert.equal(byPath(src)['X-Robots-Tag'], 'noindex, nofollow', src);
+  // 全ページの規則は先頭（後の個別の規則が同じ名前を上書きする）
+  assert.equal(v.headers[0].source, '/((?!api/).*)');
   assert.match(fs.readFileSync(path.join(ROOT, '.gitignore'), 'utf8'), /^dist\/$/m);
 });
 

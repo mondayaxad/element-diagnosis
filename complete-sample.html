@@ -367,7 +367,9 @@ a.sample-return.ed-sky-btn[aria-disabled="true"] { opacity:.55; pointer-events:n
 .sample-cta a{width:100%}
 .sample-cta .sample-mypage a{width:auto}}
 @media print{.sample-intro,.sample-cta,.sample-return-top{display:none}
-.sample-mark{color:rgba(40,55,70,.42)}}</style>
+.sample-mark{color:rgba(40,55,70,.42)}}  /* 申込を押した後（決済画面へ移動中）：押せないことが分かる見た目 */
+  [data-buy][data-busy] { opacity:.6; pointer-events:none; }
+</style>
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="description" content="元素診断 CORE I 完全解析レポートの表示サンプル（8ページ版）。">
 <meta property="og:type" content="article">
