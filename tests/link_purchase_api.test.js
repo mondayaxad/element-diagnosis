@@ -187,6 +187,33 @@ test('A ¥1,000：診断結果の記録で購入→支払い→購入完了ペ�
   await ctx.db.close();
 });
 
+test('購入完了ページへ戻った時（cs=今の決済）：今の購入だけ current とリンク（支払いの確認の前でも）。途中でやめた決済にはリンクを出さない', { skip }, async () => {
+  const ctx = await setup();
+  const { context } = await resultContext(ctx);
+  // 途中でやめた決済画面（支払わない）→ 新しい購入操作で支払う
+  const left = await buyAndPay(ctx, context, 'complete', { goal: 'GOAL_EXPLORE_01', pay: false });
+  const paid = await buyAndPay(ctx, context, 'complete', { goal: 'GOAL_EXPLORE_01', pay: false });
+  // 支払いの確認の前（Webhook の前）でも、今の購入のリンクを返す
+  let d = await ctx.op('deliveries', { session: paid.cs });
+  assert.equal(d.code, 200, JSON.stringify(d.body));
+  let cur = d.body.purchases.filter((x) => x.current);
+  assert.equal(cur.length, 1);
+  assert.equal(cur[0].state, 'pending');
+  assert.match(cur[0].link, /^[A-Za-z0-9_-]{43}$/);
+  const other = d.body.purchases.filter((x) => !x.current);
+  assert.ok(other.every((x) => x.link === undefined), '途中でやめた決済にはリンクを出さない');
+  ctx.stripe.pay(paid.cs, { customer_details: { email: 'buyer@example.test' } });
+  d = await ctx.op('deliveries', { session: paid.cs });
+  cur = d.body.purchases.filter((x) => x.current);
+  assert.deepEqual([cur[0].state, cur[0].product], ['active', 'complete']);
+  // 他人の決済の ID（この端末の Cookie の注文でない）・形の違う ID
+  const stranger = await ctx.op('deliveries', { session: 'cs_test_' + 'z'.repeat(40) });
+  assert.equal(stranger.body.purchases.filter((x) => x.current).length, 0);
+  assert.equal((await ctx.op('deliveries', { session: 'not-a-session' })).code, 400);
+  assert.ok(left.cs !== paid.cs);
+  await ctx.db.close();
+});
+
 test('B ¥3,000：MENTOR 目標が必須・注文に固定。支払い→生成→固有リンクで完全解析だけ（解析レポートは開けない）', { skip }, async () => {
   const ctx = await setup();
   const { context } = await resultContext(ctx);

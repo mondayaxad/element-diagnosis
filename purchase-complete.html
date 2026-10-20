@@ -51,13 +51,17 @@
 <script src="/js/report-purchase.js"></script>
 <script>
 // 購入完了ページ（complete_13）：購入した商品を受け取るための画面。別の商品の申込は出さない。
-//   この端末で購入したレポート（HttpOnly の Cookie の秘密値）を、Stripe に支払いを確かめてから示す。
+//   決済から戻った時（?cs=<Checkout Session の ID>）：今の購入のレポートのリンク（/report-link#t=）へそのまま進む
+//   （支払いの確認・完全解析の作成の状態・コピー・登録は、リンクの入口のページが行う）。
+//   それ以外：この端末で購入したレポート（HttpOnly の Cookie の秘密値）を、Stripe に支払いを確かめてから示す。
 //   支払い済み：レポートを開く・固有リンクをコピー・PDF 保存の案内・マイページに登録する。完全解析は作成の状態も。
 (function () {
   'use strict';
   var B = window.EdBuy;
   var list = document.getElementById('pcList');
   var canceled = /(?:^|[?&])status=canceled(?:&|$)/.test(location.search);
+  var csMatch = /(?:^|[?&])cs=(cs_(?:test|live)_[A-Za-z0-9_]{8,200})(?:&|$)/.exec(location.search);
+  var currentSession = csMatch ? csMatch[1] : null;
   var NAMES = { analysis: '解析レポート', complete: '完全解析' };
   var tries = 0;
   if (canceled) {
@@ -96,10 +100,16 @@
       + '<p class="msg" data-msg role="status"></p></div>';
   }
   function render(purchases) {
-    // 支払いを確かめられない古い決済（閉じた・期限切れ）は出さない。決済待ちは、いちばん新しい1件だけ（今戻ってきた決済）
-    var shown = purchases.filter(function (p) { return p.state !== 'closed'; });
-    var firstPending = shown.findIndex(function (p) { return p.state === 'pending'; });
-    shown = shown.filter(function (p, i) { return p.state !== 'pending' || i === firstPending; });
+    // 今の購入：そのレポートのリンクの入口へ進む（このページを介さない）
+    var cur = purchases.filter(function (p) { return p.current && p.link; })[0];
+    if (cur) {
+      B.rememberLink(cur.link);
+      B.track('report_link_open', { product: cur.product, source: 'purchase_complete' });
+      location.replace('/report-link#t=' + cur.link);
+      return;
+    }
+    // 閉じた・期限切れの決済と、支払われていない決済（途中でやめた決済画面）は出さない
+    var shown = purchases.filter(function (p) { return p.state !== 'closed' && p.state !== 'pending'; });
     if (!shown.length) {
       if (canceled) { list.innerHTML = ''; return; }
       document.getElementById('pcLead').textContent = '';
@@ -122,14 +132,14 @@
       };
       el.querySelector('[data-register]').onclick = function (e) { e.target.disabled = true; B.startRegister(p.link, 'purchase_complete'); };
     });
-    var waiting = shown.some(function (p) { return p.state === 'pending' || (p.state === 'active' && p.product === 'complete' && p.report && p.report.status === 'generating'); });
+    var waiting = shown.some(function (p) { return p.state === 'active' && p.product === 'complete' && p.report && p.report.status === 'generating'; });
     if (waiting) {
       if (tries < 40) { tries += 1; setTimeout(load, tries < 6 ? 3000 : 15000); }
       else list.insertAdjacentHTML('beforeend', '<p class="note">確認に時間がかかっています。少し待ってから、このページを読み込み直してください。</p>');
     }
   }
   function load() {
-    B.call('deliveries', {}).then(function (r) {
+    B.call('deliveries', currentSession ? { session: currentSession } : {}).then(function (r) {
       if (!r.ok) {
         list.innerHTML = '<div class="card"><p class="note">購入状況を確認できませんでした。</p><button type="button" class="btn" data-retry>もう一度確認する</button></div>';
         list.querySelector('[data-retry]').onclick = function () { tries = 0; load(); };

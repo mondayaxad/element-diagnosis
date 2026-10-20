@@ -154,7 +154,7 @@ test('ゲスト ¥1,000：サーバーが記録を作り、Checkout は metadata
   assert.deepEqual(Object.keys(p.metadata).sort(), ['app', 'env', 'order_id']);
   assert.equal(p.client_reference_id, undefined);
   assert.equal(p.customer_email, undefined);
-  assert.equal(p.success_url, `${ORIGIN}/purchase-complete`);
+  assert.equal(p.success_url, `${ORIGIN}/purchase-complete?cs={CHECKOUT_SESSION_ID}`);
   assert.equal(p.cancel_url, `${ORIGIN}/purchase-complete?status=canceled`);
   assert.doesNotMatch(JSON.stringify(p), new RegExp(CODE_A));
   assert.deepEqual(p.line_items, [{ price: 'price_test_analysis1000', quantity: 1 }]);

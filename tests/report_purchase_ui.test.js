@@ -342,6 +342,28 @@ test('購入完了：受け取り専用（状態・開く・リンクのコピ�
   await p.__ctx.close();
 });
 
+test('購入完了：決済から戻った時（?cs=）は、今の購入のレポートのリンクへそのまま進む。途中でやめた決済（支払い待ち）は一覧に出さない', { skip: skip() }, async () => {
+  const CS = 'cs_test_' + 'a'.repeat(40);
+  const p = await open(`/purchase-complete?cs=${CS}`, { api: {
+    deliveries: (b) => [200, { purchases: b.session === CS
+      ? [{ product: 'complete', state: 'pending', current: true, link: LINK_B }, { product: 'complete', state: 'pending' }]
+      : [] }],
+    'link-open': [200, { product: 'complete', state: 'pending' }],
+  } });
+  await p.waitForURL((u) => u.pathname === '/report-link');
+  assert.equal(new URL(p.url()).hash, '#t=' + LINK_B);
+  await p.__ctx.close();
+  // 戻り先の ID が無い（後から開いた）：支払い待ち（途中でやめた決済）は出さない
+  const q = await open('/purchase-complete', { api: { deliveries: [200, { purchases: [
+    { product: 'complete', state: 'active', link: LINK_B, purchasedOn: '2026-10-20', report: { status: 'ready' } },
+    { product: 'complete', state: 'pending' },
+  ] }] } });
+  await q.waitForSelector('[data-item="0"]');
+  assert.doesNotMatch(await q.locator('#pcList').innerText(), /お支払いを確認しています/);
+  assert.equal(await q.locator('#pcList .card').count(), 1);
+  await q.__ctx.close();
+});
+
 // ================= レポート固有リンク
 test('固有リンク：開くたびに状態を確かめ、読む・コピー・登録（注釈なし）。返金後は読めない。無効なリンクは無効と示す', { skip: skip() }, async () => {
   const active = { product: 'analysis', state: 'active', purchasedOn: '2026-10-20', summary: SUMMARY };
