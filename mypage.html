@@ -20,6 +20,7 @@
 <script src="complete-analysis.js"></script>
 <script src="js/nav-busy.js"></script>
 <script src="js/guest-purchase.js"></script>
+<script src="js/report-purchase.js"></script>
 <!-- eti_v2_save.jsは保存自体は行わないが（mypage.htmlは閲覧専用）、
      v2結果画面からGoogleログイン経由で戻ってきた際のpending保存
      （onAuthStateChangeリスナー）を成立させるために読み込む。 -->
@@ -968,6 +969,12 @@
   .mp-rec-actions > .ca-msg { flex-basis: 100%; }
   .mp-btn.mp-btn-pending, .mp-btn.mp-btn-pending[disabled] { font-family: inherit; background: transparent; border: 1px dashed var(--card-border); color: var(--fg-dim); font-weight: 400; cursor: not-allowed; opacity: 1; }
   @media (max-width: 420px) { .mp-rec-actions { flex-direction: column; } .mp-rec-actions > .mp-btn { flex: none; width: 100%; } }
+  /* 記録ごとのレポート（complete_13）：解析レポート・完全解析の2行 */
+  .mp-rec-row { flex: 1 1 14em; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  .mp-rec-row > .mp-btn, .mp-rec-row > .ca-btn { width: 100%; white-space: normal; text-align: center; line-height: 1.5; }
+  .mp-rec-note { margin: 0; font-size: 11px; line-height: 1.7; color: var(--fg-dim); }
+  .mp-rec-sample { font-size: 11.5px; color: var(--fg-dim); text-align: center; }
+  .ca-card .mp-rec-row { margin-top: 12px; }
   .mp-notice .mp-btn { margin-top: 4px; }
   .mp-empty-topline { margin-bottom: 8px; justify-content: flex-end; }
   /* 右上入口のシート：対象の記録を選ぶ */
@@ -1251,30 +1258,49 @@ const MP_CHECKOUT_ERRORS = {
 const MP_REFRESH_ERRORS = ['analysis_already_purchased', 'repurchase_not_allowed', 'checkout_in_progress', 'purchase_completed',
   'rights_suspended', 'offer_changed', 'legacy_purchase_not_eligible'];
 function mpCheckoutErrorText(code) { return MP_CHECKOUT_ERRORS[code] || 'お手続きを開始できませんでした。時間をおいて、もう一度お試しください。'; }
+// 申込（complete_13）：マイページの全ての入口（右上の「レポート」・最新の結果・過去の記録）で共通。
+//   この記録の購入対象トークンを作り、js/report-purchase.js（EdBuy）で申し込む。完全解析は共通の目標の選択の画面から
 document.addEventListener('click', async (e) => {
   const btn = e.target && e.target.closest && e.target.closest('[data-analysis-checkout], [data-complete-checkout]');
-  if (!btn || btn.disabled) return;
+  if (!btn || btn.disabled || typeof EdBuy === 'undefined') return;
   e.preventDefault();
   const analysis = btn.hasAttribute('data-analysis-checkout');
   const id = btn.getAttribute(analysis ? 'data-analysis-checkout' : 'data-complete-checkout');
+  const product = analysis ? 'analysis' : 'complete';
+  let msg = btn.parentElement && btn.parentElement.querySelector('.mp-checkout-msg');
+  const say = (text) => {
+    if (!msg) {
+      msg = document.createElement('p');
+      msg.className = 'mp-checkout-msg';
+      msg.setAttribute('role', 'status');
+      btn.insertAdjacentElement('afterend', msg);
+    }
+    msg.textContent = text;
+  };
+  if (msg) msg.textContent = '';
+  const goal = product === 'complete' ? await EdBuy.goalDialog() : null;
+  if (product === 'complete' && !goal) return;
   EdNavBusy.hold(btn, '決済画面へ移動しています…');
-  const r = await mpStartCheckout(analysis ? { diagnosisSessionId: id, product: 'analysis' } : { diagnosisSessionId: id },
-    btn.getAttribute('data-source') || 'mypage', analysis ? 'analysis' : 'complete');
-  // 移動を始めた：戻る・タブ復帰では js/nav-busy.js が押せる状態へ戻す
+  const c = await EdBuy.contextFromRecord(id);
+  if (!c.ok || !c.body || !EdBuy.contextOk(c.body.context)) {
+    EdNavBusy.release(btn);
+    say(EdBuy.errorText(c.body && c.body.error === 'not_authenticated' ? 'context_expired' : (c.body && c.body.error)));
+    return;
+  }
+  const r = await EdBuy.start({ context: c.body.context, product, goal, source: btn.getAttribute('data-source') || 'mypage_history' });
   if (r.ok) { EdNavBusy.handoff(btn); return; }
   EdNavBusy.release(btn);
-  let msg = btn.parentElement && btn.parentElement.querySelector('.mp-checkout-msg');
-  if (!msg) {
-    msg = document.createElement('p');
-    msg.className = 'mp-checkout-msg';
-    msg.setAttribute('role', 'status');
-    btn.insertAdjacentElement('afterend', msg);
-  }
-  msg.textContent = mpCheckoutErrorText(r.error);
-  if (r.error === 'guest_purchase_unclaimed' || r.error === 'guest_purchase_completed') {
-    msg.insertAdjacentHTML('beforeend', ' <a href="/mypage.html#recover">購入時のメールアドレスで確認して引き継ぐ</a>');
-  }
-  if (MP_REFRESH_ERRORS.includes(r.error)) setTimeout(() => { init(); }, 1800);
+  if (!r.silent) say(EdBuy.errorText(r.error));
+});
+// サンプル（マイページから）：この記録を購入の対象として、サンプルページへ（同じタブ。トークンはフラグメント）
+document.addEventListener('click', async (e) => {
+  const a = e.target && e.target.closest && e.target.closest('[data-mp-sample]');
+  if (!a || typeof EdBuy === 'undefined') return;
+  e.preventDefault();
+  const product = a.getAttribute('data-mp-sample') === 'complete' ? 'complete' : 'analysis';
+  EdBuy.track(product === 'complete' ? 'complete_sample_open' : 'analysis_sample_open', { source: 'mypage' });
+  const c = await EdBuy.contextFromRecord(a.getAttribute('data-record'));
+  location.assign(EdBuy.sampleHref(product, c.ok && c.body ? c.body.context : null, 'mypage'));
 });
 function v2ClosenessLine(label, ranking, purchased) {
   const top = v2TopName(ranking);
@@ -1303,7 +1329,7 @@ function renderGate(root, message) {
     <div class="gate" id="historyGateArea">
       <p class="gate-title">マイページを作成・ログイン</p>
       <p data-gate-methods>はじめての方は、${mpAuthMethodsText()}で無料で作成できます。<br>以前に保存した方は、保存したときと同じ方法でログインしてください。</p>
-      <p class="gate-note" data-gate-purchase-note>ログインなしで購入した方は、<b>購入時のメールアドレス</b>で作成・ログインすると、購入した解析レポート・完全解析がマイページに自動で引き継がれます（購入した端末でなくても引き継げます）。</p>
+      <p class="gate-note" data-gate-purchase-note>購入したレポートは、レポートのリンク（URL）の「マイページに登録する」から、このマイページに追加できます。購入時のメールアドレスと同じアカウントでなくても登録できます。</p>
       <div id="gateAuth"></div>
       <div class="gate-msg" id="gateMsg">${message || ''}</div>
     </div>
@@ -1360,7 +1386,7 @@ function renderEmpty(root, user) {
       まだ保存された診断記録がありません。<br>
       診断結果画面の「結果を保存」から記録できます。
       <p class="empty-hint">以前ほかの方法${mpOtherMethodsText()}で保存した記録は、そのときと同じ方法でログインすると表示されます。</p>
-      <p class="empty-hint" data-empty-purchase-note>ログインなしで購入した方：購入時のメールアドレスでログインすると、自動で引き継がれます。別のメールアドレス・X でログインしている時は、<a href="/mypage.html#recover">購入時のメールアドレスで確認して引き継ぐ</a>から引き継げます。</p>
+      <p class="empty-hint" data-empty-purchase-note>購入したレポートは、レポートのリンク（購入完了ページ・レポートの最下部）の「マイページに登録する」から、このマイページに追加できます。</p>
     </div>
     ${user ? mpAccountHtml(user) : ''}
     ${caSheetShellHtml([])}
@@ -1967,59 +1993,192 @@ function caGuideHtml(r, g, pending) {
       <div class="ca-rec-guide-action">${action}${note}</div>
     </div>`;
 }
-// 記録の購入・閲覧導線（2026-10-07）。LATEST RESULT と THE RECORDS の両方がこの関数だけを使う
-// （文言・価格・状態判定をずらさないため）。引数の記録（diagnosis_session_id）だけを対象にする。
-//   購入状態を確認できない：購入・閲覧ボタンを出さず、「もう一度確認する」だけ
-//   無料のみ：解析レポート ¥1,000（既存の決済導線）／完全解析 ¥3,000（準備中・押せない）
-//   解析レポート購入済み：解析レポートを見る／完全解析へアップグレード ¥2,000（準備中・押せない）
-//   完全解析購入済み：解析レポートを見る／完全解析を見る
-// 完全解析の対象外（旧版など）の記録には、完全解析のボタンを出さない。
-// source：¥1,000 導線の既存の計測（mypage_unlock_click）の source。'latest' または 'records'。
+/* ============================================================
+   記録ごとのレポート（complete_13・表14）。LATEST RESULT・THE RECORDS・右上の「レポート」の全てがこの規則だけを使う。
+   解析レポート（A ¥1,000）と完全解析（B ¥3,000）は別の商品。A は B を開けず、B は A を開けない。
+     登録なし　　　：解析レポート ¥1,000／完全解析 ¥3,000
+     A のみ　　　　：解析レポートを読む／完全解析 ¥3,000
+     B のみ　　　　：解析レポート ¥1,000／完全解析を読む
+     A・B とも　　：解析レポートを読む／完全解析を読む
+   「読む」の根拠：このアカウントに登録したレポート（report_deliveries）。以前の仕組みで本人が購入済みの権利（my-entitlements）もそのまま読める。
+   返金・停止は、そのレポート（納品）だけを止める。もう一方の商品・別の注文には影響しない。
+   ============================================================ */
+function mpDeliveryRank(d) {
+  if (!d) return -1;
+  if (d.state === 'active') return d.product === 'complete' && !(d.report && d.report.status === 'ready') ? 2 : 3;
+  return d.state === 'pending' ? 1 : 0;
+}
+// 同じ記録・同じ商品の納品が複数（買い直し）：読めるものを優先する
+function mpBestDelivery(list, product) {
+  return (list || []).filter((d) => d.product === product).sort((x, y) => mpDeliveryRank(y) - mpDeliveryRank(x))[0] || null;
+}
+// このアカウントに登録したレポートを記録に重ねる（本人の記録でない記録は、マイページの記録と同じ形で加える）。
+// 購入時メール・Cookie・同じ結果の別の記録では判定しない（登録だけが根拠）
+let mpReportsOk = true;
+async function mpMergeReports(sessions) {
+  mpReportsOk = true;
+  if (typeof EdBuy === 'undefined' || !Array.isArray(sessions)) return;
+  const r = await EdBuy.myReports();
+  if (!r.ok || !r.body || !Array.isArray(r.body.reports)) { mpReportsOk = false; return; }
+  const byId = new Map(sessions.map((s) => [String(s.id), s]));
+  (r.body.records || []).forEach((row) => {
+    if (!row || byId.has(String(row.id)) || typeof mapHistoryRow !== 'function') return;
+    const s = mapHistoryRow(row);
+    s.registeredOnly = true;
+    sessions.push(s); // 配列の同一性は保つ（購入状態の確認結果の対応付けに使う）
+    byId.set(String(s.id), s);
+  });
+  r.body.reports.forEach((d) => {
+    const s = byId.get(String(d.record));
+    if (!s) return;
+    (s.deliveries = s.deliveries || []).push(d);
+  });
+  sessions.forEach((s) => {
+    s.analysisDelivery = mpBestDelivery(s.deliveries, 'analysis');
+    s.completeDelivery = mpBestDelivery(s.deliveries, 'complete');
+  });
+}
+// レポートのリンクからの登録（ログインの後も、このタブで続ける）。秘密値は URL・GA4・ログに出さない
+async function mpRegisterFromIntent() {
+  if (typeof EdBuy === 'undefined') return null;
+  const token = EdBuy.takeRegisterIntent();
+  if (!token) return null;
+  const r = await EdBuy.register(token);
+  if (r.ok && r.body && (r.body.result === 'registered' || r.body.result === 'already')) {
+    EdBuy.track('report_register_done', { result: r.body.result, product: r.body.product === 'complete' ? 'complete' : 'analysis' });
+    return { ok: true, result: r.body.result, product: r.body.product };
+  }
+  const error = (r.body && r.body.error) || (r.status === 0 ? 'network' : 'unknown');
+  EdBuy.track('report_register_failed', { reason: error });
+  return { ok: false, error, token: error === 'network' || error === 'service_unavailable' ? token : null };
+}
+const MP_REGISTER_ERRORS = {
+  link_not_found: 'このレポートのリンクは無効です（再発行された・または誤ったリンクです）。登録できませんでした。',
+  link_inactive: 'このレポートは、返金・停止などのため現在ご覧いただけないため、登録できませんでした。',
+  payment_pending: 'お支払いの確認が済んでいないため、まだ登録できません。少し時間をおいて、レポートのリンクからもう一度お試しください。',
+  not_authenticated: 'ログインの確認ができませんでした。もう一度ログインしてから、レポートのリンクの「マイページに登録する」をお試しください。',
+};
+function mpShowRegisterOutcome(root, out) {
+  if (!out) return;
+  const name = out.product === 'complete' ? '完全解析' : '解析レポート';
+  const html = out.ok
+    ? `<p>${out.result === 'already' ? `この${name}は、このマイページに登録済みです。` : `${name}を、このマイページに登録しました。`}</p>`
+    : `<p>${mpEsc(MP_REGISTER_ERRORS[out.error] || '登録できませんでした。時間をおいて、レポートのリンクの「マイページに登録する」からもう一度お試しください。')}</p>`
+      + (out.token ? '<button type="button" class="mp-btn" data-register-retry>もう一度登録する</button>' : '');
+  const box = mpClaimBox(root, html);
+  const retry = box.querySelector('[data-register-retry]');
+  if (retry) retry.onclick = () => { EdBuy.startRegister(out.token, 'mypage_retry'); };
+}
+function mpAnalysisDelivery(r) { return (r && r.session && r.session.analysisDelivery) || null; }
+function mpCompleteDelivery(r) { return (r && r.session && r.session.completeDelivery) || null; }
+// 完全解析の対象（ETI v2 の100問・RC1 の版）か。サーバーの判定があればそれを正とする
+function mpCompleteEligible(r) {
+  const sv = caServerOf(r);
+  if (sv.lookup === 'ok' && sv.complete) return sv.complete.completeEligible === true;
+  return caAvailable() ? caIsEligible(r) : false;
+}
+// 以前の仕組みで本人が購入した完全解析の権利（閲覧の状態表示は従来どおり）
+function mpLegacyCompleteView(r) {
+  const sv = caServerOf(r).complete;
+  if (!sv || !(sv.completeEntitlement === 'active' || sv.completeEntitlement === 'suspended')) return null;
+  return caViewOf(r);
+}
+const MP_STOPPED = { refunded: '返金のため、このレポートは現在ご覧いただけません。', suspended: 'お支払いの確認中のため、このレポートは現在ご覧いただけません。', revoked: 'このレポートのリンクは停止・再発行されています。' };
+function mpBuyButtonHtml(r, product, cls, source) {
+  const s = r.session || {};
+  const isA = product === 'analysis';
+  const price = isA ? '¥1,000' : '¥3,000';
+  const name = isA ? '解析レポート' : '完全解析';
+  if (!s.isV2) return isA ? `<p class="mp-legacy-retired" role="note">${MP_LEGACY_RETIRED_TEXT}</p>` : '';
+  if (!isA && !mpCompleteEligible(r)) return '<p class="mp-rec-mentor" role="note">完全解析（全46ページ）は、最新版の100問で診断した記録が対象です。</p>';
+  if (!mpSalesOpen() || !s.id || (isA && !V2_REPORT_SALES_ENABLED)) {
+    return `<button type="button" class="${cls} is-pending" disabled aria-disabled="true" style="opacity:0.6;cursor:not-allowed">${isA ? name : `${name} ${price}`}（準備中）</button>`
+      + (isA || /\bca-btn\b/.test(cls) ? '' : `<p class="mp-rec-note">${mpEsc(EdBuy.COMPLETE_NOTICE)}</p>`);
+  }
+  const attr = isA ? 'data-analysis-checkout' : 'data-complete-checkout';
+  return `<button type="button" class="${cls}" ${attr}="${mpEsc(s.id)}" data-source="${mpEsc(source)}">${name}　${price}</button>`
+    + (isA || /\bca-btn\b/.test(cls) ? '' : `<p class="mp-rec-note">${mpEsc(EdBuy.COMPLETE_NOTICE)}</p>`)
+    + `<a class="mp-rec-sample" href="#" data-mp-sample="${product}" data-record="${mpEsc(s.id)}">${name}のサンプルを見る</a>`;
+}
+function mpReadButtonHtml(d, cls, label) {
+  return `<button type="button" class="${cls}" data-mp-open="${mpEsc(d.delivery)}">${label}</button>`;
+}
+// 解析レポート（A）の行
+function mpAnalysisRowHtml(r, cls, source) {
+  const d = mpAnalysisDelivery(r);
+  if (d && d.state === 'active') return mpReadButtonHtml(d, cls, '解析レポートを読む');
+  if (r.purchased) return purchasedReportButton(r.session, cls, '解析レポートを読む');
+  // 以前の仕組みで購入済みだが今は読めない（異議申し立ての確認中など）：重ねて売らない
+  const lsv = caServerOf(r).complete;
+  if (lsv && lsv.analysisPurchased) return '<p class="mp-rec-mentor" role="status">この記録の解析レポートは、現在確認中です。</p>';
+  const stopped = d && MP_STOPPED[d.state] ? `<p class="mp-rec-mentor" role="status">${MP_STOPPED[d.state]}</p>` : '';
+  return stopped + mpBuyButtonHtml(r, 'analysis', cls, source);
+}
+// 完全解析（B）の行
+function mpCompleteRowHtml(r, cls, source) {
+  const d = mpCompleteDelivery(r);
+  if (d && d.state === 'active') {
+    const st = d.report ? d.report.status : 'generating';
+    if (st === 'ready') return mpReadButtonHtml(d, cls, '完全解析を読む');
+    if (st === 'failed') {
+      return '<p class="mp-rec-mentor" role="status">完全解析を作成できませんでした。</p>'
+        + (d.report && d.report.regenerate === 'available'
+          ? `<button type="button" class="${cls}" data-mp-regenerate="${mpEsc(d.delivery)}">もう一度作成する</button>`
+          : '<p class="mp-rec-note">運営者が確認して作成し直します。お手数ですが @mondayaxad までご連絡ください（追加のお支払いは不要です）。</p>');
+    }
+    return `<p class="mp-rec-mentor" role="status">完全解析を作成しています。数分かかることがあります。</p><button type="button" class="mp-btn" data-mp-refresh>状態を更新</button>`;
+  }
+  const legacy = mpLegacyCompleteView(r);
+  if (legacy) return caViewHtml(r, legacy);
+  const lsv = caServerOf(r).complete;
+  const stopped = d && MP_STOPPED[d.state] ? `<p class="mp-rec-mentor" role="status">${MP_STOPPED[d.state]}</p>`
+    : lsv && lsv.completeEntitlement === 'revoked' ? '<p class="mp-rec-mentor" role="status">返金などにより、以前の完全解析は終了しています。もう一度お申し込みいただけます。</p>' : '';
+  return stopped + mpBuyButtonHtml(r, 'complete', cls, source);
+}
 function mpRecordActionsHtml(r, source) {
   if (!mpEntitlementOk) return mpRecordUnknownHtml();
-  const st = caAvailable() ? caStateOf(r) : null;
-  const offer = st ? CompleteAnalysis.pendingOfferFor(st) : null;
-  // 完全解析を購入済みの記録（Preview）では、閲覧の状態（準備中・見る・再確認・停止・失効）を出す
-  const view = caViewOf(r);
-  // MENTOR 目標の選択が有効な記録（Preview）では、準備中ボタンの代わりに目標選択への導線・確認中の表示を出す
-  const pending = view ? caViewHtml(r, view)
-    : caMentorMode(r) ? caRecordMentorHtml(r)
-    : (offer ? CompleteAnalysis.pendingButtonHtml(offer, 'mp-btn mp-btn-pending') : '');
-  const guide = caGuideMode(r);
-  const items = [];
-  if (r.purchased) {
-    items.push(purchasedReportButton(r.session, 'mp-btn primary', '解析レポートを見る'));
-    if (view) {
-      // 完全解析の権利が分かっている記録：閲覧・準備中・作り直しの表示（サーバーの状態）
-      items.push(pending);
-    } else if (caKey(r) === 'complete_ready') {
-      items.push(`<button type="button" class="mp-btn" data-session-id="${encodeURIComponent(String((r.session && r.session.id) || ''))}" onclick="openPurchasedComplete(decodeURIComponent(this.dataset.sessionId), this)">完全解析を見る</button>`);
-    } else if (guide) {
-      // 解析購入済み・完全解析の権利なし（Preview）：購入案内（説明は常に表示、決済は状態で止める）。権利の確認が済むまでは決済を出さない
-      items.push(caGuideHtml(r, guide, pending));
-    } else if (pending) {
-      items.push(pending);
-    }
-  } else {
-    // 完全解析の権利がある記録には、解析レポート ¥1,000 の購入導線を出さない（完全解析が内包する）。
-    // 完全解析の状態を読み取れなかった時（権利の有無が不明）だけは、従来どおり ¥1,000 の導線を残す
-    const svc = caServerOf(r).complete;
-    // ¥2,000 の後に ¥1,000 だけ返金（完全解析の根拠が無い）：解析レポートを買い直すと完全解析も読める
-    const basisInactive = !!(svc && svc.completeViewBlocked === 'basis_inactive');
-    const liveComplete = !!(svc && (svc.completeEntitlement === 'active' || svc.completeEntitlement === 'suspended'));
-    const hasComplete = !basisInactive && !!(view && (liveComplete || view.kind !== 'retry'));
-    if (svc && svc.analysisPurchased) {
-      // 解析レポートは購入済みだが、今は読めない（異議申し立ての確認中など）：¥1,000 を出さない（購入済みに重ねて売らない）
-      items.push('<p class="mp-rec-mentor" role="status">この記録の解析レポートは、現在確認中です。</p>');
-    } else if (!hasComplete) {
-      items.push(v2ReportCta(r.session, 'mp-btn primary', source === 'latest' ? 'latest' : 'records',
-        basisInactive ? `解析レポート　${MP_REPORT_PRICE}（完全解析を読むために必要です）` : `解析レポート　${MP_REPORT_PRICE}`));
-    }
-    if (pending) items.push(pending);
-  }
+  // 登録したレポートを確かめられない：申込の導線は出さない（買い直しの取り違えを防ぐ）。以前の仕組みで本人が購入済みのレポートは読める
+  if (!mpReportsOk) return (r.purchased ? `<div class="mp-rec-actions">${purchasedReportButton(r.session, 'mp-btn primary', '解析レポートを読む')}</div>` : '') + mpRecordUnknownHtml();
+  const src = source === 'latest' ? 'mypage_latest' : 'mypage_history';
   const rid = String((r.session && r.session.id) || '');
-  return `<div class="mp-rec-actions" data-rec-actions="${encodeURIComponent(rid)}" data-rec-source="${source === 'latest' ? 'latest' : 'records'}">${items.join('')}</div>`;
+  return `<div class="mp-rec-actions" data-rec-actions="${encodeURIComponent(rid)}" data-rec-source="${source === 'latest' ? 'latest' : 'records'}">
+    <div class="mp-rec-row" data-rec-product="analysis">${mpAnalysisRowHtml(r, 'mp-btn primary', src)}</div>
+    <div class="mp-rec-row" data-rec-product="complete">${mpCompleteRowHtml(r, 'mp-btn', src)}</div></div>`;
 }
+// 登録したレポートを開く（開くたびにサーバーが支払い・返金・停止を確かめる）
+async function mpOpenDelivery(button) {
+  const id = button.getAttribute('data-mp-open');
+  EdNavBusy.hold(button, 'レポートを準備中…');
+  const old = button.parentElement && button.parentElement.querySelector('.report-open-error');
+  if (old) old.remove();
+  const r = await EdBuy.myOpen(id);
+  if (r.ok && r.body && typeof r.body.url === 'string' && r.body.url.charAt(0) === '/') {
+    EdBuy.track(r.body.product === 'complete' ? 'complete_report_open' : 'analysis_report_open', { source: 'mypage' });
+    navigateTo(r.body.url);
+    EdNavBusy.handoff(button);
+    return;
+  }
+  EdNavBusy.release(button);
+  const m = document.createElement('p');
+  m.className = 'report-open-error';
+  m.textContent = r.ok && r.body && r.body.state && r.body.state !== 'active' ? (MP_STOPPED[r.body.state] || 'このレポートは現在ご覧いただけません。') : 'レポートを開けませんでした。時間をおいて再度お試しください。';
+  button.insertAdjacentElement('afterend', m);
+}
+document.addEventListener('click', async (e) => {
+  const t = e.target && e.target.closest ? e.target : null;
+  if (!t || typeof EdBuy === 'undefined') return;
+  const open = t.closest('[data-mp-open]');
+  if (open) { e.preventDefault(); if (!open.disabled) mpOpenDelivery(open); return; }
+  const regen = t.closest('[data-mp-regenerate]');
+  if (regen) {
+    e.preventDefault();
+    regen.disabled = true;
+    await EdBuy.myRegenerate(regen.getAttribute('data-mp-regenerate'));
+    if (typeof init === 'function') init();
+    return;
+  }
+  if (t.closest('[data-mp-refresh]')) { e.preventDefault(); if (typeof init === 'function') init(); }
+});
 /* 決済をやり直す（POST ?op=user-checkout-reset）：この記録の未払いの決済画面を閉じてから、購入状態を取り直す。
    支払い済みだった時はそのまま反映される（二重に請求しない）。 */
 async function mpCheckoutReset(button) {
@@ -2443,7 +2602,8 @@ function caApplyStates(records) {
   if (preview) mpEntitlementOk = preview !== 'unknown';
 }
 
-const CA_TRIGGER_LABEL = { empty: 'アップグレード', free: 'アップグレード', analysis: '完全解析へ', analysis_only: 'アップグレード', complete_generating: '準備中', complete_failed: '準備中', complete_ready: '完全解析を見る', unknown: '状態を確認' };
+// 右上の入口は、購入状態にかかわらず「レポート」（complete_13）。状態は data-state にだけ残す
+const CA_TRIGGER_LABEL = { empty: 'レポート', free: 'レポート', analysis: 'レポート', analysis_only: 'レポート', complete_generating: 'レポート', complete_failed: 'レポート', complete_ready: 'レポート', unknown: 'レポート' };
 // 右上の入口（2026-10-07）：ログイン中の本人には、購入状態にかかわらず出す（未購入者にも出す）。
 // 購入する商品だけでなく、対象の診断記録を決める入口。最新の記録へ勝手に紐づけない。
 //   記録0件：診断を始める案内／記録1件：その記録の状態で文言を決める（選択済み）
@@ -2537,108 +2697,75 @@ function caGoRediagnosis() {
   if (sec) sec.scrollIntoView({ behavior: window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
 }
 
+// 右上の「レポート」のシート：選んだ記録の解析レポート（A）・完全解析（B）を、記録内と同じ規則（表14）で示す
 function caSheetBodyHtml(r) {
-  if (caMentorMode(r)) {
-    if (caStep === 'goal') return caMentorGoalHtml(r);
-    if (caStep === 'confirm') return caMentorConfirmHtml(r);
-    const overview = caMentorOverviewHtml(r);
-    if (overview) return overview;
-  }
-  const k = caKey(r);
   const target = caTargetHtml(r);
-  const eligible = caIsEligible(r);
-  if (k === 'free' && !eligible) {
-    // 完全解析の対象外（旧版など）：解析レポートだけを示し、完全解析のセクション・購入導線は出さない
+  if (!mpEntitlementOk || !mpReportsOk) {
     return `${target}
-      <h2 class="ca-lead" id="latest-upgrade-title">この記録に、もう一つ深い観測を加える。</h2>
-      ${caAnalysisCardHtml(r)}
-      <div class="ca-ineligible">
-        <p class="ca-body">完全解析（全46ページ）は、最新版の100問で診断した記録が対象です。この記録は以前の版のため、解析レポートのみご利用いただけます。</p>
-        <button type="button" class="ca-btn ca-quiet-action" onclick="caGoRediagnosis()">最新版で診断する（RE-DIAGNOSIS）</button>
-      </div>`;
-  }
-  if (k === 'free') {
-    const direct = CompleteAnalysis.OFFERS.direct;
-    return `${target}
-      <h2 class="ca-lead" id="latest-upgrade-title">この記録に、もう一つ深い観測を加える。</h2>
-      ${caAnalysisCardHtml(r)}
-      <section class="ca-card ca-card--secondary" aria-label="完全解析">
-        <div class="ca-card-head"><span class="ca-eyebrow">COMPLETE ANALYSIS</span><span class="ca-pages"><span class="ca-pages-ja">全46ページ</span><span class="ca-pages-en">COMPLETE RECORD</span></span></div>
-        <h3 class="ca-title">完全解析</h3>
-        <p class="ca-body">三つの人物像から、この結果の全体を統合します。</p>
-        ${caLensBlockHtml()}
-        <div class="ca-price-row"><span class="ca-meta">解析レポートの内容もすべて含まれます</span><span class="ca-price">${direct.price}</span></div>
-        ${CompleteAnalysis.pendingButtonHtml(direct, 'ca-btn ca-secondary-action')}
-        ${CA_PENDING_NOTE}
-      </section>`;
-  }
-  if (k === 'analysis' && eligible) {
-    const up = CompleteAnalysis.OFFERS.upgrade;
-    return `${target}
-      <div class="ca-state-head">
-        <div class="ca-eyebrow">ANALYSIS OBSERVED</div>
-        <h2 class="ca-lead" id="latest-upgrade-title">構造と解釈まで観測されています</h2>
-      </div>
-      <section class="ca-card ca-card--secondary is-sole" aria-label="完全解析">
-        <div class="ca-card-head"><span class="ca-eyebrow">COMPLETE ANALYSIS</span><span class="ca-pages"><span class="ca-pages-ja">全46ページ</span><span class="ca-pages-en">COMPLETE RECORD</span></span></div>
-        <h3 class="ca-title">完全解析</h3>
-        ${caLensBlockHtml()}
-        <div class="ca-price-row"><span class="ca-meta">対象：${mpComboText(r)}／この診断記録</span><span class="ca-price">追加 ${up.price}</span></div>
-        ${CompleteAnalysis.pendingButtonHtml(up, 'ca-btn ca-secondary-action')}
-        ${CA_PENDING_NOTE}
-      </section>`;
-  }
-  if (k === 'complete_generating' || k === 'complete_failed') {
-    return `${target}
-      <div class="ca-state-head">
-        <div class="ca-card-head"><span class="ca-eyebrow">COMPLETE ANALYSIS</span><span class="ca-status">準備中</span></div>
-        <h2 class="ca-state-title" id="latest-upgrade-title">完全解析を準備しています</h2>
-        <p class="ca-body">この記録の結果をもとに、統合処理を進めています。解析レポートは、すでに確認できます。</p>
-      </div>
-      ${purchasedReportButton(r.session, 'ca-btn ca-view-action', '解析レポートを見る')}
-      <button type="button" class="ca-btn ca-quiet-action" onclick="caRecheck(this)">状態を更新</button>`;
-  }
-  if (k === 'complete_ready') {
-    const id = encodeURIComponent(String(r.session.id));
-    return `${target}
-      <div class="ca-state-head">
-        <div class="ca-card-head"><span class="ca-eyebrow">COMPLETE ANALYSIS</span><span class="ca-pages"><span class="ca-pages-ja">全46ページ</span><span class="ca-pages-en">COMPLETE RECORD</span></span></div>
-        <h2 class="ca-state-title" id="latest-upgrade-title">この記録の完全解析が保存されています</h2>
-      </div>
-      <button type="button" class="ca-btn ca-primary-action" data-session-id="${id}" onclick="openPurchasedComplete(decodeURIComponent(this.dataset.sessionId), this)">完全解析を見る</button>
-      ${purchasedReportButton(r.session, 'ca-btn ca-view-action', '解析レポートを見る')}`;
-  }
-  if (k === 'analysis') {
-    // 完全解析の対象外で解析レポートは購入済み（通常は入口自体を出さない。念のための安全側表示）
-    return `${target}
-      <div class="ca-state-head"><h2 class="ca-lead" id="latest-upgrade-title">この記録は、構造と解釈まで観測されています</h2></div>
-      ${purchasedReportButton(r.session, 'ca-btn ca-view-action', '解析レポートを見る')}`;
-  }
-  return `${target}
     <div class="ca-state-head is-unknown">
       <h2 class="ca-state-title" id="latest-upgrade-title">購入状態を確認できませんでした</h2>
       <p class="ca-body">通信状態を確認して、もう一度お試しください。</p>
     </div>
     <button type="button" class="ca-btn ca-view-action" onclick="caRecheck(this)">状態を再確認</button>`;
+  }
+  const analysisCard = `<section class="ca-card ca-card--primary" aria-label="解析レポート">
+        <div class="ca-eyebrow">STRUCTURE / INTERPRETATION</div>
+        <h3 class="ca-title">解析レポート</h3>
+        <p class="ca-body">この結果の内側にある、考え方・動き方・選び方を観測します。</p>
+        ${caObservationGridHtml(r)}
+        <div class="ca-price-row"><span class="ca-meta">この記録の解析レポート</span><span class="ca-price">${MP_REPORT_PRICE}</span></div>
+        <div class="mp-rec-row" data-rec-product="analysis">${mpAnalysisRowHtml(r, 'ca-btn ca-primary-action', 'mypage_header')}</div>
+      </section>`;
+  if (!mpCompleteEligible(r)) {
+    // 完全解析の対象外（旧版など）：完全解析のセクション・申込は出さない
+    return `${target}
+      <h2 class="ca-lead" id="latest-upgrade-title">この記録のレポート</h2>
+      ${analysisCard}
+      <div class="ca-ineligible">
+        <p class="ca-body">完全解析（全46ページ）は、最新版の100問で診断した記録が対象です。この記録は以前の版のため、完全解析はご利用いただけません。</p>
+        <button type="button" class="ca-btn ca-quiet-action" onclick="caGoRediagnosis()">最新版で診断する（RE-DIAGNOSIS）</button>
+      </div>`;
+  }
+  return `${target}
+      <h2 class="ca-lead" id="latest-upgrade-title">この記録のレポート</h2>
+      ${analysisCard}
+      <section class="ca-card ca-card--secondary" aria-label="完全解析">
+        <div class="ca-card-head"><span class="ca-eyebrow">COMPLETE ANALYSIS</span><span class="ca-pages"><span class="ca-pages-ja">全46ページ</span><span class="ca-pages-en">COMPLETE RECORD</span></span></div>
+        <h3 class="ca-title">完全解析</h3>
+        <p class="ca-body">三つの人物像から、この結果の全体を統合します。</p>
+        <p class="ca-body" data-complete-notice>${mpEsc(EdBuy.COMPLETE_NOTICE)}</p>
+        ${caLensBlockHtml()}
+        <div class="ca-price-row"><span class="ca-meta">この記録の完全解析（解析レポートとは別の商品）</span><span class="ca-price">¥3,000</span></div>
+        <div class="mp-rec-row" data-rec-product="complete">${mpCompleteRowHtml(r, 'ca-btn ca-secondary-action', 'mypage_header')}</div>
+      </section>`;
 }
 
 // 記録が複数のとき、対象の記録を選ぶ画面（選ぶまで購入・閲覧の導線は出さない）
+// 記録の選択：A・B それぞれの状態（表14と同じ根拠）
+function mpPickState(r) {
+  if (!mpEntitlementOk || !mpReportsOk) return '購入状態を確認できません';
+  const a = mpAnalysisDelivery(r);
+  const b = mpCompleteDelivery(r);
+  const hasA = (a && a.state === 'active') || r.purchased === true;
+  const hasB = (b && b.state === 'active') || !!mpLegacyCompleteView(r);
+  return `解析レポート ${hasA ? '読めます' : '未購入'}・完全解析 ${hasB ? '読めます' : '未購入'}`;
+}
 const CA_PICK_STATE = { free: '解析レポート 未購入', analysis: '解析レポート 購入済み', complete_generating: '完全解析 準備中', complete_failed: '完全解析 準備中', complete_ready: '完全解析 購入済み', unknown: '購入状態を確認できません' };
 function caPickerHtml(records) {
   return `<div class="ca-state-head">
       <div class="ca-eyebrow">SELECT A RECORD</div>
-      <h2 class="ca-lead" id="latest-upgrade-title">どの診断記録をアップグレードしますか</h2>
-      <p class="ca-body">アップグレードは診断記録ごとです。対象の記録を選んでください。</p>
+      <h2 class="ca-lead" id="latest-upgrade-title">どの診断記録のレポートを見ますか</h2>
+      <p class="ca-body">レポートは診断記録ごとです。対象の記録を選んでください。</p>
     </div>
     <ul class="ca-pick-list">${records.map((r, i) => `<li><button type="button" class="ca-pick" data-pick-index="${i}">
       <span class="ca-pick-date">${mpDate(r.date)}${i === 0 ? '<span class="ca-pick-new">最新</span>' : ''}</span>
       <span class="ca-pick-combo">${mpComboHtml(r)}</span>
-      <span class="ca-pick-state">${CA_PICK_STATE[caKey(r)] || ''}</span></button></li>`).join('')}</ul>`;
+      <span class="ca-pick-state">${mpPickState(r)}</span></button></li>`).join('')}</ul>`;
 }
 // 記録0件：まず診断して記録に残す案内
 function caEmptySheetHtml() {
   return `<div class="ca-state-head">
-      <div class="ca-eyebrow">UPGRADE</div>
+      <div class="ca-eyebrow">REPORT</div>
       <h2 class="ca-lead" id="latest-upgrade-title">まず診断して、結果を記録に残してください</h2>
       <p class="ca-body">解析レポートと完全解析は、診断記録ごとに選べます。診断結果を診断記録に保存すると、ここから選べるようになります。</p>
     </div>
@@ -3509,7 +3636,7 @@ async function initOnce() {
     // 購入の引き継ぎ（購入完了ページ・解析レポートの「マイページに引き継ぐ」）・購入時メールでの復旧から来た時の案内
     let intentNote = '';
     try { intentNote = sessionStorage.getItem('ed_claim_intent_v1') ? 'ログインすると、この端末の購入をマイページに引き継ぎます。' : ''; } catch (e) { intentNote = ''; }
-    if (location.hash === '#recover') intentNote = '購入時のメールアドレスで「メールで続ける」からログインすると、その購入を引き継げます。';
+    if (typeof EdBuy !== 'undefined' && EdBuy.peekRegisterIntent()) intentNote = 'ログイン（または新規登録）すると、購入したレポートをこのマイページに登録します。';
     renderGate(root);
     // OAuth（Google・X）から戻ってログインできなかった：理由を出す（ログイン画面に黙って戻さない）
     const returnError = typeof takeAuthReturnError === 'function' ? takeAuthReturnError() : null;
@@ -3556,8 +3683,11 @@ async function initOnce() {
   // この端末のゲスト購入（Cookie）を、記録を描く前に引き継ぐ。押すまで待つと、結果ページから保存した同じ結果の記録が
   //   未購入に見えて、もう一度購入を求めてしまう（買い直し・二重決済の原因）。引き継ぎはサーバーが Cookie の秘密値と
   //   「ログイン中の確認済みメール＝購入時のメール」を確かめた時だけ行う（共有端末の別の人へは移らない）
-  const claimOutcome = await mpClaimBeforeRender();
+  // 購入時メール・Cookie による自動の引き継ぎは行わない（complete_13）。購入したレポートは、レポートの固有リンクから明示的に登録する
+  const claimOutcome = null;
+  const registerOutcome = await mpRegisterFromIntent();
   const result = await loadDiagnosisHistory(DIAGNOSIS_TYPE);
+  if (result.ok) await mpMergeReports(result.sessions);
   if (!result.ok) {
     renderError(root);
     return;
@@ -3565,8 +3695,7 @@ async function initOnce() {
   if (result.sessions.length === 0) {
     renderEmpty(root, user);
     mpRenderedUserId = user.id;
-    mpShowClaimOutcome(root, claimOutcome, user);
-    mpGuestPurchaseFlow(root, claimOutcome, user);
+    mpShowRegisterOutcome(root, registerOutcome);
     return;
   }
   mpEntitlementOk = mpEntitlementCheckedOk(result.sessions);
@@ -3579,8 +3708,7 @@ async function initOnce() {
     });
     window.scrollTo(0, keepScrollY);
   }
-  mpShowClaimOutcome(root, claimOutcome, user);
-  mpGuestPurchaseFlow(root, claimOutcome, user);
+  mpShowRegisterOutcome(root, registerOutcome);
   // お知らせメール（Kit）の同期は、登録完了と診断の保存の後に diagnosis-save.js の runSignedInFlow() が行う。
 }
 // eti_v2_save.js（Googleログイン復帰後、v2のpending保存が完了した時点）から
@@ -3853,11 +3981,9 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
   if (event !== 'SIGNED_IN') return;
   // 同じ利用者の再通知（タブへの復帰など）では描き直さない。#recover（購入時メールでの確認）は照合へ進むため描き直す
   const uid = session && session.user ? session.user.id : null;
-  if (uid && uid === mpRenderedUserId && location.hash !== '#recover') return;
+  if (uid && uid === mpRenderedUserId) return;
   init();
 });
-// 同じページの「#recover」へのリンク（購入時メールでの確認）：ページは読み込み直されないため、ここで確認の画面へ進める
-window.addEventListener('hashchange', () => { if (location.hash === '#recover') init(); });
 // 戻る操作で（bfcache から）表示された：開いたままのシート・止まったスクロールを残さない
 window.addEventListener('pageshow', (e) => {
   if (!e.persisted) return;

@@ -354,7 +354,24 @@ async function loadDiagnosisHistory(diagnosisType) {
 
   if (error) return { ok: false, error };
 
-  const sessions = (data || []).map(row => {
+  const sessions = (data || []).map(mapHistoryRow);
+
+  // 【修正】これまで呼ばれていなかった/api/my-entitlementsを実際に呼び、
+  // sessionsへpurchasedフラグを反映する。以前はここが未接続で、
+  // purchasedが常にundefined（＝常に未解放表示）になっていた。
+  try {
+    await attachPurchasedStatus(sessions);
+  } catch (e) {
+    console.error('entitlement check failed (mypage will show as unpurchased):', e);
+    // 購入状態が確認できなくても、診断履歴自体の表示は継続する
+  }
+
+  return { ok: true, sessions };
+}
+
+// 診断記録の行（diagnosis_sessions と結果・回答）→ マイページの表示用の形。
+//   本人の記録（Supabase から直接）と、レポートの固有リンクから登録した記録（/api/complete-checkout?op=my-reports が同じ形で返す）で共通
+function mapHistoryRow(row) {
     const r = Array.isArray(row.diagnosis_results) ? row.diagnosis_results[0] : row.diagnosis_results;
     const a = Array.isArray(row.diagnosis_answers) ? row.diagnosis_answers[0] : row.diagnosis_answers;
     const isV2 = row.diagnosis_version === 'ETI-2.0';
@@ -380,19 +397,6 @@ async function loadDiagnosisHistory(diagnosisType) {
       encodedAnswers: a ? a.encoded_answers : null,
       purchased: false, // 後段でfetchPurchasedStatus()の結果を使って上書きする
     };
-  });
-
-  // 【修正】これまで呼ばれていなかった/api/my-entitlementsを実際に呼び、
-  // sessionsへpurchasedフラグを反映する。以前はここが未接続で、
-  // purchasedが常にundefined（＝常に未解放表示）になっていた。
-  try {
-    await attachPurchasedStatus(sessions);
-  } catch (e) {
-    console.error('entitlement check failed (mypage will show as unpurchased):', e);
-    // 購入状態が確認できなくても、診断履歴自体の表示は継続する
-  }
-
-  return { ok: true, sessions };
 }
 
 // /api/my-entitlements を呼び、本人の診断コードの購入状態をsessionsへ反映する。
