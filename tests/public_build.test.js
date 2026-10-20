@@ -92,7 +92,10 @@ test('vercel.json：build で dist を作り、dist だけを配信する（clea
   // cleanUrls では /index.html を宛先にできない（404）。TOP（/）へ書き換える
   assert.deepEqual(v.rewrites, [{ source: '/result', destination: '/' }]);
   assert.deepEqual(v.headers, [{ source: '/result', headers: [
-    { key: 'X-Robots-Tag', value: 'noindex, nofollow' }, { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' }] }]);
+    { key: 'X-Robots-Tag', value: 'noindex, nofollow' }, { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' }] },
+  // レポート固有リンク（/report-link#t=）：検索に載せない・Referer を送らない・端末やプロキシに保存しない（complete_13）
+  { source: '/report-link', headers: [
+    { key: 'X-Robots-Tag', value: 'noindex, nofollow' }, { key: 'Referrer-Policy', value: 'no-referrer' }, { key: 'Cache-Control', value: 'private, no-store' }] }]);
   assert.match(fs.readFileSync(path.join(ROOT, '.gitignore'), 'utf8'), /^dist\/$/m);
 });
 

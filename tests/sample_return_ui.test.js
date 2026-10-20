@@ -41,23 +41,6 @@ test.before(async () => {
 });
 test.after(async () => { if (browser) await browser.close(); if (server) server.close(); });
 
-test('申込欄から別のタブで開いたサンプル：「申し込みに戻る」でタブを閉じる（元のページの申込欄は残る）', { skip: skip() }, async () => {
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
-  const opener = await ctx.newPage();
-  await opener.goto(base + '/opener.html');
-  const [popup] = await Promise.all([ctx.waitForEvent('page'), opener.click('#go')]);
-  await popup.waitForLoadState();
-  const errors = [];
-  popup.on('pageerror', (e) => errors.push(String(e)));
-  assert.equal(await popup.locator('[data-sample-return]').count(), 2, '上部と末尾');
-  await popup.locator('.sample-cta [data-sample-return][data-ready="1"]').waitFor({ state: 'attached' });
-  const closed = popup.waitForEvent('close', { timeout: 15000 });
-  await popup.locator('.sample-cta [data-sample-return]').click();
-  await closed;
-  assert.equal(new URL(opener.url()).pathname, '/opener.html');
-  assert.deepEqual(errors, []);
-  await ctx.close();
-});
 
 test('直接開いた（閉じられない）：入口に合わせて移動する。秘密値はフラグメントだけ', { skip: skip() }, async () => {
   const cases = [
@@ -77,17 +60,19 @@ test('直接開いた（閉じられない）：入口に合わせて移動す�
   }
 });
 
-test('320・390・1280px：「申し込みに戻る」が横にはみ出さない・押せる大きさ（44px 以上）・動きを減らす設定でも動く', { skip: skip() }, async () => {
+test('320・390・1280px：「元の画面に戻る」・末尾の申込欄が横にはみ出さない・押せる大きさ（44px 以上）・動きを減らす設定でも動く', { skip: skip() }, async () => {
   for (const width of [320, 390, 1280]) {
     const ctx = await browser.newContext({ viewport: { width, height: 844 }, reducedMotion: 'reduce' });
     const p = await ctx.newPage();
     await p.goto(base + '/complete-sample?from=report');
-    for (const sel of ['.sample-return-top [data-sample-return]', '.sample-cta [data-sample-return]']) {
+    // 上部の「元の画面に戻る」と、末尾の申込欄（直接開いた時は「まず元素診断を受ける」）
+    await p.locator('[data-sample-buy] a.sample-return').waitFor();
+    for (const sel of ['.sample-return-top [data-sample-return]', '[data-sample-buy] a.sample-return']) {
       const b = await p.locator(sel).boundingBox();
       assert.ok(b.height >= 44, `${sel} ${width}`);
       assert.ok(b.x >= 0 && b.x + b.width <= width + 0.5, `${sel} ${width}`);
     }
-    await p.locator('.sample-cta [data-sample-return]').click();
+    await p.locator('.sample-return-top [data-sample-return]').click();
     await p.waitForURL((u) => u.pathname === '/purchase-complete');
     await ctx.close();
   }

@@ -58,7 +58,7 @@ async function setup({ env = {}, prices = PRICES } = {}) {
   const fullEnv = { ...SALES_ENV, ...env };
   // 生成・保存・閲覧は tests/complete_report_job.test.js で試す。ここでは後段の生成を起動しない（試験の後まで走り続けないように）
   const deps = { env: fullEnv, fetchImpl: db.fetchImpl, stripeFactory: stripe.factory, logger, waitUntil: null };
-  const checkoutH = Checkout.createHandler(deps);
+  const checkoutH = Checkout.createHandler({ ...deps, retiredRoutesForTests: true });
   const webhookH = Webhook.createHandler(deps);
   const statusH = Status.createHandler({ env: fullEnv, fetchImpl: db.fetchImpl, logger, waitUntil: null });
   const ctx = {
@@ -249,7 +249,7 @@ test('Production（販売停止中）は Checkout が 503 sales_closed・ゲス�
     { method: 'POST', headers: {}, query: { op: 'guest-checkout' }, body: { offer: 'analysis', code: 'abcdefgh12' } },
   ]) {
     const res = makeRes();
-    await Checkout.createHandler(deps)(req, res);
+    await Checkout.createHandler({ ...deps, retiredRoutesForTests: true })(req, res);
     assert.equal(res.code, 503);
     assert.deepEqual(res.body, { error: 'sales_closed' });
   }
@@ -264,7 +264,7 @@ test('Production の Ref・Stripe モードの取り違えと環境不明では 
     const stripe = fakeStripe({ prices: PRICES });
     const deps = { env, fetchImpl: async (u) => { calls.push(u); throw new Error('no network'); }, stripeFactory: stripe.factory, logger: makeLogger() };
     for (const [h, req] of [
-      [Checkout.createHandler(deps), { method: 'POST', headers: { authorization: 'Bearer x' }, body: { diagnosisSessionId: '11111111-1111-4111-8111-111111111111' } }],
+      [Checkout.createHandler({ ...deps, retiredRoutesForTests: true }), { method: 'POST', headers: { authorization: 'Bearer x' }, body: { diagnosisSessionId: '11111111-1111-4111-8111-111111111111' } }],
       [Status.createHandler(deps), { method: 'GET', headers: { authorization: 'Bearer x' }, query: { diagnosisSessionId: '11111111-1111-4111-8111-111111111111' } }],
       [Webhook.createHandler(deps), eventRequest({ type: 'checkout.session.completed', objectId: 'cs_test_abcdefghij', secret: SECRET }).req],
     ]) {
@@ -731,7 +731,7 @@ test('Webhook：販売を閉じていても返金・dispute を処理する', as
   assert.equal((await send({ type: 'charge.refunded', objectId: chargeId })).code, 200);
   assert.equal(await ctx.state(p.sessionId), 'refunded|lock=true|ent=analysis:revoked,complete:revoked|rep=revoked');
   // Checkout は閉じたまま
-  const co = Checkout.createHandler({ env: { ...SALES_ENV, COMPLETE_SALES_OPEN: 'false' }, fetchImpl: ctx.db.fetchImpl, stripeFactory: ctx.stripe.factory, logger: ctx.logger });
+  const co = Checkout.createHandler({ env: { ...SALES_ENV, COMPLETE_SALES_OPEN: 'false' }, fetchImpl: ctx.db.fetchImpl, stripeFactory: ctx.stripe.factory, logger: ctx.logger, retiredRoutesForTests: true });
   const res = makeRes();
   await co({ method: 'POST', headers: { authorization: `Bearer ${p.token}` }, body: { diagnosisSessionId: p.sessionId } }, res);
   assert.deepEqual([res.code, res.body], [503, { error: 'sales_closed' }]);
@@ -831,7 +831,7 @@ test('旧 Payment Link の購入が無い新診断の記録は、新しい Check
 
 const MyEnt = require(path.join(__dirname, '..', 'api', 'my-entitlements.js'));
 async function legacyVerify(ctx, token, body, { env } = {}) {
-  const h = env ? Checkout.createHandler({ env: { ...ctx.env, ...env }, fetchImpl: ctx.db.fetchImpl, stripeFactory: ctx.stripe.factory, logger: ctx.logger, waitUntil: null }) : null;
+  const h = env ? Checkout.createHandler({ env: { ...ctx.env, ...env }, fetchImpl: ctx.db.fetchImpl, stripeFactory: ctx.stripe.factory, logger: ctx.logger, waitUntil: null, retiredRoutesForTests: true }) : null;
   const res = makeRes();
   const req = { method: 'POST', query: { op: 'legacy-verify' }, headers: { host: 'evil.example', ...(token ? { authorization: `Bearer ${token}` } : {}) }, body };
   if (h) await h(req, res); else await Checkout.createHandler({ env: ctx.env, fetchImpl: ctx.db.fetchImpl, stripeFactory: ctx.stripe.factory, logger: ctx.logger, waitUntil: null })(req, res);

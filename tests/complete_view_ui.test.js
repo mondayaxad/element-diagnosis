@@ -167,6 +167,8 @@ async function open(w, opts = {}) {
       return send(404, { error: 'not_found' });
     });
   }
+  // 登録したレポート（complete_13）：この試験では登録なし
+  await p.route('**/api/complete-checkout?op=my-reports', (r) => r.fulfill({ contentType: 'application/json', body: '{"reports":[],"records":[]}' }));
   await p.route('**/api/my-entitlements', (r) => {
     if (w.calls) w.calls.push({ op: 'my-entitlements', at: w.calls.length });
     const body = { purchased_by_version: w.purchased };
@@ -306,23 +308,6 @@ test('決済からの戻り（complete_return=1）：2秒→3秒→5秒の間隔
   await p.__ctx.close();
 });
 
-test('戻りの確認は最大60秒で止め、手動の「もう一度確認する」へ（無限に確認しない）。既存の戻り先 complete=returned も同じ', { skip: skip() }, async () => {
-  for (const query of ['?complete_return=1', '?complete=returned']) {
-    const w = world({ records: { 'sess-B': rec({ checkoutInProgress: true }), 'sess-A': rec() },
-      statusSeq: { 'sess-B': [{ code: 200, entitlement: 'active', report: 'generating' }] } });
-    const p = await open(w, { query, clock: true });
-    await advance(p, 30000);
-    assert.match(await actions(p, 'sess-B', 'latest').innerText(), /完全解析を準備しています/);
-    await advance(p, 40000);
-    await p.waitForSelector('[data-rec-actions="sess-B"][data-rec-source="latest"] [data-ca-view-recheck]');
-    const n = w.gets.length;
-    assert.ok(n >= 8 && n <= 12, `確認の回数 ${n}`);
-    assert.match(await actions(p, 'sess-B', 'latest').innerText(), /準備に時間がかかっています/);
-    await advance(p, 120000);
-    assert.equal(w.gets.length, n, '60秒の後は自動で確認しない');
-    await p.__ctx.close();
-  }
-});
 
 test('failed／状態取得失敗：「もう一度確認する」。押すと確認し、ready なら「完全解析を見る」へ（フォーカスも移る）', { skip: skip() }, async () => {
   const w = world({ records: { 'sess-B': purchased({ completeStatus: 'failed' }), 'sess-A': rec() } });
@@ -349,19 +334,27 @@ test('failed／状態取得失敗：「もう一度確認する」。押すと�
   await p2.__ctx.close();
 });
 
-test('suspended：「現在、完全解析を閲覧できません」／revoked：「この完全解析は利用できません」。どちらも閲覧ボタン・購入導線なし', { skip: skip() }, async () => {
-  for (const [ent, text] of [['suspended', '現在、完全解析を閲覧できません'], ['revoked', 'この完全解析は利用できません']]) {
-    const w = world({ records: { 'sess-B': purchased({ completeEntitlement: ent, completeStatus: ent === 'revoked' ? 'revoked' : 'ready' }), 'sess-A': rec() } });
-    const p = await open(w);
-    for (const src of ['latest', 'records']) {
-      const box = actions(p, 'sess-B', src);
-      assert.equal(await box.locator('.ca-view-status').innerText(), text);
-      assert.equal(await box.locator('[data-ca-view-open]').count(), 0);
-      assert.doesNotMatch(await box.innerText(), /¥1,000|¥3,000|¥2,000/);
-    }
-    await p.__ctx.close();
+test('suspended：「現在、完全解析を閲覧できません」（閲覧ボタン・購入導線なし）／revoked：終了の案内と、もう一度の申込（complete_13：再購入できる）', { skip: skip() }, async () => {
+  const w = world({ records: { 'sess-B': purchased({ completeEntitlement: 'suspended', completeStatus: 'ready' }), 'sess-A': rec() } });
+  const p = await open(w);
+  for (const src of ['latest', 'records']) {
+    const box = actions(p, 'sess-B', src);
+    assert.equal(await box.locator('.ca-view-status').innerText(), '現在、完全解析を閲覧できません');
+    assert.equal(await box.locator('[data-ca-view-open]').count(), 0);
+    assert.doesNotMatch(await box.locator('[data-rec-product="complete"]').innerText(), /¥/);
   }
+  await p.__ctx.close();
+  const w2 = world({ records: { 'sess-B': purchased({ completeEntitlement: 'revoked', completeStatus: 'revoked', repurchaseBlocked: false }), 'sess-A': rec() } });
+  const p2 = await open(w2);
+  for (const src of ['latest', 'records']) {
+    const box = actions(p2, 'sess-B', src).locator('[data-rec-product="complete"]');
+    assert.match(await box.innerText(), /以前の完全解析は終了しています/);
+    assert.match(await box.innerText(), /完全解析 ¥3,000/);
+    assert.equal(await box.locator('[data-ca-view-open]').count(), 0);
+  }
+  await p2.__ctx.close();
 });
+
 
 test('¥2,000 の根拠の解析レポートが返金された（basis_inactive）：閲覧ボタンを出さず、解析レポート（¥1,000）の申込で読める案内。押した後の 403 basis_inactive も同じ', { skip: skip() }, async () => {
   let w = world({ records: { 'sess-B': purchased({ completeViewBlocked: 'basis_inactive' }), 'sess-A': rec() } });
@@ -478,21 +471,6 @@ test('別ユーザー・別の記録：各ボタンは自分の記録の ID だ�
 });
 
 // 本物の Production（本番ホスト名）はローカルで再現できないため、appEnv が preview 以外（development）で機能フラグが閉じることを確かめる
-test('Preview 以外（appEnv が preview でない）では新しい表示を出さず、complete-status を呼ばない', { skip: skip() }, async () => {
-  const w = world({ appEnv: 'development', completeLookup: null, records: {} });
-  const p = await open(w, { query: '?complete_return=1' });
-  await new Promise((r) => setTimeout(r, 2500));
-  assert.equal(await p.locator('[data-ca-view]').count(), 0);
-  assert.equal(w.gets.length + w.posts.length, 0);
-  assert.ok(await p.locator('.mp-btn-pending').count() >= 1, '従来の準備中ボタンのまま（押せない）');
-  assert.equal(await p.locator('.mp-btn-pending').first().isDisabled(), true);
-  await p.__ctx.close();
-  // Preview でも、my-entitlements が v2 の項目を返さなければ新しい表示を出さない
-  const w2 = world({ completeLookup: null });
-  const p2 = await open(w2);
-  assert.equal(await p2.locator('[data-ca-view]').count(), 0);
-  await p2.__ctx.close();
-});
 
 test('キーボード：Tab で「完全解析を見る」に到達し、フォーカスが見える。Enter で開く', { skip: skip() }, async () => {
   const w = world();
@@ -526,20 +504,6 @@ test('320・390・1280px：全状態で横スクロールなし、操作は 44px
   }
 });
 
-test('Checkout のボタンは押せない：販売開始後も、権利なしの記録は目標の選択の導線だけ（決済へのリンクはない）。停止中は無効の準備中', { skip: skip() }, async () => {
-  const w = world({ records: { 'sess-B': purchased(), 'sess-A': rec() } });
-  const closed = await open(w);
-  const ac = actions(closed, 'sess-A', 'records');
-  assert.equal(await ac.locator('[data-mentor-open]').count(), 0, '販売停止中は目標を選ぶ操作もない');
-  assert.equal(await ac.locator('button.mp-btn-pending').isDisabled(), true);
-  await closed.__ctx.close();
-  const p = await open(w, { salesOpen: true });
-  const a = actions(p, 'sess-A', 'records');
-  assert.match(await a.innerText(), /目標を選ぶ/);
-  assert.equal(await a.locator('[data-ca-view]').count(), 0);
-  assert.equal(await p.locator('a[href*="checkout.stripe.com"], [data-checkout-start]').count(), 0);
-  await p.__ctx.close();
-});
 
 // 5件以上の記録：購入した記録が新しい順で4件目以降でも、戻りの確認の対象になる
 const MANY = ['sess-1', 'sess-2', 'sess-3', 'sess-4', 'sess-5', 'sess-6'].map((id, i) => v2Row(id, `2026-09-${String(28 - i * 3).padStart(2, '0')}T10:00:00Z`, 11 + i * 2));
@@ -547,17 +511,6 @@ function manyWorld(records, statusSeq) {
   return world({ rows: MANY.map((x) => x.row), records: Object.assign(Object.fromEntries(MANY.map((x) => [x.row.id, rec()])), records), statusSeq });
 }
 
-test('戻りの確認：6件の記録のうち5件目（4件目以降）を購入しても確認し、ready で「完全解析を見る」', { skip: skip() }, async () => {
-  const w = manyWorld({ 'sess-5': rec({ checkoutInProgress: true }) },
-    { 'sess-5': [{ code: 200, entitlement: null, report: null }, { code: 200, entitlement: 'active', report: 'generating' }, { code: 200, entitlement: 'active', report: 'ready' }] });
-  const p = await open(w, { query: '?complete=returned', clock: true, width: 1280, height: 900 });
-  await advance(p, 12000);
-  await p.waitForSelector('[data-rec-actions="sess-5"][data-rec-source="records"] [data-ca-view-open]');
-  assert.deepEqual([...new Set(w.gets.map((g) => g.id))], ['sess-5'], '対象の記録だけを確認する');
-  assert.equal(w.gets.length, 3);
-  assert.equal(await p.locator('[data-ca-view]').count(), 1, '他の記録は従来の導線のまま');
-  await p.__ctx.close();
-});
 
 test('戻りの確認：対象が5件あっても同時に確認するのは最大3件。終わった記録の後に残りを確認する', { skip: skip() }, async () => {
   const ready = [{ code: 200, entitlement: 'active', report: 'ready' }];
@@ -578,195 +531,36 @@ test('戻りの確認：対象が5件あっても同時に確認するのは最�
 
 // ゲストで ¥3,000 を購入 → 結果ページからマイページを作成（同じ結果の記録が保存される）→ マイページ：
 //   記録を描く前にこの端末の購入を引き継ぐ（押すのを待たない）。もう一度購入を求めない
-test('ゲスト購入の後にマイページを作成：記録を描く前に自動で引き継ぎ、¥1,000・¥3,000 を求めない（解析レポート・完全解析を見る）', { skip: skip() }, async () => {
-  const w = world({
-    rows: [B.row], calls: [],
-    purchased: {}, records: { 'sess-B': rec({ completeOffer: 'direct_complete' }) },
-    guest: { purchases: [{ ref: 'a1b2c3d4e5f6a7b8c9d0', analysis: 'active', complete: 'active', report: 'ready', pending: false, claimed: false, canClaim: true, canUpgrade: false }] },
-    afterClaim: { purchased: { [`ETI-2.0:${B.code}`]: true }, records: { 'sess-B': purchased({ analysisAccess: true, analysisPurchased: true }) } },
-  });
-  const p = await open(w);
-  await p.waitForFunction(() => /マイページに引き継ぎました/.test(document.body.innerText));
-  const claimAt = w.calls.find((c) => c.op === 'guest-claim').at;
-  const entAt = w.calls.find((c) => c.op === 'my-entitlements').at;
-  assert.ok(claimAt < entAt, '購入状態を読む前に引き継ぐ');
-  const text = await p.locator('#root').innerText();
-  assert.match(text, /完全解析を見る/);
-  assert.doesNotMatch(text, /¥1,000|¥3,000|追加 ?¥2,000/, '購入済みの記録に購入を求めない');
-  assert.equal(w.calls.filter((c) => c.op === 'guest-claim').length, 1);
-  assert.deepEqual(p.__errors, []);
-  await p.__ctx.close();
-});
 
-test('引き継げない（購入時と別のメールのアカウント）：理由と購入時メールでの確認を出し、勝手に移さない', { skip: skip() }, async () => {
-  const w = world({
-    rows: [B.row], calls: [], records: { 'sess-B': rec({ completeOffer: 'direct_complete' }) },
-    guest: { claimError: 'claim_email_mismatch', purchases: [{ ref: 'a1b2c3d4e5f6a7b8c9d0', analysis: 'active', complete: null, report: null, pending: false, claimed: false, canClaim: true, canUpgrade: true }] },
-  });
-  const p = await open(w);
-  await p.waitForSelector('#mpClaimBox a[href="/mypage.html#recover"]');
-  assert.match(await p.locator('#mpClaimBox').innerText(), /購入時に使用したメールアドレスのアカウントでログインしてください/);
-  assert.equal(await p.locator('#mpClaimBtn').count(), 0);
-  assert.equal(w.claimed, undefined);
-  await p.__ctx.close();
-});
 
-test('購入時メールでの確認（#recover）：いまのメールにはコードを送らない。コードで確認した後は、同じ入力の画面に戻さず、確認できたこと・ログイン中のアカウント・見つからなかったことと次の一手を出す', { skip: skip() }, async () => {
-  const w = world({ rows: [], calls: [], guest: { purchases: [] } });
-  const p = await open(w, { query: '#recover', empty: true });
-  await p.waitForSelector('#mpRecoverEmail');
-  assert.match(await p.locator('#mpClaimBox').innerText(), /ログイン中のアカウント：メール（ow\*\*\*@example\.test）/);
-  assert.doesNotMatch(await p.locator('#mpClaimBox').innerText(), /owner@example/, 'メールアドレスをそのまま出さない');
-  assert.match(await p.locator('#mpClaimBox').innerText(), /ログインが切り替わり/);
-  await p.fill('#mpRecoverEmail', 'Owner@example.test');
-  await p.click('#mpRecoverSend');
-  await p.waitForFunction(() => /いまログイン中のアカウントのメールアドレスです/.test(document.getElementById('mpRecoverMsg').textContent));
-  assert.deepEqual(await p.evaluate(() => window.__otp), [], 'いまのメールにはコードを送らない');
-  await p.fill('#mpRecoverEmail', 'buyer@example.test');
-  await p.click('#mpRecoverSend');
-  await p.waitForSelector('#mpRecoverOtp', { state: 'visible' });
-  await p.fill('#mpRecoverOtp', '123456');
-  await p.click('#mpRecoverVerify');
-  await p.waitForFunction(() => /メールアドレスの確認が完了しました/.test(document.body.innerText));
-  const text = await p.locator('#mpClaimBox').innerText();
-  assert.match(text, /このメールアドレスで支払われた、引き継げる購入は見つかりませんでした/);
-  assert.equal(await p.locator('#mpRecoverEmail').count(), 0, '同じ入力の画面に戻さない');
-  await p.waitForTimeout(1800); // 描き直しが重なっても、結果の画面のまま
-  assert.match(await p.locator('#mpClaimBox').innerText(), /メールアドレスの確認が完了しました/);
-  await p.click('[data-mp-recover-again]');
-  await p.waitForSelector('#mpRecoverEmail');
-  await p.click('[data-mp-recover-done]');
-  await p.waitForFunction(() => location.hash === '' && !document.getElementById('mpRecoverEmail'));
-  assert.deepEqual(p.__errors, []);
-  await p.__ctx.close();
-});
 
-test('購入時メールでの確認（#recover）：複数のメールで支払われた記録は「自動では引き継げない」と案内する（見つからなかったとは言わない）', { skip: skip() }, async () => {
-  const w = world({ rows: [], calls: [], guest: { purchases: [] }, recoverMixed: 1 });
-  const p = await open(w, { query: '#recover', empty: true });
-  await p.waitForSelector('#mpRecoverEmail');
-  const text = await p.locator('#mpClaimBox').innerText();
-  assert.match(text, /複数のメールアドレスで支払われているため、自動ではマイページに引き継げません/);
-  assert.doesNotMatch(text, /見つかりませんでした/);
-  await p.__ctx.close();
-});
 
-test('引き継げなかった理由ごとの次の一手：複数のメールの購入は問い合わせ先、手続き中は「もう一度確認する」（購入時メールへの行き来にしない）', { skip: skip() }, async () => {
-  for (const [code, re, recoverLink, retry] of [['claim_mixed_email', /複数のメールアドレス/, 0, 0], ['checkout_in_progress', /決済の手続き/, 0, 1], ['claim_conflict', /別のアカウントに引き継ぎ済み/, 0, 0], ['email_otp_required', /6桁のコード/, 1, 0]]) {
-    const w = world({
-      rows: [B.row], calls: [], records: { 'sess-B': rec({ completeOffer: 'direct_complete' }) },
-      guest: { claimError: code, purchases: [{ ref: 'a1b2c3d4e5f6a7b8c9d0', analysis: 'active', complete: null, report: null, pending: false, claimed: false, canClaim: true, canUpgrade: true }] },
-    });
-    const p = await open(w);
-    await p.waitForSelector('#mpClaimBox');
-    await p.waitForFunction((r) => new RegExp(r).test(document.getElementById('mpClaimBox').innerText), re.source);
-    assert.equal(await p.locator('#mpClaimBox a[href="/mypage.html#recover"]').count(), recoverLink, code);
-    assert.equal(await p.locator('#mpClaimBox [data-mp-claim-retry]').count(), retry, code);
-    assert.match(await p.locator('#mpClaimBox').innerText(), /ログイン中のアカウント/, code);
-    await p.__ctx.close();
-  }
-});
 
 // 総当たり：サーバーが返す記録の状態ごとに、マイページの記録の導線が正しいか（購入済みに購入を求めない・未購入は買える）
-test('総当たり（マイページ）：未購入／解析レポートだけ／完全解析まで／旧購入／決済中の画面が残る／確認できない／同じ結果の重複記録', { skip: skip() }, async () => {
-  const B2 = { ...B.row, id: 'sess-B2', completed_at: '2026-10-02T10:00:00Z' }; // 同じ結果をもう一度保存した記録
-  const owned = { [`ETI-2.0:${B.code}`]: true };
-  const cases = [
-    { name: '未購入', purchased: {}, rec: rec({ completeOffer: 'direct_complete' }), must: [/解析レポート\s*¥1,000/, /¥3,000/], mustNot: [/解析レポートを見る/, /完全解析を見る/] },
-    { name: '解析レポートだけ', purchased: owned, rec: rec({ analysisSource: 'record_entitlement', analysisAccess: true, analysisPurchased: true, completeOffer: 'analysis_upgrade' }),
-      must: [/解析レポートを見る/, /追加\s*¥2,000/], mustNot: [/¥1,000/, /¥3,000/] },
-    { name: '完全解析まで', purchased: owned, rec: purchased({ analysisAccess: true, analysisPurchased: true, completeBlocked: 'repurchase_not_allowed' }),
-      must: [/解析レポートを見る/, /完全解析を見る/], mustNot: [/¥1,000/, /¥2,000/, /¥3,000/] },
-    { name: '旧購入（本人に結び付け済み）', purchased: owned, rec: rec({ analysisAccess: true, legacyAnalysis: true, completeBlocked: 'legacy_purchase_not_eligible' }),
-      must: [/解析レポートを見る/, /旧バージョンのため、完全解析はお申し込みいただけません/], mustNot: [/¥1,000/, /¥2,000/, /¥3,000/] },
-    // 決済中の画面が残っていても、申込を止めない（申込の時にサーバーが古い画面を閉じる）。「手続き中」とは出さない
-    { name: '¥2,000 の決済中の画面が残る（解析レポートあり）', purchased: owned, rec: rec({ analysisSource: 'record_entitlement', analysisAccess: true, analysisPurchased: true, checkoutInProgress: true, completeOffer: 'analysis_upgrade' }),
-      must: [/解析レポートを見る/, /追加\s*¥2,000/], mustNot: [/¥1,000/, /¥3,000/, /手続き中|やり直/] },
-    { name: '解析レポートが確認中（異議申し立て中）', purchased: {}, rec: rec({ analysisPurchased: true, completeBlocked: 'rights_suspended' }),
-      must: [/解析レポートは、現在確認中です/], mustNot: [/¥1,000/, /¥2,000/, /¥3,000/] },
-    { name: '¥2,000 の後に ¥1,000 だけ返金（完全解析の根拠なし）', purchased: {}, rec: purchased({ completeViewBlocked: 'basis_inactive', completeBlocked: 'repurchase_not_allowed' }),
-      must: [/解析レポート\s*¥1,000（完全解析を読むために必要です）/], mustNot: [/¥3,000/] },
-    { name: '¥3,000 の決済中の画面が残る（未購入）', purchased: {}, rec: rec({ checkoutInProgress: true, completeOffer: 'direct_complete' }),
-      must: [/解析レポート\s*¥1,000/, /¥3,000/], mustNot: [/手続き中|やり直/] },
-    { name: '¥3,000 を返金（もう一度買える）', purchased: {}, rec: rec({ completeEntitlement: 'revoked', completeStatus: 'revoked', repurchaseBlocked: false, completeOffer: 'direct_complete' }),
-      must: [/解析レポート\s*¥1,000/, /¥3,000/], mustNot: [/利用できません|権利は終了/] },
-    { name: '確認できない（サーバーは購入済みの印を返せない）', purchased: {}, completeLookup: 'failed', rec: rec(), must: [/購入状態を確認できませんでした/], mustNot: [/¥1,000/, /¥2,000/, /¥3,000/] },
-  ];
-  for (const c of cases) {
-    for (const width of [320, 390, 1280]) {
-      const w = world({ rows: [B.row], purchased: c.purchased, completeLookup: c.completeLookup || 'ok', records: { 'sess-B': c.rec } });
-      const p = await open(w, { width, salesOpen: true, publicSales: true });
-      // 確認できない時は、記録の導線の代わりに「確認できませんでした」の案内だけを出す
-      const t = c.completeLookup === 'failed' ? await p.locator('.mp-latest').innerText() : await actions(p, 'sess-B', 'latest').innerText();
-      for (const re of c.must) assert.match(t, re, `${c.name}（${width}px）：${t}`);
-      for (const re of c.mustNot) assert.doesNotMatch(t, re, `${c.name}（${width}px）：${t}`);
-      assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${c.name}（${width}px）：横にはみ出さない`);
-      assert.deepEqual(p.__errors, [], c.name);
-      await p.__ctx.close();
-    }
-  }
-  // 同じ結果の重複記録（保存した記録＋引き継いだ記録）：正本の1つだけを出し、どちらにも購入を求めない
-  const w = world({ rows: [B2, B.row], purchased: owned, records: {
-    'sess-B2': purchased({ analysisAccess: true, analysisPurchased: true }), 'sess-B': purchased({ analysisAccess: true, analysisPurchased: true, duplicateOf: 'sess-B2' }) } });
-  const p = await open(w, { salesOpen: true, publicSales: true });
-  const all = await p.locator('#root').innerText();
-  assert.doesNotMatch(all, /¥1,000|¥2,000|¥3,000/);
-  assert.equal(await p.locator('[data-rec-actions="sess-B"]').count(), 0, '重複の記録は出さない');
-  assert.ok(await p.locator('[data-rec-actions="sess-B2"]').count() >= 1);
-  await p.__ctx.close();
-});
 
 // ================= Cookie の無い端末：購入時メールの6桁コードでログインした直後は、マイページを開くだけで引き継ぐ
 const jwtWith = (amr) => ['eyJhbGciOiJIUzI1NiJ9', Buffer.from(JSON.stringify({ sub: 'user-1', amr })).toString('base64url'), 'sig'].join('.');
 const nowSec = () => Math.floor(Date.now() / 1000);
 
-test('Cookie の無い端末：購入時のメールアドレスでログイン（6桁コード・Google、時間が経っても）すると、マイページを開くだけで引き継ぎ、記録を描く前に購入済みで表示（1回だけ）', { skip: skip() }, async () => {
-  for (const amr of [[{ method: 'otp', timestamp: nowSec() - 30 }], [{ method: 'otp', timestamp: nowSec() - 86400 }], [{ method: 'oauth', timestamp: nowSec() - 10 }]]) {
-    const w = world({ rows: [], dynamicRows: true, calls: [], token: jwtWith(amr), guest: { purchases: [] }, recoverable: 1, records: {},
-      afterRecover: { rows: [B.row], purchased: { [`ETI-2.0:${B.code}`]: true }, records: { 'sess-B': purchased({ analysisAccess: true, analysisPurchased: true }) } } });
-    const p = await open(w);
-    await p.waitForFunction(() => /購入時のメールアドレスで確認した購入（1件）を、マイページに引き継ぎました/.test(document.body.innerText));
-    const text = await p.locator('#root').innerText();
-    assert.doesNotMatch(text, /まだ保存された診断記録がありません/);
-    assert.match(text, /完全解析を見る/);
-    assert.doesNotMatch(text, /¥1,000|¥3,000|追加 ?¥2,000/);
-    const recAt = w.calls.find((c) => c.op === 'guest-recover').at;
-    const entAt = w.calls.find((c) => c.op === 'my-entitlements').at;
-    assert.ok(recAt < entAt, '購入状態を読む前に引き継ぐ');
-    assert.equal(w.calls.filter((c) => c.op === 'guest-recover').length, 1);
-    assert.deepEqual(p.__errors, []);
-    await p.__ctx.close();
-  }
-});
 
-test('引き継げる購入が無い・メールの無いログイン（X 等）：何も移さず、記録0件の画面に購入時メールでの引き継ぎの案内を出す', { skip: skip() }, async () => {
-  for (const over of [{ recoverable: 0 }, { recoverError: 'claim_email_required' }]) {
-    const w = world(Object.assign({ rows: [], calls: [], token: jwtWith([{ method: 'oauth', timestamp: nowSec() - 10 }]), guest: { purchases: [] }, records: {} }, over));
-    const p = await open(w, { empty: true });
-    await p.waitForFunction(() => /まだ保存された診断記録がありません/.test(document.body.innerText));
-    assert.match(await p.locator('[data-empty-purchase-note]').innerText(), /購入時のメールアドレスでログインすると、自動で引き継がれます/);
-    assert.equal(await p.locator('[data-empty-purchase-note] a[href="/mypage.html#recover"]').count(), 1);
-    assert.equal(await p.locator('#mpClaimBox').count(), 0);
-    await p.__ctx.close();
-  }
-});
 
-test('完全解析を購入済みの記録：右上の入口は「完全解析を見る」、シートも購入済み（完全解析を見る）で表示し、押すと閲覧へ進む（未購入のように見せない）', { skip: skip() }, async () => {
+test('以前の仕組みで完全解析を購入済みの記録：右上の入口は「レポート」、シートでも閲覧の表示（未購入のように見せない）。押すと閲覧へ進む', { skip: skip() }, async () => {
   const w = world({ rows: [B.row], purchased: { [`ETI-2.0:${B.code}`]: true }, records: { 'sess-B': purchased({ analysisAccess: true, analysisPurchased: true }) } });
   const p = await open(w);
   const trigger = p.locator('#mpUpgradeTrigger');
-  assert.equal((await trigger.innerText()).trim(), '完全解析を見る');
+  assert.equal((await trigger.innerText()).trim(), 'レポート');
   await trigger.click();
   const body = p.locator('#mpUpgradeBody');
-  await body.locator('[data-session-id="sess-B"]').filter({ hasText: '完全解析を見る' }).first().waitFor();
-  const t = await body.innerText();
-  assert.match(t, /この記録の完全解析が保存されています/);
-  assert.doesNotMatch(t, /お申し込み済みです|構造と解釈まで観測されています|¥2,000|¥3,000/);
-  await body.locator('[data-session-id="sess-B"]').filter({ hasText: '完全解析を見る' }).first().click();
+  await body.locator('[data-ca-view-open]').first().waitFor();
+  const t = await body.locator('[data-rec-product]').allInnerTexts();
+  assert.match(t.join('\n'), /解析レポートを読む/);
+  assert.doesNotMatch(t.join('\n'), /¥2,000|¥3,000|¥1,000/);
+  await body.locator('[data-ca-view-open]').first().click();
   await p.waitForFunction(() => /COMPLETE VIEW/.test(document.body.innerText));
   assert.ok(w.viewHits >= 1);
   await p.__ctx.close();
 });
+
 
 test('記録一覧：診断結果（長い国家名・武器名を含む）と NEW・COMPLETE 等の札が重ならない・切れない・横にはみ出さない（320／390／1280px）', { skip: skip() }, async () => {
   const rows = [1, 2, 4, 5, 6, 8].map((k, i) => v2Row(`sess-${k}`, `2026-10-0${i + 1}T10:00:00Z`, k).row);

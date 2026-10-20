@@ -96,49 +96,7 @@ const GOALS = [200, { salesOpen: true, catalog: CE.MENTOR_CATALOG }];
 const CHECKOUT = (b) => [200, { checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test_fake', offer: b.offer, amount: { analysis: 1000, direct_complete: 3000, analysis_upgrade: 2000 }[b.offer] }];
 const noScroll = (p) => p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
-test('完了ページ（販売中）：¥1,000 はゲストの Checkout（offer と診断コードだけ）。同じタブで Stripe へ', { skip: skip() }, async () => {
-  const p = await resultPage({ api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
-  const btn = p.locator('#lockUnlockAllBtn');
-  assert.equal((await btn.innerText()).trim(), '全てのロックを解除する →');
-  assert.match(await p.content(), /登録不要。お支払いの後、このブラウザですぐにお読みいただけます。/);
-  await btn.click();
-  await p.waitForURL(/checkout\.stripe\.com/);
-  const co = p.__calls.filter((c) => c.op === 'guest-checkout');
-  assert.deepEqual(co.map((c) => c.body), [{ offer: 'analysis', code: p.__code }]);
-  assert.deepEqual(p.__errors, []);
-  await p.__ctx.close();
-});
 
-test('完了ページ（C7）：Stripe から「戻る」・タブ復帰・移動できなかった時に「決済画面へ移動しています…」のまま止めない', { skip: skip() }, async () => {
-  for (const width of [320, 390, 1280]) {
-    const p = await resultPage({ width, api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
-    const btn = p.locator('#lockUnlockAllBtn');
-    // 購入状態を確かめてから ¥1,000 を押せる
-    await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
-    const label = (await btn.innerText()).trim();
-    assert.doesNotMatch(label, /確認しています/);
-    // 決済画面へ移れなかった（204）：移動を始めた印のまま → タブ復帰で戻る
-    await p.route('https://checkout.stripe.com/**', (r) => r.fulfill({ status: 204, body: '' }));
-    await btn.click();
-    await p.waitForFunction(() => document.querySelector('#lockUnlockAllBtn[data-nav-busy="away"]'));
-    assert.equal((await btn.innerText()).trim(), '決済画面へ移動しています…');
-    await p.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
-    assert.equal((await btn.innerText()).trim(), label);
-    assert.equal(await btn.isDisabled(), false);
-    // bfcache からの表示（pageshow persisted）
-    await btn.click();
-    await p.waitForFunction(() => document.querySelector('#lockUnlockAllBtn[data-nav-busy="away"]'));
-    const statusCalls = p.__calls.filter((c) => c.op === 'guest-status').length;
-    await p.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })));
-    // 戻る操作で復元された：購入の欄を描き直す（確かめ直してから、また押せる）
-      for (let i = 0; i < 100 && p.__calls.filter((c) => c.op === 'guest-status').length === statusCalls; i++) await new Promise((r) => setTimeout(r, 30));
-    await p.waitForFunction((l) => { const b = document.querySelector('#lockUnlockAllBtn'); return !b.disabled && b.textContent.trim() === l; }, label);
-    assert.equal((await btn.innerText()).trim(), label, String(width));
-    assert.equal(await btn.isDisabled(), false);
-    assert.equal(await noScroll(p), true, String(width));
-    await p.__ctx.close();
-  }
-});
 
 test('D4：旧版（legacy-v1）の結果には旧 Payment Link も新しい Checkout も出さず、対象外と最新の診断への案内（販売中でも）', { skip: skip() }, async () => {
   for (const width of [320, 1280]) {
@@ -160,232 +118,17 @@ test('D4：旧版（legacy-v1）の結果には旧 Payment Link も新しい Che
   }
 });
 
-test('完了ページ（販売中）：完全解析 ¥3,000 は目標を選ぶまで押せない → 目標つきで Checkout', { skip: skip() }, async () => {
-  const p = await resultPage({ api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
-  await p.click('details.ca-fold > summary');
-  const fold = p.locator('details.ca-fold');
-  // 展開しただけでは目標の選択・決済を出さない。「まだ見えていない輪郭を読む ¥3,000」を押してから
-  const reveal = fold.locator('[data-reveal-offer="direct_complete"]');
-  await reveal.waitFor();
-  assert.equal((await reveal.innerText()).trim(), 'まだ見えていない輪郭を読む　¥3,000');
-  assert.equal(await fold.locator('[data-guest-buy]').count(), 0);
-  await reveal.click();
-  await fold.locator('[data-guest-buy]').waitFor();
-  assert.match(await fold.innerText(), /¥3,000/);
-  const buy = fold.locator('[data-guest-buy="direct_complete"]');
-  assert.equal(await buy.isDisabled(), true, '目標を選ぶまで押せない');
-  assert.equal(await fold.locator('input[name="guest-mentor-goal"]').count(), 5);
-  await fold.locator('input[value="GOAL_EXPLORE_01"]').check();
-  assert.equal(await buy.isDisabled(), false);
-  await buy.click();
-  await p.waitForURL(/checkout\.stripe\.com/);
-  assert.deepEqual(p.__calls.filter((c) => c.op === 'guest-checkout').map((c) => c.body), [{ offer: 'direct_complete', code: p.__code, goal: 'GOAL_EXPLORE_01' }]);
-  await p.__ctx.close();
-});
 
-test('完了ページ（ログインなし）：この端末で同じ記録の解析レポートを購入済み → 解析レポートを読む・追加 ¥2,000 だけ（¥1,000・¥3,000 は出さない）', { skip: skip() }, async () => {
-  const purchases = [{ ref: REF, analysis: 'active', complete: null, report: null, pending: false, claimed: false, canClaim: true, canUpgrade: true, thisRecord: true }];
-  const p = await resultPage({ api: { 'guest-status': [200, { salesOpen: true, purchases }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT,
-    'guest-report': [200, { url: '/report.html?token=fake.token' }] } });
-  await p.waitForFunction(() => document.querySelector('#lockUnlockAllBtn').textContent.trim() === '解析レポートを読む');
-  assert.equal(await p.locator('#lockPrice').isHidden(), true, '¥1,000 の価格を出さない');
-  await p.click('details.ca-fold > summary');
-  const fold = p.locator('details.ca-fold');
-  await fold.locator('[data-reveal-offer="analysis_upgrade"]').waitFor();
-  assert.equal(await fold.locator('[data-reveal-offer="direct_complete"]').count(), 0, '¥3,000 は出さない');
-  assert.match(await fold.innerText(), /追加¥2,000/);
-  await fold.locator('[data-reveal-offer="analysis_upgrade"]').click();
-  await fold.locator('input[name="guest-mentor-goal"]').first().check();
-  await fold.locator('[data-guest-buy]').click();
-  await p.waitForURL(/checkout\.stripe\.com/);
-  assert.deepEqual(p.__calls.filter((c) => c.op === 'guest-checkout').map((c) => [c.body.offer, c.body.code === p.__code]), [['analysis_upgrade', true]]);
-  assert.equal(p.__calls.filter((c) => c.op === 'my-entitlements').length, 0, 'ログインしていなければマイページの権利は見ない');
-  await p.__ctx.close();
-});
 
-test('完了ページ（ログインなし）：解析レポートを読む → 解析レポートのページを開く（この画面でロックを外さない）', { skip: skip() }, async () => {
-  const purchases = [{ ref: REF, analysis: 'active', complete: null, report: null, pending: false, claimed: false, canClaim: true, canUpgrade: true, thisRecord: true }];
-  const p = await resultPage({ api: { 'guest-status': [200, { salesOpen: true, purchases }], 'guest-report': [200, { url: '/report.html?token=fake.token' }] } });
-  await p.route('**/report.html?token=*', (r) => r.fulfill({ contentType: 'text/html', body: '<p>report</p>' }));
-  await p.waitForFunction(() => document.querySelector('#lockUnlockAllBtn').textContent.trim() === '解析レポートを読む');
-  await p.locator('#lockUnlockAllBtn').click();
-  await p.waitForURL(/\/report\.html\?token=/);
-  assert.deepEqual(p.__calls.filter((c) => c.op === 'guest-report').map((c) => c.body), [{ ref: REF }]);
-  assert.equal(p.__calls.filter((c) => c.op === 'guest-checkout').length, 0);
-  await p.__ctx.close();
-});
 
-test('完了ページ（ログインなし）：完全解析を購入済み → 解析レポートを読む・完全解析を見る（購入の導線は出さない）', { skip: skip() }, async () => {
-  const purchases = [{ ref: REF, analysis: 'active', complete: 'active', report: 'ready', pending: false, claimed: false, canClaim: true, canUpgrade: false, thisRecord: true }];
-  const p = await resultPage({ api: { 'guest-status': [200, { salesOpen: true, purchases }] } });
-  await p.waitForFunction(() => document.querySelector('#lockUnlockAllBtn').textContent.trim() === '解析レポートを読む');
-  await p.click('details.ca-fold > summary');
-  const fold = p.locator('details.ca-fold');
-  await fold.locator('[data-guest-view]').waitFor();
-  assert.match(await fold.innerText(), /完全解析は購入済みです/);
-  assert.equal(await fold.locator('[data-reveal-offer]').count(), 0);
-  for (const w of [320, 390, 1280]) {
-    await p.setViewportSize({ width: w, height: 844 });
-    assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${w}px で横にはみ出さない`);
-  }
-  await p.__ctx.close();
-});
 
-test('完了ページ（ログイン中・マイページから過去の結果を開いた）：本人が購入済みなら「解析レポートを読む（マイページ）」・完全解析もマイページから（二重に決済しない）', { skip: skip() }, async () => {
-  const p0 = await page('/');
-  const code = await p0.evaluate(() => { const a = {}; ETI_V2_QUESTIONS.forEach((q, i) => { a[q.id] = ((i * 7) % 5) - 2; }); return ETIv2.encodeAnswersV2(a, ETI_V2_QUESTIONS); });
-  await p0.__ctx.close();
-  const p = await page('/', { user: true, purchased: [code], api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
-  await p.goto(`${base}/?dv=ETI-2.0&code=${code}`);
-  await p.waitForFunction(() => /解析レポートを読む（マイページ）/.test(document.querySelector('#lockUnlockAllBtn').textContent));
-  await p.click('details.ca-fold > summary');
-  const fold = p.locator('details.ca-fold');
-  // 解析レポートだけ購入済み：完全解析はマイページで追加 ¥2,000（¥3,000 は出さない）
-  assert.match(await fold.innerText(), /この結果の解析レポートは購入済みです。完全解析は、マイページの診断記録から追加 ¥2,000 でお申し込みいただけます。/);
-  assert.equal(await fold.locator('a[href="/mypage.html"]').count(), 1);
-  assert.doesNotMatch(await fold.innerText(), /¥3,000/);
-  assert.equal(await fold.locator('[data-reveal-offer]').count(), 0);
-  assert.match(p.__calls.find((c) => c.op === 'my-entitlements').auth, /^Bearer /);
-  await p.locator('#lockUnlockAllBtn').click();
-  await p.waitForURL((u) => u.pathname === '/mypage.html');
-  assert.equal(p.__calls.filter((c) => c.op === 'guest-checkout').length, 0);
-  await p.__ctx.close();
-});
 
-test('完了ページ（ログイン中）：前の結果を購入済みでも、違う診断結果ならそのまま ¥1,000・¥3,000 を買える', { skip: skip() }, async () => {
-  const p0 = await page('/');
-  const [codeA, codeB] = await p0.evaluate(() => [7, 3].map((k) => { const a = {}; ETI_V2_QUESTIONS.forEach((q, i) => { a[q.id] = ((i * k) % 5) - 2; }); return ETIv2.encodeAnswersV2(a, ETI_V2_QUESTIONS); }));
-  await p0.__ctx.close();
-  const p = await page('/', { user: true, purchased: [codeA], api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
-  await p.goto(`${base}/?dv=ETI-2.0&code=${codeB}`);
-  await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
-  await p.click('details.ca-fold > summary');
-  await p.locator('details.ca-fold [data-reveal-offer="direct_complete"]').waitFor();
-  assert.ok(p.__calls.some((c) => c.op === 'my-entitlements'), '本人の購入を確かめた');
-  assert.doesNotMatch(await p.locator('#lockUnlockAllBtn').innerText(), /マイページ|購入済み/);
-  await p.locator('#lockUnlockAllBtn').click();
-  await p.waitForURL(/checkout\.stripe\.com/);
-  assert.deepEqual(p.__calls.filter((c) => c.op === 'guest-checkout').map((c) => c.body), [{ offer: 'analysis', code: codeB }]);
-  await p.__ctx.close();
-});
 
-test('完了ページ（販売停止中）：¥1,000・¥3,000 とも「準備中」で押せない・Checkout を呼ばない', { skip: skip() }, async () => {
-  const p = await resultPage({ salesOpen: false, api: { 'guest-status': [200, { salesOpen: false, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
-  assert.equal((await p.locator('#lockUnlockAllBtn').innerText()).trim(), '解析レポート（準備中）');
-  assert.equal(await p.locator('#lockUnlockAllBtn').isDisabled(), true);
-  await p.click('details.ca-fold > summary');
-  await p.locator('details.ca-fold button.is-pending').waitFor();
-  assert.equal((await p.locator('details.ca-fold button.is-pending').innerText()).trim(), 'まだ見えていない輪郭を読む　¥3,000（準備中）');
-  await p.locator('#lockUnlockAllBtn').click({ force: true });
-  assert.equal(p.__calls.filter((c) => c.op === 'guest-checkout').length, 0);
-  await p.__ctx.close();
-});
 
-test('購入完了ページ：すぐ読めるボタン・完全解析の状態・控えめな引き継ぎ（文言どおり）。ID を画面に出さない', { skip: skip() }, async () => {
-  const purchases = [{ ref: REF, analysis: 'active', complete: 'active', report: 'ready', pending: false, claimed: false, canClaim: true, canUpgrade: false }];
-  for (const width of [320, 390, 1280]) {
-    const p = await page('/purchase-complete', { width, api: { 'guest-status': [200, { salesOpen: true, purchases }],
-      'guest-view': [200, { viewUrl: '/api/complete-status?view=fake', expiresIn: 300 }] } });
-    await p.locator('[data-open-analysis]').waitFor();
-    const text = await p.locator('main').innerText();
-    assert.match(text, /ご購入ありがとうございます/);
-    assert.match(text, /解析レポートを読む/);
-    assert.match(text, /完全解析を見る/);
-    assert.doesNotMatch(text, /¥[0-9]/, '購入完了ページでは売らない');
-    assert.match(text, /この購入をマイページに引き継ぐ/);
-    assert.match(text, /購入時のメールアドレスでマイページに登録（ログイン）すると、この購入はマイページに引き継がれます。この端末でなくても、購入時のメールアドレスでログインすれば自動で引き継がれます。/);
-    assert.doesNotMatch(await p.content(), UUID_RE);
-    assert.ok(await noScroll(p), 'width ' + width);
-    // ログイン方法は押した時だけ（ここではマイページへ移動する）
-    assert.equal(await p.locator('.au, #gateAuth').count(), 0);
-    await p.__ctx.close();
-  }
-  const p = await page('/purchase-complete', { api: { 'guest-status': [200, { salesOpen: true, purchases }] } });
-  await p.locator('[data-claim]').click();
-  await p.waitForURL(/\/mypage\.html$/);
-  assert.ok(await p.evaluate(() => !!sessionStorage.getItem('ed_claim_intent_v1')));
-  await p.__ctx.close();
-});
 
-test('購入完了ページ：生成中は状態を表示して確認を続け、ready で「完全解析を見る」', { skip: skip() }, async () => {
-  let n = 0;
-  const p = await page('/purchase-complete', { api: { 'guest-status': () => [200, { salesOpen: true, purchases: [
-    { ref: REF, analysis: 'active', complete: 'active', report: n++ < 1 ? 'generating' : 'ready', pending: false, claimed: false, canClaim: true, canUpgrade: false }] }] } });
-  await p.waitForFunction(() => /作成中/.test(document.body.innerText));
-  await p.locator('[data-open-complete]').waitFor({ timeout: 6000 });
-  await p.__ctx.close();
-});
 
-test('購入完了ページ：生成の最終の失敗は回り続けず「作成できませんでした」。「もう一度作成する」で作り直し→ready（C6）', { skip: skip() }, async () => {
-  let queued = false;
-  const p = await page('/purchase-complete', { api: {
-    'guest-status': () => [200, { salesOpen: true, purchases: [
-      { ref: REF, analysis: 'active', complete: 'active', report: queued ? 'ready' : 'failed', regenerate: queued ? null : 'available', pending: false, claimed: false, canClaim: true, canUpgrade: false }] }],
-    'guest-regenerate': () => { queued = true; return [202, { result: 'queued' }]; },
-  } });
-  await p.waitForFunction(() => /作成できませんでした/.test(document.body.innerText));
-  assert.equal(await p.locator('.spinner').count(), 0, '最終の失敗では回る表示を出さない');
-  assert.doesNotMatch(await p.locator('body').innerText(), /作成をやり直しています/);
-  assert.match(await p.locator('body').innerText(), /追加のお支払いはありません/);
-  await p.locator('[data-regenerate]').click();
-  await p.locator('[data-open-complete]').waitFor({ timeout: 6000 });
-  assert.deepEqual(p.__calls.filter((c) => c.op === 'guest-regenerate').map((c) => c.body), [{ ref: REF }]);
-  assert.deepEqual(p.__errors, []);
-  await p.__ctx.close();
-  // 上限：ボタンなし・お問い合わせ
-  const q = await page('/purchase-complete', { api: { 'guest-status': [200, { salesOpen: true, purchases: [
-    { ref: REF, analysis: 'active', complete: 'active', report: 'failed', regenerate: 'operator', pending: false, claimed: false, canClaim: true, canUpgrade: false }] }] } });
-  await q.waitForFunction(() => /@mondayaxad までご連絡ください/.test(document.body.innerText));
-  assert.equal(await q.locator('[data-regenerate]').count(), 0);
-  await q.__ctx.close();
-});
 
-test('購入完了ページ：この端末に購入が無い時は、同じ端末で開く案内と購入時メールでの引き継ぎ（マイページ）', { skip: skip() }, async () => {
-  const p = await page('/purchase-complete', { api: { 'guest-status': [200, { salesOpen: true, purchases: [] }] } });
-  await p.waitForFunction(() => /購入したときと同じ端末・ブラウザで開いてください/.test(document.body.innerText));
-  assert.equal(await p.locator('a[href="/mypage.html#recover"]').count(), 1);
-  await p.__ctx.close();
-  // 中止して戻った（購入なし）：何も買っていないため、引き継ぎの案内は出さない
-  const q = await page('/purchase-complete?status=canceled', { api: { 'guest-status': [200, { salesOpen: true, purchases: [] }] } });
-  await q.waitForFunction(() => /お手続きを中止しました/.test(document.body.innerText));
-  await new Promise((r) => setTimeout(r, 400));
-  assert.doesNotMatch(await q.locator('main').innerText(), /購入したときと同じ端末|マイページで購入を引き継ぐ/);
-  assert.equal(await q.locator('a[href="/mypage.html#recover"]').count(), 0);
-  assert.equal(new URL(q.url()).search, '', '戻り先の印を URL から消す');
-  await q.__ctx.close();
-});
 
-test('解析レポートの下部からいつでもマイページへ引き継げる：この端末の購入は「この購入をマイページに引き継ぐ」、確かめられない時も購入時のメールアドレスで登録へ。購入時メールで引き継がれると明示', { skip: skip() }, async () => {
-  const p0 = await page('/');
-  const code = await p0.evaluate(() => { const a = {}; ETI_V2_QUESTIONS.forEach((q, i) => { a[q.id] = ((i * 7) % 5) - 2; }); return ETIv2.encodeAnswersV2(a, ETI_V2_QUESTIONS); });
-  await p0.__ctx.close();
-  const reportData = { diagnosis_version: 'ETI-2.0', entitlements: { core_analysis_access: true, journey_report_access: false }, purchase: null, code, viewer: 'guest' };
-  const purchases = [{ ref: REF, analysis: 'active', complete: null, report: null, pending: false, claimed: false, canClaim: true, canUpgrade: true, thisRecord: true }];
-  const p = await page('/report.html?token=fake', { reportData, api: { 'guest-status': [200, { salesOpen: true, purchases }] } });
-  const save = p.locator('[data-report-inherit-claim]');
-  await save.waitFor();
-  assert.equal((await save.innerText()).trim(), 'この購入をマイページに引き継ぐ');
-  assert.match(await p.locator('[data-report-inherit]').innerText(), /購入時のメールアドレスでマイページに登録（ログイン）すると[\s\S]*引き継がれ/);
-  await save.click();
-  await p.waitForURL((u) => u.pathname === '/mypage.html' && u.hash === '');
-  await p.__ctx.close();
-  // 状態の確認に失敗しても、下部の引き継ぎは出す
-  const f = await page('/report.html?token=fake', { reportData, api: { 'guest-status': [503, { error: 'service_unavailable' }] } });
-  await f.locator('[data-report-inherit] a[href="/mypage.html"]').waitFor();
-  await f.__ctx.close();
-  // この端末で購入を確かめられない：決済は出さず、購入時のメールの確認へ
-  const q = await page('/report.html?token=fake', { reportData, api: { 'guest-status': [200, { salesOpen: true, purchases: [] }] } });
-  await q.locator('[data-report-complete] a[href="/mypage.html#recover"]').waitFor();
-  assert.equal(await q.locator('[data-report-upgrade], [data-report-buy]').count(), 0);
-  await q.locator('[data-report-complete] a[href="/mypage.html#recover"]').click();
-  await q.waitForURL((u) => u.pathname === '/mypage.html' && u.hash === '#recover');
-  await q.__ctx.close();
-  // この端末で確かめられない時も、下部から購入時のメールアドレスでの登録へ進める
-  const q2 = await page('/report.html?token=fake', { reportData, api: { 'guest-status': [200, { salesOpen: true, purchases: [] }] } });
-  await q2.locator('[data-report-inherit-mypage]').waitFor();
-  assert.equal(await q2.locator('[data-report-inherit-mypage]').getAttribute('href'), '/mypage.html');
-  await q2.__ctx.close();
-});
 
 test('サンプルからマイページ：sample_to_mypage を1回だけ（入口だけ・ID なし）記録し、URL から from=sample を消す', { skip: skip() }, async () => {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
@@ -414,66 +157,18 @@ test('サンプルからマイページ：sample_to_mypage を1回だけ（入�
   await ctx.close();
 });
 
-test('完了ページ：未払いの決済が残っていても買っていない扱い。案内の文言は出さず、申込の導線をそのまま出し、そこから申し込める（C3）', { skip: skip() }, async () => {
-  const p = await resultPage({ api: {
-    'guest-status': () => [200, { salesOpen: true, purchases: [{ ref: REF, analysis: null, complete: null, report: null, pending: true, claimed: false, canClaim: false, canUpgrade: false, thisRecord: true }] }],
-    'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
-  await p.evaluate(() => { const d = document.querySelector('details.ca-fold'); if (d) d.open = true; });
-  const offer = p.locator('[data-reveal-offer="direct_complete"]');
-  await offer.waitFor();
-  const text = await p.locator('[data-guest-complete]').innerText();
-  assert.doesNotMatch(text, /前回のお手続き|手続き中|購入状況を見る|購入済み/);
-  await offer.click();
-  await p.waitForSelector('input[name="guest-mentor-goal"]');
-  assert.ok(await noScroll(p));
-  await p.__ctx.close();
-});
 
-test('購入完了ページ：このブラウザに複数の購入がある時は、購入の日時で見分けられる', { skip: skip() }, async () => {
-  const one = (at) => ({ ref: REF, analysis: 'active', complete: null, report: null, pending: false, claimed: false, canClaim: true, canUpgrade: true, purchasedAt: at });
-  const p = await page('/purchase-complete', { api: { 'guest-status': [200, { salesOpen: true, purchases: [one('2026-10-13T22:08:58.000Z'), one('2026-10-14T01:42:35.000Z')] }] } });
-  await p.waitForFunction(() => document.querySelectorAll('.pc-at').length === 2);
-  const lines = await p.locator('.pc-at').allInnerTexts();
-  assert.ok(lines.every((t) => /^\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2} のご購入$/.test(t.trim())), lines.join('|'));
-  assert.notEqual(lines[0], lines[1]);
-  await p.__ctx.close();
-});
 
-test('購入完了ページ（Stripe で戻った ?status=canceled）：未払いの決済を閉じてから表示・URL から印を消す（C3）', { skip: skip() }, async () => {
-  const p = await page('/purchase-complete?status=canceled', { api: {
-    'guest-cancel': [200, { closed: 1, paid: 0 }], 'guest-status': [200, { salesOpen: true, purchases: [] }] } });
-  await p.waitForFunction(() => /お手続きを中止しました/.test(document.body.innerText));
-  await p.waitForFunction(() => true);
-  for (let i = 0; i < 40 && p.__calls.filter((c) => c.op === 'guest-status').length === 0; i++) await new Promise((r) => setTimeout(r, 100));
-  const ops = p.__calls.map((c) => c.op);
-  assert.deepEqual(ops.slice(0, 2), ['guest-cancel', 'guest-status']);
-  assert.match(await p.locator('#pcTitle').innerText(), /中止/);
-  assert.equal(await p.evaluate(() => location.search), '');
-  await p.__ctx.close();
-});
 
-test('購入完了ページ：確認を使い切ったら回り続ける表示を止め、読み込み直しの案内を出す', { skip: skip() }, async () => {
-  const p = await page('/purchase-complete', { clock: true, api: { 'guest-status': [200, { salesOpen: true, purchases: [{ ref: REF, analysis: null, complete: null, report: null, pending: true, claimed: false, canClaim: false, canUpgrade: false }] }] } });
-  await p.waitForSelector('.spinner');
-  // 偽の時計を進める間に、実際の通信（状態の確認）が終わるのを待つ（負荷の高い時でも確認の回数を使い切るまで進める）
-  for (let i = 0; i < 40; i++) {
-    if (await p.evaluate(() => /確認に時間がかかっています/.test(document.body.innerText))) break;
-    await p.clock.runFor(31000);
-    await new Promise((r) => setTimeout(r, 100));
-  }
-  await p.waitForFunction(() => /確認に時間がかかっています/.test(document.body.innerText));
-  assert.equal(await p.locator('.spinner').count(), 0);
-  await p.__ctx.close();
-});
 
 // ================= A：BEYOND THE RESULT（完全解析の訴求）
-test('BEYOND THE RESULT：¥1,000 の主導線の下。閉じた状態は予告だけ・展開でサンプルと ¥3,000。320／390／1280px で重なり・はみ出しなし', { skip: skip() }, async () => {
+test('BEYOND THE RESULT：¥1,000 の主導線の下。閉じた状態は予告だけ・展開でサンプルと ¥3,000（complete_13 の共通の申込）。320／390／1280px で重なり・はみ出しなし', { skip: skip() }, async () => {
   for (const width of [320, 390, 1280]) {
     const p = await resultPage({ width, api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
     await p.evaluate(() => { window.__ev = []; window.gtag = function () { window.__ev.push(Array.from(arguments)); }; });
     const fold = p.locator('details.ca-reveal');
     // 購入状態の確認が終わって購入の欄が描かれてから、2つの位置を同じ時点で測る（描き替えの途中で測らない）
-    await fold.locator('[data-reveal-offer]').waitFor({ state: 'attached' });
+    await fold.locator('[data-buy-complete]').waitFor({ state: 'attached' });
     const { b1, f1 } = await p.evaluate(() => {
       const r = (el) => { const x = el.getBoundingClientRect(); return { y: x.top + window.scrollY, height: x.height }; };
       return { b1: r(document.querySelector('#lockUnlockAllBtn')), f1: r(document.querySelector('details.ca-reveal')) };
@@ -481,12 +176,12 @@ test('BEYOND THE RESULT：¥1,000 の主導線の下。閉じた状態は予告�
     assert.ok(f1.y >= b1.y + b1.height, `${width}: ¥1,000 の下（${b1.y + b1.height} ≤ ${f1.y}）`);
     assert.ok(b1.height >= 44, `${width}: ¥1,000 の大きさを保つ`);
     assert.equal(await fold.evaluate((d) => d.open), false);
-    assert.equal(await fold.locator('[data-reveal-offer]').isVisible(), false, '閉じた状態に ¥3,000 の導線を見せない');
+    assert.equal(await fold.locator('[data-buy-complete]').isVisible(), false, '閉じた状態に ¥3,000 の導線を見せない');
     assert.equal(await fold.locator('[data-ca-sample]').isVisible(), false);
     assert.doesNotMatch(await fold.locator('summary').innerText(), /¥/);
     assert.equal(await noScroll(p), true, `${width}: 閉じた状態`);
     await fold.locator('summary').click();
-    await fold.locator('[data-reveal-offer="direct_complete"]').waitFor();
+    await fold.locator('[data-buy-complete]').waitFor();
     assert.equal(await fold.locator('[data-ca-sample]').isVisible(), true);
     assert.equal(await noScroll(p), true, `${width}: 開いた状態`);
     // 本文・ボタンが横にはみ出さない（カードの内側に収まる）
@@ -495,15 +190,14 @@ test('BEYOND THE RESULT：¥1,000 の主導線の下。閉じた状態は予告�
       return Array.from(document.querySelectorAll('details.ca-reveal *')).filter((el) => { const r = el.getBoundingClientRect(); return r.width && (r.right > vw + 0.5 || r.left < -0.5); }).map((el) => el.className || el.tagName);
     });
     assert.deepEqual(out, [], `${width}: はみ出し`);
-    // 計測：展開・サンプル・¥3,000（匿名。記録 ID・URL・診断コードを含めない）
-    await p.route('**/complete-sample', (r) => r.fulfill({ contentType: 'text/html', body: '<p>sample</p>' }));
-    const [popup] = await Promise.all([p.waitForEvent('popup'), fold.locator('[data-ca-sample]').click()]);
-    await popup.close();
-    await fold.locator('[data-reveal-offer="direct_complete"]').click();
-    await fold.locator('[data-guest-buy]').waitFor();
+    // ¥3,000 を押すと、共通の目標の選択の画面（決済はまだ）
+    await fold.locator('[data-buy-complete]').click();
+    await p.locator('.edb-dialog input[name="edb-goal"]').first().waitFor();
+    await p.keyboard.press('Escape');
+    // 計測：展開（匿名。記録 ID・URL・診断コードを含めない）
     const ev = await p.evaluate(() => window.__ev.filter((a) => a[0] === 'event').map((a) => [a[1], a[2]]));
     const names = ev.map((e) => e[0]);
-    for (const n of ['complete_details_open', 'complete_sample_open', 'complete_offer_click']) assert.ok(names.includes(n), `${width}: ${n}`);
+    for (const n of ['complete_details_open']) assert.ok(names.includes(n), `${width}: ${n}`);
     assert.doesNotMatch(JSON.stringify(ev), new RegExp(`${p.__code}|https?:|sess-|@`));
     assert.deepEqual(p.__errors, []);
     await p.__ctx.close();
@@ -535,106 +229,3 @@ const codeOf = async () => {
 };
 const ST = (o) => Object.assign({ analysisAccess: false, analysisPurchased: false, legacyAnalysis: false, completeOffer: null, completeBlocked: null,
   completeEntitlement: null, completeStatus: 'none', checkoutInProgress: false }, o);
-
-test('監査：購入状態を確かめるまで ¥1,000 は押せない（確かめる前に押して、購入済みの人に重ねて売らない）', { skip: skip() }, async () => {
-  let release;
-  const gate = new Promise((r) => { release = r; });
-  const p = await page('/', { api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-checkout': CHECKOUT } });
-  await p.route('**/api/complete-checkout?op=guest-status', async (r) => { await gate; r.fulfill({ contentType: 'application/json', body: JSON.stringify({ salesOpen: true, purchases: [] }) }); });
-  const code = await p.evaluate(() => { const a = {}; ETI_V2_QUESTIONS.forEach((q, i) => { a[q.id] = ((i * 7) % 5) - 2; }); return ETIv2.encodeAnswersV2(a, ETI_V2_QUESTIONS); });
-  await p.goto(`${base}/?dv=ETI-2.0&code=${code}`);
-  await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
-  assert.equal(await p.locator('#lockUnlockAllBtn').isDisabled(), true);
-  assert.match(await p.locator('#lockUnlockAllBtn').innerText(), /購入状態を確認しています/);
-  assert.equal(await p.locator('.lock-cta:not([disabled])').count(), 0);
-  release();
-  await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
-  await p.__ctx.close();
-});
-
-test('監査：ログイン中の結果ページは、アカウントの状態で出し分ける（完全解析まで・旧購入・異議申し立て）。¥1,000・¥3,000 を出さない', { skip: skip() }, async () => {
-  const code = await codeOf();
-  const cases = [
-    [ST({ analysisAccess: true, analysisPurchased: true, completeEntitlement: 'active', completeBlocked: 'repurchase_not_allowed', completeStatus: 'ready' }), /完全解析は購入済みです[\s\S]*マイページで完全解析を見る/],
-    [ST({ analysisAccess: true, legacyAnalysis: true, completeBlocked: 'legacy_purchase_not_eligible' }), /旧バージョンのため、完全解析はお申し込みいただけません/],
-    // 再々監査：異議申し立てで返金された ¥3,000（権利は取り消し・注文は disputed）。押しても進めない ¥3,000 を出さない
-    [ST({ completeEntitlement: 'revoked', completeStatus: 'revoked', completeOffer: 'direct_complete', completeBlocked: 'repurchase_not_allowed' }), /現在お申し込みいただけません[\s\S]*マイページで開く/],
-  ];
-  for (const [st, re] of cases) {
-    const p = await page('/', { user: true, resultStates: { ['ETI-2.0:' + code]: st }, api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-checkout': CHECKOUT } });
-    await p.goto(`${base}/?dv=ETI-2.0&code=${code}`);
-    await p.waitForFunction(() => !/購入状態を確認しています/.test(document.querySelector('#lockUnlockAllBtn').textContent));
-    await p.click('details.ca-fold > summary');
-    const t = await p.locator('details.ca-fold').innerText();
-    assert.match(t, re);
-    assert.doesNotMatch(t, /¥3,000/);
-    assert.equal(await p.locator('[data-reveal-offer]').count(), 0);
-    assert.doesNotMatch(await p.locator('#lockUnlockAllBtn').innerText(), /ロックを解除/);
-    await p.__ctx.close();
-  }
-});
-
-test('監査：この端末で引き継ぎ済みの結果（ログアウト中）：マイページで開く。売り直さない', { skip: skip() }, async () => {
-  const p = await resultPage({ api: { 'guest-status': [200, { salesOpen: true, purchases: [{ ref: REF, analysis: null, complete: null, report: null, pending: false, claimed: true, canClaim: false, canUpgrade: false }], claimedThisResult: true }], 'guest-checkout': CHECKOUT } });
-  await p.waitForFunction(() => /マイページ/.test(document.querySelector('#lockUnlockAllBtn').textContent));
-  await p.click('details.ca-fold > summary');
-  assert.match(await p.locator('details.ca-fold').innerText(), /マイページに引き継ぎ済みです[\s\S]*マイページで開く/);
-  assert.equal(await p.locator('[data-reveal-offer]').count(), 0);
-  await p.__ctx.close();
-});
-
-test('監査：申込で「購入済み」（409）が返ったら、購入欄を描き直す（古い ¥1,000 を残さない）', { skip: skip() }, async () => {
-  let n = 0;
-  const p = await resultPage({ api: {
-    'guest-status': () => [200, { salesOpen: true, purchases: n++ === 0 ? [] : [{ ref: REF, analysis: 'active', complete: null, report: null, pending: false, claimed: false, canClaim: true, canUpgrade: true, thisRecord: true }] }],
-    'guest-checkout': [409, { error: 'analysis_already_purchased' }] } });
-  await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
-  await p.locator('#lockUnlockAllBtn').click();
-  await p.waitForFunction(() => document.querySelector('#lockUnlockAllBtn').textContent.trim() === '解析レポートを読む', null, { timeout: 6000 });
-  await p.__ctx.close();
-});
-
-test('ログイン中・アカウントに決済中の画面だけが残る：「手続き中」と出さず、¥1,000・¥3,000 を買える（申込の時にサーバーが古い画面を閉じる）', { skip: skip() }, async () => {
-  const code = await codeOf();
-  const p = await page('/', { user: true, resultStates: { ['ETI-2.0:' + code]: ST({ checkoutInProgress: true, completeOffer: 'direct_complete' }) },
-    api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-checkout': CHECKOUT } });
-  await p.goto(`${base}/?dv=ETI-2.0&code=${code}`);
-  await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
-  assert.doesNotMatch(await p.locator('#lockUnlockAllBtn').innerText(), /手続き中|マイページ/);
-  await p.click('details.ca-fold > summary');
-  await p.locator('[data-reveal-offer="direct_complete"]').waitFor();
-  assert.doesNotMatch(await p.locator('details.ca-fold').innerText(), /手続き中|やり直/);
-  await p.__ctx.close();
-});
-
-test('再監査：ログイン中に ¥3,000 を返金した結果：「手続き中」と出さず、¥1,000・¥3,000 を買える', { skip: skip() }, async () => {
-  const code = await codeOf();
-  const p = await page('/', { user: true, resultStates: { ['ETI-2.0:' + code]: ST({ completeEntitlement: 'revoked', completeStatus: 'revoked', completeOffer: 'direct_complete' }) },
-    api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-checkout': CHECKOUT } });
-  await p.goto(`${base}/?dv=ETI-2.0&code=${code}`);
-  await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
-  assert.doesNotMatch(await p.locator('#lockUnlockAllBtn').innerText(), /手続き中|マイページ/);
-  await p.click('details.ca-fold > summary');
-  await p.locator('[data-reveal-offer="direct_complete"]').waitFor();
-  await p.__ctx.close();
-});
-
-test('再監査：購入状態の確認が止まっても、8秒で申込の導線を出す（申込の時にサーバーが確かめ直す）', { skip: skip() }, async () => {
-  const p = await page('/', { api: { 'guest-checkout': CHECKOUT } });
-  await p.route('**/api/complete-checkout?op=guest-status', () => { /* 応答しない */ });
-  const code = await p.evaluate(() => { const a = {}; ETI_V2_QUESTIONS.forEach((q, i) => { a[q.id] = ((i * 7) % 5) - 2; }); return ETIv2.encodeAnswersV2(a, ETI_V2_QUESTIONS); });
-  await p.goto(`${base}/?dv=ETI-2.0&code=${code}`);
-  await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
-  assert.equal(await p.locator('#lockUnlockAllBtn').isDisabled(), true);
-  await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled, null, { timeout: 12000 });
-  await p.__ctx.close();
-});
-
-test('購入完了ページ：支払いを確認できていない決済は、いちばん新しい1件だけ「確認しています」と出す（以前に閉じなかった別の結果の決済を出さない）', { skip: skip() }, async () => {
-  const pend = (ref, at) => ({ ref, analysis: null, complete: null, report: null, pending: true, claimed: false, canClaim: false, canUpgrade: false, purchasedAt: at });
-  const p = await page('/purchase-complete', { api: { 'guest-status': [200, { salesOpen: true, purchases: [
-    pend('a1a1a1a1a1a1a1a1a1a1', '2026-10-14T01:00:00.000Z'), pend('b2b2b2b2b2b2b2b2b2b2', '2026-10-14T03:00:00.000Z')] }] } });
-  await p.waitForFunction(() => /お支払いを確認しています/.test(document.body.innerText));
-  assert.equal(await p.locator('.card').count(), 1);
-  await p.__ctx.close();
-});

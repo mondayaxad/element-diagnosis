@@ -103,6 +103,8 @@ async function mypage(purchasedKeys) {
   await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: fakeSupabase(ROWS) }));
   await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: previewPublicConfigJs() }));
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  // 登録したレポート（complete_13）：この試験では登録なし
+  await p.route('**/api/complete-checkout?op=my-reports', (r) => r.fulfill({ contentType: 'application/json', body: '{"reports":[],"records":[]}' }));
   await p.route('**/api/my-entitlements', (r) => r.fulfill({ contentType: 'application/json',
     body: JSON.stringify({ purchased_by_version: Object.fromEntries(purchasedKeys.map((k) => [k, true])) }) }));
   await p.route('**/api/my-report-link', (r) => {

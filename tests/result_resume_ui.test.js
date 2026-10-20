@@ -45,6 +45,15 @@ test.before(async () => {
 test.after(async () => { if (browser) await browser.close(); if (server) server.close(); });
 
 const GOALS = [200, { salesOpen: true, catalog: CE.MENTOR_CATALOG }];
+// 購入対象トークン（試験用。固有リンクの秘密値ごとに決まる値）
+const CTX_FOR = (tk) => 'Ctx_' + Buffer.from(tk).toString('base64url').slice(0, 70);
+// 申込は購入対象トークンと商品だけ（診断コード・固有リンクの秘密値を op=buy に送らない）
+function assertBuy(w, tk, product = 'analysis') {
+  assert.deepEqual(w.calls.filter((c) => c.op === 'buy-context').map((c) => c.body).slice(-1), [{ resume: tk }]);
+  const buy = w.calls.filter((c) => c.op === 'buy');
+  assert.deepEqual(buy.map((c) => [c.body.context, c.body.product]).slice(-1), [[CTX_FOR(tk), product]]);
+  assert.ok(buy.every((c) => !JSON.stringify(c.body).includes(tk)), 'op=buy に固有リンクの秘密値を送らない');
+}
 
 // world：サーバーの状態（固有リンクの秘密値 → 診断コード）
 function world(over) {
@@ -80,6 +89,9 @@ async function wire(ctx, w) {
       return code ? send(200, { code, diagnosisVersion: 'ETI-2.0', versions: VERSIONS }) : send(404, { error: 'result_not_found' });
     }
     if (op === 'guest-cancel') return send(200, { closed: 1, paid: 0 });
+    // 申込（complete_13）：診断結果の固有リンクから購入対象トークン → 共通の op=buy
+    if (op === 'buy-context') return w.links[body.resume] ? send(200, { context: CTX_FOR(body.resume), summary: {}, eligible: { analysis: true, complete: true } }) : send(404, { error: 'record_not_found' });
+    if (op === 'buy') return send(200, { checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test_fake', product: body.product });
     if (op === 'guest-status') return send(200, { salesOpen: true, purchases: [] });
     if (op === 'guest-goals') return send(...GOALS);
     if (op === 'guest-checkout') return send(200, { checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test_fake', offer: body.offer, amount: 1000 });
@@ -156,12 +168,12 @@ test('診断完了 → 固有リンク（/result#r=）→ 再読み込み・新�
   await q.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
   await q.locator('#lockUnlockAllBtn').click();
   await q.waitForURL(/checkout\.stripe\.com/);
-  assert.deepEqual(w.calls.filter((c) => c.op === 'guest-checkout').map((c) => c.body), [{ offer: 'analysis', code, resume: tk }]);
+  assertBuy(w, tk);
   assert.deepEqual(p.__errors.concat(q.__errors), []);
   await ctx.close();
 });
 
-test('再診断はそれぞれ別の固有リンク。旧形式の ?code= から開いた結果には作らない。作成に失敗しても結果と ¥1,000 は使える', { skip: skip() }, async () => {
+test('再診断はそれぞれ別の固有リンク。旧形式の ?code= から開いた結果には作らない。作成に失敗しても結果は使える（申込は購入の対象を作れるまで進めない）', { skip: skip() }, async () => {
   let w = world();
   let ctx = await newContext();
   await wire(ctx, w);
@@ -206,10 +218,11 @@ test('再診断はそれぞれ別の固有リンク。旧形式の ?code= から
   await p.waitForTimeout(300);
   assert.equal(new URL(p.url()).pathname, '/');
   assert.equal(await p.locator('#resumeNote').isVisible(), false);
-  await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
+  // 購入の対象（記録）を作れなかった：申込は進めず、読み込み直しの案内（作り直しを1回試す）。診断コードだけでは申し込まない
+  assert.ok(code2);
   await p.locator('#lockUnlockAllBtn').click();
-  await p.waitForURL(/checkout\.stripe\.com/);
-  assert.deepEqual(w.calls.filter((c) => c.op === 'guest-checkout').map((c) => c.body), [{ offer: 'analysis', code: code2 }]);
+  await p.waitForFunction(() => /購入の準備ができませんでした/.test((document.getElementById('guestAnalysisMsg') || {}).textContent || ''), null, { timeout: 15000 });
+  assert.equal(w.calls.filter((c) => c.op === 'buy').length, 0);
   assert.deepEqual(p.__errors, []);
   await ctx.close();
 });
@@ -254,7 +267,7 @@ test('Stripe でキャンセルして戻っても、購入完了ページから�
   await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
   await p.locator('#lockUnlockAllBtn').click();
   await p.waitForURL(/checkout\.stripe\.com/);
-  assert.deepEqual(w.calls.filter((c) => c.op === 'guest-checkout').map((c) => c.body), [{ offer: 'analysis', code, resume: tk }]);
+  assertBuy(w, tk);
   // ブラウザの「戻る」：結果の URL のまま
   await p.goBack();
   await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
@@ -281,38 +294,6 @@ test('320・390・1280px：固有リンクの案内・開けない時の表示�
   }
 });
 
-test('結果ページ：¥1,000 の決済画面から支払わずに「戻る」・再読み込みで戻ると、未払いの決済を閉じて、すぐ買える状態に戻る（購入済みとは扱わない）', { skip: skip() }, async () => {
-  const w = world();
-  const ctx = await newContext();
-  await wire(ctx, w);
-  const p = await open(ctx, '/');
-  await complete(p);
-  await p.waitForFunction(() => location.hash.startsWith('#r='));
-  await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
-  await p.locator('#lockUnlockAllBtn').click();
-  await p.waitForURL(/checkout\.stripe\.com/);
-  // 戻る（ページの復元・再読み込みのどちらでも）
-  await p.goBack();
-  await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
-  await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
-  const cancels = () => w.calls.filter((c) => c.op === 'guest-cancel').length;
-  for (let i = 0; i < 20 && cancels() < 1; i++) await p.waitForTimeout(100);
-  assert.equal(cancels(), 1, '戻った時に未払いの決済を閉じる');
-  assert.doesNotMatch(await p.locator('#lockUnlockAllBtn').innerText(), /購入済み|読む/);
-  // 印は使い終える：もう一度の再読み込みでは閉じない
-  await p.reload();
-  await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
-  await p.waitForTimeout(400);
-  assert.equal(cancels(), 1);
-  // 再読み込みで戻った場合も同じ（印があれば閉じる）
-  await p.evaluate(() => sessionStorage.setItem('ed_checkout_started_v1', '1'));
-  await p.reload();
-  await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
-  for (let i = 0; i < 20 && cancels() < 2; i++) await p.waitForTimeout(100);
-  assert.equal(cancels(), 2);
-  assert.deepEqual(p.__errors, []);
-  await ctx.close();
-});
 
 test('同じ診断結果を別の人・別の端末が購入済みでも、この端末に記録が無ければ未購入として ¥1,000・¥3,000 を売る（別の人の購入を表示しない）', { skip: skip() }, async () => {
   const w = world();
@@ -320,13 +301,14 @@ test('同じ診断結果を別の人・別の端末が購入済みでも、こ�
   await wire(ctx, w);
   const p = await open(ctx, '/');
   const code = await complete(p);
-  await p.waitForSelector('[data-guest-complete] [data-reveal-offer="direct_complete"]', { state: 'attached' });
-  const box = p.locator('[data-guest-complete]');
-  assert.doesNotMatch(await box.textContent(), /購入済み/);
+  await p.waitForSelector('[data-buy-complete]', { state: 'attached' });
+  assert.doesNotMatch(await p.locator('[data-buy-complete]').textContent(), /購入済み/);
+  await p.waitForFunction(() => location.hash.startsWith('#r='));
   await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
   assert.doesNotMatch(await p.locator('#lockUnlockAllBtn').innerText(), /購入済み/);
   await p.locator('#lockUnlockAllBtn').click();
   await p.waitForURL(/checkout\.stripe\.com/);
-  assert.deepEqual(w.calls.filter((c) => c.op === 'guest-checkout').map((c) => [c.body.offer, c.body.code]), [['analysis', code]]);
+  assert.ok(code);
+  assertBuy(w, w.issued[0]);
   await ctx.close();
 });

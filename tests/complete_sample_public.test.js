@@ -27,10 +27,12 @@ function jpegSize(buf) {
   throw new Error('SOF が見つかりません');
 }
 
-test('サンプル：8ページ・noindex,nofollow,noarchive・同じサイトの「申し込みに戻る」の script 1本だけ・form／iframe なし', () => {
+test('サンプル：8ページ・noindex,nofollow,noarchive・同じサイトの script だけ（戻る・販売中の設定・共通の申込・申込欄）・form／iframe なし', () => {
   assert.equal((SAMPLE.match(/<section class="page/g) || []).length, 8);
   assert.match(SAMPLE, /<meta name="robots" content="noindex,nofollow,noarchive">/);
-  assert.doesNotMatch(SAMPLE.replace('<script src="/js/sample-return.js"></script>', ''), /<script|<form|<iframe|<object|<embed|<link\b|\son[a-z]+\s*=/i);
+  let rest = SAMPLE;
+  for (const src of ['/js/sample-return.js', '/api/public-config?format=js', '/js/report-purchase.js', '/js/sample-buy.js']) rest = rest.replace(`<script src="${src}"></script>`, '');
+  assert.doesNotMatch(rest, /<script|<form|<iframe|<object|<embed|<link\b|\son[a-z]+\s*=/i);
   assert.match(SAMPLE, /script-src 'self'/);
   // 外部への読み込み（src・url()）が無い。http(s) は OGP の meta だけ
   assert.doesNotMatch(SAMPLE, /\ssrc\s*=\s*["']?https?:/i);
@@ -41,17 +43,23 @@ test('サンプル：8ページ・noindex,nofollow,noarchive・同じサイト�
   assert.equal(external.length, metaUrls.length, 'OGP の meta 以外に外部 URL があります');
 });
 
-test('サンプル：CTA は「申し込みに戻る」（上下2か所）とマイページだけ（このページでは決済しない・Stripe へ直接送らない）', () => {
+
+test('サンプル（complete_13）：上部は「元の画面に戻る」、末尾は申込欄（購入対象トークンがある時だけ申込・直接開いた時は「まず元素診断を受ける」）。Stripe へ直接は送らない', () => {
   const hrefs = [...SAMPLE.matchAll(/href="([^"]*)"/g)].map((m) => m[1]).filter((h) => !h.startsWith('#'));
-  assert.deepEqual(hrefs, ['/', '/', '/mypage?from=sample']);
-  assert.equal((SAMPLE.match(/data-sample-return/g) || []).length, 2);
+  assert.deepEqual(hrefs, ['/', '/']);
+  assert.equal((SAMPLE.match(/data-sample-return/g) || []).length, 1);
+  assert.equal((SAMPLE.match(/data-sample-buy/g) || []).length, 1);
   assert.doesNotMatch(SAMPLE, /stripe|checkout/i);
-  assert.match(SAMPLE, /マイページをお持ちでない方も、ここから無料で作成できます。/);
-  // スクリプトは同じサイトの1本だけ・通信は禁止のまま
-  assert.match(SAMPLE, /script-src 'self'; connect-src 'none'/);
-  assert.deepEqual([...SAMPLE.matchAll(/<script[^>]*src="([^"]+)"/g)].map((m) => m[1]), ['/js/sample-return.js']);
+  // 通信は同じサイトだけ（申込欄の API）
+  assert.match(SAMPLE, /script-src 'self'; connect-src 'self'/);
+  assert.deepEqual([...SAMPLE.matchAll(/<script[^>]*src="([^"]+)"/g)].map((m) => m[1]), ['/js/sample-return.js', '/api/public-config?format=js', '/js/report-purchase.js', '/js/sample-buy.js']);
   assert.doesNotMatch(read('js/sample-return.js'), /fetch|XMLHttpRequest|sendBeacon|gtag/);
+  // 申込欄：直接開いた時は申し込まない（購入対象トークンが無い）
+  const buy = read('js/sample-buy.js');
+  assert.match(buy, /まず元素診断を受ける/);
+  assert.match(buy, /if \(!B\.contextOk\(context\)\)/);
 });
+
 
 test('サンプル：OGP は新しい画像の絶対 URL・summary_large_image', () => {
   assert.match(SAMPLE, new RegExp(`<meta property="og:image" content="${OGP_URL.replace(/[.]/g, '\\.')}">`));
@@ -60,21 +68,21 @@ test('サンプル：OGP は新しい画像の絶対 URL・summary_large_image',
   assert.match(SAMPLE, /<meta property="og:url" content="https:\/\/element-diagnosis-five\.vercel\.app\/complete-sample">/);
 });
 
-test('サンプルは結果ページと解析レポートの完全解析の欄からだけリンクする（マイページ・ナビ・sitemap・タイプページからはリンクしない）', () => {
+test('サンプルへのリンクは、診断結果の欄・解析レポートの最下部・共通の申込（EdBuy.sampleHref）だけ（ナビ・sitemap・タイプページからはリンクしない）', () => {
   for (const p of ['mypage.html', 'privacy.html', 'terms.html', 'sitemap.xml', 'robots.txt', 'complete-analysis.js']) {
     assert.doesNotMatch(read(p), /complete-sample/, `${p} がサンプルを参照しています`);
   }
   const index = read('index.html');
   assert.equal((index.match(/complete-sample/g) || []).length, 1, 'index は完全解析の欄の1か所だけ');
-  assert.match(index, /href="\/complete-sample\?from=result" target="_blank" rel="noopener" data-ca-sample/);
-  // 解析レポート：末尾の完全解析の案内（追加 ¥2,000）の1か所だけ
+  assert.match(index, /href="\/complete-sample\.html#from=result" data-ca-sample data-buy-sample="complete"/);
   const report = read('report.html');
-  assert.equal((report.match(/complete-sample/g) || []).length, 1, 'report は完全解析の案内の1か所だけ');
-  assert.match(report, /href="\/complete-sample\?from=' \+ \(viewer === 'mypage' \? 'mypage' : 'report'\) \+ '" target="_blank" rel="noopener" data-ca-sample/);
+  assert.equal((report.match(/complete-sample/g) || []).length, 1, 'report は以前の仕組みの閲覧の最下部の1か所だけ（固有リンクの最下部は EdBuy.sampleHref）');
+  assert.match(read('js/report-purchase.js'), /'\/complete-sample\.html'/);
   for (const f of fs.readdirSync(path.join(ROOT, 'type'))) {
     assert.doesNotMatch(read(`type/${f}`), /complete-sample/);
   }
 });
+
 
 test('TOP の OGP：1200×630 の JPEG・新しいファイル名・絶対 URL', () => {
   const size = jpegSize(fs.readFileSync(path.join(ROOT, OGP_PATH)));

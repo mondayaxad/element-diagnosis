@@ -80,7 +80,7 @@ async function setup({ env = {} } = {}) {
   const logger = makeLogger();
   const fullEnv = { ...ENV, ...env };
   const deps = { env: fullEnv, fetchImpl: db.fetchImpl, stripeFactory: stripe.factory, logger, waitUntil: null };
-  const checkoutH = Checkout.createHandler(deps);
+  const checkoutH = Checkout.createHandler({ ...deps, retiredRoutesForTests: true });
   const webhookH = Webhook.createHandler(deps);
   const bodies = [];
   const ctx = {
@@ -214,40 +214,32 @@ test('購入完了ページ：Webhook より先でも Stripe に問い合わせ�
   await ctx.db.close();
 });
 
-test('ゲストの追加 ¥2,000：この端末（Cookie の秘密値）で確かめた解析レポートの記録に、同じ記録で完全解析を付ける。重ね買いは断る', { skip }, async () => {
+test('旧ゲスト経路の追加 ¥2,000 は廃止（complete_13）：DB が注文を作らない。既存の ¥1,000 の購入はそのまま読める・別の結果の ¥3,000 は別の記録', { skip }, async () => {
   const ctx = await setup();
   await buy(ctx, { offer: 'analysis', code: CODE_A });
   await ctx.op('guest-status', {});
-  const noGoal = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_A });
-  assert.equal(noGoal.code, 400);
-  // 同じ記録の ¥1,000・¥3,000 は断る（画面は ¥2,000 を出す）。新しい記録も作らない
-  const a2 = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_A });
-  assert.deepEqual([a2.code, a2.body.error], [409, 'analysis_already_purchased']);
-  const d2 = await ctx.op('guest-checkout', { offer: 'direct_complete', code: CODE_A, goal: 'GOAL_PACE_01' });
-  assert.deepEqual([d2.code, d2.body.error], [409, 'upgrade_available']);
-  assert.equal((await ctx.rows('diagnosis_sessions')).length, 1);
-  // ¥2,000：同じ記録（記録を増やさない）・サーバーが選んだ ¥2,000 の Price
-  await buy(ctx, { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_PACE_01' });
-  assert.equal(ctx.stripe.st.lastCreate.params.line_items[0].price, 'price_test_upgrade2000');
-  assert.equal((await ctx.rows('diagnosis_sessions')).length, 1);
+  const before = (await ctx.rows('complete_orders')).map((o) => `${o.offer}:${o.status}`).sort();
+  // ¥2,000：DB の検査（complete_orders_no_repurchase）が complete_offer_retired で断る（注文・Stripe の決済画面を作らない）
+  const creates = ctx.stripe.st.calls.filter((c) => c === 'checkout.sessions.create').length;
+  const up = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_PACE_01' });
+  assert.ok(up.code >= 400, JSON.stringify(up.body));
+  assert.equal(ctx.stripe.st.calls.filter((c) => c === 'checkout.sessions.create').length, creates, 'Stripe の決済画面を作らない');
+  assert.deepEqual((await ctx.rows('complete_orders')).map((o) => `${o.offer}:${o.status}`).sort(), before, '注文を増やさない・既存の行は変えない');
+  const ins = await ctx.db.fetchImpl(`${ctx.env.SUPABASE_URL}/rest/v1/complete_orders`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify({ diagnosis_session_id: (await ctx.rows('diagnosis_sessions'))[0].id, buyer: 'guest', offer: 'analysis_upgrade', amount: 2000, currency: 'jpy', status: 'created' }),
+  });
+  assert.ok(ins.status >= 400, '¥2,000 の行は DB に直接も作れない');
+  // 既存の ¥1,000：購入したブラウザで引き続き読める
   const s = (await ctx.op('guest-status', { code: CODE_A })).body.purchases.find((x) => x.thisRecord);
-  assert.deepEqual([s.analysis, s.complete, s.report, s.canUpgrade], ['active', 'active', 'queued', false]);
-  // 完全解析を購入済み：¥2,000・¥3,000・¥1,000 とも断る
-  for (const [offer, goal, err] of [['analysis_upgrade', 'GOAL_PACE_01', 'repurchase_not_allowed'], ['direct_complete', 'GOAL_PACE_01', 'repurchase_not_allowed'], ['analysis', undefined, 'repurchase_not_allowed']]) {
-    const r = await ctx.op('guest-checkout', goal ? { offer, code: CODE_A, goal } : { offer, code: CODE_A });
-    assert.deepEqual([r.code, r.body.error], [409, err], offer);
-  }
-  const orders = await ctx.rows('complete_orders');
-  assert.deepEqual(orders.filter((o) => o.status === 'paid').map((o) => `${o.offer}:${o.amount}:${o.analysis_basis}`).sort(),
-    ['analysis:1000:null', 'analysis_upgrade:2000:record_entitlement']);
-  // 違う診断結果の ¥3,000（別の記録・解析＋完全解析）
+  assert.equal(s.analysis, 'active');
+  assert.equal((await ctx.op('guest-report', { ref: s.ref })).code, 200);
+  // 違う診断結果の ¥3,000（別の記録）
   await buy(ctx, { offer: 'direct_complete', code: CODE_B, goal: 'GOAL_EXPLORE_01' });
   const b = (await ctx.op('guest-status', { code: CODE_B })).body.purchases.find((x) => x.thisRecord);
-  assert.deepEqual([b.analysis, b.complete, b.report, b.canUpgrade], ['active', 'active', 'queued', false]);
-  // 完全解析の閲覧：生成前は 409 report_not_ready
-  assert.equal((await ctx.op('guest-view', { ref: b.ref })).code, 409);
-  // Cookie の無いブラウザでは何も見えない・ref だけでは開けない
-  assert.equal((await ctx.op('guest-report', { ref: b.ref }, { cookie: '' })).code, 403);
+  assert.deepEqual([b.complete, b.report], ['active', 'queued']);
+  assert.equal((await ctx.op('guest-view', { ref: b.ref })).code, 409, '生成前は 409 report_not_ready');
+  assert.equal((await ctx.op('guest-report', { ref: b.ref }, { cookie: '' })).code, 403, 'Cookie の無いブラウザでは開けない');
   await ctx.db.close();
 });
 
@@ -358,63 +350,28 @@ test('Cookie を失った時の復旧：ログイン中の確認済みメール�
   await ctx.db.close();
 });
 
-test('購入時メールが分かれた記録（¥1,000 を B・¥2,000 を C のメール）は、Cookie・購入時メールのどちらでも、どのアカウントへも自動では移さない（complete_12）。X のメールでは移さない', { skip }, async () => {
+test('引き継ぎ（Cookie の秘密値・購入時メールの照合で所有者を移す）は廃止（complete_13）：公開の処理は 410 transfer_retired・記録の所有者は変わらない', { skip }, async () => {
   const ctx = await setup();
   await buy(ctx, { offer: 'analysis', code: CODE_A }, { email: 'b@example.test' });
   const st = await ctx.op('guest-status', {});
   const ref = st.body.purchases[0].ref;
-  // ログインなしの ¥2,000：Stripe の決済画面のメールを、¥1,000 を払った時のメールに固定する
-  const up = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_PACE_01' });
-  assert.equal(up.code, 200, JSON.stringify(up.body));
-  assert.equal(ctx.stripe.st.lastCreate.params.customer_email, 'b@example.test');
-  assert.doesNotMatch(JSON.stringify(up.body), /example\.test/, '応答にメールを出さない');
-  // 固定の前に作られた記録の再現：¥2,000 を別のメール（C）で払う
-  ctx.stripe.pay(ctx.csIdOf(up.body.checkoutUrl), { customer_details: { email: 'c@example.test' } });
-  await ctx.op('guest-status', {});
-  const tokB = 'tok-mixed-b';
-  const tokC = 'tok-mixed-c';
-  const tokX = 'tok-mixed-x';
+  const tokB = 'tok-retired-b';
   await ctx.db.user({ email: 'b@example.test', token: tokB });
-  await ctx.db.user({ email: 'c@example.test', token: tokC });
-  await ctx.db.user({ email: 'b@example.test', token: tokX, provider: 'x' });
-  const byCookie = await ctx.op('guest-claim', { ref }, { token: tokB });
-  assert.deepEqual([byCookie.code, byCookie.body], [409, { error: 'claim_mixed_email' }]);
-  const byCookieC = await ctx.op('guest-claim', { ref }, { token: tokC });
-  assert.deepEqual([byCookieC.code, byCookieC.body], [409, { error: 'claim_mixed_email' }]);
-  for (const tok of [tokB, tokC]) {
-    const r = await ctx.op('guest-recover', {}, { token: tok, cookie: '' });
-    assert.equal(r.code, 200);
-    assert.equal(r.body.claimed, 0);
-    assert.equal(r.body.mixed, 1);
+  // 公開の関数（module.exports）と同じ作り方（retiredRoutesForTests なし）
+  const pub = Checkout.createHandler({ env: ctx.env, fetchImpl: ctx.db.fetchImpl, stripeFactory: ctx.stripe.factory, logger: ctx.logger, waitUntil: null });
+  for (const [op, body] of [['guest-claim', { ref }], ['guest-recover', {}], ['guest-checkout', { offer: 'analysis', code: CODE_B }]]) {
+    const res = makeRes();
+    await pub({ method: 'POST', headers: { host: 'x', cookie: ctx.cookie, authorization: `Bearer ${tokB}` }, query: { op }, body }, res);
+    assert.equal(res.code, 410, op);
+    assert.deepEqual(Object.keys(res.body), ['error'], op);
   }
-  // X のメール（このサービスが持ち主だと確かめていない）では、Cookie・購入時メールとも移さない
-  assert.deepEqual((await ctx.op('guest-recover', {}, { token: tokX, cookie: '' })).body, { error: 'email_otp_required' });
-  assert.deepEqual((await ctx.op('guest-claim', { ref }, { token: tokX })).body, { error: 'email_otp_required' });
+  const res = makeRes();
+  await pub({ method: 'POST', headers: { host: 'x', authorization: `Bearer ${tokB}` }, body: { diagnosisSessionId: (await ctx.rows('diagnosis_sessions'))[0].id } }, res);
+  assert.deepEqual([res.code, res.body.error], [410, 'checkout_retired'], 'マイページの旧 Checkout');
   assert.equal((await ctx.rows('diagnosis_sessions'))[0].user_id, null, 'どこへも移っていない');
   assert.ok((await ctx.rows('complete_orders')).every((o) => o.user_id === null));
-  // 購入したブラウザでは、引き続き Cookie で読める
+  // 購入したブラウザでは、引き続き Cookie で読める（既存の購入の閲覧は残す）
   assert.equal((await ctx.op('guest-report', { ref })).code, 200);
-  await ctx.db.close();
-});
-
-test('購入時メールが1つの記録：DB の移す処理でも、別のメールの支払いが入った記録は断る（確かめてから移すまでの間の支払い）', { skip }, async () => {
-  const ctx = await setup();
-  await buy(ctx, { offer: 'analysis', code: CODE_A }, { email: 'b@example.test' });
-  await ctx.op('guest-status', {});
-  const up = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_PACE_01' });
-  ctx.stripe.pay(ctx.csIdOf(up.body.checkoutUrl), { customer_details: { email: 'c@example.test' } });
-  await ctx.op('guest-status', {});
-  const [session] = await ctx.rows('diagnosis_sessions');
-  const userB = await ctx.db.user({ email: 'b@example.test' });
-  for (const method of ['cookie', 'email_otp']) {
-    const r = await ctx.db.fetchImpl(`${ctx.env.SUPABASE_URL}/rest/v1/rpc/complete_transfer_guest_record`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ p_user_id: userB, p_diagnosis_session_id: session.id, p_method: method }),
-    });
-    assert.equal(r.status >= 400, true, method);
-    assert.match(JSON.stringify(await r.json()), /complete_claim_mixed_email/, method);
-  }
-  assert.equal((await ctx.rows('diagnosis_sessions'))[0].user_id, null);
   await ctx.db.close();
 });
 

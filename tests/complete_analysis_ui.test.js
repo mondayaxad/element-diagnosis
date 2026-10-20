@@ -102,6 +102,8 @@ async function page(url, { width = 390, height = 844, supa = { rows: ROWS }, red
   await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: previewPublicConfigJs(global.__cfgExtra || {}) }));
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
   await p.route(/cdnjs\.cloudflare\.com|googletagmanager/, (r) => r.fulfill({ contentType: 'application/javascript', body: '' }));
+  // 登録したレポート（complete_13）：この試験では登録なし
+  await p.route('**/api/complete-checkout?op=my-reports', (r) => r.fulfill({ contentType: 'application/json', body: '{"reports":[],"records":[]}' }));
   await p.route('**/api/my-entitlements', (r) => r.fulfill({ contentType: 'application/json', body: '{"purchased_by_version":{}}' }));
   await p.route('**/api/report-data**', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify(global.__reportData || {}) }));
   await p.goto(base + url);
@@ -125,7 +127,7 @@ async function openSheet(p, pick = 0) {
 test('mypage：右上入口は LATEST RESULT より上・追従しない・間にバナーを足さない・既存集計は維持', { skip: skip() }, async () => {
   const p = await mypage('free');
   const t = p.locator('#mpUpgradeTrigger');
-  assert.equal(await t.innerText(), 'アップグレード');
+  assert.equal(await t.innerText(), 'レポート');
   const tb = await t.boundingBox(), lb = await p.locator('#mp-latest-h').boundingBox();
   assert.ok(tb.y < lb.y);
   assert.equal(await t.evaluate((e) => getComputedStyle(e).position), 'relative');
@@ -156,7 +158,8 @@ test('mypage free：解析¥1,000が主（塗り）、完全¥3,000は副（枠�
   assert.ok(await p.evaluate(() => document.activeElement.hasAttribute('data-repick')));
   const text = await sheetText(p);
   assert.ok(text.indexOf('解析レポート') < text.indexOf('完全解析　') || text.indexOf('STRUCTURE') < text.indexOf('COMPLETE ANALYSIS'));
-  for (const s of [...COMBO_B.split(' × '), 'MIRROR', '現在のあなたに近い人物像', 'HIDDEN SHAPE', '表に出にくい一面に近い人物像', 'MENTOR', 'これから伸ばす方向に近い人物像', '10名', 'CHARACTERS', '全46ページ', 'COMPLETE RECORD', '気質', '価値観', '人物像', '近しいキャラクター4名', '解析レポートの内容もすべて含まれます']) assert.ok(text.includes(s), s);
+  for (const s of [...COMBO_B.split(' × '), 'MIRROR', '現在のあなたに近い人物像', 'HIDDEN SHAPE', '表に出にくい一面に近い人物像', 'MENTOR', 'これから伸ばす方向に近い人物像', '10名', 'CHARACTERS', '全46ページ', 'COMPLETE RECORD', '気質', '価値観', '人物像', '近しいキャラクター4名', '解析レポートとは別の商品', '完全解析は、解析レポートとは異なる内容を扱う別商品です。解析レポートの本文は含まれません。']) assert.ok(text.includes(s), s);
+  assert.ok(!text.includes('解析レポートの内容もすべて含まれます'), 'A を含むとは書かない（complete_13）');
   // 観測項目は箇条書き（li・チェック・鍵）ではなく区画で示す
   assert.equal(await p.locator('#mpUpgradeBody .ca-observation-item').count(), 4);
   assert.ok(!/[✓🔒]/.test(text));
@@ -198,55 +201,12 @@ test('mypage：フォーカストラップ・Escape・外側押下で閉じ、�
   await p.__ctx.close();
 });
 
-test('mypage analysis：差額¥2,000だけ（¥1,000・¥3,000カードなし。準備中で押せない）', { skip: skip() }, async () => {
-  const p = await mypage('analysis');
-  // 記録が2件（最新B＝解析購入済み、過去A＝未購入）なので、入口は共通の「アップグレード」
-  assert.equal(await p.locator('#mpUpgradeTrigger').innerText(), 'アップグレード');
-  await openSheet(p);
-  const text = await sheetText(p);
-  assert.ok(text.includes('追加 ¥2,000')); assert.ok(text.includes(`対象：${COMBO_B}／この診断記録`));
-  assert.ok(text.includes('構造と解釈まで観測されています'));
-  assert.ok(!text.includes('さらに開かれるもの'));
-  assert.equal(await p.locator('#mpUpgradeBody .ca-lens').count(), 3);
-  assert.ok(!text.includes('¥3,000') && !text.includes('¥1,000'));
-  assert.equal(await p.locator('#mpUpgradeBody a[href*="buy.stripe"]').count(), 0);
-  const pending = p.locator('#mpUpgradeBody button.is-pending');
-  assert.equal(await pending.count(), 1);
-  assert.equal((await pending.innerText()).trim(), '完全解析へアップグレード ¥2,000（準備中）');
-  assert.equal(await pending.isDisabled(), true);
-  await p.__ctx.close();
-});
 
-test('mypage generating：追加購入CTAなし・解析レポートは開ける', { skip: skip() }, async () => {
-  const p = await mypage('complete-generating');
-  assert.equal(await p.locator('#mpUpgradeTrigger').innerText(), 'アップグレード');
-  await openSheet(p);
-  const text = await sheetText(p);
-  assert.ok(text.includes('完全解析を準備しています')); assert.ok(text.includes('解析レポートを見る'));
-  assert.equal(await p.locator('#mpUpgradeBody a[href*="buy.stripe"]').count(), 0);
-  await p.__ctx.close();
-});
 
-test('mypage ready：解析レポートと完全解析の両方を開ける・COMPLETE表示', { skip: skip() }, async () => {
-  const p = await mypage('complete-ready');
-  const t = p.locator('#mpUpgradeTrigger');
-  // 過去Aは未購入なので、記録が2件の入口は「アップグレード」
-  assert.equal(await t.innerText(), 'アップグレード');
-  assert.equal(await p.locator('.mp-latest.is-complete .mp-chip.complete').count(), 1);
-  await openSheet(p);
-  const body = p.locator('#mpUpgradeBody');
-  assert.equal(await body.locator('a[href*="buy.stripe"]').count(), 0);
-  assert.equal(await body.getByText('解析レポートを見る').count(), 1);
-  const open = body.getByText('完全解析を見る');
-  assert.equal(await open.getAttribute('data-session-id'), 'sess-B');
-  await open.click();
-  assert.match(await body.innerText(), /Preview：完全解析の閲覧先はまだ接続していません/);
-  await p.__ctx.close();
-});
 
 test('mypage unknown：購入CTAを出さない（シート・ページとも）', { skip: skip() }, async () => {
   const p = await mypage('unknown');
-  assert.equal(await p.locator('#mpUpgradeTrigger').innerText(), '状態を確認');
+  assert.equal(await p.locator('#mpUpgradeTrigger').innerText(), 'レポート');
   await p.click('#mpUpgradeTrigger');
   assert.equal(await p.locator('#mpUpgradeBody .ca-pick').count(), 0, '状態不明では記録を選ばせない');
   assert.match(await sheetText(p), /購入状態を確認できませんでした/);
@@ -256,7 +216,7 @@ test('mypage unknown：購入CTAを出さない（シート・ページとも）
 
 test('mypage 実データ（Preview指定なし）：未購入者にも右上入口を出す。完全解析は準備中で押せない', { skip: skip() }, async () => {
   const p = await mypage(null);
-  assert.equal(await p.locator('#mpUpgradeTrigger').innerText(), 'アップグレード');
+  assert.equal(await p.locator('#mpUpgradeTrigger').innerText(), 'レポート');
   // 記録が2件：まず対象の記録を選ばせる（最新へ勝手に紐づけない）。選ぶまで購入導線は出さない
   await p.click('#mpUpgradeTrigger');
   const body = p.locator('#mpUpgradeBody');
@@ -267,7 +227,7 @@ test('mypage 実データ（Preview指定なし）：未購入者にも右上入
   // 販売停止中（既定）：解析レポート ¥1,000 も「準備中」で押せない（Payment Link へは送らない）
   assert.equal(await body.locator('.ca-card--primary a[href*="buy.stripe"]').count(), 0);
   assert.match(await body.locator('.ca-card--primary').innerText(), /解析レポート（準備中）/);
-  assert.equal(await body.locator('button.is-pending').count(), 1);
+  assert.equal(await body.locator('button.is-pending').count(), 2, '解析レポート・完全解析とも準備中（押せない）');
   assert.equal(await body.locator('a[data-product-id^="core_complete_analysis"], [data-preview-dummy]').count(), 0);
   // 選び直せる
   await body.locator('[data-repick]').click();
@@ -278,18 +238,18 @@ test('mypage 実データ（Preview指定なし）：未購入者にも右上入
   // 無効な指定値も「指定なし」と同じ扱い
   const q = await page('/mypage.html?preview_entitlement=bogus');
   await q.waitForSelector('.mp-latest', { state: 'attached' });
-  assert.equal(await q.locator('#mpUpgradeTrigger').innerText(), 'アップグレード');
+  assert.equal(await q.locator('#mpUpgradeTrigger').innerText(), 'レポート');
   await q.__ctx.close();
   await p.__ctx.close();
 });
 
 test('mypage Preview 指定あり：free はアップグレード、unknown は状態確認画面を確認できる', { skip: skip() }, async () => {
   const f = await mypage('free');
-  assert.equal(await f.locator('#mpUpgradeTrigger').innerText(), 'アップグレード');
+  assert.equal(await f.locator('#mpUpgradeTrigger').innerText(), 'レポート');
   assert.equal(await f.locator('#mpUpgradeOverlay').count(), 1);
   await f.__ctx.close();
   const u = await mypage('unknown');
-  assert.equal(await u.locator('#mpUpgradeTrigger').innerText(), '状態を確認');
+  assert.equal(await u.locator('#mpUpgradeTrigger').innerText(), 'レポート');
   await u.click('#mpUpgradeTrigger');
   assert.match(await u.locator('#mpUpgradeBody').innerText(), /購入状態を確認できませんでした/);
   assert.equal(await u.locator('a[href*="buy.stripe"]').count(), 0);
@@ -305,44 +265,24 @@ test('販売開始後（CA_COMPLETE_SALES_OPEN = true）に権利APIが無けれ
   await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: fakeSupabase({ rows: ROWS }) }));
   await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: previewPublicConfigJs() }));
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  // 登録したレポート（complete_13）：この試験では登録なし
+  await p.route('**/api/complete-checkout?op=my-reports', (r) => r.fulfill({ contentType: 'application/json', body: '{"reports":[],"records":[]}' }));
   await p.route('**/api/my-entitlements', (r) => r.fulfill({ contentType: 'application/json', body: '{"purchased_by_version":{}}' }));
   await p.route('**/complete-analysis.js', (r) => r.fulfill({ contentType: 'application/javascript', body: src }));
   await p.goto(base + '/mypage.html');
   await p.waitForSelector('.mp-latest', { state: 'attached' });
-  assert.equal(await p.locator('#mpUpgradeTrigger').innerText(), '状態を確認');
+  assert.equal(await p.locator('#mpUpgradeTrigger').innerText(), 'レポート');
   await p.click('#mpUpgradeTrigger');
   assert.match(await p.locator('#mpUpgradeBody').innerText(), /購入状態を確認できませんでした/);
   assert.equal(await p.locator('#mpUpgradeBody a[href*="buy.stripe"], #mpUpgradeBody button.is-pending').count(), 0);
   await ctx.close();
 });
 
-test('mypage 記録別の権利：過去Aだけ complete、最新Bは free。BからAを開けない', { skip: skip() }, async () => {
-  const p = await mypage('free', '&preview_past=complete-ready');
-  assert.equal(await p.locator('#mp-rec-1.is-complete .mp-chip.complete').count(), 1);
-  assert.equal(await p.locator('#mp-rec-0.is-complete').count(), 0);
-  assert.equal(await p.locator('#mp-rec-0 .mp-chip.locked').count(), 1);
-  assert.equal(await p.locator('.mp-badge.is-complete').count(), 1);
-  assert.equal(await p.locator('#mpUpgradeTrigger').innerText(), 'アップグレード');
-  // 過去Aの完全解析は開ける（Preview では閲覧先未接続の案内）
-  await p.click('#mp-rec-1 > summary');
-  const openA = p.locator('#mp-rec-1 .mp-rec-actions').getByText('完全解析を見る');
-  assert.equal(await openA.getAttribute('data-session-id'), 'sess-A');
-  await openA.click();
-  assert.match(await p.locator('#mp-rec-1 .mp-rec-actions').innerText(), /この記録だけが対象/);
-  // 最新B の id では完全解析を開けない（Aの状態・URLを参照しない）
-  const res = await p.evaluate(async () => {
-    const b = document.createElement('button'); const w = document.createElement('div'); w.appendChild(b); document.body.appendChild(w);
-    await openPurchasedComplete('sess-B', b);
-    return w.innerText;
-  });
-  assert.match(res, /まだ開けません/);
-  await p.__ctx.close();
-});
 
 test('mypage：記録なしは右上入口から診断を始める案内へ。未ログイン・読込エラー時は入口を出さない', { skip: skip() }, async () => {
   const e = await page('/mypage.html', { supa: { rows: [] } });
   await e.waitForSelector('#mpUpgradeTrigger');
-  assert.equal(await e.locator('#mpUpgradeTrigger').innerText(), 'アップグレード');
+  assert.equal(await e.locator('#mpUpgradeTrigger').innerText(), 'レポート');
   await e.click('#mpUpgradeTrigger');
   const body = e.locator('#mpUpgradeBody');
   assert.match(await body.innerText(), /まず診断して、結果を記録に残してください/);
@@ -405,7 +345,7 @@ test('index：¥1,000主導線のあとに折りたたみ。閉じても¥1,000�
   await p.click('details.ca-fold > summary');
   const text = await fold.innerText();
   for (const s of ['この結果が示すのは、あなたの核となる一面です。', 'あなたと重なる人物', 'まだ言葉になっていない内側の可能性', 'これから借りられる力を', '三つの視点からひとつの輪郭へ結びます。', '全46ページの完全解析', '8ページのサンプルを見る', '¥3,000', '完全解析は準備中です']) assert.ok(text.includes(s), s);
-  assert.equal(await fold.locator('[data-ca-sample]').getAttribute('href'), '/complete-sample?from=result');
+  assert.equal(await fold.locator('[data-ca-sample]').getAttribute('href'), '/complete-sample.html#from=result');
   assert.equal(await fold.locator('.ca-reveal-stars i').count(), 3);
   // 決済前のボタンに「見る」「開く」を使わない。押せない button（href なし）
   const cta = fold.locator('button.is-pending');
@@ -453,26 +393,6 @@ async function report(state) {
   return p;
 }
 
-test('report：旧ナラティブ欄を置換。解析購入者には追加¥2,000だけ', { skip: skip() }, async () => {
-  const p = await report('analysis');
-  const html = await p.content();
-  for (const gone of ['NARRATIVE REPORT', 'narrativeCodeText', 'narrative_report', 'dRmeV52XU1EV6f62BU3Nm09', 'ナラティブレポート']) assert.ok(!html.includes(gone), gone);
-  const sec = p.locator('.ca-r-sec');
-  const text = await sec.innerText();
-  assert.ok(text.includes('この観測を、三つの人物像とともに統合する。'));
-  assert.ok(text.includes('追加 ¥2,000')); assert.ok(!text.includes('¥3,000') && !text.includes('¥1,000'));
-  // ボタンは準備中の1つだけ（押せない・href なし）。「内容を見る」ボタンは置かない
-  assert.equal(await sec.locator('a[href*="buy.stripe"], [data-preview-dummy]').count(), 0);
-  assert.equal(await sec.locator('a, button, summary').count(), 1);
-  const pending = sec.locator('button.ca-r-btn.is-pending');
-  assert.equal((await pending.innerText()).trim(), '完全解析へアップグレード ¥2,000（準備中）');
-  assert.equal(await pending.isDisabled(), true);
-  assert.ok(!text.includes('完全解析の内容を見る'));
-  // 構成順：英語見出し → 三つの人物像 → 統合の説明 → 追加¥2,000 → ボタン
-  const order = await sec.evaluate((e) => ['.ca-eyebrow', '.ca-lens-list', '.ca-body', '.ca-r-price', '.ca-r-btn'].map((q) => e.querySelector(q).getBoundingClientRect().top));
-  assert.deepEqual([...order].sort((x, y) => x - y), order);
-  await p.__ctx.close();
-});
 
 test('report：generating／ready／unknown', { skip: skip() }, async () => {
   let p = await report('complete-generating');
@@ -559,7 +479,7 @@ test('旧版記録：完全解析の購入ボタン（¥3,000・追加¥2,000）
     // preview_entitlement で complete を指定しても、旧版の最新記録には COMPLETE 表示・完全解析を開く導線を出さない
     assert.equal(await p.locator('.mp-latest.is-complete, .mp-latest .mp-chip.complete, .mp-latest .ca-rec-complete').count(), 0, st);
     const t = p.locator('#mpUpgradeTrigger');
-    assert.equal(await t.innerText(), 'アップグレード', st);
+    assert.equal(await t.innerText(), 'レポート', st);
     await openSheet(p, 0); // 旧版の記録を選ぶ
     const body = p.locator('#mpUpgradeBody');
     const text = await body.innerText();
@@ -573,7 +493,7 @@ test('旧版記録：完全解析の購入ボタン（¥3,000・追加¥2,000）
       await body.getByText('最新版で診断する（RE-DIAGNOSIS）').click();
       assert.equal(await p.locator('#mpUpgradeOverlay').isHidden(), true);
     } else {
-      assert.match(text, /解析レポートを見る/, st);
+      assert.match(text, /解析レポートを(見る|読む)/, st);
     }
     // 記録内（アコーディオン）にも旧版の完全解析ボタンは出さない
     assert.equal(await p.locator('#mp-rec-0 button.is-pending').count(), 0, st);
@@ -636,7 +556,7 @@ test('適格性は表示文字ではなく保存データで判定する（版�
     await p.waitForSelector('.mp-latest', { state: 'attached' });
     await openSheet(p, 0);
     assert.ok(await p.locator('#mpUpgradeBody .ca-record-slip').count() === 1, row.id);
-    assert.equal(await p.locator('#mpUpgradeBody a[data-product-id^="core_complete_analysis"], #mpUpgradeBody button.is-pending').count(), 0, row.id);
+    assert.equal(await p.locator('#mpUpgradeBody a[data-product-id^="core_complete_analysis"], #mpUpgradeBody .ca-card--secondary, #mpUpgradeBody [data-complete-checkout]').count(), 0, row.id);
     await p.__ctx.close();
   }
 });
