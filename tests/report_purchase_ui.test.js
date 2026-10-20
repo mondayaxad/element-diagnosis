@@ -501,7 +501,9 @@ test('登録：リンクの秘密値（このタブの sessionStorage）でロ�
   for (const [result, re] of [['registered', /このマイページに登録しました/], ['already', /登録済みです/]]) {
     const p = await mypage([DEL('analysis', 'active')], { init: seed, api: { 'link-register': [200, { result, product: 'analysis' }] } });
     // ログイン中のアカウントへ黙って登録しない：どのアカウントかを示し、押した時だけ登録する
+    // 以前から残っていたログイン：黙って使わない。通常どおりログインして登録する（今のアカウントも選べる）
     await p.waitForSelector('#mpClaimBox [data-register-go]');
+    assert.equal(await p.locator('#mpClaimBox [data-register-login]').count(), 1);
     assert.match(await p.locator('#mpClaimBox').innerText(), /ログイン中のアカウント/);
     assert.equal(p.__calls.filter((c) => c.op === 'link-register').length, 0, '確認の前に登録しない');
     await p.click('#mpClaimBox [data-register-go]');
@@ -513,11 +515,19 @@ test('登録：リンクの秘密値（このタブの sessionStorage）でロ�
     assertNoSecrets(p, [LINK_A]);
     await p.__ctx.close();
   }
+  // 登録のためにログインの画面を通った後（このタブの印）：確かめずに、そのアカウントへ登録する（通常の登録の流れ）
+  const viaLogin = await mypage([DEL('analysis', 'active')], { init: seed + `sessionStorage.setItem('ed_register_login_v1', '1');`, api: { 'link-register': [200, { result: 'registered', product: 'analysis' }] } });
+  await viaLogin.waitForFunction(() => /このマイページに登録しました/.test((document.getElementById('mpClaimBox') || {}).innerText || ''));
+  assert.equal(viaLogin.__calls.filter((c) => c.op === 'link-register').length, 1);
+  assert.equal(await viaLogin.locator('[data-register-login]').count(), 0);
+  assert.equal(await viaLogin.evaluate(() => sessionStorage.getItem('ed_register_login_v1')), null);
+  await viaLogin.__ctx.close();
   // 未ログイン：登録の予定をログインの画面で示し、秘密値は残す（ログインの後に登録する）
   const g = await open('/mypage.html', { init: seed, api: {} });
   await g.waitForSelector('#gateAuth');
   assert.match(await g.locator('#historyGateArea').innerText(), /購入したレポートをこのマイページに登録します/);
   assert.equal(JSON.parse(await g.evaluate(() => sessionStorage.getItem('ed_register_v1'))).t, LINK_A);
+  assert.equal(await g.evaluate(() => sessionStorage.getItem('ed_register_login_v1')), '1', 'ログインの後は、そのアカウントへ登録する印');
   await g.__ctx.close();
 });
 

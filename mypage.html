@@ -2051,27 +2051,42 @@ async function mpRegisterNow(token) {
   return { ok: false, error, token: error === 'network' || error === 'service_unavailable' ? token : null };
 }
 let mpRegisterDone = null; // 「このアカウントに登録する」の結果（描き直した後に示す）
-function mpRegisterFromIntent() {
+// 登録のためにログインの画面を通った印（このタブ）。ログインの後は、そのアカウントへ登録する（通常の登録の流れ）
+const MP_REGISTER_LOGIN_KEY = 'ed_register_login_v1';
+function mpRegisterLoginMark(on) {
+  try { if (on) sessionStorage.setItem(MP_REGISTER_LOGIN_KEY, '1'); else sessionStorage.removeItem(MP_REGISTER_LOGIN_KEY); } catch (e) { /* 保存できなくても続ける */ }
+}
+function mpRegisterLoginMarked() {
+  try { return sessionStorage.getItem(MP_REGISTER_LOGIN_KEY) === '1'; } catch (e) { return false; }
+}
+async function mpRegisterFromIntent() {
   if (mpRegisterDone) { const done = mpRegisterDone; mpRegisterDone = null; return done; }
   if (typeof EdBuy === 'undefined') return null;
+  const viaLogin = mpRegisterLoginMarked();
   const token = EdBuy.takeRegisterIntent();
-  return token ? { confirm: true, token } : null;
+  mpRegisterLoginMark(false);
+  if (!token) return null;
+  // この登録のためにログインした：そのまま登録する
+  if (viaLogin) return mpRegisterNow(token);
+  // 以前からこのブラウザに残っていたログイン：黙って使わない。通常どおりログインの画面から登録する（今のアカウントも選べる）
+  return { confirm: true, token };
 }
 function mpRegisterConfirm(root, out, user) {
-  const box = mpClaimBox(root, '<p>購入したレポートを、このマイページに登録しますか？</p>'
+  const box = mpClaimBox(root, '<p>購入したレポートを、マイページに登録します。登録するアカウントでログインしてください。</p>'
+    + '<p><button type="button" class="mp-btn primary" data-register-login>ログインして登録する</button></p>'
     + mpAccountLine(user)
-    + '<p><button type="button" class="mp-btn primary" data-register-go>このアカウントに登録する</button></p>'
-    + '<p><button type="button" class="mp-btn" data-register-switch>別のアカウントで登録する</button> <button type="button" class="mp-btn" data-register-cancel>登録しない</button></p>');
+    + '<p><button type="button" class="mp-btn" data-register-go>このアカウントに登録する</button> <button type="button" class="mp-btn" data-register-cancel>登録しない</button></p>');
+  // 通常の登録：登録の予定をこのタブに戻してからログアウトし、ログインの画面へ（ログインの後に登録する）
+  box.querySelector('[data-register-login]').onclick = async (e) => {
+    e.currentTarget.disabled = true;
+    EdBuy.startRegister(out.token, 'mypage_login', { stay: true });
+    try { await signOutUser(); } catch (err) { /* ログアウトに失敗してもログイン画面へ */ }
+    await init();
+  };
   box.querySelector('[data-register-go]').onclick = async (e) => {
     e.currentTarget.disabled = true;
     mpRegisterDone = await mpRegisterNow(out.token);
     await init(); // 登録したレポートを記録に反映して描き直し、結果を示す
-  };
-  // 別のアカウント：登録の印をこのタブに戻してからログアウトし、ログインの画面へ（ログインの後に、もう一度確かめる）
-  box.querySelector('[data-register-switch]').onclick = async () => {
-    EdBuy.startRegister(out.token, 'mypage_switch', { stay: true });
-    try { await signOutUser(); } catch (e) { /* ログアウトに失敗してもログイン画面へ */ }
-    await init();
   };
   box.querySelector('[data-register-cancel]').onclick = () => { box.remove(); };
 }
@@ -3659,7 +3674,10 @@ async function initOnce() {
     // 購入の引き継ぎ（購入完了ページ・解析レポートの「マイページに引き継ぐ」）・購入時メールでの復旧から来た時の案内
     let intentNote = '';
     try { intentNote = sessionStorage.getItem('ed_claim_intent_v1') ? 'ログインすると、この端末の購入をマイページに引き継ぎます。' : ''; } catch (e) { intentNote = ''; }
-    if (typeof EdBuy !== 'undefined' && EdBuy.peekRegisterIntent()) intentNote = 'ログイン（または新規登録）すると、購入したレポートをこのマイページに登録します。';
+    if (typeof EdBuy !== 'undefined' && EdBuy.peekRegisterIntent()) {
+      intentNote = 'ログイン（または新規登録）すると、購入したレポートをこのマイページに登録します。';
+      mpRegisterLoginMark(true); // ログインの後は、そのアカウントへ登録する
+    }
     renderGate(root);
     // OAuth（Google・X）から戻ってログインできなかった：理由を出す（ログイン画面に黙って戻さない）
     const returnError = typeof takeAuthReturnError === 'function' ? takeAuthReturnError() : null;
@@ -3708,7 +3726,7 @@ async function initOnce() {
   //   「ログイン中の確認済みメール＝購入時のメール」を確かめた時だけ行う（共有端末の別の人へは移らない）
   // 購入時メール・Cookie による自動の引き継ぎは行わない（complete_13）。購入したレポートは、レポートの固有リンクから明示的に登録する
   const claimOutcome = null;
-  const registerOutcome = mpRegisterFromIntent();
+  const registerOutcome = await mpRegisterFromIntent();
   const result = await loadDiagnosisHistory(DIAGNOSIS_TYPE);
   if (result.ok) await mpMergeReports(result.sessions);
   if (!result.ok) {
