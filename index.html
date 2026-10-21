@@ -2854,11 +2854,17 @@ function renderResult(root) {
       ? { diagnosisVersion: 'ETI-2.0', itemSetVersion: ETI_V2_META.itemSetVersion, scoringVersion: ETI_V2_META.scoringVersion, diagnosisCode: shortCode }
       : { diagnosisVersion: DIAGNOSIS_VERSION, itemSetVersion: null, scoringVersion: SCORING_VERSION, diagnosisCode: applyData };
 
+    var fromMypageRec = !window.__edResumeToken ? edRecordFromUrl() : null;
     var RS_LOGIN_LABEL = { signed_out_known: 'ログインして診断記録に保存する', signed_out: '無料登録して診断記録に保存する' };
     var renderRecordCard = function (state) {
       var label = '<div class="rs-label">診断記録</div>';
       var html;
-      if (state === 'saved' || state === 'just_saved') {
+      if (state === 'registered') {
+        // マイページの記録から開いた結果：すでにマイページにある（保存の案内は出さない）
+        html = label + '<p class="rs-done-head" role="status">✓ マイページに登録済みです</p>'
+          + '<p class="rs-text">この結果は、マイページの診断記録から開いています。</p>'
+          + '<a class="rs-link rs-quiet" href="/mypage.html" onclick="trackEvent(\'mypage_entry_click\',{entry_point:\'result\'})">マイページに戻る <span class="arw">→</span></a>';
+      } else if (state === 'saved' || state === 'just_saved') {
         // 同じページに留まる。マイページは任意の副導線
         html = label + '<p class="rs-done-head" role="status">✓ 診断記録に保存しました</p>'
           + '<p class="rs-text">' + (state === 'just_saved' ? 'このまま、結果の続きをご覧いただけます。' : 'この結果は、すでに診断記録に残っています。') + '</p>'
@@ -3004,6 +3010,8 @@ function renderResult(root) {
       var found = await findSavedDiagnosisRecord(recordKey);
       if (found.state === 'unknown') console.error('saved-record check failed (showing as unsaved):', found.error);
       // 認証から戻った直後（#recordCard 付き）に保存済みなら、いま保存できたものとして示す
+      // マイページの記録（#rec=）から開いた結果：ログイン中なら「マイページに登録済み」（購入して登録した記録も含む）
+      if (fromMypageRec && found.state !== 'signed_out' && !(afterFlow && afterFlow.savedAny)) { renderRecordCard('registered'); return; }
       if (found.state === 'saved') { renderRecordCard((afterFlow && afterFlow.savedAny) || window.__edReturnToRecordCard ? 'just_saved' : 'saved'); return; }
       if (found.state === 'signed_out') {
         renderRecordCard(hasRegistrationKnownHint() ? 'signed_out_known' : 'signed_out');

@@ -785,3 +785,19 @@ test('マイページ：解析レポートと完全解析の両方で COMPLETE�
     await p.__ctx.close();
   }
 });
+
+test('結果ページ：マイページの記録（#rec=）から開いた時は、保存の欄を「マイページに登録済み」にする', { skip: skip() }, async () => {
+  const url = `/?dv=ETI-2.0&code=${encodeURIComponent(V2(7).code)}#rec=${REC_ID}`;
+  const p = await open(url, { signedIn: true, rows: [], api: RESULT_API() });
+  await p.waitForFunction(() => { const c = document.querySelector('#recordCard'); return c && c.getAttribute('data-state') && c.getAttribute('data-state') !== 'saving'; });
+  assert.equal(await p.locator('#recordCard').getAttribute('data-state'), 'registered');
+  const t = await p.locator('#recordCard').innerText();
+  assert.match(t, /マイページに登録済み/);
+  assert.doesNotMatch(t, /まだ診断記録に残っていません|保存する/);
+  await p.__ctx.close();
+  // 同じ結果でも、マイページから開いていない時は従来どおり
+  const q = await open(`/?dv=ETI-2.0&code=${encodeURIComponent(V2(7).code)}`, { signedIn: true, rows: [], api: RESULT_API() });
+  await q.waitForFunction(() => { const c = document.querySelector('#recordCard'); return c && c.getAttribute('data-state') && c.getAttribute('data-state') !== 'saving'; });
+  assert.notEqual(await q.locator('#recordCard').getAttribute('data-state'), 'registered');
+  await q.__ctx.close();
+});
