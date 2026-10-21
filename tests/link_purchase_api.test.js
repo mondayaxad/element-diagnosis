@@ -281,6 +281,20 @@ test('B ¥3,000：MENTOR 目標が必須・注文に固定。支払い→生成�
   assert.doesNotMatch(String(v.body), new RegExp(p.link), '完全解析の HTML に固有リンクの秘密値を入れない');
   // 完全解析の固有リンクから解析レポート（report.html）のトークンは出ない
   assert.doesNotMatch(o.body.url, /report\.html/);
+  // 固有リンクから開いた閲覧 URL は長く保つ（アドレスをコピー・ブックマークしても見られる）。マイページ・以前の経路の閲覧 URL は5分のまま
+  const RJ = require('../lib/complete-report-job');
+  const viaLinkUrl = o.body.url + '&src=link';
+  const tk = RJ.readViewToken(VIEW_SECRET, new URL(o.body.url, 'https://x').searchParams.get('view'));
+  assert.ok(tk.ok && tk.linkFp, '固有リンクの指紋を持つ');
+  assert.ok(tk.expiresAt - Math.floor(Date.now() / 1000) > 29 * 24 * 3600, '30日');
+  // 固有リンクを再発行すると、古い閲覧 URL はすぐ開けなくなる（指紋が合わない）。新しいリンクの閲覧 URL は開ける
+  assert.equal((await ctx.view(viaLinkUrl)).code, 200);
+  const [delivery] = await ctx.rows('report_deliveries');
+  const fresh = crypto.randomBytes(32).toString('base64url');
+  await ctx.db.sql(`select public.complete_admin_reissue_delivery($1, $2)`, [delivery.id, LP.tokenHash(fresh)]);
+  assert.equal((await ctx.view(viaLinkUrl)).code, 403, '再発行の後は、古い閲覧 URL で開けない');
+  const o2 = await ctx.op('link-open', { token: fresh, open: true }, { cookie: '' });
+  assert.equal((await ctx.view(o2.body.url + '&src=link')).code, 200);
   await ctx.db.close();
 });
 

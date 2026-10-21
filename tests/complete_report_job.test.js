@@ -601,7 +601,18 @@ test('閲覧トークン：期限は300秒・中身は暗号化・改ざんは�
   const { token, expiresAt } = RJ.issueViewToken(VIEW_SECRET, ids, t0);
   assert.equal(expiresAt, t0 + 300);
   // deliveryId：固有リンク・マイページの登録から開いた時だけ（complete_13）。本人の権利の閲覧では null
-  assert.deepEqual(RJ.readViewToken(VIEW_SECRET, token, t0), { ok: true, ...ids, deliveryId: null, expiresAt: t0 + 300 });
+  assert.deepEqual(RJ.readViewToken(VIEW_SECRET, token, t0), { ok: true, ...ids, deliveryId: null, linkFp: null, expiresAt: t0 + 300 });
+  // 固有リンクから開いた閲覧（納品＋固有リンクの指紋）：30日。指紋が無い納品の閲覧（マイページなど）は300秒のまま
+  const did = crypto.randomUUID();
+  const fp = crypto.randomBytes(8).toString('hex');
+  const delivered = { reportId: ids.reportId, userId: null, sessionId: ids.sessionId, deliveryId: did };
+  const long = RJ.issueViewToken(VIEW_SECRET, { ...delivered, linkFp: fp }, t0);
+  assert.equal(long.expiresAt, t0 + RJ.VIEW_LINK_TTL_SEC);
+  assert.deepEqual(RJ.readViewToken(VIEW_SECRET, long.token, t0 + 86400), { ok: true, reportId: ids.reportId, userId: null, sessionId: ids.sessionId, deliveryId: did, linkFp: fp, expiresAt: t0 + RJ.VIEW_LINK_TTL_SEC });
+  assert.equal(RJ.readViewToken(VIEW_SECRET, long.token, t0 + RJ.VIEW_LINK_TTL_SEC + 1).reason, 'token_expired');
+  assert.equal(RJ.issueViewToken(VIEW_SECRET, delivered, t0).expiresAt, t0 + 300, '指紋が無い納品の閲覧は5分');
+  assert.equal(RJ.issueViewToken(VIEW_SECRET, { ...ids, linkFp: fp }, t0).expiresAt, t0 + 300, '納品が無い閲覧は5分（本人の権利）');
+  assert.equal(RJ.issueViewToken(VIEW_SECRET, { ...delivered, linkFp: 'not-a-fingerprint' }, t0).expiresAt, t0 + 300);
   assert.equal(RJ.readViewToken(VIEW_SECRET, token, t0 + 300).ok, true);
   assert.equal(RJ.readViewToken(VIEW_SECRET, token, t0 + 301).reason, 'token_expired');
   assert.equal(RJ.readViewToken(crypto.randomBytes(32).toString('base64url'), token, t0).reason, 'token_invalid');

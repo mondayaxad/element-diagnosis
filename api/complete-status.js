@@ -138,9 +138,11 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
 
   // 納品（レポート固有リンク・マイページの登録）からの閲覧：開くたびに、納品が active・注文が paid・生成物が ready であることを確かめる
   async function deliveryViewRow(conn, t) {
-    const dels = await CP.selectRows(fetchImpl, conn, `report_deliveries?id=eq.${encodeURIComponent(t.deliveryId)}&select=status,order_id,report_id,product,diagnosis_session_id`);
+    const dels = await CP.selectRows(fetchImpl, conn, `report_deliveries?id=eq.${encodeURIComponent(t.deliveryId)}&select=status,order_id,report_id,product,diagnosis_session_id,link_token_hash`);
     const d = dels[0];
     if (!d || d.status !== 'active' || d.product !== 'complete' || d.report_id !== t.reportId || d.diagnosis_session_id !== t.sessionId) return { state: 'not_entitled' };
+    // 長く保つ閲覧 URL（固有リンクから開いたもの）：いまの固有リンクと同じ時だけ。再発行した後の古い閲覧 URL は開けない
+    if (t.linkFp && String(d.link_token_hash || '').slice(0, 16) !== t.linkFp) return { state: 'not_entitled' };
     const [orders, reports] = await Promise.all([
       CP.selectRows(fetchImpl, conn, `complete_orders?id=eq.${encodeURIComponent(d.order_id)}&select=status`),
       CP.selectRows(fetchImpl, conn, `complete_reports?id=eq.${encodeURIComponent(t.reportId)}&select=id,status,storage_path,output_sha256,revoked_at,quarantined_at`),
