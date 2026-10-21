@@ -11,6 +11,21 @@
     });
   }
 
+  // 表示する国家：事実データで region が null の人物（ニコ・スカーク・アーロイ）は国家を出さない。
+  //   正本の resolver は、表示用に以前の国家（legacy.old_nation_field：ニコ＝ナタなど・誤り）で埋めているため、表示の層で外す。
+  //   完全解析（api/_complete/rc1）は事実データを使うため、もとから「—」
+  var noRegion = null;
+  function displayNation(name, region) {
+    if (!noRegion) {
+      noRegion = {};
+      [typeof ETI_V2_CHARACTERS_2_1_0 !== 'undefined' ? ETI_V2_CHARACTERS_2_1_0 : null,
+       typeof ETI_V2_CHARACTERS !== 'undefined' ? ETI_V2_CHARACTERS : null].forEach(function (src) {
+        (src || []).forEach(function (c) { if (c && c.region === null) noRegion[c.name] = true; });
+      });
+    }
+    return noRegion[name] ? null : (region || null);
+  }
+
   function mirrorRows(rows) {
     return (rows || []).map(function (row) {
       return {
@@ -18,7 +33,7 @@
         match: row.mirrorScore,
         el: row.element,
         w: row.weapon,
-        nation: row.region,
+        nation: displayNation(row.name, row.region),
         personalitySim: Math.round((row.pSim || 0) * 100),
         styleSim: Math.round((row.sSim || 0) * 100),
         valuesSim: Math.round((row.vSim || 0) * 100),
@@ -65,7 +80,7 @@
     return 'ETI-2.0';
   }
 
-  var api = { buildV2ViewModel: buildV2ViewModel, detectResultVersion: detectResultVersion };
+  var api = { buildV2ViewModel: buildV2ViewModel, detectResultVersion: detectResultVersion, displayNation: displayNation };
   root.ETIv2LegacyAdapter = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

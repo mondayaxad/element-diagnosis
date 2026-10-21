@@ -35,6 +35,7 @@
 <script src="js/eti_v2_engine.js"></script>
 <!-- 保存時のMIRROR版（mirror_model_version）ごとに、当時のキャラクター座標・選択規則で表示する -->
 <script src="js/characters118_v2_1.js"></script>
+<script src="js/eti_v2_legacy_adapter.js"></script>
 <script src="js/eti_mirror_selection_v21.js"></script>
 <script src="js/eti_v2_mirror_resolver.js"></script>
 <style>
@@ -1685,20 +1686,24 @@ function mpMirrorComputedV2(s) {
   } catch (e) { console.error('mirror recompute failed (falling back to saved snapshot):', e); }
   return null;
 }
+// 人物の国家（表示）：国家が定まらない人物（ニコ・スカーク・アーロイ）は出さない（js/eti_v2_legacy_adapter.js）
+function mpCharNation(name, region) {
+  return typeof ETIv2LegacyAdapter !== 'undefined' ? ETIv2LegacyAdapter.displayNation(name, region) : (region || null);
+}
 // 一致率の上位4名（生スコア順位。MIRROR の選択とは別の一覧）
 function mpMirrorTop4V2(s) {
   const c = mpMirrorComputedV2(s);
-  if (c && Array.isArray(c.rankings) && c.rankings.length) return c.rankings.slice(0, 4).map(x => ({ name: x.name, match: x.mirrorScore, el: x.element, w: x.weapon, nation: x.region }));
-  return Array.isArray(s && s.mirrorSnapshot) ? s.mirrorSnapshot.slice(0, 4) : [];
+  if (c && Array.isArray(c.rankings) && c.rankings.length) return c.rankings.slice(0, 4).map(x => ({ name: x.name, match: x.mirrorScore, el: x.element, w: x.weapon, nation: mpCharNation(x.name, x.region) }));
+  return Array.isArray(s && s.mirrorSnapshot) ? s.mirrorSnapshot.slice(0, 4).map(x => Object.assign({}, x, { nation: mpCharNation(x && x.name, x && x.nation) })) : [];
 }
 // MIRROR（最も近しいキャラクター1人）。保存時の版で計算し、ETI-MIRROR-2.1.0 は同率処理（元素→国家→武器→番号）の選択結果。
 // 計算は決定的なので index で表示・保存した人物と一致する。計算できない場合だけ保存時スナップショットの選択（selected:true）を使う。
 function mpMirrorV2(s) {
   const c = mpMirrorComputedV2(s);
-  if (c && c.mirror) return { name: c.mirror.name, match: c.mirror.mirrorScore, el: c.mirror.element, w: c.mirror.weapon, nation: c.mirror.region };
+  if (c && c.mirror) return { name: c.mirror.name, match: c.mirror.mirrorScore, el: c.mirror.element, w: c.mirror.weapon, nation: mpCharNation(c.mirror.name, c.mirror.region) };
   if (typeof ETIv2MirrorResolver !== 'undefined') {
     const saved = ETIv2MirrorResolver.mirrorFromSnapshot(s && s.mirrorSnapshot);
-    if (saved && saved.name) return saved;
+    if (saved && saved.name) return Object.assign({}, saved, { nation: mpCharNation(saved.name, saved.nation) });
   }
   return mpMirrorTop4V2(s)[0] || null;
 }

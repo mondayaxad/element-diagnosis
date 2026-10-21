@@ -1200,11 +1200,10 @@ function styleTopTagForCharacter(charName) {
 // 辞書照合のためだけに、表示直前でregionを正規化した「別配列」を作る。
 const NATION_REGION_ALIAS_V2 = { "ナド・クライ": "ナドクライ" };
 var V2_CHARACTERS_NORMALIZED = null;
-// regionがnull（ニコ・スカーク・アーロイの3名。audit.region_correctedによる意図的な null 化）の場合、
-// 表示用フォールバックとしてのみ legacy.old_nation_field を使う。元データ（region:null自体）は書き換えない。
+// regionがnull（ニコ・スカーク・アーロイの3名。audit.region_correctedによる意図的な null 化）の場合は、国家を出さない。
 // MIRRORのスコアリングはregionを見ないため、この正規化は表示（国家バッジ等）にのみ影響する。
 function getV2CharacterDisplayRegion(c) {
-  var region = c.region || (c.legacy && c.legacy.old_nation_field) || null;
+  var region = c.region || null; // null の3名は国家を出さない（以前の legacy.old_nation_field は誤りのため使わない）
   return NATION_REGION_ALIAS_V2[region] || region;
 }
 // この画面で使うMIRROR版：新規診断は最新版（ETI-MIRROR-2.1.0）。URLから復元した結果は mv の版
@@ -2360,7 +2359,7 @@ function renderResult(root) {
             <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
               <span style="background:${ELEMENTS[top1.el].color}22;border:1px solid ${ELEMENTS[top1.el].color}55;color:${ELEMENTS[top1.el].color};font-size:11px;padding:2px 8px;border-radius:3px">${top1.el}</span>
               <span style="background:${WEAPONS[top1.w].color}22;border:1px solid ${WEAPONS[top1.w].color}55;color:${WEAPONS[top1.w].color};font-size:11px;padding:2px 8px;border-radius:3px">${top1.w}</span>
-              <span style="background:#c9a86022;border:1px solid #c9a86055;color:#e0c890;font-size:11px;padding:2px 8px;border-radius:3px">${top1.nation}</span>
+              ${top1.nation ? `<span style="background:#c9a86022;border:1px solid #c9a86055;color:#e0c890;font-size:11px;padding:2px 8px;border-radius:3px">${top1.nation}</span>` : ''}
               <span style="background:#7ab8e822;border:1px solid #7ab8e855;color:${ACCENT};font-size:11px;padding:2px 8px;border-radius:3px">${diagnosisVersion === 'ETI-2.0' ? styleTopTagForCharacter(top1.name) : ENNEA[top1.ennea].name}</span>
             </div>
           </div>

@@ -163,3 +163,18 @@ test('保存：版を渡すとpendingに2.1.0、省略時は従来の固定値',
   assert.equal(legacy.characterProfileVersion, 'ETI-CHAR-2.0.1');
   assert.equal(legacy.mirrorModelVersion, 'ETI-MIRROR-2.0.2');
 });
+
+test('表示の国家：事実データで region が null の3名（ニコ・スカーク・アーロイ）は国家を出さない（以前の誤った国家で埋めない）', () => {
+  // 表示の層（js/eti_v2_legacy_adapter.js）。正本の resolver・完全解析の算出は変えない
+  const src = read('js/eti_v2_legacy_adapter.js');
+  const ad = new Function('ETI_V2_CHARACTERS', 'ETI_V2_CHARACTERS_2_1_0', 'const window = {};' + src + ';return window.ETIv2LegacyAdapter;')(ctx.OLD, ctx.NEW);
+  const nulls = ctx.NEW.filter((c) => c.region === null).map((c) => c.name).sort();
+  assert.deepEqual(nulls, ['アーロイ', 'スカーク', 'ニコ'].sort());
+  for (const n of nulls) assert.equal(ad.displayNation(n, 'ナタ'), null, n);
+  assert.equal(ad.displayNation('ウェンティ', 'モンド'), 'モンド');
+  // 結果の表示モデル（一致率の上位）も同じ
+  const res = score(ctx.Q.map((q, i) => ((i * 7) % 5) - 2));
+  const rows = R.computeMirror(res, 'ETI-MIRROR-2.1.0').rankings;
+  const vm = ad.buildV2ViewModel(res, rows, 'x');
+  for (const c of vm.charMatches) assert.equal(c.nation === null, nulls.includes(c.name), c.name);
+});

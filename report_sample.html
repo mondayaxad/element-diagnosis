@@ -1271,11 +1271,10 @@ function computeSchwartzScoresV2(results) {
    ============================================================ */
 const NATION_REGION_ALIAS_V2 = { "ナド・クライ": "ナドクライ" };
 var V2_CHARACTERS_NORMALIZED = null;
-// regionがnull（ニコ・スカーク・アーロイの3名。audit.region_correctedによる意図的な null 化）の場合、
-// 表示用フォールバックとしてのみ legacy.old_nation_field を使う。元データ（region:null自体）は書き換えない。
+// regionがnull（ニコ・スカーク・アーロイの3名。audit.region_correctedによる意図的な null 化）の場合は、国家を出さない。
 // MIRRORのスコアリングはregionを見ないため、この正規化は表示（国家バッジ等）にのみ影響する。
 function getV2CharacterDisplayRegion(c) {
-  var region = c.region || (c.legacy && c.legacy.old_nation_field) || null;
+  var region = c.region || null; // null の3名は国家を出さない（以前の legacy.old_nation_field は誤りのため使わない）
   return NATION_REGION_ALIAS_V2[region] || region;
 }
 // レポートのMIRROR版：マイページから開いた場合はマイページで表示している版（mv）。購入直後（Stripe→verify）など mv が無い場合は
@@ -1909,7 +1908,7 @@ function renderFullReport(root, results, diagnosisCode) {
   const charCardsHtml = top4.map((c,i) => `
     <div class="charcard2" style="border-color:${pal.p}30">
       <div class="top"><div><span class="rank">${i+1}</span><span class="name">${c.name}</span></div><span class="pct" style="color:${pal.p}">${c.match}%</span></div>
-      <div class="tags"><span style="background:${pal.dark}50;border-color:${pal.p}50;color:${pal.light}">${c.el}</span><span style="background:${pal.dark}50;border-color:${pal.p}50;color:${pal.light}">${c.w}</span><span style="background:#c9a86050;border-color:#c9a86080;color:#e0c890">${c.nation}</span></div>
+      <div class="tags"><span style="background:${pal.dark}50;border-color:${pal.p}50;color:${pal.light}">${c.el}</span><span style="background:${pal.dark}50;border-color:${pal.p}50;color:${pal.light}">${c.w}</span>${c.nation ? `<span style="background:#c9a86050;border-color:#c9a86080;color:#e0c890">${c.nation}</span>` : ''}</div>
       <p>${diagnosisVersion === 'ETI-2.0' ? describeCharMatchV2(c, topEl, topW, i) : describeCharMatch(c, results, topEl, topW, et, i)}</p>
     </div>`).join('');
   const allSameEl = top4.every(c=>c.el===topEl);
