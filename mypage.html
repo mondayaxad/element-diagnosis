@@ -513,7 +513,8 @@
   .mp-chip-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   .mp-chip { font-size: 11px; line-height: 16px; letter-spacing: .5px; border: 1px solid var(--card-border); border-radius: 4px; padding: 1px 7px; color: var(--fg-dim); }
   .mp-chip.new { background: var(--accent-dim); border-color: var(--accent); color: #e0f4ff; }
-  .mp-chip.insight { border-color: #c0a860; color: #c0a860; }
+  /* INSIGHT：淡い紫（NEW の青・COMPLETE の金と重ならない） */
+  .mp-chip.insight { border-color: color-mix(in srgb, #a58ee6 70%, transparent); color: #c9b8f5; background: rgba(165, 142, 230, .12); }
   /* 未解放：LOCKEDを強調せず静かに示す（点線・淡色・背景なし） */
   .mp-chip.locked { border-style: dotted; border-color: #4a4566; color: #8a84a6; background: transparent; letter-spacing: .04em; padding: 1px 6px; }
   .mp-chip.legacy { border-style: dashed; }
