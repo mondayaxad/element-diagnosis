@@ -30,8 +30,15 @@
 //  10. 閲覧のたびに、トークンの種類ごとの規則で DB の権利を確かめる（complete_08。D5・D6）。
 //      再発行トークン（マイページ・ゲスト）は記録（sid）・本人（uid）を持ち、その記録の有効な解析権だけを見る
 //      （同じ診断コードを持つ別の本人の権利は使わない）。旧購入は返金・取消・運営者の停止で読めなくなる。
-//      上の 3・4 は置き換え：DB を確かめられない時は 503（旧形式も含め、確かめずに表示しない）。
+//      DB を確かめられない時は 503（verify・再発行・固有リンクは、確かめずに表示しない）。
 //      応答は Cache-Control: private, no-store
+//  11. 旧購入者保護（S0・2026-10-21）：旧形式（legacy_floor）のトークンだけは、DB への接続・照合が一時的に失敗しても
+//      現行の本番（main）と同じく表示する（DB の障害で旧購入者を締め出さない）。ただし：
+//        ・DB に届いて「停止・取消（legacy_access_blocks）」や「返金済み（有効な行が無い）」を確かめられた時は表示しない
+//        ・署名・期限・復号の失敗は従来どおり 403（DB の状態に関係なく表示しない）
+//        ・verify（purchase 付き）・マイページ／ゲストの再発行・固有リンク（delivery）は従来どおり 503
+//        ・「DB に届いて停止が無い」と「DB の障害で確かめられない」を legacyFacts の結果で分けて扱う
+//      ログには理由の種類だけを出し、URL・トークン・診断コード・メール・利用者 ID は出さない
 //
 // 署名検証・有効期限確認の中核ロジックは本番版から変更していない。
 
@@ -167,20 +174,24 @@ function createHandler({ env, fetchImpl }) {
   }
 
   // 旧購入（purchase_entitlements）：診断コードのハッシュ単位。運営者が停止・取消したものは数えない（complete_08 §2）
+  //   2つの照合を別々に扱い、DB に届いて分かった事実（rows・blocked）と、確かめられなかったこと（unconfirmed）を分ける。
+  //   rows：旧購入の行（null＝照合できなかった）／blocked：true＝停止・取消を確認・false＝停止なしを確認・null＝照合できなかった
   async function legacyFacts(conn, hash) {
-    const [rows, blocked] = await Promise.all([
+    const [rowsR, blockedR] = await Promise.allSettled([
       select(conn, `purchase_entitlements?diagnosis_code_hash=eq.${hash}&select=product_type,status`),
       PS.blockedLegacyHashes((path) => select(conn, path), [hash]),
     ]);
-    const isBlocked = blocked.has(hash);
+    const rows = rowsR.status === 'fulfilled' ? rowsR.value : null;
+    const blocked = blockedR.status === 'fulfilled' ? blockedR.value.has(hash) : null;
     const permissions = new Set();
-    if (!isBlocked) {
+    if (rows && blocked === false) {
       for (const row of rows) {
         if (row.status !== 'active') continue;
         (PRODUCT_PERMISSIONS[row.product_type] || []).forEach((p) => permissions.add(p));
       }
     }
-    return { rows, blocked: isBlocked, permissions };
+    const failed = [rowsR, blockedR].find((r) => r.status === 'rejected');
+    return { rows, blocked, permissions, unconfirmed: rows === null || blocked === null, error: failed ? failed.reason : null };
   }
 
   // 記録の診断コードのハッシュがトークンの診断コードと一致すること（別の記録・別の結果へ流用させない）
@@ -227,14 +238,22 @@ function createHandler({ env, fetchImpl }) {
 
   async function legacyPermissions(conn, kind, hash) {
     const legacy = await legacyFacts(conn, hash);
-    const journey = legacy.permissions.has('journey_report_access');
-    if (kind === 'verify') return { core: legacy.permissions.has('core_analysis_access'), journey };
-    {
-      // 署名付きの旧形式リンク：旧購入の行が無い時代の発行分もあるため、行が無ければ従来どおり読める。
-      // 行があってどれも有効でない（返金・取消）、または運営者が停止・取消した場合は読めない（D6）
-      const refunded = legacy.rows.length > 0 && !legacy.rows.some((r) => r.status === 'active');
-      return { core: !legacy.blocked && !refunded, journey };
+    // verify：DB の権利だけで決める。確かめられなければ 503（従来どおり）
+    if (kind === 'verify') {
+      if (legacy.unconfirmed) throw legacy.error || new Error('lookup failed');
+      return { core: legacy.permissions.has('core_analysis_access'), journey: legacy.permissions.has('journey_report_access') };
     }
+    // 署名付きの旧形式リンク（legacy_floor）：旧購入の行が無い時代の発行分もあるため、行が無ければ従来どおり読める。
+    // 行があってどれも有効でない（返金・取消）、または運営者が停止・取消した場合は読めない（D6）。
+    // DB に届いて確かめられた「停止・取消」「返金済み」は、もう一方の照合が失敗していても優先して止める。
+    if (legacy.blocked === true) return { core: false, journey: false };
+    const refunded = legacy.rows !== null && legacy.rows.length > 0 && !legacy.rows.some((r) => r.status === 'active');
+    if (refunded) return { core: false, journey: false };
+    if (legacy.unconfirmed) {
+      // S0：DB の障害で確かめられない。現行 main と同じく、旧形式のリンクは CORE1 だけ表示する（DB 由来の権限は付けない）
+      return { core: true, journey: false, unconfirmed: true };
+    }
+    return { core: true, journey: legacy.permissions.has('journey_report_access') };
   }
 
   return async function handler(req, res) {
@@ -292,6 +311,10 @@ function createHandler({ env, fetchImpl }) {
     if (!perms.core && !perms.journey) {
       res.status(403).json({ error: 'not_entitled' });
       return;
+    }
+    if (perms.unconfirmed) {
+      // 理由の種類だけ（URL・トークン・診断コード・利用者 ID は出さない）
+      console.error('report-data warning: legacy_floor served without DB confirmation (S0)');
     }
 
     const responseBody = {
