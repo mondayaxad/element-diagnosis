@@ -29,7 +29,7 @@ function build() {
 
   // サンプルであることを冒頭に示す
   html = replaceOnce(html, '<title>元素診断 解析レポート</title>',
-    '<title>元素診断 解析レポート（サンプル）</title>');
+    '<title>元素診断 解析レポート（サンプル）</title>\n<meta name="robots" content="noindex,nofollow">');
   html = replaceOnce(html, '<body>\n<div id="root">',
     '<body>\n<div style="background:linear-gradient(90deg,#5a4490,#8a5fc0);color:#fff;text-align:center;padding:12px 16px;font-size:13px;font-weight:700;letter-spacing:1px">\n'
     + '  📖 これはサンプルレポートです（実際にご購入いただくと、あなた自身の診断結果でこの内容が生成されます）\n</div>\n<div id="root">');

@@ -34,6 +34,7 @@ const PUBLIC_FILES = [
   'report_sample.html',
   'privacy.html',
   'terms.html',
+  'tokushoho.html',                                           // 特定商取引法に基づく表記（購入の入口からリンク。検索に出す）
   'complete-analysis.js',
   'diagnosis-save.js',
   'ogp.jpeg',
@@ -266,8 +267,24 @@ function verifyDist(outDir, { root = ROOT, expected } = {}) {
   return { problems, files: present, absoluteMissing: refs.absoluteMissing, api };
 }
 
-function build({ root = ROOT, outDir = path.join(ROOT, OUT_DIR), files = PUBLIC_FILES, dirs = PUBLIC_DIRS } = {}) {
+// 法務ページ（利用規約・特商法・プライバシー）の公開日などの未確定の箇所（【…】）。Production のビルドでは、残っていれば止める
+//   （公開日は、実際に Production へ公開する日に確定する。Preview・手元のビルドは通す）
+const LEGAL_PAGES = ['terms.html', 'privacy.html', 'tokushoho.html'];
+function legalPlaceholderProblems(root = ROOT, env = process.env) {
+  const production = env.VERCEL_ENV === 'production' || env.LEGAL_RELEASE_CHECK === '1';
+  if (!production) return [];
+  const problems = [];
+  for (const f of LEGAL_PAGES) {
+    const text = fs.readFileSync(path.join(root, f), 'utf8');
+    const m = text.match(/【[^】]{1,20}】/g);
+    if (m) problems.push(`${f}: 未確定の箇所が残っています（${[...new Set(m)].join('、')}）。公開日などを確定してから Production へ出してください`);
+  }
+  return problems;
+}
+
+function build({ root = ROOT, outDir = path.join(ROOT, OUT_DIR), files = PUBLIC_FILES, dirs = PUBLIC_DIRS, env = process.env } = {}) {
   const { files: list, problems } = listPublicFiles(root, files, dirs);
+  if (files === PUBLIC_FILES) problems.push(...legalPlaceholderProblems(root, env));
   fs.rmSync(outDir, { recursive: true, force: true });
   fs.mkdirSync(outDir, { recursive: true });
   for (const f of list) {
@@ -280,7 +297,7 @@ function build({ root = ROOT, outDir = path.join(ROOT, OUT_DIR), files = PUBLIC_
 }
 
 module.exports = {
-  PUBLIC_FILES, PUBLIC_DIRS, FORBIDDEN, KNOWN_MISSING_ABSOLUTE,
+  PUBLIC_FILES, PUBLIC_DIRS, FORBIDDEN, KNOWN_MISSING_ABSOLUTE, LEGAL_PAGES, legalPlaceholderProblems,
   listPublicFiles, walk, forbiddenIn, collectRefs, checkRefs, traceApiImports, apiFilesExposed, verifyDist, build,
 };
 

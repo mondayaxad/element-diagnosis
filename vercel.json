@@ -105,6 +105,15 @@
       ]
     },
     {
+      "source": "/report_sample",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
       "source": "/purchase-complete",
       "headers": [
         {
