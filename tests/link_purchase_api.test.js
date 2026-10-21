@@ -286,7 +286,7 @@ test('B ¥3,000：MENTOR 目標が必須・注文に固定。支払い→生成�
   const viaLinkUrl = o.body.url + '&src=link';
   const tk = RJ.readViewToken(VIEW_SECRET, new URL(o.body.url, 'https://x').searchParams.get('view'));
   assert.ok(tk.ok && tk.linkFp, '固有リンクの指紋を持つ');
-  assert.ok(tk.expiresAt - Math.floor(Date.now() / 1000) > 29 * 24 * 3600, '30日');
+  assert.ok(tk.expiresAt - Math.floor(Date.now() / 1000) > 9 * 365 * 24 * 3600, '実質無期限（10年）');
   // 固有リンクを再発行すると、古い閲覧 URL はすぐ開けなくなる（指紋が合わない）。新しいリンクの閲覧 URL は開ける
   assert.equal((await ctx.view(viaLinkUrl)).code, 200);
   const [delivery] = await ctx.rows('report_deliveries');

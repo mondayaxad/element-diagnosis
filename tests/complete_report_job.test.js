@@ -602,7 +602,7 @@ test('閲覧トークン：期限は300秒・中身は暗号化・改ざんは�
   assert.equal(expiresAt, t0 + 300);
   // deliveryId：固有リンク・マイページの登録から開いた時だけ（complete_13）。本人の権利の閲覧では null
   assert.deepEqual(RJ.readViewToken(VIEW_SECRET, token, t0), { ok: true, ...ids, deliveryId: null, linkFp: null, expiresAt: t0 + 300 });
-  // 固有リンクから開いた閲覧（納品＋固有リンクの指紋）：30日。指紋が無い納品の閲覧（マイページなど）は300秒のまま
+  // 固有リンクから開いた閲覧（納品＋固有リンクの指紋）：実質無期限（10年）。指紋が無い納品の閲覧（マイページなど）は300秒のまま
   const did = crypto.randomUUID();
   const fp = crypto.randomBytes(8).toString('hex');
   const delivered = { reportId: ids.reportId, userId: null, sessionId: ids.sessionId, deliveryId: did };
