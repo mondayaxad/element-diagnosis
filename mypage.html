@@ -706,7 +706,13 @@
   /* 診断結果（元素 × 武器 × 国家）と札（NEW・COMPLETE 等）を重ねない：結果は 11em を目安に幅を取り、足りなければ札が次の行へ回る。
      それでも入らない狭い画面では、結果の中で折り返す（はみ出して札の下に潜らない） */
   .mp-rec > summary .c { flex: 1 1 11em; min-width: 0; word-break: keep-all; overflow-wrap: anywhere; }
-  .mp-rec > summary .mp-chip-row { flex: 0 1 auto; min-width: 0; }
+  .mp-rec > summary .mp-chip-row { flex: 0 0 auto; min-width: 0; flex-direction: column; align-items: flex-end; flex-wrap: nowrap; gap: 3px; }
+  .mp-rec > summary .mp-chip-row:empty { display: none; }
+  /* 記録の見出しは1行：NEW・COMPLETE が重なっても折り返さない（組合せの文字が必要なら2行になる） */
+  .mp-rec > summary { flex-wrap: nowrap; gap: 8px; }
+  .mp-rec > summary .c { flex: 1 1 0; }
+  .mp-rec > summary .mp-chip { font-size: 9.5px; line-height: 14px; padding: 1px 4px; letter-spacing: .04em; white-space: nowrap; }
+  .mp-rec > summary .mp-chip.complete { letter-spacing: .06em; }
   .mp-rec > summary .c .el { font-weight: 700; }
   .mp-rec > summary::after { content: '⌄'; color: var(--fg-dim); font-size: 13px; }
   .mp-rec[open] > summary::after { content: '⌃'; }
@@ -2503,7 +2509,6 @@ function mpCollectionHtml(records) {
             ${mpEmblemHtml(r)}
             <span class="nm" style="color:${mpElText(r.el)}">${r.name}</span>
             <span class="dt">${mpDate(r.date)}</span>
-            ${!mpEntitlementOk ? '' : mpIsComplete(r) ? '<span class="st complete">COMPLETE</span>' : mpAwake(r) ? '<span class="st insight">INSIGHT</span>' : ''}
           </button>`).join('')}
       </div>
       ${records.length >= 4 ? `<button type="button" class="mp-col-next" onclick="mpCollectionNext()" aria-label="記録章の続きを見る（全${records.length}件）">›</button>` : ''}

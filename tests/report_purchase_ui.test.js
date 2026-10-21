@@ -772,11 +772,13 @@ test('マイページ：解析レポートと完全解析の両方で COMPLETE�
   for (const [reports, want] of [[[DEL('analysis', 'active')], 'INSIGHT'], [[B], 'INSIGHT'], [[DEL('analysis', 'active'), B], 'COMPLETE']]) {
     const p = await mypage(reports);
     const got = await p.evaluate(() => ({
-      badge: document.querySelector('.mp-badge .st').innerText,
+      badge: document.querySelectorAll('.mp-badge .st').length, // 記録章の欄には COMPLETE・INSIGHT を出さない
+      chips: document.querySelector('details.mp-rec .mp-chip-row').innerText.replace(/\s+/g, ' ').trim(),
       latest: document.querySelector('.mp-latest').className,
       chip: !!document.querySelector('.mp-latest .mp-chip.complete'),
     }));
-    assert.equal(got.badge, want);
+    assert.equal(got.badge, 0);
+    assert.equal(got.chips, want === 'COMPLETE' ? 'NEW COMPLETE' : 'NEW');
     assert.match(got.latest, /state-insight/);
     assert.equal(/is-complete/.test(got.latest), want === 'COMPLETE');
     assert.equal(got.chip, want === 'COMPLETE');
