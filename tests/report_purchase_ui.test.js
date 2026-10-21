@@ -847,3 +847,14 @@ test('マイページ：完全解析を申し込める記録だけ、購入ボ�
     await p.__ctx.close();
   }
 });
+
+test('マイページ：完全解析だけ購入の記録は「解析レポートを購入すると、上の4つの深層がひらきます。」', { skip: skip() }, async () => {
+  for (const [reports, re] of [
+    [[DEL('complete', 'active', { report: { status: 'ready' } })], /解析レポートを購入すると、上の4つの深層がひらきます。/],
+    [[], /この記録には、まだ知らない自分があります。/],
+  ]) {
+    const p = await mypage(reports);
+    assert.match(await p.locator('.mp-latest .mp-rec-cta-note').first().innerText(), re);
+    await p.__ctx.close();
+  }
+});

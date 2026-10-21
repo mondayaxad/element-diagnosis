@@ -2409,7 +2409,7 @@ function mpLockedHtml(r, where) {
       </div>
       <div class="mp-locked-title">まだ読み解いていないもの</div>
       ${rows.map(([t, cap, d]) => `<div class="mp-locked-row" data-domain="${d}"><span class="txt"><span class="t">${t}</span><span class="cap">${cap}</span><span class="ghost" aria-hidden="true"></span></span></div>`).join('')}
-      <p class="mp-rec-cta-note">この記録には、まだ知らない自分があります。</p>
+      <p class="mp-rec-cta-note">${mpOwnsComplete(r) ? '解析レポートを購入すると、上の4つの深層がひらきます。' : 'この記録には、まだ知らない自分があります。'}</p>
       ${mpEntitlementOk ? caRecordCompleteHtml(r, false) : ''}
       ${mpRecordActionsHtml(r, isLatest ? 'latest' : 'records')}
     </div>`;
