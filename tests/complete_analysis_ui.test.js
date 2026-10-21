@@ -128,7 +128,7 @@ async function openSheet(p, pick = 0) {
 test('mypage：右上入口は LATEST RESULT より上・追従しない・間にバナーを足さない・既存集計は維持', { skip: skip() }, async () => {
   const p = await mypage('free');
   const t = p.locator('#mpUpgradeTrigger');
-  assert.equal(await t.innerText(), 'レポート');
+  assert.equal(await t.innerText(), 'アップグレード');
   const tb = await t.boundingBox(), lb = await p.locator('#mp-latest-h').boundingBox();
   assert.ok(tb.y < lb.y);
   assert.equal(await t.evaluate((e) => getComputedStyle(e).position), 'relative');
@@ -218,7 +218,7 @@ test('mypage unknown：購入CTAを出さない（シート・ページとも）
 
 test('mypage 実データ（Preview指定なし）：未購入者にも右上入口を出す。完全解析は準備中で押せない', { skip: skip() }, async () => {
   const p = await mypage(null);
-  assert.equal(await p.locator('#mpUpgradeTrigger').innerText(), 'レポート');
+  assert.equal(await p.locator('#mpUpgradeTrigger').innerText(), 'アップグレード');
   // 記録が2件：まず対象の記録を選ばせる（最新へ勝手に紐づけない）。選ぶまで購入導線は出さない
   await p.click('#mpUpgradeTrigger');
   const body = p.locator('#mpUpgradeBody');
@@ -240,14 +240,14 @@ test('mypage 実データ（Preview指定なし）：未購入者にも右上入
   // 無効な指定値も「指定なし」と同じ扱い
   const q = await page('/mypage.html?preview_entitlement=bogus');
   await q.waitForSelector('.mp-latest', { state: 'attached' });
-  assert.equal(await q.locator('#mpUpgradeTrigger').innerText(), 'レポート');
+  assert.equal(await q.locator('#mpUpgradeTrigger').innerText(), 'アップグレード');
   await q.__ctx.close();
   await p.__ctx.close();
 });
 
 test('mypage Preview 指定あり：free はアップグレード、unknown は状態確認画面を確認できる', { skip: skip() }, async () => {
   const f = await mypage('free');
-  assert.equal(await f.locator('#mpUpgradeTrigger').innerText(), 'レポート');
+  assert.equal(await f.locator('#mpUpgradeTrigger').innerText(), 'アップグレード');
   assert.equal(await f.locator('#mpUpgradeOverlay').count(), 1);
   await f.__ctx.close();
   const u = await mypage('unknown');
@@ -487,7 +487,7 @@ test('旧版記録：完全解析の購入ボタン（¥3,000・追加¥2,000）
     // preview_entitlement で complete を指定しても、旧版の最新記録には COMPLETE 表示・完全解析を開く導線を出さない
     assert.equal(await p.locator('.mp-latest.is-complete, .mp-latest .mp-chip.complete, .mp-latest .ca-rec-complete').count(), 0, st);
     const t = p.locator('#mpUpgradeTrigger');
-    assert.equal(await t.innerText(), 'レポート', st);
+    assert.equal(await t.innerText(), 'アップグレード', st);
     await openSheet(p, 0); // 旧版の記録を選ぶ
     const body = p.locator('#mpUpgradeBody');
     const text = await body.innerText();

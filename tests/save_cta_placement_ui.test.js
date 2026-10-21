@@ -503,7 +503,7 @@ test('マイページ：購入状態APIが失敗してもアコーディオン�
   await p.locator('#mp-rec-0 > summary').click();
   await p.locator('#mp-rec-0 .mp-notice button').click();
   await p.waitForSelector('#mp-rec-0 .mp-rec-actions', { state: 'attached' });
-  assert.equal(await p.locator('#mpUpgradeTrigger').innerText(), 'レポート');
+  assert.equal(await p.locator('#mpUpgradeTrigger').innerText(), 'アップグレード');
   assert.deepEqual(p.__errors, []);
   await p.__ctx.close();
 });
@@ -543,7 +543,7 @@ test('マイページ：記録内CTA（無料のみ／解析購入済み）と�
 
 test('マイページ：記録1件はその記録が選択済み。右上の文言は状態で変わる', { skip: skip() }, async () => {
   const f = await mypage({ supa: { rows: [RA.row] } });
-  assert.equal(await f.locator('#mpUpgradeTrigger').innerText(), 'レポート');
+  assert.equal(await f.locator('#mpUpgradeTrigger').innerText(), 'アップグレード');
   await f.click('#mpUpgradeTrigger');
   assert.equal(await f.locator('#mpUpgradeBody .ca-pick').count(), 0);
   assert.equal(await f.locator('#mpUpgradeBody .ca-card--primary a[href*="buy.stripe"]').count(), 0);
@@ -551,7 +551,7 @@ test('マイページ：記録1件はその記録が選択済み。右上の文�
   assert.deepEqual((await f.locator('#mpUpgradeBody button.is-pending').allInnerTexts()).map((t) => t.trim()).filter((t) => /完全解析/.test(t)), ['完全解析 ¥3,000（準備中）']);
   await f.__ctx.close();
   const a = await mypage({ supa: { rows: [RA.row] }, entitlements: purchasedFor(RA.code) });
-  assert.equal(await a.locator('#mpUpgradeTrigger').innerText(), 'レポート');
+  assert.equal(await a.locator('#mpUpgradeTrigger').innerText(), 'アップグレード');
   await a.click('#mpUpgradeTrigger');
   assert.equal((await a.locator('#mpUpgradeBody button.is-pending').innerText()).trim(), '完全解析 ¥3,000（準備中）');
   assert.equal(await a.locator('#mpUpgradeBody a[href*="buy.stripe"]').count(), 0);

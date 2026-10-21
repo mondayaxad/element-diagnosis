@@ -454,7 +454,7 @@ test('マイページ：返金した納品はその納品だけ止める（も�
 
 test('マイページ：右上は「レポート」・シートの見出しは「この記録のレポート」。購入は共通の op=buy（記録の購入対象トークン）', { skip: skip() }, async () => {
   const p = await mypage([DEL('analysis', 'active')]);
-  assert.equal((await p.locator('#mpUpgradeTrigger').innerText()).trim(), 'レポート');
+  assert.equal((await p.locator('#mpUpgradeTrigger').innerText()).trim(), 'アップグレード');
   await p.click('#mpUpgradeTrigger');
   await p.waitForSelector('#mpUpgradeBody #latest-upgrade-title');
   assert.equal((await p.locator('#latest-upgrade-title').innerText()).trim(), 'この記録のレポート');
@@ -779,7 +779,7 @@ test('マイページ：解析レポートと完全解析の両方で COMPLETE�
       chip: !!document.querySelector('.mp-latest .mp-chip.complete'),
     }));
     assert.equal(got.badge, 0);
-    assert.equal(got.chips, want === 'COMPLETE' ? 'NEW COMPLETE' : 'NEW');
+    assert.equal(got.chips, want === 'COMPLETE' ? 'NEW COMPLETE' : 'NEW INSIGHT');
     assert.match(got.latest, /state-insight/);
     assert.equal(/is-complete/.test(got.latest), want === 'COMPLETE');
     assert.equal(got.chip, want === 'COMPLETE');
@@ -857,4 +857,24 @@ test('マイページ：完全解析だけ購入の記録は「解析レポー�
     assert.match(await p.locator('.mp-latest .mp-rec-cta-note').first().innerText(), re);
     await p.__ctx.close();
   }
+});
+
+test('マイページ：右上は未購入が1つでもあれば「アップグレード」・すべて購入済みなら「レポート」。記録の選択はわかる言葉で', { skip: skip() }, async () => {
+  const B = DEL('complete', 'active', { report: { status: 'ready' } });
+  for (const [reports, label] of [[[], 'アップグレード'], [[DEL('analysis', 'active')], 'アップグレード'], [[B], 'アップグレード'], [[DEL('analysis', 'active'), B], 'レポート']]) {
+    const p = await mypage(reports);
+    assert.equal((await p.locator('#mpUpgradeTrigger').innerText()).trim(), label, JSON.stringify(reports.map((r) => r.product)));
+    await p.__ctx.close();
+  }
+  // 記録が2件：選択の画面に INSIGHT・COMPLETE と、✓／○ の言葉
+  const R2 = v2Row('55555555-5555-4555-8555-555555555555', '2026-10-14T00:39:00Z', 3);
+  const p = await mypage([DEL('analysis', 'active')], { rows: [REC_ROW, R2] });
+  await p.locator('#mpUpgradeTrigger').click();
+  const t = await p.locator('#mpUpgradeBody').innerText();
+  assert.match(t, /INSIGHT/);
+  assert.match(t, /✓\s*解析レポート\s*読み解いた記録があります/);
+  assert.match(t, /○\s*完全解析\s*まだ開いていません/);
+  assert.match(t, /○\s*解析レポート\s*まだ読み解いていません/);
+  assert.doesNotMatch(t, /読めます|未購入/);
+  await p.__ctx.close();
 });

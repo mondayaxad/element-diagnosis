@@ -1005,7 +1005,14 @@
   .ca-pick-date { font-size: 12px; color: var(--ca-muted); letter-spacing: .04em; }
   .ca-pick-new { margin-left: 8px; font-size: 10.5px; color: var(--ca-gold); letter-spacing: .08em; }
   .ca-pick-combo { overflow-wrap: anywhere; }
-  .ca-pick-state { font-size: 11.5px; color: var(--ca-body); }
+  .ca-pick-state { display: grid; gap: 2px; margin-top: 2px; font-size: 12px; color: var(--ca-body); }
+  .ca-pick-line { display: flex; align-items: baseline; gap: 6px; color: var(--ca-muted); }
+  .ca-pick-line.is-on { color: var(--ca-title); }
+  .ca-pick-mark { flex: none; width: 1em; text-align: center; font-size: 11px; }
+  .ca-pick-line.is-on .ca-pick-mark { color: var(--ca-gold); }
+  .ca-pick-name { flex: none; min-width: 6.5em; }
+  .ca-pick-text { min-width: 0; }
+  .ca-pick-date .mp-chip { margin-left: 8px; font-size: 10px; padding: 0 5px; }
   .ca-repick { margin-top: 0; margin-bottom: 12px; }
   .ca-pending-note { margin-top: 8px; font-size: 11.5px; line-height: 1.7; color: var(--ca-muted); }
   /* MENTOR 目標の選択（2026-10-07・決済は未接続）：標準の radio・44px 以上のタップ領域・狭い画面でも横に溢れない */
@@ -2502,7 +2509,7 @@ function mpLatestHtml(r) {
         <div class="mp-latest-main">
           ${mpEmblemHtml(r, 'lg')}
           <div class="mp-latest-info">
-            <div class="mp-chip-row"><span class="mp-chip">${mpDate(r.date)}</span><span class="mp-chip new">NEW</span>${mpIsComplete(r) ? '<span class="mp-chip complete">COMPLETE</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}</div>
+            <div class="mp-chip-row"><span class="mp-chip">${mpDate(r.date)}</span><span class="mp-chip new">NEW</span>${!mpEntitlementOk ? '' : mpIsComplete(r) ? '<span class="mp-chip complete">COMPLETE</span>' : mpAwake(r) ? '<span class="mp-chip insight">INSIGHT</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}</div>
             ${r.code ? `<div class="mp-latest-code"><b class="mp-typecode mp-gt" style="color:${mpElText(r.el)};--gc:${mpElText(r.el)}">${r.code}</b><span class="mp-gt" style="color:${mpElText(r.el)};--gc:${mpElText(r.el)};opacity:.85">${r.typeName}</span></div>` : ''}
             <div class="mp-latest-combo">${mpComboHtml(r)}</div>
           </div>
@@ -2572,7 +2579,7 @@ function mpRecordHtml(r, i) {
   const detailLink = r.resultUrl
     ? `<a href="${mpEsc(mpResultHref(r))}" class="mp-detail-link" onclick="trackEvent('mypage_view_result_click',{source:'records'})">当時の診断結果を見る →</a>`
     : '';
-  const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${mpIsComplete(r) ? '<span class="mp-chip complete">COMPLETE</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
+  const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${!mpEntitlementOk ? '' : mpIsComplete(r) ? '<span class="mp-chip complete">COMPLETE</span>' : mpAwake(r) ? '<span class="mp-chip insight">INSIGHT</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
   let body;
   // 開閉（<details>）は購入状態APIと無関係。確認できなかった記録も開けて、中に再確認を出す
   if (!mpEntitlementOk) body = mpVizHtml(r) + mpRecordActionsHtml(r, 'records');
@@ -2798,13 +2805,24 @@ function caTriggerKey(records) {
   }
   return records.every(r => caKey(r) === 'complete_ready') ? 'complete_ready' : 'free';
 }
+// 右上の名称：まだ持っていないレポート（最新版の記録の解析レポート・完全解析）が1つでもあれば「アップグレード」、すべて持っていれば「レポート」
+function mpHasUpgrade(records) {
+  if (!mpEntitlementOk || !mpReportsOk) return false;
+  return records.some((r) => {
+    if (!(r.session && r.session.isV2)) return false; // 以前の版は申し込めない
+    const a = mpAnalysisDelivery(r);
+    const ownsA = (a && a.state === 'active') || r.purchased === true;
+    const ownsB = mpOwnsComplete(r);
+    return !ownsA || (!ownsB && mpCompleteEligible(r));
+  });
+}
 function caTriggerHtml(records) {
   if (!caAvailable() || !Array.isArray(records)) return '';
   const k = caTriggerKey(records);
   const r0 = records[0];
   return `<button type="button" class="archive-upgrade-trigger${k === 'complete_ready' ? ' is-ready' : ''}" id="mpUpgradeTrigger"
     aria-haspopup="dialog" aria-controls="latest-upgrade-dialog" aria-expanded="false" data-state="${k}"
-    style="--uc:${r0 ? mpElText(r0.el) : 'var(--accent)'}">${CA_TRIGGER_LABEL[k] || CA_TRIGGER_LABEL.unknown}</button>`;
+    style="--uc:${r0 ? mpElText(r0.el) : 'var(--accent)'}">${k !== 'unknown' && k !== 'empty' && mpHasUpgrade(records) ? 'アップグレード' : (CA_TRIGGER_LABEL[k] || CA_TRIGGER_LABEL.unknown)}</button>`;
 }
 
 // 各記録（LATEST RESULT／THE RECORDS）内の完全解析表示。complete の記録だけに出る。
@@ -2929,17 +2947,25 @@ function caSheetBodyHtml(r) {
 // 記録が複数のとき、対象の記録を選ぶ画面（選ぶまで購入・閲覧の導線は出さない）
 // 記録の選択：A・B それぞれの状態（表14と同じ根拠）
 function mpPickState(r) {
-  if (!mpEntitlementOk || !mpReportsOk) return '購入状態を確認できません';
+  if (!mpEntitlementOk || !mpReportsOk) return '<span class="ca-pick-line">購入の状態を確かめられませんでした</span>';
   const a = mpAnalysisDelivery(r);
   const b = mpCompleteDelivery(r);
   const stopped = (d) => d && (d.state === 'suspended' || d.state === 'revoked');
-  const aText = (a && a.state === 'active') || r.purchased === true ? '読めます' : stopped(a) ? '停止中' : '未購入';
+  // 持っているものは「✓」、まだのものは「○」。言葉はマイページの世界観に合わせる
+  let aOn = false, aText = 'まだ読み解いていません';
+  if ((a && a.state === 'active') || r.purchased === true) { aOn = true; aText = '読み解いた記録があります'; }
+  else if (stopped(a)) aText = 'いまはご覧いただけません';
+  else if (r.isLegacy) aText = '以前の版のため対象外です';
   const lsv = caServerOf(r).complete;
-  let bText = '未購入';
-  if (b && b.state === 'active') bText = b.report && b.report.status === 'ready' ? '読めます' : b.report && b.report.status === 'revoked' ? '停止中' : '作成中';
-  else if (stopped(b) || (lsv && lsv.completeEntitlement === 'suspended')) bText = '停止中';
-  else if (mpOwnsComplete(r)) bText = caIsReady(r) ? '読めます' : '作成中';
-  return `解析レポート ${aText}・完全解析 ${bText}`;
+  let bOn = false, bText = mpCompleteEligible(r) ? 'まだ開いていません' : '最新版の記録が対象です';
+  if (b && b.state === 'active') {
+    const st = b.report && b.report.status;
+    if (st === 'revoked') bText = 'いまはご覧いただけません';
+    else { bOn = true; bText = st === 'ready' ? '全46ページが保存されています' : '作成しています'; }
+  } else if (stopped(b) || (lsv && lsv.completeEntitlement === 'suspended')) bText = 'いまはご覧いただけません';
+  else if (mpOwnsComplete(r)) { bOn = true; bText = caIsReady(r) ? '全46ページが保存されています' : '作成しています'; }
+  const line = (on, name, text) => `<span class="ca-pick-line${on ? ' is-on' : ''}"><span class="ca-pick-mark" aria-hidden="true">${on ? '✓' : '○'}</span><span class="ca-pick-name">${name}</span><span class="ca-pick-text">${text}</span></span>`;
+  return line(aOn, '解析レポート', aText) + line(bOn, '完全解析', bText);
 }
 const CA_PICK_STATE = { free: '解析レポート 未購入', analysis: '解析レポート 購入済み', complete_generating: '完全解析 準備中', complete_failed: '完全解析 準備中', complete_ready: '完全解析 購入済み', unknown: '購入状態を確認できません' };
 function caPickerHtml(records) {
@@ -2949,7 +2975,7 @@ function caPickerHtml(records) {
       <p class="ca-body">レポートは診断記録ごとです。対象の記録を選んでください。</p>
     </div>
     <ul class="ca-pick-list">${records.map((r, i) => `<li><button type="button" class="ca-pick" data-pick-index="${i}">
-      <span class="ca-pick-date">${mpDate(r.date)}${i === 0 ? '<span class="ca-pick-new">最新</span>' : ''}</span>
+      <span class="ca-pick-date">${mpDate(r.date)}${i === 0 ? '<span class="ca-pick-new">最新</span>' : ''}${mpEntitlementOk ? (mpIsComplete(r) ? '<span class="mp-chip complete">COMPLETE</span>' : mpAwake(r) ? '<span class="mp-chip insight">INSIGHT</span>' : '') : ''}</span>
       <span class="ca-pick-combo">${mpComboHtml(r)}</span>
       <span class="ca-pick-state">${mpPickState(r)}</span></button></li>`).join('')}</ul>`;
 }
