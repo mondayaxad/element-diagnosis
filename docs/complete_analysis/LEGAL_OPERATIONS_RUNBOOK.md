@@ -95,3 +95,14 @@
 
 ### 8.6 GA4
 - 登録まわりの GA4 のイベント（`newsletter_subscribe_success`／`newsletter_subscribe_error`）から、同意版（`consent_version`）の送信をやめた。同意版・メールアドレス・利用者 ID は GA4 と console に出さない
+
+### 8.7 complete_16 適用後の確認結果（Preview・読み取り）
+- 履歴 `20261021200000 complete_16_close_old_consent_versions`：1行。complete_15（`20261021180000`）も1行。履歴の合計：25行
+- `complete_registration_onboarding` の定義 md5：`fea360967378f4cf22f2a31cc01253f2`（PG17 で確認した complete_16 適用後の値と一致）。同名の関数は1つ
+- 許可する版：規約 `2026-10-21`／プライバシー `2026-10-21`／お知らせメール `2026-10-07-v1` の組だけ。それ以外（旧版の組・新旧の混在・未定義・空・NULL）は `unsupported_consent_version`
+- 権限：anon 不可・authenticated 可・service_role 不可。`security definer`・`search_path` 空
+- `profiles`：8件、`auth.users`：8件（重複 0）。全8件の同意記録 md5：`5825714c480e60d1b8dce57d96564f0e`
+- 旧版で登録した7件（md5 `56c51367c3a3fdd2eabd635b53c19f44`）は、履歴として保持し、書き換えていない。`2026-10-21` で登録した1件も不変
+- 構造：20テーブル／221列／64関数。列定義 md5 `801238096cb36e5dcaef6d22d73f32fc`、他の関数 md5 `eaf1cc236ee5ee2687463f2b028bf544`（いずれも基準値と一致）
+- complete_16 適用後の追加の実機登録（新規アカウント）と、古いタブでの専用案内の実機確認は、省略した。理由：実機の登録確認（8.4）、PG17 での試験（適用・二度適用・rollback・再適用・各拒否・完了済みの不変）、関数定義のハッシュの一致により、十分と判断した
+- Preview の法務・同意対応は、これで完了とする。残るのは、8.1 の「公開前チェックリスト」（7節）の項目（公開日の確定・外部サービスの URL・Supabase のリージョン・Resend の利用・原文との照合・Stripe の live の公開情報・本番用の同意版 migration など）
