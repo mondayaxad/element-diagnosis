@@ -1723,14 +1723,14 @@ const MP_KINDS = {
         w = (v2TopName(r.weapon) || {}).name;
         nation = (v2TopName(r.nation) || {}).name;
         const m = mpMirrorV2(s);
-        mirror = m ? { name: m.name, match: m.match, el: m.el, w: m.w, nation: m.nation } : null;
+        mirror = m ? { name: m.name, match: m.match, el: m.el, w: m.w, nation: mpCharNation(m.name, m.nation) } : null;
         const mv = mpMirrorUrlParam(s);
         if (s.encodedAnswers) resultUrl = '/?dv=ETI-2.0&code=' + encodeURIComponent(s.encodedAnswers) + (mv ? '&mv=' + encodeURIComponent(mv) : '');
       } else {
         const pr = s.primaryResult || {};
         el = pr.element; w = pr.weapon; nation = pr.nation;
         const m = (s.characterMatches && s.characterMatches[0]) || null;
-        mirror = m ? { name: m.name, match: m.match, el: m.el, w: m.w, nation: m.nation } : null;
+        mirror = m ? { name: m.name, match: m.match, el: m.el, w: m.w, nation: mpCharNation(m.name, m.nation) } : null;
         // 旧版は dv 無しの ?code= が旧版として復元される既存仕様
         if (s.encodedAnswers) resultUrl = '/?code=' + encodeURIComponent(s.encodedAnswers);
       }
