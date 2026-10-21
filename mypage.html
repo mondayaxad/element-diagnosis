@@ -971,7 +971,19 @@
   @media (max-width: 420px) { .mp-rec-actions { flex-direction: column; } .mp-rec-actions > .mp-btn { flex: none; width: 100%; } }
   /* 記録ごとのレポート（complete_13）：解析レポート・完全解析の2行 */
   .mp-rec-row { flex: 1 1 14em; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-  .mp-rec-row > .mp-btn, .mp-rec-row > .ca-btn { width: 100%; white-space: normal; text-align: center; line-height: 1.5; }
+  .mp-rec-row > .mp-btn, .mp-rec-row > .ca-btn { flex: none; width: 100%; white-space: normal; text-align: center; line-height: 1.5; }
+  @media (max-width: 420px) { .mp-rec-actions > .mp-rec-row { flex: none; width: 100%; } }
+  /* 申込の CTA：元素ごとのグラデーション（記録の --lc・--lc2） */
+  .mp-rec-row > .mp-btn.mp-cta-el {
+    min-height: 50px; font-size: 13.5px; font-weight: 700; letter-spacing: .04em; color: #ffffff;
+    border: 1px solid color-mix(in srgb, var(--lc, #7ab8e8) 55%, transparent);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.08), transparent 45%),
+      linear-gradient(135deg, color-mix(in srgb, var(--lc, #7ab8e8) 55%, #0b0a18), color-mix(in srgb, var(--lc, #7ab8e8) 78%, #0b0a18) 55%, color-mix(in srgb, color-mix(in srgb, var(--lc, #7ab8e8) 80%, var(--lc2, #7ab8e8)) 72%, #0b0a18));
+    box-shadow: 0 0 14px color-mix(in srgb, var(--lc, #7ab8e8) 28%, transparent), 0 3px 10px rgba(0,0,0,0.30);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.45);
+  }
+  .mp-rec-row > .mp-btn.mp-cta-el:disabled { box-shadow: none; }
   .mp-rec-note { margin: 0; font-size: 11px; line-height: 1.7; color: var(--fg-dim); }
   .mp-rec-sample { font-size: 11.5px; color: var(--fg-dim); text-align: center; }
   .ca-card .mp-rec-row { margin-top: 12px; }
@@ -2044,6 +2056,8 @@ async function mpMergeReports(sessions) {
   sessions.forEach((s) => {
     s.analysisDelivery = mpBestDelivery(s.deliveries, 'analysis');
     s.completeDelivery = mpBestDelivery(s.deliveries, 'complete');
+    // 登録した解析レポート（マイページ・固有リンクで購入）も購入済みとして描く（INSIGHT・紋章・INSIGHTS の数）
+    if (s.analysisDelivery && s.analysisDelivery.state === 'active') s.purchased = true;
   });
 }
 // レポートのリンクからの登録（ログインの後も、このタブで続ける）。秘密値は URL・GA4・ログに出さない
@@ -2224,9 +2238,13 @@ function mpRecordActionsHtml(r, source) {
   if (!mpReportsOk) return (r.purchased ? `<div class="mp-rec-actions">${purchasedReportButton(r.session, 'mp-btn primary', '解析レポートを読む')}</div>` : '') + mpRecordUnknownHtml();
   const src = source === 'latest' ? 'mypage_latest' : 'mypage_history';
   const rid = String((r.session && r.session.id) || '');
+  // 解析レポートを購入済みなら、完全解析を上に（元素の色の CTA）・「解析レポートを読む」を下に
+  const ad = mpAnalysisDelivery(r);
+  const ownsA = (ad && ad.state === 'active') || r.purchased === true;
+  const rowA = `<div class="mp-rec-row" data-rec-product="analysis">${mpAnalysisRowHtml(r, ownsA ? 'mp-btn' : 'mp-btn primary mp-cta-el', src)}</div>`;
+  const rowB = `<div class="mp-rec-row" data-rec-product="complete">${mpCompleteRowHtml(r, ownsA ? 'mp-btn primary mp-cta-el' : 'mp-btn', src)}</div>`;
   return `<div class="mp-rec-actions" data-rec-actions="${encodeURIComponent(rid)}" data-rec-source="${source === 'latest' ? 'latest' : 'records'}">
-    <div class="mp-rec-row" data-rec-product="analysis">${mpAnalysisRowHtml(r, 'mp-btn primary', src)}</div>
-    <div class="mp-rec-row" data-rec-product="complete">${mpCompleteRowHtml(r, 'mp-btn', src)}</div></div>`;
+    ${ownsA ? rowB + rowA : rowA + rowB}</div>`;
 }
 // 登録したレポートを開く（開くたびにサーバーが支払い・返金・停止を確かめる）
 async function mpOpenDelivery(button) {
@@ -2670,10 +2688,15 @@ function caApplyStates(records) {
       // 解析レポートの購入状態（/api/my-entitlements）を確認できた記録だけ free／analysis。
       //   完全解析の権利（有効）があれば、生成の状態で complete_ready／complete_generating／complete_failed（右上の入口・シートも購入済みで表示）
       const svc0 = caServerOf(r);
-      const cAct = svc0.lookup === 'ok' && svc0.complete && svc0.complete.completeEntitlement === 'active';
-      const rep = cAct ? svc0.complete.completeStatus : null;
+      const legacyAct = svc0.lookup === 'ok' && svc0.complete && svc0.complete.completeEntitlement === 'active';
+      // 登録した完全解析（マイページ・固有リンクで購入）も同じ状態に数える（COMPLETE の印・紋章）
+      const cd = mpCompleteDelivery(r);
+      const dAct = !!(cd && cd.state === 'active');
+      const cAct = legacyAct || dAct;
+      const dRep = dAct ? (cd.report ? cd.report.status : 'generating') : null;
+      const rep = dRep === 'ready' ? 'ready' : legacyAct ? svc0.complete.completeStatus : dRep;
       const cStatus = rep === 'ready' ? 'ready'
-        : (rep === 'failed' && (svc0.complete.completeRegenerate === 'available' || svc0.complete.completeRegenerate === 'operator')) ? 'failed' : 'generating';
+        : rep === 'failed' && (dAct || svc0.complete.completeRegenerate === 'available' || svc0.complete.completeRegenerate === 'operator') ? 'failed' : 'generating';
       st = CompleteAnalysis.realState({ analysisKnown: mpEntitlementOk, analysisAccess: r.purchased === true || cAct, diagnosisSessionId: id,
         completeAccess: cAct, completeStatus: cAct ? cStatus : 'none' });
     }

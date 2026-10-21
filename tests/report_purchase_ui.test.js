@@ -707,3 +707,30 @@ test('320・390・1280px：診断結果・サンプル・購入完了・固有�
     }
   }
 });
+
+test('マイページ：ボタンの高さ（390px）・A 購入済みは完全解析が上（元素の色）・登録した A／B が INSIGHT・COMPLETE に反映', { skip: skip() }, async () => {
+  for (const [reports, order, insight, complete] of [
+    [[], ['analysis', 'complete'], false, false],
+    [[DEL('analysis', 'active')], ['complete', 'analysis'], true, false],
+    [[DEL('analysis', 'active'), DEL('complete', 'active', { report: { status: 'ready' } })], ['complete', 'analysis'], true, true],
+  ]) {
+    const p = await mypage(reports);
+    const got = await p.evaluate(() => {
+      const box = document.querySelector('.mp-latest [data-rec-actions]');
+      const btns = [...box.querySelectorAll('.mp-rec-row > .mp-btn')];
+      return {
+        order: [...box.querySelectorAll(':scope > .mp-rec-row')].map((r) => r.getAttribute('data-rec-product')),
+        heights: btns.map((b) => b.getBoundingClientRect().height),
+        cta: [...box.querySelectorAll('.mp-cta-el')].map((b) => b.closest('[data-rec-product]').getAttribute('data-rec-product')),
+        latest: document.querySelector('.mp-latest').className,
+      };
+    });
+    assert.deepEqual(got.order, order);
+    assert.ok(got.heights.every((h) => h >= 44 && h <= 60), '縦に伸びない：' + got.heights.join(','));
+    assert.deepEqual(got.cta, [order[0]], '上の行だけ元素の色の CTA');
+    assert.equal(/state-insight/.test(got.latest), insight, 'INSIGHT：' + got.latest);
+    assert.equal(/is-complete/.test(got.latest), complete, 'COMPLETE：' + got.latest);
+    assert.deepEqual(p.__errors, []);
+    await p.__ctx.close();
+  }
+});

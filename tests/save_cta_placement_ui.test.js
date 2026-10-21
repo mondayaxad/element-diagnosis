@@ -521,7 +521,8 @@ test('マイページ：記録内CTA（無料のみ／解析購入済み）と�
   // B（解析レポート購入済み）
   await p.locator('#mp-rec-0 > summary').click();
   const b = p.locator('#mp-rec-0 .mp-rec-actions');
-  assert.deepEqual((await b.locator('a, button').allInnerTexts()).map((t) => t.trim()), ['解析レポートを読む', '完全解析 ¥3,000（準備中）']);
+  // 解析レポートを購入済み：完全解析を上（元素の色の CTA）・「解析レポートを読む」を下
+  assert.deepEqual((await b.locator('a, button').allInnerTexts()).map((t) => t.trim()), ['完全解析 ¥3,000（準備中）', '解析レポートを読む']);
   // 準備中ボタン：button・disabled・href なし。強制クリックしても外部遷移・決済イベントなし
   for (const btn of [...await p.locator('#mp-rec-1 button.is-pending').all(), ...await p.locator('#mp-rec-0 button.is-pending').all()]) {
     assert.equal(await btn.evaluate((e) => e.tagName), 'BUTTON');
@@ -612,7 +613,7 @@ async function openRecord(p, i) {
 test('LATEST RESULT：4状態で THE RECORDS の同じ記録と同じ購入・閲覧導線を出す', { skip: skip() }, async () => {
   const cases = [
     { name: 'free', opts: { supa: { rows: [RB.row, RA.row] } }, want: ['解析レポート（準備中）', '完全解析 ¥3,000（準備中）'] },
-    { name: 'analysis', opts: { supa: { rows: [RB.row, RA.row] }, entitlements: purchasedFor(RB.code) }, want: ['解析レポートを読む', '完全解析 ¥3,000（準備中）'] },
+    { name: 'analysis', opts: { supa: { rows: [RB.row, RA.row] }, entitlements: purchasedFor(RB.code) }, want: ['完全解析 ¥3,000（準備中）', '解析レポートを読む'] },
     // 完全解析の登録あり（表14 の B・A＋B）は tests/report_purchase_ui.test.js で確かめる（旧 Preview の表示確認用の状態は廃止）
   ];
   for (const c of cases) {
