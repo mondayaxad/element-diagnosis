@@ -132,3 +132,24 @@ test('report_sample は noindex（meta と X-Robots-Tag）', () => {
   assert.ok(rule, 'vercel.json の headers');
   assert.ok(rule.headers.some((h) => /x-robots-tag/i.test(h.key) && /noindex/.test(h.value)));
 });
+
+test('complete_16：新規の登録完了は新しい組だけ。旧版は履歴として残し、書き換えない。専用の案内文。GA4 に同意版を送らない', () => {
+  const sql = read('docs/sql/20261021200000_complete_16_close_old_consent_versions.sql');
+  assert.match(sql, /p_terms_version is distinct from '2026-10-21'\s+or p_privacy_version is distinct from '2026-10-21'\s+or p_newsletter_consent_version is distinct from '2026-10-07-v1'/);
+  assert.match(sql, /if v_status = 'required' then\s+update public\.profiles/);
+  assert.equal((sql.match(/update\s+public\.profiles/gi) || []).length, 1);
+  assert.doesNotMatch(sql, /delete\s+from\s+public\.profiles|alter\s+table|drop\s+(table|column)/i);
+  for (const g of ['not a preview database', 'not a PostgreSQL 17 server', 'complete_15 is not applied']) assert.ok(sql.includes(g), g);
+  assert.match(sql, /on conflict \(version\) do nothing/);
+  const rb = read('docs/sql/complete_95_rollback_16_DRAFT_DO_NOT_RUN.sql');
+  assert.match(rb, /DRAFT|草案・実行しない/);
+  assert.match(rb, /\('2026-10-07', '2026-10-13'\)[\s\S]*\('2026-10-21', '2026-10-21'\)/, 'complete_15 の2組へ戻す');
+  assert.match(rb, /delete from supabase_migrations\.schema_migrations where version = '20261021200000'/);
+  assert.doesNotMatch(rb, /update\s+public\.profiles\s+set\s+terms_version\s*=\s*'2026-10-0/);
+  // 画面：専用の案内文
+  assert.match(read('js/registration-onboarding.js'), /利用規約・プライバシーポリシーが更新されました。ページを再読み込みして、もう一度お手続きください。/);
+  assert.match(read('js/registration-onboarding.js'), /ページを再読み込みする/);
+  assert.match(read('diagnosis-save.js'), /unsupported_consent_version/);
+  // GA4 へ同意版を送らない
+  assert.doesNotMatch(read('diagnosis-save.js'), /trackEvent\([^)]*consent_version/);
+});
