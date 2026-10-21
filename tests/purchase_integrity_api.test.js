@@ -5,7 +5,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('crypto');
-const { PREVIEW_ENV } = require('./fixtures/server_env');
+const { PREVIEW_ENV, PROD_ENV } = require('./fixtures/server_env');
 const { fakeStripe, eventRequest } = require('./fixtures/fake_stripe');
 const { savedRecord, variantAnswers } = require('./fixtures/report_data');
 
@@ -20,21 +20,25 @@ const MyReportLink = require('../api/my-report-link.js');
 const ReportData = require('../api/report-data.js');
 
 const SECRET = 'whsec_test_fake_secret_for_unit_tests';
-const ORIGIN = 'https://element-diagnosis-git-release-c-preview-nmkw0322-4497s-projects.vercel.app';
+// COMPLETE_DB_STRIPE_MODE=live：本番の構成（Production・Stripe Live・本番専用 migration の DB）で同じ試験を流す（すべて偽物）
+const LIVE = process.env.COMPLETE_DB_STRIPE_MODE === 'live';
+const MODE = LIVE ? 'live' : 'test';
+const APP_ENV = LIVE ? 'production' : 'preview';
+const ORIGIN = LIVE ? 'https://element-diagnosis-five.vercel.app' : 'https://element-diagnosis-git-release-c-preview-nmkw0322-4497s-projects.vercel.app';
 const ENV = {
-  ...PREVIEW_ENV,
+  ...(LIVE ? PROD_ENV : PREVIEW_ENV),
   COMPLETE_SALES_OPEN: 'true',
   COMPLETE_CHECKOUT_ORIGIN: ORIGIN,
-  STRIPE_PRICE_ANALYSIS: 'price_test_analysis1000',
-  STRIPE_COMPLETE_PRICE_DIRECT: 'price_test_direct3000',
-  STRIPE_COMPLETE_PRICE_UPGRADE: 'price_test_upgrade2000',
+  STRIPE_PRICE_ANALYSIS: `price_${MODE}_analysis1000`,
+  STRIPE_COMPLETE_PRICE_DIRECT: `price_${MODE}_direct3000`,
+  STRIPE_COMPLETE_PRICE_UPGRADE: `price_${MODE}_upgrade2000`,
   STRIPE_COMPLETE_WEBHOOK_SECRET: SECRET,
   COMPLETE_VIEW_TOKEN_SECRET: crypto.randomBytes(32).toString('base64url'),
 };
 const PRICES = {
-  price_test_analysis1000: { id: 'price_test_analysis1000', active: true, livemode: false, currency: 'jpy', unit_amount: 1000, type: 'one_time' },
-  price_test_direct3000: { id: 'price_test_direct3000', active: true, livemode: false, currency: 'jpy', unit_amount: 3000, type: 'one_time' },
-  price_test_upgrade2000: { id: 'price_test_upgrade2000', active: true, livemode: false, currency: 'jpy', unit_amount: 2000, type: 'one_time' },
+  [`price_${MODE}_analysis1000`]: { id: `price_${MODE}_analysis1000`, active: true, livemode: LIVE, currency: 'jpy', unit_amount: 1000, type: 'one_time' },
+  [`price_${MODE}_direct3000`]: { id: `price_${MODE}_direct3000`, active: true, livemode: LIVE, currency: 'jpy', unit_amount: 3000, type: 'one_time' },
+  [`price_${MODE}_upgrade2000`]: { id: `price_${MODE}_upgrade2000`, active: true, livemode: LIVE, currency: 'jpy', unit_amount: 2000, type: 'one_time' },
 };
 const CODE_A = savedRecord().encoded_answers;
 const CODE_B = savedRecord(variantAnswers(1)).encoded_answers;
@@ -70,7 +74,7 @@ async function setup({ env = {} } = {}) {
   const close0 = db.close.bind(db);
   db.close = async () => { if (db.__closed) return; db.__closed = true; await close0(); };
   OPEN.push(db);
-  const stripe = fakeStripe({ prices: JSON.parse(JSON.stringify(PRICES)) });
+  const stripe = fakeStripe({ prices: JSON.parse(JSON.stringify(PRICES)), livemode: LIVE });
   const logger = makeLogger();
   const fullEnv = { ...ENV, ...env };
   const deps = { env: fullEnv, fetchImpl: db.fetchImpl, stripeFactory: stripe.factory, logger, waitUntil: null };
@@ -103,7 +107,7 @@ async function setup({ env = {} } = {}) {
       return t;
     },
     async webhook(opts) {
-      const { req } = eventRequest({ secret: SECRET, ...opts });
+      const { req } = eventRequest({ secret: SECRET, livemode: LIVE, ...opts });
       const res = makeRes();
       await webhookH(req, res);
       return res;
@@ -177,7 +181,7 @@ test('ログイン状態の ¥1,000：Checkout ¥1,000 → 支払い確定で解
   const p = await person(ctx);
   const { r } = await payLoggedIn(ctx, p, { diagnosisSessionId: p.sessionId, product: 'analysis' });
   assert.deepEqual([r.body.offer, r.body.amount], ['analysis', 1000]);
-  assert.deepEqual(ctx.stripe.st.lastCreate.params.line_items, [{ price: 'price_test_analysis1000', quantity: 1 }]);
+  assert.deepEqual(ctx.stripe.st.lastCreate.params.line_items, [{ price: `price_${MODE}_analysis1000`, quantity: 1 }]);
   assert.deepEqual(await rightsOf(ctx, p.sessionId), ['analysis:active']);
   const e = (await ctx.entitlements(p.token)).body;
   const rec = e.records[p.sessionId];
@@ -471,7 +475,7 @@ test('閲覧リンクの流用：別の本人・別の記録・別の診断結�
   await payLoggedIn(ctx, p, { diagnosisSessionId: p.sessionId, product: 'analysis' });
   const q = await person(ctx, { email: 'q@example.test', code: CODE_A }); // 同じ診断コード・未購入
   const qb = await ctx.db.record({ userId: p.userId, code: CODE_B }); // 本人の別の結果（未購入）
-  const base = { exp: Date.now() + 60000, env: 'preview', diagnosis_version: 'ETI-2.0', access_mode: 'mypage_entitlement_reissue' };
+  const base = { exp: Date.now() + 60000, env: APP_ENV, diagnosis_version: 'ETI-2.0', access_mode: 'mypage_entitlement_reissue' };
   const ok = await ctx.reportData(urlOf({ ...base, sid: p.sessionId, uid: p.userId, enc: encRef(`v2_${CODE_A}`) }));
   assert.equal(ok.code, 200);
   // 同じ診断コードの別の本人：権利を共有しない
@@ -503,7 +507,7 @@ test('旧 ¥1,000：運営者が停止すると旧形式リンク・マイペー
   await ctx.db.sql(`insert into public.complete_legacy_bindings (legacy_entitlement_id, user_id, diagnosis_session_id, match_method)
     select id, $1, $2, 'operator_verified' from public.purchase_entitlements where stripe_checkout_session_id = $3`, [p.userId, p.sessionId, legacyCs]);
   const floor = urlOf({ exp: Date.now() + 60000, code: `v2_${code}` });
-  const verifyTok = urlOf({ exp: Date.now() + 60000, env: 'preview', diagnosis_version: 'ETI-2.0', purchase: { transaction_id: 'x' }, enc: encRef(`v2_${code}`) });
+  const verifyTok = urlOf({ exp: Date.now() + 60000, env: APP_ENV, diagnosis_version: 'ETI-2.0', purchase: { transaction_id: 'x' }, enc: encRef(`v2_${code}`) });
   assert.deepEqual([(await ctx.reportData(floor)).code, (await ctx.reportData(verifyTok)).code], [200, 200]);
   assert.equal((await ctx.reportLink(p.token, p.sessionId)).code, 200);
   const admin = (action, incident, reason = 'refund') => ctx.db.sql(
@@ -1060,7 +1064,7 @@ test('監査：反映しなかった注文（中止後の遅れた支払い）�
   const r = await ctx.checkout(p.token, { diagnosisSessionId: p.sessionId, product: 'analysis' });
   const [order] = await ctx.rows('complete_orders');
   await ctx.db.sql(`update public.complete_orders set status = 'canceled' where id = $1`, [order.id]);
-  const out = await ctx.db.sql(`select public.complete_apply_dispute('evt_dispute_canceled_1', now(), false, $1, 'pi_x', 'opened') as r`, [order.id]);
+  const out = await ctx.db.sql(`select public.complete_apply_dispute('evt_dispute_canceled_1', now(), ${LIVE}, $1, 'pi_x', 'opened') as r`, [order.id]);
   assert.equal(out[0].r, 'ignored:order_not_applied');
   assert.ok(r.code === 200);
   await ctx.db.close();
@@ -1108,8 +1112,8 @@ test('再監査：解析レポートの支払いで異議申し立てに負け�
   const p = await person(ctx);
   await payLoggedIn(ctx, p, { diagnosisSessionId: p.sessionId, product: 'analysis' });
   const [o] = await ctx.rows('complete_orders');
-  await ctx.db.sql(`select public.complete_apply_dispute('evt_dl_open', now(), false, $1, $2, 'opened')`, [o.id, o.stripe_payment_intent_id]);
-  await ctx.db.sql(`select public.complete_apply_dispute('evt_dl_lost', now() + interval '1 minute', false, $1, $2, 'lost')`, [o.id, o.stripe_payment_intent_id]);
+  await ctx.db.sql(`select public.complete_apply_dispute('evt_dl_open', now(), ${LIVE}, $1, $2, 'opened')`, [o.id, o.stripe_payment_intent_id]);
+  await ctx.db.sql(`select public.complete_apply_dispute('evt_dl_lost', now() + interval '1 minute', ${LIVE}, $1, $2, 'lost')`, [o.id, o.stripe_payment_intent_id]);
   const res = await ctx.db.fetchImpl(`${ENV.SUPABASE_URL}/rest/v1/rpc/complete_create_order`, { method: 'POST', body: JSON.stringify({
     p_user_id: p.userId, p_diagnosis_session_id: p.sessionId, p_offer: 'direct_complete', p_idempotency_key: 'co_after_dispute_lost_1' }) });
   assert.equal(res.ok, false);

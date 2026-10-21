@@ -6,7 +6,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('crypto');
-const { PREVIEW_ENV } = require('./fixtures/server_env');
+const { PREVIEW_ENV, PROD_ENV } = require('./fixtures/server_env');
 const { fakeStripe, eventRequest } = require('./fixtures/fake_stripe');
 const { savedRecord, variantAnswers } = require('./fixtures/report_data');
 const GP = require('../lib/guest-purchase');
@@ -19,22 +19,25 @@ const Webhook = require('../api/stripe-webhook.js');
 const ReportData = require('../api/report-data.js');
 
 const SECRET = 'whsec_test_fake_secret_for_unit_tests';
-const ORIGIN = 'https://element-diagnosis-git-release-c-preview-nmkw0322-4497s-projects.vercel.app';
+// COMPLETE_DB_STRIPE_MODE=live：本番の構成（Production・Stripe Live・本番専用 migration の DB）で同じ試験を流す（すべて偽物）
+const LIVE = process.env.COMPLETE_DB_STRIPE_MODE === 'live';
+const MODE = LIVE ? 'live' : 'test';
+const ORIGIN = LIVE ? 'https://element-diagnosis-five.vercel.app' : 'https://element-diagnosis-git-release-c-preview-nmkw0322-4497s-projects.vercel.app';
 const VIEW_SECRET = crypto.randomBytes(32).toString('base64url');
 const ENV = {
-  ...PREVIEW_ENV,
+  ...(LIVE ? PROD_ENV : PREVIEW_ENV),
   COMPLETE_SALES_OPEN: 'true',
   COMPLETE_CHECKOUT_ORIGIN: ORIGIN,
-  STRIPE_PRICE_ANALYSIS: 'price_test_analysis1000',
-  STRIPE_COMPLETE_PRICE_DIRECT: 'price_test_direct3000',
-  STRIPE_COMPLETE_PRICE_UPGRADE: 'price_test_upgrade2000',
+  STRIPE_PRICE_ANALYSIS: `price_${MODE}_analysis1000`,
+  STRIPE_COMPLETE_PRICE_DIRECT: `price_${MODE}_direct3000`,
+  STRIPE_COMPLETE_PRICE_UPGRADE: `price_${MODE}_upgrade2000`,
   STRIPE_COMPLETE_WEBHOOK_SECRET: SECRET,
   COMPLETE_VIEW_TOKEN_SECRET: VIEW_SECRET,
 };
 const PRICES = {
-  price_test_analysis1000: { id: 'price_test_analysis1000', active: true, livemode: false, currency: 'jpy', unit_amount: 1000, type: 'one_time' },
-  price_test_direct3000: { id: 'price_test_direct3000', active: true, livemode: false, currency: 'jpy', unit_amount: 3000, type: 'one_time' },
-  price_test_upgrade2000: { id: 'price_test_upgrade2000', active: true, livemode: false, currency: 'jpy', unit_amount: 2000, type: 'one_time' },
+  [`price_${MODE}_analysis1000`]: { id: `price_${MODE}_analysis1000`, active: true, livemode: LIVE, currency: 'jpy', unit_amount: 1000, type: 'one_time' },
+  [`price_${MODE}_direct3000`]: { id: `price_${MODE}_direct3000`, active: true, livemode: LIVE, currency: 'jpy', unit_amount: 3000, type: 'one_time' },
+  [`price_${MODE}_upgrade2000`]: { id: `price_${MODE}_upgrade2000`, active: true, livemode: LIVE, currency: 'jpy', unit_amount: 2000, type: 'one_time' },
 };
 const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 const CODE_A = savedRecord().encoded_answers;
@@ -76,7 +79,7 @@ async function setup({ env = {} } = {}) {
   const close0 = db.close.bind(db);
   db.close = async () => { if (db.__closed) return; db.__closed = true; await close0(); };
   OPEN.push(db);
-  const stripe = fakeStripe({ prices: JSON.parse(JSON.stringify(PRICES)) });
+  const stripe = fakeStripe({ prices: JSON.parse(JSON.stringify(PRICES)), livemode: LIVE });
   const logger = makeLogger();
   const fullEnv = { ...ENV, ...env };
   const deps = { env: fullEnv, fetchImpl: db.fetchImpl, stripeFactory: stripe.factory, logger, waitUntil: null };
@@ -99,7 +102,7 @@ async function setup({ env = {} } = {}) {
       return res;
     },
     async webhook(opts) {
-      const { req } = eventRequest({ secret: SECRET, ...opts });
+      const { req } = eventRequest({ secret: SECRET, livemode: LIVE, ...opts });
       const res = makeRes();
       await webhookH(req, res);
       return res;
@@ -157,7 +160,7 @@ test('ゲスト ¥1,000：サーバーが記録を作り、Checkout は metadata
   assert.equal(p.success_url, `${ORIGIN}/purchase-complete?cs={CHECKOUT_SESSION_ID}`);
   assert.equal(p.cancel_url, `${ORIGIN}/purchase-complete?status=canceled`);
   assert.doesNotMatch(JSON.stringify(p), new RegExp(CODE_A));
-  assert.deepEqual(p.line_items, [{ price: 'price_test_analysis1000', quantity: 1 }]);
+  assert.deepEqual(p.line_items, [{ price: `price_${MODE}_analysis1000`, quantity: 1 }]);
   // Cookie：__Host-・Secure・HttpOnly・SameSite=Lax。秘密値は Cookie にだけあり、DB はハッシュだけ
   const set = r.headers['set-cookie'];
   assert.match(set, /^__Host-ed_gp=[0-9a-f-]{36}\.[A-Za-z0-9_-]{43}; Path=\/; Max-Age=\d+; Secure; HttpOnly; SameSite=Lax$/);
@@ -398,7 +401,7 @@ test('応答・ログに秘密値・注文 ID・Session ID・メール・診断�
   const all = ctx.bodies.filter((b) => !b.includes('checkoutUrl')).join('\n') + ctx.logger.lines.join('\n');
   assert.ok(!all.includes(secret));
   assert.doesNotMatch(all, UUID_RE);
-  assert.doesNotMatch(all, /cs_test_|pi_[A-Za-z0-9]|@|evt_/);
+  assert.doesNotMatch(all, /cs_test_|cs_live_|pi_[A-Za-z0-9]|@|evt_/);
   assert.ok(!all.includes(CODE_A));
   await ctx.db.close();
 });

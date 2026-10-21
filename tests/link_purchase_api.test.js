@@ -5,7 +5,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('crypto');
-const { PREVIEW_ENV } = require('./fixtures/server_env');
+const { PREVIEW_ENV, PROD_ENV } = require('./fixtures/server_env');
 const { fakeStripe, eventRequest } = require('./fixtures/fake_stripe');
 const { createFakeStorage } = require('./fixtures/fake_storage');
 const { savedRecord, variantAnswers } = require('./fixtures/report_data');
@@ -19,22 +19,26 @@ const ReportData = require('../api/report-data.js');
 const Status = require('../api/complete-status.js');
 
 const SECRET = 'whsec_test_fake_secret_for_unit_tests';
-const ORIGIN = 'https://element-diagnosis-git-release-c-preview-nmkw0322-4497s-projects.vercel.app';
+// COMPLETE_DB_STRIPE_MODE=live：本番の構成（Production・Stripe Live・本番専用 migration prod_01〜04 の DB）で同じ試験を流す。
+//   すべて偽物（偽の鍵・偽の Stripe・ローカル DB）。既定は Preview（Stripe Test）。
+const LIVE = process.env.COMPLETE_DB_STRIPE_MODE === 'live';
+const MODE = LIVE ? 'live' : 'test';
+const ORIGIN = LIVE ? 'https://element-diagnosis-five.vercel.app' : 'https://element-diagnosis-git-release-c-preview-nmkw0322-4497s-projects.vercel.app';
 const VIEW_SECRET = crypto.randomBytes(32).toString('base64url');
 const ENV = {
-  ...PREVIEW_ENV,
+  ...(LIVE ? PROD_ENV : PREVIEW_ENV),
   COMPLETE_SALES_OPEN: 'true',
   COMPLETE_CHECKOUT_ORIGIN: ORIGIN,
-  STRIPE_PRICE_ANALYSIS: 'price_test_analysis1000',
-  STRIPE_COMPLETE_PRICE_DIRECT: 'price_test_direct3000',
-  STRIPE_COMPLETE_PRICE_UPGRADE: 'price_test_upgrade2000',
+  STRIPE_PRICE_ANALYSIS: `price_${MODE}_analysis1000`,
+  STRIPE_COMPLETE_PRICE_DIRECT: `price_${MODE}_direct3000`,
+  STRIPE_COMPLETE_PRICE_UPGRADE: `price_${MODE}_upgrade2000`,
   STRIPE_COMPLETE_WEBHOOK_SECRET: SECRET,
   COMPLETE_VIEW_TOKEN_SECRET: VIEW_SECRET,
 };
 const PRICES = {
-  price_test_analysis1000: { id: 'price_test_analysis1000', active: true, livemode: false, currency: 'jpy', unit_amount: 1000, type: 'one_time' },
-  price_test_direct3000: { id: 'price_test_direct3000', active: true, livemode: false, currency: 'jpy', unit_amount: 3000, type: 'one_time' },
-  price_test_upgrade2000: { id: 'price_test_upgrade2000', active: true, livemode: false, currency: 'jpy', unit_amount: 2000, type: 'one_time' },
+  [`price_${MODE}_analysis1000`]: { id: `price_${MODE}_analysis1000`, active: true, livemode: LIVE, currency: 'jpy', unit_amount: 1000, type: 'one_time' },
+  [`price_${MODE}_direct3000`]: { id: `price_${MODE}_direct3000`, active: true, livemode: LIVE, currency: 'jpy', unit_amount: 3000, type: 'one_time' },
+  [`price_${MODE}_upgrade2000`]: { id: `price_${MODE}_upgrade2000`, active: true, livemode: LIVE, currency: 'jpy', unit_amount: 2000, type: 'one_time' },
 };
 const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 const CODE_A = savedRecord().encoded_answers;
@@ -72,7 +76,7 @@ async function setup({ env = {} } = {}) {
   OPEN.push(db);
   const storage = createFakeStorage();
   const fetchImpl = storage.wrap(db.fetchImpl);
-  const stripe = fakeStripe({ prices: JSON.parse(JSON.stringify(PRICES)) });
+  const stripe = fakeStripe({ prices: JSON.parse(JSON.stringify(PRICES)), livemode: LIVE });
   const logger = makeLogger();
   const pending = [];
   const fullEnv = { ...ENV, ...env };
@@ -97,7 +101,7 @@ async function setup({ env = {} } = {}) {
       return res;
     },
     async webhook(opts) {
-      const { req } = eventRequest({ secret: SECRET, ...opts });
+      const { req } = eventRequest({ secret: SECRET, livemode: LIVE, ...opts });
       const res = makeRes();
       await webhookH(req, res);
       return res;
@@ -215,7 +219,7 @@ test('購入完了ページへ戻った時（cs=今の決済）：今の購入�
   cur = d.body.purchases.filter((x) => x.current);
   assert.deepEqual([cur[0].state, cur[0].product], ['active', 'complete']);
   // 他人の決済の ID（この端末の Cookie の注文でない）・形の違う ID
-  const stranger = await ctx.op('deliveries', { session: 'cs_test_' + 'z'.repeat(40) });
+  const stranger = await ctx.op('deliveries', { session: `cs_${MODE}_` + 'z'.repeat(40) });
   assert.equal(stranger.body.purchases.filter((x) => x.current).length, 0);
   assert.equal((await ctx.op('deliveries', { session: 'not-a-session' })).code, 400);
   assert.ok(left.cs !== paid.cs);
@@ -309,7 +313,7 @@ test('¥2,000 は UI・API・DB で新しく作れない（既存の行は残す
   const [session] = await ctx.rows('diagnosis_sessions');
   await assert.rejects(ctx.db.sql(`insert into public.complete_orders (diagnosis_session_id, offer, amount, stripe_mode, analysis_basis, idempotency_key,
       mentor_goal_catalog_version, mentor_goal_id, mentor_goal_selected_at, buyer, claim_secret_hash)
-    values ($1, 'analysis_upgrade', 2000, 'test', 'record_entitlement', 'x_${attemptId()}', 'CORE1-MENTOR-GOALS-1.0.0', 'GOAL_PACE_01', now(), 'link', $2)`,
+    values ($1, 'analysis_upgrade', 2000, '${MODE}', 'record_entitlement', 'x_${attemptId()}', 'CORE1-MENTOR-GOALS-1.0.0', 'GOAL_PACE_01', now(), 'link', $2)`,
   [session.id, crypto.randomBytes(32).toString('hex')]), /complete_offer_retired|check constraint/);
   await assert.rejects(ctx.db.sql(`select * from public.complete_create_link_order($1, 'analysis_upgrade', $2, $3, 'GOAL_PACE_01')`,
     [session.id, `lk_${attemptId()}`, crypto.randomBytes(32).toString('hex')]), /complete_offer_retired/);
@@ -542,7 +546,7 @@ test('応答・ログ：固有リンクの秘密値は購入完了ページ（Co
   const [order] = await ctx.rows('complete_orders');
   const all = ctx.bodies.filter((b) => !b.includes('"checkoutUrl"')).join('\n');
   assert.doesNotMatch(all, new RegExp(order.id));
-  assert.doesNotMatch(all, /cs_test_|pi_|buyer@example/);
+  assert.doesNotMatch(all, /cs_test_|cs_live_|pi_|buyer@example/);
   assert.doesNotMatch(all, new RegExp(CODE_A.slice(0, 24)));
   const leaks = ctx.bodies.filter((b) => b.includes(p.link));
   assert.ok(leaks.every((b) => b.includes('"purchases"')), '秘密値は購入完了ページの応答だけ');

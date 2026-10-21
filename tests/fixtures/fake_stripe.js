@@ -11,7 +11,9 @@ const rid = (p) => `${p}${crypto.randomBytes(12).toString('hex')}`;
 const clone = (o) => JSON.parse(JSON.stringify(o));
 const stripeError = (type, statusCode, code) => Object.assign(new Error(type), { type, statusCode, code });
 
-function fakeStripe({ prices = {} } = {}) {
+// livemode: true で Live の Session（cs_live_）・Charge・Dispute を返す（本番構成の DB 試験用）。既定は Test
+function fakeStripe({ prices = {}, livemode = false } = {}) {
+  const sid = () => rid(livemode ? 'cs_live_' : 'cs_test_');
   const st = { prices: { ...prices }, sessions: {}, charges: {}, disputes: {}, idem: {}, calls: [], failures: {} };
   function call(method, fn) {
     st.calls.push(method);
@@ -41,9 +43,9 @@ function fakeStripe({ prices = {} } = {}) {
           if (params.expires_at !== undefined && (!Number.isInteger(params.expires_at) || params.expires_at < nowSec + 30 * 60 || params.expires_at > nowSec + 86400)) {
             throw stripeError('StripeInvalidRequestError', 400, 'parameter_invalid_integer');
           }
-          const id = rid('cs_test_');
+          const id = sid();
           st.sessions[id] = {
-            id, object: 'checkout.session', livemode: false, mode: params.mode || 'payment', status: 'open', payment_status: 'unpaid',
+            id, object: 'checkout.session', livemode, mode: params.mode || 'payment', status: 'open', payment_status: 'unpaid',
             url: `https://checkout.stripe.com/c/pay/${id}`, expires_at: params.expires_at !== undefined ? params.expires_at : Math.floor(Date.now() / 1000) + 86400,
             amount_total: price.unit_amount, currency: price.currency, metadata: clone(params.metadata || {}),
             payment_intent: null, customer_details: null,
@@ -88,9 +90,9 @@ function fakeStripe({ prices = {} } = {}) {
     factory: () => client,
     fail(method, err) { (st.failures[method] = st.failures[method] || []).push(err || stripeError('StripeConnectionError', 0)); },
     // 旧 ¥1,000 の購入（verify の経路で作られた Session）
-    legacySession({ email, paid = true, livemode = false } = {}) {
-      const id = rid('cs_test_');
-      st.sessions[id] = { id, livemode, status: 'complete', payment_status: paid ? 'paid' : 'unpaid', metadata: {},
+    legacySession({ email, paid = true, livemode: lm = livemode } = {}) {
+      const id = rid(lm ? 'cs_live_' : 'cs_test_');
+      st.sessions[id] = { id, livemode: lm, status: 'complete', payment_status: paid ? 'paid' : 'unpaid', metadata: {},
         customer_details: email === undefined ? null : { email }, amount_total: 1000, currency: 'jpy', payment_intent: rid('pi_') };
       return id;
     },
@@ -98,14 +100,14 @@ function fakeStripe({ prices = {} } = {}) {
       const s = st.sessions[sessionId];
       Object.assign(s, { status: 'complete', payment_status: 'paid', payment_intent: s.payment_intent || rid('pi_') }, over);
       const ch = rid('ch_');
-      st.charges[ch] = { id: ch, livemode: false, payment_intent: s.payment_intent, amount: s.amount_total, amount_refunded: 0, currency: s.currency };
+      st.charges[ch] = { id: ch, livemode, payment_intent: s.payment_intent, amount: s.amount_total, amount_refunded: 0, currency: s.currency };
       return { chargeId: ch, paymentIntentId: s.payment_intent };
     },
     expire(sessionId) { st.sessions[sessionId].status = 'expired'; },
     refund(chargeId, amount) { st.charges[chargeId].amount_refunded = amount; },
     dispute(chargeId, status = 'needs_response') {
       const du = rid('du_');
-      st.disputes[du] = { id: du, livemode: false, charge: chargeId, payment_intent: st.charges[chargeId].payment_intent, status };
+      st.disputes[du] = { id: du, livemode, charge: chargeId, payment_intent: st.charges[chargeId].payment_intent, status };
       return du;
     },
     setDispute(du, status) { st.disputes[du].status = status; },
