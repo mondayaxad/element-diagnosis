@@ -7,7 +7,7 @@
 | `00_keychain_setup.sh` | （任意）接続URI・DBパスワード・暗号化パスフレーズを macOS キーチェーンへ登録（以後の入力を省く） |
 | `01_backup.sh` | 本番DBを読み取り専用で接続 → 接続先確認 → 基準値取得 → 暗号化バックアップ → manifest |
 | `02_restore_check.sh` | 復号・SHA照合 → 使い捨てのローカルPostgreSQL 17へ復元 → 基準値と比較 |
-| `03_migration_check.sh` | 復元した使い捨てDBへ本番 migration（prod_01〜04）を当て、適用・二度適用・rollback・再適用・不変項目を確認（本番には接続しない） |
+| `03_migration_check.sh` | 復元した使い捨てDBへ本番 migration（prod_01〜03・04a・04b）を当て、適用・二度適用・rollback・再適用・不変項目を確認（本番には接続しない） |
 | `fingerprint.sql` | 本番と復元先で同じ基準値（件数・構造の指紋・購入の集計指紋）を出すSQL。読み取り専用で、個人情報は出しません |
 
 ## 0. 準備（macOS / Homebrew の例）
@@ -78,7 +78,7 @@ cd <キットのフォルダ>
 
 - 最初に migration ファイルの SHA-256 を表示する（`docs/sql/production/SHA256SUMS` と一致すること）。
 - `PASS preflight（実データで基準値と一致）`：SQL に入っている基準値（購入の集計指紋など）が実データと一致。
-- 合格の目安：`TOTAL pass=29 fail=0`。出力は PASS／FAIL と件数・ハッシュだけ（個人情報なし）。
+- 合格の目安：`TOTAL pass=35 fail=0`。出力は PASS／FAIL と件数・ハッシュだけ（個人情報なし）。
 
 ## 3. 評価の範囲
 

@@ -1,4 +1,4 @@
-# 本番DB migration 適用手順書（akivoob・prod_01〜04）
+# 本番DB migration 適用手順書（akivoob・prod_01〜03・04a・04b）
 
 > **この手順書だけでは実行しない。** 各段階は、運営者の承認を得てから実行する。
 > 本番への適用・Production deploy・main への merge・環境変数／Auth／Stripe の変更は、それぞれ別に承認を得る。
@@ -25,31 +25,42 @@
 | `prod_01_registration_compat.sql` | 適用 | 登録・同意・既存利用者の互換層（既存3人は legacy_exempt）。本番専用の台帳 `element_release.migration_ledger` |
 | `prod_02_orders_reports_links.sql` | 適用 | 注文・権利・レポート・固有リンク・登録・管理の表と関数（Live 限定） |
 | `prod_03_reissue_and_constraints.sql` | 適用 | 再発行の修正・本番制約の総点検 |
-| `prod_04_onboarding_required.sql` | 適用 | 登録完了の必須化（**Production deploy の直前**に実行） |
+| `prod_04a_onboarding_required_state.sql` | 適用 | 新規登録の初期状態を `required` にするだけ（保存の拒否はまだしない）。旧画面からの保存は続く |
+| `prod_04b_onboarding_enforcement.sql` | 適用 | 登録完了前（required）の診断保存を DB で拒否（**新コードの deploy と同意の記録を確認した後**） |
 | `prod_80_invariants_READONLY.sql` | 読み取り | S0 の不変項目（件数・ハッシュ）。適用前と各段階の後で**完全に一致**すること（`info.` の行は比較しない） |
 | `prod_81_postcheck_READONLY.sql` | 読み取り | 段階ごとの状態（台帳・Live 限定・同意版・登録の既定値・新しい表の件数・API ロールの権限） |
-| `prod_9[1-4]_rollback_*_DRAFT_DO_NOT_RUN.sql` | 戻し草案 | `docs/PRODUCTION_MIGRATION_ROLLBACK_RUNBOOK.md` を参照 |
+| `prod_9[1-5]_rollback_*_DRAFT_DO_NOT_RUN.sql` | 戻し草案（95＝04b・94＝04a・93〜91＝03〜01） | `docs/PRODUCTION_MIGRATION_ROLLBACK_RUNBOOK.md` を参照 |
 
 SHA-256 は `docs/sql/production/SHA256SUMS`。SQL Editor へ貼る前に、手元のファイルと一致することを確かめる。
 
-## 2. 当日の流れ（目安）
+## 2. 適用の順序（旧画面と新画面の切り替え中も保存を止めない）
 
-| 時点 | 作業 | 承認 |
-|---|---|---|
-| T−1日〜当日 | §3 バックアップの取り直しと、そのバックアップでの migration 試験（03） | 済ませてから次へ |
-| 当日 | §4 prod_00 → prod_01 → prod_02 → prod_03（続けて実行。数分） | 適用の承認 |
-| deploy 直前 | §5 prod_04 → 直後に Production の Promote | deploy の承認と同時 |
-| 直後 | §6 確認（旧URL・新しい購入の動作） | — |
+| 順 | 作業 | 確認 | 承認 |
+|---|---|---|---|
+| 1 | `prod_00_preflight_READONLY` | `preflight: OK（NG 0 件）` | 適用の承認 |
+| 2 | `prod_01_registration_compat` | §4 の確認 | |
+| 3 | `prod_02_orders_reports_links` | §4 の確認 | |
+| 4 | `prod_03_reissue_and_constraints` | §4 の確認 | |
+| 5 | 各確認 SQL | `prod_80`（適用前と完全一致）・`prod_81` | |
+| 6 | `prod_04a_onboarding_required_state` | `prod_81`：`onboarding.default = 'required'`・`onboarding.require_trigger = 0` | |
+| 7 | 旧 Production（現在のコード）で、新規登録→診断の保存ができること | 新規登録は required・保存できる・同意は記録されない | |
+| 8 | 新コードを**販売停止のまま** Production へ deploy／Promote | — | deploy の承認 |
+| 9 | 新規登録で同意画面が出て、2026-10-21／2026-10-21／2026-10-07-v1 が記録されること | `prod_81`：`profiles.by_status` に completed | |
+| 10 | `prod_04b_onboarding_enforcement` | `prod_81`：`onboarding.require_trigger = 1` | 04b の承認 |
+| 11 | 登録未完了では保存できず、登録完了後は保存できること | 既存利用者（legacy_exempt）も保存できる | |
 
-- prod_01〜03 の後も、旧 main（現在の Production）はそのまま動く（保存・旧購入・旧レポート閲覧・新規登録。§7）。
-- prod_04 の後、新コードの deploy までの間に旧画面で新規登録した人は、新コードが出るまで診断を保存できない。prod_04 と Promote の間を空けない。
+- 1〜6 の後も、旧 main（現在の Production）はそのまま動く（保存・旧購入・旧レポート閲覧・新規登録。§7）。
+- 6〜10 の間（04a の後・04b の前）は、保存を拒否しない。deploy が遅れても旧画面で保存でき、新画面は同意を記録できる。
+  - 旧画面で 04a の後に登録した人は required のまま保存できる。新コードへ切り替わった後、次の表示で同意画面へ進む。
+  - 04a の前に登録した人（既存3人・01〜03 の間の登録）は legacy_exempt のまま。一括で required にしない。既存の同意・お知らせメールの値は変えない。
+- 04b が失敗しても（1つの transaction）、04a までの状態のままサービスを続けられる。原因を直してから 04b をやり直す。
 - 段階の間に旧 Payment Link で正規の Live 購入が入っても、2段階目以降は止まらない（基準の9件だけを照合し、後から入った行は「Live・active・core1 ¥1,000」であることだけを確かめる）。
 
 ## 3. 事前：バックアップと、そのバックアップでの試験（運営者の手元 PC）
 
 1. `operator_backup_kit/01_backup.sh`（読み取り専用・暗号化バックアップ）→ `02_restore_check.sh`（復元と比較）が合格すること。
 2. `operator_backup_kit/03_migration_check.sh <バックアップのフォルダ> <リポジトリ>/docs/sql/production` を実行し、
-   `TOTAL pass=29 fail=0` であること。最初の `PASS preflight（実データで基準値と一致）` は、SQL に入っている基準値（購入の集計指紋など）が**実データと一致する**ことの確認でもある。
+   `TOTAL pass=35 fail=0` であること。最初の `PASS preflight（実データで基準値と一致）` は、SQL に入っている基準値（購入の集計指紋など）が**実データと一致する**ことの確認でもある。
    - 表示される migration ファイルの SHA-256 が `SHA256SUMS` と一致すること。
 3. 旧レポート URL（2026-10-06 以前に発行したもの）が開けることを確認しておく（適用後の比較用）。
 
@@ -72,11 +83,14 @@ SHA-256 は `docs/sql/production/SHA256SUMS`。SQL Editor へ貼る前に、手�
 - `stage_already_applied`：その段階は適用済み。二度目は何もしない。
 - `purchase_entitlements baseline is not 9 rows` など基準の不一致：DB が想定と違う。適用せず、棚卸しからやり直す。
 
-## 5. 切り替え（Production deploy の直前）
+## 5. 04a → deploy → 04b
 
-1. 新コードの Production deploy（Promote）の準備ができていること（別承認）。
-2. `prod_04_onboarding_required.sql` → 成功。`prod_81`：`ledger.stages = {1,2,3,4}`、`onboarding.default = 'required'`、`onboarding.require_trigger = 1`。`prod_80`：完全一致。
-3. 直ちに Promote。
+1. `prod_04a_onboarding_required_state.sql` → 成功。`prod_81`：`ledger.stages = {1,2,3,4}`、`onboarding.default = 'required'`、`onboarding.require_trigger = 0（prod_04b 以降 1）`。`prod_80`：完全一致。
+2. 旧 Production で新規登録→保存ができることを確かめる（試験用のアカウント。個人情報を報告に載せない）。
+3. 新コードを販売停止（`COMPLETE_SALES_OPEN` は閉じたまま）で Production へ deploy／Promote（別承認）。
+4. 新規登録で同意画面が出て、登録完了後に保存できることを確かめる（`prod_81` の `profiles.by_status` に completed が増える）。
+5. `prod_04b_onboarding_enforcement.sql` → 成功。`prod_81`：`ledger.stages = {1,2,3,4,5}`、`onboarding.require_trigger = 1`。`prod_80`：完全一致。
+6. 登録未完了（required）のアカウントでは保存できず、登録完了後は保存できることを確かめる。
 
 ## 6. 適用後の確認
 
@@ -90,11 +104,13 @@ SHA-256 は `docs/sql/production/SHA256SUMS`。SQL Editor へ貼る前に、手�
 | 段階の後 | 旧 main の保存 | 新規登録→保存（旧画面） | 旧 /api/verify の記録 | 旧 /api/report-data | 同意列の直接書き換え |
 |---|---|---|---|---|---|
 | prod_01〜03 | 可 | 可（legacy_exempt） | 可 | 可 | 拒否（旧 main は使っていない） |
-| prod_04 | 可（既存利用者） | 新コードの deploy まで不可 | 可 | 可 | 拒否 |
+| prod_04a | 可 | 可（required。同意は新コードで） | 可 | 可 | 拒否 |
+| prod_04b | 可（既存利用者） | 不可（新コードの同意画面で登録完了してから） | 可 | 可 | 拒否 |
 
 ## 8. 検証の記録（2026-10-21・ローカル）
 
 - 本番相当の PG17（baseline_archive 0001〜0007＋本番の既定権限＋合成データ）。構造の指紋（列57・関数3・policy 8・制約19・索引13・権限126・主要3関数・auth トリガー）が本番の基準値と一致。
-- `docs/sql/production/local_check/run_all.sh`：適用・二度適用・rollback・再適用（30項目）、停止条件（15項目：Preview・PG16・件数・金額・指紋・関数・列・policy・権限・部分適用・順序・途中失敗・段階の間の購入）、旧 main の DB 操作（全段階）が合格。
-- アプリ試験：DB を使う試験を本番の構成（Production・Stripe Live・prod_01〜04 の DB）でも実行し全件合格（`COMPLETE_DB_STRIPE_MODE=live`）。
+- `docs/sql/production/local_check/run_all.sh`：適用・二度適用・rollback・再適用（36項目）、停止条件（15項目：Preview・PG16・件数・金額・指紋・関数・列・policy・権限・部分適用・順序・途中失敗・段階の間の購入）、
+  切り替え中の状態（36項目：01〜03 後・04a 後 deploy 前・04a 後の新コード・04b 後・障害時・04a／04b の rollback）、旧 main の DB 操作（全段階）が合格。
+- アプリ試験：DB を使う試験を本番の構成（Production・Stripe Live・prod_01〜04b の DB）でも実行し全件合格（`COMPLETE_DB_STRIPE_MODE=live`）。
 - Preview の最終状態との構造の差は、意図したもの（Live 限定の制約・注文の記録・Webhook の照合・Preview 専用の関数と制約が無いこと）だけ。
