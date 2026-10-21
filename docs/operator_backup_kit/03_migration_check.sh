@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 本番専用 migration（prod_01〜04）を「実際のバックアップを復元した使い捨ての PG17」に当てて確かめる。
+# 本番専用 migration（prod_01〜03・04a・04b）を「実際のバックアップを復元した使い捨ての PG17」に当てて確かめる。
 #   本番には接続しない（ローカルのUnixソケットのみ）。復号結果はファイルに書かない。
 #   出力は PASS／FAIL と件数・ハッシュだけ（個人情報・ID は出さない）。
 # 使い方: ./03_migration_check.sh <バックアップのフォルダ> <リポジトリの docs/sql/production フォルダ>
@@ -44,13 +44,13 @@ q -d postgres -c "create database mig template base" >/dev/null
 # 0. 事前確認（本番の基準値と一致すること：実データの集計指紋もここで照合される）
 if q -d mig -f "$M/prod_00_preflight_READONLY.sql" > "$W/pre.out" 2>&1 && grep -q "preflight: OK" "$W/pre.out"; then ok "preflight（実データで基準値と一致）"; else ng "preflight: $(grep -E 'NG|ERROR' "$W/pre.out" | head -3 | tr '\n' ' ')"; fi
 inv mig "$W/i0.tsv"; dump mig "$W/d0.sql"
-S="prod_01_registration_compat prod_02_orders_reports_links prod_03_reissue_and_constraints prod_04_onboarding_required"
+S="prod_01_registration_compat prod_02_orders_reports_links prod_03_reissue_and_constraints prod_04a_onboarding_required_state prod_04b_onboarding_enforcement"
 for s in $S; do run mig $s && ok "適用 $s" || ng "適用 $s: $(grep -m1 ERROR "$W/run.out")"; inv mig "$W/ia.tsv"; cmp -s "$W/i0.tsv" "$W/ia.tsv" && ok "不変項目（$s の後）" || ng "不変項目（$s の後）"; done
 dump mig "$W/d1.sql"
 for s in $S; do run mig $s && ng "二度適用 $s（止まるはず）" || { grep -q stage_already_applied "$W/run.out" && ok "二度適用 $s は止まり変更なし" || ng "二度適用 $s: $(grep -m1 ERROR "$W/run.out")"; }; done
 dump mig "$W/d1b.sql"; cmp -s "$W/d1.sql" "$W/d1b.sql" && ok "二度適用の後も構造は同じ" || ng "二度適用で構造が変わった"
 q -d mig -f "$M/prod_81_postcheck_READONLY.sql" 2>&1 | sed -n '/ k /,$p' | sed 's/^/  /'
-for r in prod_94_rollback_04_DRAFT_DO_NOT_RUN prod_93_rollback_03_DRAFT_DO_NOT_RUN prod_92_rollback_02_DRAFT_DO_NOT_RUN prod_91_rollback_01_DRAFT_DO_NOT_RUN; do
+for r in prod_95_rollback_04b_DRAFT_DO_NOT_RUN prod_94_rollback_04a_DRAFT_DO_NOT_RUN prod_93_rollback_03_DRAFT_DO_NOT_RUN prod_92_rollback_02_DRAFT_DO_NOT_RUN prod_91_rollback_01_DRAFT_DO_NOT_RUN; do
   run mig $r && ok "rollback $r" || ng "rollback $r: $(grep -m1 ERROR "$W/run.out")"; inv mig "$W/ir.tsv"; cmp -s "$W/i0.tsv" "$W/ir.tsv" && ok "不変項目（$r の後）" || ng "不変項目（$r の後）"; done
 dump mig "$W/d2.sql"; cmp -s "$W/d0.sql" "$W/d2.sql" && ok "全段階の rollback 後の構造＝適用前" || ng "rollback 後の構造が適用前と違う"
 for s in $S; do run mig $s && ok "再適用 $s" || ng "再適用 $s: $(grep -m1 ERROR "$W/run.out")"; done

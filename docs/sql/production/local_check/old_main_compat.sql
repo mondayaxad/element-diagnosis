@@ -1,5 +1,5 @@
 -- 旧 main（現在の Production）のDB操作が、各段階の後でも動くこと（全体を最後に取り消す）
---   current_setting('test.stage')::int = 0（適用前）〜4。出力：PASS／FAIL の行だけ
+--   test.stage = 0（適用前）・1〜3（prod_01〜03）・4（prod_04a）・5（prod_04b）。出力：PASS／FAIL の行だけ
 \set QUIET on
 \set ON_ERROR_STOP on
 begin;
@@ -12,6 +12,11 @@ insert into auth.users(id) values ('00000000-0000-4000-8000-0000000000aa');
 reset role;
 do $$ begin
   insert into r values ((select count(*) = 1 from public.profiles where id = '00000000-0000-4000-8000-0000000000aa'), 'signup creates profile (handle_new_user)');
+  if current_setting('test.stage')::int between 1 and 5 then
+    insert into r values ((select onboarding_status from public.profiles where id = '00000000-0000-4000-8000-0000000000aa')
+                          = case when current_setting('test.stage')::int >= 4 then 'required' else 'legacy_exempt' end,
+                          'new signup status is ' || case when current_setting('test.stage')::int >= 4 then 'required (prod_04a)' else 'legacy_exempt (before prod_04a)' end);
+  end if;
 end $$;
 -- 旧 main の保存（save_diagnosis_session・ログイン中の本人）：既存利用者
 set local role authenticated;
@@ -24,9 +29,9 @@ exception when others then insert into r values (false, 'old save_diagnosis_sess
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-0000000000aa', true) \g /dev/null
 do $$ declare v uuid; begin
   v := public.save_diagnosis_session('element', 'v1', 's1', gen_random_uuid(), now(), '{"q1":3}', 'enc', '{"t":"x"}', '{"a":1}', '[]', 'OLDMAINCODE2');
-  insert into r values (current_setting('test.stage')::int < 4, 'new signup save via old code ' || case when current_setting('test.stage')::int < 4 then 'works (legacy_exempt until prod_04)' else 'unexpectedly works after prod_04' end);
+  insert into r values (current_setting('test.stage')::int < 5, 'new signup save via old code ' || case when current_setting('test.stage')::int < 5 then 'works (no enforcement until prod_04b)' else 'unexpectedly works after prod_04b' end);
 exception when others then
-  insert into r values (current_setting('test.stage')::int = 4 and sqlerrm = 'onboarding_required', 'new signup save via old code ' || case when current_setting('test.stage')::int = 4 then 'rejected after prod_04 (onboarding_required)' else 'failed: ' || sqlerrm end);
+  insert into r values (current_setting('test.stage')::int = 5 and sqlerrm = 'onboarding_required', 'new signup save via old code ' || case when current_setting('test.stage')::int = 5 then 'rejected after prod_04b (onboarding_required)' else 'failed: ' || sqlerrm end);
 end $$;
 -- ブラウザ（authenticated）から同意・お知らせメールの列を直接書き換えられない（prod_01 以降）
 do $$ begin

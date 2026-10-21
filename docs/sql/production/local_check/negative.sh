@@ -4,8 +4,9 @@ H=$(dirname "$(readlink -f "$0")"); $H/mkcopies.sh >/dev/null || exit 1
 . "$(dirname "$(readlink -f "$0")")/env.sh"
 A=$(cd "$(dirname "$(readlink -f "$0")")/../../baseline_archive_20261006" && pwd)
 P="$B/psql -X -q -v ON_ERROR_STOP=1 -h /tmp/prodsim/s -p 55440 -U postgres"; Q=/tmp/prodsim/sql
+$B/psql -X -q -h /tmp/prodsim/s -p 55440 -U postgres -d postgres -c "select 1" >/dev/null 2>&1 || { echo "FAIL server_reachable: ローカルの PG17 が動いていない（harness.sh start）"; exit 1; }
 pass=0; fail=0
-dump() { $B/pg_dump -h /tmp/prodsim/s -p ${3:-55440} -U postgres -d $1 --schema-only | grep -v -E "^--|^$|^SET |^SELECT pg_catalog|^\\\\(un)?restrict" > $2; }
+dump() { $B/pg_dump -h /tmp/prodsim/s -p ${3:-55440} -U postgres -d $1 --schema-only | grep -v -E "^--|^$|^SET |^SELECT pg_catalog|^\\\\(un)?restrict" > $2; [ -s $2 ] || { echo "FAIL empty schema dump ($1)"; exit 1; }; }
 expect_stop() { # $1 label, $2 db, $3 file, $4 expected message
   dump $2 /tmp/prodsim/neg_before.sql
   if $P -d $2 -f $Q/$3.sql > /tmp/prodsim/neg.out 2>&1; then echo "FAIL $1 (applied)"; fail=$((fail+1)); return; fi
@@ -47,9 +48,9 @@ if $P -d n11 -f $Q/prod_02_orders_reports_links.sql > /tmp/prodsim/neg.out 2>&1;
 # 段階の間に旧 main（/api/verify）で正規の Live 購入が入っても、次の段階は進める（基準の9件だけを照合）
 fresh n12; $P -d n12 -f $Q/$S1.sql >/dev/null
 $P -d n12 -c "insert into public.purchase_entitlements(diagnosis_code_hash, stripe_checkout_session_id, product_type, amount) values (repeat('c',64), 'cs_live_AFTERPROD01', 'core1', 1000)" >/dev/null
-if $P -d n12 -f $Q/prod_02_orders_reports_links.sql >/tmp/prodsim/neg.out 2>&1 && $P -d n12 -f $Q/prod_03_reissue_and_constraints.sql >>/tmp/prodsim/neg.out 2>&1 && $P -d n12 -f $Q/prod_04_onboarding_required.sql >>/tmp/prodsim/neg.out 2>&1; then echo "PASS 段階の間に正規の Live 購入 → prod_02〜04 は進む"; pass=$((pass+1)); else echo "FAIL live purchase between stages: $(grep -m1 ERROR /tmp/prodsim/neg.out)"; fail=$((fail+1)); fi
+if $P -d n12 -f $Q/prod_02_orders_reports_links.sql >/tmp/prodsim/neg.out 2>&1 && $P -d n12 -f $Q/prod_03_reissue_and_constraints.sql >>/tmp/prodsim/neg.out 2>&1 && $P -d n12 -f $Q/prod_04a_onboarding_required_state.sql >>/tmp/prodsim/neg.out 2>&1 && $P -d n12 -f $Q/prod_04b_onboarding_enforcement.sql >>/tmp/prodsim/neg.out 2>&1; then echo "PASS 段階の間に正規の Live 購入 → prod_02〜04b は進む"; pass=$((pass+1)); else echo "FAIL live purchase between stages: $(grep -m1 ERROR /tmp/prodsim/neg.out)"; fail=$((fail+1)); fi
 # その状態から全段階を戻せる（旧購入・後から入った購入には触れない）
-ok=1; for r in prod_94_rollback_04_DRAFT_DO_NOT_RUN prod_93_rollback_03_DRAFT_DO_NOT_RUN prod_92_rollback_02_DRAFT_DO_NOT_RUN prod_91_rollback_01_DRAFT_DO_NOT_RUN; do $P -d n12 -f $Q/$r.sql >/tmp/prodsim/neg.out 2>&1 || { ok=0; echo "  $r: $(grep -m1 ERROR /tmp/prodsim/neg.out)"; }; done
+ok=1; for r in prod_95_rollback_04b_DRAFT_DO_NOT_RUN prod_94_rollback_04a_DRAFT_DO_NOT_RUN prod_93_rollback_03_DRAFT_DO_NOT_RUN prod_92_rollback_02_DRAFT_DO_NOT_RUN prod_91_rollback_01_DRAFT_DO_NOT_RUN; do $P -d n12 -f $Q/$r.sql >/tmp/prodsim/neg.out 2>&1 || { ok=0; echo "  $r: $(grep -m1 ERROR /tmp/prodsim/neg.out)"; }; done
 [ $ok = 1 ] && [ "$($B/psql -X -At -h /tmp/prodsim/s -p 55440 -U postgres -d n12 -c "select count(*) from public.purchase_entitlements")" = 10 ] && { echo "PASS その状態から全段階を戻せ、購入10件は残る"; pass=$((pass+1)); } || { echo "FAIL rollback with later live purchase"; fail=$((fail+1)); }
 # 段階の間に Live 以外の行が入ったら止まる
 fresh n13; $P -d n13 -f $Q/$S1.sql >/dev/null
@@ -64,7 +65,6 @@ $P16 -d postgres -c "create database p16" >/dev/null; $P16 -d p16 -f $A/restore_
 $P16 -d p16 -c "create table auth.identities(id uuid primary key default gen_random_uuid(), user_id uuid, provider text)" >/dev/null
 for f in $A/000[1-7]*.sql; do $P16 -d p16 --single-transaction -f $f >/dev/null 2>&1; done
 $P16 -d p16 -f $H/synthetic_data.sql >/dev/null 2>&1
-dump p16 /tmp/prodsim/p16_before.sql 55441 2>/dev/null
 if $P16 -d p16 -f $Q/$S1.sql > /tmp/prodsim/neg.out 2>&1; then echo "FAIL PG16 (applied)"; fail=$((fail+1)); else
   grep -q "postgresql 17 or later is required" /tmp/prodsim/neg.out && { echo "PASS PostgreSQL 16 → stopped"; pass=$((pass+1)); } || { echo "FAIL PG16: $(grep -m1 ERROR /tmp/prodsim/neg.out)"; fail=$((fail+1)); }; fi
 runuser -u postgres -- $PG16_SERVER_BIN/pg_ctl -D $W16/d -m fast stop >/dev/null; rm -rf $W16

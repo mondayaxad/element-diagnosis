@@ -1,20 +1,19 @@
 -- ============================================================
--- prod_04：登録完了の必須化（切り替え。本番 Production deploy の直前に実行）
+-- prod_04b：登録完了前（required）の利用者の診断保存を DB で拒否する
 -- 【本番（element-diagnosis-test / akivoob）専用】SQL Editor で、このファイル全体を1回だけ実行する。
 -- 【Preview・その他では実行しない】冒頭の確認で、本番の基準と違えば何も変えずに止まる。
 -- 生成元：docs/sql/production/build_production_sql.py（Preview migration から機械的に組み立て。手で編集しない）
--- 前提：prod_03 適用済み。新コードの Production deploy の準備ができていること（この直後に Promote する）
--- 戻し：docs/sql/production/prod_94_rollback_04_DRAFT_DO_NOT_RUN.sql（DRAFT_DO_NOT_RUN）
+-- 前提：prod_04a 適用済み。新コードが Production に出ていて、新規登録で同意（2026-10-21 の組）が記録されることを確認済み
+-- 戻し：docs/sql/production/prod_95_rollback_04b_DRAFT_DO_NOT_RUN.sql（DRAFT_DO_NOT_RUN）
 -- 二度目の実行：冒頭で stage_already_applied として止まる（何も変更しない）。
 -- 旧購入者保護（S0）：purchase_entitlements・旧購入・既存6表の既存列・主要3関数・既存 RLS／policy／権限は変更しない。
 -- ============================================================
 --
--- 内容
---   ・新規登録の既定値を 'required' にする（新しい画面で同意してから保存する）
---   ・登録完了前（required）の利用者の診断保存を DB でも拒否するトリガーを作る
---   ・既存3人（legacy_exempt）と、prod_01〜04 の間に旧画面で登録した人（legacy_exempt）は対象外のまま
--- 注意：この段階の後、新コードの deploy までの間に旧画面で新規登録した人は、新コードが出るまで診断を保存できない。
---       そのため prod_04 は Production deploy（Promote）の直前に実行し、間を空けない。
+-- 内容（この段階の責務はこれだけ）
+--   ・diagnosis_sessions への INSERT の前に、登録完了前（required）の利用者を拒否するトリガーを作る
+--     （save_diagnosis_session・save_diagnosis_session_v2・直接の INSERT のすべて）
+--   ・登録完了済み（completed）と既存利用者（legacy_exempt）は従来どおり保存できる
+--   ・この段階が失敗しても prod_04a までの状態でサービスを続けられる（1つの transaction。失敗すれば何も変わらない）
 
 begin;
 
@@ -127,20 +126,30 @@ begin
     raise exception 'purchase_entitlements fingerprint differs from the baseline';
   end if;
   -- END EXPECTED PURCHASE FINGERPRINT
-  -- 段階の順序：prod_03 まで適用済みで、prod_04 は未適用
+  -- 段階の順序：prod_04a まで適用済みで、prod_04b は未適用
   if to_regclass('element_release.migration_ledger') is null then
     raise exception 'prod_01 is not applied (ledger missing)';
   end if;
-  if exists (select 1 from element_release.migration_ledger where stage = 4) then
-    raise exception 'stage_already_applied: prod_04 は適用済みです（何も変更していません）';
+  if exists (select 1 from element_release.migration_ledger where stage = 5) then
+    raise exception 'stage_already_applied: prod_04b は適用済みです（何も変更していません）';
   end if;
-  if (select array_agg(stage order by stage) from element_release.migration_ledger) is distinct from array[1, 2, 3] then
+  if (select array_agg(stage order by stage) from element_release.migration_ledger) is distinct from array[1, 2, 3, 4] then
     raise exception 'ledger does not show the previous stages in order';
   end if;
 end
 $guard$;
 
-alter table public.profiles alter column onboarding_status set default 'required';
+do $pre4b$
+begin
+  if (select column_default from information_schema.columns where table_schema = 'public' and table_name = 'profiles' and column_name = 'onboarding_status')
+     is distinct from '''required''::text' then
+    raise exception 'prod_04a state expected (onboarding_status default required)';
+  end if;
+  if exists (select 1 from pg_trigger where tgname = 'diagnosis_sessions_require_onboarding') then
+    raise exception 'require_onboarding trigger already exists (partial or foreign state)';
+  end if;
+end
+$pre4b$;
 
 create trigger diagnosis_sessions_require_onboarding
   before insert on public.diagnosis_sessions
@@ -148,12 +157,8 @@ create trigger diagnosis_sessions_require_onboarding
 
 do $post$
 begin
-  if (select column_default from information_schema.columns where table_schema = 'public' and table_name = 'profiles' and column_name = 'onboarding_status')
-     is distinct from '''required''::text' then
-    raise exception 'onboarding_status default must be required';
-  end if;
-  if exists (select 1 from public.profiles where onboarding_status = 'required' and created_at < (select applied_at from element_release.migration_ledger where stage = 1)) then
-    raise exception 'profiles created before prod_01 must not be required';
+  if (select count(*) from pg_trigger where tgname = 'diagnosis_sessions_require_onboarding' and tgrelid = 'public.diagnosis_sessions'::regclass and tgenabled = 'O') <> 1 then
+    raise exception 'require_onboarding trigger must be enabled on diagnosis_sessions';
   end if;
 end
 $post$;
@@ -265,7 +270,7 @@ begin
   -- END EXPECTED PURCHASE FINGERPRINT
 end
 $guard$;
-insert into element_release.migration_ledger (stage, name) values (4, 'prod_04_onboarding_required');
+insert into element_release.migration_ledger (stage, name) values (5, 'prod_04b_onboarding_enforcement');
 
 notify pgrst, 'reload schema';
 

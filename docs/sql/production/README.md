@@ -15,10 +15,11 @@ Preview 用の migration（`docs/sql/2026*.sql`）は本番では使わない。
 | 1 | `prod_01_registration_compat.sql` | 登録・同意・既存利用者の互換層。既存3人は legacy_exempt。台帳 `element_release.migration_ledger` |
 | 2 | `prod_02_orders_reports_links.sql` | Preview complete_01〜13 の本体（Live 限定へ置き換え）。注文・権利・レポート・固有リンク・登録・管理 |
 | 3 | `prod_03_reissue_and_constraints.sql` | Preview complete_14（再発行）＋本番制約の総点検 |
-| 4 | `prod_04_onboarding_required.sql` | 登録完了の必須化（Production deploy の直前） |
+| 4（04a） | `prod_04a_onboarding_required_state.sql` | 新規登録の初期状態を required にするだけ（保存の拒否はしない） |
+| 5（04b） | `prod_04b_onboarding_enforcement.sql` | 登録完了前の保存を DB で拒否（新コードの deploy と同意の記録を確認した後） |
 | 不変 | `prod_80_invariants_READONLY.sql` | S0 の不変項目（適用前と完全一致すること） |
 | 状態 | `prod_81_postcheck_READONLY.sql` | 段階ごとの状態 |
-| 戻し | `prod_91〜94_rollback_*_DRAFT_DO_NOT_RUN.sql` | 草案。本番では実行しない |
+| 戻し | `prod_91〜95_rollback_*_DRAFT_DO_NOT_RUN.sql` | 草案。本番では実行しない（95＝04b・94＝04a） |
 
 ## 設計の要点
 
@@ -30,18 +31,18 @@ Preview 用の migration（`docs/sql/2026*.sql`）は本番では使わない。
   Preview 専用の制約（`*_preview_test_*`）は作らない。Test の Price ID・Webhook 値は SQL に含まない。
   `purchase_entitlements` には制約を足さない（`cs_test_` の8行があるため）。
 - **既存表への変更**：`profiles` に列（登録完了・同意・お知らせメール同期）と制約・同意列の保護トリガー。既存行は列の既定値で legacy_exempt（UPDATE 文は使わない）。
-  `diagnosis_sessions` は user_id の NOT NULL を外す（ゲスト記録用。既存8行は値を持つまま）・`guest_created_at`・所有者かゲストかの制約・所有者固定トリガー、prod_04 で登録完了前の保存を拒否するトリガー。
+  `diagnosis_sessions` は user_id の NOT NULL を外す（ゲスト記録用。既存8行は値を持つまま）・`guest_created_at`・所有者かゲストかの制約・所有者固定トリガー、prod_04b で登録完了前の保存を拒否するトリガー（prod_04a は新規登録の初期状態を required にするだけ）。
   他の4表（`diagnosis_answers`・`diagnosis_results`・`report_snapshots`・`purchase_entitlements`）には何もしない。
 - **段階の間の購入**：旧 Payment Link で正規の Live 購入が入っても、2段階目以降は prod_01 の時刻より前の9件を基準に照合し、後から入った行は「Live・active・core1 ¥1,000」であることだけを確かめる。
 
 ## ローカル検証
 
-`local_check/run_all.sh`（root で実行。PostgreSQL 17 と 16 の場所は `local_check/env.sh`）：本番相当の PG17（合成データ）で、構造の指紋の一致・適用・二度適用・rollback・再適用・停止条件・旧 main の DB 操作を確かめる。
+`local_check/run_all.sh`（root で実行。PostgreSQL 17 と 16 の場所は `local_check/env.sh`）：本番相当の PG17（合成データ）で、構造の指紋の一致・適用・二度適用・rollback・再適用・停止条件・切り替え中の状態（`transition.sh`）・旧 main の DB 操作を確かめる。
 試験は本番の購入の指紋2行だけを合成データ用の値へ差し替えたコピー（`/tmp/prodsim/sql`）で行う（`local_check/mkcopies.sh`）。
 
 アプリ試験（本番の構成）：
 
 ```bash
-# prod_01〜04 を当てた DB をテンプレートにし（合成の既存データは空にする）、DB を使う試験を Live で実行
+# prod_01〜04b を当てた DB をテンプレートにし（合成の既存データは空にする）、DB を使う試験を Live で実行
 COMPLETE_DB_STRIPE_MODE=live PGT_TEMPLATE=<テンプレート> COMPLETE_DB_BACKEND=<pg バックエンド> node --test tests/link_purchase_api.test.js tests/purchase_integrity_api.test.js tests/complete_guest_api.test.js
 ```

@@ -13,7 +13,7 @@
 --   ・本番専用の migration 台帳 element_release.migration_ledger（外部 API から見えない別スキーマ）
 --   ・profiles に登録完了・同意・お知らせメール同期の列を追加（既存3人は legacy_exempt。既存の値は変えない）
 --   ・同意列のブラウザ直接書き換え防止トリガー、登録完了 RPC（同意版は 2026-10-21 の組だけ）
---   ・新規登録の既定値は、prod_04 までの間は legacy_exempt（旧画面からの登録は新しい同意をしていないため）
+--   ・新規登録の既定値は、prod_04a までの間は legacy_exempt（旧画面からの登録は新しい同意をしていないため）
 --   ・旧 main のコード（save_diagnosis_session・/api/verify・/api/report-data）の動きは変わらない
 
 begin;
@@ -152,13 +152,13 @@ $guard$;
 create schema element_release;
 revoke all on schema element_release from public, anon, authenticated, service_role;
 create table element_release.migration_ledger (
-  stage       integer primary key check (stage between 1 and 4),
+  stage       integer primary key check (stage between 1 and 5),
   name        text not null,
   applied_at  timestamptz not null default now(),
   applied_by  text not null default current_user
 );
 revoke all on table element_release.migration_ledger from public, anon, authenticated, service_role;
-comment on schema element_release is '元素診断 本番 migration の台帳（prod_01〜04）。アプリ・API からは使わない';
+comment on schema element_release is '元素診断 本番 migration の台帳（1=prod_01・2=prod_02・3=prod_03・4=prod_04a・5=prod_04b）。アプリ・API からは使わない';
 
 -- ------------------------------------------------------------
 -- 由来：docs/sql/20261006225744_onboarding_01_registration_onboarding.sql（Preview 判定・履歴行を除き、本番向けの置き換えをしたもの）
@@ -311,7 +311,7 @@ begin
 end;
 $$;
 
--- トリガーの作成は prod_04（切り替え）で行う。ここでは関数だけを用意する。
+-- トリガーの作成は prod_04b で行う。ここでは関数だけを用意する。
 
 revoke all on function public.diagnosis_sessions_require_onboarding() from public, anon, authenticated;
 revoke all on function public.complete_registration_onboarding(text, text, text) from public, anon;
@@ -417,10 +417,10 @@ begin
   end if;
   if (select column_default from information_schema.columns where table_schema = 'public' and table_name = 'profiles' and column_name = 'onboarding_status')
      is distinct from '''legacy_exempt''::text' then
-    raise exception 'onboarding_status default must be legacy_exempt until prod_04';
+    raise exception 'onboarding_status default must be legacy_exempt until prod_04a';
   end if;
   if exists (select 1 from pg_trigger where tgname = 'diagnosis_sessions_require_onboarding') then
-    raise exception 'require_onboarding trigger must not exist before prod_04';
+    raise exception 'require_onboarding trigger must not exist before prod_04b';
   end if;
   if has_schema_privilege('anon', 'element_release', 'USAGE') or has_schema_privilege('authenticated', 'element_release', 'USAGE')
      or has_schema_privilege('service_role', 'element_release', 'USAGE') then

@@ -16,8 +16,8 @@ select k, v from (values
        and (pg_get_functiondef(p.oid) ~ $re$stripe_mode <> 'test'$re$ or pg_get_functiondef(p.oid) ~ 'p_livemode is distinct from false')) || ' (0 であること)'),
   ('consent.accepts_2026_10_21_only', (select case when d is null then '(関数なし)' else (position('2026-10-21' in d) > 0 and d !~ '2026-10-13' and d !~ '2026-10-07([^-]|$)')::text end
        from (select case when to_regprocedure('public.complete_registration_onboarding(text, text, text)') is null then null else pg_get_functiondef(to_regprocedure('public.complete_registration_onboarding(text, text, text)')) end d) x)),
-  ('onboarding.default', (select column_default from information_schema.columns where table_schema = 'public' and table_name = 'profiles' and column_name = 'onboarding_status') || ' (prod_01〜03: legacy_exempt / prod_04 以降: required)'),
-  ('onboarding.require_trigger', (select count(*)::text from pg_trigger where tgname = 'diagnosis_sessions_require_onboarding') || ' (prod_04 以降 1)'),
+  ('onboarding.default', (select column_default from information_schema.columns where table_schema = 'public' and table_name = 'profiles' and column_name = 'onboarding_status') || ' (prod_01〜03: legacy_exempt / prod_04a 以降: required)'),
+  ('onboarding.require_trigger', (select count(*)::text from pg_trigger where tgname = 'diagnosis_sessions_require_onboarding') || ' (prod_04b 以降 1)'),
   ('profiles.by_status', case when not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'profiles' and column_name = 'onboarding_status') then '(列なし)'
        else (xpath('/row/c/text()', query_to_xml('select string_agg(onboarding_status || ''='' || n, '','' order by onboarding_status) as c from (select onboarding_status, count(*) n from public.profiles group by 1) x', false, true, '')))[1]::text end),
   ('new_tables.rows', (select coalesce(string_agg(t || '=' || case when to_regclass('public.' || t) is null then '(なし)'

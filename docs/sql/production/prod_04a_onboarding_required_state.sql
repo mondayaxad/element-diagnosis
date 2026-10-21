@@ -1,16 +1,27 @@
 -- ============================================================
--- prod_94：prod_04（登録完了の必須化）の戻し草案
--- 【DRAFT_DO_NOT_RUN】本番では実行しない。障害時に、別途の承認を得てから使う草案。
--- 生成元：docs/sql/production/build_production_sql.py（手で編集しない）
--- 使える条件：prod_04 が最新。登録完了前（required）・登録完了済み（completed）の利用者が 0 人
---   条件を満たさなければ、冒頭の確認で何も変えずに止まる。
--- 戻した後：旧 main（/api/verify・/api/report-data・save_diagnosis_session）の購入・旧レポート閲覧は動く。
--- 既存6表の既存列・既存行・旧購入（purchase_entitlements の9行）は変更・削除しない。
+-- prod_04a：新規登録の初期状態を required にする（保存の拒否はまだ有効にしない）
+-- 【本番（element-diagnosis-test / akivoob）専用】SQL Editor で、このファイル全体を1回だけ実行する。
+-- 【Preview・その他では実行しない】冒頭の確認で、本番の基準と違えば何も変えずに止まる。
+-- 生成元：docs/sql/production/build_production_sql.py（Preview migration から機械的に組み立て。手で編集しない）
+-- 前提：prod_03 適用済み（element_release.migration_ledger に stage 1〜3）
+-- 戻し：docs/sql/production/prod_94_rollback_04a_DRAFT_DO_NOT_RUN.sql（DRAFT_DO_NOT_RUN）
+-- 二度目の実行：冒頭で stage_already_applied として止まる（何も変更しない）。
+-- 旧購入者保護（S0）：purchase_entitlements・旧購入・既存6表の既存列・主要3関数・既存 RLS／policy／権限は変更しない。
 -- ============================================================
+--
+-- 内容（この段階の責務はこれだけ）
+--   ・profiles.onboarding_status の列の既定値を 'required' にする。列の既定値は INSERT の時だけ使われるため、
+--     この段階より後に作られる profile（Supabase Auth の新規登録 → handle_new_user）だけが required になる。
+--     既存の行の値は DB の定義上変わらない（UPDATE はしない。既存3人と prod_01〜03 の間の登録は legacy_exempt のまま）
+--   ・登録完了前の保存を拒否するトリガーは作らない（prod_04b）。旧画面（現在の Production）からの保存は続けられる
+--   ・同意の版・お知らせメールの値は記録しない・変えない（記録するのは新しい画面の登録完了 RPC だけ）
+--   ・旧画面で作られた required の利用者は、新コードへ切り替わった後、次の表示で登録完了（同意）の画面へ進む
+-- 順序：prod_04a → 旧 Production で保存できることを確認 → 新コードを販売停止のまま deploy／Promote → 同意の記録を確認 → prod_04b
 
 begin;
 
 set local lock_timeout = '5s';
+set local statement_timeout = '120s';
 
 do $guard$
 declare
@@ -118,30 +129,53 @@ begin
     raise exception 'purchase_entitlements fingerprint differs from the baseline';
   end if;
   -- END EXPECTED PURCHASE FINGERPRINT
-end
-$guard$;
-do $rb$
-begin
+  -- 段階の順序：prod_03 まで適用済みで、prod_04a は未適用
   if to_regclass('element_release.migration_ledger') is null then
-    raise exception 'ledger missing: nothing to roll back';
+    raise exception 'prod_01 is not applied (ledger missing)';
   end if;
-  if (select max(stage) from element_release.migration_ledger) is distinct from 4 then
-    raise exception 'rollback must be done from the latest stage: latest is %, this file rolls back 4', (select max(stage) from element_release.migration_ledger);
+  if exists (select 1 from element_release.migration_ledger where stage = 4) then
+    raise exception 'stage_already_applied: prod_04a は適用済みです（何も変更していません）';
+  end if;
+  if (select array_agg(stage order by stage) from element_release.migration_ledger) is distinct from array[1, 2, 3] then
+    raise exception 'ledger does not show the previous stages in order';
   end if;
 end
-$rb$;
+$guard$;
 
-do $nodata$
+do $pre4a$
 begin
+  if (select column_default from information_schema.columns where table_schema = 'public' and table_name = 'profiles' and column_name = 'onboarding_status')
+     is distinct from '''legacy_exempt''::text' then
+    raise exception 'onboarding_status default must be legacy_exempt before prod_04a';
+  end if;
   if exists (select 1 from public.profiles where onboarding_status in ('required', 'completed')) then
-    raise exception 'new registrations exist (required/completed): do not roll back';
+    raise exception 'required/completed profiles exist before prod_04a (unexpected)';
+  end if;
+  if exists (select 1 from pg_trigger where tgname = 'diagnosis_sessions_require_onboarding') then
+    raise exception 'require_onboarding trigger must not exist before prod_04b';
+  end if;
+  -- 適用前の legacy_exempt の人数（この transaction の中だけで使う）
+  perform set_config('element.legacy_exempt_before_04a', (select count(*)::text from public.profiles where onboarding_status = 'legacy_exempt'), true);
+end
+$pre4a$;
+
+alter table public.profiles alter column onboarding_status set default 'required';
+
+do $post$
+begin
+  if (select column_default from information_schema.columns where table_schema = 'public' and table_name = 'profiles' and column_name = 'onboarding_status')
+     is distinct from '''required''::text' then
+    raise exception 'onboarding_status default must be required';
+  end if;
+  if (select count(*) from public.profiles where onboarding_status = 'legacy_exempt')::text <> current_setting('element.legacy_exempt_before_04a')
+     or exists (select 1 from public.profiles where onboarding_status <> 'legacy_exempt') then
+    raise exception 'existing profiles must stay legacy_exempt';
+  end if;
+  if exists (select 1 from pg_trigger where tgname = 'diagnosis_sessions_require_onboarding') then
+    raise exception 'require_onboarding trigger must not be created by prod_04a';
   end if;
 end
-$nodata$;
-
-drop trigger diagnosis_sessions_require_onboarding on public.diagnosis_sessions;
-alter table public.profiles alter column onboarding_status set default 'legacy_exempt';
-delete from element_release.migration_ledger where stage = 4;
+$post$;
 do $guard$
 declare
   v_n integer; v_fp text; v_cut timestamptz;
@@ -250,6 +284,7 @@ begin
   -- END EXPECTED PURCHASE FINGERPRINT
 end
 $guard$;
+insert into element_release.migration_ledger (stage, name) values (4, 'prod_04a_onboarding_required_state');
 
 notify pgrst, 'reload schema';
 
