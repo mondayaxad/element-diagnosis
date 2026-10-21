@@ -763,6 +763,23 @@ test('マイページ：完全解析だけ購入（作成中）でも記録章�
   assert.match(await p.locator('.mp-latest').getAttribute('class'), /state-insight/);
   assert.match(await rowText(p, 'complete'), /作成しています/);
   await p.waitForFunction(() => /完全解析を読む/.test((document.querySelector('.mp-latest [data-rec-product="complete"]') || {}).innerText || ''), null, { timeout: 25000 });
-  assert.match(await p.locator('.mp-latest').getAttribute('class'), /is-complete/);
+  assert.doesNotMatch(await p.locator('.mp-latest').getAttribute('class'), /is-complete/, '完全解析だけは INSIGHT');
   await p.__ctx.close();
+});
+
+test('マイページ：解析レポートと完全解析の両方で COMPLETE・片方だけは INSIGHT', { skip: skip() }, async () => {
+  const B = DEL('complete', 'active', { report: { status: 'ready' } });
+  for (const [reports, want] of [[[DEL('analysis', 'active')], 'INSIGHT'], [[B], 'INSIGHT'], [[DEL('analysis', 'active'), B], 'COMPLETE']]) {
+    const p = await mypage(reports);
+    const got = await p.evaluate(() => ({
+      badge: document.querySelector('.mp-badge .st').innerText,
+      latest: document.querySelector('.mp-latest').className,
+      chip: !!document.querySelector('.mp-latest .mp-chip.complete'),
+    }));
+    assert.equal(got.badge, want);
+    assert.match(got.latest, /state-insight/);
+    assert.equal(/is-complete/.test(got.latest), want === 'COMPLETE');
+    assert.equal(got.chip, want === 'COMPLETE');
+    await p.__ctx.close();
+  }
 });

@@ -2211,6 +2211,8 @@ function mpOwnsComplete(r) {
 }
 // 記録章が目覚めた状態（解析レポート・完全解析のどちらかを購入済み）
 function mpAwake(r) { return !!(r && (r.purchased || mpOwnsComplete(r))); }
+// COMPLETE：解析レポートと完全解析の両方を購入済み（片方だけは INSIGHT）
+function mpIsComplete(r) { return !!(r && r.purchased === true && mpOwnsComplete(r)); }
 const MP_STOPPED = { refunded: '返金のため、このレポートは現在ご覧いただけません。', suspended: 'お支払いの確認中のため、このレポートは現在ご覧いただけません。', revoked: 'このレポートのリンクは停止・再発行されています。' };
 function mpBuyButtonHtml(r, product, cls, source) {
   const s = r.session || {};
@@ -2460,11 +2462,11 @@ function mpLatestHtml(r) {
   return `
     <section class="mp-sec" aria-labelledby="mp-latest-h">
       <div class="mp-sec-head" id="mp-latest-h"><span class="mp-sec-en">LATEST RESULT</span><span class="mp-sec-ja">最新のあなた</span></div>
-      <div class="mp-latest state-${mpAwake(r) ? 'insight' : 'record'}${caIsReady(r) ? ' is-complete' : ''}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}">${mpAwake(r) && mpEntitlementOk ? mpOrnHtml(r, r.color, MP_EL_GLOW_END[r.el] || r.color) : ''}
+      <div class="mp-latest state-${mpAwake(r) ? 'insight' : 'record'}${mpIsComplete(r) ? ' is-complete' : ''}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}">${mpAwake(r) && mpEntitlementOk ? mpOrnHtml(r, r.color, MP_EL_GLOW_END[r.el] || r.color) : ''}
         <div class="mp-latest-main">
           ${mpEmblemHtml(r, 'lg')}
           <div class="mp-latest-info">
-            <div class="mp-chip-row"><span class="mp-chip">${mpDate(r.date)}</span><span class="mp-chip new">NEW</span>${caIsReady(r) ? '<span class="mp-chip complete">COMPLETE</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}</div>
+            <div class="mp-chip-row"><span class="mp-chip">${mpDate(r.date)}</span><span class="mp-chip new">NEW</span>${mpIsComplete(r) ? '<span class="mp-chip complete">COMPLETE</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}</div>
             ${r.code ? `<div class="mp-latest-code"><b class="mp-typecode mp-gt" style="color:${mpElText(r.el)};--gc:${mpElText(r.el)}">${r.code}</b><span class="mp-gt" style="color:${mpElText(r.el)};--gc:${mpElText(r.el)};opacity:.85">${r.typeName}</span></div>` : ''}
             <div class="mp-latest-combo">${mpComboHtml(r)}</div>
           </div>
@@ -2493,15 +2495,15 @@ function mpCollectionHtml(records) {
       <div class="mp-collection" id="mp-collection" role="list">
         ${records.map((r, i) => `
           <button type="button" role="listitem"
-            class="mp-badge state-${mpAwake(r) ? 'insight' : 'record'}${caIsReady(r) ? ' is-complete' : ''}"
+            class="mp-badge state-${mpAwake(r) ? 'insight' : 'record'}${mpIsComplete(r) ? ' is-complete' : ''}"
             style="--badge-c:${r.color};--badge-c2:${MP_EL_GLOW_END[r.el] || r.color}"
             onclick="mpOpenRecord(${i})"
-            aria-label="${mpDate(r.date)}の${MP_KINDS[r.kind].label}の記録（${caIsReady(r) ? 'COMPLETE・完全解析が保存された記録' : r.purchased ? 'INSIGHT・深く読み解いた記録' : mpEntitlementOk ? '記録' : '購入状態未確認'}）">
+            aria-label="${mpDate(r.date)}の${MP_KINDS[r.kind].label}の記録（${mpIsComplete(r) ? 'COMPLETE・解析レポートと完全解析の記録' : mpAwake(r) ? 'INSIGHT・深く読み解いた記録' : mpEntitlementOk ? '記録' : '購入状態未確認'}）">
             ${mpAwake(r) && mpEntitlementOk ? mpOrnHtml(r, r.color, MP_EL_GLOW_END[r.el] || r.color) : ''}
             ${mpEmblemHtml(r)}
             <span class="nm" style="color:${mpElText(r.el)}">${r.name}</span>
             <span class="dt">${mpDate(r.date)}</span>
-            ${!mpEntitlementOk ? '' : caIsReady(r) ? '<span class="st complete">COMPLETE</span>' : r.purchased ? '<span class="st insight">INSIGHT</span>' : ''}
+            ${!mpEntitlementOk ? '' : mpIsComplete(r) ? '<span class="st complete">COMPLETE</span>' : mpAwake(r) ? '<span class="st insight">INSIGHT</span>' : ''}
           </button>`).join('')}
       </div>
       ${records.length >= 4 ? `<button type="button" class="mp-col-next" onclick="mpCollectionNext()" aria-label="記録章の続きを見る（全${records.length}件）">›</button>` : ''}
@@ -2535,7 +2537,7 @@ function mpRecordHtml(r, i) {
   const detailLink = r.resultUrl
     ? `<a href="${mpEsc(mpResultHref(r))}" class="mp-detail-link" onclick="trackEvent('mypage_view_result_click',{source:'records'})">当時の診断結果を見る →</a>`
     : '';
-  const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${caIsReady(r) ? '<span class="mp-chip complete">COMPLETE</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
+  const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${mpIsComplete(r) ? '<span class="mp-chip complete">COMPLETE</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
   let body;
   // 開閉（<details>）は購入状態APIと無関係。確認できなかった記録も開けて、中に再確認を出す
   if (!mpEntitlementOk) body = mpVizHtml(r) + mpRecordActionsHtml(r, 'records');
@@ -2543,7 +2545,7 @@ function mpRecordHtml(r, i) {
   else if (r.purchased) body = mpVizHtml(r) + mpInsightHtml(r) + caRecordCompleteHtml(r, false) + mpRecordActionsHtml(r, 'records');
   else body = mpVizHtml(r) + mpLockedHtml(r, 'records');
   return `
-    <details class="mp-rec state-${mpAwake(r) ? 'insight' : 'record'}${caIsReady(r) ? ' is-complete' : ''}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}" id="mp-rec-${i}" ontoggle="if(this.dataset.restored){delete this.dataset.restored}else if(this.open){trackEvent('diagnosis_history_open',{diagnosis_type:'${r.kind}'})}">
+    <details class="mp-rec state-${mpAwake(r) ? 'insight' : 'record'}${mpIsComplete(r) ? ' is-complete' : ''}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}" id="mp-rec-${i}" ontoggle="if(this.dataset.restored){delete this.dataset.restored}else if(this.open){trackEvent('diagnosis_history_open',{diagnosis_type:'${r.kind}'})}">
       <summary>${mpAwake(r) && mpEntitlementOk ? mpOrnHtml(r, r.color, MP_EL_GLOW_END[r.el] || r.color) : ''}
         <span class="d">${mpDate(r.date)}</span>
         <span class="c">${r.headline ? `<span class="el" style="color:${r.color}">${r.headline}</span>` : mpComboHtml(r)}</span>
