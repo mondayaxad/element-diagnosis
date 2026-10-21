@@ -1648,7 +1648,7 @@ function mpEmblemSeasonKey(record) {
 function mpEmblemSrc(record) {
   const seasonKey = mpEmblemSeasonKey(record);
   const season = MP_EMBLEM_SEASONS[seasonKey] || MP_EMBLEM_SEASONS[MP_EMBLEM_BASE_SEASON];
-  const state = record && record.purchased ? 'awakened' : 'record';
+  const state = mpAwake(record) ? 'awakened' : 'record';
   const el = record && record.el;
   return (season[state] && season[state][el]) || '';
 }
@@ -1657,7 +1657,7 @@ function mpEmblemHtml(record, size) {
   const color = record.color || '#7ab8e8';
   const src = mpEmblemSrc(record);
   if (!src) return '';
-  const stateLabel = record.purchased ? '解析済みの記録章' : '記録章';
+  const stateLabel = mpAwake(record) ? '解析済みの記録章' : '記録章';
   return `<span class="mp-emblem ${size === 'lg' ? 'lg' : ''}" style="--c:${color}" aria-hidden="true"><img src="${src}" alt="${mpEsc(record.el || '')}${stateLabel}" loading="lazy" decoding="async"></span>`;
 }
 
@@ -2053,6 +2053,21 @@ async function mpMergeReports(sessions) {
     if (!s) return;
     (s.deliveries = s.deliveries || []).push(d);
   });
+  // 同じ結果の記録が2つある時は、購入したレポートを表に出る記録へ寄せる（片方に ¥1,000 が出て、買い直しを招かないように）
+  //   ・購入したゲストの記録と同じ結果を、自分の記録としても保存した：自分の記録へ寄せ、ゲストの記録は出さない
+  //   ・自分の記録どうしの重複（後で隠す方）に納品がある：残す方へ寄せる
+  const resultKey = (s) => (s && s.encodedAnswers ? (s.isV2 ? 'ETI-2.0:' : 'element-v1:') + s.encodedAnswers : null);
+  const ownedByResult = new Map();
+  sessions.forEach((s) => { const k = resultKey(s); if (k && !s.registeredOnly && !ownedByResult.has(k)) ownedByResult.set(k, s); });
+  for (let i = sessions.length - 1; i >= 0; i--) {
+    const s = sessions[i];
+    const dup = s.complete && s.complete.duplicateOf ? byId.get(String(s.complete.duplicateOf)) : null;
+    const target = s.registeredOnly ? ownedByResult.get(resultKey(s)) : (dup && dup !== s ? dup : null);
+    if (!target || target === s) continue;
+    if (s.deliveries) (target.deliveries = target.deliveries || []).push(...s.deliveries);
+    s.deliveries = [];
+    if (s.registeredOnly) sessions.splice(i, 1); // 配列の同一性は保つ（購入状態の確認結果の対応付けに使う）
+  }
   sessions.forEach((s) => {
     s.analysisDelivery = mpBestDelivery(s.deliveries, 'analysis');
     s.completeDelivery = mpBestDelivery(s.deliveries, 'complete');
@@ -2063,7 +2078,13 @@ async function mpMergeReports(sessions) {
 // レポートのリンクからの登録（ログインの後も、このタブで続ける）。秘密値は URL・GA4・ログに出さない
 //   ログイン済みのアカウントへ黙って登録しない：どのアカウントに登録するかを示し、押した時だけ登録する（別のアカウントも選べる）
 async function mpRegisterNow(token) {
-  const r = await EdBuy.register(token);
+  let r = await EdBuy.register(token);
+  // 決済の直後は、支払いの反映（Webhook）が数秒遅れることがある：少し待って確かめ直す
+  for (const wait of [1500, 2500, 4000]) {
+    if (!(r.body && r.body.error === 'payment_pending')) break;
+    await new Promise((ok) => setTimeout(ok, wait));
+    r = await EdBuy.register(token);
+  }
   if (r.ok && r.body && (r.body.result === 'registered' || r.body.result === 'already')) {
     EdBuy.track('report_register_done', { result: r.body.result, product: r.body.product === 'complete' ? 'complete' : 'analysis' });
     return { ok: true, result: r.body.result, product: r.body.product };
@@ -2071,7 +2092,7 @@ async function mpRegisterNow(token) {
   const error = (r.body && r.body.error) || (r.status === 0 ? 'network' : 'unknown');
   EdBuy.track('report_register_failed', { reason: error });
   // link：登録できなくても、購入したレポートをすぐ開けるように（マイページから申し込んだ時は、入口のページを通らずに来ている）
-  const transient = error === 'network' || error === 'service_unavailable' || r.status === 429 || r.status >= 500;
+  const transient = error === 'network' || error === 'service_unavailable' || error === 'payment_pending' || r.status === 429 || r.status >= 500;
   return { ok: false, error, token: transient ? token : null, link: error === 'link_not_found' ? null : token };
 }
 let mpRegisterDone = null; // 「このアカウントに登録する」の結果（描き直した後に示す）
@@ -2165,6 +2186,11 @@ function mpShowRegisterOutcome(root, out, user) {
 }
 function mpAnalysisDelivery(r) { return (r && r.session && r.session.analysisDelivery) || null; }
 function mpCompleteDelivery(r) { return (r && r.session && r.session.completeDelivery) || null; }
+// 読める（作成中・作成済み・作成の失敗）完全解析の納品。生成物が停止（revoked）したものは含めない
+function mpCompleteLive(r) {
+  const d = mpCompleteDelivery(r);
+  return d && d.state === 'active' && !(d.report && d.report.status === 'revoked') ? d : null;
+}
 // 完全解析の対象（ETI v2 の100問・RC1 の版）か。サーバーの判定があればそれを正とする
 function mpCompleteEligible(r) {
   const sv = caServerOf(r);
@@ -2177,6 +2203,14 @@ function mpLegacyCompleteView(r) {
   if (!sv || !(sv.completeEntitlement === 'active' || sv.completeEntitlement === 'suspended')) return null;
   return caViewOf(r);
 }
+// 完全解析を持っている（作成中・作成済み・以前の仕組み）。記録章・紋章の表示に使う（解析レポートの中身は開かない）
+function mpOwnsComplete(r) {
+  if (mpCompleteLive(r)) return true;
+  const sv = caServerOf(r);
+  return !!(sv.lookup === 'ok' && sv.complete && sv.complete.completeEntitlement === 'active');
+}
+// 記録章が目覚めた状態（解析レポート・完全解析のどちらかを購入済み）
+function mpAwake(r) { return !!(r && (r.purchased || mpOwnsComplete(r))); }
 const MP_STOPPED = { refunded: '返金のため、このレポートは現在ご覧いただけません。', suspended: 'お支払いの確認中のため、このレポートは現在ご覧いただけません。', revoked: 'このレポートのリンクは停止・再発行されています。' };
 function mpBuyButtonHtml(r, product, cls, source) {
   const s = r.session || {};
@@ -2216,6 +2250,7 @@ function mpCompleteRowHtml(r, cls, source) {
   if (d && d.state === 'active') {
     const st = d.report ? d.report.status : 'generating';
     if (st === 'ready') return mpReadButtonHtml(d, cls, '完全解析を読む');
+    if (st === 'revoked') return '<p class="mp-rec-mentor" role="status">この完全解析は、現在ご覧いただけません。お手数ですが @mondayaxad までご連絡ください。</p>';
     if (st === 'failed') {
       return '<p class="mp-rec-mentor" role="status">完全解析を作成できませんでした。</p>'
         + (d.report && d.report.regenerate === 'available'
@@ -2337,6 +2372,7 @@ function mpLockedHtml(r, where) {
       <div class="mp-locked-title">まだ読み解いていないもの</div>
       ${rows.map(([t, cap, d]) => `<div class="mp-locked-row" data-domain="${d}"><span class="txt"><span class="t">${t}</span><span class="cap">${cap}</span><span class="ghost" aria-hidden="true"></span></span></div>`).join('')}
       <p class="mp-rec-cta-note">この記録には、まだ知らない自分があります。</p>
+      ${mpEntitlementOk ? caRecordCompleteHtml(r, false) : ''}
       ${mpRecordActionsHtml(r, isLatest ? 'latest' : 'records')}
     </div>`;
 }
@@ -2387,7 +2423,7 @@ function mpArchiveHtml(records) {
   // INSIGHTSは「画面上でINSIGHT状態になっている診断記録の数」（THE RECORDS／YOUR COLLECTIONの表示と一致させる）。
   // 購入状態を確認できなかった場合は数を出さない（0件と誤認させない）。
   const insightNum = mpEntitlementOk
-    ? `<span class="mp-stat-num">${pad(records.filter(r => r.purchased).length)}</span>`
+    ? `<span class="mp-stat-num">${pad(records.filter(mpAwake).length)}</span>`
     : `<span class="mp-stat-num unknown" aria-label="確認できませんでした">--</span>`;
   return `
     <section class="mp-archive archive-header" aria-labelledby="mp-archive-title">
@@ -2424,7 +2460,7 @@ function mpLatestHtml(r) {
   return `
     <section class="mp-sec" aria-labelledby="mp-latest-h">
       <div class="mp-sec-head" id="mp-latest-h"><span class="mp-sec-en">LATEST RESULT</span><span class="mp-sec-ja">最新のあなた</span></div>
-      <div class="mp-latest state-${r.purchased ? 'insight' : 'record'}${caIsReady(r) ? ' is-complete' : ''}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}">${r.purchased && mpEntitlementOk ? mpOrnHtml(r, r.color, MP_EL_GLOW_END[r.el] || r.color) : ''}
+      <div class="mp-latest state-${mpAwake(r) ? 'insight' : 'record'}${caIsReady(r) ? ' is-complete' : ''}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}">${mpAwake(r) && mpEntitlementOk ? mpOrnHtml(r, r.color, MP_EL_GLOW_END[r.el] || r.color) : ''}
         <div class="mp-latest-main">
           ${mpEmblemHtml(r, 'lg')}
           <div class="mp-latest-info">
@@ -2457,15 +2493,15 @@ function mpCollectionHtml(records) {
       <div class="mp-collection" id="mp-collection" role="list">
         ${records.map((r, i) => `
           <button type="button" role="listitem"
-            class="mp-badge state-${r.purchased ? 'insight' : 'record'}${caIsReady(r) ? ' is-complete' : ''}"
+            class="mp-badge state-${mpAwake(r) ? 'insight' : 'record'}${caIsReady(r) ? ' is-complete' : ''}"
             style="--badge-c:${r.color};--badge-c2:${MP_EL_GLOW_END[r.el] || r.color}"
             onclick="mpOpenRecord(${i})"
             aria-label="${mpDate(r.date)}の${MP_KINDS[r.kind].label}の記録（${caIsReady(r) ? 'COMPLETE・完全解析が保存された記録' : r.purchased ? 'INSIGHT・深く読み解いた記録' : mpEntitlementOk ? '記録' : '購入状態未確認'}）">
-            ${r.purchased ? mpOrnHtml(r, r.color, MP_EL_GLOW_END[r.el] || r.color) : ''}
+            ${mpAwake(r) && mpEntitlementOk ? mpOrnHtml(r, r.color, MP_EL_GLOW_END[r.el] || r.color) : ''}
             ${mpEmblemHtml(r)}
             <span class="nm" style="color:${mpElText(r.el)}">${r.name}</span>
             <span class="dt">${mpDate(r.date)}</span>
-            ${caIsReady(r) ? '<span class="st complete">COMPLETE</span>' : r.purchased ? '<span class="st insight">INSIGHT</span>' : mpEntitlementOk ? '' : ''}
+            ${!mpEntitlementOk ? '' : caIsReady(r) ? '<span class="st complete">COMPLETE</span>' : r.purchased ? '<span class="st insight">INSIGHT</span>' : ''}
           </button>`).join('')}
       </div>
       ${records.length >= 4 ? `<button type="button" class="mp-col-next" onclick="mpCollectionNext()" aria-label="記録章の続きを見る（全${records.length}件）">›</button>` : ''}
@@ -2507,8 +2543,8 @@ function mpRecordHtml(r, i) {
   else if (r.purchased) body = mpVizHtml(r) + mpInsightHtml(r) + caRecordCompleteHtml(r, false) + mpRecordActionsHtml(r, 'records');
   else body = mpVizHtml(r) + mpLockedHtml(r, 'records');
   return `
-    <details class="mp-rec state-${r.purchased ? 'insight' : 'record'}${caIsReady(r) ? ' is-complete' : ''}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}" id="mp-rec-${i}" ontoggle="if(this.dataset.restored){delete this.dataset.restored}else if(this.open){trackEvent('diagnosis_history_open',{diagnosis_type:'${r.kind}'})}">
-      <summary>${r.purchased && mpEntitlementOk ? mpOrnHtml(r, r.color, MP_EL_GLOW_END[r.el] || r.color) : ''}
+    <details class="mp-rec state-${mpAwake(r) ? 'insight' : 'record'}${caIsReady(r) ? ' is-complete' : ''}" style="--lc:${r.color};--lc2:${MP_EL_GLOW_END[r.el] || r.color}" id="mp-rec-${i}" ontoggle="if(this.dataset.restored){delete this.dataset.restored}else if(this.open){trackEvent('diagnosis_history_open',{diagnosis_type:'${r.kind}'})}">
+      <summary>${mpAwake(r) && mpEntitlementOk ? mpOrnHtml(r, r.color, MP_EL_GLOW_END[r.el] || r.color) : ''}
         <span class="d">${mpDate(r.date)}</span>
         <span class="c">${r.headline ? `<span class="el" style="color:${r.color}">${r.headline}</span>` : mpComboHtml(r)}</span>
         <span class="mp-chip-row">${chips}</span>
@@ -2690,8 +2726,8 @@ function caApplyStates(records) {
       const svc0 = caServerOf(r);
       const legacyAct = svc0.lookup === 'ok' && svc0.complete && svc0.complete.completeEntitlement === 'active';
       // 登録した完全解析（マイページ・固有リンクで購入）も同じ状態に数える（COMPLETE の印・紋章）
-      const cd = mpCompleteDelivery(r);
-      const dAct = !!(cd && cd.state === 'active');
+      const cd = mpCompleteLive(r);
+      const dAct = !!cd;
       const cAct = legacyAct || dAct;
       const dRep = dAct ? (cd.report ? cd.report.status : 'generating') : null;
       const rep = dRep === 'ready' ? 'ready' : legacyAct ? svc0.complete.completeStatus : dRep;
@@ -2748,7 +2784,7 @@ function caRecordCompleteHtml(r, withButton) {
       <p class="ca-body">この記録の完全解析が保存されています。</p>
       <button type="button" class="ca-btn ca-secondary-action" data-session-id="${id}" onclick="openPurchasedComplete(decodeURIComponent(this.dataset.sessionId), this)">完全解析を開く ›</button></div>`;
   }
-  if (k === 'complete_generating' || k === 'complete_failed') {
+  if (k === 'complete_generating') { // 作成できなかった時は、下の行が案内する（ここでは出さない）
     return `<div class="ca-rec-complete"><div class="ca-rec-head"><span class="ca-eyebrow">COMPLETE｜完全解析</span><span class="ca-status">準備中</span></div>
       <p class="ca-body">完全解析を準備しています。解析レポートは、すでに確認できます。</p></div>`;
   }
@@ -2816,13 +2852,19 @@ function caSheetBodyHtml(r) {
     </div>
     <button type="button" class="ca-btn ca-view-action" onclick="caRecheck(this)">状態を再確認</button>`;
   }
+  // 価格は、申込のボタンを出す時だけ（購入済み・確認中・停止は価格を出さない）。解析レポートを購入済みなら完全解析を上に
+  const offers = (html) => /data-(analysis|complete)-checkout=|is-pending/.test(html);
+  const rowA = mpAnalysisRowHtml(r, 'ca-btn ca-primary-action', 'mypage_header');
+  const rowB = mpCompleteRowHtml(r, 'ca-btn ca-secondary-action', 'mypage_header');
+  const ad = mpAnalysisDelivery(r);
+  const ownsA = (ad && ad.state === 'active') || r.purchased === true;
   const analysisCard = `<section class="ca-card ca-card--primary" aria-label="解析レポート">
         <div class="ca-eyebrow">STRUCTURE / INTERPRETATION</div>
         <h3 class="ca-title">解析レポート</h3>
         <p class="ca-body">この結果の内側にある、考え方・動き方・選び方を観測します。</p>
         ${caObservationGridHtml(r)}
-        <div class="ca-price-row"><span class="ca-meta">この記録の解析レポート</span><span class="ca-price">${MP_REPORT_PRICE}</span></div>
-        <div class="mp-rec-row" data-rec-product="analysis">${mpAnalysisRowHtml(r, 'ca-btn ca-primary-action', 'mypage_header')}</div>
+        ${offers(rowA) ? `<div class="ca-price-row"><span class="ca-meta">この記録の解析レポート</span><span class="ca-price">${MP_REPORT_PRICE}</span></div>` : ''}
+        <div class="mp-rec-row" data-rec-product="analysis">${rowA}</div>
       </section>`;
   if (!mpCompleteEligible(r)) {
     // 完全解析の対象外（旧版など）：完全解析のセクション・申込は出さない
@@ -2834,17 +2876,17 @@ function caSheetBodyHtml(r) {
         <button type="button" class="ca-btn ca-quiet-action" onclick="caGoRediagnosis()">最新版で診断する（RE-DIAGNOSIS）</button>
       </div>`;
   }
-  return `${target}
-      <h2 class="ca-lead" id="latest-upgrade-title">この記録のレポート</h2>
-      ${analysisCard}
-      <section class="ca-card ca-card--secondary" aria-label="完全解析">
+  const completeCard = `<section class="ca-card ca-card--secondary" aria-label="完全解析">
         <div class="ca-card-head"><span class="ca-eyebrow">COMPLETE ANALYSIS</span><span class="ca-pages"><span class="ca-pages-ja">全46ページ</span><span class="ca-pages-en">COMPLETE RECORD</span></span></div>
         <h3 class="ca-title">完全解析</h3>
         <p class="ca-body">三つの人物像から、この結果の全体を統合します。</p>
         ${caLensBlockHtml()}
-        <div class="ca-price-row"><span class="ca-meta">この記録の完全解析（解析レポートとは別の商品）</span><span class="ca-price">¥3,000</span></div>
-        <div class="mp-rec-row" data-rec-product="complete">${mpCompleteRowHtml(r, 'ca-btn ca-secondary-action', 'mypage_header')}</div>
+        ${offers(rowB) ? '<div class="ca-price-row"><span class="ca-meta">この記録の完全解析（解析レポートとは別の商品）</span><span class="ca-price">¥3,000</span></div>' : ''}
+        <div class="mp-rec-row" data-rec-product="complete">${rowB}</div>
       </section>`;
+  return `${target}
+      <h2 class="ca-lead" id="latest-upgrade-title">この記録のレポート</h2>
+      ${ownsA ? completeCard + analysisCard : analysisCard + completeCard}`;
 }
 
 // 記録が複数のとき、対象の記録を選ぶ画面（選ぶまで購入・閲覧の導線は出さない）
@@ -2853,9 +2895,14 @@ function mpPickState(r) {
   if (!mpEntitlementOk || !mpReportsOk) return '購入状態を確認できません';
   const a = mpAnalysisDelivery(r);
   const b = mpCompleteDelivery(r);
-  const hasA = (a && a.state === 'active') || r.purchased === true;
-  const hasB = (b && b.state === 'active') || !!mpLegacyCompleteView(r);
-  return `解析レポート ${hasA ? '読めます' : '未購入'}・完全解析 ${hasB ? '読めます' : '未購入'}`;
+  const stopped = (d) => d && (d.state === 'suspended' || d.state === 'revoked');
+  const aText = (a && a.state === 'active') || r.purchased === true ? '読めます' : stopped(a) ? '停止中' : '未購入';
+  const lsv = caServerOf(r).complete;
+  let bText = '未購入';
+  if (b && b.state === 'active') bText = b.report && b.report.status === 'ready' ? '読めます' : b.report && b.report.status === 'revoked' ? '停止中' : '作成中';
+  else if (stopped(b) || (lsv && lsv.completeEntitlement === 'suspended')) bText = '停止中';
+  else if (mpOwnsComplete(r)) bText = caIsReady(r) ? '読めます' : '作成中';
+  return `解析レポート ${aText}・完全解析 ${bText}`;
 }
 const CA_PICK_STATE = { free: '解析レポート 未購入', analysis: '解析レポート 購入済み', complete_generating: '完全解析 準備中', complete_failed: '完全解析 準備中', complete_ready: '完全解析 購入済み', unknown: '購入状態を確認できません' };
 function caPickerHtml(records) {
@@ -3820,6 +3867,7 @@ async function initOnce() {
     window.scrollTo(0, keepScrollY);
   }
   mpShowRegisterOutcome(root, registerOutcome, user);
+  mpScheduleGeneratingRefresh();
   // お知らせメール（Kit）の同期は、登録完了と診断の保存の後に diagnosis-save.js の runSignedInFlow() が行う。
 }
 // eti_v2_save.js（Googleログイン復帰後、v2のpending保存が完了した時点）から
@@ -3827,6 +3875,26 @@ async function initOnce() {
 // 保存完了前に一度・完了後にもう一度（このフック経由で）呼ばれることがあるが、
 // 後者が最終的に正しい状態を表示する。
 window.refreshMypageHistory = init;
+
+// 完全解析を作成中の記録がある間は、15秒ごとに状態を確かめ直す（最大20回・約5分。シート・申込の画面を開いている間・裏にある間は待つ）
+let mpGenTimer = null;
+let mpGenTries = 0;
+function mpScheduleGeneratingRefresh() {
+  clearTimeout(mpGenTimer);
+  const generating = (window.__mpRecords || []).some((r) => {
+    const d = mpCompleteLive(r);
+    return d && !(d.report && (d.report.status === 'ready' || d.report.status === 'failed'));
+  });
+  if (!generating) { mpGenTries = 0; return; }
+  if (mpGenTries >= 20) return;
+  mpGenTimer = setTimeout(() => {
+    const sheet = document.getElementById('mpUpgradeOverlay');
+    const busy = document.visibilityState === 'hidden' || (sheet && !sheet.hidden) || document.querySelector('[aria-modal="true"]:not(#latest-upgrade-dialog)');
+    if (busy) { mpScheduleGeneratingRefresh(); return; }
+    mpGenTries++;
+    init();
+  }, 15000);
+}
 
 /* 購入の引き継ぎ（ゲスト購入 → この本人のマイページ）
    ・この端末の Cookie にある、支払済み・未引き継ぎの購入を、押した時（または「引き継ぐ」を押してログインした直後）だけ引き継ぐ。

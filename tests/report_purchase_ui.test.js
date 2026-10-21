@@ -734,3 +734,35 @@ test('マイページ：ボタンの高さ（390px）・A 購入済みは完全�
     await p.__ctx.close();
   }
 });
+
+test('マイページ：同じ結果のゲスト記録で買ったレポートは自分の記録に寄せる（¥1,000 の記録と2枚にならない）・シートは購入済みに価格を出さない', { skip: skip() }, async () => {
+  const guest = Object.assign(v2Row('66666666-6666-4666-8666-666666666666', '2026-10-20T07:20:00Z', 7), { user_id: null }); // REC_ROW と同じ回答
+  const del = Object.assign(DEL('analysis', 'active'), { record: guest.id });
+  const p = await mypage([del], { api: { 'my-reports': [200, { reports: [del], records: [guest] }] } });
+  const got = await p.evaluate(() => ({
+    recs: document.querySelectorAll('details.mp-rec').length,
+    latest: document.querySelector('.mp-latest').className,
+    a: document.querySelector('.mp-latest [data-rec-product="analysis"]').innerText,
+  }));
+  assert.equal(got.recs, 1, '記録は1枚');
+  assert.match(got.latest, /state-insight/);
+  assert.match(got.a, /解析レポートを読む/);
+  await p.locator('#mpUpgradeTrigger').click();
+  const sheet = await p.locator('#mpUpgradeBody').innerText();
+  assert.doesNotMatch(sheet, /¥1,000/, '購入済みの解析レポートに価格を出さない');
+  assert.match(sheet, /¥3,000/);
+  assert.ok(sheet.indexOf('完全解析') < sheet.indexOf('解析レポートを読む'), '完全解析が上');
+  assert.deepEqual(p.__errors, []);
+  await p.__ctx.close();
+});
+
+test('マイページ：完全解析だけ購入（作成中）でも記録章が目覚め、作成が終わると自動で「完全解析を読む」に変わる', { skip: skip() }, async () => {
+  let n = 0;
+  const reports = () => [200, { reports: [DEL('complete', 'active', { report: { status: ++n >= 2 ? 'ready' : 'generating' } })], records: [] }];
+  const p = await mypage(null, { api: { 'my-reports': reports } });
+  assert.match(await p.locator('.mp-latest').getAttribute('class'), /state-insight/);
+  assert.match(await rowText(p, 'complete'), /作成しています/);
+  await p.waitForFunction(() => /完全解析を読む/.test((document.querySelector('.mp-latest [data-rec-product="complete"]') || {}).innerText || ''), null, { timeout: 25000 });
+  assert.match(await p.locator('.mp-latest').getAttribute('class'), /is-complete/);
+  await p.__ctx.close();
+});

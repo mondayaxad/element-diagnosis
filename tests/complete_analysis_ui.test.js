@@ -495,7 +495,9 @@ test('旧版記録：完全解析の購入ボタン（¥3,000・追加¥2,000）
     assert.equal(await body.locator('.ca-card--secondary, .ca-lens-list, button.is-pending').count(), 0, '完全解析セクションなし ' + st);
     assert.equal(await body.locator('[data-preview-dummy], a[data-product-id^="core_complete_analysis"]').count(), 0);
     if (st === 'free') {
-      assert.ok(text.includes('¥1,000'), '解析レポートは表示');
+      // 旧版は解析レポートも販売対象外：価格は出さず、対象外の案内を出す
+      assert.ok(!text.includes('¥1,000'), '買えない商品に価格を出さない');
+      assert.match(text, /現在の解析商品の対象外/);
       assert.match(text, /最新版の100問で診断した記録が対象/);
       // 既存の RE-DIAGNOSIS へ案内する
       await body.getByText('最新版で診断する（RE-DIAGNOSIS）').click();
