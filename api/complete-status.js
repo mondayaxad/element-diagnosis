@@ -166,8 +166,10 @@ function createHandler({ env, fetchImpl, logger = console, waitUntil = RJ.defaul
         res.setHeader('Cache-Control', 'no-store');
         // 閲覧トークンを渡す：入口のページは、このトークンで開いた固有リンク（このタブの控え）だけを開き直す
         //   固有リンクから開いた閲覧（src=link）だけ入口へ。マイページ・以前の仕組みから開いた閲覧は、マイページへ戻す
+        //   入口へは閲覧トークンを ?v= で渡す（# を付けない：ブラウザは、元のアドレスの # 〔固有リンク #t=〕を引き継ぐ。
+        //   アドレスをコピーして5分後に開いても、入口が固有リンクで開き直す）
         res.setHeader('Location', queryParam(req, 'src') === 'link'
-          ? `/report-link#v=${encodeURIComponent(String(queryParam(req, 'view') || '').slice(0, 2048))}` : '/mypage.html');
+          ? `/report-link?v=${encodeURIComponent(String(queryParam(req, 'view') || '').slice(0, 2048))}` : '/mypage.html');
         return res.status(302).end();
       }
       return res.status(t.reason === 'token_expired' ? 410 : 403).json({ error: t.reason === 'token_expired' ? 'view_link_expired' : 'view_link_invalid', incident_id: incident });

@@ -433,7 +433,7 @@ test('期限切れ（300秒後）・改ざん・形式違反のトークンは�
   const nav = await ctx.view(token, { accept: 'text/html,application/xhtml+xml' });
   assert.deepEqual([nav.code, nav.headers.location], [302, '/mypage.html']);
   const viaLink = await ctx.view(token, { accept: 'text/html' }, { src: 'link' });
-  assert.deepEqual([viaLink.code, viaLink.headers.location], [302, `/report-link#v=${encodeURIComponent(token)}`]);
+  assert.deepEqual([viaLink.code, viaLink.headers.location], [302, `/report-link?v=${encodeURIComponent(token)}`]);
   // エラー応答・照合 ID・ログにトークンを含めない
   assert.deepEqual(Object.keys(expired.body).sort(), ['error', 'incident_id']);
   assert.ok(!JSON.stringify(expired.body).includes(token.slice(0, 16)));

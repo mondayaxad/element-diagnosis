@@ -59,7 +59,7 @@
   var VIA_KEY = 'ed_report_via_link_v1';
   function viaLink() { try { var v = JSON.parse(sessionStorage.getItem(VIA_KEY) || 'null'); return v && /^[A-Za-z0-9_-]{43}$/.test(String(v.t || '')) && typeof v.url === 'string' ? v : null; } catch (e) { return null; } }
   var fromHash = B.readFragment('t');
-  var viewHint = B.readFragment('v');
+  var viewHint = B.readFragment('v') || (/^[A-Za-z0-9_-]{1,2048}$/.test(new URLSearchParams(location.search).get('v') || '') ? new URLSearchParams(location.search).get('v') : null);
   var via = viaLink();
   var token = /^[A-Za-z0-9_-]{43}$/.test(String(fromHash || '')) ? fromHash
     : (viewHint && via && via.url.indexOf('view=' + decodeURIComponent(viewHint)) >= 0 ? via.t : null);
@@ -72,7 +72,7 @@
   }
   B.rememberLink(token);
   // 秘密値を URL に残す（ブックマーク・コピーできるように）。#register の時だけ #t= の形に戻す
-  if (!fromHash) { try { history.replaceState(null, '', '/report-link#t=' + token); } catch (e) { /* そのまま */ } }
+  if (!fromHash || location.search) { try { history.replaceState(null, '', '/report-link#t=' + token); } catch (e) { /* そのまま */ } }
   if (wantRegister) { B.startRegister(token, 'report_footer'); return; }
   // マイページから申し込んで支払いから戻った：このレポートをマイページに登録して戻る（申し込んだ本人のログインのまま。確かめを挟まない）
   //   （印はこの購入の固有リンクの目印と組。違う固有リンク〔人から受け取ったリンクなど〕では登録に進まない）
@@ -126,7 +126,8 @@
         // この固有リンクから開いた印：開いた閲覧 URL と組で控える（レポートの画面は、自分の URL と一致した時だけ、この固有リンクを使う）
         try { sessionStorage.setItem(VIA_KEY, JSON.stringify({ t: token, url: r.body.url })); } catch (e) { /* 下の # で渡す */ }
         // 解析レポート：このタブに控えを置けない設定でも固有リンクを使えるよう、# にも付ける（サーバーへは送られない）
-        location.replace(r.body.url + (r.body.url.indexOf('/report.html') === 0 ? '#t=' + token : ''));
+        //   完全解析は、閲覧用 URL（5分）のあとに # で固有リンクを付ける（アドレスをコピーしても、期限が切れたら入口へ戻り、この固有リンクで開き直せる）
+        location.replace(r.body.url + '#t=' + token);
         return;
       }
       render(r.ok && r.body ? r.body : b, true); // 開けなかった：最新の状態（返金など）で示す
@@ -183,7 +184,7 @@
       B.openLink(token, true).then(function (r) {
         if (r.ok && r.body && typeof r.body.url === 'string' && r.body.url.charAt(0) === '/') {
           B.track(b.product === 'complete' ? 'complete_report_open' : 'analysis_report_open', { source: 'report_link' });
-          location.assign(r.body.url);
+          location.assign(r.body.url + '#t=' + token);
           return;
         }
         open.disabled = false;

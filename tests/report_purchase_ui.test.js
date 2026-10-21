@@ -98,7 +98,7 @@ test.before(async () => {
 test.after(async () => { if (browser) await browser.close(); if (server) server.close(); });
 
 // api：op ごとの応答（関数なら body を受け取って [status, json]）
-async function open(url, { width = 390, api = {}, signedIn = false, rows = [], salesOpen = true, init = null, entitlements = null } = {}) {
+async function open(url, { width = 390, api = {}, signedIn = false, rows = [], salesOpen = true, init = null, entitlements = null, pre = null } = {}) {
   const ctx = await browser.newContext({ viewport: { width, height: 844 } });
   const p = await ctx.newPage();
   p.setDefaultTimeout(8000);
@@ -125,6 +125,7 @@ async function open(url, { width = 390, api = {}, signedIn = false, rows = [], s
     const [status, json] = typeof h === 'function' ? h(body) : h || [404, { error: 'not_found' }];
     r.fulfill({ status, contentType: 'application/json', body: JSON.stringify(json) });
   });
+  if (pre) await pre(p);
   await p.goto(base + url);
   p.__ctx = ctx; p.__errors = errors; p.__calls = calls; p.__console = consoleLines;
   return p;
@@ -800,4 +801,25 @@ test('結果ページ：マイページの記録（#rec=）から開いた時は
   await q.waitForFunction(() => { const c = document.querySelector('#recordCard'); return c && c.getAttribute('data-state') && c.getAttribute('data-state') !== 'saving'; });
   assert.notEqual(await q.locator('#recordCard').getAttribute('data-state'), 'registered');
   await q.__ctx.close();
+});
+
+test('完全解析：開いた時のアドレスに期限のない固有リンク（#t=）が付く・期限切れで戻っても固有リンクで開き直せる', { skip: skip() }, async () => {
+  const READY = { product: 'complete', state: 'active', report: { status: 'ready' }, summary: SUMMARY, purchasedOn: '2026-10-21' };
+  // 完全解析の閲覧 URL は、サーバーの代わりに空の画面を返す（アドレスだけを確かめる）
+  const view = (p) => p.route('**/api/complete-status?**', (r) => r.fulfill({ contentType: 'text/html', body: '<p>view</p>' }));
+  const final = (p, re) => p.waitForFunction((src) => new RegExp(src).test(location.href), re.source, { timeout: 8000 });
+  // 開く：閲覧用 URL（5分）に # で固有リンクを付ける（解析レポートと同じく、アドレスをコピーしても開き直せる）
+  const p = await open('/report-link#t=' + LINK_B, { pre: view, api: { 'link-open': [200, { ...READY, url: '/api/complete-status?view=abc123&src=link' }] } });
+  await final(p, new RegExp('/api/complete-status\\?view=abc123&src=link#t=' + LINK_B));
+  await p.__ctx.close();
+  // 期限切れ：サーバーが /report-link?v=… へ戻す。ブラウザは元の # を引き継ぐので、固有リンクで開き直す（?v= は消す）
+  const q = await open('/report-link?v=abc123#t=' + LINK_B, { pre: view, api: { 'link-open': [200, { ...READY, url: '/api/complete-status?view=fresh456&src=link' }] } });
+  await final(q, new RegExp('/api/complete-status\\?view=fresh456&src=link#t=' + LINK_B));
+  assert.equal(q.__calls.filter((c) => c.op === 'link-open' && c.body.open === true).length, 1);
+  await q.__ctx.close();
+  // 同じタブで開いたままの期限切れ（# が無い）：このタブの控え（閲覧 URL と組）で固有リンクを開き直す
+  const seed = `sessionStorage.setItem('ed_report_via_link_v1', JSON.stringify({ t: '${LINK_B}', url: '/api/complete-status?view=abc123&src=link' }));`;
+  const r = await open('/report-link?v=abc123', { pre: view, init: seed, api: { 'link-open': [200, { ...READY, url: '/api/complete-status?view=fresh789&src=link' }] } });
+  await final(r, new RegExp('/api/complete-status\\?view=fresh789&src=link#t=' + LINK_B));
+  await r.__ctx.close();
 });
