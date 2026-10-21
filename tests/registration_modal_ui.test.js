@@ -25,6 +25,11 @@ const MODAL_PAGE = `<!doctype html><meta charset="utf-8"><meta name="viewport" c
 <script src="/js/registration-onboarding.js"></script>
 <script>
   window.__accepts = 0;
+  window.__openOutdated = function () {
+    window.__result = undefined; window.__reloaded = 0;
+    return showRegistrationOnboarding({ userId: 'user-1', onAccept: async function () { window.__accepts += 1; return { ok: false, code: 'consent_version_outdated' }; } })
+      .then(function (r) { window.__result = r; return r; });
+  };
   window.__open = function (failFirst) {
     window.__result = undefined;
     return showRegistrationOnboarding({ userId: 'user-1', onAccept: async function () {
@@ -251,7 +256,7 @@ function fakeSupabase(status) {
       return q;
     }
     return { from: builder,
-      rpc: async (name) => { window.__log.push('rpc:' + name); if (name === 'complete_registration_onboarding') { status = 'completed'; return { data: { onboarding_status: 'completed', newsletter_sync_status: 'pending' }, error: null }; } return { data: null, error: status === 'required' ? { message: 'onboarding_required' } : null }; },
+      rpc: async (name, args) => { window.__log.push('rpc:' + name); if (name === 'complete_registration_onboarding') { window.__lastConsentArgs = args; if (window.__rejectConsent) return { data: null, error: { code: '22023', message: 'unsupported_consent_version' } }; status = 'completed'; return { data: { onboarding_status: 'completed', newsletter_sync_status: 'pending' }, error: null }; } return { data: null, error: status === 'required' ? { message: 'onboarding_required' } : null }; },
       auth: { getUser: async () => ({ data: { user } }), getSession: async () => ({ data: { session: user ? { access_token: "t" } : null } }),
         onAuthStateChange(cb) { cbs.push(cb); setTimeout(() => cb('INITIAL_SESSION', user ? { access_token: 't' } : null), 0); return { data: { subscription: { unsubscribe() {} } } }; },
         signOut: async () => { window.__log.push('signOut'); user = null; cbs.forEach((cb) => cb('SIGNED_OUT', null)); return {}; },
@@ -259,7 +264,7 @@ function fakeSupabase(status) {
   } };`;
 }
 
-async function mypageWith(status) {
+async function mypageWith(status, opts) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const p = await ctx.newPage();
   p.setDefaultTimeout(8000);
@@ -274,6 +279,9 @@ async function mypageWith(status) {
   await p.route(/cdnjs\.cloudflare\.com|googletagmanager/, (r) => r.fulfill({ contentType: 'application/javascript', body: '' }));
   await p.route('**/api/my-entitlements', (r) => r.fulfill({ contentType: 'application/json', body: '{"purchased_by_version":{}}' }));
   await p.route('**/api/subscribe', (r) => { subscribeCalls.push(1); r.fulfill({ status: 502, contentType: 'application/json', body: '{"error":"kit_error"}' }); });
+  await p.addInitScript((reject) => { window.__rejectConsent = !!reject; window.__ga = []; window.gtag = function () { window.__ga.push([].slice.call(arguments)); }; }, !!(opts && opts.reject));
+  const consoleTexts = [];
+  p.on('console', (m) => consoleTexts.push(m.text()));
   await p.addInitScript(() => {
     // 未保存の v2 診断（OAuth 往復前に一時保存されたもの）
     if (!localStorage.getItem('__seeded')) {
@@ -283,7 +291,7 @@ async function mypageWith(status) {
     }
   });
   await p.goto(base + '/mypage.html');
-  p.__ctx = ctx; p.__subscribeCalls = subscribeCalls; p.__pageErrors = pageErrors;
+  p.__ctx = ctx; p.__subscribeCalls = subscribeCalls; p.__pageErrors = pageErrors; p.__console = consoleTexts;
   return p;
 }
 
@@ -333,4 +341,71 @@ test('マイページ：既存ユーザー（completed／legacy_exempt）には�
     assert.deepEqual(p.__pageErrors, [], 'ページの JS エラーなし');
   await p.__ctx.close();
   }
+});
+
+
+// ---- 古い画面（旧い同意版を送る）が断られた時（complete_16）
+test('古い画面：unsupported_consent_version は専用の案内と再読み込みボタン。同意済みとは扱わず、一般のエラー文にしない', { skip: skip() }, async () => {
+  const p = await modalPage();
+  await p.evaluate(() => { window.__openOutdated(); });
+  await p.waitForSelector('.ro-dialog');
+  await p.locator('#roAll').check();
+  await p.locator('#roYes').click();
+  await p.waitForFunction(() => document.getElementById('roErr').textContent.length > 0);
+  const err = await p.locator('#roErr').innerText();
+  assert.equal(err, '利用規約・プライバシーポリシーが更新されました。ページを再読み込みして、もう一度お手続きください。');
+  assert.doesNotMatch(err, /通信状況/);
+  assert.equal((await p.locator('#roYes').innerText()).trim(), 'ページを再読み込みする');
+  assert.equal(await p.locator('#roYes').isDisabled(), false);
+  assert.equal(await p.evaluate(() => window.__result), undefined, '受け付けた（accepted）扱いにしない');
+  assert.equal(await p.locator('.ro-dialog').count(), 1, 'モーダルは開いたまま');
+  assert.equal(await p.evaluate(() => window.__accepts), 1);
+  // ボタンは再度の同意の記録を送らず、ページを再読み込みする
+  const nav = p.waitForEvent('load');
+  await p.locator('#roYes').click();
+  await nav;
+  assert.equal(await p.evaluate(() => window.__accepts), 0, '再読み込みでページは初期状態に戻る（同意の送信を繰り返さない）');
+  await p.__ctx.close();
+});
+
+for (const width of [320, 390]) {
+  test(`古い画面の案内：${width}px で横にはみ出さず、ボタンは44px以上`, { skip: skip() }, async () => {
+    const p = await modalPage({ width, height: 700 });
+    await p.evaluate(() => { window.__openOutdated(); });
+    await p.waitForSelector('.ro-dialog');
+    await p.locator('#roAll').check();
+    await p.locator('#roYes').click();
+    await p.waitForFunction(() => document.getElementById('roErr').textContent.length > 0);
+    const m = await p.evaluate(() => ({ over: document.documentElement.scrollWidth - document.documentElement.clientWidth, dlg: document.querySelector('.ro-dialog').scrollWidth - document.querySelector('.ro-dialog').clientWidth, h: document.getElementById('roYes').getBoundingClientRect().height }));
+    assert.equal(m.over, 0); assert.equal(m.dlg, 0); assert.ok(m.h >= 44, String(m.h));
+    await p.__ctx.close();
+  });
+}
+
+test('マイページ：DB が旧い同意版を断ったら専用の案内。保存・Kit 同期はしない。GA4・console に同意版や個人情報を出さない', { skip: skip() }, async () => {
+  const p = await mypageWith('required', { reject: true });
+  await p.waitForSelector('.ro-dialog');
+  await p.locator('#roAll').check();
+  await p.locator('#roYes').click();
+  await p.waitForFunction(() => document.getElementById('roErr').textContent.includes('更新されました'));
+  assert.equal((await p.locator('#roYes').innerText()).trim(), 'ページを再読み込みする');
+  const log = await p.evaluate(() => window.__log);
+  assert.ok(!log.includes('rpc:save_diagnosis_session_v2'), '同意前は保存しない: ' + JSON.stringify(log));
+  assert.equal(p.__subscribeCalls.length, 0);
+  assert.ok(await p.evaluate(() => !!localStorage.getItem('pendingDiagnosis_v2')), '未保存の診断は残る');
+  const sent = JSON.stringify(await p.evaluate(() => window.__ga)) + '\n' + p.__console.join('\n');
+  assert.doesNotMatch(sent, /2026-10-2|2026-10-0|2026-10-13|owner@example\.test|user-1/);
+  await p.__ctx.close();
+});
+
+test('マイページ：通常の新版の登録は従来どおり成功（規約・プライバシーとも 2026-10-21 を送る）。GA4・console に同意版を出さない', { skip: skip() }, async () => {
+  const p = await mypageWith('required');
+  await p.waitForSelector('.ro-dialog');
+  await p.locator('#roAll').check();
+  await p.locator('#roYes').click();
+  await p.waitForFunction(() => !document.querySelector('.ro-dialog'));
+  assert.deepEqual(await p.evaluate(() => window.__lastConsentArgs), { p_terms_version: '2026-10-21', p_privacy_version: '2026-10-21', p_newsletter_consent_version: '2026-10-07-v1' });
+  const sent = JSON.stringify(await p.evaluate(() => window.__ga)) + '\n' + p.__console.join('\n');
+  assert.doesNotMatch(sent, /2026-10-2|2026-10-0|2026-10-13|owner@example\.test|user-1/);
+  await p.__ctx.close();
 });

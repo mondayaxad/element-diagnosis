@@ -15,6 +15,8 @@ const REGISTRATION_NEWSLETTER_NOTICE = '登録した方には、診断結果の�
   + '元素診断のアップデート、新しい解析、関連する商品・企画などのお知らせをメールでお届けすることがあります。'
   + '配信はいつでも停止できます。';
 
+const REGISTRATION_OUTDATED_MESSAGE = '利用規約・プライバシーポリシーが更新されました。ページを再読み込みして、もう一度お手続きください。';
+
 function readRegistrationDraft(userId) {
   try {
     const raw = sessionStorage.getItem(REGISTRATION_ONBOARDING_DRAFT_PREFIX + userId);
@@ -151,6 +153,16 @@ function showRegistrationOnboarding(opts) {
       }
       busy = false;
       yes.removeAttribute('aria-busy');
+      // 古い画面：規約・プライバシーポリシーの版が更新された。同意は記録されていない。再読み込みの案内だけを出す
+      if (res && res.code === 'consent_version_outdated') {
+        err.textContent = REGISTRATION_OUTDATED_MESSAGE;
+        yes.textContent = 'ページを再読み込みする';
+        yes.disabled = false;
+        no.disabled = false;
+        yes.onclick = () => { window.location.reload(); };
+        yes.focus();
+        return;
+      }
       yes.textContent = '同意して登録を完了する';
       err.textContent = '登録を完了できませんでした。通信状況を確かめて、もう一度お試しください。';
       sync();
@@ -184,5 +196,5 @@ function showRegistrationOnboarding(opts) {
 
 if (typeof window !== 'undefined') window.showRegistrationOnboarding = showRegistrationOnboarding;
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { showRegistrationOnboarding, REGISTRATION_NEWSLETTER_NOTICE };
+  module.exports = { showRegistrationOnboarding, REGISTRATION_NEWSLETTER_NOTICE, REGISTRATION_OUTDATED_MESSAGE };
 }

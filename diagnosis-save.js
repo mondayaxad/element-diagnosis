@@ -122,8 +122,9 @@ function trackEvent(name, params) {
    メール案内専用のチェックボックスは設けない。配信内容は登録完了モーダルに明示する。
    ============================================================ */
 // 同意の版（内部の識別子）：利用規約・プライバシーポリシー・特定商取引法に基づく表記を改めた版 2026-10-21。
-//   公開ページの制定日・施行日（実際に Production へ公開する日）とは別のもの。DB（complete_15）が、この版を受け付ける
-//   （旧版 2026-10-07・2026-10-13 も受け付けるので、SQL を先に適用すれば、順序によらず登録は止まらない）
+//   公開ページの制定日・施行日（実際に Production へ公開する日）とは別のもの。DB（complete_16）は、新規の登録完了で、
+//   この組（規約 2026-10-21 ＋ プライバシー 2026-10-21）だけを受け付ける。古い画面（旧版の組）が断られた時は、
+//   unsupported_consent_version を専用の案内（再読み込み）にする。同意の版を自動で書き換えたり、同意を代行したりしない
 const REGISTRATION_TERMS_VERSION = '2026-10-21';
 const REGISTRATION_PRIVACY_VERSION = '2026-10-21';
 const NEWSLETTER_CONSENT_VERSION = '2026-10-07-v1';
@@ -171,7 +172,11 @@ async function completeRegistrationOnboarding() {
       p_privacy_version: REGISTRATION_PRIVACY_VERSION,
       p_newsletter_consent_version: NEWSLETTER_CONSENT_VERSION,
     });
-    if (error || !data || data.onboarding_status !== 'completed') return { ok: false, error: error || 'unexpected_result' };
+    if (error || !data || data.onboarding_status !== 'completed') {
+      // 古い画面（旧い同意版を送る）が断られた：一般のエラーにせず、再読み込みの案内にする（同意済みとは扱わない）
+      if (error && /unsupported_consent_version/.test(String(error.message || ''))) return { ok: false, code: 'consent_version_outdated' };
+      return { ok: false, error: error || 'unexpected_result' };
+    }
     return { ok: true };
   } catch (e) {
     return { ok: false, error: 'exception' };
@@ -318,7 +323,7 @@ function newsletterSyncDue(profile, now) {
 async function syncNewsletterIfDue(profile) {
   if (!newsletterSyncDue(profile, Date.now())) return { skipped: 'not_due' };
   const synced = await subscribeToNewsletter();
-  trackEvent(synced.ok ? 'newsletter_subscribe_success' : 'newsletter_subscribe_error', { consent_version: NEWSLETTER_CONSENT_VERSION });
+  trackEvent(synced.ok ? 'newsletter_subscribe_success' : 'newsletter_subscribe_error');
   return synced;
 }
 
