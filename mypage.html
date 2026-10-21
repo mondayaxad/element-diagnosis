@@ -1038,6 +1038,15 @@
   .ca-view-note { margin: 0; font-size: 11.5px; color: var(--fg-dim); line-height: 1.6; overflow-wrap: anywhere; }
   .ca-view .mp-btn[aria-busy="true"] { opacity: .6; cursor: progress; }
   /* 解析購入済みの記録内の完全解析の案内（320・390px でも横にはみ出さない） */
+  /* 完全解析の案内（申込のボタンの上。サンプルの「この先にあるもの」と同じ流れ） */
+  .mp-rec-actions > .mp-beyond { flex-basis: 100%; min-width: 0; margin: 6px 0 2px; padding: 14px 14px 12px; border-radius: 8px; text-align: left;
+    border: 1px solid color-mix(in srgb, #c0a860 34%, transparent);
+    background: radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--lc, #7ab8e8) 14%, transparent) 0%, transparent 62%), rgba(10, 9, 21, .55); }
+  .mp-beyond-eyebrow { font-size: 10px; letter-spacing: .16em; color: #c0a860; }
+  .mp-beyond-title { margin: 6px 0 0; font-size: 14px; font-weight: 700; line-height: 1.7; color: #e8d8a0; letter-spacing: .04em; word-break: auto-phrase; }
+  .mp-beyond-body { margin: 8px 0 0; font-size: 12px; line-height: 1.9; color: #b8b2cc; }
+  .mp-beyond-body b { font-weight: 600; color: #eef4ee; }
+  .mp-beyond-body b.g { color: #e8d8a0; }
   .mp-rec-actions > .ca-rec-guide { flex-basis: 100%; min-width: 0; margin-top: 4px; padding: 12px 14px 14px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--lc, #7ab8e8) 34%, var(--ca-line)); background: rgba(10, 12, 24, .5); overflow-wrap: anywhere; }
   .ca-rec-guide-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
   .ca-rec-guide-lead { margin: 8px 0 0; font-size: 14px; line-height: 1.7; color: var(--ca-title, var(--fg)); }
@@ -2280,6 +2289,11 @@ function mpCompleteRowHtml(r, cls, source) {
   if (d && (d.state === 'suspended' || d.state === 'revoked')) return stopped; // 買い直させない（二重のお支払いを防ぐ）
   return stopped + mpBuyButtonHtml(r, 'complete', cls, source);
 }
+const MP_BEYOND_HTML = `<div class="mp-beyond" data-rec-beyond>
+      <div class="mp-beyond-eyebrow">BEYOND THE REPORT｜この先にあるもの</div>
+      <p class="mp-beyond-title">まだ、ここには現れていない輪郭があります</p>
+      <p class="mp-beyond-body">この記録が描いたのは、いまのあなたの輪郭です。完全解析では、<b>三つの人物像</b>から、もう一段深く読みます。元素・武器・国家と20軸を横断し、組み合わせ、活かし方、過剰に働いたときのサインまでを、<b class="g">全46ページ</b>の記録に結びます。</p>
+    </div>`;
 function mpRecordActionsHtml(r, source) {
   if (!mpEntitlementOk) return mpRecordUnknownHtml();
   // 登録したレポートを確かめられない：申込の導線は出さない（買い直しの取り違えを防ぐ）。以前の仕組みで本人が購入済みのレポートは読める
@@ -2290,7 +2304,10 @@ function mpRecordActionsHtml(r, source) {
   const ad = mpAnalysisDelivery(r);
   const ownsA = (ad && ad.state === 'active') || r.purchased === true;
   const rowA = `<div class="mp-rec-row" data-rec-product="analysis">${mpAnalysisRowHtml(r, ownsA ? 'mp-btn' : 'mp-btn primary mp-cta-el', src)}</div>`;
-  const rowB = `<div class="mp-rec-row" data-rec-product="complete">${mpCompleteRowHtml(r, ownsA ? 'mp-btn primary mp-cta-el' : 'mp-btn', src)}</div>`;
+  const rowBInner = mpCompleteRowHtml(r, ownsA ? 'mp-btn primary mp-cta-el' : 'mp-btn', src);
+  // 完全解析を申し込める時だけ、ボタンの上に案内（サンプルの「この先にあるもの」と同じ流れ）
+  const beyond = /data-complete-checkout=|is-pending/.test(rowBInner) ? MP_BEYOND_HTML : '';
+  const rowB = `${beyond}<div class="mp-rec-row" data-rec-product="complete">${rowBInner}</div>`;
   return `<div class="mp-rec-actions" data-rec-actions="${encodeURIComponent(rid)}" data-rec-source="${source === 'latest' ? 'latest' : 'records'}">
     ${ownsA ? rowB + rowA : rowA + rowB}</div>`;
 }

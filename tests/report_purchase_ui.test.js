@@ -823,3 +823,27 @@ test('完全解析：開いた時のアドレスに期限のない固有リン�
   await final(r, new RegExp('/api/complete-status\\?view=fresh789&src=link#t=' + LINK_B));
   await r.__ctx.close();
 });
+
+test('マイページ：完全解析を申し込める記録だけ、購入ボタンの上に「この先にあるもの」の案内を出す', { skip: skip() }, async () => {
+  for (const [reports, want] of [
+    [[], 1], [[DEL('analysis', 'active')], 1],
+    [[DEL('complete', 'active', { report: { status: 'ready' } })], 0],
+    [[DEL('analysis', 'active'), DEL('complete', 'active', { report: { status: 'generating' } })], 0],
+  ]) {
+    const p = await mypage(reports);
+    const got = await p.evaluate(() => {
+      const box = document.querySelector('.mp-latest [data-rec-actions]');
+      const g = box.querySelector('[data-rec-beyond]');
+      return { n: box.querySelectorAll('[data-rec-beyond]').length,
+        next: g && g.nextElementSibling ? g.nextElementSibling.getAttribute('data-rec-product') : null,
+        text: g ? g.innerText : '' };
+    });
+    assert.equal(got.n, want);
+    if (want) {
+      assert.equal(got.next, 'complete', '完全解析の購入ボタンのすぐ上');
+      assert.match(got.text, /この先にあるもの[\s\S]*三つの人物像[\s\S]*全46ページ/);
+    }
+    assert.deepEqual(p.__errors, []);
+    await p.__ctx.close();
+  }
+});
