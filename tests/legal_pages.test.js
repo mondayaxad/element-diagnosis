@@ -79,6 +79,8 @@ test('同意版：クライアントの定数と DB の関数が一致。公開�
   const sql = read('docs/sql/20261021180000_complete_15_consent_versions.sql');
   assert.ok(sql.includes(`'${terms}'`) && sql.includes(`'${priv}'`), 'migration が新しい版を受け付ける');
   assert.ok(sql.includes("'2026-10-07'") && sql.includes("'2026-10-13'"), '旧版も受け付ける（既存の同意記録は書き換えない）');
+  assert.match(sql, /\(p_terms_version, p_privacy_version\) is distinct from \('2026-10-07', '2026-10-13'\)\s+and \(p_terms_version, p_privacy_version\) is distinct from \('2026-10-21', '2026-10-21'\)/, '同意は正規の2組だけ（個別の許可リストにしない）');
+  assert.doesNotMatch(sql, /p_terms_version not in|p_privacy_version not in/);
   if (news) assert.ok(sql.includes(`'${news}'`));
   assert.doesNotMatch(sql, /delete\s+from\s+public\.profiles/i);
   assert.equal((sql.match(/update\s+public\.profiles/gi) || []).length, 1, '更新は、登録の完了時（onboarding が required の行）の1か所だけ');

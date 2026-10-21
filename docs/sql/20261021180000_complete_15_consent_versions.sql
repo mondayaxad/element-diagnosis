@@ -3,8 +3,11 @@
 --   ・complete_registration_onboarding(text, text, text) の置き換えだけ。表・列・既存の行は変えない。
 --     既存の利用者の同意の記録（profiles の terms_version・privacy_version など）は書き換えない
 --     （更新するのは、これまでどおり、登録が未完了〔required〕の人が登録を完了する時だけ）。
---   ・受け付ける版：利用規約 '2026-10-07' または '2026-10-21'、プライバシーポリシー '2026-10-13' または '2026-10-21'、
---     お知らせメール '2026-10-07-v1'（文面は変えないので据え置き）。それ以外は unsupported_consent_version で断る。
+--   ・受け付ける同意は、次の「組」の2つだけ（個別の許可リストではなく、組として検証する）：
+--       旧画面：利用規約 '2026-10-07' ＋ プライバシーポリシー '2026-10-13'
+--       新画面：利用規約 '2026-10-21' ＋ プライバシーポリシー '2026-10-21'
+--     旧版と新版の混在（'2026-10-07' ＋ '2026-10-21'、'2026-10-21' ＋ '2026-10-13'）や、その他の版は
+--     unsupported_consent_version で断る。お知らせメールは '2026-10-07-v1' だけ（文面は変えないので据え置き）。
 --   ・内部の同意版（2026-10-21）と、公開ページの制定日・施行日（実際に Production へ公開する日）は別のもの。
 --     公開日が決まっても、この migration は作り直さない。
 --   ・権限は complete_09 と同じ（authenticated だけが実行できる。security definer・search_path = ''）。
@@ -43,11 +46,13 @@ begin
   if v_uid is null then
     raise exception 'not_authenticated' using errcode = '28000';
   end if;
-  -- 同意の版：公開前の版（2026-10-07・2026-10-13）と、法務ページを改めた版（2026-10-21）の両方を受け付ける
-  --   （SQL を先に適用し、その後にコードを出す順序でも、既存の画面の登録が止まらない）。それ以外の版は断る
-  if p_terms_version not in ('2026-10-07', '2026-10-21')
-     or p_privacy_version not in ('2026-10-13', '2026-10-21')
-     or p_newsletter_consent_version is distinct from '2026-10-07-v1' then
+  -- 同意の版：正規の組（旧画面の組・新画面の組）だけを受け付ける。混在した組を送る正規の経路は無い
+  --   （SQL を先に適用し、その後にコードを出す順序でも、既存の画面の登録が止まらない）
+  if (p_terms_version, p_privacy_version) is distinct from ('2026-10-07', '2026-10-13')
+     and (p_terms_version, p_privacy_version) is distinct from ('2026-10-21', '2026-10-21') then
+    raise exception 'unsupported_consent_version' using errcode = '22023';
+  end if;
+  if p_newsletter_consent_version is distinct from '2026-10-07-v1' then
     raise exception 'unsupported_consent_version' using errcode = '22023';
   end if;
 
