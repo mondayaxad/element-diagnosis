@@ -185,6 +185,8 @@ async function assertSingleEarlyCard(p, msg) {
   assert.equal(r.note, 0, '「下部の保存へ」の案内なし');
   assert.ok(r.card < r.share && r.card < r.unlock, '画像保存・購入導線より前 ' + (msg || ''));
 }
+const LEGAL_TEXTS = ['特定商取引法に基づく表記', '利用規約', 'プライバシーポリシー'];
+const noLegal = (a) => a.filter((t) => !LEGAL_TEXTS.includes(t.trim()));
 const btnText = (p, sel) => p.locator(sel).innerText().then((t) => t.trim());
 
 // ---------------- 診断完了ページ ----------------
@@ -514,7 +516,7 @@ test('マイページ：記録内CTA（無料のみ／解析購入済み）と�
   // A（無料のみ）
   await p.locator('#mp-rec-1 > summary').click();
   const a = p.locator('#mp-rec-1 .mp-rec-actions');
-  const aBtns = await a.locator('a, button').allInnerTexts();
+  const aBtns = noLegal(await a.locator('a, button').allInnerTexts());
   // 販売停止中（既定）：¥1,000 も「準備中」。Payment Link へは送らない
   assert.deepEqual(aBtns.map((t) => t.trim()), ['解析レポート（準備中）', '完全解析 ¥3,000（準備中）']);
   assert.equal(await a.locator('a[href*="buy.stripe"]').count(), 0);
@@ -522,7 +524,7 @@ test('マイページ：記録内CTA（無料のみ／解析購入済み）と�
   await p.locator('#mp-rec-0 > summary').click();
   const b = p.locator('#mp-rec-0 .mp-rec-actions');
   // 解析レポートを購入済み：完全解析を上（元素の色の CTA）・「解析レポートを読む」を下
-  assert.deepEqual((await b.locator('a, button').allInnerTexts()).map((t) => t.trim()), ['完全解析 ¥3,000（準備中）', '解析レポートを読む']);
+  assert.deepEqual(noLegal(await b.locator('a, button').allInnerTexts()).map((t) => t.trim()), ['完全解析 ¥3,000（準備中）', '解析レポートを読む']);
   // 準備中ボタン：button・disabled・href なし。強制クリックしても外部遷移・決済イベントなし
   for (const btn of [...await p.locator('#mp-rec-1 button.is-pending').all(), ...await p.locator('#mp-rec-0 button.is-pending').all()]) {
     assert.equal(await btn.evaluate((e) => e.tagName), 'BUTTON');
@@ -598,7 +600,7 @@ test('マイページ：320／390／1280px で横スクロールしない（記�
 });
 
 // ---------------- LATEST RESULT のアコーディオン（2026-10-07 追加） ----------------
-const actionTexts = (p, sel) => p.locator(`${sel} .mp-rec-actions`).locator('a, button').allInnerTexts().then((a) => a.map((t) => t.trim()));
+const actionTexts = (p, sel) => p.locator(`${sel} .mp-rec-actions`).locator('a, button').allInnerTexts().then((a) => noLegal(a).map((t) => t.trim()));
 async function openLatestFold(p) {
   const d = p.locator('details.mp-latest-fold');
   if (!(await d.evaluate((e) => e.open))) await d.locator(':scope > summary').click();

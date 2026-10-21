@@ -1782,7 +1782,8 @@ function reportLinkToken() {
 var REPORT_SAMPLE_LINK = '<a class="ca-r-sample" href="/complete-sample.html" data-ca-sample>完全解析のサンプルを見る</a>';
 // マイページから開いた解析レポートの最下部：完全解析の申込はマイページの記録から
 function renderMypageFooter(box) {
-  box.innerHTML = REPORT_SAMPLE_LINK + '<a class="ca-r-btn is-offer" href="/mypage.html" data-report-mypage>マイページでこの記録の完全解析を作成する ¥3,000</a>';
+  box.innerHTML = REPORT_SAMPLE_LINK + '<a class="ca-r-btn is-offer" href="/mypage.html" data-report-mypage>マイページでこの記録の完全解析を作成する ¥3,000</a>'
+    + (window.EdBuy ? window.EdBuy.legalLinksHtml() : '');
 }
 function renderDeliveryFooter(box) {
   var B = window.EdBuy;
@@ -1820,7 +1821,7 @@ function renderDeliveryFooter(box) {
     box.innerHTML = (B.contextOk(ctx) ? '<a class="ca-r-sample" href="' + B.esc(B.sampleHref('complete', ctx, 'report')) + '" data-ca-sample>完全解析のサンプルを見る</a>' : '')
       + (open ? '<button type="button" class="ca-r-btn is-offer" data-report-buy-complete><span class="ed-sky-main">まだ見えていない輪郭を読む</span><span class="ed-sky-sub">この診断結果で完全解析を作成する ' + B.yen(B.PRODUCTS.complete.price) + '</span></button>'
         : '<button type="button" class="ca-r-btn is-pending" disabled aria-disabled="true">完全解析 ' + B.yen(B.PRODUCTS.complete.price) + '（準備中）</button>')
-      + '<p class="ca-guest-msg" data-buy-msg role="status"></p>';
+      + '<p class="ca-guest-msg" data-buy-msg role="status"></p>' + B.legalLinksHtml();
     var buy = box.querySelector('[data-report-buy-complete]');
     if (buy) buy.onclick = function () {
       var msg = box.querySelector('[data-buy-msg]');
@@ -2082,7 +2083,7 @@ function renderFullReport(root, results, diagnosisCode) {
         <p id="pdfMsg" role="status" data-pdf-skip style="margin:0 0 12px;color:#b8a8d8;font-size:12px;line-height:1.8"></p>
         <div data-report-register-slot data-pdf-skip></div>
         ここまでが、解析レポートの全内容です。<br>
-        ご不明点があれば <a href="https://x.com/mondayaxad" style="color:${pal.light}">@mondayaxad</a> までご連絡ください。
+        ご不明点があれば <a href="mailto:yaduns0522@gmail.com" style="color:${pal.light}">yaduns0522@gmail.com</a> までご連絡ください。
       </div>
     </div>`;
 }
@@ -2226,9 +2227,9 @@ async function savePdf() {
       } else if (reopen && errCode !== 'not_entitled') {
         root.innerHTML = '<div class="err-box"><h2>閲覧の期限が切れました</h2><p>購入したレポートのリンクから、もう一度お開きください。</p>' + reopen + '</div>';
       } else if (errCode === 'not_entitled') {
-        root.innerHTML = '<div class="err-box"><h2>このレポートはご覧いただけません</h2><p>ご購入を確認できませんでした（返金・取消などの場合を含みます）。購入済みの場合は、マイページからもう一度お開きください。お心当たりがない場合は @mondayaxad までご連絡ください。</p></div>';
+        root.innerHTML = '<div class="err-box"><h2>このレポートはご覧いただけません</h2><p>ご購入を確認できませんでした（返金・取消などの場合を含みます）。購入済みの場合は、マイページからもう一度お開きください。お心当たりがない場合は yaduns0522@gmail.com までご連絡ください。</p></div>';
       } else {
-        root.innerHTML = '<div class="err-box"><h2>リンクが無効です</h2><p>リンクの有効期限が切れたか、正しくありません。マイページ、または購入した端末の画面からもう一度お開きください。お心当たりがない場合は @mondayaxad までご連絡ください。</p></div>';
+        root.innerHTML = '<div class="err-box"><h2>リンクが無効です</h2><p>リンクの有効期限が切れたか、正しくありません。マイページ、または購入した端末の画面からもう一度お開きください。お心当たりがない場合は yaduns0522@gmail.com までご連絡ください。</p></div>';
       }
       return;
     }
@@ -2292,7 +2293,7 @@ async function savePdf() {
     const canViewAnalysis = !!entitlements &&
       (entitlements.core_analysis_access === true || entitlements.core_complete_access === true);
     if (!canViewAnalysis) {
-      root.innerHTML = '<div class="err-box"><h2>この商品はまだご覧いただけません</h2><p>CORE1（解析レポート）をご購入いただくと、こちらのページから閲覧できます。お心当たりがない場合は @mondayaxad までご連絡ください。</p></div>';
+      root.innerHTML = '<div class="err-box"><h2>この商品はまだご覧いただけません</h2><p>CORE1（解析レポート）をご購入いただくと、こちらのページから閲覧できます。お心当たりがない場合は yaduns0522@gmail.com までご連絡ください。</p></div>';
       return;
     }
 
@@ -2306,7 +2307,7 @@ async function savePdf() {
         answersV2Obj = null;
       }
       if (!answersV2Obj) {
-        root.innerHTML = '<div class="err-box"><h2>診断コードの読み取りに失敗しました</h2><p>お手数ですが @mondayaxad までご連絡ください。</p></div>';
+        root.innerHTML = '<div class="err-box"><h2>診断コードの読み取りに失敗しました</h2><p>お手数ですが yaduns0522@gmail.com までご連絡ください。</p></div>';
         return;
       }
       const resultsV2 = computeResultsV2ForUI(answersV2Obj, code);
@@ -2320,7 +2321,7 @@ async function savePdf() {
 
     const answersArr = decodeAnswers(code);
     if (!answersArr) {
-      root.innerHTML = '<div class="err-box"><h2>診断コードの読み取りに失敗しました</h2><p>お手数ですが @mondayaxad までご連絡ください。</p></div>';
+      root.innerHTML = '<div class="err-box"><h2>診断コードの読み取りに失敗しました</h2><p>お手数ですが yaduns0522@gmail.com までご連絡ください。</p></div>';
       return;
     }
     const answersObj = {};
@@ -2330,7 +2331,7 @@ async function savePdf() {
     if (typeof gtag === 'function') gtag('event', 'analysis_report_view', { diagnosis_version: 'element-v1' });
   } catch (e) {
     console.error(e);
-    root.innerHTML = '<div class="err-box"><h2>エラーが発生しました</h2><p>時間をおいて再度お試しください。改善しない場合は @mondayaxad までご連絡ください。</p></div>';
+    root.innerHTML = '<div class="err-box"><h2>エラーが発生しました</h2><p>時間をおいて再度お試しください。改善しない場合は yaduns0522@gmail.com までご連絡ください。</p></div>';
   }
 })();
 </script>

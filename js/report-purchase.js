@@ -117,6 +117,14 @@
     too_many_attempts: 'お申し込みの回数が多いため、少し時間をおいてからお試しください。',
     network: '通信できませんでした。電波の良い場所で、もう一度お試しください。',
   };
+  // ---- 購入の入口に置く、法務ページへのリンク（特定商取引法に基づく表記・利用規約・プライバシーポリシー）
+  //   別のタブで開く（診断結果・選んだ商品・固有リンク・マイページの対象の記録を、そのまま残す）。リンクの先は正本のページだけ
+  var LEGAL = [['/tokushoho', '特定商取引法に基づく表記'], ['/terms.html', '利用規約'], ['/privacy.html', 'プライバシーポリシー']];
+  function legalLinksHtml(opts) {
+    var o = opts || {};
+    var links = LEGAL.map(function (l) { return '<a href="' + l[0] + '" target="_blank" rel="noopener noreferrer">' + l[1] + '</a>'; }).join('<span aria-hidden="true">｜</span>');
+    return '<p class="ed-legal-links" data-legal-links>' + (o.lead ? '<span class="ed-legal-lead">' + esc(o.lead) + '</span> ' : '') + links + '</p>';
+  }
   function errorText(code) { return ERROR_TEXT[code] || 'お手続きを開始できませんでした。時間をおいて、もう一度お試しください。'; }
 
   // ---- 完全解析の目標の選択（全ての入口で同じ画面）
@@ -152,6 +160,7 @@
       wrap.innerHTML = '<div class="edb-panel"><h2 id="edbGoalTitle" class="edb-title">完全解析 ' + yen(PRODUCTS.complete.price) + '</h2>'
         + '<div data-edb-goals><p class="edb-note">目標の一覧を読み込んでいます…</p></div>'
         + '<p class="edb-msg" role="alert"></p>'
+        + legalLinksHtml({ lead: 'お申し込みの前に、次をご確認ください。' })
         + '<div class="edb-actions"><button type="button" class="edb-btn" data-edb-go disabled>目標を選んで決済へ（' + yen(PRODUCTS.complete.price) + '）</button>'
         + '<button type="button" class="edb-link" data-edb-cancel>やめる</button></div></div>';
       d.body.appendChild(wrap);
@@ -332,6 +341,9 @@
       '.edb-btn{min-height:44px;padding:0 18px;border-radius:8px;border:0;color:#fff;font:inherit;font-size:13px;letter-spacing:.04em;cursor:pointer;background:linear-gradient(120deg,#5b78c8 0%,#8a5fc0 50%,#c9a860 100%)}',
       '.edb-btn[disabled]{opacity:.55;cursor:default}',
       '.edb-link{background:none;border:0;color:#8aa3c8;font:inherit;font-size:12.5px;text-decoration:underline;cursor:pointer;padding:8px;min-height:44px}',
+      '.ed-legal-links{margin:10px 0 0;font-size:11.5px;line-height:1.9;text-align:center;color:inherit;opacity:.8;overflow-wrap:anywhere}',
+      '.ed-legal-links a{color:inherit;text-decoration:underline;display:inline-block;padding:2px 4px}.ed-legal-links span[aria-hidden]{margin:0 2px;opacity:.6}',
+      '.ed-legal-lead{display:block}',
     ].join('\n');
     d.head.appendChild(s);
   }
@@ -344,7 +356,7 @@
     PRODUCTS: PRODUCTS, COMPLETE_NOTICE: COMPLETE_NOTICE, SHARE_NOTICE: SHARE_NOTICE, PDF_NOTICE: PDF_NOTICE,
     yen: yen, esc: esc, salesOpen: salesOpen, track: track, call: call, errorText: errorText,
     contextFromResume: contextFromResume, contextFromRecord: contextFromRecord, summary: summary, contextOk: contextOk,
-    sampleHref: sampleHref, readFragment: readFragment, start: start, returnPath: returnPath, goalDialog: goalDialog,
+    legalLinksHtml: legalLinksHtml, sampleHref: sampleHref, readFragment: readFragment, start: start, returnPath: returnPath, goalDialog: goalDialog,
     linkUrl: linkUrl, rememberLink: rememberLink, rememberedLink: rememberedLink, openLink: openLink,
     startRegister: startRegister, takeRegisterIntent: takeRegisterIntent, peekRegisterIntent: peekRegisterIntent, peekRegisterToken: peekRegisterToken, registerIntentAt: registerIntentAt, markBuyFromMypage: markBuyFromMypage, clearBuyFromMypage: clearBuyFromMypage, takeBuyFromMypage: takeBuyFromMypage, register: register,
     copyText: copyText, myReports: myReports, myOpen: myOpen, myRegenerate: myRegenerate, accountToken: accountToken,

@@ -129,16 +129,18 @@
         + (facts ? '<p data-sample-facts>' + facts + '</p>' : '')
         + '<div class="ed-sky-wrap">' + skyBtn('complete', 'まだ見えていない輪郭を読む', subject + 'の完全解析　全46ページ　¥3,000' + pend, open && el.complete) + '</div>'
         + '<p class="ca-guest-msg" data-buy-msg role="status"></p>'
+        + B.legalLinksHtml()
         + '<p class="sample-mypage"><a href="' + B.esc(backHref()) + '" data-sample-back>元の画面に戻る</a></p>';
     } else {
       // 解析レポート（主）：情報は最小限（ボタンと戻る）。完全解析は、この下の「この先にあるもの」で控えめに
       box.innerHTML = '<div class="ed-sky-wrap">' + skyBtn('analysis', subject + 'で、解析レポートを読む', '¥1,000' + pend, open && el.analysis) + '</div>'
         + '<p class="ca-guest-msg" data-buy-msg role="status"></p>'
+        + B.legalLinksHtml()
         + '<p class="sample-mypage"><a href="' + B.esc(backHref()) + '" data-sample-back>元の画面に戻る</a></p>';
       offer = slot ? slot.querySelector('[data-complete-offer]') : null;
       if (offer) {
         offer.innerHTML = '<div class="ed-sky-wrap">' + skyBtn('complete', 'まだ見えていない輪郭を読む', '完全解析　¥3,000' + pend, open && el.complete, true) + '</div>'
-          + '<p class="ca-guest-msg" data-buy-msg role="status"></p>';
+          + '<p class="ca-guest-msg" data-buy-msg role="status"></p>' + B.legalLinksHtml();
       }
     }
     [box, offer].forEach(function (root) {

@@ -101,7 +101,7 @@
       + '<a class="btn" style="width:100%;margin:6px 0 0" href="/report-link#t=' + p.link + '" data-open>' + name + 'を開く</a>'
       + '<div class="claim"><button type="button" class="btn" data-copy>リンクをコピー</button> <button type="button" class="btn" data-register>マイページに登録する</button></div>'
       + '<p class="note">このページのボタンで開くレポートのリンク（URL）が、期限のない入口です。必ずコピーして保管してください。</p>'
-      + '<p class="msg" data-msg role="status"></p></div>';
+      + '<p class="msg" data-msg role="status"></p>' + B.legalLinksHtml() + '</div>';
   }
   var lastSig = null;
   function render(purchases) {
@@ -121,7 +121,8 @@
       document.getElementById('pcLead').textContent = '';
       list.innerHTML = '<div class="card"><p class="row-name">この端末では、ご購入を確認できませんでした。</p>'
         + '<p class="note">購入したときと同じ端末・ブラウザで開いてください。購入後にコピーしたレポートのリンク（URL）からも開けます。</p>'
-        + '<p class="note">リンクを無くした場合は、お支払いの確認のうえで再発行します。<a href="https://x.com/mondayaxad" target="_blank" rel="noopener">@mondayaxad</a> までご連絡ください。</p></div>';
+        + '<p class="note">リンクを紛失された場合は、Stripe から届いた請求書のメールをご確認ください。見つからない場合は、<a href="mailto:yaduns0522@gmail.com">yaduns0522@gmail.com</a> までご連絡ください。</p>'
+        + B.legalLinksHtml() + '</div>';
       return;
     }
     if (!canceled) {

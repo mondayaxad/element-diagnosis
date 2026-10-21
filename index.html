@@ -585,10 +585,11 @@
 <footer>
   <p class="footer-copy">元素診断 — An original personality framework inspired by Genshin Impact. For entertainment purposes. © マンデーアクスト / @mondayaxad</p>
   <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-top:16px">
+    <a href="/tokushoho" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">特定商取引法に基づく表記</a>
     <a href="/privacy.html" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">プライバシーポリシー</a>
     <a href="/terms.html" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">利用規約</a>
     <a href="javascript:void(0)" onclick="document.getElementById('about').style.display='flex'" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">運営者情報</a>
-    <a href="https://x.com/mondayaxad" target="_blank" rel="noopener" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">お問い合わせ</a>
+    <a href="mailto:yaduns0522@gmail.com" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">お問い合わせ</a>
   </div>
 </footer>
 
@@ -2726,6 +2727,7 @@ function renderResult(root) {
           </p>
           ${diagnosisVersion === 'ETI-2.0' ? '<p data-purchase-link-note style="text-align:center;color:var(--rx-tertiary);font-size:11px;line-height:1.7;margin-top:4px">お支払いの後、レポートのリンク（URL）が発行されます。そのリンクからいつでも読めて、マイページにも登録できます。</p>'
             + '<p style="text-align:center;margin:6px 0 0"><a href="/report_sample.html#from=result" data-buy-sample="analysis" style="color:var(--rx-tertiary);font-size:11.5px">解析レポートのサンプルを見る</a></p>' : ''}
+          ${diagnosisVersion === 'ETI-2.0' && typeof EdBuy !== 'undefined' ? EdBuy.legalLinksHtml() : ''}
           ${completeAnalysisFoldHtml(diagnosisVersion === 'ETI-2.0' && results.raw && results.raw.meta ? results.raw.meta.itemSetVersion : null, diagnosisVersion, elC)}
         </div>
       </div>
@@ -3076,7 +3078,8 @@ function completeAnalysisFoldHtml(itemSetVersion, diagnosisVersion, elColor) {
     // 全ての状態で同じ導線（ログイン・購入の有無で変えない）：完全解析 ¥3,000（目標の選択は共通の画面。js/report-purchase.js）
     cta = '<div data-report-buy="complete">'
       + '<button type="button" class="ca-fold-btn ca-fold-btn-buy" data-buy-complete aria-label="完全解析 ¥3,000（まだ見えていない輪郭を読む）"><span class="ca-buy-main">まだ見えていない輪郭を読む</span><span class="ca-buy-sub">¥3,000</span></button>'
-      + '<p class="ca-guest-msg" data-buy-msg role="status"></p></div>';
+      + '<p class="ca-guest-msg" data-buy-msg role="status"></p>'
+      + (typeof EdBuy !== 'undefined' ? EdBuy.legalLinksHtml() : '') + '</div>';
   } else if (offer) {
     var isUp = offer.offer === 'upgrade_2000';
     cta = CA.pendingButtonHtml(offer, 'ca-fold-btn')
@@ -3365,7 +3368,7 @@ function initGuestPurchase(root, code, refs, opts) {
       else if (st.completeEntitlement === 'active') note = '<p class="ca-fold-note">この結果の完全解析は購入済みです。</p><a class="ca-fold-btn" href="/mypage.html">マイページで完全解析を見る</a>';
       else if (st.completeOffer === 'analysis_upgrade') note = '<p class="ca-fold-note">この結果の解析レポートは購入済みです。完全解析は、マイページの診断記録から追加 ¥2,000 でお申し込みいただけます。</p><a class="ca-fold-btn" href="/mypage.html">マイページで完全解析へ　追加¥2,000</a>';
       else if (st.completeBlocked === 'legacy_purchase_not_eligible') note = '<p class="ca-fold-note">この記録の解析レポートは、旧バージョンのため、完全解析はお申し込みいただけません。</p>';
-      else if (st.completeBlocked === 'repurchase_not_allowed' || st.completeBlocked === 'rights_suspended') note = '<p class="ca-fold-note">この記録の購入は、現在お申し込みいただけません。詳しくはマイページの診断記録でご確認いただくか、@mondayaxad までお問い合わせください。</p><a class="ca-fold-btn" href="/mypage.html">マイページで開く</a>';
+      else if (st.completeBlocked === 'repurchase_not_allowed' || st.completeBlocked === 'rights_suspended') note = '<p class="ca-fold-note">この記録の購入は、現在お申し込みいただけません。詳しくはマイページの診断記録でご確認いただくか、yaduns0522@gmail.com までお問い合わせください。</p><a class="ca-fold-btn" href="/mypage.html">マイページで開く</a>';
       else note = '<p class="ca-fold-note">この結果の購入状況は、マイページの診断記録からご確認いただけます。</p><a class="ca-fold-btn" href="/mypage.html">マイページで開く</a>';
       mypageBox(note);
       return;
@@ -3878,38 +3881,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 
-<!-- ===== モーダル：プライバシーポリシー ===== -->
-<div id="privacy" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.85);overflow-y:auto;padding:24px 16px;align-items:flex-start">
-  <div style="max-width:600px;margin:0 auto;background:#081018;border:1px solid #1e3448;border-radius:12px;padding:32px 24px;position:relative">
-    <button onclick="document.getElementById('privacy').style.display='none'" style="position:absolute;top:16px;right:16px;background:transparent;border:none;color:#6a9cc0;font-size:20px;cursor:pointer">✕</button>
-    <h2 style="color:#7ab8e8;font-size:16px;margin-bottom:20px;letter-spacing:0.1em">プライバシーポリシー</h2>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本サイト（element-diagnosis-five.vercel.app）は、マンデーアクスト（@mondayaxad）が運営する非公式ファンサイトです。</p>
-    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">Cookieおよびアクセス解析について</p>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本サイトはGoogle Analytics（Google LLC）を使用しています。トラフィックデータは匿名で収集されており、個人を特定するものではありません。Cookieを無効にすることで収集を拒否できます。</p>
-    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">診断結果の保存について</p>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">無料診断は通常ブラウザ上だけで処理されます。ただし、結果画面で保存を選んだ場合に限り、回答と算出結果をログイン情報に紐づけて保存します。保存は任意で、保存しなくても診断は最後まで利用できます。保存のために初めて登録するときは、利用規約とプライバシーポリシーへの同意をお願いしています。登録した方には、元素診断のアップデートや新しい解析、関連する商品・企画などのお知らせをメールでお届けすることがあります（いつでも停止できます）。</p>
-    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">お問い合わせ</p>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9">プライバシーに関するお問い合わせはXのDM（@mondayaxad）までご連絡ください。</p>
-    <p style="color:#7098b8;font-size:11px;margin-top:20px">制定日：2026年7月1日</p>
-  </div>
-</div>
-
-<!-- ===== モーダル：利用規約 ===== -->
-<div id="terms" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.85);overflow-y:auto;padding:24px 16px;align-items:flex-start">
-  <div style="max-width:600px;margin:0 auto;background:#081018;border:1px solid #1e3448;border-radius:12px;padding:32px 24px;position:relative">
-    <button onclick="document.getElementById('terms').style.display='none'" style="position:absolute;top:16px;right:16px;background:transparent;border:none;color:#6a9cc0;font-size:20px;cursor:pointer">✕</button>
-    <h2 style="color:#7ab8e8;font-size:16px;margin-bottom:20px;letter-spacing:0.1em">利用規約</h2>
-    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">非公式コンテンツについて</p>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本サイトは「原神」の非公式ファンサイトです。HoYoverse（miHoYo Co., Ltd.）およびその関連企業とは一切関係ありません。「原神」に関する著作権・商標権はHoYoverse（miHoYo Co., Ltd.）に帰属します。</p>
-    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">免責事項</p>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本診断はエンターテインメント・自己理解を目的としたものです。診断結果の正確性・完全性を保証するものではありません。公式の解釈と異なる場合があります。</p>
-    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">禁止事項</p>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本サイトのコンテンツの無断転載・商用利用を禁止します。</p>
-    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">変更について</p>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9">本規約は予告なく変更される場合があります。</p>
-  </div>
-</div>
-
 <!-- ===== モーダル：運営者情報 ===== -->
 <div id="about" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.85);overflow-y:auto;padding:24px 16px;align-items:flex-start">
   <div style="max-width:600px;margin:0 auto;background:#081018;border:1px solid #1e3448;border-radius:12px;padding:32px 24px;position:relative">
@@ -3922,7 +3893,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">本サイトについて</p>
     <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">Big Five・エニアグラムと元素・武器種を組み合わせた独自の心理傾向診断です。原神の公式コンテンツではありません。</p>
     <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">お問い合わせ</p>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9">XのDM（@mondayaxad）または yaduns0522@gmail.com までご連絡ください。</p>
+    <p style="color:#6a9cc0;font-size:13px;line-height:1.9">メール（yaduns0522@gmail.com）までご連絡ください。XのDM（@mondayaxad）でも受け付けます。</p>
   </div>
 </div>
 

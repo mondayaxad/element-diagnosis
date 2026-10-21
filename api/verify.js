@@ -287,7 +287,7 @@ function createHandler({ env, fetchImpl, stripeFactory }) {
       // 記録済みの購入と、この決済の診断コード・商品が一致すること（別の診断結果のリンクへ流用させない）
       if (entitlementRow.diagnosis_code_hash !== diagnosisCodeHash || entitlementRow.product_type !== productType) {
         console.error('verify error: recorded purchase mismatch', tail(sessionId));
-        res.status(403).send('このご購入は確認できませんでした。お心当たりがない場合は @mondayaxad までご連絡ください。');
+        res.status(403).send('このご購入は確認できませんでした。お心当たりがない場合は yaduns0522@gmail.com までご連絡ください。');
         return;
       }
 
@@ -306,7 +306,7 @@ function createHandler({ env, fetchImpl, stripeFactory }) {
         return;
       }
       if (entitlementRow.status !== 'active' || blocked) {
-        res.status(403).send('このご購入は、返金・取消などにより閲覧いただけません。お心当たりがない場合は @mondayaxad までご連絡ください。');
+        res.status(403).send('このご購入は、返金・取消などにより閲覧いただけません。お心当たりがない場合は yaduns0522@gmail.com までご連絡ください。');
         return;
       }
 

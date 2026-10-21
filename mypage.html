@@ -1047,6 +1047,7 @@
   .ca-view .mp-btn[aria-busy="true"] { opacity: .6; cursor: progress; }
   /* 解析購入済みの記録内の完全解析の案内（320・390px でも横にはみ出さない） */
   /* 完全解析の案内（申込のボタンの上。サンプルの「この先にあるもの」と同じ流れ） */
+  .mp-rec-actions > .ed-legal-links { flex-basis: 100%; margin: 4px 0 0; color: var(--fg-dim); }
   .mp-rec-actions > .mp-beyond { flex-basis: 100%; min-width: 0; margin: 4px 0 0; padding: 10px 12px; border-radius: 8px; text-align: left;
     border: 1px solid color-mix(in srgb, var(--lc, #7ab8e8) 30%, transparent);
     background: radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--lc, #7ab8e8) 14%, transparent) 0%, transparent 62%), rgba(10, 9, 21, .55); }
@@ -2288,12 +2289,12 @@ function mpCompleteRowHtml(r, cls, source) {
   if (d && d.state === 'active') {
     const st = d.report ? d.report.status : 'generating';
     if (st === 'ready') return mpReadButtonHtml(d, cls, '完全解析を読む');
-    if (st === 'revoked') return '<p class="mp-rec-mentor" role="status">この完全解析は、現在ご覧いただけません。お手数ですが @mondayaxad までご連絡ください。</p>';
+    if (st === 'revoked') return '<p class="mp-rec-mentor" role="status">この完全解析は、現在ご覧いただけません。お手数ですが yaduns0522@gmail.com までご連絡ください。</p>';
     if (st === 'failed') {
       return '<p class="mp-rec-mentor" role="status">完全解析を作成できませんでした。</p>'
         + (d.report && d.report.regenerate === 'available'
           ? `<button type="button" class="${cls}" data-mp-regenerate="${mpEsc(d.delivery)}">もう一度作成する</button>`
-          : '<p class="mp-rec-note">運営者が確認して作成し直します。お手数ですが @mondayaxad までご連絡ください（追加のお支払いは不要です）。</p>');
+          : '<p class="mp-rec-note">運営者が確認して作成し直します。お手数ですが yaduns0522@gmail.com までご連絡ください（追加のお支払いは不要です）。</p>');
     }
     return `<p class="mp-rec-mentor" role="status">完全解析を作成しています。数分かかることがあります。</p><button type="button" class="mp-btn" data-mp-refresh>もう一度確かめる</button>`;
   }
@@ -2324,8 +2325,11 @@ function mpRecordActionsHtml(r, source) {
   // 完全解析を申し込める時だけ、ボタンの上に案内（サンプルの「この先にあるもの」と同じ流れ）
   const beyond = /data-complete-checkout=|is-pending/.test(rowBInner) ? MP_BEYOND_HTML : '';
   const rowB = `${beyond}<div class="mp-rec-row" data-rec-product="complete">${rowBInner}</div>`;
+  // 申し込める商品がある時だけ、特商法・規約・プライバシーへのリンクを、購入ボタンの近くに（別タブ。記録の選択は保たれる）
+  const offers = /data-(analysis|complete)-checkout=|is-pending/.test(rowA + rowBInner);
+  const legal = offers && typeof EdBuy !== 'undefined' ? EdBuy.legalLinksHtml() : '';
   return `<div class="mp-rec-actions" data-rec-actions="${encodeURIComponent(rid)}" data-rec-source="${source === 'latest' ? 'latest' : 'records'}">
-    ${ownsA ? rowB + rowA : rowA + rowB}</div>`;
+    ${ownsA ? rowB + rowA : rowA + rowB}${legal}</div>`;
 }
 // 登録したレポートを開く（開くたびにサーバーが支払い・返金・停止を確かめる）
 async function mpOpenDelivery(button) {
@@ -2715,7 +2719,7 @@ function mpAccountHtml(userOrUid) {
           <summary class="mp-account-row"><span>⚙ アカウント設定</span><span>›</span></summary>
           <div class="mp-account-body">
             ${uid ? `<div>ユーザーID</div><div class="mp-uid">${mpEsc(uid)}</div>` : ''}
-            <div style="margin-top:8px">アカウントの削除をご希望の場合は、X（@mondayaxad）またはメール（<a href="mailto:yaduns0522@gmail.com" style="color:var(--accent)">yaduns0522@gmail.com</a>）までご連絡ください。内容を確認のうえ対応します（即時の自動削除ではありません）。</div>
+            <div style="margin-top:8px">アカウントの削除をご希望の場合は、メール（<a href="mailto:yaduns0522@gmail.com" style="color:var(--accent)">yaduns0522@gmail.com</a>）までご連絡ください（X の DM（@mondayaxad）でも受け付けます）。内容を確認のうえ対応します（即時の自動削除ではありません）。</div>
           </div>
         </details>
         <button type="button" class="mp-account-row" onclick="handleLogoutClick()"><span>⇥ ログアウト</span><span>›</span></button>
@@ -2914,6 +2918,8 @@ function caSheetBodyHtml(r) {
   const rowB = mpCompleteRowHtml(r, 'ca-btn ca-secondary-action', 'mypage_header');
   const ad = mpAnalysisDelivery(r);
   const ownsA = (ad && ad.state === 'active') || r.purchased === true;
+  // 申し込める商品がある時だけ、特商法・規約・プライバシーへのリンク（別タブ。開いているシート・選んだ記録は保たれる）
+  const legalSheet = (offers(rowA) || offers(rowB)) && typeof EdBuy !== 'undefined' ? EdBuy.legalLinksHtml() : '';
   const analysisCard = `<section class="ca-card ca-card--primary" aria-label="解析レポート">
         <div class="ca-eyebrow">STRUCTURE / INTERPRETATION</div>
         <h3 class="ca-title">解析レポート</h3>
@@ -2927,6 +2933,7 @@ function caSheetBodyHtml(r) {
     return `${target}
       <h2 class="ca-lead" id="latest-upgrade-title">この記録のレポート</h2>
       ${analysisCard}
+      ${legalSheet}
       <div class="ca-ineligible">
         <p class="ca-body">完全解析（全46ページ）は、最新版の100問で診断した記録が対象です。この記録は以前の版のため、完全解析はご利用いただけません。</p>
         <button type="button" class="ca-btn ca-quiet-action" onclick="caGoRediagnosis()">最新版で診断する（RE-DIAGNOSIS）</button>
@@ -2942,7 +2949,8 @@ function caSheetBodyHtml(r) {
       </section>`;
   return `${target}
       <h2 class="ca-lead" id="latest-upgrade-title">この記録のレポート</h2>
-      ${ownsA ? completeCard + analysisCard : analysisCard + completeCard}`;
+      ${ownsA ? completeCard + analysisCard : analysisCard + completeCard}
+      ${legalSheet}`;
 }
 
 // 記録が複数のとき、対象の記録を選ぶ画面（選ぶまで購入・閲覧の導線は出さない）
@@ -3042,7 +3050,7 @@ const CA_VIEW_NOTES = {
   not_entitled: 'この記録の完全解析を閲覧する権利を確認できませんでした。',
   basis_inactive: '解析レポートの購入が取り消されたため、完全解析をご覧いただけません。解析レポート（¥1,000）をお申し込みいただくと、ご覧いただけます。',
   regenerate: 'お支払いは完了しています。同じご注文・同じ目標で、もう一度作成できます（追加のお支払いはありません）。',
-  operator: 'お支払いは完了しています。お手数ですが @mondayaxad までご連絡ください（追加のお支払いは不要です）。',
+  operator: 'お支払いは完了しています。お手数ですが yaduns0522@gmail.com までご連絡ください（追加のお支払いは不要です）。',
   regenerate_failed: 'もう一度作成できませんでした。時間をおいて、もう一度お試しください。',
   login: 'ログインの有効期限が切れました。もう一度ログインしてから開いてください。',
 };
@@ -4045,7 +4053,7 @@ function mpClaimErrorHtml(code) {
   const text = `<p>${mpEsc(G.claimErrorText(code))}</p>`;
   if (code === 'claim_conflict') return text + '<p class="mp-claim-note">引き継ぎ先のアカウント（購入時のメールアドレスのアカウントの場合があります）でログインすると、ご覧いただけます。</p>';
   if (code === 'claim_not_paid') return text;
-  if (code === 'claim_mixed_email') return text + '<p class="mp-claim-note">ご不明点があれば <a href="https://x.com/mondayaxad" target="_blank" rel="noopener">@mondayaxad</a> までご連絡ください。</p>';
+  if (code === 'claim_mixed_email') return text + '<p class="mp-claim-note">ご不明点があれば <a href="mailto:yaduns0522@gmail.com">yaduns0522@gmail.com</a> までご連絡ください。</p>';
   if (code === 'checkout_in_progress' || code === 'claim_email_unknown' || code === 'network' || !code) {
     return text + '<p><button type="button" data-mp-claim-retry>もう一度確認する</button></p>';
   }

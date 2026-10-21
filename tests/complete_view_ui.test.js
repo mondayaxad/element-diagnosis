@@ -402,14 +402,14 @@ test('C6：生成の最終の失敗は「完全解析を作成できませんで
   p = await open(w);
   const box = actions(p, 'sess-B', 'latest');
   assert.equal(await box.locator('[data-ca-view-regenerate]').count(), 0);
-  assert.match(await box.innerText(), /@mondayaxad までご連絡ください/);
+  assert.match(await box.innerText(), /yaduns0522@gmail.com までご連絡ください/);
   await p.__ctx.close();
   // 押した後に 409（上限に達した）→ お問い合わせへ
   w = world({ records: { 'sess-B': purchased({ completeStatus: 'failed', completeRegenerate: 'available' }), 'sess-A': rec() },
     postReply: { status: 409, body: { error: 'regenerate_operator_required' } } });
   p = await open(w);
   await actions(p, 'sess-B', 'latest').locator('[data-ca-view-regenerate]').click();
-  await p.waitForSelector('[data-rec-actions="sess-B"][data-rec-source="latest"] .ca-view-note >> text=@mondayaxad までご連絡ください');
+  await p.waitForSelector('[data-rec-actions="sess-B"][data-rec-source="latest"] .ca-view-note >> text=yaduns0522@gmail.com までご連絡ください');
   assert.equal(await actions(p, 'sess-B', 'latest').locator('[data-ca-view-regenerate]').count(), 0);
   await p.__ctx.close();
 });
