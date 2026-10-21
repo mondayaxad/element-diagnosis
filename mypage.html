@@ -1039,13 +1039,30 @@
   .ca-view .mp-btn[aria-busy="true"] { opacity: .6; cursor: progress; }
   /* 解析購入済みの記録内の完全解析の案内（320・390px でも横にはみ出さない） */
   /* 完全解析の案内（申込のボタンの上。サンプルの「この先にあるもの」と同じ流れ） */
-  .mp-rec-actions > .mp-beyond { flex-basis: 100%; min-width: 0; margin: 6px 0 2px; padding: 14px 14px 12px; border-radius: 8px; text-align: left;
+  .mp-rec-actions > .mp-beyond { flex-basis: 100%; min-width: 0; margin: 4px 0 0; padding: 10px 12px; border-radius: 8px; text-align: left;
     border: 1px solid color-mix(in srgb, #c0a860 34%, transparent);
     background: radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--lc, #7ab8e8) 14%, transparent) 0%, transparent 62%), rgba(10, 9, 21, .55); }
   .mp-beyond-eyebrow { font-size: 10px; letter-spacing: .16em; color: #c0a860; }
-  .mp-beyond-title { margin: 6px 0 0; font-size: 14px; font-weight: 700; line-height: 1.7; color: #e8d8a0; letter-spacing: .04em; word-break: auto-phrase; }
-  .mp-beyond-body { margin: 8px 0 0; font-size: 12px; line-height: 1.9; color: #b8b2cc; }
+  .mp-beyond-title { margin: 4px 0 0; font-size: 13px; font-weight: 700; line-height: 1.6; color: #e8d8a0; letter-spacing: .04em; word-break: auto-phrase; }
+  .mp-beyond-body { margin: 4px 0 0; font-size: 11.5px; line-height: 1.8; color: #b8b2cc; }
+  /* 完全解析の申込ボタン：診断結果のページと同じ「夜空に元素の光がさす宝石の色」（記録の元素色 --lc を差し色に） */
+  .mp-rec-row > .mp-btn[data-complete-checkout] { position: relative; overflow: hidden; min-height: 54px; font-size: 14px; font-weight: 600; letter-spacing: .12em; color: #f3ead2;
+    border: 1px solid rgba(214, 189, 132, .55); text-shadow: 0 0 12px rgba(255, 236, 190, .35);
+    background:
+      radial-gradient(1.2px 1.2px at 14% 28%, rgba(255,255,255,.75) 50%, transparent 52%),
+      radial-gradient(1px 1px at 33% 74%, rgba(255,255,255,.5) 50%, transparent 52%),
+      radial-gradient(1.3px 1.3px at 78% 30%, rgba(255,248,220,.7) 50%, transparent 52%),
+      radial-gradient(1px 1px at 91% 70%, rgba(255,255,255,.45) 50%, transparent 52%),
+      radial-gradient(130% 170% at 0% 0%, color-mix(in srgb, var(--lc, #7ab8e8) 50%, transparent) 0%, transparent 58%),
+      radial-gradient(90% 140% at 100% 100%, rgba(201, 168, 96, .38) 0%, transparent 60%),
+      linear-gradient(115deg, #0f1630 0%, #1d2147 42%, #31285a 70%, #4a3a52 100%);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 0 22px color-mix(in srgb, var(--lc, #7ab8e8) 24%, transparent); }
+  .mp-rec-row > .mp-btn[data-complete-checkout]::after { content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(100deg, transparent 30%, rgba(255,240,200,.12) 48%, transparent 66%); transform: translateX(-100%); animation: mp-buy-sheen 5.5s ease-in-out infinite; }
+  @keyframes mp-buy-sheen { 0%, 62% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+  @media (prefers-reduced-motion: reduce) { .mp-rec-row > .mp-btn[data-complete-checkout]::after { animation: none; display: none; } }
   .mp-beyond-body b { font-weight: 600; color: #eef4ee; }
+  .mp-beyond-body b { white-space: nowrap; }
   .mp-beyond-body b.g { color: #e8d8a0; }
   .mp-rec-actions > .ca-rec-guide { flex-basis: 100%; min-width: 0; margin-top: 4px; padding: 12px 14px 14px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--lc, #7ab8e8) 34%, var(--ca-line)); background: rgba(10, 12, 24, .5); overflow-wrap: anywhere; }
   .ca-rec-guide-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
@@ -2292,7 +2309,7 @@ function mpCompleteRowHtml(r, cls, source) {
 const MP_BEYOND_HTML = `<div class="mp-beyond" data-rec-beyond>
       <div class="mp-beyond-eyebrow">BEYOND THE REPORT｜この先にあるもの</div>
       <p class="mp-beyond-title">まだ、ここには現れていない輪郭があります</p>
-      <p class="mp-beyond-body">この記録が描いたのは、いまのあなたの輪郭です。完全解析では、<b>三つの人物像</b>から、もう一段深く読みます。元素・武器・国家と20軸を横断し、組み合わせ、活かし方、過剰に働いたときのサインまでを、<b class="g">全46ページ</b>の記録に結びます。</p>
+      <p class="mp-beyond-body"><b>三つの人物像</b>から、この記録をもう一段深く読む。<b class="g">全46ページ</b>の完全解析。</p>
     </div>`;
 function mpRecordActionsHtml(r, source) {
   if (!mpEntitlementOk) return mpRecordUnknownHtml();
