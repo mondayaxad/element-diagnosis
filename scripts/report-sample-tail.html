@@ -1,0 +1,52 @@
+<style>
+  .sample-cta { max-width:640px; margin:24px auto 48px; padding:18px 16px; border:1px solid #2a2440; border-radius:10px; background:rgba(20,16,36,.6);
+    color:#c9c2e0; font-size:12.5px; line-height:1.9; text-align:center; box-sizing:border-box; }
+  .sample-cta h2 { margin:0 0 8px; font-size:16px; letter-spacing:.08em; color:#e6e2f2; }
+  .sample-cta p { margin:6px 0; }
+  .sample-cta a { color:#c9a860; }
+  .sample-cta a.sample-return { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:8px 18px; border-radius:8px;
+    color:#fff; text-decoration:none; background:linear-gradient(120deg,#5b78c8 0%,#8a5fc0 50%,#c9a860 100%); }
+  @media (max-width:520px) { .sample-cta a.sample-return { width:100%; } }
+  /* 申込のボタン：夜空に元素の光がさす宝石の色（元素診断の世界観） */
+  .sample-cta .ed-sky-wrap, .beyond-cta .ed-sky-wrap { display:grid; gap:10px; justify-items:center; margin:12px 0 6px; }
+  a.sample-return.ed-sky-btn { position:relative; overflow:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:3px; width:100%; max-width:440px; min-height:60px; padding:10px 16px; box-sizing:border-box;
+    border:1px solid rgba(214,189,132,.55); border-radius:8px; color:#f3ead2; text-decoration:none; letter-spacing:.1em;
+    background:
+      radial-gradient(1.2px 1.2px at 14% 28%, rgba(255,255,255,.75) 50%, transparent 52%),
+      radial-gradient(1px 1px at 33% 74%, rgba(255,255,255,.5) 50%, transparent 52%),
+      radial-gradient(1.3px 1.3px at 78% 30%, rgba(255,248,220,.7) 50%, transparent 52%),
+      radial-gradient(1px 1px at 91% 70%, rgba(255,255,255,.45) 50%, transparent 52%),
+      radial-gradient(130% 170% at 0% 0%, color-mix(in srgb, var(--el, #8a6bd0) 46%, transparent) 0%, transparent 58%),
+      radial-gradient(90% 140% at 100% 100%, rgba(201,168,96,.38) 0%, transparent 60%),
+      linear-gradient(115deg, #0f1630 0%, #1d2147 42%, #31285a 70%, #4a3a52 100%);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 0 22px color-mix(in srgb, var(--el, #8a6bd0) 22%, transparent); }
+  a.sample-return.ed-sky-btn .ed-sky-main { font-size:14.5px; font-weight:600; letter-spacing:.12em; text-shadow:0 0 12px rgba(255,236,190,.35); }
+  a.sample-return.ed-sky-btn .ed-sky-sub { font-size:11.5px; letter-spacing:.1em; color:#d6bd84; font-weight:400; }
+  a.sample-return.ed-sky-btn[aria-disabled="true"] { opacity:.55; pointer-events:none; }
+  /* 完全解析（解析レポートのサンプルでの案内）：主の申込より控えめに */
+  a.sample-return.ed-sky-btn.is-quiet { min-height:54px; border-color:rgba(214,189,132,.32); color:#e4dcc8; box-shadow:none;
+    background:radial-gradient(120% 160% at 0% 0%, color-mix(in srgb, var(--el, #8a6bd0) 16%, transparent) 0%, transparent 60%), linear-gradient(115deg,#10152a 0%,#171a33 55%,#211d33 100%); }
+  a.sample-return.ed-sky-btn.is-quiet .ed-sky-main { font-size:14px; text-shadow:none; }
+  a.sample-return.ed-sky-btn.is-quiet .ed-sky-sub { color:#bfa978; }
+  /* この先にあるもの（完全解析の案内） */
+  .beyond-sec .desc strong { font-weight:600; }
+  .beyond-sec .sec-title { text-wrap:balance; word-break:auto-phrase; }
+  .beyond-cta { margin-top:18px; }
+  .beyond-notice { margin:10px 0; padding-left:10px; border-left:2px solid #2d2944; font-size:11.5px; line-height:1.8; color:#9a92b4; }
+  .beyond-sample { display:flex; align-items:center; gap:12px; margin:12px 0 0; padding:12px 14px; border:1px solid rgba(201,168,96,.45); border-radius:10px; background:rgba(201,168,96,.06); color:#e6e1f2; text-decoration:none; text-align:left; }
+  .beyond-sample-icon { flex:none; width:30px; height:36px; border:1px solid #c9a860; border-radius:3px; position:relative; background:linear-gradient(180deg,rgba(201,168,96,.18),transparent); }
+  .beyond-sample-icon::before, .beyond-sample-icon::after { content:''; position:absolute; left:6px; right:6px; height:1px; background:#c9a860; opacity:.7; }
+  .beyond-sample-icon::before { top:10px; } .beyond-sample-icon::after { top:16px; }
+  .beyond-sample-text { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .beyond-sample-text b { font-size:13.5px; font-weight:600; letter-spacing:.06em; }
+  .beyond-sample-text small { font-size:11px; color:#9a92b4; line-height:1.6; }
+  @media print { .beyond-cta { display:none; } }
+  @media print { .sample-cta { display:none; } }
+  /* 申込を押した後（決済画面へ移動中）：押せないことが分かる見た目 */
+  [data-buy][data-busy] { opacity:.6; pointer-events:none; }
+</style>
+<aside class="sample-cta" aria-label="お申し込み" data-sample-buy="analysis" data-pdf-skip>
+  <h2>あなた自身の診断結果で読む</h2>
+  <p>お申し込みには、あなたの診断結果が必要です。<a href="/">まず元素診断を受ける</a></p>
+</aside>
+<script src="/js/sample-buy.js"></script>

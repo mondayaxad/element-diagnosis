@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<!-- GA4：js/ga.js が本番ドメインでだけ読み込む（Preview・ローカルでは送信しない。URL は origin＋path だけ・# の購入対象トークンを送らない） -->
+<!-- このファイルは scripts/build-report-sample.js が report.html から作る。直接編集しない -->
+<!-- GA4：js/ga.js が本番ドメインでだけ読み込む（Preview・ローカルでは送信しない）。
+     送る page_location は origin＋path だけ。イベントの値から記録 ID・メール・Stripe ID・トークンを落とす。 -->
 <script src="/js/ga.js"></script>
+<script>
+  // 本番ドメイン以外（Preview・ローカル）では true。Stripe の旧 Payment Link（v1）をテスト用に切り替える。
+  var IS_PREVIEW_BUILD = location.hostname !== 'element-diagnosis-five.vercel.app';
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>元素診断 解析レポート</title>
+<title>元素診断 解析レポート（サンプル）</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
   :root { --panel:#0c0a14; --line:#221c38; --fg:#dce6de; --sub:#7a8a80; --accent:#a888d8; }
@@ -13,6 +19,7 @@
   .wrap { max-width:480px; margin:0 auto; padding:32px 18px 80px; }
   .state-box { text-align:center; padding:80px 20px; color:#8878a8; font-size:13px; line-height:2; }
   .spinner { width:28px; height:28px; border:2px solid #2a2240; border-top-color:#a888d8; border-radius:50%; margin:0 auto 18px; animation:spin 0.8s linear infinite; }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation:none; } }
   @keyframes spin { to { transform:rotate(360deg); } }
   .err-box { text-align:center; padding:80px 20px; }
   .err-box h2 { color:#e8b8a0; font-size:16px; margin-bottom:12px; }
@@ -58,7 +65,7 @@
   .ring-item svg { display:block; width:100%; max-width:76px; height:auto; margin:0 auto; }
   @media (max-width:360px) { .ring-grid { gap:6px; } }
   .ring-item .pctnum { font-size:15px; font-weight:700; }
-  .ring-item .ringlabel { font-size:10px; color:#9bb0a2; margin-top:6px; line-height:1.4; }
+  .ring-item .ringlabel { font-size:10px; color:#9bb0a2; margin-top:6px; line-height:1.4; overflow-wrap:anywhere; }
   .sw-list { margin-top:14px; }
   .sw-section-label { font-size:12.5px; font-weight:700; margin:16px 0 10px; display:flex; align-items:center; gap:6px; }
   .sw-row { display:flex; gap:11px; padding:12px 0; border-bottom:1px solid #1c1830; align-items:flex-start; }
@@ -87,6 +94,60 @@
   /* ラグジュアリー装飾 */
   .gold-rule { height:1px; margin:20px 0; background:linear-gradient(90deg, transparent, #c0a860, transparent); }
   .eyebrow { font-size:10px; letter-spacing:0.25em; color:#c0a860; text-transform:uppercase; margin-bottom:8px; }
+  /* 完全解析の案内（本文を読み終えた終端だけ。追従しない・背景画像や紋章を置かない）
+     役割ごとの色（白一色にしない）：見出し --ca-title／本文 --ca-body／補足 --ca-muted／罫 --ca-line／価格 --ca-gold／
+     人物像 --ca-mirror・--ca-hidden・--ca-mentor */
+  .ca-r-sec { --ca-title:#e0dcf0; --ca-body:#aaa5bb; --ca-muted:#817b96; --ca-line:#2d2944; --ca-gold:#c9a860;
+    --ca-mirror:#83b9da; --ca-hidden:#ac82d4; --ca-mentor:#d3ad68; --ca-view:#9fc3dd; }
+  .ca-r-sec .ca-eyebrow { font-size:10.5px; letter-spacing:0.2em; color:var(--ca-muted); }
+  .ca-r-sec .ca-lead { word-break:auto-phrase; margin:6px 0 0; font-size:15px; font-weight:700; color:var(--ca-title); line-height:1.8; letter-spacing:0.05em; }
+  .ca-r-sec .ca-body { margin:12px 0 0; font-size:12.5px; color:var(--ca-body); line-height:1.9; }
+  .ca-r-sec .ca-meta { margin:0; font-size:11.5px; color:var(--ca-muted); line-height:1.7; }
+  .ca-r-sec .ca-state { margin:10px 0 0; font-size:17px; font-weight:700; color:var(--ca-state, var(--ca-title)); }
+  .ca-lens-list { list-style:none; margin:16px 0 0; padding:0; border-top:1px solid var(--ca-line); }
+  .ca-lens { position:relative; padding:11px 2px 11px 14px; border-bottom:1px solid var(--ca-line); }
+  .ca-lens::before { content:''; position:absolute; left:0; top:11px; bottom:11px; width:2px; border-radius:1px; background:var(--lens-c); }
+  .ca-lens--mirror { --lens-c:var(--ca-mirror); } .ca-lens--hidden { --lens-c:var(--ca-hidden); } .ca-lens--mentor { --lens-c:var(--ca-mentor); }
+  .ca-lens-en { font-size:11.5px; letter-spacing:0.16em; color:var(--lens-c); }
+  .ca-lens-head { display:block; }
+  .ca-lens-desc { display:block; margin-top:1px; font-size:12.5px; color:var(--ca-body); line-height:1.7; }
+  .ca-r-price { display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-top:20px; padding-top:10px; border-top:1px dashed var(--ca-line); }
+  .ca-r-price .ca-price { flex:none; font-size:16px; letter-spacing:0.06em; color:var(--ca-gold); white-space:nowrap; }
+  .ca-r-btn:focus-visible { outline:2px solid #a888d8; outline-offset:2px; }
+  .ca-r-btn { display:flex; align-items:center; justify-content:center; width:100%; min-height:46px; margin-top:12px; border-radius:8px; border:1px solid #6a5a94; background:transparent; color:var(--ca-title); font-family:inherit; font-size:14px; letter-spacing:0.08em; text-decoration:none; cursor:pointer; }
+  .ca-r-btn.is-pending { font-family:inherit; font-size:13px; color:#a3a6c4; border-style:dashed; cursor:not-allowed; }
+  .ca-r-btn.ca-r-register { display:inline-flex; width:auto; min-height:44px; margin:0 0 16px; padding:10px 20px; border-radius:6px; font-size:12.5px; color:#fff; background:#6a52b0; border-color:#8a72d0; letter-spacing:.04em; }
+  .ca-r-btn.is-view { border-color:color-mix(in srgb, var(--ca-view) 40%, var(--ca-line)); color:var(--ca-view); }
+  .ca-r-note { margin-top:10px; padding-left:8px; border-left:2px solid var(--ca-line); font-size:11px; color:var(--ca-muted); line-height:1.7; }
+  .ca-lens-desc--strong { color:var(--ca-title); font-size:13px; }
+  .ca-lens-more { display:block; margin-top:4px; font-size:12px; line-height:1.85; color:var(--ca-muted); }
+  /* 完全解析の申込：夜空に元素の光がさす宝石の色（元素診断の世界観） */
+  .ca-r-btn.is-offer { flex-direction:column; gap:3px; margin-top:20px; min-height:60px; color:#f3ead2; font-weight:600; letter-spacing:0.1em; text-align:center; line-height:1.5; padding:10px 14px;
+    border:1px solid rgba(214,189,132,.55);
+    background:
+      radial-gradient(1.2px 1.2px at 14% 28%, rgba(255,255,255,.75) 50%, transparent 52%),
+      radial-gradient(1px 1px at 33% 74%, rgba(255,255,255,.5) 50%, transparent 52%),
+      radial-gradient(1.3px 1.3px at 78% 30%, rgba(255,248,220,.7) 50%, transparent 52%),
+      radial-gradient(130% 170% at 0% 0%, color-mix(in srgb, var(--el, #8a6bd0) 46%, transparent) 0%, transparent 58%),
+      radial-gradient(90% 140% at 100% 100%, rgba(201,168,96,.38) 0%, transparent 60%),
+      linear-gradient(115deg, #0f1630 0%, #1d2147 42%, #31285a 70%, #4a3a52 100%);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.04), 0 0 22px color-mix(in srgb, var(--el, #8a6bd0) 22%, transparent); }
+  .ca-r-btn.is-offer .ed-sky-main { font-size:15px; letter-spacing:.14em; text-shadow:0 0 12px rgba(255,236,190,.35); }
+  .ca-r-btn.is-offer .ed-sky-sub { font-size:11.5px; font-weight:400; letter-spacing:.08em; color:#d6bd84; }
+  .ca-r-btn.is-offer:disabled { opacity:0.55; cursor:default; box-shadow:none; }
+  .ca-r-goal-title { margin-top:16px; font-size:12px; letter-spacing:0.12em; color:var(--ca-gold); }
+  .ca-goal-list { border:0; margin:10px 0 0; padding:0; }
+  .ca-goal-list legend { font-size:12px; color:var(--ca-body); line-height:1.8; margin-bottom:6px; }
+  .ca-goal { display:flex; gap:10px; align-items:flex-start; min-height:44px; padding:10px 4px; border-bottom:1px solid var(--ca-line); cursor:pointer; }
+  .ca-goal input { margin-top:4px; width:18px; height:18px; flex:none; accent-color:#8a5fc0; }
+  .ca-goal b { display:block; font-size:13px; color:var(--ca-title); font-weight:700; }
+  .ca-goal span span { display:block; font-size:11.5px; color:var(--ca-muted); line-height:1.7; margin-top:2px; }
+  .ca-r-msg { margin-top:8px; font-size:12px; color:#e0a0a0; min-height:1em; }
+  .ca-r-mypage { margin-top:14px; font-size:12px; }
+  .ca-r-inherit { margin-top:28px; padding-top:20px; border-top:1px solid rgba(255,255,255,.08); }
+  .ca-r-inherit .ca-r-note b { font-weight:600; }
+  .ca-r-mypage a { color:#a89cc8; text-decoration:none; border-bottom:1px solid #3a3058; padding-bottom:1px; }
+  .ca-r-sample { display:inline-block; margin-top:12px; font-size:12px; letter-spacing:0.06em; color:#8fb4dc; text-decoration:none; border-bottom:1px solid #2c3a55; padding-bottom:1px; }
   .cover-dots { position:relative; width:220px; height:220px; margin:0 auto 20px; }
   .cover-dots svg { width:100%; height:100%; }
   .sec-img { width:100%; aspect-ratio:16/9; border-radius:10px; margin:16px 0; overflow:hidden; position:relative; }
@@ -100,13 +161,27 @@
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!-- 完全解析（46ページ）の表示用状態。PREVIEW ONLY：購入権は発行しない -->
+<script src="complete-analysis.js"></script>
+<script src="/api/public-config?format=js"></script>
+<script src="js/guest-purchase.js"></script>
+<script src="js/report-purchase.js"></script>
+<script src="js/lens-constellation.js"></script>
+<script src="js/ETI_v2_QUESTIONS_100.js"></script>
+<script src="js/eti_v2_prototypes.js"></script>
+<script src="js/eti_v2_engine.js"></script>
+<script src="js/characters118_v2.js"></script>
+<script src="js/characters118_v2_1.js"></script>
+<script src="js/eti_mirror_selection_v21.js"></script>
+<script src="js/eti_v2_mirror_resolver.js"></script>
+<script src="js/eti_v2_legacy_adapter.js"></script>
 </head>
 <body>
 <div style="background:linear-gradient(90deg,#5a4490,#8a5fc0);color:#fff;text-align:center;padding:12px 16px;font-size:13px;font-weight:700;letter-spacing:1px">
   📖 これはサンプルレポートです（実際にご購入いただくと、あなた自身の診断結果でこの内容が生成されます）
 </div>
 <div id="root">
-  <div class="state-box"><div class="spinner"></div>お支払い状況を確認しています…</div>
+  <div class="state-box"><div class="spinner"></div>サンプルを表示しています…</div>
 </div>
 
 <script>
@@ -135,7 +210,7 @@ const WEAPONS = {
 // MBTI風4文字タイプコード＋固有名称（35通り）
 const ELEMENT_CODE = { "炎":"PY", "水":"HY", "氷":"CR", "雷":"EL", "風":"AN", "岩":"GE", "草":"DE" };
 const WEAPON_CODE = { "片手剣":"SW", "両手剣":"CM", "長柄":"PL", "法器":"CT", "弓":"BW" };
-const NATION_CODE = { "モンド":"M", "璃月":"L", "稲妻":"I", "スメール":"S", "フォンテーヌ":"F", "ナタ":"N", "スネージナヤ":"Z" };
+const NATION_CODE = { "モンド":"M", "璃月":"L", "稲妻":"I", "スメール":"S", "フォンテーヌ":"F", "ナタ":"N", "スネージナヤ":"Z", "ナドクライ":"D" };
 function typeCode(el, w, nation) { return ELEMENT_CODE[el] + WEAPON_CODE[w] + (nation ? '-' + NATION_CODE[nation] : ''); }
 // 35タイプ固有の名称（機械的な掛け合わせではなく、組み合わせごとの性質から命名）
 const TYPE_NAME = {
@@ -150,6 +225,8 @@ const TYPE_NAME = {
 function typeName(el, w) { return TYPE_NAME[el][w]; }
 // 国家（価値観理論：シュワルツの基本的価値観をテイワット7国家にマッピング）
 const NATIONS = ["モンド","璃月","稲妻","スメール","フォンテーヌ","ナタ","スネージナヤ"];
+// ETI v2専用：legacy-v1の7国家（NATIONS、上のまま不変）＋ナドクライの8国家。
+const NATIONS_V2 = NATIONS.concat(["ナドクライ"]);
 const NATION_DESC = {
   "モンド":     "モンドが体現するのは「自由」です。誰にも縛られず、自分の意志で選び取ることに、何よりの価値を置きます。",
   "璃月":       "璃月が体現するのは「契約と達成」です。交わした約束を守り、目に見える成果を積み上げることに、価値を置きます。",
@@ -157,7 +234,8 @@ const NATION_DESC = {
   "スメール":   "スメールが体現するのは「知恵」です。物事の真実を追い求め、知識を分かち合うことに、価値を置きます。",
   "フォンテーヌ": "フォンテーヌが体現するのは「法と正義」です。公正さと調和を重んじ、誰に対しても等しくあることに、価値を置きます。",
   "ナタ":       "ナタが体現するのは「戦争」です。真っ向からぶつかり合う戦いの中でこそ、生きる実感を得ることに、価値を置きます。",
-  "スネージナヤ": "スネージナヤが体現するのは「抗争」です。争いを通じて自らの力を示し、抗い続けることに、価値を置きます。",
+  "スネージナヤ": "スネージナヤが体現するのは「慈愛」です。大切なものを守るためなら、厳しい現実にも立ち向かい、自らが痛みを引き受けることに価値を置きます。",
+  "ナドクライ":   "ナドクライが体現するのは「月光」です。表舞台の喧騒から離れ、静かな場所で自分の価値観を保つことに、価値を置きます。",
 };
 // 35タイプ固有の説明（使い回しではなく、組み合わせごとに意味づけ）
 const TYPE_DESC = {
@@ -493,6 +571,7 @@ const NATION_VALUES = {
   "フォンテーヌ": ['普遍主義','同調'],
   "ナタ":         ['刺激','快楽'],
   "スネージナヤ": ['権力','達成'],
+  "ナドクライ": ['自己志向','安全'],
 };
 // 価値観次元 → 国家の逆引き（複数国家にまたがる次元は平均を取る）
 const VALUE_NATIONS = {};
@@ -1016,6 +1095,307 @@ function computeResults(answers) {
 
   return { big5, enneaRaw, enneaTop, enneaWing, enneaSorted, elementScores, weaponScores, nationScores, charMatches };
 }
+
+/* ============================================================
+   ETI v2 — STYLE表示コンテンツ（正式名称・詩的タグ・解釈文）
+   Enneagramの代替ではなく、v2で実測したSTYLE5軸をそのまま表示する。
+   固定辞書と実測順位から機械的に組み立てる（自由生成しない）。index.htmlと同一の内容。
+   ============================================================ */
+const STYLE_LABEL = { AGY:'主導性', REL:'関係調整', ROL:'役割持続', REF:'媒介思考', AUT:'自律距離' };
+const STYLE_POETIC_TAG = {
+  AGY:'道を切り拓く意志', REL:'縁を結ぶ調律', ROL:'役目を貫く献身',
+  REF:'思索を介す眼差し', AUT:'距離を守る自律',
+};
+const STYLE_WEAPON_TAG = {
+  AGY:'推進', REL:'調和', ROL:'完遂',
+  REF:'熟考', AUT:'自律',
+};
+const STYLE_BASE_DESC = {
+  AGY:'誰かの合図を待つより、自ら最初の一歩を選ぶ人です。',
+  REL:'人と人のあいだに流れる温度を読み、関係がほどけない形へ整えます。',
+  ROL:'一度引き受けた役目を、その意味が尽きるまで手放しません。',
+  REF:'衝動のまま触れるのではなく、思索や言葉を介して世界へ近づきます。',
+  AUT:'近づきすぎず離れすぎず、自分の輪郭を守れる距離から歩きます。',
+};
+function rankStyleAxes(styleDisplay) {
+  return ETI_V2_META.styleAxes.map(function(ax, i) {
+    return { axis: ax, score: styleDisplay[ax], order: i };
+  }).sort(function(a, b) { return (b.score - a.score) || (a.order - b.order); });
+}
+function buildStyleCoreText(styleDisplay) {
+  var ranked = rankStyleAxes(styleDisplay);
+  var first = ranked[0].axis, second = ranked[1].axis;
+  return 'あなたの行動の核には〈' + STYLE_POETIC_TAG[first] + '〉があり、そこへ〈' + STYLE_POETIC_TAG[second] + '〉が重なっています。'
+    + STYLE_BASE_DESC[first] + STYLE_BASE_DESC[second];
+}
+function pickStyleTags_Similar(styleDisplay) {
+  return rankStyleAxes(styleDisplay).slice(0, 4).map(function(r) { return STYLE_POETIC_TAG[r.axis]; });
+}
+function pickStyleTags_Weapon(weaponPrototype, styleDisplay) {
+  var scored = ETI_V2_META.styleAxes.map(function(ax, i) {
+    return { axis: ax, protoWeight: weaponPrototype[ax], userScore: styleDisplay[ax], order: i };
+  });
+  scored.sort(function(a, b) {
+    return (b.protoWeight - a.protoWeight) || (b.userScore - a.userScore) || (a.order - b.order);
+  });
+  return scored.slice(0, 4).map(function(r) { return r.axis; });
+}
+// 武器種（行動）特性リング用：v1のpickFactorTags_Weapon_v3（Enneagramのsw強み弱み）に相当する
+// 情報量を持たせつつ、存在しないEnneagramの強み/弱みを捏造しない。実測STYLE値と基本解釈文のみを使う。
+function pickStyleTags_Weapon_v3(weaponPrototype, styleDisplay) {
+  var axes = pickStyleTags_Weapon(weaponPrototype, styleDisplay);
+  return axes.map(function(ax) {
+    var v = Math.round(styleDisplay[ax]);
+    var plain = STYLE_PLAIN[ax], band = styleBand(v);
+    return { word: plain.power, pct: v, desc: STYLE_BASE_DESC[ax], sw: plain.sw[band],
+      why: '行動スタイルの実測値（' + v + '）から導かれています。' };
+  });
+}
+// STYLE 5軸のわかりやすい説明と、実測値の高低ごとの強み・弱み（レポート専用。実測値の帯で選ぶだけで、推測値は作らない）
+const STYLE_COLOR = { AGY:'#e0805a', REL:'#5fb8a0', ROL:'#d4ad5a', REF:'#9a86e0', AUT:'#6aa4dc' };
+const STYLE_PLAIN = {
+  AGY: { power:'推進',
+    hi:'指示や合図を待たずに、自分で決めて動き始めることが多いタイプです。', mid:'自分から動く場面と、周りに合わせて動く場面を使い分けています。', lo:'まず周りの状況や相手の出方を見てから動く、慎重なタイプです。',
+    sw:{ hi:{ s:'迷っている場に最初の一歩を示し、物事を前に進められます。', ww:'先走り', w:'周りの準備が整う前に動き出し、置いていかれる人が出ることがあります。' },
+         mid:{ s:'状況に応じて、引っ張る役と支える役のどちらにも回れます。', ww:'様子見の長さ', w:'動くべきか迷っているうちに、タイミングを逃すことがあります。' },
+         lo:{ s:'状況を見極めてから動くため、無駄な衝突や失敗を避けられます。', ww:'受け身', w:'きっかけを待つうちに、自分の意見を出す機会を逃しがちです。' } } },
+  REL: { power:'調和',
+    hi:'場の空気や相手の気持ちを読み、関係がうまくいくように自然と調整します。', mid:'必要なときには相手に合わせ、そうでないときは自分のやり方を通します。', lo:'関係の調整より、内容や自分のやり方を優先する傾向があります。',
+    sw:{ hi:{ s:'人と人のあいだを取り持ち、チームの雰囲気を安定させられます。', ww:'気疲れ', w:'相手に合わせすぎて、自分の本音を後回しにしやすくなります。' },
+         mid:{ s:'協調と主張のバランスが取れ、どんな相手とも関係を築けます。', ww:'立ち位置の揺れ', w:'場面ごとに態度が変わり、本心が伝わりにくいことがあります。' },
+         lo:{ s:'空気に流されず、言うべきことをはっきり伝えられます。', ww:'摩擦', w:'言い方や順序への配慮が足りず、誤解を生むことがあります。' } } },
+  ROL: { power:'完遂',
+    hi:'一度引き受けたことは、最後までやり遂げようとします。', mid:'責任は果たしつつ、状況が変われば役割の持ち方も見直します。', lo:'役割に縛られず、状況に応じてやり方を柔軟に変えます。',
+    sw:{ hi:{ s:'責任感が強く、周りから安心して任せてもらえます。', ww:'抱え込み', w:'役目を手放せず、無理をしてでも続けてしまうことがあります。' },
+         mid:{ s:'続ける力と切り替える力の両方を持ち、長く安定して働けます。', ww:'中途の迷い', w:'続けるか手放すかの判断に、時間がかかることがあります。' },
+         lo:{ s:'変化に強く、新しいやり方へすばやく切り替えられます。', ww:'継続の弱さ', w:'飽きや状況の変化で、途中で手を離しやすくなります。' } } },
+  REF: { power:'熟考',
+    hi:'すぐ行動するより、まず考えたり言葉にしたりしてから動きます。', mid:'考えることと動くことを、場面に合わせて行き来します。', lo:'考えるより先に、実際に動いて確かめるタイプです。',
+    sw:{ hi:{ s:'物事の意味や仕組みを整理し、筋の通った判断ができます。', ww:'考えすぎ', w:'考える時間が長く、動き出しが遅れることがあります。' },
+         mid:{ s:'考えすぎず、動きすぎず、ほどよい速さで判断できます。', ww:'中途半端さ', w:'深く考えるべき場面でも、早めに結論を出してしまうことがあります。' },
+         lo:{ s:'行動が早く、試しながら答えを見つけられます。', ww:'見切り発車', w:'準備や確認が足りないまま進め、やり直しが増えることがあります。' } } },
+  AUT: { power:'自律',
+    hi:'人と適度な距離を保ち、自分のペースで物事を進めます。', mid:'人と一緒に進める時間と、一人で進める時間の両方を大切にします。', lo:'人と近い距離で、一緒に進めることを好みます。',
+    sw:{ hi:{ s:'周りに流されず、自分の判断で落ち着いて進められます。', ww:'距離の取りすぎ', w:'頼ることが苦手で、困りごとを一人で抱えがちです。' },
+         mid:{ s:'協力と自立を使い分け、どんな体制でも力を出せます。', ww:'ペースの揺れ', w:'周りに合わせるか自分を通すかで、疲れがたまることがあります。' },
+         lo:{ s:'人と力を合わせることで、一人では出せない成果を出せます。', ww:'依存', w:'一人で決める場面になると、不安を感じやすくなります。' } } },
+};
+function styleBand(v) { return v >= 60 ? 'hi' : (v <= 40 ? 'lo' : 'mid'); }
+// セクション冒頭の一言（何を測っているか）と、下に置く点数の基準
+function secIntro(text) { return `<p style="font-size:12px;color:#a3afba;line-height:1.85;margin:2px 0 14px">${text}</p>`; }
+function scoreScaleNote(hiText, midText, loText) {
+  return `<div style="font-size:10.5px;color:#7d8a96;margin-top:12px;line-height:1.8">数値は0〜100。<span style="color:#9fd0a0">60以上</span>＝${hiText}、<span style="color:#c8c0a0">41〜59</span>＝${midText}、<span style="color:#d8a070">40以下</span>＝${loText}として説明しています。</div>`;
+}
+// Big Five 各因子が何を表すか（平易な一言）
+const BIG5_PLAIN = {
+  O:'新しい考えや体験に、どれだけ心が開いているか', C:'計画を立て、決めたことをやり通す力',
+  E:'人との関わりや刺激から、どれだけ活力を得るか', A:'相手を思いやり、協力しようとする姿勢',
+  N:'気持ちの揺れやすさ、ストレスへの敏感さ',
+};
+function generateWhySimilarTextV2(top1, topEl, topW) {
+  const points = [];
+  if (top1.el === topEl) points.push('元素');
+  if (top1.w === topW) points.push('武器');
+  let matchLine = points.length
+    ? `特に${points.join('・')}が、あなたと完全に一致しています。`
+    : `元素・武器の型は異なりますが、性格・行動スタイル・価値観の複数の層が、同じ方向を指しているために起きる重なりです。`;
+  return `${top1.name}との一致度は${top1.match}%。${matchLine}（性格類似度：${top1.personalitySim}%・行動スタイル類似度：${top1.styleSim}%・価値観類似度：${top1.valuesSim}%）`;
+}
+// describeCharMatchのv2版：Enneagramの核一致ではなく、MIRRORの3類似度を根拠に組み立てる。
+function describeCharMatchV2(ch, topEl, topW, rankIndex) {
+  const points = [];
+  if (ch.el === topEl) points.push('元素');
+  if (ch.w === topW) points.push('武器');
+  const pointsStr = points.join('・');
+  const simEntries = [['性格類似度', ch.personalitySim], ['行動スタイル類似度', ch.styleSim], ['価値観類似度', ch.valuesSim]];
+  simEntries.sort((a,b) => b[1]-a[1]);
+  const topSim = simEntries[0];
+  const templates = [
+    () => points.length
+      ? `${pointsStr}が一致するだけでなく、${topSim[0]}の高さ（${topSim[1]}%）が、この一致度を支えています。`
+      : `${topSim[0]}が${topSim[1]}%と高く、ほぼ同じ座標に位置しています。元素・武器の型は異なりますが、根の部分が重なっています。`,
+    () => `${ch.name}との重なりの核は${topSim[0]}です（${topSim[1]}%）。${points.length?`さらに${pointsStr}も一致し、`:''}複数の層が同じ方向を指しています。`,
+    () => points.length
+      ? `構造として${pointsStr}が重なっており、その上で${topSim[0]}の高さ（${topSim[1]}%）が、この一致度を裏付けています。`
+      : `表面的な型は異なりますが、${topSim[0]}が強く重なっており（${topSim[1]}%）、性質の根が近いことを示しています。`,
+    () => `一致度${ch.match}%のうち、最も効いているのは${topSim[0]}です（${topSim[1]}%）。${points.length?`${pointsStr}の一致も含め、`:''}複数の層が、同じ方向を向いています。`,
+  ];
+  return templates[rankIndex % templates.length]();
+}
+// 総括：PERSONALITY・STYLE・VALUESの3軸を統合（Enneagramには触れない）
+function buildOverviewSection_v3_V2(results, pal) {
+  const big5 = results.big5; // = results.personality（PERSONALITYの5軸をBig5同名で利用）
+  const topNat = results.nationScores[0].nation;
+  const topFactors = Object.keys(big5)
+    .sort((a,b)=>Math.abs(big5[b]-50)-Math.abs(big5[a]-50)).slice(0,2);
+  const f1 = topFactors[0], f2 = topFactors[1];
+  const ranked = rankStyleAxes(results.style);
+  const s1 = ranked[0].axis, s2 = ranked[1].axis;
+  const C = { p:'#b48ad8', s:'#dcae5a', v:'#5cc4b0' };
+  const b5 = f => `<strong style="color:${C.p}">${BIG5[f].name}</strong><span style="color:#8f9fb0;font-size:11.5px">（${big5[f]}・${big5[f] >= 50 ? BIG5[f].high : BIG5[f].low}）</span>`;
+  const st = ax => `<strong style="color:${STYLE_COLOR[ax]}">「${STYLE_PLAIN[ax].power}」</strong><span style="color:#8f9fb0;font-size:11.5px">（${STYLE_LABEL[ax]}）</span>`;
+  const row = (color, tag, title, body) => `
+    <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #1c1830">
+      <span style="flex-shrink:0;width:4px;border-radius:2px;background:${color}"></span>
+      <div>
+        <div style="font-size:10.5px;letter-spacing:1.5px;color:${color};margin-bottom:3px">${tag}<span style="color:#8f9fb0;letter-spacing:0;margin-left:8px">${title}</span></div>
+        <div style="font-size:12.5px;color:#c8d0d8;line-height:1.9">${body}</div>
+      </div>
+    </div>`;
+  return `
+    <div class="overview-box" style="border-color:${pal.p}40">
+      ${row(C.p, 'PERSONALITY', 'どう感じ、どう動くか', `気質のデータでは、${b5(f1)}と${b5(f2)}が突出しています。この2つが、あなたの反応の土台です。`)}
+      ${row(C.s, 'STYLE', 'どう行動へ表すか', `行動では${st(s1)}がいちばん強く、${st(s2)}がそれに続きます。${STYLE_PLAIN[s1][styleBand(Math.round(results.style[s1]))]}`)}
+      ${row(C.v, 'VALUES', '何を大切にして選ぶか', `価値観は<strong style="color:#f0dca0">${topNat}</strong>にもっとも近く、「<strong style="color:#f0dca0">${REPORT_NATION_MEANING[topNat] || ''}</strong>」が日々の選択の基準になっています。`)}
+      <p style="font-size:13.5px;color:#eef4ee;line-height:1.95;margin:16px 0 0;padding:12px 14px;border-radius:8px;background:linear-gradient(90deg,${pal.p}22,transparent)">この3つの層が<strong style="color:${pal.light}">同じ方向を向いているとき</strong>、あなたは最も自分らしく動けます。逆に、層同士がねじれる場面では、迷いや葛藤が生まれやすくなります。</p>
+    </div>`;
+}
+
+// シュワルツ10次元スコア：v2はVALUES(SD/ST/HE/AC/PO/SE/CO/TR/BE/UN)の実測値を
+// 日本語ラベルへ直接対応させる（v1のように国家スコアから近似する必要がない）。
+const SCHWARTZ_AXIS_CODE = {
+  自己志向:'SD', 刺激:'ST', 快楽:'HE', 達成:'AC', 権力:'PO',
+  安全:'SE', 同調:'CO', 伝統:'TR', 博愛:'BE', 普遍主義:'UN',
+};
+function computeSchwartzScoresV2(results) {
+  const scores = {};
+  Object.keys(SCHWARTZ_VALUE).forEach(function(v) {
+    const code = SCHWARTZ_AXIS_CODE[v];
+    scores[v] = Math.round(results.values[code]);
+  });
+  return scores;
+}
+
+/* ============================================================
+   ETI v2 — キャラクター正規化・結果計算（report.html描画用ラッパー）
+   ============================================================ */
+const NATION_REGION_ALIAS_V2 = { "ナド・クライ": "ナドクライ" };
+var V2_CHARACTERS_NORMALIZED = null;
+// regionがnull（ニコ・スカーク・アーロイの3名。audit.region_correctedによる意図的な null 化）の場合、
+// 表示用フォールバックとしてのみ legacy.old_nation_field を使う。元データ（region:null自体）は書き換えない。
+// MIRRORのスコアリングはregionを見ないため、この正規化は表示（国家バッジ等）にのみ影響する。
+function getV2CharacterDisplayRegion(c) {
+  var region = c.region || (c.legacy && c.legacy.old_nation_field) || null;
+  return NATION_REGION_ALIAS_V2[region] || region;
+}
+// レポートのMIRROR版：マイページから開いた場合はマイページで表示している版（mv）。購入直後（Stripe→verify）など mv が無い場合は
+// 最新版（ETI-MIRROR-2.1.0）。レポートの購入トークンには MIRROR 版が含まれないため（js/eti_v2_mirror_resolver.js 参照）。
+function reportV2MirrorVersion() {
+  var mv = new URLSearchParams(window.location.search).get('mv');
+  return mv ? ETIv2MirrorResolver.versionFromUrlParam(mv) : ETIv2MirrorResolver.CURRENT;
+}
+function getV2CharactersNormalized() {
+  return ETIv2MirrorResolver.normalizedCharacters(ETIv2MirrorResolver.resolveVersion(reportV2MirrorVersion()));
+}
+function computeResultsV2ForUI(answersByItemId, encodedCode) {
+  var raw = ETIv2.computeResultsV2(answersByItemId, {
+    elementPrototypes: ELEMENT_PROTOTYPES_V2,
+    weaponPrototypes: WEAPON_PROTOTYPES_V2,
+    nationPrototypes: NATION_PROTOTYPES_V2,
+  });
+  var computed = ETIv2MirrorResolver.computeMirror(raw, reportV2MirrorVersion());
+  var vm = ETIv2LegacyAdapter.buildV2ViewModel(raw, computed.rankings, encodedCode);
+  vm.raw = raw;
+  // 一致率の表（charMatches）は生スコア順のまま。MIRROR見出しに使う1人は vm.mirror。
+  vm.mirror = vm.charMatches.find(function(c) { return c.name === computed.mirror.name; }) || vm.charMatches[0];
+  vm.mirrorModelVersion = computed.mirrorModelVersion;
+  vm.characterProfileVersion = computed.characterProfileVersion;
+  return vm;
+}
+
+// 「行動スタイルの深層 — STYLE」セクション本体：5軸全ての正式名称・実測値・説明を表示する
+// （上位3軸への切り詰めをしない）。CORE/FEAR/DESIREやウィング・成長/分裂方向に相当する
+// v2固有の概念は存在しないため作らない。
+function styleDeepDiveSection(results, pal) {
+  const ranked = rankStyleAxes(results.style);
+  const v = ax => Math.round(results.style[ax]);
+  const first = ranked[0].axis, second = ranked[1].axis, last = ranked[ranked.length - 1].axis;
+  const em = (ax, text) => `<strong style="color:${STYLE_COLOR[ax]};font-weight:700">${text}</strong>`;
+  // いちばん低い軸：数値の帯に合わせて言い方を変える（高い値を「控えめ」と呼ばない）
+  const lastBand = styleBand(v(last)), lastName = em(last, '「' + STYLE_PLAIN[last].power + '」');
+  const lastLine = lastBand === 'lo'
+    ? `いちばん控えめなのは${lastName}（${v(last)}）で、${STYLE_PLAIN[last].lo}`
+    : lastBand === 'mid'
+      ? `5軸の中でいちばん数値が低いのは${lastName}（${v(last)}）で、${STYLE_PLAIN[last].mid}`
+      : `いちばん数値が低い${lastName}（${v(last)}）も高めで、5軸すべてがしっかり出ています。`;
+  const lead = `
+    <p style="font-size:13.5px;color:#e8eef0;line-height:1.95;margin:0 0 8px">あなたの行動でいちばん強く出ているのは${em(first, '「' + STYLE_PLAIN[first].power + '」')}<span style="color:#8f9fb0;font-size:11.5px">（${STYLE_LABEL[first]} ${v(first)}）</span>、次に${em(second, '「' + STYLE_PLAIN[second].power + '」')}<span style="color:#8f9fb0;font-size:11.5px">（${STYLE_LABEL[second]} ${v(second)}）</span>です。</p>
+    <p style="font-size:12.5px;color:#b8c4cc;line-height:1.95;margin:0">${STYLE_PLAIN[first][styleBand(v(first))]}${STYLE_PLAIN[second][styleBand(v(second))]}${lastLine}</p>`;
+  const rows = ranked.map(r => {
+    const c = STYLE_COLOR[r.axis], val = Math.round(r.score), gid = 'styg' + r.axis;
+    return `
+    <div class="bar-block">
+      <div class="bar-top"><span class="label"><span style="color:#eef4ee">${STYLE_PLAIN[r.axis].power}</span><span style="color:#7d8a96;font-size:11px;margin-left:6px">${STYLE_LABEL[r.axis]} — ${r.axis}</span></span><span class="val" style="color:${c}">${val}</span></div>
+      <div class="bar-track">
+        <svg width="100%" height="6" style="display:block">
+          <defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="${c}" stop-opacity="0.35"/><stop offset="60%" stop-color="${c}"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0.85"/>
+          </linearGradient></defs>
+          <rect x="0" y="0" width="${val}%" height="6" rx="3" fill="url(#${gid})"/>
+        </svg>
+      </div>
+      <div class="bar-note" style="color:#a3afba">${STYLE_PLAIN[r.axis][styleBand(val)]}</div>
+    </div>`;
+  }).join('');
+  return `
+    ${secIntro('行動スタイルは、人や物事に向き合うときの「動き方」を、推進・調和・完遂・熟考・自律の5つで表したものです。')}
+    <div style="background:#0e0c18;border-left:3px solid ${STYLE_COLOR[first]};border-radius:6px;padding:16px 18px;margin:6px 0 18px">${lead}</div>
+    ${rows}
+    ${scoreScaleNote('強く出ている', '場面によって使い分けている', '控えめ')}`;
+}
+
+// ---------- 国家：なぜその国家になったか（価値観の実測値と国家の重なりを図で示す） ----------
+const REPORT_NATION_MEANING = { "モンド":"自由", "璃月":"契約", "稲妻":"永遠", "スメール":"知恵", "フォンテーヌ":"正義", "ナタ":"戦争", "スネージナヤ":"慈愛", "ナドクライ":"月光" };
+function nationReasonSection(results) {
+  const axes = ETI_V2_META.valueAxes;
+  const codeToLabel = {}; Object.keys(SCHWARTZ_AXIS_CODE).forEach(l => { codeToLabel[SCHWARTZ_AXIS_CODE[l]] = l; });
+  const topNat = results.nationScores[0].nation;
+  const center = obj => { const m = axes.reduce((a, ax) => a + obj[ax], 0) / axes.length; const o = {}; axes.forEach(ax => { o[ax] = obj[ax] - m; }); return o; };
+  const user = center(results.values), proto = center(NATION_PROTOTYPES_V2[topNat]);
+  // 国家が重んじる価値（プロトタイプで平均より高い上位3）と、あなたが強く持つ価値（平均より高い上位3）
+  const natTop = axes.slice().sort((a, b) => proto[b] - proto[a]).slice(0, 3);
+  const userTop = axes.slice().sort((a, b) => results.values[b] - results.values[a]).slice(0, 3);
+  // 決め手：あなたと国家の両方で平均より高い価値のうち、重なりの大きい順
+  const overlap = list => list.filter(ax => user[ax] > 0 && proto[ax] > 0).sort((a, b) => user[b] * proto[b] - user[a] * proto[a]).slice(0, 2);
+  const keys = overlap(userTop).length ? overlap(userTop) : overlap(axes);
+  const label = ax => codeToLabel[ax];
+  const col = ax => SCHWARTZ_VALUE[label(ax)] || '#c9a860';
+  const chip = ax => `<strong style="color:${col(ax)}">${label(ax)}</strong>`;
+  const near = results.nationScores.slice(0, 4);
+  const nearBars = near.map((n, i) => `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <span style="width:84px;font-size:12px;color:${i === 0 ? '#f0dca0' : '#a3afba'};font-weight:${i === 0 ? 700 : 400}">${n.nation}</span>
+      <div style="flex:1;height:8px;background:#1a1626;border-radius:4px;overflow:hidden"><div style="width:${n.score}%;height:100%;border-radius:4px;background:${i === 0 ? 'linear-gradient(90deg,#6a5428,#c9a860 60%,#f4e2b0)' : 'linear-gradient(90deg,#2a2638,#5a5470)'}"></div></div>
+      <span style="width:30px;text-align:right;font-size:12px;font-weight:700;color:${i === 0 ? '#f0dca0' : '#8f9fb0'}">${n.score}</span>
+    </div>`).join('');
+  const userBars = userTop.map(ax => {
+    const val = Math.round(results.values[ax]);
+    return `
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+        <span style="font-size:12.5px;color:${col(ax)};font-weight:700">${label(ax)}</span>
+        <span style="font-size:12px;font-weight:700;color:${col(ax)}">${val}</span>
+      </div>
+      <div style="height:7px;background:#1a1626;border-radius:4px;overflow:hidden"><div style="width:${val}%;height:100%;border-radius:4px;background:linear-gradient(90deg, ${col(ax)}55, ${col(ax)} 65%, #ffffffcc)"></div></div>
+    </div>`;
+  }).join('');
+  const gap = near.length > 1 ? near[0].score - near[1].score : null;
+  const reason = keys.length
+    ? `あなたが強く持つ価値のうち、${keys.map(chip).join('と')}は、${topNat}がもっとも大切にする価値（${natTop.map(chip).join('・')}）と重なっています。この重なりが、${topNat}を選んだ<strong style="color:#f0dca0">決め手</strong>です。`
+    : `${topNat}がもっとも大切にする価値（${natTop.map(chip).join('・')}）と、あなたの価値観全体の傾き方が、8国家の中でいちばん近い形をしています。`;
+  return `
+    <div style="background:#100c1a;border:1px solid #c9a86040;border-radius:10px;padding:18px 16px;margin:16px 0">
+      <div style="font-size:10.5px;letter-spacing:2px;color:#c9a860;margin-bottom:6px">WHY ${topNat}</div>
+      <div style="font-size:15px;font-weight:700;color:#f0dca0;margin-bottom:12px">なぜあなたは${topNat}なのか</div>
+      <div style="font-size:11px;color:#8f9fb0;margin-bottom:8px">国家との近さ（上位4国）</div>
+      ${nearBars}
+      ${gap != null ? `<div style="font-size:11px;color:#8f9fb0;margin:2px 0 16px">2位の${near[1].nation}とは<strong style="color:#e8eef0">${gap}ポイント差</strong>です。</div>` : ''}
+      <div style="font-size:11px;color:#8f9fb0;margin-bottom:8px">あなたが強く持つ価値（上位3）</div>
+      ${userBars}
+      <p style="font-size:12.5px;color:#c8d0d8;line-height:1.95;margin:12px 0 0">${topNat}は「<strong style="color:#f0dca0">${REPORT_NATION_MEANING[topNat] || ''}</strong>」を体現する国家です。${reason}</p>
+    </div>`;
+}
+
 const ELEMENT_PALETTE = {
   "炎": { p:"#c84a20", light:"#f0a878", dark:"#7a2c10", bg:"#1a0f08" },
   "水": { p:"#2a7aaa", light:"#8fd0ec", dark:"#123a52", bg:"#08131a" },
@@ -1075,16 +1455,16 @@ const ENNEA_SW = {
   9:{s:'内的な安定と調和を保つ力があります。', w:'摩擦を避けるために自分の意見を飲み込み続け、本当に望んでいることが見えなくなる場合があります。決断の先延ばしも起きやすい傾向です。', ww:'惰性'},
 };// シュワルツ価値観次元の強み・弱み
 const NATION_SW = {
-  自己志向:{s:'自分の意志で選び取る力があります。誰かに決めてもらうより、自分で考え、自分の責任で選択することに価値を感じます。この自律性が、独自の視点や創造性の土台にもなっています。', w:'他者の意見や既存のやり方を軽視しやすく、独りよがりになる場合があります。協調が必要な場面でも、自分のやり方を押し通そうとして、周囲との摩擦を生みやすい傾向です。', ww:'独善'},
-  刺激:{s:'新しい挑戦に踏み出す行動力があります。変化やスリルを恐れず、未知の状況にもむしろ活力を感じて向かっていける、行動力の源泉です。', w:'安定より変化を求めすぎて、落ち着いた継続が苦手になりがちです。刺激が薄れると急速に興味を失い、地道な積み重ねが必要な場面で息切れしやすい傾向があります。', ww:'飽きやすさ'},
-  達成:{s:'目標に向けて成果を積み上げる力があります。明確な目標があるほど力を発揮し、努力を結果に変換する実行力に長けています。', w:'結果に自己価値を依存させすぎ、成果が出ない時期に強い焦りや自己否定を感じやすい傾向です。過程よりも数字や評価に意識が向きすぎることもあります。', ww:'成果依存'},
-  権力:{s:'状況を主導し、統率する力があります。責任を引き受け、周囲を導く立場に自然と身を置けるのは、大きな強みです。', w:'力で押し切ろうとしやすく、他者の自律性や意見を軽視する場合があります。統率のつもりが、支配的な振る舞いとして受け取られてしまうこともあります。', ww:'支配欲'},
-  伝統:{s:'受け継がれてきたものを大切にする力があります。積み重ねられてきた知恵や様式を尊重し、簡単には揺らがない軸を持っています。', w:'変化への抵抗が強く、新しい価値観ややり方の受け入れに時間がかかります。「今まで通り」に固執し、必要な変化を先延ばしにしてしまう場合があります。', ww:'頑迷'},
-  安全:{s:'リスクを見極め、安定を築く力があります。先を読み、危険を未然に防ぐ慎重さが、周囲からの信頼にもつながっています。', w:'慎重になりすぎて、機会を逃しやすい傾向があります。最悪のシナリオを想定しすぎるあまり、一歩を踏み出すタイミングを逃してしまうことがあります。', ww:'過度な警戒'},
-  普遍主義:{s:'公平さと広い視野を持つ力があります。目の前の利害を超えて、誰にとっても望ましい状態を考えられる、視野の広さが強みです。', w:'理想を優先しすぎて、身近な利害や現実的な制約への配慮が後回しになる場合があります。理念が先行し、足元の対応が遅れることがあります。', ww:'理想先行'},
-  同調:{s:'周囲との調和を保つ力があります。場の空気を読み、対立を避けながら物事を進める、円滑なコミュニケーション力があります。', w:'自分の意見を飲み込みすぎて、本音が見えなくなる場合があります。周囲に合わせ続けた結果、自分が本当は何を望んでいるか、見失いやすい傾向です。', ww:'自己抑圧'},
-  快楽:{s:'今この瞬間を楽しむ力があります。目の前の喜びを素直に味わい、人生を豊かに感じる感受性を持っています。', w:'長期的な計画より目先の快を優先しやすい傾向があります。将来のための我慢や地道な積み上げが、後回しになりがちです。', ww:'短絡'},
-  博愛:{s:'身近な人の幸福を大切にする力があります。親しい人のために時間や労力を惜しまない、深く温かい情の持ち主です。', w:'身近な人を優先しすぎて、その外側への関心が薄れやすい傾向があります。内輪の結束が強い分、新しい関係や異なる立場への理解が後回しになることがあります。', ww:'内輪びいき'},
+  自己志向:{s:'自分の意志で選び取る力があります。誰かに決めてもらうより、自分で考え、自分の責任で選択することに価値を感じます。この自律性が、独自の視点や創造性の土台にもなっています。', w:'自分の考えより、周囲の意見や前例を優先しすぎる傾向があります。決断を他者に委ねがちで、本当はどうしたいのかが、自分でも分からなくなることがあります。', ww:'流されやすさ'},
+  刺激:{s:'新しい挑戦に踏み出す行動力があります。変化やスリルを恐れず、未知の状況にもむしろ活力を感じて向かっていける、行動力の源泉です。', w:'変化や挑戦を避け、慣れた場所に留まろうとする傾向があります。安定を優先するあまり、本当はやってみたいことにも、一歩を踏み出せないことがあります。', ww:'現状維持'},
+  達成:{s:'目標に向けて成果を積み上げる力があります。明確な目標があるほど力を発揮し、努力を結果に変換する実行力に長けています。', w:'成果や評価そのものへの関心が薄く、目標に向けた粘りが続きにくい傾向があります。結果を出すことより、無理をしないことを優先しすぎる場合があります。', ww:'推進力の弱さ'},
+  権力:{s:'状況を主導し、統率する力があります。責任を引き受け、周囲を導く立場に自然と身を置けるのは、大きな強みです。', w:'自己主張や意思表示を控えめにしすぎる傾向があります。本来リーダーシップを取るべき場面でも遠慮してしまい、周囲に流されやすくなることがあります。', ww:'主導力不足'},
+  伝統:{s:'受け継がれてきたものを大切にする力があります。積み重ねられてきた知恵や様式を尊重し、簡単には揺らがない軸を持っています。', w:'既存のやり方や前例を軽視しやすい傾向があります。新しさを優先するあまり、積み重ねてきたものが持つ価値に気づかず、足元が定まらなくなることがあります。', ww:'地に足のつかなさ'},
+  安全:{s:'リスクを見極め、安定を築く力があります。先を読み、危険を未然に防ぐ慎重さが、周囲からの信頼にもつながっています。', w:'リスクへの警戒が薄く、見通しの甘い判断をしやすい傾向があります。「なんとかなる」と楽観しすぎて、備えが不十分なまま踏み出してしまうことがあります。', ww:'見通しの甘さ'},
+  普遍主義:{s:'公平さと広い視野を持つ力があります。目の前の利害を超えて、誰にとっても望ましい状態を考えられる、視野の広さが強みです。', w:'自分や身近な範囲の利害を優先し、視野が狭くなりやすい傾向があります。全体にとっての公平さより、目の前の都合を優先してしまう場合があります。', ww:'視野の狭さ'},
+  同調:{s:'周囲との調和を保つ力があります。場の空気を読み、対立を避けながら物事を進める、円滑なコミュニケーション力があります。', w:'周囲との歩調を合わせることを軽視しやすい傾向があります。自分の意見をそのまま押し出しすぎて、意図せず摩擦や反発を生んでしまうことがあります。', ww:'摩擦の生みやすさ'},
+  快楽:{s:'今この瞬間を楽しむ力があります。目の前の喜びを素直に味わい、人生を豊かに感じる感受性を持っています。', w:'目の前の楽しみより、義務や将来を優先しすぎる傾向があります。「今を楽しむ」ことに罪悪感を覚えやすく、息抜きが後回しになりがちです。', ww:'息抜き下手'},
+  博愛:{s:'身近な人の幸福を大切にする力があります。親しい人のために時間や労力を惜しまない、深く温かい情の持ち主です。', w:'身近な相手への関心や配慮が薄くなりやすい傾向があります。距離を置いた関わり方を好むあまり、大切な人にも情が伝わりにくくなることがあります。', ww:'距離の置きすぎ'},
 };
 function pctFromEnneaTypeRaw(results, type) {
   const raw = results.enneaRaw || {};
@@ -1307,15 +1687,183 @@ function schwartzStrengthWeakness(scores) {
     <div class="sw-list">${rowsW}</div>`;
 }
 
+/* 完全解析（46ページ）の案内【PREVIEW ONLY の状態表示】
+   旧ナラティブ販売欄（¥3,000・旧Stripeリンク・申込コード・ギフト説明・旧ナラティブ用のGA4 item）を置き換える。
+   完全解析は解析レポートとは別の商品（¥3,000）。追加 ¥2,000 は廃止（complete_13）。
+   完全解析の権利APIが無い間は状態を unknown とし、購入CTAを出さない（購入済みかどうかを推測しない）。 */
+function completeAnalysisReportHtml(pal, results, diagnosisVersion) {
+  var CA = (typeof CompleteAnalysis !== 'undefined') ? CompleteAnalysis : null;
+  // 完全解析の適格性：診断版・設問版と、回答から ETI v2 の結果を計算できたか（旧版は対象外＝ブロック自体を出さない）
+  var meta = results && results.raw && results.raw.meta;
+  var elig = CA ? CA.completeEligibility({ diagnosisVersion: diagnosisVersion, itemSetVersion: meta ? meta.itemSetVersion : null, answersComplete: !!meta }) : { eligible: false };
+  if (!elig.eligible) return '';
+  var name = CA ? CA.previewStateName() : null;
+  var st = CA.withEligibility(name ? CA.previewState(name, '') : CA.realState({ analysisKnown: false }), elig);
+  var key = CA.stateKey(st);
+  // 三つの人物像は文章に埋め込まず、色線付きの3行で示す
+  var lenses = CA ? CA.lensListHtml('count') : '<p class="ca-body">MIRROR・HIDDEN SHAPE・MENTOR 各10名</p>';
+  var head = `
+        <div class="ca-eyebrow">COMPLETE ANALYSIS</div>
+        <p class="ca-lead">この観測を、三つの人物像とともに統合する。</p>`;
+  var body;
+  if (key === 'analysis' && CA.pendingOfferFor(st)) {
+    var up = CA.OFFERS.direct;
+    // 内容は三つの人物像として既に示しているため、購入へ進むボタンは1つだけにする
+    body = `${head}
+        ${lenses}
+        <p class="ca-body">${CA.INTEGRATION_TEXT}</p>
+        <div class="ca-r-price"><span class="ca-meta">完全解析</span><span class="ca-price">${up.price}</span></div>
+        <!-- 決済は未接続（2026-10-07）：押せない「準備中」。href・決済イベントなし -->
+        ${CA.pendingButtonHtml(up, 'ca-r-btn')}
+        <p class="ca-r-note">完全解析は準備中です。現在はお申し込みいただけません。</p>`;
+  } else if (key === 'complete_generating' || key === 'complete_failed') {
+    body = `${head}
+        <p class="ca-state">完全解析を生成しています</p>
+        <p class="ca-body">この記録の結果をもとに、完全解析を準備しています。</p>`;
+  } else if (key === 'complete_ready') {
+    body = `${head}
+        <p class="ca-state">完全解析が保存されています</p>
+        <button type="button" class="ca-r-btn" onclick="CompleteAnalysis.track('complete_report_open',{source:'analysis_report',preview_dummy:true});var n=this.nextElementSibling;if(n)n.hidden=false;">この記録の完全解析を開く</button>
+        <p class="ca-r-note" hidden>Preview：完全解析の閲覧先はまだ接続していません。</p>`;
+  } else if (!name) {
+    // 実データ：購入状態はこの後に確かめて、[data-report-complete] を描き替える（initReportComplete）
+    body = `
+        <div class="ca-eyebrow">BEYOND THE REPORT｜この先にあるもの</div>
+        <p class="ca-lead">このレポートが描いたのは、いまのあなたの輪郭。<br>その奥にある三つの人物像を、46ページで読み解く。</p>
+        ${typeof EdLens !== 'undefined' ? EdLens.mapHtml({ color: pal.p }) : reportLensListHtml()}
+        <div data-report-complete data-pdf-skip></div>
+        <div data-report-inherit data-pdf-skip></div>`;
+  } else {
+    body = `${head}
+        ${lenses}
+        <p class="ca-r-note">この記録の完全解析の購入状態を確認できないため、購入導線は表示していません。</p>`;
+  }
+  return `<div class="sec ca-r-sec" style="border-color:${pal.p}35;--ca-state:${pal.light}">${body}
+      </div>`;
+}
+
+// 三つの人物像（レポート末尾の案内用の詳しい説明。内容は完全解析のサンプルと同じ）
+var REPORT_LENSES = [
+  { key: 'mirror', en: 'MIRROR', head: 'いまのあなたに最も近い10名',
+    body: '20軸の配置が、いまのあなたに最も近い人物たちです。元素・武器・国家の結果名が違っていても、どこが重なり、どこが違うのかを一人ずつ読み解きます。' },
+  { key: 'hidden', en: 'HIDDEN SHAPE', head: '表に出にくい一面に近い10名',
+    body: '強さの順位ではなく、山と谷の「形」が近い人物たちです。数値の高さだけでは目立たなかった資質が、配置として何を意味するのかを示します。' },
+  { key: 'mentor', en: 'MENTOR', head: 'これから伸ばす方向に近い10名',
+    body: 'あなたが選ぶ目標に向けて、核を失わずに広げるための振る舞いを借りられる人物たちです。選んだ目標によって、顔ぶれと読み解く軸が変わります。' },
+];
+function reportLensListHtml() {
+  return '<ul class="ca-lens-list" aria-label="三つの人物像">' + REPORT_LENSES.map(function (l) {
+    return '<li class="ca-lens ca-lens--' + l.key + '"><span class="ca-lens-head"><span class="ca-lens-en">' + l.en + '</span></span>'
+      + '<span class="ca-lens-desc ca-lens-desc--strong">' + l.head + '</span>'
+      + '<span class="ca-lens-more">' + l.body + '</span></li>';
+  }).join('') + '</ul>';
+}
+
+// 完全解析の案内（実データ・complete_13）：完全解析は別の商品 ¥3,000（追加 ¥2,000 は廃止）。
+// 解析レポート（固有リンク・登録）：完全解析の欄は、サンプルと「この診断結果で完全解析を作成する ¥3,000」だけ。
+//   「マイページに登録する」は完全解析の欄に置かず、最下部の PDF の保存の隣（[data-report-register-slot]）に置く。
+//   注釈（PDF・共有・別商品）は出さない（世界観を保つ。条件は決済画面・規約で示す）。
+//   固有リンクの秘密値は、入口のページ（/report-link）がこのタブの sessionStorage に控えたもの
+// この画面を開いた固有リンク（一度決めたら、この画面の間は保つ）：
+//   入口のページが {t, url} で控えたもののうち、URL（閲覧トークン）がこの画面と同じ時だけ。
+//   このタブに控えを置けない設定（Safari のプライベートなど）の時だけ、入口が URL の # に付けた値（#t=）を使う
+function reportLinkToken() {
+  if (window.__reportLinkToken !== undefined) return window.__reportLinkToken;
+  var token = null;
+  var storageOk = true;
+  try {
+    var via = JSON.parse(sessionStorage.getItem('ed_report_via_link_v1') || 'null');
+    if (via && /^[A-Za-z0-9_-]{43}$/.test(String(via.t || '')) && typeof via.url === 'string'
+      && via.url.indexOf('?') > 0 && via.url.slice(via.url.indexOf('?')) === location.search) token = via.t;
+    sessionStorage.setItem('ed_storage_probe', '1'); sessionStorage.removeItem('ed_storage_probe');
+  } catch (e) { storageOk = false; }
+  if (!token && !storageOk) {
+    var m = /(?:^#|&)t=([A-Za-z0-9_-]{43})(?:&|$)/.exec(location.hash || '');
+    if (m) token = m[1];
+  }
+  window.__reportLinkToken = token;
+  return token;
+}
+var REPORT_SAMPLE_LINK = '<a class="ca-r-sample" href="/complete-sample.html" data-ca-sample>完全解析のサンプルを見る</a>';
+// マイページから開いた解析レポートの最下部：完全解析の申込はマイページの記録から
+function renderMypageFooter(box) {
+  box.innerHTML = REPORT_SAMPLE_LINK + '<a class="ca-r-btn is-offer" href="/mypage.html" data-report-mypage>マイページでこの記録の完全解析を作成する ¥3,000</a>';
+}
+function renderDeliveryFooter(box) {
+  var B = window.EdBuy;
+  var inherit = document.querySelector('[data-report-inherit]');
+  if (inherit) inherit.innerHTML = '';
+  var regSlot = document.querySelector('[data-report-register-slot]');
+  if (regSlot) regSlot.innerHTML = '';
+  box.innerHTML = '';
+  if (!B) return;
+  // この画面を開いた固有リンク：入口のページが {t, url} で控えたもののうち、URL（閲覧トークン）がこの画面と同じ時だけ。
+  //   マイページから開いた・別のレポートを開いた後のタブ：固有リンクを使わない（取り違えた記録で登録・購入しない）
+  // 一度決めた固有リンクは、この画面の間は保つ（アドレスを書き換えた後の描き直し・戻る〔bfcache〕でも同じ）
+  var token = reportLinkToken();
+  if (!token) { renderMypageFooter(box); return; }
+  // 固有リンクから開いた時：アドレスバーを期限のない固有リンクに戻す（コピー・ブックマーク・再読み込みで、そのまま開ける）
+  try { history.replaceState(null, '', '/report-link#t=' + token); } catch (e) { /* そのまま */ }
+  // 同じタブで別の固有リンクに変えた（# だけの移動）：読み込み直して、そのリンクを開く（表示中のレポートと取り違えない）
+  if (!window.__reportHashWatch) {
+    window.__reportHashWatch = true;
+    window.addEventListener('hashchange', function () { if (location.hash !== '#t=' + token) location.reload(); });
+  }
+  B.openLink(token, false).then(function (r) {
+    if (!r.ok) {
+      box.innerHTML = '<p class="ca-guest-msg" role="status">購入の状況を確かめられませんでした。ページを読み込み直してください。</p>';
+      return;
+    }
+    var b = r.body || {};
+    var ctx = b.context;
+    var open = B.salesOpen() && B.contextOk(ctx);
+    if (regSlot) {
+      regSlot.innerHTML = '<button type="button" class="ca-r-btn ca-r-register" data-report-register>マイページに登録する</button>';
+      var reg = regSlot.querySelector('[data-report-register]');
+      reg.onclick = function () { reg.disabled = true; B.startRegister(token, 'analysis_report'); };
+    }
+    box.innerHTML = (B.contextOk(ctx) ? '<a class="ca-r-sample" href="' + B.esc(B.sampleHref('complete', ctx, 'report')) + '" data-ca-sample>完全解析のサンプルを見る</a>' : '')
+      + (open ? '<button type="button" class="ca-r-btn is-offer" data-report-buy-complete><span class="ed-sky-main">まだ見えていない輪郭を読む</span><span class="ed-sky-sub">この診断結果で完全解析を作成する ' + B.yen(B.PRODUCTS.complete.price) + '</span></button>'
+        : '<button type="button" class="ca-r-btn is-pending" disabled aria-disabled="true">完全解析 ' + B.yen(B.PRODUCTS.complete.price) + '（準備中）</button>')
+      + '<p class="ca-guest-msg" data-buy-msg role="status"></p>';
+    var buy = box.querySelector('[data-report-buy-complete]');
+    if (buy) buy.onclick = function () {
+      var msg = box.querySelector('[data-buy-msg]');
+      msg.textContent = '';
+      B.start({ context: ctx, product: 'complete', source: 'analysis_report' }).then(function (res) {
+        if (!res.ok && !res.silent) msg.textContent = B.errorText(res.error);
+      });
+    };
+  });
+}
+function initReportComplete(code, viewer, mypageComplete) {
+  var box = document.querySelector('[data-report-complete]');
+  if (!box) return;
+  reportCompleteArgs = [code, viewer, mypageComplete];
+  // レポート固有リンク・マイページの登録から開いた解析レポート（complete_13）：最下部はマイページへの登録と、完全解析 ¥3,000
+  if (viewer === 'delivery') { renderDeliveryFooter(box); return; }
+  // 以前の仕組みの解析レポート（マイページの本人の権利・ゲストの購入）：¥2,000 の追加は廃止（complete_13）。
+  //   完全解析は別の商品（¥3,000）として、マイページの記録・診断結果のページから申し込む。ここでは購入の判定をしない
+  var inherit = document.querySelector('[data-report-inherit]');
+  if (inherit) inherit.innerHTML = '';
+  if (viewer === 'mypage') { renderMypageFooter(box); return; }
+  box.innerHTML = REPORT_SAMPLE_LINK;
+}
+// 決済画面から「戻る」で戻った（ページがそのまま復元された）時も、未払いの決済を閉じて案内を描き直す
+var reportCompleteArgs = null;
+window.addEventListener('pageshow', function (e) {
+  if (e.persisted && reportCompleteArgs) initReportComplete(reportCompleteArgs[0], reportCompleteArgs[1], reportCompleteArgs[2]);
+});
 function renderFullReport(root, results, diagnosisCode) {
   window.__diagnosisCode = diagnosisCode || '';
+  const diagnosisVersion = results.schemaVersion === 'ETI-2.0' ? 'ETI-2.0' : 'legacy-v1';
   const topEl = results.elementScores[0].element;
   const topW  = results.weaponScores[0].weapon;
   const topNat = results.nationScores[0].nation;
   const pal = ELEMENT_PALETTE[topEl];
-  const et  = results.enneaTop.type;
-  const eInfo = ENNEA[et];
-  const wingInfo = results.enneaWing ? ENNEA[results.enneaWing.type] : null;
+  const et  = diagnosisVersion === 'legacy-v1' ? results.enneaTop.type : null;
+  const eInfo = diagnosisVersion === 'legacy-v1' ? ENNEA[et] : null;
+  const wingInfo = (diagnosisVersion === 'legacy-v1' && results.enneaWing) ? ENNEA[results.enneaWing.type] : null;
   const big5 = results.big5;
   const PALETTE = [pal.p, pal.light, '#c9a860', pal.dark];
   const NAT_PALETTE = ['#c9a860', '#8a5fc0', '#5fb0a0', '#d17a52'];
@@ -1340,22 +1888,29 @@ function renderFullReport(root, results, diagnosisCode) {
           <rect x="0" y="0" width="${big5[k]}%" height="6" rx="3" fill="url(#${gradId})"/>
         </svg>
       </div>
-      <div class="bar-note">${big5[k]>=50?BIG5[k].high:BIG5[k].low}</div>
+      <div style="font-size:11px;color:#8f9fb0;margin-top:6px">${BIG5_PLAIN[k]}</div>
+      <div class="bar-note" style="color:#b8c4cc;margin-top:3px">${big5[k] >= 60
+        ? `<span style="color:#9fd0a0">高め</span> — ${BIG5[k].high}の傾向がはっきり出ています。`
+        : big5[k] <= 40
+          ? `<span style="color:#d8a070">低め</span> — ${BIG5[k].low}の傾向が出ています。`
+          : `<span style="color:#c8c0a0">中間</span> — 「${BIG5[k].high.split('・')[0]}」と「${BIG5[k].low.split('・')[0]}」のどちらにも偏らず、場面で使い分けます。`}</div>
     </div>`;
   }).join('');
 
   const usedWords = new Set();
   const tagsElement = pickFactorTags_Profile_v3(results, ELEMENT_PROFILE[topEl], usedWords);
-  const tagsWeapon = pickFactorTags_Weapon_v3(results, WEAPON_ENNEA[topW], usedWords);
-  const tagsNation = pickFactorTags_Nation_v3(results, usedWords);
-  const schwartzScores = computeSchwartzScores(results);
+  const tagsWeapon = diagnosisVersion === 'ETI-2.0'
+    ? pickStyleTags_Weapon_v3(WEAPON_PROTOTYPES_V2[topW], results.style)
+    : pickFactorTags_Weapon_v3(results, WEAPON_ENNEA[topW], usedWords);
+  const tagsNation = pickFactorTags_Nation_v3(results, usedWords); // Schwartz価値観語彙のみで、Enneagramに依存しないため両世代共通
+  const schwartzScores = diagnosisVersion === 'ETI-2.0' ? computeSchwartzScoresV2(results) : computeSchwartzScores(results);
 
   const top4 = results.charMatches.slice(0,4);
   const charCardsHtml = top4.map((c,i) => `
     <div class="charcard2" style="border-color:${pal.p}30">
       <div class="top"><div><span class="rank">${i+1}</span><span class="name">${c.name}</span></div><span class="pct" style="color:${pal.p}">${c.match}%</span></div>
       <div class="tags"><span style="background:${pal.dark}50;border-color:${pal.p}50;color:${pal.light}">${c.el}</span><span style="background:${pal.dark}50;border-color:${pal.p}50;color:${pal.light}">${c.w}</span><span style="background:#c9a86050;border-color:#c9a86080;color:#e0c890">${c.nation}</span></div>
-      <p>${describeCharMatch(c, results, topEl, topW, et, i)}</p>
+      <p>${diagnosisVersion === 'ETI-2.0' ? describeCharMatchV2(c, topEl, topW, i) : describeCharMatch(c, results, topEl, topW, et, i)}</p>
     </div>`).join('');
   const allSameEl = top4.every(c=>c.el===topEl);
   const commonNotes = [];
@@ -1401,14 +1956,14 @@ function renderFullReport(root, results, diagnosisCode) {
       <svg width="100%" height="100%" viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice">
         <g transform="translate(320,180)">
           <circle r="130" fill="none" stroke="#c9a860" stroke-width="0.7" opacity="0.5"/>
-          ${NATIONS.map((n,i) => {
-            const ang = (i/7)*2*Math.PI - Math.PI/2;
+          ${(diagnosisVersion === 'ETI-2.0' ? NATIONS_V2 : NATIONS).map((n,i,arr) => {
+            const ang = (i/arr.length)*2*Math.PI - Math.PI/2;
             const x=(130*Math.cos(ang)).toFixed(1), y=(130*Math.sin(ang)).toFixed(1);
             return `<line x1="0" y1="0" x2="${x}" y2="${y}" stroke="#c9a860" stroke-width="0.8" opacity="0.5"/><circle cx="${x}" cy="${y}" r="5" fill="${n===topNat?'#e8d8a0':'#5a4d30'}"/>`;
           }).join('')}
           <circle r="4" fill="#f0e4c0"/>
         </g>
-        <text x="320" y="335" text-anchor="middle" font-family="serif" font-size="11" letter-spacing="4" fill="#c9a860" opacity="0.8">SEVEN NATIONS COMPASS</text>
+        <text x="320" y="335" text-anchor="middle" font-family="serif" font-size="11" letter-spacing="4" fill="#c9a860" opacity="0.8">${diagnosisVersion === 'ETI-2.0' ? 'EIGHT NATIONS COMPASS' : 'SEVEN NATIONS COMPASS'}</text>
       </svg>
     </div>`;
 
@@ -1467,20 +2022,23 @@ function renderFullReport(root, results, diagnosisCode) {
         <div class="sec-no">02</div>
         <div class="sec-title" style="color:#e0c890">国家 — ${topNat}（価値観）</div>
         <p class="desc">${NATION_DESC[topNat]}</p>
-        <div class="quote-box" style="border-color:#c9a860">シュワルツの基本的価値観理論は、10の価値観次元を円環状に配置するモデルです。パーセンテージの単純な順位ではなく、10次元それぞれの実測スコアとして表示します。</div>
+        ${diagnosisVersion === 'ETI-2.0' ? nationReasonSection(results) : `<div class="quote-box" style="border-color:#c9a860">シュワルツの基本的価値観理論は、10の価値観次元を円環状に配置するモデルです。パーセンテージの単純な順位ではなく、10次元それぞれの実測スコアとして表示します。</div>`}
         ${nationImg}
       </div>
 
       <div class="sec" style="border-color:#c9a86040">
         <div class="eyebrow">TEN BASIC VALUES</div>
         <div class="sec-title" style="font-size:14px;color:#e0c890">価値観プロファイル（10次元）</div>
+        ${secIntro('あなたが何を大切にして選ぶかを、10の価値の重みで表しています。外側に広がっている価値ほど、判断のときに強く働いています。')}
         <div style="margin:12px 0 8px">${schwartzRadar(schwartzScores, 240)}</div>
         ${schwartzStrengthWeakness(schwartzScores)}
+        ${scoreScaleNote('強く大切にしている', 'ほどほどに大切にしている', 'あまり重視していない')}
       </div>
 
       <div class="sec" style="border-color:${pal.p}35">
         <div class="sec-no">03</div>
-        <div class="sec-title" style="color:${pal.light}">動機の深層 — Enneagram</div>
+        <div class="sec-title" style="color:${pal.light}">${diagnosisVersion === 'ETI-2.0' ? '行動スタイルの深層 — STYLE' : '動機の深層 — Enneagram'}</div>
+        ${diagnosisVersion === 'ETI-2.0' ? styleDeepDiveSection(results, pal) : `
         <div style="text-align:center;margin:6px 0 16px">
           <span style="font-size:32px;font-weight:700;color:${pal.light};letter-spacing:1px">${et}${wingInfo?'w'+results.enneaWing.type:''}</span>
           <div style="font-size:12px;color:#9bb0a2;margin-top:4px">タイプ${et}（${eInfo.name}）${wingInfo?` ／ ウィング${results.enneaWing.type}（${wingInfo.name}）`:''}</div>
@@ -1493,13 +2051,15 @@ function renderFullReport(root, results, diagnosisCode) {
         </div>
         <div class="interact-box" style="border-color:${pal.p}40">
           <span class="tag">ストレス方向</span>負荷がかかった時、タイプ${ENNEA_STRESS[et]}（${ENNEA[ENNEA_STRESS[et]].name}）の性質が現れやすくなります。
-        </div>
+        </div>`}
       </div>
 
       <div class="sec" style="border-color:${pal.p}35">
         <div class="sec-no">04</div>
         <div class="sec-title" style="color:${pal.light}">気質のデータ — Big Five 5因子</div>
+        ${secIntro('Big Fiveは、性格を5つの基本的な側面から測る、心理学でもっとも広く使われている枠組みです。')}
         ${barsHtml}
+        ${scoreScaleNote('その傾向がはっきり出ている', 'どちらにも偏らない', '反対側の傾向が出ている')}
       </div>
 
       <div class="sec" style="border-color:${pal.p}35">
@@ -1514,11 +2074,10 @@ function renderFullReport(root, results, diagnosisCode) {
       <div class="sec" style="border-color:${pal.p}35">
         <div class="sec-no">06</div>
         <div class="sec-title" style="color:${pal.light}">総括 — 気質・動機・価値観の統合</div>
-        <div class="eyebrow">BIG FIVE × ENNEAGRAM × VALUES THEORY</div>
-        ${buildOverviewSection_v3(results, pal)}
+        <div class="eyebrow">${diagnosisVersion === 'ETI-2.0' ? 'PERSONALITY × STYLE × VALUES THEORY' : 'BIG FIVE × ENNEAGRAM × VALUES THEORY'}</div>
+        ${diagnosisVersion === 'ETI-2.0' ? buildOverviewSection_v3_V2(results, pal) : buildOverviewSection_v3(results, pal)}
       </div>
 
-      <!-- この先にあるもの：完全解析（別商品・全46ページ）。旧商品（ナラティブレポート）の紹介は撤去 -->
       <div class="sec beyond-sec" style="border-color:#c0a86055;--el:${pal.p};background:radial-gradient(120% 80% at 50% 0%, ${pal.p}22 0%, transparent 60%),linear-gradient(160deg,${pal.dark}38,#0b0915 70%)">
         <div class="eyebrow" style="color:#c0a860">BEYOND THE REPORT｜この先にあるもの</div>
         <div class="sec-title" style="color:#e8d8a0">まだ、ここには現れていない輪郭があります</div>
@@ -1636,28 +2195,7 @@ async function savePdf() {
       pdf.addImage(segImgData, 'JPEG', 0, 0, pdfWidth, segHeightMm);
     }
 
-    // 最後に、画像ではなく「本物のテキスト」として診断コードのページを追加
-    // （html2canvasで画像化された中のコードは、PDFビューアで正確にコピーできないため）
-    // 注：jsPDF標準フォントは日本語を描画できないため、このページのラベルは英語のみ使用する
-    var code = window.__diagnosisCode || '';
-    if (code) {
-      pdf.addPage();
-      pdf.setFillColor(5, 4, 8);
-      pdf.rect(0, 0, pdfWidth, pageHeightMm, 'F');
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(200, 168, 96);
-      pdf.setFontSize(14);
-      pdf.text('Your Diagnosis Code', 20, 30);
-      pdf.setTextColor(230, 230, 230);
-      pdf.setFontSize(10);
-      pdf.text('Use this code when applying for the Narrative Report.', 20, 40);
-      pdf.setFont('courier', 'normal');
-      pdf.setFontSize(13);
-      pdf.setTextColor(255, 255, 255);
-      // コードが長い場合に備え、40文字ごとに改行して表示（テキストなので確実にコピー可能）
-      var lines = pdf.splitTextToSize(code, 170);
-      pdf.text(lines, 20, 55);
-    }
+    // 診断コードのページは付けない（旧ナラティブ販売の申込コードの案内は廃止。PDF に回答の符号・秘密値・ID を入れない）
 
     pdf.save('元素診断_解析レポート.pdf');
     // アプリの中のブラウザ（LINE・Instagram など）はファイルの保存に対応していないことがある
@@ -1675,12 +2213,9 @@ async function savePdf() {
 
 (function initSampleReport() {
   const root = document.getElementById('root');
-  const code = 'p9lfx8sq6g6dts4xvrnwrl79ympqi8tx8e4xa06u3srit';
-  const answersArr = decodeAnswers(code);
-  const answersObj = {};
-  answersArr.forEach((v,i) => answersObj[i] = v);
-  const results = computeResults(answersObj);
-  renderFullReport(root, results, code);
+  const code = '30fm9zj1kjiedagvbgw0e991pmj8wfx6z6179pzkb9d3c';
+  const answers = ETIv2.decodeAnswersV2(code, ETI_V2_QUESTIONS);
+  renderFullReport(root, computeResultsV2ForUI(answers, code), code);
 })();
 </script>
 <style>
@@ -1734,9 +2269,6 @@ async function savePdf() {
   <h2>あなた自身の診断結果で読む</h2>
   <p>お申し込みには、あなたの診断結果が必要です。<a href="/">まず元素診断を受ける</a></p>
 </aside>
-<script src="/api/public-config?format=js"></script>
-<script src="/js/report-purchase.js"></script>
-<script src="/js/lens-constellation.js"></script>
 <script src="/js/sample-buy.js"></script>
 </body>
 </html>
