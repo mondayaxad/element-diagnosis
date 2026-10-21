@@ -175,8 +175,9 @@ test('A ¥1,000：診断結果の記録で購入→支払い→購入完了ペ�
   assert.match(created.success_url, new RegExp(`^https://[^/]+/report-link#t=${p.link}$`));
   assert.equal(created.invoice_creation.enabled, true);
   assert.ok(created.invoice_creation.invoice_data.description.includes(created.success_url));
-  assert.match(created.invoice_creation.invoice_data.description, /^解析レポートのURL（期限なし）/);
-  assert.match(ctx.stripe.st.lastCreate.params.custom_text.submit.message, /^解析レポート（1,000円・税込）。.*すぐにお読みいただけます。.*返品・返金はお受けしていません/, '決済画面（最終確認画面）に価格・提供の時期・返品の決まり');
+  assert.match(created.invoice_creation.invoice_data.description, /^解析レポートのURL（通常の有効期限なし）/);
+  assert.match(ctx.stripe.st.lastCreate.params.custom_text.submit.message, /^解析レポート（1,000円・税込）。.*すぐにお読みいただけます。.*固有のリンク.*PDF等で端末に保存できます。.*返品・キャンセル・返金は原則として受け付けません。ただし、二重決済.*特定商取引法に基づく表記：https?:\/\/[^/]+\/tokushoho　利用規約：https?:\/\/[^/]+\/terms\.html$/, '決済画面（最終確認画面）に価格・提供の時期・提供方法・返金の決まり・特商法と規約のリンク');
+  assert.ok(ctx.stripe.st.lastCreate.params.custom_text.submit.message.length <= 1200, '決済画面の文面は長すぎない');
   // 固有リンクを開く（Cookie の無いブラウザでも開ける）
   const o = await ctx.op('link-open', { token: p.link, open: true }, { cookie: '' });
   assert.equal(o.code, 200, JSON.stringify(o.body));
@@ -262,7 +263,7 @@ test('B ¥3,000：MENTOR 目標が必須・注文に固定。支払い→生成�
   assert.deepEqual((await ctx.op('buy', { context, product: 'complete', attempt: attemptId() })).body, { error: 'mentor_goal_required' });
   assert.deepEqual((await ctx.op('buy', { context, product: 'analysis', goal: 'GOAL_PACE_01', attempt: attemptId() })).body, { error: 'invalid_request' });
   await buyAndPay(ctx, context, 'complete', { goal: 'GOAL_EXPLORE_01' });
-  assert.match(ctx.stripe.st.lastCreate.params.custom_text.submit.message, /^完全解析（3,000円・税込）。解析レポートとは別の商品.*MENTOR の目標は、お支払いの後は変更できません。.*返品・返金はお受けしていません/);
+  assert.match(ctx.stripe.st.lastCreate.params.custom_text.submit.message, /^完全解析（3,000円・税込）。解析レポートとは別の商品.*MENTOR の目標は、お支払いの後は変更できません。.*返品・キャンセル・返金は原則として受け付けません/);
   const [order] = await ctx.rows('complete_orders');
   assert.deepEqual([order.offer, order.amount, order.mentor_goal_id], ['direct_complete', 3000, 'GOAL_EXPLORE_01']);
   assert.deepEqual(await ctx.rows('record_mentor_goals'), [], '記録の目標の表は使わない（注文に固定）');
