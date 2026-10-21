@@ -138,7 +138,7 @@ for (const provider of ['google', 'x', 'email']) {
     assert.ok(order.every((i) => i >= 0), JSON.stringify(h.log));
     assert.deepEqual([...order].sort((a, b) => a - b), order, '順序：' + JSON.stringify(h.log));
     const params = JSON.parse(h.log.find((x) => x.startsWith('rpc_params:')).slice('rpc_params:'.length));
-    assert.deepEqual(params, { p_terms_version: '2026-10-07', p_privacy_version: '2026-10-13', p_newsletter_consent_version: '2026-10-07-v1' });
+    assert.deepEqual(params, { p_terms_version: '2026-10-21', p_privacy_version: '2026-10-21', p_newsletter_consent_version: '2026-10-07-v1' });
     assert.equal(h.hasV1(), false); assert.equal(h.hasV2(), false);
     assert.equal(h.profile.onboarding_status, 'completed');
     assert.equal(h.profileWrites.length, 0, 'ブラウザから profiles を直接書かない');
@@ -310,9 +310,9 @@ test('プライバシーポリシー：任意チェックの旧説明が無く�
   const t = fs.readFileSync(path.join(ROOT, 'privacy.html'), 'utf8');
   assert.ok(!t.includes('チェックを入れて同意した場合のみ'));
   assert.ok(!t.includes('同意は任意です'));
-  for (const s of ['利用規約とプライバシーポリシーへの同意', '新しい診断', '新しい解析', '関連する商品・企画', 'Kit', '配信メール内のリンクから停止', '版：2026-10-13', '固有のリンク', 'IPアドレスそのものは保存せず']) {
+  for (const s of ['利用規約とプライバシーポリシーへの同意', '元素診断のアップデート', '新しい解析', '関連する商品・企画', 'Kit', '配信メール内のリンクから停止', '固有のリンク', 'IP アドレスそのものは、本サイトのデータベースに保存しません']) {
     assert.ok(t.includes(s), s);
   }
   const terms = fs.readFileSync(path.join(ROOT, 'terms.html'), 'utf8');
-  for (const s of ['メールアドレス（6桁の確認コード）', 'アカウントの登録について', '2026-10-07']) assert.ok(terms.includes(s), s);
+  for (const s of ['メールアドレス（6桁の確認コード）', 'アカウントの登録について']) assert.ok(terms.includes(s), s);
 });

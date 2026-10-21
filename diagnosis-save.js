@@ -121,9 +121,11 @@ function trackEvent(name, params) {
      Kit の失敗で登録・保存を失敗扱いにしない。再送は「24時間以上・3回まで」（サーバーも同じ条件で判定する）。
    メール案内専用のチェックボックスは設けない。配信内容は登録完了モーダルに明示する。
    ============================================================ */
-const REGISTRATION_TERMS_VERSION = '2026-10-07';
-// プライバシーポリシーは 2026-10-13 版（診断結果の固有リンクを追記。complete_09 で DB の受け付ける版も 2026-10-13）
-const REGISTRATION_PRIVACY_VERSION = '2026-10-13';
+// 同意の版（内部の識別子）：利用規約・プライバシーポリシー・特定商取引法に基づく表記を改めた版 2026-10-21。
+//   公開ページの制定日・施行日（実際に Production へ公開する日）とは別のもの。DB（complete_15）が、この版を受け付ける
+//   （旧版 2026-10-07・2026-10-13 も受け付けるので、SQL を先に適用すれば、順序によらず登録は止まらない）
+const REGISTRATION_TERMS_VERSION = '2026-10-21';
+const REGISTRATION_PRIVACY_VERSION = '2026-10-21';
 const NEWSLETTER_CONSENT_VERSION = '2026-10-07-v1';
 const NEWSLETTER_RETRY_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const NEWSLETTER_MAX_ATTEMPTS = 3;
