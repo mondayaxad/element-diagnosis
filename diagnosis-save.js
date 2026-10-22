@@ -608,8 +608,10 @@ async function subscribeToNewsletter() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     const accessToken = session && session.access_token;
     if (!accessToken) return { ok: false, status: 401 };
+    // keepalive：登録直後に画面を閉じる・移動しても、リクエストが途中で打ち切られないようにする
     const res = await fetch('/api/subscribe', {
       method: 'POST',
+      keepalive: true,
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + accessToken },
       body: JSON.stringify({ consentVersion: NEWSLETTER_CONSENT_VERSION }),
     });

@@ -31,6 +31,8 @@ const CONSENT_VERSION = '2026-10-07-v1';
 const CONSENT_SOURCE = 'registration_onboarding';
 const RETRY_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const MAX_ATTEMPTS = 3;
+// Kit への通信（確認の GET・作成の POST・応答本文の読み取りを合わせて）の上限。Kit が応答しなくても、関数の実行時間の上限より前に failed を記録して終える
+const KIT_TIMEOUT_MS = 8000;
 
 function parseBody(req) {
   if (!req.body) return {};
@@ -51,7 +53,7 @@ function syncDue(profile, nowMs) {
   return (nowMs - last) >= RETRY_INTERVAL_MS;
 }
 
-function createHandler({ fetchImpl, env, now = () => Date.now() }) {
+function createHandler({ fetchImpl, env, now = () => Date.now(), kitTimeoutMs = KIT_TIMEOUT_MS }) {
   // ログインユーザー本人としてのアクセス：公開キー＋ユーザーの access token（サーバー用キーは使わない）
   async function getVerifiedUser(conn, accessToken) {
     const res = await fetchImpl(`${conn.supabaseUrl}/auth/v1/user`, {
@@ -122,10 +124,36 @@ function createHandler({ fetchImpl, env, now = () => Date.now() }) {
   }
 
   // Kit への登録（既存の購読者は作り直さない・配信停止済みを戻さない）。戻り値：{ status, code, body }
+  // Kit への通信（確認の GET・作成の POST・応答本文の読み取りを合わせて）が kitTimeoutMs を過ぎたら中断し、failed（502）にする。
+  // 中断（AbortSignal）を無視する fetch でも、競合で必ず期限に返す。
+  // 通信の失敗・期限切れのときも、ログには例外の種類だけを出す（メール・キー・本文は出さない）。
   async function syncToKit(email) {
+    const ctrl = new AbortController();
+    let timer;
+    const timeout = new Promise((_, reject) => {
+      timer = setTimeout(() => {
+        ctrl.abort();
+        const e = new Error('kit_timeout');
+        e.name = 'TimeoutError';
+        reject(e);
+      }, kitTimeoutMs);
+    });
+    const work = syncToKitInner(email, ctrl.signal);
+    work.catch(() => {}); // 期限後に遅れて失敗しても未処理の拒否にしない
+    try {
+      return await Promise.race([work, timeout]);
+    } catch (err) {
+      console.error('subscribe error: Kit request failed', err && err.name ? err.name : 'unknown');
+      return { status: 'failed', code: 502, body: { error: 'kit_error' } };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  async function syncToKitInner(email, signal) {
     const lookup = await fetchImpl(
       `${KIT_SUBSCRIBERS_URL}?email_address=${encodeURIComponent(email)}&status=all`,
-      { method: 'GET', headers: kitHeaders() }
+      { method: 'GET', headers: kitHeaders(), signal }
     );
     if (!lookup.ok) {
       console.error('subscribe error: Kit lookup failed', lookup.status);
@@ -144,6 +172,7 @@ function createHandler({ fetchImpl, env, now = () => Date.now() }) {
       method: 'POST',
       headers: kitHeaders(),
       body: JSON.stringify({ email_address: email, state: 'active' }),
+      signal,
     });
     if (!kitRes.ok) {
       console.error('subscribe error: Kit create failed', kitRes.status);

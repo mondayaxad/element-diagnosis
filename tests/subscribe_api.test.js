@@ -29,7 +29,7 @@ function completedProfile(extra) {
 
 // profile: profiles 行（null で行なし。PATCH で書き換わる）／ profileStatus: 読み取りの HTTP ステータス
 function harness({ env = {}, user = USER, profile = completedProfile(), profileStatus = 200, claimStatus = 200,
-  kitLookup = { subscribers: [] }, kitLookupStatus = 200, kitCreateStatus = 201, now = NOW } = {}) {
+  kitLookup = { subscribers: [] }, kitLookupStatus = 200, kitCreateStatus = 201, now = NOW, kitHang = null, kitTimeoutMs } = {}) {
   const calls = [];
   const row = profile ? { ...profile } : null;
   const fetchImpl = async (url, opts = {}) => {
@@ -54,11 +54,19 @@ function harness({ env = {}, user = USER, profile = completedProfile(), profileS
       if (profileStatus !== 200) return json(profileStatus, { message: 'column does not exist' });
       return json(200, row ? [{ ...row }] : []);
     }
-    if (url.startsWith('https://api.kit.com/v4/subscribers?')) return json(kitLookupStatus, kitLookup);
-    if (url === 'https://api.kit.com/v4/subscribers') return json(kitCreateStatus, { subscriber: { id: 1 } });
+    // kitHang：'lookup'＝確認の GET が応答しない／'create'＝作成の POST が応答しない／'body'＝GET の本文が読めないまま止まる（AbortSignal は無視する偽の fetch）
+    if (url.startsWith('https://api.kit.com/v4/subscribers?')) {
+      if (kitHang === 'lookup') return new Promise(() => {});
+      if (kitHang === 'body') return { ok: true, status: 200, json: () => new Promise(() => {}) };
+      return json(kitLookupStatus, kitLookup);
+    }
+    if (url === 'https://api.kit.com/v4/subscribers') {
+      if (kitHang === 'create') return new Promise(() => {});
+      return json(kitCreateStatus, { subscriber: { id: 1 } });
+    }
     throw new Error('unexpected fetch ' + url);
   };
-  const handler = createHandler({ fetchImpl, env: { ...baseEnv, ...env }, now: () => now });
+  const handler = createHandler(Object.assign({ fetchImpl, env: { ...baseEnv, ...env }, now: () => now }, kitTimeoutMs ? { kitTimeoutMs } : {}));
   async function call({ token = 'good-token', body = { consentVersion: CONSENT_VERSION }, method = 'POST' } = {}) {
     const res = { code: 0, body: null, status(c) { this.code = c; return this; }, json(b) { this.body = b; return this; } };
     await handler({ method, headers: token ? { authorization: 'Bearer ' + token } : {}, body }, res);
@@ -273,4 +281,43 @@ test('Preview ガード：許可リストに無いメールは Kit を呼ばず 
 
 test('POST 以外は 405', async () => {
   assert.equal((await harness().call({ method: 'GET' })).code, 405);
+});
+
+// ---- 2026-10-22：Kit への通信の期限（8秒）----
+test('Kit のタイムアウトの既定は8秒（Kit への GET・POST・本文の読み取りを合わせた上限）', () => {
+  const src = require('fs').readFileSync(path.join(__dirname, '..', 'api', 'subscribe.js'), 'utf8');
+  assert.match(src, /const KIT_TIMEOUT_MS = 8000;/);
+  assert.match(src, /kitTimeoutMs = KIT_TIMEOUT_MS/);
+});
+
+for (const where of ['lookup', 'create', 'body']) {
+  test(`Kit が応答しない（${where}）：期限で failed を記録して 502。メール・秘密をログ／応答に出さない。診断の保存とは無関係`, async () => {
+    const s = silenceErrors();
+    try {
+      const t0 = Date.now();
+      const h = harness({ kitHang: where, kitTimeoutMs: 120 });
+      const r = await h.call();
+      const elapsed = Date.now() - t0;
+      assert.equal(r.code, 502);
+      assert.deepEqual(r.body, { error: 'kit_error' });
+      assert.ok(elapsed >= 100 && elapsed < 2000, `elapsed ${elapsed}`);
+      assert.equal(h.row.newsletter_sync_status, 'failed');
+      assert.equal(h.row.newsletter_sync_attempts, 1);
+      if (where === 'lookup' || where === 'body') assert.equal(h.kitCreates().length, 0);
+      const all = s.logs.join('\n') + JSON.stringify(r.body);
+      for (const secret of [KEY, USER.email, encodeURIComponent(USER.email), 'good-token']) assert.ok(!all.includes(secret), 'leak');
+      assert.match(s.logs.join('\n'), /Kit request failed TimeoutError/);
+    } finally { s.restore(); }
+  });
+}
+
+test('Kit への fetch には中断用の signal が付く。タイムアウト後の再送は24時間後から（試行の権利は消費済み）', async () => {
+  const h = harness();
+  await h.call();
+  for (const c of h.kitCalls()) assert.ok(c.opts.signal, 'signal');
+  const hung = harness({ kitHang: 'create', kitTimeoutMs: 60 });
+  await hung.call();
+  const again = await hung.call();
+  assert.equal(again.body.skipped, 'not_due');
+  assert.equal(hung.kitCreates().length, 1);
 });

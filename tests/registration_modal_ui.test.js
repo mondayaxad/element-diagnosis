@@ -17,7 +17,7 @@ for (const p of ['playwright', '/opt/node22/lib/node_modules/playwright']) {
 const skip = () => !chromium;
 const ROOT = path.join(__dirname, '..');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.json': 'application/json', '.css': 'text/css', '.svg': 'image/svg+xml' };
-const NOTICE = '登録した方には、診断結果の保存やアカウント管理に必要なご案内のほか、元素診断のアップデート、新しい解析、関連する商品・企画などのお知らせをメールでお届けすることがあります。配信はいつでも停止できます。';
+const NOTICE = '「同意して登録を完了する」を押すと、元素診断から、診断結果の保存に必要なご案内のほか、アップデート、新しい解析、商品・企画などのお知らせメールを受け取ることにも同意したものとします。配信は、メール内のリンクからいつでも停止できます。';
 
 // モーダルだけを開く検証用ページ（サーバー上の仮想ページ。リポジトリには置かない）
 const MODAL_PAGE = `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
