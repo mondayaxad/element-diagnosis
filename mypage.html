@@ -789,6 +789,12 @@
   }
   .mp-detail-link { display: inline-block; margin-top: 14px; font-size: 12px; color: var(--accent); text-decoration: none; border-bottom: 1px dotted var(--accent-dim); padding: 6px 0 1px; }
   .mp-btn.ghost { border-color: var(--card-border); color: var(--fg-dim); }
+  /* 開いた中の最下部の操作欄：左＝結果を見る（主）・右＝Xシェア。狭い画面でも横並びのまま、文字は折り返さない */
+  .mp-latest-ops { flex-wrap: nowrap; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--card-border); }
+  .mp-latest-ops > .mp-btn { flex: 1 1 0; min-width: 0; white-space: nowrap; }
+  .mp-latest-ops > .mp-op-main { flex-grow: 1.35; border-color: color-mix(in srgb, var(--lc, #7ab8e8) 55%, transparent); color: #eef6ff;
+    background: color-mix(in srgb, var(--lc, #7ab8e8) 14%, transparent); }
+  .mp-latest-ops > .mp-op-sub { border-color: var(--card-border); color: var(--fg-dim); font-weight: 600; }
   .mp-btn:focus-visible, .mp-badge:focus-visible, .mp-rec > summary:focus-visible, .mp-account-row:focus-visible, .mp-detail-link:focus-visible, .lock-cta-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   /* ---- RE-DIAGNOSIS / ACCOUNT ---- */
@@ -1054,7 +1060,26 @@
   .mp-beyond-eyebrow { font-size: 10px; letter-spacing: .16em; color: color-mix(in srgb, var(--lc, #7ab8e8) 75%, #ffffff); }
   .mp-beyond-title { margin: 4px 0 0; font-size: 13px; font-weight: 700; line-height: 1.6; color: #e6e2f2; letter-spacing: .04em; word-break: auto-phrase; }
   .mp-beyond-body { margin: 4px 0 0; font-size: 11.5px; line-height: 1.8; color: #b8b2cc; }
-  /* 完全解析の申込ボタン：記録の元素の色だけで作るグラデーション（元素色 --lc → 次の色 --lc2。星・金・光沢は使わない） */
+  /* 「その先を見る」：閉じた状態は予告だけ。開くと完全解析の内容・申込・サンプル */
+  .mp-rec-actions > .mp-reveal { padding-bottom: 6px; }
+  .mp-reveal-toggle { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 44px; margin: 6px 0 0; padding: 8px 10px;
+    background: transparent; border: 0; border-top: 1px solid color-mix(in srgb, var(--lc, #7ab8e8) 22%, transparent); color: color-mix(in srgb, var(--lc, #7ab8e8) 55%, #ffffff);
+    font-family: inherit; font-size: 12.5px; letter-spacing: .14em; cursor: pointer; }
+  .mp-reveal-toggle:hover { color: #ffffff; }
+  .mp-reveal-toggle:focus-visible { outline: 2px solid #9cc4f0; outline-offset: 2px; }
+  .mp-reveal-chev { display: inline-block; transition: transform .2s ease; }
+  .mp-reveal-toggle[aria-expanded="true"] .mp-reveal-chev { transform: rotate(180deg); }
+  .mp-reveal-body { padding: 4px 0 8px; }
+  .mp-reveal-body > .mp-rec-row { width: 100%; margin-top: 10px; }
+  .mp-reveal-lens { font-size: 12px; }
+  .ca-card .mp-reveal-toggle { margin-top: 12px; }
+  @media (prefers-reduced-motion: reduce) { .mp-reveal-chev { transition: none; } }
+  /* 解析レポートを購入済みの時の完全解析：通常のボタンを土台に、金の縁取りと控えめな光を足す（派手にしない） */
+  .mp-rec-row > .mp-btn.mp-cta-rich, .ca-btn.ca-cta-rich {
+    border-color: color-mix(in srgb, var(--ca-gold, #c9a860) 70%, transparent) !important;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ca-gold, #c9a860) 22%, transparent), 0 0 16px color-mix(in srgb, var(--ca-gold, #c9a860) 22%, transparent), 0 3px 10px rgba(0,0,0,.3) !important; }
+  .mp-rec-row > .mp-btn.mp-cta-rich:disabled, .ca-btn.ca-cta-rich[disabled] { box-shadow: none !important; }
+  /* 完全解析の申込ボタン：記録の元素の色で作るグラデーション（元素色 --lc → 次の色 --lc2）。解析レポート購入済みの時だけ .mp-cta-rich の金を足す */
   .mp-rec-row > .mp-btn[data-complete-checkout] { min-height: 52px; font-size: 14px; font-weight: 700; letter-spacing: .1em; color: #ffffff;
     border: 1px solid color-mix(in srgb, var(--lc, #7ab8e8) 60%, transparent); text-shadow: 0 1px 2px rgba(0,0,0,.45);
     background:
@@ -2311,6 +2336,33 @@ const MP_BEYOND_HTML = `<div class="mp-beyond" data-rec-beyond>
       <p class="mp-beyond-title">まだ、ここには現れていない輪郭があります</p>
       <p class="mp-beyond-body"><b>三つの人物像</b>から、この記録をもう一段深く読む。<b class="g">全46ページ</b>の完全解析。</p>
     </div>`;
+// 未購入の記録の完全解析：閉じた状態は予告（BEYOND THE REPORT と短い説明）と「その先を見る」だけ。
+// 開くと、完全解析の内容・申込のボタン（¥3,000）・サンプルを出す（完了ページの「その先を見る」と同じ考え方）
+function mpRevealHtml(id, inner) {
+  const safeId = String(id).replace(/[^A-Za-z0-9_-]/g, '');
+  return `<div class="mp-beyond mp-reveal" data-rec-beyond>
+      <div class="mp-beyond-eyebrow">BEYOND THE REPORT｜この先にあるもの</div>
+      <p class="mp-beyond-title">まだ、ここには現れていない輪郭があります</p>
+      <p class="mp-beyond-body"><b>三つの人物像</b>から、この記録をもう一段深く読む。<b class="g">全46ページ</b>の完全解析。</p>
+      <button type="button" class="mp-reveal-toggle" aria-expanded="false" aria-controls="${safeId}" data-mp-reveal>その先を見る<span class="mp-reveal-chev" aria-hidden="true">⌄</span></button>
+      <div class="mp-reveal-body" id="${safeId}" hidden>
+        <div class="mp-reveal-lens">${caLensBlockHtml()}</div>
+        ${inner}
+      </div>
+    </div>`;
+}
+// 「その先を見る」の開閉（button＋aria-expanded。開いた状態は描き直すまで保つ）
+document.addEventListener('click', (e) => {
+  const b = e.target && e.target.closest && e.target.closest('[data-mp-reveal]');
+  if (!b) return;
+  e.preventDefault();
+  const body = document.getElementById(b.getAttribute('aria-controls'));
+  if (!body) return;
+  const open = b.getAttribute('aria-expanded') !== 'true';
+  b.setAttribute('aria-expanded', open ? 'true' : 'false');
+  body.hidden = !open;
+  if (open && typeof CompleteAnalysis !== 'undefined' && CompleteAnalysis.track) CompleteAnalysis.track('complete_details_open', { source: 'mypage' });
+});
 function mpRecordActionsHtml(r, source) {
   if (!mpEntitlementOk) return mpRecordUnknownHtml();
   // 登録したレポートを確かめられない：申込の導線は出さない（買い直しの取り違えを防ぐ）。以前の仕組みで本人が購入済みのレポートは読める
@@ -2321,15 +2373,20 @@ function mpRecordActionsHtml(r, source) {
   const ad = mpAnalysisDelivery(r);
   const ownsA = (ad && ad.state === 'active') || r.purchased === true;
   const rowA = `<div class="mp-rec-row" data-rec-product="analysis">${mpAnalysisRowHtml(r, ownsA ? 'mp-btn' : 'mp-btn primary mp-cta-el', src)}</div>`;
-  const rowBInner = mpCompleteRowHtml(r, ownsA ? 'mp-btn primary mp-cta-el' : 'mp-btn', src);
-  // 完全解析を申し込める時だけ、ボタンの上に案内（サンプルの「この先にあるもの」と同じ流れ）
-  const beyond = /data-complete-checkout=|is-pending/.test(rowBInner) ? MP_BEYOND_HTML : '';
-  const rowB = `${beyond}<div class="mp-rec-row" data-rec-product="complete">${rowBInner}</div>`;
-  // 申し込める商品がある時だけ、特商法・規約・プライバシーへのリンクを、購入ボタンの近くに（別タブ。記録の選択は保たれる）
-  const offers = /data-(analysis|complete)-checkout=|is-pending/.test(rowA + rowBInner);
-  const legal = offers && typeof EdBuy !== 'undefined' ? EdBuy.legalLinksHtml() : '';
+  // 解析レポートを購入済み：完全解析が次の選択肢なので主役（金の縁取りと控えめな光を足した、少しリッチなボタン）
+  // 金は申込のボタンの時だけ（完全解析を読む・作成中などの閲覧の導線には付けない）
+  const offerB = /data-complete-checkout=|is-pending/.test(mpCompleteRowHtml(r, 'mp-btn', src));
+  const rowBInner = mpCompleteRowHtml(r, ownsA ? `mp-btn primary mp-cta-el${offerB ? ' mp-cta-rich' : ''}` : 'mp-btn', src);
+  let rowB;
+  if (offerB && !ownsA) {
+    // どちらも未購入：主役は解析レポート。完全解析は「その先を見る」を開いた時だけ、内容・申込・サンプルを出す
+    rowB = mpRevealHtml(`mp-reveal-${source === 'latest' ? 'latest' : 'rec'}-${rid}`, `<div class="mp-rec-row" data-rec-product="complete">${rowBInner}</div>`);
+  } else {
+    // 完全解析を申し込める時だけ、ボタンの上に案内（サンプルの「この先にあるもの」と同じ流れ）
+    rowB = `${offerB ? MP_BEYOND_HTML : ''}<div class="mp-rec-row" data-rec-product="complete">${rowBInner}</div>`;
+  }
   return `<div class="mp-rec-actions" data-rec-actions="${encodeURIComponent(rid)}" data-rec-source="${source === 'latest' ? 'latest' : 'records'}">
-    ${ownsA ? rowB + rowA : rowA + rowB}${legal}</div>`;
+    ${ownsA ? rowB + rowA : rowA + rowB}</div>`;
 }
 // 登録したレポートを開く（開くたびにサーバーが支払い・返金・停止を確かめる）
 async function mpOpenDelivery(button) {
@@ -2493,11 +2550,12 @@ function mpArchiveHtml(records) {
 
 // CTAの優先順位（§23）：未購入＝解析レポート導線 > 結果を見る > Xシェア、
 // 購入済み＝解析レポートを読む > 結果を見る > Xシェア（控えめ）。再診断は下のRE-DIAGNOSIS。
+// 「結果を見る」と「Xシェア」は、カードの上部には置かず、開いた中の最下部に横並び（左＝結果を見る〔主〕・右＝Xシェア）
 function mpLatestHtml(r) {
   const viewBtn = r.resultUrl
-    ? `<a href="${mpEsc(mpResultHref(r))}" class="mp-btn" onclick="trackEvent('mypage_view_result_click',{source:'latest'})">結果を見る ›</a>`
-    : `<span class="mp-btn" aria-disabled="true">結果を見る ›</span>`;
-  const shareBtn = `<button type="button" class="mp-btn${r.purchased ? ' ghost' : ''}" onclick="mpShare(0)"><span aria-hidden="true">𝕏</span> Xシェア</button>`;
+    ? `<a href="${mpEsc(mpResultHref(r))}" class="mp-btn mp-op-main" onclick="trackEvent('mypage_view_result_click',{source:'latest'})">結果を見る ›</a>`
+    : `<span class="mp-btn mp-op-main" aria-disabled="true">結果を見る ›</span>`;
+  const shareBtn = `<button type="button" class="mp-btn mp-op-sub" onclick="mpShare(0)"><span aria-hidden="true">𝕏</span> Xシェア</button>`;
   let state;
   // 購入状態の表示の直後に、THE RECORDS と同じ購入・閲覧導線（最新の記録そのものが対象）
   if (!mpEntitlementOk) {
@@ -2520,13 +2578,12 @@ function mpLatestHtml(r) {
           </div>
         </div>
         ${mpVizHtml(r)}
-        ${viewBtn ? `<div class="mp-btn-row mp-latest-view">${viewBtn}</div>` : ''}
         <details class="mp-latest-fold">
           <summary>${r.purchased ? '深く読み解いた内容を見る' : mpEntitlementOk ? 'まだ読み解いていない部分を見る' : 'この記録の詳細を見る'}</summary>
           <div class="mp-latest-fold-body">
             ${state}
-            <div class="mp-btn-row">
-              ${shareBtn}
+            <div class="mp-btn-row mp-latest-ops">
+              ${viewBtn}${shareBtn}
             </div>
           </div>
         </details>
@@ -2914,12 +2971,11 @@ function caSheetBodyHtml(r) {
   }
   // 価格は、申込のボタンを出す時だけ（購入済み・確認中・停止は価格を出さない）。解析レポートを購入済みなら完全解析を上に
   const offers = (html) => /data-(analysis|complete)-checkout=|is-pending/.test(html);
-  const rowA = mpAnalysisRowHtml(r, 'ca-btn ca-primary-action', 'mypage_header');
-  const rowB = mpCompleteRowHtml(r, 'ca-btn ca-secondary-action', 'mypage_header');
   const ad = mpAnalysisDelivery(r);
   const ownsA = (ad && ad.state === 'active') || r.purchased === true;
-  // 申し込める商品がある時だけ、特商法・規約・プライバシーへのリンク（別タブ。開いているシート・選んだ記録は保たれる）
-  const legalSheet = (offers(rowA) || offers(rowB)) && typeof EdBuy !== 'undefined' ? EdBuy.legalLinksHtml() : '';
+  const rowA = mpAnalysisRowHtml(r, 'ca-btn ca-primary-action', 'mypage_header');
+  // 解析レポートを購入済み：完全解析が主役（少しリッチなボタン）。未購入：完全解析は「その先を見る」の中
+  const rowB = mpCompleteRowHtml(r, ownsA ? `ca-btn ca-primary-action${offers(mpCompleteRowHtml(r, 'ca-btn', 'mypage_header')) ? ' ca-cta-rich' : ''}` : 'ca-btn ca-secondary-action', 'mypage_header');
   const analysisCard = `<section class="ca-card ca-card--primary" aria-label="解析レポート">
         <div class="ca-eyebrow">STRUCTURE / INTERPRETATION</div>
         <h3 class="ca-title">解析レポート</h3>
@@ -2933,24 +2989,28 @@ function caSheetBodyHtml(r) {
     return `${target}
       <h2 class="ca-lead" id="latest-upgrade-title">この記録のレポート</h2>
       ${analysisCard}
-      ${legalSheet}
       <div class="ca-ineligible">
         <p class="ca-body">完全解析（全46ページ）は、最新版の100問で診断した記録が対象です。この記録は以前の版のため、完全解析はご利用いただけません。</p>
         <button type="button" class="ca-btn ca-quiet-action" onclick="caGoRediagnosis()">最新版で診断する（RE-DIAGNOSIS）</button>
       </div>`;
   }
+  const completeInner = `${caLensBlockHtml()}
+        ${offers(rowB) ? '<div class="ca-price-row"><span class="ca-meta">この記録の完全解析（解析レポートとは別の商品）</span><span class="ca-price">¥3,000</span></div>' : ''}
+        <div class="mp-rec-row" data-rec-product="complete">${rowB}</div>`;
+  // どちらも未購入で完全解析を申し込める：内容・価格・申込は「その先を見る」を開いた時だけ
+  const completeDetail = offers(rowB) && !ownsA
+    ? `<button type="button" class="mp-reveal-toggle" aria-expanded="false" aria-controls="ca-sheet-reveal" data-mp-reveal>その先を見る<span class="mp-reveal-chev" aria-hidden="true">⌄</span></button>
+        <div class="mp-reveal-body" id="ca-sheet-reveal" hidden>${completeInner}</div>`
+    : completeInner;
   const completeCard = `<section class="ca-card ca-card--secondary" aria-label="完全解析">
         <div class="ca-card-head"><span class="ca-eyebrow">COMPLETE ANALYSIS</span><span class="ca-pages"><span class="ca-pages-ja">全46ページ</span><span class="ca-pages-en">COMPLETE RECORD</span></span></div>
         <h3 class="ca-title">完全解析</h3>
         <p class="ca-body">三つの人物像から、この結果の全体を統合します。</p>
-        ${caLensBlockHtml()}
-        ${offers(rowB) ? '<div class="ca-price-row"><span class="ca-meta">この記録の完全解析（解析レポートとは別の商品）</span><span class="ca-price">¥3,000</span></div>' : ''}
-        <div class="mp-rec-row" data-rec-product="complete">${rowB}</div>
+        ${completeDetail}
       </section>`;
   return `${target}
       <h2 class="ca-lead" id="latest-upgrade-title">この記録のレポート</h2>
-      ${ownsA ? completeCard + analysisCard : analysisCard + completeCard}
-      ${legalSheet}`;
+      ${ownsA ? completeCard + analysisCard : analysisCard + completeCard}`;
 }
 
 // 記録が複数のとき、対象の記録を選ぶ画面（選ぶまで購入・閲覧の導線は出さない）
@@ -4245,5 +4305,14 @@ window.addEventListener('pageshow', (e) => {
 
 init();
 </script>
+<!-- 共通フッター：特商法・利用規約・プライバシーポリシーへのリンクは、各ページの最下部のここだけに置く（購入ボタンの周辺には出さない） -->
+<footer class="ed-legal-foot" style="margin:48px auto 0;padding:22px 16px calc(22px + env(safe-area-inset-bottom));text-align:center;border-top:1px solid rgba(150,180,240,.12)">
+  <style>@media print{.ed-legal-foot{display:none!important}}.ed-legal-foot a:focus-visible{outline:2px solid #9cc4f0;outline-offset:2px}</style>
+  <nav aria-label="法務情報" style="display:flex;gap:4px 20px;justify-content:center;flex-wrap:wrap">
+    <a href="/tokushoho" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em;padding:8px 2px">特定商取引法に基づく表記</a>
+    <a href="/privacy.html" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em;padding:8px 2px">プライバシーポリシー</a>
+    <a href="/terms.html" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em;padding:8px 2px">利用規約</a>
+  </nav>
+</footer>
 </body>
 </html>

@@ -160,7 +160,6 @@
       wrap.innerHTML = '<div class="edb-panel"><h2 id="edbGoalTitle" class="edb-title">完全解析 ' + yen(PRODUCTS.complete.price) + '</h2>'
         + '<div data-edb-goals><p class="edb-note">目標の一覧を読み込んでいます…</p></div>'
         + '<p class="edb-msg" role="alert"></p>'
-        + legalLinksHtml({ lead: 'お申し込みの前に、次をご確認ください。' })
         + '<div class="edb-actions"><button type="button" class="edb-btn" data-edb-go disabled>目標を選んで決済へ（' + yen(PRODUCTS.complete.price) + '）</button>'
         + '<button type="button" class="edb-link" data-edb-cancel>やめる</button></div></div>';
       d.body.appendChild(wrap);

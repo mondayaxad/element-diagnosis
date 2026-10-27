@@ -91,18 +91,25 @@ test('同意版：クライアントの定数と DB の関数が一致。公開�
   assert.ok(fs.existsSync(path.join(ROOT, 'docs/sql/complete_94_rollback_15_DRAFT_DO_NOT_RUN.sql')));
 });
 
-test('購入の入口：特商法・規約・プライバシーのリンクが、購入ボタンの近くにある（共通の部品）', () => {
-  const rp = read('js/report-purchase.js');
-  for (const s of ["'/tokushoho'", "'/terms.html'", "'/privacy.html'", 'noopener noreferrer', 'target="_blank"', 'data-legal-links']) assert.ok(rp.includes(s), s);
-  assert.match(rp, /legalLinksHtml/);
-  assert.match(read('js/sample-buy.js'), /legalLinksHtml/);
-  assert.match(read('index.html'), /href="\/tokushoho"/);
-  assert.match(read('report.html'), /legalLinksHtml/);
-  assert.match(read('report-link.html'), /legalLinksHtml/);
-  assert.match(read('purchase-complete.html'), /legalLinksHtml/);
-  const mp = read('mypage.html');
-  assert.match(mp, /legalLinksHtml/);
-  assert.match(mp, /legalSheet/);
+test('法務リンク：特商法・規約・プライバシーは各ページ最下部の共通フッターだけ。購入ボタン・アコーディオンの周辺には出さない（同意モーダルは残す）', () => {
+  // 購入の入口（CTA・アコーディオン・購入の確認画面）では、法務リンクの部品を呼ばない
+  for (const f of ['index.html', 'mypage.html', 'report.html', 'report_sample.html', 'report-link.html', 'purchase-complete.html', 'js/sample-buy.js', 'js/guest-purchase.js']) {
+    assert.doesNotMatch(read(f), /legalLinksHtml\(|legalSheet/, f);
+  }
+  assert.doesNotMatch(read('js/report-purchase.js'), /legalLinksHtml\(\{/, '購入の確認画面に法務リンクを出さない');
+  // 各ページの最下部（共通フッター）に、3つの法務ページへのリンクが1組だけ
+  for (const f of ['index.html', 'mypage.html', 'report.html', 'report_sample.html', 'report-link.html', 'purchase-complete.html', 'complete-sample.html']) {
+    const t = read(f);
+    for (const href of ['href="/tokushoho"', 'href="/privacy.html"', 'href="/terms.html"']) {
+      assert.equal(t.split(href).length - 1, 1, `${f}: ${href}`);
+    }
+    const foot = t.lastIndexOf('<footer');
+    assert.ok(foot > 0 && t.indexOf('href="/tokushoho"') > foot, `${f}: 法務リンクは最下部のフッターの中`);
+  }
+  // 登録の同意モーダルには、同意の対象を確かめるための規約・プライバシーへのリンクを残す
+  const ro = read('js/registration-onboarding.js');
+  assert.match(ro, /<a href="\/terms\.html" target="_blank" rel="noopener">利用規約<\/a>/);
+  assert.match(ro, /<a href="\/privacy\.html" target="_blank" rel="noopener">プライバシーポリシー<\/a>/);
   // 旧い規約・プライバシーのモーダル（本文の二重管理）は残さない
   assert.doesNotMatch(read('index.html'), /id="terms"|id="privacy"/);
 });

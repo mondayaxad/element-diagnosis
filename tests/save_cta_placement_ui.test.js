@@ -517,8 +517,14 @@ test('マイページ：記録内CTA（無料のみ／解析購入済み）と�
   await p.locator('#mp-rec-1 > summary').click();
   const a = p.locator('#mp-rec-1 .mp-rec-actions');
   const aBtns = noLegal(await a.locator('a, button').allInnerTexts());
-  // 販売停止中（既定）：¥1,000 も「準備中」。Payment Link へは送らない
-  assert.deepEqual(aBtns.map((t) => t.trim()), ['解析レポート（準備中）', '完全解析 ¥3,000（準備中）']);
+  // 販売停止中（既定）：¥1,000 も「準備中」。Payment Link へは送らない。完全解析は「その先を見る」（閉じた状態）の中
+  assert.deepEqual(aBtns.map((t) => t.trim()), ['解析レポート（準備中）', 'その先を見る\n⌄', '完全解析 ¥3,000（準備中）']);
+  const tog = a.locator('[data-mp-reveal]');
+  assert.equal(await tog.getAttribute('aria-expanded'), 'false');
+  assert.equal(await a.locator('[data-rec-product="complete"] .is-pending').isVisible(), false);
+  await tog.click();
+  assert.equal(await tog.getAttribute('aria-expanded'), 'true');
+  assert.equal(await a.locator('[data-rec-product="complete"] .is-pending').isVisible(), true);
   assert.equal(await a.locator('a[href*="buy.stripe"]').count(), 0);
   // B（解析レポート購入済み）
   await p.locator('#mp-rec-0 > summary').click();
@@ -614,7 +620,7 @@ async function openRecord(p, i) {
 
 test('LATEST RESULT：4状態で THE RECORDS の同じ記録と同じ購入・閲覧導線を出す', { skip: skip() }, async () => {
   const cases = [
-    { name: 'free', opts: { supa: { rows: [RB.row, RA.row] } }, want: ['解析レポート（準備中）', '完全解析 ¥3,000（準備中）'] },
+    { name: 'free', opts: { supa: { rows: [RB.row, RA.row] } }, want: ['解析レポート（準備中）', 'その先を見る\n⌄', '完全解析 ¥3,000（準備中）'] },
     { name: 'analysis', opts: { supa: { rows: [RB.row, RA.row] }, entitlements: purchasedFor(RB.code) }, want: ['完全解析 ¥3,000（準備中）', '解析レポートを読む'] },
     // 完全解析の登録あり（表14 の B・A＋B）は tests/report_purchase_ui.test.js で確かめる（旧 Preview の表示確認用の状態は廃止）
   ];
@@ -636,9 +642,16 @@ test('LATEST RESULT：4状態で THE RECORDS の同じ記録と同じ購入・�
       return !!(acts && row && (acts.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING));
     });
     assert.ok(order, 'actions before 結果を見る/Xシェア ' + c.name);
-    // 「結果を見る」は折りたたみの外（いつでも見える）。シェアは折りたたみの中
-    assert.match(await p.locator('.mp-latest-view').innerText(), /結果を見る/);
-    assert.match(await p.locator('.mp-latest-fold .mp-btn-row').innerText(), /Xシェア/);
+    // 「結果を見る」と「Xシェア」は折りたたみの最下部に横並び（左が結果を見る）。カード上部の大きな「結果を見る」は無い
+    assert.equal(await p.locator('.mp-latest-view').count(), 0);
+    const ops = await p.evaluate(() => {
+      const row = document.querySelector('.mp-latest-fold-body > .mp-latest-ops:last-child') || document.querySelector('.mp-latest-fold .mp-latest-ops');
+      const [v, x] = [...row.children];
+      const rv = v.getBoundingClientRect(), rx = x.getBoundingClientRect();
+      return { texts: [v.innerText.trim(), x.innerText.trim()], sameLine: Math.abs(rv.top - rx.top) < 2, leftFirst: rv.left < rx.left, wider: rv.width > rx.width, h: Math.min(rv.height, rx.height), last: row === row.parentElement.lastElementChild };
+    });
+    assert.match(ops.texts[0], /結果を見る/); assert.match(ops.texts[1], /Xシェア/);
+    assert.ok(ops.sameLine && ops.leftFirst && ops.wider && ops.h >= 44 && ops.last, JSON.stringify(ops));
     // 完全解析を見る は最新記録（B）が対象
     if (c.name === 'complete') assert.equal(await p.locator('.mp-latest-fold').getByText('完全解析を見る').getAttribute('data-session-id'), 'sess-B');
     if (c.name === 'analysis') assert.equal(await p.locator('.mp-latest-fold').getByText('解析レポートを読む').getAttribute('data-session-id'), 'sess-B');

@@ -630,5 +630,14 @@ a.sample-return.ed-sky-btn[aria-disabled="true"] { opacity:.55; pointer-events:n
 <script src="/js/sample-return.js"></script>
 <script src="/api/public-config?format=js"></script>
 <script src="/js/report-purchase.js"></script>
-<script src="/js/sample-buy.js"></script></body>
+<script src="/js/sample-buy.js"></script><!-- 共通フッター：特商法・利用規約・プライバシーポリシーへのリンクは、各ページの最下部のここだけに置く（購入ボタンの周辺には出さない） -->
+<footer class="ed-legal-foot" style="margin:48px auto 0;padding:22px 16px calc(22px + env(safe-area-inset-bottom));text-align:center;border-top:1px solid rgba(150,180,240,.12)">
+  <style>@media print{.ed-legal-foot{display:none!important}}.ed-legal-foot a:focus-visible{outline:2px solid #9cc4f0;outline-offset:2px}</style>
+  <nav aria-label="法務情報" style="display:flex;gap:4px 20px;justify-content:center;flex-wrap:wrap">
+    <a href="/tokushoho" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em;padding:8px 2px">特定商取引法に基づく表記</a>
+    <a href="/privacy.html" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em;padding:8px 2px">プライバシーポリシー</a>
+    <a href="/terms.html" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em;padding:8px 2px">利用規約</a>
+  </nav>
+</footer>
+</body>
 </html>

@@ -127,6 +127,17 @@
     .tp .cta:hover { filter: brightness(1.1); box-shadow: 0 0 36px rgba(100,90,210,.3), 0 12px 26px rgba(0,0,0,.4), inset 0 1px 0 rgba(210,225,255,.2); }
     .tp .cta .en { font-family: var(--font-en); letter-spacing: .14em; }
     /* マイページ入口：主CTAの下の補助導線（右上のMY PAGEボタンは置かない） */
+    /* 右上のマイページ（ヒーローの中に置く。スクロールに追従しない）。白〜淡い水色の文字と小さな人物アイコンだけ。
+       囲み・ピル型にしない。タップ領域は 44px 以上。iPhone のセーフエリアの内側に置く */
+    .tp .hero-mypage { position: absolute; z-index: 2; top: max(10px, env(safe-area-inset-top)); right: max(10px, env(safe-area-inset-right));
+      display: inline-flex; align-items: center; gap: 6px; min-width: 44px; min-height: 44px; padding: 0 10px; box-sizing: border-box;
+      color: #b9d4ec; font-size: 12px; letter-spacing: .14em; text-decoration: none; opacity: .82;
+      transition: opacity .25s ease, color .25s ease, text-shadow .25s ease; -webkit-tap-highlight-color: transparent; }
+    .tp .hero-mypage svg { width: 15px; height: 15px; flex: none; }
+    .tp .hero-mypage:hover, .tp .hero-mypage:active { opacity: 1; color: #e4f1ff; text-shadow: 0 0 10px rgba(156,196,240,.55); }
+    .tp .hero-mypage:hover svg, .tp .hero-mypage:active svg { filter: drop-shadow(0 0 4px rgba(156,196,240,.6)); }
+    .tp .hero-mypage:focus-visible { outline: 1px solid rgba(156,196,240,.7); outline-offset: 2px; opacity: 1; }
+    @media (prefers-reduced-motion: reduce) { .tp .hero-mypage { transition: none; } }
     .tp .hero-record-link { margin-top: 18px; color: #7896b3; font-size: 12px; letter-spacing: .08em; text-decoration: none; opacity: .9; transition: color .2s ease; }
     .tp .hero-record-link:hover { color: #a8c7e3; }
     .tp .hero-record-link .arw { display: inline-block; transition: transform .2s ease; }
@@ -473,6 +484,8 @@
 <div class="night" aria-hidden="true"><div class="photo"></div><div class="tint"></div></div>
 <main class="tp">
   <section class="hero" id="top">
+    <!-- 右上のマイページ（認証の判定・ログインはマイページ側の既存の仕組み。計測は既存の mypage_entry_click を使う） -->
+    <a href="/mypage.html" class="hero-mypage" onclick="trackEvent('mypage_entry_click',{entry_point:'top_header'})"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><circle cx="8" cy="5.4" r="2.6"/><path d="M2.8 14.2c.6-2.7 2.7-4.3 5.2-4.3s4.6 1.6 5.2 4.3" stroke-linecap="round"/></svg><span>マイページ</span></a>
     <!-- 小さな結晶（renderHeroGems() が描画） -->
     <div class="gems" id="heroGems" aria-hidden="true"></div>
     <div class="hero-content">
@@ -2727,7 +2740,6 @@ function renderResult(root) {
           </p>
           ${diagnosisVersion === 'ETI-2.0' ? '<p data-purchase-link-note style="text-align:center;color:var(--rx-tertiary);font-size:11px;line-height:1.7;margin-top:4px">お支払いの後、レポートのリンク（URL）が発行されます。そのリンクからいつでも読めて、マイページにも登録できます。</p>'
             + '<p style="text-align:center;margin:6px 0 0"><a href="/report_sample.html#from=result" data-buy-sample="analysis" style="color:var(--rx-tertiary);font-size:11.5px">解析レポートのサンプルを見る</a></p>' : ''}
-          ${diagnosisVersion === 'ETI-2.0' && typeof EdBuy !== 'undefined' ? EdBuy.legalLinksHtml() : ''}
           ${completeAnalysisFoldHtml(diagnosisVersion === 'ETI-2.0' && results.raw && results.raw.meta ? results.raw.meta.itemSetVersion : null, diagnosisVersion, elC)}
         </div>
       </div>
@@ -3079,7 +3091,7 @@ function completeAnalysisFoldHtml(itemSetVersion, diagnosisVersion, elColor) {
     cta = '<div data-report-buy="complete">'
       + '<button type="button" class="ca-fold-btn ca-fold-btn-buy" data-buy-complete aria-label="完全解析 ¥3,000（まだ見えていない輪郭を読む）"><span class="ca-buy-main">まだ見えていない輪郭を読む</span><span class="ca-buy-sub">¥3,000</span></button>'
       + '<p class="ca-guest-msg" data-buy-msg role="status"></p>'
-      + (typeof EdBuy !== 'undefined' ? EdBuy.legalLinksHtml() : '') + '</div>';
+      + '</div>';
   } else if (offer) {
     var isUp = offer.offer === 'upgrade_2000';
     cta = CA.pendingButtonHtml(offer, 'ca-fold-btn')

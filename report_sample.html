@@ -1788,7 +1788,7 @@ var REPORT_SAMPLE_LINK = '<a class="ca-r-sample" href="/complete-sample.html" da
 // マイページから開いた解析レポートの最下部：完全解析の申込はマイページの記録から
 function renderMypageFooter(box) {
   box.innerHTML = REPORT_SAMPLE_LINK + '<a class="ca-r-btn is-offer" href="/mypage.html" data-report-mypage>マイページでこの記録の完全解析を作成する ¥3,000</a>'
-    + (window.EdBuy ? window.EdBuy.legalLinksHtml() : '');
+    ;
 }
 function renderDeliveryFooter(box) {
   var B = window.EdBuy;
@@ -1826,7 +1826,7 @@ function renderDeliveryFooter(box) {
     box.innerHTML = (B.contextOk(ctx) ? '<a class="ca-r-sample" href="' + B.esc(B.sampleHref('complete', ctx, 'report')) + '" data-ca-sample>完全解析のサンプルを見る</a>' : '')
       + (open ? '<button type="button" class="ca-r-btn is-offer" data-report-buy-complete><span class="ed-sky-main">まだ見えていない輪郭を読む</span><span class="ed-sky-sub">この診断結果で完全解析を作成する ' + B.yen(B.PRODUCTS.complete.price) + '</span></button>'
         : '<button type="button" class="ca-r-btn is-pending" disabled aria-disabled="true">完全解析 ' + B.yen(B.PRODUCTS.complete.price) + '（準備中）</button>')
-      + '<p class="ca-guest-msg" data-buy-msg role="status"></p>' + B.legalLinksHtml();
+      + '<p class="ca-guest-msg" data-buy-msg role="status"></p>';
     var buy = box.querySelector('[data-report-buy-complete]');
     if (buy) buy.onclick = function () {
       var msg = box.querySelector('[data-buy-msg]');
@@ -2219,6 +2219,15 @@ async function savePdf() {
   renderFullReport(root, computeResultsV2ForUI(answers, code), code);
 })();
 </script>
+<!-- 共通フッター：特商法・利用規約・プライバシーポリシーへのリンクは、各ページの最下部のここだけに置く（購入ボタンの周辺には出さない） -->
+<footer class="ed-legal-foot" style="margin:48px auto 0;padding:22px 16px calc(22px + env(safe-area-inset-bottom));text-align:center;border-top:1px solid rgba(150,180,240,.12)">
+  <style>@media print{.ed-legal-foot{display:none!important}}.ed-legal-foot a:focus-visible{outline:2px solid #9cc4f0;outline-offset:2px}</style>
+  <nav aria-label="法務情報" style="display:flex;gap:4px 20px;justify-content:center;flex-wrap:wrap">
+    <a href="/tokushoho" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em;padding:8px 2px">特定商取引法に基づく表記</a>
+    <a href="/privacy.html" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em;padding:8px 2px">プライバシーポリシー</a>
+    <a href="/terms.html" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em;padding:8px 2px">利用規約</a>
+  </nav>
+</footer>
 <style>
   .sample-cta { max-width:640px; margin:24px auto 48px; padding:18px 16px; border:1px solid #2a2440; border-radius:10px; background:rgba(20,16,36,.6);
     color:#c9c2e0; font-size:12.5px; line-height:1.9; text-align:center; box-sizing:border-box; }

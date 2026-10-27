@@ -709,26 +709,33 @@ test('320・390・1280px：診断結果・サンプル・購入完了・固有�
   }
 });
 
-test('マイページ：ボタンの高さ（390px）・A 購入済みは完全解析が上（元素の色）・登録した A／B が INSIGHT・COMPLETE に反映', { skip: skip() }, async () => {
-  for (const [reports, order, insight, complete] of [
-    [[], ['analysis', 'complete'], false, false],
-    [[DEL('analysis', 'active')], ['complete', 'analysis'], true, false],
-    [[DEL('analysis', 'active'), DEL('complete', 'active', { report: { status: 'ready' } })], ['complete', 'analysis'], true, true],
+test('マイページ：ボタンの高さ（390px）・未購入は完全解析を「その先を見る」の中に・A 購入済みは完全解析が上（元素の色＋金）・登録した A／B が INSIGHT・COMPLETE に反映', { skip: skip() }, async () => {
+  for (const [reports, order, insight, complete, reveal, rich] of [
+    [[], ['analysis', 'complete'], false, false, true, []],
+    [[DEL('analysis', 'active')], ['complete', 'analysis'], true, false, false, ['complete']],
+    [[DEL('analysis', 'active'), DEL('complete', 'active', { report: { status: 'ready' } })], ['complete', 'analysis'], true, true, false, []],
   ]) {
     const p = await mypage(reports);
+    // 開いて、表示されているボタンの高さを測る（記録の中の操作）
+    await p.evaluate(() => { document.querySelector('.mp-latest-fold').open = true; });
     const got = await p.evaluate(() => {
       const box = document.querySelector('.mp-latest [data-rec-actions]');
-      const btns = [...box.querySelectorAll('.mp-rec-row > .mp-btn')];
+      const btns = [...box.querySelectorAll('.mp-rec-row > .mp-btn')].filter((b) => b.offsetParent !== null);
+      const t = box.querySelector('[data-mp-reveal]');
       return {
-        order: [...box.querySelectorAll(':scope > .mp-rec-row')].map((r) => r.getAttribute('data-rec-product')),
+        order: [...box.querySelectorAll('[data-rec-product]')].map((r) => r.getAttribute('data-rec-product')),
         heights: btns.map((b) => b.getBoundingClientRect().height),
         cta: [...box.querySelectorAll('.mp-cta-el')].map((b) => b.closest('[data-rec-product]').getAttribute('data-rec-product')),
+        rich: [...box.querySelectorAll('.mp-cta-rich')].map((b) => b.closest('[data-rec-product]').getAttribute('data-rec-product')),
+        reveal: t ? { expanded: t.getAttribute('aria-expanded'), hidden: document.getElementById(t.getAttribute('aria-controls')).hidden } : null,
         latest: document.querySelector('.mp-latest').className,
       };
     });
     assert.deepEqual(got.order, order);
-    assert.ok(got.heights.every((h) => h >= 44 && h <= 60), '縦に伸びない：' + got.heights.join(','));
+    assert.ok(got.heights.length >= 1 && got.heights.every((h) => h >= 44 && h <= 60), '縦に伸びない：' + got.heights.join(','));
     assert.deepEqual(got.cta, [order[0]], '上の行だけ元素の色の CTA');
+    assert.deepEqual(got.rich, rich, 'A 購入済み・B 未購入の時だけ完全解析を少しリッチに');
+    assert.deepEqual(got.reveal, reveal ? { expanded: 'false', hidden: true } : null, '未購入の時だけ、完全解析は閉じた「その先を見る」の中');
     assert.equal(/state-insight/.test(got.latest), insight, 'INSIGHT：' + got.latest);
     assert.equal(/is-complete/.test(got.latest), complete, 'COMPLETE：' + got.latest);
     assert.deepEqual(p.__errors, []);
@@ -835,7 +842,8 @@ test('マイページ：完全解析を申し込める記録だけ、購入ボ�
       const box = document.querySelector('.mp-latest [data-rec-actions]');
       const g = box.querySelector('[data-rec-beyond]');
       return { n: box.querySelectorAll('[data-rec-beyond]').length,
-        next: g && g.nextElementSibling ? g.nextElementSibling.getAttribute('data-rec-product') : null,
+        // A 購入済みは購入ボタンのすぐ上、未購入は「その先を見る」の中（閉じた案内の下）
+        next: !g ? null : (g.querySelector('.mp-reveal-body [data-rec-product]') || g.nextElementSibling || { getAttribute: () => null }).getAttribute('data-rec-product'),
         text: g ? g.innerText : '' };
     });
     assert.equal(got.n, want);

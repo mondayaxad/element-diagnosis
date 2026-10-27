@@ -147,7 +147,7 @@ test('mypage：右上入口は LATEST RESULT より上・追従しない・間�
   await p.__ctx.close();
 });
 
-test('mypage free：解析¥1,000が主（塗り）、完全¥3,000は副（枠線・準備中で押せない）', { skip: skip() }, async () => {
+test('mypage free：解析¥1,000が主（塗り）、完全¥3,000は「その先を見る」の中で副（枠線・準備中で押せない）', { skip: skip() }, async () => {
   const p = await mypage('free');
   await p.click('#mpUpgradeTrigger');
   const dlg = p.locator('#latest-upgrade-dialog');
@@ -157,6 +157,15 @@ test('mypage free：解析¥1,000が主（塗り）、完全¥3,000は副（枠�
   // 記録が2件：対象を選ぶと、フォーカスはシート内（選び直しボタン）へ移る
   await p.click('#mpUpgradeBody [data-pick-index="0"]');
   assert.ok(await p.evaluate(() => document.activeElement.hasAttribute('data-repick')));
+  // どちらも未購入：完全解析の内容・価格・申込は閉じている（「その先を見る」＝button・aria-expanded）
+  const reveal = p.locator('#mpUpgradeBody .ca-card--secondary [data-mp-reveal]');
+  assert.equal(await reveal.count(), 1);
+  assert.equal(await reveal.getAttribute('aria-expanded'), 'false');
+  assert.equal(await reveal.evaluate((e) => e.tagName), 'BUTTON');
+  assert.equal(await p.locator('.ca-card--secondary button.is-pending').isVisible(), false);
+  assert.equal(await p.locator('.ca-card--primary .ca-primary-action').isVisible(), true);
+  await reveal.click();
+  assert.equal(await reveal.getAttribute('aria-expanded'), 'true');
   const text = await sheetText(p);
   assert.ok(text.indexOf('解析レポート') < text.indexOf('完全解析　') || text.indexOf('STRUCTURE') < text.indexOf('COMPLETE ANALYSIS'));
   for (const s of [...COMBO_B.split(' × '), 'MIRROR', '現在のあなたに近い人物像', 'HIDDEN SHAPE', '表に出にくい一面に近い人物像', 'MENTOR', 'これから伸ばす方向に近い人物像', '10名', 'CHARACTERS', '全46ページ', 'COMPLETE RECORD', '気質', '価値観', '人物像', '近しいキャラクター4名', '解析レポートとは別の商品']) assert.ok(text.includes(s), s);

@@ -45,8 +45,11 @@ test('サンプル：8ページ・noindex,nofollow,noarchive・同じサイト�
 
 
 test('サンプル（complete_13）：上部は「元の画面に戻る」、末尾は申込欄（購入対象トークンがある時だけ申込・直接開いた時は「まず元素診断を受ける」）。Stripe へ直接は送らない', () => {
+  // 法務ページ（最下部の共通フッター）を除くリンクは、トップへの2つだけ
+  const LEGAL = ['/tokushoho', '/privacy.html', '/terms.html'];
   const hrefs = [...SAMPLE.matchAll(/href="([^"]*)"/g)].map((m) => m[1]).filter((h) => !h.startsWith('#'));
-  assert.deepEqual(hrefs, ['/', '/']);
+  assert.deepEqual(hrefs.filter((h) => !LEGAL.includes(h)), ['/', '/']);
+  assert.deepEqual(hrefs.filter((h) => LEGAL.includes(h)), LEGAL);
   assert.equal((SAMPLE.match(/data-sample-return/g) || []).length, 1);
   assert.equal((SAMPLE.match(/data-sample-buy/g) || []).length, 1);
   assert.doesNotMatch(SAMPLE, /stripe|checkout/i);
