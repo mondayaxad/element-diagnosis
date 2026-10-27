@@ -12,7 +12,7 @@
 //     scripts/build-ogp-bases.mjs で35枚の下地 JPEG（assets/ogp/bases/）に事前に描いておき、実行時は人ごとの情報だけを重ねる。
 //     MIRROR 欄の地・枠・内側の光も、キャラクターの元素ごとの札（7枚の透過 PNG）を事前に作っておく。
 //     光彩（textShadow・inset boxShadow）の描画が CPU の大半だったため。
-//   ・フォントは Google Fonts を毎回取得せず、必要な文字だけのサブセット（assets/ogp/fonts/）を関数に同梱して読む。
+//   ・フォントは Google Fonts を毎回取得せず、必要な文字だけのサブセット（assets/ogp/fonts/ の WOFF を api/_og-font.mjs に base64 で同梱）を使う。
 //   ・同じ診断結果は同じ URL（p の正規形）にそろえ、CDN に長期キャッシュさせる（同じ画像を作り直さない）。
 //   ・下地が取れない時（Preview の保護など）は、従来どおり1枚をすべて描く。
 import { ImageResponse } from '@vercel/og';
@@ -20,6 +20,7 @@ import { ImageResponse } from '@vercel/og';
 import { buildOgpCardTree } from '../js/ogp-card.mjs';
 import { ELEMENT_KEY } from '../js/ogp-theme.mjs';
 import { CHAR_ELEMENT } from './_ogp-char-element.mjs';
+import { OG_FONT_WOFF_BASE64 } from './_og-font.mjs';
 import { ELEMENT_CODE, WEAPON_CODE, TYPE_NAME, ELEMENT_NAME, WEAPON_NAME, NATION_NAME, CHAR_NAMES, unpackShareParams, canonicalShareP, packShareParams } from './_og-data.mjs';
 
 export const config = { runtime: 'edge' };
@@ -31,19 +32,17 @@ const CACHE_HEADERS = {
   'vercel-cdn-cache-control': 'public, max-age=31536000, immutable',
 };
 
-// 必要な文字だけの明朝（Noto Serif JP 700。SIL Open Font License）。関数に同梱し、同じ実行環境の中では読み直さない
-const FONT_FILE = 'noto-serif-jp-700-og.woff';
-const FONT_URL = new URL('../assets/ogp/fonts/' + FONT_FILE, import.meta.url);
+// 必要な文字だけの明朝（Noto Serif JP 700。SIL Open Font License）。base64 のモジュールとして関数に同梱する
+// （この構成の Edge 関数では モジュールの場所を基準にしたファイル読み込みが使えないため）。同じ実行環境では復号し直さない
 let fontCache = null;
-async function loadFont(origin) {
-  if (fontCache) return fontCache;
-  for (const u of [FONT_URL, `${origin}/assets/ogp/fonts/${FONT_FILE}`]) {
-    try {
-      const r = await fetch(u);
-      if (r.ok) { fontCache = await r.arrayBuffer(); return fontCache; }
-    } catch (e) { /* 次を試す */ }
+function loadFont() {
+  if (!fontCache) {
+    const bin = atob(OG_FONT_WOFF_BASE64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    fontCache = bytes.buffer;
   }
-  return null;
+  return fontCache;
 }
 
 async function fetchImageDataUri(url) {
@@ -101,23 +100,25 @@ export default async function handler(req) {
     match: matchText,
   };
 
-  const font = await loadFont(origin);
-  const fonts = font ? [{ name: 'Noto Serif JP', data: font, weight: 700, style: 'normal' }] : [];
+  const fonts = [{ name: 'Noto Serif JP', data: loadFont(), weight: 700, style: 'normal' }];
   const fontOpts = { fontSerif: 'Noto Serif JP', fontSans: 'Noto Serif JP' };
 
   // 下地（タイプ別・事前生成）があれば、人ごとの情報だけを重ねる
   const baseUrl = await fetchImageDataUri(`${origin}/assets/ogp/bases/${code}.jpg`);
-  let tree;
+  let tree, render;
   if (baseUrl) {
     // MIRROR 欄の地・枠・内側の光も事前生成の札（キャラクターの元素ごと）。取れなければその場で描く
     const mirrorPlateUrl = charName ? await fetchImageDataUri(`${origin}/assets/ogp/bases/mirror-${ELEMENT_KEY[data.mirrorElement] || 'anemo'}.png`) : null;
     tree = buildOgpCardTree(data, { ...fontOpts, part: 'overlay', baseUrl, mirrorPlateUrl });
+    render = mirrorPlateUrl || !charName ? 'base' : 'base-noplate';
   } else {
     // 下地が取れない：従来どおり正式背景から1枚をすべて描く（背景も取れなければ SVG 円環）
     const backgroundUrl = await fetchImageDataUri(`${origin}/assets/ogp/backgrounds/${ELEMENT_KEY[el] || 'anemo'}.jpg`);
     tree = buildOgpCardTree(data, { ...fontOpts, backgroundUrl, showBackground: !!backgroundUrl });
+    render = backgroundUrl ? 'full' : 'plain';
   }
-  return new ImageResponse(tree, { width: 1200, height: 630, fonts, headers: CACHE_HEADERS });
+  // x-og-render：どの描き方をしたか（base＝事前生成の下地を使った通常の経路／full・plain＝下地が取れず1枚をすべて描いた）
+  return new ImageResponse(tree, { width: 1200, height: 630, fonts, headers: { ...CACHE_HEADERS, 'x-og-render': render } });
 }
 
 function toBase64(buf) {

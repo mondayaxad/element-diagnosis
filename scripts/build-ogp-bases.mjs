@@ -4,6 +4,7 @@
 //   描き方は js/ogp-card.mjs の buildOgpCardTree(part:'base') で、api/og-image と同じ Satori（@vercel/og）を使う。
 //   出力：assets/ogp/bases/<タイプコード>.jpg（1200×630・JPEG）
 //         assets/ogp/bases/mirror-<元素キー>.png（MIRROR 欄の地・枠・内側の光。キャラクターの元素ごと7枚・透過 PNG）
+//         api/_og-font.mjs（assets/ogp/fonts/noto-serif-jp-700-og.woff を base64 で関数に同梱するモジュール）
 //
 // 実行（開発用。デザイン・背景・フォント・タイプ名を変えた時だけ作り直してコミットする）：
 //   npm i --no-save @vercel/og@0.6.3   … まだ無い場合
@@ -12,6 +13,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import crypto from 'crypto';
 import { execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { ImageResponse } from '@vercel/og';
@@ -56,3 +58,10 @@ for (const el of PACK_ELEMENTS) {
   console.log(path.basename(out), fs.statSync(out).size);
 }
 fs.rmSync(tmp, { recursive: true, force: true });
+fs.writeFileSync(path.join(ROOT, 'api/_og-font.mjs'),
+  '// api/_og-font.mjs（自動生成：scripts/build-ogp-bases.mjs）\n'
+  + '// assets/ogp/fonts/noto-serif-jp-700-og.woff（Noto Serif JP 700 のサブセット。SIL Open Font License）を base64 で同梱したもの。\n'
+  + '// 先頭が _ のファイルは Vercel の API ルートにならない。\n'
+  + `export const OG_FONT_SHA256 = '${crypto.createHash('sha256').update(font).digest('hex')}';\n`
+  + `export const OG_FONT_WOFF_BASE64 = '${font.toString('base64')}';\n`);
+console.log('api/_og-font.mjs', font.length);

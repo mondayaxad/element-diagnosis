@@ -36,10 +36,13 @@ test('p の正規形：同じ見た目になる p は同じ文字列。範囲外
 test('og-image：Google Fonts を実行時に取得しない・同梱フォント・長期 CDN キャッシュ・正規形でなければ 308', () => {
   const src = read('api/og-image.mjs');
   assert.doesNotMatch(src, /fonts\.googleapis|fonts\.gstatic/);
-  assert.match(src, /new URL\('\.\.\/assets\/ogp\/fonts\/' \+ FONT_FILE, import\.meta\.url\)/);
+  // フォントは base64 のモジュールで同梱（Edge 関数で import.meta.url 基準の読み込みが使えないため）
+  assert.match(src, /import \{ OG_FONT_WOFF_BASE64 \} from '\.\/_og-font\.mjs';/);
+  assert.doesNotMatch(src, /import\.meta\.url/);
   assert.match(src, /'vercel-cdn-cache-control': 'public, max-age=31536000, immutable'/);
   assert.match(src, /s-maxage=31536000/);
   assert.match(src, /status: 308/);
+  assert.match(src, /'x-og-render': render/);
   // 旧形式（el・w・nat・c・m）も、p で表せる時は正規形へ転送する（順序・余分なパラメータで作り直さない）
   assert.match(src, /packShareParams\(el, w, nat, name \? CHAR_NAMES\.indexOf\(name\) : 0x7F, Number\(match\)\)/);
   assert.match(src, /export const config = \{ runtime: 'edge' \}/);
@@ -67,9 +70,15 @@ test('下地35枚（元素7×武器5）・MIRROR 欄の札7枚・フォントが
   assert.equal(fs.readdirSync(path.join(ROOT, 'assets/ogp/bases')).filter((n) => n.endsWith('.jpg')).length, 35);
   const font = fs.readFileSync(path.join(ROOT, 'assets/ogp/fonts/noto-serif-jp-700-og.woff'));
   assert.equal(font.toString('latin1', 0, 4), 'wOFF', 'Satori が読める WOFF（WOFF2 ではない）');
+  const F = await imp('api/_og-font.mjs');
+  assert.ok(Buffer.from(F.OG_FONT_WOFF_BASE64, 'base64').equals(font), '同梱のフォントは assets のフォントと同じ');
+  assert.equal(F.OG_FONT_SHA256, require('crypto').createHash('sha256').update(font).digest('hex'));
   const { listPublicFiles } = require('../scripts/build-public.js');
   const files = listPublicFiles().files;
-  for (const f of ['assets/ogp/bases/HYSW.jpg', 'assets/ogp/bases/mirror-pyro.png', 'assets/ogp/fonts/noto-serif-jp-700-og.woff']) assert.ok(files.includes(f), f);
+  for (const el of D.PACK_ELEMENTS) {
+    for (const w of D.PACK_WEAPONS) assert.ok(files.includes(`assets/ogp/bases/${D.ELEMENT_CODE[el]}${D.WEAPON_CODE[w]}.jpg`));
+    assert.ok(files.includes(`assets/ogp/bases/mirror-${T.ELEMENT_KEY[el]}.png`));
+  }
 });
 
 test('カードの組み立て：all（従来の1枚描き）は人ごとの情報もすべて含み、overlay は下地の上に人ごとの情報だけ', async () => {
