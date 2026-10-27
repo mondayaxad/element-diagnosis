@@ -310,6 +310,7 @@ test('マイページ：新規ユーザーは登録完了モーダル → いい
   // ログイン画面は新規／既存を断定しない
   const gate = await p.locator('#gateAuth').innerText();
   assert.match(gate, /Googleで続ける/); assert.match(gate, /Xで続ける/); assert.match(gate, /メールで続ける/);
+  assert.match(gate, /Xでは、メールアドレスの登録（確認済み）が必要です/);
   assert.doesNotMatch(gate, /新規登録|再ログイン/);
   assert.deepEqual(p.__pageErrors, [], 'ページの JS エラーなし');
   await p.__ctx.close();

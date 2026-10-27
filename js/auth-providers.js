@@ -229,7 +229,8 @@ function renderAuthChoices(container, h) {
         <button type="button" class="au-btn au-google" data-au="google"${handlers.googleButtonId ? ` id="${handlers.googleButtonId}"` : ''}>${AUTH_ICON_GOOGLE}Googleで続ける</button>`
         + (authInAppBrowser() ? '<p class="au-inapp" role="note" style="margin:6px 0 0;font-size:12px;line-height:1.7;color:#b9b2d6">アプリの中のブラウザでは、Google でログインできないことがあります。Safari などのブラウザで開くか、メールで続けてください。</p>' : '') : '')
     + (authProviderEnabled('x') ? `
-        <button type="button" class="au-btn au-x" data-au="x">${AUTH_ICON_X}Xで続ける</button>` : '');
+        <button type="button" class="au-btn au-x" data-au="x">${AUTH_ICON_X}Xで続ける</button>
+        <p class="au-xnote" role="note" style="margin:6px 0 0;font-size:12px;line-height:1.7;color:#9aa6c8">Xでは、メールアドレスの登録（確認済み）が必要です。メールのないXアカウントは、Google またはメールで続けてください。</p>` : '');
   let view = 'choices';
   let lastMessage = '';
 
@@ -479,7 +480,7 @@ function authSignInErrorMessage(err) {
   const code = (err && (err.code || err.error_code)) || '';
   const text = ((err && (err.description || err.message)) || '').toLowerCase();
   if (/access_denied/.test(code)) return 'ログインを中止しました。';
-  if (/email/.test(text)) return 'このアカウントからメールアドレスを受け取れなかったため、ログインできませんでした。別の方法でお試しください。';
+  if (/email/.test(text)) return 'このアカウントからメールアドレスを受け取れなかったため、ログインできませんでした。Xでは、アカウントにメールアドレスの登録（確認済み）が必要です。Google またはメールでお試しください。';
   return 'ログインできませんでした。時間をおいて、もう一度お試しいただくか、別の方法でお試しください。';
 }
 function authLinkErrorMessage(err) {
