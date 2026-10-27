@@ -39,7 +39,8 @@ test('規約：A と B は別商品・サービス終了は固定日数なし・
   assert.match(t, /それぞれ別の商品で、一方を購入しても、もう一方の内容は含まれません/);
   assert.match(t, /合理的な予告期間/);
   assert.doesNotMatch(t, /30日前|[0-9]+日前までに/);
-  assert.match(t, /リンクを紛失された場合は、Stripe から届いた請求書のメールをご確認ください/);
+  assert.match(t, /リンクを紛失された場合は、お問い合わせください/);
+  assert.doesNotMatch(t, /請求書/);
   assert.match(t, /故意または重大な過失がある場合を除き/);
   assert.match(t, /消費者契約法その他の法令により/);
   assert.match(t, /通常の有効期限を設けていません/);
@@ -122,7 +123,7 @@ test('連絡先：購入・マイページ・レポートの案内はメール�
   assert.ok(read('purchase-complete.html').includes(EMAIL));
 });
 
-test('決済画面と請求書の文面：提供方法・保存の案内・返金・特商法と規約のリンク', () => {
+test('決済画面の文面：提供方法・保存の案内・返金・特商法と規約のリンク', () => {
   const L = require('../lib/link-purchase.js');
   for (const offer of ['analysis', 'direct_complete']) {
     const m = L.checkoutText(offer, 'https://example.test');

@@ -67,7 +67,7 @@
   if (!token) {
     document.getElementById('rlTitle').textContent = 'レポートを開く';
     box.innerHTML = '<div class="card"><p class="state">購入したレポートのリンク（URL）から開いてください。</p>'
-      + '<p class="note">リンクは、お支払いの後に届いた請求書のメールにも記載しています。マイページに登録したレポートは、<a href="/mypage.html">マイページ</a>から開けます。</p></div>';
+      + '<p class="note">マイページに登録したレポートは、<a href="/mypage.html">マイページ</a>から開けます。</p></div>';
     return;
   }
   B.rememberLink(token);
