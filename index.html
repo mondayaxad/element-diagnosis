@@ -3060,10 +3060,22 @@ function renderResult(root) {
         try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (e) { /* noop */ }
       }
     };
-    window.onSignedInFlowDone = function (r) {
-      decideRecordState(r || {}).then(showReturnedCard).catch(function () { renderRecordCard('registration_unknown'); });
+    // 認証から戻って（保存カードへ戻る流れ）登録・保存が済んだら、結果ページに留めずマイページへ移る
+    //   （登録や保存ができなかった時は、このページの保存カードで続きができるよう留まる）
+    var goMypageAfterReturn = function (r) {
+      if (!window.__edReturnToRecordCard || window.__edReturnToMypageStarted) return;
+      if (r && r.state && r.state !== 'ok') return;
+      // 「保存しました」（保存できた・既に保存済み）になった時だけ。登録が済んでいなければこの状態にはならない
+      var s = recordCard.getAttribute('data-state');
+      if (s !== 'just_saved' && s !== 'saved') return;
+      window.__edReturnToMypageStarted = true;
+      setTimeout(function () { window.location.assign('/mypage.html'); }, 800);
     };
-    decideRecordState().then(showReturnedCard).catch(function (e) {
+    window.onSignedInFlowDone = function (r) {
+      decideRecordState(r || {}).then(showReturnedCard).then(function () { goMypageAfterReturn(r); })
+        .catch(function () { renderRecordCard('registration_unknown'); });
+    };
+    decideRecordState().then(showReturnedCard).then(function () { goMypageAfterReturn(null); }).catch(function (e) {
       console.error('record state check failed:', e && e.message);
       renderRecordCard('registration_unknown');
     });

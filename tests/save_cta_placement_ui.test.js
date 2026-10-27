@@ -324,7 +324,7 @@ test('Google：認証へ進む前に戻り先（この結果ページ）を残�
   await p.__ctx.close();
 });
 
-test('Google・X の認証から戻ったマイページ：表示せず結果ページの保存カードへ戻り、そこで保存して「保存しました」', { skip: skip() }, async () => {
+test('Google・X の認証から戻ったマイページ：結果ページの保存カードで登録・保存して「保存しました」の後、マイページへ移る（TOP・結果ページに留めない）', { skip: skip() }, async () => {
   const resultPath = `/?dv=ETI-2.0&code=${RB.code}`;
   for (const status of ['completed', 'required']) {
     const p = await openPage('/mypage.html?code=auth-code', { supa: { status }, pendingV2: RB.code,
@@ -339,14 +339,35 @@ test('Google・X の認証から戻ったマイページ：表示せず結果ペ
     }
     await p.waitForFunction(() => document.getElementById('recordCard').getAttribute('data-state') === 'just_saved');
     assert.match(await p.locator('#recordCard').innerText(), /✓ 診断記録に保存しました/, status);
-    assert.equal(new URL(p.url()).pathname, '/', '結果ページに留まる ' + status);
+    // 保存カードが画面内にある（移る前に「保存しました」を見せる）
+    await p.waitForFunction(() => { const r = document.getElementById('recordCard').getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; }, null, { timeout: 700 });
+    const log1 = await log(p);
+    assert.equal(log1.filter((x) => x === 'rpc:save_diagnosis_session_v2').length, 1, '保存は1回だけ ' + status);
     assert.ok(await p.evaluate(() => !localStorage.getItem('pendingDiagnosis_v2')), '保存成功後に pending を削除');
     assert.ok(await p.evaluate(() => !localStorage.getItem('ed_save_return_v1')), '戻り先の印は1回で消す');
-    assert.equal((await log(p)).filter((x) => x === 'rpc:save_diagnosis_session_v2').length, 1, '保存は1回だけ ' + status);
-    // 保存カードが画面内にある（レイアウトが落ち着いた後も）
-    await p.waitForFunction(() => { const r = document.getElementById('recordCard').getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; }, null, { timeout: 4000 });
-    await p.waitForTimeout(2200);
-    assert.ok(await p.locator('#recordCard').evaluate((e) => { const r = e.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; }), 'card in view ' + status);
+    // 登録・保存が済んだら、マイページへ移る（結果ページ・TOP に留めない）
+    await p.waitForURL((u) => u.pathname === '/mypage.html', { timeout: 5000 });
+    assert.equal(new URL(p.url()).search, '', 'マイページは認証の戻りの印なしで開く ' + status);
+    assert.deepEqual(p.__errors, []);
+    await p.__ctx.close();
+  }
+});
+
+test('トップ右上の「マイページ」：ログインの有無に関わらず表示。未ログインは作成・ログイン（登録）の画面、ログイン中はマイページ', { skip: skip() }, async () => {
+  for (const signedIn of [false, true]) {
+    const p = await openPage('/', { supa: { signedIn, rows: [] } });
+    const a = p.locator('#top .hero-mypage');
+    assert.equal(await a.isVisible(), true, 'visible signedIn=' + signedIn);
+    await a.click();
+    await p.waitForURL((u) => u.pathname === '/mypage.html');
+    if (signedIn) {
+      await p.waitForSelector('#mpUpgradeTrigger');
+      assert.equal(await p.locator('#historyGateArea').count(), 0, 'ログイン中は登録画面を出さない');
+    } else {
+      await p.waitForSelector('#historyGateArea');
+      assert.match(await p.locator('#historyGateArea .gate-title').innerText(), /マイページを作成・ログイン/);
+      assert.ok(await p.locator('#gateAuth [data-au="email"]').count() >= 1, '登録・ログインの方法を出す');
+    }
     assert.deepEqual(p.__errors, []);
     await p.__ctx.close();
   }

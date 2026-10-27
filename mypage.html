@@ -3913,7 +3913,7 @@ async function initOnce() {
   mpRenderedUserId = null;
   // 結果ページで保存を始めて認証から戻ってきた：マイページは表示せず、結果ページへ戻す（diagnosis-save.js）
   if (window.__edReturningToResult) {
-    root.innerHTML = '<p class="empty">診断結果のページへ戻っています…</p>';
+    root.innerHTML = '<p class="empty">診断記録を保存しています…</p>';
     return;
   }
   const user = await getCurrentUser();
