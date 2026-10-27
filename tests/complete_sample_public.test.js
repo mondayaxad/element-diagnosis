@@ -95,8 +95,9 @@ test('TOP の OGP：1200×630 の JPEG・新しいファイル名・絶対 URL',
   const size = jpegSize(fs.readFileSync(path.join(ROOT, OGP_PATH)));
   assert.deepEqual(size, { width: 1200, height: 630 });
   const index = read('index.html');
-  assert.ok(index.includes(`<meta property="og:image" content="${OGP_URL}">`));
-  assert.ok(index.includes(`<meta name="twitter:image" content="${OGP_URL}">`));
+  // X などのカードのキャッシュを更新するため、画像の URL に版（?v=）を付ける（画像は同じ）
+  assert.ok(index.includes(`<meta property="og:image" content="${OGP_URL}?v=20261027">`));
+  assert.ok(index.includes(`<meta name="twitter:image" content="${OGP_URL}?v=20261027">`));
   assert.match(index, /<meta property="og:image:width" content="1200">/);
   assert.match(index, /<meta property="og:image:height" content="630">/);
   assert.match(index, /<meta name="twitter:card" content="summary_large_image">/);
