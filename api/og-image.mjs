@@ -6,58 +6,68 @@
 //     「Edge Runtimeでのみ動作し、Node.jsランタイムでは動作しない」ため、
 //     このファイルだけは .mjs 拡張子（ESモジュール）＋ Edge Runtime を使用する。
 //     （他のAPIファイルはCommonJS形式・Node.jsランタイムのまま）
+//
+// CPU を減らす工夫（2026-10-27。見た目と URL は従来どおり）：
+//   ・タイプ（元素×武器）だけで決まる部分（背景・暗いoverlay・枠と内側の光・見出し・光彩つきのタイプコード・タイプ名・下帯の地）は
+//     scripts/build-ogp-bases.mjs で35枚の下地 JPEG（assets/ogp/bases/）に事前に描いておき、実行時は人ごとの情報だけを重ねる。
+//     MIRROR 欄の地・枠・内側の光も、キャラクターの元素ごとの札（7枚の透過 PNG）を事前に作っておく。
+//     光彩（textShadow・inset boxShadow）の描画が CPU の大半だったため。
+//   ・フォントは Google Fonts を毎回取得せず、必要な文字だけのサブセット（assets/ogp/fonts/）を関数に同梱して読む。
+//   ・同じ診断結果は同じ URL（p の正規形）にそろえ、CDN に長期キャッシュさせる（同じ画像を作り直さない）。
+//   ・下地が取れない時（Preview の保護など）は、従来どおり1枚をすべて描く。
 import { ImageResponse } from '@vercel/og';
 // 新デザイン（7元素の正式背景＋情報レイヤー）。Webプレビュー（ogp-card-demo.html）と同じ組み立てを使う。
 import { buildOgpCardTree } from '../js/ogp-card.mjs';
 import { ELEMENT_KEY } from '../js/ogp-theme.mjs';
 import { CHAR_ELEMENT } from './_ogp-char-element.mjs';
+import { ELEMENT_CODE, WEAPON_CODE, TYPE_NAME, ELEMENT_NAME, WEAPON_NAME, NATION_NAME, CHAR_NAMES, unpackShareParams, canonicalShareP } from './_og-data.mjs';
 
 export const config = { runtime: 'edge' };
 
-// ---- 最低限必要なデータ（index.html/report.htmlと同一の定義） ----
-const ELEMENT_CODE = { "炎":"PY", "水":"HY", "氷":"CR", "雷":"EL", "風":"AN", "岩":"GE", "草":"DE" };
-const WEAPON_CODE = { "片手剣":"SW", "両手剣":"CM", "長柄":"PL", "法器":"CT", "弓":"BW" };
-const TYPE_NAME = {
-  "炎": { "片手剣":"殉愛者", "両手剣":"猛進者", "長柄":"殉衛者", "法器":"信奉者", "弓":"貫徹者" },
-  "水": { "片手剣":"同調者", "両手剣":"孤淵者", "長柄":"静衛者", "法器":"深識者", "弓":"静観者" },
-  "氷": { "片手剣":"宿縁者", "両手剣":"破氷者", "長柄":"氷壁者", "法器":"透徹者", "弓":"凍眼者" },
-  "雷": { "片手剣":"共鳴者", "両手剣":"破天者", "長柄":"雷衛者", "法器":"電導者", "弓":"疾光者" },
-  "風": { "片手剣":"随風者", "両手剣":"疾風者", "長柄":"客衛者", "法器":"漂識者", "弓":"追風者" },
-  "岩": { "片手剣":"包容者", "両手剣":"破岩者", "長柄":"護衛者", "法器":"礎識者", "弓":"遠護者" },
-  "草": { "片手剣":"縁結者", "両手剣":"芽吹者", "長柄":"育衛者", "法器":"叡結者", "弓":"見守者" },
+// 同じ URL は同じ画像（日時・乱数を含まない）。ブラウザ・CDN とも1年。Vercel の CDN にも明示する
+const CACHE_HEADERS = {
+  'cache-control': 'public, immutable, no-transform, max-age=31536000, s-maxage=31536000',
+  'cdn-cache-control': 'public, max-age=31536000, immutable',
+  'vercel-cdn-cache-control': 'public, max-age=31536000, immutable',
 };
-// URL短縮のため、シェア元（index.html）からはコード・インデックスで渡される。ここで日本語に復元する。
-const ELEMENT_NAME = { PY:"炎", HY:"水", CR:"氷", EL:"雷", AN:"風", GE:"岩", DE:"草" };
-const WEAPON_NAME = { SW:"片手剣", CM:"両手剣", PL:"長柄", CT:"法器", BW:"弓" };
-const NATION_NAME = { M:"モンド", L:"璃月", I:"稲妻", S:"スメール", F:"フォンテーヌ", N:"ナタ", Z:"スネージナヤ", D:"ナドクライ" };
-const CHAR_NAMES = ["ディルック","マーヴィカ","嘉明","ディシア","辛炎","ベネット","胡桃","香菱","トーマ","シュヴルーズ","アルレッキーノ","ニコ","煙緋","クレー","リネ","アンバー","宵宮","ドゥリン","フリーナ","ニィロウ","神里綾人","行秋","タルタリヤ","夜蘭","シグウィン","モナ","珊瑚宮心海","ヌヴィレット","コロンビーナ","ムアラニ","バーバラ","アイノ","ダリア","キャンディス","オデット","神里綾華","スカーク","七七","レイラ","ガイア","申鶴","ロサリア","ミカ","エスコフィエ","ローエン","甘雨","ディオナ","アーロイ","リオセスリ","シャルロット","シトラリ","アリョーシャ","刻晴","クロリンデ","久岐忍","雷電将軍","セノ","イアンサ","フィッシュル","九条裟羅","オロルン","セトス","八重神子","リサ","ヴァレサ","レザー","北斗","ドリー","楓原万葉","ジン","リネット","ファルカ","早柚","ウェンティ","チャスカ","ファルザン","ヤフォダ","スクロース","放浪者","閑雲","藍硯","鹿野院平蔵","夢見月瑞希","イファ","プルーネ","鍾離","イルーガ","カチーナ","雲菫","ナヴィア","荒瀧一斗","ノエル","アルベド","茲白","千織","シロネン","ゴロー","リンネア","凝光","ナヒーダ","白朮","ラウマ","ネフェル","ティナリ","コレイ","アルハイゼン","綺良々","カーヴェ","キィニチ","エミリエ","ヨォーヨ","サンドローネ","魈","エウルア","重雲","フレミネ","フリンズ","イネファ"];
 
-// URL短縮版：5値を1つの整数にビット単位で詰め込んだ「p」パラメータのデコード
-const PACK_ELEMENTS = ["炎","水","氷","雷","風","岩","草"];
-const PACK_WEAPONS = ["片手剣","両手剣","長柄","法器","弓"];
-const PACK_NATIONS = ["モンド","璃月","稲妻","スメール","フォンテーヌ","ナタ","スネージナヤ","ナドクライ"];
-function unpackShareParams(p) {
-  const n = parseInt(p, 36);
-  if (isNaN(n)) return null;
-  const elI = (n >> 20) & 0x7;
-  const wI = (n >> 17) & 0x7;
-  const natI = (n >> 14) & 0x7;
-  const cI = (n >> 7) & 0x7F;
-  const mI = n & 0x7F;
-  return {
-    el: PACK_ELEMENTS[elI] || '風',
-    w: PACK_WEAPONS[wI] || '法器',
-    nat: PACK_NATIONS[natI] || 'モンド',
-    charIdx: cI,
-    match: mI,
-  };
+// 必要な文字だけの明朝（Noto Serif JP 700。SIL Open Font License）。関数に同梱し、同じ実行環境の中では読み直さない
+const FONT_FILE = 'noto-serif-jp-700-og.woff';
+const FONT_URL = new URL('../assets/ogp/fonts/' + FONT_FILE, import.meta.url);
+let fontCache = null;
+async function loadFont(origin) {
+  if (fontCache) return fontCache;
+  for (const u of [FONT_URL, `${origin}/assets/ogp/fonts/${FONT_FILE}`]) {
+    try {
+      const r = await fetch(u);
+      if (r.ok) { fontCache = await r.arrayBuffer(); return fontCache; }
+    } catch (e) { /* 次を試す */ }
+  }
+  return null;
+}
+
+async function fetchImageDataUri(url) {
+  try {
+    const r = await fetch(url);
+    const type = (r.headers.get('content-type') || '').split(';')[0].trim();
+    if (r.ok && /^image\/(jpeg|png)$/.test(type)) return `data:${type};base64,` + toBase64(await r.arrayBuffer());
+  } catch (e) { /* 取れない時は呼び出し側で代わりの描き方にする */ }
+  return null;
 }
 
 export default async function handler(req) {
-  const { searchParams } = new URL(req.url);
+  const reqUrl = new URL(req.url);
+  const { searchParams } = reqUrl;
+  const origin = reqUrl.origin;
   let el, w, nat, charIdx, match;
   const packed = searchParams.get('p');
-  if (packed) {
+  if (packed !== null) {
+    // 正規形でない p・余分なパラメータは、正規形の URL へ転送する（同じ結果の画像を別の URL で作り直さない）
+    const canon = canonicalShareP(packed);
+    if (!canon) return new Response('invalid', { status: 400, headers: { 'Cache-Control': 'public, max-age=86400, s-maxage=86400' } });
+    if (canon !== packed || [...searchParams.keys()].some((k) => k !== 'p')) {
+      return new Response(null, { status: 308, headers: { Location: `${origin}/api/og-image?p=${canon}`, ...CACHE_HEADERS } });
+    }
     const unpacked = unpackShareParams(packed);
     el = unpacked.el; w = unpacked.w; nat = unpacked.nat; charIdx = unpacked.charIdx; match = unpacked.match;
   } else {
@@ -84,50 +94,23 @@ export default async function handler(req) {
     match: matchText,
   };
 
-  // ---- 日本語フォント（表示する文字だけをサブセット取得。Satori は TTF/OTF/WOFF のみ対応） ----
-  const labelText = '元素診断—MYRESULT最も近しいキャラクター%一致私の結果は【】×';
-  const allText = Array.from(new Set((labelText + code + typeName + el + w + nat + charName + matchText + '0123456789').split(''))).join('');
-  const fonts = [];
-  for (const [family, name] of [['Noto+Serif+JP', 'Noto Serif JP'], ['Noto+Sans+JP', 'Noto Sans JP']]) {
-    try {
-      // 古いブラウザを装って WOFF2 ではなく TTF の URL を返させる（既存実装と同じ方法）
-      const cssRes = await fetch(
-        `https://fonts.googleapis.com/css2?family=${family}:wght@700&text=${encodeURIComponent(allText)}`,
-        { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Trident/7.0; rv:11.0) like Gecko' } }
-      );
-      const css = await cssRes.text();
-      const fontUrlMatch = css.match(/src: url\(([^)]+)\)/);
-      if (fontUrlMatch) {
-        const fontRes = await fetch(fontUrlMatch[1]);
-        fonts.push({ name, data: await fontRes.arrayBuffer(), weight: 700, style: 'normal' });
-      }
-    } catch (e) {
-      // フォント取得に失敗しても画像生成は続ける（真っ白は避ける）
-    }
-  }
+  const font = await loadFont(origin);
+  const fonts = font ? [{ name: 'Noto Serif JP', data: font, weight: 700, style: 'normal' }] : [];
+  const fontOpts = { fontSerif: 'Noto Serif JP', fontSans: 'Noto Serif JP' };
 
-  // ---- 背景：主結果の元素の正式背景（JPEG。@vercel/og は WebP 非対応）。取得できなければ背景なし（SVG円環）で描く ----
-  const origin = new URL(req.url).origin;
-  const bgKey = ELEMENT_KEY[el] || 'anemo';
-  let backgroundUrl = null;
-  try {
-    const bgRes = await fetch(`${origin}/assets/ogp/backgrounds/${bgKey}.jpg`);
-    if (bgRes.ok && (bgRes.headers.get('content-type') || '').includes('image')) {
-      backgroundUrl = 'data:image/jpeg;base64,' + toBase64(await bgRes.arrayBuffer());
-    }
-  } catch (e) {
-    // 背景が取れない場合（Previewの保護など）も、情報と円環だけで生成を続ける
+  // 下地（タイプ別・事前生成）があれば、人ごとの情報だけを重ねる
+  const baseUrl = await fetchImageDataUri(`${origin}/assets/ogp/bases/${code}.jpg`);
+  let tree;
+  if (baseUrl) {
+    // MIRROR 欄の地・枠・内側の光も事前生成の札（キャラクターの元素ごと）。取れなければその場で描く
+    const mirrorPlateUrl = charName ? await fetchImageDataUri(`${origin}/assets/ogp/bases/mirror-${ELEMENT_KEY[data.mirrorElement] || 'anemo'}.png`) : null;
+    tree = buildOgpCardTree(data, { ...fontOpts, part: 'overlay', baseUrl, mirrorPlateUrl });
+  } else {
+    // 下地が取れない：従来どおり正式背景から1枚をすべて描く（背景も取れなければ SVG 円環）
+    const backgroundUrl = await fetchImageDataUri(`${origin}/assets/ogp/backgrounds/${ELEMENT_KEY[el] || 'anemo'}.jpg`);
+    tree = buildOgpCardTree(data, { ...fontOpts, backgroundUrl, showBackground: !!backgroundUrl });
   }
-
-  return new ImageResponse(
-    buildOgpCardTree(data, {
-      backgroundUrl,
-      showBackground: !!backgroundUrl,
-      fontSerif: fonts.some(f => f.name === 'Noto Serif JP') ? 'Noto Serif JP' : (fonts[0] ? fonts[0].name : 'sans-serif'),
-      fontSans: fonts.some(f => f.name === 'Noto Sans JP') ? 'Noto Sans JP' : (fonts[0] ? fonts[0].name : 'sans-serif'),
-    }),
-    { width: 1200, height: 630, fonts }
-  );
+  return new ImageResponse(tree, { width: 1200, height: 630, fonts, headers: CACHE_HEADERS });
 }
 
 function toBase64(buf) {
