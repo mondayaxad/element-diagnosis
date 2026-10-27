@@ -23,6 +23,7 @@ const CP = require('../lib/complete-payment');
 const RJ = require('../lib/complete-report-job');
 const CA = require('../lib/complete-apply');
 const GP = require('../lib/guest-purchase');
+const GA = require('../lib/ga4-mp');
 
 const API = 'stripe-webhook';
 const MAX_BODY_BYTES = 512 * 1024;
@@ -112,6 +113,11 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
       p_payment_intent_id: pi, p_amount_refunded: Number.isInteger(charge.amount_refunded) ? charge.amount_refunded : null,
     });
     if (result === 'applied' || result === 'duplicate') await closeUpgrades(conn, found.orderId);
+    // GA4 の返金（purchase と同じ参照）。初めて反映した時だけ・応答の後で送る（失敗しても処理に影響しない）
+    if (result === 'applied') {
+      GA.scheduleRefund(waitUntil, { env, fetchImpl, livemode: CP.livemodeOf(conn), transactionId: GP.refOf(env, found.orderId),
+        value: Number.isInteger(charge.amount_refunded) ? charge.amount_refunded : null, logger });
+    }
     return result;
   }
 

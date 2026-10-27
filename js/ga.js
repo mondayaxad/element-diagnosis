@@ -1,5 +1,5 @@
 // js/ga.js
-// GA4 の読み込み（index・mypage・report・購入完了ページで共通）。
+// GA4 の読み込み（index・mypage・report・購入完了・固有リンク・完全解析のサンプル・タイプ別ページで共通）。
 //   ・本番ドメインでだけ読み込む。Preview・ローカルでは gtag() は何もしない（本番の計測へ混ぜない）。
 //   ・page_location は origin＋path だけ（?token=・?code=・?status= などの問い合わせ文字列・# を送らない）。
 //   ・page_referrer は origin だけ（Stripe の決済画面の URL＝Session ID を送らない）。

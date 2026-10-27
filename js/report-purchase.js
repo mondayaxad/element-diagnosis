@@ -214,6 +214,10 @@
       if (!goal) return { ok: false, error: 'cancelled', silent: true };
     }
     track('checkout_start', { product: o.product, value: info.price, currency: 'JPY', source: o.source });
+    // GA4 標準の購入ファネル（begin_checkout → purchase）。独自の checkout_start と同時に送る
+    try {
+      if (typeof global.gtag === 'function') global.gtag('event', 'begin_checkout', { currency: 'JPY', value: info.price, source: o.source, items: [{ item_id: o.product, item_name: info.label, price: info.price, quantity: 1 }] });
+    } catch (e) { /* 計測の失敗は画面に影響させない */ }
     var attempt = randomToken(18);
     if (!attempt) return { ok: false, error: 'unknown' };
     var body = { context: o.context, product: o.product, attempt: attempt };
