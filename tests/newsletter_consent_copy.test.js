@@ -32,14 +32,17 @@ test('privacy・terms：登録画面と同じ意味（ボタンでお知らせ�
   }
 });
 
-test('法務ページ：運営者の正式情報・問い合わせ先・【公開日】・版は変わっていない', () => {
+test('法務ページ：運営者の正式情報・問い合わせ先・版は変わっていない。公開日は 2026年10月27日 に確定（【…】は残っていない）', () => {
   const privacy = read('privacy.html'); const terms = read('terms.html'); const toku = read('tokushoho.html');
   assert.ok(privacy.includes('マンデーアクスト'));
   assert.ok(toku.includes('マンデーアクスト'));
   assert.equal((privacy.match(/mailto:/g) || []).length, 1);
   assert.equal((terms.match(/mailto:/g) || []).length, 1);
   assert.equal((toku.match(/mailto:/g) || []).length, 2);
-  for (const t of [privacy, terms, toku]) assert.ok(t.includes('【公開日】'));
+  assert.ok(terms.includes('制定日：2026年7月1日 / 改定日：2026年10月27日'));
+  assert.ok(privacy.includes('制定日：2026年7月1日 / 改定日：2026年10月27日'));
+  assert.ok(toku.includes('制定日：2026年10月27日'));
+  for (const t of [privacy, terms, toku]) assert.doesNotMatch(t, /【[^】]{1,20}】/);
   assert.ok(!/お知らせメールへの同意は任意|受け取るを選んだ場合のみ|保存時に選択|専用チェックボックス/.test(privacy + terms));
 });
 

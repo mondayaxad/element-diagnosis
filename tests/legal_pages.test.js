@@ -55,17 +55,18 @@ test('プライバシー：IP は照合値のみ・Supabase の地域を書か�
 
 test('法務ページは公開ファイルに入り、Production ではビルドが【…】の残りを止める。Preview は通す', () => {
   assert.ok(B.PUBLIC_FILES.includes('tokushoho.html') && B.PUBLIC_FILES.includes('terms.html') && B.PUBLIC_FILES.includes('privacy.html'));
-  assert.ok(/【公開日】/.test(read('tokushoho.html')), '公開日は実際の公開の日まで【公開日】');
+  // 公開日は 2026年10月27日 に確定済み（【…】の仮置きは残っていない）
+  assert.ok(read('tokushoho.html').includes('制定日：2026年10月27日'));
   assert.deepEqual(B.legalPlaceholderProblems(ROOT, { VERCEL_ENV: 'preview' }), []);
   assert.deepEqual(B.legalPlaceholderProblems(ROOT, {}), []);
-  const prod = B.legalPlaceholderProblems(ROOT, { VERCEL_ENV: 'production' });
-  assert.equal(prod.length, 3, prod.join('\n'));
-  assert.equal(B.legalPlaceholderProblems(ROOT, { LEGAL_RELEASE_CHECK: '1' }).length, 3);
-  // 確定済みの文面なら通る
+  assert.deepEqual(B.legalPlaceholderProblems(ROOT, { VERCEL_ENV: 'production' }), [], '本番のビルドを止めない');
+  assert.deepEqual(B.legalPlaceholderProblems(ROOT, { LEGAL_RELEASE_CHECK: '1' }), []);
+  // 仮置き（【…】）が残っていれば、Production のビルドは止まる（ガードそのものは残す）
   const d = fs.mkdtempSync(path.join(os.tmpdir(), 'ed-legal-'));
   try {
-    for (const f of B.LEGAL_PAGES) fs.writeFileSync(path.join(d, f), read(f).replace(/【公開日】/g, '2026年11月1日'));
-    assert.deepEqual(B.legalPlaceholderProblems(d, { VERCEL_ENV: 'production' }), []);
+    for (const f of B.LEGAL_PAGES) fs.writeFileSync(path.join(d, f), read(f).replace('2026年10月27日', '【公開日】'));
+    assert.equal(B.legalPlaceholderProblems(d, { VERCEL_ENV: 'production' }).length, 3);
+    assert.deepEqual(B.legalPlaceholderProblems(d, { VERCEL_ENV: 'preview' }), []);
   } finally { fs.rmSync(d, { recursive: true, force: true }); }
 });
 
