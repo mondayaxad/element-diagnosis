@@ -31,15 +31,17 @@ test('サンプル：8ページ・noindex,nofollow,noarchive・同じサイト�
   assert.equal((SAMPLE.match(/<section class="page/g) || []).length, 8);
   assert.match(SAMPLE, /<meta name="robots" content="noindex,nofollow,noarchive">/);
   let rest = SAMPLE;
-  for (const src of ['/js/sample-return.js', '/api/public-config?format=js', '/js/report-purchase.js', '/js/sample-buy.js']) rest = rest.replace(`<script src="${src}"></script>`, '');
+  for (const src of ['/js/ga.js', '/js/sample-return.js', '/api/public-config?format=js', '/js/report-purchase.js', '/js/sample-buy.js']) rest = rest.replace(`<script src="${src}"></script>`, '');
   assert.doesNotMatch(rest, /<script|<form|<iframe|<object|<embed|<link\b|\son[a-z]+\s*=/i);
-  assert.match(SAMPLE, /script-src 'self'/);
+  assert.match(SAMPLE, /script-src 'self' https:\/\/www\.googletagmanager\.com;/);
   // 外部への読み込み（src・url()）が無い。http(s) は OGP の meta だけ
   assert.doesNotMatch(SAMPLE, /\ssrc\s*=\s*["']?https?:/i);
   assert.doesNotMatch(SAMPLE, /url\(\s*["']?https?:/i);
-  const external = [...SAMPLE.matchAll(/https?:\/\/[^"'\s<>)]+/g)].map((m) => m[0]);
+  // CSP の meta（GA4 の送信先の許可）を除いて数える
+  const NO_CSP = SAMPLE.replace(/<meta http-equiv="Content-Security-Policy"[^>]*>/, '');
+  const external = [...NO_CSP.matchAll(/https?:\/\/[^"'\s<>)]+/g)].map((m) => m[0]);
   for (const u of external) assert.ok(u.startsWith('https://element-diagnosis-five.vercel.app/'), u);
-  const metaUrls = [...SAMPLE.matchAll(/<meta [^>]*content="(https?:[^"]+)"/g)].map((m) => m[1]);
+  const metaUrls = [...NO_CSP.matchAll(/<meta [^>]*content="(https?:[^"]+)"/g)].map((m) => m[1]);
   assert.equal(external.length, metaUrls.length, 'OGP の meta 以外に外部 URL があります');
 });
 
@@ -54,8 +56,9 @@ test('サンプル（complete_13）：上部は「元の画面に戻る」、末
   assert.equal((SAMPLE.match(/data-sample-buy/g) || []).length, 1);
   assert.doesNotMatch(SAMPLE, /stripe|checkout/i);
   // 通信は同じサイトだけ（申込欄の API）
-  assert.match(SAMPLE, /script-src 'self'; connect-src 'self'/);
-  assert.deepEqual([...SAMPLE.matchAll(/<script[^>]*src="([^"]+)"/g)].map((m) => m[1]), ['/js/sample-return.js', '/api/public-config?format=js', '/js/report-purchase.js', '/js/sample-buy.js']);
+  // 通信は同じサイト（申込欄の API）と GA4 の送信先だけ（js/ga.js が本番ドメインでだけ読み込む）
+  assert.match(SAMPLE, /script-src 'self' https:\/\/www\.googletagmanager\.com; connect-src 'self' https:\/\/\*\.google-analytics\.com https:\/\/\*\.analytics\.google\.com https:\/\/\*\.googletagmanager\.com;/);
+  assert.deepEqual([...SAMPLE.matchAll(/<script[^>]*src="([^"]+)"/g)].map((m) => m[1]), ['/js/ga.js', '/js/sample-return.js', '/api/public-config?format=js', '/js/report-purchase.js', '/js/sample-buy.js']);
   assert.doesNotMatch(read('js/sample-return.js'), /fetch|XMLHttpRequest|sendBeacon|gtag/);
   // 申込欄：直接開いた時は申し込まない（購入対象トークンが無い）
   const buy = read('js/sample-buy.js');
@@ -92,8 +95,9 @@ test('TOP の OGP：1200×630 の JPEG・新しいファイル名・絶対 URL',
   const size = jpegSize(fs.readFileSync(path.join(ROOT, OGP_PATH)));
   assert.deepEqual(size, { width: 1200, height: 630 });
   const index = read('index.html');
-  assert.ok(index.includes(`<meta property="og:image" content="${OGP_URL}">`));
-  assert.ok(index.includes(`<meta name="twitter:image" content="${OGP_URL}">`));
+  // X などのカードのキャッシュを更新するため、画像の URL に版（?v=）を付ける（画像は同じ）
+  assert.ok(index.includes(`<meta property="og:image" content="${OGP_URL}?v=20261027">`));
+  assert.ok(index.includes(`<meta name="twitter:image" content="${OGP_URL}?v=20261027">`));
   assert.match(index, /<meta property="og:image:width" content="1200">/);
   assert.match(index, /<meta property="og:image:height" content="630">/);
   assert.match(index, /<meta name="twitter:card" content="summary_large_image">/);

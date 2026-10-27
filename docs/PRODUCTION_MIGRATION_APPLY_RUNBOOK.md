@@ -92,12 +92,48 @@ SHA-256 は `docs/sql/production/SHA256SUMS`。SQL Editor へ貼る前に、手�
 5. `prod_04b_onboarding_enforcement.sql` → 成功。`prod_81`：`ledger.stages = {1,2,3,4,5}`、`onboarding.require_trigger = 1`。`prod_80`：完全一致。
 6. 登録未完了（required）のアカウントでは保存できず、登録完了後は保存できることを確かめる。
 
+## 5-2. 完全解析の保存先（Storage の bucket）の作成（販売開始の前に必須・SQL では作られない）
+
+`prod_01`〜`prod_04b` は **Storage の bucket を作らない**。完全解析のレポート（HTML）は非公開 bucket `complete-reports` に保存するため、
+**bucket が無いと、決済は通るのにレポートが作られない**（Webhook は 200 のまま、`complete_reports` が `failed`・`last_error_code = storage_rejected`）。
+2026-10-27 の本番の試験購入（¥3,000）で実際に起きた。
+
+作成（Supabase 本番の画面：Storage → New bucket。**プロジェクトの識別子が本番であることをURLで確かめる**）：
+
+| 項目 | 設定 |
+|---|---|
+| Name | `complete-reports`（作成後は変更できない） |
+| Public bucket | **オフ**（非公開） |
+| File size limit | **2 MB** |
+| Allowed MIME types | `text/html` |
+| Policies | **追加しない**（サーバー用キーだけで読み書きする） |
+
+確認（読み取り専用）：`select id, public, file_size_limit, allowed_mime_types from storage.buckets;` が 1 行、`public = false`・`2097152`・`{text/html}`。
+`select count(*) from pg_policies where schemaname = 'storage';` が 0。（この確認は SQL Editor の管理者権限で行う。API 用の読み取りロールでは bucket が見えず空に見えることがある）
+
+**販売を開く前（`COMPLETE_SALES_OPEN` を入れる前）の確認項目に、bucket の存在を含める。**
+
+## 5-3. 生成に失敗した完全解析の再実行（運営者の操作・SQL Editor・本番）
+
+購入者の画面の「もう一度作成する」は、手動の再試行が **2 回**に達すると効かない（`manual_retries = 2`）。原因（bucket 不足など）を直した後は、
+運営者用の関数で、回数の上限に関係なく待ち行列（`queued`）へ戻す。
+
+1. 失敗した生成物を探す（読み取り）：`select id, status, attempts, manual_retries, last_error_code from public.complete_reports where status = 'failed';`
+2. **本番のプロジェクト**の SQL Editor で、1 回だけ実行：
+   `select public.complete_admin_regenerate_report('<上で見つけた id>'::uuid, '<操作の識別コード>');`
+   - 識別コードは **小文字の 16 進数（0〜9・a〜f）でちょうど 12 桁**（例：`b0c0de202610`）。形が違うと `complete_admin_invalid_request`。
+   - id は**コピーして貼る**（1 文字違うと `complete_report_not_found`。Preview で実行した場合も同じエラーになる）。
+   - 戻り値 `requeued`（待ち行列に戻した）／`noop`（対象外：ready・revoked・隔離など）。同じ識別コードの再実行は前回の結果が返るだけ。
+3. 購入者が状態の確認の画面（購入後の画面・マイページ）を開くと、生成が再開する（数分）。`status = 'ready'` になったことを読み取りで確かめる。
+4. `revoked`（返金・敗訴）・隔離されたものは `noop`。
+
 ## 6. 適用後の確認
 
 - 旧レポート URL（2026-10-06 以前の発行分）が開ける（運営者が確認。URL・トークンは共有しない）。
 - `prod_80` が適用前と一致（`info.pe.after_cut` は後から入った購入の件数。比較しない）。
 - 新規登録（Google・X・メール OTP）で登録完了の画面が出て、同意 2026-10-21 で登録できる。
 - 新しい購入（A ¥1,000・B ¥3,000）・固有リンク・マイページ登録（販売開始の判断は別）。
+- **販売を開く前に、§5-2 の Storage bucket `complete-reports` が存在すること**（無いと、完全解析の決済後にレポートが作られない）。
 
 ## 7. 旧コード（現在の Production）との両立（ローカルで確認済み）
 
