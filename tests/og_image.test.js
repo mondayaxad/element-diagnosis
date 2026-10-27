@@ -26,6 +26,8 @@ test('p の正規形：同じ見た目になる p は同じ文字列。範囲外
   // 範囲外の元素・武器・キャラクター番号：描かれる内容（既定）と同じ正規形へ
   assert.equal(D.canonicalShareP(P(7, 6, 3, 120, 5)), P(4, 3, 3, 127, 5));
   for (const bad of ['', 'abc!', 'x'.repeat(13), '-1']) assert.equal(D.canonicalShareP(bad), null, bad);
+  // 旧形式の値から作る p も同じ正規形
+  assert.equal(D.packShareParams('水', '片手剣', 'フォンテーヌ', 10, 75), P(1, 0, 4, 10, 75));
   // 正規形は、描く値が同じ
   const a = D.unpackShareParams(P(7, 6, 3, 120, 5)), b = D.unpackShareParams(P(4, 3, 3, 127, 5));
   assert.deepEqual([a.el, a.w, a.nat, D.CHAR_NAMES[a.charIdx] || '', a.match], [b.el, b.w, b.nat, D.CHAR_NAMES[b.charIdx] || '', b.match]);
@@ -38,6 +40,8 @@ test('og-image：Google Fonts を実行時に取得しない・同梱フォン�
   assert.match(src, /'vercel-cdn-cache-control': 'public, max-age=31536000, immutable'/);
   assert.match(src, /s-maxage=31536000/);
   assert.match(src, /status: 308/);
+  // 旧形式（el・w・nat・c・m）も、p で表せる時は正規形へ転送する（順序・余分なパラメータで作り直さない）
+  assert.match(src, /packShareParams\(el, w, nat, name \? CHAR_NAMES\.indexOf\(name\) : 0x7F, Number\(match\)\)/);
   assert.match(src, /export const config = \{ runtime: 'edge' \}/);
   // シェアの経路（/api/share → /api/og-image?p=）は変えない
   assert.match(read('api/share.js'), /\/api\/og-image\?p=\$\{encodeURIComponent\(packed\)\}/);

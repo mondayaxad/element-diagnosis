@@ -47,7 +47,10 @@ export function canonicalShareP(p) {
   if (typeof p !== 'string' || !/^[0-9a-zA-Z]{1,12}$/.test(p)) return null;
   const u = unpackShareParams(p);
   if (!u) return null;
-  const elI = PACK_ELEMENTS.indexOf(u.el), wI = PACK_WEAPONS.indexOf(u.w), natI = PACK_NATIONS.indexOf(u.nat);
   const cI = CHAR_NAMES[u.charIdx] ? u.charIdx : 0x7F; // 名簿にない番号は「キャラクターなし」
-  return ((elI << 20) | (wI << 17) | (natI << 14) | (cI << 7) | u.match).toString(36);
+  return packShareParams(u.el, u.w, u.nat, cI, u.match);
+}
+// 描く値（日本語の元素・武器・国家、キャラクター番号〔なしは 127〕、一致度 0〜127）から p を作る
+export function packShareParams(el, w, nat, charIdx, match) {
+  return ((PACK_ELEMENTS.indexOf(el) << 20) | (PACK_WEAPONS.indexOf(w) << 17) | (PACK_NATIONS.indexOf(nat) << 14) | (charIdx << 7) | match).toString(36);
 }

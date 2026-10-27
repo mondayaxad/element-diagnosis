@@ -20,7 +20,7 @@ import { ImageResponse } from '@vercel/og';
 import { buildOgpCardTree } from '../js/ogp-card.mjs';
 import { ELEMENT_KEY } from '../js/ogp-theme.mjs';
 import { CHAR_ELEMENT } from './_ogp-char-element.mjs';
-import { ELEMENT_CODE, WEAPON_CODE, TYPE_NAME, ELEMENT_NAME, WEAPON_NAME, NATION_NAME, CHAR_NAMES, unpackShareParams, canonicalShareP } from './_og-data.mjs';
+import { ELEMENT_CODE, WEAPON_CODE, TYPE_NAME, ELEMENT_NAME, WEAPON_NAME, NATION_NAME, CHAR_NAMES, unpackShareParams, canonicalShareP, packShareParams } from './_og-data.mjs';
 
 export const config = { runtime: 'edge' };
 
@@ -80,6 +80,13 @@ export default async function handler(req) {
     el = ELEMENT_NAME[elCode] || '風';
     w = WEAPON_NAME[wCode] || '法器';
     nat = NATION_NAME[natCode] || 'モンド';
+    // 描く内容が p で表せる時（一致度が 0〜127 の整数）は、同じ画像の p の正規形へ転送する
+    // （パラメータの順序・余分なパラメータの違いで同じ画像を作り直さない）。表せない旧リンクはそのまま描く
+    if (/^(0|[1-9]\d{0,2})$/.test(match) && Number(match) <= 127) {
+      const name = (charIdx !== null && CHAR_NAMES[Number(charIdx)]) ? CHAR_NAMES[Number(charIdx)] : '';
+      const canon = packShareParams(el, w, nat, name ? CHAR_NAMES.indexOf(name) : 0x7F, Number(match));
+      return new Response(null, { status: 308, headers: { Location: `${origin}/api/og-image?p=${canon}`, ...CACHE_HEADERS } });
+    }
   }
   const charName = (charIdx !== null && CHAR_NAMES[Number(charIdx)]) ? CHAR_NAMES[Number(charIdx)] : '';
 
