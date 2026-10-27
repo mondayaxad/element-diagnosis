@@ -1,0 +1,581 @@
+// 完全解析の画面（index／mypage／report）と Kit 同意欄の表示テスト（Playwright・Preview fixture）。
+// Supabase・API・フォントはすべて差し替え。Stripe・Kit・DB へは接続しない。
+// Playwright が無い環境では skip する。
+//   実行: node --test tests/complete_analysis_ui.test.js
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+
+let chromium = null;
+for (const p of ['playwright', '/opt/node22/lib/node_modules/playwright']) {
+  try { ({ chromium } = require(p)); break; } catch (e) { /* 次を試す */ }
+}
+const ROOT = path.join(__dirname, '..');
+const { pipeFile } = require('./fixtures/serve_file');
+const { previewPublicConfigJs } = require('./fixtures/server_env');
+const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.mjs': 'application/javascript', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.json': 'application/json', '.css': 'text/css', '.svg': 'image/svg+xml' };
+
+// 偽の Supabase：signedIn=false で未ログイン。rows は diagnosis_sessions の行。
+function fakeSupabase({ signedIn = true, rows = [], historyError = false } = {}) {
+  return `window.supabase = { createClient() {
+    const user = ${signedIn ? '{ id: "user-1", email: "owner@example.test" }' : 'null'};
+    const rows = ${JSON.stringify(rows)};
+    function builder(table) {
+      let one = false;
+      const q = new Proxy({}, { get(_t, k) {
+        if (k === 'then') return (res, rej) => {
+          let out;
+          if (table === 'diagnosis_sessions') out = ${historyError ? '{ data: null, error: { message: "x" } }' : '{ data: one ? (rows[0] || null) : rows, error: null }'};
+          // 登録完了済みのユーザー（登録完了モーダルは出ない）
+          else if (table === 'profiles') out = { data: { onboarding_status: 'completed', newsletter_sync_status: 'synced', newsletter_sync_attempts: 1, newsletter_sync_attempted_at: null }, error: null };
+          else out = { data: one ? null : [], error: null };
+          return Promise.resolve(out).then(res, rej);
+        };
+        if (k === 'single' || k === 'maybeSingle') return () => { one = true; return q; };
+        return () => q;
+      } });
+      return q;
+    }
+    return { from: builder, rpc: async () => ({ data: null, error: null }),
+      auth: { getUser: async () => ({ data: { user } }), getSession: async () => ({ data: { session: user ? { access_token: "t" } : null } }),
+        onAuthStateChange() { return { data: { subscription: { unsubscribe() {} } } }; }, signOut: async () => ({}) } };
+  } };`;
+}
+// 最新版（ETI v2）の記録は、正本エンジンで実際に計算した回答・結果から作る（保存時と同じ形）。
+const vm = require('vm');
+const V2 = (() => {
+  const ctx = { console };
+  vm.createContext(ctx);
+  for (const f of ['js/ETI_v2_QUESTIONS_100.js', 'js/eti_v2_prototypes.js', 'js/eti_v2_engine.js']) vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), ctx, { filename: f });
+  vm.runInContext('this.__make = (k) => { const A = {}; ETI_V2_QUESTIONS.forEach((q, i) => { A[q.id] = ((i * k) % 5) - 2; }); const R = ETIv2.computeResultsV2(A, { elementPrototypes: ELEMENT_PROTOTYPES_V2, weaponPrototypes: WEAPON_PROTOTYPES_V2, nationPrototypes: NATION_PROTOTYPES_V2 }); return { code: ETIv2.encodeAnswersV2(A, ETI_V2_QUESTIONS), R: JSON.parse(JSON.stringify(R)) }; };', ctx);
+  return ctx.__make;
+})();
+function v2Row(id, completedAt, k) {
+  const { code, R } = V2(k);
+  return {
+    row: { id, user_id: 'user-1', completed_at: completedAt, diagnosis_type: 'element', diagnosis_version: 'ETI-2.0', item_set_version: 'ETI-ITEM-2.0.0',
+      diagnosis_results: [{ primary_result: {}, scores: {}, character_matches: [], diagnosis_code: code, item_set_version: 'ETI-ITEM-2.0.0', scoring_version: 'ETI-SCORE-2.0.0',
+        character_profile_version: 'ETI-CHAR-2.1.0', mirror_model_version: 'ETI-MIRROR-2.1.0',
+        v2_scores: { personality: R.personality, style: R.style, values: R.values, valuesCentered: R.valuesCentered },
+        v2_rankings: { element: R.elementRanking, weapon: R.weaponRanking, nation: R.nationRanking }, mirror_snapshot: [] }],
+      diagnosis_answers: [{ encoded_answers: code }] },
+    combo: `${R.elementRanking[0].name} × ${R.weaponRanking[0].name} × ${R.nationRanking[0].name}`,
+  };
+}
+const B = v2Row('sess-B', '2026-10-01T10:00:00Z', 7);
+const A = v2Row('sess-A', '2026-09-20T10:00:00Z', 3);
+const COMBO_B = B.combo;
+// 既定：最新版の記録2件（新しい順に B, A）
+const ROWS = [B.row, A.row];
+// 旧版（element-v1）の記録：設問・保存項目が ETI v2 と異なる
+const LEGACY_ROW = { id: 'sess-L', user_id: 'user-1', completed_at: '2026-10-03T10:00:00Z', diagnosis_type: 'element', diagnosis_version: null,
+  diagnosis_results: [{ primary_result: { element: '風', weapon: '弓', nation: 'モンド' }, scores: {}, character_matches: [{ name: 'ウェンティ', match: 82, el: '風' }] }],
+  diagnosis_answers: [{ encoded_answers: 'codeL' }] };
+
+let server, base, browser;
+test.before(async () => {
+  if (!chromium) return;
+  server = http.createServer((req, res) => {
+    const u = new URL(req.url, 'http://x');
+    let f = path.join(ROOT, decodeURIComponent(u.pathname));
+    if (!f.startsWith(ROOT)) { res.writeHead(403); return res.end(); }
+    if (fs.existsSync(f) && fs.statSync(f).isDirectory()) f = path.join(f, 'index.html');
+    if (!fs.existsSync(f)) { res.writeHead(404); return res.end(); }
+    res.writeHead(200, { 'Content-Type': TYPES[path.extname(f)] || 'application/octet-stream' });
+    pipeFile(f, res);
+  });
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  base = `http://127.0.0.1:${server.address().port}`;
+  browser = await chromium.launch(process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : {});
+});
+test.after(async () => { if (browser) await browser.close(); if (server) server.close(); });
+
+async function page(url, { width = 390, height = 844, supa = { rows: ROWS }, reducedMotion } = {}) {
+  const ctx = await browser.newContext({ viewport: { width, height }, reducedMotion });
+  const p = await ctx.newPage();
+  p.setDefaultTimeout(8000);
+  const errors = [];
+  p.on('pageerror', (e) => errors.push(String(e)));
+  await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: fakeSupabase(supa) }));
+  await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: previewPublicConfigJs(global.__cfgExtra || {}) }));
+  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  await p.route(/cdnjs\.cloudflare\.com|googletagmanager/, (r) => r.fulfill({ contentType: 'application/javascript', body: '' }));
+  // 登録したレポート（complete_13）：この試験では登録なし
+  await p.route('**/api/complete-checkout?op=my-reports', (r) => r.fulfill({ contentType: 'application/json', body: '{"reports":[],"records":[]}' }));
+  await p.route('**/api/my-entitlements', (r) => r.fulfill({ contentType: 'application/json', body: '{"purchased_by_version":{}}' }));
+  await p.route('**/api/report-data**', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify(global.__reportData || {}) }));
+  await p.goto(base + url);
+  p.__errors = errors; p.__ctx = ctx;
+  return p;
+}
+const skip = () => !chromium;
+
+async function mypage(state, extra = '', opts = {}) {
+  const p = await page(`/mypage.html${state ? `?preview_entitlement=${state}${extra}` : ''}`, opts);
+  await p.waitForSelector('.mp-latest', { state: 'attached' });
+  return p;
+}
+const sheetText = (p) => p.locator('#mpUpgradeBody').innerText();
+// 右上入口を開き、記録が複数なら対象の記録を選ぶ（既定は最新＝0番目）
+async function openSheet(p, pick = 0) {
+  await p.click('#mpUpgradeTrigger');
+  if (await p.locator('#mpUpgradeBody .ca-pick').count()) await p.click(`#mpUpgradeBody [data-pick-index="${pick}"]`);
+}
+
+test('mypage：右上入口は LATEST RESULT より上・追従しない・間にバナーを足さない・既存集計は維持', { skip: skip() }, async () => {
+  const p = await mypage('free');
+  const t = p.locator('#mpUpgradeTrigger');
+  assert.equal(await t.innerText(), 'アップグレード');
+  const tb = await t.boundingBox(), lb = await p.locator('#mp-latest-h').boundingBox();
+  assert.ok(tb.y < lb.y);
+  assert.equal(await t.evaluate((e) => getComputedStyle(e).position), 'relative');
+  assert.ok(tb.height >= 34 && tb.height <= 38, 'height ' + tb.height);
+  // 見た目は36px・タップ領域は44px相当（::after）
+  assert.equal(await t.evaluate((e) => getComputedStyle(e, '::after').top), '-4px');
+  // LATEST RESULT の次の section は YOUR COLLECTION（新規バナーなし）
+  assert.equal(await p.evaluate(() => document.querySelector('[aria-labelledby="mp-latest-h"]').nextElementSibling.getAttribute('aria-labelledby')), 'mp-col-h');
+  assert.equal(await p.locator('.mp-stat-en').allInnerTexts().then((a) => a.join(',')), 'RECORDS,INSIGHTS');
+  assert.equal(await p.locator('.mp-chip.locked, .st').filter({ hasText: 'LOCKED' }).count(), 0, 'LOCKED の表記はマイページで使わない');
+  // スクロールしても追従しない
+  await p.mouse.wheel(0, 1200); await p.waitForTimeout(100);
+  const after = await t.boundingBox();
+  assert.ok(!after || after.y < tb.y - 100);
+  assert.deepEqual(p.__errors, []);
+  await p.__ctx.close();
+});
+
+test('mypage free：解析¥1,000が主（塗り）、完全¥3,000は「その先を見る」の中で副（枠線・準備中で押せない）', { skip: skip() }, async () => {
+  const p = await mypage('free');
+  await p.click('#mpUpgradeTrigger');
+  const dlg = p.locator('#latest-upgrade-dialog');
+  assert.equal(await dlg.getAttribute('role'), 'dialog');
+  assert.equal(await dlg.getAttribute('aria-modal'), 'true');
+  assert.equal(await p.evaluate(() => document.activeElement.id), 'mpUpgradeClose');
+  // 記録が2件：対象を選ぶと、フォーカスはシート内（選び直しボタン）へ移る
+  await p.click('#mpUpgradeBody [data-pick-index="0"]');
+  assert.ok(await p.evaluate(() => document.activeElement.hasAttribute('data-repick')));
+  // どちらも未購入：完全解析の内容・価格・申込は閉じている（「その先を見る」＝button・aria-expanded）
+  const reveal = p.locator('#mpUpgradeBody .ca-card--secondary [data-mp-reveal]');
+  assert.equal(await reveal.count(), 1);
+  assert.equal(await reveal.getAttribute('aria-expanded'), 'false');
+  assert.equal(await reveal.evaluate((e) => e.tagName), 'BUTTON');
+  assert.equal(await p.locator('.ca-card--secondary button.is-pending').isVisible(), false);
+  assert.equal(await p.locator('.ca-card--primary .ca-primary-action').isVisible(), true);
+  await reveal.click();
+  assert.equal(await reveal.getAttribute('aria-expanded'), 'true');
+  const text = await sheetText(p);
+  assert.ok(text.indexOf('解析レポート') < text.indexOf('完全解析　') || text.indexOf('STRUCTURE') < text.indexOf('COMPLETE ANALYSIS'));
+  for (const s of [...COMBO_B.split(' × '), 'MIRROR', '現在のあなたに近い人物像', 'HIDDEN SHAPE', '表に出にくい一面に近い人物像', 'MENTOR', 'これから伸ばす方向に近い人物像', '10名', 'CHARACTERS', '全46ページ', 'COMPLETE RECORD', '気質', '価値観', '人物像', '近しいキャラクター4名', '解析レポートとは別の商品']) assert.ok(text.includes(s), s);
+  assert.ok(!text.includes('解析レポートの本文は含まれません'), '注釈を出さない');
+  assert.ok(!text.includes('解析レポートの内容もすべて含まれます'), 'A を含むとは書かない（complete_13）');
+  // 観測項目は箇条書き（li・チェック・鍵）ではなく区画で示す
+  assert.equal(await p.locator('#mpUpgradeBody .ca-observation-item').count(), 4);
+  assert.ok(!/[✓🔒]/.test(text));
+  const primary = p.locator('.ca-card--primary .ca-primary-action');
+  assert.equal(await primary.count(), 1);
+  assert.equal(await p.locator('.ca-card--primary .ca-price').innerText(), '¥1,000');
+  const pending = p.locator('.ca-card--secondary button.is-pending');
+  assert.equal(await p.locator('.ca-card--secondary .ca-price').innerText(), '¥3,000');
+  assert.ok((await pending.getAttribute('class')).includes('ca-secondary-action'), '完全解析は枠線型（主CTAより弱い）');
+  assert.equal(await pending.evaluate((e) => getComputedStyle(e).backgroundImage), 'none');
+  assert.equal((await pending.innerText()).trim(), '完全解析 ¥3,000（準備中）');
+  assert.equal(await pending.isDisabled(), true);
+  assert.equal(await pending.getAttribute('href'), null);
+  assert.equal(await p.locator('#mpUpgradeBody [data-preview-dummy], #mpUpgradeBody a[data-product-id^="core_complete_analysis"]').count(), 0);
+  // 背景スクロール停止
+  assert.equal(await p.evaluate(() => getComputedStyle(document.body).overflow), 'hidden');
+  for (const banned of ['2/6', '4/6', '6/6', '残り一つ', '完成させる', 'すべて集める']) assert.ok(!text.includes(banned), banned);
+  await p.__ctx.close();
+});
+
+test('mypage：フォーカストラップ・Escape・外側押下で閉じ、トリガーへ戻る', { skip: skip() }, async () => {
+  const p = await mypage('free');
+  await openSheet(p);
+  for (let i = 0; i < 12; i++) {
+    await p.keyboard.press('Tab');
+    assert.ok(await p.evaluate(() => !!document.activeElement.closest('#latest-upgrade-dialog')), 'focus stays in dialog');
+  }
+  await p.keyboard.press('Shift+Tab');
+  assert.ok(await p.evaluate(() => !!document.activeElement.closest('#latest-upgrade-dialog')));
+  await p.keyboard.press('Escape');
+  assert.equal(await p.locator('#mpUpgradeOverlay').isHidden(), true);
+  assert.equal(await p.evaluate(() => document.activeElement.id), 'mpUpgradeTrigger');
+  assert.equal(await p.evaluate(() => getComputedStyle(document.body).overflow), 'visible');
+  await p.click('#mpUpgradeTrigger');
+  await p.click('.ca-sheet-scroll', { position: { x: 30, y: 30 } }); // 内部押下では閉じない
+  assert.equal(await p.locator('#mpUpgradeOverlay').isHidden(), false);
+  await p.mouse.click(195, 20); // オーバーレイ（外側）
+  assert.equal(await p.locator('#mpUpgradeOverlay').isHidden(), true);
+  await p.__ctx.close();
+});
+
+
+
+
+test('mypage unknown：購入CTAを出さない（シート・ページとも）', { skip: skip() }, async () => {
+  const p = await mypage('unknown');
+  assert.equal(await p.locator('#mpUpgradeTrigger').innerText(), 'レポート');
+  await p.click('#mpUpgradeTrigger');
+  assert.equal(await p.locator('#mpUpgradeBody .ca-pick').count(), 0, '状態不明では記録を選ばせない');
+  assert.match(await sheetText(p), /購入状態を確認できませんでした/);
+  assert.equal(await p.locator('a[href*="buy.stripe"]').count(), 0);
+  await p.__ctx.close();
+});
+
+test('mypage 実データ（Preview指定なし）：未購入者にも右上入口を出す。完全解析は準備中で押せない', { skip: skip() }, async () => {
+  const p = await mypage(null);
+  assert.equal(await p.locator('#mpUpgradeTrigger').innerText(), 'アップグレード');
+  // 記録が2件：まず対象の記録を選ばせる（最新へ勝手に紐づけない）。選ぶまで購入導線は出さない
+  await p.click('#mpUpgradeTrigger');
+  const body = p.locator('#mpUpgradeBody');
+  assert.equal(await body.locator('.ca-pick').count(), 2);
+  assert.equal(await body.locator('a[href*="buy.stripe"], button.is-pending, .ca-card').count(), 0);
+  await body.locator('[data-pick-index="1"]').click();
+  assert.match(await body.innerText(), new RegExp('SELECTED RECORD'));
+  // 販売停止中（既定）：解析レポート ¥1,000 も「準備中」で押せない（Payment Link へは送らない）
+  assert.equal(await body.locator('.ca-card--primary a[href*="buy.stripe"]').count(), 0);
+  assert.match(await body.locator('.ca-card--primary').innerText(), /解析レポート（準備中）/);
+  assert.equal(await body.locator('button.is-pending').count(), 2, '解析レポート・完全解析とも準備中（押せない）');
+  assert.equal(await body.locator('a[data-product-id^="core_complete_analysis"], [data-preview-dummy]').count(), 0);
+  // 選び直せる
+  await body.locator('[data-repick]').click();
+  assert.equal(await body.locator('.ca-pick').count(), 2);
+  // 既存の集計・LOCKED 表示は変わらない
+  assert.equal(await p.locator('.mp-stat-en').allInnerTexts().then((x) => x.join(',')), 'RECORDS,INSIGHTS');
+  assert.equal(await p.locator('.mp-latest .mp-chip.locked').count(), 0, 'LOCKED の表記を出さない');
+  // 無効な指定値も「指定なし」と同じ扱い
+  const q = await page('/mypage.html?preview_entitlement=bogus');
+  await q.waitForSelector('.mp-latest', { state: 'attached' });
+  assert.equal(await q.locator('#mpUpgradeTrigger').innerText(), 'アップグレード');
+  await q.__ctx.close();
+  await p.__ctx.close();
+});
+
+test('mypage Preview 指定あり：free はアップグレード、unknown は状態確認画面を確認できる', { skip: skip() }, async () => {
+  const f = await mypage('free');
+  assert.equal(await f.locator('#mpUpgradeTrigger').innerText(), 'アップグレード');
+  assert.equal(await f.locator('#mpUpgradeOverlay').count(), 1);
+  await f.__ctx.close();
+  const u = await mypage('unknown');
+  assert.equal(await u.locator('#mpUpgradeTrigger').innerText(), 'レポート');
+  await u.click('#mpUpgradeTrigger');
+  assert.match(await u.locator('#mpUpgradeBody').innerText(), /購入状態を確認できませんでした/);
+  assert.equal(await u.locator('a[href*="buy.stripe"]').count(), 0);
+  await u.__ctx.close();
+});
+
+test('販売開始後（CA_COMPLETE_SALES_OPEN = true）に権利APIが無ければ、状態不明として「状態を確認」', { skip: skip() }, async () => {
+  const src = fs.readFileSync(path.join(ROOT, 'complete-analysis.js'), 'utf8').replace('var CA_COMPLETE_SALES_OPEN = false;', 'var CA_COMPLETE_SALES_OPEN = true;');
+  assert.ok(src.includes('var CA_COMPLETE_SALES_OPEN = true;'));
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const p = await ctx.newPage();
+  p.setDefaultTimeout(8000);
+  await p.route(/supabase-js@2/, (r) => r.fulfill({ contentType: 'application/javascript', body: fakeSupabase({ rows: ROWS }) }));
+  await p.route(/\/api\/public-config\?format=js$/, (r) => r.fulfill({ contentType: 'application/javascript', body: previewPublicConfigJs() }));
+  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  // 登録したレポート（complete_13）：この試験では登録なし
+  await p.route('**/api/complete-checkout?op=my-reports', (r) => r.fulfill({ contentType: 'application/json', body: '{"reports":[],"records":[]}' }));
+  await p.route('**/api/my-entitlements', (r) => r.fulfill({ contentType: 'application/json', body: '{"purchased_by_version":{}}' }));
+  await p.route('**/complete-analysis.js', (r) => r.fulfill({ contentType: 'application/javascript', body: src }));
+  await p.goto(base + '/mypage.html');
+  await p.waitForSelector('.mp-latest', { state: 'attached' });
+  assert.equal(await p.locator('#mpUpgradeTrigger').innerText(), 'レポート');
+  await p.click('#mpUpgradeTrigger');
+  assert.match(await p.locator('#mpUpgradeBody').innerText(), /購入状態を確認できませんでした/);
+  assert.equal(await p.locator('#mpUpgradeBody a[href*="buy.stripe"], #mpUpgradeBody button.is-pending').count(), 0);
+  await ctx.close();
+});
+
+
+test('mypage：記録なしは右上入口から診断を始める案内へ。未ログイン・読込エラー時は入口を出さない', { skip: skip() }, async () => {
+  const e = await page('/mypage.html', { supa: { rows: [] } });
+  await e.waitForSelector('#mpUpgradeTrigger');
+  assert.equal(await e.locator('#mpUpgradeTrigger').innerText(), 'レポート');
+  await e.click('#mpUpgradeTrigger');
+  const body = e.locator('#mpUpgradeBody');
+  assert.match(await body.innerText(), /まず診断して、結果を記録に残してください/);
+  assert.equal(await body.locator('a[href="/"]').innerText(), '診断を始める');
+  assert.equal(await body.locator('a[href*="buy.stripe"], button.is-pending').count(), 0);
+  assert.ok(await e.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+  assert.deepEqual(e.__errors, []);
+  await e.__ctx.close();
+  for (const supa of [{ signedIn: false }, { historyError: true }]) {
+    const p = await page('/mypage.html?preview_entitlement=free', { supa });
+    await p.waitForTimeout(400);
+    assert.equal(await p.locator('#mpUpgradeTrigger').count(), 0, JSON.stringify(supa));
+    await p.__ctx.close();
+  }
+});
+
+test('mypage：390px／320px ではみ出さない・改行しない・reduced motion', { skip: skip() }, async () => {
+  for (const width of [390, 320]) {
+    const p = await mypage('free', '', { width, reducedMotion: 'reduce' });
+    assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'no horizontal scroll ' + width);
+    const t = await p.locator('#mpUpgradeTrigger').boundingBox(), e = await p.locator('.archive-header__eyebrow').boundingBox();
+    assert.ok(t.height <= 38, 'no wrap'); assert.ok(e.x + e.width <= t.x, 'no overlap');
+    assert.equal(await p.locator('#mpUpgradeTrigger').evaluate((el) => getComputedStyle(el).transitionDuration), '0s');
+    await p.click('#mpUpgradeTrigger');
+    const box = await p.locator('#latest-upgrade-dialog').boundingBox();
+    assert.ok(Math.abs(box.y + box.height - p.viewportSize().height) < 1, 'bottom sheet');
+    assert.ok(box.height <= p.viewportSize().height * 0.85 + 1);
+    await p.__ctx.close();
+  }
+});
+
+async function indexResult(state, supa) {
+  const p = await page('/', supa ? { supa } : {});
+  const code = await p.evaluate(() => { const a = {}; ETI_V2_QUESTIONS.forEach((q, i) => { a[q.id] = ((i * 7) % 5) - 2; }); return ETIv2.encodeAnswersV2(a, ETI_V2_QUESTIONS); });
+  await p.goto(`${base}/?dv=ETI-2.0&code=${code}${state ? '&preview_entitlement=' + state : ''}`);
+  await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
+  return p;
+}
+
+test('index：¥1,000主導線のあとに折りたたみ。閉じても¥1,000は使え、開くと説明と準備中ボタン（押せない）', { skip: skip() }, async () => {
+  const p = await indexResult('free');
+  const fold = p.locator('details.ca-fold');
+  assert.equal(await fold.count(), 1);
+  assert.equal(await fold.evaluate((d) => d.open), false);
+  // 負荷が高いと結果の描き直しと計測が重なるため、読み込みが落ち着いてから同じフレームで両方の位置を測る
+  await p.waitForLoadState('networkidle');
+  const pos = await p.evaluate(() => ({
+    btnY: document.querySelector('#lockUnlockAllBtn').getBoundingClientRect().top,
+    foldY: document.querySelector('details.ca-fold').getBoundingClientRect().top,
+  }));
+  assert.ok(pos.foldY > pos.btnY, `¥1,000 より後（${pos.btnY} → ${pos.foldY}）`);
+  // 閉じた状態は静かな予告だけ（¥3,000・決済ボタン・サンプルは出さない）
+  const closed = await fold.locator('summary').innerText();
+  for (const s of ['BEYOND THE RESULT｜この先にあるもの', 'まだ、ここには現れていない輪郭があります。', '三つの人物像から、あなたをもう一段深く読む。', 'MIRROR・HIDDEN SHAPE・MENTOR', 'その先を見る']) assert.ok(closed.includes(s), s);
+  assert.doesNotMatch(closed, /¥3,000|¥2,000|完全解析との違い/);
+  assert.equal(await fold.locator('[data-ca-sample]').isVisible(), false);
+  // 販売停止中（既定）は ¥1,000 も「準備中」で押せない
+  assert.equal(await p.locator('#lockUnlockAllBtn').innerText().then((s) => s.trim()), '解析レポート ¥1,000（準備中）');
+  assert.equal(await p.locator('#lockUnlockAllBtn').isDisabled(), true);
+  await p.click('details.ca-fold > summary');
+  const text = await fold.innerText();
+  for (const s of ['この結果が示すのは、あなたの核となる一面です。', 'あなたと重なる人物', 'まだ言葉になっていない内側の可能性', 'これから借りられる力を', '三つの視点からひとつの輪郭へ結びます。', 'いまのあなたに最も近い10名', '表に出にくい一面に近い10名', 'これから伸ばす方向に近い10名', '三つの視点、三十の人物像。', '全46ページの完全解析', '完全解析のサンプルを読む', '8ページをそのまま抜き出しています', '¥3,000', '準備中']) assert.ok(text.includes(s), s);
+  // 三つの人物像の図（同じサイトの画像・代替テキストあり）と、三つの視点の説明
+  const img = fold.locator('.edl-map img.edl-img');
+  assert.equal(await img.count(), 1);
+  assert.match(await img.getAttribute('src'), /^\/assets\/complete\/lens-map-840\.webp$/);
+  assert.match(await img.getAttribute('alt'), /MIRROR[\s\S]*HIDDEN SHAPE[\s\S]*MENTOR/);
+  assert.equal(await fold.locator('.edl-legend .edl-item').count(), 3);
+  assert.equal(await fold.locator('[data-ca-sample]').getAttribute('href'), '/complete-sample.html#from=result');
+  assert.equal(await fold.locator('.ca-reveal-stars i').count(), 3);
+  // 決済前のボタンに「見る」「開く」を使わない。押せない button（href なし）
+  const cta = fold.locator('button.is-pending');
+  const ctaText = (await cta.innerText()).trim();
+  assert.equal(ctaText, '完全解析 ¥3,000（準備中）');
+  assert.ok(!/見る|開く/.test(ctaText));
+  assert.equal(await cta.isDisabled(), true);
+  assert.equal(await cta.getAttribute('href'), null);
+  assert.equal(await fold.locator('a[href*="buy.stripe"], [data-preview-dummy]').count(), 0);
+  // 料金概要に¥3,000・ナラティブを出さない
+  const html = await p.content();
+  assert.ok(!html.includes('ナラティブ'));
+  assert.ok(!/料金<\/dt><dd[^>]*>[^<]*¥3,000/.test(html));
+  await p.__ctx.close();
+});
+
+test('index：購入状態を確かめられない時も申込の導線は出す（ログインなしの購入は買えることを優先）・旧 Payment Link は無い／JS無しでも details で到達できる', { skip: skip() }, async () => {
+  const p = await indexResult(null);
+  await p.click('details.ca-fold > summary');
+  assert.equal(await p.locator('details.ca-fold a[href*="buy.stripe"]').count(), 0);
+  await p.waitForFunction(() => /まだ見えていない輪郭を読む/.test(document.querySelector('details.ca-fold').innerText));
+  assert.doesNotMatch(await p.locator('details.ca-fold').innerText(), /購入状態を確認できないため/);
+  assert.equal(await p.locator('details.ca-fold > summary').evaluate((s) => s.parentElement.tagName), 'DETAILS');
+  await p.__ctx.close();
+});
+
+test('index：結果画面にメール案内専用のチェックボックスを出さない（配信内容は登録完了モーダルで明示）', { skip: skip() }, async () => {
+  // 未ログイン（保存前）の記録カードで確認する
+  const p = await indexResult(null, { signedIn: false });
+  await p.waitForSelector('#recordAuth', { state: 'attached', timeout: 5000 });
+  assert.equal(await p.locator('#newsletterOptInCheckbox').count(), 0);
+  assert.equal(await p.locator('label.rs-optin').count(), 0);
+  assert.equal(await p.evaluate(() => typeof window.showRegistrationOnboarding), 'function');
+  await p.__ctx.close();
+});
+
+async function report(state) {
+  global.__reportData = { diagnosis_version: 'ETI-2.0', entitlements: { core_analysis_access: true, journey_report_access: false }, purchase: null };
+  const p0 = await page('/');
+  const code = await p0.evaluate(() => { const a = {}; ETI_V2_QUESTIONS.forEach((q, i) => { a[q.id] = ((i * 7) % 5) - 2; }); return ETIv2.encodeAnswersV2(a, ETI_V2_QUESTIONS); });
+  await p0.__ctx.close();
+  global.__reportData.code = code;
+  const p = await page(`/report.html?token=x${state ? '&preview_entitlement=' + state : ''}`);
+  await p.waitForSelector('.ca-r-sec', { state: 'attached' });
+  return p;
+}
+
+
+test('report：generating／ready／unknown', { skip: skip() }, async () => {
+  let p = await report('complete-generating');
+  assert.match(await p.locator('.ca-r-sec').innerText(), /完全解析を生成しています/);
+  assert.equal(await p.locator('.ca-r-sec a[href*="buy.stripe"]').count(), 0);
+  await p.__ctx.close();
+  p = await report('complete-ready');
+  assert.match(await p.locator('.ca-r-sec').innerText(), /完全解析が保存されています/);
+  assert.equal(await p.locator('.ca-r-sec').getByText('この記録の完全解析を開く').count(), 1);
+  await p.__ctx.close();
+  p = await report(null);
+  assert.equal(await p.locator('.ca-r-sec a[href*="buy.stripe"]').count(), 0);
+  await p.__ctx.close();
+});
+
+test('report：complete 権だけでも解析レポートを閲覧できる（core_complete_access が analysis を内包）', { skip: skip() }, async () => {
+  global.__reportData = { diagnosis_version: 'ETI-2.0', entitlements: { core_analysis_access: false, core_complete_access: true }, purchase: null };
+  const p0 = await page('/');
+  global.__reportData.code = await p0.evaluate(() => { const a = {}; ETI_V2_QUESTIONS.forEach((q, i) => { a[q.id] = ((i * 7) % 5) - 2; }); return ETIv2.encodeAnswersV2(a, ETI_V2_QUESTIONS); });
+  await p0.__ctx.close();
+  const p = await page('/report.html?token=x');
+  await p.waitForSelector('.ca-r-sec', { state: 'attached' });
+  assert.equal(await p.getByText('この商品はまだご覧いただけません').count(), 0);
+  await p.__ctx.close();
+  global.__reportData = { diagnosis_version: 'ETI-2.0', entitlements: { core_analysis_access: false, journey_report_access: true }, purchase: null };
+  const q = await page('/report.html?token=x');
+  await q.waitForSelector('.err-box', { state: 'attached' });
+  assert.equal(await q.getByText('この商品はまだご覧いただけません').count(), 1);
+  await q.__ctx.close();
+});
+
+// ---- 視覚面の確認（白一色にしない・人物像の区別・閉じるボタンの重なり） ----
+async function colorsOf(p, sel) {
+  return p.evaluate((q) => Array.from(document.querySelectorAll(q)).map((e) => getComputedStyle(e).color), sel);
+}
+test('視覚：シートの文字色が役割で分かれ、三つの人物像が色と説明の両方で区別できる', { skip: skip() }, async () => {
+  const p = await mypage('free');
+  await openSheet(p);
+  const textColors = new Set(await p.evaluate(() => Array.from(document.querySelectorAll('#mpUpgradeBody *'))
+    .filter((e) => e.childNodes.length && Array.from(e.childNodes).some((n) => n.nodeType === 3 && n.textContent.trim()))
+    .map((e) => getComputedStyle(e).color)));
+  assert.ok(textColors.size >= 5, 'text colors ' + [...textColors].join(' '));
+  const white = await p.evaluate(() => Array.from(document.querySelectorAll('#mpUpgradeBody *'))
+    .filter((e) => Array.from(e.childNodes).some((n) => n.nodeType === 3 && n.textContent.trim()))
+    .filter((e) => /^rgb\((2[3-5]\d), (2[3-5]\d), (2[3-5]\d)\)$/.test(getComputedStyle(e).color) && !e.closest('.ca-primary-action')).length);
+  assert.equal(white, 0, '塗りCTA以外に白に近い文字を使わない');
+  const lensColors = await colorsOf(p, '#mpUpgradeBody .ca-card--secondary .ca-lens-en');
+  assert.equal(new Set(lensColors).size, 3);
+  const descs = await p.locator('#mpUpgradeBody .ca-card--secondary .ca-lens-desc').allInnerTexts();
+  assert.equal(new Set(descs).size, 3);
+  assert.equal(await p.locator('.ca-price').first().evaluate((e) => getComputedStyle(e).color), 'rgb(201, 168, 96)');
+  // 小さい補足文字も読める明るさ（--ca-muted 以上）・11px以上
+  const small = await p.evaluate(() => Array.from(document.querySelectorAll('#mpUpgradeBody .ca-meta, #mpUpgradeBody .ca-pending-note, #mpUpgradeBody .ca-eyebrow')).map((e) => parseFloat(getComputedStyle(e).fontSize)));
+  assert.ok(small.every((n) => n >= 10.5), small.join(','));
+  await p.__ctx.close();
+});
+
+test('視覚：シートをスクロールしても閉じるボタンは本文と重ならない', { skip: skip() }, async () => {
+  const p = await mypage('free');
+  await openSheet(p);
+  await p.locator('#mpUpgradeBody').evaluate((e) => { e.scrollTop = 300; });
+  const close = await p.locator('#mpUpgradeClose').boundingBox(), scroll = await p.locator('#mpUpgradeBody').boundingBox();
+  assert.ok(close.y + close.height <= scroll.y + 4, 'close sits above the scroll area');
+  await p.__ctx.close();
+});
+
+test('視覚：全状態・index・report が 390px／320px で横スクロールしない', { skip: skip() }, async () => {
+  for (const width of [390, 320]) {
+    for (const st of ['free', 'analysis', 'complete-generating', 'complete-ready', 'unknown']) {
+      const p = await mypage(st, '', { width });
+      await openSheet(p);
+      assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth
+        && Array.from(document.querySelectorAll('#mpUpgradeBody *')).every((e) => e.getBoundingClientRect().right <= window.innerWidth + 0.5)), `${st} ${width}`);
+      await p.__ctx.close();
+    }
+  }
+});
+
+// ---- 旧版（element-v1）記録：完全解析の適格性（fail-closed） ----
+test('旧版記録：完全解析の購入ボタン（¥3,000・追加¥2,000）とセクションを出さない／解析レポートだけ', { skip: skip() }, async () => {
+  for (const st of ['free', 'analysis', 'complete-generating', 'complete-ready']) {
+    const p = await page(`/mypage.html?preview_entitlement=${st}`, { supa: { rows: [LEGACY_ROW, A.row] } });
+    await p.waitForSelector('.mp-latest', { state: 'attached' });
+    // preview_entitlement で complete を指定しても、旧版の最新記録には COMPLETE 表示・完全解析を開く導線を出さない
+    assert.equal(await p.locator('.mp-latest.is-complete, .mp-latest .mp-chip.complete, .mp-latest .ca-rec-complete').count(), 0, st);
+    const t = p.locator('#mpUpgradeTrigger');
+    assert.equal(await t.innerText(), 'アップグレード', st);
+    await openSheet(p, 0); // 旧版の記録を選ぶ
+    const body = p.locator('#mpUpgradeBody');
+    const text = await body.innerText();
+    assert.ok(!text.includes('¥3,000') && !text.includes('¥2,000'), st);
+    assert.equal(await body.locator('.ca-card--secondary, .ca-lens-list, button.is-pending').count(), 0, '完全解析セクションなし ' + st);
+    assert.equal(await body.locator('[data-preview-dummy], a[data-product-id^="core_complete_analysis"]').count(), 0);
+    if (st === 'free') {
+      // 旧版は解析レポートも販売対象外：価格は出さず、対象外の案内を出す
+      assert.ok(!text.includes('¥1,000'), '買えない商品に価格を出さない');
+      assert.match(text, /現在の解析商品の対象外/);
+      assert.match(text, /最新版の100問で診断した記録が対象/);
+      // 既存の RE-DIAGNOSIS へ案内する
+      await body.getByText('最新版で診断する（RE-DIAGNOSIS）').click();
+      assert.equal(await p.locator('#mpUpgradeOverlay').isHidden(), true);
+    } else {
+      assert.match(text, /解析レポートを(見る|読む)/, st);
+    }
+    // 記録内（アコーディオン）にも旧版の完全解析ボタンは出さない
+    assert.equal(await p.locator('#mp-rec-0 button.is-pending').count(), 0, st);
+    assert.equal(await p.locator('a[data-product-id^="core_complete_analysis"]').count(), 0);
+    await p.__ctx.close();
+  }
+});
+
+test('旧版記録：完全解析用の関数を直接呼んでも購入先・閲覧先へ進めない', { skip: skip() }, async () => {
+  const p = await page('/mypage.html?preview_entitlement=complete-ready', { supa: { rows: [LEGACY_ROW, A.row] } });
+  await p.waitForSelector('.mp-latest', { state: 'attached' });
+  const r = await p.evaluate(async () => {
+    const rec = window.__mpRecords[0];
+    const st = caStateOf(rec);
+    const b = document.createElement('button'); const w = document.createElement('div'); w.appendChild(b); document.body.appendChild(w);
+    await openPurchasedComplete('sess-L', b);
+    const html = caSheetBodyHtml(rec);
+    return { href: caCompleteCheckoutHref(rec), eligible: st.completeEligible, completeAccess: st.completeAccess,
+      offer: CompleteAnalysis.completeCheckoutHref(st), msg: w.innerText, buy: /data-product-id="core_complete_analysis/.test(html) };
+  });
+  assert.equal(r.href, null); assert.equal(r.offer, null);
+  assert.equal(r.eligible, false); assert.equal(r.completeAccess, false);
+  assert.match(r.msg, /まだ開けません/);
+  assert.equal(r.buy, false);
+  await p.__ctx.close();
+});
+
+test('旧版記録：unknown は従来どおり購入ボタンを出さない', { skip: skip() }, async () => {
+  const p = await page('/mypage.html?preview_entitlement=unknown', { supa: { rows: [LEGACY_ROW, A.row] } });
+  await p.waitForSelector('.mp-latest', { state: 'attached' });
+  await p.click('#mpUpgradeTrigger');
+  assert.equal(await p.locator('a[href*="buy.stripe"]').count(), 0);
+  await p.__ctx.close();
+});
+
+test('旧版の結果：index と report に完全解析の購入導線を出さない', { skip: skip() }, async () => {
+  // index：旧版コード（?code=）の結果
+  const p = await page('/');
+  const legacyCode = await p.evaluate(() => { const a = {}; for (let i = 0; i < QUESTIONS.length; i++) a[i] = (i % 5) - 2; return encodeAnswers(a); });
+  await p.goto(`${base}/?code=${legacyCode}&preview_entitlement=free`);
+  await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
+  assert.equal(await p.locator('details.ca-fold').count(), 0);
+  assert.equal(await p.locator('#lockUnlockAllBtn').count(), 1, '¥1,000 の主導線はそのまま');
+  await p.__ctx.close();
+  // report：旧版の解析レポート
+  global.__reportData = { diagnosis_version: 'element-v1', entitlements: { core_analysis_access: true }, purchase: null, code: legacyCode };
+  const q = await page('/report.html?token=x&preview_entitlement=analysis');
+  await q.waitForSelector('#pdfSaveBtn', { state: 'attached' });
+  assert.equal(await q.locator('.ca-r-sec').count(), 0);
+  assert.equal(await q.locator('a[data-product-id^="core_complete_analysis"]').count(), 0);
+  await q.__ctx.close();
+});
+
+test('適格性は表示文字ではなく保存データで判定する（版・設問版・回答の検証）', { skip: skip() }, async () => {
+  // 版は ETI-2.0 でも、設問版が違う／回答が復元できない記録は不適格
+  const badItem = JSON.parse(JSON.stringify(B.row)); badItem.id = 'sess-X'; badItem.item_set_version = 'ETI-ITEM-1.9.0'; badItem.diagnosis_results[0].item_set_version = 'ETI-ITEM-1.9.0';
+  const badCode = JSON.parse(JSON.stringify(B.row)); badCode.id = 'sess-Y'; badCode.diagnosis_answers = [{ encoded_answers: 'zz!!' }];
+  for (const row of [badItem, badCode]) {
+    const p = await page('/mypage.html?preview_entitlement=free', { supa: { rows: [row, A.row] } });
+    await p.waitForSelector('.mp-latest', { state: 'attached' });
+    await openSheet(p, 0);
+    assert.ok(await p.locator('#mpUpgradeBody .ca-record-slip').count() === 1, row.id);
+    assert.equal(await p.locator('#mpUpgradeBody a[data-product-id^="core_complete_analysis"], #mpUpgradeBody .ca-card--secondary, #mpUpgradeBody [data-complete-checkout]').count(), 0, row.id);
+    await p.__ctx.close();
+  }
+});

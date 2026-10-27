@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>元素診断 — TOPデモ v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<!--
+  TOPデモ v3（背景画像組み込み版）。見た目確認専用。
+  現行 index.html の文章・構造を正本とし、背景に「静寂の星空と霧の湖」を暗く薄く敷く。
+  診断・保存・認証・決済などのスクリプトは読み込まない。
+  ?nobg を付けると背景画像なしで表示（比較用）。
+-->
+<style>
+  /* 構成：一枚の夜（固定レイヤー）の上を、HERO → ABOUT → 記録 → 深層 → 最終CTA が静かに流れる */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    color-scheme: dark;
+    /* 夜の藍（ベース） */
+    --bg: #07070f;
+    --indigo: #0b0c22;
+    --indigo-2: #111233;
+    /* 文字の青の階層（重要度順） */
+    --t-head: #e2e4f6;   /* 見出し：青白 */
+    --t-body: #8e9dbf;   /* 本文：藍灰 */
+    --t-sub:  #6f7ea3;   /* 補足：暗い藍灰 */
+    --t-en:   #56648a;   /* 英語：さらに静か */
+    --t-brand:#7aa2cf;   /* 英字ブランド：少し明るい青 */
+    --t-link: #86b6e6;   /* リンク：水色寄りの青 */
+    /* 意味色（文字・細線・点・CTAにだけ） */
+    --c-el: #a8d8f0;     /* 元素：水色 */
+    --c-wp: #8ccfd6;     /* 武器：青緑 */
+    --c-na: #e0c890;     /* 国家：淡い金 */
+    --c-mi: #b8a8e0;     /* MIRROR・補助：淡紫 */
+    /* 解析4領域（マイページの領域色と同じ） */
+    --d-p: #b48ad8; --d-s: #dcae5a; --d-v: #5cc4b0; --d-m: #a9bfe6;
+    --line: rgba(140, 160, 220, .16);
+    --font-jp: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    --font-en: 'IM Fell English', 'Times New Roman', serif;
+  }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--bg); color: var(--t-head);
+    font-family: var(--font-jp); -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  }
+
+  /* ===== 一枚の夜：背景画像＋色レイヤー（固定。セクションごとに切り替えない） ===== */
+  .night { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: var(--bg); }
+  .night .photo {
+    /* 画像の水平線（高さ約71%）がCTAより下に来るよう、画面より縦長に敷いて上端を合わせる */
+    position: absolute; top: 0; left: 0; right: 0; height: 128svh;
+    background: url('assets/backgrounds/quiet-starry-lake.jpg') center top / cover no-repeat;
+    opacity: .26;
+    filter: brightness(.6) saturate(.75) contrast(.95);
+  }
+  .night .tint {
+    position: absolute; inset: 0;
+    background:
+      /* 文字の集まる上〜中央を暗く（可読性） */
+      radial-gradient(ellipse 90% 40% at 50% 34%, rgba(7,7,15,.55), transparent 75%),
+      /* 現行の青紫のにじみ */
+      radial-gradient(ellipse 80% 50% at 50% 24%, rgba(100,60,180,.14), transparent 70%),
+      /* 深青（左下）・藍（右） */
+      radial-gradient(ellipse 60% 40% at 12% 84%, rgba(40,90,170,.10), transparent 65%),
+      radial-gradient(ellipse 45% 35% at 90% 62%, rgba(60,60,150,.08), transparent 65%),
+      /* 上端と下端を夜色に沈める */
+      linear-gradient(180deg, rgba(7,7,15,.5) 0%, rgba(7,7,15,0) 22%);
+  }
+  .nobg .night .photo { display: none; }
+
+  main, footer { position: relative; z-index: 1; }
+
+  /* HERO以降は藍のoverlayを重ね、背景の存在感をさらに落とす（境目は作らない） */
+  .deep {
+    background: linear-gradient(180deg, rgba(7,7,15,0) 0, rgba(8,8,20,.78) 180px, rgba(8,8,20,.84) 100%);
+  }
+
+  /* ===== 共通（文字サイズ・余白は現行 index.html の値を踏襲） ===== */
+  .wrap { max-width: 720px; margin: 0 auto; padding-inline: 24px; }
+  .eyebrow {  /* 現行 .section-label */
+    font-family: var(--font-en); font-style: italic; font-size: 11px; letter-spacing: .3em; text-transform: uppercase;
+    color: #5d7cab; margin-bottom: 16px;
+  }
+  .h2 {  /* 現行 .about-title */
+    font-size: clamp(20px, 3.5vw, 28px); font-weight: 700; line-height: 1.5; color: var(--t-head); margin-bottom: 20px;
+  }
+  .link {  /* 現行 noteリンク */
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--t-link); font-size: 12.5px; text-decoration: none;
+    border-bottom: 1px solid rgba(134,182,230,.32); padding-bottom: 2px;
+  }
+  .link .arw { transition: transform .2s; display: inline-block; }
+  .link:hover .arw { transform: translateX(3px); }
+  .link:focus-visible, .cta:focus-visible, summary:focus-visible { outline: 1px solid var(--t-link); outline-offset: 4px; }
+  /* 区切りの光点（細線＋小さな星） */
+  .spark { position: relative; width: 132px; height: 1px; margin: 0 auto; background: linear-gradient(90deg, transparent, rgba(160,180,240,.35), transparent); }
+  .spark::after { content: ''; position: absolute; left: 50%; top: 50%; width: 3px; height: 3px; margin: -1.5px 0 0 -1.5px; border-radius: 50%;
+    background: #dfe8ff; box-shadow: 0 0 6px 1px rgba(170,190,255,.7); }
+
+  .jp { word-break: auto-phrase; }
+
+  /* ===== HERO（現行 .hero と同じ寸法） ===== */
+  .hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: center; align-items: center;
+    text-align: center; padding: 60px 24px 80px; }
+  .gems { position: absolute; inset: 0; pointer-events: none; }
+  .gem { position: absolute; width: 56px; height: 56px; transform-origin: top left; }
+  .gem svg { display: block; filter: drop-shadow(0 0 6px var(--gc)); }
+
+  .hero-content { position: relative; z-index: 2; max-width: 680px; }
+  .hero-en {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    font-family: var(--font-en); font-style: italic; font-size: clamp(11px, 1.8vw, 14px); letter-spacing: .25em; text-transform: uppercase;
+    color: var(--t-brand); text-shadow: 0 0 14px rgba(122,162,207,.22); margin-bottom: 20px; white-space: nowrap;
+  }
+  .hero-en .rule { width: 28px; height: 1px; background: rgba(122,162,207,.45); flex: none; }
+  /* 現行と同じ大きさのため、狭い画面では折り返す（そのときは両脇の線を外す） */
+  @media (max-width: 560px) { .hero-en { white-space: normal; } .hero-en .rule { display: none; } }
+  .hero-title {
+    font-size: clamp(32px, 8vw, 64px); font-weight: 700; line-height: 1.15; letter-spacing: .05em; color: #f1eeff; margin-bottom: 10px;
+    text-shadow: 0 0 30px rgba(140,130,240,.24), 0 2px 18px rgba(7,7,15,.8);
+  }
+  .hero-sub {
+    font-family: var(--font-en), var(--font-jp); font-style: italic;
+    font-size: clamp(16px, 3.5vw, 26px); letter-spacing: .08em; color: #86acd8; margin-bottom: 28px;
+  }
+  .hero .spark { margin-bottom: 28px; }
+  .hero-desc { font-size: clamp(13px, 1.8vw, 15px); line-height: 1.95; color: var(--t-body); max-width: 520px; margin: 0 auto 36px; }
+  .hero-desc strong { font-weight: 700; }
+  .k-el { color: var(--c-el); } .k-wp { color: var(--c-wp); } .k-na { color: var(--c-na); }
+  .hero-desc .theory-line { color: var(--t-sub); }
+  .hero-desc .en { display: block; margin-top: 10px; font-family: var(--font-en); font-style: italic; font-size: clamp(11px, 1.5vw, 13px); color: var(--t-en); }
+
+  .cta-wrap { display: flex; flex-direction: column; align-items: center; }
+  .cta {  /* 現行 .hero-cta と同じ寸法 */
+    display: inline-block; padding: 16px 48px; border-radius: 6px; text-decoration: none;
+    font-family: var(--font-jp); font-size: 15px; letter-spacing: .2em; color: #eef4ff;
+    background: linear-gradient(135deg, #1b4c86 0%, #2556a0 52%, #3c4a9e 100%);
+    border: 1px solid rgba(150,180,240,.22);
+    box-shadow: 0 0 32px rgba(90,80,200,.24), 0 12px 26px rgba(0,0,0,.4), inset 0 1px 0 rgba(210,225,255,.16);
+    transition: filter .2s, box-shadow .2s;
+  }
+  .cta:hover { filter: brightness(1.1); box-shadow: 0 0 36px rgba(100,90,210,.3), 0 12px 26px rgba(0,0,0,.4), inset 0 1px 0 rgba(210,225,255,.2); }
+  .cta .en { font-family: var(--font-en); letter-spacing: .14em; }
+  /* マイページ入口：主CTAの下に置く補助導線。枠・背景・発光なし */
+  .hero-record-link {
+    margin-top: 18px; color: #7896b3; font-size: 12px; letter-spacing: .08em; text-decoration: none; opacity: .9;
+    transition: color .2s ease;
+  }
+  .hero-record-link:hover { color: #a8c7e3; }
+  .hero-record-link .arw { display: inline-block; transition: transform .2s ease; }
+  .hero-record-link:hover .arw { transform: translateX(3px); }
+  .hero-record-link:focus-visible { outline: 1px solid var(--t-link); outline-offset: 4px; }
+  @media (max-width: 480px) { .cta { padding: 14px 32px; font-size: 14px; } }
+  .hero-scroll { position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); width: 1px; height: 38px;
+    background: linear-gradient(180deg, rgba(140,170,230,.5), transparent); }
+
+  /* ===== ABOUT（現行 .about と同じ寸法） ===== */
+  .about { padding-block: 80px; }
+  .about-body { font-size: 14px; line-height: 2; color: var(--t-body); }
+  .about-body + .about-body { margin-top: 16px; }
+  .about-body .q { color: #c3cde6; }
+  .about-body.triad b { font-weight: 700; }
+  .about-en { margin-top: 10px; font-family: var(--font-en); font-style: italic; font-size: 12px; color: var(--t-en); }
+  .about .link { margin-top: 18px; }
+
+  /* 学術背景：現行のカード群の位置（noteリンクの下 32px）に、静かな導線として置く */
+  .theory { margin-top: 32px; padding-top: 24px; position: relative; }
+  .theory::before { content: ''; position: absolute; top: 0; left: 0; width: 64px; height: 1px; background: linear-gradient(90deg, rgba(140,170,230,.4), transparent); }
+  .theory-names { font-family: var(--font-en); font-size: 13px; letter-spacing: .06em; color: #a9b8da; }
+  .theory-names i { font-style: normal; color: #4f628e; margin: 0 .4em; }
+  .theory summary { list-style: none; cursor: pointer; margin-top: 10px; }
+  .theory summary::-webkit-details-marker { display: none; }
+  .theory details[open] summary .arw { transform: rotate(90deg); }
+  .theory dl { margin-top: 18px; }
+  .theory .item { display: grid; grid-template-columns: 8em 1fr; gap: 14px; padding: 12px 0; border-top: 1px solid rgba(140,160,220,.08); }
+  .theory .item:first-child { border-top: 0; }
+  .theory dt { font-size: 12px; letter-spacing: .1em; color: #5d7cab; padding-top: 1px; }
+  .theory dd { min-width: 0; font-size: 13px; line-height: 1.7; color: #99a8c8; }
+  .theory dd small { display: block; font-family: var(--font-en); font-style: italic; font-size: 11px; color: var(--t-en); }
+
+  /* ===== RECORDS / INSIGHT（現行ABOUTと同じ寸法の続き） ===== */
+  .obs { padding-block: 0 80px; display: grid; gap: 80px; }
+  .obs .lead { font-size: 14px; line-height: 2; color: var(--t-body); }
+  .obs .link { margin-top: 18px; }
+
+  /* 記録：過去 → 今 の静かな時間軸 */
+  .timeline { margin-top: 24px; }
+  .timeline svg { display: block; width: 100%; max-width: 420px; height: auto; overflow: visible; }
+  .timeline text { font-family: var(--font-en); font-style: italic; font-size: 10px; letter-spacing: .2em; fill: #5d7cab; }
+  .timeline .now { fill: #c7d8f5; }
+
+  /* 公式LINE：夜の藍を優先。淡緑は小さな点・細い下線・hoverのごく弱い光だけ */
+  .line-sec { --line-g: #7fd6a4; }
+  .line-link { border-bottom-color: rgba(127,214,164,.34); transition: color .2s, border-color .2s, text-shadow .2s; }
+  .line-link:hover { color: #bfe8d0; border-bottom-color: rgba(127,214,164,.6); text-shadow: 0 0 10px rgba(127,214,164,.18); }
+  .line-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--line-g); box-shadow: 0 0 5px rgba(127,214,164,.55); flex: none; }
+
+  /* 深層：4領域を小さな点と線で */
+  .domains { margin-top: 22px; display: grid; gap: 12px; list-style: none; max-width: 420px; }
+  .domains li { display: grid; grid-template-columns: 8px 7.6em 1fr; align-items: center; gap: 12px; font-size: 13px; color: #b3bfda; letter-spacing: .04em; }
+  .domains .pt { width: 7px; height: 7px; border-radius: 50%; background: var(--dc); box-shadow: 0 0 6px var(--dc); }
+  .domains .ln { height: 1px; background: linear-gradient(90deg, var(--dc), transparent); opacity: .55; width: var(--w); }
+  .domains .en { font-family: var(--font-en); letter-spacing: .1em; }
+
+  /* ===== 最終CTA ===== */
+  .final { text-align: center; padding-block: 0 80px; }
+  .final .copy { margin-top: 24px; font-size: 14px; line-height: 1.8; letter-spacing: .1em; color: var(--t-body); }
+  .final .cta-wrap { margin-top: 20px; }
+
+  /* ===== FOOTER（現行と同じ寸法） ===== */
+  footer { padding: 48px 24px; text-align: center; background: rgba(7,7,15,.86); }
+  .footer-copy { font-size: 11px; color: var(--t-en); letter-spacing: .1em; }
+  .footer-links { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+  .footer-links a { color: #6f7ea3; font-size: 11px; text-decoration: none; letter-spacing: .1em; }
+
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .link .arw { transition: none; } }
+</style>
+</head>
+<body>
+<div class="night" aria-hidden="true"><div class="photo"></div><div class="tint"></div></div>
+
+<main>
+  <!-- ===== HERO ===== -->
+  <section class="hero" id="top">
+    <div class="gems" id="heroGems" aria-hidden="true"></div>
+
+    <div class="hero-content">
+      <p class="hero-en"><span class="rule" aria-hidden="true"></span><span>Element Diagnosis — Know Your Nature</span><span class="rule" aria-hidden="true"></span></p>
+      <h1 class="hero-title">元素診断</h1>
+      <p class="hero-sub">あなたの気質と強みを、元素に映す</p>
+      <div class="spark" aria-hidden="true"></div>
+
+      <p class="hero-desc jp">
+        人の内には、7つの気質が流れている。<br>
+        100の問いに答えることで、あなたの<strong class="k-el">元素（内的な性質）</strong>と<strong class="k-wp">武器（強みと関わり方）</strong>と<strong class="k-na">国家（価値観）</strong>が映し出される。
+        <br><span class="theory-line">Big Five × エニアグラム × 価値観理論を土台にした、自己理解のための診断。</span>
+        <span class="en">Seven elements flow within. 100 questions to reveal your nature, strength, and values — a self-understanding diagnosis built on Big Five, Enneagram, and Values Theory.</span>
+      </p>
+
+      <div class="cta-wrap">
+        <a href="/index.html#diagnosis" class="cta">診断をはじめる <span class="en">— Start</span></a>
+        <a href="/mypage.html" class="hero-record-link">診断記録を見る <span class="arw">→</span></a>
+      </div>
+    </div>
+    <span class="hero-scroll" aria-hidden="true"></span>
+  </section>
+
+  <div class="deep">
+    <!-- ===== ABOUT ===== -->
+    <section class="about wrap">
+      <p class="eyebrow">About this Diagnosis</p>
+      <h2 class="h2">なぜ、元素で性格を測るのか</h2>
+      <p class="about-body jp">
+        ビッグファイブやエニアグラム、価値観理論といった心理尺度は、自分を知るための優れた地図だ。しかし数字や抽象的なラベルは、心に留まりにくい。そこでワタシは、原神というゲームの<span class="q">「元素」「国家」</span>体系に着目した。各キャラクターのパーソナリティに割り当てられた元素と、彼らが生きる国家を、心理傾向の軸として再解釈することで、結果が物語として記憶に残る診断を設計した。
+      </p>
+      <p class="about-body triad jp">
+        <b class="k-el">元素</b>は内的な気質。<b class="k-wp">武器</b>は他者との関わり方。<b class="k-na">国家</b>は何を大切にするかという価値観。3つの掛け合わせが、あなたという人間の輪郭を描く。
+      </p>
+      <p class="about-en">Big Five, Enneagram, and Values Theory provide reference frameworks for the diagnosis. The seven elements and seven nations provide the story that makes results memorable. Designed by a writer who spent years studying personality psychology and 118 characters across all seven elements and nations.</p>
+      <a class="link" href="https://note.com/mondayaxad/n/ne73b307f6273" target="_blank" rel="noopener">この診断が生まれた経緯を、noteで読む <span class="arw">→</span></a>
+
+      <div class="theory">
+        <p class="theory-names">Big Five<i>/</i>Enneagram<i>/</i>Values Theory</p>
+        <details>
+          <summary class="link">診断設計と心理理論について <span class="arw">→</span></summary>
+          <dl>
+            <div class="item"><dt>略称</dt><dd>ETI（Element Type Indicator）<small>"What's your ETI?"</small></dd></div>
+            <div class="item"><dt>診断形式</dt><dd>100問 / 5段階回答<small>100 questions · 5-point scale</small></dd></div>
+            <div class="item"><dt>測定軸</dt><dd>7元素 × 5武器 × 7国家<small>7 elements × 5 weapons × 7 nations</small></dd></div>
+            <div class="item"><dt>土台となる尺度</dt><dd>Big Five / Enneagram / Values Theory<small>Academic psychology base</small></dd></div>
+            <div class="item"><dt>料金</dt><dd class="jp">診断：無料 ／ 解析レポート：¥1,000 ／ ナラティブ：¥3,000<small>Diagnosis: Free / Analysis: ¥1,000 / Narrative: ¥3,000</small></dd></div>
+          </dl>
+        </details>
+      </div>
+    </section>
+
+    <!-- ===== RECORDS / INSIGHT ===== -->
+    <div class="obs wrap">
+      <section aria-labelledby="rec-h">
+        <p class="eyebrow">Results That Stay With You</p>
+        <h2 class="h2" id="rec-h">記録として、残す</h2>
+        <p class="lead jp">診断結果は、あなたの記録として保存できます。<br>再診するたび、過去の結果が蓄積されていきます。</p>
+        <div class="timeline" aria-hidden="true">
+          <!-- 過去の記録（淡い点）から今（明るい点）へ。観測記録のような細い軸 -->
+          <svg viewBox="0 0 320 44">
+            <line x1="6" y1="16" x2="306" y2="16" stroke="rgba(140,160,220,.22)" stroke-width="1"/>
+            <line x1="6" y1="16" x2="306" y2="16" stroke="url(#tl)" stroke-width="1"/>
+            <defs><linearGradient id="tl" x1="0" x2="1"><stop offset="0" stop-color="#7aa2cf" stop-opacity="0"/><stop offset="1" stop-color="#a8d8f0" stop-opacity=".7"/></linearGradient></defs>
+            <circle cx="40" cy="16" r="2.2" fill="#5d7cab" opacity=".55"/>
+            <circle cx="112" cy="16" r="2.2" fill="#6f8fbf" opacity=".7"/>
+            <circle cx="190" cy="16" r="2.4" fill="#86a8d8" opacity=".85"/>
+            <circle cx="290" cy="16" r="7" fill="none" stroke="#a8d8f0" stroke-opacity=".35" stroke-width="1"/>
+            <circle cx="290" cy="16" r="3.2" fill="#d6ecff"/>
+            <text x="6" y="40">PAST</text>
+            <text x="306" y="40" text-anchor="end" class="now">NOW</text>
+          </svg>
+        </div>
+        <a class="link" href="/mypage.html">診断記録を見る <span class="arw">→</span></a>
+      </section>
+
+      <section class="line-sec" aria-labelledby="line-h">
+        <p class="eyebrow">Stay Connected</p>
+        <h2 class="h2" id="line-h">旅の続きを、静かに受け取る</h2>
+        <p class="lead jp">元素診断の更新や、新しい観測、<br>先行体験の案内などを公式LINEからお届けします。<br>必要なときだけ、静かにお知らせします。</p>
+        <a class="link line-link" href="https://line.me/R/ti/p/@307ttqfu?oat_content=url&amp;ts=09190026#~" target="_blank" rel="noopener"><span class="line-dot" aria-hidden="true"></span>公式LINEを追加する <span class="arw">→</span></a>
+      </section>
+
+      <section aria-labelledby="deep-h">
+        <p class="eyebrow">Deeper Insight</p>
+        <h2 class="h2" id="deep-h">さらに深く、読み解く</h2>
+        <p class="lead jp">診断結果の先では、4つの視点から、あなたをより深く読み解くことができます。</p>
+        <ul class="domains">
+          <li style="--dc:var(--d-p);--w:78%"><span class="pt"></span><span>パーソナリティ</span><span class="ln"></span></li>
+          <li style="--dc:var(--d-s);--w:62%"><span class="pt"></span><span>行動スタイル</span><span class="ln"></span></li>
+          <li style="--dc:var(--d-v);--w:70%"><span class="pt"></span><span>価値観</span><span class="ln"></span></li>
+          <li style="--dc:var(--d-m);--w:54%"><span class="pt"></span><span class="en">MIRROR</span><span class="ln"></span></li>
+        </ul>
+        <a class="link" href="/report_sample.html">解析レポートの例を見る <span class="arw">→</span></a>
+      </section>
+    </div>
+
+    <!-- ===== 最終CTA ===== -->
+    <section class="final wrap">
+      <div class="spark" aria-hidden="true"></div>
+      <p class="copy">まだ見ぬ、自分を知る。</p>
+      <div class="cta-wrap">
+        <a href="/index.html#diagnosis" class="cta">診断をはじめる <span class="en">— Start</span></a>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <p class="footer-copy">元素診断 — An original personality framework inspired by Genshin Impact. For entertainment purposes. © マンデーアクスト / @mondayaxad</p>
+  <div class="footer-links">
+    <a href="/privacy.html">プライバシーポリシー</a>
+    <a href="/terms.html">利用規約</a>
+    <a href="https://x.com/mondayaxad" target="_blank" rel="noopener">お問い合わせ</a>
+  </div>
+</footer>
+
+<script>
+  // 比較用：?nobg で背景画像を外す
+  if (/[?&]nobg\b/.test(location.search)) document.documentElement.classList.add('nobg');
+  // 小さな結晶：現行 renderHeroGems() と同じ配置・同じ元素色・同じカット。サイズと不透明度だけ控えめに。
+  (function () {
+    var EL = { '炎':'#c84a20', '水':'#2a7aaa', '氷':'#4a80c0', '雷':'#9040d0', '風':'#3a8a60', '岩':'#a07830', '草':'#4a8020' };
+    var pos = [
+      {top:'8%',  left:'10%', size:26, op:0.40}, {top:'14%', left:'82%', size:20, op:0.32},
+      {top:'40%', left:'4%',  size:16, op:0.26}, {top:'58%', left:'88%', size:22, op:0.34},
+      {top:'78%', left:'14%', size:18, op:0.28}, {top:'85%', left:'70%', size:15, op:0.26},
+      {top:'28%', left:'92%', size:14, op:0.22}
+    ];
+    var html = '';
+    Object.keys(EL).forEach(function (el, i) {
+      var p = pos[i], c = EL[el], id = 'g' + i;
+      html += '<div class="gem" style="top:' + p.top + ';left:' + p.left + ';opacity:' + p.op + ';transform:scale(' + (p.size / 56).toFixed(2) + ');--gc:' + c + '80">' +
+        '<svg width="56" height="56" viewBox="0 0 56 56"><defs><linearGradient id="' + id + '" x1="0" y1="0" x2="1" y2="1">' +
+        '<stop offset="0%" stop-color="#fff" stop-opacity=".85"/><stop offset="45%" stop-color="' + c + '"/><stop offset="100%" stop-color="' + c + '" stop-opacity=".55"/></linearGradient></defs>' +
+        '<g stroke="#ffffffa0" stroke-width="0.6" stroke-linejoin="round">' +
+        '<polygon points="28,10 36,20 28,24 20,20" fill="url(#' + id + ')"/>' +
+        '<polygon points="20,20 28,24 26,40 15,30" fill="' + c + '" opacity=".88"/>' +
+        '<polygon points="36,20 28,24 30,40 41,30" fill="' + c + '" opacity=".72"/>' +
+        '<polygon points="26,40 30,40 28,46" fill="' + c + '" opacity=".6"/>' +
+        '<polygon points="28,10 36,20 32,17" fill="#fff" opacity=".4"/></g></svg></div>';
+    });
+    document.getElementById('heroGems').innerHTML = html;
+  })();
+</script>
+</body>
+</html>

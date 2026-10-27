@@ -1,0 +1,177 @@
+{
+  "record": "COMPLETE-RC1-IMAGE-PROVENANCE-1.0.0",
+  "recorded_at": "2026-10-08",
+  "scope": "完全解析 RC1（46ページの HTML レポート）で使う画像20点。api/_complete/rc1/assets/ と、同一の写し prototypes/core1_v4_result_driven/assets/。",
+  "declaration": {
+    "declared_by": "倉賀大介（制作者本人）",
+    "declared_at": "2026-10-08",
+    "text": "画像20点は、すべて倉賀大介本人が ChatGPT の画像生成で作成した自作 AI 画像です。文章プロンプトだけで生成しており、原神公式画像・ロゴ・第三者画像・既存画像は入力素材として一切使用していません。",
+    "creation_method": "ChatGPT の画像生成（文章プロンプトのみ）",
+    "input_materials": "なし（原神公式画像・ロゴ・第三者画像・既存画像は入力素材として使用していない）"
+  },
+  "basis": "本人の申告による。この記録は申告とファイル（SHA-256）を結び付けるもので、生成時のプロンプト・生成履歴そのものは保存していない。",
+  "file_facts": "20点とも JPEG（元素 900×900、武器種・国家 420×420）。EXIF・XMP・IPTC・ICC・コメントなし（JFIF の見出しだけ）。重複なし。試作版の写しと SHA-256 は全件一致（2026-10-08 確認）。",
+  "integrity": "画像を差し替えた時は SHA-256 が一致しなくなり、tests/complete_image_provenance.test.js が失敗する。差し替えた画像の出所を確認して、この記録を更新すること。",
+  "images": [
+    {
+      "file": "api/_complete/rc1/assets/elements/pyro.jpg",
+      "prototype_copy": "prototypes/core1_v4_result_driven/assets/elements/pyro.jpg",
+      "subject": "炎",
+      "bytes": 53266,
+      "sha256": "b8c4b195ef9b6ffdf99e84c599af846b7595de33ec5980af0bd14ef7b5fcdc48",
+      "used_on": "元素が1位：P01（表紙）と P13。2位：P14、3位：P15"
+    },
+    {
+      "file": "api/_complete/rc1/assets/elements/hydro.jpg",
+      "prototype_copy": "prototypes/core1_v4_result_driven/assets/elements/hydro.jpg",
+      "subject": "水",
+      "bytes": 56376,
+      "sha256": "aa0624d830cd475cc16c0ee13350802d7c667489e8d6c1e14ab696521e10b063",
+      "used_on": "元素が1位：P01（表紙）と P13。2位：P14、3位：P15"
+    },
+    {
+      "file": "api/_complete/rc1/assets/elements/cryo.jpg",
+      "prototype_copy": "prototypes/core1_v4_result_driven/assets/elements/cryo.jpg",
+      "subject": "氷",
+      "bytes": 49010,
+      "sha256": "3e4ab0efc0b0a27c6acea021b313fa9e75b061a41508cd609b39f669c41b26c7",
+      "used_on": "元素が1位：P01（表紙）と P13。2位：P14、3位：P15"
+    },
+    {
+      "file": "api/_complete/rc1/assets/elements/electro.jpg",
+      "prototype_copy": "prototypes/core1_v4_result_driven/assets/elements/electro.jpg",
+      "subject": "雷",
+      "bytes": 48889,
+      "sha256": "4cced1bbb45ffbefb9b29b10974c97d57ae2fca61902e51a567f9713dc005865",
+      "used_on": "元素が1位：P01（表紙）と P13。2位：P14、3位：P15"
+    },
+    {
+      "file": "api/_complete/rc1/assets/elements/anemo.jpg",
+      "prototype_copy": "prototypes/core1_v4_result_driven/assets/elements/anemo.jpg",
+      "subject": "風",
+      "bytes": 46491,
+      "sha256": "fb0b7b87ecad7a00b3f2bc79da07f77d820cf1b4062e97328c4c66429986521e",
+      "used_on": "元素が1位：P01（表紙）と P13。2位：P14、3位：P15"
+    },
+    {
+      "file": "api/_complete/rc1/assets/elements/geo.jpg",
+      "prototype_copy": "prototypes/core1_v4_result_driven/assets/elements/geo.jpg",
+      "subject": "岩",
+      "bytes": 56628,
+      "sha256": "a1bfc797edc8f703ac94406be92dab62f25d36db450086c2fe798d7cb0897147",
+      "used_on": "元素が1位：P01（表紙）と P13。2位：P14、3位：P15"
+    },
+    {
+      "file": "api/_complete/rc1/assets/elements/dendro.jpg",
+      "prototype_copy": "prototypes/core1_v4_result_driven/assets/elements/dendro.jpg",
+      "subject": "草",
+      "bytes": 40685,
+      "sha256": "0888eb65fdacc8dc2d600d0cd1e9d98d4678df111081b89a91888e621ae0f334",
+      "used_on": "元素が1位：P01（表紙）と P13。2位：P14、3位：P15"
+    },
+    {
+      "file": "api/_complete/rc1/assets/weapons/sword.jpg",
+      "prototype_copy": "prototypes/core1_v4_result_driven/assets/weapons/sword.jpg",
+      "subject": "片手剣",
+      "bytes": 14289,
+      "sha256": "2a0a9b1beaa43f691a5d81ef2cb6d78aafa980c14d62d13558876101557f17a7",
+      "used_on": "武器種が1位：P16、2位：P17、3位：P18"
+    },
+    {
+      "file": "api/_complete/rc1/assets/weapons/claymore.jpg",
+      "prototype_copy": "prototypes/core1_v4_result_driven/assets/weapons/claymore.jpg",
+      "subject": "両手剣",
+      "bytes": 19771,
+      "sha256": "4ca5264877e8398a89f1b43c94a575c105e2bf07ef6ebd4a8dde9b719703201d",
+      "used_on": "武器種が1位：P16、2位：P17、3位：P18"
+    },
+    {
+      "file": "api/_complete/rc1/assets/weapons/polearm.jpg",
+      "prototype_copy": "prototypes/core1_v4_result_driven/assets/weapons/polearm.jpg",
+      "subject": "長柄",
+      "bytes": 15789,
+      "sha256": "8559e93b03d6296107c695ca03e16a5daa3a772082e779a18d7cb554a2d5abd3",
+      "used_on": "武器種が1位：P16、2位：P17、3位：P18"
+    },
+    {
+      "file": "api/_complete/rc1/assets/weapons/catalyst.jpg",
+      "prototype_copy": "prototypes/core1_v4_result_driven/assets/weapons/catalyst.jpg",
+      "subject": "法器",
+      "bytes": 17567,
+      "sha256": "2f3197ce8ebe07d561659d57a463f0d68a7fafef49bfc4d1f69948f92811839c",
+      "used_on": "武器種が1位：P16、2位：P17、3位：P18"
+    },
+    {
+      "file": "api/_complete/rc1/assets/weapons/bow.jpg",
+      "prototype_copy": "prototypes/core1_v4_result_driven/assets/weapons/bow.jpg",
+      "subject": "弓",
+      "bytes": 18035,
+      "sha256": "82567e61cd1840bd6762fb07271fac4100394dc6289803dc6279ce63afef28f6",
+      "used_on": "武器種が1位：P16、2位：P17、3位：P18"
+    },
+    {
+      "file": "api/_complete/rc1/assets/nations/mondstadt.jpg",
+      "prototype_copy": "prototypes/core1_v4_result_driven/assets/nations/mondstadt.jpg",
+      "subject": "モンド",
+      "bytes": 19067,
+      "sha256": "2cd319c2370fa47a491307821ddeb6093445504af7106106f9499b3821acc294",
+      "used_on": "国家が1位：P19、2位：P20、3位：P21（価値観が平坦な場合も表示）"
+    },
+    {
+      "file": "api/_complete/rc1/assets/nations/liyue.jpg",
+      "prototype_copy": "prototypes/core1_v4_result_driven/assets/nations/liyue.jpg",
+      "subject": "璃月",
+      "bytes": 22923,
+      "sha256": "c0e85a1e512d5a5dd248f94b581b691be7b8afa603a380fa55357cf2110d82e8",
+      "used_on": "国家が1位：P19、2位：P20、3位：P21（価値観が平坦な場合も表示）"
+    },
+    {
+      "file": "api/_complete/rc1/assets/nations/inazuma.jpg",
+      "prototype_copy": "prototypes/core1_v4_result_driven/assets/nations/inazuma.jpg",
+      "subject": "稲妻",
+      "bytes": 20163,
+      "sha256": "cdb250345df6672de534dbb81ffc51e704d883fbb5d5daa1f7c97f827886261e",
+      "used_on": "国家が1位：P19、2位：P20、3位：P21（価値観が平坦な場合も表示）"
+    },
+    {
+      "file": "api/_complete/rc1/assets/nations/sumeru.jpg",
+      "prototype_copy": "prototypes/core1_v4_result_driven/assets/nations/sumeru.jpg",
+      "subject": "スメール",
+      "bytes": 18034,
+      "sha256": "89726ae24542d8b20eb90c8b373e0c09a064be47260ee7d1f789abc7f0c35eb8",
+      "used_on": "国家が1位：P19、2位：P20、3位：P21（価値観が平坦な場合も表示）"
+    },
+    {
+      "file": "api/_complete/rc1/assets/nations/fontaine.jpg",
+      "prototype_copy": "prototypes/core1_v4_result_driven/assets/nations/fontaine.jpg",
+      "subject": "フォンテーヌ",
+      "bytes": 17824,
+      "sha256": "318457298fb274f1e7a959cb629050b9486b9753b9b3df88061382bcfb71e4ee",
+      "used_on": "国家が1位：P19、2位：P20、3位：P21（価値観が平坦な場合も表示）"
+    },
+    {
+      "file": "api/_complete/rc1/assets/nations/natlan.jpg",
+      "prototype_copy": "prototypes/core1_v4_result_driven/assets/nations/natlan.jpg",
+      "subject": "ナタ",
+      "bytes": 23839,
+      "sha256": "66ac137b4d7e0e880236f13eb9ece233fc5feac82cf5b24429ea2e7c6afd4867",
+      "used_on": "国家が1位：P19、2位：P20、3位：P21（価値観が平坦な場合も表示）"
+    },
+    {
+      "file": "api/_complete/rc1/assets/nations/snezhnaya.jpg",
+      "prototype_copy": "prototypes/core1_v4_result_driven/assets/nations/snezhnaya.jpg",
+      "subject": "スネージナヤ",
+      "bytes": 29658,
+      "sha256": "b4c78c65f0a37c2d41388fa120ae5a357b9fcd51c7be293fa937cc325acf7d51",
+      "used_on": "国家が1位：P19、2位：P20、3位：P21（価値観が平坦な場合も表示）"
+    },
+    {
+      "file": "api/_complete/rc1/assets/nations/nodkrai.jpg",
+      "prototype_copy": "prototypes/core1_v4_result_driven/assets/nations/nodkrai.jpg",
+      "subject": "ナドクライ",
+      "bytes": 30156,
+      "sha256": "78407d173867cb92a4cd96f1c068f41fa5236c2355b65852ef34b5096375b4cf",
+      "used_on": "国家が1位：P19、2位：P20、3位：P21（価値観が平坦な場合も表示）"
+    }
+  ]
+}

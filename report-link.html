@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<script src="/js/ga.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<title>購入したレポート — 元素診断</title>
+<style>
+  :root { --bg:#07070f; --panel:#0e0b18; --line:#241d3a; --fg:#e6e2f2; --sub:#9a92b4; --dim:#8a83a3; --accent:#b98af0; --gold:#d6bd84; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font-family:'Noto Serif JP','Hiragino Mincho ProN',serif; line-height:1.9; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:520px; margin:0 auto; padding:40px 16px 72px; }
+  .eyebrow { font-size:10.5px; letter-spacing:.32em; color:var(--accent); margin:0 0 8px; }
+  h1 { font-size:20px; font-weight:600; letter-spacing:.08em; margin:0 0 6px; }
+  .lead { font-size:12.5px; color:var(--sub); margin:0 0 20px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:18px 18px 16px; margin-bottom:16px; overflow-wrap:anywhere; }
+  .facts { display:grid; grid-template-columns:auto 1fr; gap:2px 12px; font-size:12.5px; margin:0 0 12px; }
+  .facts dt { color:var(--dim); } .facts dd { margin:0; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:8px 18px; border-radius:6px;
+    border:1px solid color-mix(in srgb, var(--accent) 55%, transparent); background:rgba(185,138,240,.12); color:var(--fg);
+    font-family:inherit; font-size:13px; letter-spacing:.06em; cursor:pointer; text-decoration:none; }
+  .btn.main { width:100%; border:0; color:#fff; background:linear-gradient(120deg,#5b78c8 0%,#8a5fc0 50%,#c9a860 100%); }
+  .btn.sub { background:transparent; border-color:var(--line); color:var(--sub); font-size:12.5px; }
+  .btn[disabled] { opacity:.55; cursor:default; }
+  .btn:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+  .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
+  .actions .btn.sub { flex:1 1 12em; }
+  .note { font-size:11.5px; color:var(--dim); margin:8px 0 0; }
+  .state { font-size:12.5px; color:var(--sub); margin:0 0 10px; }
+  .msg { font-size:12px; color:#d6a8b8; margin:8px 0 0; }
+  .msg:empty { display:none; }
+  .spinner { display:inline-block; width:12px; height:12px; border:1.5px solid #3a3058; border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; vertical-align:-2px; margin-right:6px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation:none; } }
+  .links { margin-top:28px; font-size:12px; color:var(--sub); }
+  .links a { color:var(--sub); }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <p class="eyebrow">ELEMENT DIAGNOSIS</p>
+  <h1 id="rlTitle">レポートを開いています</h1>
+  <p class="lead" id="rlLead" hidden>このページのリンク（URL）が、購入したレポートの入口です。期限はありません。</p>
+  <div id="rlBox" aria-live="polite"><p class="note"><span class="spinner" aria-hidden="true"></span>確認しています…</p></div>
+  <p class="links"><a href="/">元素診断のトップへ</a> ・ <a href="/mypage.html">マイページ</a></p>
+</main>
+<script src="/js/report-purchase.js"></script>
+<script>
+(function () {
+  'use strict';
+  var B = window.EdBuy;
+  var box = document.getElementById('rlBox');
+  var NAMES = { analysis: '解析レポート', complete: '完全解析' };
+  // 固有リンクの秘密値：URL のフラグメント（#t=）。
+  //   完全解析の画面から戻った時（#v=<閲覧トークン>）は、このタブで「その閲覧 URL を開いた固有リンク」だけを使う
+  //   （同じタブで別のレポートを開いていても、取り違えない）
+  var VIA_KEY = 'ed_report_via_link_v1';
+  function viaLink() { try { var v = JSON.parse(sessionStorage.getItem(VIA_KEY) || 'null'); return v && /^[A-Za-z0-9_-]{43}$/.test(String(v.t || '')) && typeof v.url === 'string' ? v : null; } catch (e) { return null; } }
+  var fromHash = B.readFragment('t');
+  var viewHint = B.readFragment('v') || (/^[A-Za-z0-9_-]{1,2048}$/.test(new URLSearchParams(location.search).get('v') || '') ? new URLSearchParams(location.search).get('v') : null);
+  var via = viaLink();
+  var token = /^[A-Za-z0-9_-]{43}$/.test(String(fromHash || '')) ? fromHash
+    : (viewHint && via && via.url.indexOf('view=' + decodeURIComponent(viewHint)) >= 0 ? via.t : null);
+  var wantRegister = /(?:^#|&)register(?:&|$)/.test(location.hash || '');
+  if (!token) {
+    document.getElementById('rlTitle').textContent = 'レポートを開く';
+    box.innerHTML = '<div class="card"><p class="state">購入したレポートのリンク（URL）から開いてください。</p>'
+      + '<p class="note">リンクは、お支払いの後に届いた請求書のメールにも記載しています。マイページに登録したレポートは、<a href="/mypage.html">マイページ</a>から開けます。</p></div>';
+    return;
+  }
+  B.rememberLink(token);
+  // 秘密値を URL に残す（ブックマーク・コピーできるように）。#register の時だけ #t= の形に戻す
+  if (!fromHash || location.search) { try { history.replaceState(null, '', '/report-link#t=' + token); } catch (e) { /* そのまま */ } }
+  if (wantRegister) { B.startRegister(token, 'report_footer'); return; }
+  // マイページから申し込んで支払いから戻った：このレポートをマイページに登録して戻る（申し込んだ本人のログインのまま。確かめを挟まない）
+  //   （印はこの購入の固有リンクの目印と組。違う固有リンク〔人から受け取ったリンクなど〕では登録に進まない）
+  // 同じタブで別の固有リンクに変えた（# だけの移動）：読み込み直して、そのリンクで開き直す
+  window.addEventListener('hashchange', function () { if (B.readFragment('t') !== token) location.reload(); });
+  (fromHash ? B.takeBuyFromMypage(token) : Promise.resolve(false)).then(function (mine) {
+    if (mine) {
+      B.startRegister(token, 'mypage_buy', { stay: true });
+      try { sessionStorage.setItem('ed_register_login_v1', String(B.registerIntentAt())); } catch (e) { /* 印が無ければ、マイページで確かめる */ }
+      location.replace('/mypage.html');
+      return;
+    }
+    load();
+  });
+
+  var polls = 0;
+  function factsHtml(b) {
+    var s = b.summary || {};
+    var rows = [];
+    if (b.purchasedOn) rows.push(['購入日', b.purchasedOn]);
+    if (s.diagnosedOn) rows.push(['診断日', s.diagnosedOn]);
+    if (s.element) rows.push(['元素', s.element]);
+    if (s.weapon) rows.push(['武器', s.weapon]);
+    if (s.nation) rows.push(['国家', s.nation]);
+    if (s.mirror) rows.push(['MIRROR', s.mirror]);
+    return rows.length ? '<dl class="facts">' + rows.map(function (r) { return '<dt>' + B.esc(r[0]) + '</dt><dd>' + B.esc(r[1]) + '</dd>'; }).join('') + '</dl>' : '';
+  }
+  function toolsHtml() {
+    return '<div class="actions"><button type="button" class="btn sub" data-copy>このリンクをコピー</button>'
+      + '<button type="button" class="btn sub" data-register>マイページに登録する</button></div>'
+      + '<p class="msg" data-msg role="status"></p>';
+  }
+  function bindTools() {
+    var msg = box.querySelector('[data-msg]');
+    var c = box.querySelector('[data-copy]');
+    if (c) c.onclick = function () {
+      B.copyText(B.linkUrl(token)).then(function (ok) {
+        if (msg) msg.textContent = ok ? 'リンクをコピーしました。大切に保管してください。' : 'コピーできませんでした。アドレスバーの URL を控えてください。';
+      });
+      B.track('report_link_copy', { source: 'report_link' });
+    };
+    var r = box.querySelector('[data-register]');
+    if (r) r.onclick = function () { r.disabled = true; B.startRegister(token, 'report_link'); };
+  }
+  // 読める状態：中継の画面を出さず、そのままレポートを開く（固有リンクのアドレスはレポートの画面が引き継ぐ）
+  function readable(b) { return b.state === 'active' && (b.product !== 'complete' || (b.report && b.report.status === 'ready')); }
+  function openNow(b) {
+    B.openLink(token, true).then(function (r) {
+      if (r.ok && r.body && typeof r.body.url === 'string' && r.body.url.charAt(0) === '/') {
+        B.track(b.product === 'complete' ? 'complete_report_open' : 'analysis_report_open', { source: 'report_link' });
+        // この固有リンクから開いた印：開いた閲覧 URL と組で控える（レポートの画面は、自分の URL と一致した時だけ、この固有リンクを使う）
+        try { sessionStorage.setItem(VIA_KEY, JSON.stringify({ t: token, url: r.body.url })); } catch (e) { /* 下の # で渡す */ }
+        // 解析レポート：このタブに控えを置けない設定でも固有リンクを使えるよう、# にも付ける（サーバーへは送られない）
+        //   完全解析は、閲覧用 URL（5分）のあとに # で固有リンクを付ける（アドレスをコピーしても、期限が切れたら入口へ戻り、この固有リンクで開き直せる）
+        location.replace(r.body.url + '#t=' + token);
+        return;
+      }
+      render(r.ok && r.body ? r.body : b, true); // 開けなかった：最新の状態（返金など）で示す
+    });
+  }
+  // 購入の計測（GA4）：支払いの直後に開いた時だけ・このブラウザで1回（再読み込みで重ねない）
+  function trackPurchase(b) {
+    var c = b && b.conversion;
+    if (!c || !/^[0-9a-f]{20}$/.test(String(c.transactionId || '')) || typeof window.gtag !== 'function') return;
+    var key = 'ed_conv_' + c.transactionId;
+    try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch (e) { /* 保存できない時も1回送る */ }
+    window.gtag('event', 'purchase', { transaction_id: c.transactionId, value: c.value, currency: 'JPY', product: b.product });
+  }
+  function render(b, openFailed) {
+    trackPurchase(b);
+    if (readable(b) && !openFailed) { openNow(b); return; }
+    var name = NAMES[b.product] || 'レポート';
+    document.getElementById('rlTitle').textContent = name;
+    document.getElementById('rlLead').hidden = false;
+    // 状態が変わっていなければ描き直さない（コピーの後のフォーカス・「コピーしました」を消さない。読み上げを繰り返さない）
+    var sig = [b.product, b.state, b.report && b.report.status, b.report && b.report.regenerate, !!openFailed].join('|');
+    if (sig === lastSig && box.querySelector('.card')) { schedule(b); return; }
+    lastSig = sig;
+    var html = '<div class="card">' + factsHtml(b);
+    if (b.state === 'active') {
+      if (b.product === 'complete' && (!b.report || b.report.status !== 'ready')) {
+        var failed = b.report && b.report.status === 'failed';
+        if (b.report && b.report.status === 'revoked') html += '<p class="state">この完全解析は、現在ご覧いただけません。ご不明点は <a href="mailto:yaduns0522@gmail.com">yaduns0522@gmail.com</a> までご連絡ください。</p>';
+        else html += failed
+          ? '<p class="state">完全解析を作成できませんでした。</p>' + (b.report.regenerate === 'available'
+            ? '<button type="button" class="btn main" data-regenerate>もう一度作成する</button>'
+            : '<p class="note">運営者が確認して作成し直します。お手数ですが <a href="mailto:yaduns0522@gmail.com">yaduns0522@gmail.com</a> までご連絡ください。</p>')
+          : '<p class="state"><span class="spinner" aria-hidden="true"></span>完全解析を作成しています。数分かかることがあります。</p>';
+      } else {
+        html += '<button type="button" class="btn main" data-open>' + name + 'を読む</button>';
+      }
+      html += toolsHtml();
+    } else if (b.state === 'pending') {
+      html += '<p class="state"><span class="spinner" aria-hidden="true"></span>お支払いを確認しています。</p>';
+    } else if (b.state === 'closed') {
+      html += '<p class="state">お支払いが完了していないため、このレポートはまだありません。</p>';
+    } else {
+      var why = b.state === 'refunded' ? '返金のため' : b.state === 'suspended' ? 'お支払いの確認中のため' : '停止されているため';
+      html += '<p class="state">このレポートは、' + why + '現在ご覧いただけません。</p>'
+        + '<p class="note">端末に保存したPDFは、そのまま残ります。ご不明点は <a href="mailto:yaduns0522@gmail.com">yaduns0522@gmail.com</a> までご連絡ください。</p>';
+    }
+    html += '</div>';
+    box.innerHTML = html;
+    bindTools();
+    if (openFailed && readable(b)) { var fm = box.querySelector('[data-msg]'); if (fm) fm.textContent = 'レポートを開けませんでした。時間をおいて、もう一度お試しください。'; }
+    var open = box.querySelector('[data-open]');
+    if (open) open.onclick = function () {
+      open.disabled = true;
+      B.openLink(token, true).then(function (r) {
+        if (r.ok && r.body && typeof r.body.url === 'string' && r.body.url.charAt(0) === '/') {
+          B.track(b.product === 'complete' ? 'complete_report_open' : 'analysis_report_open', { source: 'report_link' });
+          location.assign(r.body.url + '#t=' + token);
+          return;
+        }
+        open.disabled = false;
+        var m = box.querySelector('[data-msg]');
+        if (m) m.textContent = 'レポートを開けませんでした。時間をおいて、もう一度お試しください。';
+      });
+    };
+    var regen = box.querySelector('[data-regenerate]');
+    if (regen) regen.onclick = function () {
+      regen.disabled = true;
+      B.call('link-regenerate', { token: token }).then(function () { setTimeout(load, 1500); });
+    };
+    schedule(b);
+  }
+  var lastSig = null;
+  function schedule(b) {
+    var waiting = b.state === 'pending' || (b.state === 'active' && b.product === 'complete' && b.report && b.report.status === 'generating');
+    if (waiting && polls < 60) { polls += 1; setTimeout(load, polls <= 6 ? 5000 : 15000); }
+    else if (waiting && !box.querySelector('[data-slow]')) box.querySelector('.card').insertAdjacentHTML('beforeend', '<p class="note" data-slow>確認に時間がかかっています。少し待ってから、このページを読み込み直してください。</p>');
+  }
+  function load() {
+    B.openLink(token, false).then(function (r) {
+      if (r.ok) { render(r.body); return; }
+      if (r.status === 404 && r.body && r.body.error === 'link_not_found') {
+        box.innerHTML = '<div class="card"><p class="state">このリンクでは、レポートを開けませんでした。新しいリンクが発行されたか、URLの一部が欠けているのかもしれません。</p>'
+          + '<p class="note">新しいリンクをお持ちの場合は、そちらを開いてください。ご不明点は <a href="mailto:yaduns0522@gmail.com">yaduns0522@gmail.com</a> までご連絡ください。</p></div>';
+        return;
+      }
+      box.innerHTML = '<div class="card"><p class="state">いまは状態を確かめられませんでした。少し時間をおいて、もう一度お試しください。</p><button type="button" class="btn sub" data-retry>もう一度確認する</button></div>';
+      box.querySelector('[data-retry]').onclick = load;
+    });
+  }
+})();
+</script>
+<!-- 共通フッター：特商法・利用規約・プライバシーポリシーへのリンクは、各ページの最下部のここだけに置く（購入ボタンの周辺には出さない） -->
+<footer class="ed-legal-foot" style="margin:48px auto 0;padding:22px 16px calc(22px + env(safe-area-inset-bottom));text-align:center;border-top:1px solid rgba(150,180,240,.12)">
+  <style>@media print{.ed-legal-foot{display:none!important}}.ed-legal-foot a:focus-visible{outline:2px solid #9cc4f0;outline-offset:2px}</style>
+  <nav aria-label="法務情報" style="display:flex;gap:4px 20px;justify-content:center;flex-wrap:wrap">
+    <a href="/tokushoho" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em;padding:8px 2px">特定商取引法に基づく表記</a>
+    <a href="/privacy.html" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em;padding:8px 2px">プライバシーポリシー</a>
+    <a href="/terms.html" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em;padding:8px 2px">利用規約</a>
+  </nav>
+</footer>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<script src="/js/ga.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<title>ご購入の確認 — 元素診断</title>
+<style>
+  :root { --bg:#07070f; --panel:#0e0b18; --line:#241d3a; --fg:#e6e2f2; --sub:#9a92b4; --dim:#8a83a3; --accent:#b98af0; --gold:#d6bd84; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font-family:'Noto Serif JP','Hiragino Mincho ProN',serif; line-height:1.9; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:520px; margin:0 auto; padding:40px 16px 72px; }
+  .eyebrow { font-size:10.5px; letter-spacing:.32em; color:var(--accent); margin:0 0 8px; }
+  h1 { font-size:20px; font-weight:600; letter-spacing:.08em; margin:0 0 6px; }
+  .lead { font-size:12.5px; color:var(--sub); margin:0 0 24px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:18px 18px 16px; margin-bottom:16px; }
+  .row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 0; border-bottom:1px dashed var(--line); }
+  .row:last-of-type { border-bottom:none; }
+  .row-name { font-size:13.5px; }
+  .row-state { font-size:11.5px; color:var(--sub); }
+  .btn { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:8px 16px; border-radius:4px;
+    border:1px solid color-mix(in srgb, var(--accent) 55%, transparent); background:rgba(185,138,240,.10); color:var(--fg);
+    font-family:inherit; font-size:12.5px; letter-spacing:.08em; cursor:pointer; text-decoration:none; white-space:nowrap; }
+  .btn[disabled] { opacity:.55; cursor:default; }
+  .btn:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+  .claim { margin-top:14px; padding-top:12px; border-top:1px solid var(--line); }
+  .claim .btn { background:transparent; border-color:var(--line); color:var(--sub); font-size:12px; }
+  .note { font-size:11.5px; color:var(--dim); margin:6px 0 0; }
+  .pc-at { margin:0 0 10px; letter-spacing:.04em; }
+  .msg { font-size:12px; color:#d6a8b8; margin:8px 0 0; min-height:0; }
+  .msg:empty { display:none; }
+  .spinner { display:inline-block; width:12px; height:12px; border:1.5px solid #3a3058; border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; vertical-align:-2px; margin-right:6px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  /* 動きを減らす設定：回転を止める（「確認しています」の文言は残る） */
+  @media (prefers-reduced-motion: reduce) { .spinner { animation:none; } }
+  .links { margin-top:28px; font-size:12px; color:var(--sub); }
+  .links a { color:var(--sub); }
+  @media (max-width:360px) { .row { flex-wrap:wrap; } .row .btn { width:100%; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <p class="eyebrow">ELEMENT DIAGNOSIS</p>
+  <h1 id="pcTitle">ご購入の確認</h1>
+  <p class="lead" id="pcLead">お支払いの状況を確認しています。</p>
+  <div id="pcList" aria-live="polite"><p class="note"><span class="spinner" aria-hidden="true"></span>確認しています…</p></div>
+  <p class="links"><a id="pcResultLink" href="/" hidden>診断結果に戻る</a><span id="pcResultSep" hidden> ・ </span><a href="/">元素診断のトップへ</a> ・ <a href="/mypage.html">マイページ</a></p>
+</main>
+<script src="/js/report-purchase.js"></script>
+<script>
+// 購入完了ページ（complete_13）：購入した商品を受け取るための画面。別の商品の申込は出さない。
+//   決済から戻った時（?cs=<Checkout Session の ID>）：今の購入のレポートのリンク（/report-link#t=）へそのまま進む
+//   （支払いの確認・完全解析の作成の状態・コピー・登録は、リンクの入口のページが行う）。
+//   それ以外：この端末で購入したレポート（HttpOnly の Cookie の秘密値）を、Stripe に支払いを確かめてから示す。
+//   支払い済み：レポートを開く・固有リンクをコピー・PDF 保存の案内・マイページに登録する。完全解析は作成の状態も。
+(function () {
+  'use strict';
+  var B = window.EdBuy;
+  var list = document.getElementById('pcList');
+  var canceled = /(?:^|[?&])status=canceled(?:&|$)/.test(location.search);
+  var csMatch = /(?:^|[?&])cs=(cs_(?:test|live)_[A-Za-z0-9_]{8,200})(?:&|$)/.exec(location.search);
+  var currentSession = csMatch ? csMatch[1] : null;
+  var NAMES = { analysis: '解析レポート', complete: '完全解析' };
+  var tries = 0;
+  if (canceled) {
+    try { sessionStorage.removeItem('ed_buy_from_mypage_v1'); } catch (e) { /* noop */ }
+    document.getElementById('pcTitle').textContent = 'お手続きを中止しました';
+    document.getElementById('pcLead').textContent = 'お支払いは行われていません。もう一度お申し込みいただけます。';
+    var back = document.getElementById('pcResultLink');
+    // 戻り先：この端末で申込を始めた画面。分からない時は、この端末で最後に開いた診断結果の固有リンク（/result#r=）
+    var last = null;
+    try { last = localStorage.getItem('ed_last_result_v1'); } catch (e) { last = null; }
+    var rp = B.returnPath();
+    back.href = rp !== '/' ? rp : (/^[A-Za-z0-9_-]{43}$/.test(String(last || '')) ? '/result#r=' + last : '/');
+    back.textContent = 'お申し込みの画面に戻る';
+    back.hidden = false;
+    document.getElementById('pcResultSep').hidden = false;
+  }
+  // 戻り先の印は URL から消す（再読み込みで繰り返さない）
+  if (location.search) { try { history.replaceState(null, '', location.pathname); } catch (e) { /* そのまま */ } }
+
+  function itemHtml(p, i) {
+    var name = NAMES[p.product] || 'レポート';
+    var head = '<p class="row-name">' + name + '</p>' + (p.purchasedOn ? '<p class="note pc-at">購入日 ' + B.esc(p.purchasedOn) + '</p>' : '');
+    if (p.state === 'pending') return '<div class="card">' + head + '<p class="row-state"><span class="spinner" aria-hidden="true"></span>お支払いを確認しています。</p></div>';
+    if (p.state === 'active' && !p.link) {
+      return '<div class="card">' + head + '<p class="row-state">このレポートのリンクは新しいものに変わっています。新しいリンク（または Stripe から届いた請求書のメール）からお開きください。</p></div>';
+    }
+    if (p.state !== 'active' || !p.link) {
+      return '<div class="card">' + head + '<p class="row-state">このレポートは、返金や停止のため、現在ご覧いただけません。端末に保存したPDFはそのまま残ります。</p></div>';
+    }
+    var report = '';
+    if (p.product === 'complete' && p.report && p.report.status !== 'ready') {
+      report = p.report.status === 'failed'
+        ? '<p class="row-state">完全解析を作成できませんでした。レポートの入口から作り直せます。</p>'
+        : '<p class="row-state"><span class="spinner" aria-hidden="true"></span>完全解析を作成しています。数分かかることがあります。</p>';
+    }
+    return '<div class="card" data-item="' + i + '">' + head + report
+      + '<a class="btn" style="width:100%;margin:6px 0 0" href="/report-link#t=' + p.link + '" data-open>' + name + 'を開く</a>'
+      + '<div class="claim"><button type="button" class="btn" data-copy>リンクをコピー</button> <button type="button" class="btn" data-register>マイページに登録する</button></div>'
+      + '<p class="note">このページのボタンで開くレポートのリンク（URL）が、期限のない入口です。必ずコピーして保管してください。</p>'
+      + '<p class="msg" data-msg role="status"></p>' + '</div>';
+  }
+  var lastSig = null;
+  function render(purchases) {
+    if (canceled) { list.innerHTML = ''; return; } // 中止の画面には、ほかの購入を並べない（中止した注文を買ったように見せない）
+    // 今の購入：そのレポートのリンクの入口へ進む（このページを介さない）
+    var cur = purchases.filter(function (p) { return p.current && p.link; })[0];
+    if (cur) {
+      B.rememberLink(cur.link);
+      B.track('report_link_open', { product: cur.product, source: 'purchase_complete' });
+      location.replace('/report-link#t=' + cur.link);
+      return;
+    }
+    // 閉じた・期限切れの決済と、支払われていない決済（途中でやめた決済画面）は出さない
+    var shown = purchases.filter(function (p) { return p.state !== 'closed' && p.state !== 'pending'; });
+    if (!shown.length) {
+      if (canceled) { list.innerHTML = ''; return; }
+      document.getElementById('pcLead').textContent = '';
+      list.innerHTML = '<div class="card"><p class="row-name">この端末では、ご購入を確認できませんでした。</p>'
+        + '<p class="note">購入したときと同じ端末・ブラウザで開いてください。購入後にコピーしたレポートのリンク（URL）からも開けます。</p>'
+        + '<p class="note">リンクを紛失された場合は、Stripe から届いた請求書のメールをご確認ください。見つからない場合は、<a href="mailto:yaduns0522@gmail.com">yaduns0522@gmail.com</a> までご連絡ください。</p>'
+        + '</div>';
+      return;
+    }
+    if (!canceled) {
+      document.getElementById('pcTitle').textContent = 'ご購入ありがとうございます';
+      document.getElementById('pcLead').textContent = 'レポートを開き、リンクを控えておいてください。';
+    }
+    // 状態が変わっていなければ描き直さない（コピーの後のフォーカス・「コピーしました」を消さない）
+    var sig = shown.map(function (p) { return [p.product, p.state, p.report && p.report.status, !!p.link].join(':'); }).join('|');
+    if (sig !== lastSig || !list.querySelector('[data-item]')) {
+    lastSig = sig;
+    list.innerHTML = shown.map(itemHtml).join('');
+    list.querySelectorAll('[data-item]').forEach(function (el) {
+      var p = shown[Number(el.getAttribute('data-item'))];
+      var msg = el.querySelector('[data-msg]');
+      el.querySelector('[data-open]').addEventListener('click', function () { B.rememberLink(p.link); B.track('report_link_open', { product: p.product, source: 'purchase_complete' }); });
+      el.querySelector('[data-copy]').onclick = function () {
+        B.copyText(B.linkUrl(p.link)).then(function (ok) { msg.textContent = ok ? 'リンクをコピーしました。大切に保管してください。' : 'コピーできませんでした。「開く」で開いたページの URL を控えてください。'; });
+      };
+      el.querySelector('[data-register]').onclick = function (e) { e.target.disabled = true; B.startRegister(p.link, 'purchase_complete'); };
+    });
+    }
+    var waiting = shown.some(function (p) { return p.state === 'active' && p.product === 'complete' && p.report && p.report.status === 'generating'; });
+    if (waiting) {
+      if (tries < 40) { tries += 1; setTimeout(load, tries < 6 ? 3000 : 15000); }
+      else list.insertAdjacentHTML('beforeend', '<p class="note">確認に時間がかかっています。少し待ってから、このページを読み込み直してください。</p>');
+    }
+  }
+  function load() {
+    B.call('deliveries', currentSession ? { session: currentSession } : {}).then(function (r) {
+      if (!r.ok) {
+        document.getElementById('pcLead').textContent = '';
+        list.innerHTML = '<div class="card"><p class="note">いまは購入の状況を確かめられませんでした。少し時間をおいて、もう一度お試しください。</p><button type="button" class="btn" data-retry>もう一度確認する</button></div>';
+        list.querySelector('[data-retry]').onclick = function () { tries = 0; load(); };
+        return;
+      }
+      if (tries === 0) B.track('checkout_return', { state: canceled ? 'canceled' : 'returned' });
+      render(r.body.purchases || []);
+    });
+  }
+  window.addEventListener('pageshow', function (e) { if (e.persisted && !canceled) { tries = 0; load(); } });
+  if (!canceled) load(); // 中止の画面では、ほかの購入を並べないので問い合わせない
+})();
+</script>
+<!-- 共通フッター：特商法・利用規約・プライバシーポリシーへのリンクは、各ページの最下部のここだけに置く（購入ボタンの周辺には出さない） -->
+<footer class="ed-legal-foot" style="margin:48px auto 0;padding:22px 16px calc(22px + env(safe-area-inset-bottom));text-align:center;border-top:1px solid rgba(150,180,240,.12)">
+  <style>@media print{.ed-legal-foot{display:none!important}}.ed-legal-foot a:focus-visible{outline:2px solid #9cc4f0;outline-offset:2px}</style>
+  <nav aria-label="法務情報" style="display:flex;gap:4px 20px;justify-content:center;flex-wrap:wrap">
+    <a href="/tokushoho" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em;padding:8px 2px">特定商取引法に基づく表記</a>
+    <a href="/privacy.html" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em;padding:8px 2px">プライバシーポリシー</a>
+    <a href="/terms.html" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em;padding:8px 2px">利用規約</a>
+  </nav>
+</footer>
+</body>
+</html>

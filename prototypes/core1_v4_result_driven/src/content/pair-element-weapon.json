@@ -1,0 +1,853 @@
+{
+ "version": "CORE1-PAIR-EW-1.0.0",
+ "review_status": "editorial_reviewed_v1",
+ "relation_labels": {
+  "alignment": "一致",
+  "complement": "補完",
+  "tension": "緊張",
+  "conditional": "条件付き"
+ },
+ "relation_rule": "既定関係は辞書の編集判断。表示ラベルは本人の根拠軸がカテゴリの向きと一致する割合で確定する（CORE1-PAIR-RELATION-0.1.0）。",
+ "items": {
+  "炎×片手剣": {
+   "pair_id": "ELEMENT.炎×WEAPON.片手剣",
+   "a": "炎",
+   "b": "片手剣",
+   "default_relation": "complement",
+   "summary": "熱を起こし、相手に合わせて配る。",
+   "together": "炎の熱量で場を動かし、片手剣の調整で一人ひとりの歩幅に合わせて進める組み合わせです。勢いが独走にならず、周りを巻き込みながら前へ出られます。",
+   "tension": "熱が強い日には合わせる手間を省きたくなり、逆に合わせすぎると、始めた勢いが薄まることがあります。",
+   "works_when": "始める合図は自分が出し、進め方は相手に合わせて調整できている時。",
+   "friction_when": "全員に合わせようとして、始めた熱が途中で散ってしまう時。",
+   "scene_templates": [
+    "新しい取り組みを提案し、メンバーごとに関わり方を変えて声をかける。",
+    "予定変更の日、まず自分が動き出し、周りの都合に合わせて段取りを組み直す。"
+   ],
+   "observation_question": "「今日の熱は、相手の歩幅に届いていたか」",
+   "shared_themes": [
+    "熱を起こし、相手に合わせて配る。"
+   ],
+   "tension_themes": [
+    "熱が強い日には合わせる手間を省きたくなり、逆に合わせすぎると、始めた勢いが薄まることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "炎×両手剣": {
+   "pair_id": "ELEMENT.炎×WEAPON.両手剣",
+   "a": "炎",
+   "b": "両手剣",
+   "default_relation": "alignment",
+   "summary": "熱量と決断が、同じ「前へ」を指す。",
+   "together": "炎の始動と両手剣の決断は、どちらも停滞を破って前へ進む方向にあります。迷う場面で最初に動き、選択肢を絞って一気に進められます。",
+   "tension": "同じ方向に強く働くぶん、立ち止まって確かめる工程が抜けやすくなります。",
+   "works_when": "進む方向が決まり、確かめる時点も一つ置かれている時。",
+   "friction_when": "勢いと断定が重なり、周りが意見を言う前に決まってしまう時。",
+   "scene_templates": [
+    "止まっていた案件で、自分から方針を出して初日に着手する。",
+    "緊急時に、迷わず役割を割り振って動き出す。"
+   ],
+   "observation_question": "「速く決めたことのうち、確かめ直すべきものはどれか」",
+   "shared_themes": [
+    "熱量と決断が、同じ「前へ」を指す。"
+   ],
+   "tension_themes": [
+    "同じ方向に強く働くぶん、立ち止まって確かめる工程が抜けやすくなります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "炎×長柄": {
+   "pair_id": "ELEMENT.炎×WEAPON.長柄",
+   "a": "炎",
+   "b": "長柄",
+   "default_relation": "conditional",
+   "summary": "始める熱を、続ける力が支える。",
+   "together": "炎が場を動かし、長柄が動き出したものを最後まで支え続けます。始めて終わりではなく、始めたことを長く持たせる組み合わせです。",
+   "tension": "始めることが多いほど支え続ける役割も増え、抱える範囲が広がりやすくなります。",
+   "works_when": "始めるものの数を絞り、支える範囲と終わりが決まっている時。",
+   "friction_when": "次々に始めたものを、すべて自分で支え続けようとする時。",
+   "scene_templates": [
+    "立ち上げた企画を、軌道に乗るまで定例で見守り続ける。",
+    "自分が始めた取り組みの引き継ぎ資料を作り、支える役割を次の人へ渡す。"
+   ],
+   "observation_question": "「始めたもののうち、支え続けるのはどれか」",
+   "shared_themes": [
+    "始める熱を、続ける力が支える。"
+   ],
+   "tension_themes": [
+    "始めることが多いほど支え続ける役割も増え、抱える範囲が広がりやすくなります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "炎×法器": {
+   "pair_id": "ELEMENT.炎×WEAPON.法器",
+   "a": "炎",
+   "b": "法器",
+   "default_relation": "complement",
+   "summary": "熱を、言葉と仕組みに変えて届ける。",
+   "together": "炎の熱量が動き出すきっかけを作り、法器の設計がその熱を言葉や仕組みとして残します。勢いだけで終わらず、他の人も同じ方向へ動ける形になります。",
+   "tension": "早く動きたい炎と、整えてから出したい法器の間で、速さと精度の取り合いが起こることがあります。",
+   "works_when": "動きながら、要点だけを短く言葉にして共有できている時。",
+   "friction_when": "熱で走り出した後に説明や仕組みが追いつかず、周りが置いていかれる時。",
+   "scene_templates": [
+    "新しい提案を口頭で始め、翌日には一枚の図にして共有する。",
+    "勢いで進めた試作の手順を、後から誰でも再現できる形に書き残す。"
+   ],
+   "observation_question": "「熱を、誰かが使える言葉に変えられたか」",
+   "shared_themes": [
+    "熱を、言葉と仕組みに変えて届ける。"
+   ],
+   "tension_themes": [
+    "早く動きたい炎と、整えてから出したい法器の間で、速さと精度の取り合いが起こることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "炎×弓": {
+   "pair_id": "ELEMENT.炎×WEAPON.弓",
+   "a": "炎",
+   "b": "弓",
+   "default_relation": "tension",
+   "summary": "前へ出る熱と、距離を取る焦点。",
+   "together": "炎は場へ飛び込んで熱を伝え、弓は距離を取って一点を見定めます。向きは違いますが、選んだ一点へ熱を集中できると、大きな推進力になります。",
+   "tension": "飛び込みたい気持ちと見極めたい姿勢がぶつかり、動き出す時機に迷うことがあります。",
+   "works_when": "先に狙う一点を決め、そこにだけ熱を注げている時。",
+   "friction_when": "狙いが定まらないまま熱だけが先に出て、力が散ってしまう時。",
+   "scene_templates": [
+    "多くの課題の中から一つを選び、その日はそこにだけ力を注ぐ。",
+    "会議で全体を見渡してから、最も効く一言を熱を込めて伝える。"
+   ],
+   "observation_question": "「今日の熱は、選んだ一点に向いていたか」",
+   "shared_themes": [
+    "前へ出る熱と、距離を取る焦点。"
+   ],
+   "tension_themes": [
+    "飛び込みたい気持ちと見極めたい姿勢がぶつかり、動き出す時機に迷うことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "水×片手剣": {
+   "pair_id": "ELEMENT.水×WEAPON.片手剣",
+   "a": "水",
+   "b": "片手剣",
+   "default_relation": "alignment",
+   "summary": "受け取ったものに合わせて、やり方を整える。",
+   "together": "水が相手の事情を受け取り、片手剣がそれに合わせて進め方を調整します。受け取ることと合わせることが同じ方向を指し、相手にとって動きやすい形を作れます。",
+   "tension": "どちらも相手に寄り添う力なので、自分の判断や境界が後回しになりやすくなります。",
+   "works_when": "合わせる範囲と、自分が譲れない線の両方が決まっている時。",
+   "friction_when": "受け取ったものすべてに合わせようとして、自分の判断が見えなくなる時。",
+   "scene_templates": [
+    "相手の事情を聞いた上で、その人が動きやすい手順に組み替える。",
+    "予定変更で困っている人の話を聞き、その場で分担を調整する。"
+   ],
+   "observation_question": "「今日合わせたことのうち、合わせなくてよかったものはあるか」",
+   "shared_themes": [
+    "受け取ったものに合わせて、やり方を整える。"
+   ],
+   "tension_themes": [
+    "どちらも相手に寄り添う力なので、自分の判断や境界が後回しになりやすくなります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "水×両手剣": {
+   "pair_id": "ELEMENT.水×WEAPON.両手剣",
+   "a": "水",
+   "b": "両手剣",
+   "default_relation": "tension",
+   "summary": "背景まで受け取る力と、一気に決める力。",
+   "together": "水は相手の事情を背景ごと受け取り、両手剣は選択肢を絞って決断します。受け取ってから決めることができれば、事情を踏まえた力強い判断になります。",
+   "tension": "受け取るほど決めにくくなり、決めるほど受け取りきれないものが残るという引っ張り合いが起こります。",
+   "works_when": "受け取る時間と決める時刻が分けられている時。",
+   "friction_when": "受け取った事情の重さで決断が止まる、または事情を置き去りにして決めてしまう時。",
+   "scene_templates": [
+    "関係者の話を聞く時間を区切り、その後で自分が方針を決める。",
+    "決めた後に、受け取った事情への配慮を一言添えて伝える。"
+   ],
+   "observation_question": "「受け取る時間と、決める時刻を分けられたか」",
+   "shared_themes": [
+    "背景まで受け取る力と、一気に決める力。"
+   ],
+   "tension_themes": [
+    "受け取るほど決めにくくなり、決めるほど受け取りきれないものが残るという引っ張り合いが起こります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "水×長柄": {
+   "pair_id": "ELEMENT.水×WEAPON.長柄",
+   "a": "水",
+   "b": "長柄",
+   "default_relation": "complement",
+   "summary": "相手の立場を考え、引き受けた役割を続ける。",
+   "together": "水が相手の事情を受け取り、長柄が近づきすぎない距離から必要な役割を支え続けます。受け取るだけでも支えるだけでもない、事情を踏まえて長く支える動き方になります。",
+   "tension": "受け取った事情の分だけ支える範囲が広がり、気づいた人が全部を背負う形になりやすくなります。",
+   "works_when": "支える範囲と期限が言葉になっている時。気づきが手当てにつながり、本人も疲れにくい。",
+   "friction_when": "範囲を決めないまま引き受け続ける時。気づいた人が全部を背負い、周りはその負担に気づかない。",
+   "scene_templates": [
+    "同僚の様子がいつもと違うことに気づき、声をかけるだけでなく、担当の一部を期限付きで引き受ける。",
+    "会議で出た小さな不安を拾い、進行表に確認項目として残しておく。"
+   ],
+   "observation_question": "「私はどこまでを支えると決めたか」",
+   "shared_themes": [
+    "相手の立場を考え、引き受けた役割を続ける。"
+   ],
+   "tension_themes": [
+    "受け取った事情の分だけ支える範囲が広がり、気づいた人が全部を背負う形になりやすくなります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "水×法器": {
+   "pair_id": "ELEMENT.水×WEAPON.法器",
+   "a": "水",
+   "b": "法器",
+   "default_relation": "complement",
+   "summary": "受け取ったものを、言葉と仕組みに整える。",
+   "together": "水が背景や言葉にならない思いを受け取り、法器がそれを文章・図・手順に置き換えます。受け取ったものが一人の中に留まらず、周りが使える形になります。",
+   "tension": "受け取ったものを全部言葉にしようとして、整える作業が長くなることがあります。",
+   "works_when": "整える相手と量を絞り、受け取ったものの要点だけを形にできている時。",
+   "friction_when": "受け取ったものをすべて正確に説明しようとして、渡す時機が遅れる時。",
+   "scene_templates": [
+    "相談の内容を、相手が次に動ける三つの手順にまとめて返す。",
+    "会議の行き違いを、論点の図にして共有する。"
+   ],
+   "observation_question": "「受け取ったもののうち、言葉にするのはどれか」",
+   "shared_themes": [
+    "受け取ったものを、言葉と仕組みに整える。"
+   ],
+   "tension_themes": [
+    "受け取ったものを全部言葉にしようとして、整える作業が長くなることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "水×弓": {
+   "pair_id": "ELEMENT.水×WEAPON.弓",
+   "a": "水",
+   "b": "弓",
+   "default_relation": "tension",
+   "summary": "受け取る近さと、見定める距離。",
+   "together": "水は相手の事情に近づいて受け取り、弓は距離を取って重要な一点を選びます。受け取った後で一点を選べると、事情を踏まえた的確な関わり方になります。",
+   "tension": "近づいて受け取りたい気持ちと、離れて見たい姿勢がぶつかり、関わり方に迷うことがあります。",
+   "works_when": "受け取った後に一度距離を取り、関わる一点を選べている時。",
+   "friction_when": "受け取りすぎて一点を選べない、または距離を取りすぎて事情を受け取り損ねる時。",
+   "scene_templates": [
+    "話を十分に聞いた後、一番困っていることを一つだけ選んで手を貸す。",
+    "複数の相談のうち、今週は一件にだけ深く関わると決める。"
+   ],
+   "observation_question": "「受け取った後で、関わる一点を選べたか」",
+   "shared_themes": [
+    "受け取る近さと、見定める距離。"
+   ],
+   "tension_themes": [
+    "近づいて受け取りたい気持ちと、離れて見たい姿勢がぶつかり、関わり方に迷うことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "氷×片手剣": {
+   "pair_id": "ELEMENT.氷×WEAPON.片手剣",
+   "a": "氷",
+   "b": "片手剣",
+   "default_relation": "tension",
+   "summary": "崩さない基準と、合わせる柔らかさ。",
+   "together": "氷は大切な基準を崩さず保ち、片手剣は相手や場面に合わせてやり方を変えます。守る基準と変えてよい部分を分けられると、芯を保ったまま柔軟に動けます。",
+   "tension": "合わせるほど基準が揺らぎ、基準を守るほど合わせにくくなる引っ張り合いがあります。",
+   "works_when": "守る基準を一つに絞り、それ以外は相手に合わせて変えられている時。",
+   "friction_when": "合わせるたびに基準を少しずつ譲り、内側に不満が溜まる時。",
+   "scene_templates": [
+    "品質の基準だけは守り、作業の順番は相手の都合に合わせる。",
+    "依頼者の希望を聞きながら、譲れない一点だけは先に伝える。"
+   ],
+   "observation_question": "「今日、合わせた部分と守った部分を分けられたか」",
+   "shared_themes": [
+    "崩さない基準と、合わせる柔らかさ。"
+   ],
+   "tension_themes": [
+    "合わせるほど基準が揺らぎ、基準を守るほど合わせにくくなる引っ張り合いがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "氷×両手剣": {
+   "pair_id": "ELEMENT.氷×WEAPON.両手剣",
+   "a": "氷",
+   "b": "両手剣",
+   "default_relation": "conditional",
+   "summary": "守る基準を、決断で貫く。",
+   "together": "氷の譲れない基準と両手剣の決断が重なると、基準に沿った判断を迷わず下せます。周りが揺れても、決めた線を保ったまま前へ進めます。",
+   "tension": "基準が強く決断も早いため、他の見方を取り入れる余地が狭くなりやすくなります。",
+   "works_when": "守る基準が自分で選んだもので、決断の理由を説明できている時。",
+   "friction_when": "基準と決断が固くなりすぎ、修正が必要な時にも引き返せない時。",
+   "scene_templates": [
+    "品質の基準を満たさない案を、理由を添えてはっきり差し戻す。",
+    "危うい兆候に気づいた時、自分の判断で作業を止める。"
+   ],
+   "observation_question": "「その基準は、今も守る理由があるか」",
+   "shared_themes": [
+    "守る基準を、決断で貫く。"
+   ],
+   "tension_themes": [
+    "基準が強く決断も早いため、他の見方を取り入れる余地が狭くなりやすくなります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "氷×長柄": {
+   "pair_id": "ELEMENT.氷×WEAPON.長柄",
+   "a": "氷",
+   "b": "長柄",
+   "default_relation": "alignment",
+   "summary": "崩さない基準を、長く支え続ける。",
+   "together": "氷の保つ力と長柄の続ける力は、どちらも「崩さずに持たせる」方向にあります。品質や約束を、目立たなくても長く支え続けられます。",
+   "tension": "保つことと続けることが重なるため、手放す時機を見失いやすくなります。",
+   "works_when": "守る基準と、支える期間の両方が決まっている時。",
+   "friction_when": "誰にも言わずに基準を守り続け、負担が外から見えなくなる時。",
+   "scene_templates": [
+    "毎週の点検を欠かさず続け、小さな乱れを早く見つける。",
+    "長く続く作業で、品質の基準を最後まで保つ。"
+   ],
+   "observation_question": "「守り続けていることを、誰かに伝えているか」",
+   "shared_themes": [
+    "崩さない基準を、長く支え続ける。"
+   ],
+   "tension_themes": [
+    "保つことと続けることが重なるため、手放す時機を見失いやすくなります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "氷×法器": {
+   "pair_id": "ELEMENT.氷×WEAPON.法器",
+   "a": "氷",
+   "b": "法器",
+   "default_relation": "alignment",
+   "summary": "内側で保った基準を、言葉と仕組みにする。",
+   "together": "氷が揺れずに保つ基準を、法器が文章や手順に置き換えます。自分の中の譲れない線が、周りにも共有できる仕組みになります。",
+   "tension": "基準を正確に言葉にしようとして、準備が長くなることがあります。",
+   "works_when": "基準の要点を短い文章にして共有できている時。",
+   "friction_when": "基準を言葉にしないまま一人で守り、周りに伝わらない時。",
+   "scene_templates": [
+    "自分が気をつけている確認項目を、チェックリストにして共有する。",
+    "品質の基準を一枚の文書にまとめ、次の担当者に渡す。"
+   ],
+   "observation_question": "「保っている基準を、言葉で渡せたか」",
+   "shared_themes": [
+    "内側で保った基準を、言葉と仕組みにする。"
+   ],
+   "tension_themes": [
+    "基準を正確に言葉にしようとして、準備が長くなることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "氷×弓": {
+   "pair_id": "ELEMENT.氷×WEAPON.弓",
+   "a": "氷",
+   "b": "弓",
+   "default_relation": "alignment",
+   "summary": "静かな距離から、譲れない一点を見定める。",
+   "together": "氷の静けさと弓の距離は、どちらも場から一歩引いて見る方向にあります。周りに流されず、守るべき一点を正確に見定められます。",
+   "tension": "引いて見る姿勢が重なるため、関わる時機を逃しやすくなります。",
+   "works_when": "見定めた一点を、期限を決めて外へ伝えられている時。",
+   "friction_when": "距離を取ったまま一人で判断を抱え、周りから何を考えているか見えなくなる時。",
+   "scene_templates": [
+    "会議では黙って全体を見渡し、終わった後に最も重要な一点だけを伝える。",
+    "多くの懸念の中から、本当に止めるべき一つを選ぶ。"
+   ],
+   "observation_question": "「見定めた一点を、外へ出せたか」",
+   "shared_themes": [
+    "静かな距離から、譲れない一点を見定める。"
+   ],
+   "tension_themes": [
+    "引いて見る姿勢が重なるため、関わる時機を逃しやすくなります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "雷×片手剣": {
+   "pair_id": "ELEMENT.雷×WEAPON.片手剣",
+   "a": "雷",
+   "b": "片手剣",
+   "default_relation": "complement",
+   "summary": "違和感を捉え、その場で調整に変える。",
+   "together": "雷が場の違和感を素早く捉え、片手剣がそれに合わせてやり方をその場で組み替えます。気づきがすぐに手当てにつながる組み合わせです。",
+   "tension": "反応の速さと調整の細かさが重なり、変更が多くなりすぎることがあります。",
+   "works_when": "変えるべき一点を選んでから調整できている時。",
+   "friction_when": "気づくたびに細かく変え、周りが変化についていけなくなる時。",
+   "scene_templates": [
+    "進行中の作業で違和感に気づき、関係者の都合に合わせて手順を組み替える。",
+    "会議の空気が重くなった時、話題の順番をその場で入れ替える。"
+   ],
+   "observation_question": "「今日の変更のうち、本当に必要だったのはどれか」",
+   "shared_themes": [
+    "違和感を捉え、その場で調整に変える。"
+   ],
+   "tension_themes": [
+    "反応の速さと調整の細かさが重なり、変更が多くなりすぎることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "雷×両手剣": {
+   "pair_id": "ELEMENT.雷×WEAPON.両手剣",
+   "a": "雷",
+   "b": "両手剣",
+   "default_relation": "alignment",
+   "summary": "違和感を、決断で一気に変化へ変える。",
+   "together": "雷の変化を起こす力と両手剣の決断は、どちらも停滞を破る方向にあります。気づいた違和感を、迷わず大きな方向転換へつなげられます。",
+   "tension": "反応と決断が重なるぶん、確かめる前に動き出してしまうことがあります。",
+   "works_when": "違和感の中身を一行で確かめてから決められている時。",
+   "friction_when": "違和感への反応が強く、周りの準備が整う前に方向を変えてしまう時。",
+   "scene_templates": [
+    "進め方の問題に気づき、その日のうちに方針の切り替えを決める。",
+    "停滞した議論で論点のずれを指摘し、その場で結論を出す。"
+   ],
+   "observation_question": "「決める前に、違和感の中身を確かめたか」",
+   "shared_themes": [
+    "違和感を、決断で一気に変化へ変える。"
+   ],
+   "tension_themes": [
+    "反応と決断が重なるぶん、確かめる前に動き出してしまうことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "雷×長柄": {
+   "pair_id": "ELEMENT.雷×WEAPON.長柄",
+   "a": "雷",
+   "b": "長柄",
+   "default_relation": "tension",
+   "summary": "変化を起こす力と、続ける力。",
+   "together": "雷は停滞に変化を入れ、長柄は役割を変えずに支え続けます。変えるべきところと続けるべきところを見分けられると、変化と安定の両方を担えます。",
+   "tension": "変えたい気持ちと続けたい姿勢がぶつかり、内側で張り詰めることがあります。",
+   "works_when": "変える部分と続ける部分を、はっきり分けられている時。",
+   "friction_when": "違和感を抱えたまま役割を続け、張り詰めた状態が長引く時。",
+   "scene_templates": [
+    "長く続く仕事の中で、一か所だけ手順を変える提案をする。",
+    "違和感に気づいても、まずは今の役割を区切りまで続けてから変える。"
+   ],
+   "observation_question": "「今の違和感は、変えるべきものか、続けながら見守るものか」",
+   "shared_themes": [
+    "変化を起こす力と、続ける力。"
+   ],
+   "tension_themes": [
+    "変えたい気持ちと続けたい姿勢がぶつかり、内側で張り詰めることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "雷×法器": {
+   "pair_id": "ELEMENT.雷×WEAPON.法器",
+   "a": "雷",
+   "b": "法器",
+   "default_relation": "complement",
+   "summary": "違和感を、言葉にして変化の道筋にする。",
+   "together": "雷が捉えた違和感を、法器が整理して言葉や図にします。鋭い気づきが、周りも納得できる変化の道筋になります。",
+   "tension": "早く変えたい雷と、整えてから出したい法器の間で、速さの取り合いが起こります。",
+   "works_when": "違和感を短い言葉にまとめてから、変化を提案できている時。",
+   "friction_when": "違和感を言葉にする前に反応してしまう、または整えすぎて変化の時機を逃す時。",
+   "scene_templates": [
+    "資料の違和感を、問題点と修正案の二行にまとめて伝える。",
+    "改善の提案を、現状と変更後を並べた図にして示す。"
+   ],
+   "observation_question": "「違和感を、相手が理解できる言葉にできたか」",
+   "shared_themes": [
+    "違和感を、言葉にして変化の道筋にする。"
+   ],
+   "tension_themes": [
+    "早く変えたい雷と、整えてから出したい法器の間で、速さの取り合いが起こります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "雷×弓": {
+   "pair_id": "ELEMENT.雷×WEAPON.弓",
+   "a": "雷",
+   "b": "弓",
+   "default_relation": "alignment",
+   "summary": "違和感の中から、効く一点を射抜く。",
+   "together": "雷の鋭い感度と弓の焦点は、どちらも重要な一点を捉える方向にあります。多くの違和感の中から、変えるべき一点を見定めて手を打てます。",
+   "tension": "感度の高さが緊張を生みやすく、見定めるまでの時間に張り詰めることがあります。",
+   "works_when": "違和感を集めた後、一点を選んで期限内に出せている時。",
+   "friction_when": "違和感に次々反応し、選ぶ前に疲れてしまう時。",
+   "scene_templates": [
+    "多くの気がかりの中から、最も影響の大きい一つを選んで指摘する。",
+    "不具合の兆しに気づき、原因となる一か所を特定して伝える。"
+   ],
+   "observation_question": "「捉えた違和感のうち、射抜くべき一点はどれか」",
+   "shared_themes": [
+    "違和感の中から、効く一点を射抜く。"
+   ],
+   "tension_themes": [
+    "感度の高さが緊張を生みやすく、見定めるまでの時間に張り詰めることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "風×片手剣": {
+   "pair_id": "ELEMENT.風×WEAPON.片手剣",
+   "a": "風",
+   "b": "片手剣",
+   "default_relation": "alignment",
+   "summary": "新しい見方を、場に合わせて柔らかく持ち込む。",
+   "together": "風の別の見方を探す力と片手剣の合わせる力は、どちらも固定されない柔軟さを持っています。新しい案を、相手や場面に合わせて受け入れられる形で持ち込めます。",
+   "tension": "どちらも形を固めない力なので、結論や方針がなかなか定まらないことがあります。",
+   "works_when": "広げる案と、最後に選ぶ一つの両方が決まっている時。",
+   "friction_when": "相手に合わせて案を変え続け、何を提案していたのかが見えなくなる時。",
+   "scene_templates": [
+    "会議の流れを見ながら、別の見方を質問の形でそっと出す。",
+    "相手ごとに伝え方を変えながら、新しいやり方を試してもらう。"
+   ],
+   "observation_question": "「今日の柔らかさは、何か一つを形にできたか」",
+   "shared_themes": [
+    "新しい見方を、場に合わせて柔らかく持ち込む。"
+   ],
+   "tension_themes": [
+    "どちらも形を固めない力なので、結論や方針がなかなか定まらないことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "風×両手剣": {
+   "pair_id": "ELEMENT.風×WEAPON.両手剣",
+   "a": "風",
+   "b": "両手剣",
+   "default_relation": "conditional",
+   "summary": "広げた可能性から、一つを選んで進む。",
+   "together": "風が選択肢を広げ、両手剣がその中から一つを選んで一気に進めます。広げることと決めることを一人で担える組み合わせです。",
+   "tension": "広げたい気持ちと決めたい姿勢が交互に現れ、方針が急に変わったように見えることがあります。",
+   "works_when": "広げる時間と決める時刻が分かれている時。",
+   "friction_when": "決めた後も新しい案が浮かび、決めたことを何度も覆してしまう時。",
+   "scene_templates": [
+    "企画会議で案を出し切った後、自分で一つを選んで担当を決める。",
+    "行き詰まった作業で前提を変え、その場で新しいやり方に切り替える。"
+   ],
+   "observation_question": "「広げた後で、一つに決められたか」",
+   "shared_themes": [
+    "広げた可能性から、一つを選んで進む。"
+   ],
+   "tension_themes": [
+    "広げたい気持ちと決めたい姿勢が交互に現れ、方針が急に変わったように見えることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "風×長柄": {
+   "pair_id": "ELEMENT.風×WEAPON.長柄",
+   "a": "風",
+   "b": "長柄",
+   "default_relation": "tension",
+   "summary": "自由に広げる力と、役割を続ける力。",
+   "together": "風は枠の外を探し、長柄は決まった役割を支え続けます。続ける役割の中に新しい見方を少しずつ持ち込めると、続けることが停滞になりません。",
+   "tension": "自由に動きたい気持ちと、役割を離れにくい姿勢がぶつかり、息苦しさを感じることがあります。",
+   "works_when": "続ける役割の中に、試してよい余白が一つ用意されている時。",
+   "friction_when": "役割を続けるうちに、新しいことを試す余白がなくなる時。",
+   "scene_templates": [
+    "長く続く作業の中で、月に一度だけ別のやり方を試す。",
+    "支えている仕組みの改善案を、役割を続けながら少しずつ出す。"
+   ],
+   "observation_question": "「続けている役割の中に、試す余白はあるか」",
+   "shared_themes": [
+    "自由に広げる力と、役割を続ける力。"
+   ],
+   "tension_themes": [
+    "自由に動きたい気持ちと、役割を離れにくい姿勢がぶつかり、息苦しさを感じることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "風×法器": {
+   "pair_id": "ELEMENT.風×WEAPON.法器",
+   "a": "風",
+   "b": "法器",
+   "default_relation": "alignment",
+   "summary": "新しい見方を、言葉と構造で形にする。",
+   "together": "風の発想と法器の設計は、どちらも状況の見え方を変える方向にあります。浮かんだ可能性を、言葉や図にして周りと共有できる形にできます。",
+   "tension": "発想が広がるほど整理する量も増え、まとまるまでに時間がかかることがあります。",
+   "works_when": "広げた案の中から、言葉にするものを選べている時。",
+   "friction_when": "案を広げては整理し直し、いつまでも形が定まらない時。",
+   "scene_templates": [
+    "新しい企画の考え方を、一枚の図にまとめて共有する。",
+    "行き詰まった問題を、別の切り口で整理し直して示す。"
+   ],
+   "observation_question": "「広げた可能性のうち、言葉にするのはどれか」",
+   "shared_themes": [
+    "新しい見方を、言葉と構造で形にする。"
+   ],
+   "tension_themes": [
+    "発想が広がるほど整理する量も増え、まとまるまでに時間がかかることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "風×弓": {
+   "pair_id": "ELEMENT.風×WEAPON.弓",
+   "a": "風",
+   "b": "弓",
+   "default_relation": "complement",
+   "summary": "広い視野から、狙う一点を選ぶ。",
+   "together": "風が枠の外まで見渡し、弓がその中から重要な一点を見定めます。広く見ることと絞ることが補い合い、意外な一点を狙えます。",
+   "tension": "広げる視野と絞る焦点の切り替えに、時間がかかることがあります。",
+   "works_when": "広く見る時間の後に、狙う一点を選べている時。",
+   "friction_when": "視野を広げすぎて、狙いが定まらない時。",
+   "scene_templates": [
+    "多くの改善案を見渡した後、最も効果の大きい一つだけに取り組む。",
+    "新しい分野を一通り調べてから、自分が深める一点を決める。"
+   ],
+   "observation_question": "「広く見た後で、狙いを一つに定められたか」",
+   "shared_themes": [
+    "広い視野から、狙う一点を選ぶ。"
+   ],
+   "tension_themes": [
+    "広げる視野と絞る焦点の切り替えに、時間がかかることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "岩×片手剣": {
+   "pair_id": "ELEMENT.岩×WEAPON.片手剣",
+   "a": "岩",
+   "b": "片手剣",
+   "default_relation": "complement",
+   "summary": "崩れない足場の上で、やり方を整える。",
+   "together": "岩が手順と土台を固め、片手剣が相手や場面に合わせて細部を調整します。安定した土台があるから、柔軟な調整が混乱になりません。",
+   "tension": "土台を守りたい岩と、場面に合わせたい片手剣の間で、どこまで変えるかに迷うことがあります。",
+   "works_when": "守る土台と、調整してよい部分が分けられている時。",
+   "friction_when": "調整のたびに土台まで変えてしまい、積み上げが崩れる時。",
+   "scene_templates": [
+    "基本の手順は守り、相手の都合に合わせて順番だけを入れ替える。",
+    "新しいメンバーに土台となる手順を教えながら、その人に合う進め方を探す。"
+   ],
+   "observation_question": "「今日変えたのは、土台か、細部か」",
+   "shared_themes": [
+    "崩れない足場の上で、やり方を整える。"
+   ],
+   "tension_themes": [
+    "土台を守りたい岩と、場面に合わせたい片手剣の間で、どこまで変えるかに迷うことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "岩×両手剣": {
+   "pair_id": "ELEMENT.岩×WEAPON.両手剣",
+   "a": "岩",
+   "b": "両手剣",
+   "default_relation": "tension",
+   "summary": "着実に積む力と、一気に進める決断。",
+   "together": "岩は一段ずつ積み上げ、両手剣は大きな決断で一気に進めます。積み上げた土台の上で決断できると、大胆でも崩れにくい前進になります。",
+   "tension": "着実に進めたい姿勢と一気に進めたい姿勢がぶつかり、進み方に迷うことがあります。",
+   "works_when": "土台が整った時点で、決断して進められている時。",
+   "friction_when": "準備を固めすぎて決断が遅れる、または土台なしに決めて崩れる時。",
+   "scene_templates": [
+    "手順を整えてから、導入の日程を自分で決めて一気に切り替える。",
+    "準備が八割できた時点で、残りは進めながら整えると決める。"
+   ],
+   "observation_question": "「土台は、決断するのに十分整っているか」",
+   "shared_themes": [
+    "着実に積む力と、一気に進める決断。"
+   ],
+   "tension_themes": [
+    "着実に進めたい姿勢と一気に進めたい姿勢がぶつかり、進み方に迷うことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "岩×長柄": {
+   "pair_id": "ELEMENT.岩×WEAPON.長柄",
+   "a": "岩",
+   "b": "長柄",
+   "default_relation": "alignment",
+   "summary": "崩れない足場を、長く支え続ける。",
+   "together": "岩の積み上げる力と長柄の続ける力は、どちらも長く持たせる方向にあります。手順と役割を崩さず、長期にわたって場を安定させられます。",
+   "tension": "安定を保つ力が重なるため、変える必要がある時に動きにくくなることがあります。",
+   "works_when": "支える範囲と、見直す時期が決まっている時。",
+   "friction_when": "積み上げた形を守ることが目的になり、役割を手放せなくなる時。",
+   "scene_templates": [
+    "運用の手順を整え、長い期間同じ品質で続ける。",
+    "長く続く行事の段取りを、毎回少しずつ改善しながら支える。"
+   ],
+   "observation_question": "「守り続けている形に、見直す時期はあるか」",
+   "shared_themes": [
+    "崩れない足場を、長く支え続ける。"
+   ],
+   "tension_themes": [
+    "安定を保つ力が重なるため、変える必要がある時に動きにくくなることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "岩×法器": {
+   "pair_id": "ELEMENT.岩×WEAPON.法器",
+   "a": "岩",
+   "b": "法器",
+   "default_relation": "alignment",
+   "summary": "確かな手順を、言葉と仕組みにして残す。",
+   "together": "岩の手順を固める力と法器の言葉にする力は、どちらも再現できる形を作る方向にあります。自分のやり方を、誰でも使える仕組みとして残せます。",
+   "tension": "仕組みを完成させようとして、準備や文書が増えすぎることがあります。",
+   "works_when": "使う人に合わせて、必要な手順だけを書き残せている時。",
+   "friction_when": "仕組みを整えることに力を注ぎすぎて、実際の作業が後回しになる時。",
+   "scene_templates": [
+    "毎回違っていた作業を、一枚の手順書にまとめる。",
+    "積み上げてきたやり方を、新人向けの研修資料にする。"
+   ],
+   "observation_question": "「作った仕組みは、使う人に合っているか」",
+   "shared_themes": [
+    "確かな手順を、言葉と仕組みにして残す。"
+   ],
+   "tension_themes": [
+    "仕組みを完成させようとして、準備や文書が増えすぎることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "岩×弓": {
+   "pair_id": "ELEMENT.岩×WEAPON.弓",
+   "a": "岩",
+   "b": "弓",
+   "default_relation": "conditional",
+   "summary": "足場を固めてから、一点を狙う。",
+   "together": "岩が確かな足場を整え、弓が距離を取って狙う一点を定めます。準備と焦点がそろうと、確実に効く一手を打てます。",
+   "tension": "足場固めと見極めの両方に時間をかけ、動き出しが遅れることがあります。",
+   "works_when": "足場の準備に期限を決め、その後で一点を選べている時。",
+   "friction_when": "準備と観察が長くなり、狙う時機を逃す時。",
+   "scene_templates": [
+    "資料を整えた上で、最も重要な一点に絞って提案する。",
+    "点検の手順を固め、その中で最も危うい一か所を重点的に見る。"
+   ],
+   "observation_question": "「準備はどこまでで十分か」",
+   "shared_themes": [
+    "足場を固めてから、一点を狙う。"
+   ],
+   "tension_themes": [
+    "足場固めと見極めの両方に時間をかけ、動き出しが遅れることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "草×片手剣": {
+   "pair_id": "ELEMENT.草×WEAPON.片手剣",
+   "a": "草",
+   "b": "片手剣",
+   "default_relation": "alignment",
+   "summary": "理解を育て、相手に合わせて渡す。",
+   "together": "草が経験を理解へ育て、片手剣が相手に合わせて渡し方を調整します。わかったことを、相手ごとに使いやすい形で届けられます。",
+   "tension": "相手に合わせて説明を変えるほど、伝える内容が増えていくことがあります。",
+   "works_when": "相手に必要な理解だけを選んで渡せている時。",
+   "friction_when": "相手ごとに説明を作り直し続け、負担が大きくなる時。",
+   "scene_templates": [
+    "新しい手順を、相手の経験に合わせて説明の仕方を変えて伝える。",
+    "調べたことを、聞く人の関心に合わせて短く話す。"
+   ],
+   "observation_question": "「渡した理解は、相手に必要な量だったか」",
+   "shared_themes": [
+    "理解を育て、相手に合わせて渡す。"
+   ],
+   "tension_themes": [
+    "相手に合わせて説明を変えるほど、伝える内容が増えていくことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "草×両手剣": {
+   "pair_id": "ELEMENT.草×WEAPON.両手剣",
+   "a": "草",
+   "b": "両手剣",
+   "default_relation": "tension",
+   "summary": "理解を深める力と、決めて進める力。",
+   "together": "草は理解が揃うまで深め、両手剣は選択肢を絞って一気に進めます。深めた理解を土台に決断できると、根拠のある力強い前進になります。",
+   "tension": "理解してから動きたい気持ちと先に決めたい姿勢がぶつかり、判断の時機に迷うことがあります。",
+   "works_when": "理解を深める時間に区切りをつけ、決める時点を決めている時。",
+   "friction_when": "理解が揃うまで決断を待つ、または理解を置き去りに決めて後悔する時。",
+   "scene_templates": [
+    "調べる期間を三日と決め、四日目に自分で方針を決める。",
+    "わかっている範囲で決め、不明な点は後で確かめると伝える。"
+   ],
+   "observation_question": "「どこまでわかれば、決めてよいか」",
+   "shared_themes": [
+    "理解を深める力と、決めて進める力。"
+   ],
+   "tension_themes": [
+    "理解してから動きたい気持ちと先に決めたい姿勢がぶつかり、判断の時機に迷うことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "草×長柄": {
+   "pair_id": "ELEMENT.草×WEAPON.長柄",
+   "a": "草",
+   "b": "長柄",
+   "default_relation": "complement",
+   "summary": "育てた理解で、長く人を支える。",
+   "together": "草が経験を知識へ育て、長柄がそれを使って長く人を支え続けます。教え、見守り、育てる役割を担える組み合わせです。",
+   "tension": "支える相手が増えるほど、教えることと見守ることの負担も増えていきます。",
+   "works_when": "支える相手と期間が決まっている時。",
+   "friction_when": "頼られるままに支える相手が増え、自分が学ぶ時間がなくなる時。",
+   "scene_templates": [
+    "新人に手順を教え、一人で回せるようになるまで見守る。",
+    "調べたことを共有した後も、質問に答える役割を続ける。"
+   ],
+   "observation_question": "「支え続けている相手は、いつ一人立ちするか」",
+   "shared_themes": [
+    "育てた理解で、長く人を支える。"
+   ],
+   "tension_themes": [
+    "支える相手が増えるほど、教えることと見守ることの負担も増えていきます。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "草×法器": {
+   "pair_id": "ELEMENT.草×WEAPON.法器",
+   "a": "草",
+   "b": "法器",
+   "default_relation": "alignment",
+   "summary": "理解を体系へ、体系を説明へ。",
+   "together": "草の知りたいという関心と法器の整理して言葉にする力が、同じ「言葉にする」方向を指しています。経験を、誰かが使える知識の形へ変えられます。",
+   "tension": "理解と整理の両方に時間をかけるため、外へ出す時機が遅れることがあります。",
+   "works_when": "説明の相手を決め、必要な量に絞って形にできている時。",
+   "friction_when": "理解と整理を繰り返し、完成するまで誰にも渡さない時。",
+   "scene_templates": [
+    "調べたことを、つまずきやすい点をまとめた手順書にする。",
+    "学んだ考え方を、一枚の図にして共有する。"
+   ],
+   "observation_question": "「この理解は、誰に渡すためのものか」",
+   "shared_themes": [
+    "理解を体系へ、体系を説明へ。"
+   ],
+   "tension_themes": [
+    "理解と整理の両方に時間をかけるため、外へ出す時機が遅れることがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  },
+  "草×弓": {
+   "pair_id": "ELEMENT.草×WEAPON.弓",
+   "a": "草",
+   "b": "弓",
+   "default_relation": "conditional",
+   "summary": "広く育てた理解から、要点を射抜く。",
+   "together": "草が幅広く理解を育て、弓がその中から最も重要な一点を選びます。深い理解をもとに、的確な一点を示せます。",
+   "tension": "理解を広げたい気持ちと一点に絞る姿勢の間で、どこまで調べるかに迷うことがあります。",
+   "works_when": "調べた後に、伝える要点を一つ選べている時。",
+   "friction_when": "理解を広げ続け、要点を選ぶ前に時間が過ぎる時。",
+   "scene_templates": [
+    "調べたことの中から、相手の判断に一番効く一点だけを伝える。",
+    "レビューで根拠を確かめた上で、最も重要な指摘を一つ選ぶ。"
+   ],
+   "observation_question": "「理解したことのうち、伝える一点はどれか」",
+   "shared_themes": [
+    "広く育てた理解から、要点を射抜く。"
+   ],
+   "tension_themes": [
+    "理解を広げたい気持ちと一点に絞る姿勢の間で、どこまで調べるかに迷うことがあります。"
+   ],
+   "evidence_axes": "core_axes(a)[:2] + core_axes(b)[:2]",
+   "review_status": "editorial_reviewed_v1"
+  }
+ }
+}

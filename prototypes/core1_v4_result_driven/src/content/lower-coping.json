@@ -1,0 +1,305 @@
+{
+ "version": "CORE1-LOWER-COPING-1.0.0",
+ "review_status": "editorial_reviewed_v1",
+ "rule": "上位資質は「同じ目的へ近づく」ところまでを書き、remaining_gap を必ず明記する。完全代替（同じ目的に届く）とは書かない。",
+ "items": {
+  "炎": {
+   "required_outcome": "物事を最初に動かし始めること",
+   "remaining_gap": "最初の一歩を踏み出すきっかけそのもの",
+   "external_support": "開始日を先に決めるか、始める合図を出す人と組みます",
+   "minimum_practice": "必須の場面だけ、最初の一言を自分から口にする",
+   "upper_contribution": "熱量を持って最初の一言を口に出すと、周りが動き出すきっかけが生まれます",
+   "preferred_uppers": [
+    "雷",
+    "風",
+    "岩",
+    "草",
+    "水",
+    "氷"
+   ]
+  },
+  "水": {
+   "required_outcome": "相手の事情や背景を受け取ること",
+   "remaining_gap": "相手の気持ちを直接聞き取ること",
+   "external_support": "話を聞く役の人と組むか、相談の時間を先に確保します",
+   "minimum_practice": "大事な相手には、結論の前に一つだけ質問する",
+   "upper_contribution": "関わる人の事情を受け取っておくと、何が求められているかの手がかりが集まります",
+   "preferred_uppers": [
+    "草",
+    "岩",
+    "風",
+    "氷",
+    "雷",
+    "炎"
+   ]
+  },
+  "氷": {
+   "required_outcome": "基準や品質を崩さず保つこと",
+   "remaining_gap": "細かな基準を毎回守り続けること",
+   "external_support": "チェックリストや確認の担当を置きます",
+   "minimum_practice": "最後の確認だけは省かない",
+   "upper_contribution": "守る基準を一つ決めておくと、何を保つべきかがはっきりします",
+   "preferred_uppers": [
+    "岩",
+    "草",
+    "水",
+    "雷",
+    "炎",
+    "風"
+   ]
+  },
+  "雷": {
+   "required_outcome": "違和感を早く捉えて変化を起こすこと",
+   "remaining_gap": "小さな違和感にすぐ気づく感度そのもの",
+   "external_support": "定期的な振り返りの場を設け、周りの気づきを集めます",
+   "minimum_practice": "気になったことを一日一つ書き留める",
+   "upper_contribution": "違和感を早めに言葉にすると、どこを変えるべきかが見えてきます",
+   "preferred_uppers": [
+    "風",
+    "炎",
+    "氷",
+    "水",
+    "草",
+    "岩"
+   ]
+  },
+  "風": {
+   "required_outcome": "前提を外して別の見方を出すこと",
+   "remaining_gap": "枠の外へ発想を飛ばすこと",
+   "external_support": "発想を出す役の人と組むか、案を広げる時間を別に設けます",
+   "minimum_practice": "一つの案に決める前に、別案を一つだけ考える",
+   "upper_contribution": "前提を一つ外して考えると、別の進め方の候補が見つかります",
+   "preferred_uppers": [
+    "草",
+    "雷",
+    "水",
+    "炎",
+    "氷",
+    "岩"
+   ]
+  },
+  "岩": {
+   "required_outcome": "手順を固めて再現できる形にすること",
+   "remaining_gap": "同じ作業を繰り返し安定させ続けること",
+   "external_support": "手順書やテンプレートを用意し、運用の担当を決めます",
+   "minimum_practice": "繰り返す作業だけは、手順を一枚に書いておく",
+   "upper_contribution": "手順と足場を整えておくと、誰がやっても同じ形で進められます",
+   "preferred_uppers": [
+    "氷",
+    "草",
+    "炎",
+    "水",
+    "雷",
+    "風"
+   ]
+  },
+  "草": {
+   "required_outcome": "経験を理解へ育てて残すこと",
+   "remaining_gap": "時間をかけて理解を深める工程そのもの",
+   "external_support": "調べる役の人と組むか、学ぶ時間を予定に入れます",
+   "minimum_practice": "わかったことを一行だけ残す",
+   "upper_contribution": "調べたことを整理しておくと、判断に必要な理解がそろいます",
+   "preferred_uppers": [
+    "水",
+    "風",
+    "岩",
+    "氷",
+    "雷",
+    "炎"
+   ]
+  },
+  "片手剣": {
+   "required_outcome": "相手や場面に合わせてやり方を調整すること",
+   "remaining_gap": "その場で細かく合わせ直すこと",
+   "external_support": "調整役の人と組むか、変更時の連絡手順を決めておきます",
+   "minimum_practice": "予定が変わった時だけ、関係者に一言確認する",
+   "upper_contribution": "相手ごとに進め方を調整すると、関わる人が動きやすくなります",
+   "preferred_uppers": [
+    "長柄",
+    "法器",
+    "弓",
+    "両手剣"
+   ]
+  },
+  "両手剣": {
+   "required_outcome": "選択肢を絞って最終的に決めること",
+   "remaining_gap": "最終的に一つを選ぶ機能",
+   "external_support": "期限と決定担当者を先に置きます",
+   "minimum_practice": "期限が来たら、二択のどちらかを選ぶ",
+   "upper_contribution": "選択肢を絞って決めると、止まっていた状況が前へ進みます",
+   "preferred_uppers": [
+    "弓",
+    "法器",
+    "長柄",
+    "片手剣"
+   ]
+  },
+  "長柄": {
+   "required_outcome": "役割を長く支え続けること",
+   "remaining_gap": "同じ役割を長期間続けること",
+   "external_support": "交代制や引き継ぎの仕組みを置きます",
+   "minimum_practice": "引き受けた役割は、決めた区切りまでは続ける",
+   "upper_contribution": "範囲と期限を決めて支え続けると、途中で崩れにくくなります",
+   "preferred_uppers": [
+    "片手剣",
+    "法器",
+    "弓",
+    "両手剣"
+   ]
+  },
+  "法器": {
+   "required_outcome": "状況を言葉や仕組みに整理すること",
+   "remaining_gap": "複雑なことを丁寧に言語化する作業そのもの",
+   "external_support": "文書化を担う人と組むか、テンプレートを使います",
+   "minimum_practice": "大事な決定だけ、理由を一行で書き残す",
+   "upper_contribution": "状況を言葉や図に整理すると、次に何を決めるべきかが明確になります",
+   "preferred_uppers": [
+    "弓",
+    "長柄",
+    "片手剣",
+    "両手剣"
+   ]
+  },
+  "弓": {
+   "required_outcome": "全体を見て重要な一点を選ぶこと",
+   "remaining_gap": "距離を取って冷静に見極める時間そのもの",
+   "external_support": "レビュー役を置くか、判断の前に一度離れる時間を予定に入れます",
+   "minimum_practice": "決める前に、優先順位の一位だけを書く",
+   "upper_contribution": "影響の大きい一点を選ぶと、力を向ける先がはっきりします",
+   "preferred_uppers": [
+    "法器",
+    "両手剣",
+    "長柄",
+    "片手剣"
+   ]
+  },
+  "モンド": {
+   "required_outcome": "人が自分で選べる余白を守ること",
+   "remaining_gap": "縛りを外して選択を任せること",
+   "external_support": "裁量の範囲を言葉にして共有します",
+   "minimum_practice": "決める前に、相手が選べる部分を一つ残す",
+   "upper_contribution": "選べる余白を残しておくと、人が自分で動きやすくなります",
+   "preferred_uppers": [
+    "ナドクライ",
+    "スメール",
+    "ナタ",
+    "フォンテーヌ",
+    "璃月",
+    "稲妻",
+    "スネージナヤ"
+   ]
+  },
+  "璃月": {
+   "required_outcome": "約束と信頼を長く積み重ねること",
+   "remaining_gap": "交わした約束を長く守り続けること",
+   "external_support": "約束の記録と見直しの時期を決めておきます",
+   "minimum_practice": "大事な約束だけは、期日を書いて守る",
+   "upper_contribution": "約束と経緯を確かめておくと、守るべき筋がはっきりします",
+   "preferred_uppers": [
+    "稲妻",
+    "フォンテーヌ",
+    "スネージナヤ",
+    "スメール",
+    "ナドクライ",
+    "ナタ",
+    "モンド"
+   ]
+  },
+  "稲妻": {
+   "required_outcome": "一つの基準を守り続けること",
+   "remaining_gap": "型を繰り返し磨き続けること",
+   "external_support": "守る基準を文書にし、点検の担当を置きます",
+   "minimum_practice": "譲れない基準を一つだけ決めておく",
+   "upper_contribution": "守る型を一つ決めておくと、判断がぶれにくくなります",
+   "preferred_uppers": [
+    "璃月",
+    "フォンテーヌ",
+    "スネージナヤ",
+    "スメール",
+    "ナドクライ",
+    "ナタ",
+    "モンド"
+   ]
+  },
+  "スメール": {
+   "required_outcome": "根拠を確かめて納得できる判断をすること",
+   "remaining_gap": "時間をかけて理解を深めること",
+   "external_support": "調べる時間を確保するか、根拠を確認する役を置きます",
+   "minimum_practice": "大事な判断だけ、根拠を一つ確かめる",
+   "upper_contribution": "それぞれの根拠を書き出すと、納得できる判断の材料がそろいます",
+   "preferred_uppers": [
+    "フォンテーヌ",
+    "ナドクライ",
+    "モンド",
+    "璃月",
+    "稲妻",
+    "ナタ",
+    "スネージナヤ"
+   ]
+  },
+  "フォンテーヌ": {
+   "required_outcome": "判断の根拠を説明できる形にすること",
+   "remaining_gap": "原則と例外を丁寧に詰めること",
+   "external_support": "判断基準を文書にし、説明役を置きます",
+   "minimum_practice": "例外を作る時だけ、その条件を一行で残す",
+   "upper_contribution": "原則と例外を言葉にすると、誰にでも説明できる基準ができます",
+   "preferred_uppers": [
+    "スメール",
+    "稲妻",
+    "璃月",
+    "ナドクライ",
+    "モンド",
+    "スネージナヤ",
+    "ナタ"
+   ]
+  },
+  "ナタ": {
+   "required_outcome": "仲間と熱を分け合って挑むこと",
+   "remaining_gap": "場の熱そのものを生み出すこと",
+   "external_support": "場を盛り上げる役の人と組むか、挑戦の場を共同で設けます",
+   "minimum_practice": "仲間の挑戦に、一度だけ一緒に参加する",
+   "upper_contribution": "挑む手応えを仲間と共有すると、動き出す熱が生まれます",
+   "preferred_uppers": [
+    "モンド",
+    "スネージナヤ",
+    "璃月",
+    "スメール",
+    "フォンテーヌ",
+    "稲妻",
+    "ナドクライ"
+   ]
+  },
+  "スネージナヤ": {
+   "required_outcome": "目的のために人と資源を集めて動かすこと",
+   "remaining_gap": "人を統率して力を集中させる機能",
+   "external_support": "統括役を置き、目的と担当表を先に共有します",
+   "minimum_practice": "大きな目標の時だけ、目的を一文で共有する",
+   "upper_contribution": "目的を一つに定めると、力を向ける先がそろいます",
+   "preferred_uppers": [
+    "ナタ",
+    "璃月",
+    "稲妻",
+    "フォンテーヌ",
+    "スメール",
+    "モンド",
+    "ナドクライ"
+   ]
+  },
+  "ナドクライ": {
+   "required_outcome": "引き受ける範囲と境界を自分で決めること",
+   "remaining_gap": "自分の判断で境界を引き続けること",
+   "external_support": "依頼の受け方のルールを決めておきます",
+   "minimum_practice": "頼まれた時、引き受ける範囲を一つだけ伝える",
+   "upper_contribution": "引き受ける範囲を自分で決めておくと、関わり方がはっきりします",
+   "preferred_uppers": [
+    "モンド",
+    "スメール",
+    "稲妻",
+    "フォンテーヌ",
+    "璃月",
+    "スネージナヤ",
+    "ナタ"
+   ]
+  }
+ }
+}

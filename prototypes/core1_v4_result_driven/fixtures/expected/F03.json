@@ -1,0 +1,335 @@
+{
+ "axes": {
+  "personality": {
+   "O": 50,
+   "C": 94,
+   "E": 91,
+   "A": 63,
+   "N": 50
+  },
+  "style": {
+   "AGY": 92,
+   "REL": 38,
+   "ROL": 63,
+   "REF": 29,
+   "AUT": 75
+  },
+  "values": {
+   "SD": 75,
+   "ST": 83,
+   "HE": 92,
+   "AC": 67,
+   "PO": 50,
+   "SE": 17,
+   "CO": 25,
+   "TR": 42,
+   "BE": 67,
+   "UN": 50
+  }
+ },
+ "values_flat": false,
+ "rankings": {
+  "element": [
+   {
+    "rank": 1,
+    "name": "炎",
+    "display": 96,
+    "distance": 0.03633180424916986,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "雷",
+    "display": 76,
+    "distance": 0.24108089928486662,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "水",
+    "display": 75,
+    "distance": 0.24923884127479007,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "岩",
+    "display": 75,
+    "distance": 0.25400787389370433,
+    "band": "middle"
+   },
+   {
+    "rank": 5,
+    "name": "草",
+    "display": 70,
+    "distance": 0.30285309970347013,
+    "band": "middle"
+   },
+   {
+    "rank": 6,
+    "name": "風",
+    "display": 61,
+    "distance": 0.38538292645108185,
+    "band": "bottom"
+   },
+   {
+    "rank": 7,
+    "name": "氷",
+    "display": 56,
+    "distance": 0.44330576355378015,
+    "band": "bottom"
+   }
+  ],
+  "weapon": [
+   {
+    "rank": 1,
+    "name": "両手剣",
+    "display": 92,
+    "distance": 0.07784600182411427,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "弓",
+    "display": 72,
+    "distance": 0.2757897750098796,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "長柄",
+    "display": 71,
+    "distance": 0.29250641018617013,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "片手剣",
+    "display": 63,
+    "distance": 0.3676411293639492,
+    "band": "bottom"
+   },
+   {
+    "rank": 5,
+    "name": "法器",
+    "display": 61,
+    "distance": 0.39441095319476116,
+    "band": "bottom"
+   }
+  ],
+  "nation": [
+   {
+    "rank": 1,
+    "name": "ナタ",
+    "display": 99,
+    "distance": 0.010121925633727047,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "モンド",
+    "display": 87,
+    "distance": 0.13364895249271358,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "スメール",
+    "display": 62,
+    "distance": 0.3781402275229223,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "スネージナヤ",
+    "display": 58,
+    "distance": 0.41959666178950633,
+    "band": "middle"
+   },
+   {
+    "rank": 5,
+    "name": "ナド・クライ",
+    "display": 57,
+    "distance": 0.4280920146647673,
+    "band": "middle"
+   },
+   {
+    "rank": 6,
+    "name": "フォンテーヌ",
+    "display": 26,
+    "distance": 0.7417752067799225,
+    "band": "middle"
+   },
+   {
+    "rank": 7,
+    "name": "璃月",
+    "display": 21,
+    "distance": 0.7923519714157912,
+    "band": "bottom"
+   },
+   {
+    "rank": 8,
+    "name": "稲妻",
+    "display": 6,
+    "distance": 0.9370973918844228,
+    "band": "bottom"
+   }
+  ]
+ },
+ "mirror": {
+  "top10": [
+   {
+    "rank": 1,
+    "name": "タルタリヤ",
+    "display": 83,
+    "raw": 83.06621764318155
+   },
+   {
+    "rank": 2,
+    "name": "香菱",
+    "display": 83,
+    "raw": 83.00716115423032
+   },
+   {
+    "rank": 3,
+    "name": "ファルカ",
+    "display": 82,
+    "raw": 81.85522893825635
+   },
+   {
+    "rank": 4,
+    "name": "辛炎",
+    "display": 80,
+    "raw": 80.38186994984082
+   },
+   {
+    "rank": 5,
+    "name": "北斗",
+    "display": 79,
+    "raw": 78.95734500277018
+   },
+   {
+    "rank": 6,
+    "name": "ガイア",
+    "display": 79,
+    "raw": 78.57884206537047
+   },
+   {
+    "rank": 7,
+    "name": "ヴァレサ",
+    "display": 78,
+    "raw": 78.45768804622392
+   },
+   {
+    "rank": 8,
+    "name": "ベネット",
+    "display": 78,
+    "raw": 78.33764128240603
+   },
+   {
+    "rank": 9,
+    "name": "ヤフォダ",
+    "display": 78,
+    "raw": 78.10543838352669
+   },
+   {
+    "rank": 10,
+    "name": "荒瀧一斗",
+    "display": 78,
+    "raw": 77.90098109293041
+   }
+  ],
+  "selected": {
+   "name": "タルタリヤ",
+   "canonicalIndex": 22,
+   "rawRank": 1
+  }
+ },
+ "hidden": {
+  "top10": [
+   {
+    "rank": 1,
+    "name": "タルタリヤ",
+    "display": 88,
+    "raw": 0.8770685167776009
+   },
+   {
+    "rank": 2,
+    "name": "ファルカ",
+    "display": 85,
+    "raw": 0.8500972097677344
+   },
+   {
+    "rank": 3,
+    "name": "北斗",
+    "display": 83,
+    "raw": 0.8299754092957441
+   },
+   {
+    "rank": 4,
+    "name": "荒瀧一斗",
+    "display": 76,
+    "raw": 0.755674772166782
+   },
+   {
+    "rank": 5,
+    "name": "香菱",
+    "display": 73,
+    "raw": 0.7310380437546611
+   },
+   {
+    "rank": 6,
+    "name": "ドリー",
+    "display": 73,
+    "raw": 0.7297759246256457
+   },
+   {
+    "rank": 7,
+    "name": "プルーネ",
+    "display": 72,
+    "raw": 0.717675338807593
+   },
+   {
+    "rank": 8,
+    "name": "ヴァレサ",
+    "display": 71,
+    "raw": 0.7110548191249775
+   },
+   {
+    "rank": 9,
+    "name": "ベネット",
+    "display": 70,
+    "raw": 0.698094866108283
+   },
+   {
+    "rank": 10,
+    "name": "アンバー",
+    "display": 70,
+    "raw": 0.6975717353485849
+   }
+  ]
+ },
+ "mentor": {
+  "status": "goal_not_selected",
+  "changes": [],
+  "top10": []
+ },
+ "domains": [
+  {
+   "key": "understanding",
+   "display": 51
+  },
+  {
+   "key": "integration",
+   "display": 55
+  },
+  {
+   "key": "sustain",
+   "display": 60
+  },
+  {
+   "key": "expression",
+   "display": 77
+  }
+ ]
+}

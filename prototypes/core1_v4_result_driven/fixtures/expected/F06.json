@@ -1,0 +1,415 @@
+{
+ "axes": {
+  "personality": {
+   "O": 25,
+   "C": 84,
+   "E": 53,
+   "A": 88,
+   "N": 31
+  },
+  "style": {
+   "AGY": 54,
+   "REL": 63,
+   "ROL": 83,
+   "REF": 42,
+   "AUT": 38
+  },
+  "values": {
+   "SD": 42,
+   "ST": 33,
+   "HE": 42,
+   "AC": 75,
+   "PO": 67,
+   "SE": 67,
+   "CO": 58,
+   "TR": 83,
+   "BE": 58,
+   "UN": 50
+  }
+ },
+ "values_flat": false,
+ "rankings": {
+  "element": [
+   {
+    "rank": 1,
+    "name": "岩",
+    "display": 96,
+    "distance": 0.03872983346207419,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "炎",
+    "display": 77,
+    "distance": 0.23302360395462088,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "水",
+    "display": 71,
+    "distance": 0.28548204847240394,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "草",
+    "display": 69,
+    "distance": 0.30967725134404045,
+    "band": "middle"
+   },
+   {
+    "rank": 5,
+    "name": "雷",
+    "display": 62,
+    "distance": 0.3845776904605882,
+    "band": "middle"
+   },
+   {
+    "rank": 6,
+    "name": "風",
+    "display": 60,
+    "distance": 0.39585350825778975,
+    "band": "bottom"
+   },
+   {
+    "rank": 7,
+    "name": "氷",
+    "display": 56,
+    "distance": 0.4362338822237448,
+    "band": "bottom"
+   }
+  ],
+  "weapon": [
+   {
+    "rank": 1,
+    "name": "長柄",
+    "display": 94,
+    "distance": 0.05603570290448761,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "片手剣",
+    "display": 84,
+    "distance": 0.16413409152275468,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "法器",
+    "display": 69,
+    "distance": 0.30714817271147815,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "弓",
+    "display": 69,
+    "distance": 0.31247399891831,
+    "band": "bottom"
+   },
+   {
+    "rank": 5,
+    "name": "両手剣",
+    "display": 66,
+    "distance": 0.33947017542046315,
+    "band": "bottom"
+   }
+  ],
+  "nation": [
+   {
+    "rank": 1,
+    "name": "璃月",
+    "display": 98,
+    "distance": 0.0172675587225552,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "稲妻",
+    "display": 90,
+    "distance": 0.1048148453872696,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "スネージナヤ",
+    "display": 59,
+    "distance": 0.40863942405309983,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "フォンテーヌ",
+    "display": 53,
+    "distance": 0.4718353201658535,
+    "band": "middle"
+   },
+   {
+    "rank": 5,
+    "name": "スメール",
+    "display": 33,
+    "distance": 0.6718669127932253,
+    "band": "middle"
+   },
+   {
+    "rank": 6,
+    "name": "ナド・クライ",
+    "display": 27,
+    "distance": 0.7299759833190678,
+    "band": "middle"
+   },
+   {
+    "rank": 7,
+    "name": "ナタ",
+    "display": 21,
+    "distance": 0.7908694908103036,
+    "band": "bottom"
+   },
+   {
+    "rank": 8,
+    "name": "モンド",
+    "display": 10,
+    "distance": 0.9021409170568282,
+    "band": "bottom"
+   }
+  ]
+ },
+ "mirror": {
+  "top10": [
+   {
+    "rank": 1,
+    "name": "ノエル",
+    "display": 84,
+    "raw": 83.78672178184426
+   },
+   {
+    "rank": 2,
+    "name": "キャンディス",
+    "display": 82,
+    "raw": 82.48630686060375
+   },
+   {
+    "rank": 3,
+    "name": "重雲",
+    "display": 81,
+    "raw": 80.96110571173189
+   },
+   {
+    "rank": 4,
+    "name": "九条裟羅",
+    "display": 80,
+    "raw": 80.08130339105206
+   },
+   {
+    "rank": 5,
+    "name": "ジン",
+    "display": 80,
+    "raw": 79.96960534869689
+   },
+   {
+    "rank": 6,
+    "name": "シュヴルーズ",
+    "display": 79,
+    "raw": 79.44384005500812
+   },
+   {
+    "rank": 7,
+    "name": "イルーガ",
+    "display": 78,
+    "raw": 78.1163537097745
+   },
+   {
+    "rank": 8,
+    "name": "甘雨",
+    "display": 78,
+    "raw": 78.02890902558947
+   },
+   {
+    "rank": 9,
+    "name": "ヨォーヨ",
+    "display": 77,
+    "raw": 77.40371909191698
+   },
+   {
+    "rank": 10,
+    "name": "ゴロー",
+    "display": 77,
+    "raw": 77.36812236876887
+   }
+  ],
+  "selected": {
+   "name": "ノエル",
+   "canonicalIndex": 91,
+   "rawRank": 1
+  }
+ },
+ "hidden": {
+  "top10": [
+   {
+    "rank": 1,
+    "name": "ノエル",
+    "display": 90,
+    "raw": 0.8998177358450788
+   },
+   {
+    "rank": 2,
+    "name": "キャンディス",
+    "display": 89,
+    "raw": 0.8852224532982759
+   },
+   {
+    "rank": 3,
+    "name": "ゴロー",
+    "display": 87,
+    "raw": 0.8726156406771896
+   },
+   {
+    "rank": 4,
+    "name": "ジン",
+    "display": 87,
+    "raw": 0.8725353987250196
+   },
+   {
+    "rank": 5,
+    "name": "シュヴルーズ",
+    "display": 86,
+    "raw": 0.8649692059336298
+   },
+   {
+    "rank": 6,
+    "name": "九条裟羅",
+    "display": 83,
+    "raw": 0.8274476445112704
+   },
+   {
+    "rank": 7,
+    "name": "重雲",
+    "display": 83,
+    "raw": 0.8262852869079963
+   },
+   {
+    "rank": 8,
+    "name": "イルーガ",
+    "display": 82,
+    "raw": 0.8239822732481551
+   },
+   {
+    "rank": 9,
+    "name": "トーマ",
+    "display": 82,
+    "raw": 0.8214746075020709
+   },
+   {
+    "rank": 10,
+    "name": "カチーナ",
+    "display": 81,
+    "raw": 0.8141403722340957
+   }
+  ]
+ },
+ "mentor": {
+  "status": "ok",
+  "changes": [
+   {
+    "path": "personality.O",
+    "layer": "personality",
+    "axis": "O",
+    "before": 25,
+    "delta": 20,
+    "after": 45,
+    "clamped": false
+   },
+   {
+    "path": "values.ST",
+    "layer": "values",
+    "axis": "ST",
+    "before": 33,
+    "delta": 15,
+    "after": 48,
+    "clamped": false
+   }
+  ],
+  "top10": [
+   {
+    "rank": 1,
+    "name": "ノエル",
+    "display": 85,
+    "raw": 84.84488320970924
+   },
+   {
+    "rank": 2,
+    "name": "キャンディス",
+    "display": 84,
+    "raw": 83.9681477524706
+   },
+   {
+    "rank": 3,
+    "name": "ジン",
+    "display": 81,
+    "raw": 81.4285762448747
+   },
+   {
+    "rank": 4,
+    "name": "九条裟羅",
+    "display": 81,
+    "raw": 80.79482120287535
+   },
+   {
+    "rank": 5,
+    "name": "重雲",
+    "display": 81,
+    "raw": 80.6300791329604
+   },
+   {
+    "rank": 6,
+    "name": "シュヴルーズ",
+    "display": 80,
+    "raw": 80.45857858340169
+   },
+   {
+    "rank": 7,
+    "name": "ヨォーヨ",
+    "display": 79,
+    "raw": 79.39725197886159
+   },
+   {
+    "rank": 8,
+    "name": "ラウマ",
+    "display": 79,
+    "raw": 79.39026470582861
+   },
+   {
+    "rank": 9,
+    "name": "甘雨",
+    "display": 79,
+    "raw": 79.38874999184436
+   },
+   {
+    "rank": 10,
+    "name": "イルーガ",
+    "display": 79,
+    "raw": 79.09593939837526
+   }
+  ]
+ },
+ "domains": [
+  {
+   "key": "understanding",
+   "display": 40
+  },
+  {
+   "key": "integration",
+   "display": 60
+  },
+  {
+   "key": "sustain",
+   "display": 77
+  },
+  {
+   "key": "expression",
+   "display": 53
+  }
+ ]
+}

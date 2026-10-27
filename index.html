@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-FDN7NYZW9D"></script>
+<!-- GA4：js/ga.js が本番ドメインでだけ読み込む（Preview・ローカルでは送信しない）。
+     送る page_location は origin＋path だけ。イベントの値から記録 ID・メール・Stripe ID・トークンを落とす。 -->
+<script src="/js/ga.js"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-FDN7NYZW9D');
+  // 本番ドメイン以外（Preview・ローカル）では true。Stripe の旧 Payment Link（v1）をテスト用に切り替える。
+  var IS_PREVIEW_BUILD = location.hostname !== 'element-diagnosis-five.vercel.app';
 </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,12 +15,15 @@
   <meta property="og:title" content="元素診断 — あなたの気質と強みを知る">
   <meta property="og:description" content="100問の設問から、あなたの元素・武器・国家を映し出す心理傾向診断。">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="https://element-diagnosis-five.vercel.app/ogp.jpeg">
+  <meta property="og:image" content="https://element-diagnosis-five.vercel.app/assets/ogp/ogp-top-20261009.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="元素診断 アナタの内側にある、元素の輪郭を。">
   <meta property="og:url" content="https://element-diagnosis-five.vercel.app/">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="元素診断 — あなたの気質と強みを知る">
   <meta name="twitter:description" content="100問の設問から、あなたの元素・武器・国家を映し出す心理傾向診断。">
-  <meta name="twitter:image" content="https://element-diagnosis-five.vercel.app/ogp.jpeg">
+  <meta name="twitter:image" content="https://element-diagnosis-five.vercel.app/assets/ogp/ogp-top-20261009.jpg">
 
   <!-- ===== SEO強化：canonical + 構造化データ ===== -->
   <!-- WebApplicationの構造化データは既存のものが下にあるため、ここではFAQPageのみ追加 -->
@@ -34,7 +36,7 @@
       { "@type": "Question", "name": "元素診断とは何ですか？",
         "acceptedAnswer": { "@type": "Answer", "text": "元素診断は、Big Five・エニアグラム・シュワルツの価値観理論という3つの心理学的枠組みを土台に、原神の「元素」「武器種」「国家」というモチーフで性格を可視化する診断ツールです。100問の設問に答えると、35タイプの中からあなたに近いタイプが分かります。" } },
       { "@type": "Question", "name": "元素診断は無料ですか？",
-        "acceptedAnswer": { "@type": "Answer", "text": "はい、100問の診断と基本的な結果表示は無料です。より詳しいナラティブレポートは有償でご用意しています。" } },
+        "acceptedAnswer": { "@type": "Answer", "text": "はい、100問の診断と基本的な結果表示は無料です。より詳しい解析レポート（¥1,000）は有償でご用意しています。" } },
       { "@type": "Question", "name": "何タイプありますか？",
         "acceptedAnswer": { "@type": "Answer", "text": "7つの元素×5つの武器種の組み合わせで、全35タイプに分類されます。" } }
     ]
@@ -50,6 +52,13 @@
       --fg: #e0dcf0;
       --accent: #7ab8e8;
       --accent-dim: #2a5878;
+      /* 完了ページの文字色（役割ごと）：見出し・結論／本文／補足／ラベル補助、金アクセント、国家（価値観）の淡い金 */
+      --rx-primary: #E8F1F8;
+      --rx-secondary: #A9C2D3;
+      --rx-tertiary: #718A9C;
+      --rx-muted: #526776;
+      --rx-gold: #C9A860;
+      --rx-nation: #E0C890;
     }
     html { scroll-behavior: smooth; }
     body {
@@ -60,186 +69,324 @@
       overflow-x: hidden;
     }
 
-    /* ===== HERO ===== */
-    .hero {
-      position: relative;
-      min-height: 100svh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 60px 24px 80px;
-      overflow: hidden;
+    /* ===== TOP（確定版：index-demo-v3 を正本に移植。.tp 配下にだけ効かせ、診断・結果画面のスタイルとは衝突させない） ===== */
+    :root {
+      --t-head: #e2e4f6; --t-body: #8e9dbf; --t-sub: #6f7ea3; --t-en: #56648a; --t-brand: #7aa2cf; --t-link: #86b6e6;
+      --c-el: #a8d8f0; --c-wp: #8ccfd6; --c-na: #e0c890; --c-mi: #b8a8e0;
+      --d-p: #b48ad8; --d-s: #dcae5a; --d-v: #5cc4b0; --d-m: #a9bfe6;
+      --font-jp: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+      --font-en: 'IM Fell English', 'Times New Roman', serif;
     }
-    .hero-bg {
-      position: absolute;
-      inset: 0;
+    /* 一枚の夜：背景画像＋色レイヤー（固定。セクションごとに切り替えない） */
+    .night { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: var(--bg); }
+    .night .photo {
+      position: absolute; top: 0; left: 0; right: 0; height: 128svh;
+      background: url('/assets/backgrounds/quiet-starry-lake.jpg') center top / cover no-repeat;
+      opacity: .26; filter: brightness(.6) saturate(.75) contrast(.95);
+    }
+    .night .tint {
+      position: absolute; inset: 0;
       background:
-        radial-gradient(ellipse 80% 60% at 50% 30%, rgba(100,60,180,0.18) 0%, transparent 70%),
-        radial-gradient(ellipse 60% 80% at 20% 80%, rgba(40,100,160,0.10) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 50% at 80% 70%, rgba(180,80,40,0.08) 0%, transparent 60%);
-      pointer-events: none;
+        radial-gradient(ellipse 90% 40% at 50% 34%, rgba(7,7,15,.55), transparent 75%),
+        radial-gradient(ellipse 80% 50% at 50% 24%, rgba(100,60,180,.14), transparent 70%),
+        radial-gradient(ellipse 60% 40% at 12% 84%, rgba(40,90,170,.10), transparent 65%),
+        radial-gradient(ellipse 45% 35% at 90% 62%, rgba(60,60,150,.08), transparent 65%),
+        linear-gradient(180deg, rgba(7,7,15,.5) 0%, rgba(7,7,15,0) 22%);
     }
-    /* 七元素 回転リング */
-    .hero-ring {
-      position: absolute;
-      top: 50%; left: 50%;
-      width: min(520px, 90vw);
-      height: min(520px, 90vw);
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      animation: ring-spin 60s linear infinite;
+    .tp { position: relative; z-index: 1; color: var(--t-head); }
+    .tp .deep { background: linear-gradient(180deg, rgba(7,7,15,0) 0, rgba(8,8,20,.78) 180px, rgba(8,8,20,.84) 100%); }
+    .tp .wrap { max-width: 720px; margin: 0 auto; padding-inline: 24px; }
+    .tp .eyebrow { font-family: var(--font-en); font-style: italic; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: #5d7cab; margin-bottom: 16px; }
+    .tp .h2 { font-size: clamp(20px, 3.5vw, 28px); font-weight: 700; line-height: 1.5; color: var(--t-head); margin-bottom: 20px; }
+    .tp .link { display: inline-flex; align-items: center; gap: 6px; color: var(--t-link); font-size: 12.5px; text-decoration: none; border-bottom: 1px solid rgba(134,182,230,.32); padding-bottom: 2px; }
+    .tp .link .arw { transition: transform .2s; display: inline-block; }
+    .tp .link:hover .arw { transform: translateX(3px); }
+    .tp .link:focus-visible, .tp .cta:focus-visible, .tp summary:focus-visible { outline: 1px solid var(--t-link); outline-offset: 4px; }
+    .tp .spark { position: relative; width: 132px; height: 1px; margin: 0 auto; background: linear-gradient(90deg, transparent, rgba(160,180,240,.35), transparent); }
+    .tp .spark::after { content: ''; position: absolute; left: 50%; top: 50%; width: 3px; height: 3px; margin: -1.5px 0 0 -1.5px; border-radius: 50%; background: #dfe8ff; box-shadow: 0 0 6px 1px rgba(170,190,255,.7); }
+    .tp .jp { word-break: auto-phrase; }
+    /* HERO（寸法は旧 .hero と同じ） */
+    .tp .hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 60px 24px 80px; }
+    .tp .gems { position: absolute; inset: 0; pointer-events: none; }
+    .tp .gem { position: absolute; width: 56px; height: 56px; transform-origin: top left; }
+    .tp .gem svg { display: block; filter: drop-shadow(0 0 6px var(--gc)); }
+    .tp .hero-content { position: relative; z-index: 2; max-width: 680px; }
+    .tp .hero-en { display: flex; align-items: center; justify-content: center; gap: 12px; font-family: var(--font-en); font-style: italic; font-size: clamp(11px, 1.8vw, 14px); letter-spacing: .25em; text-transform: uppercase; color: var(--t-brand); text-shadow: 0 0 14px rgba(122,162,207,.22); margin-bottom: 20px; white-space: nowrap; }
+    .tp .hero-en .rule { width: 28px; height: 1px; background: rgba(122,162,207,.45); flex: none; }
+    @media (max-width: 560px) { .tp .hero-en { white-space: normal; } .tp .hero-en .rule { display: none; } }
+    .tp .hero-title { font-size: clamp(32px, 8vw, 64px); font-weight: 700; line-height: 1.15; letter-spacing: .05em; color: #f1eeff; margin-bottom: 10px; text-shadow: 0 0 30px rgba(140,130,240,.24), 0 2px 18px rgba(7,7,15,.8); }
+    .tp .hero-sub { font-family: var(--font-en), var(--font-jp); font-style: italic; font-size: clamp(16px, 3.5vw, 26px); letter-spacing: .08em; color: #86acd8; margin-bottom: 28px; }
+    .tp .hero .spark { margin-bottom: 28px; }
+    .tp .hero-desc { font-size: clamp(13px, 1.8vw, 15px); line-height: 1.95; color: var(--t-body); max-width: 520px; margin: 0 auto 36px; }
+    .tp .hero-desc strong { font-weight: 700; }
+    .tp .k-el { color: var(--c-el); } .tp .k-wp { color: var(--c-wp); } .tp .k-na { color: var(--c-na); }
+    .tp .hero-desc .theory-line { color: var(--t-sub); }
+    .tp .hero-desc .en { display: block; margin-top: 10px; font-family: var(--font-en); font-style: italic; font-size: clamp(11px, 1.5vw, 13px); color: var(--t-en); }
+    .tp .cta-wrap { display: flex; flex-direction: column; align-items: center; }
+    .tp .cta { display: inline-block; padding: 16px 48px; border-radius: 6px; text-decoration: none; font-family: var(--font-jp); font-size: 15px; letter-spacing: .2em; color: #eef4ff; background: linear-gradient(135deg, #1b4c86 0%, #2556a0 52%, #3c4a9e 100%); border: 1px solid rgba(150,180,240,.22); box-shadow: 0 0 32px rgba(90,80,200,.24), 0 12px 26px rgba(0,0,0,.4), inset 0 1px 0 rgba(210,225,255,.16); transition: filter .2s, box-shadow .2s; cursor: pointer; }
+    .tp .cta:hover { filter: brightness(1.1); box-shadow: 0 0 36px rgba(100,90,210,.3), 0 12px 26px rgba(0,0,0,.4), inset 0 1px 0 rgba(210,225,255,.2); }
+    .tp .cta .en { font-family: var(--font-en); letter-spacing: .14em; }
+    /* マイページ入口：主CTAの下の補助導線（右上のMY PAGEボタンは置かない） */
+    /* 右上のマイページ（ヒーローの中に置く。スクロールに追従しない）。白〜淡い水色の文字と小さな人物アイコンだけ。
+       囲み・ピル型にしない。タップ領域は 44px 以上。iPhone のセーフエリアの内側に置く */
+    .tp .hero-mypage { position: absolute; z-index: 2; top: max(10px, env(safe-area-inset-top)); right: max(10px, env(safe-area-inset-right));
+      display: inline-flex; align-items: center; gap: 6px; min-width: 44px; min-height: 44px; padding: 0 10px; box-sizing: border-box;
+      color: #b9d4ec; font-size: 12px; letter-spacing: .14em; text-decoration: none; opacity: .82;
+      transition: opacity .25s ease, color .25s ease, text-shadow .25s ease; -webkit-tap-highlight-color: transparent; }
+    .tp .hero-mypage svg { width: 15px; height: 15px; flex: none; }
+    .tp .hero-mypage:hover, .tp .hero-mypage:active { opacity: 1; color: #e4f1ff; text-shadow: 0 0 10px rgba(156,196,240,.55); }
+    .tp .hero-mypage:hover svg, .tp .hero-mypage:active svg { filter: drop-shadow(0 0 4px rgba(156,196,240,.6)); }
+    .tp .hero-mypage:focus-visible { outline: 1px solid rgba(156,196,240,.7); outline-offset: 2px; opacity: 1; }
+    @media (prefers-reduced-motion: reduce) { .tp .hero-mypage { transition: none; } }
+    .tp .hero-record-link { margin-top: 18px; color: #7896b3; font-size: 12px; letter-spacing: .08em; text-decoration: none; opacity: .9; transition: color .2s ease; }
+    .tp .hero-record-link:hover { color: #a8c7e3; }
+    .tp .hero-record-link .arw { display: inline-block; transition: transform .2s ease; }
+    .tp .hero-record-link:hover .arw { transform: translateX(3px); }
+    .tp .hero-record-link:focus-visible { outline: 1px solid var(--t-link); outline-offset: 4px; }
+    @media (max-width: 480px) { .tp .cta { padding: 14px 32px; font-size: 14px; } }
+    .tp .hero-scroll { position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); width: 1px; height: 38px; background: linear-gradient(180deg, rgba(140,170,230,.5), transparent); }
+    /* ABOUT（寸法は旧 .about と同じ） */
+    .tp .about { padding-block: 80px; }
+    .tp .about-body { font-size: 14px; line-height: 2; color: var(--t-body); }
+    .tp .about-body + .about-body { margin-top: 16px; }
+    .tp .about-body .q { color: #c3cde6; }
+    .tp .about-body.triad b { font-weight: 700; }
+    .tp .about-en { margin-top: 10px; font-family: var(--font-en); font-style: italic; font-size: 12px; color: var(--t-en); }
+    .tp .about .link { margin-top: 18px; }
+    .tp .theory { margin-top: 72px; padding-top: 30px; position: relative; }
+    .tp .theory::before { content: ''; position: absolute; top: 0; left: 0; width: 64px; height: 1px; background: linear-gradient(90deg, rgba(140,170,230,.4), transparent); }
+    .tp .theory-names { font-family: var(--font-en); font-size: 13px; letter-spacing: .06em; color: #a9b8da; }
+    .tp .theory-names i { font-style: normal; color: #4f628e; margin: 0 .4em; }
+    .tp .theory summary { list-style: none; cursor: pointer; margin-top: 10px; }
+    .tp .theory details[open] summary .arw { transform: rotate(90deg); }
+    .tp .theory dl { margin-top: 18px; }
+    .tp .theory .item { display: grid; grid-template-columns: 8em 1fr; gap: 14px; padding: 12px 0; border-top: 1px solid rgba(140,160,220,.08); }
+    .tp .theory .item:first-child { border-top: 0; }
+    .tp .theory dt { font-size: 12px; letter-spacing: .1em; color: #5d7cab; padding-top: 1px; }
+    .tp .theory dd { min-width: 0; font-size: 13px; line-height: 1.7; color: #99a8c8; }
+    .tp .theory dd small { display: block; font-family: var(--font-en); font-style: italic; font-size: 11px; color: var(--t-en); }
+    /* RECORDS / 公式LINE / DEEPER INSIGHT */
+    .tp .obs { padding-block: 0 80px; display: grid; gap: 80px; }
+    .tp .obs .lead { font-size: 14px; line-height: 2; color: var(--t-body); }
+    .tp .obs .link { margin-top: 18px; }
+    .tp .timeline { margin-top: 24px; }
+    .tp .timeline svg { display: block; width: 100%; max-width: 420px; height: auto; overflow: visible; }
+    .tp .timeline text { font-family: var(--font-en); font-style: italic; font-size: 10px; letter-spacing: .2em; fill: #5d7cab; }
+    .tp .timeline .now { fill: #c7d8f5; }
+    .tp .line-sec { --line-g: #7fd6a4; }
+    .tp .line-link { border-bottom-color: rgba(127,214,164,.34); transition: color .2s, border-color .2s, text-shadow .2s; }
+    .tp .line-link:hover { color: #bfe8d0; border-bottom-color: rgba(127,214,164,.6); text-shadow: 0 0 10px rgba(127,214,164,.18); }
+    .tp .line-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--line-g); box-shadow: 0 0 5px rgba(127,214,164,.55); flex: none; }
+    .tp .domains { margin-top: 22px; display: grid; gap: 12px; list-style: none; max-width: 420px; }
+    .tp .domains li { display: grid; grid-template-columns: 8px 7.6em 1fr; align-items: center; gap: 12px; font-size: 13px; color: #b3bfda; letter-spacing: .04em; }
+    .tp .domains .pt { width: 7px; height: 7px; border-radius: 50%; background: var(--dc); box-shadow: 0 0 6px var(--dc); }
+    .tp .domains .ln { height: 1px; background: linear-gradient(90deg, var(--dc), transparent); opacity: .55; width: var(--w); }
+    .tp .domains .en { font-family: var(--font-en); letter-spacing: .1em; }
+    /* 最終CTA */
+    .tp .final { text-align: center; padding-block: 0 80px; }
+    .tp .final .copy { margin-top: 24px; font-size: 14px; line-height: 1.8; letter-spacing: .1em; color: var(--t-body); }
+    .tp .final .cta-wrap { margin-top: 20px; }
+    @media (prefers-reduced-motion: reduce) { .tp .link .arw, .tp .hero-record-link .arw { transition: none; } }
+    /* ===== 診断中UI（確定版：diagnosis-ui-demo。表示のみ。renderQuizV2 の .qz 配下だけに効かせる） ===== */
+    .qz { margin-top: 32px; --qz-line: #172238; --qz-line-on: #3a5a92; --qz-dot: #2c3d5e; --qz-dot-on: #8fb4ea; --qz-dim: #5a6886; --qz-sub: #7f93b5; }
+    .qz-prog { margin-bottom: 20px; }
+    .qz-prog-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 9px; }
+    .qz-range { font-size: 12.5px; letter-spacing: .12em; color: #8aa3c8; font-variant-numeric: tabular-nums; }
+    .qz-range .of { color: var(--qz-dim); letter-spacing: .08em; }
+    .qz-count { font-size: 11.5px; letter-spacing: .08em; color: var(--qz-sub); font-variant-numeric: tabular-nums; }
+    .qz-count b { font-weight: 500; color: #a9c2e6; }
+    .qz-bar { height: 2px; border-radius: 1px; background: #121a2e; overflow: hidden; }
+    .qz-bar i { display: block; height: 100%; border-radius: 1px; background: linear-gradient(90deg, #2a3f78, #6f9fd8 70%, #a8d8f0); transition: width .3s ease; }
+    .qz-card { position: relative; background: #090d18; border: 1px solid var(--qz-line); border-radius: 12px; padding: 17px 18px 15px; margin-bottom: 10px; cursor: pointer;
+      transition: opacity .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease; }
+    .qz-no { font-size: 11px; letter-spacing: .14em; color: var(--qz-dim); margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+    .qz-text { font-size: 14.5px; line-height: 1.65; font-weight: 500; color: var(--qz-sub); margin: 0 0 14px; word-break: auto-phrase; }
+    .qz-card.is-active { opacity: 1; border-color: var(--qz-line-on); background: linear-gradient(170deg, #0f1a31 0%, #0c1425 55%, #0b1122 100%);
+      box-shadow: inset 0 0 22px rgba(90,120,210,.07), 0 0 0 1px rgba(110,140,230,.04); }
+    .qz-card.is-active .qz-no { color: #9ccbee; }
+    .qz-card.is-active .qz-text { color: #e4e2f6; }
+    .qz-card.is-done { opacity: .76; border-color: #131c2e; }
+    .qz-card.is-done .qz-text { color: #8391ad; }
+    .qz-card.is-next { opacity: .56; }
+    /* 回答した瞬間：次の設問が灯り、直前の設問が静かに沈む（180ms） */
+    .qz-card.is-arriving { animation: qz-arrive .18s ease both; }
+    .qz-card.is-settling { animation: qz-settle .18s ease both; }
+    @keyframes qz-arrive { from { opacity: .56; } to { opacity: 1; } }
+    @keyframes qz-settle { from { opacity: 1; } to { opacity: .76; } }
+    .qz-scale { display: flex; justify-content: space-between; align-items: center; padding: 0 4px; }
+    .qz-dot { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; cursor: pointer; padding: 0; background: transparent;
+      border: 1.5px solid var(--qz-dot); color: #5c6f93; font-family: inherit; font-size: 12px; line-height: 1; font-variant-numeric: tabular-nums;
+      display: grid; place-items: center; transition: background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease; }
+    .qz-card.is-active .qz-dot { border-color: #3a5078; color: #7d93bb; }
+    .qz-dot:hover { border-color: #56709e; color: #a6bbe0; }
+    .qz-dot:focus-visible { outline: 1px solid var(--qz-dot-on); outline-offset: 3px; }
+    .qz-dot.is-on, .qz-card.is-active .qz-dot.is-on { background: radial-gradient(circle at 40% 35%, rgba(150,170,245,.42), rgba(80,90,190,.34) 70%);
+      border-color: var(--qz-dot-on); color: #eef2ff; box-shadow: 0 0 0 1px rgba(160,190,250,.22), 0 0 8px rgba(120,150,240,.22); }
+    .qz-labels { display: flex; justify-content: space-between; margin-top: 8px; }
+    .qz-labels span { font-size: 10px; letter-spacing: .04em; color: var(--qz-dim); }
+    .qz-card.is-active .qz-labels span { color: var(--qz-sub); }
+    .qz-pager { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; }
+    .qz-pager button { background: transparent; border: 1px solid #1c2a44; color: #7f93b5; border-radius: 6px; padding: 8px 18px; font-size: 12px; letter-spacing: .04em; cursor: pointer; font-family: inherit; }
+    .qz-pager button:disabled { color: #2a3350; cursor: default; }
+    .qz-result { width: 100%; margin-top: 12px; border: none; color: #eef4ff; border-radius: 6px; padding: 12px; font-size: 13px; letter-spacing: .12em; cursor: pointer; font-family: inherit;
+      background: linear-gradient(135deg, #1b4c86 0%, #2556a0 52%, #3c4a9e 100%); }
+    .qz-jump { width: 100%; margin-top: 8px; background: transparent; border: 1px dashed #2a3c60; color: #7f93b5; border-radius: 6px; padding: 9px; font-size: 11.5px; cursor: pointer; font-family: inherit; }
+    @media (prefers-reduced-motion: reduce) {
+      .qz-card, .qz-dot, .qz-bar i { transition: none; }
+      .qz-card.is-arriving, .qz-card.is-settling { animation: none; }
     }
-    @keyframes ring-spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
-    .hero-ring-inner {
-      position: absolute;
-      top: 50%; left: 50%;
-      width: min(360px, 62vw);
-      height: min(360px, 62vw);
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      animation: ring-spin 40s linear infinite reverse;
-    }
-    .ring-dot {
-      position: absolute;
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      top: 50%; left: 50%;
-      filter: blur(0.5px);
-    }
-    .hero-content { position: relative; z-index: 2; max-width: 680px; }
-    .hero-en {
-      font-family: 'IM Fell English', serif;
-      font-style: italic;
-      font-size: clamp(11px, 1.8vw, 14px);
-      letter-spacing: 0.25em;
-      color: var(--accent-dim);
-      text-transform: uppercase;
-      margin-bottom: 20px;
-      display: block;
-    }
-    .hero-title {
-      font-size: clamp(32px, 8vw, 64px);
-      font-weight: 700;
-      line-height: 1.15;
-      letter-spacing: 0.05em;
-      color: #f0e8ff;
-      margin-bottom: 10px;
-    }
-    .hero-title-sub {
-      font-family: 'IM Fell English', serif;
-      font-style: italic;
-      font-size: clamp(16px, 3.5vw, 26px);
-      color: #6098c0;
-      letter-spacing: 0.08em;
-      margin-bottom: 28px;
-    }
-    .hero-desc {
-      font-size: clamp(13px, 1.8vw, 15px);
-      line-height: 1.95;
-      color: #6a90a8;
-      max-width: 520px;
-      margin: 0 auto 36px;
-    }
-    .hero-desc-en {
-      font-family: 'IM Fell English', serif;
-      font-style: italic;
-      font-size: clamp(11px, 1.5vw, 13px);
-      color: #5a80a0;
-      margin-top: 10px;
-      display: block;
-    }
-    .hero-cta {
-      display: inline-block;
-      background: linear-gradient(135deg, #1a4a78, #2a6a9a);
-      color: #e0f4ff;
-      text-decoration: none;
-      border: none;
-      border-radius: 6px;
-      padding: 16px 48px;
-      font-size: 15px;
-      font-family: 'Noto Serif JP', serif;
-      letter-spacing: 0.2em;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.2s;
-      box-shadow: 0 0 32px rgba(120,80,200,0.25);
-    }
-    .hero-cta:hover { opacity: 0.88; transform: translateY(-1px); }
-    .hero-scroll {
-      position: absolute;
-      bottom: 28px; left: 50%;
-      transform: translateX(-50%);
-      color: #7098b8;
-      font-size: 11px;
-      letter-spacing: 0.2em;
-      animation: scroll-fade 2.5s ease-in-out infinite;
-    }
-    @keyframes scroll-fade { 0%,100%{opacity:0.3} 50%{opacity:0.8} }
 
-    /* 七元素ラベル行 */
-    .elements-strip {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 28px;
-    }
-    .el-tag {
-      font-size: 12px;
-      padding: 3px 10px;
-      border-radius: 3px;
-      letter-spacing: 0.05em;
-      opacity: 0.85;
-    }
+    /* ===== 診断記録カード（確定版：result-save-demo。完了ページの保存カードだけに効かせる） ===== */
+    .rs-card { position: relative; overflow: hidden; text-align: center; border-radius: 12px; padding: 22px 20px 20px; margin-bottom: 16px;
+      border: 1px solid #243353; color: #e2e4f6;
+      background: radial-gradient(ellipse 70% 90% at 12% 110%, color-mix(in srgb, var(--el) 9%, transparent), transparent 70%), linear-gradient(165deg, #0d1428 0%, #0a0e1b 60%, #080b16 100%); }
+    .rs-card::before { content: ''; position: absolute; top: 0; left: 18%; right: 18%; height: 1px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--el) 55%, transparent), transparent); }
+    .rs-label { font-size: 11px; letter-spacing: .3em; color: #8aa3c8; margin-bottom: 12px; }
+    .rs-text { font-size: 13px; line-height: 1.95; color: #9aa8c6; margin: 0 0 18px; word-break: auto-phrase; }
+    .rs-btn { display: flex; align-items: center; justify-content: center; width: 100%; border: 1px solid rgba(150,180,240,.2); border-radius: 8px; padding: 14px;
+      font-family: inherit; font-size: 13.5px; letter-spacing: .14em; color: #eef3ff; cursor: pointer;
+      background: linear-gradient(135deg, #16284f 0%, #1f4282 55%, color-mix(in srgb, var(--el) 28%, #24428a) 100%);
+      box-shadow: inset 0 1px 0 rgba(210,225,255,.12), 0 8px 20px rgba(0,0,0,.35); transition: filter .2s; }
+    .rs-btn:hover { filter: brightness(1.08); }
+    .rs-btn[disabled] { cursor: default; filter: none; }
+    .rs-btn:focus-visible, .rs-link:focus-visible { outline: 1px solid #8fb6e8; outline-offset: 3px; }
+    .rs-link { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; border-radius: 8px; padding: 13px;
+      font-size: 13.5px; letter-spacing: .12em; text-decoration: none; color: #d9e6fb;
+      border: 1px solid color-mix(in srgb, var(--el) 30%, #2c3f66); background: rgba(20,30,60,.45); transition: background .2s; }
+    .rs-link:hover { background: rgba(30,44,86,.6); }
+    .rs-link .arw { display: inline-block; transition: transform .2s; }
+    .rs-link:hover .arw { transform: translateX(3px); }
+    .rs-done { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: .12em; color: #a9c6ea; margin-bottom: 10px; }
+    .rs-done::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: color-mix(in srgb, var(--el) 70%, #cfe0ff); box-shadow: 0 0 6px color-mix(in srgb, var(--el) 50%, transparent); }
+    .rs-saving { position: relative; height: 1px; margin: 14px auto 0; width: 60%; background: #1c2a48; overflow: hidden; }
+    .rs-saving::after { content: ''; position: absolute; top: 0; left: -40%; width: 40%; height: 100%; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--el) 60%, #a8c8f0), transparent); animation: rs-sweep 1.4s ease-in-out infinite; }
+    @keyframes rs-sweep { to { left: 100%; } }
+    .rs-err { font-size: 12px; line-height: 1.8; color: #d6a8b8; margin: -6px 0 14px; }
+    /* 確認中は中立の1行だけ（確定後に1回だけ描画する） */
+    .rs-pending { min-height: 20px; margin: 0; font-size: 12px; letter-spacing: .08em; color: #6f82a6; text-align: center; }
+    .rs-sub { font-size: 12px; line-height: 1.8; color: #8c9bbb; margin: 10px 0 0; word-break: auto-phrase; }
+    .rs-done-head { font-size: 14px; letter-spacing: .08em; color: #cfe0f8; margin: 0 0 8px; }
+    .rs-link.rs-quiet { margin-top: 4px; padding: 10px; font-size: 12.5px; border-color: #24365a; background: transparent; }
 
-    /* ===== ABOUT ===== */
-    .about {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 80px 24px;
-      border-top: 1px solid #0e1e30;
-    }
-    .section-label {
-      font-family: 'IM Fell English', serif;
-      font-style: italic;
-      font-size: 11px;
-      letter-spacing: 0.3em;
-      color: var(--accent-dim);
-      text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-    .about-title {
-      font-size: clamp(20px, 3.5vw, 28px);
-      font-weight: 700;
-      color: #c8e8f8;
-      line-height: 1.5;
-      margin-bottom: 20px;
-    }
-    .about-body {
-      font-size: 14px;
-      line-height: 2;
-      color: #6a90a8;
-    }
-    .about-body + .about-body { margin-top: 16px; }
-    .about-en {
-      font-family: 'IM Fell English', serif;
-      font-style: italic;
-      font-size: 12px;
-      color: #5a80a0;
-      margin-top: 10px;
-    }
+    /* 完全解析：¥1,000の案内の後に置く折りたたみ。閉じた状態は細い一行だけ。主CTAより一段弱い枠線型ボタン。
+       役割ごとの色（白一色にしない）：見出し --ca-title／本文 --ca-body／補足 --ca-muted／罫 --ca-line／価格 --ca-gold／
+       人物像 --ca-mirror・--ca-hidden・--ca-mentor */
+    .ca-fold { --ca-title: #e0dcf0; --ca-body: #aaa5bb; --ca-muted: #817b96; --ca-line: #2d2944; --ca-gold: #c9a860;
+      --ca-mirror: #83b9da; --ca-hidden: #ac82d4; --ca-mentor: #d3ad68;
+      margin-top: 22px; border-top: 1px solid var(--ca-line); text-align: left; }
+    .ca-fold > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; min-height: 48px; padding: 0 4px; color: var(--ca-body); font-size: 13px; letter-spacing: .08em; cursor: pointer; }
+    .ca-fold > summary::-webkit-details-marker { display: none; }
+    .ca-fold > summary::after { content: ''; width: 7px; height: 7px; border-right: 1px solid var(--ca-muted); border-bottom: 1px solid var(--ca-muted); transform: rotate(45deg); margin: -4px 6px 0 0; }
+    .ca-fold[open] > summary::after { transform: rotate(-135deg); margin-top: 4px; }
+    .ca-fold > summary:focus-visible { outline: 2px solid #7ab8e8; outline-offset: 2px; }
+    .ca-fold-body { padding: 8px 4px 6px; }
+    .ca-fold .ca-eyebrow { font-size: 10.5px; letter-spacing: .2em; color: var(--ca-muted); }
+    .ca-fold .ca-lead { word-break: auto-phrase; margin: 6px 0 0; font-size: 14px; color: var(--ca-title); line-height: 1.8; letter-spacing: .05em; }
+    .ca-fold .ca-body { margin: 12px 0 0; font-size: 12.5px; color: var(--ca-body); line-height: 1.9; }
+    .ca-fold .ca-meta { margin: 6px 0 0; font-size: 11.5px; color: var(--ca-muted); line-height: 1.7; }
+    .ca-lens-list { list-style: none; margin: 14px 0 0; padding: 0; border-top: 1px solid var(--ca-line); }
+    .ca-lens { position: relative; padding: 10px 2px 10px 14px; border-bottom: 1px solid var(--ca-line); }
+    .ca-lens::before { content: ''; position: absolute; left: 0; top: 10px; bottom: 10px; width: 2px; border-radius: 1px; background: var(--lens-c); }
+    .ca-lens--mirror { --lens-c: var(--ca-mirror); } .ca-lens--hidden { --lens-c: var(--ca-hidden); } .ca-lens--mentor { --lens-c: var(--ca-mentor); }
+    .ca-lens-head { display: block; }
+    .ca-lens-en { font-size: 12px; letter-spacing: .16em; color: var(--lens-c); }
+    .ca-lens-desc { display: block; margin-top: 1px; font-size: 12.5px; color: var(--ca-body); line-height: 1.7; }
+    .ca-fold-price { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 18px; padding-top: 10px; border-top: 1px dashed var(--ca-line); }
+    .ca-fold-price .ca-meta { margin: 0; }
+    .ca-fold-price .ca-price { flex: none; white-space: nowrap; font-size: 16px; letter-spacing: .06em; color: var(--ca-gold); }
+    .ca-fold-btn { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 46px; margin-top: 10px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--el, #7ab8e8) 45%, var(--ca-line)); background: transparent; color: var(--ca-title); font-family: inherit; font-size: 14px; letter-spacing: .08em; text-decoration: none; }
+    .ca-fold-btn-quiet { border-color: var(--ca-line); color: var(--ca-muted, #8a93a8); font-size: 13px; cursor: pointer; }
+    .ca-fold-btn:focus-visible { outline: 2px solid #7ab8e8; outline-offset: 2px; }
+    /* 準備中（決済未接続）：押せないことが分かる見た目。button 既定の文字指定を打ち消す */
+    .ca-fold-btn.is-pending { font-family: inherit; font-size: 13px; letter-spacing: .06em; color: #9aa8c6; background: transparent; border-style: dashed; cursor: not-allowed; opacity: 1; }
+    .ca-goal-list { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 0; padding: 0; border: none; }
+    .ca-goal-list legend { font-size: 12px; color: var(--ca-body); margin-bottom: 4px; padding: 0; }
+    .ca-goal { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--ca-line); border-radius: 8px; cursor: pointer; }
+    .ca-goal input { margin-top: 5px; flex: none; }
+    .ca-goal b { display: block; font-weight: 600; font-size: 13px; color: var(--ca-title); line-height: 1.7; }
+    .ca-goal span { display: block; font-size: 11.5px; color: var(--ca-muted); line-height: 1.7; }
+    .ca-goal:has(input:checked) { border-color: color-mix(in srgb, var(--el, #7ab8e8) 60%, var(--ca-line)); }
+    .ca-fold-btn[disabled] { opacity: .55; cursor: default; }
+    .ca-guest-msg { margin: 8px 0 0; font-size: 11.5px; color: #d6a8b8; line-height: 1.7; }
+    .ca-guest-msg:empty { display: none; }
+    .ca-fold-note { margin: 10px 0 0; padding-left: 8px; border-left: 2px solid var(--ca-line); font-size: 11px; color: var(--ca-muted); line-height: 1.7; }
+    /* 完全解析の申込：夜空に元素の光がさす宝石の色（元素診断の世界観。結果の元素色 --el を差し色に） */
+    .ca-fold-btn-buy { position: relative; overflow: hidden; flex-direction: column; gap: 3px; min-height: 60px; padding: 10px 14px; cursor: pointer; color: #f3ead2;
+      border: 1px solid rgba(214, 189, 132, .55);
+      background:
+        radial-gradient(1.2px 1.2px at 14% 28%, rgba(255,255,255,.75) 50%, transparent 52%),
+        radial-gradient(1px 1px at 33% 74%, rgba(255,255,255,.5) 50%, transparent 52%),
+        radial-gradient(1.3px 1.3px at 78% 30%, rgba(255,248,220,.7) 50%, transparent 52%),
+        radial-gradient(1px 1px at 91% 70%, rgba(255,255,255,.45) 50%, transparent 52%),
+        radial-gradient(130% 170% at 0% 0%, color-mix(in srgb, var(--el, #7ab8e8) 46%, transparent) 0%, transparent 58%),
+        radial-gradient(90% 140% at 100% 100%, rgba(201, 168, 96, .38) 0%, transparent 60%),
+        linear-gradient(115deg, #0f1630 0%, #1d2147 42%, #31285a 70%, #4a3a52 100%);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 0 22px color-mix(in srgb, var(--el, #7ab8e8) 22%, transparent); }
+    .ca-fold-btn-buy::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 30%, rgba(255,240,200,.12) 48%, transparent 66%); transform: translateX(-100%); animation: ca-buy-sheen 5.5s ease-in-out infinite; pointer-events: none; }
+    @keyframes ca-buy-sheen { 0%, 62% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+    @media (prefers-reduced-motion: reduce) { .ca-fold-btn-buy::after { animation: none; display: none; } }
+    .ca-fold-btn-buy .ca-buy-main { font-size: 15px; font-weight: 600; letter-spacing: .14em; text-shadow: 0 0 12px rgba(255, 236, 190, .35); }
+    .ca-fold-btn-buy .ca-buy-sub { font-size: 11.5px; letter-spacing: .12em; color: #d6bd84; }
+    .ca-fold-btn-buy[disabled] { background: transparent; color: #9aa8c6; box-shadow: none; border: 1px dashed var(--ca-line); }
+    .ca-fold-btn-buy[disabled]::after { display: none; }
+    /* サンプルへの導線 */
+    .ca-sample-link { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--ca-gold) 45%, var(--ca-line));
+      border-radius: 10px; background: rgba(201, 168, 96, .06); color: var(--ca-title); text-decoration: none; }
+    .ca-sample-link:focus-visible { outline: 2px solid #7ab8e8; outline-offset: 2px; }
+    .ca-sample-icon { flex: none; width: 30px; height: 36px; border: 1px solid var(--ca-gold); border-radius: 3px; position: relative; background: linear-gradient(180deg, rgba(201,168,96,.18), transparent); }
+    .ca-sample-icon::before, .ca-sample-icon::after { content: ''; position: absolute; left: 6px; right: 6px; height: 1px; background: var(--ca-gold); opacity: .7; }
+    .ca-sample-icon::before { top: 10px; } .ca-sample-icon::after { top: 16px; }
+    .ca-sample-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .ca-sample-text b { font-size: 13.5px; font-weight: 600; letter-spacing: .06em; }
+    .ca-sample-text small { font-size: 11px; color: var(--ca-muted); line-height: 1.6; }
+    .ca-sample-go { flex: none; color: var(--ca-gold); font-size: 14px; }
+    /* 診断結果の固有リンクの案内（控えめに） */
+    .resume-note { margin: 0 0 14px; padding: 10px 12px; border: 1px solid #1e3448; border-radius: 8px; font-size: 11.5px; line-height: 1.8; color: #8c9bbb; text-align: left; }
+    .resume-note[hidden] { display: none; }
+    .resume-err { margin: 48px 0; padding: 24px 18px; border: 1px solid #1e3448; border-radius: 10px; text-align: center; }
+    .resume-err-title { margin: 0; font-size: 16px; letter-spacing: .06em; color: #cfe0f8; }
+    .resume-err-body { margin: 12px 0 0; font-size: 12.5px; line-height: 1.8; color: #8c9bbb; }
+    .resume-err-link { display: inline-block; margin-top: 16px; padding: 10px 22px; border: 1px solid #2c4a6e; border-radius: 8px; color: #a8c8ec; text-decoration: none; font-size: 13px; }
+    /* BEYOND THE RESULT：閉じた状態は静かな予告だけ（決済ボタンは出さない）。開いた時だけ、三つの小さな光点と細い線が現れる */
+    .ca-reveal > summary { display: block; min-height: 0; padding: 16px 4px 12px; color: var(--ca-body); letter-spacing: .04em; }
+    .ca-reveal > summary::after { content: none; }
+    .ca-reveal-eyebrow { display: block; font-size: 10.5px; letter-spacing: .22em; color: color-mix(in srgb, var(--ca-gold) 70%, var(--ca-muted)); }
+    .ca-reveal-lead { display: block; margin-top: 10px; font-size: 13.5px; line-height: 1.95; color: var(--ca-title); word-break: auto-phrase; }
+    .ca-reveal-lens { display: block; margin-top: 8px; font-size: 11px; letter-spacing: .16em; color: var(--ca-muted); }
+    .ca-reveal-more { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 10px; font-size: 12px; letter-spacing: .1em; color: #8fb4dc; }
+    .ca-reveal-more::after { content: ''; width: 6px; height: 6px; border-right: 1px solid currentColor; border-bottom: 1px solid currentColor; transform: rotate(45deg); margin-top: -3px; }
+    .ca-reveal[open] .ca-reveal-more { display: none; }
+    .ca-reveal-stars { position: relative; height: 12px; margin: 4px 2px 6px; }
+    .ca-reveal-stars::before { content: ''; position: absolute; left: 3px; right: 3px; top: 5.5px; height: 1px; background: linear-gradient(90deg, transparent, var(--ca-line) 12%, var(--ca-line) 88%, transparent); transform-origin: left center; }
+    .ca-reveal-stars i { position: absolute; top: 3px; width: 6px; height: 6px; border-radius: 50%; background: var(--dot); box-shadow: 0 0 6px color-mix(in srgb, var(--dot) 45%, transparent); }
+    .ca-reveal-stars i:nth-child(1) { left: 12%; --dot: var(--ca-mirror); }
+    .ca-reveal-stars i:nth-child(2) { left: calc(50% - 3px); --dot: var(--ca-hidden); }
+    .ca-reveal-stars i:nth-child(3) { right: 12%; --dot: var(--ca-mentor); }
+    .ca-reveal[open] .ca-reveal-stars::before { animation: ca-reveal-line .9s ease-out both; }
+    .ca-reveal[open] .ca-reveal-stars i { animation: ca-reveal-dot .8s ease-out both; }
+    .ca-reveal[open] .ca-reveal-stars i:nth-child(2) { animation-delay: .15s; }
+    .ca-reveal[open] .ca-reveal-stars i:nth-child(3) { animation-delay: .3s; }
+    @keyframes ca-reveal-line { from { transform: scaleX(0); opacity: 0; } to { transform: scaleX(1); opacity: 1; } }
+    @keyframes ca-reveal-dot { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: scale(1); } }
+    .ca-reveal .ca-body { margin-top: 10px; font-size: 13px; line-height: 2; }
+    .ca-reveal-pages { margin: 16px 0 0; font-size: 12px; letter-spacing: .12em; color: var(--ca-gold); }
+    @media (prefers-reduced-motion: reduce) { .ca-reveal[open] .ca-reveal-stars::before, .ca-reveal[open] .ca-reveal-stars i { animation: none; } }
+    @media (prefers-reduced-motion: reduce) { .rs-saving::after { animation: none; left: 30%; } .rs-link .arw { transition: none; } }
 
     /* ===== DIAGNOSIS ===== */
     #diagnosis {
-      border-top: 1px solid #0e1e30;
+      position: relative; z-index: 1;
+      background: rgba(8,8,20,.86);
+      border-top: 1px solid rgba(140,160,220,.10);
       padding: 60px 0 0;
     }
     #diagnosis-root { min-height: 100vh; }
 
     /* ===== FOOTER ===== */
     footer {
-      border-top: 1px solid #0e1e30;
+      position: relative; z-index: 1;
+      background: rgba(7,7,15,.92);
+      border-top: 1px solid rgba(140,160,220,.10);
       padding: 48px 24px;
       text-align: center;
     }
@@ -277,12 +424,6 @@
       letter-spacing: 0.1em;
     }
 
-    @media (prefers-reduced-motion: reduce) {
-      .hero-ring, .hero-ring-inner { animation: none; }
-    }
-    @media (max-width: 480px) {
-      .hero-cta { padding: 14px 32px; font-size: 14px; }
-    }
     summary::-webkit-details-marker { display: none; }
     summary::marker { content: ""; }
 
@@ -309,80 +450,145 @@
     }
   }
   </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous"></script>
+<!-- Supabase の接続先（環境ごと）。diagnosis-save.js より前に同期で読み込む。取得できなければログイン・保存を止める -->
+<script src="/api/public-config?format=js"></script>
+<!-- 診断完了ページ：ページを開いただけでは登録完了（規約）モーダルを出さない。認証復帰後に保存する
+     診断（pending）があるときと、「保存」を押したときだけ判定する（diagnosis-save.js） -->
+<script>window.ED_REGISTRATION_CHECK_ON_LOAD = 'pending_only';</script>
+<script src="diagnosis-save.js"></script>
+<!-- 登録完了モーダル（新規ユーザーの初回認証後だけ。判定と記録は diagnosis-save.js） -->
+<script src="js/registration-onboarding.js"></script>
+<!-- 完全解析（46ページ）の表示用状態。PREVIEW ONLY：購入権は発行しない -->
+<script src="complete-analysis.js"></script>
+<script src="js/nav-busy.js"></script>
+<script src="js/guest-purchase.js"></script>
+<script src="js/report-purchase.js"></script>
+<script src="js/lens-constellation.js"></script>
+<script src="js/ETI_v2_QUESTIONS_100.js"></script>
+<script src="js/eti_v2_prototypes.js"></script>
+<script src="js/eti_v2_engine.js"></script>
+<script src="js/eti_v2_answer_collection.js"></script>
+<script src="js/characters118_v2.js"></script>
+<script src="js/characters118_v2_1.js"></script>
+<script src="js/eti_mirror_selection_v21.js"></script>
+<script src="js/eti_v2_mirror_resolver.js"></script>
+<script src="js/eti_v2_legacy_adapter.js"></script>
+<script src="js/eti_v2_save.js"></script>
+<script src="js/diagnosis-record-check.js"></script>
+<script src="js/auth-providers.js"></script>
 </head>
 <body>
 
-<!-- ===== HERO ===== -->
-<section class="hero">
-  <div class="hero-bg"></div>
+<!-- ===== TOP（確定版：index-demo-v3 を正本に移植。UIのみ。開始・計測の呼び出しは既存のまま） ===== -->
+<div class="night" aria-hidden="true"><div class="photo"></div><div class="tint"></div></div>
+<main class="tp">
+  <section class="hero" id="top">
+    <!-- 右上のマイページ（認証の判定・ログインはマイページ側の既存の仕組み。計測は既存の mypage_entry_click を使う） -->
+    <a href="/mypage.html" class="hero-mypage" onclick="trackEvent('mypage_entry_click',{entry_point:'top_header'})"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><circle cx="8" cy="5.4" r="2.6"/><path d="M2.8 14.2c.6-2.7 2.7-4.3 5.2-4.3s4.6 1.6 5.2 4.3" stroke-linecap="round"/></svg><span>マイページ</span></a>
+    <!-- 小さな結晶（renderHeroGems() が描画） -->
+    <div class="gems" id="heroGems" aria-hidden="true"></div>
+    <div class="hero-content">
+      <p class="hero-en"><span class="rule" aria-hidden="true"></span><span>Element Diagnosis — Know Your Nature</span><span class="rule" aria-hidden="true"></span></p>
+      <h1 class="hero-title">元素診断</h1>
+      <p class="hero-sub">あなたの気質と強みを、元素に映す</p>
+      <div class="spark" aria-hidden="true"></div>
+      <p class="hero-desc jp">
+        人の内には、7つの気質が流れている。<br>
+        100の問いに答えることで、あなたの<strong class="k-el">元素（内的な性質）</strong>と<strong class="k-wp">武器（強みと関わり方）</strong>と<strong class="k-na">国家（価値観）</strong>が映し出される。
+        <br><span class="theory-line">Big Five × エニアグラム × 価値観理論を土台にした、自己理解のための診断。</span>
+        <span class="en">Seven elements flow within. 100 questions to reveal your nature, strength, and values — a self-understanding diagnosis built on Big Five, Enneagram, and Values Theory.</span>
+      </p>
+      <div class="cta-wrap">
+        <a href="javascript:void(0)" class="cta" onclick="startNewDiagnosisV2()">診断をはじめる <span class="en">— Start</span></a>
+        <a href="/mypage.html" class="hero-record-link" onclick="trackEvent('mypage_entry_click',{entry_point:'top'})">診断記録を見る <span class="arw">→</span></a>
+      </div>
+    </div>
+    <span class="hero-scroll" aria-hidden="true"></span>
+  </section>
 
-  <!-- 七元素 回転リング（非表示） -->
+  <div class="deep">
+    <!-- ABOUT -->
+    <section class="about wrap">
+      <p class="eyebrow">About this Diagnosis</p>
+      <h2 class="h2">なぜ、元素で性格を測るのか</h2>
+      <p class="about-body jp">
+        ビッグファイブやエニアグラム、価値観理論といった心理尺度は、自分を知るための優れた地図だ。しかし数字や抽象的なラベルは、心に留まりにくい。そこでワタシは、原神というゲームの<span class="q">「元素」「国家」</span>体系に着目した。各キャラクターのパーソナリティに割り当てられた元素と、彼らが生きる国家を、心理傾向の軸として再解釈することで、結果が物語として記憶に残る診断を設計した。
+      </p>
+      <p class="about-body triad jp">
+        <b class="k-el">元素</b>は内的な気質。<b class="k-wp">武器</b>は他者との関わり方。<b class="k-na">国家</b>は何を大切にするかという価値観。3つの掛け合わせが、あなたという人間の輪郭を描く。
+      </p>
+      <p class="about-en">Big Five, Enneagram, and Values Theory provide reference frameworks for the diagnosis. The seven elements and seven nations provide the story that makes results memorable. Designed by a writer who spent years studying personality psychology and 118 characters across all seven elements and nations.</p>
+      <a class="link" href="https://note.com/mondayaxad/n/ne73b307f6273" target="_blank" rel="noopener">この診断が生まれた経緯を、noteで読む <span class="arw">→</span></a>
+      <div class="theory">
+        <p class="theory-names">Big Five<i>/</i>Enneagram<i>/</i>Values Theory</p>
+        <details>
+          <summary class="link">診断設計と心理理論について <span class="arw">→</span></summary>
+          <dl>
+            <div class="item"><dt>略称</dt><dd>ETI（Element Type Indicator）<small>"What's your ETI?"</small></dd></div>
+            <div class="item"><dt>診断形式</dt><dd>100問 / 5段階回答<small>100 questions · 5-point scale</small></dd></div>
+            <div class="item"><dt>測定軸</dt><dd>7元素 × 5武器 × 7国家<small>7 elements × 5 weapons × 7 nations</small></dd></div>
+            <div class="item"><dt>土台となる尺度</dt><dd>Big Five / Enneagram / Values Theory<small>Academic psychology base</small></dd></div>
+            <div class="item"><dt>料金</dt><dd class="jp">診断：無料 ／ 解析レポート：¥1,000<small>Diagnosis: Free / Analysis: ¥1,000</small></dd></div>
+          </dl>
+        </details>
+      </div>
+    </section>
 
-  <!-- 宝石の散りばめ装飾（リニューアル感） -->
-  <div id="heroGems" style="position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:1"></div>
+    <!-- RECORDS / 公式LINE / DEEPER INSIGHT -->
+    <div class="obs wrap">
+      <section aria-labelledby="rec-h">
+        <p class="eyebrow">Results That Stay With You</p>
+        <h2 class="h2" id="rec-h">記録として、残す</h2>
+        <p class="lead jp">診断結果は、あなたの記録として保存できます。<br>再診するたび、過去の結果が蓄積されていきます。</p>
+        <div class="timeline" aria-hidden="true">
+          <svg viewBox="0 0 320 44">
+            <line x1="6" y1="16" x2="306" y2="16" stroke="rgba(140,160,220,.22)" stroke-width="1"/>
+            <line x1="6" y1="16" x2="306" y2="16" stroke="url(#tp-tl)" stroke-width="1"/>
+            <defs><linearGradient id="tp-tl" x1="0" x2="1"><stop offset="0" stop-color="#7aa2cf" stop-opacity="0"/><stop offset="1" stop-color="#a8d8f0" stop-opacity=".7"/></linearGradient></defs>
+            <circle cx="40" cy="16" r="2.2" fill="#5d7cab" opacity=".55"/>
+            <circle cx="112" cy="16" r="2.2" fill="#6f8fbf" opacity=".7"/>
+            <circle cx="190" cy="16" r="2.4" fill="#86a8d8" opacity=".85"/>
+            <circle cx="290" cy="16" r="7" fill="none" stroke="#a8d8f0" stroke-opacity=".35" stroke-width="1"/>
+            <circle cx="290" cy="16" r="3.2" fill="#d6ecff"/>
+            <text x="6" y="40">PAST</text>
+            <text x="306" y="40" text-anchor="end" class="now">NOW</text>
+          </svg>
+        </div>
+        <a class="link" href="/mypage.html" onclick="trackEvent('mypage_entry_click',{entry_point:'top'})">診断記録を見る <span class="arw">→</span></a>
+      </section>
 
-  <div class="hero-content">
-    <span class="hero-en">Element Diagnosis — Know Your Nature</span>
-    <h1 class="hero-title">元素診断</h1>
-    <p class="hero-title-sub">あなたの気質と強みを、元素に映す</p>
+      <section class="line-sec" aria-labelledby="line-h">
+        <p class="eyebrow">Stay Connected</p>
+        <h2 class="h2" id="line-h">旅の続きを、静かに受け取る</h2>
+        <p class="lead jp">元素診断の更新や、新しい観測、<br>先行体験の案内などを公式LINEからお届けします。<br>必要なときだけ、静かにお知らせします。</p>
+        <a class="link line-link" href="https://line.me/R/ti/p/@307ttqfu?oat_content=url&amp;ts=09190026#~" target="_blank" rel="noopener"><span class="line-dot" aria-hidden="true"></span>公式LINEを追加する <span class="arw">→</span></a>
+      </section>
 
-    <!-- 七元素タグ -->
-    <div class="elements-strip" id="elStrip"></div>
+      <section aria-labelledby="deep-h">
+        <p class="eyebrow">Deeper Insight</p>
+        <h2 class="h2" id="deep-h">さらに深く、読み解く</h2>
+        <p class="lead jp">診断結果の先では、4つの視点から、あなたをより深く読み解くことができます。</p>
+        <ul class="domains">
+          <li style="--dc:var(--d-p);--w:78%"><span class="pt"></span><span>パーソナリティ</span><span class="ln"></span></li>
+          <li style="--dc:var(--d-s);--w:62%"><span class="pt"></span><span>行動スタイル</span><span class="ln"></span></li>
+          <li style="--dc:var(--d-v);--w:70%"><span class="pt"></span><span>価値観</span><span class="ln"></span></li>
+          <li style="--dc:var(--d-m);--w:54%"><span class="pt"></span><span class="en">MIRROR</span><span class="ln"></span></li>
+        </ul>
+        <a class="link" href="/report_sample.html">解析レポートの例を見る <span class="arw">→</span></a>
+      </section>
+    </div>
 
-    <p class="hero-desc">
-      人の内には、7つの気質が流れている。<br>
-      100の問いに答えることで、あなたの<strong style="color:#a8d8f0">元素（内的な性質）</strong>と<strong style="color:#a8d8f0">武器（強みと関わり方）</strong>と<strong style="color:#e0c890">国家（価値観）</strong>が映し出される。<br>
-      Big Five × エニアグラム × 価値観理論を土台にした、自己理解のための診断。
-      <span class="hero-desc-en">Seven elements flow within. 100 questions to reveal your nature, strength, and values — a self-understanding diagnosis built on Big Five, Enneagram, and Values Theory.</span>
-    </p>
-
-    <a href="javascript:void(0)" class="hero-cta" onclick="answers={};currentIdx=0;gtag('event','quiz_start',{event_category:'diagnosis'});setPhase('quiz')">診断をはじめる — Start</a>
-
+    <!-- 最終CTA -->
+    <section class="final wrap">
+      <div class="spark" aria-hidden="true"></div>
+      <p class="copy">まだ見ぬ、自分を知る。</p>
+      <div class="cta-wrap">
+        <a href="javascript:void(0)" class="cta" onclick="startNewDiagnosisV2()">診断をはじめる <span class="en">— Start</span></a>
+      </div>
+    </section>
   </div>
-
-  <span class="hero-scroll">↓ scroll</span>
-</section>
-
-<!-- ===== ABOUT ===== -->
-<section class="about">
-  <p class="section-label">About this Diagnosis</p>
-  <h2 class="about-title">なぜ、元素で性格を測るのか</h2>
-  <p class="about-body">
-    ビッグファイブやエニアグラム、価値観理論といった心理尺度は、自分を知るための優れた地図だ。しかし数字や抽象的なラベルは、心に留まりにくい。そこでワタシは、原神というゲームの「元素」「国家」体系に着目した。各キャラクターのパーソナリティに割り当てられた元素と、彼らが生きる国家を、心理傾向の軸として再解釈することで、結果が物語として記憶に残る診断を設計した。
-  </p>
-  <p class="about-body">
-    元素は内的な気質。武器は他者との関わり方。国家は何を大切にするかという価値観。3つの掛け合わせが、あなたという人間の輪郭を描く。
-  </p>
-  <p class="about-en">Big Five, Enneagram, and Values Theory provide the scientific foundation. The seven elements and seven nations provide the story that makes results memorable. Designed by a writer who spent years studying personality psychology and 118 characters across all seven elements and nations.</p>
-  <a href="https://note.com/mondayaxad/n/ne73b307f6273" target="_blank" rel="noopener"
-    style="display:inline-flex;align-items:center;gap:6px;margin-top:18px;color:#7ab8e8;font-size:12.5px;text-decoration:none;border-bottom:1px solid #7ab8e850;padding-bottom:2px">
-    この診断が生まれた経緯を、noteで読む →
-  </a>
-
-  <div style="margin-top:32px; display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px;">
-    <div style="background:#08101a; border:1px solid #0e1e30; border-radius:8px; padding:16px;">
-      <div style="color:#7ab8e8; font-size:12px; letter-spacing:0.1em; margin-bottom:6px;">略称</div>
-      <div style="color:#7098b8; font-size:13px; line-height:1.7;">ETI（Element Type Indicator）<br><span style="font-family:'IM Fell English',serif;font-style:italic;font-size:11px;color:#5a80a0;">"What's your ETI?"</span></div>
-    </div>
-    <div style="background:#08101a; border:1px solid #0e1e30; border-radius:8px; padding:16px;">
-      <div style="color:#7ab8e8; font-size:12px; letter-spacing:0.1em; margin-bottom:6px;">診断形式</div>
-      <div style="color:#7098b8; font-size:13px; line-height:1.7;">100問 / 5段階回答<br><span style="font-family:'IM Fell English',serif;font-style:italic;font-size:11px;color:#5a80a0;">100 questions · 5-point scale</span></div>
-    </div>
-    <div style="background:#08101a; border:1px solid #0e1e30; border-radius:8px; padding:16px;">
-      <div style="color:#7ab8e8; font-size:12px; letter-spacing:0.1em; margin-bottom:6px;">測定軸</div>
-      <div style="color:#7098b8; font-size:13px; line-height:1.7;">7元素 × 5武器 × 7国家<br><span style="font-family:'IM Fell English',serif;font-style:italic;font-size:11px;color:#5a80a0;">7 elements × 5 weapons × 7 nations</span></div>
-    </div>
-    <div style="background:#08101a; border:1px solid #0e1e30; border-radius:8px; padding:16px;">
-      <div style="color:#7ab8e8; font-size:12px; letter-spacing:0.1em; margin-bottom:6px;">土台となる尺度</div>
-      <div style="color:#7098b8; font-size:13px; line-height:1.7;">Big Five / Enneagram / Values Theory<br><span style="font-family:'IM Fell English',serif;font-style:italic;font-size:11px;color:#5a80a0;">Academic psychology base</span></div>
-    </div>
-    <div style="background:#08101a; border:1px solid #0e1e30; border-radius:8px; padding:16px;">
-      <div style="color:#7ab8e8; font-size:12px; letter-spacing:0.1em; margin-bottom:6px;">料金</div>
-      <div style="color:#7098b8; font-size:13px; line-height:1.7;">診断：無料 ／ 解析レポート：¥1,000 ／ ナラティブ：¥3,000<br><span style="font-family:'IM Fell English',serif;font-style:italic;font-size:11px;color:#5a80a0;">Diagnosis: Free / Analysis: ¥1,000 / Narrative: ¥3,000</span></div>
-    </div>
-  </div>
-</section>
-
+</main>
 <!-- ===== DIAGNOSIS ===== -->
 <section id="diagnosis" style="overflow:hidden;padding:0 2px">
   <div id="diagnosis-root" style="max-width:100%;overflow-x:hidden"></div>
@@ -392,10 +598,11 @@
 <footer>
   <p class="footer-copy">元素診断 — An original personality framework inspired by Genshin Impact. For entertainment purposes. © マンデーアクスト / @mondayaxad</p>
   <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-top:16px">
-    <a href="javascript:void(0)" onclick="document.getElementById('privacy').style.display='flex'" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">プライバシーポリシー</a>
-    <a href="javascript:void(0)" onclick="document.getElementById('terms').style.display='flex'" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">利用規約</a>
+    <a href="/tokushoho" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">特定商取引法に基づく表記</a>
+    <a href="/privacy.html" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">プライバシーポリシー</a>
+    <a href="/terms.html" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">利用規約</a>
     <a href="javascript:void(0)" onclick="document.getElementById('about').style.display='flex'" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">運営者情報</a>
-    <a href="https://x.com/mondayaxad" target="_blank" rel="noopener" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">お問い合わせ</a>
+    <a href="mailto:yaduns0522@gmail.com" style="color:#7098b8;font-size:11px;text-decoration:none;letter-spacing:0.1em">お問い合わせ</a>
   </div>
 </footer>
 
@@ -428,7 +635,7 @@ const ELEMENT_CODE = { "炎":"PY", "水":"HY", "氷":"CR", "雷":"EL", "風":"AN
 // （診断ロジック自体はサーバー側で再計算せず、既に計算済みの値をそのまま圧縮するだけなので安全）
 const PACK_ELEMENTS = ["炎","水","氷","雷","風","岩","草"];
 const PACK_WEAPONS = ["片手剣","両手剣","長柄","法器","弓"];
-const PACK_NATIONS = ["モンド","璃月","稲妻","スメール","フォンテーヌ","ナタ","スネージナヤ"];
+const PACK_NATIONS = ["モンド","璃月","稲妻","スメール","フォンテーヌ","ナタ","スネージナヤ","ナドクライ"];
 function packShareParams(el, w, nat, charIdx, matchPct) {
   var elI = PACK_ELEMENTS.indexOf(el);       // 0-6  → 3bit
   var wI = PACK_WEAPONS.indexOf(w);          // 0-4  → 3bit
@@ -439,7 +646,7 @@ function packShareParams(el, w, nat, charIdx, matchPct) {
   return packed.toString(36);
 }
 const WEAPON_CODE = { "片手剣":"SW", "両手剣":"CM", "長柄":"PL", "法器":"CT", "弓":"BW" };
-const NATION_CODE = { "モンド":"M", "璃月":"L", "稲妻":"I", "スメール":"S", "フォンテーヌ":"F", "ナタ":"N", "スネージナヤ":"Z" };
+const NATION_CODE = { "モンド":"M", "璃月":"L", "稲妻":"I", "スメール":"S", "フォンテーヌ":"F", "ナタ":"N", "スネージナヤ":"Z", "ナドクライ":"D" };
 function typeCode(el, w, nation) { return ELEMENT_CODE[el] + WEAPON_CODE[w] + (nation ? '-' + NATION_CODE[nation] : ''); }
 // 35タイプ固有の名称（機械的な掛け合わせではなく、組み合わせごとの性質から命名）
 const TYPE_NAME = {
@@ -454,10 +661,12 @@ const TYPE_NAME = {
 function typeName(el, w) { return TYPE_NAME[el][w]; }
 // 国家（価値観理論：シュワルツの基本的価値観をテイワット7国家にマッピング）
 const NATIONS = ["モンド","璃月","稲妻","スメール","フォンテーヌ","ナタ","スネージナヤ"];
+// ETI v2専用：legacy-v1の7国家（NATIONS、上のまま不変）＋ナドクライの8国家。
+const NATIONS_V2 = NATIONS.concat(["ナドクライ"]);
 // 各国家がもたらす意味（一言）
 const NATION_MEANING = {
   "モンド":"自由", "璃月":"契約", "稲妻":"永遠", "スメール":"知恵",
-  "フォンテーヌ":"正義", "ナタ":"戦争", "スネージナヤ":"抗争",
+  "フォンテーヌ":"正義", "ナタ":"戦争", "スネージナヤ":"慈愛", "ナドクライ":"月光",
 };
 const NATION_DESC = {
   "モンド":     "モンドが体現するのは「自由」です。誰にも縛られず、自分の意志で選び取ることに、何よりの価値を置きます。規則やしがらみより、自分の心が向く方向を信じるタイプで、束縛を感じる環境では、力を発揮しづらくなる傾向があります。",
@@ -466,7 +675,8 @@ const NATION_DESC = {
   "スメール":   "スメールが体現するのは「知恵」です。物事の真実を追い求め、知識を分かち合うことに、価値を置きます。表面的な理解では満足せず、本質まで掘り下げようとする探究心と、それを独占せず還元しようとする姿勢が特徴です。",
   "フォンテーヌ": "フォンテーヌが体現するのは「法と正義」です。公正さと調和を重んじ、誰に対しても等しくあることに、価値を置きます。ひいきや不公平を嫌い、誰から見ても筋の通った判断を下そうとする、バランス感覚に優れた価値観です。",
   "ナタ":       "ナタが体現するのは「戦争」です。真っ向からぶつかり合う戦いの中でこそ、生きる実感を得ることに、価値を置きます。困難を避けるより、正面から挑むことを選ぶタイプで、仲間と共に壁を乗り越えることに、強い充実感を覚えます。",
-  "スネージナヤ": "スネージナヤが体現するのは「抗争」です。争いを通じて自らの力を示し、抗い続けることに、価値を置きます。厳しい状況に置かれるほど、かえって強さを発揮するタイプで、簡単には屈しない、したたかな忍耐力を持っています。",
+  "スネージナヤ": "スネージナヤが体現するのは「慈愛」です。大切なものを守るためなら、厳しい現実にも立ち向かい、自らが痛みを引き受けることに価値を置きます。冷たく見える決断の奥に深い情と献身を抱き、簡単には揺らがない忍耐力を持っています。",
+  "ナドクライ":   "ナドクライが体現するのは「月光」です。表舞台の喧騒から離れ、静かな場所で自分の価値観を保つことに、価値を置きます。人に知られることを求めず、慣れた場所より知らない環境にかえって心惹かれる、独自の歩き方をするタイプです。",
 };
 const NATION_TRAITS = {
   "モンド": ["束縛からの解放", "自分の意志優先", "しがらみを嫌う"],
@@ -476,6 +686,7 @@ const NATION_TRAITS = {
   "フォンテーヌ": ["公正さ", "誰にでも平等", "バランス感覚"],
   "ナタ": ["正面から挑む", "仲間との達成感", "困難を避けない"],
   "スネージナヤ": ["逆境での強さ", "したたかな忍耐", "屈しない意志"],
+  "ナドクライ": ["静かな独立性", "未知への惹かれ", "表に出ない機能美"],
 };
 // 35タイプ固有の説明（使い回しではなく、組み合わせごとに意味づけ）
 const TYPE_DESC = {
@@ -574,20 +785,20 @@ function renderHeroGems() {
   if (!container) return;
   const els = Object.keys(ELEMENTS);
   const positions = [
-    {top:'8%',  left:'10%', size:34, op:0.5},
-    {top:'14%', left:'82%', size:26, op:0.4},
-    {top:'40%', left:'4%',  size:22, op:0.35},
-    {top:'58%', left:'88%', size:30, op:0.45},
-    {top:'78%', left:'14%', size:24, op:0.4},
-    {top:'85%', left:'70%', size:20, op:0.35},
-    {top:'28%', left:'92%', size:18, op:0.3},
+    {top:'8%',  left:'10%', size:26, op:0.40},
+    {top:'14%', left:'82%', size:20, op:0.32},
+    {top:'40%', left:'4%',  size:16, op:0.26},
+    {top:'58%', left:'88%', size:22, op:0.34},
+    {top:'78%', left:'14%', size:18, op:0.28},
+    {top:'85%', left:'70%', size:15, op:0.26},
+    {top:'28%', left:'92%', size:14, op:0.22},
   ];
   let html = '';
   els.forEach((el, i) => {
     const p = positions[i % positions.length];
     const c = ELEMENTS[el].color;
     html += `
-      <div style="position:absolute;top:${p.top};left:${p.left};width:56px;height:56px;opacity:${p.op};transform:scale(${(p.size/56).toFixed(2)});transform-origin:top left">
+      <div class="gem" style="top:${p.top};left:${p.left};opacity:${p.op};transform:scale(${(p.size/56).toFixed(2)});--gc:${c}80">
         ${gemPlanetSvg(c, el, 'hero'+i, false)}
       </div>`;
   });
@@ -657,11 +868,11 @@ const ELEMENT_TRAITS = {
   "草": ["探究心", "共有意欲", "静かな知性"],
 };
 const WEAPON_DESC = {
-  "片手剣": "片手剣は、他者との関わりの中で力を発揮する武器です。援助者・堅実家の性質——支え合い、信頼を築こうとする動機が、その扱い方の根にあります。相手が誰かによって、力の出し方そのものを変える柔軟さがあり、一人で完結するより、誰かのために動く時の方が、本来の力を発揮します。",
-  "両手剣": "両手剣は、独力で道を切り拓く武器です。統率者・達成者の性質——自分の力で状況を動かそうとする動機が、この武器の核にあります。誰かに頼るより、自分で結果を出すことに価値を置き、困難であるほど、かえって力が湧いてくるタイプです。周囲を牽引する場面で、真価を発揮します。",
-  "長柄":   "長柄は、間合いを保ちながら集団を守る武器です。改革者・調停者の性質——誠実に役目を果たし、場の調和を保とうとする動機が、扱い方を支えます。前に出て目立つより、全体が円滑に回ることを優先し、必要な時にはしっかりと境界線を引く、縁の下の力持ちとしての強さがあります。",
-  "法器":   "法器は、術式という抽象を介して世界と接続する武器です。観察者・個性派の性質——理解し、独自の視点を持とうとする動機が、その根にあります。直接ぶつかるより、一歩引いた場所から本質を見極めることを好み、他人には見えないところにある繋がりに、自然と気づくタイプです。",
-  "弓":     "弓は、距離を取りながら精密に狙いを定める武器です。楽天家の性質——縛られず自由に、満たされた状態を追い求める動機が、一射に込められています。目の前のことに縛られるより、選択肢を広く持っておきたいという気持ちが強く、狙いを定める瞬間の集中力に、その本領が表れます。",
+  "片手剣": "片手剣は、他者との関わりの中で力を発揮する武器です。支え合いと信頼を重視する傾向——人と支え合い、信頼を築こうとする動機が、その扱い方の根にあります。相手が誰かによって、力の出し方そのものを変える柔軟さがあり、一人で完結するより、誰かのために動く時の方が、本来の力を発揮します。",
+  "両手剣": "両手剣は、独力で道を切り拓く武器です。自ら状況を動かす傾向——自分の力で物事を前へ進めようとする動機が、この武器の核にあります。誰かに頼るより、自分で結果を出すことに価値を置き、困難であるほど、かえって力が湧いてくるタイプです。周囲を牽引する場面で、真価を発揮します。",
+  "長柄":   "長柄は、間合いを保ちながら集団を守る武器です。誠実さと調和を重んじる傾向——役目を果たし、場の調和を保とうとする動機が、扱い方を支えます。前に出て目立つより、全体が円滑に回ることを優先し、必要な時にはしっかりと境界線を引く、縁の下の力持ちとしての強さがあります。",
+  "法器":   "法器は、術式という抽象を介して世界と接続する武器です。理解と独自の視点を求める傾向——物事を深く理解し、自分なりの見方を持とうとする動機が、その根にあります。直接ぶつかるより、一歩引いた場所から本質を見極めることを好み、他人には見えないところにある繋がりに、自然と気づくタイプです。",
+  "弓":     "弓は、距離を取りながら精密に狙いを定める武器です。自由と充足を求める傾向——縛られず、満たされた状態を追い求める動機が、一射に込められています。目の前のことに縛られるより、選択肢を広く持っておきたいという気持ちが強く、狙いを定める瞬間の集中力に、その本領が表れます。",
 };
 const WEAPON_TRAITS = {
   "片手剣": ["支え合い", "相手に応じた柔軟さ", "関係性の中の力"],
@@ -787,6 +998,7 @@ const NATION_VALUES = {
   "フォンテーヌ": ['普遍主義','同調'],
   "ナタ":         ['刺激','快楽'],
   "スネージナヤ": ['権力','達成'],
+  "ナドクライ": ['自己志向','安全'],
 };
 function pickFactorTags_Nation(results, usedWords) {
   const sorted = results.nationScores; // 既にスコア順
@@ -850,15 +1062,65 @@ function radarChart(labels, values, color, size) {
     </svg>`;
 }
 
+// 完了ページの差し込み画像（理解を助ける補助。16:9の枠はそのまま、画像は assets/result/ の静止画）
+function resultFigure(name, alt) {
+  return `<div style="width:100%;aspect-ratio:16/9;border-radius:10px;margin-bottom:14px;overflow:hidden;background:#07060f">
+    <img src="/assets/result/${name}.webp" alt="${alt}" width="1280" height="720" loading="lazy" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover">
+  </div>`;
+}
+const LOCK_ICON_PATH = '<rect x="5" y="11" width="14" height="10" rx="2" fill="currentColor"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>';
+// 未解放の特性タイル：外周リング（カテゴリ色）＋内側の淡い円面と発光。ラベルは色を少し明るくして読みやすく
+function lockedTraitTile(label, c) {
+  return `<div style="text-align:center">
+    <div style="width:58px;height:58px;margin:0 auto 7px;border-radius:50%;border:1.5px solid ${c};display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 42%,rgba(255,255,255,.10),${c}22 58%,${c}0f);box-shadow:0 0 16px ${c}33,inset 0 0 0 5px rgba(255,255,255,.04)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="color:#D8DCE3;filter:drop-shadow(0 0 4px ${c}88)">${LOCK_ICON_PATH}</svg>
+    </div>
+    <div style="font-size:10.5px;font-weight:600;letter-spacing:.3px;color:color-mix(in srgb, ${c} 62%, #ffffff);line-height:1.4">${label}</div>
+  </div>`;
+}
+// ロック解除カード上部の大きな鍵
+function lockBadge(c) {
+  return `<div style="width:48px;height:48px;border-radius:50%;background:radial-gradient(circle at 50% 38%,color-mix(in srgb, ${c} 70%, #ffffff),${c} 70%);display:flex;align-items:center;justify-content:center;margin:0 auto;position:relative;top:24px;z-index:2;border:3px solid #0c0a14;box-shadow:0 0 0 1px ${c}66,0 0 22px ${c}55"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="color:#fff">${LOCK_ICON_PATH}</svg></div>`;
+}
+// 暗い背景で読める文字色（元素・武器の固有色を少し明るくする）
+function rxText(c) { return `color-mix(in srgb, ${c} 66%, #ffffff)`; }
+// 類似度ゲージ（項目別）：[ラベル, 値(0-100), 色]。バーは暗い同系色から明るい色へのグラデーション
+function similarityGauges(items) {
+  return `<div style="display:flex;flex-direction:column;gap:9px;margin:14px 0 2px">${items.map(([label, v, c]) => {
+    const w = Math.max(0, Math.min(100, Math.round(v)));
+    return `<div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+        <span style="font-size:11px;letter-spacing:.5px;color:var(--rx-secondary)">${label}</span>
+        <span style="font-size:12px;font-weight:700;color:color-mix(in srgb, ${c} 55%, #ffffff)">${w}<span style="font-size:9.5px;font-weight:400;margin-left:1px">%</span></span>
+      </div>
+      <div style="height:7px;background:#14121f;border-radius:4px;overflow:hidden;box-shadow:inset 0 0 0 1px #ffffff0a">
+        <div style="width:${w}%;height:100%;border-radius:4px;background:linear-gradient(90deg, color-mix(in srgb, ${c} 45%, #0c0a14), ${c} 70%, color-mix(in srgb, ${c} 60%, #ffffff));box-shadow:0 0 8px ${c}55"></div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+// 本文の冒頭語（元素名・武器名・国家名）を固有色で強調する
+function rxLead(text, word, color) {
+  return text.indexOf(word) === 0 ? `<strong style="color:${color};font-weight:700">${word}</strong>` + text.slice(word.length) : text;
+}
+// 本文中の最初の「…」（国家の体現する価値など）を強調する
+function rxQuote(text, color) {
+  return text.replace(/「([^」]+)」/, `<strong style="color:${color};font-weight:600">「$1」</strong>`);
+}
+// 特性チップ（元素・武器・国家）：境界と背景に加えて文字の明度も上げる
+function rxChip(label, c, textColor) {
+  return `<span style="font-size:10.5px;color:${textColor || rxText(c)};border:1px solid ${c}66;background:${c}1f;border-radius:12px;padding:4px 10px;letter-spacing:.3px">${label}</span>`;
+}
+
 function reportPreviewCard(accentColor, label, cta, bodyHtml) {
   return `
     <div style="background:#08060f;border:1px solid #182838;border-radius:10px;padding:16px;margin-top:12px;position:relative;overflow:hidden">
-      <div style="font-size:10px;color:#6a95b8;letter-spacing:1.5px;margin-bottom:10px">解析レポートより — ${label}</div>
+      <div style="font-size:10px;color:var(--rx-tertiary);letter-spacing:1.5px;margin-bottom:10px">解析レポートより — <span style="color:var(--rx-primary);font-weight:600">${label}</span></div>
       <div style="filter:blur(2px);user-select:none;pointer-events:none;opacity:0.92">${bodyHtml}</div>
       <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,#08060f 92%);display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px">
         <button class="lock-cta" data-label="${cta}"
           style="background:${accentColor};border:none;color:#fff;border-radius:20px;padding:8px 18px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" fill="#fff"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="color:#fff">${LOCK_ICON_PATH}</svg>
           今すぐロックを解除
         </button>
       </div>
@@ -869,11 +1131,122 @@ function generateWhySimilarText(top1, topEl, topW, et) {
   const points = [];
   if (top1.el === topEl) points.push('元素');
   if (top1.w === topW) points.push('武器');
-  if (top1.ennea === et) points.push('エニアグラムの核');
+  if (top1.ennea === et) points.push('動機の核');
   let matchLine = points.length
-    ? `特に${points.join('・')}が、あなたと完全に一致しています。`
+    ? `特に<strong style="color:var(--rx-primary)">${points.join('・')}が、あなたと完全に一致</strong>しています。`
     : `元素・武器の型は異なりますが、性質の根であるBig Fiveのスコアが強く重なっています。`;
-  return `${top1.name}との一致度は${top1.match}%。${matchLine}表面的な共通点ではなく、気質を形づくる複数の層が、同じ方向を指しているために起きる重なりです（Big Five類似度：${top1.big5Sim}%）。`;
+  return `${top1.name}との一致度は<strong style="color:var(--rx-primary);font-size:13px">${top1.match}%</strong>。${matchLine}表面的な共通点ではなく、気質を形づくる複数の層が、同じ方向を指しているために起きる重なりです。`;
+}
+
+
+/* ============================================================
+   ETI v2 — STYLE表示コンテンツ（正式名称・詩的タグ・解釈文）
+   v2にはEnneagramが存在しないため、CORE/FEAR/DESIREの推測値は作らない。
+   固定辞書と実測順位から機械的に組み立てる（自由生成しない。再訪時も同じ文章になる）。
+   ============================================================ */
+const STYLE_LABEL = { AGY:'主導性', REL:'関係調整', ROL:'役割持続', REF:'媒介思考', AUT:'自律距離' };
+const STYLE_POETIC_TAG = {
+  AGY:'道を切り拓く意志', REL:'縁を結ぶ調律', ROL:'役目を貫く献身',
+  REF:'思索を介す眼差し', AUT:'距離を守る自律',
+};
+const STYLE_WEAPON_TAG = {
+  AGY:'推進', REL:'調和', ROL:'完遂',
+  REF:'熟考', AUT:'自律',
+};
+const STYLE_BASE_DESC = {
+  AGY:'誰かの合図を待つより、自ら最初の一歩を選ぶ人です。',
+  REL:'人と人のあいだに流れる温度を読み、関係がほどけない形へ整えます。',
+  ROL:'一度引き受けた役目を、その意味が尽きるまで手放しません。',
+  REF:'衝動のまま触れるのではなく、思索や言葉を介して世界へ近づきます。',
+  AUT:'近づきすぎず離れすぎず、自分の輪郭を守れる距離から歩きます。',
+};
+// 同点時はETI_V2_META.styleAxesの順序で固定する（決定的：再訪時も同じ結果になる）。
+function rankStyleAxes(styleDisplay) {
+  return ETI_V2_META.styleAxes.map(function(ax, i) {
+    return { axis: ax, score: styleDisplay[ax], order: i };
+  }).sort(function(a, b) { return (b.score - a.score) || (a.order - b.order); });
+}
+// STYLE上位2軸から、固定辞書と実測順位だけで決定的に本文を組み立てる。
+function buildStyleCoreText(styleDisplay) {
+  var ranked = rankStyleAxes(styleDisplay);
+  var first = ranked[0].axis, second = ranked[1].axis;
+  return 'あなたの行動の核には〈' + STYLE_POETIC_TAG[first] + '〉があり、そこへ〈' + STYLE_POETIC_TAG[second] + '〉が重なっています。'
+    + STYLE_BASE_DESC[first] + STYLE_BASE_DESC[second];
+}
+// 近しい人物像タグ：v2ではENNEA_WORDを呼ばず、STYLE上位4軸の詩的タグを使用する。
+function pickStyleTags_Similar(styleDisplay) {
+  return rankStyleAxes(styleDisplay).slice(0, 4).map(function(r) { return STYLE_POETIC_TAG[r.axis]; });
+}
+// 武器種側の表現：選ばれた武器プロトタイプで重みの高い軸を優先し、本人の実測STYLEで同点を判定する。
+// 軸と無関係な語彙は追加しない（STYLE_WEAPON_TAGの5語のみを使う）。
+function pickStyleTags_Weapon(weaponPrototype, styleDisplay) {
+  var scored = ETI_V2_META.styleAxes.map(function(ax, i) {
+    return { axis: ax, protoWeight: weaponPrototype[ax], userScore: styleDisplay[ax], order: i };
+  });
+  scored.sort(function(a, b) {
+    return (b.protoWeight - a.protoWeight) || (b.userScore - a.userScore) || (a.order - b.order);
+  });
+  return scored.slice(0, 4).map(function(r) { return STYLE_WEAPON_TAG[r.axis]; });
+}
+// 「何故似ているか」本文のv2版。Enneagramの核一致には触れず、MIRRORの類似度根拠を示す。
+function generateWhySimilarTextV2(top1, topEl, topW) {
+  const points = [];
+  if (top1.el === topEl) points.push('元素');
+  if (top1.w === topW) points.push('武器');
+  let matchLine = points.length
+    ? `特に<strong style="color:var(--rx-primary)">${points.join('・')}が、あなたと完全に一致</strong>しています。`
+    : `元素・武器の型は異なりますが、性格・行動スタイル・価値観の複数の層が、同じ方向を指しているために起きる重なりです。`;
+  return `${top1.name}との一致度は<strong style="color:var(--rx-primary);font-size:13px">${top1.match}%</strong>。${matchLine}`;
+}
+// 近しいキャラクターの4つ目のバッジ（v1のエニアグラム表示に相当）。
+// そのキャラクター自身の実測STYLEの最上位軸から、詩的タグを1つ表示する。
+function styleTopTagForCharacter(charName) {
+  var ch = getV2CharactersNormalized().find(function(c) { return c.name === charName; });
+  if (!ch || !ch.style) return STYLE_POETIC_TAG.AGY;
+  var ranked = rankStyleAxes(ch.style);
+  return STYLE_POETIC_TAG[ranked[0].axis];
+}
+
+/* ============================================================
+   ETI v2 — キャラクター正規化・結果計算（index.html表示用ラッパー）
+   ============================================================ */
+// characters118_v2.jsの事実メタデータ（old_nation_field含む）は変更しない。
+// 辞書照合のためだけに、表示直前でregionを正規化した「別配列」を作る。
+const NATION_REGION_ALIAS_V2 = { "ナド・クライ": "ナドクライ" };
+var V2_CHARACTERS_NORMALIZED = null;
+// regionがnull（ニコ・スカーク・アーロイの3名。audit.region_correctedによる意図的な null 化）の場合は、国家を出さない。
+// MIRRORのスコアリングはregionを見ないため、この正規化は表示（国家バッジ等）にのみ影響する。
+function getV2CharacterDisplayRegion(c) {
+  var region = c.region || null; // null の3名は国家を出さない（以前の legacy.old_nation_field は誤りのため使わない）
+  return NATION_REGION_ALIAS_V2[region] || region;
+}
+// この画面で使うMIRROR版：新規診断は最新版（ETI-MIRROR-2.1.0）。URLから復元した結果は mv の版
+// （mv無しのURLも最新版で表示）。js/eti_v2_mirror_resolver.js を参照。
+function currentV2MirrorVersion() {
+  return window.__mirrorVersion || ETIv2MirrorResolver.CURRENT;
+}
+// 表示中の版のキャラクター座標（region は表示用に正規化済み）。118名の並び順は版によらず同じ。
+function getV2CharactersNormalized() {
+  return ETIv2MirrorResolver.normalizedCharacters(ETIv2MirrorResolver.resolveVersion(currentV2MirrorVersion()));
+}
+// MIRRORはPERSONALITY/STYLE/VALUESの類似度で計算し、国家一致を必須条件としない。
+// 一致率ランキング（charMatches）は生スコア順のまま。表示・保存するMIRRORは vm.mirror
+// （ETI-MIRROR-2.1.0 では同率時に 元素→国家→武器→番号 で選ぶため、charMatches[0] と異なり得る）。
+function computeResultsV2ForUI(answersByItemId, encodedCode, mirrorModelVersion) {
+  var raw = ETIv2.computeResultsV2(answersByItemId, {
+    elementPrototypes: ELEMENT_PROTOTYPES_V2,
+    weaponPrototypes: WEAPON_PROTOTYPES_V2,
+    nationPrototypes: NATION_PROTOTYPES_V2,
+  });
+  var computed = ETIv2MirrorResolver.computeMirror(raw, mirrorModelVersion || currentV2MirrorVersion());
+  var vm = ETIv2LegacyAdapter.buildV2ViewModel(raw, computed.rankings, encodedCode);
+  vm.raw = raw; // 保存(RPC送信)用に、v2固有の生スコアも保持しておく
+  vm.mirror = vm.charMatches.find(function(c) { return c.name === computed.mirror.name; }) || vm.charMatches[0];
+  vm.mirrorModelVersion = computed.mirrorModelVersion;
+  vm.characterProfileVersion = computed.characterProfileVersion;
+  vm.mirrorSelection = computed.selectionMeta;
+  vm.mirrorSnapshot = ETIv2MirrorResolver.buildMirrorSnapshot(computed);
+  return vm;
 }
 
 /* ============================================================
@@ -1302,16 +1675,37 @@ let jumpQueue = null; // ジャンプボタンを押した時点の未回答リ�
 
 function getAnsweredCount() { return Object.keys(answers).length; }
 
+// ブラウザの履歴・タブで自分の診断結果を見分けられるよう、結果の画面では題名に結果を入れる（それ以外の画面は元の題名）
+var ED_BASE_TITLE = document.title;
 function render() {
   const phase = window.__phase || 'intro';
+  if (phase !== 'result') document.title = ED_BASE_TITLE;
   const root = document.getElementById('diagnosis-root');
   if (!root) return;
+  const isV2 = window.__diagnosisVersion === 'ETI-2.0';
   if (phase === 'intro') renderIntro(root);
-  else if (phase === 'quiz') renderQuiz(root);
+  else if (phase === 'quiz') { if (isV2) renderQuizV2(root); else renderQuiz(root); }
   else if (phase === 'result') renderResult(root);
   else if (phase === 'basis') renderBasis(root);
 }
 
+// 新規診断の開始導線は全てこの関数へ統一する（ヒーローCTA・イントロ内開始ボタン・
+// 完了ページの再診断ボタン等）。旧?code=結果を表示中でも、必ずETI v2を新規に開始する
+// （window.__diagnosisVersionが直前の状態のまま残ることで、legacyのままquizへ進んでしまう
+// 事故を防ぐ）。旧URLの結果表示そのものは、このrouteとは別の経路（DOMContentLoaded時の
+// ?code=復元処理）で行われ、ここでは一切変更しない。
+function startNewDiagnosisV2() {
+  answersV2 = {}; currentIdxV2 = 0; quizFocusIdxV2 = null;
+  clearQuizProgressV2();
+  // 前の結果の固有リンクは使わない（新しい診断には新しいリンクを作る）。/result から始めた時は TOP の URL へ戻す
+  window.__edResumeToken = null;
+  window.__resumeFresh = false;
+  if (/^\/result(\.html)?$/.test(location.pathname)) { try { history.replaceState(null, '', '/'); } catch (e) { /* そのまま */ } }
+  window.__diagnosisVersion = 'ETI-2.0';
+  window.__mirrorVersion = null; // 新規診断は最新のMIRROR版で計算する
+  if (typeof gtag === 'function') gtag('event','quiz_start',{event_category:'diagnosis',diagnosis_version:'ETI-2.0'});
+  setPhase('quiz');
+}
 function setPhase(p) {
   window.__phase = p;
   render();
@@ -1455,11 +1849,7 @@ function renderIntro(root) {
     </section>`;
   var startBtn = root.querySelector('#start-btn');
   if (startBtn) {
-    startBtn.addEventListener('click', function() {
-      answers = {}; currentIdx = 0;
-      if (typeof gtag === 'function') gtag('event','quiz_start',{event_category:'diagnosis'});
-      setPhase('quiz');
-    });
+    startBtn.addEventListener('click', startNewDiagnosisV2);
   }
 
 }
@@ -1635,27 +2025,265 @@ function nextQ() { jumpQueue = null; if (currentIdx + PAGE_SIZE < QUESTIONS.leng
 function prevQ() { jumpQueue = null; if (currentIdx - PAGE_SIZE >= 0) { currentIdx -= PAGE_SIZE; quizFocusIdx = null; renderQuiz(document.getElementById('diagnosis-root')); scrollQuizTop(); } }
 function showResult() { if (getAnsweredCount() >= QUESTIONS.length) { gtag('event','quiz_complete',{event_category:'diagnosis',value:getAnsweredCount()}); setPhase('result'); } }
 
+/* ===== ETI v2 QUIZ（v1のrenderQuiz/selectAnswer/answersとは完全に独立） ===== */
+var V2_CANONICAL_ORDER = null;
+function getV2CanonicalOrder() {
+  if (!V2_CANONICAL_ORDER) V2_CANONICAL_ORDER = ETIv2.getCanonicalOrder(ETI_V2_QUESTIONS);
+  return V2_CANONICAL_ORDER;
+}
+var V2_QUESTIONS_BY_ID = null;
+function getV2QuestionsById() {
+  if (!V2_QUESTIONS_BY_ID) {
+    V2_QUESTIONS_BY_ID = {};
+    ETI_V2_QUESTIONS.forEach(function(q) { V2_QUESTIONS_BY_ID[q.id] = q; });
+  }
+  return V2_QUESTIONS_BY_ID;
+}
+let currentIdxV2 = 0; // ページ先頭のcanonical order内インデックス（0,5,10,...）
+let quizFocusIdxV2 = null; // フォーカス中のitem_id
+
+// 診断の途中経過（このタブだけ）：再読み込み・戻る操作で回答を失わない。結果を出したら消す
+var QUIZ_PROGRESS_KEY = 'ed_quiz_progress_v2';
+function saveQuizProgressV2() {
+  try { sessionStorage.setItem(QUIZ_PROGRESS_KEY, JSON.stringify({ a: answersV2, i: currentIdxV2, at: Date.now() })); } catch (e) { /* 保存できなくても続ける */ }
+}
+function clearQuizProgressV2() { try { sessionStorage.removeItem(QUIZ_PROGRESS_KEY); } catch (e) { /* noop */ } }
+function restoreQuizProgressV2() {
+  try {
+    var v = JSON.parse(sessionStorage.getItem(QUIZ_PROGRESS_KEY) || 'null');
+    if (!v || typeof v.a !== 'object' || !v.a || Date.now() - Number(v.at) > 6 * 3600 * 1000) return false;
+    var n = Object.keys(v.a).length;
+    if (!n) return false;
+    answersV2 = v.a; currentIdxV2 = Number(v.i) || 0; quizFocusIdxV2 = null;
+    return true;
+  } catch (e) { return false; }
+}
+function renderQuizV2(root) {
+  saveQuizProgressV2();
+  var order = getV2CanonicalOrder();
+  var byId = getV2QuestionsById();
+  var pageStart = currentIdxV2;
+  var pageIds = order.slice(pageStart, pageStart + PAGE_SIZE);
+  var answeredCount = getAnsweredCountV2();
+  var pct = Math.round((answeredCount / order.length) * 100);
+  var allAnswered = isCompleteV2(order);
+  var firstUnansweredId = getFirstUnansweredItemIdV2(order);
+  var isLastPage = pageStart + PAGE_SIZE >= order.length;
+
+  if (quizFocusIdxV2 === null || pageIds.indexOf(quizFocusIdxV2) === -1) {
+    var firstUnansweredInPage = null;
+    for (var k = 0; k < pageIds.length; k++) {
+      if (answersV2[pageIds[k]] === undefined) { firstUnansweredInPage = pageIds[k]; break; }
+    }
+    quizFocusIdxV2 = firstUnansweredInPage !== null ? firstUnansweredInPage : pageIds[0];
+  }
+
+  // 表示だけの状態：直前に回答した設問を静かに沈め、次の設問を灯す（回答・遷移の処理には関与しない）
+  var prevFocusV2 = window.__qzPrevFocusV2;
+  var focusMovedV2 = prevFocusV2 !== undefined && prevFocusV2 !== quizFocusIdxV2 && pageIds.indexOf(prevFocusV2) !== -1;
+  window.__qzPrevFocusV2 = quizFocusIdxV2;
+  var pad2 = function(n) { return String(n).padStart(2, '0'); };
+
+  root.innerHTML = `
+    <section class="qz">
+      <div class="qz-prog">
+        <div class="qz-prog-top">
+          <span class="qz-range">Q${pad2(pageStart+1)}—${pad2(Math.min(pageStart+PAGE_SIZE, order.length))} <span class="of">/ ${order.length}</span></span>
+          <span class="qz-count">回答済 <b>${answeredCount}</b></span>
+        </div>
+        <div class="qz-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${order.length}" aria-valuenow="${answeredCount}"><i style="width:${pct}%"></i></div>
+      </div>
+
+      ${pageIds.map((id, i) => {
+        const q = byId[id];
+        const qIdx = pageStart + i;
+        const cur = answersV2[id];
+        const isFocused = id === quizFocusIdxV2;
+        const scale = ETI_V2_META.responseScales[q.responseMode];
+        const state = isFocused ? 'is-active' : (cur !== undefined ? 'is-done' : 'is-next');
+        const motion = focusMovedV2 ? (isFocused ? ' is-arriving' : (id === prevFocusV2 && cur !== undefined ? ' is-settling' : '')) : '';
+        return `
+        <div class="q-card-v2 qz-card ${state}${motion}" data-qid="${id}">
+          <div class="qz-no">Q${qIdx+1}</div>
+          <p class="qz-text">${q.text}</p>
+          <div class="scale-dots-v2 qz-scale" data-qid="${id}" role="radiogroup" aria-label="Q${qIdx+1}の回答">
+            ${scale.map((s, j) => `
+              <button data-v="${s.value}" aria-label="${s.label}" role="radio" aria-checked="${cur===s.value}" class="qz-dot${cur===s.value?' is-on':''}">${j+1}</button>
+            `).join('')}
+          </div>
+          <div class="qz-labels">
+            <span>${scale[0].label}</span>
+            <span>${scale[scale.length-1].label}</span>
+          </div>
+        </div>`;
+      }).join('')}
+
+      <div class="qz-pager">
+        <button id="prev-btn-v2" ${pageStart===0?'disabled':''}>← 前の5問</button>
+        ${!isLastPage
+          ? `<button id="next-btn-v2">次の5問 →</button>`
+          : `<span></span>`}
+      </div>
+
+      ${allAnswered
+        ? `<button id="result-btn-inline-v2" class="qz-result">結果を見る →</button>` : ''}
+
+      ${!allAnswered && firstUnansweredId !== null && isLastPage
+        ? `<button id="jump-unanswered-btn-v2" class="qz-jump">未回答の設問へ →</button>` : ''}
+    </section>`;
+
+  // 次の設問が画面外に隠れたときだけ、上部が見える程度に短く寄せる（ページ送り時は既存のscrollQuizTopが優先）
+  if (focusMovedV2) {
+    var activeCard = root.querySelector('.qz-card.is-active');
+    if (activeCard) requestAnimationFrame(function() {
+      var r = activeCard.getBoundingClientRect(), vh = window.innerHeight;
+      if (r.top >= 12 && r.bottom <= vh - 12) return;
+      var dy = r.top < 12 ? r.top - 16 : Math.min(r.bottom - vh + 24, r.top - 72);
+      if (Math.abs(dy) < 8) return;
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.scrollBy({ top: dy, behavior: reduce ? 'auto' : 'smooth' });
+    });
+  }
+
+  root.querySelectorAll('.q-card-v2').forEach(function(card) {
+    card.addEventListener('click', function(e) {
+      var id = card.getAttribute('data-qid');
+      if (id !== quizFocusIdxV2) {
+        quizFocusIdxV2 = id;
+        renderQuizV2(document.getElementById('diagnosis-root'));
+      }
+    });
+  });
+
+  root.querySelectorAll('.scale-dots-v2').forEach(function(div) {
+    var id = div.getAttribute('data-qid');
+    div.querySelectorAll('button').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        selectAnswerV2ForUI(id, Number(btn.getAttribute('data-v')));
+      });
+    });
+  });
+
+  var prevBtn = root.querySelector('#prev-btn-v2');
+  if (prevBtn) prevBtn.addEventListener('click', function() { prevQV2(); });
+  var nextBtn = root.querySelector('#next-btn-v2');
+  if (nextBtn) nextBtn.addEventListener('click', function() { nextQV2(); });
+  var resultBtnInline = root.querySelector('#result-btn-inline-v2');
+  if (resultBtnInline) resultBtnInline.addEventListener('click', function() { showResultV2(); });
+  var jumpBtn = root.querySelector('#jump-unanswered-btn-v2');
+  if (jumpBtn) jumpBtn.addEventListener('click', function() {
+    var id = getFirstUnansweredItemIdV2(order);
+    if (id !== null) {
+      var idx = order.indexOf(id);
+      currentIdxV2 = Math.floor(idx / PAGE_SIZE) * PAGE_SIZE;
+      quizFocusIdxV2 = id;
+      renderQuizV2(document.getElementById('diagnosis-root'));
+      scrollQuizTop();
+    }
+  });
+}
+
+// 回答→次の未回答へフォーカス移動。ページの5問が全て埋まったら、最終ページでなければ
+// 自動的に次ページへ進む（以前発生した「質問5から6へ進まない」問題の回帰防止。DOM E2Eで確認する）。
+function selectAnswerV2ForUI(itemId, v) {
+  var root = document.getElementById('diagnosis-root');
+  var order = getV2CanonicalOrder();
+  var wasFocused = (itemId === quizFocusIdxV2);
+  var result = selectAnswerV2(itemId, v);
+  quizFocusIdxV2 = itemId;
+
+  if (result.action === 'deselected') {
+    renderQuizV2(root);
+    return;
+  }
+
+  var idxInOrder = order.indexOf(itemId);
+  var pageStart = Math.floor(idxInOrder / PAGE_SIZE) * PAGE_SIZE;
+  var pageIds = order.slice(pageStart, pageStart + PAGE_SIZE);
+
+  if (wasFocused) {
+    var nextUnfocused = null;
+    for (var k = 0; k < pageIds.length; k++) {
+      if (order.indexOf(pageIds[k]) <= idxInOrder) continue;
+      if (answersV2[pageIds[k]] === undefined) { nextUnfocused = pageIds[k]; break; }
+    }
+    if (nextUnfocused !== null) quizFocusIdxV2 = nextUnfocused;
+  }
+
+  var pageComplete = pageIds.every(function(id) { return answersV2[id] !== undefined; });
+  var isLastPage = pageStart + PAGE_SIZE >= order.length;
+  if (pageComplete && !isLastPage && currentIdxV2 === pageStart) {
+    currentIdxV2 = pageStart + PAGE_SIZE;
+    quizFocusIdxV2 = null;
+    renderQuizV2(root);
+    scrollQuizTop();
+    return;
+  }
+  renderQuizV2(root);
+}
+
+function nextQV2() {
+  var order = getV2CanonicalOrder();
+  if (currentIdxV2 + PAGE_SIZE < order.length) {
+    currentIdxV2 += PAGE_SIZE; quizFocusIdxV2 = null;
+    renderQuizV2(document.getElementById('diagnosis-root')); scrollQuizTop();
+  }
+}
+function prevQV2() {
+  if (currentIdxV2 - PAGE_SIZE >= 0) {
+    currentIdxV2 -= PAGE_SIZE; quizFocusIdxV2 = null;
+    renderQuizV2(document.getElementById('diagnosis-root')); scrollQuizTop();
+  }
+}
+function showResultV2() {
+  var order = getV2CanonicalOrder();
+  if (isCompleteV2(order)) {
+    if (typeof gtag === 'function') gtag('event','quiz_complete',{event_category:'diagnosis',value:getAnsweredCountV2(),diagnosis_version:'ETI-2.0'});
+    // 診断を完了した直後の結果：表示の後に固有リンク（/result#r=）を作る（診断ごとに別のリンク）
+    window.__resultNonce = (window.__resultNonce || 0) + 1;
+    window.__resumeFresh = true;
+    window.__edResumeToken = null;
+    clearQuizProgressV2();
+    setPhase('result');
+  }
+}
+
 /* ===== RESULT ===== */
 function renderResult(root) {
-  const results = computeResults(answers);
+  const diagnosisVersion = (window.__diagnosisVersion === 'ETI-2.0') ? 'ETI-2.0' : 'legacy-v1';
+  const shortCode = diagnosisVersion === 'ETI-2.0' ? ETIv2.encodeAnswersV2(answersV2, ETI_V2_QUESTIONS) : encodeAnswers(answers);
+  const results = diagnosisVersion === 'ETI-2.0' ? computeResultsV2ForUI(answersV2, shortCode) : computeResults(answers);
   const topEl = results.elementScores[0].element;
   const topW = results.weaponScores[0].weapon;
   const topNat = results.nationScores[0].nation;
   const elC = ELEMENTS[topEl].color;
   const wC = WEAPONS[topW].color;
-  const et = results.enneaTop.type;
-  const top1 = results.charMatches[0];
+  const et = diagnosisVersion === 'legacy-v1' ? results.enneaTop.type : null;
+  // MIRROR（最も近しいキャラクター）。v2は版ごとの選択結果、legacyは従来どおり1位。
+  const top1 = (diagnosisVersion === 'ETI-2.0' && results.mirror) ? results.mirror : results.charMatches[0];
   const ACCENT = '#7ab8e8';
+  try { document.title = `診断結果 ${topEl}×${topW}×${topNat}・${typeName(topEl, topW)}（${typeCode(topEl, topW, topNat)}）｜元素診断`; } catch (e) { /* 題名は変えなくても表示は続ける */ }
+  // 暗い背景で読める固有色（元素・武器）。国家は淡い金で統一
+  const elT = rxText(elC), wT = rxText(wC), natT = 'var(--rx-nation)';
 
   // 本文・因子タグ（実データ連動、文体は本体サイトに準拠）
-  const whySimilarText = generateWhySimilarText(top1, topEl, topW, et);
-  const elementText = ELEMENT_DESC[topEl];
-  const weaponText = WEAPON_DESC[topW];
-  const nationText = NATION_DESC[topNat];
-  const tagsSimilar = pickFactorTags_Similar(results);
+  // v2にはEnneagramが存在しないため、近しい人物像・武器種のタグはSTYLE軸から組み立てる。
+  const whySimilarText = diagnosisVersion === 'ETI-2.0'
+    ? generateWhySimilarTextV2(top1, topEl, topW)
+    : generateWhySimilarText(top1, topEl, topW, et);
+  // 本文：冒頭語（元素名・武器名・国家名）と国家の価値を固有色で強調する
+  const elementText = rxLead(ELEMENT_DESC[topEl], topEl, elT);
+  const weaponText = rxLead(WEAPON_DESC[topW], topW, wT);
+  const nationText = rxQuote(rxLead(NATION_DESC[topNat], topNat, natT), natT);
+  const tagsSimilar = diagnosisVersion === 'ETI-2.0'
+    ? pickStyleTags_Similar(results.style)
+    : pickFactorTags_Similar(results);
   const usedProfileWords = new Set();
   const tagsElement = pickFactorTags_Profile(results, ELEMENT_PROFILE[topEl], usedProfileWords);
-  const tagsWeapon = pickFactorTags_Weapon(results, WEAPON_ENNEA[topW], usedProfileWords);
+  const tagsWeapon = diagnosisVersion === 'ETI-2.0'
+    ? pickStyleTags_Weapon(WEAPON_PROTOTYPES_V2[topW], results.style)
+    : pickFactorTags_Weapon(results, WEAPON_ENNEA[topW], usedProfileWords);
   const tagsNation = pickFactorTags_Nation(results, usedProfileWords);
 
   // 診断結果を分析用に記録（元素・武器種・国家・エニアグラム・一致キャラの分布を後から集計できるようにする）
@@ -1663,21 +2291,23 @@ function renderResult(root) {
     window.__resultLogged = true;
     gtag('event', 'diagnosis_result', {
       event_category: 'diagnosis',
+      diagnosis_version: diagnosisVersion,
       element: topEl,
       weapon: topW,
       nation: topNat,
       element_weapon: topEl + topW,
       element_weapon_nation: topEl + topW + '-' + topNat,
-      ennea_type: et,
-      ennea_wing: results.enneaWing ? results.enneaWing.type : null,
+      ennea_type: diagnosisVersion === 'legacy-v1' ? et : null,
+      ennea_wing: (diagnosisVersion === 'legacy-v1' && results.enneaWing) ? results.enneaWing.type : null,
       top_character: top1.name,
       top_character_match: top1.match
     });
   }
 
-  const enneaWingStr = results.enneaWing ? 'w' + results.enneaWing.type : '';
-  const shortCode = encodeAnswers(answers);
-  const applyData = topEl + topW + '-E' + et + enneaWingStr + '-' + shortCode;
+  const enneaWingStr = (diagnosisVersion === 'legacy-v1' && results.enneaWing) ? 'w' + results.enneaWing.type : '';
+  const applyData = diagnosisVersion === 'ETI-2.0'
+    ? (topEl + topW + '-' + shortCode)
+    : (topEl + topW + '-E' + et + enneaWingStr + '-' + shortCode);
   window.__lastApplyData = applyData;
 
   root.innerHTML = `
@@ -1698,29 +2328,37 @@ function renderResult(root) {
           <span style="font-size:22px;color:#6a90a8">×</span>
           <span style="font-size:34px;font-weight:700;color:${wC}">${topW}</span>
         </div>
-        <div style="color:#b0d8f0;font-size:14px">${ELEMENTS[topEl].axis} ／ ${WEAPONS[topW].principle} ／ ${topNat}</div>
+        <div style="color:var(--rx-secondary);font-size:14px">${ELEMENTS[topEl].axis} ／ ${WEAPONS[topW].principle} ／ ${topNat}</div>
         <details style="margin-top:14px;padding-top:14px;border-top:1px solid ${elC}25">
           <summary style="color:#90c0e0;font-size:11px;cursor:pointer;list-style:none;letter-spacing:1px">もっと詳しく見る ▾</summary>
           <div style="margin-top:12px">
-            <div style="font-size:13px;color:#a8ccec;margin-bottom:10px">${typeCode(topEl,topW)}（${typeName(topEl,topW)}）とは</div>
-            <div style="display:flex;gap:8px;margin-bottom:12px">
+            <div style="font-size:13.5px;color:var(--rx-primary);font-weight:600;margin-bottom:6px">${typeCode(topEl,topW)}（${typeName(topEl,topW)}）とは</div>
+            <p style="font-size:12px;color:var(--rx-tertiary);line-height:1.8;margin:0 0 12px">このタイプコードは、あなたの気質・関わり方・価値観の傾向をもとに組み立てられています。コードの各部分がそれぞれ異なる軸を表しており、それらが重なることで、あなたらしい人物像が立ち上がります。</p>
+            <div style="display:flex;gap:8px;margin-bottom:14px">
               <div style="flex:1;background:${elC}15;border:1px solid ${elC}40;border-radius:8px;padding:9px 11px">
-                <div style="font-size:19px;font-weight:800;color:${elC}">${ELEMENT_CODE[topEl]}</div>
-                <div style="font-size:10px;color:#6a90a8;margin-top:2px">${topEl}——気質の軸</div>
+                <div style="font-size:19px;font-weight:800;color:${elT}">${ELEMENT_CODE[topEl]}</div>
+                <div style="font-size:10px;color:var(--rx-tertiary);margin-top:2px">${topEl}——気質の軸</div>
               </div>
               <div style="flex:1;background:${wC}15;border:1px solid ${wC}40;border-radius:8px;padding:9px 11px">
-                <div style="font-size:19px;font-weight:800;color:${wC}">${WEAPON_CODE[topW]}</div>
-                <div style="font-size:10px;color:#6a90a8;margin-top:2px">${topW}——動機の軸</div>
+                <div style="font-size:19px;font-weight:800;color:${wT}">${WEAPON_CODE[topW]}</div>
+                <div style="font-size:10px;color:var(--rx-tertiary);margin-top:2px">${topW}——関わり方の軸</div>
               </div>
               <div style="flex:1;background:#c9a86015;border:1px solid #c9a86040;border-radius:8px;padding:9px 11px">
-                <div style="font-size:19px;font-weight:800;color:#e0c890">${NATION_CODE[topNat]}</div>
-                <div style="font-size:10px;color:#6a90a8;margin-top:2px">${topNat}——価値観の軸</div>
+                <div style="font-size:19px;font-weight:800;color:${natT}">${NATION_CODE[topNat]}</div>
+                <div style="font-size:10px;color:var(--rx-tertiary);margin-top:2px">${topNat}——価値観の軸</div>
               </div>
             </div>
-            <div style="color:#7aa8c8;font-size:13px;line-height:1.8">${typeOverview(topEl,topW)}</div>
-            <div style="color:#7aa8c8;font-size:13px;line-height:1.8;margin-top:10px">${topNat}は<strong style="color:#e0c890">「${NATION_MEANING[topNat]}」</strong>を大切にする国家です。${NATION_DESC[topNat]}</div>
-            <div style="margin-top:14px;padding-top:14px;border-top:1px solid ${elC}20;color:#a8ccec;font-size:13px;line-height:1.9">
-              つまり<strong style="color:${ACCENT}">${typeCode(topEl,topW)}</strong>型は、「${ELEMENTS[topEl].keyword}」という気質を持ちながら、「${WEAPONS[topW].style}」というかたちで人と関わり、「${NATION_MEANING[topNat]}」を大切にする人——というのが、この4文字の意味するところです。
+            <div style="color:var(--rx-secondary);font-size:13px;line-height:1.85">
+              <div style="font-size:10.5px;letter-spacing:1.5px;color:${elT};margin-bottom:3px">気質｜${topEl}</div>
+              <div>${rxLead(ELEMENT_DESC[topEl], topEl, elT)}</div>
+              <div style="font-size:10.5px;letter-spacing:1.5px;color:${wT};margin:14px 0 3px">関わり方｜${topW}</div>
+              <div>${rxLead(WEAPON_DESC[topW], topW, wT)}</div>
+              <div style="margin-top:10px;color:var(--rx-primary)">この二つが重なる時、「<strong style="font-weight:700;color:${elT}">${typeName(topEl,topW)}</strong>」という人物像が立ち上がります。</div>
+              <div style="font-size:10.5px;letter-spacing:1.5px;color:${natT};margin:14px 0 3px">価値観｜${topNat}</div>
+              <div>${topNat}は<strong style="color:${natT}">「${NATION_MEANING[topNat]}」</strong>を大切にする国家です。${NATION_DESC[topNat]}</div>
+            </div>
+            <div style="margin-top:16px;padding:12px 14px;border-left:2px solid ${elC};background:linear-gradient(90deg,${elC}14,transparent);border-radius:0 8px 8px 0;color:var(--rx-primary);font-size:13.5px;font-weight:500;line-height:1.9">
+              つまり<strong style="color:${ACCENT};letter-spacing:1px">${typeCode(topEl,topW)}</strong>型は、「<span style="color:${elT}">${ELEMENTS[topEl].keyword}</span>」という気質を持ちながら、「<span style="color:${wT}">${WEAPONS[topW].style}</span>」というかたちで人と関わり、「<span style="color:${natT}">${NATION_MEANING[topNat]}</span>」を大切にする人——というのが、この4文字の意味するところです。
             </div>
           </div>
         </details>
@@ -1731,17 +2369,17 @@ function renderResult(root) {
         <div style="font-size:11px;letter-spacing:3px;color:#6a90b0;text-transform:uppercase;margin-bottom:12px">最も近しいキャラクター</div>
         <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
           <div>
-            <div style="font-size:30px;font-weight:700;color:${ELEMENTS[top1.el].color};line-height:1.1">${top1.name}</div>
+            <div style="font-size:30px;font-weight:700;color:${ELEMENTS[top1.el].color};line-height:1.2;display:inline-block;padding-right:2px;background:linear-gradient(90deg, color-mix(in srgb, ${ELEMENTS[top1.el].color} 72%, #ffffff), ${ELEMENTS[top1.el].color} 55%, color-mix(in srgb, ${WEAPONS[top1.w].color} 75%, #ffffff));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">${top1.name}</div>
             <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
               <span style="background:${ELEMENTS[top1.el].color}22;border:1px solid ${ELEMENTS[top1.el].color}55;color:${ELEMENTS[top1.el].color};font-size:11px;padding:2px 8px;border-radius:3px">${top1.el}</span>
               <span style="background:${WEAPONS[top1.w].color}22;border:1px solid ${WEAPONS[top1.w].color}55;color:${WEAPONS[top1.w].color};font-size:11px;padding:2px 8px;border-radius:3px">${top1.w}</span>
-              <span style="background:#c9a86022;border:1px solid #c9a86055;color:#e0c890;font-size:11px;padding:2px 8px;border-radius:3px">${top1.nation}</span>
-              <span style="background:#7ab8e822;border:1px solid #7ab8e855;color:${ACCENT};font-size:11px;padding:2px 8px;border-radius:3px">エニア${top1.ennea} ${ENNEA[top1.ennea].name}</span>
+              ${top1.nation ? `<span style="background:#c9a86022;border:1px solid #c9a86055;color:#e0c890;font-size:11px;padding:2px 8px;border-radius:3px">${top1.nation}</span>` : ''}
+              <span style="background:#7ab8e822;border:1px solid #7ab8e855;color:${ACCENT};font-size:11px;padding:2px 8px;border-radius:3px">${diagnosisVersion === 'ETI-2.0' ? styleTopTagForCharacter(top1.name) : ENNEA[top1.ennea].name}</span>
             </div>
           </div>
           <div style="margin-left:auto;text-align:center">
-            <div style="font-size:38px;font-weight:700;color:#90c8f0;line-height:1">${top1.match}<span style="font-size:18px">%</span></div>
-            <div style="color:#6a9cc0;font-size:11px">一致度</div>
+            <div style="font-size:38px;font-weight:700;color:var(--rx-primary);line-height:1;text-shadow:0 0 18px ${ELEMENTS[top1.el].color}66">${top1.match}<span style="font-size:18px">%</span></div>
+            <div style="color:var(--rx-tertiary);font-size:11px;letter-spacing:1px">一致度</div>
           </div>
         </div>
       </div>
@@ -1760,11 +2398,19 @@ function renderResult(root) {
                 <span style="color:#5a80a0;font-size:10px">${ELEMENTS[e.element].axis}</span>
               </span>
               <div style="background:#0a0a14;height:6px;border-radius:3px;overflow:hidden;margin-top:4px">
-                <div style="background:${ELEMENTS[e.element].color};width:${n}%;height:100%;border-radius:3px;opacity:${i===0?1:0.55}"></div>
+                <div style="background:linear-gradient(90deg, color-mix(in srgb, ${ELEMENTS[e.element].color} 50%, #0a0a14), ${ELEMENTS[e.element].color} 65%, color-mix(in srgb, ${ELEMENTS[e.element].color} 60%, #ffffff));width:${n}%;height:100%;border-radius:3px;opacity:${i===0?1:0.7}"></div>
               </div>
             </div>`;
         }).join('')}
       </div>
+
+      <!-- 診断記録（元素TOP3の直後・1か所だけ）。押すまでログインもサーバー保存も開始しない（ログイン済みでも自動保存しない）。
+           表示時に行うのは、ログイン状態・登録状態・「この結果がすでに保存済みか」の読み取りだけ。
+           確認が済むまでは中立の1行だけを出し、済んだら1回だけ描画する。登録・ログイン・同意・保存の後も、
+           マイページへ自動で移動せず、このカードの中で「保存しました」を示す。 -->
+      <section id="recordCard" class="rs-card" style="--el:${elC}" data-state="pending" aria-live="polite">
+        <p class="rs-pending">診断記録の状態を確認しています</p>
+      </section>
 
       <div style="text-align:center;color:#5a80a0;font-size:11px;letter-spacing:2px;margin:20px 0 14px">— ここまでが無料診断の結果です —</div>
 
@@ -1800,14 +2446,14 @@ function renderResult(root) {
               ['近しいキャラクター1名', true],
               ['なぜ似ているかの簡易な理由', true],
               ['Big Five 5因子の詳細スコアと相互作用', false],
-              ['エニアグラムの深層（CORE・FEAR・DESIRE）', false],
+              [diagnosisVersion === 'ETI-2.0' ? 'STYLE｜行動・関わり方の分析（全5軸）' : 'STYLE｜行動・関わり方の分析（動機・反応傾向）', false],
               ['価値観10次元の全スコアと強み・弱み', false],
               ['近しいキャラクター4名、それぞれの一致理由', false],
               ['判定根拠（なぜその組み合わせになったか）', false],
             ].map(([label,unlocked])=>`
               <div style="display:flex;align-items:center;gap:10px">
                 <span style="width:18px;height:18px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;background:${unlocked?elC:'#182838'};color:${unlocked?'#fff':'#4a6580'}">${unlocked?'✓':'🔒'}</span>
-                <span style="font-size:12px;color:${unlocked?'#a8ccec':'#6a5d85'}">${label}</span>
+                <span style="font-size:12px;color:${unlocked?'var(--rx-primary)':'#8a80a8'}">${label}</span>
               </div>`).join('')}
           </div>
           <div style="text-align:center;margin-top:14px;padding-top:12px;border-top:1px solid ${elC}25;font-size:11px;color:#6a90a8">
@@ -1821,51 +2467,21 @@ function renderResult(root) {
           <!-- セクション1: 何故似ているか -->
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
             <span style="width:8px;height:8px;border-radius:50%;background:${elC};display:inline-block"></span>
-            <h4 style="color:#d0ecff;font-size:15px;margin:0">何故あなたは似ているか</h4>
+            <h4 style="color:color-mix(in srgb, var(--rx-primary) 88%, ${elC});font-size:15px;margin:0">何故あなたは似ているか</h4>
           </div>
-          <div style="width:100%;aspect-ratio:16/9;border-radius:10px;margin-bottom:14px;position:relative;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#181430,#050408 75%)">
-            <svg width="100%" height="100%" viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice">
-              <defs>
-                <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stop-color="#e8d8a0" stop-opacity="0.9"/>
-                  <stop offset="100%" stop-color="#e8d8a0" stop-opacity="0"/>
-                </radialGradient>
-              </defs>
-              <g opacity="0.5">
-                <circle cx="60" cy="50" r="1" fill="#fff"/><circle cx="580" cy="40" r="1.2" fill="#fff"/>
-                <circle cx="30" cy="200" r="1" fill="#fff"/><circle cx="610" cy="180" r="1" fill="#fff"/>
-                <circle cx="100" cy="320" r="1.3" fill="#fff"/><circle cx="540" cy="300" r="1" fill="#fff"/>
-              </g>
-              <g stroke="#7a6ca8" stroke-width="0.8" opacity="0.55">
-                <line x1="320" y1="180" x2="180" y2="100"/>
-                <line x1="320" y1="180" x2="460" y2="110"/>
-                <line x1="320" y1="180" x2="200" y2="260"/>
-                <line x1="320" y1="180" x2="440" y2="270"/>
-                <line x1="180" y1="100" x2="200" y2="260"/>
-                <line x1="460" y1="110" x2="440" y2="270"/>
-              </g>
-              <circle cx="320" cy="180" r="34" fill="url(#nodeGlow)"/>
-              <circle cx="320" cy="180" r="7" fill="#f0e4c0"/>
-              <circle cx="180" cy="100" r="16" fill="none" stroke="${elC}" stroke-width="1.4"/>
-              <circle cx="180" cy="100" r="4" fill="${elC}"/>
-              <circle cx="460" cy="110" r="13" fill="none" stroke="#2a7aaa" stroke-width="1.4"/>
-              <circle cx="460" cy="110" r="4" fill="#2a7aaa"/>
-              <circle cx="200" cy="260" r="18" fill="none" stroke="#3a8a60" stroke-width="1.4"/>
-              <circle cx="200" cy="260" r="4" fill="#3a8a60"/>
-              <circle cx="440" cy="270" r="11" fill="none" stroke="#9040d0" stroke-width="1.4"/>
-              <circle cx="440" cy="270" r="4" fill="#9040d0"/>
-              <text x="320" y="330" text-anchor="middle" font-family="serif" font-size="11" letter-spacing="4" fill="#6a5c88">CONSTELLATION OF AFFINITY</text>
-            </svg>
-          </div>
-          <p style="color:#6a90a8;font-size:12px;line-height:1.9;margin:0 0 4px">
+          ${resultFigure('affinity-constellation', 'あなたと近しいキャラクターの親和性を表す星図')}
+          <p style="color:var(--rx-secondary);font-size:12px;line-height:1.95;margin:0 0 4px">
             ${whySimilarText}
           </p>
+          ${diagnosisVersion === 'ETI-2.0'
+            ? similarityGauges([['性格類似度', top1.personalitySim, '#b48ad8'], ['行動スタイル類似度', top1.styleSim, '#dcae5a'], ['価値観類似度', top1.valuesSim, '#5cc4b0']])
+            : similarityGauges([['性格類似度（Big Five）', top1.big5Sim, '#b48ad8']])}
 
           <div style="height:1px;background:#182838;margin:18px 0"></div>
 
           <!-- セクション2: 繋がり合う因子 -->
-          <h4 style="color:#d0ecff;font-size:14px;margin:0 0 6px">あなたの動機特性</h4>
-          <div style="color:#6a95b8;font-size:10.5px;letter-spacing:1px;margin-bottom:8px">近しい人物像 TOP4</div>
+          <h4 style="color:var(--rx-primary);font-size:14px;margin:0 0 6px">あなたの動機特性</h4>
+          <div style="color:var(--rx-tertiary);font-size:10.5px;letter-spacing:1px;margin-bottom:8px">近しい人物像 TOP4</div>
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:18px">
             ${results.charMatches.slice(0,4).map((c,i) => `
               <div style="background:#08060f;border:1px solid #182838;border-radius:8px;padding:10px 4px;text-align:center">
@@ -1875,33 +2491,33 @@ function renderResult(root) {
               </div>`).join('')}
           </div>
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
-            ${tagsSimilar.map((f,i)=>[f,['#d17a52','#5b8fd1','#7fbf6a','#c9a04e'][i]]).map(([f,c])=>`
-              <div style="text-align:center">
-                <div style="width:52px;height:52px;margin:0 auto 6px;border-radius:50%;border:2px solid ${c};display:flex;align-items:center;justify-content:center;background:${c}18">
-                  <span style="display:inline-flex"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="vertical-align:middle"><rect x="5" y="11" width="14" height="10" rx="2" fill="#9a9aa8"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#9a9aa8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span>
-                </div>
-                <div style="font-size:9.5px;color:${c};line-height:1.4">${f}</div>
-              </div>`).join('')}
+            ${tagsSimilar.map((f,i)=>[f,['#d17a52','#5b8fd1','#7fbf6a','#c9a04e'][i]]).map(([f,c])=>lockedTraitTile(f, c)).join('')}
           </div>
           <div style="position:relative;margin-top:26px">
-            <div style="width:44px;height:44px;border-radius:50%;background:${elC};display:flex;align-items:center;justify-content:center;margin:0 auto;position:relative;top:22px;z-index:2;border:3px solid #0c0a14;font-size:18px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="vertical-align:middle"><rect x="5" y="11" width="14" height="10" rx="2" fill="#e8e8ec"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#e8e8ec" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
-            <div style="background:#0a1420;border:1px solid ${elC}50;border-radius:12px;padding:36px 18px 20px;text-align:center">
-              <h5 style="color:#d0ecff;font-size:15px;margin:0 0 10px">今すぐロックを解除</h5>
-              <p style="color:#6a90a8;font-size:11.5px;line-height:1.8;margin:0 0 16px">フルレポートを取得して、あなたと繋がりあう因子を持つキャラクターと巡り会いましょう。</p>
+            ${lockBadge(elC)}
+            <div style="background:#0a1420;border:1px solid ${elC}50;border-radius:12px;padding:38px 18px 20px;text-align:center">
+              <h5 style="color:var(--rx-primary);font-size:15px;margin:0 0 10px">今すぐロックを解除</h5>
+              <p style="color:var(--rx-secondary);font-size:11.5px;line-height:1.8;margin:0 0 16px">フルレポートを取得して、あなたと繋がりあう因子を持つキャラクターと巡り会いましょう。</p>
               <button class="lock-cta" data-label="運命"
                 style="width:100%;background:${elC};border:none;color:#fff;border-radius:8px;padding:13px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
                 運命のロックを解除
               </button>
-              ${reportPreviewCard(elC, 'エニアグラムの深層', '動機',
-                `<div style="font-size:11.5px;color:#a8ccec;line-height:1.9">
-                  <strong>CORE：</strong>${ENNEA[et].core}<br>
-                  <strong>FEAR：</strong>${ENNEA[et].fear}<br>
-                  <strong>DESIRE：</strong>${ENNEA[et].desire}<br>
-                  ${results.enneaWing ? `<strong>ウィング：</strong>タイプ${results.enneaWing.type}（${ENNEA[results.enneaWing.type].name}）の傾向を併せ持ち、${ENNEA[et].name}の核に、${ENNEA[results.enneaWing.type].name}の色合いが加わります。<br>` : ''}
-                  <strong>統合の方向：</strong>安定している時、タイプ${ENNEA_GROWTH[et]}（${ENNEA[ENNEA_GROWTH[et]].name}）の性質が現れやすくなります。健全な成長のサインです。<br>
-                  <strong>分裂の方向：</strong>負荷がかかった時、タイプ${ENNEA_STRESS[et]}（${ENNEA[ENNEA_STRESS[et]].name}）の性質が現れやすくなります。ストレスへの反応として現れます。<br>
-                  この核となる動機が、日常のどんな場面で強く出るか、どう付き合えばよいかを、フルレポートでは具体的に解説します。
-                </div>`)}
+              ${diagnosisVersion === 'ETI-2.0'
+                ? reportPreviewCard(elC, 'STYLE｜行動・関わり方の分析', '動機',
+                  `<div style="font-size:11.5px;color:#a8ccec;line-height:1.9">
+                    ${buildStyleCoreText(results.style)}<br><br>
+                    5軸（主導性・関係調整・役割持続・媒介思考・自律距離）それぞれの実測値と、日常のどんな場面で強く出るかを、フルレポートでは具体的に解説します。
+                  </div>`)
+                : reportPreviewCard(elC, 'STYLE｜行動・関わり方の分析', '動機',
+                  `<div style="font-size:11.5px;color:#a8ccec;line-height:1.9">
+                    <strong>核となる動機：</strong>${ENNEA[et].core}<br>
+                    <strong>避けたいもの：</strong>${ENNEA[et].fear}<br>
+                    <strong>求めるもの：</strong>${ENNEA[et].desire}<br>
+                    ${results.enneaWing ? `<strong>併せ持つ傾向：</strong>${ENNEA[results.enneaWing.type].name}の色合いが、行動の核に加わります。<br>` : ''}
+                    <strong>余裕がある時：</strong>${ENNEA[ENNEA_GROWTH[et]].name}の性質が現れやすくなります。健全な成長のサインです。<br>
+                    <strong>プレッシャー下：</strong>${ENNEA[ENNEA_STRESS[et]].name}の性質が現れやすくなります。負荷への反応として現れます。<br>
+                    人との距離感・動機・反応傾向が、日常のどんな場面で強く出るか、どう付き合えばよいかを、フルレポートでは具体的に解説します。
+                  </div>`)}
               ${reportPreviewCard(elC, '近しいキャラクター、4人の一致理由', '一致理由',
                 `<div style="display:flex;flex-direction:column;gap:9px">${results.charMatches.slice(0,4).map((c,i)=>`
                   <div style="font-size:11px;color:#90b8d0">
@@ -1920,67 +2536,28 @@ function renderResult(root) {
           <!-- セクション1: 元素が導く可能性 -->
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
             <span style="width:8px;height:8px;border-radius:50%;background:${elC};display:inline-block"></span>
-            <h4 style="color:#d0ecff;font-size:15px;margin:0">元素が導くあなたの可能性</h4>
+            <h4 style="color:color-mix(in srgb, var(--rx-primary) 85%, ${elC});font-size:15px;margin:0">元素が導くあなたの可能性</h4>
           </div>
-          <div style="width:100%;aspect-ratio:16/9;border-radius:10px;margin-bottom:14px;position:relative;overflow:hidden;background:radial-gradient(ellipse at 50% 50%,#161228,#050408 75%)">
-            <svg width="100%" height="100%" viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice">
-              <g transform="translate(320,180)">
-                <circle r="130" fill="none" stroke="#4a3d70" stroke-width="0.7" opacity="0.6"/>
-                <circle r="90" fill="none" stroke="#4a3d70" stroke-width="0.5" opacity="0.4"/>
-                <circle r="50" fill="none" stroke="#4a3d70" stroke-width="0.5" opacity="0.3"/>
-
-                <line x1="0" y1="0" x2="0.0" y2="-130.0" stroke="#c84a20" stroke-width="0.8" opacity="0.5"/>
-                <circle cx="0.0" cy="-130.0" r="4.5" fill="#c84a20"/>
-                <line x1="0" y1="0" x2="101.6" y2="-81.1" stroke="#2a7aaa" stroke-width="0.8" opacity="0.5"/>
-                <circle cx="101.6" cy="-81.1" r="4.5" fill="#2a7aaa"/>
-                <line x1="0" y1="0" x2="126.7" y2="28.9" stroke="#4a80c0" stroke-width="0.8" opacity="0.5"/>
-                <circle cx="126.7" cy="28.9" r="4.5" fill="#4a80c0"/>
-                <line x1="0" y1="0" x2="56.4" y2="117.1" stroke="#9040d0" stroke-width="0.8" opacity="0.5"/>
-                <circle cx="56.4" cy="117.1" r="4.5" fill="#9040d0"/>
-                <line x1="0" y1="0" x2="-56.4" y2="117.1" stroke="#3a8a60" stroke-width="0.8" opacity="0.5"/>
-                <circle cx="-56.4" cy="117.1" r="4.5" fill="#3a8a60"/>
-                <line x1="0" y1="0" x2="-126.7" y2="28.9" stroke="#a07830" stroke-width="0.8" opacity="0.5"/>
-                <circle cx="-126.7" cy="28.9" r="4.5" fill="#a07830"/>
-                <line x1="0" y1="0" x2="-101.6" y2="-81.1" stroke="#4a8020" stroke-width="0.8" opacity="0.5"/>
-                <circle cx="-101.6" cy="-81.1" r="4.5" fill="#4a8020"/>
-
-                <circle r="30" fill="none" stroke="#e8d8a0" stroke-width="1"/>
-                <circle cx="30.0" cy="0.0" r="30" fill="none" stroke="#e8d8a0" stroke-width="0.6" opacity="0.5"/>
-                <circle cx="15.0" cy="26.0" r="30" fill="none" stroke="#e8d8a0" stroke-width="0.6" opacity="0.5"/>
-                <circle cx="-15.0" cy="26.0" r="30" fill="none" stroke="#e8d8a0" stroke-width="0.6" opacity="0.5"/>
-                <circle cx="-30.0" cy="0.0" r="30" fill="none" stroke="#e8d8a0" stroke-width="0.6" opacity="0.5"/>
-                <circle cx="-15.0" cy="-26.0" r="30" fill="none" stroke="#e8d8a0" stroke-width="0.6" opacity="0.5"/>
-                <circle cx="15.0" cy="-26.0" r="30" fill="none" stroke="#e8d8a0" stroke-width="0.6" opacity="0.5"/>
-                <circle r="4" fill="#f0e4c0"/>
-              </g>
-              <text x="320" y="335" text-anchor="middle" font-family="serif" font-size="11" letter-spacing="4" fill="#6a5c88">ELEMENTAL RESONANCE MAP</text>
-            </svg>
-          </div>
-          <p style="color:#6a90a8;font-size:12px;line-height:1.9;margin:0 0 10px">
+          ${resultFigure('elemental-resonance-map', '七つの元素の共鳴を表す星環')}
+          <p style="color:var(--rx-secondary);font-size:12px;line-height:1.95;margin:0 0 10px">
             ${elementText}
           </p>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin:0 0 4px">
-            ${ELEMENT_TRAITS[topEl].map(t=>`<span style="font-size:10.5px;color:${elC};border:1px solid ${elC}50;background:${elC}15;border-radius:12px;padding:4px 10px">${t}</span>`).join('')}
+            ${ELEMENT_TRAITS[topEl].map(t=>rxChip(t, elC)).join('')}
           </div>
 
           <div style="height:1px;background:#182838;margin:18px 0"></div>
 
           <!-- セクション2: あなたの元素特性 -->
-          <h4 style="color:#d0ecff;font-size:14px;margin:0 0 12px">あなたの元素（気質）特性</h4>
+          <h4 style="color:var(--rx-primary);font-size:14px;margin:0 0 12px">あなたの元素（気質）特性</h4>
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
-            ${tagsElement.map((f,i)=>[f,['#5b8fd1','#c9a04e','#7fbf6a','#d17a86'][i]]).map(([f,c])=>`
-              <div style="text-align:center">
-                <div style="width:52px;height:52px;margin:0 auto 6px;border-radius:50%;border:2px solid ${c};display:flex;align-items:center;justify-content:center;background:${c}18">
-                  <span style="display:inline-flex"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="vertical-align:middle"><rect x="5" y="11" width="14" height="10" rx="2" fill="#9a9aa8"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#9a9aa8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span>
-                </div>
-                <div style="font-size:9.5px;color:${c};line-height:1.4">${f}</div>
-              </div>`).join('')}
+            ${tagsElement.map((f,i)=>[f,['#5b8fd1','#c9a04e','#7fbf6a','#d17a86'][i]]).map(([f,c])=>lockedTraitTile(f, c)).join('')}
           </div>
           <div style="position:relative;margin-top:26px">
-            <div style="width:44px;height:44px;border-radius:50%;background:${elC};display:flex;align-items:center;justify-content:center;margin:0 auto;position:relative;top:22px;z-index:2;border:3px solid #0c0a14;font-size:18px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="vertical-align:middle"><rect x="5" y="11" width="14" height="10" rx="2" fill="#e8e8ec"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#e8e8ec" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
-            <div style="background:#0a1420;border:1px solid ${elC}50;border-radius:12px;padding:36px 18px 20px;text-align:center">
-              <h5 style="color:#d0ecff;font-size:15px;margin:0 0 10px">今すぐロックを解除</h5>
-              <p style="color:#6a90a8;font-size:11.5px;line-height:1.8;margin:0 0 16px">フルレポートを取得して、あなたに隠された才能を知りましょう。</p>
+            ${lockBadge(elC)}
+            <div style="background:#0a1420;border:1px solid ${elC}50;border-radius:12px;padding:38px 18px 20px;text-align:center">
+              <h5 style="color:var(--rx-primary);font-size:15px;margin:0 0 10px">今すぐロックを解除</h5>
+              <p style="color:var(--rx-secondary);font-size:11.5px;line-height:1.8;margin:0 0 16px">フルレポートを取得して、あなたに隠された才能を知りましょう。</p>
               <button class="lock-cta" data-label="才能"
                 style="width:100%;background:${elC};border:none;color:#fff;border-radius:8px;padding:13px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
                 才能のロックを解除
@@ -2009,63 +2586,45 @@ function renderResult(root) {
           <!-- セクション1: 武器種が導く可能性 -->
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
             <span style="width:8px;height:8px;border-radius:50%;background:${wC};display:inline-block"></span>
-            <h4 style="color:#d0ecff;font-size:15px;margin:0">武器種が導くあなたの可能性</h4>
+            <h4 style="color:color-mix(in srgb, var(--rx-primary) 85%, ${wC});font-size:15px;margin:0">武器種が導くあなたの可能性</h4>
           </div>
-          <div style="width:100%;aspect-ratio:16/9;border-radius:10px;margin-bottom:14px;position:relative;overflow:hidden;background:radial-gradient(ellipse at 50% 50%,#141a24,#050408 75%)">
-            <svg width="100%" height="100%" viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice">
-              <g transform="translate(320,180)">
-                <circle r="140" fill="none" stroke="#3a5468" stroke-width="0.5" opacity="0.5"/>
-                <circle r="100" fill="none" stroke="#3a5468" stroke-width="0.5" opacity="0.4"/>
-                <line x1="-150" y1="0" x2="150" y2="0" stroke="#3a5468" stroke-width="0.4" opacity="0.4"/>
-                <line x1="0" y1="-150" x2="0" y2="150" stroke="#3a5468" stroke-width="0.4" opacity="0.4"/>
-
-                <polygon points="0,0 23.5,-32.4 0.0,-115.0" fill="#8fa8c0" opacity="0.10"/>
-                <line x1="0" y1="0" x2="0.0" y2="-115.0" stroke="#c8d8e8" stroke-width="0.8" opacity="0.7"/>
-                <polygon points="0,0 38.0,12.4 109.4,-35.5" fill="#8fa8c0" opacity="0.10"/>
-                <line x1="0" y1="0" x2="109.4" y2="-35.5" stroke="#c8d8e8" stroke-width="0.8" opacity="0.7"/>
-                <polygon points="0,0 0.0,40.0 67.6,93.0" fill="#8fa8c0" opacity="0.10"/>
-                <line x1="0" y1="0" x2="67.6" y2="93.0" stroke="#c8d8e8" stroke-width="0.8" opacity="0.7"/>
-                <polygon points="0,0 -38.0,12.4 -67.6,93.0" fill="#8fa8c0" opacity="0.10"/>
-                <line x1="0" y1="0" x2="-67.6" y2="93.0" stroke="#c8d8e8" stroke-width="0.8" opacity="0.7"/>
-                <polygon points="0,0 -23.5,-32.4 -109.4,-35.5" fill="#8fa8c0" opacity="0.10"/>
-                <line x1="0" y1="0" x2="-109.4" y2="-35.5" stroke="#c8d8e8" stroke-width="0.8" opacity="0.7"/>
-
-                <circle r="6" fill="#e8f0f8"/>
-                <circle r="6" fill="none" stroke="#8fa8c0" stroke-width="0.8"/>
-              </g>
-              <text x="320" y="335" text-anchor="middle" font-family="serif" font-size="11" letter-spacing="4" fill="#6a7c88">FIVEFOLD BEARING COMPASS</text>
-            </svg>
-          </div>
-          <p style="color:#6a90a8;font-size:12px;line-height:1.9;margin:0 0 10px">
+          ${resultFigure('fivefold-bearing-compass', '五つの武器種の方位を表すコンパス')}
+          <p style="color:var(--rx-secondary);font-size:12px;line-height:1.95;margin:0 0 10px">
             ${weaponText}
           </p>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin:0 0 4px">
-            ${WEAPON_TRAITS[topW].map(t=>`<span style="font-size:10.5px;color:${wC};border:1px solid ${wC}50;background:${wC}15;border-radius:12px;padding:4px 10px">${t}</span>`).join('')}
+            ${WEAPON_TRAITS[topW].map(t=>rxChip(t, wC)).join('')}
           </div>
 
           <div style="height:1px;background:#182838;margin:18px 0"></div>
 
           <!-- セクション2: あなたの武器種特性 -->
-          <h4 style="color:#d0ecff;font-size:14px;margin:0 0 12px">あなたの武器種（行動）特性</h4>
+          <h4 style="color:var(--rx-primary);font-size:14px;margin:0 0 12px">あなたの武器種（行動）特性</h4>
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
-            ${tagsWeapon.map((f,i)=>[f,['#7ab8e8','#5fb0a0','#d1a55b','#7a97d1'][i]]).map(([f,c])=>`
-              <div style="text-align:center">
-                <div style="width:52px;height:52px;margin:0 auto 6px;border-radius:50%;border:2px solid ${c};display:flex;align-items:center;justify-content:center;background:${c}18">
-                  <span style="display:inline-flex"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="vertical-align:middle"><rect x="5" y="11" width="14" height="10" rx="2" fill="#9a9aa8"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#9a9aa8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span>
-                </div>
-                <div style="font-size:9.5px;color:${c};line-height:1.4">${f}</div>
-              </div>`).join('')}
+            ${tagsWeapon.map((f,i)=>[f,['#7ab8e8','#5fb0a0','#d1a55b','#7a97d1'][i]]).map(([f,c])=>lockedTraitTile(f, c)).join('')}
           </div>
           <div style="position:relative;margin-top:26px">
-            <div style="width:44px;height:44px;border-radius:50%;background:${wC};display:flex;align-items:center;justify-content:center;margin:0 auto;position:relative;top:22px;z-index:2;border:3px solid #0c0a14;font-size:18px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="vertical-align:middle"><rect x="5" y="11" width="14" height="10" rx="2" fill="#e8e8ec"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#e8e8ec" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
-            <div style="background:#0a1420;border:1px solid ${wC}50;border-radius:12px;padding:36px 18px 20px;text-align:center">
-              <h5 style="color:#d0ecff;font-size:15px;margin:0 0 10px">今すぐロックを解除</h5>
-              <p style="color:#6a90a8;font-size:11.5px;line-height:1.8;margin:0 0 16px">フルレポートを取得して、あなたに隠された行動傾向を知りましょう。</p>
+            ${lockBadge(wC)}
+            <div style="background:#0a1420;border:1px solid ${wC}50;border-radius:12px;padding:38px 18px 20px;text-align:center">
+              <h5 style="color:var(--rx-primary);font-size:15px;margin:0 0 10px">今すぐロックを解除</h5>
+              <p style="color:var(--rx-secondary);font-size:11.5px;line-height:1.8;margin:0 0 16px">フルレポートを取得して、あなたに隠された行動傾向を知りましょう。</p>
               <button class="lock-cta" data-label="傾向"
                 style="width:100%;background:${wC};border:none;color:#fff;border-radius:8px;padding:13px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
                 傾向のロックを解除
               </button>
-              ${reportPreviewCard(wC, `${topEl}×${topW}の判定根拠`, '判定根拠',
+              ${diagnosisVersion === 'ETI-2.0'
+                ? reportPreviewCard(wC, 'STYLE｜行動スタイル5軸', 'スタイル',
+                  `<div style="display:flex;flex-direction:column;gap:10px">
+                    <div style="margin-bottom:4px">${radarChart(ETI_V2_META.styleAxes.map(ax => STYLE_LABEL[ax]), ETI_V2_META.styleAxes.map(ax => results.style[ax]), wC, 150)}</div>
+                    ${rankStyleAxes(results.style).map(r => `
+                    <div>
+                      <div style="display:flex;justify-content:space-between;font-size:10.5px;margin-bottom:3px"><span style="color:#b6c4bc">${STYLE_LABEL[r.axis]} — ${r.axis}</span><span style="color:${wC};font-weight:700">${Math.round(r.score)}</span></div>
+                      <div style="height:6px;background:#151120;border-radius:3px;overflow:hidden"><div style="width:${Math.round(r.score)}%;height:100%;border-radius:3px;background:linear-gradient(90deg, color-mix(in srgb, ${wC} 50%, #0c0a14), ${wC})"></div></div>
+                      <div style="font-size:9.5px;color:#6a95b8;line-height:1.6;margin-top:4px">${STYLE_BASE_DESC[r.axis]}</div>
+                    </div>`).join('')}
+                    <div style="font-size:10px;color:#6a95b8;margin-top:2px">5軸それぞれの実測値と、日常のどんな場面で強く出るかを、フルレポートで解説しています。</div>
+                  </div>`)
+                : reportPreviewCard(wC, `${topEl}×${topW}の判定根拠`, '判定根拠',
                 `<div style="font-size:11.5px;color:#a8ccec;line-height:1.9">
                   ${ELEMENT_DESC[topEl]}<br><br>
                   ${WEAPON_DESC[topW]}<br><br>
@@ -2091,66 +2650,53 @@ function renderResult(root) {
           <!-- セクション1: 国家が導く可能性 -->
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
             <span style="width:8px;height:8px;border-radius:50%;background:#c9a860;display:inline-block"></span>
-            <h4 style="color:#d0ecff;font-size:15px;margin:0">国家が導くあなたの可能性</h4>
+            <h4 style="color:color-mix(in srgb, var(--rx-primary) 82%, #c9a860);font-size:15px;margin:0">国家が導くあなたの可能性</h4>
           </div>
-          <div style="width:100%;aspect-ratio:16/9;border-radius:10px;margin-bottom:14px;position:relative;overflow:hidden;background:radial-gradient(ellipse at 50% 50%,#161228,#050408 75%)">
-            <svg width="100%" height="100%" viewBox="0 0 640 360" preserveAspectRatio="xMidYMid slice">
-              <g transform="translate(320,180)">
-                <circle r="130" fill="none" stroke="#4a3d70" stroke-width="0.7" opacity="0.6"/>
-                <circle r="90" fill="none" stroke="#4a3d70" stroke-width="0.5" opacity="0.4"/>
-                <circle r="50" fill="none" stroke="#4a3d70" stroke-width="0.5" opacity="0.3"/>
-                ${NATIONS.map((n,i) => {
-                  const ang = (i/7)*2*Math.PI - Math.PI/2;
-                  const x = (130*Math.cos(ang)).toFixed(1), y = (130*Math.sin(ang)).toFixed(1);
-                  return `<line x1="0" y1="0" x2="${x}" y2="${y}" stroke="#c9a860" stroke-width="0.8" opacity="0.5"/><circle cx="${x}" cy="${y}" r="4.5" fill="${n===topNat?'#e8d8a0':'#6a5d3a'}"/>`;
-                }).join('')}
-                <circle r="30" fill="none" stroke="#e8d8a0" stroke-width="1"/>
-                <circle r="4" fill="#f0e4c0"/>
-              </g>
-              <text x="320" y="335" text-anchor="middle" font-family="serif" font-size="11" letter-spacing="4" fill="#6a5c88">SEVEN NATIONS COMPASS</text>
-            </svg>
-          </div>
-          <p style="color:#6a90a8;font-size:12px;line-height:1.9;margin:0 0 10px">
+          ${resultFigure('seven-nations-compass', '国家が示す価値観の星環コンパス')}
+          <p style="color:var(--rx-secondary);font-size:12px;line-height:1.95;margin:0 0 10px">
             ${nationText}
           </p>
           <div style="display:flex;gap:6px;flex-wrap:wrap;margin:0 0 4px">
-            ${NATION_TRAITS[topNat].map(t=>`<span style="font-size:10.5px;color:#e0c890;border:1px solid #c9a86050;background:#c9a86015;border-radius:12px;padding:4px 10px">${t}</span>`).join('')}
+            ${NATION_TRAITS[topNat].map(t=>rxChip(t, '#c9a860', 'var(--rx-nation)')).join('')}
           </div>
 
           <div style="height:1px;background:#182838;margin:18px 0"></div>
 
           <!-- セクション2: あなたの価値観特性 -->
-          <h4 style="color:#d0ecff;font-size:14px;margin:0 0 12px">あなたの価値観特性</h4>
+          <h4 style="color:var(--rx-primary);font-size:14px;margin:0 0 12px">あなたの価値観特性</h4>
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px">
-            ${tagsNation.map((f,i)=>[f, SCHWARTZ_VALUE[f] || ['#c9a860','#3a7ab0','#5fb0a0','#d17a52'][i]]).map(([f,c])=>`
-              <div style="text-align:center">
-                <div style="width:52px;height:52px;margin:0 auto 6px;border-radius:50%;border:2px solid ${c};display:flex;align-items:center;justify-content:center;background:${c}18">
-                  <span style="display:inline-flex"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="vertical-align:middle"><rect x="5" y="11" width="14" height="10" rx="2" fill="#9a9aa8"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#9a9aa8" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span>
-                </div>
-                <div style="font-size:9.5px;color:${c};line-height:1.4">${f}</div>
-              </div>`).join('')}
+            ${tagsNation.map((f,i)=>[f, SCHWARTZ_VALUE[f] || ['#c9a860','#3a7ab0','#5fb0a0','#d17a52'][i]]).map(([f,c])=>lockedTraitTile(f, c)).join('')}
           </div>
           <div style="position:relative;margin-top:26px">
-            <div style="width:44px;height:44px;border-radius:50%;background:#c9a860;display:flex;align-items:center;justify-content:center;margin:0 auto;position:relative;top:22px;z-index:2;border:3px solid #0c0a14;font-size:18px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="vertical-align:middle"><rect x="5" y="11" width="14" height="10" rx="2" fill="#e8e8ec"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#e8e8ec" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
-            <div style="background:#0a1420;border:1px solid #c9a86050;border-radius:12px;padding:36px 18px 20px;text-align:center">
-              <h5 style="color:#d0ecff;font-size:15px;margin:0 0 10px">今すぐロックを解除</h5>
-              <p style="color:#6a90a8;font-size:11.5px;line-height:1.8;margin:0 0 16px">フルレポートを取得して、あなたの価値観が導く生き方を知りましょう。</p>
+            ${lockBadge('#c9a860')}
+            <div style="background:#0a1420;border:1px solid #c9a86050;border-radius:12px;padding:38px 18px 20px;text-align:center">
+              <h5 style="color:var(--rx-primary);font-size:15px;margin:0 0 10px">今すぐロックを解除</h5>
+              <p style="color:var(--rx-secondary);font-size:11.5px;line-height:1.8;margin:0 0 16px">フルレポートを取得して、あなたの価値観が導く生き方を知りましょう。</p>
               <button class="lock-cta" data-label="価値観"
                 style="width:100%;background:#c9a860;border:none;color:#0a1420;border-radius:8px;padding:13px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
                 価値観のロックを解除
               </button>
-              ${reportPreviewCard('#c9a860', '価値観の深層', '価値観',
-                `<div style="display:flex;flex-direction:column;gap:8px">
-                  <div style="margin-bottom:4px">${radarChart(['●●','●●','●●','●●','●●','●●','●●'], [62,45,70,38,55,48,66], '#c9a860', 150)}</div>
-                  ${['ソラナミ','カゲツキ','ヒカリノ','トワユキ','ミズカゲ','ホシオト','ツキノワ'].map((dummy,i)=>`
-                  <div>
-                    <div style="display:flex;align-items:center;gap:8px">
-                      <span style="width:80px;font-size:10px;color:#6a90a8;filter:blur(2.2px)">${dummy}</span>
-                      <div style="flex:1;height:6px;background:#1c1830;border-radius:3px;overflow:hidden"><div style="width:${[62,45,70,38,55,48,66][i]}%;height:100%;background:#c9a860"></div></div>
-                    </div>
-                  </div>`).join('')}
-                  <div style="font-size:10px;color:#6a95b8;margin-top:2px">7国家全ての価値観スコアと、シュワルツの基本的価値観理論に基づく解説、そして${topNat}という結果に至った根拠を、フルレポートに掲載しています。</div>
-                </div>`)}
+              ${(() => {
+                const previewNames = diagnosisVersion === 'ETI-2.0'
+                  ? ['ソラナミ','カゲツキ','ヒカリノ','トワユキ','ミズカゲ','ホシオト','ツキノワ','ユキシズ']
+                  : ['ソラナミ','カゲツキ','ヒカリノ','トワユキ','ミズカゲ','ホシオト','ツキノワ'];
+                const previewScores = diagnosisVersion === 'ETI-2.0'
+                  ? [62,45,70,38,55,48,66,52]
+                  : [62,45,70,38,55,48,66];
+                const nationCountLabel = diagnosisVersion === 'ETI-2.0' ? '8国家' : '7国家';
+                return reportPreviewCard('#c9a860', '価値観の深層', '価値観',
+                  `<div style="display:flex;flex-direction:column;gap:8px">
+                    <div style="margin-bottom:4px">${radarChart(previewNames.map(()=>'●●'), previewScores, '#c9a860', 150)}</div>
+                    ${previewNames.map((dummy,i)=>`
+                    <div>
+                      <div style="display:flex;align-items:center;gap:8px">
+                        <span style="width:80px;font-size:10px;color:#6a90a8;filter:blur(2.2px)">${dummy}</span>
+                        <div style="flex:1;height:6px;background:#1c1830;border-radius:3px;overflow:hidden"><div style="width:${previewScores[i]}%;height:100%;background:#c9a860"></div></div>
+                      </div>
+                    </div>`).join('')}
+                    <div style="font-size:10px;color:#6a95b8;margin-top:2px">${nationCountLabel}全ての価値観スコアと、シュワルツの基本的価値観理論に基づく解説、そして${topNat}という結果に至った根拠を、フルレポートに掲載しています。</div>
+                  </div>`);
+              })()}
             </div>
           </div>
         </div>
@@ -2158,41 +2704,49 @@ function renderResult(root) {
         <!-- 統一CTA -->
         <div style="background:linear-gradient(135deg,${elC}1c,#08101a);border:1px solid ${elC}45;border-radius:14px;padding:26px 24px;text-align:center">
           <div style="font-size:10px;color:#c0a860;letter-spacing:2px;margin-bottom:10px">UNLOCK EVERYTHING</div>
-          <h3 style="color:#d0ecff;font-size:17px;margin:0 0 10px;letter-spacing:1px;line-height:1.6">あなたの元素と武器種と国家についての<br>全てを解放</h3>
-          <p style="color:#6a90a8;font-size:12px;line-height:1.85;margin:0 0 20px">ここまでは、あなたという人の輪郭だけです。その先にあるものを、確定的なロジックで解き明かします。</p>
+          <h3 style="color:var(--rx-primary);font-size:17px;margin:0 0 10px;letter-spacing:1px;line-height:1.6">あなたの元素と武器種と国家についての<br>全てを解放</h3>
+          <p style="color:var(--rx-secondary);font-size:12px;line-height:1.85;margin:0 0 20px">ここまでは、あなたという人の輪郭だけです。その先にあるものを、確定的なロジックで解き明かします。</p>
 
           <div style="background:#0c0a14;border:1px solid ${elC}30;border-radius:10px;padding:18px 18px;margin-bottom:20px;text-align:left">
-            <div style="font-size:11px;color:${ACCENT};letter-spacing:1px;margin-bottom:12px">ご利用いただける内容</div>
+            <div style="font-size:11px;color:var(--rx-gold);letter-spacing:2px;margin-bottom:14px">ご利用いただける内容</div>
             ${[
               ['Big Five 全5因子の詳細スコア','数値だけでなく、因子同士の相互作用まで解説'],
-              ['エニアグラムの深層','ウィング、統合・分裂時の行動パターン'],
-              ['価値観の深層','7国家の価値観スコア全て、なぜその国家に至ったかの根拠'],
+              diagnosisVersion === 'ETI-2.0'
+                ? ['STYLE｜行動・関わり方の分析','5軸すべての実測値と、人との距離感・動機・反応傾向の解説']
+                : ['STYLE｜行動・関わり方の分析','人との距離感、動機、反応傾向、状況によるスタイルの変化'],
+              diagnosisVersion === 'ETI-2.0'
+                ? ['価値観の深層','8国家の価値観スコア全て、なぜその国家に至ったかの根拠']
+                : ['価値観の深層','7国家の価値観スコア全て、なぜその国家に至ったかの根拠'],
               [`${topEl}×${topW}の判定根拠`,'なぜその組み合わせに至ったか、スコアから解説'],
               ['近しいキャラクター4名の一致理由','Big Five類似度・元素・武器・国家、それぞれの一致点を根拠つきで解説'],
               ['強みと弱み（4領域）','仕事・人間関係・日常・探求における傾向'],
             ].map(([t,d])=>`
               <div style="display:flex;gap:10px;margin-bottom:12px;align-items:flex-start">
-                <span style="color:${elC};font-size:13px;flex-shrink:0;margin-top:1px">✓</span>
+                <span style="color:var(--rx-gold);font-size:13px;flex-shrink:0;margin-top:1px">✓</span>
                 <div>
-                  <div style="color:#d0ecff;font-size:12.5px;font-weight:600;margin-bottom:2px">${t}</div>
-                  <div style="color:#6a95b8;font-size:10.5px;line-height:1.5">${d}</div>
+                  <div style="color:var(--rx-primary);font-size:13px;font-weight:600;margin-bottom:3px">${t}</div>
+                  <div style="color:var(--rx-tertiary);font-size:11px;line-height:1.6">${d}</div>
                 </div>
               </div>`).join('')}
           </div>
 
-          <div style="font-size:28px;font-weight:700;color:#eee0c0;margin-bottom:18px">¥1,000</div>
+          <div id="lockPrice" style="font-size:28px;font-weight:700;color:#eee0c0;margin-bottom:18px">¥1,000</div>
           <button id="lockUnlockAllBtn"
             style="width:100%;background:linear-gradient(90deg,${elC},${wC});border:none;color:#fff;border-radius:8px;padding:14px;font-size:14px;cursor:pointer;letter-spacing:2px;font-weight:600;font-family:inherit">
             全てのロックを解除する →
           </button>
           <p style="text-align:center;color:#c0a860;font-size:11px;margin-top:8px;font-weight:600">
-            ✓ 決済完了後、自動的にレポートページへ移動します。
+            ${diagnosisVersion === 'ETI-2.0' ? '✓ 登録不要。お支払いの後、すぐにお読みいただけます。' : '✓ 決済完了後、自動的にレポートページへ移動します。'}
           </p>
+          ${diagnosisVersion === 'ETI-2.0' ? '<p data-purchase-link-note style="text-align:center;color:var(--rx-tertiary);font-size:11px;line-height:1.7;margin-top:4px">お支払いの後、レポートのリンク（URL）が発行されます。そのリンクからいつでも読めて、マイページにも登録できます。</p>'
+            + '<p style="text-align:center;margin:6px 0 0"><a href="/report_sample.html#from=result" data-buy-sample="analysis" style="color:var(--rx-tertiary);font-size:11.5px">解析レポートのサンプルを見る</a></p>' : ''}
+          ${completeAnalysisFoldHtml(diagnosisVersion === 'ETI-2.0' && results.raw && results.raw.meta ? results.raw.meta.itemSetVersion : null, diagnosisVersion, elC)}
         </div>
       </div>
 
+      ${diagnosisVersion === 'ETI-2.0' ? '<p id="resumeNote" class="resume-note" role="note" hidden>この診断結果は、ブラウザの履歴からもう一度開けます。</p>' : ''}
       <div style="display:flex;gap:10px">
-        <button onclick="answers={};currentIdx=0;gtag('event','quiz_start',{event_category:'diagnosis'});setPhase('quiz')"
+        <button onclick="startNewDiagnosisV2()"
           style="flex:1;background:transparent;border:1px solid #1e3448;color:#6a90b0;border-radius:8px;padding:12px;font-size:13px;cursor:pointer;font-family:inherit">
           もう一度診断する
         </button>
@@ -2202,26 +2756,60 @@ function renderResult(root) {
         </button>
       </div>
     </section>`;
-  // ロックパターンのCTA配線（自動化版 ¥1,000・診断コードをclient_reference_idとして付与）
-  var STRIPE_URL_AUTO = 'https://buy.stripe.com/3cIcMXdCy5VbavmgsK3Nm08';
-  function stripeUrlWithCode() {
-    return STRIPE_URL_AUTO + '?client_reference_id=' + encodeURIComponent(shortCode);
-  }
+  // ロックパターンの CTA 配線。ETI v2：サーバーが作る Checkout（ゲスト購入・登録不要）。販売停止中（COMPLETE_SALES_OPEN）は「準備中」。
+  // 旧版（legacy-v1）の結果：新規販売は終了（D4）。旧 Payment Link にも新しい Checkout にも進めず、対象外の案内だけを出す
+  // （購入済みの方の閲覧は、購入時のリンク・マイページから従来どおり）。
+  var V2_REPORT_SALES_ENABLED = true; // mypage.htmlと必ず同一値を維持すること。
+  var LEGACY_RETIRED_TEXT = 'この結果は現在の解析商品の対象外です。最新の元素診断を受けてください。';
+  var legacyResult = diagnosisVersion !== 'ETI-2.0';
+  var guestFlow = !legacyResult && typeof EdGuestPurchase !== 'undefined';
+  var salesOpenNow = typeof EdGuestPurchase !== 'undefined' && EdGuestPurchase.salesOpen();
+  var v2SalesLocked = !salesOpenNow || !guestFlow;
   var lockCtaBtns = root.querySelectorAll('.lock-cta');
-  lockCtaBtns.forEach(function(btn) {
-    btn.onclick = function() {
-      var label = btn.getAttribute('data-label');
-      if (typeof gtag === 'function') gtag('event','lock_cta_click',{event_category:'conversion',label:label});
-      autoCopyAndProceed(applyData, stripeUrlWithCode());
-    };
-  });
   var lockUnlockAllBtn = root.querySelector('#lockUnlockAllBtn');
-  if (lockUnlockAllBtn) {
-    lockUnlockAllBtn.onclick = function() {
-      if (typeof gtag === 'function') gtag('event','unlock_all_click',{event_category:'conversion'});
-      autoCopyAndProceed(applyData, stripeUrlWithCode());
-    };
+  function lockPending(btn) {
+    btn.textContent = '解析レポート ¥1,000（準備中）';
+    btn.style.opacity = '0.6';
+    btn.style.cursor = 'not-allowed';
+    btn.disabled = true;
+    btn.onclick = function(e) { e.preventDefault(); };
   }
+  function lockRetired(btn) {
+    btn.textContent = '解析レポートの対象外です';
+    btn.style.opacity = '0.6';
+    btn.style.cursor = 'not-allowed';
+    btn.disabled = true;
+    btn.onclick = function(e) { e.preventDefault(); };
+  }
+  if (legacyResult && lockUnlockAllBtn) {
+    var lr = document.createElement('p');
+    lr.className = 'ca-guest-msg';
+    lr.id = 'legacyRetiredNote';
+    lr.setAttribute('role', 'note');
+    lr.textContent = LEGACY_RETIRED_TEXT;
+    lockUnlockAllBtn.insertAdjacentElement('afterend', lr);
+  }
+  // 販売中の ETI v2：購入状態を確かめるまで ¥1,000 を押せない（initGuestPurchase が状態に合わせて「¥1,000・読む」を決める。
+  //   確かめる前に押されて、購入済みの人に重ねて売らない）
+  lockCtaBtns.forEach(function(btn) {
+    if (legacyResult) { lockRetired(btn); return; }
+    if (v2SalesLocked) { lockPending(btn); return; }
+  });
+  if (lockUnlockAllBtn) {
+    if (legacyResult) {
+      lockRetired(lockUnlockAllBtn);
+    } else if (v2SalesLocked) {
+      lockPending(lockUnlockAllBtn);
+    }
+    var gm = document.createElement('p');
+    gm.id = 'guestAnalysisMsg';
+    gm.className = 'ca-guest-msg';
+    gm.setAttribute('role', 'status');
+    lockUnlockAllBtn.insertAdjacentElement('afterend', gm);
+  }
+  // 解析レポート ¥1,000・完全解析 ¥3,000（complete_13）：ログイン・この端末の購入の有無で、価格・導線を変えない
+  if (guestFlow) initReportPurchase(root, shortCode, { lockCtaBtns: lockCtaBtns, lockUnlockAllBtn: lockUnlockAllBtn });
+  if (diagnosisVersion === 'ETI-2.0') setupResumeLink(root, shortCode);
   // シェアボタンのイベント設定（直接2択）
   var saveImgBtn = root.querySelector('#saveImgBtn');
   if (saveImgBtn) {
@@ -2232,13 +2820,18 @@ function renderResult(root) {
   var tweetShareBtn = root.querySelector('#tweetShareBtn');
   if (tweetShareBtn) {
     tweetShareBtn.onclick = function() {
-      tweetShareResult(topEl, topW, topNat, top1.name, top1.match, applyData, shortCode, CHARACTERS.findIndex(function(c){return c.name===top1.name;}));
+      var charIdx = diagnosisVersion === 'ETI-2.0'
+        ? getV2CharactersNormalized().findIndex(function(c){return c.name===top1.name;})
+        : CHARACTERS.findIndex(function(c){return c.name===top1.name;});
+      tweetShareResult(topEl, topW, topNat, top1.name, top1.match, applyData, shortCode, charIdx, diagnosisVersion);
     };
   }
   var copyUrlBtn = root.querySelector('#copyUrlBtn');
   if (copyUrlBtn) {
     copyUrlBtn.onclick = function() {
-      var url = 'https://element-diagnosis-five.vercel.app/?code=' + encodeURIComponent(shortCode);
+      // この結果の固有リンク（/result#r=）があればそれを。無ければ従来の形
+      var url = window.__edResumeToken && /^[A-Za-z0-9_-]{43}$/.test(window.__edResumeToken)
+        ? location.origin + '/result#r=' + window.__edResumeToken : buildResultUrl(shortCode, diagnosisVersion);
       var originalText = copyUrlBtn.innerHTML;
       function showCopied() {
         copyUrlBtn.innerHTML = '✓ コピーしました（このURLで、いつでも同じ結果に戻れます）';
@@ -2255,12 +2848,618 @@ function renderResult(root) {
     };
   }
 
+  // 診断記録カード（2026-10-07 改訂）：元素TOP3の直後に1つだけ。状態ごとに文言を出し分ける。
+  //   ログイン中・登録済み（completed／legacy_exempt） … 「この結果を診断記録に保存する」
+  //   ログイン中・登録完了前（required）              … 「登録を完了して診断記録に保存する」（押したときだけ規約モーダル）
+  //   ログアウト中・端末ヒントあり                     … 「ログインして診断記録に保存する」
+  //   ログアウト中・端末ヒントなし                     … 「無料登録して診断記録に保存する」
+  //   保存済み                                         … 「✓ 診断記録に保存しました」（マイページへは自動で移動しない）
+  //   登録状態を確認できない                           … 保存できるとは表示せず「もう一度確認する」
+  // 端末ヒント（ed_registration_known_v1）は文言の出し分けだけに使う。保存は従来どおり
+  // handleSaveResultClickV2()／handleSaveResultClick() が、ログインと onboarding_status を確かめてから行う。
+  var recordCard = root.querySelector('#recordCard');
+  // 認証から戻った直後（/mypage.html から #recordCard 付きで戻る）：保存カードの位置を表示する
+  if (window.location.hash === '#recordCard') window.__edReturnToRecordCard = true;
+  if (recordCard) {
+    var isV2Record = diagnosisVersion === 'ETI-2.0';
+    // 完全一致の判定キー（user_id はチェック側でログイン中の本人に固定）
+    var recordKey = isV2Record
+      ? { diagnosisVersion: 'ETI-2.0', itemSetVersion: ETI_V2_META.itemSetVersion, scoringVersion: ETI_V2_META.scoringVersion, diagnosisCode: shortCode }
+      : { diagnosisVersion: DIAGNOSIS_VERSION, itemSetVersion: null, scoringVersion: SCORING_VERSION, diagnosisCode: applyData };
+
+    var fromMypageRec = !window.__edResumeToken ? edRecordFromUrl() : null;
+    var RS_LOGIN_LABEL = { signed_out_known: 'ログインして診断記録に保存する', signed_out: '無料登録して診断記録に保存する' };
+    var renderRecordCard = function (state) {
+      var label = '<div class="rs-label">診断記録</div>';
+      var html;
+      if (state === 'registered') {
+        // マイページの記録から開いた結果：すでにマイページにある（保存の案内は出さない）
+        html = label + '<p class="rs-done-head" role="status">✓ マイページに登録済みです</p>'
+          + '<p class="rs-text">この結果は、マイページの診断記録から開いています。</p>'
+          + '<a class="rs-link rs-quiet" href="/mypage.html" onclick="trackEvent(\'mypage_entry_click\',{entry_point:\'result\'})">マイページに戻る <span class="arw">→</span></a>';
+      } else if (state === 'saved' || state === 'just_saved') {
+        // 同じページに留まる。マイページは任意の副導線
+        html = label + '<p class="rs-done-head" role="status">✓ 診断記録に保存しました</p>'
+          + '<p class="rs-text">' + (state === 'just_saved' ? 'このまま、結果の続きをご覧いただけます。' : 'この結果は、すでに診断記録に残っています。') + '</p>'
+          + '<a class="rs-link rs-quiet" href="/mypage.html" onclick="trackEvent(\'mypage_entry_click\',{entry_point:\'result\'})">マイページで確認する <span class="arw">→</span></a>';
+      } else if (state === 'saving') {
+        html = label + '<p class="rs-text">この結果を、診断記録に残しています。</p>'
+          + '<button type="button" class="rs-btn" disabled aria-busy="true">記録しています</button><div class="rs-saving" aria-hidden="true"></div>';
+      } else if (state === 'signed_out_known' || state === 'signed_out') {
+        // 押すとログイン方法（Google／X／メール）を出す。端末ヒントは文言だけに使う
+        html = label + '<p class="rs-text">この結果を、今のあなたとして残しませんか。<br>保存すると、次に診断したとき今日の自分と見比べられます。</p>'
+          + '<button type="button" class="rs-btn" id="recordLoginBtn">' + RS_LOGIN_LABEL[state] + '</button>'
+          + (state === 'signed_out' ? '<p class="rs-sub">保存後も、このページで結果を続けてご覧いただけます。</p>' : '')
+          + '<div id="recordAuth" hidden></div>';
+      } else if (state === 'registration_unknown') {
+        // 登録状態（profiles）を確認できない：登録済みとは扱わず、保存ボタンを出さない（fail-closed）
+        html = label + '<p class="rs-text">登録状態を確認できませんでした</p>'
+          + '<p class="rs-err" role="alert">通信状況を確かめて、もう一度お試しください。</p>'
+          + '<button type="button" class="rs-btn" id="recordRecheckBtn">もう一度確認する</button>';
+      } else if (state === 'error') {
+        html = label + '<p class="rs-text">この結果は、まだ診断記録に残っていません。</p>'
+          + '<p class="rs-err" role="alert">保存できませんでした。通信状況を確かめて、もう一度お試しください。</p>'
+          + '<button type="button" class="rs-btn" id="recordSaveBtn">もう一度試す</button>';
+      } else {
+        // 'unsaved'（登録済み）／'unsaved_required'（登録完了前。押したときだけ規約モーダル）
+        html = label + '<p class="rs-text">この結果は、まだ診断記録に残っていません。<br>記録として残すと、マイページからいつでも見返せます。</p>'
+          + '<button type="button" class="rs-btn" id="recordSaveBtn">' + (state === 'unsaved_required' ? '登録を完了して診断記録に保存する' : 'この結果を診断記録に保存する') + '</button>';
+      }
+      recordCard.setAttribute('data-state', state);
+      recordCard.innerHTML = html;
+      var btn = recordCard.querySelector('#recordSaveBtn');
+      if (btn) btn.onclick = async function () {
+        // ログインが切れていたら、Google へ直行せず、ログイン方法の選択（Google・X・メール）へ戻す
+        if (state === 'error') {
+          var signedIn = true;
+          try { var sess = await supabaseClient.auth.getSession(); signedIn = !!(sess && sess.data && sess.data.session); } catch (e) { signedIn = true; }
+          if (!signedIn) { renderRecordCard('signed_out'); return; }
+        }
+        onRecordSaveClick(state);
+      };
+      var recheck = recordCard.querySelector('#recordRecheckBtn');
+      if (recheck) recheck.onclick = function () { recheck.disabled = true; decideRecordState(); };
+      var authBox = recordCard.querySelector('#recordAuth');
+      var loginBtn = recordCard.querySelector('#recordLoginBtn');
+      if (authBox && loginBtn) loginBtn.onclick = function () {
+        loginBtn.hidden = true;
+        authBox.hidden = false;
+        // 未ログイン：Google／X／メールの3方式（js/auth-providers.js）
+        renderAuthChoices(authBox, {
+          // Google は従来どおり（保存関数が pending を退避して Google へ遷移する）
+          onGoogle: function () { onRecordSaveClick('signed_out'); },
+          onX: onRecordSaveWithX,
+          // メールOTPはページ遷移しない。ログインできたら、そのまま通常の保存へ進む（登録状態はそこで判定）
+          onEmailSignedIn: function () { onRecordSaveClick('unsaved', true); },
+          onChoose: function (m) { if (m !== 'google') trackRecordSaveClick(); },
+        });
+      };
+    };
+
+    var trackRecordSaveClick = function () {
+      if (typeof gtag === 'function') gtag('event', 'result_save_click', isV2Record
+        ? { event_category: 'engagement', diagnosis_version: 'ETI-2.0' }
+        : { event_category: 'engagement' });
+    };
+
+    // X ログイン：Google のときに保存関数が行うのと同じ pending 退避（既存の関数をそのまま使う）をしてから
+    // X へ遷移する。復帰先は /mypage.html で、保存は既存の onAuthStateChange が行う。
+    var onRecordSaveWithX = async function () {
+      // X が使えない時は、保存待ち・戻り先の印を残さずに止める（印だけ残ると、後の別のログインで古い結果ページへ戻される）
+      if (!(await authEnsureProvider('x'))) return { error: AUTH_PROVIDER_DISABLED_ERROR };
+      // 認証後は一度 /mypage.html へ戻り、そこからこの結果ページの保存カードへ戻る（diagnosis-save.js）
+      rememberSaveReturn(buildResultUrl(shortCode, diagnosisVersion));
+      if (isV2Record) {
+        stashPendingDiagnosisV2(buildPendingV2(answersV2, shortCode, results.raw, recordMirrorTop(), crypto.randomUUID(), recordMirrorVersions()));
+      } else {
+        stashPendingDiagnosis(answers, buildResultPayload(results, topEl, topW, et, topNat), shortCode);
+        var pending = readPendingDiagnosis();
+        pending.diagnosisCode = applyData;
+        localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
+      }
+      return signInWithX();
+    };
+
+    // 保存する mirror_snapshot：表示と同じ選択結果から作る（一致率上位4名の並び＋選ばれたMIRRORに selected:true）
+    var recordMirrorTop = function () {
+      return results.mirrorSnapshot;
+    };
+    var recordMirrorVersions = function () {
+      return { characterProfileVersion: results.characterProfileVersion, mirrorModelVersion: results.mirrorModelVersion };
+    };
+
+    var recordSaveInFlight = false;
+    var onRecordSaveClick = async function (fromState, alreadyTracked) {
+      // 二重保存を防ぐ（保存中の再押下・同時の呼び出しは無視する）
+      if (recordSaveInFlight) return;
+      recordSaveInFlight = true;
+      if (!alreadyTracked) trackRecordSaveClick();
+      // Google で認証する場合に備え、戻り先（この結果ページ）を残す。メールOTP・ログイン済みでは使われない
+      if (fromState === 'signed_out') rememberSaveReturn(buildResultUrl(shortCode, diagnosisVersion));
+      renderRecordCard('saving');
+      try {
+      // ログイン済みなら、保存直前にもう一度読み取りで確認する（同じ結果ならINSERTしない）
+      var before = await findSavedDiagnosisRecord(recordKey);
+      if (before.state === 'saved') { renderRecordCard('saved'); return; }
+      if (isV2Record) {
+        var clientSessionId = crypto.randomUUID();
+        var res = await handleSaveResultClickV2(answersV2, shortCode, results.raw, recordMirrorTop(), clientSessionId, recordMirrorVersions());
+        if (res && res.ok) {
+          renderRecordCard('just_saved');
+          return;
+        }
+        // 登録完了モーダルで「いいえ」：サインアウト済み（記録は pending のまま残る）
+        if (res && res.registration === 'declined') { renderRecordCard('signed_out'); return; }
+        // 未ログイン：Google認証へ遷移中（保存は認証復帰後の既存処理が行う）
+        if (res && res.pendingStashed && res.error === 'not_authenticated') return;
+        renderRecordCard('error');
+      } else {
+        var resultPayload = buildResultPayload(results, topEl, topW, et, topNat);
+        var v1res = await handleSaveResultClick(answers, resultPayload, shortCode, applyData);
+        // 登録完了モーダルで「いいえ」：サインアウト済み（記録は pending のまま残る）
+        if (v1res && v1res.registration === 'declined') { renderRecordCard('signed_out'); return; }
+        // legacy の保存関数は結果を返さないため、読み取りで確認して表示を決める
+        var after = await findSavedDiagnosisRecord(recordKey);
+        if (after.state === 'saved') renderRecordCard('just_saved');
+        else if (after.state === 'signed_out') return; // Google認証へ遷移中
+        else renderRecordCard('error');
+      }
+      } catch (e) {
+        // 保存処理の例外でカードが「記録しています」のまま止まらないようにする
+        console.error('diagnosis record save failed:', e);
+        renderRecordCard('error');
+      } finally {
+        recordSaveInFlight = false;
+      }
+    };
+
+    // この結果の pending（認証の往復前に退避した保存待ち）があるか。別の結果の古い pending とは区別する
+    var pendingForThisResult = function () {
+      var p = isV2Record ? (typeof readPendingDiagnosisV2 === 'function' ? readPendingDiagnosisV2() : null) : readPendingDiagnosis();
+      return !!(p && (isV2Record ? p.encodedAnswers === shortCode : p.diagnosisCode === applyData));
+    };
+    // 状態の決定（読み取りだけ。モーダルは開かない）。afterFlow：認証後の保存処理が終わった後の再判定
+    var decideRecordState = async function (afterFlow) {
+      var found = await findSavedDiagnosisRecord(recordKey);
+      if (found.state === 'unknown') console.error('saved-record check failed (showing as unsaved):', found.error);
+      // 認証から戻った直後（#recordCard 付き）に保存済みなら、いま保存できたものとして示す
+      // マイページの記録（#rec=）から開いた結果：ログイン中なら「マイページに登録済み」（購入して登録した記録も含む）
+      if (fromMypageRec && found.state !== 'signed_out' && !(afterFlow && afterFlow.savedAny)) { renderRecordCard('registered'); return; }
+      if (found.state === 'saved') { renderRecordCard((afterFlow && afterFlow.savedAny) || window.__edReturnToRecordCard ? 'just_saved' : 'saved'); return; }
+      if (found.state === 'signed_out') {
+        renderRecordCard(hasRegistrationKnownHint() ? 'signed_out_known' : 'signed_out');
+        return;
+      }
+      // 認証から戻り、保存する pending の処理中（diagnosis-save.js の runSignedInFlow）：終わるまで「記録しています」
+      if (!afterFlow && pendingForThisResult()) {
+        renderRecordCard('saving');
+        // 念のため：処理の完了通知が来ないまま止まらないよう、一定時間後に読み取りで判定し直す
+        setTimeout(function () { if (recordCard.getAttribute('data-state') === 'saving') window.onSignedInFlowDone({}); }, 15000);
+        return;
+      }
+      var reg = await peekRegistrationStatus();
+      if (reg.state === 'signed_out') { renderRecordCard(hasRegistrationKnownHint() ? 'signed_out_known' : 'signed_out'); return; }
+      if (reg.state !== 'ok') { renderRecordCard('registration_unknown'); return; }
+      // 登録は済んだが、この結果の保存に失敗した（pending は残っている）：再試行できる
+      if (afterFlow && afterFlow.state === 'ok' && pendingForThisResult()) { renderRecordCard('error'); return; }
+      renderRecordCard(reg.status === 'required' ? 'unsaved_required' : 'unsaved');
+    };
+    // 認証後の保存処理（pending）が終わったら、このカードへ結果を反映する（同じページに留まる）
+    // 認証から戻った直後：保存カードの位置へ戻す（URL の #recordCard は外す）
+    // 画像などの読み込みでカードより上の高さが後から変わるため、利用者が自分で動かすまでは少し後にも合わせ直す
+    var returnUserMoved = false;
+    if (window.__edReturnToRecordCard) ['wheel', 'touchstart', 'keydown'].forEach(function (t) {
+      window.addEventListener(t, function () { returnUserMoved = true; }, { once: true, passive: true });
+    });
+    var scrollToRecordCard = function () { if (!returnUserMoved) recordCard.scrollIntoView({ block: 'center' }); };
+    var showReturnedCard = function () {
+      if (!window.__edReturnToRecordCard) return;
+      scrollToRecordCard();
+      [300, 1000, 2000].forEach(function (ms) { setTimeout(scrollToRecordCard, ms); });
+      if (window.location.hash === '#recordCard') {
+        try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (e) { /* noop */ }
+      }
+    };
+    // 認証から戻って（保存カードへ戻る流れ）登録・保存が済んだら、結果ページに留めずマイページへ移る
+    //   （登録や保存ができなかった時は、このページの保存カードで続きができるよう留まる）
+    var goMypageAfterReturn = function (r) {
+      if (!window.__edReturnToRecordCard || window.__edReturnToMypageStarted) return;
+      if (r && r.state && r.state !== 'ok') return;
+      // 「保存しました」（保存できた・既に保存済み）になった時だけ。登録が済んでいなければこの状態にはならない
+      var s = recordCard.getAttribute('data-state');
+      if (s !== 'just_saved' && s !== 'saved') return;
+      window.__edReturnToMypageStarted = true;
+      setTimeout(function () { window.location.assign('/mypage.html'); }, 800);
+    };
+    window.onSignedInFlowDone = function (r) {
+      decideRecordState(r || {}).then(showReturnedCard).then(function () { goMypageAfterReturn(r); })
+        .catch(function () { renderRecordCard('registration_unknown'); });
+    };
+    decideRecordState().then(showReturnedCard).then(function () { goMypageAfterReturn(null); }).catch(function (e) {
+      console.error('record state check failed:', e && e.message);
+      renderRecordCard('registration_unknown');
+    });
+  }
 }
 
-function autoCopyAndProceed(data, url) {
-  // 計測を送信してからStripeへ遷移（自動連携のため、コピー操作は不要）
-  if (typeof gtag === 'function') gtag('event', 'auto_copy_success', { event_category: 'conversion' });
-  window.open(url, '_blank');
+/* 完全解析（46ページ）の折りたたみ【PREVIEW ONLY の状態表示】
+   ¥1,000の主導線より前・料金概要には出さない。<details> なのでJSが無くても内容へ到達できる。
+   完全解析の権利APIが無い間は状態を unknown とし、購入CTAを出さない（freeと推測しない）。
+   ?preview_entitlement= は Preview でのみ有効（complete-analysis.js のガード）。 */
+function completeAnalysisFoldHtml(itemSetVersion, diagnosisVersion, elColor) {
+  var CA = (typeof CompleteAnalysis !== 'undefined') ? CompleteAnalysis : null;
+  // 完全解析の適格性：旧版（element-v1）など、46ページ生成の入力契約を満たさない結果には折りたたみ自体を出さない
+  var elig = CA ? CA.completeEligibility({ diagnosisVersion: diagnosisVersion, itemSetVersion: itemSetVersion, answersComplete: !!itemSetVersion }) : { eligible: false };
+  if (!elig.eligible) return '';
+  var name = CA.previewStateName();
+  var st = CA.withEligibility(name ? CA.previewState(name, '') : CA.realState({ analysisKnown: false }), elig);
+  var key = CA.stateKey(st);
+  // 決済は未接続（2026-10-07）：価格は見せるが、ボタンは押せない「準備中」（href・決済イベントなし）
+  var offer = CA.pendingOfferFor(st);
+  var cta;
+  // 実データ（Preview の状態指定なし）：ゲスト購入の欄（js/guest-purchase.js。この端末の購入状態を確かめてから描く）
+  if (!name && diagnosisVersion === 'ETI-2.0' && typeof EdGuestPurchase !== 'undefined') {
+    // 全ての状態で同じ導線（ログイン・購入の有無で変えない）：完全解析 ¥3,000（目標の選択は共通の画面。js/report-purchase.js）
+    cta = '<div data-report-buy="complete">'
+      + '<button type="button" class="ca-fold-btn ca-fold-btn-buy" data-buy-complete aria-label="完全解析 ¥3,000（まだ見えていない輪郭を読む）"><span class="ca-buy-main">まだ見えていない輪郭を読む</span><span class="ca-buy-sub">¥3,000</span></button>'
+      + '<p class="ca-guest-msg" data-buy-msg role="status"></p>'
+      + '</div>';
+  } else if (offer) {
+    var isUp = offer.offer === 'upgrade_2000';
+    cta = CA.pendingButtonHtml(offer, 'ca-fold-btn')
+      + '<p class="ca-fold-note">完全解析は準備中です。現在はお申し込みいただけません。</p>';
+  } else if (key === 'complete_ready' || key === 'complete_generating') {
+    cta = '<p class="ca-fold-note">この記録の完全解析は購入済みです。マイページから開けます。</p>';
+  } else {
+    cta = '<p class="ca-fold-note">この結果の購入状態を確認できないため、完全解析の購入導線は表示していません。</p>';
+  }
+  // BEYOND THE RESULT：閉じた状態は予告だけ（¥3,000 の決済ボタンは出さない）。開いた後に、サンプルと申込の導線を出す
+  var elStyle = /^#[0-9a-fA-F]{3,8}$/.test(String(elColor || '')) ? ' style="--el:' + elColor + '"' : '';
+  return '<details class="ca-fold ca-reveal"' + elStyle + ' ontoggle="if(this.open&&typeof CompleteAnalysis!==\'undefined\')CompleteAnalysis.track(\'complete_details_open\',{source:\'index\',preview_dummy:' + (!!offer) + '})">'
+    + '<summary>'
+    + '<span class="ca-reveal-eyebrow">BEYOND THE RESULT｜この先にあるもの</span>'
+    + '<span class="ca-reveal-lead">まだ、ここには現れていない輪郭があります。<br>三つの人物像から、あなたをもう一段深く読む。</span>'
+    + '<span class="ca-reveal-lens">MIRROR・HIDDEN SHAPE・MENTOR</span>'
+    + '<span class="ca-reveal-more">その先を見る</span>'
+    + '</summary>'
+    + '<div class="ca-fold-body">'
+    + '<div class="ca-reveal-stars" aria-hidden="true"><i></i><i></i><i></i></div>'
+    + '<p class="ca-body">この結果が示すのは、あなたの核となる一面です。</p>'
+    + '<p class="ca-body">完全解析では、<br>あなたと重なる人物、<br>まだ言葉になっていない内側の可能性、<br>これから借りられる力を、<br>三つの視点からひとつの輪郭へ結びます。</p>'
+    + (typeof EdLens !== 'undefined' ? EdLens.mapHtml({ color: elColor }) : '')
+    + '<p class="ca-reveal-pages">全46ページの完全解析</p>'
+    + '<a class="ca-sample-link" href="/complete-sample.html#from=result" data-ca-sample data-buy-sample="complete"'
+    + ' onclick="if(typeof CompleteAnalysis!==\'undefined\')CompleteAnalysis.track(\'complete_sample_open\',{source:\'index\'})">'
+    + '<span class="ca-sample-icon" aria-hidden="true"></span><span class="ca-sample-text"><b>完全解析のサンプルを読む</b><small>実際の46ページから、8ページをそのまま抜き出しています</small></span><span class="ca-sample-go" aria-hidden="true">→</span></a>'
+    + cta
+    + '</div></details>';
+}
+
+/* ゲスト購入（ETI v2・登録不要）：この端末の購入状態に合わせて、解析レポートの主導線と完全解析の欄を描く。
+   価格はマイページの有無で変えない（権利だけで決める）。
+   ・未購入：主導線 ¥1,000（解析レポート）・完全解析の欄 ¥3,000（解析＋完全解析）。
+   ・この端末で確かめた同じ記録に新 Checkout の解析レポート：解析レポートを読む・追加 ¥2,000 だけ（¥1,000・¥3,000 は出さない）。
+   ・完全解析を購入済み：解析レポートを読む・完全解析を見る（購入の導線は出さない）。
+   ・販売停止中：価格は見せるが、ボタンは「準備中」で押せない。
+   ・価格・権利はサーバーが決め、申込の時にもう一度確かめる（ここでは offer と目標だけを送る）。 */
+// ログイン中の本人の購入（この診断結果の解析レポート）を確かめる。ログインしていない・確かめられない時は null
+function edAccountPurchase(code) {
+  // ログイン中の本人のアカウントでの、この診断結果の状態。
+  //   null：ログインしていない（ゲストとして判断）／{ loggedIn, known:false }：確かめられなかった（売らない）／
+  //   { loggedIn, known:true, state }：state はこの結果の状態（本人が保存していなければ null）
+  if (typeof getCurrentUser !== 'function' || typeof supabaseClient === 'undefined' || !supabaseClient || supabaseClient.unavailable) return Promise.resolve(null);
+  return getCurrentUser().then(function (user) {
+    if (!user) return null;
+    return supabaseClient.auth.getSession().then(function (s) {
+      var token = s && s.data && s.data.session && s.data.session.access_token;
+      if (!token) return null;
+      return fetch('/api/my-entitlements', { headers: { Authorization: 'Bearer ' + token } }).then(function (res) {
+        if (!res.ok) return { loggedIn: true, known: false };
+        return res.json().then(function (body) {
+          if (!body || body.completeLookup !== 'ok' || !body.result_states) return { loggedIn: true, known: false };
+          return { loggedIn: true, known: true, state: body.result_states['ETI-2.0:' + code] || null };
+        });
+      }).catch(function () { return { loggedIn: true, known: false }; });
+    });
+  }).catch(function () { return null; });
+}
+// 決済画面から戻った・戻る操作でページが復元された：購入の欄を必ず描き直す（未払いの決済は閉じてから。支払い済みなら反映される）
+var lastGuestPurchaseArgs = null;
+window.addEventListener('pageshow', function (e) {
+  if (!e.persisted || !lastGuestPurchaseArgs || typeof EdGuestPurchase === 'undefined') return;
+  var marked = EdGuestPurchase.consumeCheckoutMark();
+  (marked ? EdGuestPurchase.cancel().catch(function () { return null; }) : Promise.resolve(null)).then(function () {
+    initGuestPurchase(lastGuestPurchaseArgs[0], lastGuestPurchaseArgs[1], lastGuestPurchaseArgs[2]);
+  });
+});
+// 申込の結果が「購入済み・状態が変わった」の時は、購入の欄を描き直す（古いボタンを残さない）
+var ED_REFRESH_ERRORS = ['analysis_already_purchased', 'upgrade_available', 'upgrade_not_available', 'repurchase_not_allowed',
+  'rights_suspended', 'purchase_completed', 'claimed', 'owned_in_account', 'checkout_in_progress', 'offer_changed'];
+function edRefreshAfter(error) {
+  if (ED_REFRESH_ERRORS.indexOf(error) < 0 || !lastGuestPurchaseArgs) return;
+  setTimeout(function () { initGuestPurchase(lastGuestPurchaseArgs[0], lastGuestPurchaseArgs[1], lastGuestPurchaseArgs[2], { keepMessage: true }); }, 1800);
+}
+/* 診断結果ページの申込（complete_13）。購入の対象は、この診断結果の記録（診断結果の固有リンク #r= の記録）。
+   ・常に 解析レポート ¥1,000・完全解析 ¥3,000（ログイン・購入済みかどうかで変えない。再購入も受け付ける）。
+   ・購入対象トークンは押した時に作る（固有リンクの作成を待つ）。サンプルへは同じタブで、トークンをフラグメントで渡す。 */
+var edCtxCache = null;
+function edWaitResume(ms) {
+  return new Promise(function (resolve) {
+    var started = Date.now();
+    (function tick() {
+      if (window.__edResumeToken) return resolve(window.__edResumeToken);
+      if (Date.now() - started > ms) return resolve(null);
+      setTimeout(tick, 200);
+    })();
+  });
+}
+// マイページから開いた結果（/?dv=ETI-2.0&code=…#rec=<記録 ID>）：固有リンクは作らず、ログイン中の本人の記録を購入の対象にする
+function edRecordFromUrl() {
+  var m = /(?:^#|&)rec=([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:&|$)/i.exec(location.hash || '');
+  return m ? m[1] : null;
+}
+function edResultContext(root, code) {
+  var t = window.__edResumeToken;
+  var rec = !t && !window.__resumeFresh ? edRecordFromUrl() : null;
+  if (rec && EdBuy.contextFromRecord) {
+    if (edCtxCache && edCtxCache.token === 'rec:' + rec && Date.now() - edCtxCache.at < 6 * 3600 * 1000) return Promise.resolve(edCtxCache.context);
+    return EdBuy.contextFromRecord(rec).then(function (r) {
+      if (!r.ok || !r.body || !EdBuy.contextOk(r.body.context)) return null;
+      edCtxCache = { token: 'rec:' + rec, context: r.body.context, at: Date.now() };
+      return r.body.context;
+    }, function () { return null; });
+  }
+  if (edCtxCache && t && edCtxCache.token === t && Date.now() - edCtxCache.at < 6 * 3600 * 1000) return Promise.resolve(edCtxCache.context);
+  // 固有リンクの作成に失敗していた：一度だけ作り直す（同じ診断の秘密値のまま。サーバーは冪等）
+  if (!t && window.__resumeCreating === window.__resultNonce && window.__resumePending) { window.__resumeCreating = null; setupResumeLink(root, code); }
+  // 固有リンクの無い結果（?dv=ETI-2.0&code= で開いた共有・ブックマーク）：押した時に、この結果の固有リンクを作って購入の対象にする
+  if (!t && !window.__resumeFresh && !window.__resumePending && window.__diagnosisVersion === 'ETI-2.0') { window.__resumeFresh = true; setupResumeLink(root, code); }
+  return edWaitResume(8000).then(function (token) {
+    if (!token) return null;
+    return EdBuy.contextFromResume(token).then(function (r) {
+      if (!r.ok || !r.body || !EdBuy.contextOk(r.body.context)) return null;
+      edCtxCache = { token: token, context: r.body.context, at: Date.now() };
+      return r.body.context;
+    });
+  });
+}
+function initReportPurchase(root, code, refs) {
+  if (typeof EdBuy === 'undefined') return;
+  var B = EdBuy;
+  var open = B.salesOpen();
+  function buy(product, btn, msgEl, source) {
+    if (msgEl) msgEl.textContent = '';
+    var pickGoal = product === 'complete' ? B.goalDialog() : Promise.resolve(null);
+    pickGoal.then(function (goal) {
+      if (product === 'complete' && !goal) return;
+      EdNavBusy.hold(btn, '決済画面へ移動しています…');
+      edResultContext(root, code).then(function (c) {
+        if (!c) { EdNavBusy.release(btn); if (msgEl) msgEl.textContent = '購入の準備ができませんでした。通信を確かめて、もう一度押してください。'; return; }
+        // マイページの記録（#rec=）から開いた結果：支払いの後、マイページに登録して戻る
+        return B.start({ context: c, product: product, goal: goal, source: source, fromMypage: !!edRecordFromUrl() }).then(function (r) {
+          if (r.ok) { EdNavBusy.handoff(btn); return; }
+          if (r.error === 'in_progress') return; // 先の申込が決済画面へ移動中（押せない表示のまま）
+          EdNavBusy.release(btn);
+          if (!r.silent && msgEl) msgEl.textContent = B.errorText(r.error);
+        });
+      });
+    });
+  }
+  var lockMsg = document.getElementById('guestAnalysisMsg');
+  var aBtns = [refs.lockUnlockAllBtn].concat(Array.prototype.slice.call(refs.lockCtaBtns || [])).filter(Boolean);
+  if (open) {
+    aBtns.forEach(function (btn) {
+      btn.onclick = function (e) {
+        e.preventDefault();
+        if (typeof gtag === 'function') gtag('event', btn === refs.lockUnlockAllBtn ? 'unlock_all_click' : 'lock_cta_click', { event_category: 'conversion' });
+        buy('analysis', btn, lockMsg, btn === refs.lockUnlockAllBtn ? 'result' : 'result_lock');
+      };
+    });
+  }
+  var cb = root.querySelector('[data-buy-complete]');
+  if (cb) {
+    if (!open) { cb.disabled = true; cb.classList.add('is-pending'); cb.setAttribute('aria-disabled', 'true'); cb.innerHTML = '<span class="ca-buy-main">まだ見えていない輪郭を読む</span><span class="ca-buy-sub">¥3,000（準備中）</span>'; }
+    else cb.onclick = function () { buy('complete', cb, root.querySelector('[data-buy-msg]'), 'result'); };
+  }
+  root.querySelectorAll('[data-buy-sample]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var product = a.getAttribute('data-buy-sample');
+      B.track(product === 'complete' ? 'complete_sample_open' : 'analysis_sample_open', { source: 'result' });
+      edResultContext(root, code).then(function (c) { location.assign(B.sampleHref(product, c, 'result')); });
+    });
+  });
+}
+function initGuestPurchase(root, code, refs, opts) {
+  var G = EdGuestPurchase;
+  lastGuestPurchaseArgs = [root, code, refs];
+  var box = root.querySelector('[data-guest-complete]');
+  var open = G.salesOpen();
+  var lockBtns = [refs.lockUnlockAllBtn].concat(Array.prototype.slice.call(refs.lockCtaBtns || [])).filter(Boolean);
+  var lockMsg = document.getElementById('guestAnalysisMsg');
+  function goalPicker(goalsData, offer) {
+    var goals = (goalsData && goalsData.catalog && goalsData.catalog.goals) || [];
+    if (!goals.length) return '<p class="ca-fold-note">目標の一覧を読み込めませんでした。再読み込みしてください。</p>';
+    return '<fieldset class="ca-goal-list"><legend>MENTOR の目標を1つ選んでください（お支払いの後は変えられません）</legend>'
+      + goals.map(function (g) {
+        return '<label class="ca-goal"><input type="radio" name="guest-mentor-goal" value="' + G.esc(g.goalId) + '"><span><b>' + G.esc(g.label) + '</b><span>' + G.esc(g.description || '') + '</span></span></label>';
+      }).join('') + '</fieldset>'
+      + '<button type="button" class="ca-fold-btn" data-guest-buy="' + offer + '" disabled>目標を選んで決済へ（' + G.yen(G.OFFERS[offer].price) + '）</button>'
+      + '<p class="ca-guest-msg" data-guest-msg role="status"></p>';
+  }
+  // 申込の導線の文言（¥3,000、解析レポートを購入済みなら追加 ¥2,000）
+  function offerLabel(offer) {
+    return 'まだ見えていない輪郭を読む　' + (offer === 'analysis_upgrade' ? '追加' : '') + G.yen(G.OFFERS[offer].price);
+  }
+  function pendingHtml(offer) {
+    return '<button type="button" class="ca-fold-btn is-pending" disabled aria-disabled="true">' + offerLabel(offer) + '（準備中）</button>'
+      + '<p class="ca-fold-note">完全解析は準備中です。現在はお申し込みいただけません。</p>';
+  }
+  // 解析レポートの主導線（¥1,000 のボタン群）の状態。mode：checking（確かめている：押せない）／buy（¥1,000）／read（読む）／
+  //   mypage（マイページで読む）／hold（確認中・押せない）
+  function setLock(mode, onRead, text) {
+    if (refs.lockPrice) refs.lockPrice.hidden = mode !== 'buy';
+    lockBtns.forEach(function (btn) {
+      btn.style.opacity = '';
+      btn.style.cursor = 'pointer';
+      btn.disabled = false;
+      if (mode === 'buy') {
+        btn.textContent = btn.__edBuyLabel || btn.textContent;
+        btn.onclick = function () { edStartAnalysis(btn, btn === refs.lockUnlockAllBtn ? null : btn.getAttribute('data-label')); };
+        return;
+      }
+      if (!btn.__edBuyLabel) btn.__edBuyLabel = btn.textContent;
+      if (mode === 'read' || mode === 'mypage') {
+        btn.textContent = text || (mode === 'mypage' ? '解析レポートを読む（マイページ）' : '解析レポートを読む');
+        btn.onclick = function (e) {
+          e.preventDefault();
+          if (mode === 'mypage') { location.assign('/mypage.html'); return; }
+          onRead(btn);
+        };
+        return;
+      }
+      btn.textContent = text || '購入状態を確認しています…';
+      btn.disabled = true;
+      btn.style.opacity = '0.6';
+      btn.style.cursor = 'not-allowed';
+      btn.onclick = function (e) { e.preventDefault(); };
+    });
+  }
+  function edStartAnalysis(btn, label) {
+    if (typeof gtag === 'function') gtag('event', label ? 'lock_cta_click' : 'unlock_all_click', label ? { event_category: 'conversion', label: label } : { event_category: 'conversion' });
+    EdNavBusy.hold(btn, '決済画面へ移動しています…');
+    G.checkout('analysis', code, null, 'result_lock').then(function (r) {
+      if (r.ok) { EdNavBusy.handoff(btn); return; }
+      EdNavBusy.release(btn);
+      if (lockMsg) lockMsg.innerHTML = G.errorHtml(r.error);
+      edRefreshAfter(r.error);
+    });
+  }
+  function readGuest(p) {
+    return function (btn) {
+      EdNavBusy.hold(btn, '解析レポートを開いています…');
+      G.openAnalysis(p.ref, 'result').then(function (ok) {
+        if (ok) { EdNavBusy.handoff(btn); return; }
+        EdNavBusy.release(btn);
+        if (lockMsg) lockMsg.textContent = '解析レポートを開けませんでした。購入完了ページ、またはマイページからご覧ください。';
+      });
+    };
+  }
+  function completeOwnedHtml(p) {
+    var label = G.completeLabel(p);
+    return '<p class="ca-fold-note">この結果の完全解析は購入済みです' + (label ? '（' + G.esc(label) + '）' : '') + '。</p>'
+      + (p.complete === 'active' ? '<button type="button" class="ca-fold-btn" data-guest-view>完全解析を見る</button>' : '')
+      + '<p class="ca-guest-msg" data-guest-msg role="status"></p>';
+  }
+  function wireCompleteOwned(p) {
+    var btn = box.querySelector('[data-guest-view]');
+    var msg = box.querySelector('[data-guest-msg]');
+    if (!btn) return;
+    btn.onclick = function () {
+      EdNavBusy.hold(btn, '完全解析を開いています…');
+      G.openComplete(p.ref, 'result').then(function (res) {
+        if (res.ok) { EdNavBusy.handoff(btn); return; }
+        EdNavBusy.release(btn);
+        if (msg) msg.textContent = res.error === 'report_not_ready' ? '完全解析は作成中です。しばらくしてから、もう一度お試しください。'
+          : res.error === 'claimed' ? 'この購入はマイページに引き継ぎ済みです。マイページからご覧ください。'
+          : '完全解析を開けませんでした。購入完了ページからご覧ください。';
+      });
+    };
+  }
+  function mypageBox(html) { if (box) box.innerHTML = html; }
+  setLock('checking');
+  if (lockMsg && !(opts && opts.keepMessage)) lockMsg.textContent = '';
+  mypageBox('<p class="ca-fold-note">購入状態を確認しています…</p>');
+  // 決済画面から支払わずに戻った（再読み込み・開き直し）：未払いの決済を閉じてから確かめる（支払い済みなら反映される）
+  // 確かめる通信が止まった時（電波など）：8秒で待つのをやめ、未購入として申込の導線を出す（申込の時にサーバーが確かめ直す）
+  var timeout = function (p, fallback) { return Promise.race([p, new Promise(function (r) { setTimeout(function () { r(fallback); }, 8000); })]); };
+  Promise.all([timeout(G.releaseIfReturned().then(function () { return G.status(code); }), { ok: false, body: {} }),
+    timeout(edAccountPurchase(code), null)]).then(function (res) {
+    var r = res[0];
+    var account = res[1];
+    // ログイン中でアカウントの状態を確かめられない時・この端末の状態を確かめられない時も、申込の導線は出す
+    //   （申込の時にサーバーが本人のアカウントとこの端末の購入を確かめ、購入済みなら重ねて売らない。買えることを優先する）
+    var st = account && account.known ? account.state : null;
+    // ログイン中の本人がこの結果を購入済み・旧購入：マイページで読む・申し込む（ゲストとして重ねて売らない）
+    //   決済中（未払いの開いた画面）だけなら、ここで申し込める（サーバーが古い画面を閉じてから、選んだ方の画面を作る）
+    var liveC = !!(st && (st.completeEntitlement === 'active' || st.completeEntitlement === 'suspended'));
+    if (st && (st.analysisPurchased || st.analysisAccess || st.legacyAnalysis || liveC
+        || st.completeBlocked === 'repurchase_not_allowed' || st.completeBlocked === 'rights_suspended')) {
+      if (st.analysisAccess) setLock('mypage');
+      else setLock('hold', null, st.analysisPurchased ? '解析レポートは現在確認中です' : 'マイページでご確認ください');
+      var note;
+      if (st.completeViewBlocked === 'basis_inactive') note = '<p class="ca-fold-note">完全解析をお読みいただくには、解析レポート（¥1,000）が必要です。マイページの診断記録からお申し込みいただけます。</p><a class="ca-fold-btn" href="/mypage.html">マイページで申し込む</a>';
+      else if (st.completeEntitlement === 'active') note = '<p class="ca-fold-note">この結果の完全解析は購入済みです。</p><a class="ca-fold-btn" href="/mypage.html">マイページで完全解析を見る</a>';
+      else if (st.completeOffer === 'analysis_upgrade') note = '<p class="ca-fold-note">この結果の解析レポートは購入済みです。完全解析は、マイページの診断記録から追加 ¥2,000 でお申し込みいただけます。</p><a class="ca-fold-btn" href="/mypage.html">マイページで完全解析へ　追加¥2,000</a>';
+      else if (st.completeBlocked === 'legacy_purchase_not_eligible') note = '<p class="ca-fold-note">この記録の解析レポートは、旧バージョンのため、完全解析はお申し込みいただけません。</p>';
+      else if (st.completeBlocked === 'repurchase_not_allowed' || st.completeBlocked === 'rights_suspended') note = '<p class="ca-fold-note">この記録の購入は、現在お申し込みいただけません。詳しくはマイページの診断記録でご確認いただくか、yaduns0522@gmail.com までお問い合わせください。</p><a class="ca-fold-btn" href="/mypage.html">マイページで開く</a>';
+      else note = '<p class="ca-fold-note">この結果の購入状況は、マイページの診断記録からご確認いただけます。</p><a class="ca-fold-btn" href="/mypage.html">マイページで開く</a>';
+      mypageBox(note);
+      return;
+    }
+    // ゲスト（この端末の Cookie で確かめた、この結果の記録の権利だけで決める。同じ診断結果の別の人・別の端末の購入は見ない）
+    var purchases = (r.ok && r.body.purchases) || [];
+    var mine = purchases.filter(function (p) { return p.thisRecord; })[0] || null;
+    // この端末で、この結果の購入をマイページに引き継ぎ済み：マイページで開く（ゲストとして売り直さない）
+    if (!mine && r.ok && r.body.claimedThisResult) {
+      setLock('mypage');
+      mypageBox('<p class="ca-fold-note">この結果の購入は、マイページに引き継ぎ済みです。解析レポート・完全解析はマイページからご覧いただけます。</p><a class="ca-fold-btn" href="/mypage.html">マイページで開く</a>');
+      return;
+    }
+    var analysisActive = !!(mine && mine.analysis === 'active');
+    var completeLive = !!(mine && (mine.complete === 'active' || mine.complete === 'suspended'));
+    if (analysisActive) setLock('read', readGuest(mine));
+    else if (mine && mine.needsAnalysis && open) setLock('buy');
+    else if (mine && (mine.analysis === 'suspended' || completeLive)) setLock('hold', null, '解析レポートは現在確認中です');
+    else if (open) setLock('buy');
+    else setLock('hold', null, '解析レポート ¥1,000（準備中）');
+    if (!box) return;
+    if (completeLive) {
+      box.innerHTML = completeOwnedHtml(mine) + (mine.needsAnalysis ? '<p class="ca-fold-note">完全解析をお読みいただくには、解析レポート（¥1,000）が必要です。上の解析レポートからお申し込みいただけます。</p>' : '');
+      wireCompleteOwned(mine);
+      return;
+    }
+    if (mine && mine.analysis === 'suspended') {
+      box.innerHTML = '<p class="ca-fold-note">この結果の購入は、現在確認中のためお申し込みいただけません。</p>';
+      return;
+    }
+    var offer = mine && mine.canUpgrade ? 'analysis_upgrade' : 'direct_complete';
+    if (analysisActive && offer !== 'analysis_upgrade') { box.innerHTML = ''; return; }
+    if (!open) { box.innerHTML = pendingHtml(offer); return; }
+    box.innerHTML = (offer === 'analysis_upgrade' ? '<p class="ca-fold-note">この結果の解析レポートは購入済みです。完全解析は追加 ¥2,000 でお申し込みいただけます。</p>' : '')
+      + '<button type="button" class="ca-fold-btn" data-reveal-offer="' + offer + '">' + offerLabel(offer) + '</button>';
+    var reveal = box.querySelector('[data-reveal-offer]');
+    reveal.onclick = function () {
+      G.track('complete_offer_click', { offer: offer, source: 'result' });
+      reveal.disabled = true;
+      showGoals();
+    };
+    function showGoals() {
+    box.innerHTML = '<p class="ca-fold-note">読み込んでいます…</p>';
+    G.goals().then(function (gr) {
+      box.innerHTML = '<p class="ca-reveal-pages">' + offerLabel(offer) + '</p>' + goalPicker(gr.ok ? gr.body : null, offer);
+      var btn = box.querySelector('[data-guest-buy]');
+      var msg = box.querySelector('[data-guest-msg]');
+      box.addEventListener('change', function (e) {
+        if (e.target && e.target.name === 'guest-mentor-goal') {
+          btn.disabled = false;
+          G.track('complete_goal_select', { source: 'result' });
+        }
+      });
+      if (btn) btn.onclick = function () {
+        var picked = box.querySelector('input[name="guest-mentor-goal"]:checked');
+        if (!picked) return;
+        EdNavBusy.hold(btn, '決済画面へ移動しています…');
+        G.checkout(offer, code, picked.value, 'result_complete').then(function (res) {
+          if (res.ok) { EdNavBusy.handoff(btn); return; }
+          EdNavBusy.release(btn);
+          if (msg) msg.innerHTML = G.errorHtml(res.error);
+          edRefreshAfter(res.error);
+        });
+      };
+    });
+    }
+  }).catch(function () { if (open) setLock('buy'); });
 }
 
 /* ===== BASIS ===== */
@@ -2351,22 +3550,158 @@ function renderBasis(root) {
     </section>`;
 }
 
+/* ===== 保存済み・共有URLからの復元時の表示位置（表示層のみ） =====
+   復元に成功した場合だけ、巨大なHeroを飛ばして結果の先頭（#diagnosis-root）から見せる。
+   decode・URL形式・legacy/v2の復元分岐・診断ロジックには一切触れない。
+   Webフォント読込などで上部の高さが変わる場合に備え、利用者がまだ自分で
+   スクロール操作をしていなければ、読込完了時にもう一度だけ位置を合わせる。 */
+// 呼び出し元（v2復元）はtry内にあるため、ここでの例外は外へ出さない（復元の成否に影響させない）。
+function revealRestoredResult() {
+  try {
+  var userMoved = false;
+  var markMoved = function() { userMoved = true; };
+  ['wheel', 'touchstart', 'keydown'].forEach(function(t) {
+    window.addEventListener(t, markMoved, { once: true, passive: true });
+  });
+  var go = function() {
+    if (userMoved || window.__phase !== 'result') return;
+    // 認証から戻った直後は、結果の先頭ではなく保存カードの位置を表示する
+    var card = window.__edReturnToRecordCard ? document.getElementById('recordCard') : null;
+    if (card) { card.scrollIntoView({ block: 'center' }); return; }
+    var root = document.getElementById('diagnosis-root');
+    if (root) root.scrollIntoView({ block: 'start' });
+  };
+  requestAnimationFrame(go);
+  if (document.readyState === 'complete') setTimeout(go, 0);
+  else window.addEventListener('load', go, { once: true });
+  } catch (e) {
+    console.error('restore scroll failed:', e);
+  }
+}
+
+/* ===== 診断結果の固有リンク（/result#r=<秘密値>） =====
+   ・診断を完了した直後に、サーバーが保存値からゲストの診断記録を作り、秘密値（256bit）を返す。DB にはハッシュだけを保存する。
+   ・秘密値は URL のフラグメント（#r=）にだけ置く（HTTP のログ・Referer・GA4 には送られない）。履歴に残すため replaceState で書き換える。
+   ・リンクを知っている人は無料の結果を表示できる（有料レポートの閲覧は、従来どおり権利を毎回確かめる）。
+   ・作成に失敗しても、表示中の結果と購入の操作はそのまま使える。 */
+var RESUME_KEY = 'ed_last_result_v1';
+function resumeShowNote(root) {
+  var note = root && root.querySelector('#resumeNote');
+  if (note) note.hidden = false;
+}
+function resumeRemember(token) {
+  try { localStorage.setItem(RESUME_KEY, token); } catch (e) { /* 保存できなくても履歴から開ける */ }
+}
+function setupResumeLink(root, code) {
+  if (typeof EdGuestPurchase === 'undefined') return;
+  var token = window.__edResumeToken;
+  if (token) { resumeShowNote(root); return; }
+  if (!window.__resumeFresh) return; // 旧形式の ?code= から開いた結果などには作らない
+  var nonce = window.__resultNonce;
+  if (window.__resumeCreating === nonce) return;
+  // 秘密値はこの診断（nonce）ごとに1つ。描き直し・再送でも同じ値を使う（サーバーは冪等。記録もリンクも増えない）
+  if (!window.__resumePending || window.__resumePending.nonce !== nonce) {
+    var fresh = EdGuestPurchase.newResumeToken ? EdGuestPurchase.newResumeToken() : null;
+    if (!fresh || !/^[A-Za-z0-9_-]{43}$/.test(fresh)) return;
+    window.__resumePending = { nonce: nonce, token: fresh };
+  }
+  var t = window.__resumePending.token;
+  window.__resumeCreating = nonce;
+  EdGuestPurchase.resultLink(code, t).then(function (r) {
+    if (!r || !r.ok) return; // 失敗しても表示・購入はそのまま（同じ診断では作り直さない）
+    if (window.__resultNonce !== nonce || window.__phase !== 'result') return;
+    window.__edResumeToken = t;
+    try { history.replaceState(null, '', '/result#r=' + t); } catch (e) { /* 履歴を書き換えられない環境 */ }
+    resumeRemember(t);
+    resumeShowNote(document.getElementById('diagnosis-root'));
+  }).catch(function () { /* 一時的な失敗：何もしない */ });
+}
+function renderResumeError(kind) {
+  var root = document.getElementById('diagnosis-root');
+  if (!root) return;
+  var msg = kind === 'retry'
+    ? '<h2 class="resume-err-title">いまは診断結果を開けません</h2><p class="resume-err-body">時間をおいて、もう一度お試しください。</p>'
+    : '<h2 class="resume-err-title">この診断結果は開けません</h2><p class="resume-err-body">リンクが正しくないか、保存期間が過ぎています。</p>';
+  root.innerHTML = '<section class="resume-err" role="alert">' + msg + '<p><a class="resume-err-link" href="/">TOPへ</a></p></section>';
+  try { root.scrollIntoView({ block: 'start' }); } catch (e) { /* noop */ } // ヒーローの下に隠れて見落とさない
+}
+// /result#r=<秘密値> を開いた：保存時の版のまま、同じ診断結果を復元する（版が今の診断と違う時は開かない）
+function openResumeFromUrl() {
+  var meta = document.createElement('meta');
+  meta.name = 'robots'; meta.content = 'noindex,nofollow';
+  document.head.appendChild(meta);
+  var m = /(?:^#|&)r=([A-Za-z0-9_-]{43})(?:&|$)/.exec(location.hash || '');
+  if (!m || typeof EdGuestPurchase === 'undefined') { renderResumeError('invalid'); return; }
+  var token = m[1];
+  EdGuestPurchase.resultOpen(token).then(function (r) {
+    if (!r.ok) { renderResumeError(r.status === 404 || r.status === 400 ? 'invalid' : 'retry'); return; }
+    var b = r.body || {};
+    var v = b.versions || {};
+    var decoded = null;
+    try { decoded = b.diagnosisVersion === 'ETI-2.0' ? ETIv2.decodeAnswersV2(b.code, ETI_V2_QUESTIONS) : null; } catch (e) { decoded = null; }
+    if (!decoded || v.itemSetVersion !== ETI_V2_META.itemSetVersion || v.scoringVersion !== ETI_V2_META.scoringVersion) {
+      renderResumeError('invalid');
+      return;
+    }
+    answersV2 = decoded;
+    window.__diagnosisVersion = 'ETI-2.0';
+    // 保存時の MIRROR 版で表示する（今の版で計算し直さない）
+    window.__mirrorVersion = ETIv2MirrorResolver.versionFromUrlParam(ETIv2MirrorResolver.urlParamFor(v.mirrorModelVersion));
+    window.__edResumeToken = token;
+    window.__resumeFresh = false;
+    resumeRemember(token);
+    window.__phase = 'result';
+    render();
+    revealRestoredResult();
+  }).catch(function () { renderResumeError('retry'); });
+}
+
 /* ===== 初期化 ===== */
 window.addEventListener('DOMContentLoaded', function() {
-  // URLに ?code=診断コード が付いている場合は、その結果をそのまま復元して表示する
-  // （Xでシェアされたリンクから戻ってきた時・以前の結果をブックマークしていた時に使用）
+  // URLの世代判定：
+  //   ?dv=ETI-2.0&code=... → v2結果を復元
+  //   ?code=... のみ（dv無し・dv!=ETI-2.0）→ 常にlegacy-v1として復元（後からv2へ推測変換しない）
+  //   どちらも無い → 新規訪問（ETI v2を開始）
+  // 診断結果の固有リンク（/result#r=）
+  if (/^\/result(\.html)?$/.test(location.pathname)) { openResumeFromUrl(); return; }
   var params = new URLSearchParams(window.location.search);
   var savedCode = params.get('code');
-  if (savedCode) {
+  var dv = params.get('dv');
+
+  if (savedCode && dv === 'ETI-2.0') {
+    try {
+      var decodedV2 = ETIv2.decodeAnswersV2(savedCode, ETI_V2_QUESTIONS);
+      if (decodedV2) {
+        answersV2 = decodedV2;
+        window.__diagnosisVersion = 'ETI-2.0';
+        // mv の無いURLは最新版で表示する（Preview のデータは最新版へ更新する決定）
+        window.__mirrorVersion = ETIv2MirrorResolver.versionFromUrlParam(params.get('mv'));
+        window.__phase = 'result';
+        render();
+        revealRestoredResult();
+        return;
+      }
+    } catch (e) {
+      console.error('ETIv2 decode failed for restore:', e);
+    }
+    // 復元に失敗した場合は新規訪問として扱う（下へフォールスルー）。
+  } else if (savedCode) {
     var decoded = decodeAnswers(savedCode);
     if (decoded) {
       answers = {};
       decoded.forEach(function(v, i) { answers[i] = v; });
+      window.__diagnosisVersion = 'legacy-v1';
       window.__phase = 'result';
       render();
+      revealRestoredResult();
       return;
     }
   }
+  window.__diagnosisVersion = 'ETI-2.0';
+  // 診断の途中で再読み込み・戻った：このタブの途中経過から続ける
+  if (restoreQuizProgressV2()) { window.__mirrorVersion = null; setPhase('quiz'); return; }
+  // マイページの「もう一度、診断する」（?start=1）：すぐに診断を始める
+  if (params.get('start') === '1') { try { history.replaceState(null, '', '/'); } catch (e) { /* そのまま */ } startNewDiagnosisV2(); return; }
   window.__phase = 'intro';
   render();
 });
@@ -2513,7 +3848,16 @@ function saveShareImage(topEl, topW, charName, matchPct) {
 }
 
 // 「Xでシェア」：ワンタッチでテキストのみのツイート画面を開く
-function tweetShareResult(topEl, topW, topNat, charName, matchPct, applyData, shortCode, charIdx) {
+function buildResultUrl(shortCode, diagnosisVersion) {
+  var params = new URLSearchParams();
+  if (diagnosisVersion === 'ETI-2.0') params.set('dv', 'ETI-2.0');
+  params.set('code', shortCode || '');
+  // v2はMIRROR版を付ける（どの版の結果かをURLで示す）
+  if (diagnosisVersion === 'ETI-2.0') params.set('mv', ETIv2MirrorResolver.urlParamFor(currentV2MirrorVersion()));
+  return window.location.origin + '/?' + params.toString();
+}
+
+function tweetShareResult(topEl, topW, topNat, charName, matchPct, applyData, shortCode, charIdx, diagnosisVersion) {
   gtag('event', 'result_tweet_click', { event_category: 'engagement' });
   // 診断コードを自動コピー（あとでサイトに戻って申込できるように）
   if (applyData && navigator.clipboard) {
@@ -2524,7 +3868,12 @@ function tweetShareResult(topEl, topW, topNat, charName, matchPct, applyData, sh
   // シェア専用URL（/api/share）：元素・武器・国家・キャラIndex・一致度の5つを、
   // 個別パラメータではなく1つの短い符号（p）にまとめてURLを短縮する。
   var packed = packShareParams(topEl, topW, topNat, charIdx >= 0 ? charIdx : 0, matchPct);
-  var shareUrl = 'https://element-diagnosis-five.vercel.app/api/share?code=' + encodeURIComponent(shortCode || '') + '&p=' + packed;
+  var shareParams = new URLSearchParams();
+  if (diagnosisVersion === 'ETI-2.0') shareParams.set('dv', 'ETI-2.0');
+  shareParams.set('code', shortCode || '');
+  if (diagnosisVersion === 'ETI-2.0') shareParams.set('mv', ETIv2MirrorResolver.urlParamFor(currentV2MirrorVersion()));
+  shareParams.set('p', packed);
+  var shareUrl = window.location.origin + '/api/share?' + shareParams.toString();
 
   var text = encodeURIComponent('元素診断をやってみました。\n\n私の結果は【' + topEl + ' × ' + topW + '× ' + topNat + '】\n最も近しいキャラクター：' + charName + '（' + matchPct + '%一致）\n\n' + shareUrl + '\n\n#元素診断 #' + code + ' #' + charName);
   window.open('https://twitter.com/intent/tweet?text=' + text, '_blank');
@@ -2538,7 +3887,6 @@ document.addEventListener('DOMContentLoaded', function() {
   window.prevQ = prevQ;
   window.showResult = showResult;
   window.setPhase = setPhase;
-  window.autoCopyAndProceed = autoCopyAndProceed;
   window.render = render;
   window.saveShareImage = saveShareImage;
   window.tweetShareResult = tweetShareResult;
@@ -2557,38 +3905,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 
-<!-- ===== モーダル：プライバシーポリシー ===== -->
-<div id="privacy" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.85);overflow-y:auto;padding:24px 16px;align-items:flex-start">
-  <div style="max-width:600px;margin:0 auto;background:#081018;border:1px solid #1e3448;border-radius:12px;padding:32px 24px;position:relative">
-    <button onclick="document.getElementById('privacy').style.display='none'" style="position:absolute;top:16px;right:16px;background:transparent;border:none;color:#6a9cc0;font-size:20px;cursor:pointer">✕</button>
-    <h2 style="color:#7ab8e8;font-size:16px;margin-bottom:20px;letter-spacing:0.1em">プライバシーポリシー</h2>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本サイト（element-diagnosis-five.vercel.app）は、マンデーアクスト（@mondayaxad）が運営する非公式ファンサイトです。</p>
-    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">Cookieおよびアクセス解析について</p>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本サイトはGoogle Analytics（Google LLC）を使用しています。トラフィックデータは匿名で収集されており、個人を特定するものではありません。Cookieを無効にすることで収集を拒否できます。</p>
-    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">個人情報について</p>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本サイトは診断結果をサーバーに保存しません。診断結果はお使いのブラウザ上でのみ処理されます。</p>
-    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">お問い合わせ</p>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9">プライバシーに関するお問い合わせはXのDM（@mondayaxad）までご連絡ください。</p>
-    <p style="color:#7098b8;font-size:11px;margin-top:20px">制定日：2026年7月1日</p>
-  </div>
-</div>
-
-<!-- ===== モーダル：利用規約 ===== -->
-<div id="terms" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.85);overflow-y:auto;padding:24px 16px;align-items:flex-start">
-  <div style="max-width:600px;margin:0 auto;background:#081018;border:1px solid #1e3448;border-radius:12px;padding:32px 24px;position:relative">
-    <button onclick="document.getElementById('terms').style.display='none'" style="position:absolute;top:16px;right:16px;background:transparent;border:none;color:#6a9cc0;font-size:20px;cursor:pointer">✕</button>
-    <h2 style="color:#7ab8e8;font-size:16px;margin-bottom:20px;letter-spacing:0.1em">利用規約</h2>
-    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">非公式コンテンツについて</p>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本サイトは「原神」の非公式ファンサイトです。HoYoverse（miHoYo Co., Ltd.）およびその関連企業とは一切関係ありません。「原神」に関する著作権・商標権はHoYoverse（miHoYo Co., Ltd.）に帰属します。</p>
-    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">免責事項</p>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本診断はエンターテインメント・自己理解を目的としたものです。診断結果の正確性・完全性を保証するものではありません。公式の解釈と異なる場合があります。</p>
-    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">禁止事項</p>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">本サイトのコンテンツの無断転載・商用利用を禁止します。</p>
-    <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">変更について</p>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9">本規約は予告なく変更される場合があります。</p>
-  </div>
-</div>
-
 <!-- ===== モーダル：運営者情報 ===== -->
 <div id="about" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.85);overflow-y:auto;padding:24px 16px;align-items:flex-start">
   <div style="max-width:600px;margin:0 auto;background:#081018;border:1px solid #1e3448;border-radius:12px;padding:32px 24px;position:relative">
@@ -2601,7 +3917,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">本サイトについて</p>
     <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">Big Five・エニアグラムと元素・武器種を組み合わせた独自の心理傾向診断です。原神の公式コンテンツではありません。</p>
     <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">お問い合わせ</p>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9">XのDM（@mondayaxad）または yaduns0522@gmail.com までご連絡ください。</p>
+    <p style="color:#6a9cc0;font-size:13px;line-height:1.9">メール（yaduns0522@gmail.com）までご連絡ください。XのDM（@mondayaxad）でも受け付けます。</p>
   </div>
 </div>
 

@@ -1,0 +1,172 @@
+[
+ {
+  "claim_id": "P03-TENSION-1",
+  "page_id": "P03",
+  "text": "相手に合わせる気質と、自分で選びたい価値観が、同じ場面で別の行動を求めることがあります。",
+  "kind": "model_interpretation",
+  "evidence": [
+   {
+    "path": "axes.personality.A",
+    "value": 66
+   },
+   {
+    "path": "values_centered.SD",
+    "value": 1.7
+   },
+   {
+    "path": "rule.conflict_scene",
+    "value": "相手の希望と自分の判断が食い違った時、相手に合わせるか自分で選ぶかを、その場で決めなければならない。"
+   }
+  ],
+  "rule_id": "CORE1-TENSION-1.0.0",
+  "rule_version": "CORE1-COPY-RULES-1.0.0",
+  "content_id": "T_A_SD",
+  "assertion_strength": "balanced"
+ },
+ {
+  "claim_id": "P03-PEAKS",
+  "page_id": "P03",
+  "text": "数値の山は自律距離（自律・自己裁量側）と自己方向（自己決定側）です。数値の谷は誠実性と伝統です。誠実性は、計画を先に固める頻度が低く、勢いや状況に合わせてやり方を変えやすい方向として現れます。伝統は、慣習を基準にする頻度が低く、受け継いだものを自分の目で選び直しやすい方向として現れます。",
+  "kind": "model_interpretation",
+  "evidence": [
+   {
+    "path": "axes.style.AUT",
+    "value": 88
+   },
+   {
+    "path": "axes.values.SD",
+    "value": 92
+   },
+   {
+    "path": "axes.personality.C",
+    "value": 31
+   },
+   {
+    "path": "axes.values.TR",
+    "value": 17
+   }
+  ],
+  "rule_id": "CORE1-POLARITY-1.0.0.valley",
+  "rule_version": "CORE1-COPY-RULES-1.0.0",
+  "content_id": null,
+  "assertion_strength": "balanced"
+ },
+ {
+  "claim_id": "P03-FACT-3",
+  "page_id": "P03",
+  "text": "数値の谷は誠実性と伝統。誠実性は即興・可変側、伝統は慣習を選び直す側として現れやすい。",
+  "kind": "calculated_fact",
+  "evidence": [
+   {
+    "path": "axes.personality.C",
+    "value": 31
+   },
+   {
+    "path": "axes.values.TR",
+    "value": 17
+   }
+  ],
+  "rule_id": "CORE1-POLARITY-1.0.0.valley",
+  "rule_version": "CORE1-COPY-RULES-1.0.0",
+  "content_id": null,
+  "assertion_strength": "balanced"
+ },
+ {
+  "claim_id": "P13-BODY-MEANING",
+  "page_id": "P13",
+  "text": "風は、既存の枠から一歩離れ、別の可能性や自由な視点を探す気質です。今回の風を形づくっている中心（主要一致軸）は、<b>誠実性</b>（即興・可変側）です。計画に縛られない軽さが、決まった手順の外にある可能性へ目を向けさせます。",
+  "kind": "model_interpretation",
+  "evidence": [
+   {
+    "path": "rankings.element[0].evidence.O",
+    "value": 88,
+    "prototype": 90,
+    "band": "high",
+    "side": "hi",
+    "status": "adopted_supporting"
+   },
+   {
+    "path": "rankings.element[0].evidence.C",
+    "value": 31,
+    "prototype": 30,
+    "band": "low",
+    "side": "lo",
+    "status": "adopted_primary"
+   },
+   {
+    "path": "rankings.element[0].evidence.A",
+    "value": 66,
+    "prototype": 70,
+    "band": "high",
+    "side": "hi",
+    "status": "adopted_supporting"
+   },
+   {
+    "path": "rule.neutral",
+    "value": "CORE1-NEUTRAL-1.0.0"
+   },
+   {
+    "path": "rule.thresholds",
+    "value": "P/S <= 35 または >= 65（50 は neutral）"
+   }
+  ],
+  "rule_id": "CORE1-CORE-AXIS-1.0.0",
+  "rule_version": "CORE1-COPY-RULES-1.0.0",
+  "content_id": "ELEMENT.anemo.intro+core_axis_meanings.C",
+  "assertion_strength": "balanced"
+ },
+ {
+  "claim_id": "P25-CONFLICT",
+  "page_id": "P25",
+  "text": "相手の希望と自分の判断が食い違った時、相手に合わせるか自分で選ぶかを、その場で決めなければならない。",
+  "kind": "editorial_hypothesis",
+  "evidence": [
+   {
+    "path": "rule.conflict_scene",
+    "value": "相手の希望と自分の判断が食い違った時、相手に合わせるか自分で選ぶかを、その場で決めなければならない。"
+   }
+  ],
+  "rule_id": "CORE1-TENSION-1.0.0",
+  "rule_version": "CORE1-COPY-RULES-1.0.0",
+  "content_id": "T_A_SD",
+  "assertion_strength": "balanced"
+ },
+ {
+  "claim_id": "P27-1-OVERLOOK",
+  "page_id": "P27",
+  "text": "誠実性（即興・可変側）は、絶対値ではなく相対配置を見るとウェンティと同じ谷の位置にあり、形の一部として意味を持ちます。",
+  "kind": "model_interpretation",
+  "evidence": [
+   {
+    "path": "axes.personality.C",
+    "value": 31
+   }
+  ],
+  "rule_id": "SHAPE_VALLEY",
+  "rule_version": "CORE1-COPY-RULES-1.0.0",
+  "content_id": null,
+  "assertion_strength": "balanced"
+ },
+ {
+  "claim_id": "P29-SUB-6",
+  "page_id": "P29",
+  "text": "草で調べたことを整理しておくと、判断に必要な理解がそろいます。これは「基準や品質を崩さず保つこと」へ近づく一歩ですが、細かな基準を毎回守り続けることまでは代替しないため、チェックリストや確認の担当を置きます。",
+  "kind": "editorial_hypothesis",
+  "evidence": [],
+  "rule_id": "CORE1-LOWER-COPING-1.0.0",
+  "rule_version": "CORE1-COPY-RULES-1.0.0",
+  "content_id": "LOWER_COPING.氷+UPPER.草",
+  "assertion_strength": "tentative"
+ },
+ {
+  "claim_id": "P29-MIN-6",
+  "page_id": "P29",
+  "text": "最低限：最後の確認だけは省かない。",
+  "kind": "editorial_hypothesis",
+  "evidence": [],
+  "rule_id": "CORE1-LOWER-COPING-1.0.0",
+  "rule_version": "CORE1-COPY-RULES-1.0.0",
+  "content_id": "LOWER_COPING.氷.minimum_practice",
+  "assertion_strength": "tentative"
+ }
+]

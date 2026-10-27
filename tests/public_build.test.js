@@ -1,0 +1,194 @@
+// scripts/build-public.js のテスト。公開してよいファイルだけを dist/ に出すこと、
+// 参照の欠損・公開禁止ファイルの混入・API の import の破損を検出できることを確かめる。
+//   実行: node --test tests/public_build.test.js
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const B = require('../scripts/build-public.js');
+
+const ROOT = path.join(__dirname, '..');
+
+const TMP = [];
+function tmpDir(prefix) { const d = fs.mkdtempSync(path.join(os.tmpdir(), prefix)); TMP.push(d); return d; }
+test.after(() => { for (const d of TMP) fs.rmSync(d, { recursive: true, force: true }); });
+function buildTo(opts = {}) {
+  const outDir = path.join(tmpDir('ed-dist-'), 'dist');
+  const r = B.build({ outDir, ...opts });
+  return { ...r, outDir, has: (p) => fs.existsSync(path.join(outDir, p)) };
+}
+const hasProblem = (r, re) => r.problems.some((p) => re.test(p));
+
+test('許可リストどおりに dist を作り、問題が無い', () => {
+  const r = buildTo();
+  assert.deepEqual(r.problems, []);
+  for (const f of ['index.html', 'mypage.html', 'report.html', 'report_sample.html', 'privacy.html', 'terms.html',
+                   'complete-analysis.js', 'diagnosis-save.js', 'ogp.jpeg', 'robots.txt', 'sitemap.xml',
+                   'js/eti_v2_engine.js', 'js/registration-onboarding.js', 'assets/backgrounds/quiet-starry-lake.jpg',
+                   'assets/result/seven-nations-compass.webp', 'assets/ogp/backgrounds/pyro.jpg',
+                   'assets/emblems/2026-autumn/record/pyro.png', 'assets/emblems/2026-autumn/awakened/pyro.png']) {
+    assert.ok(r.has(f), `dist にありません: ${f}`);
+  }
+  assert.equal(B.walk(path.join(r.outDir, 'type')).length, 35);
+  // 公開ページが読み込む JS はすべて dist にある（index・mypage・report の <script src>）
+  for (const page of ['index.html', 'mypage.html', 'report.html']) {
+    const html = fs.readFileSync(path.join(ROOT, page), 'utf8');
+    for (const m of html.matchAll(/<script[^>]*\ssrc="([^"$]+)"/g)) {
+      if (/^(https?:)?\/\//.test(m[1]) || m[1].startsWith('/api/')) continue;
+      assert.ok(r.has(m[1].replace(/^\//, '').replace(/\?.*$/, '')), `${page} の ${m[1]} が dist にありません`);
+    }
+  }
+});
+
+test('公開禁止のものは dist に無い（docs・tests・prototypes・lib・scripts・api・SQL・設定・テスト用ページ）', () => {
+  const r = buildTo();
+  for (const d of ['docs', 'tests', 'prototypes', 'lib', 'scripts', 'api', 'node_modules']) assert.ok(!r.has(d), `${d}/ が dist にあります`);
+  for (const f of ['api/public-config.js', 'api/mentor-goal.js', 'lib/server-env.js', 'lib/complete-eligibility.js',
+                   'api/complete-checkout.js', 'api/stripe-webhook.js', 'api/complete-status.js', 'lib/complete-payment.js',
+                   'lib/complete-materials.json', 'scripts/complete-materials.js', 'lib/complete-report-job.js',
+                   'prototypes/core1_v4_result_driven/src/content/mentor-goals.json', 'package.json', 'vercel.json', '.gitignore', 'index-test.html',
+                   'js/ogp-card.mjs', 'js/ogp-theme.mjs', 'js/ogp-fixtures.mjs']) {
+    assert.ok(!r.has(f), `${f} が dist にあります`);
+  }
+  assert.deepEqual(r.files.filter((f) => /\.(sql|md)$/i.test(f) || /DRAFT|DO_NOT_RUN/.test(f)), []);
+  assert.deepEqual(B.forbiddenIn(r.files), []);
+});
+
+test('許可リストはディレクトリを丸ごと・再帰でコピーしない', () => {
+  for (const f of B.PUBLIC_FILES) {
+    assert.ok(!/[*?]/.test(f), `ワイルドカード: ${f}`);
+    assert.deepEqual(B.forbiddenIn([f]), [], `公開禁止に当たる: ${f}`);
+  }
+  for (const { dir, ext } of B.PUBLIC_DIRS) {
+    assert.ok(dir && dir !== '.' && !dir.includes('*'), `ディレクトリ指定が広すぎます: ${dir}`);
+    assert.match(ext, /^\.[a-z0-9]+$/);
+    assert.deepEqual(B.forbiddenIn([`${dir}/x${ext}`]), [], `公開禁止に当たる: ${dir}`);
+  }
+});
+
+test('API の import は解決でき、lib/server-env.js などサーバー専用ファイルは dist に出ない', () => {
+  const api = B.traceApiImports();
+  assert.deepEqual(api.problems, []);
+  for (const f of ['api/public-config.js', 'api/verify.js', 'api/og-image.mjs', 'lib/server-env.js', 'js/ogp-card.mjs', 'js/ogp-theme.mjs',
+                   'api/mentor-goal.js', 'lib/complete-eligibility.js', 'prototypes/core1_v4_result_driven/src/content/mentor-goals.json',
+                   'api/complete-checkout.js', 'api/stripe-webhook.js', 'api/complete-status.js', 'lib/complete-payment.js', 'lib/complete-materials.json']) {
+    assert.ok(api.files.includes(f), `API からたどれません: ${f}`);
+  }
+  assert.deepEqual(api.packages, ['@vercel/functions', '@vercel/og', 'stripe']);
+  // 決済の API は生成素材（prototypes の CSS・画像・本文 JSON）を読み込まない（固定したハッシュだけを使う）
+  assert.deepEqual(api.files.filter((f) => f.startsWith('prototypes/') && !f.endsWith('/mentor-goals.json')), []);
+  const r = buildTo();
+  assert.deepEqual(B.apiFilesExposed(r.outDir, api.files), []);
+});
+
+test('vercel.json：build で dist を作り、dist だけを配信する（cleanUrls は維持）', () => {
+  const v = JSON.parse(fs.readFileSync(path.join(ROOT, 'vercel.json'), 'utf8'));
+  assert.equal(v.buildCommand, 'node scripts/build-public.js');
+  assert.equal(v.outputDirectory, 'dist');
+  assert.equal(v.cleanUrls, true);
+  // 診断結果の固有リンク（/result#r=）：index.html を返し、検索に載せない・Referer にパスより先を出さない
+  // cleanUrls では /index.html を宛先にできない（404）。TOP（/）へ書き換える
+  assert.deepEqual(v.rewrites, [{ source: '/result', destination: '/' }]);
+  const byPath = (src) => v.headers.filter((h) => h.source === src).flatMap((h) => h.headers).reduce((o, h) => Object.assign(o, { [h.key]: h.value }), {});
+  // 全ページ（API を除く）：MIME の推測をさせない・他サイトに枠で埋め込ませない・Referer は origin まで
+  assert.deepEqual(byPath('/((?!api/).*)'), { 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "frame-ancestors 'none'", 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'strict-origin-when-cross-origin' });
+  // 診断結果の固有リンク（/result#r=）：検索に載せない・Referer にパスより先を出さない
+  assert.deepEqual(byPath('/result'), { 'X-Robots-Tag': 'noindex, nofollow', 'Referrer-Policy': 'strict-origin-when-cross-origin' });
+  // レポート固有リンク・解析レポート・購入完了：検索に載せない・Referer を送らない・端末やプロキシに保存しない（complete_13）
+  for (const src of ['/report-link', '/report', '/purchase-complete']) {
+    assert.deepEqual(byPath(src), { 'X-Robots-Tag': 'noindex, nofollow', 'Referrer-Policy': 'no-referrer', 'Cache-Control': 'private, no-store' }, src);
+  }
+  for (const src of ['/mypage', '/complete-sample']) assert.equal(byPath(src)['X-Robots-Tag'], 'noindex, nofollow', src);
+  // 全ページの規則は先頭（後の個別の規則が同じ名前を上書きする）
+  assert.equal(v.headers[0].source, '/((?!api/).*)');
+  assert.match(fs.readFileSync(path.join(ROOT, '.gitignore'), 'utf8'), /^dist\/$/m);
+});
+
+test('本番ドメインの絶対 URL で実体が無いのは既知の thumbs だけ', () => {
+  const r = buildTo();
+  assert.ok(r.absoluteMissing.every((p) => /^thumbs\/x_card_[A-Z]{4}\.png$/.test(p)), r.absoluteMissing.join(','));
+});
+
+// ---- 意図的に壊したときに検出できること ----
+test('検出：必要な JS をコピーし忘れる', () => {
+  const r = buildTo({ files: B.PUBLIC_FILES.filter((f) => f !== 'js/eti_v2_engine.js') });
+  assert.ok(hasProblem(r, /参照先が dist にありません: (index|mypage|report)\.html → js\/eti_v2_engine\.js/), r.problems.join('\n'));
+});
+
+test('検出：画像ディレクトリを外して画像が欠ける', () => {
+  const r = buildTo({ dirs: B.PUBLIC_DIRS.filter((d) => d.dir !== 'assets/emblems/2026-autumn/record') });
+  assert.ok(hasProblem(r, /mypage\.html → assets\/emblems\/2026-autumn\/record\/pyro\.png/), r.problems.join('\n'));
+});
+
+test('検出：docs を誤って dist へコピーする', () => {
+  const r = buildTo({ files: [...B.PUBLIC_FILES, 'docs/complete_analysis/FOUNDATION_DESIGN_DRAFT.md'] });
+  assert.ok(hasProblem(r, /公開禁止のファイルがあります.*docs\/complete_analysis\/FOUNDATION_DESIGN_DRAFT\.md/), r.problems.join('\n'));
+  const r2 = buildTo({ dirs: [...B.PUBLIC_DIRS, { dir: 'docs/sql', ext: '.sql' }] });
+  assert.ok(hasProblem(r2, /公開禁止のファイルがあります.*docs\/sql\/.*\.sql/), r2.problems.join('\n'));
+});
+
+test('検出：lib/server-env.js を静的公開する', () => {
+  const r = buildTo({ files: [...B.PUBLIC_FILES, 'lib/server-env.js'] });
+  assert.ok(hasProblem(r, /公開禁止のファイルがあります.*lib\/server-env\.js/), r.problems.join('\n'));
+  assert.ok(hasProblem(r, /API 専用のファイルが dist にあります: lib\/server-env\.js/), r.problems.join('\n'));
+});
+
+test('検出：API の import が解決できない・未宣言のパッケージ', () => {
+  const root = tmpDir('ed-api-');
+  fs.mkdirSync(path.join(root, 'api'));
+  fs.mkdirSync(path.join(root, 'lib'));
+  fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ dependencies: { stripe: '*' } }));
+  fs.writeFileSync(path.join(root, 'lib', 'server-env.js'), "module.exports = {};\n");
+  fs.writeFileSync(path.join(root, 'api', 'ok.js'), "const crypto = require('crypto');\nconst e = require('../lib/server-env');\nrequire('stripe');\n");
+  fs.writeFileSync(path.join(root, 'api', 'broken.js'), "const { x } = require('../lib/server-env-renamed');\n");
+  fs.writeFileSync(path.join(root, 'api', 'img.mjs'), "import { ImageResponse } from '@vercel/og';\nimport { a } from '../js/missing.mjs';\n");
+  const api = B.traceApiImports(root);
+  assert.ok(api.files.includes('lib/server-env.js'));
+  assert.ok(api.problems.some((p) => /api\/broken\.js → \.\.\/lib\/server-env-renamed/.test(p)), api.problems.join('\n'));
+  assert.ok(api.problems.some((p) => /api\/img\.mjs → \.\.\/js\/missing\.mjs/.test(p)), api.problems.join('\n'));
+  assert.ok(api.problems.some((p) => /package\.json に無いパッケージ.*@vercel\/og/.test(p)), api.problems.join('\n'));
+  assert.ok(!api.problems.some((p) => /api\/ok\.js/.test(p)));
+});
+
+test('検出：許可リストのファイルが無い', () => {
+  const r = buildTo({ files: [...B.PUBLIC_FILES, 'js/does-not-exist.js'] });
+  assert.ok(hasProblem(r, /許可リストのファイルがありません: js\/does-not-exist\.js/), r.problems.join('\n'));
+});
+
+// D4：旧 Payment Link（buy.stripe.com）は公開物のどこにも無い。テスト・SQL・手順書も公開しない
+test('公開物に旧 Payment Link（buy.stripe.com）が0件。テスト・SQL・手順書・資料を含まない', () => {
+  const r = buildTo();
+  const files = B.walk(r.outDir); // dist からの相対パス
+  assert.ok(files.includes('report_sample.html') && files.includes('index.html') && files.includes('mypage.html'));
+  const hits = [];
+  for (const f of files) {
+    if (!/\.(html|js|json|txt|xml|css|md)$/.test(f)) continue;
+    const text = fs.readFileSync(path.join(r.outDir, f), 'utf8');
+    if (/buy\.stripe\.com|plink_[A-Za-z0-9]|payment_link/i.test(text)) hits.push(f);
+  }
+  assert.deepEqual(hits, []);
+  const rel = files;
+  assert.deepEqual(rel.filter((f) => /(^|\/)(tests?|docs|scripts|prototypes)\//.test(f) || /\.(sql|md)$/.test(f) || /RUNBOOK/i.test(f)), []);
+});
+
+// 旧購入の記録の案内・旧 Payment Link の販売終了の表示：古い文言と返金の約束を公開画面に出さない
+test('公開画面に旧文言（以前の決済リンク）・「返金いたします」「返金できます」が0件。新しい文言は公開物にある', () => {
+  const r = buildTo();
+  const OLD = /以前の決済リンクでのご購入のため|返金いたします|返金できます/;
+  const hits = [];
+  for (const f of B.walk(r.outDir)) {
+    if (!/\.(html|js|json|txt)$/.test(f)) continue;
+    if (OLD.test(fs.readFileSync(path.join(r.outDir, f), 'utf8'))) hits.push(f);
+  }
+  // API が返す画面（verify の販売終了など）も公開画面として確かめる
+  for (const f of B.walk(path.join(ROOT, 'api')).concat(B.walk(path.join(ROOT, 'lib')).map((x) => '../lib/' + x))) {
+    const abs = path.join(ROOT, 'api', f);
+    if (/\.js$/.test(f) && OLD.test(fs.readFileSync(abs, 'utf8'))) hits.push('api/' + f);
+  }
+  assert.deepEqual(hits, []);
+  const all = B.walk(r.outDir).filter((f) => /\.(html|js)$/.test(f)).map((f) => fs.readFileSync(path.join(r.outDir, f), 'utf8')).join('\n');
+  assert.ok(all.includes('この記録の解析レポートは、旧バージョンのため、完全解析はお申し込みいただけません。'));
+  assert.ok(fs.readFileSync(path.join(ROOT, 'api', 'verify.js'), 'utf8').includes('この決済リンクでの販売は終了しました。お手数ですがお問い合わせください。'));
+});

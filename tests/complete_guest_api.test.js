@@ -1,0 +1,425 @@
+// ゲスト購入（診断完了ページ）・購入完了ページ・マイページへの引き継ぎ・メール OTP での復旧の試験。
+//   本物の SQL 関数（complete_01〜07）が必要：COMPLETE_DB_BACKEND=<createBackend を返すモジュール> と PGT_HOST を指定して実行する
+//   （ローカル PG17 に complete_01〜07 を適用した DB。tests/complete_payment_api.test.js と同じ部品）。
+//   指定が無い時は skip する（メモリ上の模型には complete_07 の規則を写していないため）。
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const crypto = require('crypto');
+const { PREVIEW_ENV, PROD_ENV } = require('./fixtures/server_env');
+const { fakeStripe, eventRequest } = require('./fixtures/fake_stripe');
+const { savedRecord, variantAnswers } = require('./fixtures/report_data');
+const GP = require('../lib/guest-purchase');
+const CA = require('../lib/complete-apply');
+
+const BACKEND = process.env.COMPLETE_DB_BACKEND;
+const skip = BACKEND ? false : 'COMPLETE_DB_BACKEND（PG17・complete_01〜07）が無いため skip';
+const Checkout = require('../api/complete-checkout.js');
+const Webhook = require('../api/stripe-webhook.js');
+const ReportData = require('../api/report-data.js');
+
+const SECRET = 'whsec_test_fake_secret_for_unit_tests';
+// COMPLETE_DB_STRIPE_MODE=live：本番の構成（Production・Stripe Live・本番専用 migration の DB）で同じ試験を流す（すべて偽物）
+const LIVE = process.env.COMPLETE_DB_STRIPE_MODE === 'live';
+const MODE = LIVE ? 'live' : 'test';
+const ORIGIN = LIVE ? 'https://element-diagnosis-five.vercel.app' : 'https://element-diagnosis-git-release-c-preview-nmkw0322-4497s-projects.vercel.app';
+const VIEW_SECRET = crypto.randomBytes(32).toString('base64url');
+const ENV = {
+  ...(LIVE ? PROD_ENV : PREVIEW_ENV),
+  COMPLETE_SALES_OPEN: 'true',
+  COMPLETE_CHECKOUT_ORIGIN: ORIGIN,
+  STRIPE_PRICE_ANALYSIS: `price_${MODE}_analysis1000`,
+  STRIPE_COMPLETE_PRICE_DIRECT: `price_${MODE}_direct3000`,
+  STRIPE_COMPLETE_PRICE_UPGRADE: `price_${MODE}_upgrade2000`,
+  STRIPE_COMPLETE_WEBHOOK_SECRET: SECRET,
+  COMPLETE_VIEW_TOKEN_SECRET: VIEW_SECRET,
+};
+const PRICES = {
+  [`price_${MODE}_analysis1000`]: { id: `price_${MODE}_analysis1000`, active: true, livemode: LIVE, currency: 'jpy', unit_amount: 1000, type: 'one_time' },
+  [`price_${MODE}_direct3000`]: { id: `price_${MODE}_direct3000`, active: true, livemode: LIVE, currency: 'jpy', unit_amount: 3000, type: 'one_time' },
+  [`price_${MODE}_upgrade2000`]: { id: `price_${MODE}_upgrade2000`, active: true, livemode: LIVE, currency: 'jpy', unit_amount: 2000, type: 'one_time' },
+};
+const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+const CODE_A = savedRecord().encoded_answers;
+const CODE_B = savedRecord(variantAnswers(1)).encoded_answers;
+const CODE_C = savedRecord(variantAnswers(2)).encoded_answers;
+
+function makeRes() {
+  return {
+    code: 0, body: undefined, headers: {},
+    status(c) { this.code = c; return this; },
+    json(b) { this.body = b; return this; },
+    send(b) { this.body = b; return this; },
+    setHeader(k, v) { this.headers[k.toLowerCase()] = v; },
+    end() { return this; },
+  };
+}
+function makeLogger() {
+  const lines = [];
+  const push = (...a) => lines.push(a.map(String).join(' '));
+  return { lines, error: push, warn: push, log: push, info: push };
+}
+// JWT の形をしたアクセストークン（amr 付き）。署名の確認は偽の Auth（/auth/v1/user）が token の一致で行う
+function jwtWith(claims) {
+  const b = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+  return `${b({ alg: 'HS256', typ: 'JWT' })}.${b(claims)}.${crypto.randomBytes(16).toString('base64url')}`;
+}
+
+// 失敗した試験でも DB を閉じる（接続が残って試験の実行が終わらないのを防ぐ）
+const OPEN = [];
+test.afterEach(async () => {
+  while (OPEN.length) {
+    const db = OPEN.pop();
+    if (!db.__closed) await db.close().catch(() => {});
+  }
+});
+
+async function setup({ env = {} } = {}) {
+  const db = await require(BACKEND).createBackend();
+  const close0 = db.close.bind(db);
+  db.close = async () => { if (db.__closed) return; db.__closed = true; await close0(); };
+  OPEN.push(db);
+  const stripe = fakeStripe({ prices: JSON.parse(JSON.stringify(PRICES)), livemode: LIVE });
+  const logger = makeLogger();
+  const fullEnv = { ...ENV, ...env };
+  const deps = { env: fullEnv, fetchImpl: db.fetchImpl, stripeFactory: stripe.factory, logger, waitUntil: null };
+  const checkoutH = Checkout.createHandler({ ...deps, retiredRoutesForTests: true });
+  const webhookH = Webhook.createHandler(deps);
+  const bodies = [];
+  const ctx = {
+    db, stripe, logger, env: fullEnv, bodies, cookie: '',
+    // ブラウザ（Cookie を保持する）として呼ぶ
+    async op(op, body, { token, cookie } = {}) {
+      const res = makeRes();
+      const headers = { host: 'evil.example' };
+      const jar = cookie !== undefined ? cookie : ctx.cookie;
+      if (jar) headers.cookie = jar;
+      if (token) headers.authorization = `Bearer ${token}`;
+      await checkoutH({ method: 'POST', headers, query: { op }, body }, res);
+      const set = res.headers['set-cookie'];
+      if (set && cookie === undefined) ctx.cookie = set.split(';')[0].endsWith('=') ? '' : set.split(';')[0];
+      bodies.push(JSON.stringify(res.body));
+      return res;
+    },
+    async webhook(opts) {
+      const { req } = eventRequest({ secret: SECRET, livemode: LIVE, ...opts });
+      const res = makeRes();
+      await webhookH(req, res);
+      return res;
+    },
+    async reportData(url) {
+      const token = decodeURIComponent(url.split('token=')[1]);
+      const res = makeRes();
+      await ReportData.createHandler({ env: fullEnv, fetchImpl: db.fetchImpl })({ method: 'GET', headers: {}, query: { token } }, res);
+      return res;
+    },
+    csIdOf(url) { return url.split('/').pop(); },
+    async rows(t) { return db.rows(t); },
+  };
+  return ctx;
+}
+
+async function buy(ctx, body, { email = 'guest.buyer@example.test' } = {}) {
+  const r = await ctx.op('guest-checkout', body);
+  assert.equal(r.code, 200, JSON.stringify(r.body));
+  const cs = ctx.csIdOf(r.body.checkoutUrl);
+  const paid = ctx.stripe.pay(cs, { customer_details: { email } });
+  return { r, cs, ...paid };
+}
+
+test('販売停止・入力の検査：sales_closed／余分な項目・不正なコード・目標の不足は拒否（DB・Stripe に触れない）', { skip }, async () => {
+  const closed = await setup({ env: { COMPLETE_SALES_OPEN: undefined } });
+  const r0 = await closed.op('guest-checkout', { offer: 'analysis', code: CODE_A });
+  assert.deepEqual([r0.code, r0.body], [503, { error: 'sales_closed' }]);
+  assert.deepEqual(closed.stripe.st.calls, []);
+  await closed.db.close();
+  const ctx = await setup();
+  for (const [body, code] of [
+    [{ offer: 'analysis', code: CODE_A, price: 1 }, 400], [{ offer: 'analysis', code: CODE_A, amount: 1 }, 400],
+    [{ offer: 'complete', code: CODE_A }, 400], [{ offer: 'analysis', code: 'NOT A CODE' }, 400],
+    [{ offer: 'direct_complete', code: CODE_A }, 400], [{ offer: 'analysis', code: CODE_A, goal: 'GOAL_PACE_01' }, 400],
+  ]) {
+    const r = await ctx.op('guest-checkout', body);
+    assert.equal(r.code, code, JSON.stringify(body));
+  }
+  assert.deepEqual(ctx.stripe.st.calls, []);
+  assert.equal((await ctx.rows('complete_orders')).length, 0);
+  await ctx.db.close();
+});
+
+test('ゲスト ¥1,000：サーバーが記録を作り、Checkout は metadata 3つ・client_reference_id／メールなし・Cookie は HttpOnly／Secure／SameSite=Lax', { skip }, async () => {
+  const ctx = await setup();
+  const r = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_A });
+  assert.equal(r.code, 200, JSON.stringify(r.body));
+  assert.deepEqual(Object.keys(r.body).sort(), ['amount', 'checkoutUrl', 'offer']);
+  assert.equal(r.body.amount, 1000);
+  const p = ctx.stripe.st.lastCreate.params;
+  assert.deepEqual(Object.keys(p.metadata).sort(), ['app', 'env', 'order_id']);
+  assert.equal(p.client_reference_id, undefined);
+  assert.equal(p.customer_email, undefined);
+  assert.equal(p.success_url, `${ORIGIN}/purchase-complete?cs={CHECKOUT_SESSION_ID}`);
+  assert.equal(p.cancel_url, `${ORIGIN}/purchase-complete?status=canceled`);
+  assert.doesNotMatch(JSON.stringify(p), new RegExp(CODE_A));
+  assert.deepEqual(p.line_items, [{ price: `price_${MODE}_analysis1000`, quantity: 1 }]);
+  // Cookie：__Host-・Secure・HttpOnly・SameSite=Lax。秘密値は Cookie にだけあり、DB はハッシュだけ
+  const set = r.headers['set-cookie'];
+  assert.match(set, /^__Host-ed_gp=[0-9a-f-]{36}\.[A-Za-z0-9_-]{43}; Path=\/; Max-Age=\d+; Secure; HttpOnly; SameSite=Lax$/);
+  const secret = set.split('=')[1].split(';')[0].split('.')[1];
+  assert.equal(Buffer.from(secret, 'base64url').length, 32);
+  const [order] = await ctx.rows('complete_orders');
+  assert.equal(order.claim_secret_hash, crypto.createHash('sha256').update(secret).digest('hex'));
+  assert.ok(!JSON.stringify(await ctx.rows('complete_orders')).includes(secret));
+  assert.deepEqual([order.amount, order.offer, order.buyer, order.user_id, order.status], [1000, 'analysis', 'guest', null, 'checkout_open']);
+  // 記録はサーバーが回答から算出し直したもの（所有者なし・RC1 の版）
+  const sessions = await ctx.rows('diagnosis_sessions');
+  assert.equal(sessions.length, 1);
+  assert.equal(sessions[0].user_id, null);
+  const results = await ctx.rows('diagnosis_results');
+  assert.deepEqual(results[0].v2_scores, savedRecord().v2_scores);
+  assert.deepEqual(results[0].mirror_snapshot, savedRecord().mirror_snapshot);
+  // 応答本文に秘密値・注文 ID・Session ID が無い
+  assert.ok(!r.body.checkoutUrl.includes(secret));
+  assert.doesNotMatch(JSON.stringify(r.body), UUID_RE);
+  await ctx.db.close();
+});
+
+test('購入完了ページ：Webhook より先でも Stripe に問い合わせて付与・解析レポートをすぐ読める・Webhook の再送で増えない', { skip }, async () => {
+  const ctx = await setup();
+  const { cs } = await buy(ctx, { offer: 'analysis', code: CODE_A });
+  const s1 = await ctx.op('guest-status', {});
+  assert.equal(s1.code, 200);
+  assert.equal(s1.body.purchases.length, 1);
+  const pu = s1.body.purchases[0];
+  assert.deepEqual([pu.analysis, pu.complete, pu.pending, pu.canClaim, pu.canUpgrade], ['active', null, false, true, true], 'この端末で確かめた解析レポートの記録は追加 ¥2,000 を申し込める');
+  assert.match(pu.ref, /^[0-9a-f]{20}$/);
+  // 解析レポートの閲覧リンク → report-data が記録単位の解析権で code を返す
+  const link = await ctx.op('guest-report', { ref: pu.ref });
+  assert.equal(link.code, 200);
+  assert.match(link.body.url, /^\/report\.html\?token=/);
+  const data = await ctx.reportData(link.body.url);
+  assert.equal(data.code, 200);
+  assert.equal(data.body.entitlements.core_analysis_access, true);
+  assert.equal(data.body.code, CODE_A);
+  // Webhook（後から到着・2回）：権利・注文は増えない
+  for (let i = 0; i < 2; i++) {
+    const w = await ctx.webhook({ type: 'checkout.session.completed', objectId: cs, id: 'evt_guestanalysis000001' });
+    assert.equal(w.code, 200);
+  }
+  const w2 = await ctx.webhook({ type: 'checkout.session.completed', objectId: cs });
+  assert.equal(w2.code, 200);
+  assert.equal((await ctx.rows('record_entitlements')).length, 1);
+  assert.equal((await ctx.rows('complete_orders')).filter((o) => o.status === 'paid').length, 1);
+  assert.equal((await ctx.rows('complete_reports')).length, 0);
+  // 購入時メールは HMAC だけ（メールの文字列は DB に無い）
+  const [order] = await ctx.rows('complete_orders');
+  assert.equal(order.purchase_email_hmac, CA.purchaseEmailHmac(ctx.env, 'guest.buyer@example.test'));
+  assert.ok(!JSON.stringify(await ctx.rows('complete_orders')).includes('guest.buyer'));
+  await ctx.db.close();
+});
+
+test('旧ゲスト経路の追加 ¥2,000 は廃止（complete_13）：DB が注文を作らない。既存の ¥1,000 の購入はそのまま読める・別の結果の ¥3,000 は別の記録', { skip }, async () => {
+  const ctx = await setup();
+  await buy(ctx, { offer: 'analysis', code: CODE_A });
+  await ctx.op('guest-status', {});
+  const before = (await ctx.rows('complete_orders')).map((o) => `${o.offer}:${o.status}`).sort();
+  // ¥2,000：DB の検査（complete_orders_no_repurchase）が complete_offer_retired で断る（注文・Stripe の決済画面を作らない）
+  const creates = ctx.stripe.st.calls.filter((c) => c === 'checkout.sessions.create').length;
+  const up = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_A, goal: 'GOAL_PACE_01' });
+  assert.ok(up.code >= 400, JSON.stringify(up.body));
+  assert.equal(ctx.stripe.st.calls.filter((c) => c === 'checkout.sessions.create').length, creates, 'Stripe の決済画面を作らない');
+  assert.deepEqual((await ctx.rows('complete_orders')).map((o) => `${o.offer}:${o.status}`).sort(), before, '注文を増やさない・既存の行は変えない');
+  const ins = await ctx.db.fetchImpl(`${ctx.env.SUPABASE_URL}/rest/v1/complete_orders`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify({ diagnosis_session_id: (await ctx.rows('diagnosis_sessions'))[0].id, buyer: 'guest', offer: 'analysis_upgrade', amount: 2000, currency: 'jpy', status: 'created' }),
+  });
+  assert.ok(ins.status >= 400, '¥2,000 の行は DB に直接も作れない');
+  // 既存の ¥1,000：購入したブラウザで引き続き読める
+  const s = (await ctx.op('guest-status', { code: CODE_A })).body.purchases.find((x) => x.thisRecord);
+  assert.equal(s.analysis, 'active');
+  assert.equal((await ctx.op('guest-report', { ref: s.ref })).code, 200);
+  // 違う診断結果の ¥3,000（別の記録）
+  await buy(ctx, { offer: 'direct_complete', code: CODE_B, goal: 'GOAL_EXPLORE_01' });
+  const b = (await ctx.op('guest-status', { code: CODE_B })).body.purchases.find((x) => x.thisRecord);
+  assert.deepEqual([b.complete, b.report], ['active', 'queued']);
+  assert.equal((await ctx.op('guest-view', { ref: b.ref })).code, 409, '生成前は 409 report_not_ready');
+  assert.equal((await ctx.op('guest-report', { ref: b.ref }, { cookie: '' })).code, 403, 'Cookie の無いブラウザでは開けない');
+  await ctx.db.close();
+});
+
+test('ゲストの ¥2,000 は、この端末で解析レポートの購入を確かめられる時だけ。別の offer に切り替えると前の Stripe 画面を閉じる', { skip }, async () => {
+  const ctx = await setup();
+  const up = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_C, goal: 'GOAL_PACE_01' });
+  assert.deepEqual([up.code, up.body.error], [409, 'upgrade_not_available'], '購入を確かめられない時は ¥2,000 を作らない');
+  assert.equal((await ctx.rows('complete_orders')).length, 0);
+  const a = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_C });
+  assert.equal(a.code, 200);
+  // 未払いの解析レポートでは ¥2,000 は作らない
+  const up2 = await ctx.op('guest-checkout', { offer: 'analysis_upgrade', code: CODE_C, goal: 'GOAL_PACE_01' });
+  assert.deepEqual([up2.code, up2.body.error], [409, 'upgrade_not_available']);
+  const again = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_C });
+  assert.equal(again.body.checkoutUrl, a.body.checkoutUrl, '同じ offer は同じ画面');
+  const d = await ctx.op('guest-checkout', { offer: 'direct_complete', code: CODE_C, goal: 'GOAL_PACE_01' });
+  assert.equal(d.code, 200);
+  assert.notEqual(d.body.checkoutUrl, a.body.checkoutUrl);
+  assert.equal(ctx.stripe.st.sessions[ctx.csIdOf(a.body.checkoutUrl)].status, 'expired');
+  const orders = await ctx.rows('complete_orders');
+  assert.deepEqual(orders.map((o) => `${o.offer}:${o.status}`).sort(), ['analysis:canceled', 'direct_complete:checkout_open']);
+  await ctx.db.close();
+});
+
+test('引き継ぎ：ログイン必須・購入時メールと同じ確認済みメールだけ・支払済みだけ・1回限り（同じ人は冪等・別の人は 409）・改ざん／期限切れは拒否', { skip }, async () => {
+  const ctx = await setup();
+  await buy(ctx, { offer: 'analysis', code: CODE_A });
+  const st = await ctx.op('guest-status', {});
+  const ref = st.body.purchases[0].ref;
+  const original = ctx.cookie;
+  const tokA = 'tok-claim-a';
+  const tokB = 'tok-claim-b';
+  const tokOther = 'tok-claim-other-mail';
+  const tokNoMail = 'tok-claim-no-mail';
+  const userA = await ctx.db.user({ email: 'Guest.Buyer@example.test', token: tokA }); // 購入時メールと同じ（大文字小文字は区別しない）
+  await ctx.db.user({ email: 'b@example.test', token: tokB });
+  await ctx.db.user({ email: 'someone@example.test', token: tokOther });
+  await ctx.db.user({ email: null, token: tokNoMail });
+  assert.equal((await ctx.op('guest-claim', { ref })).code, 401);
+  // 改ざんした秘密値
+  const tampered = original.replace(/\.([A-Za-z0-9_-])/, (m, c) => `.${c === 'A' ? 'B' : 'A'}`);
+  assert.equal((await ctx.op('guest-claim', { ref }, { token: tokA, cookie: tampered })).code, 403);
+  // 別のメールのアカウント・メールの無いアカウントへは移さない（Cookie だけでは引き継がない。共有端末で別人へ移らない）
+  const other = await ctx.op('guest-claim', { ref }, { token: tokOther });
+  assert.deepEqual([other.code, other.body], [403, { error: 'claim_email_mismatch' }]);
+  const noMail = await ctx.op('guest-claim', { ref }, { token: tokNoMail });
+  assert.deepEqual([noMail.code, noMail.body], [403, { error: 'claim_email_required' }]);
+  assert.equal((await ctx.rows('diagnosis_sessions'))[0].user_id, null, '移っていない');
+  assert.equal((await ctx.op('guest-report', { ref })).code, 200, '購入したブラウザでは Cookie で読める');
+  // 引き継ぎ
+  const c1 = await ctx.op('guest-claim', { ref }, { token: tokA });
+  assert.deepEqual([c1.code, c1.body], [200, { result: 'claimed' }]);
+  // 引き継いだ記録の秘密値は Cookie に残す（権利・閲覧には使えない。この端末で「引き継ぎ済み」と案内し、ゲストとして売り直さないため）
+  assert.notEqual(ctx.cookie, '');
+  assert.deepEqual([(await ctx.op('guest-report', { ref })).code, (await ctx.op('guest-report', { ref })).body.error], [409, 'claimed']);
+  const [session] = await ctx.rows('diagnosis_sessions');
+  assert.equal(session.user_id, userA);
+  for (const t of ['complete_orders', 'record_entitlements']) assert.ok((await ctx.rows(t)).every((x) => x.user_id === userA), t);
+  // 古い Cookie を再送：同じ人は冪等、別の人は 409
+  const again = await ctx.op('guest-claim', { ref }, { token: tokA, cookie: original });
+  assert.deepEqual([again.code, again.body], [200, { result: 'already_claimed' }]);
+  const steal = await ctx.op('guest-claim', { ref }, { token: tokB, cookie: original });
+  assert.deepEqual([steal.code, steal.body.error], [409, 'claim_conflict']);
+  // 引き継ぎ後は Cookie で閲覧できない（マイページで見る）
+  assert.equal((await ctx.op('guest-report', { ref }, { cookie: original })).code, 409);
+  assert.ok((await ctx.rows('record_entitlements')).some((e) => e.user_id === userA && e.right_type === 'analysis' && e.status === 'active'));
+
+  // 未払い（決済待ち）は引き継げる購入として出さない。支払い後の期限切れは 410
+  ctx.cookie = '';
+  await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_B });
+  const pend = (await ctx.op('guest-status', {})).body.purchases[0];
+  assert.equal(pend.canClaim, false);
+  const cs = Object.keys(ctx.stripe.st.sessions).pop();
+  ctx.stripe.pay(cs, { customer_details: { email: 'b@example.test' } });
+  await ctx.op('guest-status', {});
+  const ord = (await ctx.rows('complete_orders')).find((o) => o.user_id === null && o.status === 'paid');
+  await ctx.db.patch('complete_orders', ord.id, { claim_expires_at: new Date(Date.now() - 1000).toISOString() });
+  const exp = await ctx.op('guest-claim', { ref: pend.ref }, { token: tokB });
+  assert.deepEqual([exp.code, exp.body.error], [410, 'claim_expired']);
+  await ctx.db.close();
+});
+
+test('Cookie を失った時の復旧：ログイン中の確認済みメール（6桁コード・Google 等。時間が経っても）＋購入時メールの一致で引き継ぐ。未確認のメール・メールなし・別のメールでは移さない', { skip }, async () => {
+  const ctx = await setup();
+  await buy(ctx, { offer: 'direct_complete', code: CODE_A, goal: 'GOAL_PACE_01' }, { email: 'Owner@Example.test' });
+  await ctx.op('guest-status', {});
+  ctx.cookie = '';
+  const now = Math.floor(Date.now() / 1000);
+  const unconfirmed = jwtWith({ sub: 'u', amr: [{ method: 'otp', timestamp: now }] });
+  const noEmail = jwtWith({ sub: 'n', amr: [{ method: 'oauth', timestamp: now }] });
+  const other = jwtWith({ sub: 'y', amr: [{ method: 'otp', timestamp: now - 30 }] });
+  const google = jwtWith({ sub: 'g', amr: [{ method: 'oauth', timestamp: now - 86400 }] });
+  await ctx.db.user({ email: 'owner@example.test', confirmed: false, token: unconfirmed });
+  await ctx.db.user({ email: null, token: noEmail });
+  await ctx.db.user({ email: 'someone@example.test', token: other });
+  const owner = await ctx.db.user({ email: 'owner@example.test', token: google });
+  assert.deepEqual([(await ctx.op('guest-recover', {}, { token: unconfirmed })).body.error], ['claim_email_unconfirmed']);
+  assert.deepEqual([(await ctx.op('guest-recover', {}, { token: noEmail })).body.error], ['claim_email_required']);
+  const wrong = await ctx.op('guest-recover', {}, { token: other });
+  assert.deepEqual([wrong.code, wrong.body], [200, { claimed: 0, skipped: 0, mixed: 0 }]);
+  const ok = await ctx.op('guest-recover', {}, { token: google });
+  assert.deepEqual([ok.code, ok.body], [200, { claimed: 1, skipped: 0, mixed: 0 }]);
+  const [session] = await ctx.rows('diagnosis_sessions');
+  assert.equal(session.user_id, owner);
+  assert.ok((await ctx.rows('complete_reports')).every((r) => r.user_id === owner));
+  const again = await ctx.op('guest-recover', {}, { token: google });
+  assert.deepEqual(again.body, { claimed: 0, skipped: 0, mixed: 0 });
+  await ctx.db.close();
+});
+
+test('引き継ぎ（Cookie の秘密値・購入時メールの照合で所有者を移す）は廃止（complete_13）：公開の処理は 410 transfer_retired・記録の所有者は変わらない', { skip }, async () => {
+  const ctx = await setup();
+  await buy(ctx, { offer: 'analysis', code: CODE_A }, { email: 'b@example.test' });
+  const st = await ctx.op('guest-status', {});
+  const ref = st.body.purchases[0].ref;
+  const tokB = 'tok-retired-b';
+  await ctx.db.user({ email: 'b@example.test', token: tokB });
+  // 公開の関数（module.exports）と同じ作り方（retiredRoutesForTests なし）
+  const pub = Checkout.createHandler({ env: ctx.env, fetchImpl: ctx.db.fetchImpl, stripeFactory: ctx.stripe.factory, logger: ctx.logger, waitUntil: null });
+  for (const [op, body] of [['guest-claim', { ref }], ['guest-recover', {}], ['guest-checkout', { offer: 'analysis', code: CODE_B }]]) {
+    const res = makeRes();
+    await pub({ method: 'POST', headers: { host: 'x', cookie: ctx.cookie, authorization: `Bearer ${tokB}` }, query: { op }, body }, res);
+    assert.equal(res.code, 410, op);
+    assert.deepEqual(Object.keys(res.body), ['error'], op);
+  }
+  const res = makeRes();
+  await pub({ method: 'POST', headers: { host: 'x', authorization: `Bearer ${tokB}` }, body: { diagnosisSessionId: (await ctx.rows('diagnosis_sessions'))[0].id } }, res);
+  assert.deepEqual([res.code, res.body.error], [410, 'checkout_retired'], 'マイページの旧 Checkout');
+  assert.equal((await ctx.rows('diagnosis_sessions'))[0].user_id, null, 'どこへも移っていない');
+  assert.ok((await ctx.rows('complete_orders')).every((o) => o.user_id === null));
+  // 購入したブラウザでは、引き続き Cookie で読める（既存の購入の閲覧は残す）
+  assert.equal((await ctx.op('guest-report', { ref })).code, 200);
+  await ctx.db.close();
+});
+
+test('支払い後の一時的な失敗：DB の失敗は付与せず、次の確認（再処理）で回復する', { skip }, async () => {
+  const ctx = await setup();
+  await buy(ctx, { offer: 'analysis', code: CODE_A });
+  ctx.db.failNext('rpc:complete_apply_payment');
+  const s1 = await ctx.op('guest-status', {});
+  assert.equal(s1.code, 200);
+  assert.equal(s1.body.purchases[0].analysis, null);
+  assert.equal(s1.body.purchases[0].pending, true);
+  const s2 = await ctx.op('guest-status', {});
+  assert.equal(s2.body.purchases[0].analysis, 'active');
+  assert.equal((await ctx.rows('record_entitlements')).length, 1);
+  await ctx.db.close();
+});
+
+test('応答・ログに秘密値・注文 ID・Session ID・メール・診断コードを出さない', { skip }, async () => {
+  const ctx = await setup();
+  await buy(ctx, { offer: 'analysis', code: CODE_A });
+  const st = await ctx.op('guest-status', { code: CODE_A });
+  await ctx.op('guest-report', { ref: st.body.purchases[0].ref });
+  const secret = ctx.cookie.split('.')[1];
+  const all = ctx.bodies.filter((b) => !b.includes('checkoutUrl')).join('\n') + ctx.logger.lines.join('\n');
+  assert.ok(!all.includes(secret));
+  assert.doesNotMatch(all, UUID_RE);
+  assert.doesNotMatch(all, /cs_test_|cs_live_|pi_[A-Za-z0-9]|@|evt_/);
+  assert.ok(!all.includes(CODE_A));
+  await ctx.db.close();
+});
+
+test('Cookie の解析：形式外の値・重複を捨て、最大件数を超えたら古いものから外す', () => {
+  const id = () => crypto.randomUUID();
+  const s = () => crypto.randomBytes(32).toString('base64url');
+  const a = `${id()}.${s()}`;
+  const list = GP.parseCookieHeader(`x=1; __Host-ed_gp=${a}~bad~${a}~${id()}.short; y=2`);
+  assert.equal(list.length, 1);
+  const many = Array.from({ length: 20 }, () => ({ orderId: id(), secret: s() }));
+  const ser = GP.serializeCookie(many);
+  assert.equal(GP.parseCookieHeader(ser.split(';')[0]).length, GP.MAX_ENTRIES);
+  assert.match(GP.serializeCookie([]), /Max-Age=0/);
+  assert.equal(GP.recentEmailOtp({ amr: [{ method: 'otp', timestamp: 1000 }] }, 1000 + 601), false);
+  assert.equal(GP.recentEmailOtp({ amr: [{ method: 'otp', timestamp: 1000 }] }, 1000 + 599), true);
+  assert.equal(GP.recentEmailOtp({ amr: [{ method: 'oauth', timestamp: 1000 }] }, 1001), false);
+  assert.equal(GP.recordFromCode('ZZ'), null);
+  assert.equal(GP.recordFromCode('abc DEF'), null);
+  assert.equal(GP.recordFromCode(CODE_A).p_encoded_answers, CODE_A);
+});

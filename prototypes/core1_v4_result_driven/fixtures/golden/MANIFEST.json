@@ -1,0 +1,7 @@
+{
+ "note": "承認済み46ページの算出値（immutable）。core1_v4_revised/core1_v4_revised_sample.json の複製。内容を変えてはいけない。",
+ "source": "prototypes/core1_v4_revised/core1_v4_revised_sample.json",
+ "files": {
+  "approved_sample_CORE1-V4-AUDITED-SAMPLE-001.json": "270d8a7477488dea9f6b68bb0ef2290c777138468f382da2ae0c1a6edeb7cb88"
+ }
+}

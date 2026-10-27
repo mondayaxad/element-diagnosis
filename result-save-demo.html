@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>元素診断 — 完了ページ保存UIデモ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<!--
+  診断完了ページの「診断記録」カードと周辺の見た目デモ（確認専用・3状態仕様の確定版。docs/SAVE_DEDUP_DESIGN.md §1-1）。
+  保存・認証・DBには一切アクセスしない。状態はデモ内の変数で切り替えるだけ。
+  ?state=out|in|saved|saving|justsaved|error|purchased で1状態、?all=1 で全状態を縦に並べる。
+  ?el=水 など主元素を切り替えられる（カードの奥ににじませる色だけに使う）。
+-->
+<style>
+  /* 完了ページ：深い藍を基調に、主元素色は奥のにじみと細いアクセントだけ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    color-scheme: dark;
+    --bg: #07070f; --bg-2: #090b16; --bg-3: #0b1020;
+    --card: #0a0e1b; --card-2: #0c1222;
+    --line: #1a2540; --line-2: #243353;
+    --t-head: #e2e4f6; --t-body: #9aa8c6; --t-sub: #7486a8; --t-dim: #56648a;
+    --accent: #8fb6e8;
+    --font-jp: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    --font-en: 'IM Fell English', 'Times New Roman', serif;
+    --el: #7cc8ee;   /* 主元素色（JSで差し替え） */
+  }
+  html { -webkit-text-size-adjust: 100%; background: var(--bg); }
+  body { min-height: 100svh; font-family: var(--font-jp); color: var(--t-head); -webkit-font-smoothing: antialiased;
+    background: radial-gradient(ellipse 80% 40% at 50% 0%, rgba(70,60,150,.10), transparent 70%), linear-gradient(180deg, var(--bg-3), var(--bg-2) 30%, var(--bg)); background-attachment: fixed; }
+  .page { max-width: 600px; margin: 0 auto; padding: 24px 16px 64px; }
+
+  /* 結果の要約（意味色は維持） */
+  .res { text-align: center; padding: 8px 0 26px; }
+  .res .en { font-family: var(--font-en); font-style: italic; font-size: 11px; letter-spacing: .28em; text-transform: uppercase; color: #5d7cab; }
+  .res .combo { margin-top: 10px; font-size: 26px; font-weight: 700; letter-spacing: .08em; }
+  .res .combo .x { color: #4a5578; font-weight: 400; margin: 0 .25em; font-size: .8em; }
+  .res .type { margin-top: 6px; font-size: 12.5px; color: var(--t-sub); letter-spacing: .1em; }
+
+  .sec-label { font-family: var(--font-en); font-style: italic; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: #5d7cab; margin: 0 0 12px; }
+
+  /* ===== 診断記録カード ===== */
+  .save {
+    position: relative; overflow: hidden; text-align: center; border-radius: 12px; padding: 22px 20px 20px; margin-bottom: 16px;
+    border: 1px solid var(--line-2);
+    background:
+      radial-gradient(ellipse 70% 90% at 12% 110%, color-mix(in srgb, var(--el) 9%, transparent), transparent 70%),
+      linear-gradient(165deg, #0d1428 0%, var(--card) 60%, #080b16 100%);
+  }
+  /* 上部の非常に細い主元素色アクセント */
+  .save::before { content: ''; position: absolute; top: 0; left: 18%; right: 18%; height: 1px;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--el) 55%, transparent), transparent); }
+  .save-label { font-family: var(--font-jp); font-size: 11px; letter-spacing: .3em; color: #8aa3c8; margin-bottom: 12px; }
+  .save-text { font-size: 13px; line-height: 1.95; color: var(--t-body); margin-bottom: 18px; word-break: auto-phrase; }
+  .save-text b { font-weight: 500; color: #c9d4ec; }
+
+  .save-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; border: 1px solid rgba(150,180,240,.2); border-radius: 8px;
+    padding: 14px; font-family: inherit; font-size: 13.5px; letter-spacing: .14em; color: #eef3ff; cursor: pointer; text-decoration: none;
+    background: linear-gradient(135deg, #16284f 0%, #1f4282 55%, color-mix(in srgb, var(--el) 28%, #24428a) 100%);
+    box-shadow: inset 0 1px 0 rgba(210,225,255,.12), 0 8px 20px rgba(0,0,0,.35);
+    transition: filter .2s, box-shadow .2s;
+  }
+  .save-btn:hover { filter: brightness(1.08); }
+  .save-btn:focus-visible, .link-btn:focus-visible { outline: 1px solid var(--accent); outline-offset: 3px; }
+  .save-btn[disabled] { cursor: default; filter: none; }
+
+  /* 保存済み：次の自然な行動としてのマイページ導線（購入ボタンに見せない） */
+  .link-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; border-radius: 8px; padding: 13px;
+    font-size: 13.5px; letter-spacing: .12em; text-decoration: none; color: #d9e6fb;
+    border: 1px solid color-mix(in srgb, var(--el) 30%, #2c3f66); background: rgba(20,30,60,.45);
+    transition: background .2s, border-color .2s;
+  }
+  .link-btn:hover { background: rgba(30,44,86,.6); }
+  .link-btn .arw { display: inline-block; transition: transform .2s; }
+  .link-btn:hover .arw { transform: translateX(3px); }
+  .done-mark { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: .12em; color: #a9c6ea; margin-bottom: 10px; }
+  .done-mark::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: color-mix(in srgb, var(--el) 70%, #cfe0ff); box-shadow: 0 0 6px color-mix(in srgb, var(--el) 50%, transparent); }
+
+  /* 保存処理中：静かなloading（細い光が流れるだけ） */
+  .saving-line { position: relative; height: 1px; margin: 14px auto 0; width: 60%; background: #1c2a48; overflow: hidden; }
+  .saving-line::after { content: ''; position: absolute; top: 0; left: -40%; width: 40%; height: 100%;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--el) 60%, #a8c8f0), transparent); animation: sweep 1.4s ease-in-out infinite; }
+  @keyframes sweep { to { left: 100%; } }
+
+  .err { font-size: 12px; line-height: 1.8; color: #d6a8b8; margin: -6px 0 14px; }
+
+  .state-tag { display: inline-block; font-size: 10.5px; letter-spacing: .08em; color: var(--t-dim); border: 1px dashed #1f2b46; border-radius: 4px; padding: 2px 8px; margin: 18px 0 8px; }
+
+  /* 購入状態（保存状態とは独立の表示） */
+  .purchase { display: flex; justify-content: space-between; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; background: rgba(10,14,27,.7); }
+  .purchase .k { font-size: 12px; color: var(--t-sub); letter-spacing: .06em; }
+  .purchase .v { font-size: 11px; letter-spacing: .12em; padding: 2px 9px; border-radius: 4px; }
+  .purchase .v.on { color: #0b0a18; background: linear-gradient(135deg, #cfe4fb, #9cc6ec); font-weight: 700; }
+  .purchase .v.off { color: var(--t-sub); border: 1px dotted #33415f; }
+
+  /* 周辺：区切り・シェア群も藍へ */
+  .free-end { display: flex; align-items: center; gap: 12px; color: var(--t-dim); font-size: 11px; letter-spacing: .2em; margin: 22px 0 14px; }
+  .free-end::before, .free-end::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #243353, transparent); }
+  .share { display: flex; gap: 8px; margin-bottom: 8px; }
+  .share button, .copy { font-family: inherit; cursor: pointer; font-size: 12px; letter-spacing: .06em; border-radius: 8px; padding: 12px 6px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .share button { flex: 1; border: 1px solid #22314f; color: #cfd9ee; background: linear-gradient(135deg, #111a33, #16254a); }
+  .share button.x { background: #05060c; border-color: #1d2438; color: #eef; }
+  .copy { width: 100%; background: transparent; border: 1px solid #1f2b46; color: var(--t-sub); }
+
+  /* デモ用の状態切り替え（本実装には入れない） */
+  .demo-bar { display: flex; gap: 6px; flex-wrap: wrap; font-size: 10.5px; color: var(--t-dim); margin-bottom: 18px; align-items: center; }
+  .demo-bar a { color: var(--t-sub); text-decoration: none; border: 1px solid #1c2a44; border-radius: 4px; padding: 3px 8px; }
+  .demo-bar a.on { color: #dfe8ff; border-color: #3a5a92; }
+
+  @media (prefers-reduced-motion: reduce) { .saving-line::after { animation: none; left: 30%; } }
+</style>
+</head>
+<body>
+<main class="page" id="page"></main>
+<script>
+(function () {
+  var EL = { '炎':'#eaa84e', '水':'#7cc8ee', '氷':'#cfe4fb', '雷':'#c3a4ee', '風':'#6cc8b4', '岩':'#e8c264', '草':'#b0d25c' };
+  var EL_TEXT = { '炎':'#f0b070', '水':'#8fd0f2', '氷':'#d6e8fb', '雷':'#cbb0f0', '風':'#86d4c2', '岩':'#ecca78', '草':'#bcd872' };
+  var q = new URLSearchParams(location.search);
+  var el = EL[q.get('el')] ? q.get('el') : '水';
+  document.documentElement.style.setProperty('--el', EL[el]);
+  var state = q.get('state') || 'out';
+  var all = q.get('all') === '1';
+
+  var LABEL = '<div class="save-label">診断記録</div>';
+  var CARDS = {
+    out: LABEL + '<p class="save-text">この結果を、今のあなたとして残しませんか。<br>保存すると、次に診断したとき今日の自分と見比べられます。</p>' +
+         '<button type="button" class="save-btn" data-act="save">結果を保存する</button>',
+    in: LABEL + '<p class="save-text">この結果は、まだ診断記録に残っていません。<br>記録として残すと、マイページからいつでも見返せます。</p>' +
+        '<button type="button" class="save-btn" data-act="save">この結果を診断記録に残す</button>',
+    saved: LABEL + '<p class="save-text">この結果は、すでに診断記録に残っています。</p>' +
+           '<a class="link-btn" href="#">マイページで見る <span class="arw">→</span></a>',
+    saving: LABEL + '<p class="save-text">この結果を、診断記録に残しています。</p>' +
+            '<button type="button" class="save-btn" disabled aria-busy="true">記録しています</button><div class="saving-line" aria-hidden="true"></div>',
+    justsaved: LABEL + '<div class="done-mark">記録しました</div><p class="save-text">この結果は診断記録に残りました。</p>' +
+               '<a class="link-btn" href="#">マイページで見る <span class="arw">→</span></a>',
+    error: LABEL + '<p class="save-text">この結果は、まだ診断記録に残っていません。</p>' +
+           '<p class="err" role="alert">保存できませんでした。通信状況を確かめて、もう一度お試しください。</p>' +
+           '<button type="button" class="save-btn" data-act="save">もう一度試す</button>',
+  };
+  var TAG = { out: '① 未ログイン', in: '② ログイン済み・未保存', saved: '③ ログイン済み・保存済み', saving: '④ 保存処理中', justsaved: '⑤ 保存成功直後（保存済みUIへ遷移）', error: '⑥ 保存エラー（再試行可能）' };
+
+  function summary() {
+    return '<section class="res"><div class="en">Your Element</div>' +
+      '<div class="combo"><span style="color:' + EL_TEXT[el] + '">' + el + '</span><span class="x">×</span><span style="color:#8ccfd6">長柄</span><span class="x">×</span><span style="color:#e0c890">璃月</span></div>' +
+      '<div class="type">HYPL-L　静衛者</div></section>';
+  }
+  function card(s) { return '<section class="save" data-state="' + s + '" aria-live="polite">' + CARDS[s] + '</section>'; }
+  function purchaseRow(bought) {
+    return '<div class="purchase"><span class="k">解析レポート</span><span class="v ' + (bought ? 'on">購入済み' : 'off">未購入') + '</span></div>';
+  }
+  function rest() {
+    return '<div class="free-end">ここまでが無料診断の結果です</div>' +
+      '<div class="share"><button type="button">画像を保存</button><button type="button" class="x">Xでシェア</button></div>' +
+      '<button type="button" class="copy">この結果のURLをコピー（シェアせず保存）</button>';
+  }
+  function bar() {
+    var ks = ['out','in','saved','saving','justsaved','error','purchased'];
+    var names = { out:'①未ログイン', in:'②未保存', saved:'③保存済み', saving:'④保存中', justsaved:'⑤保存直後', error:'⑥エラー', purchased:'⑦購入と独立' };
+    return '<nav class="demo-bar" aria-label="デモの状態">' + ks.map(function (k) { return '<a href="?state=' + k + '&el=' + encodeURIComponent(el) + '" class="' + (k === state && !all ? 'on' : '') + '">' + names[k] + '</a>'; }).join('') +
+      '<a href="?all=1&el=' + encodeURIComponent(el) + '" class="' + (all ? 'on' : '') + '">全状態</a></nav>';
+  }
+
+  var page = document.getElementById('page'), html = bar();
+  if (all) {
+    ['out','in','saved','saving','justsaved','error'].forEach(function (s) { html += '<div class="state-tag">' + TAG[s] + '</div>' + card(s); });
+    html += '<div class="state-tag">⑦ 購入状態とは独立（未保存×購入済み ／ 保存済み×未購入）</div>' + card('in') + purchaseRow(true) + card('saved') + purchaseRow(false);
+  } else if (state === 'purchased') {
+    html += summary() + '<p class="sec-label">Record</p>' + card('in') + purchaseRow(true) + '<div class="state-tag">↓ 別の結果：保存済み×未購入</div>' + card('saved') + purchaseRow(false) + rest();
+  } else {
+    html += summary() + '<p class="sec-label">Record</p>' + card(CARDS[state] ? state : 'out') + rest();
+  }
+  page.innerHTML = html;
+
+  // デモの動き：保存ボタン → 保存中 → 保存済みへ（DBには触れない）
+  page.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act="save"]'); if (!b) return;
+    var sec = b.closest('.save');
+    sec.innerHTML = CARDS.saving;
+    setTimeout(function () { sec.innerHTML = CARDS.justsaved; }, 900);
+  });
+})();
+</script>
+</body>
+</html>

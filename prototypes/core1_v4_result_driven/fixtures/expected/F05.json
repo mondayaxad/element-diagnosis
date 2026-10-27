@@ -1,0 +1,335 @@
+{
+ "axes": {
+  "personality": {
+   "O": 75,
+   "C": 66,
+   "E": 56,
+   "A": 16,
+   "N": 66
+  },
+  "style": {
+   "AGY": 38,
+   "REL": 96,
+   "ROL": 63,
+   "REF": 33,
+   "AUT": 21
+  },
+  "values": {
+   "SD": 25,
+   "ST": 25,
+   "HE": 33,
+   "AC": 67,
+   "PO": 50,
+   "SE": 92,
+   "CO": 83,
+   "TR": 83,
+   "BE": 58,
+   "UN": 58
+  }
+ },
+ "values_flat": false,
+ "rankings": {
+  "element": [
+   {
+    "rank": 1,
+    "name": "雷",
+    "display": 91,
+    "distance": 0.09476286192385702,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "水",
+    "display": 75,
+    "distance": 0.24531612258471716,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "氷",
+    "display": 73,
+    "distance": 0.2656689669494727,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "風",
+    "display": 69,
+    "distance": 0.3075386154615384,
+    "band": "middle"
+   },
+   {
+    "rank": 5,
+    "name": "炎",
+    "display": 67,
+    "distance": 0.3325357123678598,
+    "band": "middle"
+   },
+   {
+    "rank": 6,
+    "name": "草",
+    "display": 65,
+    "distance": 0.3466698717800553,
+    "band": "bottom"
+   },
+   {
+    "rank": 7,
+    "name": "岩",
+    "display": 57,
+    "distance": 0.43379718763495917,
+    "band": "bottom"
+   }
+  ],
+  "weapon": [
+   {
+    "rank": 1,
+    "name": "片手剣",
+    "display": 91,
+    "distance": 0.09099450532861861,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "長柄",
+    "display": 78,
+    "distance": 0.2197271034715563,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "法器",
+    "display": 60,
+    "distance": 0.3978441906073281,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "弓",
+    "display": 56,
+    "distance": 0.43861144535910146,
+    "band": "bottom"
+   },
+   {
+    "rank": 5,
+    "name": "両手剣",
+    "display": 51,
+    "distance": 0.48660045211651826,
+    "band": "bottom"
+   }
+  ],
+  "nation": [
+   {
+    "rank": 1,
+    "name": "稲妻",
+    "display": 98,
+    "distance": 0.023902680085992778,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "璃月",
+    "display": 91,
+    "distance": 0.08968755666126021,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "フォンテーヌ",
+    "display": 73,
+    "distance": 0.27186093566172775,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "スネージナヤ",
+    "display": 39,
+    "distance": 0.6137639765039453,
+    "band": "middle"
+   },
+   {
+    "rank": 5,
+    "name": "スメール",
+    "display": 36,
+    "distance": 0.6408019956095706,
+    "band": "middle"
+   },
+   {
+    "rank": 6,
+    "name": "ナド・クライ",
+    "display": 33,
+    "distance": 0.6699697372104374,
+    "band": "middle"
+   },
+   {
+    "rank": 7,
+    "name": "モンド",
+    "display": 10,
+    "distance": 0.9049133494273488,
+    "band": "bottom"
+   },
+   {
+    "rank": 8,
+    "name": "ナタ",
+    "display": 8,
+    "distance": 0.9249085292888655,
+    "band": "bottom"
+   }
+  ]
+ },
+ "mirror": {
+  "top10": [
+   {
+    "rank": 1,
+    "name": "九条裟羅",
+    "display": 77,
+    "raw": 76.75605845966429
+   },
+   {
+    "rank": 2,
+    "name": "神里綾華",
+    "display": 76,
+    "raw": 76.43272558789403
+   },
+   {
+    "rank": 3,
+    "name": "ヨォーヨ",
+    "display": 76,
+    "raw": 76.42644885691085
+   },
+   {
+    "rank": 4,
+    "name": "ジン",
+    "display": 76,
+    "raw": 76.10753029773099
+   },
+   {
+    "rank": 5,
+    "name": "重雲",
+    "display": 76,
+    "raw": 76.03696019540155
+   },
+   {
+    "rank": 6,
+    "name": "雷電将軍",
+    "display": 76,
+    "raw": 75.96761224346523
+   },
+   {
+    "rank": 7,
+    "name": "シュヴルーズ",
+    "display": 75,
+    "raw": 75.27406020289004
+   },
+   {
+    "rank": 8,
+    "name": "甘雨",
+    "display": 75,
+    "raw": 74.9018172658272
+   },
+   {
+    "rank": 9,
+    "name": "クロリンデ",
+    "display": 75,
+    "raw": 74.52257774490822
+   },
+   {
+    "rank": 10,
+    "name": "キャンディス",
+    "display": 74,
+    "raw": 74.20595311412083
+   }
+  ],
+  "selected": {
+   "name": "九条裟羅",
+   "canonicalIndex": 59,
+   "rawRank": 1
+  }
+ },
+ "hidden": {
+  "top10": [
+   {
+    "rank": 1,
+    "name": "九条裟羅",
+    "display": 70,
+    "raw": 0.7001936189998261
+   },
+   {
+    "rank": 2,
+    "name": "フリーナ",
+    "display": 70,
+    "raw": 0.6974435899403867
+   },
+   {
+    "rank": 3,
+    "name": "神里綾華",
+    "display": 69,
+    "raw": 0.690551125120496
+   },
+   {
+    "rank": 4,
+    "name": "ティナリ",
+    "display": 68,
+    "raw": 0.676505551251582
+   },
+   {
+    "rank": 5,
+    "name": "クロリンデ",
+    "display": 67,
+    "raw": 0.6710039675878114
+   },
+   {
+    "rank": 6,
+    "name": "雷電将軍",
+    "display": 67,
+    "raw": 0.6701871611355977
+   },
+   {
+    "rank": 7,
+    "name": "閑雲",
+    "display": 66,
+    "raw": 0.6594221106227014
+   },
+   {
+    "rank": 8,
+    "name": "マーヴィカ",
+    "display": 65,
+    "raw": 0.6479918910316279
+   },
+   {
+    "rank": 9,
+    "name": "ヨォーヨ",
+    "display": 64,
+    "raw": 0.6436984898167019
+   },
+   {
+    "rank": 10,
+    "name": "チャスカ",
+    "display": 63,
+    "raw": 0.6348349278611976
+   }
+  ]
+ },
+ "mentor": {
+  "status": "goal_not_selected",
+  "changes": [],
+  "top10": []
+ },
+ "domains": [
+  {
+   "key": "understanding",
+   "display": 48
+  },
+  {
+   "key": "integration",
+   "display": 59
+  },
+  {
+   "key": "sustain",
+   "display": 72
+  },
+  {
+   "key": "expression",
+   "display": 41
+  }
+ ]
+}

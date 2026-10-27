@@ -1,0 +1,424 @@
+{
+ "axes": {
+  "personality": {
+   "O": 78,
+   "C": 72,
+   "E": 31,
+   "A": 69,
+   "N": 63
+  },
+  "style": {
+   "AGY": 42,
+   "REL": 71,
+   "ROL": 83,
+   "REF": 75,
+   "AUT": 67
+  },
+  "values": {
+   "SD": 83,
+   "ST": 42,
+   "HE": 42,
+   "AC": 58,
+   "PO": 25,
+   "SE": 58,
+   "CO": 50,
+   "TR": 50,
+   "BE": 75,
+   "UN": 92
+  }
+ },
+ "values_flat": false,
+ "rankings": {
+  "element": [
+   {
+    "rank": 1,
+    "name": "水",
+    "display": 90,
+    "distance": 0.09787747442593725,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "草",
+    "display": 85,
+    "distance": 0.14959946523968595,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "風",
+    "display": 78,
+    "distance": 0.2208619478316715,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "雷",
+    "display": 75,
+    "distance": 0.2513563207878409,
+    "band": "middle"
+   },
+   {
+    "rank": 5,
+    "name": "氷",
+    "display": 74,
+    "distance": 0.26378021153983483,
+    "band": "middle"
+   },
+   {
+    "rank": 6,
+    "name": "岩",
+    "display": 70,
+    "distance": 0.3006326662224184,
+    "band": "bottom"
+   },
+   {
+    "rank": 7,
+    "name": "炎",
+    "display": 69,
+    "distance": 0.3085125605222582,
+    "band": "bottom"
+   }
+  ],
+  "weapon": [
+   {
+    "rank": 1,
+    "name": "長柄",
+    "display": 82,
+    "distance": 0.17905306476014313,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "法器",
+    "display": 81,
+    "distance": 0.19146801299433802,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "弓",
+    "display": 77,
+    "distance": 0.23315231073270537,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "片手剣",
+    "display": 75,
+    "distance": 0.25388973984783236,
+    "band": "bottom"
+   },
+   {
+    "rank": 5,
+    "name": "両手剣",
+    "display": 62,
+    "distance": 0.37597872280223515,
+    "band": "bottom"
+   }
+  ],
+  "nation": [
+   {
+    "rank": 1,
+    "name": "スメール",
+    "display": 96,
+    "distance": 0.03572295426051103,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "ナド・クライ",
+    "display": 87,
+    "distance": 0.1303397336996081,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "フォンテーヌ",
+    "display": 83,
+    "distance": 0.1695807013773511,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "モンド",
+    "display": 75,
+    "distance": 0.24760867986702184,
+    "band": "middle"
+   },
+   {
+    "rank": 5,
+    "name": "ナタ",
+    "display": 47,
+    "distance": 0.5300184439180505,
+    "band": "middle"
+   },
+   {
+    "rank": 6,
+    "name": "璃月",
+    "display": 46,
+    "distance": 0.5369366897848372,
+    "band": "middle"
+   },
+   {
+    "rank": 7,
+    "name": "稲妻",
+    "display": 44,
+    "distance": 0.5600792316677095,
+    "band": "bottom"
+   },
+   {
+    "rank": 8,
+    "name": "スネージナヤ",
+    "display": 28,
+    "distance": 0.7202591014432165,
+    "band": "bottom"
+   }
+  ]
+ },
+ "mirror": {
+  "top10": [
+   {
+    "rank": 1,
+    "name": "オロルン",
+    "display": 90,
+    "raw": 90.01180106858264
+   },
+   {
+    "rank": 2,
+    "name": "白朮",
+    "display": 90,
+    "raw": 89.83470487177017
+   },
+   {
+    "rank": 3,
+    "name": "アリョーシャ",
+    "display": 90,
+    "raw": 89.78485486471695
+   },
+   {
+    "rank": 4,
+    "name": "ティナリ",
+    "display": 88,
+    "raw": 88.41988414444819
+   },
+   {
+    "rank": 5,
+    "name": "エミリエ",
+    "display": 87,
+    "raw": 86.85391066017428
+   },
+   {
+    "rank": 6,
+    "name": "煙緋",
+    "display": 87,
+    "raw": 86.63871302255579
+   },
+   {
+    "rank": 7,
+    "name": "フレミネ",
+    "display": 86,
+    "raw": 86.4676211836762
+   },
+   {
+    "rank": 8,
+    "name": "レイラ",
+    "display": 86,
+    "raw": 86.22320863601882
+   },
+   {
+    "rank": 9,
+    "name": "オデット",
+    "display": 86,
+    "raw": 86.12775646803476
+   },
+   {
+    "rank": 10,
+    "name": "ドゥリン",
+    "display": 86,
+    "raw": 86.11445775559991
+   }
+  ],
+  "selected": {
+   "name": "オロルン",
+   "canonicalIndex": 60,
+   "rawRank": 1
+  }
+ },
+ "hidden": {
+  "top10": [
+   {
+    "rank": 1,
+    "name": "オロルン",
+    "display": 91,
+    "raw": 0.9056747778391141
+   },
+   {
+    "rank": 2,
+    "name": "フレミネ",
+    "display": 90,
+    "raw": 0.896337561202205
+   },
+   {
+    "rank": 3,
+    "name": "白朮",
+    "display": 89,
+    "raw": 0.8889707536811519
+   },
+   {
+    "rank": 4,
+    "name": "レイラ",
+    "display": 89,
+    "raw": 0.8883080736248052
+   },
+   {
+    "rank": 5,
+    "name": "ドゥリン",
+    "display": 88,
+    "raw": 0.8817962388609402
+   },
+   {
+    "rank": 6,
+    "name": "ティナリ",
+    "display": 86,
+    "raw": 0.857220196855343
+   },
+   {
+    "rank": 7,
+    "name": "アリョーシャ",
+    "display": 85,
+    "raw": 0.8541724392073167
+   },
+   {
+    "rank": 8,
+    "name": "コロンビーナ",
+    "display": 85,
+    "raw": 0.8465946723139293
+   },
+   {
+    "rank": 9,
+    "name": "アーロイ",
+    "display": 85,
+    "raw": 0.845207059580221
+   },
+   {
+    "rank": 10,
+    "name": "リネット",
+    "display": 84,
+    "raw": 0.8434068691109867
+   }
+  ]
+ },
+ "mentor": {
+  "status": "ok",
+  "changes": [
+   {
+    "path": "personality.E",
+    "layer": "personality",
+    "axis": "E",
+    "before": 31,
+    "delta": 20,
+    "after": 51,
+    "clamped": false
+   },
+   {
+    "path": "style.AGY",
+    "layer": "style",
+    "axis": "AGY",
+    "before": 42,
+    "delta": 20,
+    "after": 62,
+    "clamped": false
+   },
+   {
+    "path": "values.AC",
+    "layer": "values",
+    "axis": "AC",
+    "before": 58,
+    "delta": 10,
+    "after": 68,
+    "clamped": false
+   }
+  ],
+  "top10": [
+   {
+    "rank": 1,
+    "name": "白朮",
+    "display": 91,
+    "raw": 91.2776420251776
+   },
+   {
+    "rank": 2,
+    "name": "ティナリ",
+    "display": 91,
+    "raw": 90.80664889234339
+   },
+   {
+    "rank": 3,
+    "name": "アリョーシャ",
+    "display": 90,
+    "raw": 89.91462104773629
+   },
+   {
+    "rank": 4,
+    "name": "ファルザン",
+    "display": 89,
+    "raw": 88.79877056490528
+   },
+   {
+    "rank": 5,
+    "name": "エミリエ",
+    "display": 89,
+    "raw": 88.6202748702848
+   },
+   {
+    "rank": 6,
+    "name": "リネ",
+    "display": 88,
+    "raw": 88.17370045264434
+   },
+   {
+    "rank": 7,
+    "name": "煙緋",
+    "display": 88,
+    "raw": 88.10525863395179
+   },
+   {
+    "rank": 8,
+    "name": "オロルン",
+    "display": 88,
+    "raw": 87.87848158836951
+   },
+   {
+    "rank": 9,
+    "name": "イネファ",
+    "display": 88,
+    "raw": 87.60074146807256
+   },
+   {
+    "rank": 10,
+    "name": "閑雲",
+    "display": 87,
+    "raw": 87.4306437214116
+   }
+  ]
+ },
+ "domains": [
+  {
+   "key": "understanding",
+   "display": 82
+  },
+  {
+   "key": "integration",
+   "display": 70
+  },
+  {
+   "key": "sustain",
+   "display": 68
+  },
+  {
+   "key": "expression",
+   "display": 41
+  }
+ ]
+}

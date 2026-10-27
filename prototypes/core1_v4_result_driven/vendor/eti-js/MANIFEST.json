@@ -1,0 +1,19 @@
+{
+ "note": "正本 ETI v2 エンジン6ファイルの読み取り専用スナップショット（リポジトリの js/ と同一。ZIP単体での検証用）。編集禁止。リポジトリ内で実行する時は js/ を優先し、同一性を検証する。",
+ "versions": {
+  "diagnosis": "ETI-2.0",
+  "items": "ETI-ITEM-2.0.0",
+  "scoring": "ETI-SCORE-2.0.0",
+  "translation": "ETI-TRANS-2.0.0",
+  "characters": "ETI-CHAR-2.1.0",
+  "mirror": "ETI-MIRROR-2.1.0"
+ },
+ "files": {
+  "js/ETI_v2_QUESTIONS_100.js": "6c602439e0bf82a88183f6f6a694dd20da974b3f01be07d396315786ae5ddab4",
+  "js/characters118_v2_1.js": "a5b368ff82065df07c5a23963e8a8f051597b57b972933e06f5b9132355c1747",
+  "js/eti_mirror_selection_v21.js": "d7fb3bd8f3039243c06bf098646a4eb065edd31027215cb1ed8d31f4f53ccb1b",
+  "js/eti_v2_engine.js": "a49696b34497f25bf2c38635999b19766a1799837acd48f17602ae120685daa9",
+  "js/eti_v2_mirror_resolver.js": "031c7f9d54ed619b52faa37ece324d153826f35559b1ab4cc0728eb96e1ab0bb",
+  "js/eti_v2_prototypes.js": "35d45e433f56b6df3d56fe07e1b8ffddd02649dd46c043ea37c603e0835e1d74"
+ }
+}

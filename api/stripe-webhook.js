@@ -1,0 +1,241 @@
+// api/stripe-webhook.js
+// 完全解析の Stripe Webhook（Preview・Test のイベントだけ）。販売を閉じていても動く（返金・dispute を処理するため）。
+//
+//   POST /api/stripe-webhook   Stripe-Signature: t=...,v1=...   （生の本文）
+//
+// 設計方針
+//   - Bearer 認証は使わない。生のリクエスト本文と Stripe-Signature だけで検証する（STRIPE_COMPLETE_WEBHOOK_SECRET）。
+//     本文は req.body を使わずストリームから読む（Vercel の自動解析で本文が変わると署名を検証できないため）。
+//   - イベント本文の値は信用しない。対象の Checkout Session・Charge・Dispute を Stripe から取り直して判断する。
+//   - DB の更新は complete_04 の SQL 関数だけ（complete_apply_payment・_checkout_expired・_refund・_dispute・
+//     complete_webhook_finish）。支払い確定で注文 paid・MENTOR ロック・権利・complete_reports（queued）を同時に作る。
+//     生成は応答の後で始める（下記）。
+//   - 支払い確定（applied）の後は、応答を待たせずに Vercel の waitUntil で生成を始める（api/_complete の生成器・非公開 Storage）。
+//     起動できなかった・失敗した生成は、状態確認（api/complete-status.js）の時に回収する。
+//   - 応答：処理済み・重複・恒久的な不一致（ignored）は HTTP 200。complete_retry_later、Stripe・DB の一時的な失敗は
+//     failed を記録して HTTP 500（Stripe が再送し、failed のイベントは処理し直す）。
+//   - 完全解析の注文でないイベント（metadata.app が違う・旧 ¥1,000 の決済など）は DB に書かずに 200。
+//   - ログは理由コードと照合 ID だけ（URL・query・署名・メール・Stripe ID 全文を出さない）。
+'use strict';
+const { resolveAppEnv, requireServerEnv, requestHost, logEnvDenied } = require('../lib/server-env');
+const CE = require('../lib/complete-eligibility');
+const CP = require('../lib/complete-payment');
+const RJ = require('../lib/complete-report-job');
+const CA = require('../lib/complete-apply');
+const GP = require('../lib/guest-purchase');
+
+const API = 'stripe-webhook';
+const MAX_BODY_BYTES = 512 * 1024;
+
+function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = () => Date.now(), waitUntil = RJ.defaultWaitUntil(), storageFactory = null }) {
+  const stripeClients = new Map();
+  function stripeFor(key) {
+    if (!stripeClients.has(key)) stripeClients.set(key, stripeFactory(key));
+    return stripeClients.get(key);
+  }
+  function reply(res, status, body) {
+    return res.status(status).json(body);
+  }
+  const guestHandler = GP.createGuestHandler({
+    env, fetchImpl, stripeFor: () => stripeFor(env.STRIPE_SECRET_KEY), logger, storageFactory, waitUntil, now,
+  });
+  // 返金・異議申し立ての後：解析レポートの権利が止まった記録の、追加 ¥2,000 の決済中の画面を閉じる（根拠の無い ¥2,000 を払わせない）。
+  //   閉じられなかった時は Webhook を一時的な失敗にする（Stripe が再送し、返金・異議申し立ては重複として何もせず、閉じ直す）
+  async function closeUpgrades(conn, orderId) {
+    const r = await guestHandler.closeUpgradesAfterBasisChange(conn, orderId);
+    if (r === 'busy') throw new CP.PaymentError('close_upgrades_busy', true);
+  }
+
+  async function finish(conn, ev, status, code, orderId) {
+    return CP.rpc(fetchImpl, conn, 'complete_webhook_finish', {
+      p_event_id: ev.id, p_event_type: ev.type, p_livemode: CP.livemodeOf(conn), p_event_created: ev.createdAt,
+      p_status: status, p_error_code: code, p_order_id: orderId || null,
+    });
+  }
+
+  // Checkout Session を取り直し、完全解析の注文なら { session, orderId } を返す。違えば { notOurs } / { mismatch }。
+  async function sessionFor(stripe, sessionId, conn, expand) {
+    const appEnv = conn.appEnv;
+    if (!CP.checkoutSessionIdOk(sessionId, conn.stripeMode)) return { notOurs: true };
+    const session = await CP.stripeCall(() => stripe.checkout.sessions.retrieve(sessionId, expand ? { expand } : undefined));
+    if (!session || session.livemode !== CP.livemodeOf(conn)) return { mismatch: 'livemode_mismatch' };
+    const meta = CP.checkoutMetadataOf(session, appEnv);
+    if (!meta) return { notOurs: true };
+    if (!meta.ok) return { mismatch: 'metadata_mismatch' };
+    return { session, orderId: meta.orderId };
+  }
+
+  // PaymentIntent から完全解析の Checkout Session を探す（返金・dispute 用）
+  async function sessionForPaymentIntent(stripe, paymentIntentId, conn) {
+    if (!CP.PAYMENT_INTENT_RE.test(paymentIntentId || '')) return { notOurs: true };
+    const list = await CP.stripeCall(() => stripe.checkout.sessions.list({ payment_intent: paymentIntentId, limit: 1 }));
+    const s = list && Array.isArray(list.data) ? list.data[0] : null;
+    if (!s) return { notOurs: true };
+    return sessionFor(stripe, s.id, conn);
+  }
+
+  async function onCheckoutCompleted(conn, stripe, ev, obj) {
+    const found = await sessionFor(stripe, CP.idOf(obj), conn, ['line_items']);
+    if (found.notOurs) return 'ignored:not_complete';
+    if (found.mismatch) { await finish(conn, ev, 'ignored', found.mismatch); return `ignored:${found.mismatch}`; }
+    // 解析レポート（¥1,000）・完全解析（¥3,000／¥2,000）の適用は、購入完了ページの問い合わせと同じ共通処理（lib/complete-apply.js）
+    return CA.applyPaidSession({
+      env, fetchImpl, conn, session: found.session, orderId: found.orderId, eventId: ev.id, eventCreatedIso: ev.createdAt,
+    });
+  }
+
+  async function onCheckoutExpired(conn, stripe, ev, obj) {
+    const found = await sessionFor(stripe, CP.idOf(obj), conn);
+    if (found.notOurs) return 'ignored:not_complete';
+    if (found.mismatch) { await finish(conn, ev, 'ignored', found.mismatch); return `ignored:${found.mismatch}`; }
+    if (found.session.status !== 'expired') throw new CP.PaymentError('session_not_expired', true);
+    return CP.rpc(fetchImpl, conn, 'complete_apply_checkout_expired', {
+      p_event_id: ev.id, p_event_created: ev.createdAt, p_livemode: CP.livemodeOf(conn), p_order_id: found.orderId, p_checkout_session_id: found.session.id,
+    });
+  }
+
+  async function chargeOf(stripe, chargeId) {
+    if (!/^(ch|py)_[A-Za-z0-9_]{8,200}$/.test(chargeId || '')) return null;
+    return CP.stripeCall(() => stripe.charges.retrieve(chargeId));
+  }
+
+  async function onRefund(conn, stripe, ev, obj) {
+    const charge = await chargeOf(stripe, CP.idOf(obj));
+    if (!charge) return 'ignored:not_complete';
+    const pi = CP.idOf(charge.payment_intent);
+    const found = await sessionForPaymentIntent(stripe, pi, conn);
+    if (found.notOurs) return 'ignored:not_complete';
+    const mismatch = found.mismatch || (charge.livemode !== CP.livemodeOf(conn) ? 'livemode_mismatch' : charge.currency !== 'jpy' ? 'currency_mismatch' : null);
+    if (mismatch) { await finish(conn, ev, 'ignored', mismatch); return `ignored:${mismatch}`; }
+    const result = await CP.rpc(fetchImpl, conn, 'complete_apply_refund', {
+      p_event_id: ev.id, p_event_created: ev.createdAt, p_livemode: CP.livemodeOf(conn), p_order_id: found.orderId,
+      p_payment_intent_id: pi, p_amount_refunded: Number.isInteger(charge.amount_refunded) ? charge.amount_refunded : null,
+    });
+    if (result === 'applied' || result === 'duplicate') await closeUpgrades(conn, found.orderId);
+    return result;
+  }
+
+  async function onDispute(conn, stripe, ev, obj) {
+    const disputeId = CP.idOf(obj);
+    if (!/^du_[A-Za-z0-9_]{8,200}$/.test(disputeId || '')) return 'ignored:not_complete';
+    const dispute = await CP.stripeCall(() => stripe.disputes.retrieve(disputeId));
+    let pi = CP.idOf(dispute && dispute.payment_intent);
+    if (!pi) {
+      const charge = await chargeOf(stripe, CP.idOf(dispute && dispute.charge));
+      pi = charge ? CP.idOf(charge.payment_intent) : null;
+    }
+    const found = await sessionForPaymentIntent(stripe, pi, conn);
+    if (found.notOurs) return 'ignored:not_complete';
+    let action;
+    if (ev.type === 'charge.dispute.created') action = 'opened';
+    else if (dispute.status === 'won' || dispute.status === 'warning_closed') action = 'won';
+    else if (dispute.status === 'lost') action = 'lost';
+    const mismatch = found.mismatch || (dispute.livemode !== CP.livemodeOf(conn) ? 'livemode_mismatch' : !action ? 'dispute_not_closed' : null);
+    if (mismatch) { await finish(conn, ev, 'ignored', mismatch); return `ignored:${mismatch}`; }
+    const result = await CP.rpc(fetchImpl, conn, 'complete_apply_dispute', {
+      p_event_id: ev.id, p_event_created: ev.createdAt, p_livemode: CP.livemodeOf(conn), p_order_id: found.orderId,
+      p_payment_intent_id: pi, p_action: action,
+    });
+    if (action !== 'won' && (result === 'applied' || result === 'duplicate')) await closeUpgrades(conn, found.orderId);
+    return result;
+  }
+
+  const HANDLERS = {
+    'checkout.session.completed': onCheckoutCompleted,
+    'checkout.session.expired': onCheckoutExpired,
+    'charge.refunded': onRefund,
+    'charge.dispute.created': onDispute,
+    'charge.dispute.closed': onDispute,
+  };
+
+  return async function handler(req, res) {
+    CP.setCommonHeaders(res);
+    if (req.method !== 'POST') {
+      res.setHeader('Allow', 'POST');
+      return reply(res, 405, { error: 'method_not_allowed' });
+    }
+    const appEnv0 = resolveAppEnv(env, { host: requestHost(req) });
+    if (appEnv0 !== 'preview' && appEnv0 !== 'production') return reply(res, 404, { error: 'not_available' });
+    const guard = requireServerEnv(env, { host: requestHost(req), admin: true, stripe: true });
+    if (!guard.ok) {
+      const incident = logEnvDenied(API, guard, logger);
+      return reply(res, 503, { error: 'service_unavailable', incident_id: incident });
+    }
+    // Preview は Stripe Test・Preview の Supabase、Production は Stripe Live・本番の Supabase の組み合わせだけ
+    if (!CP.paymentEnvOk(guard, env)) return reply(res, 404, { error: 'not_available' });
+    const secret = env.STRIPE_COMPLETE_WEBHOOK_SECRET;
+    if (typeof secret !== 'string' || !secret.startsWith('whsec_')) {
+      const incident = CE.incidentId();
+      CP.logError(logger, API, 'webhook_secret_missing', incident);
+      return reply(res, 503, { error: 'service_unavailable', incident_id: incident });
+    }
+
+    let raw;
+    try {
+      raw = await CP.readRawBody(req, MAX_BODY_BYTES);
+    } catch {
+      return reply(res, 400, { error: 'invalid_request' });
+    }
+    if (raw.tooLarge) return reply(res, 413, { error: 'payload_too_large' });
+    const headers = req.headers || {};
+    const verified = CP.verifyStripeSignature(raw.body, headers['stripe-signature'], secret, Math.floor(now() / 1000));
+    if (!verified.ok) {
+      const incident = CE.incidentId();
+      CP.logError(logger, API, verified.reason, incident);
+      return reply(res, 400, { error: 'signature_invalid', incident_id: incident });
+    }
+
+    let event;
+    try { event = JSON.parse(raw.body.toString('utf8')); } catch { return reply(res, 400, { error: 'invalid_request' }); }
+    if (!event || typeof event !== 'object' || typeof event.id !== 'string' || !/^evt_[A-Za-z0-9_]{8,200}$/.test(event.id)
+        || typeof event.type !== 'string' || !Number.isInteger(event.created) || !event.data || !event.data.object) {
+      return reply(res, 400, { error: 'invalid_request' });
+    }
+    // Live のイベントは Preview では扱わない（DB に書かない）
+    if (event.livemode !== CP.livemodeOf(guard)) {
+      const incident = CE.incidentId();
+      CP.logError(logger, API, 'livemode_event', incident);
+      return reply(res, 200, { received: true, result: 'ignored' });
+    }
+    const handle = HANDLERS[event.type];
+    if (!handle) return reply(res, 200, { received: true, result: 'ignored' });
+
+    const ev = { id: event.id, type: event.type, createdAt: new Date(event.created * 1000).toISOString() };
+    const stripe = stripeFor(env.STRIPE_SECRET_KEY);
+    try {
+      const result = await handle(guard, stripe, ev, event.data.object);
+      const kind = typeof result === 'string' && result.startsWith('ignored') ? 'ignored' : 'processed';
+      // 支払い確定で生成物が queued になった：応答を待たせずに、応答の後で生成を始める（失敗しても状態確認の時に回収する）
+      if (ev.type === 'checkout.session.completed' && result === 'applied') {
+        RJ.scheduleReport(waitUntil, async () => {
+          const rows = await CP.selectRows(fetchImpl, guard, `stripe_webhook_events?event_id=eq.${encodeURIComponent(ev.id)}&select=order_id`);
+          const orderId = rows[0] && rows[0].order_id;
+          if (!CE.isUuid(orderId)) return;
+          const reports = await CP.selectRows(fetchImpl, guard, `complete_reports?source_order_id=eq.${encodeURIComponent(orderId)}&select=id`);
+          if (!reports[0]) return;
+          await RJ.processReport({ conn: guard, fetchImpl, storage: storageFactory ? storageFactory(guard) : null, reportId: reports[0].id, logger });
+        }, logger);
+      }
+      return reply(res, 200, { received: true, result: kind });
+    } catch (err) {
+      // 恒久的な不一致（ignored）は各処理で 200 にしている。ここに来るものはすべて failed を記録して 500（Stripe が再送する）。
+      // complete_retry_later・Stripe／DB の一時的な失敗のほか、想定外の DB 例外も権利を失わないよう再送に回す。
+      const code = err instanceof CP.PaymentError ? err.code : 'internal_error';
+      const incident = CE.incidentId();
+      CP.logError(logger, API, code, incident);
+      try {
+        await finish(guard, ev, 'failed', code);
+      } catch {
+        // failed を記録できなくても 500 で再送させる（イベントの記録は再送時に作られる）
+      }
+      return reply(res, 500, { error: 'retry_later', incident_id: incident });
+    }
+  };
+}
+
+module.exports = createHandler({
+  env: process.env,
+  fetchImpl: (...args) => fetch(...args),
+  stripeFactory: (key) => require('stripe')(key, { maxNetworkRetries: 1, timeout: 10000 }),
+});
+module.exports.createHandler = createHandler;

@@ -1,0 +1,424 @@
+{
+ "axes": {
+  "personality": {
+   "O": 59,
+   "C": 66,
+   "E": 22,
+   "A": 34,
+   "N": 97
+  },
+  "style": {
+   "AGY": 38,
+   "REL": 46,
+   "ROL": 58,
+   "REF": 96,
+   "AUT": 58
+  },
+  "values": {
+   "SD": 67,
+   "ST": 67,
+   "HE": 42,
+   "AC": 92,
+   "PO": 92,
+   "SE": 50,
+   "CO": 33,
+   "TR": 42,
+   "BE": 33,
+   "UN": 17
+  }
+ },
+ "values_flat": false,
+ "rankings": {
+  "element": [
+   {
+    "rank": 1,
+    "name": "氷",
+    "display": 92,
+    "distance": 0.07823042886243177,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "水",
+    "display": 76,
+    "distance": 0.24273442277518034,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "雷",
+    "display": 75,
+    "distance": 0.25242820761555157,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "風",
+    "display": 64,
+    "distance": 0.361828688746484,
+    "band": "middle"
+   },
+   {
+    "rank": 5,
+    "name": "草",
+    "display": 62,
+    "distance": 0.37698806347151104,
+    "band": "middle"
+   },
+   {
+    "rank": 6,
+    "name": "炎",
+    "display": 58,
+    "distance": 0.41918969452981547,
+    "band": "bottom"
+   },
+   {
+    "rank": 7,
+    "name": "岩",
+    "display": 56,
+    "distance": 0.4433057635537801,
+    "band": "bottom"
+   }
+  ],
+  "weapon": [
+   {
+    "rank": 1,
+    "name": "法器",
+    "display": 94,
+    "distance": 0.05639148871948674,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "弓",
+    "display": 79,
+    "distance": 0.2080384579831335,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "長柄",
+    "display": 69,
+    "distance": 0.30525399260288144,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "片手剣",
+    "display": 67,
+    "distance": 0.3307264730861441,
+    "band": "bottom"
+   },
+   {
+    "rank": 5,
+    "name": "両手剣",
+    "display": 59,
+    "distance": 0.40850948581397717,
+    "band": "bottom"
+   }
+  ],
+  "nation": [
+   {
+    "rank": 1,
+    "name": "スネージナヤ",
+    "display": 99,
+    "distance": 0.00809516476233596,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "ナタ",
+    "display": 64,
+    "distance": 0.35634943089787247,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "璃月",
+    "display": 57,
+    "distance": 0.4253092438756028,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "モンド",
+    "display": 48,
+    "distance": 0.5229763432753428,
+    "band": "middle"
+   },
+   {
+    "rank": 5,
+    "name": "ナド・クライ",
+    "display": 41,
+    "distance": 0.5866625388627322,
+    "band": "middle"
+   },
+   {
+    "rank": 6,
+    "name": "稲妻",
+    "display": 36,
+    "distance": 0.6388187750336253,
+    "band": "middle"
+   },
+   {
+    "rank": 7,
+    "name": "スメール",
+    "display": 36,
+    "distance": 0.6406750138389605,
+    "band": "bottom"
+   },
+   {
+    "rank": 8,
+    "name": "フォンテーヌ",
+    "display": 16,
+    "distance": 0.8440482101684912,
+    "band": "bottom"
+   }
+  ]
+ },
+ "mirror": {
+  "top10": [
+   {
+    "rank": 1,
+    "name": "ネフェル",
+    "display": 78,
+    "raw": 78.32763883676107
+   },
+   {
+    "rank": 2,
+    "name": "サンドローネ",
+    "display": 77,
+    "raw": 77.48776317383754
+   },
+   {
+    "rank": 3,
+    "name": "千織",
+    "display": 77,
+    "raw": 77.35647516542573
+   },
+   {
+    "rank": 4,
+    "name": "ロサリア",
+    "display": 77,
+    "raw": 76.5786180653779
+   },
+   {
+    "rank": 5,
+    "name": "夜蘭",
+    "display": 76,
+    "raw": 75.84124448467634
+   },
+   {
+    "rank": 6,
+    "name": "スクロース",
+    "display": 75,
+    "raw": 74.92427225135484
+   },
+   {
+    "rank": 7,
+    "name": "放浪者",
+    "display": 75,
+    "raw": 74.89091942123586
+   },
+   {
+    "rank": 8,
+    "name": "ローエン",
+    "display": 74,
+    "raw": 74.47087891049019
+   },
+   {
+    "rank": 9,
+    "name": "レイラ",
+    "display": 74,
+    "raw": 74.32652036945169
+   },
+   {
+    "rank": 10,
+    "name": "エスコフィエ",
+    "display": 74,
+    "raw": 74.02449882177913
+   }
+  ],
+  "selected": {
+   "name": "ネフェル",
+   "canonicalIndex": 102,
+   "rawRank": 1
+  }
+ },
+ "hidden": {
+  "top10": [
+   {
+    "rank": 1,
+    "name": "ロサリア",
+    "display": 77,
+    "raw": 0.7660236380987374
+   },
+   {
+    "rank": 2,
+    "name": "サンドローネ",
+    "display": 76,
+    "raw": 0.7603762297448408
+   },
+   {
+    "rank": 3,
+    "name": "レイラ",
+    "display": 76,
+    "raw": 0.7571839100679187
+   },
+   {
+    "rank": 4,
+    "name": "放浪者",
+    "display": 74,
+    "raw": 0.7433549547113366
+   },
+   {
+    "rank": 5,
+    "name": "申鶴",
+    "display": 73,
+    "raw": 0.7268932092558275
+   },
+   {
+    "rank": 6,
+    "name": "スクロース",
+    "display": 72,
+    "raw": 0.7200905289718366
+   },
+   {
+    "rank": 7,
+    "name": "スカーク",
+    "display": 70,
+    "raw": 0.7049594569950124
+   },
+   {
+    "rank": 8,
+    "name": "モナ",
+    "display": 70,
+    "raw": 0.704421346855806
+   },
+   {
+    "rank": 9,
+    "name": "ネフェル",
+    "display": 69,
+    "raw": 0.6861774800791559
+   },
+   {
+    "rank": 10,
+    "name": "アルハイゼン",
+    "display": 68,
+    "raw": 0.6818103797812635
+   }
+  ]
+ },
+ "mentor": {
+  "status": "ok",
+  "changes": [
+   {
+    "path": "personality.E",
+    "layer": "personality",
+    "axis": "E",
+    "before": 22,
+    "delta": 15,
+    "after": 37,
+    "clamped": false
+   },
+   {
+    "path": "personality.A",
+    "layer": "personality",
+    "axis": "A",
+    "before": 34,
+    "delta": 15,
+    "after": 49,
+    "clamped": false
+   },
+   {
+    "path": "values.BE",
+    "layer": "values",
+    "axis": "BE",
+    "before": 33,
+    "delta": 10,
+    "after": 43,
+    "clamped": false
+   }
+  ],
+  "top10": [
+   {
+    "rank": 1,
+    "name": "ネフェル",
+    "display": 80,
+    "raw": 79.78412985199827
+   },
+   {
+    "rank": 2,
+    "name": "千織",
+    "display": 79,
+    "raw": 78.68000889141472
+   },
+   {
+    "rank": 3,
+    "name": "サンドローネ",
+    "display": 77,
+    "raw": 77.4553468156476
+   },
+   {
+    "rank": 4,
+    "name": "ロサリア",
+    "display": 77,
+    "raw": 76.98409885585254
+   },
+   {
+    "rank": 5,
+    "name": "夜蘭",
+    "display": 77,
+    "raw": 76.73975246607174
+   },
+   {
+    "rank": 6,
+    "name": "ドリー",
+    "display": 76,
+    "raw": 75.93082526575323
+   },
+   {
+    "rank": 7,
+    "name": "レイラ",
+    "display": 76,
+    "raw": 75.67187857033827
+   },
+   {
+    "rank": 8,
+    "name": "ローエン",
+    "display": 76,
+    "raw": 75.6283141914727
+   },
+   {
+    "rank": 9,
+    "name": "スクロース",
+    "display": 76,
+    "raw": 75.60833281526071
+   },
+   {
+    "rank": 10,
+    "name": "エスコフィエ",
+    "display": 75,
+    "raw": 75.21405033807152
+   }
+  ]
+ },
+ "domains": [
+  {
+   "key": "understanding",
+   "display": 60
+  },
+  {
+   "key": "integration",
+   "display": 53
+  },
+  {
+   "key": "sustain",
+   "display": 67
+  },
+  {
+   "key": "expression",
+   "display": 53
+  }
+ ]
+}

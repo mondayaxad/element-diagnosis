@@ -1,0 +1,20 @@
+{
+  "decision": "RC4_RELAXED approved by user; no further coordinate optimization",
+  "approval_quote": "確定でお願いします。クロードコードに変更指示書と必要データをお願いします。",
+  "source_candidate_sha256": "5210dca05dd32f25381e4984625d36409bd9470e0d5628a89cec05119bf3a35d",
+  "diagnosis_version": "ETI-2.0",
+  "item_set_version": "ETI-ITEM-2.0.0",
+  "scoring_version": "ETI-SCORE-2.0.0",
+  "translation_model_version": "ETI-TRANS-2.0.0",
+  "character_profile_version": "ETI-CHAR-2.1.0",
+  "mirror_model_version": "ETI-MIRROR-2.1.0",
+  "normal_score_formula": "0.4*P_RMSE_similarity + 0.3*S_RMSE_similarity + 0.3*((centered_VALUES_cosine+1)/2)",
+  "tie_rule": "maximum raw score anchor within 1e-10 percentage points; element, nation, weapon, frozen canonical index",
+  "report_ranking_ui_change": false,
+  "production_deployment_authorized_by_this_handoff": false,
+  "character_count": 118,
+  "numeric_data_authority": "data/ETI_CHAR_2_1_0.json (exactly equal to approved RC4 candidate)",
+  "index_display_uses": "selection.mirror",
+  "saved_mirror_snapshot_uses": "selection.mirror",
+  "full_score_rankings_uses": "selection.rankings; original raw score ordering preserved"
+}

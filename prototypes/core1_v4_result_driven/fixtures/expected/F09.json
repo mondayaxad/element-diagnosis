@@ -1,0 +1,335 @@
+{
+ "axes": {
+  "personality": {
+   "O": 38,
+   "C": 94,
+   "E": 47,
+   "A": 97,
+   "N": 31
+  },
+  "style": {
+   "AGY": 58,
+   "REL": 96,
+   "ROL": 58,
+   "REF": 46,
+   "AUT": 21
+  },
+  "values": {
+   "SD": 75,
+   "ST": 75,
+   "HE": 75,
+   "AC": 75,
+   "PO": 75,
+   "SE": 75,
+   "CO": 75,
+   "TR": 75,
+   "BE": 75,
+   "UN": 75
+  }
+ },
+ "values_flat": true,
+ "rankings": {
+  "element": [
+   {
+    "rank": 1,
+    "name": "岩",
+    "display": 95,
+    "distance": 0.052725705305856255,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "炎",
+    "display": 75,
+    "distance": 0.24895782775401945,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "草",
+    "display": 73,
+    "distance": 0.2719926469594353,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "水",
+    "display": 72,
+    "distance": 0.2778128866701471,
+    "band": "middle"
+   },
+   {
+    "rank": 5,
+    "name": "風",
+    "display": 60,
+    "distance": 0.39746697976058337,
+    "band": "middle"
+   },
+   {
+    "rank": 6,
+    "name": "雷",
+    "display": 60,
+    "distance": 0.40346003519555684,
+    "band": "bottom"
+   },
+   {
+    "rank": 7,
+    "name": "氷",
+    "display": 55,
+    "distance": 0.44853093538796185,
+    "band": "bottom"
+   }
+  ],
+  "weapon": [
+   {
+    "rank": 1,
+    "name": "片手剣",
+    "display": 94,
+    "distance": 0.0609918027279076,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "長柄",
+    "display": 79,
+    "distance": 0.21382235617446557,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "法器",
+    "display": 62,
+    "distance": 0.3812086043100286,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "弓",
+    "display": 58,
+    "distance": 0.4247587550598575,
+    "band": "bottom"
+   },
+   {
+    "rank": 5,
+    "name": "両手剣",
+    "display": 54,
+    "distance": 0.45609209596308503,
+    "band": "bottom"
+   }
+  ],
+  "nation": [
+   {
+    "rank": 1,
+    "name": "モンド",
+    "display": 50,
+    "distance": 0.5,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "璃月",
+    "display": 50,
+    "distance": 0.5,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "稲妻",
+    "display": 50,
+    "distance": 0.5,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "スメール",
+    "display": 50,
+    "distance": 0.5,
+    "band": "middle"
+   },
+   {
+    "rank": 5,
+    "name": "フォンテーヌ",
+    "display": 50,
+    "distance": 0.5,
+    "band": "middle"
+   },
+   {
+    "rank": 6,
+    "name": "ナタ",
+    "display": 50,
+    "distance": 0.5,
+    "band": "middle"
+   },
+   {
+    "rank": 7,
+    "name": "スネージナヤ",
+    "display": 50,
+    "distance": 0.5,
+    "band": "bottom"
+   },
+   {
+    "rank": 8,
+    "name": "ナド・クライ",
+    "display": 50,
+    "distance": 0.5,
+    "band": "bottom"
+   }
+  ]
+ },
+ "mirror": {
+  "top10": [
+   {
+    "rank": 1,
+    "name": "ノエル",
+    "display": 74,
+    "raw": 73.94369550070738
+   },
+   {
+    "rank": 2,
+    "name": "トーマ",
+    "display": 72,
+    "raw": 72.45080273644227
+   },
+   {
+    "rank": 3,
+    "name": "シグウィン",
+    "display": 72,
+    "raw": 72.06387939655411
+   },
+   {
+    "rank": 4,
+    "name": "ヴァレサ",
+    "display": 72,
+    "raw": 71.68760728741933
+   },
+   {
+    "rank": 5,
+    "name": "ジン",
+    "display": 72,
+    "raw": 71.6537969752789
+   },
+   {
+    "rank": 6,
+    "name": "カチーナ",
+    "display": 72,
+    "raw": 71.5503078604788
+   },
+   {
+    "rank": 7,
+    "name": "ラウマ",
+    "display": 71,
+    "raw": 71.22484136775901
+   },
+   {
+    "rank": 8,
+    "name": "バーバラ",
+    "display": 71,
+    "raw": 70.9794590229607
+   },
+   {
+    "rank": 9,
+    "name": "ベネット",
+    "display": 71,
+    "raw": 70.74926926653056
+   },
+   {
+    "rank": 10,
+    "name": "イルーガ",
+    "display": 71,
+    "raw": 70.64220131434232
+   }
+  ],
+  "selected": {
+   "name": "ノエル",
+   "canonicalIndex": 91,
+   "rawRank": 1
+  }
+ },
+ "hidden": {
+  "top10": [
+   {
+    "rank": 1,
+    "name": "ディシア",
+    "display": 82,
+    "raw": 0.815333822520988
+   },
+   {
+    "rank": 2,
+    "name": "トーマ",
+    "display": 80,
+    "raw": 0.8015345656573322
+   },
+   {
+    "rank": 3,
+    "name": "ヴァレサ",
+    "display": 80,
+    "raw": 0.7985805205687989
+   },
+   {
+    "rank": 4,
+    "name": "シグウィン",
+    "display": 79,
+    "raw": 0.7928284840313998
+   },
+   {
+    "rank": 5,
+    "name": "ノエル",
+    "display": 79,
+    "raw": 0.7927094254537042
+   },
+   {
+    "rank": 6,
+    "name": "ディオナ",
+    "display": 79,
+    "raw": 0.7894415773859226
+   },
+   {
+    "rank": 7,
+    "name": "バーバラ",
+    "display": 78,
+    "raw": 0.7842760299085343
+   },
+   {
+    "rank": 8,
+    "name": "ゴロー",
+    "display": 78,
+    "raw": 0.7816854852113895
+   },
+   {
+    "rank": 9,
+    "name": "ジン",
+    "display": 78,
+    "raw": 0.7789949895773395
+   },
+   {
+    "rank": 10,
+    "name": "チャスカ",
+    "display": 77,
+    "raw": 0.7742363833274258
+   }
+  ]
+ },
+ "mentor": {
+  "status": "goal_not_selected",
+  "changes": [],
+  "top10": []
+ },
+ "domains": [
+  {
+   "key": "understanding",
+   "display": 59
+  },
+  {
+   "key": "integration",
+   "display": 75
+  },
+  {
+   "key": "sustain",
+   "display": 76
+  },
+  {
+   "key": "expression",
+   "display": 50
+  }
+ ]
+}

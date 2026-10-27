@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "core1/claim.schema.json",
+  "title": "CORE1 claim with trace",
+  "type": "object",
+  "required": ["claim_id", "page_id", "text", "kind", "evidence", "rule_id", "rule_version", "content_id", "assertion_strength"],
+  "properties": {
+    "claim_id": { "type": "string", "pattern": "^P\\d{2}-" },
+    "page_id": { "type": "string", "pattern": "^P\\d{2}$" },
+    "text": { "type": "string", "minLength": 1 },
+    "kind": { "enum": ["calculated_fact", "model_interpretation", "editorial_hypothesis"] },
+    "evidence": { "type": "array", "items": { "type": "object", "required": ["path"], "properties": { "path": { "type": "string" } } } },
+    "rule_id": { "type": "string" },
+    "rule_version": { "type": "string" },
+    "content_id": { "type": ["string", "null"] },
+    "assertion_strength": { "enum": ["strong", "balanced", "tentative"] }
+  }
+}

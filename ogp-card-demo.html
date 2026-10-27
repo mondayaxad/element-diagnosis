@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>元素診断 — OGPカードデモ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+<!--
+  OGP / シェアカードのWebプレビュー（確認専用）。
+  カードは js/ogp-card.mjs の buildOgpCardTree() が返すツリー（@vercel/og＝Satoriと同じ形）を
+  そのままDOMにして表示する。色・レイアウト・円環は js/ogp-theme.mjs と共有。
+  キャラクター名の色は js/characters118_v2.js の element をそのまま参照（判定ロジックは作らない）。
+  ?element=hydro|pyro|electro|cryo|anemo|dendro|geo で7元素のfixture（js/ogp-fixtures.mjs）
+  ?bg=0 背景なし（SVG円環のfallback） ／ ?ring=1 円環だけ ／ ?scale=0.5 縮小表示
+  ?el=水&w=片手剣&nat=スメール&mirror=ニィロウ&match=77&code=HYSW&type=同調者 で個別に差し替え
+-->
+<script src="js/characters118_v2.js"></script>
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; background: #0b0d16; }
+  body { min-height: 100vh; display: flex; align-items: flex-start; justify-content: flex-start; }
+  #stage { transform-origin: top left; }
+  #card { width: 1200px; height: 630px; }
+  /* Satori（@vercel/og）と同じ寸法計算にする */
+  #card, #card * { box-sizing: border-box; }
+</style>
+</head>
+<body>
+<div id="stage"><div id="card"></div></div>
+<script type="module">
+  import { buildOgpCardTree, buildRingOnlyTree, treeToDom } from './js/ogp-card.mjs';
+  import { OGP_FIXTURES } from './js/ogp-fixtures.mjs';
+  const q = new URLSearchParams(location.search);
+  // 7元素の確認用fixture：?element=hydro|pyro|electro|cryo|anemo|dendro|geo（既定は水）。個別の値はURLで上書き可
+  const base = OGP_FIXTURES[q.get('element')] || OGP_FIXTURES.hydro;
+  const d = {
+    code: q.get('code') || base.code,
+    typeName: q.get('type') || base.typeName,
+    element: q.get('el') || base.element,
+    weapon: q.get('w') || base.weapon,
+    nation: q.get('nat') || base.nation,
+    mirrorName: q.get('mirror') || base.mirrorName,
+    match: q.get('match') || String(base.match),
+  };
+  // キャラクター本人の元素：既存データ（ETI_V2_CHARACTERS）の element をそのまま使う
+  const ch = (typeof ETI_V2_CHARACTERS !== 'undefined') && ETI_V2_CHARACTERS.find(c => c.name === d.mirrorName);
+  d.mirrorElement = ch ? ch.element : d.element;
+
+  // 背景は主結果の元素から自動で選ぶ（js/ogp-theme.mjs の OGP_BACKGROUND）。?bg=0 は背景なし（SVG円環のfallback）
+  const tree = q.get('ring') === '1'
+    ? buildRingOnlyTree(d.element)
+    : buildOgpCardTree(d, { origin: '', showBackground: q.get('bg') !== '0' });
+  const card = document.getElementById('card');
+  if (q.get('ring') === '1') { card.style.width = '470px'; card.style.height = '470px'; }
+  card.appendChild(treeToDom(tree));
+  const scale = Number(q.get('scale') || 1);
+  if (scale !== 1) document.getElementById('stage').style.transform = `scale(${scale})`;
+  const img = card.querySelector('img');
+  const ready = () => document.fonts.ready.then(() => document.body.setAttribute('data-ready', '1'));
+  if (img && !img.complete) { img.addEventListener('load', ready); img.addEventListener('error', ready); } else ready();
+</script>
+</body>
+</html>

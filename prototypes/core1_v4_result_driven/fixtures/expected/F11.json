@@ -1,0 +1,335 @@
+{
+ "axes": {
+  "personality": {
+   "O": 72,
+   "C": 66,
+   "E": 41,
+   "A": 72,
+   "N": 41
+  },
+  "style": {
+   "AGY": 58,
+   "REL": 54,
+   "ROL": 67,
+   "REF": 54,
+   "AUT": 50
+  },
+  "values": {
+   "SD": 92,
+   "ST": 83,
+   "HE": 67,
+   "AC": 33,
+   "PO": 25,
+   "SE": 42,
+   "CO": 8,
+   "TR": 17,
+   "BE": 58,
+   "UN": 75
+  }
+ },
+ "values_flat": false,
+ "rankings": {
+  "element": [
+   {
+    "rank": 1,
+    "name": "草",
+    "display": 87,
+    "distance": 0.12853015210447707,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "水",
+    "display": 86,
+    "distance": 0.1375499909123952,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "風",
+    "display": 81,
+    "distance": 0.18899735447883922,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "岩",
+    "display": 76,
+    "distance": 0.2394159560263267,
+    "band": "middle"
+   },
+   {
+    "rank": 5,
+    "name": "雷",
+    "display": 74,
+    "distance": 0.26328691574022434,
+    "band": "middle"
+   },
+   {
+    "rank": 6,
+    "name": "炎",
+    "display": 73,
+    "distance": 0.26630809225406576,
+    "band": "bottom"
+   },
+   {
+    "rank": 7,
+    "name": "氷",
+    "display": 66,
+    "distance": 0.33544000953970887,
+    "band": "bottom"
+   }
+  ],
+  "weapon": [
+   {
+    "rank": 1,
+    "name": "長柄",
+    "display": 87,
+    "distance": 0.13416407864998736,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "片手剣",
+    "display": 81,
+    "distance": 0.1944222209522358,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "弓",
+    "display": 78,
+    "distance": 0.2188606862823929,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "法器",
+    "display": 78,
+    "distance": 0.22494443758403984,
+    "band": "bottom"
+   },
+   {
+    "rank": 5,
+    "name": "両手剣",
+    "display": 72,
+    "distance": 0.27658633371878666,
+    "band": "bottom"
+   }
+  ],
+  "nation": [
+   {
+    "rank": 1,
+    "name": "モンド",
+    "display": 99,
+    "distance": 0.010373712150364756,
+    "band": "top"
+   },
+   {
+    "rank": 2,
+    "name": "ナド・クライ",
+    "display": 89,
+    "distance": 0.1116871361016133,
+    "band": "top"
+   },
+   {
+    "rank": 3,
+    "name": "スメール",
+    "display": 84,
+    "distance": 0.15933840301519214,
+    "band": "top"
+   },
+   {
+    "rank": 4,
+    "name": "ナタ",
+    "display": 82,
+    "distance": 0.17938601390291714,
+    "band": "middle"
+   },
+   {
+    "rank": 5,
+    "name": "フォンテーヌ",
+    "display": 46,
+    "distance": 0.536106698989766,
+    "band": "middle"
+   },
+   {
+    "rank": 6,
+    "name": "スネージナヤ",
+    "display": 46,
+    "distance": 0.5448811090323694,
+    "band": "middle"
+   },
+   {
+    "rank": 7,
+    "name": "璃月",
+    "display": 11,
+    "distance": 0.892467904310684,
+    "band": "bottom"
+   },
+   {
+    "rank": 8,
+    "name": "稲妻",
+    "display": 9,
+    "distance": 0.9088687106489494,
+    "band": "bottom"
+   }
+  ]
+ },
+ "mirror": {
+  "top10": [
+   {
+    "rank": 1,
+    "name": "白朮",
+    "display": 88,
+    "raw": 87.76060920782793
+   },
+   {
+    "rank": 2,
+    "name": "辛炎",
+    "display": 88,
+    "raw": 87.6668824483838
+   },
+   {
+    "rank": 3,
+    "name": "リンネア",
+    "display": 88,
+    "raw": 87.64483421566234
+   },
+   {
+    "rank": 4,
+    "name": "鹿野院平蔵",
+    "display": 87,
+    "raw": 87.48917585995186
+   },
+   {
+    "rank": 5,
+    "name": "楓原万葉",
+    "display": 87,
+    "raw": 87.38993349900068
+   },
+   {
+    "rank": 6,
+    "name": "行秋",
+    "display": 87,
+    "raw": 87.15077523134399
+   },
+   {
+    "rank": 7,
+    "name": "カーヴェ",
+    "display": 87,
+    "raw": 86.88751310471433
+   },
+   {
+    "rank": 8,
+    "name": "リネ",
+    "display": 87,
+    "raw": 86.87716156243685
+   },
+   {
+    "rank": 9,
+    "name": "リサ",
+    "display": 87,
+    "raw": 86.82369472219989
+   },
+   {
+    "rank": 10,
+    "name": "アーロイ",
+    "display": 87,
+    "raw": 86.72520840346583
+   }
+  ],
+  "selected": {
+   "name": "白朮",
+   "canonicalIndex": 100,
+   "rawRank": 1
+  }
+ },
+ "hidden": {
+  "top10": [
+   {
+    "rank": 1,
+    "name": "リネ",
+    "display": 88,
+    "raw": 0.8807549246107111
+   },
+   {
+    "rank": 2,
+    "name": "白朮",
+    "display": 82,
+    "raw": 0.8230915223789378
+   },
+   {
+    "rank": 3,
+    "name": "アーロイ",
+    "display": 81,
+    "raw": 0.8149287257861748
+   },
+   {
+    "rank": 4,
+    "name": "セトス",
+    "display": 81,
+    "raw": 0.8148652655262798
+   },
+   {
+    "rank": 5,
+    "name": "エウルア",
+    "display": 81,
+    "raw": 0.8128187145488848
+   },
+   {
+    "rank": 6,
+    "name": "ファルザン",
+    "display": 79,
+    "raw": 0.7927940655875635
+   },
+   {
+    "rank": 7,
+    "name": "行秋",
+    "display": 79,
+    "raw": 0.7881293938387548
+   },
+   {
+    "rank": 8,
+    "name": "アリョーシャ",
+    "display": 78,
+    "raw": 0.7846098119515432
+   },
+   {
+    "rank": 9,
+    "name": "フリンズ",
+    "display": 77,
+    "raw": 0.7742109163189702
+   },
+   {
+    "rank": 10,
+    "name": "リオセスリ",
+    "display": 77,
+    "raw": 0.773018739004921
+   }
+  ]
+ },
+ "mentor": {
+  "status": "goal_not_selected",
+  "changes": [],
+  "top10": []
+ },
+ "domains": [
+  {
+   "key": "understanding",
+   "display": 73
+  },
+  {
+   "key": "integration",
+   "display": 56
+  },
+  {
+   "key": "sustain",
+   "display": 52
+  },
+  {
+   "key": "expression",
+   "display": 44
+  }
+ ]
+}
