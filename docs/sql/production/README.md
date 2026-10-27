@@ -33,7 +33,7 @@ Preview 用の migration（`docs/sql/2026*.sql`）は本番では使わない。
 - **既存表への変更**：`profiles` に列（登録完了・同意・お知らせメール同期）と制約・同意列の保護トリガー。既存行は列の既定値で legacy_exempt（UPDATE 文は使わない）。
   `diagnosis_sessions` は user_id の NOT NULL を外す（ゲスト記録用。既存8行は値を持つまま）・`guest_created_at`・所有者かゲストかの制約・所有者固定トリガー、prod_04b で登録完了前の保存を拒否するトリガー（prod_04a は新規登録の初期状態を required にするだけ）。
   他の4表（`diagnosis_answers`・`diagnosis_results`・`report_snapshots`・`purchase_entitlements`）には何もしない。
-- **段階の間の購入**：旧 Payment Link で正規の Live 購入が入っても、2段階目以降は prod_01 の時刻より前の9件を基準に照合し、後から入った行は「Live・active・core1 ¥1,000」であることだけを確かめる。
+- **段階の間の購入**：旧 Payment Link で正規の Live 購入が入っても、2段階目以降は 固定の締め切り（2026-10-06 00:00Z）より前の9件を基準に照合し（2026-10-26 に旧版で正規の購入が1件入ったため）、後から入った行は「Live・active・core1 ¥1,000」であることだけを確かめる。
 
 ## ローカル検証
 

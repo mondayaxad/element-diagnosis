@@ -17,8 +17,12 @@ fresh() { $P -d postgres -c "drop database if exists $1" -c "create database $1 
 S1=prod_01_registration_compat
 fresh n1; $P -d n1 -f $A/0008_preview_only_settings.sql >/dev/null
 expect_stop "Preview DB (deployment_environment あり)" n1 $S1 "deployment_environment() exists"
-fresh n2; $P -d n2 -c "insert into public.purchase_entitlements(diagnosis_code_hash, stripe_checkout_session_id, product_type, amount) values (repeat('a',64), 'cs_live_NEWSYNTH', 'core1', 1000)" >/dev/null
-expect_stop "購入が10件（基準の件数と違う）" n2 $S1 "purchase_entitlements baseline is not 9 rows"
+fresh n2; $P -d n2 -c "insert into public.purchase_entitlements(diagnosis_code_hash, stripe_checkout_session_id, product_type, amount, created_at, purchased_at) values (repeat('a',64), 'cs_live_NEWSYNTH', 'core1', 1000, '2026-09-02', '2026-09-02')" >/dev/null
+expect_stop "基準の締め切りより前に購入が10件（基準の件数と違う）" n2 $S1 "purchase_entitlements baseline is not 9 rows"
+fresh n2b; $P -d n2b -c "insert into public.purchase_entitlements(diagnosis_code_hash, stripe_checkout_session_id, product_type, amount, created_at, purchased_at) values (repeat('a',64), 'cs_live_LATEOK', 'core1', 1000, '2026-10-26 12:24+00', '2026-10-26 12:24+00')" >/dev/null
+if $P -d n2b -f $Q/$S1.sql >/tmp/prodsim/neg.out 2>&1; then echo "PASS 締め切り後の正規 live 購入（10行目）があっても prod_01 は進む（基準の9件は照合済み）"; pass=$((pass+1)); else echo "FAIL late live purchase: $(grep -m1 ERROR /tmp/prodsim/neg.out)"; fail=$((fail+1)); fi
+fresh n2c; $P -d n2c -c "insert into public.purchase_entitlements(diagnosis_code_hash, stripe_checkout_session_id, product_type, amount, created_at, purchased_at) values (repeat('a',64), 'cs_live_LATEBAD', 'core1', 2000, '2026-10-26 12:24+00', '2026-10-26 12:24+00')" >/dev/null
+expect_stop "締め切り後の行が ¥1,000 でない" n2c $S1 "unexpected purchase_entitlements rows after prod_01"
 fresh n3; $P -d n3 -c "update public.purchase_entitlements set amount = 1500 where stripe_checkout_session_id like 'cs\_live\_%'" >/dev/null
 expect_stop "live の金額が違う" n3 $S1 "counts, amounts or status differ"
 fresh n4; $P -d n4 -c "update public.purchase_entitlements set diagnosis_code_hash = repeat('b',64) where stripe_checkout_session_id like 'cs\_test\_%' and amount = 1000 and id = (select id from public.purchase_entitlements where stripe_checkout_session_id like 'cs\_test\_%' order by id limit 1)" >/dev/null

@@ -35,7 +35,7 @@ cd <キットのフォルダ>
   - PostgreSQL 17 ではない
   - 読み取り専用になっていない
   - public の表が6表でない
-  - `purchase_entitlements` が9行でない
+  - 2026-10-06 00:00Z より前の `purchase_entitlements` が9行でない、または以降の行に live・active・core1・1,000円以外がある
 - 出力先は `~/element_db_backups/<UTC日時>/` です。フォルダとファイルは所有者だけが読める権限で作られます。
 
 出力されるもの：

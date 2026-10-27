@@ -14,7 +14,8 @@ insert into public.diagnosis_answers(session_id, answers) select id, '{"q1":3}':
 insert into public.diagnosis_results(session_id, primary_result, scores, diagnosis_code)
 select s.id, '{"t":"x"}', '{"a":1}', 'SYNTHCODE' || right(s.id::text, 1) from public.diagnosis_sessions s;
 -- purchase_entitlements 9：live 1（¥1,000）・test 8（各¥1,000）、すべて active・core1
-insert into public.purchase_entitlements(diagnosis_code_hash, stripe_checkout_session_id, product_type, amount, currency, status)
+insert into public.purchase_entitlements(diagnosis_code_hash, stripe_checkout_session_id, product_type, amount, currency, status, created_at, purchased_at)
 select encode(sha256(convert_to('SYNTHCODE'||g, 'UTF8')), 'hex'),
-       case when g = 1 then 'cs_live_SYNTHETIC0001' else 'cs_test_SYNTHETIC000'||g end, 'core1', 1000, 'jpy', 'active'
+       case when g = 1 then 'cs_live_SYNTHETIC0001' else 'cs_test_SYNTHETIC000'||g end, 'core1', 1000, 'jpy', 'active',
+       timestamptz '2026-09-01 00:00:00+00' + g * interval '1 day', timestamptz '2026-09-01 00:00:00+00' + g * interval '1 day'  -- 基準の締め切り 2026-10-06 より前
 from generate_series(1,9) g;

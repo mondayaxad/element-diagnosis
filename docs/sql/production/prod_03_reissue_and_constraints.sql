@@ -94,16 +94,9 @@ begin
     raise exception 'row level security is off on a baseline table';
   end if;
   -- 6. 旧購入（purchase_entitlements）が基準どおり：9件・live 1件 ¥1,000・test 8件 ¥8,000・全て active・集計指紋
-  --    比べるのは prod_01 を適用した時点より前の行（基準の9件）。prod_01 の後に旧 main（/api/verify）が記録した
-  --    正規の Live の購入は、基準と別に「全て cs_live_・active・core1 ¥1,000」であることだけを確かめる（止めない）
-  v_cut := 'infinity';
-  if to_regclass('element_release.migration_ledger') is not null then
-    execute 'select applied_at from element_release.migration_ledger where stage = 1' into v_cut;
-    v_cut := coalesce(v_cut, 'infinity');
-  end if;
-  if v_cut = 'infinity' and nullif(current_setting('element.prod01_applied_at', true), '') is not null then
-    v_cut := current_setting('element.prod01_applied_at', true)::timestamptz;  -- prod_91（台帳を外した後の確認）用
-  end if;
+  --    比べるのは固定の締め切り 2026-10-06 00:00Z より前の行（基準の9件）。それ以降に旧 main（/api/verify）が記録した
+  --    正規の Live の購入（例：2026-10-26 の1件）は、基準と別に「全て cs_live_・active・core1 ¥1,000 JPY」であることを確かめる（違えば止める）
+  v_cut := timestamptz '2026-10-06 00:00:00+00';  -- 基準取得日（固定）。基準の9件は 2026-10-05 08:10Z までに作成済み
   if (select count(*) from public.purchase_entitlements where created_at < v_cut) <> 9 then
     raise exception 'purchase_entitlements baseline is not 9 rows (stop and re-run the preflight)';
   end if;
@@ -281,16 +274,9 @@ begin
     raise exception 'row level security is off on a baseline table';
   end if;
   -- 6. 旧購入（purchase_entitlements）が基準どおり：9件・live 1件 ¥1,000・test 8件 ¥8,000・全て active・集計指紋
-  --    比べるのは prod_01 を適用した時点より前の行（基準の9件）。prod_01 の後に旧 main（/api/verify）が記録した
-  --    正規の Live の購入は、基準と別に「全て cs_live_・active・core1 ¥1,000」であることだけを確かめる（止めない）
-  v_cut := 'infinity';
-  if to_regclass('element_release.migration_ledger') is not null then
-    execute 'select applied_at from element_release.migration_ledger where stage = 1' into v_cut;
-    v_cut := coalesce(v_cut, 'infinity');
-  end if;
-  if v_cut = 'infinity' and nullif(current_setting('element.prod01_applied_at', true), '') is not null then
-    v_cut := current_setting('element.prod01_applied_at', true)::timestamptz;  -- prod_91（台帳を外した後の確認）用
-  end if;
+  --    比べるのは固定の締め切り 2026-10-06 00:00Z より前の行（基準の9件）。それ以降に旧 main（/api/verify）が記録した
+  --    正規の Live の購入（例：2026-10-26 の1件）は、基準と別に「全て cs_live_・active・core1 ¥1,000 JPY」であることを確かめる（違えば止める）
+  v_cut := timestamptz '2026-10-06 00:00:00+00';  -- 基準取得日（固定）。基準の9件は 2026-10-05 08:10Z までに作成済み
   if (select count(*) from public.purchase_entitlements where created_at < v_cut) <> 9 then
     raise exception 'purchase_entitlements baseline is not 9 rows (stop and re-run the preflight)';
   end if;

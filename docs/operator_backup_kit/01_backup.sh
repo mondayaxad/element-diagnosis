@@ -59,11 +59,12 @@ psqlq() { "${PGBIN:+$PGBIN/}psql" -X -v ON_ERROR_STOP=1 "$@"; }
 # 1) 接続先の確認（本番DBの既知の構造と一致しなければ中止）
 # Session pooler は接続時の PGOPTIONS を反映しないため、接続後に SQL で読み取り専用へ切り替える
 RO_SQL="set session characteristics as transaction read only; set default_transaction_read_only = on"
-CHK=$(psqlq -q -At -c "$RO_SQL" -c "select current_setting('server_version_num')||'|'||current_setting('transaction_read_only')||'|'||(select count(*) from pg_tables where schemaname='public')||'|'||(to_regclass('public.purchase_entitlements') is not null)||'|'||(select count(*) from public.purchase_entitlements)")
-IFS='|' read -r VNUM RO NPUB HASPE NPE <<<"$CHK"
-echo "server_version_num=$VNUM read_only=$RO public_tables=$NPUB purchase_entitlements=$NPE"
+CHK=$(psqlq -q -At -c "$RO_SQL" -c "select current_setting('server_version_num')||'|'||current_setting('transaction_read_only')||'|'||(select count(*) from pg_tables where schemaname='public')||'|'||(to_regclass('public.purchase_entitlements') is not null)||'|'||(select count(*) from public.purchase_entitlements)||'|'||(select count(*) from public.purchase_entitlements where created_at < timestamptz '2026-10-06 00:00:00+00')||'|'||(select count(*) from public.purchase_entitlements where created_at >= timestamptz '2026-10-06 00:00:00+00' and not (stripe_checkout_session_id like 'cs\_live\_%' and status = 'active' and product_type = 'core1' and amount = 1000 and currency = 'jpy'))")
+IFS='|' read -r VNUM RO NPUB HASPE NPE NBASE NBAD <<<"$CHK"
+echo "server_version_num=$VNUM read_only=$RO public_tables=$NPUB purchase_entitlements=$NPE (締め切り2026-10-06より前=$NBASE 以降で条件外=$NBAD)"
 [ "${VNUM:0:2}" = 17 ] && [ "$RO" = on ] && [ "$HASPE" = true ] || { echo "接続先の確認に失敗。中止します"; exit 1; }
-[ "$NPUB" = 6 ] && [ "$NPE" = 9 ] || { echo "既知の基準（public 6表・購入9行）と不一致。中止します"; exit 1; }
+# 基準は「2026-10-06 00:00Z より前の購入がちょうど9行」。それ以降の行は全て live・active・core1・1,000円・JPY であること（旧版の正規の購入）
+[ "$NPUB" = 6 ] && [ "$NBASE" = 9 ] && [ "$NBAD" = 0 ] || { echo "既知の基準（public 6表・基準の購入9行・以降の行は正規のlive購入のみ）と不一致。中止します"; exit 1; }
 
 OUT="${BACKUP_ROOT:-$HOME/element_db_backups}/$(date -u +%Y%m%dT%H%M%SZ)"
 mkdir -p "$OUT"; chmod 700 "$(dirname "$OUT")" "$OUT"

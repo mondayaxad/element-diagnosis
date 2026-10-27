@@ -3,14 +3,13 @@
 -- migration の適用前と適用後（各段階の後）に実行し、出力が完全に一致することを確かめる。
 -- 出力は件数・金額・ハッシュだけ。個別の ID・メール・決済 ID・診断コード・回答は出さない。
 -- 既存6表は「既存の列だけ」で比較する（追加列があっても既存部分の一致を確かめられる）。
--- 旧購入（purchase_entitlements）は prod_01 の適用時刻より前の行（基準の9件）で比べる。
---   prod_01 の後に旧 main（/api/verify）が記録した正規の購入は info.pe.after_prod01 に件数だけ出す。
+-- 旧購入（purchase_entitlements）は固定の締め切り 2026-10-06 00:00Z より前の行（基準の9件）で比べる。
+--   それ以降に旧 main（/api/verify）が記録した正規の購入は info.pe.after_cut に件数だけ出す。
 --   比較では info. で始まる行を除く（grep -v '^info\.'）。
 -- ============================================================
 -- SQL Editor でもそのまま実行できる（psql のコマンドは使わない）。psql では -At で実行すると比較しやすい。
 begin read only;
-with cut(c) as (select case when to_regclass('element_release.migration_ledger') is null then 'infinity'::timestamptz
-                 else coalesce((xpath('/row/c/text()', query_to_xml('select applied_at as c from element_release.migration_ledger where stage = 1', false, true, '')))[1]::text::timestamptz, 'infinity') end),
+with cut(c) as (select timestamptz '2026-10-06 00:00:00+00'),
 t(k, v) as (values
   ('rows.profiles',              (select count(*)::text from public.profiles)),
   ('rows.diagnosis_sessions',    (select count(*)::text from public.diagnosis_sessions)),
@@ -18,7 +17,7 @@ t(k, v) as (values
   ('rows.diagnosis_results',     (select count(*)::text from public.diagnosis_results)),
   ('rows.report_snapshots',      (select count(*)::text from public.report_snapshots)),
   ('rows.purchase_entitlements', (select count(*)::text from public.purchase_entitlements where created_at < (select c from cut))),
-  ('info.pe.after_prod01', (select count(*) || ' live=' || count(*) filter (where stripe_checkout_session_id like 'cs\_live\_%' and status = 'active') from public.purchase_entitlements where created_at >= (select c from cut)) || '（参考：比較しない）'),
+  ('info.pe.after_cut', (select count(*) || ' live=' || count(*) filter (where stripe_checkout_session_id like 'cs\_live\_%' and status = 'active') from public.purchase_entitlements where created_at >= (select c from cut)) || '（参考：比較しない）'),
   ('rows.auth.users',            (select count(*)::text from auth.users)),
   ('rows.auth.identities',       (select count(*)::text from auth.identities)),
   -- 既存行の内容（既存の列だけ）のハッシュ
