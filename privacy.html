@@ -75,7 +75,7 @@
   <p>次の目的のために利用します。</p>
   <p>・診断・診断結果の提供と、結果の保存・マイページの提供</p>
   <p>・ログイン・本人確認・不正利用の防止</p>
-  <p>・有料レポートの販売・提供・請求書の送付・購入の確認・サポート</p>
+  <p>・有料レポートの販売・提供・購入の確認・サポート</p>
   <p>・アカウントの管理に必要なご案内、およびお知らせメール（同意された方のみ）</p>
   <p>・サービスの改善・利用状況の把握（アクセス解析）</p>
   <p>・お問い合わせへの対応、本サイトの安全の確保、障害の調査</p>
@@ -101,7 +101,7 @@
   <p>有料レポート（解析レポート・完全解析）は、ログインせずに購入できます。購入すると、レポートを読むためのリンクを発行します。サーバーには、リンクに含まれる秘密の値そのものではなく、元に戻せない形（ハッシュ）だけを保存します。</p>
   <p>購入した端末では、購入の直後に、購入完了のページでリンクをお見せするため、秘密の値を Cookie（HttpOnly。最長365日）に保存します。</p>
   <p>レポートをマイページに登録すると、登録したアカウントと購入の対応を保存します。購入時のメールアドレスと、アカウントのメールアドレスを照合することはありません。リンクを知っている人は、そのレポートを読むことができ、ご自身のマイページに登録できます。</p>
-  <p>決済には Stripe（Stripe, Inc. およびその関連会社）を利用します。お支払いの後、Stripe から、決済画面で入力されたメールアドレスあてに請求書（領収）をお送りします。この請求書には、購入したレポートのリンク（URL）を記載します。運営者は、メールアドレス等を、レポートの提供・お問い合わせへの対応に必要な範囲でだけ、Stripe の管理画面で参照します。</p>
+  <p>決済には Stripe（Stripe, Inc. およびその関連会社）を利用します。運営者は、メールアドレス等を、レポートの提供・お問い合わせへの対応に必要な範囲でだけ、Stripe の管理画面で参照します。</p>
   <p>購入が返金・取消し・異議申し立ての対象になった場合は、その購入のレポートを読めないようにします。</p>
   <h2>7. Cookie・ブラウザの保存領域について</h2>
   <table class="grid">
@@ -116,7 +116,7 @@
     <tr><td data-label="名前・種類">Google Analytics の Cookie（_ga など）</td><td data-label="内容">アクセス解析の識別</td><td data-label="保存場所・期間">Cookie。期間は Google の設定によります</td></tr>
     </tbody>
   </table>
-  <p>ブラウザの設定で、Cookie・保存領域の利用を拒否・削除できます。ただし、購入の Cookie を無効にすると、購入完了のページでレポートのリンクをお見せできなくなります（請求書のメールにリンクを記載しています）。</p>
+  <p>ブラウザの設定で、Cookie・保存領域の利用を拒否・削除できます。ただし、購入の Cookie を無効にすると、購入完了のページでレポートのリンクをお見せできなくなります。</p>
   <h2>8. アクセス解析（Google Analytics）について</h2>
   <p>本サイトは Google Analytics（Google LLC）を使用しています。ページの種類・操作・商品の種類と価格・購入ごとに作る識別子などを、Cookie を使って収集します。購入ごとの識別子は、注文から作った元に戻せない値で、運営者が個人を特定するためには使いません。</p>
   <p>リンクの秘密の値・診断の回答・メールアドレスは、送りません。表示するページの URL は、ドメインとパスだけを送ります。</p>
@@ -129,7 +129,7 @@
     <tr><td data-label="サービス">Supabase（Supabase, Inc.）</td><td data-label="目的">データベース・ログイン（認証）・レポートの保管</td><td data-label="渡る主な情報">診断の回答・結果、アカウントの情報、購入の記録</td><td data-label="プライバシーポリシー"><a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer">https://supabase.com/privacy</a></td></tr>
     <tr><td data-label="サービス">Resend（Resend, Inc.）</td><td data-label="目的">ログインの確認コードなど、認証メールの送信（Supabase の認証メールの送信に利用）</td><td data-label="渡る主な情報">メールアドレス、メールの内容</td><td data-label="プライバシーポリシー"><a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">https://resend.com/legal/privacy-policy</a></td></tr>
     <tr><td data-label="サービス">Vercel（Vercel Inc.）</td><td data-label="目的">本サイトの配信</td><td data-label="渡る主な情報">接続元の IP アドレス・ブラウザの情報</td><td data-label="プライバシーポリシー"><a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">https://vercel.com/legal/privacy-policy</a></td></tr>
-    <tr><td data-label="サービス">Stripe（Stripe, Inc. ほか）</td><td data-label="目的">決済・請求書のメール</td><td data-label="渡る主な情報">カード情報・メールアドレス・購入の内容（Stripe が取得）</td><td data-label="プライバシーポリシー"><a href="https://stripe.com/jp/privacy" target="_blank" rel="noopener noreferrer">https://stripe.com/jp/privacy</a></td></tr>
+    <tr><td data-label="サービス">Stripe（Stripe, Inc. ほか）</td><td data-label="目的">決済</td><td data-label="渡る主な情報">カード情報・メールアドレス・購入の内容（Stripe が取得）</td><td data-label="プライバシーポリシー"><a href="https://stripe.com/jp/privacy" target="_blank" rel="noopener noreferrer">https://stripe.com/jp/privacy</a></td></tr>
     <tr><td data-label="サービス">Google（Google LLC）</td><td data-label="目的">ログイン・Google Analytics・Google Fonts</td><td data-label="渡る主な情報">ログインの情報、アクセスの情報、IP アドレス</td><td data-label="プライバシーポリシー"><a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">https://policies.google.com/privacy</a></td></tr>
     <tr><td data-label="サービス">X（X Corp.）</td><td data-label="目的">ログイン</td><td data-label="渡る主な情報">ログインの情報</td><td data-label="プライバシーポリシー"><a href="https://x.com/en/privacy" target="_blank" rel="noopener noreferrer">https://x.com/en/privacy</a></td></tr>
     <tr><td data-label="サービス">Kit（Kit Inc.）</td><td data-label="目的">お知らせメール</td><td data-label="渡る主な情報">メールアドレス（同意された方のみ）</td><td data-label="プライバシーポリシー"><a href="https://kit.com/privacy" target="_blank" rel="noopener noreferrer">https://kit.com/privacy</a></td></tr>

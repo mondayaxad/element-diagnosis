@@ -86,7 +86,7 @@
     var head = '<p class="row-name">' + name + '</p>' + (p.purchasedOn ? '<p class="note pc-at">購入日 ' + B.esc(p.purchasedOn) + '</p>' : '');
     if (p.state === 'pending') return '<div class="card">' + head + '<p class="row-state"><span class="spinner" aria-hidden="true"></span>お支払いを確認しています。</p></div>';
     if (p.state === 'active' && !p.link) {
-      return '<div class="card">' + head + '<p class="row-state">このレポートのリンクは新しいものに変わっています。新しいリンク（または Stripe から届いた請求書のメール）からお開きください。</p></div>';
+      return '<div class="card">' + head + '<p class="row-state">このレポートのリンクは新しいものに変わっています。新しいリンクからお開きください。</p></div>';
     }
     if (p.state !== 'active' || !p.link) {
       return '<div class="card">' + head + '<p class="row-state">このレポートは、返金や停止のため、現在ご覧いただけません。端末に保存したPDFはそのまま残ります。</p></div>';
@@ -121,7 +121,7 @@
       document.getElementById('pcLead').textContent = '';
       list.innerHTML = '<div class="card"><p class="row-name">この端末では、ご購入を確認できませんでした。</p>'
         + '<p class="note">購入したときと同じ端末・ブラウザで開いてください。購入後にコピーしたレポートのリンク（URL）からも開けます。</p>'
-        + '<p class="note">リンクを紛失された場合は、Stripe から届いた請求書のメールをご確認ください。見つからない場合は、<a href="mailto:yaduns0522@gmail.com">yaduns0522@gmail.com</a> までご連絡ください。</p>'
+        + '<p class="note">リンクを紛失された場合は、<a href="mailto:yaduns0522@gmail.com">yaduns0522@gmail.com</a> までご連絡ください。</p>'
         + '</div>';
       return;
     }

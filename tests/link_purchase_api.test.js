@@ -174,12 +174,10 @@ test('A ¥1,000：診断結果の記録で購入→支払い→購入完了ペ�
   const orders = await ctx.rows('complete_orders');
   assert.deepEqual(orders.map((o) => `${o.buyer}:${o.offer}:${o.amount}:${o.status}:${o.user_id}`), ['link:analysis:1000:paid:null']);
   assert.equal(ctx.stripe.st.lastCreate.params.customer_email, undefined, '購入時メールを入れない（本人の判定に使わない）');
-  // 決済の後は、購入したレポートの固有リンクへそのまま戻る。同じリンクを Stripe の請求書（購入者へのメール）にも載せる
+  // 決済の後は、購入したレポートの固有リンクへそのまま戻る。請求書は作らない
   const created = ctx.stripe.st.lastCreate.params;
   assert.match(created.success_url, new RegExp(`^https://[^/]+/report-link#t=${p.link}$`));
-  assert.equal(created.invoice_creation.enabled, true);
-  assert.ok(created.invoice_creation.invoice_data.description.includes(created.success_url));
-  assert.match(created.invoice_creation.invoice_data.description, /^解析レポートのURL（通常の有効期限なし）/);
+  assert.equal(created.invoice_creation, undefined, '請求書は作らない（購入者の氏名・住所を載せないため）');
   assert.match(ctx.stripe.st.lastCreate.params.custom_text.submit.message, /^解析レポート（1,000円・税込）。.*すぐにお読みいただけます。.*固有のリンク.*PDF等で端末に保存できます。.*返品・キャンセル・返金は原則として受け付けません。ただし、二重決済.*特定商取引法に基づく表記：https?:\/\/[^/]+\/tokushoho　利用規約：https?:\/\/[^/]+\/terms\.html$/, '決済画面（最終確認画面）に価格・提供の時期・提供方法・返金の決まり・特商法と規約のリンク');
   assert.ok(ctx.stripe.st.lastCreate.params.custom_text.submit.message.length <= 1200, '決済画面の文面は長すぎない');
   // 固有リンクを開く（Cookie の無いブラウザでも開ける）
