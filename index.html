@@ -2769,14 +2769,14 @@ function renderResult(root) {
   //   本番のドメインで、販売が開いているときだけ。Preview・ほかのドメインでは、実際の決済に進ませない（「準備中」）。
   //   購入後は /api/verify が購入権を記録し、レポートへ移動する。レポート下部の「マイページに引き継ぐ」から記録を保存できる。
   var V2_REPORT_SALES_ENABLED = true; // mypage.htmlと必ず同一値を維持すること。
-  var LEGACY_PAYMENT_LINK = 'https://buy.stripe.com/3cIcMXdCy5VbavmgsK3Nm08';
+  var LEGACY_BUY_URL = 'https://buy.stripe.com/3cIcMXdCy5VbavmgsK3Nm08';
   var legacyResult = diagnosisVersion !== 'ETI-2.0';
   var legacyBuyOpen = legacyResult && location.hostname === 'element-diagnosis-five.vercel.app'
     && typeof EdGuestPurchase !== 'undefined' && EdGuestPurchase.salesOpen()
     && /^[0-9a-z]{20,80}$/.test(String(shortCode || ''));
   function legacyBuy(btn, source) {
     if (typeof gtag === 'function') gtag('event', btn === lockUnlockAllBtn ? 'unlock_all_click' : 'lock_cta_click', { event_category: 'conversion', diagnosis_version: 'legacy-v1' });
-    location.href = LEGACY_PAYMENT_LINK + '?client_reference_id=' + encodeURIComponent(shortCode);
+    location.href = LEGACY_BUY_URL + '?client_reference_id=' + encodeURIComponent(shortCode);
   }
   var guestFlow = !legacyResult && typeof EdGuestPurchase !== 'undefined';
   var salesOpenNow = typeof EdGuestPurchase !== 'undefined' && EdGuestPurchase.salesOpen();

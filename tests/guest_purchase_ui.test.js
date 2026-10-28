@@ -99,7 +99,7 @@ const noScroll = (p) => p.evaluate(() => document.documentElement.scrollWidth <=
 
 
 
-test('D4：旧版（legacy-v1）の結果には旧 Payment Link も新しい Checkout も出さず、対象外と最新の診断への案内（販売中でも）', { skip: skip() }, async () => {
+test('旧版（legacy-v1）の結果：本番以外のドメインでは実際の決済に進ませず「準備中」。完全解析の導線は出さない', { skip: skip() }, async () => {
   for (const width of [320, 1280]) {
     const p = await page('/', { width, api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
     const legacyCode = await p.evaluate(() => { const a = {}; for (let i = 0; i < QUESTIONS.length; i++) a[i] = (i % 5) - 2; return encodeAnswers(a); });
@@ -108,12 +108,13 @@ test('D4：旧版（legacy-v1）の結果には旧 Payment Link も新しい Che
     await p.evaluate(() => { window.__opened = []; window.open = (u) => { window.__opened.push(String(u)); return null; }; });
     const btn = p.locator('#lockUnlockAllBtn');
     assert.equal(await btn.isDisabled(), true);
-    assert.equal((await p.locator('#legacyRetiredNote').innerText()).trim(), 'この結果は現在の解析商品の対象外です。最新の元素診断を受けてください。');
+    assert.match((await btn.innerText()).trim(), /準備中/);
+    assert.equal(await p.locator('#legacyRetiredNote').count(), 0);
     await btn.click({ force: true }).catch(() => {});
     for (const b of await p.locator('.lock-cta').all()) await b.click({ force: true }).catch(() => {});
-    assert.deepEqual(await p.evaluate(() => window.__opened), [], 'Payment Link を開かない');
+    assert.deepEqual(await p.evaluate(() => window.__opened), []);
     assert.equal(p.__calls.filter((c) => c.op === 'guest-checkout').length, 0, '新しい Checkout にも進まない');
-    assert.doesNotMatch(await p.content(), /buy\.stripe\.com/);
+    assert.equal(await p.locator('[data-buy-complete]').count(), 0, '完全解析は販売しない');
     assert.equal(await noScroll(p), true, String(width));
     await p.__ctx.close();
   }

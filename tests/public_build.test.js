@@ -157,7 +157,7 @@ test('検出：許可リストのファイルが無い', () => {
   assert.ok(hasProblem(r, /許可リストのファイルがありません: js\/does-not-exist\.js/), r.problems.join('\n'));
 });
 
-// D4：旧 Payment Link（buy.stripe.com）は公開物のどこにも無い。テスト・SQL・手順書も公開しない
+// 旧 Payment Link（buy.stripe.com）は、旧版の解析レポート用の1本を除き、公開物のどこにも無い。テスト・SQL・手順書も公開しない
 test('公開物に旧 Payment Link（buy.stripe.com）が0件。テスト・SQL・手順書・資料を含まない', () => {
   const r = buildTo();
   const files = B.walk(r.outDir); // dist からの相対パス
@@ -166,9 +166,12 @@ test('公開物に旧 Payment Link（buy.stripe.com）が0件。テスト・SQL�
   for (const f of files) {
     if (!/\.(html|js|json|txt|xml|css|md)$/.test(f)) continue;
     const text = fs.readFileSync(path.join(r.outDir, f), 'utf8');
-    if (/buy\.stripe\.com|plink_[A-Za-z0-9]|payment_link/i.test(text)) hits.push(f);
+    // 旧版の解析レポート（¥1,000）用の Payment Link 1本だけ、index.html に置く（2026-10-29 再開）。ほかは0件
+    const t = f === 'index.html' ? text.split('https://buy.stripe.com/3cIcMXdCy5VbavmgsK3Nm08').join('') : text;
+    if (/buy\.stripe\.com|plink_[A-Za-z0-9]|payment_link/i.test(t)) hits.push(f);
   }
   assert.deepEqual(hits, []);
+  assert.ok(fs.readFileSync(path.join(r.outDir, 'index.html'), 'utf8').includes('https://buy.stripe.com/3cIcMXdCy5VbavmgsK3Nm08'));
   const rel = files;
   assert.deepEqual(rel.filter((f) => /(^|\/)(tests?|docs|scripts|prototypes)\//.test(f) || /\.(sql|md)$/.test(f) || /RUNBOOK/i.test(f)), []);
 });
