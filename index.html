@@ -3219,7 +3219,7 @@ function edResultContext(root, code) {
   }
   if (edCtxCache && t && edCtxCache.token === t && Date.now() - edCtxCache.at < 6 * 3600 * 1000) return Promise.resolve(edCtxCache.context);
   // 固有リンクの作成に失敗していた：一度だけ作り直す（同じ診断の秘密値のまま。サーバーは冪等）
-  if (!t && window.__resumeCreating === window.__resultNonce && window.__resumePending) { window.__resumeCreating = null; setupResumeLink(root, code); }
+  if (!t && window.__resumeCreating === (window.__resultNonce || 0) && window.__resumePending) { window.__resumeCreating = null; setupResumeLink(root, code); }
   // 固有リンクの無い結果（?dv=ETI-2.0&code= で開いた共有・ブックマーク）：押した時に、この結果の固有リンクを作って購入の対象にする
   if (!t && !window.__resumeFresh && !window.__resumePending && window.__diagnosisVersion === 'ETI-2.0') { window.__resumeFresh = true; setupResumeLink(root, code); }
   return edWaitResume(8000).then(function (token) {
@@ -3605,7 +3605,9 @@ function setupResumeLink(root, code) {
   var token = window.__edResumeToken;
   if (token) { resumeShowNote(root); return; }
   if (!window.__resumeFresh) return; // 旧形式の ?code= から開いた結果などには作らない
-  var nonce = window.__resultNonce;
+  // 共有リンク（?dv=…&code=…）などで開いた結果は、診断を完了していないため __resultNonce が未設定。0 として扱う
+  //   （未設定のままでは、作成中の印 __resumeCreating〔未設定〕と一致してしまい、固有リンクを作らずに購入できなくなる）
+  var nonce = window.__resultNonce || 0;
   if (window.__resumeCreating === nonce) return;
   // 秘密値はこの診断（nonce）ごとに1つ。描き直し・再送でも同じ値を使う（サーバーは冪等。記録もリンクも増えない）
   if (!window.__resumePending || window.__resumePending.nonce !== nonce) {
@@ -3617,7 +3619,7 @@ function setupResumeLink(root, code) {
   window.__resumeCreating = nonce;
   EdGuestPurchase.resultLink(code, t).then(function (r) {
     if (!r || !r.ok) return; // 失敗しても表示・購入はそのまま（同じ診断では作り直さない）
-    if (window.__resultNonce !== nonce || window.__phase !== 'result') return;
+    if ((window.__resultNonce || 0) !== nonce || window.__phase !== 'result') return;
     window.__edResumeToken = t;
     try { history.replaceState(null, '', '/result#r=' + t); } catch (e) { /* 履歴を書き換えられない環境 */ }
     resumeRemember(t);
