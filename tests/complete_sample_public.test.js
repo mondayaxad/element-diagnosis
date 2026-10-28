@@ -31,7 +31,7 @@ test('サンプル：8ページ・noindex,nofollow,noarchive・同じサイト�
   assert.equal((SAMPLE.match(/<section class="page/g) || []).length, 8);
   assert.match(SAMPLE, /<meta name="robots" content="noindex,nofollow,noarchive">/);
   let rest = SAMPLE;
-  for (const src of ['/js/ga.js', '/js/sample-return.js', '/api/public-config?format=js', '/js/report-purchase.js', '/js/sample-buy.js']) rest = rest.replace(`<script src="${src}"></script>`, '');
+  for (const src of ['/js/ga.js', '/js/sample-return.js', '/api/public-config?format=js', '/js/public-config-retry.js', '/js/report-purchase.js', '/js/sample-buy.js']) rest = rest.replace(`<script src="${src}"></script>`, '');
   assert.doesNotMatch(rest, /<script|<form|<iframe|<object|<embed|<link\b|\son[a-z]+\s*=/i);
   assert.match(SAMPLE, /script-src 'self' https:\/\/www\.googletagmanager\.com;/);
   // 外部への読み込み（src・url()）が無い。http(s) は OGP の meta だけ
@@ -58,7 +58,7 @@ test('サンプル（complete_13）：上部は「元の画面に戻る」、末
   // 通信は同じサイトだけ（申込欄の API）
   // 通信は同じサイト（申込欄の API）と GA4 の送信先だけ（js/ga.js が本番ドメインでだけ読み込む）
   assert.match(SAMPLE, /script-src 'self' https:\/\/www\.googletagmanager\.com; connect-src 'self' https:\/\/\*\.google-analytics\.com https:\/\/\*\.analytics\.google\.com https:\/\/\*\.googletagmanager\.com;/);
-  assert.deepEqual([...SAMPLE.matchAll(/<script[^>]*src="([^"]+)"/g)].map((m) => m[1]), ['/js/ga.js', '/js/sample-return.js', '/api/public-config?format=js', '/js/report-purchase.js', '/js/sample-buy.js']);
+  assert.deepEqual([...SAMPLE.matchAll(/<script[^>]*src="([^"]+)"/g)].map((m) => m[1]), ['/js/ga.js', '/js/sample-return.js', '/api/public-config?format=js', '/js/public-config-retry.js', '/js/report-purchase.js', '/js/sample-buy.js']);
   assert.doesNotMatch(read('js/sample-return.js'), /fetch|XMLHttpRequest|sendBeacon|gtag/);
   // 申込欄：直接開いた時は申し込まない（購入対象トークンが無い）
   const buy = read('js/sample-buy.js');
