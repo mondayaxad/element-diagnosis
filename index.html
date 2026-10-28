@@ -2765,11 +2765,19 @@ function renderResult(root) {
       </div>
     </section>`;
   // ロックパターンの CTA 配線。ETI v2：サーバーが作る Checkout（ゲスト購入・登録不要）。販売停止中（COMPLETE_SALES_OPEN）は「準備中」。
-  // 旧版（legacy-v1）の結果：新規販売は終了（D4）。旧 Payment Link にも新しい Checkout にも進めず、対象外の案内だけを出す
-  // （購入済みの方の閲覧は、購入時のリンク・マイページから従来どおり）。
+  // 旧版（legacy-v1）の結果：解析レポート ¥1,000 だけ、旧 Payment Link で販売する（2026-10-29 再開。完全解析は販売しない）。
+  //   本番のドメインで、販売が開いているときだけ。Preview・ほかのドメインでは、実際の決済に進ませない（「準備中」）。
+  //   購入後は /api/verify が購入権を記録し、レポートへ移動する。レポート下部の「マイページに引き継ぐ」から記録を保存できる。
   var V2_REPORT_SALES_ENABLED = true; // mypage.htmlと必ず同一値を維持すること。
-  var LEGACY_RETIRED_TEXT = 'この結果は現在の解析商品の対象外です。最新の元素診断を受けてください。';
+  var LEGACY_BUY_URL = 'https://buy.stripe.com/3cIcMXdCy5VbavmgsK3Nm08';
   var legacyResult = diagnosisVersion !== 'ETI-2.0';
+  var legacyBuyOpen = legacyResult && location.hostname === 'element-diagnosis-five.vercel.app'
+    && typeof EdGuestPurchase !== 'undefined' && EdGuestPurchase.salesOpen()
+    && /^[0-9a-z]{20,80}$/.test(String(shortCode || ''));
+  function legacyBuy(btn, source) {
+    if (typeof gtag === 'function') gtag('event', btn === lockUnlockAllBtn ? 'unlock_all_click' : 'lock_cta_click', { event_category: 'conversion', diagnosis_version: 'legacy-v1' });
+    location.href = LEGACY_BUY_URL + '?client_reference_id=' + encodeURIComponent(shortCode);
+  }
   var guestFlow = !legacyResult && typeof EdGuestPurchase !== 'undefined';
   var salesOpenNow = typeof EdGuestPurchase !== 'undefined' && EdGuestPurchase.salesOpen();
   var v2SalesLocked = !salesOpenNow || !guestFlow;
@@ -2782,30 +2790,19 @@ function renderResult(root) {
     btn.disabled = true;
     btn.onclick = function(e) { e.preventDefault(); };
   }
-  function lockRetired(btn) {
-    btn.textContent = '解析レポートの対象外です';
-    btn.style.opacity = '0.6';
-    btn.style.cursor = 'not-allowed';
-    btn.disabled = true;
-    btn.onclick = function(e) { e.preventDefault(); };
-  }
-  if (legacyResult && lockUnlockAllBtn) {
-    var lr = document.createElement('p');
-    lr.className = 'ca-guest-msg';
-    lr.id = 'legacyRetiredNote';
-    lr.setAttribute('role', 'note');
-    lr.textContent = LEGACY_RETIRED_TEXT;
-    lockUnlockAllBtn.insertAdjacentElement('afterend', lr);
+  function lockLegacyOpen(btn) {
+    btn.setAttribute('data-legacy-buy', '1');
+    btn.onclick = function(e) { e.preventDefault(); legacyBuy(btn); };
   }
   // 販売中の ETI v2：購入状態を確かめるまで ¥1,000 を押せない（initGuestPurchase が状態に合わせて「¥1,000・読む」を決める。
   //   確かめる前に押されて、購入済みの人に重ねて売らない）
   lockCtaBtns.forEach(function(btn) {
-    if (legacyResult) { lockRetired(btn); return; }
+    if (legacyResult) { if (legacyBuyOpen) lockLegacyOpen(btn); else lockPending(btn); return; }
     if (v2SalesLocked) { lockPending(btn); return; }
   });
   if (lockUnlockAllBtn) {
     if (legacyResult) {
-      lockRetired(lockUnlockAllBtn);
+      if (legacyBuyOpen) lockLegacyOpen(lockUnlockAllBtn); else lockPending(lockUnlockAllBtn);
     } else if (v2SalesLocked) {
       lockPending(lockUnlockAllBtn);
     }
