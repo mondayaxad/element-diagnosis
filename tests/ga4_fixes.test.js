@@ -138,7 +138,7 @@ function runGa(search, hostname = PROD, pathname = '/') {
   vm.createContext(ctx);
   vm.runInContext(GA_SRC, ctx);
   const config = Array.from(win.dataLayer.find((a) => a[0] === 'config'));
-  return { win, loc: config[2].page_location };
+  return { win, loc: config[2].page_location, cfg: JSON.parse(JSON.stringify(config[2])), config };
 }
 
 test('UTM：許可した utm_* だけを page_location に残す（流入元を GA4 へ渡す）', () => {
@@ -171,6 +171,56 @@ test('UTM：値が不正・個人情報や識別子に見えるものは捨て�
   ];
   for (const q of bad) assert.equal(runGa('?' + q).loc, `https://${PROD}/`, q);
   assert.equal(runGa('?utm_source=%E3%83%86%E3%82%B9%E3%83%88&utm_medium=social').loc, `https://${PROD}/?utm_medium=social`, '不正な値だけ捨てる');
+});
+
+const campaignOf = (cfg) => Object.fromEntries(Object.entries(cfg).filter(([k]) => k.startsWith('campaign_')));
+
+test('campaign_*：URL の UTM と、config の値が対応する（utm_source→campaign_source など）。page_location の UTM と同じ値', () => {
+  const r = runGa('?utm_source=ga4check&utm_medium=test&utm_campaign=prerelease&utm_content=c-1&utm_term=t_1');
+  assert.deepEqual(campaignOf(r.cfg), {
+    campaign_source: 'ga4check', campaign_medium: 'test', campaign_name: 'prerelease', campaign_content: 'c-1', campaign_term: 't_1',
+  });
+  assert.equal(r.loc, `https://${PROD}/?utm_source=ga4check&utm_medium=test&utm_campaign=prerelease&utm_content=c-1&utm_term=t_1`);
+  // 一部だけ：あるものだけを反映する
+  assert.deepEqual(campaignOf(runGa('?utm_source=x&utm_medium=social').cfg), { campaign_source: 'x', campaign_medium: 'social' });
+  assert.deepEqual(campaignOf(runGa('?utm_campaign=only').cfg), { campaign_name: 'only' });
+  // config の項目は、page_location・page_referrer と campaign_* だけ
+  assert.deepEqual(Object.keys(r.cfg).sort(), ['campaign_content', 'campaign_medium', 'campaign_name', 'campaign_source', 'campaign_term', 'page_location', 'page_referrer']);
+});
+
+test('campaign_*：UTM が無ければ設定しない（config は従来どおり）', () => {
+  for (const q of ['', '?foo=1', '?dv=ETI-2.0&code=abc&mv=2.1.0', '?utm_source=', '?utm_id=1&utm_source_platform=x']) {
+    const r = runGa(q);
+    assert.deepEqual(Object.keys(r.cfg).sort(), ['page_location', 'page_referrer'], q);
+    assert.equal(r.loc, `https://${PROD}/`, q);
+  }
+});
+
+test('campaign_*：不正な値・個人情報や識別子に見える値は、page_location にも campaign_* にも入れない。ほかの問い合わせ文字列は混ざらない', () => {
+  const code = 'q8tfdsyv0j9w30o6ezwid4nhcl7zm2wsros01rod63eq6';
+  const bad = ['a'.repeat(65), 'a%40example.test', '11111111-1111-4111-8111-111111111111', 'cs_test_a1b2c3d4e5f6',
+    'https%3A%2F%2Fexample.test%2F%3Ftoken%3D1', code, '%3Cscript%3E', 'a b%0Ac', '%E3%83%86%E3%82%B9%E3%83%88', '', '%20'];
+  for (const v of bad) {
+    const r = runGa(`?utm_source=${v}&utm_medium=social&code=${code}&token=secret`);
+    assert.deepEqual(campaignOf(r.cfg), { campaign_medium: 'social' }, v);
+    assert.equal(r.loc, `https://${PROD}/?utm_medium=social`, v);
+    const all = JSON.stringify(Array.from(r.win.dataLayer, (a) => Array.from(a)));
+    assert.ok(!all.includes(code) && !all.includes('secret'), v);
+  }
+  // 同じ名前が複数：最初の値だけ（検証を通ったもの）を使う
+  assert.deepEqual(campaignOf(runGa('?utm_source=a&utm_source=b').cfg), { campaign_source: 'a' });
+  // 値の前後の空白は、取り除いて検証する
+  assert.deepEqual(campaignOf(runGa('?utm_source=%20x%20').cfg), { campaign_source: 'x' });
+});
+
+test('campaign_*：本番以外では何も送らない・既存の gtag を上書きしない', () => {
+  const win = {};
+  const ctx = { window: win, location: { hostname: 'localhost', origin: 'http://localhost', pathname: '/', search: '?utm_source=x&utm_medium=y', hash: '' },
+    document: { referrer: '', head: { appendChild() {} }, createElement: () => ({}) }, URLSearchParams };
+  win.dataLayer = undefined;
+  vm.createContext(ctx);
+  vm.runInContext(GA_SRC, ctx);
+  assert.equal(win.dataLayer.length, 0);
 });
 
 test('UTM：本番以外では何も送らない（既存どおり）', () => {
@@ -290,5 +340,56 @@ test('diagnosis_result に、診断コード・回答・トークンを含めな
   const r = await dres(p);
   assert.match(r[0].result_origin, /^(fresh|restored)$/);
   assert.deepEqual(Object.keys(r[0]).sort(), ['diagnosis_version', 'element', 'element_weapon', 'element_weapon_nation', 'ennea_type', 'ennea_wing', 'event_category', 'nation', 'result_origin', 'top_character', 'top_character_match', 'weapon'].sort());
+  await ctx.close();
+});
+
+// ---------------- 実ブラウザ：本番のドメイン名での、送信の順序（gtag.js だけ差し替え。外部へは送らない） ----------------
+const HOST = 'https://element-diagnosis-five.vercel.app';
+async function prodHostPage(ctx) {
+  await ctx.route('**/*', async (r) => {
+    const u = new URL(r.request().url());
+    if (u.origin === HOST) {
+      if (u.pathname.startsWith('/api/')) return r.fulfill({ status: 200, contentType: 'application/javascript', body: '' });
+      const rel = u.pathname === '/' || u.pathname === '/result' ? '/index.html' : decodeURIComponent(u.pathname);
+      let f = path.join(ROOT, rel);
+      if (!fs.existsSync(f) && fs.existsSync(f + '.html')) f += '.html';
+      if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) return r.fulfill({ status: 404, body: '' });
+      return r.fulfill({ status: 200, contentType: TYPES[path.extname(f)] || 'application/octet-stream', body: fs.readFileSync(f) });
+    }
+    return r.fulfill({ contentType: 'application/javascript', body: '' }); // gtag.js・Supabase・フォントなどは空
+  });
+  return ctx.newPage();
+}
+const dlOf = (p) => p.evaluate(() => Array.from(window.dataLayer || [], (a) => Array.from(a)));
+
+test('本番のドメイン：config（UTM・campaign_*）が、最初のイベントより前に積まれる。診断コードは含まれない', { skip: skip() }, async () => {
+  const ctx = await newContext();
+  const p = await prodHostPage(ctx);
+  const code = 'q8tfdsyv0j9w30o6ezwid4nhcl7zm2wsros01rod63eq6';
+  await p.goto(`${HOST}/?utm_source=ga4check&utm_medium=test&utm_campaign=prerelease&dv=ETI-2.0&code=${code}&mv=2.1.0`, { referer: 'https://t.co/abc' });
+  await p.waitForFunction(() => (window.dataLayer || []).some((a) => a[0] === 'event' && a[1] === 'diagnosis_result'));
+  const dl = await dlOf(p);
+  assert.equal(dl[0][0], 'js');
+  assert.equal(dl[1][0], 'config');
+  assert.deepEqual(dl[1][2], {
+    page_location: `${HOST}/?utm_source=ga4check&utm_medium=test&utm_campaign=prerelease`,
+    page_referrer: 'https://t.co/',
+    campaign_source: 'ga4check', campaign_medium: 'test', campaign_name: 'prerelease',
+  });
+  const firstEvent = dl.findIndex((a) => a[0] === 'event');
+  assert.ok(firstEvent > 1, 'イベントは config の後');
+  const ev = dl.find((a) => a[0] === 'event' && a[1] === 'diagnosis_result');
+  assert.equal(ev[2].result_origin, 'restored');
+  assert.ok(!JSON.stringify(dl).includes(code), '診断コードを送らない');
+  await ctx.close();
+});
+
+test('本番のドメイン：UTM が無い時は、config に campaign_* を入れない', { skip: skip() }, async () => {
+  const ctx = await newContext();
+  const p = await prodHostPage(ctx);
+  await p.goto(`${HOST}/`);
+  await p.waitForFunction(() => (window.dataLayer || []).some((a) => a[0] === 'config'));
+  const dl = await dlOf(p);
+  assert.deepEqual(dl[1][2], { page_location: `${HOST}/`, page_referrer: '' });
   await ctx.close();
 });
