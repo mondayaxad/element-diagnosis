@@ -2242,6 +2242,7 @@ function showResultV2() {
     if (typeof gtag === 'function') gtag('event','quiz_complete',{event_category:'diagnosis',value:getAnsweredCountV2(),diagnosis_version:'ETI-2.0'});
     // 診断を完了した直後の結果：表示の後に固有リンク（/result#r=）を作る（診断ごとに別のリンク）
     window.__resultNonce = (window.__resultNonce || 0) + 1;
+    window.__freshResultNonce = window.__resultNonce; // GA4：この結果は、いま診断を完了したもの（result_origin=fresh）
     window.__resumeFresh = true;
     window.__edResumeToken = null;
     clearQuizProgressV2();
@@ -2287,10 +2288,17 @@ function renderResult(root) {
   const tagsNation = pickFactorTags_Nation(results, usedProfileWords);
 
   // 診断結果を分析用に記録（元素・武器種・国家・エニアグラム・一致キャラの分布を後から集計できるようにする）
-  if (typeof gtag === 'function' && !window.__resultLogged) {
-    window.__resultLogged = true;
+  //   result_origin：fresh＝いま診断を完了した結果／restored＝共有リンク・固有リンク・保存済みを開き直した結果。
+  //   記録は、結果ごとに1回（fresh は完了のたびの __resultNonce、restored はページの読み込みごとに1回）。
+  //   同じページで続けて診断し直した時も、完了のたびに記録する
+  //   （__resumeFresh は、開き直した結果で購入を押した時にも true になるため、判定に使わない）
+  var resultIsFresh = !!window.__freshResultNonce && window.__freshResultNonce === window.__resultNonce;
+  var resultLogKey = resultIsFresh ? 'fresh:' + window.__resultNonce : 'restored';
+  if (typeof gtag === 'function' && window.__resultLogged !== resultLogKey) {
+    window.__resultLogged = resultLogKey;
     gtag('event', 'diagnosis_result', {
       event_category: 'diagnosis',
+      result_origin: resultIsFresh ? 'fresh' : 'restored',
       diagnosis_version: diagnosisVersion,
       element: topEl,
       weapon: topW,
