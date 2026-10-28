@@ -31,8 +31,9 @@
 //   9. 発行するトークンに環境名（env）を入れる。REPORT_TOKEN_SECRET は環境ごとに別の値にする前提で、
 //      万一同じ値でも、別環境のトークンを report-data.js が受け付けない。
 //  10. ログに Session ID 全文・Supabase の応答本文を出さない（末尾だけ）。
-//  11. 旧 Payment Link の販売は終了。purchase_entitlements へ新しい行は作らず、記録済みの購入（返金・停止されていないもの）
-//      にだけ閲覧リンクを出し直す。記録の無い支払いは 410 でお問い合わせへ案内する。上の 3・4 は置き換え。
+//  11. 旧 Payment Link の販売は、旧版（element-v1）の解析レポート ¥1,000（core1）だけ再開（2026-10-29）。
+//      旧版の購入権は、支払い済みの Session で、1行だけ記録する（冪等）。現在の診断（v2_）・ほかの商品は、記録せず、
+//      記録済みの購入（返金・停止されていないもの）にだけ閲覧リンクを出し直す。記録の無い支払いは 410 でお問い合わせへ案内する。
 //
 // 署名生成・TTL・リダイレクトの中核ロジックは本番版から変更していない。
 
@@ -92,6 +93,9 @@ const PRODUCT_EXPECTED = {
   complete: { amount: 2500, currency: 'jpy' },
   core2_upgrade: { amount: 1500, currency: 'jpy' },
 };
+
+// 旧版（element-v1）の診断コードの形（英小文字・数字）。Payment Link の client_reference_id は URL で付けられるため、形を確かめる
+const LEGACY_V1_CODE_RE = /^[0-9a-z]{20,80}$/;
 
 function signToken(secret, payloadObj) {
   const payload = Buffer.from(JSON.stringify(payloadObj)).toString('base64url');
@@ -168,6 +172,19 @@ function createHandler({ env, fetchImpl, stripeFactory }) {
     }
     const rows = await res.json();
     return rows[0] || null;
+  }
+
+  // 旧版（element-v1）の解析レポート（core1）の購入権を、1行だけ記録する（2026-10-29 に旧版の販売を再開）。
+  //   既存の行（同じ Checkout Session）があれば作らない（ignore-duplicates）。作ったあと、必ず読み直して、返す。
+  //   現在の診断（v2_）・ほかの商品では、呼ばない（呼び出し側で止める）。
+  async function recordLegacyEntitlement(conn, row) {
+    const res = await fetchImpl(`${conn.supabaseUrl}/rest/v1/purchase_entitlements?on_conflict=stripe_checkout_session_id`, {
+      method: 'POST',
+      headers: { ...conn.adminHeaders(), 'Content-Type': 'application/json', Prefer: 'resolution=ignore-duplicates,return=minimal' },
+      body: JSON.stringify([row]),
+    });
+    if (!res.ok) throw new Error(`purchase_entitlements insert failed: ${res.status}`);
+    return findExistingEntitlement(conn, row.stripe_checkout_session_id);
   }
 
   return async function handler(req, res) {
@@ -278,6 +295,29 @@ function createHandler({ env, fetchImpl, stripeFactory }) {
         console.error('verify error: entitlement lookup failed', err && err.message, tail(sessionId));
         res.status(503).send('現在ご利用いただけません。時間をおいて再度お試しください。');
         return;
+      }
+      if (!entitlementRow && diagnosisRef.diagnosisVersion === 'element-v1' && productType === 'core1') {
+        // 旧版（element-v1）の解析レポート ¥1,000：販売を再開した（2026-10-29）。購入権を記録する（現在の診断〔v2_〕・ほかの商品は記録しない）。
+        //   診断コードの形は、旧版の符号（英小文字・数字）だけを受け付ける（client_reference_id は、購入者が URL で付けられる値のため）
+        if (!LEGACY_V1_CODE_RE.test(diagnosisRef.code)) {
+          res.status(400).send('診断コードが見つかりません。お手数ですが、診断結果画面からやり直してください。');
+          return;
+        }
+        try {
+          entitlementRow = await recordLegacyEntitlement(guard, {
+            diagnosis_code_hash: diagnosisCodeHash,
+            stripe_checkout_session_id: sessionId,
+            stripe_payment_intent_id: paymentIntentId,
+            product_type: 'core1',
+            amount: expected.amount,
+            currency: expected.currency,
+            status: 'active',
+          });
+        } catch (err) {
+          console.error('verify error: entitlement record failed', err && err.message, tail(sessionId));
+          res.status(503).send('現在ご利用いただけません。お支払いは完了しています。時間をおいて、このページを再読み込みしてください。');
+          return;
+        }
       }
       if (!entitlementRow) {
         console.error('verify error: payment link retired, no recorded purchase', tail(sessionId), paymentIntentId ? 'pi' : 'no_pi');

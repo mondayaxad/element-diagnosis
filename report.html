@@ -1850,6 +1850,22 @@ var reportCompleteArgs = null;
 window.addEventListener('pageshow', function (e) {
   if (e.persisted && reportCompleteArgs) initReportComplete(reportCompleteArgs[0], reportCompleteArgs[1], reportCompleteArgs[2]);
 });
+// 旧版（element-v1）のレポート下部：この結果を診断記録（マイページ）に保存する入口。
+//   診断結果の画面（/?code=…#recordCard）の「診断記録に保存」カードへ移動する（ログイン・規約の確認は、そちらの従来の手順）。
+//   購入権は、保存したあと、マイページの診断記録から同じレポートを開くときに使われる。
+function initLegacyHandoff(code) {
+  var slot = document.querySelector('[data-report-register-slot]');
+  if (!slot || !/^[0-9a-z]{20,80}$/.test(String(code || ''))) return;
+  slot.innerHTML = '<p style="margin:0 0 8px;color:#b8a8d8;font-size:12px;line-height:1.8">このレポートは、マイページに引き継げます。</p>'
+    + '<a id="legacyHandoffBtn" data-legacy-handoff href="/?code=' + code + '#recordCard" '
+    + 'style="display:inline-block;min-height:44px;box-sizing:border-box;line-height:24px;background:transparent;border:1px solid #6a5a98;color:#d8c8f8;border-radius:6px;padding:10px 20px;font-size:12.5px;text-decoration:none;font-family:inherit;margin-bottom:16px">'
+    + '<span aria-hidden="true">📌</span> マイページに引き継ぐ</a>';
+  var a = document.getElementById('legacyHandoffBtn');
+  if (a) a.addEventListener('click', function () {
+    if (typeof gtag === 'function') gtag('event', 'legacy_report_handoff_click', { event_category: 'engagement', diagnosis_version: 'element-v1' });
+  });
+}
+
 function renderFullReport(root, results, diagnosisCode) {
   window.__diagnosisCode = diagnosisCode || '';
   const diagnosisVersion = results.schemaVersion === 'ETI-2.0' ? 'ETI-2.0' : 'legacy-v1';
@@ -2328,6 +2344,7 @@ async function savePdf() {
     answersArr.forEach((v,i) => answersObj[i] = v);
     const results = computeResults(answersObj);
     renderFullReport(root, results, code);
+    initLegacyHandoff(code);
     if (typeof gtag === 'function') gtag('event', 'analysis_report_view', { diagnosis_version: 'element-v1' });
   } catch (e) {
     console.error(e);
