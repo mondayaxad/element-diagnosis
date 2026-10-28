@@ -453,6 +453,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous"></script>
 <!-- Supabase の接続先（環境ごと）。diagnosis-save.js より前に同期で読み込む。取得できなければログイン・保存を止める -->
 <script src="/api/public-config?format=js"></script>
+<script src="/js/public-config-retry.js"></script>
 <!-- 診断完了ページ：ページを開いただけでは登録完了（規約）モーダルを出さない。認証復帰後に保存する
      診断（pending）があるときと、「保存」を押したときだけ判定する（diagnosis-save.js） -->
 <script>window.ED_REGISTRATION_CHECK_ON_LOAD = 'pending_only';</script>
@@ -3247,6 +3248,8 @@ function initReportPurchase(root, code, refs) {
         return B.start({ context: c, product: product, goal: goal, source: source, fromMypage: !!edRecordFromUrl() }).then(function (r) {
           if (r.ok) { EdNavBusy.handoff(btn); return; }
           if (r.error === 'in_progress') return; // 先の申込が決済画面へ移動中（押せない表示のまま）
+          // 購入対象が無効（期限切れ・見つからない）と判定された：キャッシュを捨てる（古い値のまま、押すたびに同じ失敗にならない）
+          if (r.error === 'context_expired' || r.error === 'record_not_found') edCtxCache = null;
           EdNavBusy.release(btn);
           if (!r.silent && msgEl) msgEl.textContent = B.errorText(r.error);
         });

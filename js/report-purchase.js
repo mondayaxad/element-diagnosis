@@ -76,7 +76,11 @@
   async function accountToken() {
     try {
       if (typeof supabaseClient === 'undefined' || !supabaseClient || supabaseClient.unavailable || !supabaseClient.auth) return null;
-      var s = await supabaseClient.auth.getSession();
+      // 応答が返らないまま止まらない（認証の処理が詰まる環境がある）：5秒で諦めて、トークン無しとして扱う
+      var s = await Promise.race([
+        supabaseClient.auth.getSession(),
+        new Promise(function (resolve) { setTimeout(function () { resolve(null); }, 5000); }),
+      ]);
       return (s && s.data && s.data.session && s.data.session.access_token) || null;
     } catch (e) {
       return null;

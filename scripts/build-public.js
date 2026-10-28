@@ -64,6 +64,7 @@ const PUBLIC_FILES = [
   'js/eti_v2_prototypes.js',
   'js/eti_v2_save.js',
   'js/registration-onboarding.js',
+  'js/public-config-retry.js',
   'assets/backgrounds/quiet-starry-lake.jpg',
 ];
 // ディレクトリ直下の指定拡張子だけ（再帰しない）

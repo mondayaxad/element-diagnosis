@@ -6,6 +6,7 @@
 (function (global) {
   'use strict';
   var STUCK_MS = 20000; // 移動を始めてもこの時間ページに残っていれば、移動できなかったものとして戻す
+  var MAX_PENDING_MS = 90000; // 通信中（pending）のまま、この時間が過ぎたら、元へ戻す（応答が返らない・例外で release が呼ばれない場合の安全網）
 
   function hold(btn, label) {
     if (!btn) return;
@@ -13,6 +14,11 @@
     btn.setAttribute('data-nav-busy', 'pending');
     btn.disabled = true;
     if (label) btn.textContent = label;
+    var token = String(Date.now()) + Math.random();
+    btn.__navBusyToken = token;
+    global.setTimeout(function () {
+      if (btn.__navBusyToken === token && btn.getAttribute('data-nav-busy') === 'pending') release(btn);
+    }, NavBusy.maxPendingMs);
   }
   function release(btn) {
     if (!btn || !btn.hasAttribute('data-nav-busy')) return;
@@ -40,5 +46,6 @@
   global.addEventListener('popstate', function () { releaseAll(false); });
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') releaseAll(true); });
 
-  global.EdNavBusy = { hold: hold, handoff: handoff, release: release, releaseAll: releaseAll };
+  var NavBusy = { hold: hold, handoff: handoff, release: release, releaseAll: releaseAll, maxPendingMs: MAX_PENDING_MS };
+  global.EdNavBusy = NavBusy;
 })(window);
