@@ -105,3 +105,48 @@ test('記録に失敗したら 503（お支払いは完了している旨）。�
   assert.match(String(res.body), /お支払いは完了しています/);
   assert.equal(res.headers.Location, undefined);
 });
+
+// ---- 決済のあとの失敗・通信遮断からの復旧（同じ verify URL を開き直すだけで復旧できる） ----
+test('復旧：記録に失敗（503）したあと、同じ Session をもう一度開けば、1行だけ記録して閲覧リンクを出す', async () => {
+  const rows = [];
+  let failNext = true;
+  const base = statefulSupabase();
+  const sb = { rows: base.rows, posts: base.posts, fetchImpl: async (url, opts = {}) => {
+    if (failNext && opts.method === 'POST') { failNext = false; return json(500, {}); }
+    return base.fetchImpl(url, opts);
+  } };
+  const first = await run(sb, CODE);
+  assert.equal(first.code, 503);
+  assert.equal(base.rows.length, 0);
+  const second = await run(sb, CODE);
+  assert.ok(second.code === 302 || second.code === 303 || second.headers.Location, `retry: ${second.code}`);
+  assert.equal(base.rows.length, 1);
+  const third = await run(sb, CODE);
+  assert.equal(base.rows.length, 1, '3回目も増えない');
+  assert.ok(third.headers.Location);
+  assert.equal(rows.length, 0);
+});
+
+test('復旧：Stripe への問い合わせが切れた（通信遮断）あとも、開き直せば記録される。切れている間は何も記録しない', async () => {
+  const sb = statefulSupabase();
+  let down = true;
+  const stripeFactory = () => ({ checkout: { sessions: { retrieve: async (id) => {
+    if (down) throw Object.assign(new Error('network'), { type: 'StripeConnectionError' });
+    return { id, livemode: false, payment_status: 'paid', client_reference_id: CODE, currency: 'jpy', amount_total: 1000,
+      payment_intent: 'pi_fake', line_items: { data: [{ price: { id: TEST_CORE1_PRICE } }] } };
+  } } } });
+  const go = async () => {
+    const res = makeRes();
+    const orig = console.error; console.error = () => {};
+    try { await verify.createHandler({ env: PREVIEW_ENV, fetchImpl: sb.fetchImpl, stripeFactory })({ method: 'GET', query: { session_id: 'cs_test_legacyflow000002' }, headers: {} }, res); }
+    finally { console.error = orig; }
+    return res;
+  };
+  const cut = await go();
+  assert.equal(cut.code, 500);
+  assert.equal(sb.posts.length, 0);
+  down = false;
+  const ok = await go();
+  assert.ok(ok.headers.Location);
+  assert.equal(sb.rows.length, 1);
+});
