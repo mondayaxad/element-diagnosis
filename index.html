@@ -2873,6 +2873,61 @@ function renderResult(root) {
       : { diagnosisVersion: DIAGNOSIS_VERSION, itemSetVersion: null, scoringVersion: SCORING_VERSION, diagnosisCode: applyData };
 
     var fromMypageRec = !window.__edResumeToken ? edRecordFromUrl() : null;
+    // 旧版のレポートの「マイページに引き継ぐ」から来た人：保存された記録へ、購入（解析レポート）を結び付ける。
+    //   レポートが控えた購入時のリンク（署名付き・この端末だけ・1時間）を、ログイン中の本人として /api/my-report-link へ渡す。
+    //   結び付けは先に引き継いだ1人だけ。済んだら、控えを消す。通信の失敗だけ、控えを残して「もう一度」を出す
+    var LEGACY_HANDOFF_KEY = 'ed_legacy_handoff_v1';
+    var readLegacyHandoff = function () {
+      try {
+        var h = JSON.parse(localStorage.getItem(LEGACY_HANDOFF_KEY) || 'null');
+        if (h && h.code === shortCode && typeof h.token === 'string' && h.token.length < 4000 && Date.now() - h.at < 60 * 60 * 1000) return h;
+      } catch (e) { /* 控えなし */ }
+      return null;
+    };
+    var legacyHandoffRunning = false;
+    var runLegacyHandoff = async function () {
+      var h = readLegacyHandoff();
+      if (!h || legacyHandoffRunning) return;
+      legacyHandoffRunning = true;
+      var box = document.createElement('div');
+      box.setAttribute('data-legacy-handoff-box', '');
+      box.setAttribute('role', 'status');
+      box.innerHTML = '<p class="rs-text">購入したレポートを、マイページに引き継いでいます。</p>';
+      recordCard.appendChild(box);
+      var finish = function (html, clear) {
+        if (clear) { try { localStorage.removeItem(LEGACY_HANDOFF_KEY); } catch (e) { /* noop */ } }
+        box.innerHTML = html;
+        var again = box.querySelector('[data-legacy-handoff-retry]');
+        if (again) again.onclick = function () { box.remove(); legacyHandoffRunning = false; runLegacyHandoff(); };
+        legacyHandoffRunning = false;
+      };
+      try {
+        var sess = await supabaseClient.auth.getSession();
+        var at = sess && sess.data && sess.data.session && sess.data.session.access_token;
+        if (!at) { finish('<p class="rs-text">ログインしてから、もう一度お試しください。</p>', false); return; }
+        var r = await fetch('/api/my-report-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + at },
+          body: JSON.stringify({ op: 'legacy_handoff', token: h.token }),
+        });
+        var body = {};
+        try { body = await r.json(); } catch (e) { body = {}; }
+        if (r.ok && body.ok) {
+          finish('<p class="rs-done-head">✓ 購入したレポートを、マイページに引き継ぎました</p>'
+            + '<p class="rs-text">マイページの診断記録から、いつでも解析レポートを開けます。</p>'
+            + '<a class="rs-link rs-quiet" href="/mypage.html" onclick="trackEvent(\'mypage_entry_click\',{entry_point:\'legacy_handoff\'})">マイページで確認する <span class="arw">→</span></a>', true);
+          if (typeof gtag === 'function') gtag('event', 'legacy_report_handoff_done', { event_category: 'engagement', diagnosis_version: 'element-v1' });
+        } else if (r.status === 409 && body.error === 'already_bound') {
+          finish('<p class="rs-text">この購入は、すでに別のアカウントに引き継がれています。購入時のリンクからは、引き続きお読みいただけます。</p>', true);
+        } else if (r.status === 403) {
+          finish('<p class="rs-text">購入を確認できませんでした。お手数ですが yaduns0522@gmail.com までご連絡ください。</p>', true);
+        } else {
+          finish('<p class="rs-err" role="alert">引き継げませんでした。通信状況を確かめて、もう一度お試しください。</p><button type="button" class="rs-btn" data-legacy-handoff-retry>もう一度試す</button>', false);
+        }
+      } catch (e) {
+        finish('<p class="rs-err" role="alert">引き継げませんでした。通信状況を確かめて、もう一度お試しください。</p><button type="button" class="rs-btn" data-legacy-handoff-retry>もう一度試す</button>', false);
+      }
+    };
     var RS_LOGIN_LABEL = { signed_out_known: 'ログインして診断記録に保存する', signed_out: '無料登録して診断記録に保存する' };
     var renderRecordCard = function (state) {
       var label = '<div class="rs-label">診断記録</div>';
@@ -2912,6 +2967,7 @@ function renderResult(root) {
       }
       recordCard.setAttribute('data-state', state);
       recordCard.innerHTML = html;
+      if (!isV2Record && (state === 'saved' || state === 'just_saved' || state === 'registered')) runLegacyHandoff();
       var btn = recordCard.querySelector('#recordSaveBtn');
       if (btn) btn.onclick = async function () {
         // ログインが切れていたら、Google へ直行せず、ログイン方法の選択（Google・X・メール）へ戻す

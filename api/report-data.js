@@ -343,3 +343,6 @@ function createHandler({ env, fetchImpl }) {
 module.exports = createHandler({ env: process.env, fetchImpl: (...args) => fetch(...args) });
 module.exports.createHandler = createHandler;
 module.exports.tokenKind = tokenKind;
+module.exports.verifyToken = verifyToken;
+module.exports.resolveDiagnosisCode = resolveDiagnosisCode;
+module.exports.hashDiagnosisCode = hashDiagnosisCode;
