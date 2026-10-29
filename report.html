@@ -1852,7 +1852,7 @@ window.addEventListener('pageshow', function (e) {
 });
 // 旧版（element-v1）のレポート下部：この結果を診断記録（マイページ）に保存する入口。
 //   診断結果の画面（/?code=…#recordCard）の「診断記録に保存」カードへ移動する（ログイン・規約の確認は、そちらの従来の手順）。
-//   購入権は、保存したあと、マイページの診断記録から同じレポートを開くときに使われる。
+//   保存のあと、結果ページが、控えた購入時のリンクで購入を本人の記録へ結び付ける（/api/my-report-link の op=legacy_handoff）。
 function initLegacyHandoff(code) {
   var slot = document.querySelector('[data-report-register-slot]');
   if (!slot || !/^[0-9a-z]{20,80}$/.test(String(code || ''))) return;
@@ -1862,6 +1862,11 @@ function initLegacyHandoff(code) {
     + '<span aria-hidden="true">📌</span> マイページに引き継ぐ</a>';
   var a = document.getElementById('legacyHandoffBtn');
   if (a) a.addEventListener('click', function () {
+    // 購入時のリンク（署名付き）をこの端末に1時間だけ控える。保存のあと、結果ページがこれで購入を本人の記録へ結び付ける
+    try {
+      var tk = new URLSearchParams(location.search).get('token');
+      if (tk) localStorage.setItem('ed_legacy_handoff_v1', JSON.stringify({ code: code, token: tk, at: Date.now() }));
+    } catch (e) { /* 控えられなくても、保存の入口には進める */ }
     if (typeof gtag === 'function') gtag('event', 'legacy_report_handoff_click', { event_category: 'engagement', diagnosis_version: 'element-v1' });
   });
 }
