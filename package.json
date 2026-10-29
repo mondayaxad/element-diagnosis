@@ -6,5 +6,9 @@
     "stripe": "^17.0.0",
     "@vercel/og": "^0.6.3",
     "@vercel/functions": "3.9.8"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "test:pg": "tests/pg/run_all.sh"
   }
 }

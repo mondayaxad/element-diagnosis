@@ -2877,6 +2877,12 @@ function renderResult(root) {
     //   レポートが控えた購入時のリンク（署名付き・この端末だけ・1時間）を、ログイン中の本人として /api/my-report-link へ渡す。
     //   結び付けは先に引き継いだ1人だけ。済んだら、控えを消す。通信の失敗だけ、控えを残して「もう一度」を出す
     var LEGACY_HANDOFF_KEY = 'ed_legacy_handoff_v1';
+    // 認証から戻った流れ（保存カードへ戻った）の時だけ、少し見せてからマイページへ移る（通常のログインでは使わない）
+    var goMypageSoon = function (ms) {
+      if (!window.__edReturnToRecordCard) return;
+      window.__edReturnToMypageStarted = true;
+      setTimeout(function () { window.location.assign('/mypage.html'); }, ms);
+    };
     var readLegacyHandoff = function () {
       try {
         var h = JSON.parse(localStorage.getItem(LEGACY_HANDOFF_KEY) || 'null');
@@ -2884,49 +2890,80 @@ function renderResult(root) {
       } catch (e) { /* 控えなし */ }
       return null;
     };
+    // 引き継ぎの1回分（結果は文字列で区別する）：
+    //   ok（引き継ぎ済み・すでに済み）／bound_other（先に別のアカウントが引き継ぎ済み）／forbidden（購入を確認できない）／
+    //   no_login（ログインが無い）／failed（通信失敗・サーバー側の失敗）／timeout（時間内に終わらない）
+    //   ok・bound_other・forbidden は決着（控えを消す）。no_login・failed・timeout は控えを残し、再試行できる。
+    //   サーバー側は同じ購入・同じ記録なら何度送っても1件（二重に結び付けない）。
+    var LEGACY_HANDOFF_TIMEOUT_MS = 15000;
     var legacyHandoffRunning = false;
-    var runLegacyHandoff = async function () {
+    var legacyBox = null;
+    var withTimeout = function (promise, ms, ctl) {
+      return new Promise(function (resolve) {
+        var done = false;
+        var t = setTimeout(function () { if (!done) { done = true; try { if (ctl) ctl.abort(); } catch (e) { /* noop */ } resolve('timeout'); } }, ms);
+        promise.then(function (v) { if (!done) { done = true; clearTimeout(t); resolve(v); } },
+          function () { if (!done) { done = true; clearTimeout(t); resolve('failed'); } });
+      });
+    };
+    var legacyHandoffAttempt = async function (h, ctl) {
+      var sess = await supabaseClient.auth.getSession();
+      var at = sess && sess.data && sess.data.session && sess.data.session.access_token;
+      if (!at) return 'no_login';
+      var r = await fetch('/api/my-report-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + at },
+        body: JSON.stringify({ op: 'legacy_handoff', token: h.token }),
+        signal: ctl.signal,
+      });
+      var body = {};
+      try { body = await r.json(); } catch (e) { body = {}; }
+      if (r.ok && body.ok) return 'ok';
+      if (r.status === 409 && body.error === 'already_bound') return 'bound_other';
+      if (r.status === 403) return 'forbidden';
+      return 'failed';
+    };
+    var LEGACY_HANDOFF_VIEW = {
+      ok: ['<p class="rs-done-head">✓ 購入したレポートを、マイページに引き継ぎました</p>'
+        + '<p class="rs-text">マイページの診断記録から、いつでも解析レポートを開けます。</p>'
+        + '<a class="rs-link rs-quiet" href="/mypage.html" onclick="trackEvent(\'mypage_entry_click\',{entry_point:\'legacy_handoff\'})">マイページで確認する <span class="arw">→</span></a>', true],
+      bound_other: ['<p class="rs-text">この購入は、すでに別のアカウントに引き継がれています。購入時のリンクからは、引き続きお読みいただけます。</p>', true],
+      forbidden: ['<p class="rs-text">購入を確認できませんでした。お手数ですが yaduns0522@gmail.com までご連絡ください。</p>', true],
+      no_login: ['<p class="rs-text">ログインしてから、もう一度お試しください。</p>', false],
+      failed: ['<p class="rs-err" role="alert">引き継げませんでした。通信状況を確かめて、もう一度お試しください。</p><button type="button" class="rs-btn" data-legacy-handoff-retry>もう一度試す</button>', false],
+      timeout: ['<p class="rs-err" role="alert">時間内に完了しませんでした。通信状況を確かめて、もう一度お試しください。</p><button type="button" class="rs-btn" data-legacy-handoff-retry>もう一度試す</button>', false],
+    };
+    // 戻り値：結果（上の文字列）を返す Promise。控えが無い・実行中は、実行中の Promise（無ければ null）
+    var runLegacyHandoff = function () {
+      if (legacyHandoffRunning) return window.__legacyHandoffPromise || null;
       var h = readLegacyHandoff();
-      if (!h || legacyHandoffRunning) return;
+      if (!h) return null;
       legacyHandoffRunning = true;
-      var box = document.createElement('div');
-      box.setAttribute('data-legacy-handoff-box', '');
-      box.setAttribute('role', 'status');
-      box.innerHTML = '<p class="rs-text">購入したレポートを、マイページに引き継いでいます。</p>';
-      recordCard.appendChild(box);
-      var finish = function (html, clear) {
-        if (clear) { try { localStorage.removeItem(LEGACY_HANDOFF_KEY); } catch (e) { /* noop */ } }
-        box.innerHTML = html;
+      if (legacyBox) legacyBox.remove();
+      legacyBox = document.createElement('div');
+      legacyBox.setAttribute('data-legacy-handoff-box', '');
+      legacyBox.setAttribute('role', 'status');
+      legacyBox.innerHTML = '<p class="rs-text">購入したレポートを、マイページに引き継いでいます。</p>';
+      recordCard.appendChild(legacyBox);
+      var box = legacyBox;
+      var ctl = (typeof AbortController === 'function') ? new AbortController() : { signal: undefined, abort: function () {} };
+      var p = withTimeout(legacyHandoffAttempt(h, ctl), LEGACY_HANDOFF_TIMEOUT_MS, ctl).then(function (outcome) {
+        var view = LEGACY_HANDOFF_VIEW[outcome] || LEGACY_HANDOFF_VIEW.failed;
+        if (view[1]) { try { localStorage.removeItem(LEGACY_HANDOFF_KEY); } catch (e) { /* noop */ } }
+        box.innerHTML = view[0];
         var again = box.querySelector('[data-legacy-handoff-retry]');
-        if (again) again.onclick = function () { box.remove(); legacyHandoffRunning = false; runLegacyHandoff(); };
+        if (again) again.onclick = function () {
+          // 再試行：同じ控えを送り直す。成功したら、認証から戻った流れならマイページへ進む
+          var q = runLegacyHandoff();
+          if (q) q.then(function (out) { if (out === 'ok') goMypageSoon(1500); });
+        };
         legacyHandoffRunning = false;
-      };
-      try {
-        var sess = await supabaseClient.auth.getSession();
-        var at = sess && sess.data && sess.data.session && sess.data.session.access_token;
-        if (!at) { finish('<p class="rs-text">ログインしてから、もう一度お試しください。</p>', false); return; }
-        var r = await fetch('/api/my-report-link', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + at },
-          body: JSON.stringify({ op: 'legacy_handoff', token: h.token }),
-        });
-        var body = {};
-        try { body = await r.json(); } catch (e) { body = {}; }
-        if (r.ok && body.ok) {
-          finish('<p class="rs-done-head">✓ 購入したレポートを、マイページに引き継ぎました</p>'
-            + '<p class="rs-text">マイページの診断記録から、いつでも解析レポートを開けます。</p>'
-            + '<a class="rs-link rs-quiet" href="/mypage.html" onclick="trackEvent(\'mypage_entry_click\',{entry_point:\'legacy_handoff\'})">マイページで確認する <span class="arw">→</span></a>', true);
-          if (typeof gtag === 'function') gtag('event', 'legacy_report_handoff_done', { event_category: 'engagement', diagnosis_version: 'element-v1' });
-        } else if (r.status === 409 && body.error === 'already_bound') {
-          finish('<p class="rs-text">この購入は、すでに別のアカウントに引き継がれています。購入時のリンクからは、引き続きお読みいただけます。</p>', true);
-        } else if (r.status === 403) {
-          finish('<p class="rs-text">購入を確認できませんでした。お手数ですが yaduns0522@gmail.com までご連絡ください。</p>', true);
-        } else {
-          finish('<p class="rs-err" role="alert">引き継げませんでした。通信状況を確かめて、もう一度お試しください。</p><button type="button" class="rs-btn" data-legacy-handoff-retry>もう一度試す</button>', false);
-        }
-      } catch (e) {
-        finish('<p class="rs-err" role="alert">引き継げませんでした。通信状況を確かめて、もう一度お試しください。</p><button type="button" class="rs-btn" data-legacy-handoff-retry>もう一度試す</button>', false);
-      }
+        window.__legacyHandoffOutcome = outcome;
+        if (outcome === 'ok' && typeof gtag === 'function') gtag('event', 'legacy_report_handoff_done', { event_category: 'engagement', diagnosis_version: 'element-v1' });
+        return outcome;
+      });
+      window.__legacyHandoffPromise = p;
+      return p;
     };
     var RS_LOGIN_LABEL = { signed_out_known: 'ログインして診断記録に保存する', signed_out: '無料登録して診断記録に保存する' };
     var renderRecordCard = function (state) {
@@ -2967,6 +3004,7 @@ function renderResult(root) {
       }
       recordCard.setAttribute('data-state', state);
       recordCard.innerHTML = html;
+      if (legacyBox) recordCard.appendChild(legacyBox); // 引き継ぎの表示は、カードの描き直しで消さない
       if (!isV2Record && (state === 'saved' || state === 'just_saved' || state === 'registered')) runLegacyHandoff();
       var btn = recordCard.querySelector('#recordSaveBtn');
       if (btn) btn.onclick = async function () {
@@ -3129,6 +3167,14 @@ function renderResult(root) {
       // 「保存しました」（保存できた・既に保存済み）になった時だけ。登録が済んでいなければこの状態にはならない
       var s = recordCard.getAttribute('data-state');
       if (s !== 'just_saved' && s !== 'saved') return;
+      // 旧版の購入の引き継ぎがあった（始めた）なら、終わるまで待つ。移動するのは成功した時だけ
+      //   （失敗・時間切れ・決着の案内は、このページで読めて、失敗は再試行できる）。待つ時間は引き継ぎ側の上限（15 秒）まで
+      var hp = window.__legacyHandoffPromise;
+      if (hp) {
+        window.__edReturnToMypageStarted = true;
+        hp.then(function (out) { if (out === 'ok') { goMypageSoon(1500); } else { window.__edReturnToMypageStarted = false; } });
+        return;
+      }
       window.__edReturnToMypageStarted = true;
       setTimeout(function () { window.location.assign('/mypage.html'); }, 800);
     };

@@ -220,3 +220,102 @@ test('レポートの「マイページに引き継ぐ」：購入時のリン�
   assert.equal(kept.token, 'abc.def');
   await q.__ctx.close();
 });
+
+// ---- P2：認証から戻った直後（#recordCard）の自動移動と、引き継ぎの通信 ----
+//   引き継ぎ中はマイページへの自動移動を待つ。成功した時だけ移動。失敗・時間切れ・決着の案内は、このページに留まる（失敗は再試行できる）。
+const path_ = (p) => new URL(p.url()).pathname;
+async function returnPage(handoff, { stash = true, hash = '#recordCard', clock = false, otherStash = false } = {}) {
+  const p = await prodPage({ signedIn: true, saved: true, handoff });
+  const code = await legacyCode(p);
+  if (stash) await p.evaluate(([k, c]) => localStorage.setItem(k, JSON.stringify({ code: c, token: 'signed.token', at: Date.now() })), [KEY, code]);
+  if (otherStash) await p.evaluate((k) => localStorage.setItem(k, JSON.stringify({ code: 'otherCode0000000000000000', token: 't', at: Date.now() })), KEY);
+  if (clock) await p.clock.install();
+  await p.goto(`${HOST}/?code=${code}${hash}`);
+  return { p, code };
+}
+const delayedOk = (ms, onSent) => async (r) => { onSent && onSent(); await new Promise((x) => setTimeout(x, ms)); try { await r.fulfill({ contentType: 'application/json', body: '{"ok":true,"bound":"applied"}' }); } catch (e) { /* 中断 */ } };
+
+test('P2：認証復帰＋遅い通信：通信が終わるまでマイページへ移動せず、成功の表示のあとで移動する', { skip: skip() }, async () => {
+  let sent = 0, answered = 0;
+  const { p } = await returnPage(async (r) => { sent++; await new Promise((x) => setTimeout(x, 2500)); await r.fulfill({ contentType: 'application/json', body: '{"ok":true,"bound":"applied"}' }); answered++; });
+  await p.waitForSelector('[data-legacy-handoff-box]');
+  await p.waitForTimeout(1800); // 従来の自動移動（0.8 秒）を過ぎても、通信中は移動しない
+  assert.equal(path_(p), '/');
+  assert.equal(answered, 0);
+  await p.waitForSelector('[data-legacy-handoff-box] .rs-done-head');
+  assert.match(await p.locator('[data-legacy-handoff-box]').innerText(), /マイページに引き継ぎました/);
+  assert.equal(path_(p), '/', '成功の表示を読める');
+  await p.waitForURL((u) => u.pathname === '/mypage.html', { timeout: 6000 });
+  assert.equal(sent, 1);
+  assert.equal(answered, 1, '通信は中断されず、応答を受け取ってから移動');
+  await p.__ctx.close();
+});
+
+test('P2：通信失敗（500）：移動せずに留まり、再試行できる。再試行は同じ内容を送り、成功したら移動する', { skip: skip() }, async () => {
+  let n = 0;
+  const { p } = await returnPage(async (r) => (++n === 1 ? r.fulfill({ status: 500, contentType: 'application/json', body: '{}' }) : r.fulfill({ contentType: 'application/json', body: '{"ok":true,"bound":"already"}' })));
+  await p.waitForSelector('[data-legacy-handoff-retry]');
+  await p.waitForTimeout(2500);
+  assert.equal(path_(p), '/', '失敗では移動しない');
+  assert.notEqual(await p.evaluate((k) => localStorage.getItem(k), KEY), null, '控えは残る');
+  await p.click('[data-legacy-handoff-retry]');
+  await p.waitForURL((u) => u.pathname === '/mypage.html', { timeout: 6000 });
+  assert.equal(p.__calls.length, 2);
+  assert.deepEqual(p.__calls[0].body, p.__calls[1].body, '同じ購入リンクを送り直す（サーバー側は同じ購入なら1件）');
+  await p.__ctx.close();
+});
+
+test('P2：時間切れ（応答なし）：15 秒で打ち切り、「時間内に完了しませんでした」と再試行。無限に待たず、移動もしない', { skip: skip() }, async () => {
+  const { p } = await returnPage(() => new Promise(() => { /* 応答しない */ }), { clock: true });
+  await p.waitForSelector('[data-legacy-handoff-box]');
+  await p.clock.runFor(14000);
+  assert.equal(await p.locator('[data-legacy-handoff-retry]').count(), 0, '15 秒までは待つ');
+  await p.clock.runFor(2500);
+  await p.waitForSelector('[data-legacy-handoff-retry]');
+  assert.match(await p.locator('[data-legacy-handoff-box]').innerText(), /時間内に完了しませんでした/);
+  await p.clock.runFor(10000);
+  assert.equal(path_(p), '/', '時間切れでは移動しない');
+  assert.notEqual(await p.evaluate((k) => localStorage.getItem(k), KEY), null);
+  await p.__ctx.close();
+});
+
+test('P2：決着（別アカウントが引き継ぎ済み 409／購入を確認できない 403）：案内を出して留まる。控えは消える', { skip: skip() }, async () => {
+  for (const [status, body, re] of [[409, { error: 'already_bound' }, /すでに別のアカウントに引き継がれています/], [403, { error: 'not_entitled' }, /購入を確認できませんでした/]]) {
+    const { p } = await returnPage((r) => r.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) }));
+    await p.waitForSelector('[data-legacy-handoff-box] .rs-text:not(:has-text("引き継いでいます"))');
+    assert.match(await p.locator('[data-legacy-handoff-box]').innerText(), re);
+    await p.waitForTimeout(2500);
+    assert.equal(path_(p), '/');
+    assert.equal(await p.evaluate((k) => localStorage.getItem(k), KEY), null);
+    await p.__ctx.close();
+  }
+});
+
+test('P2：引き継ぎが無い通常のログイン復帰は、従来どおり約 0.8 秒後にマイページへ移動する（控えなし／別の診断コードの控え）', { skip: skip() }, async () => {
+  for (const mode of ['none', 'other']) {
+    const { p } = await returnPage((r) => r.fulfill({ contentType: 'application/json', body: '{"ok":true}' }), { stash: false, otherStash: mode === 'other' });
+    await p.waitForURL((u) => u.pathname === '/mypage.html', { timeout: 5000 });
+    assert.equal(p.__calls.length, 0, mode);
+    await p.__ctx.close();
+  }
+});
+
+test('P2：メールOTP等で #recordCard なし（認証復帰ではない）：従来どおり移動せず、引き継ぎだけ行う', { skip: skip() }, async () => {
+  const { p } = await returnPage(delayedOk(300), { hash: '' });
+  await p.waitForSelector('[data-legacy-handoff-box] .rs-done-head');
+  await p.waitForTimeout(2500);
+  assert.equal(path_(p), '/');
+  assert.equal(p.__calls.length, 1);
+  await p.__ctx.close();
+});
+
+test('P2：引き継ぎ中にカードが描き直されても、表示（進行中・結果）は消えず、通信は二重に送られない', { skip: skip() }, async () => {
+  let sent = 0;
+  const { p } = await returnPage(delayedOk(1500, () => { sent++; }), { hash: '' });
+  await p.waitForSelector('[data-legacy-handoff-box]');
+  await p.evaluate(() => window.onSignedInFlowDone && window.onSignedInFlowDone({}));
+  await p.waitForSelector('[data-legacy-handoff-box] .rs-done-head');
+  assert.equal(sent, 1);
+  assert.equal(await p.locator('[data-legacy-handoff-box]').count(), 1);
+  await p.__ctx.close();
+});
