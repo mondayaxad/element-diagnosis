@@ -1800,6 +1800,18 @@ const MP_KINDS = {
     },
   },
 };
+// 結果を開く直前に、記録 ID を（同じ診断コードと一緒に）この端末へ 10 分だけ控える。リンクの # 以降（#rec=）を落とすブラウザ
+//   （アプリ内ブラウザなど）でも、結果ページが「マイページの記録」として開けるように（購入済みの記録に、もう一度購入を求めない）
+document.addEventListener('click', (e) => {
+  const a = e.target && e.target.closest ? e.target.closest('a[href*="#rec="]') : null;
+  if (!a) return;
+  try {
+    const u = new URL(a.getAttribute('href'), location.origin);
+    const m = /(?:^#|&)rec=([0-9a-f-]{36})(?:&|$)/i.exec(u.hash);
+    const code = u.searchParams.get('code');
+    if (m && code) localStorage.setItem('ed_rec_hint_v1', JSON.stringify({ id: m[1], code, at: Date.now() }));
+  } catch (err) { /* 控えられなくても、リンクの # で開ける */ }
+}, true);
 // マイページから開く結果のリンク：記録 ID をフラグメントで渡す（結果ページで、この記録を購入の対象にする。共有の URL には付けない）
 function mpResultHref(r) {
   const id = String((r && r.session && r.session.id) || '');

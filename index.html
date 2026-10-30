@@ -3303,7 +3303,15 @@ function edWaitResume(ms) {
 // マイページから開いた結果（/?dv=ETI-2.0&code=…#rec=<記録 ID>）：固有リンクは作らず、ログイン中の本人の記録を購入の対象にする
 function edRecordFromUrl() {
   var m = /(?:^#|&)rec=([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:&|$)/i.exec(location.hash || '');
-  return m ? m[1] : null;
+  if (m) return m[1];
+  // アプリ内ブラウザなど、リンクの # 以降（#rec=）を落とす環境の備え：マイページが、結果を開く直前に控えた記録 ID を使う。
+  //   この結果（同じ診断コード）を、10 分以内に、マイページから開いた時だけ。記録の持ち主かどうかは、サーバーが毎回ログインで確かめる
+  try {
+    var h = JSON.parse(localStorage.getItem('ed_rec_hint_v1') || 'null');
+    var code = new URLSearchParams(location.search).get('code');
+    if (h && code && h.code === code && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(h.id || '')) && Date.now() - Number(h.at) < 10 * 60 * 1000) return h.id;
+  } catch (e) { /* 控えが無い・読めない */ }
+  return null;
 }
 function edResultContext(root, code) {
   var t = window.__edResumeToken;
