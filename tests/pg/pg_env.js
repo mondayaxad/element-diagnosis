@@ -37,20 +37,61 @@ function psqlEnv(c) {
   return env; // PGPASSWORD は呼び出し側の環境に任せる（ここでは作らない・記録しない）
 }
 function psqlArgs(c, db) {
-  return ['-X', '-At', '-h', c.host, '-p', String(c.port), '-U', c.user, '-d', db, '-v', 'ON_ERROR_STOP=1'];
+  return ['-X', '-q', '-At', '-h', c.host, '-p', String(c.port), '-U', c.user, '-d', db, '-v', 'ON_ERROR_STOP=1'];
 }
 function sql(db, query) {
   const c = assertSafeTarget(); if (db !== 'postgres') assertTestDb(db);
   return execFileSync(c.psql, [...psqlArgs(c, db), '-c', query], { env: psqlEnv(c), encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 }
+// 非同期版（ロック待ちを含むSQLが、他の接続の処理を止めないように。イベントループを塞がない）
+function sqlAsync(db, query) {
+  const { execFile } = require('child_process');
+  const c = assertSafeTarget(); if (db !== 'postgres') assertTestDb(db);
+  return new Promise((resolve, reject) => {
+    execFile(c.psql, [...psqlArgs(c, db), '-c', query], { env: psqlEnv(c), encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }, (e, stdout, stderr) => {
+      if (e) { e.stderr = stderr; reject(e); } else resolve(String(stdout).trim());
+    });
+  });
+}
 function sqlFile(db, file, { quiet = true } = {}) {
   const c = assertSafeTarget(); if (db !== 'postgres') assertTestDb(db);
-  return execFileSync(c.psql, [...psqlArgs(c, db), ...(quiet ? ['-q'] : []), '-f', file], { env: psqlEnv(c), encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  return execFileSync(c.psql, [...psqlArgs(c, db), '-f', file], { env: psqlEnv(c), encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 }
 function sqlText(db, text) {
   const c = assertSafeTarget(); assertTestDb(db);
-  return execFileSync(c.psql, [...psqlArgs(c, db), '-q'], { env: psqlEnv(c), input: text, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
+  return execFileSync(c.psql, [...psqlArgs(c, db)], { env: psqlEnv(c), input: text, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
+}
+// 長く開いておく接続（トランザクションをまたぐ試験用：ロックの順序・待ちを確かめる）。query(sql, params) で順に流し、end() で閉じる。
+//   出力は行の配列（-At 形式の文字列）。エラーは例外にする（メッセージは DB のもの）
+function openSession(db) {
+  const { spawn } = require('child_process');
+  const c = assertSafeTarget(); assertTestDb(db);
+  const args = psqlArgs(c, db).filter((x) => x !== 'ON_ERROR_STOP=1' && x !== '-v');
+  const child = spawn(c.psql, args, { env: psqlEnv(c), stdio: ['pipe', 'pipe', 'pipe'] });
+  let out = '', err = '', waiter = null, n = 0;
+  const check = () => {
+    const m = /__DONE_(\d+)__\n/.exec(out);
+    if (m && waiter && Number(m[1]) === waiter.n) {
+      const text = out.slice(0, m.index); out = out.slice(m.index + m[0].length);
+      const e = err; err = '';
+      const w = waiter; waiter = null;
+      if (/ERROR:/.test(e)) w.reject(new Error(e)); else w.resolve(text.split('\n').filter(Boolean));
+    }
+  };
+  child.stdout.on('data', (d) => { out += d; check(); });
+  child.stderr.on('data', (d) => { err += d; check(); });
+  const lit = (v) => (v === null || v === undefined ? 'null' : `'${String(v).replace(/'/g, "''")}'`);
+  return {
+    query(q, params = []) {
+      const text = q.replace(/\$(\d+)/g, (_m, i) => lit(params[Number(i) - 1])).replace(/;\s*$/, '');
+      return new Promise((resolve, reject) => {
+        waiter = { n: ++n, resolve, reject };
+        child.stdin.write(`${text};\n\\echo __DONE_${n}__\n`);
+      });
+    },
+    end() { return new Promise((resolve) => { child.on('close', resolve); try { child.stdin.end('\\q\n'); } catch (e) { resolve(); } }); },
+  };
 }
 const newDbName = () => 'e2e_' + crypto.randomBytes(5).toString('hex');
 
-module.exports = { enabled, cfg, assertSafeTarget, assertTestDb, sql, sqlFile, sqlText, newDbName };
+module.exports = { enabled, cfg, assertSafeTarget, assertTestDb, sql, sqlAsync, sqlFile, sqlText, openSession, newDbName };

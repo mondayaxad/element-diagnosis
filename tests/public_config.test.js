@@ -76,13 +76,16 @@ test('format=js：window.__ED_PUBLIC_CONFIG__ を凍結したオブジェクト�
   assert.equal(runJs(call(PREVIEW_ENV, { url: '/api/public-config?format=js', query: {} }).body).projectRef, PREVIEW_REF);
 });
 
-test('ヘッダー：Cache-Control: no-store と X-Content-Type-Options: nosniff（成功・失敗とも）', () => {
-  for (const env of [PREVIEW_ENV, { ...PREVIEW_ENV, VERCEL_ENV: 'staging' }]) {
-    for (const url of ['/api/public-config', '/api/public-config?format=js']) {
-      const r = call(env, { url });
-      assert.match(r.headers['cache-control'], /no-store/);
-      assert.equal(r.headers['x-content-type-options'], 'nosniff');
-    }
+test('ヘッダー：成功はエッジに短く置く（s-maxage=30・ブラウザには置かない）、失敗は no-store。nosniff は常に', () => {
+  for (const url of ['/api/public-config', '/api/public-config?format=js']) {
+    const ok = call(PREVIEW_ENV, { url });
+    assert.equal(ok.code, 200);
+    assert.equal(ok.headers['cache-control'], 'public, max-age=0, s-maxage=30, stale-while-revalidate=120');
+    assert.equal(ok.headers['x-content-type-options'], 'nosniff');
+    const ng = call({ ...PREVIEW_ENV, VERCEL_ENV: 'staging' }, { url });
+    assert.equal(ng.code, 503);
+    assert.match(ng.headers['cache-control'], /no-store/);
+    assert.equal(ng.headers['x-content-type-options'], 'nosniff');
   }
   assert.match(call(PREVIEW_ENV).headers['content-type'], /^application\/json/);
 });

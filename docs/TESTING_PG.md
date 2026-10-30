@@ -9,7 +9,7 @@
 |---|---|---|---|---|
 | 模型の試験 | `tests/*.test.js` | メモリ上の模型（`tests/fixtures/fake_supabase.js`・各試験の偽物） | `npm test` | 画面・処理の分岐の確認。PG は不要で速い |
 | **実PG17の試験** | `tests/pg/*.pg.test.js` | 使い捨ての PostgreSQL 17（`e2e_*`）。本番相当の構造・制約・トリガー・権限 | `npm run test:pg` | 制約・トリガー・関数・権限を含む、実DBでの確認 |
-| 既存のDB依存試験（現在スキップ） | `tests/complete_*`・`link_purchase_api`・`purchase_integrity_api` ほか | `COMPLETE_DB_BACKEND` が必要 | 未整備（§6の計画） | 75 件（§6） |
+| 既存のDB依存試験 | `tests/complete_*`・`link_purchase_api`・`purchase_integrity_api` ほか | `COMPLETE_DB_BACKEND=tests/pg/backend.js`（実PG17） | `npm run test:pg` | 約 100 件（§6）。通常の `npm test` ではスキップ |
 
 実PG17の試験は `E2E_PG=1` のときだけ動き、無ければ**スキップ**します（通常の `npm test` はPGに触れません）。
 
@@ -75,29 +75,35 @@ tests/pg/local_pg.sh stop
 - 必須チェックにする順序案：まず模型の試験を必須、実PG17の試験は 2 週間の様子見のあとに必須へ。
 - 所要時間の目安：実PG17の試験は約 10 秒（DB 作成を含む）。
 
-## 6. 既存の DB 依存試験（スキップ 79 件）を実行可能にする計画
+## 6. 既存の DB 依存試験（以前はスキップ 79 件）
 
-内訳（2026-10-29 時点）：
+`tests/pg/backend.js` を作り、**既存の DB 依存試験を実PG17で実行できるようにしました**（2026-10-30）。
 
-| 区分 | 件数 | 前提 | 状況 |
-|---|---:|---|---|
-| `COMPLETE_DB_BACKEND`（complete_01〜07） | 10 | `complete_guest_api.test.js` | 未 |
-| 〃（complete_01〜08） | 47 | `purchase_integrity_api`（44）・`link_purchase_api` の一部ほか | 未 |
-| 〃（complete_01〜13） | 18 | `link_purchase_api`・`purchase_integrity_api` の一部ほか | 未 |
-| `PGT_HOST`＋`PQ`（complete_16 の同意の組） | 1 | `consent_pairs_db.test.js` | **実行可能になった**（`npm run test:pg` に含む。10 項目合格） |
-| `@vercel/og` | 1 | npm の依存の導入 | CI で `npm ci` すれば実行される |
-| `PDF_LIBS_DIR` | 2 | PDF 生成ライブラリの場所 | 別件（PDF ライブラリの配置） |
+```bash
+E2E_PG=1 COMPLETE_DB_BACKEND=$PWD/tests/pg/backend.js node --test --test-concurrency=1 tests/link_purchase_api.test.js
+# 本番の構成（Stripe Live・本番専用 migration の構造）で流す時は COMPLETE_DB_STRIPE_MODE=live を付ける
+```
+`npm run test:pg` は、これらをまとめて実行します（Preview 相当＝Stripe Test と、本番相当＝Live の両方）。
 
-`COMPLETE_DB_BACKEND` の 75 件を動かす段階：
+| 区分 | 件数 | 状況 |
+|---|---:|---|
+| `link_purchase_api`（購入の経路・固有リンク・マイページへの登録） | 14 | 実PG17で合格 |
+| `complete_guest_api` | 11 | 合格 |
+| `complete_report_job` | 22 | 合格 |
+| `no_upgrade_price_env` | 5 | 合格 |
+| `purchase_integrity_api`（購入の整合・返金・異議申し立て・ロックの順序ほか） | 45 | 合格（ロック待ちを含む同時実行の試験は、`db.session()` の非同期接続で実行） |
+| `consent_pairs_db`（complete_16 の同意の組） | 1 | 合格（`PGT_HOST`＋`PQ`） |
+| `@vercel/og` | 1 | `npm ci` すれば実行される |
+| `PDF_LIBS_DIR` | 2 | 別件（PDF ライブラリの配置） |
 
-1. **構造（完了）**：`createPreviewLikeDb({upTo: 7 | 8 | 13 | 99})` で、試験が前提にする構造を再現できることを確認済み（`schema_smoke.pg.test.js`）。
-2. **バックエンド本体 `tests/pg/backend.js`（未）**：メモリの模型（`fake_supabase.js`）と同じ口 `{ kind, fetchImpl, calls, failNext(key), user({id,email,confirmed,onboarding,token,provider}), record({…}), legacy({code,stripeSessionId}), rows(table), patch(table,id,values), sql(query,params), close() }` を、実PG17の上で提供する。
-   - `user()`＝`auth.users`＋プロフィール＋`auth.identities`、`record()`＝診断記録の挿入、`legacy()`＝旧購入の挿入、`rows()`・`patch()`・`sql()` は直接 SQL。
-3. **模型の拡張（未）**：`postgrest_mock.js` に、PATCH、`merge-duplicates` の upsert、`Prefer: return=representation`、`/auth/v1/user` の拡張項目（`email`・`email_confirmed_at`・`identities`）、`or=`・範囲指定の filter、`failNext`／`calls` の記録を足す。サーバー側の呼び出しは `rpc` が中心（44 件）で、select は `lib/purchase-state.js` ほかの少数の形に限られる。
-4. **段階的に有効化**：`COMPLETE_DB_BACKEND=tests/pg/backend.js` で、complete_01〜07（10 件）→ 01〜08（47 件）→ 01〜13（18 件）の順に 1 ファイルずつ有効化し、模型の挙動と実DBの挙動の差（試験側が模型の癖に依存している箇所）を直す。
-5. **完了の条件**：75 件がすべて「スキップなし」で合格し、CI のジョブ2に含める。
+バックエンドの仕組み：
+- 画面の裏のサーバー（`api/*`）の呼び出しは、`service_role`（Supabase のサービスキーが使うロール）として実行します。権限の無い操作（例：運営者用の関数を API から実行する）は、本番と同じく失敗します。
+- 試験が直接使う `db.sql()` は、管理者（postgres）として実行します。
+- ロック待ちが他の接続の処理を止めないよう、サーバー側の呼び出しは非同期の psql で実行します（`pg_env.sqlAsync`）。
 
-リスク：試験の一部がメモリ模型の癖（採番・時刻・並び順）を前提にしている可能性。差が出た箇所は、実DBの挙動が正であれば試験側を直す（模型を実DBに合わせる）。
+残る課題：
+- `@vercel/og`・PDF の 3 件は DB と無関係（依存の導入）。
+- 実際の Supabase の PostgREST／Auth との差（細かい構文、JWT の検証）は、この基盤の対象外。
 
 ## 7. 本番との関係
 

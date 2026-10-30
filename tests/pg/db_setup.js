@@ -33,7 +33,7 @@ function swapFingerprint(text) {
   return out;
 }
 
-function createProdLikeDb({ withComplete17 = true } = {}) {
+function createProdLikeDb({ withComplete17 = true, synthetic = true } = {}) {
   pg.assertSafeTarget();
   const db = pg.newDbName();
   pg.sql('postgres', `create database ${db}`);
@@ -49,8 +49,10 @@ function createProdLikeDb({ withComplete17 = true } = {}) {
     create table storage.objects(id uuid primary key default gen_random_uuid(), bucket_id text references storage.buckets(id), name text);`);
   for (const f of fs.readdirSync(BASE).filter((x) => /^000[1-7].*\.sql$/.test(x)).sort()) run(path.join(BASE, f));
   pg.sqlText(db, DEFAULT_PRIVS);
-  run(path.join(PROD, 'local_check', 'synthetic_data.sql'));
-  pg.sqlText(db, "insert into auth.identities(user_id, provider) select id, 'email' from auth.users;");
+  if (synthetic) {
+    run(path.join(PROD, 'local_check', 'synthetic_data.sql'));
+    pg.sqlText(db, "insert into auth.identities(user_id, provider) select id, 'email' from auth.users;");
+  }
   for (const stage of ['01_registration_compat', '02_orders_reports_links', '03_reissue_and_constraints']) {
     pg.sqlText(db, swapFingerprint(fs.readFileSync(path.join(PROD, `prod_${stage}.sql`), 'utf8')));
   }

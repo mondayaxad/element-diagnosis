@@ -56,6 +56,8 @@ function buildPublicConfig(env, { host } = {}) {
 function createHandler({ env }) {
   return function handler(req, res) {
     const js = wantsJs(req);
+    // 失敗（503）・不正なメソッドは置かない。成功だけ、エッジに短く置く（全ページの最初に同期で待つため。値は公開してよい4項目＋販売の開閉だけ。
+    //   Checkout のサーバー側も同じ販売の開閉で止めるので、最大でも約 30 秒の差。デプロイごとに別のキャッシュ）
     res.setHeader('Cache-Control', 'no-store, max-age=0');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Content-Type', js ? 'application/javascript; charset=utf-8' : 'application/json; charset=utf-8');
@@ -77,6 +79,7 @@ function createHandler({ env }) {
       return;
     }
 
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=30, stale-while-revalidate=120');
     res.status(200);
     res.end(js
       ? `window.__ED_PUBLIC_CONFIG__ = Object.freeze(${toJsLiteral(built.config)});\n`

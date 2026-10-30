@@ -455,12 +455,28 @@ async function signInWithGoogle() {
   if (error) console.error('Google sign-in error:', error);
 }
 
+// 利用者の確認（Supabase Auth への問い合わせ）は、同じ画面の初期化の中で何度も呼ばれる（マイページでは 3 回続く）。
+//   通信の回数を減らすため、同時の呼び出しは 1 回にまとめ、結果は 3 秒だけ覚える。ログイン・ログアウト・トークン更新などの
+//   認証の変化（onAuthStateChange）と signOutUser で、すぐ捨てる。書き込みや購入の権限の判定には使わない（サーバーが毎回確かめる）。
+let currentUserMemo = null; // { at, promise }
+const CURRENT_USER_MEMO_MS = 3000;
+function forgetCurrentUser() { currentUserMemo = null; }
 async function getCurrentUser() {
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  return user;
+  const now = Date.now();
+  if (currentUserMemo && now - currentUserMemo.at < CURRENT_USER_MEMO_MS) return currentUserMemo.promise;
+  const promise = (async () => {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    return user;
+  })();
+  const memo = { at: now, promise };
+  currentUserMemo = memo;
+  // 失敗は覚えない（次の呼び出しでやり直す）
+  promise.catch(() => { if (currentUserMemo === memo) currentUserMemo = null; });
+  return promise;
 }
 
 async function signOutUser(opts) {
+  forgetCurrentUser();
   await supabaseClient.auth.signOut(opts);
 }
 
@@ -710,6 +726,7 @@ const ED_LOGIN_KEY = 'ed_login_method_v1';
 
 let signedInFlowRunning = null;
 supabaseClient.auth.onAuthStateChange((event, session) => {
+  forgetCurrentUser(); // 認証が変わった：覚えた利用者を捨てる
   if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session) {
     let m = null;
     try { m = sessionStorage.getItem(ED_LOGIN_KEY); sessionStorage.removeItem(ED_LOGIN_KEY); } catch (e) { m = null; }

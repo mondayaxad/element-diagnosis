@@ -2097,10 +2097,11 @@ function mpBestDelivery(list, product) {
 // このアカウントに登録したレポートを記録に重ねる（本人の記録でない記録は、マイページの記録と同じ形で加える）。
 // 購入時メール・Cookie・同じ結果の別の記録では判定しない（登録だけが根拠）
 let mpReportsOk = true;
-async function mpMergeReports(sessions) {
+async function mpMergeReports(sessions, prefetched) {
   mpReportsOk = true;
   if (typeof EdBuy === 'undefined' || !Array.isArray(sessions)) return;
-  const r = await EdBuy.myReports();
+  // prefetched：記録の読み込みと並行して始めた取得（待ち時間を重ねるため）。無ければ、ここで取得する
+  const r = await (prefetched || EdBuy.myReports());
   if (!r.ok || !r.body || !Array.isArray(r.body.reports)) { mpReportsOk = false; return; }
   const byId = new Map(sessions.map((s) => [String(s.id), s]));
   (r.body.records || []).forEach((row) => {
@@ -3975,8 +3976,11 @@ async function initOnce() {
   // 購入時メール・Cookie による自動の引き継ぎは行わない（complete_13）。購入したレポートは、レポートの固有リンクから明示的に登録する
   const claimOutcome = null;
   const registerOutcome = await mpRegisterOutcomeForRender();
+  // 登録したレポートの取得（サーバー経由）は、記録の読み込み（Supabase と /api/my-entitlements）と並行して始める。
+  //   以前は記録が揃ってから始めていたため、2 つのサーバー呼び出しが直列に待っていた。結果は同じ（失敗も同じ扱い）
+  const reportsFetch = typeof EdBuy !== 'undefined' ? EdBuy.myReports().catch(() => ({ ok: false })) : null;
   const result = await loadDiagnosisHistory(DIAGNOSIS_TYPE);
-  if (result.ok) await mpMergeReports(result.sessions);
+  if (result.ok) await mpMergeReports(result.sessions, reportsFetch);
   if (!result.ok) {
     renderError(root);
     mpShowRegisterOutcome(root, registerOutcome, user);

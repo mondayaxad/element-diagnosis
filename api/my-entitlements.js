@@ -86,11 +86,20 @@ function createHandler({ env, fetchImpl }) {
     return rows;
   }
 
-  async function withComplete(conn, userId, sessionRows, payload) {
+  // 権利の事実（記録・権利・注文・目標・旧購入の結び付け）の読み取り。本人の記録の一覧と並行して始めるため、別の関数にした。
+  //   Preview・Production 以外では読まない（null）。読み取りの失敗は、待つ側（withComplete）で従来どおり completeLookup: failed にする
+  function startFacts(conn, userId) {
+    if (conn.appEnv !== 'preview' && conn.appEnv !== 'production') return null;
+    const p = PS.loadUserFacts((path) => selectRows(conn, path), userId);
+    p.catch(() => {}); // 待たれる前に失敗しても未処理にしない（待つ時は元の失敗がそのまま投げられる）
+    return p;
+  }
+
+  async function withComplete(conn, userId, sessionRows, payload, factsPromise) {
     // Preview・Production だけ（環境不明では応答を従来と同じにする）。complete 系の表が無い（migration 適用前）時は completeLookup: failed
     if (conn.appEnv !== 'preview' && conn.appEnv !== 'production') return payload;
     try {
-      const states = PS.computeStates(await PS.loadUserFacts((path) => selectRows(conn, path), userId));
+      const states = PS.computeStates(await (factsPromise || PS.loadUserFacts((path) => selectRows(conn, path), userId)));
       const records = {};
       Object.keys(states).forEach((id) => { records[id] = PS.publicRecordState(states[id]); });
       // 本人の記録の解析権（¥1,000・¥3,000・引き継いだゲスト購入・本人に結び付け済みの旧購入）だけ
@@ -149,8 +158,9 @@ function createHandler({ env, fetchImpl }) {
       }
 
       const sessionRows = [];
+      const factsPromise = startFacts(guard, userId); // 記録の一覧の読み取りと並行して始める
       await fetchOwnDiagnosisCodes(guard, userId, sessionRows);
-      res.status(200).json(await withComplete(guard, userId, sessionRows, { purchased_by_version: {} }));
+      res.status(200).json(await withComplete(guard, userId, sessionRows, { purchased_by_version: {} }, factsPromise));
     } catch (err) {
       console.error('my-entitlements error:', err && err.message);
       res.status(500).json({ error: 'lookup_failed' });
