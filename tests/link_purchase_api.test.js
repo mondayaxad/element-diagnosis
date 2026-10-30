@@ -551,3 +551,31 @@ test('応答・ログ：固有リンクの秘密値は購入完了ページ（Co
   assert.doesNotMatch(ctx.logger.lines.join('\n'), new RegExp(p.link));
   await ctx.db.close();
 });
+
+// ---- 決済画面までの待ち時間：Stripe の価格の確認は、確認できた分を覚える（同じ処理体の 10 分）。商品ごとに別
+test('価格の確認：確認できた価格は覚える（2 回目の購入で Stripe の prices を呼ばない）。商品が違えば別に確認する', { skip }, async () => {
+  const ctx = await setup();
+  const { context } = await resultContext(ctx);
+  const priceCalls = () => ctx.stripe.st.calls.filter((c) => c === 'prices.retrieve').length;
+  await buyAndPay(ctx, context, 'analysis', { pay: false });
+  assert.equal(priceCalls(), 1, '初回は確認する');
+  await buyAndPay(ctx, context, 'analysis', { pay: false });
+  await buyAndPay(ctx, context, 'analysis', { pay: false });
+  assert.equal(priceCalls(), 1, '同じ価格は覚えていて、Stripe を呼ばない');
+  await buyAndPay(ctx, context, 'complete', { goal: 'GOAL_PACE_01', pay: false });
+  assert.equal(priceCalls(), 2, '別の商品（完全解析）は別に確認する');
+  await ctx.db.close();
+});
+
+test('価格の確認：問題のある価格（金額違い）は覚えず、毎回止める。決済画面は作らず、注文は閉じる', { skip }, async () => {
+  const ctx = await setup();
+  const { context } = await resultContext(ctx);
+  ctx.stripe.st.prices[ENV.STRIPE_PRICE_ANALYSIS].unit_amount = 900;
+  for (let i = 0; i < 2; i++) {
+    const r = await ctx.op('buy', { context, product: 'analysis', attempt: attemptId(), source: 'result' });
+    assert.equal(r.code, 503, JSON.stringify(r.body));
+  }
+  assert.equal(ctx.stripe.st.calls.filter((c) => c === 'prices.retrieve').length, 2, '問題のある価格は覚えない');
+  assert.equal(ctx.stripe.st.calls.filter((c) => c === 'sessions.create' || c === 'checkout.sessions.create').length, 0, '決済画面は作らない');
+  await ctx.db.close();
+});
