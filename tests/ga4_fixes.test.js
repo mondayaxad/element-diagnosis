@@ -343,6 +343,31 @@ test('diagnosis_result に、診断コード・回答・トークンを含めな
   await ctx.close();
 });
 
+test('diagnosis_profile：いま完了した新診断だけ、20軸を10点刻みで1回送る。回答・診断コードは含めない。開き直しでは送らない', { skip: skip() }, async () => {
+  const w = world();
+  const ctx = await newContext();
+  await wire(ctx, w);
+  const p = await open(ctx, '/');
+  const code = await complete(p);
+  await p.waitForFunction(() => window.__ev.some((e) => e[1] === 'diagnosis_profile'));
+  await p.evaluate(() => { render(); render(); }); // eslint-disable-line no-undef
+  const prof = await evAll(p, 'diagnosis_profile');
+  assert.equal(prof.length, 1, '再描画で増えない');
+  const keys = ['p_O', 'p_C', 'p_E', 'p_A', 'p_N', 's_AGY', 's_REL', 's_ROL', 's_REF', 's_AUT',
+    'v_SD', 'v_ST', 'v_HE', 'v_AC', 'v_PO', 'v_SE', 'v_CO', 'v_TR', 'v_BE', 'v_UN'];
+  keys.forEach((k) => {
+    assert.ok(Number.isInteger(prof[0][k]) && prof[0][k] >= 0 && prof[0][k] <= 100 && prof[0][k] % 10 === 0, k + ' は10点刻み');
+  });
+  assert.ok(Object.keys(prof[0]).length <= 25, 'GA4 のイベントのパラメータは25個まで');
+  assert.ok(!JSON.stringify(prof).includes(code), '診断コードを送らない');
+  // 同じ結果を開き直した（restored）ときは送らない
+  const p2 = await open(ctx, '/?dv=ETI-2.0&code=' + encodeURIComponent(code));
+  await p2.waitForFunction(() => window.__ev.some((e) => e[1] === 'diagnosis_result'));
+  assert.equal((await evAll(p2, 'diagnosis_profile')).length, 0, '開き直しでは送らない');
+  assert.deepEqual(p.__errors, []);
+  await ctx.close();
+});
+
 // ---------------- 実ブラウザ：本番のドメイン名での、送信の順序（gtag.js だけ差し替え。外部へは送らない） ----------------
 const HOST = 'https://element-diagnosis-five.vercel.app';
 async function prodHostPage(ctx) {

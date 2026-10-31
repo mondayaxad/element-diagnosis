@@ -2310,6 +2310,16 @@ function renderResult(root) {
       top_character: top1.name,
       top_character_match: top1.match
     });
+    // 傾向分析用：新診断（ETI-2.0）を、いま完了した結果だけ、20軸の点を10点刻みにして1イベントで送る。
+    //   個々の100問の回答・診断コード・記録 ID は送らない（10点刻みで元の回答へは戻せない）。開き直した結果は数えない（二重計上を避ける）
+    if (diagnosisVersion === 'ETI-2.0' && resultIsFresh) {
+      var band = function (v) { return Math.max(0, Math.min(100, Math.round(Number(v) / 10) * 10)); };
+      var prof = { event_category: 'diagnosis', diagnosis_version: diagnosisVersion, element: topEl, weapon: topW, nation: topNat };
+      ['O', 'C', 'E', 'A', 'N'].forEach(function (k) { prof['p_' + k] = band(results.personality[k]); });
+      ['AGY', 'REL', 'ROL', 'REF', 'AUT'].forEach(function (k) { prof['s_' + k] = band(results.style[k]); });
+      ['SD', 'ST', 'HE', 'AC', 'PO', 'SE', 'CO', 'TR', 'BE', 'UN'].forEach(function (k) { prof['v_' + k] = band(results.values[k]); });
+      gtag('event', 'diagnosis_profile', prof);
+    }
   }
 
   const enneaWingStr = (diagnosisVersion === 'legacy-v1' && results.enneaWing) ? 'w' + results.enneaWing.type : '';
