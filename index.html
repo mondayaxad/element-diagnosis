@@ -509,7 +509,7 @@
 
   <div class="deep">
     <!-- ABOUT -->
-    <section class="about wrap">
+    <section class="about wrap" id="about-intro">
       <p class="eyebrow">About this Diagnosis</p>
       <h2 class="h2">なぜ、元素で性格を測るのか</h2>
       <p class="about-body jp">
@@ -2804,8 +2804,9 @@ function renderResult(root) {
     btn.setAttribute('data-legacy-buy', '1');
     btn.onclick = function(e) { e.preventDefault(); legacyBuy(btn); };
   }
-  // 販売中の ETI v2：購入状態を確かめるまで ¥1,000 を押せない（initGuestPurchase が状態に合わせて「¥1,000・読む」を決める。
-  //   確かめる前に押されて、購入済みの人に重ねて売らない）
+  // 販売を閉じている・購入の部品（EdGuestPurchase）が無い時は、¥1,000 のボタンを「準備中」にして押せなくする。
+  //   販売中は、ボタンの押下を initReportPurchase（下）が受け持つ。購入状態（購入済みか）では導線を変えない（complete_13 以降）。
+  //   initGuestPurchase は、戻る操作（bfcache）・更新エラー時のやり直しでだけ呼ばれる（最初の描画では呼ばれない）
   lockCtaBtns.forEach(function(btn) {
     if (legacyResult) { if (legacyBuyOpen) lockLegacyOpen(btn); else lockPending(btn); return; }
     if (v2SalesLocked) { lockPending(btn); return; }
@@ -3350,7 +3351,7 @@ function initReportPurchase(root, code, refs) {
     pickGoal.then(function (goal) {
       if (product === 'complete' && !goal) return;
       EdNavBusy.hold(btn, '決済画面へ移動しています…');
-      edResultContext(root, code).then(function (c) {
+      return edResultContext(root, code).then(function (c) {
         if (!c) { EdNavBusy.release(btn); if (msgEl) msgEl.textContent = '購入の準備ができませんでした。通信を確かめて、もう一度押してください。'; return; }
         // マイページの記録（#rec=）から開いた結果：支払いの後、マイページに登録して戻る
         return B.start({ context: c, product: product, goal: goal, source: source, fromMypage: !!edRecordFromUrl() }).then(function (r) {
@@ -3360,6 +3361,11 @@ function initReportPurchase(root, code, refs) {
           if (!r.silent && msgEl) msgEl.textContent = B.errorText(r.error);
         });
       });
+    }).catch(function () {
+      // 予期しない例外（購入対象の取得・目標の選択など）：押せない表示のまま止めず、もう一度押せる状態へ戻す。
+      //   決済画面へ移動を始めたボタン（away）は、移動を妨げないようそのままにする
+      if (btn && btn.getAttribute('data-nav-busy') !== 'away') EdNavBusy.release(btn);
+      if (msgEl) msgEl.textContent = '購入の準備ができませんでした。通信を確かめて、もう一度押してください。';
     });
   }
   var lockMsg = document.getElementById('guestAnalysisMsg');
@@ -3831,7 +3837,8 @@ window.addEventListener('DOMContentLoaded', function() {
 (function() {
   var reached = {};
   var targets = [
-    { id: 'about', label: 'section_reached_about' },
+    // 紹介セクション（id=about は非表示の運営者情報モーダルで、位置が常に0のため最初のスクロールで必ず発火していた）
+    { id: 'about-intro', label: 'section_reached_about' },
     { id: 'diagnosis', label: 'section_reached_diagnosis' },
   ];
   window.addEventListener('scroll', function() {
