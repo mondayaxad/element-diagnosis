@@ -339,7 +339,8 @@ async function openSaved(resultId) {
 
 // ---- 起動 ----
 function wire() {
-  $('startBtn').addEventListener('click', () => startQuiz(null));
+  document.querySelectorAll('[data-start]').forEach((b) => b.addEventListener('click', () => startQuiz(null)));
+  document.querySelectorAll('[data-track]').forEach((a) => a.addEventListener('click', () => track(a.dataset.track, {})));
   $('resumeBtn').addEventListener('click', () => { const p = loadProgress(); if (p) startQuiz(p); });
   $('lastResultBtn').addEventListener('click', () => { const l = store.get(K.last); if (l && l.v === VERSION) { showResult(l, { mode: 'fresh' }); history.replaceState(null, '', '/jagan/#result'); } });
   $('introGo').addEventListener('click', () => { show('quiz'); renderQuestion(); });

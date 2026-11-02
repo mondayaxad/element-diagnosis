@@ -12,6 +12,9 @@
 <meta property="og:description" content="あなたの願いは、どんな深淵を映すのか。">
 <meta property="og:image" content="/api/jagan-og">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/jagan/jagan.css">
 <script src="/js/ga.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous"></script>
@@ -19,26 +22,106 @@
 <script type="module" src="/jagan/app.mjs"></script>
 </head>
 <body>
-<main class="jg-wrap" id="app">
-  <p class="jg-preview-flag">実装候補（v1.0 RC1）のプレビューです。公開・販売前の確認用です。</p>
-
-  <!-- TOP -->
-  <section id="view-top" data-view>
-    <div class="jg-hero">
-      <p class="jg-script">Delusion Diagnosis</p>
-      <h1 class="jg-title-main">邪眼診断</h1>
-      <p class="jg-subtitle">あなたの願いは、どんな深淵を映すのか。</p>
-      <hr class="jg-rule">
-      <p class="jg-lead">独自の50問に答えると、最近のあなたの心の動きを、七つの邪眼元素と六つの型、そして最も近しいファトゥスの姿で映します。所要時間はおよそ7分。元素診断の受検は不要です。</p>
-      <div class="jg-btn-row" style="flex-direction:column;align-items:center">
-        <button type="button" class="jg-btn jg-btn-primary" id="startBtn">診断をはじめる</button>
-        <button type="button" class="jg-btn" id="resumeBtn" hidden>続きから再開する</button>
-        <button type="button" class="jg-btn" id="lastResultBtn" hidden>前回の結果を見る</button>
+<main id="app">
+  <!-- ===== TOP（元素診断の TOP と同じ構成。赤黒の配色。背景・人物の画像なし） ===== -->
+  <div class="jt" id="view-top" data-view>
+    <section class="jt-hero" id="top">
+      <a href="/mypage#jagan" class="jt-mypage" data-track="jagan_mypage_entry"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><circle cx="8" cy="5.4" r="2.6"/><path d="M2.8 14.2c.6-2.7 2.7-4.3 5.2-4.3s4.6 1.6 5.2 4.3" stroke-linecap="round"/></svg><span>マイページ</span></a>
+      <p class="jt-flag">PREVIEW · v1.0 RC1</p>
+      <div class="jt-eye" aria-hidden="true">
+        <svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="92" fill="none" stroke="rgba(165,42,67,.22)"/><circle cx="100" cy="100" r="64" fill="none" stroke="rgba(165,42,67,.16)" stroke-dasharray="2 6"/><path d="M28 100 Q100 40 172 100 Q100 160 28 100Z" fill="none" stroke="rgba(200,64,92,.32)"/><ellipse cx="100" cy="100" rx="9" ry="30" fill="rgba(200,64,92,.28)"/></svg>
       </div>
-      <p class="jg-small" style="margin-top:24px">心理学理論を参考にした独自の自己理解コンテンツです。医療診断ではありません。<br><a href="/jagan/about">邪眼診断について</a></p>
-    </div>
-  </section>
+      <div class="jt-content">
+        <p class="jt-en"><span class="rule" aria-hidden="true"></span><span>Delusion Diagnosis — Gaze Into Your Abyss</span><span class="rule" aria-hidden="true"></span></p>
+        <h1 class="jt-title">邪眼診断</h1>
+        <p class="jt-sub">あなたの願いは、どんな深淵を映すのか。</p>
+        <div class="jt-spark" aria-hidden="true"></div>
+        <p class="jt-desc jp">
+          満たされた願いの裏には、満たされない願いの影がある。<br>
+          50の問いに答えることで、あなたの<strong class="k-el">邪眼元素（心の影の象徴）</strong>と<strong class="k-ty">型（感情の扱い方）</strong>、そして<strong class="k-fa">最も近しいファトゥス</strong>が映し出される。
+          <br><span class="theory-line">自己決定理論 × 感情調整の理論を参考にした、自己理解のための診断。</span>
+          <span class="en">Every wish casts a shadow. 50 questions to reveal your Delusion element, the way you hold your emotions, and the Fatui Harbinger closest to you — a self-understanding diagnosis informed by Self-Determination Theory and emotion regulation research.</span>
+        </p>
+        <div class="jt-cta-wrap">
+          <button type="button" class="jt-cta" data-start>診断をはじめる <span class="en">— Start</span></button>
+          <button type="button" class="jt-sublink" id="resumeBtn" hidden>途中から再開する <span class="arw">→</span></button>
+          <button type="button" class="jt-sublink" id="lastResultBtn" hidden>前回の結果を見る <span class="arw">→</span></button>
+          <a href="/mypage#jagan" class="jt-sublink" data-track="jagan_mypage_entry">診断記録を見る <span class="arw">→</span></a>
+        </div>
+      </div>
+      <span class="jt-scroll" aria-hidden="true"></span>
+    </section>
 
+    <div class="jt-deep">
+      <!-- ABOUT -->
+      <section class="jt-about jt-wrap">
+        <p class="jt-eyebrow">About this Diagnosis</p>
+        <h2 class="jt-h2">なぜ、邪眼で心の影を測るのか</h2>
+        <p class="jt-body jp">
+          人には、自分で選びたい、うまくやれていると感じたい、誰かとつながっていたい、という根本的な欲求がある。心理学の<span class="q">自己決定理論</span>では、これらが満たされている感覚（充足）と、妨げられていると感じる経験（阻害）を、別々のものとして扱う。満たされていても、同時に阻まれていると感じることがあるからだ。
+        </p>
+        <p class="jt-body jp">
+          そして、揺れた気持ちをどう扱うかにも人それぞれの癖がある。出来事の見方を変える<span class="q">捉え直し</span>、気持ちを表に出さない<span class="q">表出抑制</span>。つらいときに感情をつかみにくい、認めにくい、行動を止めにくい、続けにくいといった<span class="q">感情調整の困難</span>。こうした数字や専門用語は、正確でも心に留まりにくい。
+        </p>
+        <p class="jt-body jp">
+          そこでワタシは、原神の<span class="q">「邪眼」</span>に着目した。作中で、願いの代わりに力を与え、その代償を持ち主に求める道具として描かれる邪眼。そしてそれぞれの願いと代償を抱えて生きる、ファトゥスの執行官たち。満たされない願いと、その扱い方を、7つの邪眼元素と6つの型、11人の物語に重ねることで、自分の影を物語として受け取れる診断を設計した。
+        </p>
+        <p class="jt-body triad jp">
+          <b class="k-el">邪眼元素</b>は心の影の象徴。<b class="k-ty">型</b>は感情の扱い方。<b class="k-fa">ファトゥス</b>は、あなたの回答に最も近い物語の参照。3つが重なって、あなたの深淵の輪郭を描く。
+        </p>
+        <p class="jt-en-note">Self-Determination Theory, the process model of emotion regulation, and research on emotion regulation difficulties provide the reference frameworks. The Delusions and the eleven Harbingers provide the story that makes the shadow visible. This is not a medical or clinical assessment.</p>
+        <a class="jt-link" href="/jagan/about">方法と限界について読む <span class="arw">→</span></a>
+        <div class="jt-theory">
+          <p class="jt-theory-names">Self-Determination Theory<i>/</i>Emotion Regulation<i>/</i>Regulation Difficulties</p>
+          <details>
+            <summary class="jt-link">診断設計と心理理論について <span class="arw">→</span></summary>
+            <dl>
+              <div class="item"><dt>診断形式</dt><dd>50問 / 5段階回答＋「判断できない・回答しない」<small>50 questions · 5-point scale with an opt-out</small></dd></div>
+              <div class="item"><dt>測定項目</dt><dd>欲求の充足・阻害 6項目 ／ 感情の扱い方 2項目 ／ 感情調整の困難 4項目<small>12 scores, each converted to 0–100</small></dd></div>
+              <div class="item"><dt>結果</dt><dd>7邪眼元素 × 6型 ＋ ファトゥス11名との近さ<small>7 elements × 6 types · 11 Harbingers</small></dd></div>
+              <div class="item"><dt>参考にした理論</dt><dd class="jp">自己決定理論の基本的心理欲求（Deci &amp; Ryan）、感情調整のプロセスモデル（Gross）、感情調整困難の枠組み（Gratz &amp; Roemer）。設問はすべて独自に作成したもので、既存の質問票やその得点ではありません。<small>Original items informed by BPNSFS, ERQ, and DERS constructs</small></dd></div>
+              <div class="item"><dt>人物との一致率</dt><dd class="jp">作品の描写を参考に設計した独自の回答参照パターンとの近さ。人物本人の心理得点や科学的な一致確率ではありません。<small>Similarity to authored reference patterns</small></dd></div>
+              <div class="item"><dt>料金</dt><dd class="jp">診断：無料 ／ 邪眼解析レポート：¥1,000（販売準備中）<small>Diagnosis: Free / Report: ¥1,000 (coming soon)</small></dd></div>
+            </dl>
+          </details>
+        </div>
+      </section>
+
+      <div class="jt-obs jt-wrap">
+        <section aria-labelledby="jt-rec-h">
+          <p class="jt-eyebrow">Results That Stay With You</p>
+          <h2 class="jt-h2" id="jt-rec-h">記録として、残す</h2>
+          <p class="jt-lead jp">診断結果は、あなたの記録としてマイページに保存できます。<br>元素診断の記録とは別に、邪眼診断の記録として残ります。</p>
+          <div class="jt-timeline" aria-hidden="true">
+            <svg viewBox="0 0 320 44">
+              <line x1="6" y1="16" x2="306" y2="16" stroke="rgba(165,42,67,.25)" stroke-width="1"/>
+              <circle cx="40" cy="16" r="2.2" fill="#6b2a3d"/><circle cx="112" cy="16" r="2.2" fill="#8a3348"/><circle cx="190" cy="16" r="2.4" fill="#a52a43"/>
+              <circle cx="290" cy="16" r="7" fill="none" stroke="#c8405c" stroke-opacity=".45"/><circle cx="290" cy="16" r="3.2" fill="#f2b8c6"/>
+              <text x="6" y="40">PAST</text><text x="306" y="40" text-anchor="end" class="now">NOW</text>
+            </svg>
+          </div>
+          <a class="jt-link" href="/mypage#jagan" data-track="jagan_mypage_entry">診断記録を見る <span class="arw">→</span></a>
+        </section>
+
+        <section class="jt-line" aria-labelledby="jt-line-h">
+          <p class="jt-eyebrow">Stay Connected</p>
+          <h2 class="jt-h2" id="jt-line-h">旅の続きを、静かに受け取る</h2>
+          <p class="jt-lead jp">診断の更新や、新しい観測、<br>先行体験の案内などを公式LINEからお届けします。<br>必要なときだけ、静かにお知らせします。</p>
+          <a class="jt-link jt-line-link" href="https://line.me/R/ti/p/@307ttqfu?oat_content=url&amp;ts=09190026#~" target="_blank" rel="noopener"><span class="jt-line-dot" aria-hidden="true"></span>公式LINEを追加する <span class="arw">→</span></a>
+        </section>
+      </div>
+
+      <section class="jt-final jt-wrap">
+        <div class="jt-spark" aria-hidden="true"></div>
+        <p class="jt-copy">自分の深淵を覗く。</p>
+        <div class="jt-cta-wrap"><button type="button" class="jt-cta" data-start>診断をはじめる <span class="en">— Start</span></button></div>
+      </section>
+
+      <footer class="jg-footer jt-footer">邪眼診断 — An original self-understanding framework inspired by Genshin Impact. Not a medical diagnosis.<br><a href="/jagan/about">邪眼診断について</a> ・ <a href="/privacy">プライバシーポリシー</a> ・ <a href="/terms">利用規約</a> ・ <a href="/">元素診断</a></footer>
+    </div>
+  </div>
+
+<div class="jg-wrap">
   <!-- 開始前の教示 -->
   <section id="view-intro" data-view hidden>
     <div class="jg-card">
@@ -138,7 +221,8 @@
     <p class="jg-status" id="shareStatus" role="status" aria-live="polite"></p>
   </dialog>
 
-  <footer class="jg-footer"><a href="/jagan/about">邪眼診断について</a> ・ <a href="/mypage">マイページ</a> ・ <a href="/privacy">プライバシーポリシー</a> ・ <a href="/terms">利用規約</a></footer>
+  <footer class="jg-footer"><a href="/jagan/about">邪眼診断について</a> ・ <a href="/mypage#jagan">マイページ</a> ・ <a href="/privacy">プライバシーポリシー</a> ・ <a href="/terms">利用規約</a></footer>
+</div>
 </main>
 </body>
 </html>
