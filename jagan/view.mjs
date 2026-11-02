@@ -148,20 +148,6 @@ export function renderDomainTable(result, bundle, copy) {
     }).join('')}</ul>`).join('');
 }
 
-// 邪眼解析レポートの本文（サンプルページと、販売開始後の本人のレポートで共通）
-export function renderReport(result, bundle, copy) {
-  const chars = result.characters.status === 'available' ? result.characters.rankings.slice(0, 3) : [];
-  return `<section class="jg-card">${renderHeadline(result)}<div class="jg-explain">${renderExplanation(result, bundle, copy)}</div></section>
-    <section class="jg-card"><h3 class="jg-h3">12項目のスコア</h3><p class="jg-note">${esc(copy.report.score_notice)}</p>${renderDomainTable(result, bundle, copy)}</section>
-    <section class="jg-card"><h3 class="jg-h3">元素の順位</h3>${result.elements.status === 'available'
-      ? `<ol class="jg-ranklist">${result.elements.rankings.map((e) => `<li>${esc(e.rank)}. ${esc(e.label)}（${esc(e.displayScore)}）</li>`).join('')}</ol>` : '<p class="jg-pending-block">回答不足のため判定保留</p>'}
-      ${result.elements.status === 'available' ? `<p class="jg-reflect">${esc(copy.result.element[result.elements.primary].reflection)}</p>` : ''}</section>
-    <section class="jg-card"><h3 class="jg-h3">近しい人物候補と相違</h3>${chars.length ? chars.map((c) =>
-      `<details class="jg-details"${c.rank === 1 ? ' open' : ''}><summary>${esc(c.rank)}. ${esc(c.label)}（${esc(c.displayScore)}%一致）</summary>${renderCharacterDetail(result, bundle, copy, c.id)}</details>`).join('')
-      : '<p class="jg-pending-block">回答不足のため判定保留</p>'}</section>
-    <section class="jg-card"><h3 class="jg-h3">方法について</h3>${renderMethod(copy)}</section>`;
-}
-
 export function renderMethod(copy) {
   const m = copy.method;
   return ['short_notice', 'score_notice', 'element_type_notice', 'character_notice', 'balance_notice', 'timeframe_notice', 'development_notice']
@@ -489,4 +475,153 @@ export function heroGemsHtml() {
     const p = pos[i];
     return `<div class="jt-gem" style="top:${p.top};left:${p.left};opacity:${p.op};transform:scale(${(p.size / 56).toFixed(2)});--gc:${ELEMENT_COLOR[id].main}80">${gemSvg(ELEMENT_COLOR[id].main, 'hero' + i)}</div>`;
   }).join('');
+}
+
+// =====================================================================
+// 解析レポート（元素診断の解析レポートと同じ構成：表紙→01 土台→02〜04 データの深層→05 近しい人物→06 総括）
+//   サンプルと、販売開始後の本人のレポートで共通。
+// =====================================================================
+const BLOCK_INFO = {
+  need: { no: '02', title: '欲求の充足と阻害', en: 'Basic Psychological Needs', fig: 'THREE BASIC NEEDS' },
+  strategy: { no: '03', title: '感情の扱い方', en: 'Emotion Regulation', fig: 'TWO STRATEGIES' },
+  difficulty: { no: '04', title: '感情調整の困難', en: 'Regulation Difficulties', fig: 'FOUR DIFFICULTIES' },
+};
+const SCALE_NOTE = '数値は0〜100。<b class="hi">60以上</b>＝はっきり表れている、41〜59＝場面によって表れる、<b class="lo">40以下</b>＝控えめ、として説明しています。一般の人の中での順位ではなく、この診断の設計上の目安です。';
+const level = (s) => (s >= 60 ? '高め' : s <= 40 ? '控えめ' : '中程度');
+
+function ring(score, color, label) {
+  const r = 26, c = 2 * Math.PI * r, v = Math.max(0, Math.min(100, score));
+  return `<div class="rp-ring" style="--rc:${color}"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="${r}" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="5"/>
+    <circle cx="32" cy="32" r="${r}" fill="none" stroke="${color}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${(c * v / 100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 32 32)"/>
+    <text x="32" y="36" text-anchor="middle">${Math.round(v)}%</text></svg><span>${esc(label)}</span></div>`;
+}
+function bar(result, bundle, copy, d, color) {
+  const r = result.domains[d.id];
+  const c = copy.report.domains[d.id];
+  if (r.score === null) return `<div class="rp-bar"><p class="rp-bar-h"><span>${esc(c.label)}</span><b>保留</b></p><p class="rp-bar-t">回答不足のため計算していません。</p></div>`;
+  return `<div class="rp-bar" style="--bc:${color}">
+      <p class="rp-bar-h"><span>${esc(c.label)}<small>${esc(d.id.replace('_', '-'))}</small></span><b>${r.displayScore}${r.status === 'partial' ? '<small>参考</small>' : ''}</b></p>
+      <span class="rp-track"><i style="width:${Math.max(2, r.score).toFixed(1)}%"></i></span>
+      <p class="rp-bar-t">${esc(c.meaning)}。<em class="lv-${level(r.score)}">${level(r.score)}</em> — ${esc(c.limit)}</p>
+      <p class="rp-bar-q">${esc(c.reflection)}</p>
+    </div>`;
+}
+function listItems(result, bundle, copy, ids, mark, note) {
+  return ids.map((id) => {
+    const c = copy.report.domains[id];
+    return `<div class="rp-li"><span class="rp-mark rp-mark-${mark}">${mark === 'up' ? '✓' : '!'}</span><div><b>${esc(c.label)}（${result.domains[id].displayScore}点）</b>
+      <p>${esc(c.meaning)}${note}</p><small>${esc(c.limit)}</small></div></div>`;
+  }).join('');
+}
+
+export function renderReport(result, bundle, copy) {
+  const elOk = result.elements.status === 'available';
+  const typeOk = result.types.status !== 'insufficient';
+  const elId = elOk ? result.elements.primary : null;
+  const el = elOk ? result.elements.rankings.find((r) => r.id === elId) : null;
+  const typeId = typeOk ? (result.types.primary || 'NONE') : null;
+  const typeLabel = typeOk ? (result.types.primary ? result.types.label : '型の偏りなし') : '判定保留';
+  const et = elOk ? ELEMENT_TEXT[elId] : null;
+  const tt = typeOk ? TYPE_TEXT[typeId] : null;
+  const chOk = result.characters.status === 'available';
+  const top = chOk ? result.characters.rankings[0] : null;
+  const ec = elOk ? ELEMENT_COLOR[elId] : { main: '#C8405C', dark: '#5E1426' };
+  const scored = bundle.items.domains.filter((d) => result.domains[d.id].score !== null);
+  const sorted = scored.slice().sort((a, b) => result.domains[b.id].score - result.domains[a.id].score || a.id.localeCompare(b.id));
+  const highs = sorted.slice(0, 3).map((d) => d.id);
+  const lows = sorted.slice(-3).reverse().map((d) => d.id);
+  // 元素の判定に寄与した4項目（重みの大きい順）
+  const contrib = elOk ? Object.entries(bundle.interpretation.elements.find((e) => e.id === elId).weights)
+    .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).map(([axis, w]) => ({ axis, w })) : [];
+
+  const cover = `<section class="rp-cover" style="--ec:${ec.main};--ed:${ec.dark}">
+      <div class="rp-emblem"><svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="84" fill="none" stroke="color-mix(in srgb, var(--ec) 45%, transparent)"/><circle cx="100" cy="100" r="60" fill="none" stroke="rgba(255,255,255,.06)"/>
+        ${[[16, 100], [184, 100], [100, 16], [148, 168], [52, 168], [160, 40]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="3.5" fill="${i % 2 ? '#E2C08C' : ec.main}"/>`).join('')}</svg>
+        <b>${elOk ? esc(el.label) : '—'}</b></div>
+      <p class="rp-cover-en">DELUSION DIAGNOSIS — ${elOk ? esc(el.label) : ''}</p>
+      <h1 class="rp-cover-title">邪眼診断<br>解析レポート</h1>
+      <p class="rp-cover-code">${elOk ? esc(ELEMENT_NAME[elId]) : '判定保留'}</p>
+      <p class="rp-cover-type">${esc(typeLabel)}</p>
+      <p class="rp-cover-sub">${elOk ? esc(el.label) : '保留'} × ${esc(typeLabel)}${top ? ` × ${esc(top.label)}` : ''}</p>
+    </section>`;
+
+  const s01 = `<section class="rp-card">
+      <p class="rp-no">01</p>
+      <h2 class="rp-h2">あなたの邪眼 — ${elOk ? `<span style="color:${ec.main}">${esc(el.label)}</span>` : '保留'} × ${esc(typeLabel)}</h2>
+      ${elOk ? `<p class="rp-text">${esc(et.body)}</p>` : '<p class="jg-pending-block">回答不足のため元素の判定を保留しています。</p>'}
+      ${typeOk ? `<p class="rp-text">${esc(tt.body)}</p>` : ''}
+      ${elOk && typeOk ? `<blockquote class="rp-quote" style="--ec:${ec.main}">この二つが重なるとき、「${esc(et.essence)}」という影が、「${esc(tt.essence)}」かたちを通して表に現れます。</blockquote>` : ''}
+      ${constellation(ec.main, 'DELUSION RESONANCE MAP')}
+    </section>
+    ${elOk ? `<section class="rp-card">
+      <p class="rp-en">CONNECTING FACTORS</p>
+      <h3 class="rp-h3">あなたの邪眼（${esc(el.label)}）を形作る項目</h3>
+      <div class="rp-rings">${contrib.map((c) => ring(c.w < 0 ? 100 - result.domains[c.axis].score : result.domains[c.axis].score, c.w < 0 ? '#7A6A8A' : ec.main, domainLabel(bundle, c.axis) + (c.w < 0 ? '（低さ）' : ''))).join('')}</div>
+      <p class="rp-note">（低さ）の項目は、値が低いほどこの邪眼に寄与します（リングは 100−得点 で表示）。</p>
+      <p class="rp-sub-h up">◆ はっきり表れている項目（上位3）</p>
+      ${listItems(result, bundle, copy, highs, 'up', '。この項目の高さが、今回の結果に関わっています。')}
+      <p class="rp-sub-h down">◆ 控えめな項目（下位3）</p>
+      ${listItems(result, bundle, copy, lows, 'down', '。この項目は、今回の回答では控えめに表れています。')}
+    </section>` : ''}`;
+
+  const blocks = ['need', 'strategy', 'difficulty'].map((block) => {
+    const info = BLOCK_INFO[block];
+    const f = FOUNDATION[block];
+    const color = BLOCK_COLOR[block];
+    const ds = bundle.items.domains.filter((d) => d.block === block);
+    const av = ds.filter((d) => result.domains[d.id].score !== null);
+    const hi = av.slice().sort((a, b) => result.domains[b.id].score - result.domains[a.id].score)[0];
+    const lo = av.slice().sort((a, b) => result.domains[a.id].score - result.domains[b.id].score)[0];
+    const quote = hi && lo && hi.id !== lo.id
+      ? `この領域でいちばん強く表れているのは<b style="color:${color}">「${esc(hi.label)}」</b>（${result.domains[hi.id].displayScore}）、いちばん控えめなのは<b style="color:${color}">「${esc(lo.label)}」</b>（${result.domains[lo.id].displayScore}）です。${esc(copy.report.domains[hi.id].reflection)}`
+      : '回答不足の項目があるため、この領域の比較は保留しています。';
+    return `<section class="rp-card">
+      <p class="rp-no">${info.no}</p>
+      <h2 class="rp-h2" style="color:${color}">${esc(info.title)} — <span class="rp-h2-en">${esc(info.en)}</span></h2>
+      <p class="rp-text">${esc(f.intro)}</p>
+      <blockquote class="rp-quote" style="--ec:${color}">${quote}</blockquote>
+      ${ds.map((d) => bar(result, bundle, copy, d, color)).join('')}
+      <p class="rp-note">${SCALE_NOTE}</p>
+    </section>`;
+  }).join('');
+
+  const s05 = chOk ? `<section class="rp-card">
+      <p class="rp-no">05</p>
+      <h2 class="rp-h2">近しいファトゥス — <span class="rp-h2-en">Character Match</span></h2>
+      <p class="rp-text">11名の回答参照パターンとの照合結果です。比較先は、作品の描写を参考に作者が設計した「回答の参照パターン」で、人物本人の心理得点ではありません。</p>
+      ${constellation('#E2C08C', 'CONSTELLATION OF SHADOWS')}
+      ${result.characters.rankings.slice(0, 3).map((c, i) => {
+        const story = copy.character.characters[c.id];
+        const ex = explainCharacter(result, bundle.characters, c.id);
+        const row = (x) => `${esc(domainLabel(bundle, x.axis))}（あなた ${Math.round(x.userScore)}／参照 ${Math.round(x.referenceScore)}）`;
+        return `<div class="rp-match">
+          <p class="rp-match-h"><span class="rp-match-no">${c.rank}</span><b class="rx-grad" style="background-image:${characterGradient(c.id)}">${esc(c.label)}</b><em>${c.displayScore}%</em></p>
+          <div class="rx-tags"><span class="rx-tag">「${esc(story.title)}」</span><span class="rx-tag rx-tag-type">${esc(referenceTypeLabel(bundle, c.id))}</span></div>
+          <p class="rp-text sm">${esc(story.story_context)}</p>
+          <p class="rp-text sm"><b class="near">近い項目：</b>${ex.aligned.length ? ex.aligned.map(row).join('、') : esc(copy.character.no_aligned_axes)}</p>
+          <p class="rp-text sm"><b class="far">差のある項目：</b>${ex.different.length ? ex.different.map(row).join('、') : esc(copy.character.no_different_axes)}</p>
+          <p class="rp-q">${esc(story.reflection)}</p>
+        </div>`;
+      }).join('')}
+      <p class="rp-note">${esc(copy.character.global_notice)}15点・20点は説明のための設計値で、心理学上の基準ではありません。</p>
+    </section>` : '';
+
+  const sentence = (block) => {
+    const ds = bundle.items.domains.filter((d) => d.block === block && result.domains[d.id].score !== null);
+    const hi = ds.slice().sort((a, b) => result.domains[b.id].score - result.domains[a.id].score)[0];
+    return hi ? `「${esc(hi.label)}」（${result.domains[hi.id].displayScore}）がもっとも強く表れています。` : '回答不足のため保留しています。';
+  };
+  const s06 = `<section class="rp-card">
+      <p class="rp-no">06</p>
+      <h2 class="rp-h2">総括 — 欲求・扱い方・困難の統合</h2>
+      <p class="rp-en gold">NEEDS × REGULATION × DIFFICULTIES</p>
+      <div class="rp-sum" style="--bc:${BLOCK_COLOR.need}"><p class="k">NEEDS<span>何を求め、何に阻まれているか</span></p><p>欲求の領域では、${sentence('need')}</p></div>
+      <div class="rp-sum" style="--bc:${BLOCK_COLOR.strategy}"><p class="k">REGULATION<span>揺れをどう扱うか</span></p><p>感情の扱い方では、${sentence('strategy')}</p></div>
+      <div class="rp-sum" style="--bc:${BLOCK_COLOR.difficulty}"><p class="k">DIFFICULTIES<span>つらいときに何が難しいか</span></p><p>感情調整の困難では、${sentence('difficulty')}</p></div>
+      <div class="rp-final">${elOk && typeOk ? `この3つの層が重なって、<b style="color:${ec.main}">【${esc(el.label)}×${esc(typeLabel)}】</b>という深淵の輪郭が描かれています。${esc(copy.result.element[elId].reflection)}` : '回答不足の項目があるため、統合の説明は保留しています。'}</div>
+      ${elOk ? '' : ''}
+      <p class="rp-note">${esc(copy.method.short_notice)}${esc(copy.method.development_notice)}</p>
+    </section>`;
+
+  return cover + s01 + blocks + s05 + s06;
 }

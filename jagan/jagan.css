@@ -448,3 +448,72 @@ body { background: #09070B; background-image: none; }
 .rx-fatui-name { white-space: nowrap; }
 .rx-fatui-name.is-long { font-size: 29px; }
 @media (max-width: 380px) { .rx-fatui-name.is-long { font-size: 24px; } }
+
+/* ===== 解析レポート（元素診断の解析レポートと同じ構成・寸法。赤黒の配色） ===== */
+.rp { font-family: var(--font-jp); padding-top: 0; }
+.rp-banner { margin: 0 -16px 0; padding: 14px 18px; font-size: 13px; font-weight: 700; line-height: 1.7; color: #FFF1F4; background: linear-gradient(110deg, #6E1428, #A52A43 60%, #7A1F45); }
+.rp-cover { text-align: center; padding: 48px 8px 36px; }
+.rp-emblem { position: relative; width: 210px; height: 210px; margin: 0 auto 26px; }
+.rp-emblem svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.rp-emblem b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 34px; color: var(--ec); text-shadow: 0 0 18px var(--ec); }
+.rp-cover-en { font-family: var(--font-en); font-size: 11px; letter-spacing: .3em; color: #E2C08C; margin: 0 0 10px; }
+.rp-cover-title { font-size: 26px; line-height: 1.6; margin: 0 0 18px; color: #F4E6EA; }
+.rp-cover-code { font-family: var(--font-jp); font-size: 30px; font-weight: 700; letter-spacing: .12em; margin: 0 0 6px; color: var(--ec); text-shadow: 0 0 16px color-mix(in srgb, var(--ec) 50%, transparent); }
+.rp-cover-type { font-size: 19px; font-weight: 700; margin: 0 0 6px; color: #F4E6EA; }
+.rp-cover-sub { font-size: 13px; color: #A58994; margin: 0; }
+.rp-card { position: relative; background: linear-gradient(170deg, #150A10 0%, #0E070B 100%); border: 1px solid #2E1520; border-radius: 12px; padding: 24px 20px; margin-bottom: 18px; }
+.rp-no { font-family: var(--font-en); font-size: 11px; color: #8A6070; margin: 0 0 6px; }
+.rp-h2 { font-size: 19px; font-weight: 700; line-height: 1.5; margin: 0 0 14px; color: #F0A2B4; }
+.rp-h2-en { font-family: var(--font-en); font-weight: 400; font-size: 16px; }
+.rp-en { font-family: var(--font-en); font-size: 10.5px; letter-spacing: .3em; color: #A86A7A; margin: 0 0 6px; }
+.rp-en.gold { color: #C9A060; margin-bottom: 14px; }
+.rp-h3 { font-size: 15px; font-weight: 700; color: #F0A2B4; margin: 0 0 16px; }
+.rp-text { font-size: 13.5px; line-height: 2; color: #CDB5BD; margin: 0 0 12px; }
+.rp-text.sm { font-size: 12.5px; line-height: 1.85; margin-bottom: 6px; }
+.rp-text .near { color: #8FD0A8; } .rp-text .far { color: #E08A7A; }
+.rp-quote { margin: 14px 0 18px; border-left: 2px solid var(--ec); background: rgba(255, 255, 255, .02); border-radius: 0 8px 8px 0; padding: 14px 16px; font-size: 13.5px; line-height: 2; color: #EFE1E6; }
+.rp-rings { display: flex; justify-content: space-between; gap: 6px; margin: 4px 0 8px; }
+.rp-ring { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.rp-ring svg { width: 64px; height: 64px; }
+.rp-ring text { font-size: 13px; font-weight: 700; fill: var(--rc); font-family: var(--font-jp); }
+.rp-ring span { font-size: 10.5px; color: #A58994; text-align: center; line-height: 1.4; }
+.rp-note { font-size: 11.5px; line-height: 1.8; color: #8A6E78; margin: 12px 0 0; }
+.rp-note .hi { color: #8FD0A8; font-weight: 400; } .rp-note .lo { color: #E0A070; font-weight: 400; }
+.rp-sub-h { font-size: 13px; font-weight: 700; margin: 20px 0 6px; }
+.rp-sub-h.up { color: #8FD0A8; } .rp-sub-h.down { color: #E0A070; }
+.rp-li { display: flex; gap: 10px; padding: 12px 0; border-bottom: 1px solid #22101A; }
+.rp-li:last-of-type { border-bottom: 0; }
+.rp-mark { flex: none; width: 18px; font-weight: 700; }
+.rp-mark-up { color: #8FD0A8; } .rp-mark-down { color: #E0A070; }
+.rp-li b { font-size: 14px; color: #F4E6EA; }
+.rp-li p { font-size: 12.5px; line-height: 1.8; color: #BFA8B0; margin: 4px 0 2px; }
+.rp-li small { font-size: 11px; color: #7A5E68; line-height: 1.7; display: block; }
+.rp-bar { padding: 12px 0; border-bottom: 1px solid #22101A; }
+.rp-bar-h { display: flex; justify-content: space-between; align-items: baseline; margin: 0 0 6px; font-size: 13.5px; color: #EFE1E6; }
+.rp-bar-h small { font-family: var(--font-en); font-size: 10px; color: #7A5E68; margin-left: 8px; }
+.rp-bar-h b { color: var(--bc); font-size: 15px; }
+.rp-bar-h b small { margin-left: 4px; }
+.rp-track { display: block; height: 4px; border-radius: 2px; background: #22101A; overflow: hidden; margin-bottom: 8px; }
+.rp-track i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg, color-mix(in srgb, var(--bc) 40%, #22101A), var(--bc)); }
+.rp-bar-t { font-size: 12px; line-height: 1.8; color: #A58994; margin: 0; }
+.rp-bar-t em { font-style: normal; font-weight: 700; }
+.rp-bar-t .lv-高め { color: #8FD0A8; } .rp-bar-t .lv-中程度 { color: #D9C3CA; } .rp-bar-t .lv-控えめ { color: #E0A070; }
+.rp-bar-q, .rp-q { font-size: 12px; line-height: 1.8; color: #E4C9D0; margin: 6px 0 0; padding-left: 10px; border-left: 2px solid #5A2A3A; }
+.rp-match { border: 1px solid #2E1520; border-radius: 10px; padding: 14px 14px 12px; margin: 12px 0; background: #0D070A; }
+.rp-match-h { display: flex; align-items: baseline; gap: 10px; margin: 0 0 8px; }
+.rp-match-no { font-family: var(--font-en); font-size: 12px; color: #8A6070; }
+.rp-match-h b { font-size: 20px; }
+.rp-match-h em { margin-left: auto; font-style: normal; font-size: 18px; font-weight: 700; color: #F0A2B4; }
+.rp-match .rx-tags { margin-bottom: 8px; }
+.rp-sum { border-left: 2px solid var(--bc); padding: 4px 0 4px 14px; margin: 12px 0; }
+.rp-sum .k { font-family: var(--font-en); font-size: 11px; letter-spacing: .2em; color: var(--bc); margin: 0 0 4px; }
+.rp-sum .k span { font-family: var(--font-jp); letter-spacing: .05em; color: #8A6E78; margin-left: 8px; }
+.rp-sum p { font-size: 13px; line-height: 1.9; color: #CDB5BD; margin: 0; }
+.rp-final { margin-top: 16px; border-radius: 8px; background: rgba(165, 42, 67, .08); border: 1px solid #3A1A26; padding: 14px 16px; font-size: 13.5px; line-height: 2; color: #EFE1E6; }
+.rp-cta { text-align: center; }
+.rp-cta-h { font-size: 17px; font-weight: 700; color: #F4E6EA; margin: 0 0 10px; }
+.rp-cta-btn { text-decoration: none; margin: 8px 0 12px; }
+.rp-print { margin: 12px 0; background: transparent; border: 1px solid #3A1A26; color: #C99AA7; border-radius: 8px; padding: 12px 22px; font-family: inherit; font-size: 13px; cursor: pointer; }
+.rp-end { text-align: center; font-size: 11.5px; line-height: 1.9; color: #8A6E78; margin: 18px 0 40px; }
+.rp-end a { color: #C99AA7; }
+@media print { .night, .rp-banner, .rp-print, .rp-cta, .jf { display: none !important; } body { background: #0E070B; } }
