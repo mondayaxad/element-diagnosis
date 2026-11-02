@@ -1,0 +1,525 @@
+{
+  "diagnosis_key": "jagan",
+  "item_set_version": "jagan-items-1.0.0-rc1",
+  "scoring_version": "jagan-scores-1.0.0-rc1",
+  "interpretation_version": "jagan-interpretation-1.0.0-rc1",
+  "status": "implementation_candidate",
+  "launch_ready": false,
+  "instruction": "最近1か月ほどの自分を振り返り、最も近いものを選んでください。つらいときについての質問は、その期間に経験した場面を思い浮かべてください。",
+  "options": [
+    {
+      "value": 1,
+      "label": "まったく当てはまらない"
+    },
+    {
+      "value": 2,
+      "label": "あまり当てはまらない"
+    },
+    {
+      "value": 3,
+      "label": "どちらともいえない"
+    },
+    {
+      "value": 4,
+      "label": "やや当てはまる"
+    },
+    {
+      "value": 5,
+      "label": "とても当てはまる"
+    }
+  ],
+  "missing_option": {
+    "value": null,
+    "label": "判断できない・回答しない"
+  },
+  "domains": [
+    {
+      "id": "AUT_S",
+      "label": "自律性の充足",
+      "block": "need",
+      "item_count": 4,
+      "minimum_answered": 3
+    },
+    {
+      "id": "AUT_F",
+      "label": "自律性の阻害",
+      "block": "need",
+      "item_count": 4,
+      "minimum_answered": 3
+    },
+    {
+      "id": "COM_S",
+      "label": "有能感の充足",
+      "block": "need",
+      "item_count": 4,
+      "minimum_answered": 3
+    },
+    {
+      "id": "COM_F",
+      "label": "有能感の阻害",
+      "block": "need",
+      "item_count": 4,
+      "minimum_answered": 3
+    },
+    {
+      "id": "REL_S",
+      "label": "関係性の充足",
+      "block": "need",
+      "item_count": 4,
+      "minimum_answered": 3
+    },
+    {
+      "id": "REL_F",
+      "label": "関係性の阻害",
+      "block": "need",
+      "item_count": 4,
+      "minimum_answered": 3
+    },
+    {
+      "id": "REAPP",
+      "label": "捉え直しの使用",
+      "block": "strategy",
+      "item_count": 5,
+      "minimum_answered": 4
+    },
+    {
+      "id": "SUPPR",
+      "label": "表出抑制の使用",
+      "block": "strategy",
+      "item_count": 5,
+      "minimum_answered": 4
+    },
+    {
+      "id": "CLAR_D",
+      "label": "感情理解の困難",
+      "block": "difficulty",
+      "item_count": 4,
+      "minimum_answered": 3
+    },
+    {
+      "id": "ACC_D",
+      "label": "感情受容の困難",
+      "block": "difficulty",
+      "item_count": 4,
+      "minimum_answered": 3
+    },
+    {
+      "id": "IMP_D",
+      "label": "衝動調整の困難",
+      "block": "difficulty",
+      "item_count": 4,
+      "minimum_answered": 3
+    },
+    {
+      "id": "GOAL_D",
+      "label": "行動維持の困難",
+      "block": "difficulty",
+      "item_count": 4,
+      "minimum_answered": 3
+    }
+  ],
+  "items": [
+    {
+      "id": "JG001",
+      "domain": "AUT_S",
+      "block": "need",
+      "text": "日々の予定には、自分の希望を反映できている。",
+      "direction": 1
+    },
+    {
+      "id": "JG002",
+      "domain": "AUT_S",
+      "block": "need",
+      "text": "大事な選択をするとき、自分が納得できる理由で決めている。",
+      "direction": 1
+    },
+    {
+      "id": "JG003",
+      "domain": "AUT_S",
+      "block": "need",
+      "text": "周囲と意見が違っても、自分の考えを選択に活かせる。",
+      "direction": 1
+    },
+    {
+      "id": "JG004",
+      "domain": "AUT_S",
+      "block": "need",
+      "text": "引き受けることと断ることを、自分なりに決められる。",
+      "direction": 1
+    },
+    {
+      "id": "JG005",
+      "domain": "AUT_F",
+      "block": "need",
+      "text": "断りたい用事でも、引き受ける以外に道がないように感じる。",
+      "direction": 1
+    },
+    {
+      "id": "JG006",
+      "domain": "AUT_F",
+      "block": "need",
+      "text": "一日の過ごし方が、周りの都合だけで決まっていくように感じる。",
+      "direction": 1
+    },
+    {
+      "id": "JG007",
+      "domain": "AUT_F",
+      "block": "need",
+      "text": "周囲の期待から外れないために、本意ではない選択をしている。",
+      "direction": 1
+    },
+    {
+      "id": "JG008",
+      "domain": "AUT_F",
+      "block": "need",
+      "text": "自分に関わることなのに、意見を挟む余地がないと感じる。",
+      "direction": 1
+    },
+    {
+      "id": "JG009",
+      "domain": "COM_S",
+      "block": "need",
+      "text": "自分に任されたことを、最後まで形にできる手応えがある。",
+      "direction": 1
+    },
+    {
+      "id": "JG010",
+      "domain": "COM_S",
+      "block": "need",
+      "text": "難しい課題にも、取りかかるための足がかりを見つけられる。",
+      "direction": 1
+    },
+    {
+      "id": "JG011",
+      "domain": "COM_S",
+      "block": "need",
+      "text": "経験を重ねた分だけ、できることが増えたと感じる。",
+      "direction": 1
+    },
+    {
+      "id": "JG012",
+      "domain": "COM_S",
+      "block": "need",
+      "text": "自分の工夫が、取り組んでいることの成果につながっている。",
+      "direction": 1
+    },
+    {
+      "id": "JG013",
+      "domain": "COM_F",
+      "block": "need",
+      "text": "求められる水準に、自分の力が届いていないと感じる。",
+      "direction": 1
+    },
+    {
+      "id": "JG014",
+      "domain": "COM_F",
+      "block": "need",
+      "text": "取り組んでもうまくいかず、自分には難しすぎると感じる。",
+      "direction": 1
+    },
+    {
+      "id": "JG015",
+      "domain": "COM_F",
+      "block": "need",
+      "text": "失敗が続いて、自分の力を頼りにできなくなっている。",
+      "direction": 1
+    },
+    {
+      "id": "JG016",
+      "domain": "COM_F",
+      "block": "need",
+      "text": "自分なりに工夫しても、役に立っていないように感じる。",
+      "direction": 1
+    },
+    {
+      "id": "JG017",
+      "domain": "REL_S",
+      "block": "need",
+      "text": "近況を伝えたとき、気にかけて聞いてくれる相手がいる。",
+      "direction": 1
+    },
+    {
+      "id": "JG018",
+      "domain": "REL_S",
+      "block": "need",
+      "text": "大切な相手と過ごす時間に、気持ちが通じ合う感覚がある。",
+      "direction": 1
+    },
+    {
+      "id": "JG019",
+      "domain": "REL_S",
+      "block": "need",
+      "text": "人と接する中で、自分もその輪の一員だと感じる。",
+      "direction": 1
+    },
+    {
+      "id": "JG020",
+      "domain": "REL_S",
+      "block": "need",
+      "text": "弱いところを見せても、関係が続くと思える相手がいる。",
+      "direction": 1
+    },
+    {
+      "id": "JG021",
+      "domain": "REL_F",
+      "block": "need",
+      "text": "関わりたい相手から、遠ざけられているように感じる。",
+      "direction": 1
+    },
+    {
+      "id": "JG022",
+      "domain": "REL_F",
+      "block": "need",
+      "text": "一緒にいる人たちの中で、自分だけが輪の外にいるように感じる。",
+      "direction": 1
+    },
+    {
+      "id": "JG023",
+      "domain": "REL_F",
+      "block": "need",
+      "text": "自分の気持ちを伝えても、大切に扱われていないと感じる。",
+      "direction": 1
+    },
+    {
+      "id": "JG024",
+      "domain": "REL_F",
+      "block": "need",
+      "text": "身近な人から、いてもいなくても同じだと思われているように感じる。",
+      "direction": 1
+    },
+    {
+      "id": "JG025",
+      "domain": "REAPP",
+      "block": "strategy",
+      "text": "嫌なことが起きたとき、別の見方ができないか考えている。",
+      "direction": 1
+    },
+    {
+      "id": "JG026",
+      "domain": "REAPP",
+      "block": "strategy",
+      "text": "気が重い予定について、取り組む意味を考え直している。",
+      "direction": 1
+    },
+    {
+      "id": "JG027",
+      "domain": "REAPP",
+      "block": "strategy",
+      "text": "相手の言葉に傷ついたとき、自分の受け取り方以外の解釈を探している。",
+      "direction": 1
+    },
+    {
+      "id": "JG028",
+      "domain": "REAPP",
+      "block": "strategy",
+      "text": "失敗を振り返るとき、今後に活かせる面から捉えようとしている。",
+      "direction": 1
+    },
+    {
+      "id": "JG029",
+      "domain": "REAPP",
+      "block": "strategy",
+      "text": "変えられない出来事について、その意味の捉え方を変えて気持ちを整えようとしている。",
+      "direction": 1
+    },
+    {
+      "id": "JG030",
+      "domain": "SUPPR",
+      "block": "strategy",
+      "text": "気持ちが顔に出そうなとき、表情を変えないようにしている。",
+      "direction": 1
+    },
+    {
+      "id": "JG031",
+      "domain": "SUPPR",
+      "block": "strategy",
+      "text": "腹が立っていても、声の調子には出さないようにしている。",
+      "direction": 1
+    },
+    {
+      "id": "JG032",
+      "domain": "SUPPR",
+      "block": "strategy",
+      "text": "うれしい気持ちも、周りには分からない程度に抑えている。",
+      "direction": 1
+    },
+    {
+      "id": "JG033",
+      "domain": "SUPPR",
+      "block": "strategy",
+      "text": "人と話すとき、本当の気持ちが伝わらないように振る舞っている。",
+      "direction": 1
+    },
+    {
+      "id": "JG034",
+      "domain": "SUPPR",
+      "block": "strategy",
+      "text": "人前で涙が出そうなとき、気づかれないようにこらえている。",
+      "direction": 1
+    },
+    {
+      "id": "JG035",
+      "domain": "CLAR_D",
+      "block": "difficulty",
+      "text": "つらいとき、怒っているのか悲しいのか、自分でも区別しにくい。",
+      "direction": 1
+    },
+    {
+      "id": "JG036",
+      "domain": "CLAR_D",
+      "block": "difficulty",
+      "text": "気持ちが乱れても、それがどんな感情なのか言葉にしにくい。",
+      "direction": 1
+    },
+    {
+      "id": "JG037",
+      "domain": "CLAR_D",
+      "block": "difficulty",
+      "text": "つらい出来事の後、自分の中にどんな感情が残っているのかつかみにくい。",
+      "direction": 1
+    },
+    {
+      "id": "JG038",
+      "domain": "CLAR_D",
+      "block": "difficulty",
+      "text": "いくつもの感情が重なると、一つひとつを整理できなくなる。",
+      "direction": 1
+    },
+    {
+      "id": "JG039",
+      "domain": "ACC_D",
+      "block": "difficulty",
+      "text": "つらい気持ちが生じると、そんな気持ちを持つ自分を責めてしまう。",
+      "direction": 1
+    },
+    {
+      "id": "JG040",
+      "domain": "ACC_D",
+      "block": "difficulty",
+      "text": "悲しみや不安を感じている自分を、そのまま認めることが難しい。",
+      "direction": 1
+    },
+    {
+      "id": "JG041",
+      "domain": "ACC_D",
+      "block": "difficulty",
+      "text": "嫌な感情があると、その感情を持つこと自体を恥ずかしく感じる。",
+      "direction": 1
+    },
+    {
+      "id": "JG042",
+      "domain": "ACC_D",
+      "block": "difficulty",
+      "text": "気持ちが落ち込むと、落ち込んでいることを許せないと感じる。",
+      "direction": 1
+    },
+    {
+      "id": "JG043",
+      "domain": "IMP_D",
+      "block": "difficulty",
+      "text": "気持ちが高ぶると、送らない方がよいと思うメッセージを送ってしまう。",
+      "direction": 1
+    },
+    {
+      "id": "JG044",
+      "domain": "IMP_D",
+      "block": "difficulty",
+      "text": "つらさが強いとき、控えようと決めた行動に手が伸びてしまう。",
+      "direction": 1
+    },
+    {
+      "id": "JG045",
+      "domain": "IMP_D",
+      "block": "difficulty",
+      "text": "感情が強くなると、行動する前に一度止まることが難しい。",
+      "direction": 1
+    },
+    {
+      "id": "JG046",
+      "domain": "IMP_D",
+      "block": "difficulty",
+      "text": "動揺すると、後で困ると分かっている行動でも、その場でやめられなくなる。",
+      "direction": 1
+    },
+    {
+      "id": "JG047",
+      "domain": "GOAL_D",
+      "block": "difficulty",
+      "text": "気持ちが沈むと、必要な用事に取りかかれなくなる。",
+      "direction": 1
+    },
+    {
+      "id": "JG048",
+      "domain": "GOAL_D",
+      "block": "difficulty",
+      "text": "不安が強いと、進めていた作業の手が止まってしまう。",
+      "direction": 1
+    },
+    {
+      "id": "JG049",
+      "domain": "GOAL_D",
+      "block": "difficulty",
+      "text": "嫌なことが頭から離れないと、やるべきことを順番に進めにくくなる。",
+      "direction": 1
+    },
+    {
+      "id": "JG050",
+      "domain": "GOAL_D",
+      "block": "difficulty",
+      "text": "気持ちが乱れた後、途中だった作業へ戻ることが難しい。",
+      "direction": 1
+    }
+  ],
+  "display_order": [
+    "JG001",
+    "JG005",
+    "JG009",
+    "JG013",
+    "JG017",
+    "JG021",
+    "JG002",
+    "JG006",
+    "JG010",
+    "JG014",
+    "JG018",
+    "JG022",
+    "JG003",
+    "JG007",
+    "JG011",
+    "JG015",
+    "JG019",
+    "JG023",
+    "JG004",
+    "JG008",
+    "JG012",
+    "JG016",
+    "JG020",
+    "JG024",
+    "JG025",
+    "JG030",
+    "JG026",
+    "JG031",
+    "JG027",
+    "JG032",
+    "JG028",
+    "JG033",
+    "JG029",
+    "JG034",
+    "JG035",
+    "JG039",
+    "JG043",
+    "JG047",
+    "JG036",
+    "JG040",
+    "JG044",
+    "JG048",
+    "JG037",
+    "JG041",
+    "JG045",
+    "JG049",
+    "JG038",
+    "JG042",
+    "JG046",
+    "JG050"
+  ]
+}

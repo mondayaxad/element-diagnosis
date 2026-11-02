@@ -1,0 +1,46 @@
+# 邪眼診断 プレビュー実装の報告（v1.0 RC1・2026-11-02）
+
+ブランチ：`jagan-preview`（`release-c-preview` から分岐）。本番・本番DB・Stripe は変更していない。
+
+## 実装したもの
+
+| 範囲 | ファイル |
+|---|---|
+| 仕様パッケージ（正本をそのまま保存） | `docs/jagan/spec_v1_0_rc1/` |
+| 採点（仕様の runtime.mjs・math.mjs をバイト一致で使用。data.mjs は data/*.json からの生成物） | `jagan/engine/`、`scripts/jagan-data.mjs` |
+| TOP・教示・50問・回答確認・結果・保存・画像保存・X共有・レポート案内 | `jagan/index.html`、`jagan/app.mjs`、`jagan/view.mjs`、`jagan/card.mjs`、`jagan/jagan.css` |
+| 方法説明・レポートのサンプル（架空の回答例） | `jagan/about.html`、`jagan/sample.html`、`jagan/sample.mjs` |
+| 保存 API（認証・登録完了・サーバー再計算・冪等・他人の結果は 409） | `api/jagan-save.mjs` → `lib/jagan-api.mjs` |
+| 公開共有の作成・取消、共有ページ（/jagan/s/公開ID）、OGP 画像 | `api/jagan-share.mjs`、`api/jagan-share-page.mjs`、`api/jagan-og.mjs`、`lib/jagan-og-params.mjs` |
+| レポート閲覧の権限の土台（販売前は常に 403 sales_closed。販売後も jagan 専用の権利が必要） | `api/jagan-report.mjs` |
+| マイページの「邪眼診断の記録」（一覧・開く・削除、未ログイン時の保存待ちの保存） | `js/jagan-mypage.js`、`mypage.html`（3か所の呼び出しと script 1行） |
+| DB（Preview 専用・未適用）と戻しの草案 | `docs/sql/20261102120000_jagan_01_results_shares.sql`、`docs/sql/jagan_99_rollback_01_DRAFT_DO_NOT_RUN.sql` |
+| 配信の許可リスト・共有ページの rewrite・noindex | `scripts/build-public.js`、`vercel.json` |
+| テスト | `tests/jagan.test.mjs`（16件）、`tests/public_build.test.js`（rewrite の期待値を更新） |
+
+## 既存機能への影響
+
+- ETI の採点・設問・保存・購入・共有のコードは変更していない。
+- `mypage.html`：記録を描いた後に `JaganMypage.render()` を呼ぶ（失敗しても握りつぶし、ETI の表示は続く）。本番ホスト（appEnv=production）では何もしない。
+- `scripts/build-public.js`：①`jagan/` を配信対象に追加、②ブラウザとサーバーで共通の採点モジュール（`jagan/engine/*.mjs`・`jagan/view.mjs`）は API が読み込んでも公開してよいとする例外、③CSS の `url()` 検出で JS の `new URL(変数)` を参照と誤認しないよう、パスらしい値だけを数える。
+- 邪眼の API は Production では `JAGAN_PRODUCTION_ENABLED=true` が無い限り 503（本番 DB へ書かない）。
+
+## DB（未適用）
+
+`jagan_results`（本人の保存結果。本人は SELECT・DELETE のみ、書き込みはサーバーだけ）、`jagan_shares`（公開要約だけ。resultId は SHA-256 だけ保存。anon・authenticated は権限なし）、`jagan_entitlements`（購入権限の土台。行は作らない）。ETI の表は触らない。
+
+## 確認したこと
+
+- 仕様の参照テスト15件、架空回答8例の結果・公開要約が、サイトの採点と完全一致。
+- 保存・共有 API：未認証 401、登録前 403、不正な回答・版 400、別アカウントの結果 409、再送で重複しない、ブラウザが送った所有者・人物は使われない、共有に回答・12スコア・resultId が入らない、公開IDだけでは取り消せない、取消後の共有ページは 404。
+- ブラウザ（Chromium・390px幅）：TOP→50問→確認→結果、連打で2問進まない、リロード後に続きから再開、判断できない（null）の扱い、画像保存（PNG）、共有文の確認ダイアログ。
+- 既存テスト一式（tests/*.test.js）。
+
+## 未確認・残っていること
+
+- Preview DB への jagan_01 の適用（未適用。適用すると保存・共有・マイページ表示が実際に動く）。
+- このブランチのプレビューには Supabase の環境変数が無い（Preview の Supabase 変数は `release-c-preview` ブランチ限定）。保存・共有を実機で試すには、`release-c-preview` への取り込み、またはこのブランチへの環境変数の追加が必要。
+- 実機スマートフォンでの操作、OGP 画像（Edge・Google Fonts の取得）の実測、X のカード表示。
+- 設問の理解確認（人の回答）、本番 ETI との回帰の実機確認、販売（Stripe 商品・決済・権利付与）は未実装・未実施。
+- 匿名の共有作成に回数制限が無い（ETI の固有リンクと同様の制限を、公開前に追加することを推奨）。
+- 共有ページでは GA4 を読み込んでいない（公開ID を送らないため）。

@@ -26,6 +26,7 @@
      （onAuthStateChangeリスナー）を成立させるために読み込む。 -->
 <script src="js/eti_v2_save.js"></script>
 <script src="js/auth-providers.js"></script>
+<script src="js/jagan-mypage.js"></script>
 <!-- Xシェア（/api/share）のキャラクター番号を正本の並び順から取得するため読み込む（計算には使用しない） -->
 <script src="js/characters118_v2.js"></script>
 <!-- MIRROR上位4名を report.html と同じ正本（現行のキャラクター座標・ETIv2.computeMirrorV2）で表示するため読み込む。
@@ -3931,6 +3932,7 @@ async function initOnce() {
     const returnError = typeof takeAuthReturnError === 'function' ? takeAuthReturnError() : null;
     if (returnError) intentNote = authSignInErrorMessage(returnError) + (intentNote ? ` ${intentNote}` : '');
     if (intentNote) { const g = document.getElementById('gateMsg'); if (g) g.textContent = intentNote; }
+    if (window.JaganMypage) window.JaganMypage.gateNote();
     return;
   }
 
@@ -3984,12 +3986,14 @@ async function initOnce() {
   }
   if (result.sessions.length === 0) {
     renderEmpty(root, user);
+    if (window.JaganMypage) await window.JaganMypage.render(root).catch(() => {});
     mpRenderedUserId = user.id;
     mpShowRegisterOutcome(root, registerOutcome, user);
     return;
   }
   mpEntitlementOk = mpEntitlementCheckedOk(result.sessions);
   renderMypage(root, result.sessions, user);
+  if (window.JaganMypage) await window.JaganMypage.render(root).catch(() => {});
   mpRenderedUserId = user.id;
   if (keepScrollY !== null && renderedBefore === user.id) {
     openFolds.forEach((key) => {

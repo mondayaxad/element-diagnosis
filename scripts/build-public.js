@@ -64,6 +64,7 @@ const PUBLIC_FILES = [
   'js/eti_v2_prototypes.js',
   'js/eti_v2_save.js',
   'js/registration-onboarding.js',
+  'js/jagan-mypage.js',                                       // マイページの「邪眼診断の記録」（Preview）
   'assets/backgrounds/quiet-starry-lake.jpg',
 ];
 // ディレクトリ直下の指定拡張子だけ（再帰しない）
@@ -76,6 +77,10 @@ const PUBLIC_DIRS = [
   { dir: 'assets/ogp/backgrounds', ext: '.jpg' },              // api/og-image が自サイトから取得する背景（下地が無い時の描き方）
   { dir: 'assets/ogp/bases', ext: '.jpg' },                    // api/og-image の下地（タイプ別35枚。scripts/build-ogp-bases.mjs）
   { dir: 'assets/ogp/bases', ext: '.png' },                    // api/og-image の MIRROR 欄の札（元素別7枚）
+  { dir: 'jagan', ext: '.html' },                              // 邪眼診断（/jagan/・/jagan/about・/jagan/sample）
+  { dir: 'jagan', ext: '.mjs' },
+  { dir: 'jagan', ext: '.css' },
+  { dir: 'jagan/engine', ext: '.mjs' },                        // 邪眼診断の採点（仕様の runtime.mjs・math.mjs と生成した data.mjs。サーバーも同じものを使う）
 ];
 
 // 公開禁止（dist/ に1つでもあれば失敗）。許可リストの誤りに対する二重の確認。
@@ -151,7 +156,8 @@ function collectRefs(text, isHtml) {
     for (const m of text.matchAll(/\s(?:src|href|poster|data-src)\s*=\s*"([^"]*)"/gi)) add(m[1]);
     for (const m of text.matchAll(/\s(?:src|href|poster|data-src)\s*=\s*'([^']*)'/gi)) add(m[1]);
   }
-  for (const m of text.matchAll(/(?<![A-Za-z0-9_$.])url\(\s*['"]?([^'")]+)['"]?\s*\)/gi)) add(m[1]); // CSS の url()（JS の関数名 toDataURL( などは除く）
+  // CSS の url()（JS の関数名 toDataURL( などは除く。JS の new URL(変数名) を拾わないよう、パスらしい値（/ か . を含む）だけ）
+  for (const m of text.matchAll(/(?<![A-Za-z0-9_$.])url\(\s*['"]?([^'")]+)['"]?\s*\)/gi)) if (/[./]/.test(m[1])) add(m[1]);
   // JS の文字列リテラルにある公開資産のパス（/assets/…・assets/…・js/…）
   for (const m of text.matchAll(/["'`]((?:\/)?(?:assets|js)\/[A-Za-z0-9_\-./]+\.[A-Za-z0-9]+)["'`]/g)) add(m[1]);
   return [...refs];
@@ -249,10 +255,12 @@ function traceApiImports(root = ROOT, entries = apiEntryFiles(root)) {
   return { files: [...seen].sort(), packages: [...packages].sort(), problems };
 }
 
+// ブラウザとサーバーで共通に使う公開モジュール（秘密を含まない採点・設定）。API が読み込んでも公開してよい
+const SHARED_PUBLIC_MODULES = /^jagan\/(engine\/(math|runtime|data)\.mjs|view\.mjs)$/;
 // API のサーバー専用ファイル（api/ 以外の require 先）が dist に無いことを確かめる
 function apiFilesExposed(outDir, traced) {
   const dist = new Set(walk(outDir));
-  return traced.filter((f) => dist.has(f)).map((f) => `API 専用のファイルが dist にあります: ${f}`);
+  return traced.filter((f) => dist.has(f) && !SHARED_PUBLIC_MODULES.test(f)).map((f) => `API 専用のファイルが dist にあります: ${f}`);
 }
 
 function verifyDist(outDir, { root = ROOT, expected } = {}) {
@@ -299,7 +307,7 @@ function build({ root = ROOT, outDir = path.join(ROOT, OUT_DIR), files = PUBLIC_
 }
 
 module.exports = {
-  PUBLIC_FILES, PUBLIC_DIRS, FORBIDDEN, KNOWN_MISSING_ABSOLUTE, LEGAL_PAGES, legalPlaceholderProblems,
+  SHARED_PUBLIC_MODULES, PUBLIC_FILES, PUBLIC_DIRS, FORBIDDEN, KNOWN_MISSING_ABSOLUTE, LEGAL_PAGES, legalPlaceholderProblems,
   listPublicFiles, walk, forbiddenIn, collectRefs, checkRefs, traceApiImports, apiFilesExposed, verifyDist, build,
 };
 

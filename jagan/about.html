@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#09070B">
+<link rel="stylesheet" href="/jagan/jagan.css">
+<script src="/js/ga.js"></script>
+<title>邪眼診断について</title>
+</head>
+<body>
+<main class="jg-wrap">
+  <p class="jg-center"><a href="/jagan/">‹ 邪眼診断のトップへ</a></p>
+  <section class="jg-card">
+    <h1 class="jg-h3">邪眼診断について</h1>
+    <div id="methodBody"></div>
+  </section>
+  <section class="jg-card">
+    <h2 class="jg-h3">12項目と判定のしくみ</h2>
+    <p>50問は、自己決定理論の欲求の充足・阻害（6項目）、感情調整の方略（2項目）、感情調整の困難（4項目）を参考に、この診断のために独自に作った設問です。既存の質問票やその得点としては扱いません。</p>
+    <p>各項目は、回答（1〜5）の平均を0〜100に換算します。「判断できない・回答しない」は中間の値で埋めず、4問の項目は3問以上、5問の項目は4問以上の回答があるときだけ計算します。足りない項目を使う判定は保留します。</p>
+    <p>邪眼元素は、12項目の一部に作者が決めた重みを掛けて求める独自の解釈です。型は、六つの感情の扱い方のうち最も高いもので、最も高い値が60未満なら「型の偏りなし」とします。60点・差3点以内の「拮抗」は設計上の暫定基準で、一般の人の基準ではありません。</p>
+    <p>人物（ファトゥス11名）との比較は、作品の物語を参考に作者が設計した「回答の参照パターン」と、あなたの12項目との距離を、全員に共通の重みで計算したものです。人物本人が心理尺度に答えたという想定ではありません。人数・時期によって結果を調整することはありません。計算上の同率のときだけ、結果ごとの固定の値で代表を選びます。</p>
+  </section>
+  <section class="jg-card">
+    <h2 class="jg-h3">保存・共有について</h2>
+    <p>回答は、診断中と結果の再表示のために、この端末（ブラウザ）に一時的に残ります。マイページ保存は、ログインしたあなたが押したときだけ行い、回答と、保存時の版での結果を保存します。</p>
+    <p>X共有・共有ページには、邪眼元素・型・最も近しい人物・一致率・同率の有無だけを載せます。回答と12項目のスコアは載せません。共有は、作成した端末またはアカウントから取り消せます。</p>
+  </section>
+</main>
+<script type="module">
+  import { COPY } from '/jagan/engine/data.mjs';
+  import { renderMethod } from '/jagan/view.mjs';
+  document.getElementById('methodBody').innerHTML = renderMethod(COPY);
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "status": "implementation_candidate",
+  "product_key": "jagan_report_v1",
+  "currency": "JPY",
+  "price": 1000,
+  "price_status": "confirmed",
+  "sales_open": false,
+  "scope": "one_result_report",
+  "free_result_enabled": true,
+  "external_data_analysis": false,
+  "fulfillment": "authenticated_web_report_proposal",
+  "existing_eti_entitlement_grants_access": false,
+  "billing": "one_time",
+  "product_count": 1
+}

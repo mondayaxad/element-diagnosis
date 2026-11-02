@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#09070B">
+<title>邪眼診断｜あなたの願いは、どんな深淵を映すのか。</title>
+<meta name="description" content="独自の50問から、あなたの深淵を映す邪眼元素と型、最も近しいファトゥスを示す自己理解コンテンツ。医療診断ではありません。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="邪眼診断">
+<meta property="og:description" content="あなたの願いは、どんな深淵を映すのか。">
+<meta property="og:image" content="/api/jagan-og">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="/jagan/jagan.css">
+<script src="/js/ga.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous"></script>
+<script src="/api/public-config?format=js"></script>
+<script type="module" src="/jagan/app.mjs"></script>
+</head>
+<body>
+<main class="jg-wrap" id="app">
+  <p class="jg-preview-flag">実装候補（v1.0 RC1）のプレビューです。公開・販売前の確認用です。</p>
+
+  <!-- TOP -->
+  <section id="view-top" data-view>
+    <div class="jg-hero">
+      <p class="jg-script">Delusion Diagnosis</p>
+      <h1 class="jg-title-main">邪眼診断</h1>
+      <p class="jg-subtitle">あなたの願いは、どんな深淵を映すのか。</p>
+      <hr class="jg-rule">
+      <p class="jg-lead">独自の50問に答えると、最近のあなたの心の動きを、七つの邪眼元素と六つの型、そして最も近しいファトゥスの姿で映します。所要時間はおよそ7分。元素診断の受検は不要です。</p>
+      <div class="jg-btn-row" style="flex-direction:column;align-items:center">
+        <button type="button" class="jg-btn jg-btn-primary" id="startBtn">診断をはじめる</button>
+        <button type="button" class="jg-btn" id="resumeBtn" hidden>続きから再開する</button>
+        <button type="button" class="jg-btn" id="lastResultBtn" hidden>前回の結果を見る</button>
+      </div>
+      <p class="jg-small" style="margin-top:24px">心理学理論を参考にした独自の自己理解コンテンツです。医療診断ではありません。<br><a href="/jagan/about">邪眼診断について</a></p>
+    </div>
+  </section>
+
+  <!-- 開始前の教示 -->
+  <section id="view-intro" data-view hidden>
+    <div class="jg-card">
+      <h2 class="jg-h3">はじめる前に</h2>
+      <p id="introInstruction"></p>
+      <p class="jg-small">5段階のほか、「判断できない・回答しない」を選べます。選んだ設問は中間の値で埋めず、回答のない設問として扱います。回答が少ない領域は判定を保留します。</p>
+      <p class="jg-small">回答はこの端末に一時的に残り、途中で閉じても続きから再開できます。保存・共有は、結果画面であなたが操作したときだけ行います。</p>
+      <div class="jg-btn-row"><button type="button" class="jg-btn jg-btn-primary" id="introGo">質問へ進む</button></div>
+    </div>
+  </section>
+
+  <!-- 質問 -->
+  <section id="view-quiz" data-view hidden>
+    <div class="jg-card" id="quizCard">
+      <div class="jg-progress"><span id="qBlock"></span><span id="qCount"></span></div>
+      <div class="jg-progressbar" aria-hidden="true"><span id="qBar"></span></div>
+      <div id="qBreak" hidden>
+        <h2 class="jg-h3" id="qBreakTitle"></h2>
+        <p class="jg-instruction" id="qBreakText"></p>
+        <div class="jg-btn-row"><button type="button" class="jg-btn jg-btn-primary" id="qBreakGo">続ける</button></div>
+      </div>
+      <div id="qBody">
+        <p class="jg-qid" id="qId"></p>
+        <p class="jg-q" id="qText" aria-live="polite"></p>
+        <div class="jg-options" id="qOptions" role="group" aria-labelledby="qText"></div>
+        <button type="button" class="jg-opt jg-opt-missing" id="qMissing" aria-pressed="false"><span class="jg-mark" aria-hidden="true"></span><span></span></button>
+      </div>
+      <div class="jg-qnav">
+        <button type="button" class="jg-btn" id="qBack">‹ 戻る</button>
+        <button type="button" class="jg-linkbtn" id="qShowInstruction">教示を確認</button>
+        <button type="button" class="jg-btn" id="qNext">次へ ›</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 回答の確認 -->
+  <section id="view-review" data-view hidden>
+    <div class="jg-card">
+      <h2 class="jg-h3">回答の確認</h2>
+      <p id="reviewSummary"></p>
+      <p class="jg-small" id="reviewWarn" hidden></p>
+      <div class="jg-btn-row">
+        <button type="button" class="jg-btn" id="reviewBack">回答を見直す</button>
+        <button type="button" class="jg-btn jg-btn-primary" id="reviewGo">結果を見る</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 結果 -->
+  <section id="view-result" data-view hidden>
+    <p class="jg-note jg-center" id="savedBanner" hidden></p>
+    <div id="resultBody"></div>
+    <section class="jg-card jg-actions" id="resultActions">
+      <div class="jg-btn-row">
+        <button type="button" class="jg-btn jg-btn-primary" id="saveBtn">マイページ保存</button>
+        <button type="button" class="jg-btn" id="imageBtn">画像保存</button>
+        <button type="button" class="jg-btn" id="shareBtn">Xシェア</button>
+      </div>
+      <p class="jg-status" id="actionStatus" role="status" aria-live="polite"></p>
+      <p class="jg-small jg-center" id="pendingFix" hidden><button type="button" class="jg-linkbtn" id="fixAnswersBtn">回答を見直す</button></p>
+    </section>
+    <p class="jg-abyss">ここで見えているのは、あなたの深淵の一部分に過ぎません。</p>
+    <section class="jg-card" id="reportOffer">
+      <h3 class="jg-h3">邪眼解析レポート</h3>
+      <ul class="jg-report-list">
+        <li>12項目のスコアと、それぞれの意味・読み方の限界</li>
+        <li>邪眼元素と型の判定理由（寄与した項目と得点）</li>
+        <li>近しい人物候補3名との共通点・相違点</li>
+        <li>各項目の振り返りの問い</li>
+        <li>この診断の方法と限界の説明</li>
+      </ul>
+      <p class="jg-center"><a href="/jagan/sample">レポートのサンプルを見る ›</a></p>
+      <p class="jg-price">邪眼解析レポート 1,000円／買い切り<small>この結果1件分のレポートです。月額・追加プランはありません。</small></p>
+      <div class="jg-btn-row"><button type="button" class="jg-btn jg-btn-primary" id="buyBtn" aria-disabled="true" disabled>レポート準備中</button></div>
+      <p class="jg-small jg-center" id="buyNote">販売開始の準備中です。現在は購入できません。</p>
+    </section>
+    <div class="jg-btn-row" style="margin-top:24px"><button type="button" class="jg-btn" id="retryBtn">もう一度診断する</button></div>
+  </section>
+
+  <!-- 読み込みの失敗など -->
+  <section id="view-message" data-view hidden>
+    <div class="jg-card"><p id="messageText"></p><div class="jg-btn-row"><a class="jg-btn" href="/jagan/">邪眼診断のトップへ</a></div></div>
+  </section>
+
+  <dialog class="jg-dialog" id="shareDialog" aria-labelledby="shareDialogTitle">
+    <h2 class="jg-h3" id="shareDialogTitle">共有する内容</h2>
+    <pre class="jg-sharetext" id="shareText"></pre>
+    <p class="jg-small">X の投稿画面が開きます。投稿はあなたが確定するまで行われません。共有ページには、元素・型・人物・一致率だけを載せます（回答と12項目のスコアは載せません）。</p>
+    <div class="jg-btn-row">
+      <a class="jg-btn jg-btn-primary" id="shareOpenX" href="#" target="_blank" rel="noopener">X の投稿画面を開く</a>
+      <button type="button" class="jg-btn" id="shareCopy">URLをコピー</button>
+    </div>
+    <div class="jg-btn-row" style="margin-top:12px">
+      <button type="button" class="jg-linkbtn" id="shareRevoke">この共有を取り消す</button>
+      <button type="button" class="jg-linkbtn" id="shareClose">閉じる</button>
+    </div>
+    <p class="jg-status" id="shareStatus" role="status" aria-live="polite"></p>
+  </dialog>
+
+  <footer class="jg-footer"><a href="/jagan/about">邪眼診断について</a> ・ <a href="/mypage">マイページ</a> ・ <a href="/privacy">プライバシーポリシー</a> ・ <a href="/terms">利用規約</a></footer>
+</main>
+</body>
+</html>
