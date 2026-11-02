@@ -6,7 +6,7 @@
 //   ・GA4 へは操作の種類だけを送る（回答・12スコア・結果 ID・公開 ID は送らない）。
 import { computeDiagnosis, publicSummary, makeShareText } from './engine/runtime.mjs';
 import { BUNDLE, COPY } from './engine/data.mjs';
-import { renderResultPage, shareTextFromSummary, esc } from './view.mjs';
+import { renderResultPage, shareTextFromSummary, esc, heroGemsHtml } from './view.mjs';
 import { cardBlob } from './card.mjs';
 
 const ITEMS = BUNDLE.items;
@@ -380,6 +380,9 @@ function wire() {
 
 function boot() {
   wire();
+  try { $('heroGems').innerHTML = heroGemsHtml(); } catch { /* 装飾だけ */ }
+  document.querySelectorAll('[data-operator]').forEach((b) => b.addEventListener('click', () => $('operatorDialog').showModal()));
+  document.querySelectorAll('[data-operator-close]').forEach((b) => b.addEventListener('click', () => $('operatorDialog').close()));
   const params = new URLSearchParams(location.search);
   const saved = params.get('saved');
   if (saved && UUID_RE.test(saved)) { openSaved(saved); return; }

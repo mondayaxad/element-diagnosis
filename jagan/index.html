@@ -22,17 +22,18 @@
 <script type="module" src="/jagan/app.mjs"></script>
 </head>
 <body>
+<div class="night" aria-hidden="true"><div class="photo"></div><div class="tint"></div></div>
 <main id="app">
   <!-- ===== TOP（元素診断の TOP と同じ構成。赤黒の配色。背景・人物の画像なし） ===== -->
   <div class="jt" id="view-top" data-view>
     <section class="jt-hero" id="top">
       <a href="/mypage#jagan" class="jt-mypage" data-track="jagan_mypage_entry"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><circle cx="8" cy="5.4" r="2.6"/><path d="M2.8 14.2c.6-2.7 2.7-4.3 5.2-4.3s4.6 1.6 5.2 4.3" stroke-linecap="round"/></svg><span>マイページ</span></a>
-      <p class="jt-flag">PREVIEW · v1.0 RC1</p>
+      <div class="jt-gems" id="heroGems" aria-hidden="true"></div>
       <div class="jt-eye" aria-hidden="true">
         <svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="92" fill="none" stroke="rgba(165,42,67,.22)"/><circle cx="100" cy="100" r="64" fill="none" stroke="rgba(165,42,67,.16)" stroke-dasharray="2 6"/><path d="M28 100 Q100 40 172 100 Q100 160 28 100Z" fill="none" stroke="rgba(200,64,92,.32)"/><ellipse cx="100" cy="100" rx="9" ry="30" fill="rgba(200,64,92,.28)"/></svg>
       </div>
       <div class="jt-content">
-        <p class="jt-en"><span class="rule" aria-hidden="true"></span><span>Delusion Diagnosis — Gaze Into Your Abyss</span><span class="rule" aria-hidden="true"></span></p>
+        <p class="jt-en"><span class="rule" aria-hidden="true"></span><span>Delusion Diagnosis — Know Your Abyss</span><span class="rule" aria-hidden="true"></span></p>
         <h1 class="jt-title">邪眼診断</h1>
         <p class="jt-sub">あなたの願いは、どんな深淵を映すのか。</p>
         <div class="jt-spark" aria-hidden="true"></div>
@@ -117,11 +118,10 @@
         <div class="jt-cta-wrap"><button type="button" class="jt-cta" data-start>診断をはじめる <span class="en">— Start</span></button></div>
       </section>
 
-      <footer class="jg-footer jt-footer">邪眼診断 — An original self-understanding framework inspired by Genshin Impact. Not a medical diagnosis.<br><a href="/jagan/about">邪眼診断について</a> ・ <a href="/privacy">プライバシーポリシー</a> ・ <a href="/terms">利用規約</a> ・ <a href="/">元素診断</a></footer>
     </div>
   </div>
 
-<div class="jg-wrap">
+<section id="diagnosis" class="jd"><div class="jg-wrap">
   <!-- 質問（元素診断と同じ形式：5問ずつ、1〜5の丸を押して進む） -->
   <section id="view-quiz" data-view hidden>
     <div class="qz" id="quizRoot"></div>
@@ -157,8 +157,28 @@
     <p class="jg-status" id="shareStatus" role="status" aria-live="polite"></p>
   </dialog>
 
-  <footer class="jg-footer"><a href="/jagan/about">邪眼診断について</a> ・ <a href="/mypage#jagan">マイページ</a> ・ <a href="/privacy">プライバシーポリシー</a> ・ <a href="/terms">利用規約</a></footer>
-</div>
+</div></section>
 </main>
+
+<footer class="jf">
+  <p class="jf-copy">邪眼診断 — An original self-understanding framework inspired by Genshin Impact. Not a medical diagnosis. For entertainment purposes. © マンデーアクスト / @mondayaxad</p>
+  <div class="jf-links">
+    <a href="/">元素診断</a>
+    <a href="/jagan/about">邪眼診断について</a>
+    <a href="/tokushoho">特定商取引法に基づく表記</a>
+    <a href="/privacy.html">プライバシーポリシー</a>
+    <a href="/terms.html">利用規約</a>
+    <button type="button" class="jf-op" data-operator>運営者情報</button>
+    <a href="mailto:yaduns0522@gmail.com">お問い合わせ</a>
+  </div>
+</footer>
+<dialog class="jg-dialog jf-dialog" id="operatorDialog" aria-labelledby="opH">
+  <h2 id="opH" class="jg-h3">運営者情報</h2>
+  <p class="jf-k">運営者</p><p>マンデーアクスト</p>
+  <p class="jf-k">X（旧Twitter）</p><p>@mondayaxad</p>
+  <p class="jf-k">本サイトについて</p><p>自己決定理論と感情調整の研究を参考にした、邪眼元素・型・ファトゥスによる独自の自己理解診断です。原神の公式コンテンツではありません。医療診断ではありません。</p>
+  <p class="jf-k">お問い合わせ</p><p>メール（yaduns0522@gmail.com）までご連絡ください。XのDM（@mondayaxad）でも受け付けます。</p>
+  <div class="jg-btn-row"><button type="button" class="jg-linkbtn" data-operator-close>閉じる</button></div>
+</dialog>
 </body>
 </html>

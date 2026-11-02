@@ -410,3 +410,41 @@ body { font-family: var(--font-jp); }
 .rx-lock-ring { width: 54px; height: 54px; }
 .rx-lock-word { font-size: 11.5px; }
 .rx-unlock-price { font-size: 26px; font-weight: 700; color: #FFF1F4; margin: 0 0 8px; letter-spacing: .04em; }
+
+/* ===== 姉妹サイトとしての共通の地（元素診断と同じ構造：一枚の夜＝写真＋色レイヤー。色だけ赤へ） ===== */
+body { background: #09070B; background-image: none; }
+.night { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: #09070B; }
+.night .photo { position: absolute; top: 0; left: 0; right: 0; height: 128svh;
+  background: url('/assets/backgrounds/quiet-starry-lake.jpg') center top / cover no-repeat;
+  opacity: .24; filter: brightness(.55) saturate(.55) contrast(.95) sepia(.35) hue-rotate(-28deg); }
+.night .tint { position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 90% 40% at 50% 34%, rgba(9, 7, 11, .55), transparent 75%),
+    radial-gradient(ellipse 80% 50% at 50% 24%, rgba(165, 42, 67, .16), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 12% 84%, rgba(120, 30, 60, .10), transparent 65%),
+    radial-gradient(ellipse 45% 35% at 90% 62%, rgba(150, 40, 80, .08), transparent 65%),
+    linear-gradient(180deg, rgba(9, 7, 11, .5) 0%, rgba(9, 7, 11, 0) 22%); }
+#app, .jf { position: relative; z-index: 1; }
+.jt-eye { display: none; }
+.jt-gems { position: absolute; inset: 0; pointer-events: none; }
+.jt-gem { position: absolute; width: 56px; height: 56px; transform-origin: top left; }
+.jt-gem svg { display: block; filter: drop-shadow(0 0 6px var(--gc)); }
+.jt-deep { background: linear-gradient(180deg, rgba(9, 7, 11, 0) 0, rgba(16, 8, 13, .78) 180px, rgba(16, 8, 13, .84) 100%); }
+/* 診断・結果のセクション（元素診断の #diagnosis と同じ地） */
+.jd { position: relative; background: rgba(16, 8, 13, .86); border-top: 1px solid rgba(220, 110, 135, .10); padding: 36px 0 0; min-height: 100vh; }
+#view-top:not([hidden]) ~ .jd { display: none; }
+.jd .jg-wrap { padding-top: 0; }
+#view-quiz .qz { margin-top: 8px; }
+.rx-eye { width: 52px; height: 52px; }
+.rx-eye svg { width: 100%; height: 100%; }
+/* フッター（元素診断と同じ） */
+.jf { background: rgba(9, 7, 11, .92); border-top: 1px solid rgba(220, 110, 135, .10); padding: 48px 24px; text-align: center; }
+.jf-copy { margin: 0; font-size: 11px; color: #A07080; letter-spacing: .1em; line-height: 1.8; }
+.jf-links { display: flex; gap: 14px 24px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+.jf-links a, .jf-op { color: #B88796; font-size: 11px; text-decoration: none; letter-spacing: .1em; background: none; border: 0; padding: 0; font-family: inherit; cursor: pointer; }
+.jf-links a:hover, .jf-op:hover { color: #F0B9C6; }
+.jf-dialog p { font-size: 13px; line-height: 1.9; color: #CDB5BD; margin: 0 0 12px; }
+.jf-dialog .jf-k { font-weight: 700; color: #F0B9C6; margin-bottom: 4px; }
+.rx-fatui-name { white-space: nowrap; }
+.rx-fatui-name.is-long { font-size: 29px; }
+@media (max-width: 380px) { .rx-fatui-name.is-long { font-size: 24px; } }

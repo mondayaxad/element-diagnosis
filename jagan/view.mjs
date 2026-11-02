@@ -288,7 +288,7 @@ function mainCard(result, bundle) {
     : '回答が足りない項目があるため、組み合わせのまとめは保留しています。';
   return `<section class="rx-card rx-main" style="${elOk ? elementStyle(elId) : ''}">
       <div class="rx-main-head"><span class="rx-kicker">あなたの邪眼</span><span class="rx-badge">JAGAN</span></div>
-      <div class="rx-eye" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M4 32 Q32 8 60 32 Q32 56 4 32Z" fill="none" stroke="var(--ec,#C8405C)" stroke-width="2"/><ellipse cx="32" cy="32" rx="5" ry="13" fill="var(--ec,#C8405C)"/></svg></div>
+      <div class="rx-eye">${gemSvg(elOk ? ELEMENT_COLOR[elId].main : '#C8405C', 'main', 20)}</div>
       <h2 class="rx-title"><span class="rx-el">${elOk ? esc(el.label) : pending}</span><span class="rx-x">×</span><span class="rx-type" style="--tc:${typeOk ? TYPE_COLOR[typeId] : '#BDA9B0'}">${typeOk ? esc(typeLabel) : pending}</span></h2>
       <p class="rx-sub">${elOk ? esc(ELEMENT_NAME[elId]) : '判定保留'} ／ ${typeOk ? esc(tt.axis) : '判定保留'}</p>
       ${tieEl ? `<p class="jg-note">元素に計算上の同率候補があります（${esc(jaList(result.elements.ties.map((i) => result.elements.rankings.find((r) => r.id === i).label)))}）。</p>` : ''}
@@ -325,7 +325,7 @@ function fatuiCard(result, bundle, copy) {
       <p class="rx-kicker">最も近しいファトゥス</p>
       <div class="rx-fatui-row">
         <div>
-          <p class="rx-fatui-name" style="background-image:${characterGradient(top.id)}">${esc(top.label)}</p>
+          <p class="rx-fatui-name${top.label.length >= 6 ? ' is-long' : ''}" style="background-image:${characterGradient(top.id)}">${esc(top.label)}</p>
           <div class="rx-tags"><span class="rx-tag">「${esc(story.title)}」</span><span class="rx-tag rx-tag-type">${esc(referenceTypeLabel(bundle, top.id))}</span></div>
         </div>
         <div class="rx-pct"><b>${esc(top.displayScore)}<small>%</small></b><span>一致度</span></div>
@@ -464,4 +464,29 @@ export function renderResultPage(result, bundle, copy) {
     foundationCard(result, bundle, 'difficulty', BLOCK_COLOR.difficulty),
     unlockAll(),
   ].join('\n');
+}
+
+// 元素診断と同じカット入りの宝石（姉妹サイトとしての共通モチーフ）。色は邪眼の元素カラー
+export function gemSvg(color, seed, ringAngle = null) {
+  return `<svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true">
+      <defs><linearGradient id="jgm-${seed}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ffffff" stop-opacity="0.85"/><stop offset="45%" stop-color="${color}"/><stop offset="100%" stop-color="${color}" stop-opacity="0.55"/></linearGradient></defs>
+      ${ringAngle === null ? '' : `<ellipse cx="28" cy="28" rx="26" ry="8" fill="none" stroke="${color}" stroke-width="1.3" opacity="0.55" transform="rotate(${ringAngle} 28 28)"/><ellipse cx="28" cy="28" rx="26" ry="8" fill="none" stroke="${color}" stroke-width="0.6" stroke-dasharray="1 3" opacity="0.35" transform="rotate(${ringAngle} 28 28)"/>`}
+      <g stroke="#ffffffa0" stroke-width="0.6" stroke-linejoin="round">
+        <polygon points="28,10 36,20 28,24 20,20" fill="url(#jgm-${seed})"/>
+        <polygon points="20,20 28,24 26,40 15,30" fill="${color}" opacity="0.88"/>
+        <polygon points="36,20 28,24 30,40 41,30" fill="${color}" opacity="0.72"/>
+        <polygon points="26,40 30,40 28,46" fill="${color}" opacity="0.6"/>
+        <polygon points="28,10 36,20 32,17" fill="#ffffff" opacity="0.4"/>
+      </g></svg>`;
+}
+export function heroGemsHtml() {
+  const pos = [
+    { top: '8%', left: '10%', size: 26, op: 0.40 }, { top: '14%', left: '82%', size: 20, op: 0.32 }, { top: '40%', left: '4%', size: 16, op: 0.26 },
+    { top: '58%', left: '88%', size: 22, op: 0.34 }, { top: '78%', left: '14%', size: 18, op: 0.28 }, { top: '85%', left: '70%', size: 15, op: 0.26 },
+    { top: '28%', left: '92%', size: 14, op: 0.22 },
+  ];
+  return Object.keys(ELEMENT_COLOR).map((id, i) => {
+    const p = pos[i];
+    return `<div class="jt-gem" style="top:${p.top};left:${p.left};opacity:${p.op};transform:scale(${(p.size / 56).toFixed(2)});--gc:${ELEMENT_COLOR[id].main}80">${gemSvg(ELEMENT_COLOR[id].main, 'hero' + i)}</div>`;
+  }).join('');
 }
