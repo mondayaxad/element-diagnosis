@@ -122,83 +122,19 @@
   </div>
 
 <div class="jg-wrap">
-  <!-- 開始前の教示 -->
-  <section id="view-intro" data-view hidden>
-    <div class="jg-card">
-      <h2 class="jg-h3">はじめる前に</h2>
-      <p id="introInstruction"></p>
-      <p class="jg-small">5段階のほか、「判断できない・回答しない」を選べます。選んだ設問は中間の値で埋めず、回答のない設問として扱います。回答が少ない領域は判定を保留します。</p>
-      <p class="jg-small">回答はこの端末に一時的に残り、途中で閉じても続きから再開できます。保存・共有は、結果画面であなたが操作したときだけ行います。</p>
-      <div class="jg-btn-row"><button type="button" class="jg-btn jg-btn-primary" id="introGo">質問へ進む</button></div>
-    </div>
-  </section>
-
-  <!-- 質問 -->
+  <!-- 質問（元素診断と同じ形式：5問ずつ、1〜5の丸を押して進む） -->
   <section id="view-quiz" data-view hidden>
-    <div class="jg-card" id="quizCard">
-      <div class="jg-progress"><span id="qBlock"></span><span id="qCount"></span></div>
-      <div class="jg-progressbar" aria-hidden="true"><span id="qBar"></span></div>
-      <div id="qBreak" hidden>
-        <h2 class="jg-h3" id="qBreakTitle"></h2>
-        <p class="jg-instruction" id="qBreakText"></p>
-        <div class="jg-btn-row"><button type="button" class="jg-btn jg-btn-primary" id="qBreakGo">続ける</button></div>
-      </div>
-      <div id="qBody">
-        <p class="jg-qid" id="qId"></p>
-        <p class="jg-q" id="qText" aria-live="polite"></p>
-        <div class="jg-options" id="qOptions" role="group" aria-labelledby="qText"></div>
-        <button type="button" class="jg-opt jg-opt-missing" id="qMissing" aria-pressed="false"><span class="jg-mark" aria-hidden="true"></span><span></span></button>
-      </div>
-      <div class="jg-qnav">
-        <button type="button" class="jg-btn" id="qBack">‹ 戻る</button>
-        <button type="button" class="jg-linkbtn" id="qShowInstruction">教示を確認</button>
-        <button type="button" class="jg-btn" id="qNext">次へ ›</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- 回答の確認 -->
-  <section id="view-review" data-view hidden>
-    <div class="jg-card">
-      <h2 class="jg-h3">回答の確認</h2>
-      <p id="reviewSummary"></p>
-      <p class="jg-small" id="reviewWarn" hidden></p>
-      <div class="jg-btn-row">
-        <button type="button" class="jg-btn" id="reviewBack">回答を見直す</button>
-        <button type="button" class="jg-btn jg-btn-primary" id="reviewGo">結果を見る</button>
-      </div>
-    </div>
+    <div class="qz" id="quizRoot"></div>
   </section>
 
   <!-- 結果 -->
   <section id="view-result" data-view hidden>
     <p class="jg-note jg-center" id="savedBanner" hidden></p>
-    <div id="resultBody"></div>
-    <section class="jg-card jg-actions" id="resultActions">
-      <div class="jg-btn-row">
-        <button type="button" class="jg-btn jg-btn-primary" id="saveBtn">マイページ保存</button>
-        <button type="button" class="jg-btn" id="imageBtn">画像保存</button>
-        <button type="button" class="jg-btn" id="shareBtn">Xシェア</button>
-      </div>
-      <p class="jg-status" id="actionStatus" role="status" aria-live="polite"></p>
-      <p class="jg-small jg-center" id="pendingFix" hidden><button type="button" class="jg-linkbtn" id="fixAnswersBtn">回答を見直す</button></p>
-    </section>
-    <p class="jg-abyss">ここで見えているのは、あなたの深淵の一部分に過ぎません。</p>
-    <section class="jg-card" id="reportOffer">
-      <h3 class="jg-h3">邪眼解析レポート</h3>
-      <ul class="jg-report-list">
-        <li>12項目のスコアと、それぞれの意味・読み方の限界</li>
-        <li>邪眼元素と型の判定理由（寄与した項目と得点）</li>
-        <li>近しい人物候補3名との共通点・相違点</li>
-        <li>各項目の振り返りの問い</li>
-        <li>この診断の方法と限界の説明</li>
-      </ul>
-      <p class="jg-center"><a href="/jagan/sample">レポートのサンプルを見る ›</a></p>
-      <p class="jg-price">邪眼解析レポート 1,000円／買い切り<small>この結果1件分のレポートです。月額・追加プランはありません。</small></p>
-      <div class="jg-btn-row"><button type="button" class="jg-btn jg-btn-primary" id="buyBtn" aria-disabled="true" disabled>レポート準備中</button></div>
-      <p class="jg-small jg-center" id="buyNote">販売開始の準備中です。現在は購入できません。</p>
-    </section>
-    <div class="jg-btn-row" style="margin-top:24px"><button type="button" class="jg-btn" id="retryBtn">もう一度診断する</button></div>
+    <div id="resultBody" class="rx"></div>
+    <div class="rx-end">
+      <button type="button" class="rx-end-btn" id="retryBtn">もう一度診断する</button>
+      <a class="rx-end-btn" href="/jagan/about">理論を見る</a>
+    </div>
   </section>
 
   <!-- 読み込みの失敗など -->

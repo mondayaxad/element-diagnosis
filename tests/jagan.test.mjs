@@ -9,10 +9,18 @@ import { fileURLToPath } from 'node:url';
 import { computeDiagnosis, publicSummary } from '../jagan/engine/runtime.mjs';
 import { BUNDLE, COPY } from '../jagan/engine/data.mjs';
 import { recompute, headlineOf, ogParams, renderSharePage, createSaveHandler, createShareHandler, createReportHandler, createSharePageHandler, jaganEnabled } from '../lib/jagan-api.mjs';
-import { renderResult, renderReport, shareTextFromSummary } from '../jagan/view.mjs';
+import { renderResult, renderReport, renderResultPage, referenceTypeLabel, groupSimilarity, shareTextFromSummary } from '../jagan/view.mjs';
 import { parseOg } from '../lib/jagan-og-params.mjs';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+const OVERRIDES = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/jagan/site_overrides.json'), 'utf8'));
+// 仕様の例の型名を、サイトの表示名へ置き換える（数値・順位・ID は仕様の例のまま比較する）
+const OLD_TYPE = { REFRAME: '転化型', CONTAIN: '封蔵型', SURGE: '奔流型', STALL: '停滞型', CONFUSE: '混迷型', RESIST: '抗心型' };
+function relabel(v) {
+  let t = JSON.stringify(v);
+  for (const [id, old] of Object.entries(OLD_TYPE)) t = t.split(`"${old}"`).join(`"${OVERRIDES.type_labels[id]}"`);
+  return JSON.parse(t);
+}
 const SPEC = path.join(ROOT, 'docs/jagan/spec_v1_0_rc1');
 const RID = '3f2b8c1e-7a4d-4e9b-9c2f-1a2b3c4d5e6f';
 const RID2 = '9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d';
@@ -27,9 +35,13 @@ test('engine files are byte-identical to the spec package and data.mjs is regene
     assert.equal(fs.readFileSync(path.join(ROOT, 'jagan/engine', f), 'utf8'), fs.readFileSync(path.join(SPEC, f), 'utf8'), f);
   }
   execFileSync(process.execPath, [path.join(ROOT, 'scripts/jagan-data.mjs'), '--check']);
-  for (const [k, f] of [['items', 'items.json'], ['interpretation', 'interpretation.json'], ['characters', 'characters.json'], ['product', 'product.json']]) {
+  for (const [k, f] of [['items', 'items.json'], ['characters', 'characters.json'], ['product', 'product.json']]) {
     assert.deepEqual(BUNDLE[k], JSON.parse(fs.readFileSync(path.join(SPEC, 'data', f), 'utf8')));
   }
+  // interpretation は型の表示名だけをサイト用に上書き（docs/jagan/site_overrides.json）。係数・ID・基準は仕様のまま
+  const spec = JSON.parse(fs.readFileSync(path.join(SPEC, 'data', 'interpretation.json'), 'utf8'));
+  for (const t of spec.types) t.label = OVERRIDES.type_labels[t.id];
+  assert.deepEqual(BUNDLE.interpretation, spec);
 });
 
 test('the spec reference tests pass unchanged', () => {
@@ -40,8 +52,8 @@ test('every fictional example reproduces the spec results through the site bundl
   const ex = JSON.parse(fs.readFileSync(path.join(SPEC, 'examples.json'), 'utf8'));
   for (const e of ex) {
     const r = computeDiagnosis({ answers: e.input.answers, resultId: e.input.resultId, itemSetVersion: e.input.itemSetVersion || BUNDLE.items.item_set_version }, BUNDLE);
-    assert.deepEqual(JSON.parse(JSON.stringify(r)), e.result, e.name);
-    if (e.publicSummary) assert.deepEqual(publicSummary(r), e.publicSummary, e.name);
+    assert.deepEqual(JSON.parse(JSON.stringify(r)), relabel(e.result), e.name);
+    if (e.publicSummary) assert.deepEqual(publicSummary(r), relabel(e.publicSummary), e.name);
   }
 });
 
@@ -289,4 +301,34 @@ test('share page escapes html in all fields', () => {
   const evil = { ...s, element: { ...s.element, label: '<img src=x onerror=alert(1)>' } };
   const html = renderSharePage({ origin: 'https://x.invalid', publicId: 'A'.repeat(22), summary: evil });
   assert.ok(!html.includes('<img src=x'));
+});
+
+test('result page: deferred parts are not filled, no names leak, and the twelve scores are not shown for free', () => {
+  const empty = renderResultPage(run({}), BUNDLE, COPY);
+  assert.ok(empty.includes('判定保留'));
+  for (const c of BUNDLE.characters.characters) assert.ok(!empty.includes(c.name), c.name);
+  const r = run(Object.fromEntries(BUNDLE.items.items.map((i, k) => [i.id, [5, 2, 4, 3, 4, 2][k % 6]])));
+  const html = renderResultPage(r, BUNDLE, COPY);
+  // 名前が出るのは1位と、仕様で示す同率・近接候補だけ（それ以外の順位は伏せる）
+  const names = BUNDLE.characters.characters.filter((c) => html.includes(c.name)).map((c) => c.id).sort();
+  const allowed = [...new Set([r.characters.primary, ...r.characters.ties, ...r.characters.closeCandidates])].sort();
+  assert.deepEqual(names, allowed);
+  // 有料の 12 項目の表（renderDomainTable）は含まない
+  assert.ok(!html.includes('jg-domains'));
+  for (const d of BUNDLE.items.domains) assert.ok(!html.includes(COPY.report.domains[d.id].reflection), d.id);
+  // 購入ボタンは販売前は押せない
+  assert.ok((html.match(/data-buy disabled/g) || []).length >= 4);
+  assert.ok(!html.includes('邪眼解析レポート'));
+});
+
+test('renamed type labels are used everywhere, and group similarity uses the same formula as the overall score', () => {
+  assert.deepEqual(BUNDLE.interpretation.types.map((t) => t.label).sort(), Object.values(OVERRIDES.type_labels).sort());
+  for (const c of BUNDLE.characters.characters) assert.ok(Object.values(OVERRIDES.type_labels).includes(referenceTypeLabel(BUNDLE, c.id)));
+  const r = run(all(4));
+  const g = groupSimilarity(r, BUNDLE, r.characters.primary);
+  for (const v of Object.values(g)) assert.ok(v >= 0 && v <= 100);
+  // 3群の重みの合計は等しい（各1/3）ので、全体の距離の二乗は各群の距離の二乗の平均と一致する
+  const d = Object.values(g).map((v) => (1 - v / 100) ** 2);
+  const overall = r.characters.rankings[0].score;
+  assert.ok(Math.abs(100 * (1 - Math.sqrt(d.reduce((a, b) => a + b, 0) / 3)) - overall) < 1e-9);
 });

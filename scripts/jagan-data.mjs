@@ -19,12 +19,16 @@ export function render() {
     characters: read('characters.json'),
     product: read('product.json'),
   };
+  // サイト表示用の上書き（docs/jagan/site_overrides.json）。型の表示名だけ。ID・係数・採点は変えない
+  const ov = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/jagan/site_overrides.json'), 'utf8'));
+  for (const t of bundle.interpretation.types) if (ov.type_labels[t.id]) t.label = ov.type_labels[t.id];
   const copy = {
     character: read('character.copy.json'),
     result: read('result.copy.json'),
     report: read('report.copy.json'),
     method: read('method.copy.json'),
   };
+  for (const [id, label] of Object.entries(ov.type_labels)) if (copy.result.type[id]) copy.result.type[id].label = label;
   return '// 生成物：scripts/jagan-data.mjs が docs/jagan/spec_v1_0_rc1/data/*.json から作る。手で編集しない。\n' +
     `export const BUNDLE = Object.freeze(${JSON.stringify(bundle, null, 1)});\n` +
     `export const COPY = Object.freeze(${JSON.stringify(copy, null, 1)});\n`;

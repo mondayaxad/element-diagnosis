@@ -611,19 +611,19 @@ export const BUNDLE = Object.freeze({
   "types": [
    {
     "id": "REFRAME",
-    "label": "転化型",
+    "label": "再解釈型",
     "domain": "REAPP",
     "summary": "出来事の見方を変えて感情を扱おうとする。"
    },
    {
     "id": "CONTAIN",
-    "label": "封蔵型",
+    "label": "秘匿型",
     "domain": "SUPPR",
     "summary": "感情を外に出さず、内側で扱う。"
    },
    {
     "id": "SURGE",
-    "label": "奔流型",
+    "label": "衝動型",
     "domain": "IMP_D",
     "summary": "強い感情の下では、意図したように行動を止めにくい。"
    },
@@ -635,13 +635,13 @@ export const BUNDLE = Object.freeze({
    },
    {
     "id": "CONFUSE",
-    "label": "混迷型",
+    "label": "困惑型",
     "domain": "CLAR_D",
     "summary": "自分の感情をつかみ、整理することに難しさがある。"
    },
    {
     "id": "RESIST",
-    "label": "抗心型",
+    "label": "自責型",
     "domain": "ACC_D",
     "summary": "生じた感情を、そのまま認めにくい。"
    }
@@ -1431,17 +1431,17 @@ export const COPY = Object.freeze({
   },
   "type": {
    "REFRAME": {
-    "label": "転化型",
+    "label": "再解釈型",
     "paragraph": "出来事の見方を変えて感情を扱おうとする。",
     "notice": "固定的な人格ではなく、今回の回答に表れた反応の説明です。"
    },
    "CONTAIN": {
-    "label": "封蔵型",
+    "label": "秘匿型",
     "paragraph": "感情を外に出さず、内側で扱う。",
     "notice": "固定的な人格ではなく、今回の回答に表れた反応の説明です。"
    },
    "SURGE": {
-    "label": "奔流型",
+    "label": "衝動型",
     "paragraph": "強い感情の下では、意図したように行動を止めにくい。",
     "notice": "固定的な人格ではなく、今回の回答に表れた反応の説明です。"
    },
@@ -1451,12 +1451,12 @@ export const COPY = Object.freeze({
     "notice": "固定的な人格ではなく、今回の回答に表れた反応の説明です。"
    },
    "CONFUSE": {
-    "label": "混迷型",
+    "label": "困惑型",
     "paragraph": "自分の感情をつかみ、整理することに難しさがある。",
     "notice": "固定的な人格ではなく、今回の回答に表れた反応の説明です。"
    },
    "RESIST": {
-    "label": "抗心型",
+    "label": "自責型",
     "paragraph": "生じた感情を、そのまま認めにくい。",
     "notice": "固定的な人格ではなく、今回の回答に表れた反応の説明です。"
    }

@@ -6,7 +6,7 @@
 //   ・GA4 へは操作の種類だけを送る（回答・12スコア・結果 ID・公開 ID は送らない）。
 import { computeDiagnosis, publicSummary, makeShareText } from './engine/runtime.mjs';
 import { BUNDLE, COPY } from './engine/data.mjs';
-import { renderResult, shareTextFromSummary, esc } from './view.mjs';
+import { renderResultPage, shareTextFromSummary, esc } from './view.mjs';
 import { cardBlob } from './card.mjs';
 
 const ITEMS = BUNDLE.items;
@@ -16,11 +16,6 @@ const ITEM_BY_ID = Object.fromEntries(ITEMS.items.map((i) => [i.id, i]));
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const K = { progress: 'jagan_progress_v1', last: 'jagan_last_v1', pending: 'jagan_pending_save_v1', shares: 'jagan_shares_v1' };
 const PENDING_MAX_AGE_MS = 24 * 60 * 60 * 1000; // ETI v2 の保存待ちと同じ 24 時間
-const BLOCKS = {
-  need: { title: 'ブロック1／3｜日々の手応え', intro: '' },
-  strategy: { title: 'ブロック2／3｜気持ちの扱い方', intro: 'ここからは、気持ちが動いたときの扱い方についての質問です。' },
-  difficulty: { title: 'ブロック3／3｜つらいとき', intro: 'ここからは、最近1か月の、つらい気持ちになった場面についての質問です。その期間に経験した場面を思い浮かべてください。' },
-};
 
 const $ = (id) => document.getElementById(id);
 const store = {
@@ -60,113 +55,111 @@ function show(view) {
 function message(text) { $('messageText').textContent = text; show('message'); }
 
 // ---- 回答の状態（途中の回答はこの端末に残す。版が違えば使わない） ----
-let state = null; // { resultId, answers, index }
+// 元素診断と同じ形式：5問ずつのページ、1〜5の丸を押す。50問すべてに答えると結果へ進める。
+// 同じ丸をもう一度押すと選択を外す（元素診断と同じ）。欠測（null）は画面からは作らない。
+const PAGE = 5;
+let state = null; // { resultId, answers, page, focus }
 function loadProgress() {
   const p = store.get(K.progress);
   if (!p || p.v !== VERSION || !UUID_RE.test(p.resultId || '') || !p.answers || typeof p.answers !== 'object') return null;
   const answers = {};
-  for (const [k, v] of Object.entries(p.answers)) if (ITEM_BY_ID[k] && (v === null || (Number.isInteger(v) && v >= 1 && v <= 5))) answers[k] = v;
-  return { resultId: p.resultId, answers, index: Math.max(0, Math.min(ORDER.length - 1, Number(p.index) || 0)) };
+  for (const [k, v] of Object.entries(p.answers)) if (ITEM_BY_ID[k] && Number.isInteger(v) && v >= 1 && v <= 5) answers[k] = v;
+  const page = Math.max(0, Math.min(Math.floor((ORDER.length - 1) / PAGE) * PAGE, Number(p.page) || 0));
+  return { resultId: p.resultId, answers, page: page - (page % PAGE), focus: null };
 }
-function saveProgress() { if (state) store.set(K.progress, { v: VERSION, resultId: state.resultId, answers: state.answers, index: state.index }); }
-const answeredCount = (a) => ORDER.filter((id) => Object.hasOwn(a, id)).length;
+function saveProgress() { if (state) store.set(K.progress, { v: VERSION, resultId: state.resultId, answers: state.answers, page: state.page }); }
+const answeredCount = (a) => ORDER.filter((id) => Number.isInteger(a[id])).length;
+const firstUnanswered = () => ORDER.find((id) => !Number.isInteger(state.answers[id]));
+const pad2 = (n) => String(n).padStart(2, '0');
 
 // ---- 質問 ----
-let advancing = false;
-let pendingBreak = null; // ブロックの区切りを表示中
-function renderQuestion() {
-  const id = ORDER[state.index];
-  const item = ITEM_BY_ID[id];
-  const block = BLOCKS[item.block];
-  $('qBlock').textContent = block.title;
-  $('qCount').textContent = `${state.index + 1} / ${ORDER.length}`;
-  $('qBar').style.width = `${(answeredCount(state.answers) / ORDER.length) * 100}%`;
-  $('qBreak').hidden = !pendingBreak;
-  $('qBody').hidden = !!pendingBreak;
-  if (pendingBreak) {
-    $('qBreakTitle').textContent = BLOCKS[pendingBreak].title;
-    $('qBreakText').textContent = `${BLOCKS[pendingBreak].intro}${ITEMS.instruction}`;
-    $('qNext').disabled = true;
-    $('qBreakGo').focus();
-    return;
+let prevFocus = null;
+let popId = null; // 押した丸を「ポワン」と光らせる
+function renderQuiz() {
+  const ids = ORDER.slice(state.page, state.page + PAGE);
+  if (!state.focus || !ids.includes(state.focus)) state.focus = ids.find((id) => !Number.isInteger(state.answers[id])) || ids[0];
+  const n = answeredCount(state.answers);
+  const all = n === ORDER.length;
+  const last = state.page + PAGE >= ORDER.length;
+  const moved = prevFocus !== null && prevFocus !== state.focus && ids.includes(prevFocus);
+  const opt = ITEMS.options;
+  $('quizRoot').innerHTML = `
+    <div class="qz-prog">
+      <div class="qz-prog-top"><span class="qz-range">Q${pad2(state.page + 1)}—${pad2(Math.min(state.page + PAGE, ORDER.length))} <span class="of">/ ${ORDER.length}</span></span><span class="qz-count">回答済 <b>${n}</b></span></div>
+      <div class="qz-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${ORDER.length}" aria-valuenow="${n}"><i style="width:${(n / ORDER.length) * 100}%"></i></div>
+    </div>
+    ${ids.map((id, i) => {
+      const cur = state.answers[id];
+      const st = id === state.focus ? 'is-active' : (Number.isInteger(cur) ? 'is-done' : 'is-next');
+      const mo = moved ? (id === state.focus ? ' is-arriving' : (id === prevFocus && Number.isInteger(cur) ? ' is-settling' : '')) : '';
+      return `<div class="qz-card ${st}${mo}" data-qid="${id}">
+        <div class="qz-no">Q${state.page + i + 1}</div>
+        <p class="qz-text">${esc(ITEM_BY_ID[id].text)}</p>
+        <div class="qz-scale" role="radiogroup" aria-label="Q${state.page + i + 1}の回答">
+          ${opt.map((o) => `<button type="button" data-v="${o.value}" role="radio" aria-label="${esc(o.label)}" aria-checked="${cur === o.value}" class="qz-dot${cur === o.value ? ' is-on' : ''}${cur === o.value && popId === id ? ' is-pop' : ''}">${o.value}</button>`).join('')}
+        </div>
+        <div class="qz-labels"><span>${esc(opt[0].label)}</span><span>${esc(opt[opt.length - 1].label)}</span></div>
+      </div>`;
+    }).join('')}
+    <div class="qz-pager">
+      <button type="button" id="qPrev" ${state.page === 0 ? 'disabled' : ''}>← 前の5問</button>
+      ${last ? '<span></span>' : '<button type="button" id="qNext">次の5問 →</button>'}
+    </div>
+    ${all ? '<button type="button" class="qz-result" id="qResult">結果を見る →</button>' : ''}
+    ${!all && last ? '<button type="button" class="qz-jump" id="qJump">未回答の設問へ →</button>' : ''}`;
+  popId = null;
+  if (moved) {
+    const card = $('quizRoot').querySelector('.qz-card.is-active');
+    if (card) requestAnimationFrame(() => {
+      const r = card.getBoundingClientRect(), vh = window.innerHeight;
+      if (r.top >= 12 && r.bottom <= vh - 12) return;
+      const dy = r.top < 12 ? r.top - 16 : Math.min(r.bottom - vh + 24, r.top - 72);
+      if (Math.abs(dy) >= 8) window.scrollBy({ top: dy, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    });
   }
-  $('qId').textContent = `Q${state.index + 1}`;
-  $('qText').textContent = item.text;
-  const has = Object.hasOwn(state.answers, id);
-  const cur = has ? state.answers[id] : undefined;
-  $('qOptions').innerHTML = ITEMS.options.map((o) => `<button type="button" class="jg-opt" data-v="${o.value}" aria-pressed="${cur === o.value}">
-      <span class="jg-mark" aria-hidden="true"></span><span>${esc(o.label)}</span></button>`).join('');
-  const miss = $('qMissing');
-  miss.setAttribute('aria-pressed', String(has && cur === null));
-  miss.lastElementChild.textContent = ITEMS.missing_option.label;
-  $('qBack').disabled = state.index === 0;
-  $('qNext').disabled = !has;
-  $('qNext').textContent = state.index === ORDER.length - 1 ? '確認へ ›' : '次へ ›';
+  prevFocus = state.focus;
 }
-function choose(value) {
-  if (advancing || pendingBreak) return; // 連打で2問進まない
-  const id = ORDER[state.index];
-  state.answers[id] = value;
+function gotoPage(page) { state.page = page; state.focus = null; prevFocus = null; saveProgress(); renderQuiz(); window.scrollTo({ top: 0 }); }
+let pageLock = false; // ページ送りの直後の連打で次のページの設問に答えない
+function choose(id, v) {
+  if (pageLock) return;
+  const wasFocused = id === state.focus;
+  if (state.answers[id] === v) { delete state.answers[id]; state.focus = id; saveProgress(); renderQuiz(); return; } // 選択を外す
+  state.answers[id] = v;
+  popId = id;
+  state.focus = id;
+  const ids = ORDER.slice(state.page, state.page + PAGE);
+  if (wasFocused) {
+    const after = ids.slice(ids.indexOf(id) + 1).find((x) => !Number.isInteger(state.answers[x]));
+    if (after) state.focus = after;
+  }
   saveProgress();
-  advancing = true;
-  renderQuestion();
-  const at = state.index;
-  setTimeout(() => { advancing = false; if (state && state.index === at) next(); }, 260);
-}
-function next() {
-  const id = ORDER[state.index];
-  if (!Object.hasOwn(state.answers, id)) return;
-  if (state.index === ORDER.length - 1) { showReview(); return; }
-  const cur = ITEM_BY_ID[id].block;
-  state.index += 1;
-  const nb = ITEM_BY_ID[ORDER[state.index]].block;
-  if (nb !== cur) pendingBreak = nb;
-  saveProgress();
-  renderQuestion();
-}
-function back() {
-  if (advancing) return;
-  if (pendingBreak) { pendingBreak = null; state.index -= 1; saveProgress(); renderQuestion(); return; }
-  if (state.index === 0) return;
-  state.index -= 1;
-  saveProgress();
-  renderQuestion();
+  const pageDone = ids.every((x) => Number.isInteger(state.answers[x]));
+  const last = state.page + PAGE >= ORDER.length;
+  renderQuiz();
+  if (pageDone && !last) {
+    pageLock = true;
+    setTimeout(() => { pageLock = false; if (state && ORDER.slice(state.page, state.page + PAGE).every((x) => Number.isInteger(state.answers[x]))) gotoPage(state.page + PAGE); }, 320);
+  }
 }
 function startQuiz(resume) {
-  state = resume || { resultId: newResultId(), answers: {}, index: 0 };
-  pendingBreak = null;
+  state = resume || { resultId: newResultId(), answers: {}, page: 0, focus: null };
+  prevFocus = null;
   saveProgress();
-  if (!resume) { $('introInstruction').textContent = ITEMS.instruction; show('intro'); track('jagan_start', {}); return; }
-  show('quiz'); renderQuestion();
-}
-
-// ---- 回答の確認 ----
-function showReview() {
-  const a = state.answers;
-  const missing = ORDER.filter((id) => a[id] === null).length;
-  const unanswered = ORDER.length - answeredCount(a);
-  $('reviewSummary').textContent = `${ORDER.length}問中、${ORDER.length - missing - unanswered}問に回答しました。「判断できない・回答しない」は${missing}問です。`;
-  let warn = '';
-  try {
-    const r = computeDiagnosis({ answers: a, resultId: state.resultId, itemSetVersion: VERSION }, BUNDLE);
-    const short = ITEMS.domains.filter((d) => r.domains[d.id].score === null).map((d) => d.label);
-    if (short.length) warn = `回答が足りない領域があります（${short.join('・')}）。この領域を使う判定は保留になります。回答を見直すこともできます。`;
-  } catch { /* 表示だけ */ }
-  $('reviewWarn').textContent = warn;
-  $('reviewWarn').hidden = !warn;
-  show('review');
+  if (!resume) track('jagan_start', {});
+  show('quiz'); renderQuiz();
 }
 function finish() {
+  if (answeredCount(state.answers) !== ORDER.length) return;
   const answers = {};
-  for (const id of ORDER) answers[id] = Object.hasOwn(state.answers, id) ? state.answers[id] : null;
+  for (const id of ORDER) answers[id] = state.answers[id];
   const last = { v: VERSION, resultId: state.resultId, answers, completedAt: new Date().toISOString() };
   store.set(K.last, last);
   store.del(K.progress);
-  track('jagan_complete', { answered_bucket: bucket(ORDER.filter((id) => answers[id] !== null).length) });
+  track('jagan_complete', {});
   showResult(last, { mode: 'fresh' });
   try { history.replaceState(null, '', '/jagan/#result'); } catch { /* noop */ }
 }
-const bucket = (n) => (n === 50 ? '50' : n >= 45 ? '45-49' : n >= 30 ? '30-44' : '0-29');
 
 // ---- 結果 ----
 let current = null; // { result, answers, mode }
@@ -178,7 +171,8 @@ function showResult(record, { mode, savedAt } = {}) {
     catch (e) { message('結果を表示できませんでした。もう一度診断してください。'); return; }
   }
   current = { result, answers: mode === 'saved' ? result.answers : record.answers, mode };
-  $('resultBody').innerHTML = renderResult(result, BUNDLE, COPY);
+  $('resultBody').innerHTML = renderResultPage(result, BUNDLE, COPY);
+  bindResult();
   const banner = $('savedBanner');
   banner.hidden = mode !== 'saved';
   if (mode === 'saved') banner.textContent = `マイページに保存した結果です（${new Date(savedAt).toLocaleString('ja-JP')}・保存時の版 ${result.versions.interpretation}）。`;
@@ -190,8 +184,8 @@ function showResult(record, { mode, savedAt } = {}) {
   setStatus(shareable ? '' : '回答不足の部分があるため、画像保存・共有はできません。');
   const saveBtn = $('saveBtn');
   if (mode === 'saved') { saveBtn.textContent = '✓ 保存済み'; saveBtn.disabled = true; }
-  else if (store.get(K.pending) && store.get(K.pending).resultId === result.resultId) { saveBtn.textContent = 'マイページ保存（ログイン待ち）'; saveBtn.disabled = false; }
-  else { saveBtn.textContent = 'マイページ保存'; saveBtn.disabled = false; }
+  else if (store.get(K.pending) && store.get(K.pending).resultId === result.resultId) { saveBtn.textContent = 'マイページに保存する（ログイン待ち）'; saveBtn.disabled = false; }
+  else { saveBtn.textContent = 'マイページに保存する'; saveBtn.disabled = false; }
   show('result');
 }
 function summaryOf(result) { try { return publicSummary(result); } catch { return null; } }
@@ -229,15 +223,15 @@ async function save() {
     if (res.status === 403 && out.error === 'registration_required') {
       store.set(K.pending, { ...payload, at: Date.now() });
       $('actionStatus').innerHTML = '保存の前に、マイページで登録（利用規約への同意）を完了してください。完了すると自動で保存します。<a href="/mypage?from=jagan">マイページへ ›</a>';
-      btn.disabled = false; btn.textContent = 'マイページ保存';
+      btn.disabled = false; btn.textContent = 'マイページに保存する';
       return;
     }
     const why = res.status === 503 ? '保存は現在ご利用いただけません（準備中）。' : res.status === 409 ? 'この結果は保存できません（別のアカウントで保存済みです）。' : '保存に失敗しました。';
     setStatus(`${why}もう一度押すと再試行します。`, true);
-    btn.disabled = false; btn.textContent = 'マイページ保存（再試行）';
+    btn.disabled = false; btn.textContent = 'マイページに保存する（再試行）';
   } catch {
     setStatus('通信に失敗しました。もう一度押すと再試行します。', true);
-    btn.disabled = false; btn.textContent = 'マイページ保存（再試行）';
+    btn.disabled = false; btn.textContent = 'マイページに保存する（再試行）';
   } finally { saving = false; }
 }
 
@@ -247,7 +241,7 @@ async function saveImage() {
   if (!current || imaging) return;
   const s = summaryOf(current.result);
   if (!s) return;
-  imaging = true; const btn = $('imageBtn'); btn.textContent = '画像を作成中…';
+  imaging = true; const btn = $('imageBtn'); const imageLabel = btn.innerHTML; btn.textContent = '画像を作成中…';
   track('jagan_image_save', {});
   try {
     const blob = await cardBlob(s);
@@ -260,9 +254,9 @@ async function saveImage() {
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 10000);
     }
-    btn.textContent = '画像保存';
+    btn.innerHTML = imageLabel;
   } catch {
-    btn.textContent = '画像保存（再試行）';
+    btn.innerHTML = imageLabel.replace('画像を保存', '画像を保存（再試行）');
     setStatus('画像を作成できませんでした。もう一度押すと再試行します。', true);
   } finally { imaging = false; }
 }
@@ -275,7 +269,7 @@ async function share() {
   const r = current.result;
   track('jagan_share_click', {});
   const known = (store.get(K.shares) || {})[r.resultId];
-  sharing = true; $('shareBtn').textContent = '共有ページを作成中…';
+  sharing = true; const shareLabel = $('shareBtn').innerHTML; $('shareBtn').textContent = '共有ページを作成中…';
   try {
     let publicId = known && known.publicId;
     if (!publicId) {
@@ -303,7 +297,7 @@ async function share() {
     $('shareDialog').showModal();
   } catch {
     setStatus('通信に失敗しました。もう一度押すと再試行します。', true);
-  } finally { sharing = false; $('shareBtn').textContent = 'Xシェア'; }
+  } finally { sharing = false; $('shareBtn').innerHTML = shareLabel; }
 }
 async function revokeShare() {
   if (!currentShare) return;
@@ -337,27 +331,39 @@ async function openSaved(resultId) {
   } catch { message('読み込みに失敗しました。時間をおいて再度お試しください。'); }
 }
 
+// 結果ページの操作（結果を描くたびに結び直す）
+function bindResult() {
+  $('saveBtn').addEventListener('click', save);
+  $('imageBtn').addEventListener('click', saveImage);
+  $('shareBtn').addEventListener('click', share);
+  document.querySelectorAll('#resultBody [data-buy]').forEach((b) => b.addEventListener('click', () => track('jagan_report_cta', { state: 'closed' })));
+  $('fixAnswersBtn').addEventListener('click', () => {
+    if (!current || current.mode !== 'fresh') return;
+    const answers = {};
+    for (const [k, v] of Object.entries(current.answers)) if (Number.isInteger(v)) answers[k] = v;
+    state = { resultId: current.result.resultId, answers, page: 0, focus: null };
+    const id = firstUnanswered(); if (id) { const i = ORDER.indexOf(id); state.page = i - (i % PAGE); }
+    saveProgress(); show('quiz'); renderQuiz();
+  });
+  document.querySelectorAll('#resultBody .rx-more').forEach((d) => d.addEventListener('toggle', () => { if (d.open) track('jagan_detail_open', {}); }));
+}
+
 // ---- 起動 ----
 function wire() {
   document.querySelectorAll('[data-start]').forEach((b) => b.addEventListener('click', () => startQuiz(null)));
   document.querySelectorAll('[data-track]').forEach((a) => a.addEventListener('click', () => track(a.dataset.track, {})));
   $('resumeBtn').addEventListener('click', () => { const p = loadProgress(); if (p) startQuiz(p); });
   $('lastResultBtn').addEventListener('click', () => { const l = store.get(K.last); if (l && l.v === VERSION) { showResult(l, { mode: 'fresh' }); history.replaceState(null, '', '/jagan/#result'); } });
-  $('introGo').addEventListener('click', () => { show('quiz'); renderQuestion(); });
-  $('qOptions').addEventListener('click', (e) => { const b = e.target.closest('[data-v]'); if (b) choose(Number(b.dataset.v)); });
-  $('qMissing').addEventListener('click', () => choose(null));
-  $('qBack').addEventListener('click', back);
-  $('qNext').addEventListener('click', () => { if (!advancing) next(); });
-  $('qBreakGo').addEventListener('click', () => { pendingBreak = null; renderQuestion(); });
-  $('qShowInstruction').addEventListener('click', () => alert(ITEMS.instruction));
-  $('reviewBack').addEventListener('click', () => {
-    const firstMissing = ORDER.findIndex((id) => !Object.hasOwn(state.answers, id) || state.answers[id] === null);
-    state.index = firstMissing >= 0 ? firstMissing : 0; pendingBreak = null; show('quiz'); renderQuestion();
+  $('quizRoot').addEventListener('click', (e) => {
+    const dot = e.target.closest('.qz-dot');
+    const card = e.target.closest('.qz-card');
+    if (dot && card) { choose(card.dataset.qid, Number(dot.dataset.v)); return; }
+    if (card && card.dataset.qid !== state.focus) { state.focus = card.dataset.qid; renderQuiz(); return; }
+    if (e.target.id === 'qPrev' && state.page > 0) gotoPage(state.page - PAGE);
+    else if (e.target.id === 'qNext') gotoPage(state.page + PAGE);
+    else if (e.target.id === 'qResult') finish();
+    else if (e.target.id === 'qJump') { const id = firstUnanswered(); if (id) { const i = ORDER.indexOf(id); gotoPage(i - (i % PAGE)); state.focus = id; renderQuiz(); } }
   });
-  $('reviewGo').addEventListener('click', finish);
-  $('saveBtn').addEventListener('click', save);
-  $('imageBtn').addEventListener('click', saveImage);
-  $('shareBtn').addEventListener('click', share);
   $('shareCopy').addEventListener('click', async () => {
     if (!currentShare) return;
     try { await navigator.clipboard.writeText(currentShare.url); $('shareStatus').textContent = 'URLをコピーしました。'; } catch { $('shareStatus').textContent = currentShare.url; }
@@ -365,18 +371,10 @@ function wire() {
   $('shareRevoke').addEventListener('click', revokeShare);
   $('shareClose').addEventListener('click', () => $('shareDialog').close());
   $('shareOpenX').addEventListener('click', () => track('jagan_share_open_x', {}));
-  $('buyBtn').addEventListener('click', () => track('jagan_report_cta', { state: 'closed' }));
   $('retryBtn').addEventListener('click', () => { store.del(K.progress); history.replaceState(null, '', '/jagan/'); startQuiz(null); });
-  $('fixAnswersBtn').addEventListener('click', () => {
-    if (!current || current.mode !== 'fresh') return;
-    state = { resultId: current.result.resultId, answers: { ...current.answers }, index: 0 };
-    const firstMissing = ORDER.findIndex((id) => state.answers[id] === null);
-    state.index = firstMissing >= 0 ? firstMissing : 0;
-    pendingBreak = null; saveProgress(); show('quiz'); renderQuestion();
-  });
   document.addEventListener('keydown', (e) => {
-    if ($('view-quiz').hidden || pendingBreak || e.target.closest('input,textarea')) return;
-    if (/^[1-5]$/.test(e.key)) choose(Number(e.key));
+    if ($('view-quiz').hidden || !state || e.target.closest('input,textarea')) return;
+    if (/^[1-5]$/.test(e.key) && state.focus) choose(state.focus, Number(e.key));
   });
 }
 
