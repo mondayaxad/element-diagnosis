@@ -1012,7 +1012,7 @@ export const BUNDLE = Object.freeze({
      "RSK"
     ],
     "rationale": "経済と対人上の誘導、他者の扱いへの連想。富・貧困・計画性から完璧や不安を設定しない。冷淡の対応根拠は特に要確認。",
-    "region_label": "出身未確認",
+    "region_label": "璃月",
     "source_urls": [
      "https://genshin-impact.fandom.com/ja/wiki/「富者」"
     ],
