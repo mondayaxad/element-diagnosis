@@ -2236,7 +2236,7 @@ async function savePdf() {
   if (params.get('type') && location.hostname !== 'element-diagnosis-five.vercel.app' && typeof EdTypeReading !== 'undefined') {
     try {
       const [te, tw, tn] = String(params.get('type')).split('.');
-      const raw = EdTypeReading.resultsFor(te, tw, tn, params.get('char') || null);
+      const raw = EdTypeReading.resultsFor(te, tw, tn === '-' ? null : tn, params.get('char') || null);
       const computed = ETIv2MirrorResolver.computeMirror(raw, reportV2MirrorVersion());
       const vm = ETIv2LegacyAdapter.buildV2ViewModel(raw, computed.rankings, '');
       vm.raw = raw;
@@ -2247,7 +2247,8 @@ async function savePdf() {
       const note = document.createElement('div');
       note.setAttribute('data-type-reading-note', '');
       note.style.cssText = 'max-width:720px;margin:12px auto 0;padding:10px 14px;border:1px dashed rgba(201,168,96,.55);border-radius:10px;color:#d8c49a;font-size:12px;line-height:1.8';
-      note.textContent = '確認用の見本：100問の回答ではなく、選んだ元素・武器・国家' + (params.get('char') ? '・キャラクター' : '') + 'から決まる数値で描いています（購入はできません）。';
+      note.textContent = '確認用の見本：100問の回答ではなく、選んだ元素・武器・国家' + (params.get('char') ? '・キャラクター' : '') + 'から決まる数値で描いています（購入はできません）。'
+        + (params.get('product') === 'complete' ? '完全解析（全46ページ）の見本は、購入の仕組みとあわせて用意します。' : '');
       root.insertBefore(note, root.firstChild);
     } catch (e) {
       root.innerHTML = '<div class="err-box"><h2>この組み合わせは表示できません</h2><p>選んだキャラクターは、このタイプでは一致度1位になりません。</p></div>';

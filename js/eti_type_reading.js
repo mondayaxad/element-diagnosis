@@ -39,7 +39,8 @@
       N: typeof NATION_PROTOTYPES_V2 !== 'undefined' ? NATION_PROTOTYPES_V2 : g('NATION_PROTOTYPES_V2'),
     };
   }
-  function isType(e, w, n) { return ELEMENTS.indexOf(e) >= 0 && WEAPONS.indexOf(w) >= 0 && NATIONS.indexOf(n) >= 0; }
+  // 国家は「覚えていない」（null）も選べる。その時の価値観は母集団の平均（どの国家にも寄せない）
+  function isType(e, w, n) { return ELEMENTS.indexOf(e) >= 0 && WEAPONS.indexOf(w) >= 0 && (n === null || NATIONS.indexOf(n) >= 0); }
   function shrink(proto, mean) {
     var out = {};
     Object.keys(mean).forEach(function (a) { out[a] = mean[a] + K * (proto[a] - mean[a]); });
@@ -49,7 +50,7 @@
   function profileFor(e, w, n) {
     if (!isType(e, w, n)) throw new Error('unknown type');
     var p = protos();
-    return { personality: shrink(p.E[e], POP_MEAN.personality), style: shrink(p.W[w], POP_MEAN.style), values: shrink(p.N[n], POP_MEAN.values) };
+    return { personality: shrink(p.E[e], POP_MEAN.personality), style: shrink(p.W[w], POP_MEAN.style), values: n ? shrink(p.N[n], POP_MEAN.values) : Object.assign({}, POP_MEAN.values) };
   }
   // 共通点：タイプの代表プロファイルとキャラクターが、母集団の平均から同じ向きに強く離れている軸（上位 n 個）
   function sharedAxes(profile, ch, n) {
@@ -112,7 +113,7 @@
   }
   function keepsType(profile, e, w, n) {
     var r = rankAll(profile);
-    return r.element.ranking[0].name === e && r.weapon.ranking[0].name === w && r.nation.ranking[0].name === n;
+    return r.element.ranking[0].name === e && r.weapon.ranking[0].name === w && (n === null || r.nation.ranking[0].name === n);
   }
   // 選んだキャラクターが一致度1位になる、タイプの代表プロファイルに最も近い点（そのキャラクターへ寄せる割合 t を 0.01 刻みで最小に）。
   //   元素・武器・国家の判定が選んだタイプのまま保たれる範囲だけ。保てない（1位にならない）キャラクターは null
@@ -133,7 +134,7 @@
   // 選んだタイプで、一致度1位になり得るキャラクター（入力画面の候補）。事前計算した表（js/type_reading_chars.js）があれば使う
   function candidatesFor(e, w, n) {
     var table = typeof EdTypeReadingChars !== 'undefined' ? EdTypeReadingChars : g('EdTypeReadingChars');
-    var key = e + '|' + w + '|' + n;
+    var key = e + '|' + w + '|' + (n || '-');
     if (table && table.TYPES && table.TYPES[key]) return table.TYPES[key].map(function (x) { return x[0]; });
     return characters().filter(function (c) { return !!blendFor(e, w, n, c.name); }).map(function (c) { return c.name; });
   }
@@ -157,7 +158,7 @@
       typeReading: { element: e, weapon: w, nation: n, character: characterName || null, blend: picked ? picked.t : 0,
         profileVersion: TYPE_PROFILE_VERSION, rankVersion: TYPE_RANK_VERSION },
     };
-    if (r.element.ranking[0].name !== e || r.weapon.ranking[0].name !== w || r.nation.ranking[0].name !== n) throw new Error('type not preserved');
+    if (r.element.ranking[0].name !== e || r.weapon.ranking[0].name !== w || (n && r.nation.ranking[0].name !== n)) throw new Error('type not preserved');
     return raw;
   }
 

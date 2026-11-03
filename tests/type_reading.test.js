@@ -45,6 +45,14 @@ test('キャラクターを選ぶと、そのキャラクターが一致度1位�
   assert.ok(n > 280);
 });
 
+test('国家を覚えていない：価値観は母集団の平均。候補のキャラクターは1位になり、元素・武器は保たれる', () => {
+  for (const e of T.ELEMENTS) for (const w of T.WEAPONS) {
+    const r = T.resultsFor(e, w, null);
+    assert.deepEqual([r.elementRanking[0].name, r.weaponRanking[0].name], [e, w]);
+    for (const [name] of CH.TYPES[`${e}|${w}|-`]) assert.equal(R.computeMirror(T.resultsFor(e, w, null, name), 'ETI-MIRROR-2.1.0').mirror.name, name);
+  }
+});
+
 test('候補表に無いキャラクター（このタイプで1位になれない）は、数値を作らない（別の人物を1位にして見せない）', () => {
   const rows = CH.TYPES['炎|両手剣|ナタ'].map((x) => x[0]);
   const other = T.characters().map((c) => c.name).find((nm) => !rows.includes(nm));

@@ -5,85 +5,113 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="referrer" content="no-referrer">
-<title>タイプ解析レポート（見本・確認用）｜元素診断</title>
+<title>あなたの元素から、深層を掴む｜元素診断</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
 <style>
-  :root { --bg: #07070f; --card: rgba(12,14,30,.72); --line: rgba(143,180,220,.22); --head: #e3ecf8; --body: #b3c3d8; --muted: #8197b3; --gold: #c9a860; --link: #8fb4dc; }
+  :root { --bg: #06060e; --line: rgba(143,180,220,.2); --head: #e6eef9; --body: #b3c3d8; --muted: #7d90ab; --gold: #c9a860; --ac: #8fb4dc; }
   *, *::before, *::after { box-sizing: border-box; }
-  body { margin: 0; background: radial-gradient(ellipse at 50% -10%, #1a2140 0, #0a0b18 55%, var(--bg) 100%) fixed; color: var(--body); font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', serif; -webkit-font-smoothing: antialiased; }
-  .wrap { max-width: 720px; margin: 0 auto; padding: 32px 16px 96px; }
-  .note-bar { border: 1px dashed rgba(201,168,96,.5); border-radius: 10px; padding: 10px 12px; color: #d8c49a; font-size: 12px; line-height: 1.8; margin-bottom: 26px; }
-  .eyebrow { font-family: 'IM Fell English', serif; font-style: italic; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: #5d7cab; margin: 0 0 10px; }
-  h1 { color: var(--head); font-size: clamp(20px, 5vw, 26px); margin: 0 0 8px; letter-spacing: .04em; }
-  .lead { font-size: 13.5px; line-height: 1.9; margin: 0 0 24px; }
-  .step { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
-  .step h2 { font-size: 14px; color: var(--head); margin: 0 0 4px; letter-spacing: .06em; }
-  .step .hint { font-size: 11.5px; color: var(--muted); margin: 0 0 12px; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; min-height: 100vh; background: radial-gradient(ellipse 120% 70% at 50% -10%, #1b2144 0, #0b0c1c 55%, var(--bg) 100%) fixed; color: var(--body); font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', serif; -webkit-font-smoothing: antialiased; }
+  body::before { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .55;
+    background-image: radial-gradient(1px 1px at 12% 18%, #fff8, transparent), radial-gradient(1px 1px at 78% 12%, #fff6, transparent), radial-gradient(1.5px 1.5px at 40% 70%, #cfe3ff55, transparent), radial-gradient(1px 1px at 88% 64%, #fff5, transparent), radial-gradient(1px 1px at 22% 86%, #fff4, transparent), radial-gradient(1px 1px at 60% 34%, #fff5, transparent); }
+  body::after { content: ''; position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse 80% 50% at 50% 100%, color-mix(in srgb, var(--ac) 14%, transparent), transparent 70%); transition: background .6s ease; }
+  .wrap { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; padding: 40px 16px calc(120px + env(safe-area-inset-bottom)); }
+  .eyebrow { font-family: 'IM Fell English', serif; font-style: italic; font-size: 11px; letter-spacing: .32em; text-transform: uppercase; color: #6f8fbf; text-align: center; margin: 0 0 12px; }
+  h1 { color: var(--head); font-size: clamp(22px, 6vw, 30px); font-weight: 700; letter-spacing: .08em; text-align: center; margin: 0 0 12px; line-height: 1.5; }
+  .lead { text-align: center; font-size: 13.5px; line-height: 2; color: #9fb2cc; margin: 0 0 34px; }
+  .sec { margin: 0 0 30px; }
+  .sec-h { display: flex; align-items: center; gap: 12px; color: var(--head); font-size: 14px; letter-spacing: .3em; margin: 0 0 14px; }
+  .sec-h::before, .sec-h::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--line)); }
+  .sec-h::after { background: linear-gradient(90deg, var(--line), transparent); }
+  .sec[aria-disabled="true"] { opacity: .35; pointer-events: none; filter: saturate(.5); transition: opacity .3s ease; }
+  button { font: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
+  button:focus-visible { outline: 2px solid #9cc4f0; outline-offset: 3px; }
+
+  /* 元素：宝珠 */
+  .orbs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 8px; justify-items: center; }
+  .orb { position: relative; width: 74px; height: 92px; border: 0; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0; }
+  .orb .g { position: relative; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; font-weight: 700; color: #fff;
+    background: radial-gradient(circle at 34% 30%, color-mix(in srgb, var(--c) 30%, #fff) 0, var(--c) 42%, color-mix(in srgb, var(--c) 45%, #050510) 100%);
+    box-shadow: inset 0 -6px 12px rgba(0,0,0,.35), 0 0 0 1px color-mix(in srgb, var(--c) 55%, transparent), 0 0 14px color-mix(in srgb, var(--c) 30%, transparent);
+    transition: transform .25s ease, box-shadow .3s ease, filter .3s ease; text-shadow: 0 1px 6px rgba(0,0,0,.45); }
+  .orb .g::after { content: ''; position: absolute; inset: -7px; border-radius: 50%; border: 1px solid transparent; transition: border-color .3s ease; }
+  .orb .n { font-size: 12px; letter-spacing: .2em; color: #9fb2cc; }
+  .orbs.has-pick .orb:not([aria-pressed="true"]) .g { filter: saturate(.45) brightness(.7); }
+  .orb:hover .g { transform: translateY(-2px); }
+  .orb[aria-pressed="true"] .g { transform: scale(1.08); box-shadow: inset 0 -6px 12px rgba(0,0,0,.3), 0 0 0 1px color-mix(in srgb, var(--c) 80%, #fff), 0 0 26px color-mix(in srgb, var(--c) 70%, transparent), 0 0 60px color-mix(in srgb, var(--c) 35%, transparent); }
+  .orb[aria-pressed="true"] .g::after { border-color: color-mix(in srgb, var(--c) 70%, #fff); border-style: dashed; animation: spin 9s linear infinite; }
+  .orb[aria-pressed="true"] .n { color: #fff; }
+
+  /* 武器・国家：札 */
+  .cards { display: grid; gap: 10px; }
+  .cards.w { grid-template-columns: repeat(5, 1fr); }
+  .cards.na { grid-template-columns: repeat(3, 1fr); }
+  .card { position: relative; min-height: 56px; border-radius: 12px; border: 1px solid var(--line); background: linear-gradient(180deg, rgba(22,26,50,.75), rgba(10,12,26,.75)); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 10px 4px; color: #b9c8dd; font-size: 13px; letter-spacing: .08em; transition: border-color .25s ease, transform .2s ease, box-shadow .3s ease, color .25s ease; overflow: hidden; }
+  .card svg { width: 30px; height: 30px; stroke: currentColor; fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; opacity: .85; }
+  .card::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 50% 120%, color-mix(in srgb, var(--k, var(--ac)) 38%, transparent), transparent 70%); opacity: 0; transition: opacity .35s ease; }
+  .card:hover { transform: translateY(-1px); border-color: rgba(160,190,230,.4); }
+  .card[aria-pressed="true"] { color: #fff; border-color: color-mix(in srgb, var(--k, var(--ac)) 75%, #fff); box-shadow: 0 0 0 1px color-mix(in srgb, var(--k, var(--ac)) 40%, transparent), 0 0 22px color-mix(in srgb, var(--k, var(--ac)) 35%, transparent); }
+  .card[aria-pressed="true"]::before { opacity: 1; }
+  .card > * { position: relative; }
+  .card .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--k); box-shadow: 0 0 8px var(--k); }
+  .card.unknown { --k: #8a93a8; color: #8f9ab0; font-size: 12.5px; }
+  @media (max-width: 420px) { .cards.w { grid-template-columns: repeat(3, 1fr); } .orbs { gap: 12px 4px; } }
+
+  /* 近しいキャラクター */
+  .kana-row { display: grid; grid-template-columns: 2.2em 1fr; gap: 8px; align-items: start; padding: 8px 0; border-top: 1px solid rgba(143,180,220,.08); }
+  .kana-row:first-child { border-top: 0; }
+  .kana-row .k { color: #6f8fbf; font-size: 13px; padding-top: 9px; text-align: center; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip { min-height: 44px; min-width: 64px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: rgba(20,24,44,.6); color: var(--body); font: inherit; font-size: 14px; cursor: pointer; }
-  .chip[aria-pressed="true"] { border-color: var(--c, #8fb4dc); color: #fff; background: color-mix(in srgb, var(--c, #8fb4dc) 30%, #10142a); box-shadow: 0 0 10px color-mix(in srgb, var(--c, #8fb4dc) 35%, transparent); }
-  .chip:focus-visible, .btn:focus-visible, .search:focus-visible { outline: 2px solid #7ab8e8; outline-offset: 2px; }
-  .search { width: 100%; min-height: 44px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: rgba(8,10,22,.8); color: var(--head); font: inherit; font-size: 15px; }
-  .cands { list-style: none; margin: 8px 0 0; padding: 0; max-height: 240px; overflow-y: auto; border-radius: 10px; }
-  .cands li button { display: flex; width: 100%; justify-content: space-between; gap: 8px; min-height: 44px; padding: 8px 10px; border: 0; border-bottom: 1px solid rgba(143,180,220,.1); background: transparent; color: var(--body); font: inherit; font-size: 14px; text-align: left; cursor: pointer; }
-  .cands li button[aria-pressed="true"] { color: #fff; background: rgba(60,80,130,.35); }
-  .cands small { color: var(--muted); font-size: 11.5px; white-space: nowrap; }
-  .skip { margin-top: 10px; font-size: 12.5px; color: var(--link); background: none; border: 0; text-decoration: underline; cursor: pointer; font: inherit; padding: 6px 0; }
-  .btn { display: flex; width: 100%; align-items: center; justify-content: center; min-height: 52px; margin-top: 8px; border-radius: 10px; border: 1px solid rgba(143,180,220,.55); background: rgba(30,44,74,.7); color: var(--head); font: inherit; font-size: 15px; letter-spacing: .08em; cursor: pointer; }
-  .btn[disabled] { opacity: .45; cursor: default; }
-  .report { margin-top: 30px; }
-  .report[hidden] { display: none; }
-  .rp-head { text-align: center; padding: 22px 12px 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
-  .rp-type { color: var(--head); font-size: clamp(22px, 6vw, 30px); letter-spacing: .1em; margin: 6px 0; }
-  .rp-attrs { font-size: 14px; letter-spacing: .06em; }
-  .rp-ver { margin-top: 8px; font-size: 10.5px; color: var(--muted); }
-  .disclaimer { margin: 14px 0 0; padding: 10px 12px; border-left: 2px solid var(--line); font-size: 12px; line-height: 1.85; color: var(--muted); text-align: left; }
-  .tier { margin-top: 26px; }
-  .tier-label { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: 6px; margin-bottom: 10px; }
-  .tier-label b { color: var(--head); font-size: 15px; letter-spacing: .06em; }
-  .tier-label span { color: var(--gold); font-size: 13px; }
-  .sec { padding: 14px 2px; border-bottom: 1px solid rgba(143,180,220,.1); }
-  .sec h3 { margin: 0 0 6px; font-size: 13.5px; color: var(--head); letter-spacing: .06em; }
-  .sec p, .sec li { font-size: 13.5px; line-height: 1.95; margin: 0; }
-  .sec ul { margin: 4px 0 0; padding-left: 1.2em; }
-  .sec .kv { display: grid; grid-template-columns: 6.5em 1fr; gap: 4px 10px; font-size: 13px; line-height: 1.85; }
-  .sec .kv dt { color: var(--muted); }
-  .sec .kv dd { margin: 0; }
-  .wip { color: #d8c49a; font-size: 12px; }
-  .rank { list-style: none; margin: 0; padding: 0; }
-  .rank li { display: grid; grid-template-columns: 2.2em 1fr; gap: 4px 10px; padding: 10px 0; border-bottom: 1px solid rgba(143,180,220,.08); }
-  .rank .no { color: var(--gold); font-size: 15px; text-align: right; }
-  .rank .nm { color: var(--head); font-size: 14.5px; }
-  .rank .at { color: var(--muted); font-size: 11.5px; }
-  .rank .why { grid-column: 2; font-size: 12.5px; line-height: 1.8; }
-  .tag { display: inline-block; margin: 2px 4px 0 0; padding: 1px 8px; border: 1px solid rgba(143,180,220,.3); border-radius: 999px; font-size: 11px; color: #a9c0dc; }
-  .tag.same { border-color: rgba(201,168,96,.6); color: #e2cc98; }
-  .mine { margin-top: 8px; font-size: 12.5px; color: var(--muted); }
-  @media (max-width: 380px) { .sec .kv { grid-template-columns: 1fr; } }
+  .chip { min-height: 40px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: rgba(16,20,40,.7); color: #c3d1e4; font-size: 13.5px; cursor: pointer; transition: border-color .2s ease, background .2s ease, box-shadow .3s ease, color .2s ease; }
+  .chip:hover { border-color: rgba(160,190,230,.45); }
+  .chip[aria-pressed="true"] { color: #fff; border-color: color-mix(in srgb, var(--ac) 80%, #fff); background: color-mix(in srgb, var(--ac) 26%, #10142a); box-shadow: 0 0 16px color-mix(in srgb, var(--ac) 40%, transparent); }
+  .chip.unknown { border-style: dashed; color: #9aa6ba; }
+  .chars-empty { color: var(--muted); font-size: 12.5px; text-align: center; padding: 8px 0; }
+
+  /* 商品 */
+  .plans { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .plan { border-radius: 14px; border: 1px solid var(--line); background: rgba(14,16,34,.75); padding: 14px 12px; text-align: center; cursor: pointer; transition: border-color .25s ease, box-shadow .3s ease; }
+  .plan b { display: block; color: var(--head); font-size: 14.5px; letter-spacing: .1em; }
+  .plan span { display: block; margin-top: 6px; color: var(--gold); font-size: 15px; letter-spacing: .06em; }
+  .plan small { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; letter-spacing: .08em; }
+  .plan[aria-pressed="true"] { border-color: rgba(214,190,130,.75); box-shadow: 0 0 0 1px rgba(214,190,130,.3), 0 0 22px rgba(214,190,130,.22); }
+
+  /* 真相を明らかにする */
+  .reveal-wrap { position: sticky; bottom: calc(14px + env(safe-area-inset-bottom)); margin-top: 26px; z-index: 5; }
+  .reveal { position: relative; width: 100%; min-height: 62px; border: 0; border-radius: 16px; cursor: pointer; color: #fff; font-size: 17px; font-weight: 700; letter-spacing: .32em; padding: 0 0 0 .32em; isolation: isolate; overflow: hidden;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--ac) 70%, #0a0c1e), color-mix(in srgb, var(--ac) 35%, #0a0c1e)); box-shadow: 0 10px 34px rgba(0,0,0,.5), 0 0 30px color-mix(in srgb, var(--ac) 40%, transparent); text-shadow: 0 0 12px color-mix(in srgb, var(--ac) 80%, #fff); transition: opacity .3s ease, filter .3s ease; }
+  .reveal::before { content: ''; position: absolute; inset: -60%; z-index: -1; background: conic-gradient(from 0deg, transparent 0 70%, color-mix(in srgb, var(--ac) 90%, #fff) 80%, transparent 90%); animation: spin 3.2s linear infinite; }
+  .reveal::after { content: ''; position: absolute; inset: 2px; z-index: -1; border-radius: 14px; background: linear-gradient(135deg, color-mix(in srgb, var(--ac) 55%, #070818), #080a18 70%); }
+  .reveal .spark { position: absolute; inset: 0; z-index: -1; background: radial-gradient(2px 2px at 20% 40%, #fff, transparent), radial-gradient(1.5px 1.5px at 70% 30%, #fff, transparent), radial-gradient(1.5px 1.5px at 85% 70%, #fff, transparent), radial-gradient(1px 1px at 40% 75%, #fff, transparent); opacity: .7; animation: twinkle 2.4s ease-in-out infinite; }
+  .reveal[disabled] { cursor: default; filter: grayscale(.8) brightness(.6); }
+  .reveal[disabled]::before, .reveal[disabled] .spark { animation: none; opacity: .2; }
+  .flash { position: fixed; inset: 0; z-index: 50; pointer-events: none; background: radial-gradient(circle at 50% 70%, color-mix(in srgb, var(--ac) 85%, #fff), color-mix(in srgb, var(--ac) 30%, #000) 60%, #000 100%); opacity: 0; }
+  .flash.on { animation: flash 1.1s ease forwards; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes twinkle { 50% { opacity: .25; } }
+  @keyframes flash { 0% { opacity: 0; } 35% { opacity: .95; } 100% { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .orb[aria-pressed="true"] .g::after, .reveal::before, .reveal .spark { animation: none; } .flash.on { animation-duration: .01s; } }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <p class="note-bar">確認用の見本ページです（検索エンジンに出しません）。購入はまだできません。<br>「レポートを見る」で、通常の解析レポートと同じレイアウトの見本を開きます。</p>
+  <p class="eyebrow">Return to Your Nature</p>
+  <h1>あなたの元素から、<br>深層を掴む</h1>
+  <p class="lead">過去の診断結果を元に、隠された深層を読み解きます。<br>あなた自身を選択ください。</p>
 
-  <p class="eyebrow">For Returning Travelers</p>
-  <h1>以前の結果から、レポートを読む</h1>
-  <p class="lead">100の問いに答え直さなくても、以前の診断で出た「元素・武器・国家」から、あなたのタイプを読み解きます。<br>覚えている結果を選んでください。</p>
-
-  <section class="step" aria-labelledby="s1"><h2 id="s1">① 元素</h2><p class="hint">以前の結果で表示された元素</p><div class="chips" data-group="element"></div></section>
-  <section class="step" aria-labelledby="s2"><h2 id="s2">② 武器</h2><p class="hint">以前の結果で表示された武器</p><div class="chips" data-group="weapon"></div></section>
-  <section class="step" aria-labelledby="s3"><h2 id="s3">③ 国家</h2><p class="hint">以前の結果で表示された国家</p><div class="chips" data-group="nation"></div></section>
-  <section class="step" aria-labelledby="s4">
-    <h2 id="s4">④ 近しいキャラクター（任意）</h2>
-    <p class="hint">以前の結果で一致度1位だったキャラクター。選ぶと、そのキャラクターが一致度1位のレポートになります。<br>候補は、①〜③のタイプで一致度1位になり得る人物です</p>
-    <input class="search" id="charSearch" type="search" placeholder="名前で探す（例：フリーナ）" autocomplete="off" aria-controls="charList">
-    <ul class="cands" id="charList" aria-label="キャラクターの候補"></ul>
-    <button type="button" class="skip" id="charSkip">覚えていない・選ばない</button>
+  <section class="sec" aria-labelledby="h-el"><h2 class="sec-h" id="h-el">元素</h2><div class="orbs" data-group="element"></div></section>
+  <section class="sec" aria-labelledby="h-wp"><h2 class="sec-h" id="h-wp">武器種</h2><div class="cards w" data-group="weapon"></div></section>
+  <section class="sec" aria-labelledby="h-na"><h2 class="sec-h" id="h-na">国家</h2><div class="cards na" data-group="nation"></div></section>
+  <section class="sec" aria-labelledby="h-ch" id="charSec" aria-disabled="true"><h2 class="sec-h" id="h-ch">近しいキャラクター</h2><div id="charList"></div></section>
+  <section class="sec" aria-labelledby="h-pl"><h2 class="sec-h" id="h-pl">読み解き</h2>
+    <div class="plans" data-group="plan">
+      <button type="button" class="plan" data-v="analysis" aria-pressed="true"><b>解析</b><span>¥1,000</span><small>解析レポート</small></button>
+      <button type="button" class="plan" data-v="complete" aria-pressed="false"><b>完全解析</b><span>¥3,000</span><small>全46ページ</small></button>
+    </div>
   </section>
-  <button type="button" class="btn" id="showBtn" disabled>このタイプのレポートを見る（見本）</button>
-
-  <section class="report" id="report" hidden aria-live="polite"></section>
+  <div class="reveal-wrap"><button type="button" class="reveal" id="revealBtn" disabled><span class="spark" aria-hidden="true"></span>真相を明らかにする</button></div>
 </div>
+<div class="flash" id="flash" aria-hidden="true"></div>
 
 <script src="js/ETI_v2_QUESTIONS_100.js"></script>
 <script src="js/eti_v2_prototypes.js"></script>
@@ -93,140 +121,103 @@
 <script src="js/eti_mirror_selection_v21.js"></script>
 <script src="js/eti_v2_mirror_resolver.js"></script>
 <script src="js/eti_type_reading.js"></script>
-<script src="js/type_reading_text.js"></script>
 <script src="js/type_reading_chars.js"></script>
 <script>
 (function () {
   'use strict';
-  var T = EdTypeReading, X = EdTypeReadingText;
-  var COLOR = { '炎': '#c84a20', '水': '#2a7aaa', '氷': '#4a80c0', '雷': '#9040d0', '風': '#3a8a60', '岩': '#a07830', '草': '#4a8020' };
-  var TYPE_NAME = {
-    '炎': { '片手剣': '殉愛者', '両手剣': '猛進者', '長柄': '殉衛者', '法器': '信奉者', '弓': '貫徹者' },
-    '水': { '片手剣': '同調者', '両手剣': '孤淵者', '長柄': '静衛者', '法器': '深識者', '弓': '静観者' },
-    '氷': { '片手剣': '宿縁者', '両手剣': '破氷者', '長柄': '氷壁者', '法器': '透徹者', '弓': '凍眼者' },
-    '雷': { '片手剣': '共鳴者', '両手剣': '破天者', '長柄': '雷衛者', '法器': '電導者', '弓': '疾光者' },
-    '風': { '片手剣': '随風者', '両手剣': '疾風者', '長柄': '客衛者', '法器': '漂識者', '弓': '追風者' },
-    '岩': { '片手剣': '包容者', '両手剣': '破岩者', '長柄': '護衛者', '法器': '礎識者', '弓': '遠護者' },
-    '草': { '片手剣': '縁結者', '両手剣': '芽吹者', '長柄': '育衛者', '法器': '叡結者', '弓': '見守者' },
-  };
+  var T = EdTypeReading;
+  var EL_COLOR = { '炎': '#d9542a', '水': '#2f8fc6', '氷': '#6aa6e0', '雷': '#9a52e0', '風': '#3fae7f', '岩': '#c49a3a', '草': '#5f9e2c' };
+  var NATION_COLOR = { 'モンド': '#5fc9a8', '璃月': '#e0b45a', '稲妻': '#a37ee0', 'スメール': '#7cc36a', 'フォンテーヌ': '#5aa9e6', 'ナタ': '#e8734a', 'スネージナヤ': '#a8d8f2', 'ナドクライ': '#c9c3f5' };
   var WEAPON_LABEL = { '長柄': '長柄武器' };
-  var state = { element: null, weapon: null, nation: null, character: null };
+  // 武器の線画（同じ線の太さ・同じ枠で揃える）
+  var WEAPON_ICON = {
+    '片手剣': '<svg viewBox="0 0 32 32"><path d="M22 4 26 4 26 8 12 22"/><path d="M8 18l6 6"/><path d="M10 22l-4 4"/></svg>',
+    '両手剣': '<svg viewBox="0 0 32 32"><path d="M20 3h6v6L12 23"/><path d="M17 6l9 9" opacity=".5"/><path d="M7 17l8 8"/><path d="M10 22l-5 5"/></svg>',
+    '長柄': '<svg viewBox="0 0 32 32"><path d="M27 5 6 26"/><path d="M27 5l-6 1.5L25.5 11z"/><path d="M9 20l3 3"/></svg>',
+    '法器': '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="6"/><circle cx="16" cy="16" r="11" opacity=".5"/><path d="M16 3v3M16 26v3M3 16h3M26 16h3"/></svg>',
+    '弓': '<svg viewBox="0 0 32 32"><path d="M10 4c10 4 10 20 0 24"/><path d="M10 4v24" opacity=".6"/><path d="M6 16h20M22 12l4 4-4 4"/></svg>',
+  };
+  // 漢字の名前の読み（五十音順に並べるため）
+  var READING = { '嘉明': 'がみん', '辛炎': 'しんえん', '胡桃': 'ふーたお', '香菱': 'しゃんりん', '煙緋': 'えんひ', '宵宮': 'よいみや', '神里綾人': 'かみさとあやと', '行秋': 'ゆくも', '夜蘭': 'いぇらん',
+    '珊瑚宮心海': 'さんごのみやここみ', '神里綾華': 'かみさとあやか', '七七': 'なな', '申鶴': 'しぇんは', '甘雨': 'かんう', '刻晴': 'こくせい', '久岐忍': 'くきしのぶ', '雷電将軍': 'らいでんしょうぐん',
+    '九条裟羅': 'くじょうさら', '八重神子': 'やえみこ', '北斗': 'ほくと', '楓原万葉': 'かえではらかずは', '早柚': 'さゆ', '放浪者': 'ほうろうしゃ', '閑雲': 'かんうん', '藍硯': 'らんやん',
+    '鹿野院平蔵': 'しかのいんへいぞう', '夢見月瑞希': 'ゆめみづきみずき', '鍾離': 'しょうり', '雲菫': 'うんきん', '荒瀧一斗': 'あらたきいっと', '茲白': 'つーばい', '千織': 'ちおり', '凝光': 'ぎょうこう',
+    '白朮': 'びゃくじゅつ', '綺良々': 'きらら', '魈': 'しょう', '重雲': 'ちょううん' };
+  var ROWS = [['あ', 'あいうえおぁぃぅぇぉゔ'], ['か', 'かきくけこがぎぐげご'], ['さ', 'さしすせそざじずぜぞ'], ['た', 'たちつてとだぢづでどっ'], ['な', 'なにぬねの'],
+    ['は', 'はひふへほばびぶべぼぱぴぷぺぽ'], ['ま', 'まみむめも'], ['や', 'やゆよゃゅょ'], ['ら', 'らりるれろ'], ['わ', 'わをん']];
+  function hira(s) { return String(s).replace(/[ァ-ヶ]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0x60); }); }
+  function readingOf(name) { return READING[name] || hira(name); }
+  function rowOf(name) { var c = readingOf(name).charAt(0); var r = ROWS.find(function (x) { return x[1].indexOf(c) >= 0; }); return r ? r[0] : '他'; }
   function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  var NONE = '__none__';
+  var state = { element: null, weapon: null, nation: undefined, character: NONE, plan: 'analysis' };
 
-  function chips(group, list) {
-    var box = document.querySelector('[data-group="' + group + '"]');
-    box.innerHTML = list.map(function (v) {
-      var c = group === 'element' ? ' style="--c:' + COLOR[v] + '"' : '';
-      return '<button type="button" class="chip" aria-pressed="false" data-v="' + esc(v) + '"' + c + '>' + esc(WEAPON_LABEL[v] || v) + '</button>';
-    }).join('');
-    box.addEventListener('click', function (e) {
-      var b = e.target.closest('.chip'); if (!b) return;
-      state[group] = b.getAttribute('data-v');
-      box.querySelectorAll('.chip').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
-      sync();
-    });
+  function pressGroup(box, btn) {
+    box.querySelectorAll('[aria-pressed]').forEach(function (x) { x.setAttribute('aria-pressed', String(x === btn)); });
+    box.classList.add('has-pick');
   }
-  chips('element', T.ELEMENTS); chips('weapon', T.WEAPONS); chips('nation', T.NATIONS);
+  var elBox = document.querySelector('[data-group="element"]');
+  elBox.innerHTML = T.ELEMENTS.map(function (e) {
+    return '<button type="button" class="orb" aria-pressed="false" data-v="' + e + '" style="--c:' + EL_COLOR[e] + '"><span class="g">' + e + '</span><span class="n">' + e + '元素</span></button>';
+  }).join('');
+  var wpBox = document.querySelector('[data-group="weapon"]');
+  wpBox.innerHTML = T.WEAPONS.map(function (w) {
+    return '<button type="button" class="card" aria-pressed="false" data-v="' + w + '">' + WEAPON_ICON[w] + '<span>' + esc(WEAPON_LABEL[w] || w) + '</span></button>';
+  }).join('');
+  var naBox = document.querySelector('[data-group="nation"]');
+  naBox.innerHTML = T.NATIONS.map(function (n) {
+    return '<button type="button" class="card" aria-pressed="false" data-v="' + n + '" style="--k:' + NATION_COLOR[n] + '"><span class="dot" aria-hidden="true"></span><span>' + esc(n) + '</span></button>';
+  }).join('') + '<button type="button" class="card unknown" aria-pressed="false" data-v="' + NONE + '"><span class="dot" aria-hidden="true"></span><span>覚えていない</span></button>';
 
-  var CHARS = T.characters();
-  var list = document.getElementById('charList'), search = document.getElementById('charSearch');
-  function kana(s) { return String(s || '').replace(/[ァ-ヶ]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0x60); }).toLowerCase(); }
-  function typeReady() { return !!(state.element && state.weapon && state.nation); }
+  elBox.addEventListener('click', function (e) {
+    var b = e.target.closest('.orb'); if (!b) return;
+    state.element = b.getAttribute('data-v'); pressGroup(elBox, b);
+    document.documentElement.style.setProperty('--ac', EL_COLOR[state.element]);
+    sync();
+  });
+  wpBox.addEventListener('click', function (e) { var b = e.target.closest('.card'); if (!b) return; state.weapon = b.getAttribute('data-v'); pressGroup(wpBox, b); sync(); });
+  naBox.addEventListener('click', function (e) { var b = e.target.closest('.card'); if (!b) return; var v = b.getAttribute('data-v'); state.nation = v === NONE ? null : v; pressGroup(naBox, b); sync(); });
+  document.querySelector('[data-group="plan"]').addEventListener('click', function (e) {
+    var b = e.target.closest('.plan'); if (!b) return; state.plan = b.getAttribute('data-v'); pressGroup(e.currentTarget, b);
+  });
+
+  var charSec = document.getElementById('charSec'), list = document.getElementById('charList');
+  function typeReady() { return !!(state.element && state.weapon && state.nation !== undefined); }
   function drawChars() {
-    if (!typeReady()) { list.innerHTML = '<li class="hint" style="padding:8px">先に ①元素 ②武器 ③国家 を選んでください</li>'; return; }
+    if (!typeReady()) { charSec.setAttribute('aria-disabled', 'true'); list.innerHTML = '<p class="chars-empty">元素・武器種・国家を選ぶと表示されます</p>'; return; }
+    charSec.removeAttribute('aria-disabled');
+    // 選んだタイプで一致度1位になり得る人物だけ（選ぶと、その人物が一致度1位の読み解きになる）
     var allowed = T.candidatesFor(state.element, state.weapon, state.nation);
-    if (state.character && allowed.indexOf(state.character) < 0) { state.character = null; search.value = ''; }
-    var q = kana(search.value.trim());
-    var hits = CHARS.filter(function (c) { return allowed.indexOf(c.name) >= 0 && (!q || kana(c.name).indexOf(q) >= 0); });
-    // 選んだ元素・武器・国家に合うキャラクターを先に（並べ替えるだけ。どれも選べる）
-    hits.sort(function (a, b) {
-      var s = function (c) { return (c.element === state.element) + (c.weapon === state.weapon) + (c.region === state.nation); };
-      return s(b) - s(a);
+    if (state.character !== NONE && allowed.indexOf(state.character) < 0) state.character = NONE;
+    var sorted = allowed.slice().sort(function (a, b) { return readingOf(a).localeCompare(readingOf(b), 'ja'); });
+    var groups = {};
+    sorted.forEach(function (n) { var r = rowOf(n); (groups[r] = groups[r] || []).push(n); });
+    var chip = function (v, label, extra) { return '<button type="button" class="chip' + (extra || '') + '" aria-pressed="' + (state.character === v) + '" data-v="' + esc(v) + '">' + esc(label) + '</button>'; };
+    var html = '<div class="kana-row"><span class="k"></span><div class="chips">' + chip(NONE, '覚えていない', ' unknown') + '</div></div>';
+    ROWS.map(function (r) { return r[0]; }).concat(['他']).forEach(function (r) {
+      if (!groups[r]) return;
+      html += '<div class="kana-row"><span class="k">' + r + '</span><div class="chips">' + groups[r].map(function (n) { return chip(n, n); }).join('') + '</div></div>';
     });
-    list.innerHTML = hits.slice(0, 40).map(function (c) {
-      return '<li><button type="button" aria-pressed="' + (state.character === c.name) + '" data-name="' + esc(c.name) + '">' + esc(c.name)
-        + '<small>' + esc([c.element, WEAPON_LABEL[c.weapon] || c.weapon, c.region].filter(Boolean).join('・')) + '</small></button></li>';
-    }).join('') || '<li class="hint" style="padding:8px">見つかりませんでした</li>';
+    list.innerHTML = html;
   }
-  search.addEventListener('input', drawChars);
   list.addEventListener('click', function (e) {
-    var b = e.target.closest('button[data-name]'); if (!b) return;
-    state.character = b.getAttribute('data-name'); search.value = state.character; drawChars(); sync();
-  });
-  document.getElementById('charSkip').addEventListener('click', function () { state.character = null; search.value = ''; drawChars(); sync(); });
-  drawChars();
-
-  var showBtn = document.getElementById('showBtn');
-  function sync() { showBtn.disabled = !(state.element && state.weapon && state.nation); drawChars(); }
-  // 通常のレポートと同じレイアウトで開く（数値は選んだタイプ・キャラクターから決まる）
-  showBtn.addEventListener('click', function () {
-    var q = 'type=' + encodeURIComponent([state.element, state.weapon, state.nation].join('.')) + (state.character ? '&char=' + encodeURIComponent(state.character) : '');
-    location.assign('/report.html?' + q);
+    var b = e.target.closest('.chip'); if (!b) return;
+    state.character = b.getAttribute('data-v');
+    list.querySelectorAll('.chip').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
   });
 
-  function sharedLine(r) {
-    var same = [];
-    if (r.same.element) same.push('同じ元素');
-    if (r.same.weapon) same.push('同じ武器');
-    if (r.same.nation) same.push('同じ国家');
-    var axes = r.shared.map(function (a) { return a.label + (a.high ? 'を大切にする' : 'を控えめにする'); });
-    return (same.length ? same.map(function (s) { return '<span class="tag same">' + s + '</span>'; }).join('') : '')
-      + '<span>' + esc(axes.join('、')) + '点で、このタイプと重なります。</span>'
-      + (r.basisTags.length ? '<div>' + r.basisTags.slice(0, 4).map(function (t) { return '<span class="tag">' + esc(t) + '</span>'; }).join('') + '</div>' : '');
-  }
-  function rankHtml(rows) {
-    return '<ol class="rank">' + rows.map(function (r) {
-      return '<li><span class="no">' + r.rank + '</span><div><span class="nm">' + esc(r.name) + '</span> <span class="at">' + esc([r.element, WEAPON_LABEL[r.weapon] || r.weapon, r.region].filter(Boolean).join('・')) + '</span></div>'
-        + '<div class="why">' + sharedLine(r) + '</div></li>';
-    }).join('') + '</ol>';
-  }
-  function sec(title, body) { return '<div class="sec"><h3>' + esc(title) + '</h3>' + body + '</div>'; }
-  function p(t) { return '<p>' + esc(t) + '</p>'; }
-  function ul(a) { return '<ul>' + a.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>'; }
-  function wip(t) { return '<p class="wip">' + esc(t || 'このタイプの統合解釈は制作中です（見本は 水 × 片手剣 × フォンテーヌ）。') + '</p>'; }
-
-  function render() {
-    var e = state.element, w = state.weapon, n = state.nation;
-    var E = X.ELEMENT[e], W = X.WEAPON[w], N = X.NATION[n];
-    var t = X.TYPES[X.typeKey(e, w, n)];
-    var top10 = T.rankingFor(e, w, n, 10);
-    var mineRank = state.character ? T.rankOf(e, w, n, state.character) : null;
-    var a = t && t.analysis, c = t && t.complete;
-    var html = '<div class="rp-head"><p class="eyebrow" style="margin:0">Type Reading</p>'
-      + '<p class="rp-type" style="color:' + COLOR[e] + '">' + esc(TYPE_NAME[e][w]) + '</p>'
-      + '<p class="rp-attrs">' + esc(e) + ' × ' + esc(WEAPON_LABEL[w] || w) + ' × ' + esc(n) + '</p>'
-      + (state.character ? '<p class="mine">以前の結果で近しかったキャラクター：' + esc(state.character) + (mineRank ? '（このタイプの類似度ランキングでは ' + mineRank + ' 位）' : '') + '</p>' : '')
-      + '<p class="disclaimer">このレポートは、100問の回答ではなく、選んだ元素・武器・国家が同じ人に共通する傾向から読み解いたものです。'
-      + 'あなた個人の測定値や、診断で表示された一致率とは異なります。自己理解の手がかりとしてお読みください。</p>'
-      + '<p class="rp-ver">' + esc([T.TYPE_PROFILE_VERSION, T.TYPE_RANK_VERSION, X.VERSION].join(' / ')) + '</p></div>';
-
-    html += '<div class="tier"><div class="tier-label"><b>タイプ解析レポート（仮称）</b><span>¥1,000</span></div>'
-      + sec('人物像', a ? p(a.portrait) : wip())
-      + sec('元素：' + e + '（' + E.key + '）', '<dl class="kv"><dt>気質</dt><dd>' + esc(E.temperament) + '</dd><dt>感情</dt><dd>' + esc(E.emotion) + '</dd><dt>動機</dt><dd>' + esc(E.motive) + '</dd><dt>強み</dt><dd>' + esc(E.strength) + '</dd><dt>葛藤</dt><dd>' + esc(E.conflict) + '</dd></dl>')
-      + sec('武器：' + (WEAPON_LABEL[w] || w) + '（' + W.key + '）', '<dl class="kv"><dt>動き方</dt><dd>' + esc(W.action) + '</dd><dt>人との関わり</dt><dd>' + esc(W.relation) + '</dd><dt>取り組み方</dt><dd>' + esc(W.approach) + '</dd><dt>得意な役割</dt><dd>' + esc(W.role) + '</dd><dt>苦手な状況</dt><dd>' + esc(W.weak) + '</dd></dl>')
-      + sec('国家：' + n + '（' + N.key + '）', '<dl class="kv"><dt>大切にすること</dt><dd>' + esc(N.values) + '</dd><dt>判断の基準</dt><dd>' + esc(N.judge) + '</dd><dt>理想の生き方</dt><dd>' + esc(N.ideal) + '</dd><dt>価値観の葛藤</dt><dd>' + esc(N.conflict) + '</dd></dl>')
-      + sec('組み合わせの読み解き', a ? p(a.combo) : wip())
-      + sec('強み', a ? ul(a.strengths) : wip())
-      + sec('つまずきやすいところ', a ? ul(a.weaknesses) : wip())
-      + sec('タイプ類似度ランキング 上位4名', rankHtml(top10.slice(0, 4)) + '<p class="disclaimer">元素・武器・国家が同じ人に共通する傾向と、各キャラクターの性格・行動・価値観の近さから並べています。診断で表示される一致率とは異なります。</p>')
-      + '</div>';
-
-    html += '<div class="tier"><div class="tier-label"><b>タイプ完全解析（仮称）で加わる章</b><span>¥3,000</span></div>'
-      + sec('三つの要素の統合', c ? p(c.integration) : wip())
-      + sec('重なり合う力', c ? p(c.synergy) : wip())
-      + sec('引き合う矛盾', c ? p(c.tension) : wip())
-      + sec('人との関わり', c ? p(c.relations) : wip())
-      + sec('仕事・役割の傾向', c ? p(c.work) : wip())
-      + sec('決め方の癖', c ? p(c.decision) : wip())
-      + sec('内側の葛藤', c ? p(c.inner) : wip())
-      + sec('これから伸ばす方向', c ? p(c.growth) : wip())
-      + sec('タイプ類似度ランキング 上位10名', rankHtml(top10) + (c ? p(c.sharedStructure) : wip()))
-      + sec('このタイプの物語', c ? p(c.narrative) : wip())
-      + '</div>';
-    var box = document.getElementById('report');
-    box.innerHTML = html; box.hidden = false;
-    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+  var reveal = document.getElementById('revealBtn');
+  function sync() { drawChars(); reveal.disabled = !typeReady(); }
+  sync();
+  reveal.addEventListener('click', function () {
+    if (!typeReady()) return;
+    var q = 'type=' + encodeURIComponent([state.element, state.weapon, state.nation || '-'].join('.'))
+      + (state.character !== NONE ? '&char=' + encodeURIComponent(state.character) : '') + '&product=' + state.plan;
+    var f = document.getElementById('flash');
+    f.classList.add('on');
+    reveal.disabled = true;
+    setTimeout(function () { location.assign('/report.html?' + q); }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 900);
+  });
 })();
 </script>
 </body>

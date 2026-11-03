@@ -1121,10 +1121,10 @@ test('未ログイン・この端末に前回の結果なし：以前の結果�
   const p = await open('/', { api: RESULT_API() });
   await p.click('#returningCta');
   await p.waitForURL(/\/type-preview\.html$/);
-  await p.waitForSelector('[data-group="element"] .chip');
-  assert.equal(await p.locator('[data-group="element"] .chip').count(), 7);
-  assert.equal(await p.locator('[data-group="weapon"] .chip').count(), 5);
-  assert.equal(await p.locator('[data-group="nation"] .chip').count(), 8);
+  await p.waitForSelector('[data-group="element"] .orb');
+  assert.equal(await p.locator('[data-group="element"] .orb').count(), 7);
+  assert.equal(await p.locator('[data-group="weapon"] .card').count(), 5);
+  assert.equal(await p.locator('[data-group="nation"] .card').count(), 9, '8国家＋覚えていない');
   assert.deepEqual(p.__errors, []);
   await p.__ctx.close();
 });
@@ -1173,5 +1173,39 @@ test('マイページ：#buy の印は1回だけ（再読み込み・別のタ�
   await p.waitForSelector('#mpUpgradeTrigger', { state: 'attached' });
   await p.waitForTimeout(400);
   assert.equal(await p.locator('#mpUpgradeOverlay').isVisible(), false, '再読み込みでは開かない');
+  await p.__ctx.close();
+});
+
+test('以前の結果を選ぶ画面：キャラクターは五十音順の選択（入力欄なし）・覚えていない・国家を覚えていない。選んだキャラクターが一致度1位の読み解きへ', { skip: skip() }, async () => {
+  const p = await open('/type-preview.html', { api: RESULT_API() });
+  assert.equal(await p.locator('input').count(), 0, '文字の入力欄は無い');
+  assert.equal(await p.locator('#revealBtn').isDisabled(), true);
+  await p.click('[data-group=element] [data-v=水]');
+  await p.click('[data-group=weapon] [data-v=片手剣]');
+  await p.click('[data-group=nation] [data-v=フォンテーヌ]');
+  const names = await p.locator('#charList .chip:not(.unknown)').evaluateAll((a) => a.map((b) => b.getAttribute('data-v')));
+  assert.ok(names.length >= 1);
+  assert.equal(await p.locator('#charList .chip.unknown').getAttribute('aria-pressed'), 'true', '既定は「覚えていない」');
+  // 五十音の行の見出しの順（あ→か→…）
+  const rows = await p.locator('#charList .kana-row .k').allInnerTexts();
+  const order = ['あ', 'か', 'さ', 'た', 'な', 'は', 'ま', 'や', 'ら', 'わ', '他'];
+  const idx = rows.filter(Boolean).map((r) => order.indexOf(r));
+  assert.deepEqual(idx, idx.slice().sort((a, b) => a - b));
+  await p.click('#charList .chip[data-v=フリーナ]');
+  await p.click('.plan[data-v=complete]');
+  assert.equal(await p.locator('#revealBtn').isDisabled(), false);
+  await p.click('#revealBtn');
+  await p.waitForURL(/report\.html\?type=/);
+  const u = new URL(p.url());
+  assert.deepEqual([u.searchParams.get('type'), u.searchParams.get('char'), u.searchParams.get('product')], ['水.片手剣.フォンテーヌ', 'フリーナ', 'complete']);
+  // 国家を覚えていない
+  await p.goto(base + '/type-preview.html');
+  await p.click('[data-group=element] [data-v=炎]');
+  await p.click('[data-group=weapon] [data-v=弓]');
+  await p.click('[data-group=nation] [data-v=__none__]');
+  assert.ok(await p.locator('#charList .chip:not(.unknown)').count() >= 1);
+  await p.click('#revealBtn');
+  await p.waitForURL(/type=%E7%82%8E\.%E5%BC%93\.-|type=炎\.弓\.-/);
+  assert.deepEqual(p.__errors, []);
   await p.__ctx.close();
 });
