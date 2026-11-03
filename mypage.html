@@ -3741,6 +3741,22 @@ function caTabStops(root) {
   });
   return out;
 }
+// トップの「以前の結果からレポートを購入する」から来た（/mypage.html#buy）：最新の記録の購入シートを開く。
+//   ログインの往復（OAuth・メールのリンク）で # が消えても開けるよう、このタブに30分だけ控える
+const MP_BUY_INTENT_KEY = 'ed_mp_buy_intent_v1';
+(function () {
+  if (location.hash !== '#buy') return;
+  try { sessionStorage.setItem(MP_BUY_INTENT_KEY, String(Date.now())); } catch (e) { /* 控えられなくても、このページの表示では開く */ }
+  window.__mpBuyIntent = true;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* そのまま */ }
+})();
+function mpTakeBuyIntent() {
+  let at = 0;
+  try { at = Number(sessionStorage.getItem(MP_BUY_INTENT_KEY)) || 0; sessionStorage.removeItem(MP_BUY_INTENT_KEY); } catch (e) { at = 0; }
+  const fresh = window.__mpBuyIntent || (at && Date.now() - at < 30 * 60 * 1000);
+  window.__mpBuyIntent = false;
+  return !!fresh;
+}
 function caWireSheet(records) {
   const trigger = document.getElementById('mpUpgradeTrigger');
   const overlay = document.getElementById('mpUpgradeOverlay');
@@ -3752,6 +3768,10 @@ function caWireSheet(records) {
   if (records[0] && !caImpressions.has(impKey)) { caImpressions.add(impKey); CompleteAnalysis.track('mypage_upgrade_impression', caTrackParams(records[0])); }
   trigger.addEventListener('click', () => caOpenSheet());
   document.getElementById('mpUpgradeClose').addEventListener('click', () => caCloseSheet());
+  if (records[0] && mpTakeBuyIntent()) {
+    trackEvent('returning_route_open', { route: 'mypage_sheet' });
+    setTimeout(() => caOpenSheet(), 0);
+  }
   // オーバーレイ（外側）押下で閉じる。シート内部の押下では閉じない
   overlay.addEventListener('click', (e) => { if (e.target === overlay) caCloseSheet(); });
   overlay.addEventListener('keydown', (e) => {

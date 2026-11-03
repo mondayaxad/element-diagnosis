@@ -149,6 +149,20 @@
     .tp .hero-scroll { position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); width: 1px; height: 38px; background: linear-gradient(180deg, rgba(140,170,230,.5), transparent); }
     /* ABOUT（寸法は旧 .about と同じ） */
     .tp .about { padding-block: 80px; }
+    /* 診断済みの方への購入導線（新規診断の CTA より控えめ：枠線型・小さめ） */
+    .tp .returning { padding-block: 56px 8px; text-align: center; }
+    .tp .returning .h2 { margin-bottom: 12px; }
+    .tp .returning-body { color: #8ea6c4; font-size: 14px; line-height: 1.9; margin: 0 0 22px; }
+    .tp .returning-cta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 12px 22px; border: 1px solid rgba(143,180,220,.45); border-radius: 999px; background: rgba(12,16,32,.55); color: #cfe0f4; font: inherit; font-size: 14px; letter-spacing: .08em; cursor: pointer; transition: border-color .2s ease, background .2s ease; }
+    .tp .returning-cta:hover { border-color: rgba(168,199,227,.8); background: rgba(20,26,48,.7); }
+    .tp .returning-cta:focus-visible { outline: 2px solid #7ab8e8; outline-offset: 3px; }
+    .tp .returning-cta[disabled] { opacity: .6; cursor: default; }
+    .tp .returning-panel { max-width: 460px; margin: 20px auto 0; padding: 18px 18px 16px; border: 1px solid rgba(143,180,220,.22); border-radius: 12px; background: rgba(10,12,26,.6); text-align: left; color: #a9bdd6; font-size: 13px; line-height: 1.85; }
+    .tp .returning-panel[hidden] { display: none; }
+    .tp .returning-panel .rt-type { color: #e3ecf8; font-size: 15px; letter-spacing: .04em; margin: 4px 0 2px; }
+    .tp .returning-panel .rt-sub { color: #8197b3; font-size: 12px; }
+    .tp .returning-panel .rt-go { display: flex; width: 100%; align-items: center; justify-content: center; min-height: 46px; margin-top: 14px; border-radius: 8px; border: 1px solid rgba(143,180,220,.5); background: rgba(30,44,74,.55); color: #e3ecf8; font: inherit; font-size: 14px; letter-spacing: .06em; text-decoration: none; cursor: pointer; }
+    .tp .returning-panel .rt-alt { display: block; margin-top: 12px; color: #8fb4dc; font-size: 12.5px; text-align: center; }
     .tp .about-body { font-size: 14px; line-height: 2; color: var(--t-body); }
     .tp .about-body + .about-body { margin-top: 16px; }
     .tp .about-body .q { color: #c3cde6; }
@@ -514,6 +528,15 @@
   </section>
 
   <div class="deep">
+    <!-- 診断済みの方への購入導線：100問に答え直さず、以前の結果からレポートを購入する（js は下の EdReturning） -->
+    <section class="returning wrap" id="returning" aria-labelledby="returning-h">
+      <p class="eyebrow">For Returning Travelers</p>
+      <h2 class="h2" id="returning-h">すでに診断を終えたアナタへ</h2>
+      <p class="returning-body jp">もう一度、100の問いに答える必要はありません。</p>
+      <button type="button" class="returning-cta" id="returningCta">以前の結果からレポートを購入する <span class="arw" aria-hidden="true">→</span></button>
+      <div class="returning-panel" id="returningPanel" role="status" aria-live="polite" hidden></div>
+    </section>
+
     <!-- ABOUT -->
     <section class="about wrap" id="about-intro">
       <p class="eyebrow">About this Diagnosis</p>
@@ -3728,6 +3751,9 @@ function revealRestoredResult() {
     // 認証から戻った直後は、結果の先頭ではなく保存カードの位置を表示する
     var card = window.__edReturnToRecordCard ? document.getElementById('recordCard') : null;
     if (card) { card.scrollIntoView({ block: 'center' }); return; }
+    // トップの「以前の結果からレポートを購入する」から開いた：購入の案内（¥1,000）の位置を表示する
+    var buy = window.__edScrollToBuy ? document.getElementById('lockUnlockAllBtn') : null;
+    if (buy) { buy.scrollIntoView({ block: 'center' }); return; }
     var root = document.getElementById('diagnosis-root');
     if (root) root.scrollIntoView({ block: 'start' });
   };
@@ -3779,6 +3805,94 @@ function setupResumeLink(root, code) {
     resumeShowNote(document.getElementById('diagnosis-root'));
   }).catch(function () { /* 一時的な失敗：何もしない */ });
 }
+/* 診断済みの方への購入導線（トップの「以前の結果からレポートを購入する」）。
+   ・ログイン中：マイページの最新の記録の購入シートへ（/mypage.html#buy。記録の切り替えはマイページの履歴から）
+   ・ログインしていないが、この端末に前回の結果の固有リンクがある：その結果を開き、購入の案内の位置へ（/result#r=…&buy=1）
+   ・どちらも無い：ログインして保存した結果から購入する／もう一度診断する、を案内する
+   ・計測：表示（returning_section_view）・押下（returning_cta_click）・行き先（returning_route）。記録 ID・秘密値・回答は送らない */
+var EdReturning = (function () {
+  var TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;
+  function track(name, params) { try { if (typeof gtag === 'function') gtag('event', name, Object.assign({ event_category: 'returning' }, params || {})); } catch (e) { /* 計測の失敗は画面に影響させない */ } }
+  function savedResume() {
+    try { var t = localStorage.getItem(RESUME_KEY); return TOKEN_RE.test(String(t || '')) ? t : null; } catch (e) { return null; }
+  }
+  function loggedIn() {
+    if (typeof getCurrentUser !== 'function') return Promise.resolve(false);
+    var timeout = new Promise(function (r) { setTimeout(function () { r(false); }, 4000); });
+    return Promise.race([Promise.resolve().then(getCurrentUser).then(function (u) { return !!u; }, function () { return false; }), timeout]);
+  }
+  function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  // 前回の結果（固有リンク）の概要：元素×武器×国家と、近しいキャラクター（保存時の版で計算）
+  function resumeSummary(token) {
+    if (typeof EdGuestPurchase === 'undefined' || !EdGuestPurchase.resultOpen) return Promise.resolve(null);
+    return EdGuestPurchase.resultOpen(token).then(function (r) {
+      if (!r || !r.ok || !r.body || r.body.diagnosisVersion !== 'ETI-2.0') return null;
+      var v = r.body.versions || {};
+      if (v.itemSetVersion !== ETI_V2_META.itemSetVersion || v.scoringVersion !== ETI_V2_META.scoringVersion) return null;
+      try {
+        var answers = ETIv2.decodeAnswersV2(r.body.code, ETI_V2_QUESTIONS);
+        var res = computeResultsV2ForUI(answers, r.body.code, v.mirrorModelVersion);
+        var el = res.elementScores && res.elementScores[0] && res.elementScores[0].element;
+        var w = res.weaponScores && res.weaponScores[0] && res.weaponScores[0].weapon;
+        var n = res.nationScores && res.nationScores[0] && (res.nationScores[0].nation || res.nationScores[0].name);
+        var m = res.mirror || (res.charMatches && res.charMatches[0]);
+        return { type: [el, w, n].filter(Boolean).join(' × '), mirror: m ? m.name : '', match: m ? m.match : null };
+      } catch (e) { return { type: '', mirror: '', match: null }; }
+    }, function () { return null; });
+  }
+  function show(panel, html) { panel.innerHTML = html; panel.hidden = false; }
+  function init() {
+    var sec = document.getElementById('returning');
+    var btn = document.getElementById('returningCta');
+    var panel = document.getElementById('returningPanel');
+    if (!sec || !btn || !panel) return;
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (es) { if (es.some(function (e) { return e.isIntersecting; })) { track('returning_section_view'); io.disconnect(); } }, { threshold: 0.4 });
+      io.observe(sec);
+    }
+    btn.addEventListener('click', function () {
+      btn.disabled = true;
+      show(panel, '<p>以前の結果を確認しています…</p>');
+      loggedIn().then(function (signedIn) {
+        var token = savedResume();
+        track('returning_cta_click', { state: signedIn ? 'logged_in' : (token ? 'device_result' : 'none') });
+        if (signedIn) {
+          track('returning_route', { route: 'mypage' });
+          show(panel, '<p>マイページを開いています…</p>');
+          location.assign('/mypage.html#buy');
+          return;
+        }
+        if (!token) return null;
+        return resumeSummary(token).then(function (sum) {
+          if (!sum) return null;
+          show(panel, '<p class="rt-sub">この端末に、前回の診断結果があります</p>'
+            + (sum.type ? '<p class="rt-type">' + esc(sum.type) + '</p>' : '')
+            + (sum.mirror ? '<p class="rt-sub">近しいキャラクター：' + esc(sum.mirror) + (sum.match != null ? '（' + esc(sum.match) + '%）' : '') + '</p>' : '')
+            + '<a class="rt-go" href="/result#r=' + token + '&buy=1" data-rt-route="device_result">この結果からレポートを購入する</a>'
+            + '<a class="rt-alt" href="/mypage.html#buy" data-rt-route="login">ログインして、保存した別の結果から選ぶ</a>');
+          return true;
+        });
+      }).then(function (handled) {
+        if (handled !== null) return;
+        show(panel, '<p>保存した診断記録は、ログインすると選べます。</p>'
+          + '<a class="rt-go" href="/mypage.html#buy" data-rt-route="login">ログインして、以前の結果から購入する</a>'
+          + '<p class="rt-sub" style="margin-top:12px">記録を保存していない場合は、お手数ですが、もう一度診断してください（約10分）。</p>'
+          + '<a class="rt-alt" href="javascript:void(0)" data-rt-route="new_diagnosis">診断をはじめる →</a>');
+      }).catch(function () {
+        show(panel, '<p>確認できませんでした。時間をおいて、もう一度お試しください。</p>');
+      }).then(function () { btn.disabled = false; });
+    });
+    panel.addEventListener('click', function (e) {
+      var a = e.target && e.target.closest && e.target.closest('[data-rt-route]');
+      if (!a) return;
+      var route = a.getAttribute('data-rt-route');
+      track('returning_route', { route: route });
+      if (route === 'new_diagnosis') { e.preventDefault(); startNewDiagnosisV2(); }
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  return { savedResume: savedResume };
+})();
 function renderResumeError(kind) {
   var root = document.getElementById('diagnosis-root');
   if (!root) return;
@@ -3812,6 +3926,10 @@ function openResumeFromUrl() {
     window.__mirrorVersion = ETIv2MirrorResolver.versionFromUrlParam(ETIv2MirrorResolver.urlParamFor(v.mirrorModelVersion));
     window.__edResumeToken = token;
     window.__resumeFresh = false;
+    if (/(?:^#|&)buy=1(?:&|$)/.test(location.hash || '')) {
+      window.__edScrollToBuy = true;
+      try { history.replaceState(null, '', '/result#r=' + token); } catch (e) { /* そのまま */ }
+    }
     resumeRemember(token);
     window.__phase = 'result';
     render();
