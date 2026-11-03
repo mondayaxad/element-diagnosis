@@ -886,3 +886,81 @@ test('マイページ：右上は未購入が1つでもあれば「アップグ�
   assert.doesNotMatch(t, /読めます|未購入/);
   await p.__ctx.close();
 });
+
+// ================= A案：結果ページの表示順序・ロック解除は ¥1,000 へ直接・完全解析の予告
+test('A案：結果ページの表示順序（TOP3 → 共有 → 価格の案内 → 4ブロック → 比較表 → ¥1,000 → 完全解析 → 保存カード）。無料結果の区切り文言なし', { skip: skip() }, async () => {
+  for (const width of [320, 390, 1280]) {
+    const p = await resultPage({ width });
+    const y = (sel) => p.evaluate((s) => {
+      const el = typeof s === 'string' && s.startsWith('text:')
+        ? Array.from(document.querySelectorAll('*')).filter((e) => e.children.length === 0 && e.textContent.trim() === s.slice(5))[0]
+        : document.querySelector(s);
+      if (!el) return null;
+      return el.getBoundingClientRect().top + window.scrollY;
+    }, sel);
+    const order = {
+      top3: await y('text:あなたに響く元素'),
+      share: await y('#saveImgBtn'),
+      note: await y('[data-report-price-note]'),
+      lock1: await y('.lock-cta'),
+      table: await y('text:今、あなたが見ているもの'),
+      unlock: await y('#lockUnlockAllBtn'),
+      beyond: await y('.ca-reveal-wrap'),
+      card: await y('#recordCard'),
+      copy: await y('#copyUrlBtn'),
+    };
+    for (const [k, v] of Object.entries(order)) assert.ok(v !== null, `${width}: ${k} がある`);
+    const seq = ['top3', 'share', 'note', 'lock1', 'table', 'unlock', 'beyond', 'card', 'copy'];
+    for (let i = 1; i < seq.length; i++) assert.ok(order[seq[i - 1]] < order[seq[i]], `${width}: ${seq[i - 1]} → ${seq[i]}`);
+    const text = await p.locator('body').innerText();
+    assert.doesNotMatch(text, /ここまでが無料診断の結果です/);
+    // 価格の案内は4ブロックの最初に1回だけ。各ロックボタンに価格を繰り返さない
+    assert.equal(await p.locator('[data-report-price-note]').count(), 1);
+    assert.equal((await p.locator('[data-report-price-note]').innerText()).trim(), '詳細な解析は、解析レポート（¥1,000）でお読みいただけます。');
+    for (const t of await p.locator('.lock-cta').allInnerTexts()) assert.doesNotMatch(t, /¥/);
+    // 共有は二つの主要アクションのまま。URL のコピーは大きなボタンではなく小さな文字リンク（末尾の保存カードの下）
+    assert.equal(await p.locator('#saveImgBtn').isVisible(), true);
+    assert.equal(await p.locator('#tweetShareBtn').isVisible(), true);
+    assert.ok((await p.locator('#copyUrlBtn').evaluate((b) => parseFloat(getComputedStyle(b).fontSize))) <= 12);
+    assert.equal(await p.locator('#copyUrlBtn').evaluate((b) => getComputedStyle(b).borderTopWidth), '0px');
+    assert.equal(await noScroll(p), true, `${width}: 横にはみ出さない`);
+    assert.deepEqual(p.__errors, []);
+    await p.__ctx.close();
+  }
+});
+
+test('A案：各ブロックの「ロックを解除」は ¥1,000 の解析レポートの購入へ直接進む（選択モーダルを出さない）', { skip: skip() }, async () => {
+  const p = await resultPage();
+  const n = await p.locator('.lock-cta').count();
+  assert.ok(n >= 4, '4つのロックブロック');
+  await p.waitForFunction(() => !document.querySelector('.lock-cta').disabled);
+  await p.locator('.lock-cta').nth(1).click();
+  await p.waitForURL(/checkout\.stripe\.com/);
+  assert.equal(await p.locator('.edb-dialog').count(), 0, '商品の選択モーダルを出さない');
+  const buy = p.__calls.filter((c) => c.op === 'buy');
+  assert.equal(buy.length, 1);
+  assert.equal(buy[0].body.product, 'analysis');
+  assert.equal(buy[0].body.source, 'result_lock');
+  assert.ok(!('goal' in buy[0].body), '完全解析の目標は送らない');
+  await p.__ctx.close();
+});
+
+test('A案：完全解析は閉じた状態でも、¥3,000・全46ページ・MIRROR/HIDDEN SHAPE/MENTOR・サンプルへの入口が見える。サンプルは details の外で、開閉と干渉しない', { skip: skip() }, async () => {
+  const p = await resultPage();
+  await p.evaluate(() => document.querySelectorAll('details').forEach((d) => { d.open = false; }));
+  const wrap = p.locator('.ca-reveal-wrap');
+  const teaser = await wrap.locator('.ca-reveal-teaser').innerText();
+  for (const t of ['完全解析｜全46ページ｜¥3,000', 'MIRROR・HIDDEN SHAPE・MENTOR', '完全解析のサンプルを読む']) assert.ok(teaser.includes(t), t);
+  assert.equal(await p.locator('details.ca-reveal [data-ca-sample]').count(), 0);
+  assert.equal(await wrap.locator('[data-buy-complete]').isVisible(), false, '決済ボタンは閉じている間は見えない');
+  // サンプルのリンクは summary の中にない（リンクの操作が展開の操作と干渉しない）
+  assert.equal(await p.locator('summary [data-ca-sample], summary a').count(), 0);
+  assert.equal(await p.locator('details.ca-reveal').evaluate((d) => d.open), false);
+  await p.locator('details.ca-reveal > summary').click();
+  assert.equal(await p.locator('details.ca-reveal').evaluate((d) => d.open), true);
+  await wrap.locator('[data-buy-complete]').waitFor({ state: 'visible' });
+  // ¥3,000 は独立した商品：押すと目標の選択（共通の画面）→ 完全解析の購入
+  await wrap.locator('[data-buy-complete]').click();
+  await p.locator('.edb-dialog input[name="edb-goal"]').first().waitFor();
+  await p.__ctx.close();
+});

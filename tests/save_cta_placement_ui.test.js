@@ -172,7 +172,7 @@ async function indexResult(opts) {
 }
 const log = (p) => p.evaluate(() => window.__log.slice());
 const cardState = (p) => p.evaluate(() => document.getElementById('recordCard').getAttribute('data-state'));
-// 保存カードは元素TOP3の直後・購入導線より前の1か所だけ
+// 保存カードは結果ページの末尾（シェア・購入導線より後）の1か所だけ
 async function assertSingleEarlyCard(p, msg) {
   const r = await p.evaluate(() => ({
     cards: document.querySelectorAll('#recordCard, #recordEarly, #recordCardBottom, .rs-card').length,
@@ -183,7 +183,7 @@ async function assertSingleEarlyCard(p, msg) {
   }));
   assert.equal(r.cards, 1, '保存カードは1つ ' + (msg || ''));
   assert.equal(r.note, 0, '「下部の保存へ」の案内なし');
-  assert.ok(r.card < r.share && r.card < r.unlock, '画像保存・購入導線より前 ' + (msg || ''));
+  assert.ok(r.card > r.share && r.card > r.unlock, '画像保存・購入導線より後（末尾） ' + (msg || ''));
 }
 const LEGAL_TEXTS = ['特定商取引法に基づく表記', '利用規約', 'プライバシーポリシー'];
 const noLegal = (a) => a.filter((t) => !LEGAL_TEXTS.includes(t.trim()));
