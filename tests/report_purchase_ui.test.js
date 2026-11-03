@@ -888,7 +888,7 @@ test('マイページ：右上は未購入が1つでもあれば「アップグ�
 });
 
 // ================= A案：結果ページの表示順序・ロック解除は ¥1,000 へ直接・完全解析の予告
-test('A案：結果ページの表示順序（TOP3 → 共有 → 価格の案内 → 4ブロック → 比較表 → ¥1,000 → 完全解析 → 保存カード）。無料結果の区切り文言なし', { skip: skip() }, async () => {
+test('A案：結果ページの表示順序（TOP3 → 共有 → 4ブロック → 比較表 → ¥1,000 → 完全解析 → 保存カード）。無料結果の区切り文言なし', { skip: skip() }, async () => {
   for (const width of [320, 390, 1280]) {
     const p = await resultPage({ width });
     const y = (sel) => p.evaluate((s) => {
@@ -901,7 +901,6 @@ test('A案：結果ページの表示順序（TOP3 → 共有 → 価格の案�
     const order = {
       top3: await y('text:あなたに響く元素'),
       share: await y('#saveImgBtn'),
-      note: await y('[data-report-price-note]'),
       lock1: await y('.lock-cta'),
       table: await y('text:今、あなたが見ているもの'),
       unlock: await y('#lockUnlockAllBtn'),
@@ -910,13 +909,13 @@ test('A案：結果ページの表示順序（TOP3 → 共有 → 価格の案�
       copy: await y('#copyUrlBtn'),
     };
     for (const [k, v] of Object.entries(order)) assert.ok(v !== null, `${width}: ${k} がある`);
-    const seq = ['top3', 'share', 'note', 'lock1', 'table', 'unlock', 'beyond', 'card', 'copy'];
+    const seq = ['top3', 'share', 'lock1', 'table', 'unlock', 'beyond', 'card', 'copy'];
     for (let i = 1; i < seq.length; i++) assert.ok(order[seq[i - 1]] < order[seq[i]], `${width}: ${seq[i - 1]} → ${seq[i]}`);
     const text = await p.locator('body').innerText();
     assert.doesNotMatch(text, /ここまでが無料診断の結果です/);
-    // 価格の案内は4ブロックの最初に1回だけ。各ロックボタンに価格を繰り返さない
-    assert.equal(await p.locator('[data-report-price-note]').count(), 1);
-    assert.equal((await p.locator('[data-report-price-note]').innerText()).trim(), '詳細な解析は、解析レポート（¥1,000）でお読みいただけます。');
+    // 4ブロックの前に価格の案内文を置かない。各ロックボタンに価格を繰り返さない
+    assert.equal(await p.locator('[data-report-price-note]').count(), 0);
+    assert.doesNotMatch(text, /詳細な解析は、解析レポート/);
     for (const t of await p.locator('.lock-cta').allInnerTexts()) assert.doesNotMatch(t, /¥/);
     // 共有は二つの主要アクションのまま。URL のコピーは大きなボタンではなく小さな文字リンク（末尾の保存カードの下）
     assert.equal(await p.locator('#saveImgBtn').isVisible(), true);
