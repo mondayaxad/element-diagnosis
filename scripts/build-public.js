@@ -64,6 +64,7 @@ const PUBLIC_FILES = [
   'js/eti_v2_prototypes.js',
   'js/eti_v2_save.js',
   'js/eti_type_reading.js',                                   // 以前の結果から読むタイプ別レポートの計算（代表プロファイル・類似度ランキング）
+  'js/type_reading_chars.js',                                 // 同・タイプごとに一致度1位になり得るキャラクターの表（scripts/build-type-reading-chars.js）
   'js/type_reading_text.js',                                  // 同・固定の文章データ（見本の版）
   'type-preview.html',                                        // 同・入力画面とレポートの見本（確認用。noindex・リンクなし）
   'js/registration-onboarding.js',

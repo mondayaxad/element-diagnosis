@@ -176,6 +176,8 @@
 <script src="js/eti_mirror_selection_v21.js"></script>
 <script src="js/eti_v2_mirror_resolver.js"></script>
 <script src="js/eti_v2_legacy_adapter.js"></script>
+<script src="js/eti_type_reading.js"></script>
+<script src="js/type_reading_chars.js"></script>
 </head>
 <body>
 <div id="root">
@@ -2228,6 +2230,30 @@ async function savePdf() {
   const root = document.getElementById('root');
   const params = new URLSearchParams(window.location.search);
   const token = params.get('token');
+
+  // 【確認用・本番以外だけ】以前の結果から読むレポート：選んだ元素・武器・国家（と任意のキャラクター）から決まる数値で、
+  //   通常のレポートと同じレイアウトを描く（?type=元素.武器.国家&char=名前）。購入・閲覧の権利の確認はしない見本
+  if (params.get('type') && location.hostname !== 'element-diagnosis-five.vercel.app' && typeof EdTypeReading !== 'undefined') {
+    try {
+      const [te, tw, tn] = String(params.get('type')).split('.');
+      const raw = EdTypeReading.resultsFor(te, tw, tn, params.get('char') || null);
+      const computed = ETIv2MirrorResolver.computeMirror(raw, reportV2MirrorVersion());
+      const vm = ETIv2LegacyAdapter.buildV2ViewModel(raw, computed.rankings, '');
+      vm.raw = raw;
+      vm.mirror = vm.charMatches.find(function (c) { return c.name === computed.mirror.name; }) || vm.charMatches[0];
+      vm.mirrorModelVersion = computed.mirrorModelVersion;
+      vm.characterProfileVersion = computed.characterProfileVersion;
+      renderFullReport(root, vm, '');
+      const note = document.createElement('div');
+      note.setAttribute('data-type-reading-note', '');
+      note.style.cssText = 'max-width:720px;margin:12px auto 0;padding:10px 14px;border:1px dashed rgba(201,168,96,.55);border-radius:10px;color:#d8c49a;font-size:12px;line-height:1.8';
+      note.textContent = '確認用の見本：100問の回答ではなく、選んだ元素・武器・国家' + (params.get('char') ? '・キャラクター' : '') + 'から決まる数値で描いています（購入はできません）。';
+      root.insertBefore(note, root.firstChild);
+    } catch (e) {
+      root.innerHTML = '<div class="err-box"><h2>この組み合わせは表示できません</h2><p>選んだキャラクターは、このタイプでは一致度1位になりません。</p></div>';
+    }
+    return;
+  }
 
   if (!token) {
     root.innerHTML = '<div class="err-box"><h2>リンクが正しくありません</h2><p>購入したレポートのリンク（URL）から開いてください。マイページに登録したレポートは、<a href="/mypage.html">マイページ</a>から開けます。</p><p><a href="/">元素診断のトップへ</a></p></div>';

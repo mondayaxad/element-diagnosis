@@ -1117,16 +1117,14 @@ test('トップ：「すでに診断を終えたアナタへ」は「診断を�
   }
 });
 
-test('未ログイン・この端末に前回の結果なし：ログインして保存した結果から購入する／もう一度診断する、を案内', { skip: skip() }, async () => {
+test('未ログイン・この端末に前回の結果なし：以前の結果（元素・武器・国家）を選ぶ画面へ進む（ログイン・再診断の案内は出さない）', { skip: skip() }, async () => {
   const p = await open('/', { api: RESULT_API() });
   await p.click('#returningCta');
-  await p.waitForSelector('#returningPanel [data-rt-route="login"]');
-  assert.equal(await p.locator('#returningPanel [data-rt-route="login"]').getAttribute('href'), '/mypage.html#buy');
-  assert.match(await p.locator('#returningPanel').innerText(), /もう一度診断してください/);
-  const ev = await rtEvents(p);
-  assert.deepEqual(ev.find((e) => e[0] === 'returning_cta_click')[1].state, 'none');
-  await p.locator('#returningPanel [data-rt-route="new_diagnosis"]').click();
-  await p.waitForFunction(() => window.__phase === 'quiz');
+  await p.waitForURL(/\/type-preview\.html$/);
+  await p.waitForSelector('[data-group="element"] .chip');
+  assert.equal(await p.locator('[data-group="element"] .chip').count(), 7);
+  assert.equal(await p.locator('[data-group="weapon"] .chip').count(), 5);
+  assert.equal(await p.locator('[data-group="nation"] .chip').count(), 8);
   assert.deepEqual(p.__errors, []);
   await p.__ctx.close();
 });
@@ -1140,6 +1138,7 @@ test('未ログイン・この端末に前回の結果（固有リンク）あ�
   assert.match(panel, /.+ × .+ × .+/, '元素 × 武器 × 国家');
   assert.match(panel, /近しいキャラクター：.+（\d+%）/);
   assert.equal(await p.locator('#returningPanel .rt-go').getAttribute('href'), '/result#r=' + RESUME + '&buy=1');
+  assert.equal(await p.locator('#returningPanel .rt-alt').getAttribute('href'), '/type-preview.html');
   await p.click('#returningPanel .rt-go');
   await p.waitForSelector('#lockUnlockAllBtn', { state: 'visible' });
   await p.waitForFunction(() => location.hash === '#r=Rz0kEnSecretValueForResumeLink_ABCDEFGHIJKL', null, { timeout: 5000 });

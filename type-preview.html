@@ -64,7 +64,7 @@
 </head>
 <body>
 <div class="wrap">
-  <p class="note-bar">確認用の見本ページです（検索エンジンに出しません・どこからもリンクしていません）。購入はできません。<br>商品名は仮称です。文章は基礎文（7元素・5武器・8国家）と、1タイプ（水 × 片手剣 × フォンテーヌ）の完成見本だけを収録しています。</p>
+  <p class="note-bar">確認用の見本ページです（検索エンジンに出しません）。購入はまだできません。<br>「レポートを見る」で、通常の解析レポートと同じレイアウトの見本を開きます。</p>
 
   <p class="eyebrow">For Returning Travelers</p>
   <h1>以前の結果から、レポートを読む</h1>
@@ -75,7 +75,7 @@
   <section class="step" aria-labelledby="s3"><h2 id="s3">③ 国家</h2><p class="hint">以前の結果で表示された国家</p><div class="chips" data-group="nation"></div></section>
   <section class="step" aria-labelledby="s4">
     <h2 id="s4">④ 近しいキャラクター（任意）</h2>
-    <p class="hint">以前の結果で一致度が高かったキャラクター。レポートの中で参考として示します（順位や内容は変わりません）</p>
+    <p class="hint">以前の結果で一致度1位だったキャラクター。選ぶと、そのキャラクターが一致度1位のレポートになります。<br>候補は、①〜③のタイプで一致度1位になり得る人物です</p>
     <input class="search" id="charSearch" type="search" placeholder="名前で探す（例：フリーナ）" autocomplete="off" aria-controls="charList">
     <ul class="cands" id="charList" aria-label="キャラクターの候補"></ul>
     <button type="button" class="skip" id="charSkip">覚えていない・選ばない</button>
@@ -94,6 +94,7 @@
 <script src="js/eti_v2_mirror_resolver.js"></script>
 <script src="js/eti_type_reading.js"></script>
 <script src="js/type_reading_text.js"></script>
+<script src="js/type_reading_chars.js"></script>
 <script>
 (function () {
   'use strict';
@@ -130,9 +131,13 @@
   var CHARS = T.characters();
   var list = document.getElementById('charList'), search = document.getElementById('charSearch');
   function kana(s) { return String(s || '').replace(/[ァ-ヶ]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0x60); }).toLowerCase(); }
+  function typeReady() { return !!(state.element && state.weapon && state.nation); }
   function drawChars() {
+    if (!typeReady()) { list.innerHTML = '<li class="hint" style="padding:8px">先に ①元素 ②武器 ③国家 を選んでください</li>'; return; }
+    var allowed = T.candidatesFor(state.element, state.weapon, state.nation);
+    if (state.character && allowed.indexOf(state.character) < 0) { state.character = null; search.value = ''; }
     var q = kana(search.value.trim());
-    var hits = CHARS.filter(function (c) { return !q || kana(c.name).indexOf(q) >= 0; });
+    var hits = CHARS.filter(function (c) { return allowed.indexOf(c.name) >= 0 && (!q || kana(c.name).indexOf(q) >= 0); });
     // 選んだ元素・武器・国家に合うキャラクターを先に（並べ替えるだけ。どれも選べる）
     hits.sort(function (a, b) {
       var s = function (c) { return (c.element === state.element) + (c.weapon === state.weapon) + (c.region === state.nation); };
@@ -153,7 +158,11 @@
 
   var showBtn = document.getElementById('showBtn');
   function sync() { showBtn.disabled = !(state.element && state.weapon && state.nation); drawChars(); }
-  showBtn.addEventListener('click', render);
+  // 通常のレポートと同じレイアウトで開く（数値は選んだタイプ・キャラクターから決まる）
+  showBtn.addEventListener('click', function () {
+    var q = 'type=' + encodeURIComponent([state.element, state.weapon, state.nation].join('.')) + (state.character ? '&char=' + encodeURIComponent(state.character) : '');
+    location.assign('/report.html?' + q);
+  });
 
   function sharedLine(r) {
     var same = [];

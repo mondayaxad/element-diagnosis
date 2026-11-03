@@ -4035,6 +4035,8 @@ async function initOnce() {
     return;
   }
   if (result.sessions.length === 0) {
+    // トップの「以前の結果からレポートを購入する」から来たが、保存した記録が無い：以前の結果（元素・武器・国家）を選ぶ画面へ
+    if (mpTakeBuyIntent()) { trackEvent('returning_route_open', { route: 'select_no_record' }); location.replace('/type-preview.html'); return; }
     renderEmpty(root, user);
     mpRenderedUserId = user.id;
     mpShowRegisterOutcome(root, registerOutcome, user);

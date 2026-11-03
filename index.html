@@ -3869,15 +3869,15 @@ var EdReturning = (function () {
             + (sum.type ? '<p class="rt-type">' + esc(sum.type) + '</p>' : '')
             + (sum.mirror ? '<p class="rt-sub">近しいキャラクター：' + esc(sum.mirror) + (sum.match != null ? '（' + esc(sum.match) + '%）' : '') + '</p>' : '')
             + '<a class="rt-go" href="/result#r=' + token + '&buy=1" data-rt-route="device_result">この結果からレポートを購入する</a>'
-            + '<a class="rt-alt" href="/mypage.html#buy" data-rt-route="login">ログインして、保存した別の結果から選ぶ</a>');
+            + '<a class="rt-alt" href="/type-preview.html" data-rt-route="select">別の結果（元素・武器・国家）を選んで購入する</a>');
           return true;
         });
       }).then(function (handled) {
         if (handled !== null) return;
-        show(panel, '<p>保存した診断記録は、ログインすると選べます。</p>'
-          + '<a class="rt-go" href="/mypage.html#buy" data-rt-route="login">ログインして、以前の結果から購入する</a>'
-          + '<p class="rt-sub" style="margin-top:12px">記録を保存していない場合は、お手数ですが、もう一度診断してください（約10分）。</p>'
-          + '<a class="rt-alt" href="javascript:void(0)" data-rt-route="new_diagnosis">診断をはじめる →</a>');
+        // 未ログインで、この端末に前回の結果も無い：以前の結果（元素・武器・国家）を選ぶ画面へ進む
+        track('returning_route', { route: 'select' });
+        show(panel, '<p>以前の結果を選ぶ画面を開いています…</p>');
+        location.assign('/type-preview.html');
       }).catch(function () {
         show(panel, '<p>確認できませんでした。時間をおいて、もう一度お試しください。</p>');
       }).then(function () { btn.disabled = false; });

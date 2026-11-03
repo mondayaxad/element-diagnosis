@@ -98,10 +98,73 @@
     return R.normalizedCharacters(MIRROR_VERSION).map(function (c) { return { name: c.name, element: c.element, weapon: c.weapon, region: c.region }; });
   }
 
+  function engine() { return typeof ETIv2 !== 'undefined' ? ETIv2 : g('ETIv2'); }
+  function meta() { return typeof ETI_V2_META !== 'undefined' ? ETI_V2_META : g('ETI_V2_META'); }
+  function mix(a, b, t) { var o = {}; Object.keys(a).forEach(function (k) { o[k] = a[k] + t * (b[k] - a[k]); }); return o; }
+  // 3つの判定（元素・武器・国家）を、本番の採点と同じ関数で行う
+  function rankAll(profile) {
+    var E = engine(), M = meta(), p = protos();
+    return {
+      element: E.rankByDistance(p.E, profile.personality, M.personalityAxes),
+      weapon: E.rankByDistance(p.W, profile.style, M.styleAxes),
+      nation: E.rankNationsByCenteredValues(p.N, profile.values, M.valueAxes),
+    };
+  }
+  function keepsType(profile, e, w, n) {
+    var r = rankAll(profile);
+    return r.element.ranking[0].name === e && r.weapon.ranking[0].name === w && r.nation.ranking[0].name === n;
+  }
+  // 選んだキャラクターが一致度1位になる、タイプの代表プロファイルに最も近い点（そのキャラクターへ寄せる割合 t を 0.01 刻みで最小に）。
+  //   元素・武器・国家の判定が選んだタイプのまま保たれる範囲だけ。保てない（1位にならない）キャラクターは null
+  function blendFor(e, w, n, name) {
+    var R = g('ETIv2MirrorResolver');
+    var base = profileFor(e, w, n);
+    var c = R.normalizedCharacters(MIRROR_VERSION).find(function (x) { return x.name === name; });
+    if (!c) return null;
+    for (var i = 0; i <= 100; i++) {
+      var t = i / 100;
+      // 表示と同じ整数の値で確かめる（丸めで順位・判定が変わらないように）
+      var prof = { personality: round(mix(base.personality, c.personality, t)), style: round(mix(base.style, c.style, t)), values: round(mix(base.values, c.values, t)) };
+      if (!keepsType(prof, e, w, n)) return null;
+      if (R.computeMirror(prof, MIRROR_VERSION).mirror.name === name) return { t: t, profile: prof };
+    }
+    return null;
+  }
+  // 選んだタイプで、一致度1位になり得るキャラクター（入力画面の候補）。事前計算した表（js/type_reading_chars.js）があれば使う
+  function candidatesFor(e, w, n) {
+    var table = typeof EdTypeReadingChars !== 'undefined' ? EdTypeReadingChars : g('EdTypeReadingChars');
+    var key = e + '|' + w + '|' + n;
+    if (table && table.TYPES && table.TYPES[key]) return table.TYPES[key].map(function (x) { return x[0]; });
+    return characters().filter(function (c) { return !!blendFor(e, w, n, c.name); }).map(function (c) { return c.name; });
+  }
+  function round(o) { var r = {}; Object.keys(o).forEach(function (k) { r[k] = Math.max(0, Math.min(100, Math.round(o[k]))); }); return r; }
+  // 通常のレポートと同じ形の結果（computeResultsV2 の戻り値と同じ形）。数値は選んだタイプ（と選んだキャラクター）から決まる値
+  function resultsFor(e, w, n, characterName) {
+    var M = meta();
+    var picked = characterName ? blendFor(e, w, n, characterName) : null;
+    if (characterName && !picked) throw new Error('character cannot be top for this type');
+    var prof = picked ? picked.profile : profileFor(e, w, n);
+    var personality = round(prof.personality), style = round(prof.style), values = round(prof.values);
+    var r = rankAll({ personality: personality, style: style, values: values });
+    var vAvg = M.valueAxes.reduce(function (s, a) { return s + values[a]; }, 0) / M.valueAxes.length;
+    var raw = {
+      personality: personality, style: style, values: values,
+      valuesCentered: Object.fromEntries(M.valueAxes.map(function (a) { return [a, (values[a] - vAvg) / 25]; })),
+      elementRanking: r.element.ranking, elementTopGap: r.element.topGap,
+      weaponRanking: r.weapon.ranking, weaponTopGap: r.weapon.topGap,
+      nationRanking: r.nation.ranking, nationTopGap: r.nation.topGap,
+      meta: { diagnosisVersion: M.diagnosisVersion, itemSetVersion: M.itemSetVersion, scoringVersion: M.scoringVersion },
+      typeReading: { element: e, weapon: w, nation: n, character: characterName || null, blend: picked ? picked.t : 0,
+        profileVersion: TYPE_PROFILE_VERSION, rankVersion: TYPE_RANK_VERSION },
+    };
+    if (r.element.ranking[0].name !== e || r.weapon.ranking[0].name !== w || r.nation.ranking[0].name !== n) throw new Error('type not preserved');
+    return raw;
+  }
+
   var api = {
     TYPE_PROFILE_VERSION: TYPE_PROFILE_VERSION, TYPE_RANK_VERSION: TYPE_RANK_VERSION, MIRROR_VERSION: MIRROR_VERSION,
     K: K, POP_MEAN: POP_MEAN, AXIS_LABEL: AXIS_LABEL, ELEMENTS: ELEMENTS, WEAPONS: WEAPONS, NATIONS: NATIONS,
-    isType: isType, profileFor: profileFor, rankingFor: rankingFor, rankOf: rankOf, sharedAxes: sharedAxes, characters: characters,
+    isType: isType, profileFor: profileFor, rankingFor: rankingFor, blendFor: blendFor, candidatesFor: candidatesFor, resultsFor: resultsFor, keepsType: keepsType, rankOf: rankOf, sharedAxes: sharedAxes, characters: characters,
   };
   root.EdTypeReading = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
