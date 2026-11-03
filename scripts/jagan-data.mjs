@@ -1,6 +1,8 @@
 #!/usr/bin/env node
-// 邪眼診断：仕様パッケージ（docs/jagan/spec_v1_0_rc1/data/*.json）から、ブラウザとサーバーが共通で読む
-// jagan/engine/data.mjs を作る。data/ の JSON が正本で、data.mjs は生成物（手で直さない）。
+// 邪眼診断：仕様パッケージから、ブラウザとサーバーが共通で読む jagan/engine/data.mjs を作る。
+//   設問・特性・邪眼元素・人物の参照と固定補正：docs/jagan/spec_v0_3_balanced/（items.json・core-model.json・characters.json）
+//   商品（1,000円・買い切り・販売は閉じたまま）：docs/jagan/spec_v1_0_rc1/data/product.json
+//   data.mjs は生成物（手で直さない）。
 //   実行: node scripts/jagan-data.mjs           （作り直す）
 //         node scripts/jagan-data.mjs --check   （正本と一致しているかだけ確かめる。不一致なら終了コード 1）
 import fs from 'node:fs';
@@ -8,30 +10,19 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-const SPEC = path.join(ROOT, 'docs/jagan/spec_v1_0_rc1/data');
+const SPEC = path.join(ROOT, 'docs/jagan/spec_v0_3_balanced');
 const OUT = path.join(ROOT, 'jagan/engine/data.mjs');
-const read = (n) => JSON.parse(fs.readFileSync(path.join(SPEC, n), 'utf8'));
+const read = (p) => JSON.parse(fs.readFileSync(p, 'utf8'));
 
 export function render() {
   const bundle = {
-    items: read('items.json'),
-    interpretation: read('interpretation.json'),
-    characters: read('characters.json'),
-    product: read('product.json'),
+    items: read(path.join(SPEC, 'items.json')),
+    core: read(path.join(SPEC, 'core-model.json')),
+    characters: read(path.join(SPEC, 'characters.json')),
+    product: read(path.join(ROOT, 'docs/jagan/spec_v1_0_rc1/data/product.json')),
   };
-  // サイト表示用の上書き（docs/jagan/site_overrides.json）。型の表示名だけ。ID・係数・採点は変えない
-  const ov = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/jagan/site_overrides.json'), 'utf8'));
-  for (const t of bundle.interpretation.types) if (ov.type_labels[t.id]) t.label = ov.type_labels[t.id];
-  const copy = {
-    character: read('character.copy.json'),
-    result: read('result.copy.json'),
-    report: read('report.copy.json'),
-    method: read('method.copy.json'),
-  };
-  for (const [id, label] of Object.entries(ov.type_labels)) if (copy.result.type[id]) copy.result.type[id].label = label;
-  return '// 生成物：scripts/jagan-data.mjs が docs/jagan/spec_v1_0_rc1/data/*.json から作る。手で編集しない。\n' +
-    `export const BUNDLE = Object.freeze(${JSON.stringify(bundle, null, 1)});\n` +
-    `export const COPY = Object.freeze(${JSON.stringify(copy, null, 1)});\n`;
+  return '// 生成物：scripts/jagan-data.mjs が docs/jagan/spec_v0_3_balanced/*.json から作る。手で編集しない。\n' +
+    `export const BUNDLE = Object.freeze(${JSON.stringify(bundle, null, 1)});\n`;
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {

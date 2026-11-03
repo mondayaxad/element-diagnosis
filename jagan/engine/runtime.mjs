@@ -1,92 +1,94 @@
-import {ENGINE_VERSION,scoreDomains,scoreInterpretations,weightedSimilarity,rankEntries} from './math.mjs';
+// jagan/engine/runtime.mjs — 画面・API・保存が使う結果の形（judge.mjs の計算結果に、順位・整数表示・版を付ける）。
+//   ・計算は judge.mjs（仕様の runtime.mjs と同じ）。ここでは式を変えない。
+//   ・人物の「一致度」は補正を足す前の近さ（match）。選定には固定補正を使う（人物の出現の偏りを抑えるため）。
+//   ・同じ50回答は、結果ID・時刻・人数によらず同じ結果になる。
+import { judge, rankTraits, ENGINE_VERSION } from './judge.mjs';
 
-export const RESULT_SCHEMA_VERSION='jagan-result-1';
+export { ENGINE_VERSION };
+export const RESULT_SCHEMA_VERSION = 'jagan-result-2';
+const EPS = 1e-8;
 
 export function validateBundle(bundle) {
-  if(!bundle || !bundle.items || !bundle.interpretation || !bundle.characters || !bundle.product)throw new Error('missing_bundle');
-  const {items,interpretation,characters,product}=bundle;
-  if(items.diagnosis_key!=='jagan' || items.items.length!==50 || items.domains.length!==12)throw new Error('invalid_item_set');
-  if(items.interpretation_version!==interpretation.version)throw new Error('interpretation_version_mismatch');
-  if(characters.model_type!=='authored_story_association' || characters.characters.length!==11)throw new Error('invalid_character_model');
-  const expected=items.domains.map(d=>d.id).sort();
-  if(JSON.stringify([...characters.axes].sort())!==JSON.stringify(expected))throw new Error('invalid_model_axes');
-  const ids=characters.characters.map(c=>c.id);
-  if(new Set(ids).size!==11 || !ids.includes('pierro') || !ids.includes('pantalone'))throw new Error('invalid_character_roster');
-  const total=characters.axes.reduce((s,a)=>s+characters.weights[a],0);
-  if(!Number.isFinite(total)||Math.abs(total-1)>1e-10)throw new Error('invalid_model_weights');
-  for(const a of characters.axes){
-    if(!(characters.weights[a]>0))throw new Error('invalid_model_weight');
-    for(const c of characters.characters)if(typeof c.reference[a]!=='number'||!Number.isFinite(c.reference[a])||c.reference[a]<0||c.reference[a]>100)throw new Error('invalid_reference');
-  }
-  if(product.sales_open && (!Number.isInteger(product.price)||product.price<=0))throw new Error('sales_require_valid_price');
+  if (!bundle || !bundle.items || !bundle.core || !bundle.characters || !bundle.product) throw new Error('missing_bundle');
+  const { items, core, characters, product } = bundle;
+  if (items.diagnosis_key !== 'jagan' || items.items.length !== 50 || items.traits.length !== 12) throw new Error('invalid_item_set');
+  if (items.auxiliary_options.length || items.allow_skip || items.intro_screen) throw new Error('invalid_item_options');
+  if (characters.characters.length !== 11) throw new Error('invalid_character_model');
+  const ids = characters.characters.map((c) => c.id);
+  if (new Set(ids).size !== 11 || !ids.includes('pierro') || !ids.includes('pantalone')) throw new Error('invalid_character_roster');
+  for (const e of core.elements) if (Math.abs(Object.values(e.weights).reduce((s, x) => s + x, 0) - 1) > 1e-9) throw new Error('invalid_element_weights');
+  if (product.sales_open && (!Number.isInteger(product.price) || product.price <= 0)) throw new Error('sales_require_valid_price');
   return true;
 }
 
-function matchStories(domains,model,resultId) {
-  const missing=model.axes.filter(a=>domains[a]?.score===null||domains[a]?.score===undefined);
-  if(missing.length)return {status:'insufficient',primary:null,rankings:[],missingAxes:missing,modelType:model.model_type};
-  const user=Object.fromEntries(model.axes.map(a=>[a,domains[a].score]));
-  const rankings=rankEntries(model.characters.map(c=>({id:c.id,label:c.name,
-    score:weightedSimilarity(user,c.reference,model.axes,model.weights)})),resultId);
-  const best=rankings[0].score;
-  return {status:'available',modelType:model.model_type,primary:rankings[0].id,rankings,
-    ties:rankings.filter(r=>r.rank===1).map(r=>r.id),
-    closeCandidates:rankings.filter(r=>best-r.score<=3).map(r=>r.id),
-    gapToSecond:best-rankings[1].score,notice:model.notice};
+function ranked(rows) {
+  const out = [];
+  for (let i = 0; i < rows.length; i++) {
+    const first = rows.findIndex((r) => Math.abs(r.score - rows[i].score) < EPS);
+    out.push({ ...rows[i], rank: first + 1, displayScore: Math.round(rows[i].score) });
+  }
+  return out;
 }
 
-export function computeDiagnosis(input,bundle) {
+export function computeDiagnosis(input, bundle) {
   validateBundle(bundle);
-  if(!input||input.itemSetVersion!==bundle.items.item_set_version)throw new Error('item_set_version_mismatch');
-  rankEntries([],input.resultId);
-  const scored=scoreDomains(input.answers,bundle.items);
-  const interpretations=scoreInterpretations(scored.domains,bundle.interpretation,input.resultId);
-  const answered=Object.values(scored.answers).filter(v=>v!==null);
-  return {schemaVersion:RESULT_SCHEMA_VERSION,diagnosisKey:'jagan',stage:'implementation_candidate',
-    publicReleaseVerified:false,resultId:input.resultId,
-    versions:{engine:ENGINE_VERSION,itemSet:bundle.items.item_set_version,
-      scoring:bundle.items.scoring_version,interpretation:bundle.interpretation.version,
-      characterModel:bundle.characters.version,calibration:bundle.characters.calibration_version},
-    ...scored,...interpretations,characters:matchStories(scored.domains,bundle.characters,input.resultId),
-    quality:{answered:answered.length,missing:50-answered.length,uniformAnswers:answered.length===50&&new Set(answered).size===1},
-    // This is configuration only. The server must independently validate any purchase.
-    sales:{open:bundle.product.sales_open,price:bundle.product.price,currency:bundle.product.currency}};
+  if (!input || input.itemSetVersion !== bundle.items.item_set_version) throw new Error('item_set_version_mismatch');
+  const j = judge(input.answers, bundle);
+  const traitRanking = ranked(rankTraits(j.scores, bundle.items));
+  const traits = Object.fromEntries(bundle.items.traits.map((t) => [t.id, { id: t.id, label: t.label, score: j.scores[t.id], displayScore: Math.round(j.scores[t.id]) }]));
+  const elementRanking = ranked(j.elementRanking);
+  const element = { status: j.element.id ? 'available' : 'undifferentiated', id: j.element.id, label: j.element.label, nearTie: Boolean(j.element.nearTie), tiedIds: j.element.tiedIds || [], top3: elementRanking.slice(0, 3).map((e) => e.id), ranking: elementRanking };
+  const isou = { status: j.isou.id ? 'marked' : (j.isou.label === '未顕' ? 'unmarked' : 'composite'), id: j.isou.id, label: j.isou.label, nearTie: Boolean(j.isou.nearTie), tiedIds: j.isou.tiedIds || [] };
+  const characterOrder = j.privateDiagnostics.characterRanking.map((c) => ({ id: c.id, name: c.name, rawSimilarity: c.score, displayScore: Math.round(c.score), agreement: c.agreement, coverage: c.coverage, usedAxes: c.usedAxes }));
+  const character = j.character
+    ? { status: 'available', id: j.character.id, name: j.character.name, title: j.character.title, tags: j.character.tags, region: j.character.region, match: j.character.match, rawSimilarity: j.character.rawSimilarity, usedAxes: j.character.usedAxes, rawGap: j.character.rawGap, agreement: characterOrder.find((c) => c.id === j.character.id).agreement, coverage: characterOrder.find((c) => c.id === j.character.id).coverage }
+    : { status: 'insufficient', reason: 'mapped_profile_contrast_too_small' };
+  return {
+    schemaVersion: RESULT_SCHEMA_VERSION, diagnosisKey: 'jagan', stage: 'implementation_candidate', publicReleaseVerified: false,
+    resultId: input.resultId ?? null,
+    versions: { engine: ENGINE_VERSION, itemSet: bundle.items.item_set_version, scoring: bundle.core.version, interpretation: bundle.core.version, characterModel: bundle.characters.version },
+    answers: Object.fromEntries(bundle.items.items.map((i) => [i.id, input.answers[i.id]])),
+    traits, traitRanking, element, isou, character, characterOrder, mappedSpread: j.privateDiagnostics.mappedSpread,
+    // 設定の値のみ。購入の可否は必ずサーバーが別に確かめる
+    sales: { open: bundle.product.sales_open, price: bundle.product.price, currency: bundle.product.currency },
+  };
 }
 
-// Explanations describe numerical correspondence to the fictional reference,
-// without inferring hidden motives or declaring the character's actual trait score.
-export function explainCharacter(result,model,characterId=result.characters.primary) {
-  const c=model.characters.find(x=>x.id===characterId);
-  if(!c||result.characters.status!=='available')return {status:'unavailable',aligned:[],different:[]};
-  const distances=model.axes.map(axis=>({axis,userScore:result.domains[axis].score,
-    referenceScore:c.reference[axis],difference:Math.abs(result.domains[axis].score-c.reference[axis])}));
-  const aligned=distances.filter(x=>x.difference<=15).sort((a,b)=>a.difference-b.difference).slice(0,3);
-  const different=distances.filter(x=>x.difference>=20).sort((a,b)=>b.difference-a.difference).slice(0,3);
-  return {status:'available',characterId,caution:'比較先は作品解釈から作った回答参照パターンです。',
-    aligned,different,thresholdMeaning:'15点・20点は説明を作るための設計値で、心理学上の基準ではありません。'};
+// 人物の参照軸（作者が置いた対応）とあなたの得点の差。未対応の軸は中立値で補わず、比較に含めない
+export function explainCharacter(result, bundle, characterId = result.character.id) {
+  const c = bundle.characters.characters.find((x) => x.id === characterId);
+  if (!c) return { status: 'unavailable', aligned: [], different: [], unknownAxes: [] };
+  const rows = Object.entries(c.anchors).map(([axis, ref]) => ({ axis, userScore: result.traits[axis].score, referenceScore: ref, difference: Math.abs(result.traits[axis].score - ref) }));
+  return {
+    status: 'available', characterId, rows,
+    aligned: rows.filter((x) => x.difference <= 15).sort((a, b) => a.difference - b.difference),
+    different: rows.filter((x) => x.difference >= 20).sort((a, b) => b.difference - a.difference),
+    unknownAxes: c.unknown_axes,
+    caution: '比較先は作品解釈から作った部分的な参照です。未対応の特性は比較に含めていません。',
+    thresholdMeaning: '15点・20点は説明を作るための設計値で、心理学上の基準ではありません。',
+  };
 }
 
+// 公開してよい値の許可リスト。回答・12特性の得点・結果ID・所有者は含めない
 export function publicSummary(result) {
-  const e=result.elements.rankings.find(r=>r.id===result.elements.primary);
-  if(!e||result.types.status==='insufficient'||result.characters.status!=='available')throw new Error('result_not_shareable');
-  const character=result.characters.rankings.find(r=>r.id===result.characters.primary);
-  const type=result.types.primary?result.types.rankings.find(r=>r.id===result.types.primary).label:'型の偏りなし';
-  return {kind:'jagan-public-summary-1',element:{id:e.id,label:e.label,hasExactTie:result.elements.ties.length>1},
-    type:{id:result.types.primary,label:type,hasExactTie:Boolean(result.types.primary&&result.types.rankings.filter(r=>r.rank===1).length>1)},character:{id:character.id,label:character.label,
-    matchPercent:character.displayScore,hasExactTie:result.characters.ties.length>1},
-    interpretationVersion:result.versions.interpretation,characterModelVersion:result.versions.characterModel};
+  if (!result || result.character.status !== 'available') throw new Error('result_not_shareable');
+  return {
+    kind: 'jagan-public-summary-2',
+    element: { id: result.element.id, label: result.element.label },
+    isou: { id: result.isou.id, label: result.isou.label },
+    character: { id: result.character.id, label: result.character.name, matchPercent: result.character.match },
+    coreVersion: result.versions.interpretation, characterModelVersion: result.versions.characterModel,
+  };
 }
 
-export function makeShareText(result,summaryUrl,siteOrigin) {
-  const url=new URL(summaryUrl), origin=new URL(siteOrigin);
-  if(origin.protocol!=='https:'||origin.username||origin.password||origin.pathname!=='/'||origin.search||origin.hash ||
-     url.origin!==origin.origin||url.username||url.password||url.search||url.hash||
-     !/^\/jagan\/s\/[A-Za-z0-9_-]{16,128}$/.test(url.pathname))throw new Error('invalid_share_url');
-  const s=publicSummary(result);
-  const notes=[];
-  if(s.element.hasExactTie)notes.push('※元素に同率候補があります。');
-  if(s.type.hasExactTie)notes.push('※型に同率候補があります。');
-  if(s.character.hasExactTie)notes.push('※人物に同率候補があります。');
-  const tie=notes.length?'\n'+notes.join('\n'):'';
-  return `邪眼診断をやってみました。\n私の結果は、【${s.element.label}×${s.type.label}】\n\n最も近しいファトゥス：${s.character.label}（${s.character.matchPercent}%一致）${tie}\n\n${url.href}\n#邪眼診断 #原神`;
+export function shareTextFromSummary(s, url) {
+  return `邪眼診断をやってみました。\n私の結果は、【${s.element.label}×${s.isou.label}】\n\n最も近しいファトゥス：${s.character.label}（${s.character.matchPercent}%一致）\n\n${url}\n#邪眼診断 #原神`;
+}
+
+export function makeShareText(result, summaryUrl, siteOrigin) {
+  const url = new URL(summaryUrl), origin = new URL(siteOrigin);
+  if (origin.protocol !== 'https:' || origin.username || origin.password || origin.pathname !== '/' || origin.search || origin.hash ||
+    url.origin !== origin.origin || url.username || url.password || url.search || url.hash ||
+    !/^\/jagan\/s\/[A-Za-z0-9_-]{16,128}$/.test(url.pathname)) throw new Error('invalid_share_url');
+  return shareTextFromSummary(publicSummary(result), url.href);
 }

@@ -26,9 +26,9 @@ export default async function handler(req) {
   const v = parseOg(new URL(req.url).searchParams);
   const lines = v ? {
     kicker: 'あなたの深淵',
-    headline: `${v.element} × ${v.type}`,
+    headline: `${v.element} × ${v.isou}`,
     fatui: `最も近しいファトゥス：${v.character}（${v.match}%一致）`,
-    note: [v.ties & 1 ? '元素' : '', v.ties & 2 ? '型' : '', v.ties & 4 ? '人物' : ''].filter(Boolean).join('・'),
+    note: '',
   } : { kicker: 'あなたの願いは、どんな深淵を映すのか。', headline: '邪眼診断', fatui: '', note: '' };
   const footer = '邪眼診断｜作品解釈による独自の参照パターンとの近さ';
   const noteText = lines.note ? `※${lines.note}に同率候補があります` : '';

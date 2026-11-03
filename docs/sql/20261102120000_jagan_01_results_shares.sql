@@ -38,7 +38,7 @@ $$;
 create table if not exists public.jagan_results (
   result_id                uuid primary key,
   user_id                  uuid not null references auth.users(id) on delete cascade,
-  schema_version           text not null check (schema_version = 'jagan-result-1'),
+  schema_version           text not null check (schema_version = 'jagan-result-2'),
   engine_version           text not null check (length(engine_version) between 1 and 64),
   item_set_version         text not null check (length(item_set_version) between 1 and 64),
   scoring_version          text not null check (length(scoring_version) between 1 and 64),
@@ -66,7 +66,7 @@ create table if not exists public.jagan_shares (
   public_id                text primary key check (public_id ~ '^[A-Za-z0-9_-]{22}$'),
   result_key               text not null unique check (result_key ~ '^[0-9a-f]{64}$'),
   user_id                  uuid references auth.users(id) on delete cascade,
-  summary                  jsonb not null check (jsonb_typeof(summary) = 'object' and summary->>'kind' = 'jagan-public-summary-1'),
+  summary                  jsonb not null check (jsonb_typeof(summary) = 'object' and summary->>'kind' = 'jagan-public-summary-2'),
   item_set_version         text not null check (length(item_set_version) between 1 and 64),
   revoke_token_hash        text check (revoke_token_hash is null or revoke_token_hash ~ '^[0-9a-f]{64}$'),
   created_at               timestamptz not null default now(),

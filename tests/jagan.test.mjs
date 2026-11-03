@@ -1,4 +1,4 @@
-// 邪眼診断：参照実装との一致・データの同期・保存/共有 API の権限と入力検査・表示の境界。
+// 邪眼診断：仕様 v0.3 の判定との一致・データの同期・保存/共有 API の権限と入力検査・表示の境界。
 //   実行: node --test tests/jagan.test.mjs
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -6,54 +6,53 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { computeDiagnosis, publicSummary } from '../jagan/engine/runtime.mjs';
-import { BUNDLE, COPY } from '../jagan/engine/data.mjs';
+import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, explainCharacter } from '../jagan/engine/runtime.mjs';
+import { judge, characterRanking, scoreAnswers } from '../jagan/engine/judge.mjs';
+import { BUNDLE } from '../jagan/engine/data.mjs';
+import { judge as specJudge } from '../docs/jagan/spec_v0_3_balanced/runtime.mjs';
 import { recompute, headlineOf, ogParams, renderSharePage, createSaveHandler, createShareHandler, createReportHandler, createSharePageHandler, jaganEnabled } from '../lib/jagan-api.mjs';
-import { renderResult, renderReport, renderResultPage, referenceTypeLabel, groupSimilarity, shareTextFromSummary } from '../jagan/view.mjs';
+import { renderResultPage, renderReport, renderMethod } from '../jagan/view.mjs';
+import { GROUPS, ISOU_TEXT, ELEMENT_TEXT, TRAIT_COPY, CHARACTER_COPY } from '../jagan/site-copy.mjs';
 import { parseOg } from '../lib/jagan-og-params.mjs';
+import { SAMPLE_ANSWERS, sampleResult } from '../jagan/sample.mjs';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-const OVERRIDES = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs/jagan/site_overrides.json'), 'utf8'));
-// 仕様の例の型名を、サイトの表示名へ置き換える（数値・順位・ID は仕様の例のまま比較する）
-const OLD_TYPE = { REFRAME: '転化型', CONTAIN: '封蔵型', SURGE: '奔流型', STALL: '停滞型', CONFUSE: '混迷型', RESIST: '抗心型' };
-function relabel(v) {
-  let t = JSON.stringify(v);
-  for (const [id, old] of Object.entries(OLD_TYPE)) t = t.split(`"${old}"`).join(`"${OVERRIDES.type_labels[id]}"`);
-  return JSON.parse(t);
-}
-const SPEC = path.join(ROOT, 'docs/jagan/spec_v1_0_rc1');
+const SPEC = path.join(ROOT, 'docs/jagan/spec_v0_3_balanced');
 const RID = '3f2b8c1e-7a4d-4e9b-9c2f-1a2b3c4d5e6f';
 const RID2 = '9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d';
 const UID = '11111111-2222-4333-8444-555555555555';
 const UID2 = '66666666-7777-4888-9999-000000000000';
+const VERSION = BUNDLE.items.item_set_version;
 const all = (v) => Object.fromEntries(BUNDLE.items.items.map((i) => [i.id, v]));
-const run = (a, id = RID) => computeDiagnosis({ answers: a, resultId: id, itemSetVersion: BUNDLE.items.item_set_version }, BUNDLE);
+// 特性ごとの回答（指定しない特性は 2）。仕様の check.mjs の profile と同じ
+const profile = (p) => Object.fromEntries(BUNDLE.items.items.map((i) => [i.id, p[i.trait] ?? 2]));
+const run = (a, id = RID) => computeDiagnosis({ answers: a, resultId: id, itemSetVersion: VERSION }, BUNDLE);
+const VARIED = () => profile({ HOS: 5, SUS: 4, MAN: 3, CAL: 3, RSK: 1, ANX: 4 }); // 人物が出る回答
+const rand = (i) => Object.fromEntries(BUNDLE.items.items.map((x, k) => [x.id, 1 + ((i * 31 + k * 17 + (i >> 2) * k + (i % 7) * (k % 3)) % 5)]));
 
-// ---- 仕様パッケージとの一致 ----
-test('engine files are byte-identical to the spec package and data.mjs is regenerated', () => {
-  for (const f of ['math.mjs', 'runtime.mjs']) {
-    assert.equal(fs.readFileSync(path.join(ROOT, 'jagan/engine', f), 'utf8'), fs.readFileSync(path.join(SPEC, f), 'utf8'), f);
-  }
+// ---- 仕様 v0.3 との一致 ----
+test('data.mjs is regenerated from the spec package and matches its JSON', () => {
   execFileSync(process.execPath, [path.join(ROOT, 'scripts/jagan-data.mjs'), '--check']);
-  for (const [k, f] of [['items', 'items.json'], ['characters', 'characters.json'], ['product', 'product.json']]) {
-    assert.deepEqual(BUNDLE[k], JSON.parse(fs.readFileSync(path.join(SPEC, 'data', f), 'utf8')));
+  for (const [k, f] of [['items', 'items.json'], ['core', 'core-model.json'], ['characters', 'characters.json']]) {
+    assert.deepEqual(BUNDLE[k], JSON.parse(fs.readFileSync(path.join(SPEC, f), 'utf8')), f);
   }
-  // interpretation は型の表示名だけをサイト用に上書き（docs/jagan/site_overrides.json）。係数・ID・基準は仕様のまま
-  const spec = JSON.parse(fs.readFileSync(path.join(SPEC, 'data', 'interpretation.json'), 'utf8'));
-  for (const t of spec.types) t.label = OVERRIDES.type_labels[t.id];
-  assert.deepEqual(BUNDLE.interpretation, spec);
 });
 
-test('the spec reference tests pass unchanged', () => {
-  execFileSync(process.execPath, ['--test', path.join(SPEC, 'tests/runtime.test.mjs')], { stdio: 'pipe' });
+test('the spec check.mjs (18 checks) passes unchanged', () => {
+  const out = execFileSync(process.execPath, [path.join(SPEC, 'check.mjs')], { encoding: 'utf8' });
+  assert.match(out, /18 checks passed/);
 });
 
-test('every fictional example reproduces the spec results through the site bundle', () => {
-  const ex = JSON.parse(fs.readFileSync(path.join(SPEC, 'examples.json'), 'utf8'));
-  for (const e of ex) {
-    const r = computeDiagnosis({ answers: e.input.answers, resultId: e.input.resultId, itemSetVersion: e.input.itemSetVersion || BUNDLE.items.item_set_version }, BUNDLE);
-    assert.deepEqual(JSON.parse(JSON.stringify(r)), relabel(e.result), e.name);
-    if (e.publicSummary) assert.deepEqual(publicSummary(r), relabel(e.publicSummary), e.name);
+test('the site engine returns exactly the spec runtime result for 2,000 varied answer sets and the fixtures', () => {
+  for (let i = 0; i < 2000; i++) {
+    const a = rand(i);
+    assert.deepEqual(JSON.parse(JSON.stringify(judge(a, BUNDLE))), JSON.parse(JSON.stringify(specJudge(a))));
+  }
+  const fixtures = JSON.parse(fs.readFileSync(path.join(SPEC, 'parity-fixtures.json'), 'utf8'));
+  for (const f of fixtures) {
+    const got = characterRanking(f.scores, BUNDLE.characters);
+    assert.equal(got[0].id, f.winner);
+    for (const c of got) assert.ok(Math.abs(c.score - f.raw[c.id]) < 1e-8);
   }
 });
 
@@ -64,18 +63,61 @@ test('product stays one closed 1,000 JPY one-time item', () => {
   assert.equal(BUNDLE.product.existing_eti_entitlement_grants_access, false);
 });
 
+test('questions: fifty, five at a time, five options only, no skip and no intro', () => {
+  assert.equal(BUNDLE.items.items.length, 50);
+  assert.equal(BUNDLE.items.display_order.length, 50);
+  assert.deepEqual([...BUNDLE.items.display_order].sort(), BUNDLE.items.items.map((i) => i.id).sort());
+  assert.equal(BUNDLE.items.page_size, 5);
+  assert.equal(BUNDLE.items.options.length, 5);
+  assert.equal(BUNDLE.items.allow_skip, false);
+  assert.equal(BUNDLE.items.intro_screen, false);
+  assert.deepEqual(GROUPS.flatMap((g) => g.traits).sort(), BUNDLE.items.traits.map((t) => t.id).sort());
+  assert.equal(GROUPS.reduce((n, g) => n + g.traits.reduce((m, t) => m + BUNDLE.items.traits.find((x) => x.id === t).item_count, 0), 0), 50);
+});
+
+test('every trait, element, isou and character has display copy', () => {
+  for (const t of BUNDLE.items.traits) { assert.ok(TRAIT_COPY[t.id].meaning && TRAIT_COPY[t.id].limit && TRAIT_COPY[t.id].reflection, t.id); assert.ok(ISOU_TEXT[t.id].body, t.id); }
+  for (const e of BUNDLE.core.elements) assert.ok(ELEMENT_TEXT[e.id].body, e.id);
+  for (const k of ['NONE', 'MIX']) assert.ok(ISOU_TEXT[k].body, k);
+  assert.ok(ELEMENT_TEXT.NONE.body);
+  for (const c of BUNDLE.characters.characters) assert.ok(CHARACTER_COPY[c.id].story_context && CHARACTER_COPY[c.id].limit && CHARACTER_COPY[c.id].reflection, c.id);
+});
+
+test('results are deterministic: key order, repeat calls and result id do not change the outcome', () => {
+  const a = VARIED();
+  const r1 = run(a, RID), r2 = run(Object.fromEntries(Object.entries(a).reverse()), RID2);
+  assert.deepEqual({ ...r1, resultId: null }, { ...r2, resultId: null });
+  assert.deepEqual(run(a), run(a));
+});
+
+test('flat and low-contrast answers defer the character; weak/tied answers are not forced into a type', () => {
+  for (const v of [1, 2, 3, 4, 5]) assert.equal(run(all(v)).character.status, 'insufficient');
+  assert.equal(run(all(3)).isou.label, '未顕');
+  assert.equal(run(all(5)).isou.label, '複合');
+  assert.equal(run(all(3)).element.label, '未分化');
+  assert.equal(run(profile({ SEP: 5 })).character.status, 'insufficient');
+  assert.equal(run(profile({ MAN: 5, CAL: 5 })).character.id, 'dottore');
+});
+
+test('displayed match is the raw similarity (no balance offset added) and rounds the same number', () => {
+  const r = run(profile({ MAN: 4, IMP: 3 }));
+  const c = characterRanking(r.traits ? Object.fromEntries(Object.entries(r.traits).map(([k, v]) => [k, v.score])) : {}, BUNDLE.characters).find((x) => x.id === r.character.id);
+  assert.equal(r.character.match, Math.round(c.score));
+  assert.equal(c.selectionScore, c.score + c.selectionOffset);
+  assert.deepEqual(Object.fromEntries(Object.entries(r.traits).map(([k, v]) => [k, v.score])), scoreAnswers(profile({ MAN: 4, IMP: 3 }), BUNDLE.items));
+});
+
 // ---- サーバーの入力検査 ----
-test('recompute rejects bad ids, versions, unknown items and invalid values; accepts null as missing', () => {
-  const v = BUNDLE.items.item_set_version;
-  assert.equal(recompute({ resultId: 'not-a-uuid', itemSetVersion: v, answers: all(3) }).error, 'invalid_result_id');
+test('recompute requires all fifty answers as integers 1-5 and rejects unknown ids, versions and null', () => {
+  assert.equal(recompute({ resultId: 'not-a-uuid', itemSetVersion: VERSION, answers: all(3) }).error, 'invalid_result_id');
   assert.equal(recompute({ resultId: RID, itemSetVersion: 'old', answers: all(3) }).error, 'item_set_version_mismatch');
-  assert.equal(recompute({ resultId: RID, itemSetVersion: v, answers: { ...all(3), OLD1: 3 } }).error, 'unknown_item_id');
-  assert.equal(recompute({ resultId: RID, itemSetVersion: v, answers: { ...all(3), JG001: 6 } }).error, 'invalid_answer');
-  assert.equal(recompute({ resultId: RID, itemSetVersion: v, answers: [] }).error, 'invalid_answers');
-  const ok = recompute({ resultId: RID, itemSetVersion: v, answers: { ...all(4), JG001: null } });
-  assert.ok(ok.ok);
-  assert.equal(ok.result.answers.JG001, null);
-  assert.equal(ok.result.domains.AUT_S.status, 'partial');
+  assert.equal(recompute({ resultId: RID, itemSetVersion: VERSION, answers: { ...all(3), OLD1: 3 } }).error, 'unknown_item_id');
+  assert.equal(recompute({ resultId: RID, itemSetVersion: VERSION, answers: { ...all(3), ANX01: 6 } }).error, 'invalid_answer');
+  assert.equal(recompute({ resultId: RID, itemSetVersion: VERSION, answers: { ...all(3), ANX01: null } }).error, 'invalid_answer');
+  const missing = all(3); delete missing.ANX01;
+  assert.equal(recompute({ resultId: RID, itemSetVersion: VERSION, answers: missing }).error, 'invalid_answer');
+  assert.equal(recompute({ resultId: RID, itemSetVersion: VERSION, answers: [] }).error, 'invalid_answers');
+  assert.ok(recompute({ resultId: RID, itemSetVersion: VERSION, answers: all(4) }).ok);
 });
 
 // ---- 保存・共有 API（Supabase を模した fetch） ----
@@ -144,7 +186,8 @@ function call(handler, { method = 'POST', token, body, url = '/api/x' } = {}) {
     handler(req, res);
   });
 }
-const saveBody = (a = all(4), id = RID) => ({ resultId: id, itemSetVersion: BUNDLE.items.item_set_version, answers: a });
+
+const saveBody = (a = VARIED(), id = RID) => ({ resultId: id, itemSetVersion: VERSION, answers: a });
 
 test('save requires auth, registration and stores the server recomputation; retries are idempotent; other owners get 409', async () => {
   const { db, fetchImpl } = fakeDb();
@@ -152,22 +195,33 @@ test('save requires auth, registration and stores the server recomputation; retr
   assert.equal((await call(h, { body: saveBody() })).status, 401);
   assert.equal((await call(h, { token: 'bad', body: saveBody() })).status, 401);
   // ブラウザが送った所有者・人物・一致率は使わない
-  const forged = { ...saveBody(), user_id: UID2, characters: { primary: 'pierro' }, purchased: true };
+  const forged = { ...saveBody(), user_id: UID2, character: { id: 'pierro' }, purchased: true };
   const r1 = await call(h, { token: 'tok-a', body: forged });
   assert.equal(r1.status, 200);
   assert.equal(db.jagan_results.length, 1);
   const row = db.jagan_results[0];
   assert.equal(row.user_id, UID);
-  assert.deepEqual(row.snapshot, JSON.parse(JSON.stringify(run(all(4)))));
-  assert.deepEqual(row.headline, headlineOf(run(all(4))));
-  assert.equal(row.interpretation_version, BUNDLE.interpretation.version);
+  assert.deepEqual(row.snapshot, JSON.parse(JSON.stringify(run(VARIED()))));
+  assert.deepEqual(row.headline, headlineOf(run(VARIED())));
+  assert.equal(row.schema_version, 'jagan-result-2');
+  assert.equal(row.interpretation_version, BUNDLE.core.version);
+  assert.equal(row.character_model_version, BUNDLE.characters.version);
   const r2 = await call(h, { token: 'tok-a', body: saveBody() });
   assert.equal(r2.status, 200); assert.equal(r2.body.duplicate, true);
   assert.equal(db.jagan_results.length, 1);
   assert.equal((await call(h, { token: 'tok-b', body: saveBody() })).status, 409);
   assert.equal(db.jagan_results[0].user_id, UID);
-  assert.equal((await call(h, { token: 'tok-a', body: { ...saveBody(), answers: { ...all(3), JG001: 9 } } })).status, 400);
+  assert.equal((await call(h, { token: 'tok-a', body: { ...saveBody(), answers: { ...all(3), ANX01: 9 } } })).status, 400);
+  assert.equal((await call(h, { token: 'tok-a', body: { ...saveBody(), answers: { ...all(3), ANX01: null } } })).status, 400);
   assert.equal((await call(h, { method: 'GET', token: 'tok-a' })).status, 405);
+});
+
+test('a flat answer set can be saved (the character is deferred), but its public summary cannot be shared', async () => {
+  const { db, fetchImpl } = fakeDb();
+  const r = await call(createSaveHandler({ env: fakeEnv(), fetchImpl }), { token: 'tok-a', body: saveBody(all(3), RID2) });
+  assert.equal(r.status, 200);
+  assert.equal(db.jagan_results[0].headline.character, null);
+  assert.equal((await call(createShareHandler({ env: fakeEnv(), fetchImpl }), { body: saveBody(all(3), RID2) })).status, 422);
 });
 
 test('save is refused before registration completes', async () => {
@@ -190,52 +244,50 @@ test('production refuses jagan APIs unless explicitly enabled', async () => {
 test('share stores only the public summary, separates the public id from the result id, is idempotent and revocable', async () => {
   const { db, fetchImpl } = fakeDb();
   const h = createShareHandler({ env: fakeEnv(), fetchImpl });
-  const r1 = await call(h, { body: saveBody(all(4)) });
+  const r1 = await call(h, { body: saveBody() });
   assert.equal(r1.status, 200);
   assert.match(r1.body.publicId, /^[A-Za-z0-9_-]{22}$/);
   assert.match(r1.body.revokeToken, /^[A-Za-z0-9_-]{43}$/);
   const row = db.jagan_shares[0];
   const stored = JSON.stringify(row);
   assert.ok(!stored.includes(RID), 'result id must not be stored in shares');
-  assert.ok(!stored.includes('"answers"') && !stored.includes('"domains"'));
-  assert.deepEqual(row.summary, publicSummary(run(all(4))));
+  assert.ok(!stored.includes('"answers"') && !stored.includes('"traits"') && !stored.includes('ANX01'));
+  assert.deepEqual(row.summary, publicSummary(run(VARIED())));
+  assert.deepEqual(Object.keys(row.summary).sort(), ['character', 'characterModelVersion', 'coreVersion', 'element', 'isou', 'kind'].sort());
   assert.equal(row.user_id, null);
-  const r2 = await call(h, { body: saveBody(all(4)) });
+  const r2 = await call(h, { body: saveBody() });
   assert.equal(r2.body.publicId, r1.body.publicId); assert.equal(r2.body.revokeToken, undefined);
   assert.equal(db.jagan_shares.length, 1);
-  // 公開 ID だけでは取り消せない。別のアカウントも不可。取消用の値で取り消せる
   assert.equal((await call(h, { method: 'DELETE', body: { publicId: r1.body.publicId } })).status, 403);
   assert.equal((await call(h, { method: 'DELETE', token: 'tok-b', body: { publicId: r1.body.publicId } })).status, 403);
   assert.equal((await call(h, { method: 'DELETE', body: { publicId: r1.body.publicId, revokeToken: 'x'.repeat(43) } })).status, 403);
   assert.equal((await call(h, { method: 'DELETE', body: { publicId: r1.body.publicId, revokeToken: r1.body.revokeToken } })).status, 200);
   assert.ok(db.jagan_shares[0].revoked_at);
-  // 取り消した後の再共有は新しい公開 ID
-  const r3 = await call(h, { body: saveBody(all(4)) });
+  const r3 = await call(h, { body: saveBody() });
   assert.notEqual(r3.body.publicId, r1.body.publicId);
 });
 
-test('share of a saved result uses the saved snapshot and owner; another account cannot share it; insufficient is 422', async () => {
+test('share of a saved result uses the saved snapshot and owner; another account cannot share it', async () => {
   const { db, fetchImpl } = fakeDb();
-  await call(createSaveHandler({ env: fakeEnv(), fetchImpl }), { token: 'tok-a', body: saveBody(all(2)) });
+  await call(createSaveHandler({ env: fakeEnv(), fetchImpl }), { token: 'tok-a', body: saveBody(profile({ MAN: 5, CAL: 5 })) });
   const h = createShareHandler({ env: fakeEnv(), fetchImpl });
-  // 送られた回答が違っても、保存時のスナップショットを使う
-  const r = await call(h, { token: 'tok-a', body: saveBody(all(5)) });
+  const r = await call(h, { token: 'tok-a', body: saveBody(VARIED()) }); // 送られた回答が違っても、保存時のスナップショットを使う
   assert.equal(r.status, 200);
-  assert.deepEqual(r.body.summary, publicSummary(run(all(2))));
+  assert.deepEqual(r.body.summary, publicSummary(run(profile({ MAN: 5, CAL: 5 }))));
+  assert.equal(r.body.summary.character.id, 'dottore');
   assert.equal(r.body.revokeToken, null);
   assert.equal(db.jagan_shares[0].user_id, UID);
-  assert.equal((await call(h, { token: 'tok-b', body: saveBody(all(2)) })).status, 409);
-  assert.equal((await call(h, { body: saveBody({}, RID2) })).status, 422);
+  assert.equal((await call(h, { token: 'tok-b', body: saveBody(profile({ MAN: 5, CAL: 5 })) })).status, 409);
   assert.equal((await call(h, { method: 'DELETE', token: 'tok-a', body: { publicId: r.body.publicId } })).status, 200);
 });
 
 test('share page returns only the summary and 404 for unknown/revoked ids', async () => {
   const { db, fetchImpl } = fakeDb();
-  const share = await call(createShareHandler({ env: fakeEnv(), fetchImpl }), { body: saveBody(all(4)) });
+  const share = await call(createShareHandler({ env: fakeEnv(), fetchImpl }), { body: saveBody() });
   const page = createSharePageHandler({ env: fakeEnv(), fetchImpl });
   const ok = await call(page, { method: 'GET', url: `/api/jagan-share-page?id=${share.body.publicId}` });
   assert.equal(ok.status, 200);
-  const s = publicSummary(run(all(4)));
+  const s = publicSummary(run(VARIED()));
   assert.ok(ok.body.includes(s.character.label) && ok.body.includes(`/api/jagan-og?${ogParams(s).replace(/&/g, '&amp;')}`));
   assert.ok(!ok.body.includes(RID));
   assert.equal((await call(page, { method: 'GET', url: '/api/jagan-share-page?id=AAAAAAAAAAAAAAAAAAAAAA' })).status, 404);
@@ -260,75 +312,72 @@ test('report access is closed while sales are closed, and requires a jagan entit
 });
 
 // ---- 表示 ----
-test('result view never fills deferred parts with example names or numbers', () => {
-  const html = renderResult(run({}), BUNDLE, COPY);
-  assert.ok(html.includes('判定保留'));
-  for (const c of BUNDLE.characters.characters) assert.ok(!html.includes(c.name), c.name);
-  assert.ok(!/\d+%一致/.test(html));
+test('result page: deferred parts are not filled, no names leak, and the twelve scores are not shown for free', () => {
+  const flat = renderResultPage(run(all(3)), BUNDLE);
+  assert.ok(flat.includes('未分化') && flat.includes('未顕') && flat.includes('判定を保留'));
+  for (const c of BUNDLE.characters.characters) assert.ok(!flat.includes(c.name), c.name);
+  assert.ok(!/\d+%\s*<\/b><span>一致度/.test(flat));
+  const r = run(VARIED());
+  const html = renderResultPage(r, BUNDLE);
+  const names = BUNDLE.characters.characters.filter((c) => html.includes(c.name)).map((c) => c.id);
+  assert.deepEqual(names, [r.character.id]);
+  assert.ok(!html.includes('jg-domains') && !html.includes('rp-bar'));
+  for (const t of BUNDLE.items.traits) assert.ok(!html.includes(TRAIT_COPY[t.id].reflection), t.id);
+  assert.ok((html.match(/data-buy disabled/g) || []).length >= 5);
+  assert.ok(!html.includes('邪眼解析レポート'));
+  assert.ok(html.includes('¥1,000') && html.includes('全てのロックを解除する'));
+  assert.ok(html.includes('作品の描写に重ねた独自の参照と比較し、人物ごとの出現の偏りを補正して選定しています'));
 });
 
-test('result view marks exact ties and the no-pattern type, and the report renders all twelve domains', () => {
-  const mid = renderResult(run(all(3)), BUNDLE, COPY);
-  assert.ok(mid.includes('計算上の同率候補があります'));
-  assert.ok(mid.includes('型の偏りなし'));
-  assert.ok(mid.includes(COPY.result.no_marked_pattern));
-  const high = renderResult(run(all(5)), BUNDLE, COPY);
-  assert.ok(high.includes('同率'));
-  const rep = renderReport(run(all(4)), BUNDLE, COPY);
-  for (const d of BUNDLE.items.domains) assert.ok(rep.includes(COPY.report.domains[d.id].label), d.id);
+test('the report renders all twelve traits, three groups, the character section and the balance caveat; the sample is fictional', () => {
+  const rep = renderReport(sampleResult(), BUNDLE);
+  for (const t of BUNDLE.items.traits) assert.ok(rep.includes(TRAIT_COPY[t.id].meaning), t.id);
+  for (const g of GROUPS) assert.ok(rep.includes(g.en), g.id);
+  assert.ok(rep.includes('順位と一致度の大小が一致しないことがあります'));
+  assert.ok(rep.includes('未対応の特性は、中立値で補わず'));
+  const flat = renderReport(run(all(3)), BUNDLE);
+  assert.ok(flat.includes('人物の判定を保留'));
+  assert.deepEqual(Object.keys(SAMPLE_ANSWERS).sort(), BUNDLE.items.items.map((i) => i.id).sort());
 });
 
-test('share text from the summary equals the runtime template; OG params round-trip through the image parser', () => {
-  for (const v of [2, 3, 4, 5]) {
-    const r = run(all(v));
+test('share text equals the template; OG params round-trip through the image parser', () => {
+  for (const a of [VARIED(), profile({ MAN: 5, CAL: 5 }), profile({ RSK: 5, IMP: 3 }), profile({ HOS: 4, SUS: 5, WDR: 1 })]) {
+    const r = run(a);
     const s = publicSummary(r);
     const url = 'https://example.invalid/jagan/s/fixture_shared_0001';
-    assert.equal(shareTextFromSummary(s, url), (/* runtime */ awaitMake(r, url)));
+    assert.equal(shareTextFromSummary(s, url), makeShareText(r, url, 'https://example.invalid'));
+    assert.ok(makeShareText(r, url, 'https://example.invalid').startsWith('邪眼診断をやってみました。\n私の結果は、【'));
     const parsed = parseOg(new URLSearchParams(ogParams(s)));
     assert.equal(parsed.element, s.element.label);
-    assert.equal(parsed.type, s.type.label);
+    assert.equal(parsed.isou, s.isou.label);
     assert.equal(parsed.character, s.character.label);
     assert.equal(parsed.match, s.character.matchPercent);
   }
   assert.equal(parseOg(new URLSearchParams('e=XX&t=NONE&c=pierro&m=50')), null);
   assert.equal(parseOg(new URLSearchParams('e=PY&t=NONE&c=pierro&m=500')), null);
+  assert.throws(() => makeShareText(run(VARIED()), 'https://other.invalid/jagan/s/fixture_shared_0001', 'https://example.invalid'), /invalid_share_url/);
+  assert.throws(() => publicSummary(run(all(3))), /not_shareable/);
 });
-import { makeShareText } from '../jagan/engine/runtime.mjs';
-function awaitMake(r, url) { return makeShareText(r, url, 'https://example.invalid'); }
 
-test('share page escapes html in all fields', () => {
-  const s = publicSummary(run(all(4)));
+test('public summary is a strict projection without answers, trait scores or the private result id', () => {
+  const r = run(VARIED(), 'private-result-uuid');
+  const enc = JSON.stringify(publicSummary(r));
+  assert.ok(!enc.includes('private-result-uuid') && !enc.includes('"answers"') && !enc.includes('"traits"') && !enc.includes('score'));
+});
+
+test('explainCharacter compares only the anchored traits and never imputes unknown ones', () => {
+  const r = run(profile({ MAN: 5, CAL: 5 }));
+  const ex = explainCharacter(r, BUNDLE, 'dottore');
+  assert.deepEqual(ex.rows.map((x) => x.axis).sort(), ['CAL', 'MAN']);
+  assert.equal(ex.unknownAxes.length, 10);
+});
+
+test('share page and method text are escaped and carry the required disclosure', () => {
+  const s = publicSummary(run(VARIED()));
   const evil = { ...s, element: { ...s.element, label: '<img src=x onerror=alert(1)>' } };
   const html = renderSharePage({ origin: 'https://x.invalid', publicId: 'A'.repeat(22), summary: evil });
   assert.ok(!html.includes('<img src=x'));
-});
-
-test('result page: deferred parts are not filled, no names leak, and the twelve scores are not shown for free', () => {
-  const empty = renderResultPage(run({}), BUNDLE, COPY);
-  assert.ok(empty.includes('判定保留'));
-  for (const c of BUNDLE.characters.characters) assert.ok(!empty.includes(c.name), c.name);
-  const r = run(Object.fromEntries(BUNDLE.items.items.map((i, k) => [i.id, [5, 2, 4, 3, 4, 2][k % 6]])));
-  const html = renderResultPage(r, BUNDLE, COPY);
-  // 名前が出るのは1位と、仕様で示す同率・近接候補だけ（それ以外の順位は伏せる）
-  const names = BUNDLE.characters.characters.filter((c) => html.includes(c.name)).map((c) => c.id).sort();
-  const allowed = [...new Set([r.characters.primary, ...r.characters.ties, ...r.characters.closeCandidates])].sort();
-  assert.deepEqual(names, allowed);
-  // 有料の 12 項目の表（renderDomainTable）は含まない
-  assert.ok(!html.includes('jg-domains'));
-  for (const d of BUNDLE.items.domains) assert.ok(!html.includes(COPY.report.domains[d.id].reflection), d.id);
-  // 購入ボタンは販売前は押せない
-  assert.ok((html.match(/data-buy disabled/g) || []).length >= 4);
-  assert.ok(!html.includes('邪眼解析レポート'));
-});
-
-test('renamed type labels are used everywhere, and group similarity uses the same formula as the overall score', () => {
-  assert.deepEqual(BUNDLE.interpretation.types.map((t) => t.label).sort(), Object.values(OVERRIDES.type_labels).sort());
-  for (const c of BUNDLE.characters.characters) assert.ok(Object.values(OVERRIDES.type_labels).includes(referenceTypeLabel(BUNDLE, c.id)));
-  const r = run(all(4));
-  const g = groupSimilarity(r, BUNDLE, r.characters.primary);
-  for (const v of Object.values(g)) assert.ok(v >= 0 && v <= 100);
-  // 3群の重みの合計は等しい（各1/3）ので、全体の距離の二乗は各群の距離の二乗の平均と一致する
-  const d = Object.values(g).map((v) => (1 - v / 100) ** 2);
-  const overall = r.characters.rankings[0].score;
-  assert.ok(Math.abs(100 * (1 - Math.sqrt(d.reduce((a, b) => a + b, 0) / 3)) - overall) < 1e-9);
+  const m = renderMethod();
+  assert.ok(m.includes('固定の補正') && m.includes('PID-5'));
+  assert.ok(m.includes('Krueger'));
 });

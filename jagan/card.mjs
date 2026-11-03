@@ -22,17 +22,15 @@ export function drawCard(canvas, s) {
   ctx.fillStyle = C.hi; ctx.font = `italic 30px "Snell Roundhand","Apple Chancery",cursive`;
   ctx.fillText('Delusion Diagnosis', W / 2, 120);
   ctx.fillStyle = C.sub; ctx.font = `400 28px ${SERIF}`; ctx.fillText('あなたの深淵', W / 2, 175);
-  const head = `${s.element.label} × ${s.type.label}`;
+  const head = `${s.element.label} × ${s.isou.label}`;
   ctx.fillStyle = C.text; ctx.shadowColor = 'rgba(165,42,67,0.8)'; ctx.shadowBlur = 24;
   fitFont(ctx, head, 980, 88); ctx.fillText(head, W / 2, 268);
   ctx.shadowBlur = 0;
   const fat = `最も近しいファトゥス：${s.character.label}（${s.character.matchPercent}%一致）`;
   fitFont(ctx, fat, 980, 38, 400); ctx.fillText(fat, W / 2, 365);
-  const ties = [s.element.hasExactTie ? '元素' : '', s.type.hasExactTie ? '型' : '', s.character.hasExactTie ? '人物' : ''].filter(Boolean);
-  if (ties.length) { ctx.fillStyle = C.sub; ctx.font = `400 24px ${SERIF}`; ctx.fillText(`※${ties.join('・')}に同率候補があります`, W / 2, 420); }
   ctx.fillStyle = C.accent; ctx.fillRect(W / 2 - 180, 465, 360, 2);
   ctx.fillStyle = C.sub; ctx.font = `400 22px ${SERIF}`;
-  ctx.fillText('邪眼診断｜作品解釈による独自の参照パターンとの近さ', W / 2, 510);
+  ctx.fillText('邪眼診断｜作品解釈による独自の参照との近さ', W / 2, 510);
   return canvas;
 }
 

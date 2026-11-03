@@ -1,13 +1,18 @@
-// 生成物：scripts/jagan-data.mjs が docs/jagan/spec_v1_0_rc1/data/*.json から作る。手で編集しない。
+// 生成物：scripts/jagan-data.mjs が docs/jagan/spec_v0_3_balanced/*.json から作る。手で編集しない。
 export const BUNDLE = Object.freeze({
  "items": {
   "diagnosis_key": "jagan",
-  "item_set_version": "jagan-items-1.0.0-rc1",
-  "scoring_version": "jagan-scores-1.0.0-rc1",
-  "interpretation_version": "jagan-interpretation-1.0.0-rc1",
-  "status": "implementation_candidate",
+  "item_set_version": "jagan-shadow-items-0.4.0-semantic-review",
+  "status": "semantic_revision_candidate_not_validated",
   "launch_ready": false,
-  "instruction": "最近1か月ほどの自分を振り返り、最も近いものを選んでください。つらいときについての質問は、その期間に経験した場面を思い浮かべてください。",
+  "page_size": 5,
+  "page_count": 10,
+  "question_count": 50,
+  "intro_screen": false,
+  "allow_skip": false,
+  "auxiliary_options": [],
+  "required_answers": 50,
+  "default_answer": null,
   "options": [
    {
     "value": 1,
@@ -30,1195 +35,1037 @@ export const BUNDLE = Object.freeze({
     "label": "とても当てはまる"
    }
   ],
-  "missing_option": {
-   "value": null,
-   "label": "判断できない・回答しない"
-  },
-  "domains": [
+  "traits": [
    {
-    "id": "AUT_S",
-    "label": "自律性の充足",
-    "block": "need",
-    "item_count": 4,
-    "minimum_answered": 3
+    "id": "ANX",
+    "label": "不安",
+    "item_count": 4
    },
    {
-    "id": "AUT_F",
-    "label": "自律性の阻害",
-    "block": "need",
-    "item_count": 4,
-    "minimum_answered": 3
+    "id": "SEP",
+    "label": "依存",
+    "item_count": 5
    },
    {
-    "id": "COM_S",
-    "label": "有能感の充足",
-    "block": "need",
-    "item_count": 4,
-    "minimum_answered": 3
+    "id": "SUS",
+    "label": "猜疑",
+    "item_count": 4
    },
    {
-    "id": "COM_F",
-    "label": "有能感の阻害",
-    "block": "need",
-    "item_count": 4,
-    "minimum_answered": 3
+    "id": "WDR",
+    "label": "撤退",
+    "item_count": 4
    },
    {
-    "id": "REL_S",
-    "label": "関係性の充足",
-    "block": "need",
-    "item_count": 4,
-    "minimum_answered": 3
+    "id": "IMP",
+    "label": "衝動",
+    "item_count": 5
    },
    {
-    "id": "REL_F",
-    "label": "関係性の阻害",
-    "block": "need",
-    "item_count": 4,
-    "minimum_answered": 3
+    "id": "PSV",
+    "label": "固執",
+    "item_count": 4
    },
    {
-    "id": "REAPP",
-    "label": "捉え直しの使用",
-    "block": "strategy",
-    "item_count": 5,
-    "minimum_answered": 4
+    "id": "PRF",
+    "label": "完璧",
+    "item_count": 4
    },
    {
-    "id": "SUPPR",
-    "label": "表出抑制の使用",
-    "block": "strategy",
-    "item_count": 5,
-    "minimum_answered": 4
+    "id": "HOS",
+    "label": "敵意",
+    "item_count": 4
    },
    {
-    "id": "CLAR_D",
-    "label": "感情理解の困難",
-    "block": "difficulty",
-    "item_count": 4,
-    "minimum_answered": 3
+    "id": "ATT",
+    "label": "顕示",
+    "item_count": 4
    },
    {
-    "id": "ACC_D",
-    "label": "感情受容の困難",
-    "block": "difficulty",
-    "item_count": 4,
-    "minimum_answered": 3
+    "id": "MAN",
+    "label": "操作",
+    "item_count": 4
    },
    {
-    "id": "IMP_D",
-    "label": "衝動調整の困難",
-    "block": "difficulty",
-    "item_count": 4,
-    "minimum_answered": 3
+    "id": "RSK",
+    "label": "危険志向",
+    "item_count": 4
    },
    {
-    "id": "GOAL_D",
-    "label": "行動維持の困難",
-    "block": "difficulty",
-    "item_count": 4,
-    "minimum_answered": 3
-   }
-  ],
-  "items": [
-   {
-    "id": "JG001",
-    "domain": "AUT_S",
-    "block": "need",
-    "text": "日々の予定には、自分の希望を反映できている。",
-    "direction": 1
-   },
-   {
-    "id": "JG002",
-    "domain": "AUT_S",
-    "block": "need",
-    "text": "大事な選択をするとき、自分が納得できる理由で決めている。",
-    "direction": 1
-   },
-   {
-    "id": "JG003",
-    "domain": "AUT_S",
-    "block": "need",
-    "text": "周囲と意見が違っても、自分の考えを選択に活かせる。",
-    "direction": 1
-   },
-   {
-    "id": "JG004",
-    "domain": "AUT_S",
-    "block": "need",
-    "text": "引き受けることと断ることを、自分なりに決められる。",
-    "direction": 1
-   },
-   {
-    "id": "JG005",
-    "domain": "AUT_F",
-    "block": "need",
-    "text": "断りたい用事でも、引き受ける以外に道がないように感じる。",
-    "direction": 1
-   },
-   {
-    "id": "JG006",
-    "domain": "AUT_F",
-    "block": "need",
-    "text": "一日の過ごし方が、周りの都合だけで決まっていくように感じる。",
-    "direction": 1
-   },
-   {
-    "id": "JG007",
-    "domain": "AUT_F",
-    "block": "need",
-    "text": "周囲の期待から外れないために、本意ではない選択をしている。",
-    "direction": 1
-   },
-   {
-    "id": "JG008",
-    "domain": "AUT_F",
-    "block": "need",
-    "text": "自分に関わることなのに、意見を挟む余地がないと感じる。",
-    "direction": 1
-   },
-   {
-    "id": "JG009",
-    "domain": "COM_S",
-    "block": "need",
-    "text": "自分に任されたことを、最後まで形にできる手応えがある。",
-    "direction": 1
-   },
-   {
-    "id": "JG010",
-    "domain": "COM_S",
-    "block": "need",
-    "text": "難しい課題にも、取りかかるための足がかりを見つけられる。",
-    "direction": 1
-   },
-   {
-    "id": "JG011",
-    "domain": "COM_S",
-    "block": "need",
-    "text": "経験を重ねた分だけ、できることが増えたと感じる。",
-    "direction": 1
-   },
-   {
-    "id": "JG012",
-    "domain": "COM_S",
-    "block": "need",
-    "text": "自分の工夫が、取り組んでいることの成果につながっている。",
-    "direction": 1
-   },
-   {
-    "id": "JG013",
-    "domain": "COM_F",
-    "block": "need",
-    "text": "求められる水準に、自分の力が届いていないと感じる。",
-    "direction": 1
-   },
-   {
-    "id": "JG014",
-    "domain": "COM_F",
-    "block": "need",
-    "text": "取り組んでもうまくいかず、自分には難しすぎると感じる。",
-    "direction": 1
-   },
-   {
-    "id": "JG015",
-    "domain": "COM_F",
-    "block": "need",
-    "text": "失敗が続いて、自分の力を頼りにできなくなっている。",
-    "direction": 1
-   },
-   {
-    "id": "JG016",
-    "domain": "COM_F",
-    "block": "need",
-    "text": "自分なりに工夫しても、役に立っていないように感じる。",
-    "direction": 1
-   },
-   {
-    "id": "JG017",
-    "domain": "REL_S",
-    "block": "need",
-    "text": "近況を伝えたとき、気にかけて聞いてくれる相手がいる。",
-    "direction": 1
-   },
-   {
-    "id": "JG018",
-    "domain": "REL_S",
-    "block": "need",
-    "text": "大切な相手と過ごす時間に、気持ちが通じ合う感覚がある。",
-    "direction": 1
-   },
-   {
-    "id": "JG019",
-    "domain": "REL_S",
-    "block": "need",
-    "text": "人と接する中で、自分もその輪の一員だと感じる。",
-    "direction": 1
-   },
-   {
-    "id": "JG020",
-    "domain": "REL_S",
-    "block": "need",
-    "text": "弱いところを見せても、関係が続くと思える相手がいる。",
-    "direction": 1
-   },
-   {
-    "id": "JG021",
-    "domain": "REL_F",
-    "block": "need",
-    "text": "関わりたい相手から、遠ざけられているように感じる。",
-    "direction": 1
-   },
-   {
-    "id": "JG022",
-    "domain": "REL_F",
-    "block": "need",
-    "text": "一緒にいる人たちの中で、自分だけが輪の外にいるように感じる。",
-    "direction": 1
-   },
-   {
-    "id": "JG023",
-    "domain": "REL_F",
-    "block": "need",
-    "text": "自分の気持ちを伝えても、大切に扱われていないと感じる。",
-    "direction": 1
-   },
-   {
-    "id": "JG024",
-    "domain": "REL_F",
-    "block": "need",
-    "text": "身近な人から、いてもいなくても同じだと思われているように感じる。",
-    "direction": 1
-   },
-   {
-    "id": "JG025",
-    "domain": "REAPP",
-    "block": "strategy",
-    "text": "嫌なことが起きたとき、別の見方ができないか考えている。",
-    "direction": 1
-   },
-   {
-    "id": "JG026",
-    "domain": "REAPP",
-    "block": "strategy",
-    "text": "気が重い予定について、取り組む意味を考え直している。",
-    "direction": 1
-   },
-   {
-    "id": "JG027",
-    "domain": "REAPP",
-    "block": "strategy",
-    "text": "相手の言葉に傷ついたとき、自分の受け取り方以外の解釈を探している。",
-    "direction": 1
-   },
-   {
-    "id": "JG028",
-    "domain": "REAPP",
-    "block": "strategy",
-    "text": "失敗を振り返るとき、今後に活かせる面から捉えようとしている。",
-    "direction": 1
-   },
-   {
-    "id": "JG029",
-    "domain": "REAPP",
-    "block": "strategy",
-    "text": "変えられない出来事について、その意味の捉え方を変えて気持ちを整えようとしている。",
-    "direction": 1
-   },
-   {
-    "id": "JG030",
-    "domain": "SUPPR",
-    "block": "strategy",
-    "text": "気持ちが顔に出そうなとき、表情を変えないようにしている。",
-    "direction": 1
-   },
-   {
-    "id": "JG031",
-    "domain": "SUPPR",
-    "block": "strategy",
-    "text": "腹が立っていても、声の調子には出さないようにしている。",
-    "direction": 1
-   },
-   {
-    "id": "JG032",
-    "domain": "SUPPR",
-    "block": "strategy",
-    "text": "うれしい気持ちも、周りには分からない程度に抑えている。",
-    "direction": 1
-   },
-   {
-    "id": "JG033",
-    "domain": "SUPPR",
-    "block": "strategy",
-    "text": "人と話すとき、本当の気持ちが伝わらないように振る舞っている。",
-    "direction": 1
-   },
-   {
-    "id": "JG034",
-    "domain": "SUPPR",
-    "block": "strategy",
-    "text": "人前で涙が出そうなとき、気づかれないようにこらえている。",
-    "direction": 1
-   },
-   {
-    "id": "JG035",
-    "domain": "CLAR_D",
-    "block": "difficulty",
-    "text": "つらいとき、怒っているのか悲しいのか、自分でも区別しにくい。",
-    "direction": 1
-   },
-   {
-    "id": "JG036",
-    "domain": "CLAR_D",
-    "block": "difficulty",
-    "text": "気持ちが乱れても、それがどんな感情なのか言葉にしにくい。",
-    "direction": 1
-   },
-   {
-    "id": "JG037",
-    "domain": "CLAR_D",
-    "block": "difficulty",
-    "text": "つらい出来事の後、自分の中にどんな感情が残っているのかつかみにくい。",
-    "direction": 1
-   },
-   {
-    "id": "JG038",
-    "domain": "CLAR_D",
-    "block": "difficulty",
-    "text": "いくつもの感情が重なると、一つひとつを整理できなくなる。",
-    "direction": 1
-   },
-   {
-    "id": "JG039",
-    "domain": "ACC_D",
-    "block": "difficulty",
-    "text": "つらい気持ちが生じると、そんな気持ちを持つ自分を責めてしまう。",
-    "direction": 1
-   },
-   {
-    "id": "JG040",
-    "domain": "ACC_D",
-    "block": "difficulty",
-    "text": "悲しみや不安を感じている自分を、そのまま認めることが難しい。",
-    "direction": 1
-   },
-   {
-    "id": "JG041",
-    "domain": "ACC_D",
-    "block": "difficulty",
-    "text": "嫌な感情があると、その感情を持つこと自体を恥ずかしく感じる。",
-    "direction": 1
-   },
-   {
-    "id": "JG042",
-    "domain": "ACC_D",
-    "block": "difficulty",
-    "text": "気持ちが落ち込むと、落ち込んでいることを許せないと感じる。",
-    "direction": 1
-   },
-   {
-    "id": "JG043",
-    "domain": "IMP_D",
-    "block": "difficulty",
-    "text": "気持ちが高ぶると、送らない方がよいと思うメッセージを送ってしまう。",
-    "direction": 1
-   },
-   {
-    "id": "JG044",
-    "domain": "IMP_D",
-    "block": "difficulty",
-    "text": "つらさが強いとき、控えようと決めた行動に手が伸びてしまう。",
-    "direction": 1
-   },
-   {
-    "id": "JG045",
-    "domain": "IMP_D",
-    "block": "difficulty",
-    "text": "感情が強くなると、行動する前に一度止まることが難しい。",
-    "direction": 1
-   },
-   {
-    "id": "JG046",
-    "domain": "IMP_D",
-    "block": "difficulty",
-    "text": "動揺すると、後で困ると分かっている行動でも、その場でやめられなくなる。",
-    "direction": 1
-   },
-   {
-    "id": "JG047",
-    "domain": "GOAL_D",
-    "block": "difficulty",
-    "text": "気持ちが沈むと、必要な用事に取りかかれなくなる。",
-    "direction": 1
-   },
-   {
-    "id": "JG048",
-    "domain": "GOAL_D",
-    "block": "difficulty",
-    "text": "不安が強いと、進めていた作業の手が止まってしまう。",
-    "direction": 1
-   },
-   {
-    "id": "JG049",
-    "domain": "GOAL_D",
-    "block": "difficulty",
-    "text": "嫌なことが頭から離れないと、やるべきことを順番に進めにくくなる。",
-    "direction": 1
-   },
-   {
-    "id": "JG050",
-    "domain": "GOAL_D",
-    "block": "difficulty",
-    "text": "気持ちが乱れた後、途中だった作業へ戻ることが難しい。",
-    "direction": 1
+    "id": "CAL",
+    "label": "冷淡",
+    "item_count": 4
    }
   ],
   "display_order": [
-   "JG001",
-   "JG005",
-   "JG009",
-   "JG013",
-   "JG017",
-   "JG021",
-   "JG002",
-   "JG006",
-   "JG010",
-   "JG014",
-   "JG018",
-   "JG022",
-   "JG003",
-   "JG007",
-   "JG011",
-   "JG015",
-   "JG019",
-   "JG023",
-   "JG004",
-   "JG008",
-   "JG012",
-   "JG016",
-   "JG020",
-   "JG024",
-   "JG025",
-   "JG030",
-   "JG026",
-   "JG031",
-   "JG027",
-   "JG032",
-   "JG028",
-   "JG033",
-   "JG029",
-   "JG034",
-   "JG035",
-   "JG039",
-   "JG043",
-   "JG047",
-   "JG036",
-   "JG040",
-   "JG044",
-   "JG048",
-   "JG037",
-   "JG041",
-   "JG045",
-   "JG049",
-   "JG038",
-   "JG042",
-   "JG046",
-   "JG050"
-  ]
+   "ANX01",
+   "PRF01",
+   "SEP01",
+   "IMP01",
+   "WDR02",
+   "ATT01",
+   "SUS01",
+   "PSV01",
+   "HOS01",
+   "MAN01",
+   "RSK01",
+   "CAL01",
+   "ANX02",
+   "PRF02",
+   "SEP02",
+   "IMP02",
+   "WDR03",
+   "ATT02",
+   "SUS02",
+   "PSV02",
+   "HOS03",
+   "MAN02",
+   "RSK02",
+   "CAL02",
+   "ANX03",
+   "PRF04",
+   "SEP03",
+   "IMP03",
+   "WDR04",
+   "ATT03",
+   "SUS03",
+   "PSV04",
+   "HOS04",
+   "MAN03",
+   "RSK03",
+   "CAL03",
+   "ANX05",
+   "PRF05",
+   "SEP04",
+   "IMP04",
+   "WDR05",
+   "ATT05",
+   "SUS05",
+   "PSV05",
+   "HOS05",
+   "MAN04",
+   "RSK04",
+   "CAL04",
+   "SEP05",
+   "IMP05"
+  ],
+  "items": [
+   {
+    "id": "ANX01",
+    "trait": "ANX",
+    "text": "まだ決まっていないことについて、悪い展開を思い浮かべる。",
+    "direction": 1,
+    "intended_content": "先行きへの心配",
+    "review_note": "現実的な危険への妥当な心配も含み得る"
+   },
+   {
+    "id": "ANX02",
+    "trait": "ANX",
+    "text": "これからする用事について考えると、緊張して落ち着かなくなる。",
+    "direction": 1,
+    "intended_content": "緊張",
+    "review_note": "特性定義への対応を再点検した独自表現。読解・妥当性は未検証。"
+   },
+   {
+    "id": "ANX03",
+    "trait": "ANX",
+    "text": "特に問題が起きていないときも、何か悪いことが起こりそうで落ち着かない。",
+    "direction": 1,
+    "intended_content": "予期する恐れ",
+    "review_note": "現在の生活環境の影響を受ける"
+   },
+   {
+    "id": "ANX05",
+    "trait": "ANX",
+    "text": "一つの心配が落ち着くと、別の気がかりが頭に浮かぶ。",
+    "direction": 1,
+    "intended_content": "心配の持続",
+    "review_note": "固執と区別できるか確認"
+   },
+   {
+    "id": "SEP01",
+    "trait": "SEP",
+    "text": "親しい相手からの返事が遅いと、自分から離れていくのではないかと不安になる。",
+    "direction": 1,
+    "intended_content": "関係喪失への不安",
+    "review_note": "連絡習慣・実際の関係悪化の影響"
+   },
+   {
+    "id": "SEP02",
+    "trait": "SEP",
+    "text": "親しい相手との間で意見が食い違うと、距離を置かれることが心配になる。",
+    "direction": 1,
+    "intended_content": "拒絶される恐れ",
+    "review_note": "一般的な不安との区別"
+   },
+   {
+    "id": "SEP03",
+    "trait": "SEP",
+    "text": "親しい相手と離れて過ごすと、関係が続くか不安になる。",
+    "direction": 1,
+    "intended_content": "離別への不安",
+    "review_note": "相手との関係や生活上の事情の影響"
+   },
+   {
+    "id": "SEP04",
+    "trait": "SEP",
+    "text": "親しい相手が自分以外の人と過ごしていると、自分の居場所がなくなる気がする。",
+    "direction": 1,
+    "intended_content": "関係内の居場所を失う恐れ",
+    "review_note": "嫉妬との重なり"
+   },
+   {
+    "id": "SEP05",
+    "trait": "SEP",
+    "text": "頼りにしている相手がいなくなることを考えると、自分一人ではやっていけない気がする。",
+    "direction": 1,
+    "intended_content": "相手を失った後の自己支援への不安",
+    "review_note": "実際に援助が必要な事情の影響"
+   },
+   {
+    "id": "SUS01",
+    "trait": "SUS",
+    "text": "人から親切にされると、相手に何か狙いがあるのか考える。",
+    "direction": 1,
+    "intended_content": "他者の意図への疑い",
+    "review_note": "正常な警戒も拾う"
+   },
+   {
+    "id": "SUS02",
+    "trait": "SUS",
+    "text": "その場にいない間に、自分についてよくない話をされている気がする。",
+    "direction": 1,
+    "intended_content": "陰での悪意を疑う",
+    "review_note": "実際の排斥経験が影響"
+   },
+   {
+    "id": "SUS03",
+    "trait": "SUS",
+    "text": "相手の説明を聞いた後も、隠していることがあるのではと思う。",
+    "direction": 1,
+    "intended_content": "説明への疑い",
+    "review_note": "説明そのものが不十分な場合との区別"
+   },
+   {
+    "id": "SUS05",
+    "trait": "SUS",
+    "text": "相手と約束をしても、自分を裏切るのではないかという疑いが残る。",
+    "direction": 1,
+    "intended_content": "信頼・忠実さへの疑い",
+    "review_note": "関係ごとの違いがある"
+   },
+   {
+    "id": "WDR02",
+    "trait": "WDR",
+    "text": "誰かと話せる場でも、自分から会話に入らずに過ごす。",
+    "direction": 1,
+    "intended_content": "会話への関与の少なさ",
+    "review_note": "内向性との重なり"
+   },
+   {
+    "id": "WDR03",
+    "trait": "WDR",
+    "text": "人と知り合っても、その後に自分から連絡するのを控える。",
+    "direction": 1,
+    "intended_content": "関係の開始・継続への関与の少なさ",
+    "review_note": "連絡方法や相手側の事情が影響"
+   },
+   {
+    "id": "WDR04",
+    "trait": "WDR",
+    "text": "誰かと一緒に過ごせるときも、一人でいる方を選ぶ。",
+    "direction": 1,
+    "intended_content": "一人でいる選択",
+    "review_note": "望ましい一人時間も含む"
+   },
+   {
+    "id": "WDR05",
+    "trait": "WDR",
+    "text": "関わりが増えそうになると、人との距離を広げる。",
+    "direction": 1,
+    "intended_content": "対人距離の拡大",
+    "review_note": "親密さの回避との重なり"
+   },
+   {
+    "id": "IMP01",
+    "trait": "IMP",
+    "text": "思いついたことを、その後どうなるか考える前に始める。",
+    "direction": 1,
+    "intended_content": "結果を検討する前の着手",
+    "review_note": "行動力との区別"
+   },
+   {
+    "id": "IMP02",
+    "trait": "IMP",
+    "text": "気持ちが高ぶったとき、言葉を選ぶ前に口に出す。",
+    "direction": 1,
+    "intended_content": "検討する前の発言",
+    "review_note": "感情が強い場面への限定"
+   },
+   {
+    "id": "IMP03",
+    "trait": "IMP",
+    "text": "目の前のことにすぐ反応し、その後どうなるかを考えるのが後になる。",
+    "direction": 1,
+    "intended_content": "検討する前の承諾",
+    "review_note": "特性定義への対応を再点検した独自表現。読解・妥当性は未検証。"
+   },
+   {
+    "id": "IMP04",
+    "trait": "IMP",
+    "text": "その場でしたいことがあると、後の予定への影響を考えずに行動する。",
+    "direction": 1,
+    "intended_content": "後の影響を考えない行動",
+    "review_note": "単なる予定変更から内容を絞った"
+   },
+   {
+    "id": "IMP05",
+    "trait": "IMP",
+    "text": "一度立ち止まって考えようと思っても、その前に行動に移してしまう。",
+    "direction": 1,
+    "intended_content": "行動に先立つ停止の難しさ",
+    "review_note": "自覚している人だけが答えやすい可能性"
+   },
+   {
+    "id": "PSV01",
+    "trait": "PSV",
+    "text": "別のやり方が必要だと分かっても、同じ方法を続ける。",
+    "direction": 1,
+    "intended_content": "変更が必要でも同じ方法を続ける",
+    "review_note": "変更が実行できない事情が影響"
+   },
+   {
+    "id": "PSV02",
+    "trait": "PSV",
+    "text": "成果につながらなくなった取り組みでも、やめる判断ができずに続ける。",
+    "direction": 1,
+    "intended_content": "有効でない取り組みの継続",
+    "review_note": "責任から継続が必要な状況と区別"
+   },
+   {
+    "id": "PSV04",
+    "trait": "PSV",
+    "text": "考え続けても解決に近づかないことを、同じように考え続ける。",
+    "direction": 1,
+    "intended_content": "解決につながらない思考の反復",
+    "review_note": "不安・反芻との重なり"
+   },
+   {
+    "id": "PSV05",
+    "trait": "PSV",
+    "text": "周囲の状況が変わった後も、最初に決めた方針から切り替えにくい。",
+    "direction": 1,
+    "intended_content": "状況変化への切り替えの難しさ",
+    "review_note": "一貫性や約束を守ることとの区別"
+   },
+   {
+    "id": "PRF01",
+    "trait": "PRF",
+    "text": "用件は満たせていても、細かな部分を直し続ける。",
+    "direction": 1,
+    "intended_content": "十分な状態でも修正を続ける",
+    "review_note": "職業上必要な品質管理との区別"
+   },
+   {
+    "id": "PRF02",
+    "trait": "PRF",
+    "text": "作業の仕上がりを確かめるうちに、予定していた時間を超える。",
+    "direction": 1,
+    "intended_content": "確認に時間をかける",
+    "review_note": "不安からの確認との重なり"
+   },
+   {
+    "id": "PRF04",
+    "trait": "PRF",
+    "text": "少しでも不十分なところがあると、そのまま人に見せるのをためらう。",
+    "direction": 1,
+    "intended_content": "不完全な状態を出しにくい",
+    "review_note": "評価への不安との重なり"
+   },
+   {
+    "id": "PRF05",
+    "trait": "PRF",
+    "text": "急ぐ必要があるときも、細部まで整えることを優先する。",
+    "direction": 1,
+    "intended_content": "状況より細部を優先",
+    "review_note": "実際の品質要件が影響"
+   },
+   {
+    "id": "HOS01",
+    "trait": "HOS",
+    "text": "相手のちょっとした言い方に、腹が立つ。",
+    "direction": 1,
+    "intended_content": "小さなきっかけでの怒り",
+    "review_note": "実際の侮辱・疲労の影響"
+   },
+   {
+    "id": "HOS03",
+    "trait": "HOS",
+    "text": "相手への不満が、声の強さや言葉のきつさに出る。",
+    "direction": 1,
+    "intended_content": "敵対的な感情表出",
+    "review_note": "本人の判断基準が影響"
+   },
+   {
+    "id": "HOS04",
+    "trait": "HOS",
+    "text": "相手に腹を立てると、相手が困るように振る舞いたくなる。",
+    "direction": 1,
+    "intended_content": "相手に不利益を与えたい反応",
+    "review_note": "実際の行動ではなく気持ちを問う"
+   },
+   {
+    "id": "HOS05",
+    "trait": "HOS",
+    "text": "意見がぶつかったとき、相手を責める言い方になる。",
+    "direction": 1,
+    "intended_content": "相手を責める反応",
+    "review_note": "意見の主張そのものとは分ける"
+   },
+   {
+    "id": "ATT01",
+    "trait": "ATT",
+    "text": "人が集まる場で、自分に注目が集まるように話題を選ぶ。",
+    "direction": 1,
+    "intended_content": "話題選びによる注目獲得",
+    "review_note": "司会などの役割が影響"
+   },
+   {
+    "id": "ATT02",
+    "trait": "ATT",
+    "text": "他の人に注目が集まると、自分にも話を向けたくなる。",
+    "direction": 1,
+    "intended_content": "自分に注目を戻す",
+    "review_note": "自然な会話参加との区別"
+   },
+   {
+    "id": "ATT03",
+    "trait": "ATT",
+    "text": "注目を集めるために、話し方や振る舞いを大げさにする。",
+    "direction": 1,
+    "intended_content": "大げさな表現で注目を得る",
+    "review_note": "表現力一般へ薄めないため改訂"
+   },
+   {
+    "id": "ATT05",
+    "trait": "ATT",
+    "text": "自分の話に反応が少ないと、さらに注意を引く話を足す。",
+    "direction": 1,
+    "intended_content": "注意を得るための話の追加",
+    "review_note": "会話を続ける配慮との区別"
+   },
+   {
+    "id": "MAN01",
+    "trait": "MAN",
+    "text": "頼みを通したいとき、相手への好意を実際よりも強く示す。",
+    "direction": 1,
+    "intended_content": "目的のための好意の演出",
+    "review_note": "一般的な愛想との区別"
+   },
+   {
+    "id": "MAN02",
+    "trait": "MAN",
+    "text": "自分に有利な選択をしてもらうため、相手に知らせる情報を絞る。",
+    "direction": 1,
+    "intended_content": "選択的な情報提示による誘導",
+    "review_note": "要点整理・守秘との区別"
+   },
+   {
+    "id": "MAN03",
+    "trait": "MAN",
+    "text": "相手をその気にさせるため、自分が本当に思っている以上に褒める。",
+    "direction": 1,
+    "intended_content": "目的のためのお世辞",
+    "review_note": "礼儀や応援との区別"
+   },
+   {
+    "id": "MAN04",
+    "trait": "MAN",
+    "text": "自分の狙いに気づかれないようにして、相手を望む行動へ導く。",
+    "direction": 1,
+    "intended_content": "狙いを隠した誘導",
+    "review_note": "欺瞞との重なり"
+   },
+   {
+    "id": "RSK01",
+    "trait": "RSK",
+    "text": "危険があると分かっていても、面白そうなら試してみたくなる。",
+    "direction": 1,
+    "intended_content": "危険を伴う行動への接近",
+    "review_note": "適切な挑戦や訓練された危険管理と区別する"
+   },
+   {
+    "id": "RSK02",
+    "trait": "RSK",
+    "text": "危険を避けられる場面でも、刺激を求めて危ない方を選ぶ。",
+    "direction": 1,
+    "intended_content": "必須ではない危険の選択",
+    "review_note": "自己申告した危険の認識に依存する"
+   },
+   {
+    "id": "RSK03",
+    "trait": "RSK",
+    "text": "退屈を感じると、危険を伴うことにも手を出したくなる。",
+    "direction": 1,
+    "intended_content": "退屈を埋めるための危険への接近",
+    "review_note": "衝動との重なりを点検する"
+   },
+   {
+    "id": "RSK04",
+    "trait": "RSK",
+    "text": "危険を指摘されても、自分なら大丈夫だと考えて進める。",
+    "direction": 1,
+    "intended_content": "自分への危険の過小評価",
+    "review_note": "実際の能力や経験との区別が必要"
+   },
+   {
+    "id": "CAL01",
+    "trait": "CAL",
+    "text": "相手がつらそうでも、その人の気持ちにはあまり関心が向かない。",
+    "direction": 1,
+    "intended_content": "他者の苦痛への関心の薄さ",
+    "review_note": "他者の状態に気づく力や感情表現の乏しさとは区別する"
+   },
+   {
+    "id": "CAL02",
+    "trait": "CAL",
+    "text": "自分の行動で相手を傷つけたと分かっても、申し訳なさはあまり感じない。",
+    "direction": 1,
+    "intended_content": "自分が与えた負担への後悔の乏しさ",
+    "review_note": "適切な境界設定と、不必要に傷つけることを区別する"
+   },
+   {
+    "id": "CAL03",
+    "trait": "CAL",
+    "text": "自分の目的が果たせるなら、相手が困ることは気にならない。",
+    "direction": 1,
+    "intended_content": "目的達成時の他者の不利益への無関心",
+    "review_note": "利害対立に伴う正当な選択との区別が必要"
+   },
+   {
+    "id": "CAL04",
+    "trait": "CAL",
+    "text": "相手が困っていると理解しても、力になりたいという気持ちはあまり起きない。",
+    "direction": 1,
+    "intended_content": "他者の困難への配慮の薄さ",
+    "review_note": "支援できる余力がないことと、気持ちが起きないことの区別を確認"
+   }
+  ],
+  "result_engine_status": "twelve_trait_core_and_balanced_character_candidate_v0_3",
+  "changes_from_v03": {
+   "removed_ids": [
+    "ANX04",
+    "ATT04",
+    "HOS02",
+    "MAN05",
+    "PRF03",
+    "PSV03",
+    "SUS04",
+    "WDR01"
+   ],
+   "reworded_ids": [
+    "ANX02",
+    "IMP03"
+   ],
+   "added_ids": [
+    "RSK01",
+    "RSK02",
+    "RSK03",
+    "RSK04",
+    "CAL01",
+    "CAL02",
+    "CAL03",
+    "CAL04"
+   ]
+  },
+  "scoring_note": "各特性の回答平均を換算。項目数が異なるため合計値で比較しない。得点は当てはまりの指標であり、異なる特性の臨床的な強さが等しいとは保証しない。"
  },
- "interpretation": {
-  "status": "implementation_candidate",
-  "coefficient_origin": "designer_hypothesis_calibrated_on_synthetic_answers_not_validated_scale",
-  "version": "jagan-interpretation-1.0.0-rc1",
+ "core": {
+  "version": "jagan-twelve-trait-core-0.2.0-candidate",
+  "status": "design_candidate_not_empirically_validated",
+  "launch_ready": false,
+  "trait_score": "25*(mean-1)",
+  "isou_minimum_candidate": 60,
+  "near_gap_candidate": 5,
   "elements": [
    {
     "id": "PY",
     "label": "炎",
-    "theme": "内側で高まる感情",
     "weights": {
-     "ACC_D": 0.55,
-     "IMP_D": 0.24165823190791402,
-     "COM_F": 0.05000000000000002,
-     "SUPPR": -0.1583417680920859
+     "HOS": 0.45,
+     "IMP": 0.25,
+     "RSK": 0.3
     }
    },
    {
     "id": "HY",
     "label": "水",
-    "theme": "つながりの中の揺れ",
     "weights": {
-     "REL_F": 0.40470606398507475,
-     "REL_S": -0.16570771418891775,
-     "SUPPR": 0.3086132732705834,
-     "ACC_D": 0.12097294855542415
+     "SEP": 0.5,
+     "ANX": 0.3,
+     "SUS": 0.2
     }
    },
    {
     "id": "CR",
     "label": "氷",
-    "theme": "内側に留める感情",
     "weights": {
-     "SUPPR": 0.6,
-     "ACC_D": 0.1,
-     "REL_F": 0.05,
-     "IMP_D": -0.25
+     "WDR": 0.45,
+     "SUS": 0.3,
+     "CAL": 0.25
     }
    },
    {
     "id": "EL",
     "label": "雷",
-    "theme": "感情と行動の緊張",
     "weights": {
-     "IMP_D": 0.6,
-     "GOAL_D": 0.1,
-     "AUT_F": 0.05000000000000002,
-     "SUPPR": -0.25
+     "IMP": 0.4,
+     "RSK": 0.4,
+     "ATT": 0.2
     }
    },
    {
     "id": "AN",
     "label": "風",
-    "theme": "自分の意思と制約との葛藤",
     "weights": {
-     "AUT_F": 0.5741737314110146,
-     "AUT_S": -0.05000000000000002,
-     "REAPP": 0.07582626858898549,
-     "SUPPR": -0.3
+     "WDR": 0.35,
+     "ANX": 0.4,
+     "RSK": 0.25
     }
    },
    {
     "id": "GE",
     "label": "岩",
-    "theme": "揺れの中で行動を保つ",
     "weights": {
-     "GOAL_D": -0.25,
-     "SUPPR": 0.17081251162691874,
-     "COM_S": 0.35,
-     "AUT_S": 0.2291874883730813
+     "PRF": 0.45,
+     "MAN": 0.35,
+     "PSV": 0.2
     }
    },
    {
     "id": "DE",
     "label": "草",
-    "theme": "感情理解と意味の組み替え",
     "weights": {
-     "REAPP": 0.3513105937984236,
-     "CLAR_D": -0.2268325972464074,
-     "ACC_D": -0.121856808955169,
-     "COM_S": 0.3
+     "PSV": 0.45,
+     "SUS": 0.3,
+     "PRF": 0.25
     }
    }
   ],
-  "types": [
-   {
-    "id": "REFRAME",
-    "label": "再解釈型",
-    "domain": "REAPP",
-    "summary": "出来事の見方を変えて感情を扱おうとする。"
-   },
-   {
-    "id": "CONTAIN",
-    "label": "秘匿型",
-    "domain": "SUPPR",
-    "summary": "感情を外に出さず、内側で扱う。"
-   },
-   {
-    "id": "SURGE",
-    "label": "衝動型",
-    "domain": "IMP_D",
-    "summary": "強い感情の下では、意図したように行動を止めにくい。"
-   },
-   {
-    "id": "STALL",
-    "label": "停滞型",
-    "domain": "GOAL_D",
-    "summary": "強い感情の下では、必要な行動を続けにくい。"
-   },
-   {
-    "id": "CONFUSE",
-    "label": "困惑型",
-    "domain": "CLAR_D",
-    "summary": "自分の感情をつかみ、整理することに難しさがある。"
-   },
-   {
-    "id": "RESIST",
-    "label": "自責型",
-    "domain": "ACC_D",
-    "summary": "生じた感情を、そのまま認めにくい。"
-   }
-  ],
-  "type_minimum_score": 60,
-  "close_gap_points": 3,
-  "tie_epsilon": 1e-9,
-  "element_rule": "sum(abs(w)*score if w>=0 else abs(w)*(100-score)); missing required domains => defer all element rankings",
-  "type_rule": "rank six separate domains; label only if top score>=60; gap<=3 => co_dominant; these thresholds are design hypotheses",
-  "cross_domain_warning": "同じ数値が同じ心理的強さを意味するとは限らない。元素と型は創作的解釈。",
-  "calibration_version": "elements-synthetic-0.5.0"
+  "character_status": "partial_story_reference_fixed_balance_candidate_v0_3",
+  "reference_note": "元素係数・閾値は独自の演出設計。学術的な標準値ではない。"
  },
  "characters": {
-  "status": "implementation_candidate",
-  "model_type": "authored_story_association",
-  "version": "jagan-story-reference-1.0.0-rc1",
-  "calibration_version": "story-reference-synthetic-0.5.0",
-  "meaning": "人物本人の心理得点ではなく、作者が提案した利用者の回答パターンと物語との連想モデル。未測定の内面を確認したという意味ではない。",
+  "version": "jagan-character-balance-0.3.0-candidate",
+  "status": "synthetic_calibration_candidate",
+  "launch_ready": false,
   "axes": [
-   "AUT_S",
-   "AUT_F",
-   "COM_S",
-   "COM_F",
-   "REL_S",
-   "REL_F",
-   "REAPP",
-   "SUPPR",
-   "CLAR_D",
-   "ACC_D",
-   "IMP_D",
-   "GOAL_D"
+   "ANX",
+   "SEP",
+   "SUS",
+   "WDR",
+   "IMP",
+   "PSV",
+   "PRF",
+   "HOS",
+   "ATT",
+   "MAN",
+   "RSK",
+   "CAL"
   ],
-  "weights": {
-   "AUT_S": 0.05555555555555555,
-   "AUT_F": 0.05555555555555555,
-   "COM_S": 0.05555555555555555,
-   "COM_F": 0.05555555555555555,
-   "REL_S": 0.05555555555555555,
-   "REL_F": 0.05555555555555555,
-   "REAPP": 0.16666666666666666,
-   "SUPPR": 0.16666666666666666,
-   "CLAR_D": 0.08333333333333333,
-   "ACC_D": 0.08333333333333333,
-   "IMP_D": 0.08333333333333333,
-   "GOAL_D": 0.08333333333333333
-  },
-  "notice": "公式描写を参考に設計した独自の回答参照パターンとの近さです。人物本人の心理得点や科学的な一致確率ではありません。",
+  "mapped_axes": [
+   "CAL",
+   "HOS",
+   "IMP",
+   "MAN",
+   "RSK",
+   "SUS",
+   "WDR"
+  ],
+  "anchor_agreement_weight": 0.75,
+  "salience_coverage_weight": 0.25,
+  "salience_start": 50,
+  "minimum_mapped_spread": 10,
+  "similarity_display": "raw_association_score_before_balance_offset",
+  "selection": "raw_association_score_plus_fixed_balance_offset",
+  "unknown_handling": "excluded_not_imputed",
   "characters": [
    {
     "id": "pierro",
     "name": "ピエロ",
-    "reference": {
-     "AUT_S": 61.54340221963348,
-     "AUT_F": 65.76370281721685,
-     "COM_S": 61.860766651855236,
-     "COM_F": 47.27871235747045,
-     "REL_S": 43.08900299450603,
-     "REL_F": 65.98449138173298,
-     "REAPP": 55.78548092675602,
-     "SUPPR": 75.34760850800065,
-     "CLAR_D": 34.87879677023973,
-     "ACC_D": 57.581681340165915,
-     "IMP_D": 30.246231347708818,
-     "GOAL_D": 26.439510963602103
-    },
-    "authorial_seed": {
-     "AUT_S": 65,
-     "AUT_F": 65,
-     "COM_S": 65,
-     "COM_F": 45,
-     "REL_S": 45,
-     "REL_F": 65,
-     "REAPP": 60,
-     "SUPPR": 80,
-     "CLAR_D": 30,
-     "ACC_D": 55,
-     "IMP_D": 25,
-     "GOAL_D": 20
-    },
-    "association_rationale": "悔恨を抱えながら大義を持続する物語との連想。主観的な充足・困難の各値は作者の仮説。",
-    "hypothesis_axes": [
-     "AUT_S",
-     "AUT_F",
-     "COM_S",
-     "COM_F",
-     "REL_S",
-     "REL_F",
-     "REAPP",
-     "SUPPR",
-     "CLAR_D",
-     "ACC_D",
-     "IMP_D",
-     "GOAL_D"
+    "title": "道化",
+    "tags": [
+     "喪失",
+     "反逆"
     ],
-    "target_share": 0.09090909090909091
+    "anchors": {
+     "HOS": 75,
+     "SUS": 65
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "WDR",
+     "IMP",
+     "PSV",
+     "PRF",
+     "ATT",
+     "MAN",
+     "RSK",
+     "CAL"
+    ],
+    "rationale": "喪失を背景にした敵対と不信を物語上の参照にする。固執・依存の座標は推定しない。",
+    "region_label": "カーンルイア",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/嗤笑の面"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": -1.04309072
    },
    {
     "id": "capitano",
     "name": "カピターノ",
-    "reference": {
-     "AUT_S": 71.98382318260798,
-     "AUT_F": 39.4467170461109,
-     "COM_S": 71.42740649272028,
-     "COM_F": 28.56916449045122,
-     "REL_S": 64.55422106520123,
-     "REL_F": 39.39641492175234,
-     "REAPP": 56.629281445857124,
-     "SUPPR": 50.11398387529854,
-     "CLAR_D": 29.346990905232644,
-     "ACC_D": 36.61342082055688,
-     "IMP_D": 25.846069154587774,
-     "GOAL_D": 22.008915364871754
-    },
-    "authorial_seed": {
-     "AUT_S": 75,
-     "AUT_F": 40,
-     "COM_S": 75,
-     "COM_F": 25,
-     "REL_S": 65,
-     "REL_F": 40,
-     "REAPP": 60,
-     "SUPPR": 60,
-     "CLAR_D": 25,
-     "ACC_D": 35,
-     "IMP_D": 20,
-     "GOAL_D": 15
-    },
-    "association_rationale": "責任の持続と目的のための協働への連想。利他性の測定を意味しない。",
-    "hypothesis_axes": [
-     "AUT_S",
-     "AUT_F",
-     "COM_S",
-     "COM_F",
-     "REL_S",
-     "REL_F",
-     "REAPP",
-     "SUPPR",
-     "CLAR_D",
-     "ACC_D",
-     "IMP_D",
-     "GOAL_D"
+    "title": "隊長",
+    "tags": [
+     "責務",
+     "献身"
     ],
-    "target_share": 0.09090909090909091
+    "anchors": {
+     "IMP": 25,
+     "CAL": 15,
+     "HOS": 25
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "SUS",
+     "WDR",
+     "PSV",
+     "PRF",
+     "ATT",
+     "MAN",
+     "RSK"
+    ],
+    "rationale": "目的に沿う行動、協働や救命との連想として低めの参照を置く。低い悪癖が献身を測るという意味ではない。",
+    "region_label": "カーンルイア",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/「隊長」"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": -6.5172877
    },
    {
     "id": "dottore",
     "name": "ドットーレ",
-    "reference": {
-     "AUT_S": 70.24779150057789,
-     "AUT_F": 49.80205232851686,
-     "COM_S": 74.67385929247986,
-     "COM_F": 29.340174360009723,
-     "REL_S": 32.35020533739317,
-     "REL_F": 55.57853569303818,
-     "REAPP": 65.72534485056251,
-     "SUPPR": 46.27401875117146,
-     "CLAR_D": 31.357740605882228,
-     "ACC_D": 30.545343448897988,
-     "IMP_D": 31.931684913032793,
-     "GOAL_D": 28.10070694772743
-    },
-    "authorial_seed": {
-     "AUT_S": 75,
-     "AUT_F": 50,
-     "COM_S": 80,
-     "COM_F": 25,
-     "REL_S": 30,
-     "REL_F": 55,
-     "REAPP": 70,
-     "SUPPR": 55,
-     "CLAR_D": 25,
-     "ACC_D": 25,
-     "IMP_D": 25,
-     "GOAL_D": 20
-    },
-    "association_rationale": "目的を維持し、手段を組み替える物語への連想。再評価や感情理解が得意と断定しない。",
-    "hypothesis_axes": [
-     "AUT_S",
-     "AUT_F",
-     "COM_S",
-     "COM_F",
-     "REL_S",
-     "REL_F",
-     "REAPP",
-     "SUPPR",
-     "CLAR_D",
-     "ACC_D",
-     "IMP_D",
-     "GOAL_D"
+    "title": "博士",
+    "tags": [
+     "探究",
+     "操作"
     ],
-    "target_share": 0.09090909090909091
+    "anchors": {
+     "MAN": 90,
+     "CAL": 90
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "SUS",
+     "WDR",
+     "IMP",
+     "PSV",
+     "PRF",
+     "HOS",
+     "ATT",
+     "RSK"
+    ],
+    "rationale": "他者を手段にする行動と不利益の扱いを比較。研究好きから固執や完璧を推定しない。",
+    "region_label": "スメール",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/「博士」"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": 1.43494074
    },
    {
     "id": "columbina",
     "name": "コロンビーナ",
-    "reference": {
-     "AUT_S": 38.61068883830932,
-     "AUT_F": 74.710131429695,
-     "COM_S": 57.341158805520976,
-     "COM_F": 36.16318445362923,
-     "REL_S": 31.19759565085457,
-     "REL_F": 81.69106172447788,
-     "REAPP": 36.78514791288034,
-     "SUPPR": 20.081986787623855,
-     "CLAR_D": 40.5283745859874,
-     "ACC_D": 42.67077142044111,
-     "IMP_D": 21.71578825605777,
-     "GOAL_D": 32.36994178976776
-    },
-    "authorial_seed": {
-     "AUT_S": 40,
-     "AUT_F": 70,
-     "COM_S": 55,
-     "COM_F": 40,
-     "REL_S": 35,
-     "REL_F": 75,
-     "REAPP": 45,
-     "SUPPR": 30,
-     "CLAR_D": 45,
-     "ACC_D": 45,
-     "IMP_D": 30,
-     "GOAL_D": 40
-    },
-    "association_rationale": "所属期の選択の余地と、期待に置き去りにされる感覚への連想。神秘性を混迷と同一視しない。",
-    "hypothesis_axes": [
-     "AUT_S",
-     "AUT_F",
-     "COM_S",
-     "COM_F",
-     "REL_S",
-     "REL_F",
-     "REAPP",
-     "SUPPR",
-     "CLAR_D",
-     "ACC_D",
-     "IMP_D",
-     "GOAL_D"
+    "title": "少女",
+    "tags": [
+     "孤独",
+     "帰属"
     ],
-    "target_share": 0.09090909090909091
+    "anchors": {
+     "WDR": 65,
+     "HOS": 20,
+     "CAL": 20
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "SUS",
+     "IMP",
+     "PSV",
+     "PRF",
+     "ATT",
+     "MAN",
+     "RSK"
+    ],
+    "rationale": "ファデュイから距離を取る時期と、人に安らぎを願う描写への連想。帰属から依存を推定しない。時期による違い・対応根拠の弱さが残る。",
+    "region_label": "ナド・クライ",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/コロンビーナ/プロフィール"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": -1.52676805
    },
    {
     "id": "arlecchino",
     "name": "アルレッキーノ",
-    "reference": {
-     "AUT_S": 69.72195922636176,
-     "AUT_F": 45.067969459336524,
-     "COM_S": 69.25879800791337,
-     "COM_F": 34.50523963927049,
-     "REL_S": 67.83054250308123,
-     "REL_F": 35.925671326628006,
-     "REAPP": 54.34050870774389,
-     "SUPPR": 71.46576487458283,
-     "CLAR_D": 32.17828093382874,
-     "ACC_D": 34.6865845652383,
-     "IMP_D": 28.916917879327258,
-     "GOAL_D": 29.384978554010278
-    },
-    "authorial_seed": {
-     "AUT_S": 75,
-     "AUT_F": 45,
-     "COM_S": 75,
-     "COM_F": 30,
-     "REL_S": 70,
-     "REL_F": 35,
-     "REAPP": 60,
-     "SUPPR": 80,
-     "CLAR_D": 25,
-     "ACC_D": 30,
-     "IMP_D": 20,
-     "GOAL_D": 20
-    },
-    "association_rationale": "感情を扱いながら家を維持する物語への連想。本人の心理検査結果ではない。",
-    "hypothesis_axes": [
-     "AUT_S",
-     "AUT_F",
-     "COM_S",
-     "COM_F",
-     "REL_S",
-     "REL_F",
-     "REAPP",
-     "SUPPR",
-     "CLAR_D",
-     "ACC_D",
-     "IMP_D",
-     "GOAL_D"
+    "title": "召使",
+    "tags": [
+     "庇護",
+     "統制"
     ],
-    "target_share": 0.09090909090909091
+    "anchors": {
+     "MAN": 70,
+     "IMP": 20,
+     "CAL": 30
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "SUS",
+     "WDR",
+     "PSV",
+     "PRF",
+     "HOS",
+     "ATT",
+     "RSK"
+    ],
+    "rationale": "対人場面の演出と目的に沿う行動、子どもへの配慮への連想。無表情から冷淡を推定しない。",
+    "region_label": "フォンテーヌ育ち",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/アルレッキーノ/プロフィール"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": 2.29190267
    },
    {
     "id": "pulcinella",
     "name": "プルチネッラ",
-    "reference": {
-     "AUT_S": 63.29084645506392,
-     "AUT_F": 36.5593614965197,
-     "COM_S": 67.80999999145529,
-     "COM_F": 32.20566867234327,
-     "REL_S": 49.0860337186754,
-     "REL_F": 41.65083717949546,
-     "REAPP": 56.519782926178785,
-     "SUPPR": 59.86957087622511,
-     "CLAR_D": 33.284186764462454,
-     "ACC_D": 37.792582868754806,
-     "IMP_D": 28.69885910541467,
-     "GOAL_D": 24.007438433405532
-    },
-    "authorial_seed": {
-     "AUT_S": 65,
-     "AUT_F": 35,
-     "COM_S": 70,
-     "COM_F": 30,
-     "REL_S": 50,
-     "REL_F": 40,
-     "REAPP": 60,
-     "SUPPR": 65,
-     "CLAR_D": 30,
-     "ACC_D": 35,
-     "IMP_D": 25,
-     "GOAL_D": 20
-    },
-    "association_rationale": "人間関係へ働きかけながら計画を続ける物語への連想。操作欲・善悪は測っていない。",
-    "hypothesis_axes": [
-     "AUT_S",
-     "AUT_F",
-     "COM_S",
-     "COM_F",
-     "REL_S",
-     "REL_F",
-     "REAPP",
-     "SUPPR",
-     "CLAR_D",
-     "ACC_D",
-     "IMP_D",
-     "GOAL_D"
+    "title": "雄鶏",
+    "tags": [
+     "庇護",
+     "交渉"
     ],
-    "target_share": 0.09090909090909091
+    "anchors": {
+     "MAN": 75,
+     "IMP": 30
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "SUS",
+     "WDR",
+     "PSV",
+     "PRF",
+     "HOS",
+     "ATT",
+     "RSK",
+     "CAL"
+    ],
+    "rationale": "政治上の誘導と計画的な関与への連想。他者による人質評を確定した内面とせず、冷淡は未対応とする。",
+    "region_label": "関連地域：スネージナヤ",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/「雄鶏」"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": 4.50831377
    },
    {
     "id": "scaramouche",
     "name": "スカラマシュ",
-    "reference": {
-     "AUT_S": 42.30323208220267,
-     "AUT_F": 80.05531731252971,
-     "COM_S": 64.2897046188311,
-     "COM_F": 65.41510393331332,
-     "REL_S": 12.569087162449852,
-     "REL_F": 94.78026977361995,
-     "REAPP": 25.000904393381013,
-     "SUPPR": 67.50825218505507,
-     "CLAR_D": 35.00152518648961,
-     "ACC_D": 83.00519178614395,
-     "IMP_D": 56.71755707652915,
-     "GOAL_D": 30.000151316900016
-    },
-    "authorial_seed": {
-     "AUT_S": 40,
-     "AUT_F": 75,
-     "COM_S": 55,
-     "COM_F": 65,
-     "REL_S": 20,
-     "REL_F": 85,
-     "REAPP": 35,
-     "SUPPR": 60,
-     "CLAR_D": 45,
-     "ACC_D": 75,
-     "IMP_D": 60,
-     "GOAL_D": 40
-    },
-    "association_rationale": "所属期に受け止めた関係の傷つきと自己を巡る葛藤への連想。愛着・危険性を判定しない。",
-    "hypothesis_axes": [
-     "AUT_S",
-     "AUT_F",
-     "COM_S",
-     "COM_F",
-     "REL_S",
-     "REL_F",
-     "REAPP",
-     "SUPPR",
-     "CLAR_D",
-     "ACC_D",
-     "IMP_D",
-     "GOAL_D"
+    "title": "散兵",
+    "tags": [
+     "拒絶",
+     "反逆"
     ],
-    "target_share": 0.09090909090909091
+    "anchors": {
+     "HOS": 90,
+     "SUS": 85
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "WDR",
+     "IMP",
+     "PSV",
+     "PRF",
+     "ATT",
+     "MAN",
+     "RSK",
+     "CAL"
+    ],
+    "rationale": "執行官期の敵意と不信の描写を参照。現在の放浪者と混ぜず、拒絶経験だけで依存を設定しない。",
+    "region_label": "稲妻",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/「散兵」"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": 1.54694846
    },
    {
     "id": "sandrone",
     "name": "サンドローネ",
-    "reference": {
-     "AUT_S": 66.80202532964867,
-     "AUT_F": 46.46106674498636,
-     "COM_S": 74.68179803612131,
-     "COM_F": 44.950597524897624,
-     "REL_S": 29.235462808058305,
-     "REL_F": 57.53185660544955,
-     "REAPP": 37.62225234503637,
-     "SUPPR": 25.82930574148542,
-     "CLAR_D": 30.323543996551344,
-     "ACC_D": 45.533745449607125,
-     "IMP_D": 50.265209826459845,
-     "GOAL_D": 15.801748947935431
-    },
-    "authorial_seed": {
-     "AUT_S": 65,
-     "AUT_F": 45,
-     "COM_S": 70,
-     "COM_F": 45,
-     "REL_S": 35,
-     "REL_F": 55,
-     "REAPP": 45,
-     "SUPPR": 35,
-     "CLAR_D": 35,
-     "ACC_D": 45,
-     "IMP_D": 50,
-     "GOAL_D": 25
-    },
-    "association_rationale": "研究への集中と、場面によって異なる感情表現への連想。研究好きそのものを測るわけではない。",
-    "hypothesis_axes": [
-     "AUT_S",
-     "AUT_F",
-     "COM_S",
-     "COM_F",
-     "REL_S",
-     "REL_F",
-     "REAPP",
-     "SUPPR",
-     "CLAR_D",
-     "ACC_D",
-     "IMP_D",
-     "GOAL_D"
+    "title": "傀儡",
+    "tags": [
+     "没頭",
+     "執着"
     ],
-    "target_share": 0.09090909090909091
+    "anchors": {
+     "WDR": 75,
+     "HOS": 65
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "SUS",
+     "IMP",
+     "PSV",
+     "PRF",
+     "ATT",
+     "MAN",
+     "RSK",
+     "CAL"
+    ],
+    "rationale": "対人場面から退く描写と、いら立ちの描写を比較する。研究への集中から固執・完璧・冷淡を推定しない。",
+    "region_label": "フォンテーヌ由来",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/「傀儡」"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": -2.16520875
    },
    {
     "id": "signora",
     "name": "シニョーラ",
-    "reference": {
-     "AUT_S": 54.07232227108172,
-     "AUT_F": 67.34795156739202,
-     "COM_S": 64.69735926785458,
-     "COM_F": 45.966999112050864,
-     "REL_S": 22.12431863463202,
-     "REL_F": 78.00889108909728,
-     "REAPP": 35.14439086609278,
-     "SUPPR": 75.26196110906008,
-     "CLAR_D": 35.18177069669967,
-     "ACC_D": 68.91634963914748,
-     "IMP_D": 41.32575091883517,
-     "GOAL_D": 29.393161514334267
-    },
-    "authorial_seed": {
-     "AUT_S": 55,
-     "AUT_F": 65,
-     "COM_S": 65,
-     "COM_F": 45,
-     "REL_S": 25,
-     "REL_F": 75,
-     "REAPP": 40,
-     "SUPPR": 75,
-     "CLAR_D": 35,
-     "ACC_D": 65,
-     "IMP_D": 40,
-     "GOAL_D": 30
-    },
-    "association_rationale": "喪失後の強い感情と目的遂行の併存への連想。悲嘆や復讐心の得点ではない。",
-    "hypothesis_axes": [
-     "AUT_S",
-     "AUT_F",
-     "COM_S",
-     "COM_F",
-     "REL_S",
-     "REL_F",
-     "REAPP",
-     "SUPPR",
-     "CLAR_D",
-     "ACC_D",
-     "IMP_D",
-     "GOAL_D"
+    "title": "淑女",
+    "tags": [
+     "喪失",
+     "憤怒"
     ],
-    "target_share": 0.09090909090909091
+    "anchors": {
+     "HOS": 85,
+     "MAN": 70,
+     "CAL": 65
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "SUS",
+     "WDR",
+     "IMP",
+     "PSV",
+     "PRF",
+     "ATT",
+     "RSK"
+    ],
+    "rationale": "敵対的な行動、外交上の演出、他者への不利益の扱いを参照。悲嘆から依存を推定しない。",
+    "region_label": "モンド",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/シニョーラ"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": 0.83189851
    },
    {
     "id": "pantalone",
     "name": "パンタローネ",
-    "reference": {
-     "AUT_S": 63.1994313792394,
-     "AUT_F": 71.81078725608756,
-     "COM_S": 73.41107092255989,
-     "COM_F": 46.552254952245406,
-     "REL_S": 32.85405757934745,
-     "REL_F": 62.16772977568913,
-     "REAPP": 50.08913122185926,
-     "SUPPR": 73.232375190545,
-     "CLAR_D": 37.15467281746353,
-     "ACC_D": 67.69283111694408,
-     "IMP_D": 42.39362839709362,
-     "GOAL_D": 27.400836202797514
-    },
-    "authorial_seed": {
-     "AUT_S": 65,
-     "AUT_F": 70,
-     "COM_S": 75,
-     "COM_F": 45,
-     "REL_S": 35,
-     "REL_F": 60,
-     "REAPP": 55,
-     "SUPPR": 75,
-     "CLAR_D": 35,
-     "ACC_D": 65,
-     "IMP_D": 40,
-     "GOAL_D": 25
-    },
-    "association_rationale": "感情の強さと長期的な計画の併存への連想。貧困を有能感阻害へ置き換えるものではない。",
-    "hypothesis_axes": [
-     "AUT_S",
-     "AUT_F",
-     "COM_S",
-     "COM_F",
-     "REL_S",
-     "REL_F",
-     "REAPP",
-     "SUPPR",
-     "CLAR_D",
-     "ACC_D",
-     "IMP_D",
-     "GOAL_D"
+    "title": "富者",
+    "tags": [
+     "掌握",
+     "野心"
     ],
-    "target_share": 0.09090909090909091
+    "anchors": {
+     "MAN": 85,
+     "CAL": 55
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "SUS",
+     "WDR",
+     "IMP",
+     "PSV",
+     "PRF",
+     "HOS",
+     "ATT",
+     "RSK"
+    ],
+    "rationale": "経済と対人上の誘導、他者の扱いへの連想。富・貧困・計画性から完璧や不安を設定しない。冷淡の対応根拠は特に要確認。",
+    "region_label": "出身未確認",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/「富者」"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": 2.06066004
    },
    {
     "id": "tartaglia",
     "name": "タルタリヤ",
-    "reference": {
-     "AUT_S": 76.39275364193126,
-     "AUT_F": 29.77773928944889,
-     "COM_S": 76.8615239682861,
-     "COM_F": 23.248579611238423,
-     "REL_S": 82.0286135904627,
-     "REL_F": 24.125709372801516,
-     "REAPP": 50.33822602490445,
-     "SUPPR": 22.05760127272905,
-     "CLAR_D": 28.862141944813924,
-     "ACC_D": 35.813663934290766,
-     "IMP_D": 41.47840523779545,
-     "GOAL_D": 22.070601026504548
-    },
-    "authorial_seed": {
-     "AUT_S": 75,
-     "AUT_F": 30,
-     "COM_S": 75,
-     "COM_F": 25,
-     "REL_S": 80,
-     "REL_F": 25,
-     "REAPP": 55,
-     "SUPPR": 30,
-     "CLAR_D": 30,
-     "ACC_D": 35,
-     "IMP_D": 40,
-     "GOAL_D": 25
-    },
-    "association_rationale": "挑戦への関与と家族とのつながりへの連想。戦闘好きと衝動調整困難は別の概念。",
-    "hypothesis_axes": [
-     "AUT_S",
-     "AUT_F",
-     "COM_S",
-     "COM_F",
-     "REL_S",
-     "REL_F",
-     "REAPP",
-     "SUPPR",
-     "CLAR_D",
-     "ACC_D",
-     "IMP_D",
-     "GOAL_D"
+    "title": "公子",
+    "tags": [
+     "闘争",
+     "挑戦"
     ],
-    "target_share": 0.09090909090909091
+    "anchors": {
+     "RSK": 85,
+     "IMP": 45
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "SUS",
+     "WDR",
+     "PSV",
+     "PRF",
+     "HOS",
+     "ATT",
+     "MAN",
+     "CAL"
+    ],
+    "rationale": "危険への接近を中心に、計画的な行動も含む参照。戦闘好きから極端な衝動性を設定しない。数値は仮説。",
+    "region_label": "スネージナヤ",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/タルタリヤ/プロフィール"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": -1.42230898
    }
-  ]
+  ],
+  "calibration": {
+   "seed": 20261103,
+   "baseline": "four_equal_synthetic_cohorts",
+   "train_n": 33000,
+   "eligible_train_n": 32987,
+   "temperature": 0.12,
+   "optimizer_success": true,
+   "not_live_user_distribution": true,
+   "target_share": 0.09090909090909091,
+   "offset_mean": -1.2111523905001707e-16,
+   "anchor_sha256": "bcc0bbaf62983100fa6e8f3a1754906bb6c66944c27ef6b80b96abcb33f686e4"
+  }
  },
  "product": {
   "status": "implementation_candidate",
@@ -1234,329 +1081,5 @@ export const BUNDLE = Object.freeze({
   "existing_eti_entitlement_grants_access": false,
   "billing": "one_time",
   "product_count": 1
- }
-});
-export const COPY = Object.freeze({
- "character": {
-  "status": "implementation_candidate",
-  "version": "jagan-character-copy-1.0.0-rc1",
-  "global_notice": "共通点は作品解釈による回答参照パターンとの比較です。人物全体や善悪の一致ではありません。",
-  "no_aligned_axes": "総合では最上位ですが、個別項目に明確な近さを示せる部分は限られています。",
-  "no_different_axes": "この比較条件では、大きな差として示す項目はありません。人物全体が同じという意味ではありません。",
-  "close_candidates": "複数の参照パターンが近い結果です。一人だけの人物像で説明し切れるとは限りません。",
-  "characters": {
-   "pierro": {
-    "name": "ピエロ",
-    "title": "道化",
-    "story_context": "ファデュイの統括官として、失われたものへの思いを大義につなぎ、長期的な活動を続ける姿が描かれます。",
-    "association_theme": "長く抱えている思いと、日々続けている行動との関係を振り返るための連想です。",
-    "limit": "怒りがあるから感情を受容できない、という判定ではありません。",
-    "reflection": "今も続けている行動には、どんな意味を感じていますか。",
-    "source_urls": [
-     "https://genshin-impact.fandom.com/ja/wiki/嗤笑の面"
-    ],
-    "source_access": "wiki_transcription_or_summary; see evidence notes",
-    "numeric_model_origin": "authored_hypothesis_not_official_character_score"
-   },
-   "capitano": {
-    "name": "カピターノ",
-    "title": "隊長",
-    "story_context": "ナタでの物語では、救うべきもののために行動を続け、対立した相手との協働も選びます。",
-    "association_theme": "気持ちが揺れる中でも必要なことを続けるあり方を振り返る連想です。",
-    "limit": "献身や戦闘力を心理得点として測ったものではありません。",
-    "reflection": "続けることが助けになった場面と、負担になった場面はありますか。",
-    "source_urls": [
-     "https://genshin-impact.fandom.com/ja/wiki/「隊長」"
-    ],
-    "source_access": "wiki_transcription_or_summary; see evidence notes",
-    "numeric_model_origin": "authored_hypothesis_not_official_character_score"
-   },
-   "dottore": {
-    "name": "ドットーレ",
-    "title": "博士",
-    "story_context": "スメールでの物語では、研究目的に向けた活動と、交渉に応じて手段を組み替える姿が描かれます。",
-    "association_theme": "目的への関わり方や、出来事の扱い方について考えるための連想です。",
-    "limit": "残虐性、知能、共感性、道徳性が似ているという意味ではありません。",
-    "reflection": "物事を説明できることと、気持ちを理解できることに違いはありますか。",
-    "source_urls": [
-     "https://genshin-impact.fandom.com/ja/wiki/「博士」"
-    ],
-    "source_access": "wiki_transcription_or_summary; see evidence notes",
-    "numeric_model_origin": "authored_hypothesis_not_official_character_score"
-   },
-   "columbina": {
-    "name": "コロンビーナ",
-    "title": "少女",
-    "story_context": "所属期を振り返るプロフィールには、選択の余地への新鮮さと、期待される役割に自分が置き去りになる感覚が語られます。",
-    "association_theme": "自分の意思や、人とのつながりをどう感じているかを振り返る連想です。",
-    "limit": "神秘的に見えることから感情理解の困難を判定するものではありません。",
-    "reflection": "期待される役割と、自分のままでいられる感覚に違いはありますか。",
-    "source_urls": [
-     "https://genshin-impact.fandom.com/ja/wiki/コロンビーナ/プロフィール"
-    ],
-    "source_access": "wiki_transcription_or_summary; see evidence notes",
-    "numeric_model_origin": "authored_hypothesis_not_official_character_score"
-   },
-   "arlecchino": {
-    "name": "アルレッキーノ",
-    "title": "召使",
-    "story_context": "壁炉の家を率いる姿には、感情の起源を認識して扱う教えと、厳しさの中にある関わりが描かれます。",
-    "association_theme": "感情を理解すること、表に出すこと、行動を続けることを分けて考える連想です。",
-    "limit": "冷静であることを感情の欠如や、本人の常に低い困難度と同一視しません。",
-    "reflection": "表に出さない気持ちを、自分自身ではどのくらい把握できていますか。",
-    "source_urls": [
-     "https://genshin-impact.fandom.com/ja/wiki/アルレッキーノ/プロフィール"
-    ],
-    "source_access": "wiki_transcription_or_summary; see evidence notes",
-    "numeric_model_origin": "authored_hypothesis_not_official_character_score"
-   },
-   "pulcinella": {
-    "name": "プルチネッラ",
-    "title": "雄鶏",
-    "story_context": "市長としての手腕や継続的な働きかけが語られる一方、その世話や関わりへの評価は、語り手によって異なります。",
-    "association_theme": "人との関係や、目的に向けた行動をどう保つかを考えるための連想です。",
-    "limit": "他人を操作したい気持ちや、善意の有無を測ったものではありません。",
-    "reflection": "自分から見た関わり方と、相手から見た関わり方に違いはありそうですか。",
-    "source_urls": [
-     "https://genshin-impact.fandom.com/ja/wiki/「雄鶏」"
-    ],
-    "source_access": "wiki_transcription_or_summary; see evidence notes",
-    "numeric_model_origin": "authored_hypothesis_not_official_character_score"
-   },
-   "scaramouche": {
-    "name": "スカラマシュ",
-    "title": "散兵",
-    "story_context": "執行官期の物語には、裏切りと受け止めた経験、心を巡る葛藤、目的へ向かう行動が描かれます。後に、その経験の理解が変わる場面もあります。",
-    "association_theme": "つながりの中での傷つきと、その後の感情や行動を考えるための連想です。",
-    "limit": "愛着タイプ、危険性、復讐心、加害性が一致するという意味ではありません。",
-    "reflection": "当時の受け止め方と、今の見方に違いが生まれた経験はありますか。",
-    "source_urls": [
-     "https://genshin-impact.fandom.com/ja/wiki/夜を飛ぶ鳥は三段へと落ちる"
-    ],
-    "source_access": "wiki_transcription_or_summary; see evidence notes",
-    "numeric_model_origin": "authored_hypothesis_not_official_character_score"
-   },
-   "sandrone": {
-    "name": "サンドローネ",
-    "title": "傀儡",
-    "story_context": "研究に没頭する姿と、相手によって異なる関わりが語られます。周囲からの評価だけで一つの内面を決めることはできません。",
-    "association_theme": "集中する活動と、対人場面での感情の扱い方を考えるための連想です。",
-    "limit": "研究志向や完璧主義を直接測定した結果ではありません。",
-    "reflection": "集中しやすい場面と、人との関わりで負担が増す場面には違いがありますか。",
-    "source_urls": [
-     "https://genshin-impact.fandom.com/ja/wiki/「傀儡」"
-    ],
-    "source_access": "wiki_transcription_or_summary; see evidence notes",
-    "numeric_model_origin": "authored_hypothesis_not_official_character_score"
-   },
-   "signora": {
-    "name": "シニョーラ",
-    "title": "淑女",
-    "story_context": "喪失を経た強い感情と、執行官としての目的遂行が描かれます。氷の邪眼には、自身の炎を抑える役割がありました。",
-    "association_theme": "内に抱えるものと、表に出すもの、行動へ移すものを分けて振り返る連想です。",
-    "limit": "悲嘆や復讐心の得点ではなく、氷の邪眼が表出抑制の心理得点を証明するわけでもありません。",
-    "reflection": "抱えている気持ちと、日々の行動の間にどんな距離を置いていますか。",
-    "source_urls": [
-     "https://genshin-impact.fandom.com/ja/wiki/シニョーラ"
-    ],
-    "source_access": "wiki_transcription_or_summary; see evidence notes",
-    "numeric_model_origin": "authored_hypothesis_not_official_character_score"
-   },
-   "pantalone": {
-    "name": "パンタローネ",
-    "title": "富者",
-    "story_context": "経済を通じた長期的な計画を進める人物として描かれます。アルレッキーノからは、計画能力と、その奥にある感情について異なる評価が語られます。",
-    "association_theme": "計画を続けることと、内側にある気持ちとの関係を考えるための連想です。",
-    "limit": "貧困経験から現在の有能感阻害を判定したり、憎しみから衝動性を決めたりするものではありません。",
-    "reflection": "自分が説明している行動の理由と、感じている気持ちは一致していますか。",
-    "source_urls": [
-     "https://genshin-impact.fandom.com/ja/wiki/「富者」"
-    ],
-    "source_access": "wiki_transcription_or_summary; see evidence notes",
-    "numeric_model_origin": "authored_hypothesis_not_official_character_score"
-   },
-   "tartaglia": {
-    "name": "タルタリヤ",
-    "title": "公子",
-    "story_context": "強敵や挑戦への意欲と、家族への手紙や弟との関わりが描かれます。一つの場面だけでは捉えきれない姿があります。",
-    "association_theme": "取り組みへの関与と、大切な相手とのつながりを考えるための連想です。",
-    "limit": "戦闘好きや危険選好を、感情下で行動を止められないことと同一視しません。",
-    "reflection": "挑戦したい気持ちと、守りたい日常はどのように両立していますか。",
-    "source_urls": [
-     "https://genshin-impact.fandom.com/ja/wiki/タルタリヤ/プロフィール"
-    ],
-    "source_access": "wiki_transcription_or_summary; see evidence notes",
-    "numeric_model_origin": "authored_hypothesis_not_official_character_score"
-   }
-  }
- },
- "result": {
-  "status": "implementation_candidate",
-  "element": {
-   "PY": {
-    "subtitle": "内に灯る熱",
-    "paragraph": "炎は、内側で高まる感情を表す、この診断独自の象徴です。",
-    "reflection": "感情の強さと、その感情に従って行動するかどうかは、分けて振り返れます。"
-   },
-   "HY": {
-    "subtitle": "つながりに映る波紋",
-    "paragraph": "水は、人との関係の中で生まれる揺れを表す、この診断独自の象徴です。",
-    "reflection": "距離を感じる場面と、比較的安心できる関係には、どんな違いがあるでしょうか。"
-   },
-   "CR": {
-    "subtitle": "内側に留めるもの",
-    "paragraph": "氷は、感情を外へ出さずに留めるあり方を表す、この診断独自の象徴です。",
-    "reflection": "表に出さないことが自分を助ける場面と、負担になる場面の両方に目を向けられます。"
-   },
-   "EL": {
-    "subtitle": "感情と行動のあいだ",
-    "paragraph": "雷は、感情の高まりと行動の間に生まれる緊張を表す、この診断独自の象徴です。",
-    "reflection": "強い気持ちがあるとき、一度止まりやすかった条件を振り返ってみてください。"
-   },
-   "AN": {
-    "subtitle": "自分の意思の行方",
-    "paragraph": "風は、自分の意思と外からの制約の葛藤を表す、この診断独自の象徴です。",
-    "reflection": "選択を大きく変える前に、小さく選び直せる余地を探す見方もあります。"
-   },
-   "GE": {
-    "subtitle": "揺れの中に置く足場",
-    "paragraph": "岩は、気持ちが揺れても行動を保つあり方を表す、この診断独自の象徴です。",
-    "reflection": "行動を続けられることと、負担を感じていないことは同じではありません。"
-   },
-   "DE": {
-    "subtitle": "気持ちを編み直す",
-    "paragraph": "草は、感情を理解し、出来事の意味を捉え直すあり方を表す、この診断独自の象徴です。",
-    "reflection": "見方を変えることが役立つときもあれば、今の気持ちをそのまま認める方がよいときもあります。"
-   }
-  },
-  "type": {
-   "REFRAME": {
-    "label": "再解釈型",
-    "paragraph": "出来事の見方を変えて感情を扱おうとする。",
-    "notice": "固定的な人格ではなく、今回の回答に表れた反応の説明です。"
-   },
-   "CONTAIN": {
-    "label": "秘匿型",
-    "paragraph": "感情を外に出さず、内側で扱う。",
-    "notice": "固定的な人格ではなく、今回の回答に表れた反応の説明です。"
-   },
-   "SURGE": {
-    "label": "衝動型",
-    "paragraph": "強い感情の下では、意図したように行動を止めにくい。",
-    "notice": "固定的な人格ではなく、今回の回答に表れた反応の説明です。"
-   },
-   "STALL": {
-    "label": "停滞型",
-    "paragraph": "強い感情の下では、必要な行動を続けにくい。",
-    "notice": "固定的な人格ではなく、今回の回答に表れた反応の説明です。"
-   },
-   "CONFUSE": {
-    "label": "困惑型",
-    "paragraph": "自分の感情をつかみ、整理することに難しさがある。",
-    "notice": "固定的な人格ではなく、今回の回答に表れた反応の説明です。"
-   },
-   "RESIST": {
-    "label": "自責型",
-    "paragraph": "生じた感情を、そのまま認めにくい。",
-    "notice": "固定的な人格ではなく、今回の回答に表れた反応の説明です。"
-   }
-  },
-  "no_marked_pattern": "今回の回答では、特定の反応だけが強く表れる形にはなっていません。無理に強い葛藤の型へ当てはめる必要はありません。",
-  "co_dominant": "複数の反応が近い得点になっています。場面によって異なる扱い方が表れている可能性があります。",
-  "insufficient": "回答が足りない項目があるため、この部分の判定を保留しています。",
-  "assembly": "元素の象徴説明、実際の寄与項目と得点、タイプの説明、反省の問いを組み合わせる。各寄与項目が全て高いと断定しない。",
-  "character_pending": "人物プロフィールは調整中です。この表示は内部プレビュー用で、公開完成版の仕様ではありません。",
-  "version": "jagan-result-copy-1.0.0-rc1"
- },
- "report": {
-  "status": "implementation_candidate",
-  "score_notice": "0〜100は回答範囲の換算値です。順位、確率、重症度ではありません。",
-  "domains": {
-   "AUT_S": {
-    "label": "自律性の充足",
-    "meaning": "自分で納得して選べる感覚",
-    "limit": "この得点だけでは、独立心の強さや他人を必要としないことは分かりません。",
-    "reflection": "自分で選べたと感じるのは、最近のどんな場面ですか。"
-   },
-   "AUT_F": {
-    "label": "自律性の阻害",
-    "meaning": "選択を制約されていると感じる経験",
-    "limit": "高くても、他者を支配したいことや協調性の低さは意味しません。",
-    "reflection": "選び直せる余地が一つあるなら、どの場面でしょうか。"
-   },
-   "COM_S": {
-    "label": "有能感の充足",
-    "meaning": "取り組みを進められる手応え",
-    "limit": "客観的な能力や他人との優劣を評価する得点ではありません。",
-    "reflection": "手応えを得られたとき、何が助けになりましたか。"
-   },
-   "COM_F": {
-    "label": "有能感の阻害",
-    "meaning": "力が届かないと感じる経験",
-    "limit": "能力不足や劣等感の原因を証明するものではありません。",
-    "reflection": "求められることと、使える時間や支援は釣り合っていますか。"
-   },
-   "REL_S": {
-    "label": "関係性の充足",
-    "meaning": "大切な相手とつながっている感覚",
-    "limit": "交友人数や外向性の高さを意味するものではありません。",
-    "reflection": "気持ちが通じたと感じる相手や時間はありますか。"
-   },
-   "REL_F": {
-    "label": "関係性の阻害",
-    "meaning": "人との関係で距離や拒絶を感じる経験",
-    "limit": "相手が実際に拒絶していることや、愛着タイプを確定するものではありません。",
-    "reflection": "距離を感じた場面と、比較的安心できた場面に違いはありますか。"
-   },
-   "REAPP": {
-    "label": "捉え直しの使用",
-    "meaning": "見方を変えて感情を扱おうとする傾向",
-    "limit": "その方法が常に成功することや、他の方法より優れていることは意味しません。",
-    "reflection": "捉え直すことで楽になったことと、変えなくてよい気持ちは何ですか。"
-   },
-   "SUPPR": {
-    "label": "表出抑制の使用",
-    "meaning": "感情を外に出さず扱う傾向",
-    "limit": "感情がない、不健康である、冷たい人であるという意味ではありません。",
-    "reflection": "感情を表に出さないことが役立つ場面と、負担になる場面はありますか。"
-   },
-   "CLAR_D": {
-    "label": "感情理解の困難",
-    "meaning": "つらいときに感情をつかみにくい経験",
-    "limit": "無意識の内容や、特定の病気を判定するものではありません。",
-    "reflection": "感情の名前が出てこないとき、体の感覚や出来事から振り返れますか。"
-   },
-   "ACC_D": {
-    "label": "感情受容の困難",
-    "meaning": "生じた感情を認めにくい経験",
-    "limit": "その感情が悪いことや、本人の弱さを示すものではありません。",
-    "reflection": "感情を持つことと、その感情のまま行動することを分けて考えられますか。"
-   },
-   "IMP_D": {
-    "label": "衝動調整の困難",
-    "meaning": "強い感情の下で行動を止めにくい経験",
-    "limit": "危険性、攻撃性、ADHDを判定するものではありません。",
-    "reflection": "一度止まりやすかった場面には、どんな条件がありましたか。"
-   },
-   "GOAL_D": {
-    "label": "行動維持の困難",
-    "meaning": "強い感情の下で必要な行動を続けにくい経験",
-    "limit": "怠けや誠実性の低さを表すものではありません。",
-    "reflection": "つらい日にも進められた最小の行動は、どのくらいの大きさでしたか。"
-   }
-  },
-  "price": 1000,
-  "sales_open": false,
-  "version": "jagan-report-copy-1.0.0-rc1"
- },
- "method": {
-  "page_title": "邪眼診断について",
-  "short_notice": "心理学理論を参考にした独自の自己理解コンテンツです。医療診断ではありません。",
-  "score_notice": "12項目の数値は、独自設問への回答を0〜100へ換算した値です。一般集団での順位や確率ではありません。",
-  "element_type_notice": "元素・型は、回答を作品のモチーフで表す独自の解釈です。原作公式の心理分類ではありません。",
-  "character_notice": "公式描写を参考に設計した独自の回答参照パターンとの近さです。人物本人の心理得点や科学的な一致確率ではありません。",
-  "balance_notice": "出現の偏りを抑えるため、仮回答を使って参照パターンを調整しています。実利用者全体で同じ出現率になる保証はありません。",
-  "timeframe_notice": "最近1か月ほどの回答を扱います。結果は固定的な本性や善悪を示すものではありません。",
-  "development_notice": "独自50問の信頼性・妥当性を人の回答で検証した尺度ではありません。人工データによる動作確認と心理測定の検証は異なります。"
  }
 });

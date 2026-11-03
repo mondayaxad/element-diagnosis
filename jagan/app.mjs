@@ -1,12 +1,12 @@
 // jagan/app.mjs — 邪眼診断の画面（TOP・質問・結果・保存・画像保存・X共有）。
 //   採点は jagan/engine（仕様パッケージの runtime.mjs・math.mjs をそのまま使用）。サーバーも同じ版で再計算する。
-//   ・回答は 1〜5 と、別枠の「判断できない・回答しない」（null）。null を中間点で埋めない。
+//   ・回答は 1〜5 の5段階だけ（補助選択肢・スキップなし）。50問すべてに答えると結果へ進める。
 //   ・この端末に残すもの（localStorage）：途中の回答、最後の結果（再表示用）、ログイン前の保存待ち、共有の取消用の値。
 //     ETI の pending（pendingDiagnosis_v1・v2）とは別のキーにする。
 //   ・GA4 へは操作の種類だけを送る（回答・12スコア・結果 ID・公開 ID は送らない）。
-import { computeDiagnosis, publicSummary, makeShareText } from './engine/runtime.mjs';
-import { BUNDLE, COPY } from './engine/data.mjs';
-import { renderResultPage, shareTextFromSummary, esc, heroGemsHtml } from './view.mjs';
+import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary } from './engine/runtime.mjs';
+import { BUNDLE } from './engine/data.mjs';
+import { renderResultPage, esc, heroGemsHtml } from './view.mjs';
 import { cardBlob } from './card.mjs';
 
 const ITEMS = BUNDLE.items;
@@ -171,7 +171,7 @@ function showResult(record, { mode, savedAt } = {}) {
     catch (e) { message('結果を表示できませんでした。もう一度診断してください。'); return; }
   }
   current = { result, answers: mode === 'saved' ? result.answers : record.answers, mode };
-  $('resultBody').innerHTML = renderResultPage(result, BUNDLE, COPY);
+  $('resultBody').innerHTML = renderResultPage(result, BUNDLE);
   bindResult();
   const banner = $('savedBanner');
   banner.hidden = mode !== 'saved';
@@ -179,9 +179,8 @@ function showResult(record, { mode, savedAt } = {}) {
   const shareable = summaryOf(result) !== null;
   $('imageBtn').disabled = !shareable;
   $('shareBtn').disabled = !shareable;
-  const insufficient = result.elements.status === 'insufficient' || result.types.status === 'insufficient' || result.characters.status !== 'available';
-  $('pendingFix').hidden = !(insufficient && mode === 'fresh');
-  setStatus(shareable ? '' : '回答不足の部分があるため、画像保存・共有はできません。');
+  $('pendingFix').hidden = !(!shareable && mode === 'fresh');
+  setStatus(shareable ? '' : '人物の判定を保留したため、画像保存・共有はできません。');
   const saveBtn = $('saveBtn');
   if (mode === 'saved') { saveBtn.textContent = '✓ 保存済み'; saveBtn.disabled = true; }
   else if (store.get(K.pending) && store.get(K.pending).resultId === result.resultId) { saveBtn.textContent = 'マイページに保存する（ログイン待ち）'; saveBtn.disabled = false; }
