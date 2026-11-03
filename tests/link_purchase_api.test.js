@@ -382,6 +382,111 @@ test('キャンセル（期限切れ）の直後に買い直せる', { skip }, a
   await ctx.db.close();
 });
 
+const CHECKOUT_LIFETIME = 24 * 3600 - 5 * 60;
+
+test('決済画面の期限：注文の作成から約24時間（Stripe の上限 24 時間の内側）。同じ注文の再送は同じ画面', { skip }, async () => {
+  const ctx = await setup();
+  const { context } = await resultContext(ctx);
+  const a = await buyAndPay(ctx, context, 'analysis', { pay: false });
+  const [order] = await ctx.rows('complete_orders');
+  const exp = ctx.stripe.st.lastCreate.params.expires_at;
+  assert.equal(exp, Math.floor(Date.parse(order.created_at) / 1000) + CHECKOUT_LIFETIME);
+  assert.ok(exp - Math.floor(Date.now() / 1000) <= 86400, 'Stripe の上限（24 時間）を超えない');
+  assert.equal(Date.parse(order.checkout_expires_at) / 1000, exp, '内部の注文の期限も Stripe の画面と同じ');
+  // 同じ購入操作の再送（連打・通信の再試行）は、同じ画面
+  const again = await ctx.op('buy', { context, product: 'analysis', attempt: a.attempt, source: 'result' });
+  assert.equal(again.code, 200);
+  assert.equal(ctx.csIdOf(again.body.checkoutUrl), a.cs);
+  assert.equal((await ctx.rows('complete_orders')).length, 1);
+  await ctx.db.close();
+});
+
+test('24時間の間の遅い支払い：期限内なら（作成から20時間後でも）支払いが反映され、固有リンクが有効になる', { skip }, async () => {
+  const ctx = await setup();
+  const { context } = await resultContext(ctx);
+  const a = await buyAndPay(ctx, context, 'analysis', { pay: false });
+  await ctx.db.sql(`update public.complete_orders set created_at = now() - interval '20 hours' where true`);
+  ctx.stripe.pay(a.cs, { customer_details: { email: 'buyer@example.test' } });
+  const [p] = await purchases(ctx);
+  assert.equal(p.state, 'active');
+  assert.equal((await ctx.rows('complete_orders'))[0].status, 'paid');
+  await ctx.db.close();
+});
+
+test('ケースA 途中でキャンセル→再購入：新しい注文・新しい決済画面へ進める。古い未払いの画面は閉じる（24時間の間に二重に払われない）', { skip }, async () => {
+  const ctx = await setup();
+  const { context } = await resultContext(ctx);
+  const first = await buyAndPay(ctx, context, 'analysis', { pay: false }); // 決済画面で支払わずに戻る
+  const second = await buyAndPay(ctx, context, 'analysis', { pay: false }); // 元の結果から、もう一度押す
+  await ctx.drain(); // 古い画面を閉じる処理は応答の後（waitUntil）
+  assert.notEqual(first.cs, second.cs);
+  assert.equal(ctx.stripe.st.sessions[first.cs].status, 'expired', '古い未払いの画面は Stripe で閉じる');
+  assert.equal(ctx.stripe.st.sessions[second.cs].status, 'open');
+  assert.equal((await ctx.rows('complete_orders')).length, 2);
+  // 新しい画面で支払うと、1件だけ有効。古い画面は払えない（閉じ済み）
+  ctx.stripe.pay(second.cs, { customer_details: { email: 'buyer@example.test' } });
+  const list = await purchases(ctx);
+  assert.deepEqual(list.map((x) => x.state).sort(), ['active', 'closed']);
+  await ctx.db.close();
+});
+
+test('遅延：古い画面を閉じる処理は応答を待たせない（応答の時点では未完了・応答の後に閉じる）', { skip }, async () => {
+  const ctx = await setup();
+  const { context } = await resultContext(ctx);
+  const first = await buyAndPay(ctx, context, 'analysis', { pay: false });
+  await ctx.drain();
+  await buyAndPay(ctx, context, 'analysis', { pay: false });
+  assert.equal(ctx.stripe.st.sessions[first.cs].status, 'open', '応答の時点では、まだ閉じていない（応答を待たせない）');
+  assert.ok(ctx.pending.length >= 1);
+  await ctx.drain();
+  assert.equal(ctx.stripe.st.sessions[first.cs].status, 'expired');
+  await ctx.db.close();
+});
+
+test('ケースA 補足：別の商品・支払い済みの画面は閉じない。閉じる処理が失敗しても購入は進む', { skip }, async () => {
+  const ctx = await setup();
+  const { context } = await resultContext(ctx);
+  const analysis = await buyAndPay(ctx, context, 'analysis', { pay: false });
+  const complete = await buyAndPay(ctx, context, 'complete', { goal: 'GOAL_EXPLORE_01', pay: false });
+  await ctx.drain();
+  assert.equal(ctx.stripe.st.sessions[analysis.cs].status, 'open', '別の商品の画面は閉じない（独立した商品）');
+  // 支払い済みの画面は閉じない
+  ctx.stripe.pay(analysis.cs, { customer_details: { email: 'buyer@example.test' } });
+  const again = await buyAndPay(ctx, context, 'analysis', { pay: false });
+  await ctx.drain();
+  assert.equal(ctx.stripe.st.sessions[analysis.cs].status, 'complete');
+  assert.equal(ctx.stripe.st.sessions[again.cs].status, 'open');
+  // 閉じる呼び出しが失敗しても、新しい決済画面は作れる
+  ctx.stripe.fail('checkout.sessions.expire');
+  const next = await buyAndPay(ctx, context, 'analysis', { pay: false });
+  await ctx.drain();
+  assert.equal(ctx.stripe.st.sessions[next.cs].status, 'open');
+  assert.ok(complete.cs);
+  await ctx.db.close();
+});
+
+test('ケースC 完全解析：キャンセル後の再購入で MENTOR の目標が混ざらない（各注文が自分の目標を持つ）。期限切れの後も買い直せる', { skip }, async () => {
+  const ctx = await setup();
+  const { context } = await resultContext(ctx);
+  const first = await buyAndPay(ctx, context, 'complete', { goal: 'GOAL_EXPLORE_01', pay: false });
+  const second = await buyAndPay(ctx, context, 'complete', { goal: 'GOAL_PACE_01', pay: false }); // 戻って、別の目標で選び直す
+  await ctx.drain();
+  assert.equal(ctx.stripe.st.sessions[first.cs].status, 'expired');
+  const orders = await ctx.rows('complete_orders');
+  const byCs = (cs) => orders.find((o) => o.stripe_checkout_session_id === cs);
+  assert.equal(byCs(first.cs).mentor_goal_id, 'GOAL_EXPLORE_01');
+  assert.equal(byCs(second.cs).mentor_goal_id, 'GOAL_PACE_01');
+  // 期限切れ（Stripe の期限・Webhook）の後も、元の結果から買い直せる
+  ctx.stripe.expire(second.cs);
+  assert.equal((await ctx.webhook({ type: 'checkout.session.expired', objectId: second.cs })).code, 200);
+  const third = await buyAndPay(ctx, context, 'complete', { goal: 'GOAL_PACE_01' });
+  const list = await purchases(ctx);
+  assert.equal(list.filter((x) => x.state === 'active').length, 1);
+  assert.equal(list.filter((x) => x.state === 'active')[0].product, 'complete');
+  assert.ok(third.cs !== second.cs);
+  await ctx.db.close();
+});
+
 test('固有リンク：未払いでは開けない（支払い待ち）。返金・異議申し立て・運営者の停止で開けない。再発行すると古いリンクは無効', { skip }, async () => {
   const ctx = await setup();
   const { context } = await resultContext(ctx);

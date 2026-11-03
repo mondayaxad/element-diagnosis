@@ -886,3 +886,207 @@ test('マイページ：右上は未購入が1つでもあれば「アップグ�
   assert.doesNotMatch(t, /読めます|未購入/);
   await p.__ctx.close();
 });
+
+// ================= A案：結果ページの表示順序・ロック解除は ¥1,000 へ直接・完全解析の予告
+test('A案：結果ページの表示順序（TOP3 → 共有 → 価格の案内 → 4ブロック → 比較表 → ¥1,000 → 完全解析 → 保存カード）。無料結果の区切り文言なし', { skip: skip() }, async () => {
+  for (const width of [320, 390, 1280]) {
+    const p = await resultPage({ width });
+    const y = (sel) => p.evaluate((s) => {
+      const el = typeof s === 'string' && s.startsWith('text:')
+        ? Array.from(document.querySelectorAll('*')).filter((e) => e.children.length === 0 && e.textContent.trim() === s.slice(5))[0]
+        : document.querySelector(s);
+      if (!el) return null;
+      return el.getBoundingClientRect().top + window.scrollY;
+    }, sel);
+    const order = {
+      top3: await y('text:あなたに響く元素'),
+      share: await y('#saveImgBtn'),
+      note: await y('[data-report-price-note]'),
+      lock1: await y('.lock-cta'),
+      table: await y('text:今、あなたが見ているもの'),
+      unlock: await y('#lockUnlockAllBtn'),
+      beyond: await y('.ca-reveal-wrap'),
+      card: await y('#recordCard'),
+      copy: await y('#copyUrlBtn'),
+    };
+    for (const [k, v] of Object.entries(order)) assert.ok(v !== null, `${width}: ${k} がある`);
+    const seq = ['top3', 'share', 'note', 'lock1', 'table', 'unlock', 'beyond', 'card', 'copy'];
+    for (let i = 1; i < seq.length; i++) assert.ok(order[seq[i - 1]] < order[seq[i]], `${width}: ${seq[i - 1]} → ${seq[i]}`);
+    const text = await p.locator('body').innerText();
+    assert.doesNotMatch(text, /ここまでが無料診断の結果です/);
+    // 価格の案内は4ブロックの最初に1回だけ。各ロックボタンに価格を繰り返さない
+    assert.equal(await p.locator('[data-report-price-note]').count(), 1);
+    assert.equal((await p.locator('[data-report-price-note]').innerText()).trim(), '詳細な解析は、解析レポート（¥1,000）でお読みいただけます。');
+    for (const t of await p.locator('.lock-cta').allInnerTexts()) assert.doesNotMatch(t, /¥/);
+    // 共有は二つの主要アクションのまま。URL のコピーは大きなボタンではなく小さな文字リンク（末尾の保存カードの下）
+    assert.equal(await p.locator('#saveImgBtn').isVisible(), true);
+    assert.equal(await p.locator('#tweetShareBtn').isVisible(), true);
+    assert.ok((await p.locator('#copyUrlBtn').evaluate((b) => parseFloat(getComputedStyle(b).fontSize))) <= 12);
+    assert.equal(await p.locator('#copyUrlBtn').evaluate((b) => getComputedStyle(b).borderTopWidth), '0px');
+    assert.equal(await noScroll(p), true, `${width}: 横にはみ出さない`);
+    assert.deepEqual(p.__errors, []);
+    await p.__ctx.close();
+  }
+});
+
+test('A案：各ブロックの「ロックを解除」は ¥1,000 の解析レポートの購入へ直接進む（選択モーダルを出さない）', { skip: skip() }, async () => {
+  const p = await resultPage();
+  const n = await p.locator('.lock-cta').count();
+  assert.ok(n >= 4, '4つのロックブロック');
+  await p.waitForFunction(() => !document.querySelector('.lock-cta').disabled);
+  await p.locator('.lock-cta').nth(1).click();
+  await p.waitForURL(/checkout\.stripe\.com/);
+  assert.equal(await p.locator('.edb-dialog').count(), 0, '商品の選択モーダルを出さない');
+  const buy = p.__calls.filter((c) => c.op === 'buy');
+  assert.equal(buy.length, 1);
+  assert.equal(buy[0].body.product, 'analysis');
+  assert.equal(buy[0].body.source, 'result_lock');
+  assert.ok(!('goal' in buy[0].body), '完全解析の目標は送らない');
+  await p.__ctx.close();
+});
+
+test('A案：完全解析は閉じた状態でも、¥3,000・全46ページ・MIRROR/HIDDEN SHAPE/MENTOR・サンプルへの入口が見える。サンプルは details の外で、開閉と干渉しない', { skip: skip() }, async () => {
+  const p = await resultPage();
+  await p.evaluate(() => document.querySelectorAll('details').forEach((d) => { d.open = false; }));
+  const wrap = p.locator('.ca-reveal-wrap');
+  const teaser = await wrap.locator('.ca-reveal-teaser').innerText();
+  for (const t of ['完全解析｜全46ページ｜¥3,000', 'MIRROR・HIDDEN SHAPE・MENTOR', '完全解析のサンプルを読む']) assert.ok(teaser.includes(t), t);
+  assert.equal(await p.locator('details.ca-reveal [data-ca-sample]').count(), 0);
+  assert.equal(await wrap.locator('[data-buy-complete]').isVisible(), false, '決済ボタンは閉じている間は見えない');
+  // サンプルのリンクは summary の中にない（リンクの操作が展開の操作と干渉しない）
+  assert.equal(await p.locator('summary [data-ca-sample], summary a').count(), 0);
+  assert.equal(await p.locator('details.ca-reveal').evaluate((d) => d.open), false);
+  await p.locator('details.ca-reveal > summary').click();
+  assert.equal(await p.locator('details.ca-reveal').evaluate((d) => d.open), true);
+  await wrap.locator('[data-buy-complete]').waitFor({ state: 'visible' });
+  // ¥3,000 は独立した商品：押すと目標の選択（共通の画面）→ 完全解析の購入
+  await wrap.locator('[data-buy-complete]').click();
+  await p.locator('.edb-dialog input[name="edb-goal"]').first().waitFor();
+  await p.__ctx.close();
+});
+
+// ================= 小規模な安全修正（購入ボタンの待機解除・紹介セクションの計測）
+const BTN_LABEL = '決済画面へ移動しています…';
+async function clickAnalysis(p) {
+  await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
+  await p.click('#lockUnlockAllBtn');
+}
+async function assertReusable(p) {
+  // 押せない表示のまま止まらない：元の文言・押せる状態へ戻り、もう一度押せる。案内の文言が出る
+  await p.waitForFunction(() => { const b = document.querySelector('#lockUnlockAllBtn'); return !b.disabled && !b.hasAttribute('data-nav-busy'); });
+  assert.ok(!(await p.locator('#lockUnlockAllBtn').innerText()).includes(BTN_LABEL), '「移動しています…」のまま残さない');
+}
+
+test('購入ボタン（正常）：1回押すと op=buy が1回、同じタブで Stripe の決済画面へ。エラーの案内は出さない', { skip: skip() }, async () => {
+  const p = await resultPage();
+  await clickAnalysis(p);
+  await p.waitForURL(/checkout\.stripe\.com/);
+  assert.equal(p.__calls.filter((c) => c.op === 'buy').length, 1);
+  assert.deepEqual(p.__errors, []);
+  await p.__ctx.close();
+});
+
+test('購入ボタン（通信失敗）：buy の通信が切れても待機表示を解除し、案内を出して、もう一度押せる（再送は同じ購入操作で1回だけ）', { skip: skip() }, async () => {
+  const p = await resultPage();
+  let buyTries = 0;
+  await p.route('**/api/complete-checkout?op=buy', (r) => { buyTries += 1; r.abort(); });
+  await clickAnalysis(p);
+  await assertReusable(p);
+  assert.equal(buyTries, 2, '通信の失敗は同じ操作のまま1回だけ再送');
+  assert.match(await p.locator('#guestAnalysisMsg').innerText(), /.+/, '案内が出る');
+  assert.ok(!p.url().includes('checkout.stripe.com'));
+  // もう一度押すと、今度は成功して進める
+  await p.unroute('**/api/complete-checkout?op=buy');
+  await clickAnalysis(p);
+  await p.waitForURL(/checkout\.stripe\.com/);
+  assert.deepEqual(p.__errors.filter((e) => !/Failed to fetch|aborted/i.test(e)), []);
+  await p.__ctx.close();
+});
+
+test('購入ボタン（例外）：購入対象の取得が例外で拒否されても、待機表示を解除し、案内を出して、もう一度押せる', { skip: skip() }, async () => {
+  const p = await resultPage();
+  await p.evaluate(() => { window.__origCtx = window.edResultContext; window.edResultContext = function () { return Promise.reject(new Error('boom')); }; });
+  await clickAnalysis(p);
+  await assertReusable(p);
+  assert.match(await p.locator('#guestAnalysisMsg').innerText(), /購入の準備ができませんでした/);
+  assert.equal(p.__calls.filter((c) => c.op === 'buy').length, 0, '購入は始まらない');
+  // 例外が直ったら、もう一度押して進める
+  await p.evaluate(() => { window.edResultContext = window.__origCtx; });
+  await clickAnalysis(p);
+  await p.waitForURL(/checkout\.stripe\.com/);
+  assert.equal(p.__calls.filter((c) => c.op === 'buy').length, 1);
+  await p.__ctx.close();
+});
+
+test('購入ボタン：決済画面へ移動を始めた後は、例外の後処理で押せる状態へ戻さない（移動中のボタンに触れない）', { skip: skip() }, async () => {
+  const p = await resultPage();
+  await p.evaluate(() => {
+    const b = document.querySelector('#lockUnlockAllBtn');
+    EdNavBusy.hold(b, '決済画面へ移動しています…');
+    EdNavBusy.handoff(b);
+  });
+  const state = await p.evaluate(() => document.querySelector('#lockUnlockAllBtn').getAttribute('data-nav-busy'));
+  assert.equal(state, 'away');
+  await p.__ctx.close();
+});
+
+test('計測：section_reached_about は、紹介セクションに届いた時だけ1回。最初の少しのスクロールでは発火しない（非表示の運営者情報モーダルの id=about は使わない）', { skip: skip() }, async () => {
+  const p = await open('/', { api: RESULT_API() });
+  await p.waitForSelector('#about-intro', { state: 'attached' });
+  assert.equal(await p.locator('#about').count(), 1, '運営者情報モーダルは別に残る');
+  assert.equal(await p.evaluate(() => getComputedStyle(document.getElementById('about')).display), 'none');
+  const ev = (name) => p.evaluate((n) => window.__ev.filter((e) => e[0] === 'event' && e[1] === n).length, name);
+  await p.evaluate(() => window.scrollTo(0, 4));
+  await p.waitForTimeout(150);
+  assert.equal(await ev('section_reached_about'), 0, '少しのスクロールでは発火しない');
+  await p.evaluate(() => document.getElementById('about-intro').scrollIntoView());
+  await p.waitForFunction(() => window.__ev.some((e) => e[1] === 'section_reached_about'));
+  await p.evaluate(() => { window.scrollTo(0, 0); document.getElementById('about-intro').scrollIntoView(); });
+  await p.waitForTimeout(150);
+  assert.equal(await ev('section_reached_about'), 1, '2回目は発火しない');
+  await p.__ctx.close();
+});
+
+// ================= 決済画面への移動の待ち時間（先読み）とマイページの例外時の安全策
+test('遅延：指が触れた時点で購入対象の取得を始め、押した後は待たずに op=buy へ（取得は1回だけ）', { skip: skip() }, async () => {
+  const p = await resultPage({ api: { 'buy-context': () => [200, { context: CTX, summary: SUMMARY, eligible: { analysis: true, complete: true } }] } });
+  await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
+  // 指が触れた（pointerdown）だけで、購入対象の取得が始まる
+  await p.locator('#lockUnlockAllBtn').dispatchEvent('pointerdown');
+  await p.waitForTimeout(300);
+  const before = p.__calls.filter((c) => c.op === 'buy-context').length;
+  assert.equal(before, 1, '押す前に取得を始める');
+  await p.click('#lockUnlockAllBtn');
+  await p.waitForURL(/checkout\.stripe\.com/);
+  assert.equal(p.__calls.filter((c) => c.op === 'buy-context').length, 1, '取得は1回だけ（押した時に取り直さない）');
+  assert.equal(p.__calls.filter((c) => c.op === 'buy').length, 1);
+  assert.deepEqual(p.__errors, []);
+  await p.__ctx.close();
+});
+
+test('マイページ：ポインターが乗った時点で記録の購入対象を取得し、押した後は op=buy だけ（取得は1回）', { skip: skip() }, async () => {
+  const p = await mypage([]);
+  const btn = p.locator('[data-analysis-checkout]').first();
+  await btn.hover();
+  await p.waitForTimeout(300);
+  assert.equal(p.__calls.filter((c) => c.op === 'buy-context').length, 1, 'ポインターが乗った時点で取得');
+  await btn.click();
+  await p.waitForURL(/checkout\.stripe\.com/);
+  assert.equal(p.__calls.filter((c) => c.op === 'buy-context').length, 1, '押した時に取り直さない');
+  const buy = p.__calls.filter((c) => c.op === 'buy');
+  assert.deepEqual([buy.length, buy[0].body.product, buy[0].body.context], [1, 'analysis', CTX]);
+  await p.__ctx.close();
+});
+
+test('マイページ：購入対象の取得が失敗・例外でも、押せない表示のまま止まらず、もう一度押せる', { skip: skip() }, async () => {
+  for (const mode of ['error', 'exception']) {
+    const p = await mypage([], { api: { 'buy-context': [503, { error: 'service_unavailable' }] } });
+    if (mode === 'exception') await p.evaluate(() => { EdBuy.contextFromRecord = () => Promise.reject(new Error('boom')); });
+    const btn = p.locator('[data-analysis-checkout]').first();
+    await btn.click();
+    await p.waitForFunction(() => { const b = document.querySelector('[data-analysis-checkout]'); return !b.disabled && !b.hasAttribute('data-nav-busy'); });
+    assert.match(await p.locator('.mp-checkout-msg').first().innerText(), /.+/, mode + ': 案内が出る');
+    assert.equal(p.__calls.filter((c) => c.op === 'buy').length, 0, mode);
+    await p.__ctx.close();
+  }
+});

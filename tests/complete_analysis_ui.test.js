@@ -335,34 +335,39 @@ async function indexResult(state, supa) {
 
 test('index：¥1,000主導線のあとに折りたたみ。閉じても¥1,000は使え、開くと説明と準備中ボタン（押せない）', { skip: skip() }, async () => {
   const p = await indexResult('free');
-  const fold = p.locator('details.ca-fold');
+  const fold = p.locator('details.ca-reveal');
+  const wrap = p.locator('.ca-reveal-wrap');
   assert.equal(await fold.count(), 1);
   assert.equal(await fold.evaluate((d) => d.open), false);
   // 負荷が高いと結果の描き直しと計測が重なるため、読み込みが落ち着いてから同じフレームで両方の位置を測る
   await p.waitForLoadState('networkidle');
   const pos = await p.evaluate(() => ({
     btnY: document.querySelector('#lockUnlockAllBtn').getBoundingClientRect().top,
-    foldY: document.querySelector('details.ca-fold').getBoundingClientRect().top,
+    foldY: document.querySelector('details.ca-reveal').getBoundingClientRect().top,
   }));
   assert.ok(pos.foldY > pos.btnY, `¥1,000 より後（${pos.btnY} → ${pos.foldY}）`);
-  // 閉じた状態は静かな予告だけ（¥3,000・決済ボタン・サンプルは出さない）
-  const closed = await fold.locator('summary').innerText();
-  for (const s of ['BEYOND THE RESULT｜この先にあるもの', 'まだ、ここには現れていない輪郭があります。', '三つの人物像から、あなたをもう一段深く読む。', 'MIRROR・HIDDEN SHAPE・MENTOR', 'その先を見る']) assert.ok(closed.includes(s), s);
-  assert.doesNotMatch(closed, /¥3,000|¥2,000|完全解析との違い/);
-  assert.equal(await fold.locator('[data-ca-sample]').isVisible(), false);
+  // 閉じた状態でも、完全解析・全46ページ・¥3,000・MIRROR/HIDDEN SHAPE/MENTOR・サンプルが見える（決済ボタンは出さない）
+  const teaser = await wrap.locator('.ca-reveal-teaser').innerText();
+  for (const t of ['BEYOND THE RESULT｜この先にあるもの', 'まだ、ここには現れていない輪郭があります。', '三つの人物像から、あなたをもう一段深く読む。', 'MIRROR・HIDDEN SHAPE・MENTOR', '完全解析｜全46ページ｜¥3,000', '完全解析のサンプルを読む']) assert.ok(teaser.includes(t), t);
+  assert.doesNotMatch(teaser, /¥2,000|完全解析との違い/);
+  assert.equal(await fold.locator('summary').innerText().then((t) => t.trim()), 'その先を見る');
+  assert.equal(await wrap.locator('[data-ca-sample]').isVisible(), true);
+  // サンプルのリンクは <details> の外（開閉の操作と干渉しない）
+  assert.equal(await fold.locator('[data-ca-sample]').count(), 0);
+  assert.equal(await fold.locator('button.is-pending, [data-buy-complete]').first().isVisible(), false, '決済ボタンは閉じている間は見えない');
   // 販売停止中（既定）は ¥1,000 も「準備中」で押せない
   assert.equal(await p.locator('#lockUnlockAllBtn').innerText().then((s) => s.trim()), '解析レポート ¥1,000（準備中）');
   assert.equal(await p.locator('#lockUnlockAllBtn').isDisabled(), true);
-  await p.click('details.ca-fold > summary');
+  await p.click('details.ca-reveal > summary');
   const text = await fold.innerText();
-  for (const s of ['この結果が示すのは、あなたの核となる一面です。', 'あなたと重なる人物', 'まだ言葉になっていない内側の可能性', 'これから借りられる力を', '三つの視点からひとつの輪郭へ結びます。', 'いまのあなたに最も近い10名', '表に出にくい一面に近い10名', 'これから伸ばす方向に近い10名', '三つの視点、三十の人物像。', '全46ページの完全解析', '完全解析のサンプルを読む', '8ページをそのまま抜き出しています', '¥3,000', '準備中']) assert.ok(text.includes(s), s);
+  for (const s of ['この結果が示すのは、あなたの核となる一面です。', 'あなたと重なる人物', 'まだ言葉になっていない内側の可能性', 'これから借りられる力を', '三つの視点からひとつの輪郭へ結びます。', 'いまのあなたに最も近い10名', '表に出にくい一面に近い10名', 'これから伸ばす方向に近い10名', '三つの視点、三十の人物像。', '全46ページの完全解析', '¥3,000', '準備中']) assert.ok(text.includes(s), s);
   // 三つの人物像の図（同じサイトの画像・代替テキストあり）と、三つの視点の説明
   const img = fold.locator('.edl-map img.edl-img');
   assert.equal(await img.count(), 1);
   assert.match(await img.getAttribute('src'), /^\/assets\/complete\/lens-map-840\.webp$/);
   assert.match(await img.getAttribute('alt'), /MIRROR[\s\S]*HIDDEN SHAPE[\s\S]*MENTOR/);
   assert.equal(await fold.locator('.edl-legend .edl-item').count(), 3);
-  assert.equal(await fold.locator('[data-ca-sample]').getAttribute('href'), '/complete-sample.html#from=result');
+  assert.equal(await wrap.locator('[data-ca-sample]').getAttribute('href'), '/complete-sample.html#from=result');
   assert.equal(await fold.locator('.ca-reveal-stars i').count(), 3);
   // 決済前のボタンに「見る」「開く」を使わない。押せない button（href なし）
   const cta = fold.locator('button.is-pending');
@@ -381,11 +386,11 @@ test('index：¥1,000主導線のあとに折りたたみ。閉じても¥1,000�
 
 test('index：購入状態を確かめられない時も申込の導線は出す（ログインなしの購入は買えることを優先）・旧 Payment Link は無い／JS無しでも details で到達できる', { skip: skip() }, async () => {
   const p = await indexResult(null);
-  await p.click('details.ca-fold > summary');
-  assert.equal(await p.locator('details.ca-fold a[href*="buy.stripe"]').count(), 0);
-  await p.waitForFunction(() => /まだ見えていない輪郭を読む/.test(document.querySelector('details.ca-fold').innerText));
-  assert.doesNotMatch(await p.locator('details.ca-fold').innerText(), /購入状態を確認できないため/);
-  assert.equal(await p.locator('details.ca-fold > summary').evaluate((s) => s.parentElement.tagName), 'DETAILS');
+  await p.click('details.ca-reveal > summary');
+  assert.equal(await p.locator('.ca-reveal-wrap a[href*="buy.stripe"]').count(), 0);
+  await p.waitForFunction(() => /まだ見えていない輪郭を読む/.test(document.querySelector('.ca-reveal-wrap').innerText));
+  assert.doesNotMatch(await p.locator('.ca-reveal-wrap').innerText(), /購入状態を確認できないため/);
+  assert.equal(await p.locator('details.ca-reveal > summary').evaluate((s) => s.parentElement.tagName), 'DETAILS');
   await p.__ctx.close();
 });
 
@@ -554,7 +559,7 @@ test('旧版の結果：index と report に完全解析の購入導線を出さ
   const legacyCode = await p.evaluate(() => { const a = {}; for (let i = 0; i < QUESTIONS.length; i++) a[i] = (i % 5) - 2; return encodeAnswers(a); });
   await p.goto(`${base}/?code=${legacyCode}&preview_entitlement=free`);
   await p.waitForSelector('#lockUnlockAllBtn', { state: 'attached' });
-  assert.equal(await p.locator('details.ca-fold').count(), 0);
+  assert.equal(await p.locator('.ca-reveal-wrap').count(), 0);
   assert.equal(await p.locator('#lockUnlockAllBtn').count(), 1, '¥1,000 の主導線はそのまま');
   await p.__ctx.close();
   // report：旧版の解析レポート
