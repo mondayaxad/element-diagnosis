@@ -962,6 +962,9 @@ test('A案：完全解析は閉じた状態でも、¥3,000・全46ページ・M
   // ¥3,000 は独立した商品：押すと目標の選択（共通の画面）→ 完全解析の購入
   await wrap.locator('[data-buy-complete]').click();
   await p.locator('.edb-dialog input[name="edb-goal"]').first().waitFor();
+  await p.__ctx.close();
+});
+
 // ================= 小規模な安全修正（購入ボタンの待機解除・紹介セクションの計測）
 const BTN_LABEL = '決済画面へ移動しています…';
 async function clickAnalysis(p) {
@@ -1042,4 +1045,48 @@ test('計測：section_reached_about は、紹介セクションに届いた時�
   await p.waitForTimeout(150);
   assert.equal(await ev('section_reached_about'), 1, '2回目は発火しない');
   await p.__ctx.close();
+});
+
+// ================= 決済画面への移動の待ち時間（先読み）とマイページの例外時の安全策
+test('遅延：指が触れた時点で購入対象の取得を始め、押した後は待たずに op=buy へ（取得は1回だけ）', { skip: skip() }, async () => {
+  const p = await resultPage({ api: { 'buy-context': () => [200, { context: CTX, summary: SUMMARY, eligible: { analysis: true, complete: true } }] } });
+  await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
+  // 指が触れた（pointerdown）だけで、購入対象の取得が始まる
+  await p.locator('#lockUnlockAllBtn').dispatchEvent('pointerdown');
+  await p.waitForTimeout(300);
+  const before = p.__calls.filter((c) => c.op === 'buy-context').length;
+  assert.equal(before, 1, '押す前に取得を始める');
+  await p.click('#lockUnlockAllBtn');
+  await p.waitForURL(/checkout\.stripe\.com/);
+  assert.equal(p.__calls.filter((c) => c.op === 'buy-context').length, 1, '取得は1回だけ（押した時に取り直さない）');
+  assert.equal(p.__calls.filter((c) => c.op === 'buy').length, 1);
+  assert.deepEqual(p.__errors, []);
+  await p.__ctx.close();
+});
+
+test('マイページ：ポインターが乗った時点で記録の購入対象を取得し、押した後は op=buy だけ（取得は1回）', { skip: skip() }, async () => {
+  const p = await mypage([]);
+  const btn = p.locator('[data-analysis-checkout]').first();
+  await btn.hover();
+  await p.waitForTimeout(300);
+  assert.equal(p.__calls.filter((c) => c.op === 'buy-context').length, 1, 'ポインターが乗った時点で取得');
+  await btn.click();
+  await p.waitForURL(/checkout\.stripe\.com/);
+  assert.equal(p.__calls.filter((c) => c.op === 'buy-context').length, 1, '押した時に取り直さない');
+  const buy = p.__calls.filter((c) => c.op === 'buy');
+  assert.deepEqual([buy.length, buy[0].body.product, buy[0].body.context], [1, 'analysis', CTX]);
+  await p.__ctx.close();
+});
+
+test('マイページ：購入対象の取得が失敗・例外でも、押せない表示のまま止まらず、もう一度押せる', { skip: skip() }, async () => {
+  for (const mode of ['error', 'exception']) {
+    const p = await mypage([], { api: { 'buy-context': [503, { error: 'service_unavailable' }] } });
+    if (mode === 'exception') await p.evaluate(() => { EdBuy.contextFromRecord = () => Promise.reject(new Error('boom')); });
+    const btn = p.locator('[data-analysis-checkout]').first();
+    await btn.click();
+    await p.waitForFunction(() => { const b = document.querySelector('[data-analysis-checkout]'); return !b.disabled && !b.hasAttribute('data-nav-busy'); });
+    assert.match(await p.locator('.mp-checkout-msg').first().innerText(), /.+/, mode + ': 案内が出る');
+    assert.equal(p.__calls.filter((c) => c.op === 'buy').length, 0, mode);
+    await p.__ctx.close();
+  }
 });

@@ -9,6 +9,8 @@
   var IS_PREVIEW_BUILD = location.hostname !== 'element-diagnosis-five.vercel.app';
 </script>
   <meta charset="UTF-8">
+<link rel="preconnect" href="https://checkout.stripe.com">
+<link rel="dns-prefetch" href="https://checkout.stripe.com">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>元素診断 — 原神の元素で分かる性格診断 | あなたの気質と強み</title>
   <meta name="description" content="100問の設問から、あなたの内なる気質「元素」・対人様式「武器」・価値観「国家」を映し出す心理傾向診断。Big Five × エニアグラム × 価値観理論を土台にした、原神ファンのための自己理解ツール。">
@@ -3312,11 +3314,18 @@ function edRefreshAfter(error) {
 var edCtxCache = null;
 function edWaitResume(ms) {
   return new Promise(function (resolve) {
+    if (window.__edResumeToken) return resolve(window.__edResumeToken);
+    var done = false;
+    var finish = function (v) { if (done) return; done = true; window.removeEventListener('ed:resume', onReady); resolve(v); };
+    // 固有リンクができた瞬間に進む（setupResumeLink が ed:resume を送る）。届かない環境のために短い間隔でも確かめる
+    var onReady = function () { if (window.__edResumeToken) finish(window.__edResumeToken); };
+    window.addEventListener('ed:resume', onReady);
     var started = Date.now();
     (function tick() {
-      if (window.__edResumeToken) return resolve(window.__edResumeToken);
-      if (Date.now() - started > ms) return resolve(null);
-      setTimeout(tick, 200);
+      if (done) return;
+      if (window.__edResumeToken) return finish(window.__edResumeToken);
+      if (Date.now() - started > ms) return finish(null);
+      setTimeout(tick, 100);
     })();
   });
 }
@@ -3354,13 +3363,34 @@ function initReportPurchase(root, code, refs) {
   if (typeof EdBuy === 'undefined') return;
   var B = EdBuy;
   var open = B.salesOpen();
+  // 購入の対象の取得（buy-context）は、押す前（指が触れた・ポインターが乗った時）に始めて、押した後の待ち時間を短くする。
+  //   同時に何度呼ばれても通信は1回（取得中の Promise を共有）。取得後のキャッシュは edResultContext が持つ
+  var ctxPending = null;
+  function ctxOnce() {
+    if (!ctxPending) {
+      ctxPending = Promise.resolve().then(function () { return edResultContext(root, code); });
+      ctxPending.then(function () { ctxPending = null; }, function () { ctxPending = null; });
+    }
+    return ctxPending;
+  }
+  function prefetchOn(btn) {
+    if (!btn || btn.__edPrefetch) return;
+    btn.__edPrefetch = true;
+    var go = function () { ctxOnce().catch(function () { /* 押した時に改めて取得する */ }); };
+    // ポインターが乗った・フォーカスした時は、固有リンク（#r=）・マイページの記録（#rec=）がある結果だけ先に取る
+    //   （共有リンクで開いた結果は、取得の時に固有リンクを新しく作るため、押す直前＝指が触れた時だけにする）
+    var goIfKnown = function () { if (window.__edResumeToken || edRecordFromUrl()) go(); };
+    btn.addEventListener('pointerdown', go, { passive: true });
+    btn.addEventListener('mouseenter', goIfKnown, { passive: true });
+    btn.addEventListener('focus', goIfKnown, { passive: true });
+  }
   function buy(product, btn, msgEl, source) {
     if (msgEl) msgEl.textContent = '';
     var pickGoal = product === 'complete' ? B.goalDialog() : Promise.resolve(null);
     pickGoal.then(function (goal) {
       if (product === 'complete' && !goal) return;
       EdNavBusy.hold(btn, '決済画面へ移動しています…');
-      return edResultContext(root, code).then(function (c) {
+      return ctxOnce().then(function (c) {
         if (!c) { EdNavBusy.release(btn); if (msgEl) msgEl.textContent = '購入の準備ができませんでした。通信を確かめて、もう一度押してください。'; return; }
         // マイページの記録（#rec=）から開いた結果：支払いの後、マイページに登録して戻る
         return B.start({ context: c, product: product, goal: goal, source: source, fromMypage: !!edRecordFromUrl() }).then(function (r) {
@@ -3381,6 +3411,7 @@ function initReportPurchase(root, code, refs) {
   var aBtns = [refs.lockUnlockAllBtn].concat(Array.prototype.slice.call(refs.lockCtaBtns || [])).filter(Boolean);
   if (open) {
     aBtns.forEach(function (btn) {
+      prefetchOn(btn);
       btn.onclick = function (e) {
         e.preventDefault();
         if (typeof gtag === 'function') gtag('event', btn === refs.lockUnlockAllBtn ? 'unlock_all_click' : 'lock_cta_click', { event_category: 'conversion' });
@@ -3391,7 +3422,7 @@ function initReportPurchase(root, code, refs) {
   var cb = root.querySelector('[data-buy-complete]');
   if (cb) {
     if (!open) { cb.disabled = true; cb.classList.add('is-pending'); cb.setAttribute('aria-disabled', 'true'); cb.innerHTML = '<span class="ca-buy-main">まだ見えていない輪郭を読む</span><span class="ca-buy-sub">¥3,000（準備中）</span>'; }
-    else cb.onclick = function () { buy('complete', cb, root.querySelector('[data-buy-msg]'), 'result'); };
+    else { prefetchOn(cb); cb.onclick = function () { buy('complete', cb, root.querySelector('[data-buy-msg]'), 'result'); }; }
   }
   root.querySelectorAll('[data-buy-sample]').forEach(function (a) {
     a.addEventListener('click', function (e) {
@@ -3745,6 +3776,7 @@ function setupResumeLink(root, code) {
     if (!r || !r.ok) return; // 失敗しても表示・購入はそのまま（同じ診断では作り直さない）
     if ((window.__resultNonce || 0) !== nonce || window.__phase !== 'result') return;
     window.__edResumeToken = t;
+    try { window.dispatchEvent(new Event('ed:resume')); } catch (e) { /* 待っている購入は短い間隔の確認で進む */ }
     try { history.replaceState(null, '', '/result#r=' + t); } catch (e) { /* 履歴を書き換えられない環境 */ }
     resumeRemember(t);
     resumeShowNote(document.getElementById('diagnosis-root'));

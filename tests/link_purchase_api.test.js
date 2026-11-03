@@ -418,6 +418,7 @@ test('ケースA 途中でキャンセル→再購入：新しい注文・新し
   const { context } = await resultContext(ctx);
   const first = await buyAndPay(ctx, context, 'analysis', { pay: false }); // 決済画面で支払わずに戻る
   const second = await buyAndPay(ctx, context, 'analysis', { pay: false }); // 元の結果から、もう一度押す
+  await ctx.drain(); // 古い画面を閉じる処理は応答の後（waitUntil）
   assert.notEqual(first.cs, second.cs);
   assert.equal(ctx.stripe.st.sessions[first.cs].status, 'expired', '古い未払いの画面は Stripe で閉じる');
   assert.equal(ctx.stripe.st.sessions[second.cs].status, 'open');
@@ -429,20 +430,36 @@ test('ケースA 途中でキャンセル→再購入：新しい注文・新し
   await ctx.db.close();
 });
 
+test('遅延：古い画面を閉じる処理は応答を待たせない（応答の時点では未完了・応答の後に閉じる）', { skip }, async () => {
+  const ctx = await setup();
+  const { context } = await resultContext(ctx);
+  const first = await buyAndPay(ctx, context, 'analysis', { pay: false });
+  await ctx.drain();
+  await buyAndPay(ctx, context, 'analysis', { pay: false });
+  assert.equal(ctx.stripe.st.sessions[first.cs].status, 'open', '応答の時点では、まだ閉じていない（応答を待たせない）');
+  assert.ok(ctx.pending.length >= 1);
+  await ctx.drain();
+  assert.equal(ctx.stripe.st.sessions[first.cs].status, 'expired');
+  await ctx.db.close();
+});
+
 test('ケースA 補足：別の商品・支払い済みの画面は閉じない。閉じる処理が失敗しても購入は進む', { skip }, async () => {
   const ctx = await setup();
   const { context } = await resultContext(ctx);
   const analysis = await buyAndPay(ctx, context, 'analysis', { pay: false });
   const complete = await buyAndPay(ctx, context, 'complete', { goal: 'GOAL_EXPLORE_01', pay: false });
+  await ctx.drain();
   assert.equal(ctx.stripe.st.sessions[analysis.cs].status, 'open', '別の商品の画面は閉じない（独立した商品）');
   // 支払い済みの画面は閉じない
   ctx.stripe.pay(analysis.cs, { customer_details: { email: 'buyer@example.test' } });
   const again = await buyAndPay(ctx, context, 'analysis', { pay: false });
+  await ctx.drain();
   assert.equal(ctx.stripe.st.sessions[analysis.cs].status, 'complete');
   assert.equal(ctx.stripe.st.sessions[again.cs].status, 'open');
   // 閉じる呼び出しが失敗しても、新しい決済画面は作れる
   ctx.stripe.fail('checkout.sessions.expire');
   const next = await buyAndPay(ctx, context, 'analysis', { pay: false });
+  await ctx.drain();
   assert.equal(ctx.stripe.st.sessions[next.cs].status, 'open');
   assert.ok(complete.cs);
   await ctx.db.close();
@@ -453,6 +470,7 @@ test('ケースC 完全解析：キャンセル後の再購入で MENTOR の目�
   const { context } = await resultContext(ctx);
   const first = await buyAndPay(ctx, context, 'complete', { goal: 'GOAL_EXPLORE_01', pay: false });
   const second = await buyAndPay(ctx, context, 'complete', { goal: 'GOAL_PACE_01', pay: false }); // 戻って、別の目標で選び直す
+  await ctx.drain();
   assert.equal(ctx.stripe.st.sessions[first.cs].status, 'expired');
   const orders = await ctx.rows('complete_orders');
   const byCs = (cs) => orders.find((o) => o.stripe_checkout_session_id === cs);
