@@ -962,5 +962,84 @@ test('A案：完全解析は閉じた状態でも、¥3,000・全46ページ・M
   // ¥3,000 は独立した商品：押すと目標の選択（共通の画面）→ 完全解析の購入
   await wrap.locator('[data-buy-complete]').click();
   await p.locator('.edb-dialog input[name="edb-goal"]').first().waitFor();
+// ================= 小規模な安全修正（購入ボタンの待機解除・紹介セクションの計測）
+const BTN_LABEL = '決済画面へ移動しています…';
+async function clickAnalysis(p) {
+  await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
+  await p.click('#lockUnlockAllBtn');
+}
+async function assertReusable(p) {
+  // 押せない表示のまま止まらない：元の文言・押せる状態へ戻り、もう一度押せる。案内の文言が出る
+  await p.waitForFunction(() => { const b = document.querySelector('#lockUnlockAllBtn'); return !b.disabled && !b.hasAttribute('data-nav-busy'); });
+  assert.ok(!(await p.locator('#lockUnlockAllBtn').innerText()).includes(BTN_LABEL), '「移動しています…」のまま残さない');
+}
+
+test('購入ボタン（正常）：1回押すと op=buy が1回、同じタブで Stripe の決済画面へ。エラーの案内は出さない', { skip: skip() }, async () => {
+  const p = await resultPage();
+  await clickAnalysis(p);
+  await p.waitForURL(/checkout\.stripe\.com/);
+  assert.equal(p.__calls.filter((c) => c.op === 'buy').length, 1);
+  assert.deepEqual(p.__errors, []);
+  await p.__ctx.close();
+});
+
+test('購入ボタン（通信失敗）：buy の通信が切れても待機表示を解除し、案内を出して、もう一度押せる（再送は同じ購入操作で1回だけ）', { skip: skip() }, async () => {
+  const p = await resultPage();
+  let buyTries = 0;
+  await p.route('**/api/complete-checkout?op=buy', (r) => { buyTries += 1; r.abort(); });
+  await clickAnalysis(p);
+  await assertReusable(p);
+  assert.equal(buyTries, 2, '通信の失敗は同じ操作のまま1回だけ再送');
+  assert.match(await p.locator('#guestAnalysisMsg').innerText(), /.+/, '案内が出る');
+  assert.ok(!p.url().includes('checkout.stripe.com'));
+  // もう一度押すと、今度は成功して進める
+  await p.unroute('**/api/complete-checkout?op=buy');
+  await clickAnalysis(p);
+  await p.waitForURL(/checkout\.stripe\.com/);
+  assert.deepEqual(p.__errors.filter((e) => !/Failed to fetch|aborted/i.test(e)), []);
+  await p.__ctx.close();
+});
+
+test('購入ボタン（例外）：購入対象の取得が例外で拒否されても、待機表示を解除し、案内を出して、もう一度押せる', { skip: skip() }, async () => {
+  const p = await resultPage();
+  await p.evaluate(() => { window.__origCtx = window.edResultContext; window.edResultContext = function () { return Promise.reject(new Error('boom')); }; });
+  await clickAnalysis(p);
+  await assertReusable(p);
+  assert.match(await p.locator('#guestAnalysisMsg').innerText(), /購入の準備ができませんでした/);
+  assert.equal(p.__calls.filter((c) => c.op === 'buy').length, 0, '購入は始まらない');
+  // 例外が直ったら、もう一度押して進める
+  await p.evaluate(() => { window.edResultContext = window.__origCtx; });
+  await clickAnalysis(p);
+  await p.waitForURL(/checkout\.stripe\.com/);
+  assert.equal(p.__calls.filter((c) => c.op === 'buy').length, 1);
+  await p.__ctx.close();
+});
+
+test('購入ボタン：決済画面へ移動を始めた後は、例外の後処理で押せる状態へ戻さない（移動中のボタンに触れない）', { skip: skip() }, async () => {
+  const p = await resultPage();
+  await p.evaluate(() => {
+    const b = document.querySelector('#lockUnlockAllBtn');
+    EdNavBusy.hold(b, '決済画面へ移動しています…');
+    EdNavBusy.handoff(b);
+  });
+  const state = await p.evaluate(() => document.querySelector('#lockUnlockAllBtn').getAttribute('data-nav-busy'));
+  assert.equal(state, 'away');
+  await p.__ctx.close();
+});
+
+test('計測：section_reached_about は、紹介セクションに届いた時だけ1回。最初の少しのスクロールでは発火しない（非表示の運営者情報モーダルの id=about は使わない）', { skip: skip() }, async () => {
+  const p = await open('/', { api: RESULT_API() });
+  await p.waitForSelector('#about-intro', { state: 'attached' });
+  assert.equal(await p.locator('#about').count(), 1, '運営者情報モーダルは別に残る');
+  assert.equal(await p.evaluate(() => getComputedStyle(document.getElementById('about')).display), 'none');
+  const ev = (name) => p.evaluate((n) => window.__ev.filter((e) => e[0] === 'event' && e[1] === n).length, name);
+  await p.evaluate(() => window.scrollTo(0, 4));
+  await p.waitForTimeout(150);
+  assert.equal(await ev('section_reached_about'), 0, '少しのスクロールでは発火しない');
+  await p.evaluate(() => document.getElementById('about-intro').scrollIntoView());
+  await p.waitForFunction(() => window.__ev.some((e) => e[1] === 'section_reached_about'));
+  await p.evaluate(() => { window.scrollTo(0, 0); document.getElementById('about-intro').scrollIntoView(); });
+  await p.waitForTimeout(150);
+  assert.equal(await ev('section_reached_about'), 1, '2回目は発火しない');
   await p.__ctx.close();
 });
