@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="ja"><head>
+<!-- GPT確認用の静的スナップショット。JavaScriptは除去し、描画済みのHTMLとCSSだけを含む。架空の回答から作成したサンプル。 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#09070B">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&amp;family=IM+Fell+English:ital@0;1&amp;display=swap" rel="stylesheet">
+<style>
+/* 邪眼診断：夜の黒と暗赤の光。背景・人物の画像なしで成立させる（UI_SPEC.md） */
+:root {
+  --bg: #09070B; --card: #160D14; --accent: #A52A43; --accent-hi: #C8405C; --text: #EFE5E8; --sub: #BDA9B0;
+  --line: #3E1A26; --line-hi: #6B2A3D; --focus: #F2B8C6;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif; line-height: 1.8; font-size: 16px;
+  background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(165, 42, 67, .28), transparent 70%),
+                    radial-gradient(ellipse 60% 40% at 50% 110%, rgba(165, 42, 67, .14), transparent 70%);
+  background-attachment: fixed;
+}
+a { color: var(--focus); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.jg-wrap { max-width: 640px; margin: 0 auto; padding: 24px 16px 64px; }
+.jg-preview-flag { font-size: 12px; color: var(--sub); text-align: center; border: 1px dashed var(--line-hi); border-radius: 8px; padding: 4px 8px; margin: 0 0 16px; }
+.jg-card {
+  background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 24px 20px; margin: 16px 0;
+  box-shadow: 0 0 0 1px rgba(165, 42, 67, .06), 0 12px 40px rgba(0, 0, 0, .45);
+}
+/* TOP */
+.jg-hero { text-align: center; padding: 56px 8px 32px; }
+.jg-script { font-family: "Snell Roundhand", "Apple Chancery", "URW Chancery L", "Segoe Script", cursive; font-style: italic; color: var(--accent-hi); font-size: 30px; letter-spacing: .04em; margin: 0; text-shadow: 0 0 18px rgba(165, 42, 67, .6); }
+.jg-title-main { font-size: 44px; letter-spacing: .3em; margin: 8px 0 4px; padding-left: .3em; font-weight: 700; text-shadow: 0 0 24px rgba(165, 42, 67, .5); }
+.jg-subtitle { color: var(--text); font-size: 17px; margin: 8px 0 20px; }
+.jg-lead { color: var(--sub); font-size: 14px; margin: 0 auto 28px; max-width: 30em; }
+.jg-rule { width: 120px; height: 1px; margin: 20px auto; background: linear-gradient(90deg, transparent, var(--accent), transparent); border: 0; }
+/* ボタン */
+.jg-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 48px; padding: 10px 22px; border-radius: 999px;
+  border: 1px solid var(--line-hi); background: transparent; color: var(--text); font: inherit; font-size: 15px; cursor: pointer; text-decoration: none;
+  transition: background .15s, border-color .15s, transform .05s;
+}
+.jg-btn:hover { border-color: var(--accent-hi); }
+.jg-btn:active { transform: translateY(1px); }
+.jg-btn[disabled], .jg-btn[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
+.jg-btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; min-width: 220px; box-shadow: 0 0 24px rgba(165, 42, 67, .45); }
+.jg-btn-primary:hover { background: var(--accent-hi); }
+.jg-btn-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.jg-btn-row .jg-btn { flex: 1 1 160px; }
+.jg-linkbtn { background: none; border: 0; color: var(--sub); font: inherit; font-size: 14px; text-decoration: underline; cursor: pointer; padding: 8px; }
+/* 質問 */
+.jg-progress { display: flex; justify-content: space-between; font-size: 13px; color: var(--sub); margin-bottom: 6px; }
+.jg-progressbar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin-bottom: 20px; }
+.jg-progressbar > span { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-hi)); transition: width .25s; }
+.jg-q { font-size: 19px; min-height: 4.2em; margin: 8px 0 20px; }
+.jg-qid { font-size: 11px; color: var(--sub); letter-spacing: .1em; }
+.jg-options { display: grid; gap: 8px; }
+.jg-opt {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 10px 16px; text-align: left;
+  border-radius: 12px; border: 1px solid var(--line-hi); background: rgba(255, 255, 255, .02); color: var(--text); font: inherit; font-size: 15px; cursor: pointer;
+}
+.jg-opt .jg-mark { flex: 0 0 22px; height: 22px; border-radius: 50%; border: 1px solid var(--sub); display: inline-flex; align-items: center; justify-content: center; font-size: 13px; }
+.jg-opt[aria-pressed="true"] { border-color: var(--accent-hi); background: rgba(165, 42, 67, .28); }
+.jg-opt[aria-pressed="true"] .jg-mark { background: var(--accent-hi); border-color: var(--accent-hi); color: #fff; }
+.jg-opt[aria-pressed="true"] .jg-mark::before { content: "✓"; }
+.jg-opt-missing { margin-top: 14px; border-style: dashed; color: var(--sub); font-size: 14px; min-height: 44px; }
+.jg-qnav { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; gap: 8px; }
+.jg-instruction { font-size: 14px; color: var(--sub); border-left: 2px solid var(--accent); padding: 4px 12px; margin: 12px 0; }
+/* 結果 */
+.jg-kicker { text-align: center; color: var(--sub); letter-spacing: .3em; font-size: 14px; margin: 0; }
+.jg-headline { text-align: center; font-size: 34px; margin: 8px 0 16px; letter-spacing: .08em; line-height: 1.4; text-shadow: 0 0 24px rgba(165, 42, 67, .6); word-break: keep-all; overflow-wrap: anywhere; }
+.jg-headline .jg-x { color: var(--accent-hi); margin: 0 .3em; }
+.jg-explain p { margin: 10px 0; }
+.jg-sub { display: block; color: var(--accent-hi); font-size: 15px; letter-spacing: .1em; }
+.jg-note { font-size: 13px; color: var(--sub); margin: 8px 0; }
+.jg-pending { color: var(--sub); font-size: .8em; border-bottom: 1px dashed var(--sub); }
+.jg-pending-block { color: var(--sub); border: 1px dashed var(--line-hi); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+.jg-fatui { font-size: 18px; text-align: center; margin: 4px 0 8px; }
+.jg-fatui strong { font-size: 22px; color: #fff; }
+.jg-title { color: var(--sub); font-size: 14px; margin-left: 4px; }
+.jg-h3 { font-size: 17px; letter-spacing: .15em; text-align: center; margin: 0 0 12px; color: var(--text); }
+.jg-h4 { font-size: 15px; margin: 18px 0 6px; color: var(--accent-hi); }
+.jg-top3 { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.jg-top3 li { display: flex; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px; font-size: 18px; }
+.jg-rank { color: var(--accent-hi); font-size: 14px; width: 1.5em; text-align: center; }
+.jg-badge { margin-left: auto; font-size: 12px; border: 1px solid var(--line-hi); border-radius: 999px; padding: 0 8px; color: var(--sub); }
+.jg-details summary { cursor: pointer; color: var(--focus); font-size: 14px; padding: 8px 0; }
+.jg-char h3 { font-size: 18px; margin: 8px 0; }
+.jg-char ul { padding-left: 1.2em; margin: 4px 0; font-size: 14px; }
+.jg-label { font-size: 12px; letter-spacing: .15em; color: var(--accent-hi); margin: 14px 0 2px; }
+.jg-reflect { border-left: 2px solid var(--accent); padding-left: 10px; color: var(--text); font-size: 14px; }
+.jg-actions .jg-status { min-height: 1.6em; text-align: center; font-size: 13px; color: var(--sub); margin: 8px 0 0; }
+.jg-actions .jg-status.is-error { color: #F49AAE; }
+.jg-domains { list-style: none; padding: 0; margin: 0; }
+.jg-domains li { border-bottom: 1px solid var(--line); padding: 10px 0; font-size: 14px; }
+.jg-domain-head { display: flex; justify-content: space-between; font-size: 15px; }
+.jg-val { color: #fff; }
+.jg-bar { display: block; height: 4px; background: var(--line); border-radius: 2px; margin: 6px 0; }
+.jg-bar > span { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
+.jg-ranklist { padding-left: 1em; list-style: none; }
+.jg-abyss { text-align: center; font-size: 15px; margin: 32px 0 8px; color: var(--text); }
+.jg-report-list { padding-left: 1.2em; font-size: 14px; }
+.jg-price { text-align: center; font-size: 18px; margin: 18px 0 8px; }
+.jg-price small { display: block; font-size: 12px; color: var(--sub); }
+.jg-center { text-align: center; }
+.small, .jg-small { font-size: 13px; color: var(--sub); }
+.jg-footer { text-align: center; font-size: 12px; color: var(--sub); margin-top: 32px; }
+.jg-footer a { color: var(--sub); }
+/* 共有の確認 */
+dialog.jg-dialog { background: var(--card); color: var(--text); border: 1px solid var(--line-hi); border-radius: 16px; padding: 20px; width: min(92vw, 520px); }
+dialog.jg-dialog::backdrop { background: rgba(0, 0, 0, .7); }
+.jg-sharetext { white-space: pre-wrap; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 14px; font-family: inherit; }
+/* 共有ページ */
+.jg-share-card { text-align: center; margin-top: 15vh; }
+.jg-share .kicker { color: var(--sub); letter-spacing: .3em; }
+.jg-share .headline { font-size: 34px; margin: 8px 0 16px; text-shadow: 0 0 24px rgba(165, 42, 67, .6); }
+.jg-share .headline .x { color: var(--accent-hi); margin: 0 .3em; }
+.jg-share .headline.small-h { font-size: 20px; }
+.jg-share .fatui strong { font-size: 22px; }
+.jg-share .title { color: var(--sub); font-size: 14px; }
+.jg-share .note { font-size: 13px; color: var(--sub); }
+.jg-share .jg-btn { margin: 20px 0 8px; }
+[hidden] { display: none !important; }
+@media (max-width: 420px) {
+  .jg-title-main { font-size: 36px; }
+  .jg-headline { font-size: 28px; }
+  .jg-q { font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.jg-hero .jg-btn-row .jg-btn { flex: 0 0 auto; }
+.jg-fatui strong { white-space: nowrap; }
+
+/* ===== TOP（元素診断の TOP と同じ構成・寸法。配色を赤黒に置き換え。.jt 配下だけに効かせる） ===== */
+:root {
+  --font-jp: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+  --font-en: 'IM Fell English', 'Times New Roman', serif;
+  --jt-head: #F1E6EA; --jt-body: #BFA8B0; --jt-sub: #94788A; --jt-en: #8A6574; --jt-brand: #D0566F; --jt-link: #E68AA0;
+  --k-el: #F08AA0; --k-ty: #D9A6C8; --k-fa: #E2C08C;
+}
+body { font-family: var(--font-jp); }
+#view-top:not([hidden]) ~ .jg-wrap .jg-footer { display: none; }
+.jt { position: relative; color: var(--jt-head); }
+.jt .jp { word-break: auto-phrase; }
+.jt-wrap { max-width: 720px; margin: 0 auto; padding-inline: 24px; }
+.jt-hero { position: relative; min-height: 100svh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 60px 24px 80px; overflow: hidden; }
+.jt-eye { position: absolute; top: 50%; left: 50%; width: min(120vw, 760px); transform: translate(-50%, -54%); opacity: .55; pointer-events: none; }
+.jt-eye svg { display: block; width: 100%; height: auto; filter: drop-shadow(0 0 18px rgba(165, 42, 67, .35)); }
+.jt-content { position: relative; z-index: 2; max-width: 680px; }
+.jt-en { display: flex; align-items: center; justify-content: center; gap: 12px; font-family: var(--font-en); font-style: italic; font-size: clamp(11px, 1.8vw, 14px); letter-spacing: .25em; text-transform: uppercase; color: var(--jt-brand); text-shadow: 0 0 14px rgba(208, 86, 111, .3); margin: 0 0 20px; white-space: nowrap; }
+.jt-en .rule { width: 28px; height: 1px; background: rgba(208, 86, 111, .5); flex: none; }
+@media (max-width: 560px) { .jt-en { white-space: normal; } .jt-en .rule { display: none; } }
+.jt-title { font-size: clamp(32px, 8vw, 64px); font-weight: 700; line-height: 1.15; letter-spacing: .05em; color: #FBEFF2; margin: 0 0 10px; text-shadow: 0 0 30px rgba(200, 64, 92, .4), 0 2px 18px rgba(9, 7, 11, .8); }
+.jt-sub { font-family: var(--font-en), var(--font-jp); font-style: italic; font-size: clamp(16px, 3.5vw, 26px); letter-spacing: .08em; color: #E0697F; text-shadow: 0 0 16px rgba(200, 64, 92, .35); margin: 0 0 28px; }
+.jt-spark { position: relative; width: 132px; height: 1px; margin: 0 auto 28px; background: linear-gradient(90deg, transparent, rgba(220, 110, 135, .45), transparent); }
+.jt-spark::after { content: ''; position: absolute; left: 50%; top: 50%; width: 3px; height: 3px; margin: -1.5px 0 0 -1.5px; border-radius: 50%; background: #FFD9E1; box-shadow: 0 0 6px 1px rgba(240, 120, 150, .8); }
+.jt-desc { font-size: clamp(13px, 1.8vw, 15px); line-height: 1.95; color: var(--jt-body); max-width: 520px; margin: 0 auto 36px; }
+.jt-desc strong { font-weight: 700; }
+.k-el { color: var(--k-el); } .k-ty { color: var(--k-ty); } .k-fa { color: var(--k-fa); }
+.jt-desc .theory-line { color: var(--jt-sub); }
+.jt-desc .en { display: block; margin-top: 10px; font-family: var(--font-en); font-style: italic; font-size: clamp(11px, 1.5vw, 13px); color: var(--jt-en); }
+.jt-cta-wrap { display: flex; flex-direction: column; align-items: center; }
+.jt-cta { display: inline-block; padding: 16px 48px; border-radius: 6px; font-family: var(--font-jp); font-size: 15px; letter-spacing: .2em; color: #FFF1F4; cursor: pointer;
+  background: linear-gradient(135deg, #6E1428 0%, #A52A43 52%, #7A1F45 100%); border: 1px solid rgba(240, 150, 170, .25);
+  box-shadow: 0 0 32px rgba(165, 42, 67, .4), 0 12px 26px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 210, 220, .16); transition: filter .2s, box-shadow .2s; }
+.jt-cta:hover { filter: brightness(1.12); box-shadow: 0 0 40px rgba(200, 64, 92, .5), 0 12px 26px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 210, 220, .2); }
+.jt-cta .en { font-family: var(--font-en); letter-spacing: .14em; font-style: italic; }
+@media (max-width: 480px) { .jt-cta { padding: 14px 32px; font-size: 14px; } }
+.jt-sublink { margin-top: 18px; background: none; border: 0; padding: 0; font: inherit; cursor: pointer; color: #B88796; font-size: 12px; letter-spacing: .08em; text-decoration: none; opacity: .92; transition: color .2s; }
+.jt-sublink + .jt-sublink { margin-top: 12px; }
+.jt-sublink:hover { color: #F0B9C6; }
+.jt-sublink .arw, .jt-link .arw { display: inline-block; transition: transform .2s; }
+.jt-sublink:hover .arw, .jt-link:hover .arw { transform: translateX(3px); }
+.jt-mypage { position: absolute; z-index: 3; top: max(10px, env(safe-area-inset-top)); right: max(10px, env(safe-area-inset-right));
+  display: inline-flex; align-items: center; gap: 6px; min-width: 44px; min-height: 44px; padding: 0 10px;
+  color: #EBC4CE; font-size: 12px; letter-spacing: .14em; text-decoration: none; opacity: .85; transition: opacity .25s, color .25s, text-shadow .25s; }
+.jt-mypage svg { width: 15px; height: 15px; flex: none; }
+.jt-mypage:hover { opacity: 1; color: #FFE6EC; text-shadow: 0 0 10px rgba(240, 140, 165, .55); }
+.jt-flag { position: absolute; z-index: 3; top: max(22px, env(safe-area-inset-top)); left: 16px; margin: 0; font-family: var(--font-en); font-size: 10px; letter-spacing: .2em; color: var(--jt-en); }
+.jt-scroll { position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); width: 1px; height: 38px; background: linear-gradient(180deg, rgba(220, 110, 135, .55), transparent); }
+.jt-deep { background: linear-gradient(180deg, rgba(9, 7, 11, 0) 0, rgba(14, 8, 12, .8) 180px, rgba(14, 8, 12, .86) 100%); }
+.jt-eyebrow { font-family: var(--font-en); font-style: italic; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: #A85A6E; margin: 0 0 16px; }
+.jt-h2 { font-size: clamp(20px, 3.5vw, 28px); font-weight: 700; line-height: 1.5; color: var(--jt-head); margin: 0 0 20px; }
+.jt-link { display: inline-flex; align-items: center; gap: 6px; color: var(--jt-link); font-size: 12.5px; text-decoration: none; border-bottom: 1px solid rgba(230, 138, 160, .35); padding-bottom: 2px; background: none; cursor: pointer; }
+.jt-about { padding-block: 80px; }
+.jt-body { font-size: 14px; line-height: 2; color: var(--jt-body); margin: 0; }
+.jt-body + .jt-body { margin-top: 16px; }
+.jt-body .q { color: #EBCBD3; }
+.jt-body.triad b { font-weight: 700; }
+.jt-en-note { margin: 10px 0 0; font-family: var(--font-en); font-style: italic; font-size: 12px; color: var(--jt-en); }
+.jt-about > .jt-link { margin-top: 18px; }
+.jt-theory { margin-top: 72px; padding-top: 30px; position: relative; }
+.jt-theory::before { content: ''; position: absolute; top: 0; left: 0; width: 64px; height: 1px; background: linear-gradient(90deg, rgba(220, 110, 135, .45), transparent); }
+.jt-theory-names { font-family: var(--font-en); font-size: 13px; letter-spacing: .06em; color: #D3A9B5; margin: 0; }
+.jt-theory-names i { font-style: normal; color: #7A4656; margin: 0 .4em; }
+.jt-theory summary { list-style: none; margin-top: 10px; }
+.jt-theory summary::-webkit-details-marker { display: none; }
+.jt-theory details[open] summary .arw { transform: rotate(90deg); }
+.jt-theory dl { margin: 18px 0 0; }
+.jt-theory .item { display: grid; grid-template-columns: 8em 1fr; gap: 14px; padding: 12px 0; border-top: 1px solid rgba(220, 110, 135, .1); }
+.jt-theory .item:first-child { border-top: 0; }
+.jt-theory dt { font-size: 12px; letter-spacing: .1em; color: #B66E80; padding-top: 1px; }
+.jt-theory dd { margin: 0; min-width: 0; font-size: 13px; line-height: 1.7; color: #C7AEB6; }
+.jt-theory dd small { display: block; font-family: var(--font-en); font-style: italic; font-size: 11px; color: var(--jt-en); }
+@media (max-width: 480px) { .jt-theory .item { grid-template-columns: 1fr; gap: 4px; } }
+.jt-obs { padding-block: 0 80px; display: grid; gap: 80px; }
+.jt-lead { font-size: 14px; line-height: 2; color: var(--jt-body); margin: 0; }
+.jt-obs .jt-link { margin-top: 18px; }
+.jt-timeline { margin-top: 24px; }
+.jt-timeline svg { display: block; width: 100%; max-width: 420px; height: auto; overflow: visible; }
+.jt-timeline text { font-family: var(--font-en); font-style: italic; font-size: 10px; letter-spacing: .2em; fill: #A85A6E; }
+.jt-timeline .now { fill: #F2C6D0; }
+.jt-line-link { border-bottom-color: rgba(127, 214, 164, .34); }
+.jt-line-link:hover { color: #BFE8D0; }
+.jt-line-dot { width: 5px; height: 5px; border-radius: 50%; background: #7FD6A4; box-shadow: 0 0 5px rgba(127, 214, 164, .55); flex: none; }
+.jt-final { text-align: center; padding-block: 0 80px; }
+.jt-final .jt-spark { margin-bottom: 0; }
+.jt-copy { margin: 24px 0 0; font-size: 14px; line-height: 1.8; letter-spacing: .1em; color: var(--jt-body); }
+.jt-final .jt-cta-wrap { margin-top: 20px; }
+.jt-footer { padding: 0 24px 40px; margin: 0; line-height: 2; }
+.jt :focus-visible { outline: 1px solid var(--jt-link); outline-offset: 4px; }
+@media (prefers-reduced-motion: reduce) { .jt-cta, .jt-link .arw, .jt-sublink .arw, .jt-mypage { transition: none; } }
+
+/* ===== 質問（元素診断の .qz と同じ寸法・動き。赤黒の配色） ===== */
+#view-quiz .qz { margin-top: 24px; --qz-line: #2A141D; --qz-line-on: #7A2A40; --qz-dot: #4A2232; --qz-dot-on: #F08AA0; --qz-dim: #7A5A66; --qz-sub: #B0909B; font-family: var(--font-jp); }
+.qz-prog { margin-bottom: 20px; }
+.qz-prog-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 9px; }
+.qz-range { font-size: 12.5px; letter-spacing: .12em; color: #C99AA7; font-variant-numeric: tabular-nums; }
+.qz-range .of { color: var(--qz-dim); letter-spacing: .08em; }
+.qz-count { font-size: 11.5px; letter-spacing: .08em; color: var(--qz-sub); font-variant-numeric: tabular-nums; }
+.qz-count b { font-weight: 500; color: #F0B9C6; }
+.qz-bar { height: 2px; border-radius: 1px; background: #1E0F16; overflow: hidden; }
+.qz-bar i { display: block; height: 100%; border-radius: 1px; background: linear-gradient(90deg, #5E1426, #C8405C 70%, #F2B8C6); transition: width .3s ease; }
+.qz-card { position: relative; background: #0F080C; border: 1px solid var(--qz-line); border-radius: 12px; padding: 17px 18px 15px; margin-bottom: 10px; cursor: pointer;
+  transition: opacity .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease; }
+.qz-no { font-size: 11px; letter-spacing: .14em; color: var(--qz-dim); margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+.qz-text { font-size: 14.5px; line-height: 1.65; font-weight: 500; color: var(--qz-sub); margin: 0 0 14px; word-break: auto-phrase; }
+.qz-card.is-active { opacity: 1; border-color: var(--qz-line-on); background: linear-gradient(170deg, #22101A 0%, #180B12 55%, #12080D 100%);
+  box-shadow: inset 0 0 22px rgba(200, 64, 92, .08), 0 0 0 1px rgba(230, 110, 140, .05); }
+.qz-card.is-active .qz-no { color: #F0A2B4; }
+.qz-card.is-active .qz-text { color: #F4E6EA; }
+.qz-card.is-done { opacity: .76; border-color: #23111A; }
+.qz-card.is-done .qz-text { color: #A0848E; }
+.qz-card.is-next { opacity: .56; }
+.qz-card.is-arriving { animation: qz-arrive .18s ease both; }
+.qz-card.is-settling { animation: qz-settle .18s ease both; }
+@keyframes qz-arrive { from { opacity: .56; } to { opacity: 1; } }
+@keyframes qz-settle { from { opacity: 1; } to { opacity: .76; } }
+.qz-scale { display: flex; justify-content: space-between; align-items: center; padding: 0 4px; }
+.qz-dot { position: relative; width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; cursor: pointer; padding: 0; background: transparent;
+  border: 1.5px solid var(--qz-dot); color: #8A6070; font-family: inherit; font-size: 12px; line-height: 1; font-variant-numeric: tabular-nums;
+  display: grid; place-items: center; transition: background .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease; }
+.qz-card.is-active .qz-dot { border-color: #7A3A4E; color: #C99AA7; }
+.qz-dot:hover { border-color: #A65A70; color: #F0B9C6; }
+.qz-dot:focus-visible { outline: 1px solid var(--qz-dot-on); outline-offset: 3px; }
+.qz-dot.is-on, .qz-card.is-active .qz-dot.is-on { background: radial-gradient(circle at 40% 35%, rgba(255, 150, 175, .5), rgba(165, 42, 67, .45) 70%);
+  border-color: var(--qz-dot-on); color: #FFF1F4; box-shadow: 0 0 0 1px rgba(255, 170, 190, .25), 0 0 10px rgba(220, 80, 110, .35); }
+/* 押した瞬間：ポワンと膨らみ、光の輪が広がって消える */
+.qz-dot.is-pop { animation: qz-pop .36s cubic-bezier(.3, 1.6, .5, 1) both; }
+.qz-dot.is-pop::after { content: ''; position: absolute; inset: -2px; border-radius: 50%; border: 1.5px solid rgba(255, 160, 185, .8); animation: qz-ring .5s ease-out both; pointer-events: none; }
+@keyframes qz-pop { 0% { transform: scale(.82); } 55% { transform: scale(1.16); } 100% { transform: scale(1); } }
+@keyframes qz-ring { from { transform: scale(1); opacity: .9; } to { transform: scale(1.9); opacity: 0; } }
+.qz-labels { display: flex; justify-content: space-between; margin-top: 8px; }
+.qz-labels span { font-size: 10px; letter-spacing: .04em; color: var(--qz-dim); }
+.qz-card.is-active .qz-labels span { color: var(--qz-sub); }
+.qz-pager { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; }
+.qz-pager button { background: transparent; border: 1px solid #3A1A26; color: #B0909B; border-radius: 6px; padding: 8px 18px; font-size: 12px; letter-spacing: .04em; cursor: pointer; font-family: inherit; }
+.qz-pager button:disabled { color: #4A2A36; cursor: default; }
+.qz-result { width: 100%; margin-top: 12px; border: none; color: #FFF1F4; border-radius: 6px; padding: 12px; font-size: 13px; letter-spacing: .12em; cursor: pointer; font-family: inherit;
+  background: linear-gradient(135deg, #6E1428 0%, #A52A43 52%, #7A1F45 100%); box-shadow: 0 0 24px rgba(165, 42, 67, .35); }
+.qz-jump { width: 100%; margin-top: 8px; background: transparent; border: 1px dashed #5A2A3A; color: #B0909B; border-radius: 6px; padding: 9px; font-size: 11.5px; cursor: pointer; font-family: inherit; }
+@media (prefers-reduced-motion: reduce) {
+  .qz-card, .qz-dot, .qz-bar i { transition: none; }
+  .qz-card.is-arriving, .qz-card.is-settling, .qz-dot.is-pop, .qz-dot.is-pop::after { animation: none; }
+}
+
+/* ===== 結果（元素診断の結果ページと同じ並び・寸法。赤黒の配色） ===== */
+.rx { font-family: var(--font-jp); margin-top: 24px; }
+.rx-card { position: relative; background: linear-gradient(170deg, #160B11 0%, #10080C 100%); border: 1px solid #2E1520; border-radius: 12px; padding: 24px 22px; margin-bottom: 18px; overflow: hidden; }
+.rx-kicker { font-size: 11px; letter-spacing: .3em; color: #E0697F; margin: 0; }
+.rx-main { background: linear-gradient(150deg, color-mix(in srgb, var(--ec, #A52A43) 14%, #12090E) 0%, #10080C 70%); border-color: color-mix(in srgb, var(--ec, #A52A43) 35%, #2E1520); }
+.rx-main-head { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.rx-badge { font-size: 9px; letter-spacing: 1px; color: #A86A7A; border: 1px solid #5A2A3A; border-radius: 4px; padding: 2px 6px; }
+.rx-eye { position: absolute; top: 16px; right: 18px; width: 52px; height: 52px; opacity: .9; filter: drop-shadow(0 0 8px var(--eg, rgba(200, 64, 92, .5))); }
+.rx-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; margin: 0 0 8px; font-size: 34px; font-weight: 700; line-height: 1.3; text-align: left; }
+.rx-el { color: var(--ec, #F4E6EA); background: linear-gradient(180deg, var(--ec) 30%, color-mix(in srgb, var(--ed) 60%, var(--ec))); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; text-shadow: none; filter: drop-shadow(0 0 10px var(--eg, transparent)); }
+.rx-x { color: #8A6070; font-size: 22px; font-weight: 400; }
+.rx-type { color: var(--tc); }
+.rx-sub { font-size: 15px; color: #CDB5BD; margin: 0 0 4px; }
+.rx-more { margin-top: 14px; border-top: 1px solid #2E1520; padding-top: 14px; }
+.rx-more summary { list-style: none; cursor: pointer; font-size: 12.5px; letter-spacing: .1em; color: #E68AA0; }
+.rx-more summary::-webkit-details-marker { display: none; }
+.rx-more[open] summary .arw { display: inline-block; transform: rotate(180deg); }
+.rx-more-h { font-size: 15px; font-weight: 700; margin: 16px 0 6px; color: #F4E6EA; }
+.rx-more-lead { font-size: 13px; line-height: 1.9; color: #A58994; margin: 0 0 14px; }
+.rx-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+.rx-tile { border: 1px solid #3A1A26; border-radius: 10px; padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 2px; }
+.rx-tile b { font-size: 19px; }
+.rx-tile span { font-size: 11.5px; color: #A58994; }
+.rx-tile em { font-style: normal; font-size: 12px; color: #D9C3CA; margin-top: 6px; line-height: 1.6; }
+.rx-tile-el { background: color-mix(in srgb, var(--ed, #3A1A26) 45%, #0E070B); border-color: color-mix(in srgb, var(--ec, #7A2A40) 45%, #2E1520); }
+.rx-tile-el b { color: var(--ec); }
+.rx-tile-ty { background: color-mix(in srgb, var(--tc) 10%, #0E070B); border-color: color-mix(in srgb, var(--tc) 35%, #2E1520); }
+.rx-tile-ty b { color: var(--tc); }
+.rx-sec-label { font-size: 12px; letter-spacing: .12em; color: #C0707F; margin: 16px 0 4px; }
+.rx-text { font-size: 14px; line-height: 2; color: #D9C3CA; margin: 0 0 8px; }
+.rx-summary { margin: 18px 0 4px; border-left: 2px solid var(--ec, #A52A43); padding: 10px 0 10px 16px; font-size: 14px; line-height: 2; color: #EFE1E6; }
+/* 最も近しいファトゥス */
+.rx-fatui { background: linear-gradient(160deg, #1A0C14 0%, #0F080C 100%); }
+.rx-fatui-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 10px; }
+.rx-fatui-name { margin: 0 0 8px; font-size: 38px; font-weight: 700; letter-spacing: .04em; line-height: 1.2; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: #F4E6EA; filter: drop-shadow(0 0 14px rgba(200, 64, 92, .25)); }
+.rx-grad { -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.rx-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.rx-tag { font-size: 12px; border: 1px solid #5A2A3A; border-radius: 4px; padding: 3px 9px; color: #E4C9D0; background: rgba(90, 30, 50, .18); }
+.rx-tag-type { border-color: #8A3A50; color: #F0B9C6; }
+.rx-pct { text-align: center; flex: none; }
+.rx-pct b { display: block; font-size: 46px; font-weight: 700; line-height: 1; color: #FFF1F4; text-shadow: 0 0 20px rgba(200, 64, 92, .45); }
+.rx-pct b small { font-size: 18px; }
+.rx-pct span { font-size: 12px; color: #A58994; }
+/* 渇望する邪眼 */
+.rx-h3 { font-size: 15px; letter-spacing: .15em; color: #E0697F; margin: 0 0 4px; font-weight: 700; }
+.rx-lead { font-size: 12.5px; color: #A58994; margin: 0 0 14px; }
+.rx-crave { margin-bottom: 14px; }
+.rx-crave-name { display: flex; align-items: baseline; gap: 8px; margin: 0 0 6px; }
+.rx-crave-mark { color: var(--ec); font-size: 14px; }
+.rx-crave-name b { color: var(--ec); font-size: 19px; }
+.rx-crave-name span { color: color-mix(in srgb, var(--ec) 70%, #D9C3CA); font-size: 12.5px; }
+.rx-crave-name em { font-style: normal; font-size: 11px; color: #A58994; border: 1px solid #4A2232; border-radius: 999px; padding: 0 8px; margin-left: auto; }
+.rx-crave-bar { display: block; height: 6px; border-radius: 3px; background: #1E0F16; overflow: hidden; }
+.rx-crave-bar i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--ed), var(--ec)); }
+/* 保存・共有 */
+.rx-save { text-align: center; background: linear-gradient(170deg, #1A0B13 0%, #12070D 100%); border-color: #3A1A26; }
+.rx-save::before { content: ''; position: absolute; top: 0; left: 15%; right: 15%; height: 1px; background: linear-gradient(90deg, transparent, rgba(220, 110, 135, .6), transparent); }
+.rx-save-k { font-size: 12px; letter-spacing: .3em; color: #C99AA7; margin: 0 0 12px; }
+.rx-save-text { font-size: 14px; line-height: 2; color: #D9C3CA; margin: 0 0 18px; }
+.rx-save-btn { width: 100%; border: 1px solid rgba(240, 150, 170, .25); border-radius: 8px; padding: 14px; font-family: inherit; font-size: 15px; letter-spacing: .14em; color: #FFF1F4; cursor: pointer;
+  background: linear-gradient(135deg, #5E1426 0%, #8A2238 52%, #6A1A3E 100%); box-shadow: 0 0 22px rgba(165, 42, 67, .3); }
+.rx-save-btn:disabled { opacity: .7; cursor: default; }
+.rx-status { margin-top: 10px; }
+.rx-free-line { text-align: center; font-size: 12px; letter-spacing: .2em; color: #8A6070; margin: 22px 0 12px; }
+.rx-share-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+.rx-share { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; border-radius: 8px; font-family: inherit; font-size: 14px; letter-spacing: .08em; cursor: pointer; }
+.rx-share svg { width: 18px; height: 18px; }
+.rx-share-img { background: #3A1424; border: 1px solid #5A2A3A; color: #F4E6EA; }
+.rx-share-x { background: #000; border: 1px solid #222; color: #fff; }
+.rx-share-x b { font-size: 18px; }
+.rx-share:disabled { opacity: .45; cursor: not-allowed; }
+/* 今見えているもの */
+.rx-seeing { background: linear-gradient(170deg, #170A12, #0F080C); }
+.rx-seeing-k { font-size: 13px; letter-spacing: .2em; color: #C99AA7; margin: 0 0 12px; }
+.rx-seeing ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.rx-seeing li { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: #8A6E78; }
+.rx-seeing li.on { color: #EFE1E6; }
+.rx-seeing li > span { width: 22px; height: 22px; flex: none; border-radius: 50%; display: grid; place-items: center; background: #A52A43; color: #fff; }
+.rx-seeing li > span svg { width: 14px; height: 14px; }
+.rx-seeing li > span.lk { background: transparent; color: #8A6070; }
+.rx-seeing-foot { text-align: center; font-size: 12.5px; color: #A58994; margin: 18px 0 0; padding-top: 14px; border-top: 1px solid #2E1520; }
+/* セクション見出し・図 */
+.rx-sec-h { display: flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 700; margin: 0 0 16px; color: #F4E6EA; }
+.rx-sec-h i { width: 10px; height: 10px; border-radius: 50%; background: var(--dot, #C8405C); box-shadow: 0 0 8px var(--dot, #C8405C); }
+.rx-figure { position: relative; border-radius: 12px; background: radial-gradient(ellipse at 50% 45%, #2A0F1C 0%, #0C060A 70%); padding: 18px 0 30px; margin-bottom: 18px; text-align: center; }
+.rx-figure svg { width: 62%; max-width: 240px; height: auto; }
+.rx-figure span { position: absolute; left: 0; right: 0; bottom: 10px; font-family: var(--font-en); font-size: 9px; letter-spacing: .35em; color: #8A6070; }
+.rx-sim { margin: 12px 0; }
+.rx-sim p { display: flex; justify-content: space-between; margin: 0 0 6px; font-size: 13.5px; color: #D9C3CA; }
+.rx-sim b { color: var(--sc); font-size: 18px; font-weight: 600; }
+.rx-sim b small { font-size: 11px; }
+.rx-sim-bar { display: block; height: 6px; border-radius: 3px; background: #1E0F16; overflow: hidden; }
+.rx-sim-bar i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, color-mix(in srgb, var(--sc) 45%, #1E0F16), var(--sc)); }
+.rx-hr { border: 0; border-top: 1px solid #2E1520; margin: 22px 0; }
+.rx-h4 { font-size: 17px; font-weight: 700; margin: 0 0 4px; color: #F4E6EA; }
+.rx-top-locked { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 20px; }
+.rx-top-locked div { border: 1px solid #2E1520; border-radius: 8px; padding: 10px 6px; text-align: center; display: grid; gap: 4px; }
+.rx-top-locked span { font-size: 11px; color: #8A6070; }
+.rx-top-locked b, .rx-top-locked em { filter: blur(4px); color: #C99AA7; font-style: normal; font-size: 12px; user-select: none; }
+.rx-locks { display: flex; justify-content: center; flex-wrap: wrap; gap: 18px 12px; margin: 6px 0 26px; }
+.rx-lock { width: calc(25% - 10px); min-width: 70px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.rx-lock-ring { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid var(--lc); color: #E8D5DB;
+  background: radial-gradient(circle, rgba(255, 255, 255, .05), rgba(0, 0, 0, .2)); box-shadow: 0 0 14px color-mix(in srgb, var(--lc) 35%, transparent); }
+.rx-lock-ring svg { width: 20px; height: 20px; }
+.rx-lock-word { font-size: 12px; font-weight: 700; color: var(--lc); text-align: center; line-height: 1.4; }
+.rx-unlock { position: relative; margin-top: 34px; border: 1px solid #3A1A26; border-radius: 12px; background: linear-gradient(170deg, #1C0C15, #10080C); padding: 40px 18px 18px; text-align: center; }
+.rx-unlock-icon { position: absolute; top: -26px; left: 50%; transform: translateX(-50%); width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; color: #fff;
+  background: radial-gradient(circle at 40% 35%, #E0697F, #8A2238 70%); border: 3px solid #0F080C; box-shadow: 0 0 18px rgba(200, 64, 92, .5); }
+.rx-unlock-icon svg { width: 20px; height: 20px; }
+.rx-unlock-title { font-size: 18px; font-weight: 700; margin: 0 0 8px; color: #F4E6EA; }
+.rx-unlock-text { font-size: 13px; line-height: 1.9; color: #BFA8B0; margin: 0 0 14px; }
+.rx-buy { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; width: 100%; border: 0; border-radius: 8px; padding: 13px 10px; font-family: inherit; font-size: 15px; font-weight: 700; letter-spacing: .1em; color: #FFF1F4; cursor: pointer;
+  background: linear-gradient(110deg, #5E1426 0%, #A52A43 45%, #C8405C 60%, #7A1F45 100%); box-shadow: 0 0 22px rgba(165, 42, 67, .35); }
+.rx-buy-price { font-size: 12px; font-weight: 400; letter-spacing: .14em; color: #FFD9E1; }
+.rx-buy small { font-size: 10.5px; font-weight: 400; color: #F2C6D0; letter-spacing: .1em; }
+.rx-buy[disabled] { cursor: not-allowed; filter: saturate(.75) brightness(.85); }
+.rx-preview { margin-top: 14px; border: 1px solid #2E1520; border-radius: 10px; background: #0B0609; padding: 14px; }
+.rx-preview-head { font-size: 11.5px; color: #8A6070; margin: 0 0 10px; letter-spacing: .08em; }
+.rx-preview-head b { color: #EFE1E6; }
+.rx-blur { display: grid; gap: 9px; filter: blur(3px); }
+.rx-blur i { display: block; height: 9px; border-radius: 4px; background: linear-gradient(90deg, #3A1A26, #24101A); }
+.rx-blur i:nth-child(3n) { width: 72%; } .rx-blur i:nth-child(4n) { width: 86%; }
+/* 全てのロックを解除 */
+.rx-all { text-align: center; background: linear-gradient(170deg, #1E0C16, #0F080C); border-color: #4A2232; }
+.rx-all-en { font-family: var(--font-en); font-size: 11px; letter-spacing: .3em; color: #C99AA7; margin: 0 0 8px; }
+.rx-all-h { font-size: 19px; font-weight: 700; line-height: 1.6; margin: 0 0 12px; color: #F4E6EA; }
+.rx-all-list { text-align: left; border: 1px solid #2E1520; border-radius: 10px; padding: 16px; margin: 16px 0; background: #0D070A; }
+.rx-all-k { font-size: 12px; letter-spacing: .15em; color: #E2C08C; margin: 0 0 10px !important; }
+.rx-all-list p { margin: 0 0 12px; display: grid; gap: 2px; }
+.rx-all-list b { font-size: 14px; color: #F4E6EA; }
+.rx-all-list span { font-size: 12px; color: #A58994; padding-left: 1.2em; }
+.rx-all-price { font-size: 34px; font-weight: 700; margin: 8px 0 10px; color: #FFF1F4; }
+.rx-all-price small { display: block; font-size: 12px; font-weight: 400; color: #A58994; letter-spacing: .1em; }
+.rx-buy-all { font-size: 16px; padding: 16px 10px; }
+.rx-link { color: #E68AA0; font-size: 13px; }
+.rx-end { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 24px 0; }
+.rx-end-btn { display: flex; align-items: center; justify-content: center; min-height: 48px; border: 1px solid #3A1A26; border-radius: 8px; background: transparent; color: #C99AA7; font-family: var(--font-jp); font-size: 14px; letter-spacing: .08em; text-decoration: none; cursor: pointer; }
+@media (max-width: 380px) { .rx-title { font-size: 28px; } .rx-fatui-name { font-size: 30px; } .rx-pct b { font-size: 38px; } .rx-tiles { grid-template-columns: 1fr; } }
+.rx-locks { flex-wrap: nowrap; gap: 8px; justify-content: space-around; }
+.rx-lock { width: auto; min-width: 0; flex: 1 1 0; max-width: 90px; }
+.rx-lock-ring { width: 54px; height: 54px; }
+.rx-lock-word { font-size: 11.5px; }
+.rx-unlock-price { font-size: 26px; font-weight: 700; color: #FFF1F4; margin: 0 0 8px; letter-spacing: .04em; }
+
+/* ===== 姉妹サイトとしての共通の地（元素診断と同じ構造：一枚の夜＝写真＋色レイヤー。色だけ赤へ） ===== */
+body { background: #09070B; background-image: none; }
+.night { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: #09070B; }
+.night .photo { position: absolute; top: 0; left: 0; right: 0; height: 128svh;
+  background: url('https://element-diagnosis-five.vercel.app/assets/backgrounds/quiet-starry-lake.jpg') center top / cover no-repeat;
+  opacity: .24; filter: brightness(.55) saturate(.55) contrast(.95) sepia(.35) hue-rotate(-28deg); }
+.night .tint { position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 90% 40% at 50% 34%, rgba(9, 7, 11, .55), transparent 75%),
+    radial-gradient(ellipse 80% 50% at 50% 24%, rgba(165, 42, 67, .16), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 12% 84%, rgba(120, 30, 60, .10), transparent 65%),
+    radial-gradient(ellipse 45% 35% at 90% 62%, rgba(150, 40, 80, .08), transparent 65%),
+    linear-gradient(180deg, rgba(9, 7, 11, .5) 0%, rgba(9, 7, 11, 0) 22%); }
+#app, .jf { position: relative; z-index: 1; }
+.jt-eye { display: none; }
+.jt-gems { position: absolute; inset: 0; pointer-events: none; }
+.jt-gem { position: absolute; width: 56px; height: 56px; transform-origin: top left; }
+.jt-gem svg { display: block; filter: drop-shadow(0 0 6px var(--gc)); }
+.jt-deep { background: linear-gradient(180deg, rgba(9, 7, 11, 0) 0, rgba(16, 8, 13, .78) 180px, rgba(16, 8, 13, .84) 100%); }
+/* 診断・結果のセクション（元素診断の #diagnosis と同じ地） */
+.jd { position: relative; background: rgba(16, 8, 13, .86); border-top: 1px solid rgba(220, 110, 135, .10); padding: 36px 0 0; min-height: 100vh; }
+#view-top:not([hidden]) ~ .jd { display: none; }
+.jd .jg-wrap { padding-top: 0; }
+#view-quiz .qz { margin-top: 8px; }
+.rx-eye { width: 52px; height: 52px; }
+.rx-eye svg { width: 100%; height: 100%; }
+/* フッター（元素診断と同じ） */
+.jf { background: rgba(9, 7, 11, .92); border-top: 1px solid rgba(220, 110, 135, .10); padding: 48px 24px; text-align: center; }
+.jf-copy { margin: 0; font-size: 11px; color: #A07080; letter-spacing: .1em; line-height: 1.8; }
+.jf-links { display: flex; gap: 14px 24px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+.jf-links a, .jf-op { color: #B88796; font-size: 11px; text-decoration: none; letter-spacing: .1em; background: none; border: 0; padding: 0; font-family: inherit; cursor: pointer; }
+.jf-links a:hover, .jf-op:hover { color: #F0B9C6; }
+.jf-dialog p { font-size: 13px; line-height: 1.9; color: #CDB5BD; margin: 0 0 12px; }
+.jf-dialog .jf-k { font-weight: 700; color: #F0B9C6; margin-bottom: 4px; }
+.rx-fatui-name { white-space: nowrap; }
+.rx-fatui-name.is-long { font-size: 29px; }
+@media (max-width: 380px) { .rx-fatui-name.is-long { font-size: 24px; } }
+
+/* ===== 解析レポート（元素診断の解析レポートと同じ構成・寸法。赤黒の配色） ===== */
+.rp { font-family: var(--font-jp); padding-top: 0; }
+.rp-banner { margin: 0 -16px 0; padding: 14px 18px; font-size: 13px; font-weight: 700; line-height: 1.7; color: #FFF1F4; background: linear-gradient(110deg, #6E1428, #A52A43 60%, #7A1F45); }
+.rp-cover { text-align: center; padding: 48px 8px 36px; }
+.rp-emblem { position: relative; width: 210px; height: 210px; margin: 0 auto 26px; }
+.rp-emblem svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.rp-emblem b { position: absolute; inset: 0; display: grid; place-items: center; font-size: 34px; color: var(--ec); text-shadow: 0 0 18px var(--ec); }
+.rp-cover-en { font-family: var(--font-en); font-size: 11px; letter-spacing: .3em; color: #E2C08C; margin: 0 0 10px; }
+.rp-cover-title { font-size: 26px; line-height: 1.6; margin: 0 0 18px; color: #F4E6EA; }
+.rp-cover-code { font-family: var(--font-jp); font-size: 30px; font-weight: 700; letter-spacing: .12em; margin: 0 0 6px; color: var(--ec); text-shadow: 0 0 16px color-mix(in srgb, var(--ec) 50%, transparent); }
+.rp-cover-type { font-size: 19px; font-weight: 700; margin: 0 0 6px; color: #F4E6EA; }
+.rp-cover-sub { font-size: 13px; color: #A58994; margin: 0; }
+.rp-card { position: relative; background: linear-gradient(170deg, #150A10 0%, #0E070B 100%); border: 1px solid #2E1520; border-radius: 12px; padding: 24px 20px; margin-bottom: 18px; }
+.rp-no { font-family: var(--font-en); font-size: 11px; color: #8A6070; margin: 0 0 6px; }
+.rp-h2 { font-size: 19px; font-weight: 700; line-height: 1.5; margin: 0 0 14px; color: #F0A2B4; }
+.rp-h2-en { font-family: var(--font-en); font-weight: 400; font-size: 16px; }
+.rp-en { font-family: var(--font-en); font-size: 10.5px; letter-spacing: .3em; color: #A86A7A; margin: 0 0 6px; }
+.rp-en.gold { color: #C9A060; margin-bottom: 14px; }
+.rp-h3 { font-size: 15px; font-weight: 700; color: #F0A2B4; margin: 0 0 16px; }
+.rp-text { font-size: 13.5px; line-height: 2; color: #CDB5BD; margin: 0 0 12px; }
+.rp-text.sm { font-size: 12.5px; line-height: 1.85; margin-bottom: 6px; }
+.rp-text .near { color: #8FD0A8; } .rp-text .far { color: #E08A7A; }
+.rp-quote { margin: 14px 0 18px; border-left: 2px solid var(--ec); background: rgba(255, 255, 255, .02); border-radius: 0 8px 8px 0; padding: 14px 16px; font-size: 13.5px; line-height: 2; color: #EFE1E6; }
+.rp-rings { display: flex; justify-content: space-between; gap: 6px; margin: 4px 0 8px; }
+.rp-ring { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.rp-ring svg { width: 64px; height: 64px; }
+.rp-ring text { font-size: 13px; font-weight: 700; fill: var(--rc); font-family: var(--font-jp); }
+.rp-ring span { font-size: 10.5px; color: #A58994; text-align: center; line-height: 1.4; }
+.rp-note { font-size: 11.5px; line-height: 1.8; color: #8A6E78; margin: 12px 0 0; }
+.rp-note .hi { color: #8FD0A8; font-weight: 400; } .rp-note .lo { color: #E0A070; font-weight: 400; }
+.rp-sub-h { font-size: 13px; font-weight: 700; margin: 20px 0 6px; }
+.rp-sub-h.up { color: #8FD0A8; } .rp-sub-h.down { color: #E0A070; }
+.rp-li { display: flex; gap: 10px; padding: 12px 0; border-bottom: 1px solid #22101A; }
+.rp-li:last-of-type { border-bottom: 0; }
+.rp-mark { flex: none; width: 18px; font-weight: 700; }
+.rp-mark-up { color: #8FD0A8; } .rp-mark-down { color: #E0A070; }
+.rp-li b { font-size: 14px; color: #F4E6EA; }
+.rp-li p { font-size: 12.5px; line-height: 1.8; color: #BFA8B0; margin: 4px 0 2px; }
+.rp-li small { font-size: 11px; color: #7A5E68; line-height: 1.7; display: block; }
+.rp-bar { padding: 12px 0; border-bottom: 1px solid #22101A; }
+.rp-bar-h { display: flex; justify-content: space-between; align-items: baseline; margin: 0 0 6px; font-size: 13.5px; color: #EFE1E6; }
+.rp-bar-h small { font-family: var(--font-en); font-size: 10px; color: #7A5E68; margin-left: 8px; }
+.rp-bar-h b { color: var(--bc); font-size: 15px; }
+.rp-bar-h b small { margin-left: 4px; }
+.rp-track { display: block; height: 4px; border-radius: 2px; background: #22101A; overflow: hidden; margin-bottom: 8px; }
+.rp-track i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg, color-mix(in srgb, var(--bc) 40%, #22101A), var(--bc)); }
+.rp-bar-t { font-size: 12px; line-height: 1.8; color: #A58994; margin: 0; }
+.rp-bar-t em { font-style: normal; font-weight: 700; }
+.rp-bar-t .lv-高め { color: #8FD0A8; } .rp-bar-t .lv-中程度 { color: #D9C3CA; } .rp-bar-t .lv-控えめ { color: #E0A070; }
+.rp-bar-q, .rp-q { font-size: 12px; line-height: 1.8; color: #E4C9D0; margin: 6px 0 0; padding-left: 10px; border-left: 2px solid #5A2A3A; }
+.rp-match { border: 1px solid #2E1520; border-radius: 10px; padding: 14px 14px 12px; margin: 12px 0; background: #0D070A; }
+.rp-match-h { display: flex; align-items: baseline; gap: 10px; margin: 0 0 8px; }
+.rp-match-no { font-family: var(--font-en); font-size: 12px; color: #8A6070; }
+.rp-match-h b { font-size: 20px; }
+.rp-match-h em { margin-left: auto; font-style: normal; font-size: 18px; font-weight: 700; color: #F0A2B4; }
+.rp-match .rx-tags { margin-bottom: 8px; }
+.rp-sum { border-left: 2px solid var(--bc); padding: 4px 0 4px 14px; margin: 12px 0; }
+.rp-sum .k { font-family: var(--font-en); font-size: 11px; letter-spacing: .2em; color: var(--bc); margin: 0 0 4px; }
+.rp-sum .k span { font-family: var(--font-jp); letter-spacing: .05em; color: #8A6E78; margin-left: 8px; }
+.rp-sum p { font-size: 13px; line-height: 1.9; color: #CDB5BD; margin: 0; }
+.rp-final { margin-top: 16px; border-radius: 8px; background: rgba(165, 42, 67, .08); border: 1px solid #3A1A26; padding: 14px 16px; font-size: 13.5px; line-height: 2; color: #EFE1E6; }
+.rp-cta { text-align: center; }
+.rp-cta-h { font-size: 17px; font-weight: 700; color: #F4E6EA; margin: 0 0 10px; }
+.rp-cta-btn { text-decoration: none; margin: 8px 0 12px; }
+.rp-print { margin: 12px 0; background: transparent; border: 1px solid #3A1A26; color: #C99AA7; border-radius: 8px; padding: 12px 22px; font-family: inherit; font-size: 13px; cursor: pointer; }
+.rp-end { text-align: center; font-size: 11.5px; line-height: 1.9; color: #8A6E78; margin: 18px 0 40px; }
+.rp-end a { color: #C99AA7; }
+@media print { .night, .rp-banner, .rp-print, .rp-cta, .jf { display: none !important; } body { background: #0E070B; } }
+
+</style>
+
+<title>邪眼診断 解析レポート（サンプル）レビュー用</title>
+</head>
+<body>
+<div class="night" aria-hidden="true"><div class="photo"></div><div class="tint"></div></div>
+<main class="jg-wrap rp" id="app">
+  <p class="rp-banner">これはサンプルレポートです（架空の回答から作成しています）。実際には、あなた自身の診断結果でこの内容が作られます。</p>
+  <div id="sampleBody"><section class="rp-cover" style="--ec:#7DB3C6;--ed:#2C5462">
+      <div class="rp-emblem"><svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="84" fill="none" stroke="color-mix(in srgb, var(--ec) 45%, transparent)"></circle><circle cx="100" cy="100" r="60" fill="none" stroke="rgba(255,255,255,.06)"></circle>
+        <circle cx="16" cy="100" r="3.5" fill="#7DB3C6"></circle><circle cx="184" cy="100" r="3.5" fill="#E2C08C"></circle><circle cx="100" cy="16" r="3.5" fill="#7DB3C6"></circle><circle cx="148" cy="168" r="3.5" fill="#E2C08C"></circle><circle cx="52" cy="168" r="3.5" fill="#7DB3C6"></circle><circle cx="160" cy="40" r="3.5" fill="#E2C08C"></circle></svg>
+        <b>氷</b></div>
+      <p class="rp-cover-en">DELUSION DIAGNOSIS — 氷</p>
+      <h1 class="rp-cover-title">邪眼診断<br>解析レポート</h1>
+      <p class="rp-cover-code">封じた霜</p>
+      <p class="rp-cover-type">秘匿型</p>
+      <p class="rp-cover-sub">氷 × 秘匿型 × ピエロ</p>
+    </section><section class="rp-card">
+      <p class="rp-no">01</p>
+      <h2 class="rp-h2">あなたの邪眼 — <span style="color:#7DB3C6">氷</span> × 秘匿型</h2>
+      <p class="rp-text">氷の邪眼は、感情を外へ出さずに留めるあり方を映します。感情調整の研究でいう「表出抑制」は、場を保ち、周りを守るために役立つ方略です。一方で、表情や言葉を抑え続けると、相手との距離が生まれたり、内側の負担が積み重なったりしやすいことも示されています。冷たさではなく、守るために選んできた静けさです。</p>
+      <p class="rp-text">秘匿型は、感情を表情や言葉に出さず、内側で扱う傾向が強く表れた状態です。表出抑制は、その場の関係や役割を守るのに役立つ一方、感情の体験そのものは残りやすく、続けるほど心身の負担や孤立感につながりやすいことが研究で示されています。秘めることを選べる強さと、ほどく場所の両方が大切です。</p>
+      <blockquote class="rp-quote" style="--ec:#7DB3C6">この二つが重なるとき、「揺れを外に出さず、静けさの内側に留める」という影が、「感情を外に出さず、内側に秘めて扱う」かたちを通して表に現れます。</blockquote>
+      <div class="rx-figure" aria-hidden="true"><svg viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="86" fill="none" stroke="rgba(200,64,92,.18)"></circle>
+      <circle cx="100" cy="100" r="54" fill="none" stroke="rgba(200,64,92,.14)" stroke-dasharray="2 5"></circle>
+      <line x1="100" y1="100" x2="100" y2="22" stroke="rgba(220,110,135,.28)"></line><line x1="100" y1="100" x2="168" y2="62" stroke="rgba(220,110,135,.28)"></line><line x1="100" y1="100" x2="160" y2="140" stroke="rgba(220,110,135,.28)"></line><line x1="100" y1="100" x2="100" y2="176" stroke="rgba(220,110,135,.28)"></line><line x1="100" y1="100" x2="40" y2="140" stroke="rgba(220,110,135,.28)"></line><line x1="100" y1="100" x2="32" y2="62" stroke="rgba(220,110,135,.28)"></line>
+      <polygon points="100,22 168,62 160,140 100,176 40,140 32,62" fill="none" stroke="rgba(220,110,135,.18)"></polygon>
+      <circle cx="100" cy="22" r="3.2" fill="#7DB3C6"></circle><circle cx="168" cy="62" r="3.2" fill="#7DB3C6"></circle><circle cx="160" cy="140" r="3.2" fill="#7DB3C6"></circle><circle cx="100" cy="176" r="3.2" fill="#7DB3C6"></circle><circle cx="40" cy="140" r="3.2" fill="#7DB3C6"></circle><circle cx="32" cy="62" r="3.2" fill="#7DB3C6"></circle>
+      <circle cx="100" cy="100" r="7" fill="#FFE3EA"></circle><circle cx="100" cy="100" r="16" fill="none" stroke="rgba(255,200,215,.35)"></circle>
+    </svg><span>DELUSION RESONANCE MAP</span></div>
+    </section>
+    <section class="rp-card">
+      <p class="rp-en">CONNECTING FACTORS</p>
+      <h3 class="rp-h3">あなたの邪眼（氷）を形作る項目</h3>
+      <div class="rp-rings"><div class="rp-ring" style="--rc:#7DB3C6"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="5"></circle>
+    <circle cx="32" cy="32" r="26" fill="none" stroke="#7DB3C6" stroke-width="5" stroke-linecap="round" stroke-dasharray="147.0 163.4" transform="rotate(-90 32 32)"></circle>
+    <text x="32" y="36" text-anchor="middle">90%</text></svg><span>表出抑制の使用</span></div><div class="rp-ring" style="--rc:#7A6A8A"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="5"></circle>
+    <circle cx="32" cy="32" r="26" fill="none" stroke="#7A6A8A" stroke-width="5" stroke-linecap="round" stroke-dasharray="132.7 163.4" transform="rotate(-90 32 32)"></circle>
+    <text x="32" y="36" text-anchor="middle">81%</text></svg><span>衝動調整の困難（低さ）</span></div><div class="rp-ring" style="--rc:#7DB3C6"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="5"></circle>
+    <circle cx="32" cy="32" r="26" fill="none" stroke="#7DB3C6" stroke-width="5" stroke-linecap="round" stroke-dasharray="112.3 163.4" transform="rotate(-90 32 32)"></circle>
+    <text x="32" y="36" text-anchor="middle">69%</text></svg><span>感情受容の困難</span></div><div class="rp-ring" style="--rc:#7DB3C6"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="5"></circle>
+    <circle cx="32" cy="32" r="26" fill="none" stroke="#7DB3C6" stroke-width="5" stroke-linecap="round" stroke-dasharray="112.3 163.4" transform="rotate(-90 32 32)"></circle>
+    <text x="32" y="36" text-anchor="middle">69%</text></svg><span>関係性の阻害</span></div></div>
+      <p class="rp-note">（低さ）の項目は、値が低いほどこの邪眼に寄与します（リングは 100−得点 で表示）。</p>
+      <p class="rp-sub-h up">◆ はっきり表れている項目（上位3）</p>
+      <div class="rp-li"><span class="rp-mark rp-mark-up">✓</span><div><b>表出抑制の使用（90点）</b>
+      <p>感情を外に出さず扱う傾向。この項目の高さが、今回の結果に関わっています。</p><small>感情がない、不健康である、冷たい人であるという意味ではありません。</small></div></div><div class="rp-li"><span class="rp-mark rp-mark-up">✓</span><div><b>感情受容の困難（69点）</b>
+      <p>生じた感情を認めにくい経験。この項目の高さが、今回の結果に関わっています。</p><small>その感情が悪いことや、本人の弱さを示すものではありません。</small></div></div><div class="rp-li"><span class="rp-mark rp-mark-up">✓</span><div><b>自律性の阻害（69点）</b>
+      <p>選択を制約されていると感じる経験。この項目の高さが、今回の結果に関わっています。</p><small>高くても、他者を支配したいことや協調性の低さは意味しません。</small></div></div>
+      <p class="rp-sub-h down">◆ 控えめな項目（下位3）</p>
+      <div class="rp-li"><span class="rp-mark rp-mark-down">!</span><div><b>衝動調整の困難（19点）</b>
+      <p>強い感情の下で行動を止めにくい経験。この項目は、今回の回答では控えめに表れています。</p><small>危険性、攻撃性、ADHDを判定するものではありません。</small></div></div><div class="rp-li"><span class="rp-mark rp-mark-down">!</span><div><b>行動維持の困難（31点）</b>
+      <p>強い感情の下で必要な行動を続けにくい経験。この項目は、今回の回答では控えめに表れています。</p><small>怠けや誠実性の低さを表すものではありません。</small></div></div><div class="rp-li"><span class="rp-mark rp-mark-down">!</span><div><b>関係性の充足（38点）</b>
+      <p>大切な相手とつながっている感覚。この項目は、今回の回答では控えめに表れています。</p><small>交友人数や外向性の高さを意味するものではありません。</small></div></div>
+    </section><section class="rp-card">
+      <p class="rp-no">02</p>
+      <h2 class="rp-h2" style="color:#C98A5A">欲求の充足と阻害 — <span class="rp-h2-en">Basic Psychological Needs</span></h2>
+      <p class="rp-text">自己決定理論では、人には「自分で選びたい（自律性）」「うまくやれていると感じたい（有能感）」「大切な相手とつながっていたい（関係性）」という三つの基本的な欲求があると考えます。近年の研究では、欲求が満たされている感覚（充足）と、妨げられていると感じる経験（阻害）は別々に働き、阻害の経験は、満たされていない以上に心の揺れと結び付きやすいことが示されています。</p>
+      <blockquote class="rp-quote" style="--ec:#C98A5A">この領域でいちばん強く表れているのは<b style="color:#C98A5A">「自律性の阻害」</b>（69）、いちばん控えめなのは<b style="color:#C98A5A">「関係性の充足」</b>（38）です。選び直せる余地が一つあるなら、どの場面でしょうか。</blockquote>
+      <div class="rp-bar" style="--bc:#C98A5A">
+      <p class="rp-bar-h"><span>自律性の充足<small>AUT-S</small></span><b>56</b></p>
+      <span class="rp-track"><i style="width:56.3%"></i></span>
+      <p class="rp-bar-t">自分で納得して選べる感覚。<em class="lv-中程度">中程度</em> — この得点だけでは、独立心の強さや他人を必要としないことは分かりません。</p>
+      <p class="rp-bar-q">自分で選べたと感じるのは、最近のどんな場面ですか。</p>
+    </div><div class="rp-bar" style="--bc:#C98A5A">
+      <p class="rp-bar-h"><span>自律性の阻害<small>AUT-F</small></span><b>69</b></p>
+      <span class="rp-track"><i style="width:68.8%"></i></span>
+      <p class="rp-bar-t">選択を制約されていると感じる経験。<em class="lv-高め">高め</em> — 高くても、他者を支配したいことや協調性の低さは意味しません。</p>
+      <p class="rp-bar-q">選び直せる余地が一つあるなら、どの場面でしょうか。</p>
+    </div><div class="rp-bar" style="--bc:#C98A5A">
+      <p class="rp-bar-h"><span>有能感の充足<small>COM-S</small></span><b>69</b></p>
+      <span class="rp-track"><i style="width:68.8%"></i></span>
+      <p class="rp-bar-t">取り組みを進められる手応え。<em class="lv-高め">高め</em> — 客観的な能力や他人との優劣を評価する得点ではありません。</p>
+      <p class="rp-bar-q">手応えを得られたとき、何が助けになりましたか。</p>
+    </div><div class="rp-bar" style="--bc:#C98A5A">
+      <p class="rp-bar-h"><span>有能感の阻害<small>COM-F</small></span><b>44</b></p>
+      <span class="rp-track"><i style="width:43.8%"></i></span>
+      <p class="rp-bar-t">力が届かないと感じる経験。<em class="lv-中程度">中程度</em> — 能力不足や劣等感の原因を証明するものではありません。</p>
+      <p class="rp-bar-q">求められることと、使える時間や支援は釣り合っていますか。</p>
+    </div><div class="rp-bar" style="--bc:#C98A5A">
+      <p class="rp-bar-h"><span>関係性の充足<small>REL-S</small></span><b>38</b></p>
+      <span class="rp-track"><i style="width:37.5%"></i></span>
+      <p class="rp-bar-t">大切な相手とつながっている感覚。<em class="lv-控えめ">控えめ</em> — 交友人数や外向性の高さを意味するものではありません。</p>
+      <p class="rp-bar-q">気持ちが通じたと感じる相手や時間はありますか。</p>
+    </div><div class="rp-bar" style="--bc:#C98A5A">
+      <p class="rp-bar-h"><span>関係性の阻害<small>REL-F</small></span><b>69</b></p>
+      <span class="rp-track"><i style="width:68.8%"></i></span>
+      <p class="rp-bar-t">人との関係で距離や拒絶を感じる経験。<em class="lv-高め">高め</em> — 相手が実際に拒絶していることや、愛着タイプを確定するものではありません。</p>
+      <p class="rp-bar-q">距離を感じた場面と、比較的安心できた場面に違いはありますか。</p>
+    </div>
+      <p class="rp-note">数値は0〜100。<b class="hi">60以上</b>＝はっきり表れている、41〜59＝場面によって表れる、<b class="lo">40以下</b>＝控えめ、として説明しています。一般の人の中での順位ではなく、この診断の設計上の目安です。</p>
+    </section><section class="rp-card">
+      <p class="rp-no">03</p>
+      <h2 class="rp-h2" style="color:#8E7CD0">感情の扱い方 — <span class="rp-h2-en">Emotion Regulation</span></h2>
+      <p class="rp-text">感情調整のプロセスモデルでは、感情が生まれる前後のどの段階で働きかけるかによって、扱い方を区別します。出来事の見方を変える「捉え直し」は感情が大きくなる前に、感情を表に出さない「表出抑制」は感情が生まれた後に働く方略です。どちらが正しいということではなく、場面によって役立ち方と負担のかかり方が異なります。</p>
+      <blockquote class="rp-quote" style="--ec:#8E7CD0">この領域でいちばん強く表れているのは<b style="color:#8E7CD0">「表出抑制の使用」</b>（90）、いちばん控えめなのは<b style="color:#8E7CD0">「捉え直しの使用」</b>（45）です。感情を表に出さないことが役立つ場面と、負担になる場面はありますか。</blockquote>
+      <div class="rp-bar" style="--bc:#8E7CD0">
+      <p class="rp-bar-h"><span>捉え直しの使用<small>REAPP</small></span><b>45</b></p>
+      <span class="rp-track"><i style="width:45.0%"></i></span>
+      <p class="rp-bar-t">見方を変えて感情を扱おうとする傾向。<em class="lv-中程度">中程度</em> — その方法が常に成功することや、他の方法より優れていることは意味しません。</p>
+      <p class="rp-bar-q">捉え直すことで楽になったことと、変えなくてよい気持ちは何ですか。</p>
+    </div><div class="rp-bar" style="--bc:#8E7CD0">
+      <p class="rp-bar-h"><span>表出抑制の使用<small>SUPPR</small></span><b>90</b></p>
+      <span class="rp-track"><i style="width:90.0%"></i></span>
+      <p class="rp-bar-t">感情を外に出さず扱う傾向。<em class="lv-高め">高め</em> — 感情がない、不健康である、冷たい人であるという意味ではありません。</p>
+      <p class="rp-bar-q">感情を表に出さないことが役立つ場面と、負担になる場面はありますか。</p>
+    </div>
+      <p class="rp-note">数値は0〜100。<b class="hi">60以上</b>＝はっきり表れている、41〜59＝場面によって表れる、<b class="lo">40以下</b>＝控えめ、として説明しています。一般の人の中での順位ではなく、この診断の設計上の目安です。</p>
+    </section><section class="rp-card">
+      <p class="rp-no">04</p>
+      <h2 class="rp-h2" style="color:#C8405C">感情調整の困難 — <span class="rp-h2-en">Regulation Difficulties</span></h2>
+      <p class="rp-text">感情調整の困難の研究では、つらいときの難しさを、感情をつかむこと（理解）、感情を認めること（受容）、行動を止めること（衝動）、必要な行動を続けること（行動維持）といった側面に分けて捉えます。どの側面に難しさが表れやすいかによって、助けになる手がかりも変わります。</p>
+      <blockquote class="rp-quote" style="--ec:#C8405C">この領域でいちばん強く表れているのは<b style="color:#C8405C">「感情受容の困難」</b>（69）、いちばん控えめなのは<b style="color:#C8405C">「衝動調整の困難」</b>（19）です。感情を持つことと、その感情のまま行動することを分けて考えられますか。</blockquote>
+      <div class="rp-bar" style="--bc:#C8405C">
+      <p class="rp-bar-h"><span>感情理解の困難<small>CLAR-D</small></span><b>44</b></p>
+      <span class="rp-track"><i style="width:43.8%"></i></span>
+      <p class="rp-bar-t">つらいときに感情をつかみにくい経験。<em class="lv-中程度">中程度</em> — 無意識の内容や、特定の病気を判定するものではありません。</p>
+      <p class="rp-bar-q">感情の名前が出てこないとき、体の感覚や出来事から振り返れますか。</p>
+    </div><div class="rp-bar" style="--bc:#C8405C">
+      <p class="rp-bar-h"><span>感情受容の困難<small>ACC-D</small></span><b>69</b></p>
+      <span class="rp-track"><i style="width:68.8%"></i></span>
+      <p class="rp-bar-t">生じた感情を認めにくい経験。<em class="lv-高め">高め</em> — その感情が悪いことや、本人の弱さを示すものではありません。</p>
+      <p class="rp-bar-q">感情を持つことと、その感情のまま行動することを分けて考えられますか。</p>
+    </div><div class="rp-bar" style="--bc:#C8405C">
+      <p class="rp-bar-h"><span>衝動調整の困難<small>IMP-D</small></span><b>19</b></p>
+      <span class="rp-track"><i style="width:18.8%"></i></span>
+      <p class="rp-bar-t">強い感情の下で行動を止めにくい経験。<em class="lv-控えめ">控えめ</em> — 危険性、攻撃性、ADHDを判定するものではありません。</p>
+      <p class="rp-bar-q">一度止まりやすかった場面には、どんな条件がありましたか。</p>
+    </div><div class="rp-bar" style="--bc:#C8405C">
+      <p class="rp-bar-h"><span>行動維持の困難<small>GOAL-D</small></span><b>31</b></p>
+      <span class="rp-track"><i style="width:31.3%"></i></span>
+      <p class="rp-bar-t">強い感情の下で必要な行動を続けにくい経験。<em class="lv-控えめ">控えめ</em> — 怠けや誠実性の低さを表すものではありません。</p>
+      <p class="rp-bar-q">つらい日にも進められた最小の行動は、どのくらいの大きさでしたか。</p>
+    </div>
+      <p class="rp-note">数値は0〜100。<b class="hi">60以上</b>＝はっきり表れている、41〜59＝場面によって表れる、<b class="lo">40以下</b>＝控えめ、として説明しています。一般の人の中での順位ではなく、この診断の設計上の目安です。</p>
+    </section><section class="rp-card">
+      <p class="rp-no">05</p>
+      <h2 class="rp-h2">近しいファトゥス — <span class="rp-h2-en">Character Match</span></h2>
+      <p class="rp-text">11名の回答参照パターンとの照合結果です。比較先は、作品の描写を参考に作者が設計した「回答の参照パターン」で、人物本人の心理得点ではありません。</p>
+      <div class="rx-figure" aria-hidden="true"><svg viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="86" fill="none" stroke="rgba(200,64,92,.18)"></circle>
+      <circle cx="100" cy="100" r="54" fill="none" stroke="rgba(200,64,92,.14)" stroke-dasharray="2 5"></circle>
+      <line x1="100" y1="100" x2="100" y2="22" stroke="rgba(220,110,135,.28)"></line><line x1="100" y1="100" x2="168" y2="62" stroke="rgba(220,110,135,.28)"></line><line x1="100" y1="100" x2="160" y2="140" stroke="rgba(220,110,135,.28)"></line><line x1="100" y1="100" x2="100" y2="176" stroke="rgba(220,110,135,.28)"></line><line x1="100" y1="100" x2="40" y2="140" stroke="rgba(220,110,135,.28)"></line><line x1="100" y1="100" x2="32" y2="62" stroke="rgba(220,110,135,.28)"></line>
+      <polygon points="100,22 168,62 160,140 100,176 40,140 32,62" fill="none" stroke="rgba(220,110,135,.18)"></polygon>
+      <circle cx="100" cy="22" r="3.2" fill="#E2C08C"></circle><circle cx="168" cy="62" r="3.2" fill="#E2C08C"></circle><circle cx="160" cy="140" r="3.2" fill="#E2C08C"></circle><circle cx="100" cy="176" r="3.2" fill="#E2C08C"></circle><circle cx="40" cy="140" r="3.2" fill="#E2C08C"></circle><circle cx="32" cy="62" r="3.2" fill="#E2C08C"></circle>
+      <circle cx="100" cy="100" r="7" fill="#FFE3EA"></circle><circle cx="100" cy="100" r="16" fill="none" stroke="rgba(255,200,215,.35)"></circle>
+    </svg><span>CONSTELLATION OF SHADOWS</span></div>
+      <div class="rp-match">
+          <p class="rp-match-h"><span class="rp-match-no">1</span><b class="rx-grad" style="background-image:linear-gradient(100deg, #9563CF 0%, #F4E6EA 100%)">ピエロ</b><em>90%</em></p>
+          <div class="rx-tags"><span class="rx-tag">「道化」</span><span class="rx-tag rx-tag-type">秘匿型</span></div>
+          <p class="rp-text sm">ファデュイの統括官として、失われたものへの思いを大義につなぎ、長期的な活動を続ける姿が描かれます。</p>
+          <p class="rp-text sm"><b class="near">近い項目：</b>関係性の阻害（あなた 69／参照 66）、自律性の阻害（あなた 69／参照 66）、有能感の阻害（あなた 44／参照 47）</p>
+          <p class="rp-text sm"><b class="far">差のある項目：</b>この比較条件では、大きな差として示す項目はありません。人物全体が同じという意味ではありません。</p>
+          <p class="rp-q">今も続けている行動には、どんな意味を感じていますか。</p>
+        </div><div class="rp-match">
+          <p class="rp-match-h"><span class="rp-match-no">2</span><b class="rx-grad" style="background-image:linear-gradient(100deg, #78A84A 0%, #F4E6EA 100%)">パンタローネ</b><em>89%</em></p>
+          <div class="rx-tags"><span class="rx-tag">「富者」</span><span class="rx-tag rx-tag-type">秘匿型</span></div>
+          <p class="rp-text sm">経済を通じた長期的な計画を進める人物として描かれます。アルレッキーノからは、計画能力と、その奥にある感情について異なる評価が語られます。</p>
+          <p class="rp-text sm"><b class="near">近い項目：</b>感情受容の困難（あなた 69／参照 68）、有能感の阻害（あなた 44／参照 47）、自律性の阻害（あなた 69／参照 72）</p>
+          <p class="rp-text sm"><b class="far">差のある項目：</b>衝動調整の困難（あなた 19／参照 42）</p>
+          <p class="rp-q">自分が説明している行動の理由と、感じている気持ちは一致していますか。</p>
+        </div><div class="rp-match">
+          <p class="rp-match-h"><span class="rp-match-no">3</span><b class="rx-grad" style="background-image:linear-gradient(100deg, #7DB3C6 0%, #C9503C 100%)">シニョーラ</b><em>89%</em></p>
+          <div class="rx-tags"><span class="rx-tag">「淑女」</span><span class="rx-tag rx-tag-type">秘匿型</span></div>
+          <p class="rp-text sm">喪失を経た強い感情と、執行官としての目的遂行が描かれます。氷の邪眼には、自身の炎を抑える役割がありました。</p>
+          <p class="rp-text sm"><b class="near">近い項目：</b>感情受容の困難（あなた 69／参照 69）、自律性の阻害（あなた 69／参照 67）、行動維持の困難（あなた 31／参照 29）</p>
+          <p class="rp-text sm"><b class="far">差のある項目：</b>衝動調整の困難（あなた 19／参照 41）</p>
+          <p class="rp-q">抱えている気持ちと、日々の行動の間にどんな距離を置いていますか。</p>
+        </div>
+      <p class="rp-note">共通点は作品解釈による回答参照パターンとの比較です。人物全体や善悪の一致ではありません。15点・20点は説明のための設計値で、心理学上の基準ではありません。</p>
+    </section><section class="rp-card">
+      <p class="rp-no">06</p>
+      <h2 class="rp-h2">総括 — 欲求・扱い方・困難の統合</h2>
+      <p class="rp-en gold">NEEDS × REGULATION × DIFFICULTIES</p>
+      <div class="rp-sum" style="--bc:#C98A5A"><p class="k">NEEDS<span>何を求め、何に阻まれているか</span></p><p>欲求の領域では、「自律性の阻害」（69）がもっとも強く表れています。</p></div>
+      <div class="rp-sum" style="--bc:#8E7CD0"><p class="k">REGULATION<span>揺れをどう扱うか</span></p><p>感情の扱い方では、「表出抑制の使用」（90）がもっとも強く表れています。</p></div>
+      <div class="rp-sum" style="--bc:#C8405C"><p class="k">DIFFICULTIES<span>つらいときに何が難しいか</span></p><p>感情調整の困難では、「感情受容の困難」（69）がもっとも強く表れています。</p></div>
+      <div class="rp-final">この3つの層が重なって、<b style="color:#7DB3C6">【氷×秘匿型】</b>という深淵の輪郭が描かれています。表に出さないことが自分を助ける場面と、負担になる場面の両方に目を向けられます。</div>
+      
+      <p class="rp-note">心理学理論を参考にした独自の自己理解コンテンツです。医療診断ではありません。独自50問の信頼性・妥当性を人の回答で検証した尺度ではありません。人工データによる動作確認と心理測定の検証は異なります。</p>
+    </section></div>
+  <section class="rp-card rp-cta">
+    <p class="rp-cta-h">あなた自身の診断結果で読む</p>
+    <p class="rp-text">お申し込みには、あなたの診断結果が必要です。まず邪眼診断を受けてください。診断が終わると、結果のページから、その結果でのお申し込みに進めます（¥1,000・買い切り。現在は販売準備中です）。</p>
+    <a class="rx-buy rp-cta-btn" href="/jagan/">まず邪眼診断を受ける</a>
+    <p class="jg-small">マイページに保存した記録から読む：<a href="/mypage#jagan">マイページで記録を選ぶ</a></p>
+  </section>
+  <div class="jg-center"><button type="button" class="rp-print" id="printBtn">このレポートをPDFで保存する</button></div>
+  <p class="rp-end">ここまでが、解析レポートの全内容です。<br>ご不明点があれば <a href="mailto:yaduns0522@gmail.com">yaduns0522@gmail.com</a> までご連絡ください。</p>
+</main>
+<footer class="jf">
+  <p class="jf-copy">邪眼診断 — An original self-understanding framework inspired by Genshin Impact. Not a medical diagnosis. For entertainment purposes. © マンデーアクスト / @mondayaxad</p>
+  <div class="jf-links"><a href="/jagan/">邪眼診断</a><a href="/">元素診断</a><a href="/tokushoho">特定商取引法に基づく表記</a><a href="/privacy.html">プライバシーポリシー</a><a href="/terms.html">利用規約</a><a href="mailto:yaduns0522@gmail.com">お問い合わせ</a></div>
+</footer>
+
+
+
+
+</body></html>
