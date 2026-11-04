@@ -814,7 +814,7 @@ export const BUNDLE = Object.freeze({
      "RSK"
     ],
     "rationale": "ファデュイから距離を取る時期と、人に安らぎを願う描写への連想。帰属から依存を推定しない。時期による違い・対応根拠の弱さが残る。",
-    "region_label": "ナド・クライ",
+    "region_label": "ナドクライ",
     "source_urls": [
      "https://genshin-impact.fandom.com/ja/wiki/コロンビーナ/プロフィール"
     ],
@@ -847,7 +847,7 @@ export const BUNDLE = Object.freeze({
      "RSK"
     ],
     "rationale": "対人場面の演出と目的に沿う行動、子どもへの配慮への連想。無表情から冷淡を推定しない。",
-    "region_label": "フォンテーヌ育ち",
+    "region_label": "フォンテーヌ",
     "source_urls": [
      "https://genshin-impact.fandom.com/ja/wiki/アルレッキーノ/プロフィール"
     ],
@@ -880,7 +880,7 @@ export const BUNDLE = Object.freeze({
      "CAL"
     ],
     "rationale": "政治上の誘導と計画的な関与への連想。他者による人質評を確定した内面とせず、冷淡は未対応とする。",
-    "region_label": "関連地域：スネージナヤ",
+    "region_label": "スネージナヤ",
     "source_urls": [
      "https://genshin-impact.fandom.com/ja/wiki/「雄鶏」"
     ],
@@ -946,7 +946,7 @@ export const BUNDLE = Object.freeze({
      "CAL"
     ],
     "rationale": "対人場面から退く描写と、いら立ちの描写を比較する。研究への集中から固執・完璧・冷淡を推定しない。",
-    "region_label": "フォンテーヌ由来",
+    "region_label": "フォンテーヌ",
     "source_urls": [
      "https://genshin-impact.fandom.com/ja/wiki/「傀儡」"
     ],

@@ -310,7 +310,7 @@
         "孤独",
         "帰属"
       ],
-      "region": "ナド・クライ",
+      "region": "ナドクライ",
       "match": 81,
       "rawSimilarity": 80.51442841485014,
       "usedAxes": [
@@ -392,7 +392,7 @@
         "庇護",
         "統制"
       ],
-      "region": "フォンテーヌ育ち",
+      "region": "フォンテーヌ",
       "match": 91,
       "rawSimilarity": 90.81441346456307,
       "usedAxes": [
@@ -473,7 +473,7 @@
         "庇護",
         "交渉"
       ],
-      "region": "関連地域：スネージナヤ",
+      "region": "スネージナヤ",
       "match": 89,
       "rawSimilarity": 89.39339828220179,
       "usedAxes": [
@@ -633,7 +633,7 @@
         "没頭",
         "執着"
       ],
-      "region": "フォンテーヌ由来",
+      "region": "フォンテーヌ",
       "match": 86,
       "rawSimilarity": 85.72042542650517,
       "usedAxes": [

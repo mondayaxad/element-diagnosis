@@ -7,7 +7,7 @@
 import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary } from './engine/runtime.mjs';
 import { BUNDLE } from './engine/data.mjs';
 import { renderResultPage, esc, heroGemsHtml } from './view.mjs';
-import { cardBlob } from './card.mjs';
+import { cardDataUrl } from './card.mjs';
 
 const ITEMS = BUNDLE.items;
 const VERSION = ITEMS.item_set_version;
@@ -240,22 +240,26 @@ async function saveImage() {
   if (!current || imaging) return;
   const s = summaryOf(current.result);
   if (!s) return;
-  imaging = true; const btn = $('imageBtn'); const imageLabel = btn.innerHTML; btn.textContent = '画像を作成中…';
+  imaging = true;
   track('jagan_image_save', {});
   try {
-    const blob = await cardBlob(s);
-    const file = typeof File === 'function' ? new File([blob], 'jagan-result.png', { type: 'image/png' }) : null;
-    if (file && navigator.canShare && navigator.canShare({ files: [file] }) && /iP(hone|ad|od)|Android/.test(navigator.userAgent)) {
-      await navigator.share({ files: [file] }).catch(() => {});
-    } else {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'jagan-result.png';
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    // 元素診断と同じ：その場に画像を表示し、長押し（PCは右クリック）で保存してもらう
+    const url = cardDataUrl(s);
+    let overlay = $('saveImgOverlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'saveImgOverlay';
+      overlay.className = 'jg-img-overlay';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-label', '結果の画像');
+      document.body.appendChild(overlay);
     }
-    btn.innerHTML = imageLabel;
+    overlay.innerHTML = `<p>画像を長押しして「写真に保存」を選んでください<br><small>パソコンでは右クリックで保存できます</small></p>
+      <img src="${url}" alt="邪眼診断の結果画像">
+      <button type="button" id="closeImgOverlay">閉じる</button>`;
+    overlay.hidden = false;
+    $('closeImgOverlay').onclick = () => { overlay.hidden = true; };
   } catch {
-    btn.innerHTML = imageLabel.replace('画像を保存', '画像を保存（再試行）');
     setStatus('画像を作成できませんでした。もう一度押すと再試行します。', true);
   } finally { imaging = false; }
 }

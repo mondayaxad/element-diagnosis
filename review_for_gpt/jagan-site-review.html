@@ -535,6 +535,28 @@ body { background: #09070B; background-image: none; }
 .rp-end { text-align: center; font-size: 11.5px; line-height: 1.9; color: #8A6E78; margin: 18px 0 40px; }
 .rp-end a { color: #C99AA7; }
 @media print { .night, .rp-banner, .rp-print, .rp-cta, .jf { display: none !important; } body { background: #0E070B; } }
+/* 画像を保存：元素診断と同じく、その場に画像を出して長押しで保存 */
+.jg-img-overlay { position: fixed; inset: 0; z-index: 3000; background: rgba(0, 0, 0, .95); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+.jg-img-overlay p { color: #F2C6D0; font-size: 13px; margin: 0 0 14px; text-align: center; font-weight: 600; line-height: 1.7; }
+.jg-img-overlay p small { font-weight: 400; color: #A58994; }
+.jg-img-overlay img { width: min(300px, 85vw); border-radius: 12px; -webkit-touch-callout: default; }
+.jg-img-overlay button { margin-top: 20px; background: transparent; border: 1px solid #4A2232; color: #C99AA7; border-radius: 8px; padding: 12px 24px; font-size: 13px; cursor: pointer; font-family: inherit; }
+/* ファトゥスのカード：元素診断と同じく名前・ラベル・一致度だけ。方法への小さな導線 */
+.rx-fatui-link { margin: 14px 0 0; font-size: 12px; }
+.rx-fatui-link a { color: #A58994; }
+/* ロック解除の背景：実際のレポートにモザイク */
+.rx-preview { position: relative; overflow: hidden; padding-bottom: 72px; }
+.rx-mosaic { max-height: 460px; overflow: hidden; filter: blur(5px) saturate(.9); opacity: .85; pointer-events: none; user-select: none; -webkit-user-select: none;
+  -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 100%); mask-image: linear-gradient(180deg, #000 55%, transparent 100%); }
+.rx-mosaic .rp-bar:last-child { border-bottom: 0; }
+.rx-preview-btn { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+  border: 0; border-radius: 999px; padding: 13px 28px; font-family: inherit; font-size: 15px; font-weight: 700; letter-spacing: .08em; color: #fff; cursor: not-allowed;
+  background: var(--pc, #C8405C); box-shadow: 0 0 22px color-mix(in srgb, var(--pc, #C8405C) 45%, transparent); }
+.rx-preview-btn svg { width: 16px; height: 16px; }
+.rp-radar { display: block; width: 72%; max-width: 260px; margin: 6px auto 10px; }
+.rp-radar text { font-size: 10px; fill: #A58994; font-family: var(--font-jp); dominant-baseline: middle; }
+.rx-mosaic { filter: blur(3.5px) saturate(.95); opacity: 1; }
+.rx-mosaic .rp-radar { width: 80%; }
 
 </style>
 
@@ -796,8 +818,7 @@ body { background: #09070B; background-image: none; }
         </div>
         <div class="rx-pct"><b>70<small>%</small></b><span>一致度</span></div>
       </div>
-      <p class="jg-note">参照した特性：衝動・冷淡・敵意</p>
-      <p class="jg-note">作品の描写に重ねた独自の参照と比較し、人物ごとの出現の偏りを補正して選定しています。一致度は、選ばれた参照への近さを表す独自の指標です。人物全体や、善悪が一致する割合ではありません。<a href="/jagan/about">方法の説明</a></p>
+      <p class="rx-fatui-link"><a href="/jagan/about">一致度と人物の選び方について ›</a></p>
     </section>
 <section class="rx-card">
       <p class="rx-h3">あなたの渇望する邪眼</p>
@@ -855,9 +876,16 @@ body { background: #09070B; background-image: none; }
       <p class="rx-unlock-text">近しいファトゥス3名とあなたの、重なる特性と離れている特性を、物語とあわせて読み解きます。</p>
       <p class="rx-unlock-price">¥1,000</p>
       <button type="button" class="rx-buy" data-buy="" disabled="" aria-disabled="true">全てのロックを解除する<small>準備中</small></button>
-      <div class="rx-preview" aria-hidden="true">
-        <p class="rx-preview-head">ロックの先にある内容 — <b>近しいファトゥス3名の共通点と相違点</b></p>
-        <div class="rx-blur"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="rx-preview" style="--pc:#E2C08C">
+        <p class="rx-preview-head" aria-hidden="true">レポートより — <b>近しいファトゥス3名の共通点と相違点</b></p>
+        <div class="rx-mosaic" aria-hidden="true" inert=""><div class="rp-match"><p class="rp-match-h"><span class="rp-match-no">2</span><b>■■■■■■</b><em>59%</em></p>
+      <p class="rp-text sm"><b class="near">近い特性：</b>敵意（あなた 19／参照 20）、冷淡（あなた 6／参照 20）</p>
+      <p class="rp-text sm"><b class="far">差のある特性：</b>撤退（あなた 31／参照 65）</p></div><div class="rp-match"><p class="rp-match-h"><span class="rp-match-no">3</span><b>■■■■■■</b><em>55%</em></p>
+      <p class="rp-text sm"><b class="near">近い特性：</b>衝動（あなた 20／参照 20）</p>
+      <p class="rp-text sm"><b class="far">差のある特性：</b>操作（あなた 31／参照 70）、冷淡（あなた 6／参照 30）</p></div><div class="rp-match"><p class="rp-match-h"><span class="rp-match-no">4</span><b>■■■■■■</b><em>51%</em></p>
+      <p class="rp-text sm"><b class="near">近い特性：</b>衝動（あなた 20／参照 30）</p>
+      <p class="rp-text sm"><b class="far">差のある特性：</b>操作（あなた 31／参照 75）</p></div></div>
+        <button type="button" class="rx-preview-btn" data-buy="" disabled="" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg>今すぐロックを解除</button>
       </div>
     </div>
     </section>
@@ -883,9 +911,32 @@ body { background: #09070B; background-image: none; }
       <p class="rx-unlock-text">不安・依存・猜疑・撤退が、あなたの中でどう重なり、どんな場面で表れやすいかを読み解きます。</p>
       <p class="rx-unlock-price">¥1,000</p>
       <button type="button" class="rx-buy" data-buy="" disabled="" aria-disabled="true">全てのロックを解除する<small>準備中</small></button>
-      <div class="rx-preview" aria-hidden="true">
-        <p class="rx-preview-head">ロックの先にある内容 — <b>不安・依存・猜疑・撤退｜4特性（17項目）</b></p>
-        <div class="rx-blur"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="rx-preview" style="--pc:#C98A5A">
+        <p class="rx-preview-head" aria-hidden="true">レポートより — <b>不安・依存・猜疑・撤退｜4特性（17項目）</b></p>
+        <div class="rx-mosaic" aria-hidden="true" inert=""><svg class="rp-radar" viewBox="0 0 200 200"><polygon points="100.0,30.0 170.0,100.0 100.0,170.0 30.0,100.0" fill="none" stroke="rgba(255,255,255,.08)"></polygon><polygon points="100.0,53.8 146.2,100.0 100.0,146.2 53.8,100.0" fill="none" stroke="rgba(255,255,255,.08)"></polygon><polygon points="100.0,76.9 123.1,100.0 100.0,123.1 76.9,100.0" fill="none" stroke="rgba(255,255,255,.08)"></polygon>
+    <polygon points="100.0,51.9 149.0,100.0 100.0,130.6 78.1,100.0" fill="#C98A5A" fill-opacity=".28" stroke="#C98A5A"></polygon>
+    <text x="100.0" y="12.0" text-anchor="middle">不安</text><text x="188.0" y="100.0" text-anchor="middle">依存</text><text x="100.0" y="188.0" text-anchor="middle">猜疑</text><text x="12.0" y="100.0" text-anchor="middle">撤退</text></svg><div class="rp-bar" style="--bc:#C98A5A">
+      <p class="rp-bar-h"><span>不安<small>ANX</small></span><b>69</b></p>
+      <span class="rp-track"><i style="width:68.8%"></i></span>
+      <p class="rp-bar-t">先行きや起こりうる悪い展開への心配・緊張。<em class="lv-高め">高め</em> — 現実的な危険への妥当な心配も含みます。不安障害を判定するものではありません。</p>
+      <p class="rp-bar-q">心配が膨らむのは、どんな場面が多いですか。そのうち、今できることはどれですか。</p>
+    </div><div class="rp-bar" style="--bc:#C98A5A">
+      <p class="rp-bar-h"><span>依存<small>SEP</small></span><b>70</b></p>
+      <span class="rp-track"><i style="width:70.0%"></i></span>
+      <p class="rp-bar-t">親しい相手と離れる・失うことへの不安。<em class="lv-高め">高め</em> — 人に頼ることや、関係を大切にすることを否定するものではありません。依存症や愛着タイプを判定するものではありません。</p>
+      <p class="rp-bar-q">不安になるとき、相手に何を確かめたくなりますか。</p>
+    </div><div class="rp-bar" style="--bc:#C98A5A">
+      <p class="rp-bar-h"><span>猜疑<small>SUS</small></span><b>44</b></p>
+      <span class="rp-track"><i style="width:43.8%"></i></span>
+      <p class="rp-bar-t">相手の意図や説明を疑い、裏を考える傾向。<em class="lv-中程度">中程度</em> — 現実に疑う理由がある場面での警戒は含みません。妄想や病気を判定するものではありません。</p>
+      <p class="rp-bar-q">疑いが生まれたとき、確かめられることは何ですか。</p>
+    </div><div class="rp-bar" style="--bc:#C98A5A">
+      <p class="rp-bar-h"><span>撤退<small>WDR</small></span><b>31</b></p>
+      <span class="rp-track"><i style="width:31.3%"></i></span>
+      <p class="rp-bar-t">人との会話や関わりを控え、距離を置く傾向。<em class="lv-控えめ">控えめ</em> — 一人の時間を好むことや内向性は欠点ではありません。うつ状態や社交不安を判定するものではありません。</p>
+      <p class="rp-bar-q">一人でいたいのは、疲れているときですか、それとも関わりが負担なときですか。</p>
+    </div></div>
+        <button type="button" class="rx-preview-btn" data-buy="" disabled="" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg>今すぐロックを解除</button>
       </div>
     </div>
     </section>
@@ -911,9 +962,32 @@ body { background: #09070B; background-image: none; }
       <p class="rx-unlock-text">行動のくせが、強みとして働く場面と、負担になる場面を読み解きます。</p>
       <p class="rx-unlock-price">¥1,000</p>
       <button type="button" class="rx-buy" data-buy="" disabled="" aria-disabled="true">全てのロックを解除する<small>準備中</small></button>
-      <div class="rx-preview" aria-hidden="true">
-        <p class="rx-preview-head">ロックの先にある内容 — <b>衝動・危険志向・固執・完璧｜4特性（17項目）</b></p>
-        <div class="rx-blur"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="rx-preview" style="--pc:#8E7CD0">
+        <p class="rx-preview-head" aria-hidden="true">レポートより — <b>衝動・危険志向・固執・完璧｜4特性（17項目）</b></p>
+        <div class="rx-mosaic" aria-hidden="true" inert=""><svg class="rp-radar" viewBox="0 0 200 200"><polygon points="100.0,30.0 170.0,100.0 100.0,170.0 30.0,100.0" fill="none" stroke="rgba(255,255,255,.08)"></polygon><polygon points="100.0,53.8 146.2,100.0 100.0,146.2 53.8,100.0" fill="none" stroke="rgba(255,255,255,.08)"></polygon><polygon points="100.0,76.9 123.1,100.0 100.0,123.1 76.9,100.0" fill="none" stroke="rgba(255,255,255,.08)"></polygon>
+    <polygon points="100.0,86.0 104.4,100.0 100.0,130.6 60.6,100.0" fill="#8E7CD0" fill-opacity=".28" stroke="#8E7CD0"></polygon>
+    <text x="100.0" y="12.0" text-anchor="middle">衝動</text><text x="188.0" y="100.0" text-anchor="middle">危険志向</text><text x="100.0" y="188.0" text-anchor="middle">固執</text><text x="12.0" y="100.0" text-anchor="middle">完璧</text></svg><div class="rp-bar" style="--bc:#8E7CD0">
+      <p class="rp-bar-h"><span>衝動<small>IMP</small></span><b>20</b></p>
+      <span class="rp-track"><i style="width:20.0%"></i></span>
+      <p class="rp-bar-t">結果を考える前に、口に出したり動いたりする傾向。<em class="lv-控えめ">控えめ</em> — 決断の速さや行動力は強みにもなります。ADHDなどを判定するものではありません。</p>
+      <p class="rp-bar-q">後から「先に動いた」と気づいたのは、どんな場面でしたか。</p>
+    </div><div class="rp-bar" style="--bc:#8E7CD0">
+      <p class="rp-bar-h"><span>危険志向<small>RSK</small></span><b>6</b></p>
+      <span class="rp-track"><i style="width:6.3%"></i></span>
+      <p class="rp-bar-t">刺激や挑戦を求め、危険を伴うことにも近づく傾向。<em class="lv-控えめ">控えめ</em> — 冒険心や挑戦する力として働くこともあります。危険行為の傾向を判定するものではありません。</p>
+      <p class="rp-bar-q">挑戦したいことと、守りたいことの線引きは、どこにありますか。</p>
+    </div><div class="rp-bar" style="--bc:#8E7CD0">
+      <p class="rp-bar-h"><span>固執<small>PSV</small></span><b>44</b></p>
+      <span class="rp-track"><i style="width:43.8%"></i></span>
+      <p class="rp-bar-t">必要がなくなったやり方や考えを、続けてしまう・切り替えにくい傾向。<em class="lv-中程度">中程度</em> — 粘り強さや一貫性は強みにもなります。強迫症などを判定するものではありません。</p>
+      <p class="rp-bar-q">続けていることのうち、今も役に立っているのはどれですか。</p>
+    </div><div class="rp-bar" style="--bc:#8E7CD0">
+      <p class="rp-bar-h"><span>完璧<small>PRF</small></span><b>56</b></p>
+      <span class="rp-track"><i style="width:56.3%"></i></span>
+      <p class="rp-bar-t">高い基準で細部まで整え、不十分な状態を出しにくい傾向。<em class="lv-中程度">中程度</em> — 丁寧さや責任感は強みです。強迫性パーソナリティなどを判定するものではありません。</p>
+      <p class="rp-bar-q">「十分」と感じられる線は、どこにありますか。</p>
+    </div></div>
+        <button type="button" class="rx-preview-btn" data-buy="" disabled="" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg>今すぐロックを解除</button>
       </div>
     </div>
     </section>
@@ -939,9 +1013,32 @@ body { background: #09070B; background-image: none; }
       <p class="rx-unlock-text">他者との向き合い方が、強みとして働く場面と、誤解を生みやすい場面を読み解きます。</p>
       <p class="rx-unlock-price">¥1,000</p>
       <button type="button" class="rx-buy" data-buy="" disabled="" aria-disabled="true">全てのロックを解除する<small>準備中</small></button>
-      <div class="rx-preview" aria-hidden="true">
-        <p class="rx-preview-head">ロックの先にある内容 — <b>敵意・顕示・操作・冷淡｜4特性（16項目）</b></p>
-        <div class="rx-blur"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="rx-preview" style="--pc:#C8405C">
+        <p class="rx-preview-head" aria-hidden="true">レポートより — <b>敵意・顕示・操作・冷淡｜4特性（16項目）</b></p>
+        <div class="rx-mosaic" aria-hidden="true" inert=""><svg class="rp-radar" viewBox="0 0 200 200"><polygon points="100.0,30.0 170.0,100.0 100.0,170.0 30.0,100.0" fill="none" stroke="rgba(255,255,255,.08)"></polygon><polygon points="100.0,53.8 146.2,100.0 100.0,146.2 53.8,100.0" fill="none" stroke="rgba(255,255,255,.08)"></polygon><polygon points="100.0,76.9 123.1,100.0 100.0,123.1 76.9,100.0" fill="none" stroke="rgba(255,255,255,.08)"></polygon>
+    <polygon points="100.0,86.9 113.1,100.0 100.0,121.9 95.6,100.0" fill="#C8405C" fill-opacity=".28" stroke="#C8405C"></polygon>
+    <text x="100.0" y="12.0" text-anchor="middle">敵意</text><text x="188.0" y="100.0" text-anchor="middle">顕示</text><text x="100.0" y="188.0" text-anchor="middle">操作</text><text x="12.0" y="100.0" text-anchor="middle">冷淡</text></svg><div class="rp-bar" style="--bc:#C8405C">
+      <p class="rp-bar-h"><span>敵意<small>HOS</small></span><b>19</b></p>
+      <span class="rp-track"><i style="width:18.8%"></i></span>
+      <p class="rp-bar-t">相手への腹立ち・不満が生じ、態度や言葉に出やすい傾向。<em class="lv-控えめ">控えめ</em> — 怒りを感じること自体は自然な反応です。攻撃性や暴力の危険性を判定するものではありません。</p>
+      <p class="rp-bar-q">怒りの下には、どんな願いや傷つきがありそうですか。</p>
+    </div><div class="rp-bar" style="--bc:#C8405C">
+      <p class="rp-bar-h"><span>顕示<small>ATT</small></span><b>19</b></p>
+      <span class="rp-track"><i style="width:18.8%"></i></span>
+      <p class="rp-bar-t">人の注目を集めようと、話題や振る舞いを選ぶ傾向。<em class="lv-控えめ">控えめ</em> — 人を楽しませる力や存在感として働くこともあります。自己愛や演技性を判定するものではありません。</p>
+      <p class="rp-bar-q">注目が集まったとき、あなたは何を得られていますか。</p>
+    </div><div class="rp-bar" style="--bc:#C8405C">
+      <p class="rp-bar-h"><span>操作<small>MAN</small></span><b>31</b></p>
+      <span class="rp-track"><i style="width:31.3%"></i></span>
+      <p class="rp-bar-t">目的のために、好意の見せ方や情報を調整して相手を導こうとする傾向。<em class="lv-控えめ">控えめ</em> — 交渉・調整・気配りの巧みさとして働くこともあります。他者を傷つける意図や反社会性を判定するものではありません。</p>
+      <p class="rp-bar-q">相手に伝えていない狙いがあるとき、率直に頼む選択肢はありますか。</p>
+    </div><div class="rp-bar" style="--bc:#C8405C">
+      <p class="rp-bar-h"><span>冷淡<small>CAL</small></span><b>6</b></p>
+      <span class="rp-track"><i style="width:6.3%"></i></span>
+      <p class="rp-bar-t">他者の苦痛や困りごとに、関心や申し訳なさが向きにくい傾向。<em class="lv-控えめ">控えめ</em> — 冷静さとして働く場面もあります。人格の善悪や、反社会性・サイコパス傾向を判定するものではありません。</p>
+      <p class="rp-bar-q">相手が困っているとき、あなたの中では何が起きていますか。</p>
+    </div></div>
+        <button type="button" class="rx-preview-btn" data-buy="" disabled="" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg>今すぐロックを解除</button>
       </div>
     </div>
     </section>

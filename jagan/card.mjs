@@ -1,44 +1,68 @@
-// jagan/card.mjs — 「画像保存」の結果カード（押したときにブラウザで描く。公開要約と同じ値だけを使う）。
-//   背景・人物の画像は使わない。失敗しても他の操作を止めない（呼び出し側が状態を表示する）。
-const C = { bg: '#09070B', card: '#160D14', accent: '#A52A43', hi: '#C8405C', text: '#EFE5E8', sub: '#BDA9B0', line: '#5A2333' };
-const SERIF = '"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif';
+// jagan/card.mjs — 「画像を保存」の結果画像（元素診断と同じ 1080×1080 の構成。押したときにブラウザで描く）。
+//   暗い地に邪眼元素の色の光、「邪眼元素 × 異相」をそれぞれの色で、最も近しいファトゥスと一致度を大きく出す。
+//   公開要約（publicSummary）の値だけを使う。背景・人物の画像は使わない。
+import { ELEMENT_COLOR, NEUTRAL_COLOR, ISOU_COLOR } from './site-copy.mjs';
 
-function fitFont(ctx, text, max, size, weight = 700) {
-  let s = size;
-  do { ctx.font = `${weight} ${s}px ${SERIF}`; s -= 2; } while (ctx.measureText(text).width > max && s > 20);
+const SERIF = '"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif';
+const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(',');
+// 暗い地で沈みすぎず、元素診断より少し暗い色（黒を混ぜる）
+const shade = (hex, k) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * k).toString(16).padStart(2, '0')).join('');
+
+export function cardColors(s) {
+  const el = ELEMENT_COLOR[s.element.id] || NEUTRAL_COLOR;
+  const isouKey = s.isou.id || (s.isou.label === '未顕' ? 'NONE' : 'MIX');
+  return { el: shade(el.main, 0.92), elGlow: el.main, isou: shade(ISOU_COLOR[isouKey], 0.88) };
 }
 
 export function drawCard(canvas, s) {
-  const W = 1200, H = 630;
+  const W = 1080, H = 1080;
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('canvas_unavailable');
-  const g = ctx.createRadialGradient(W / 2, H * 0.38, 20, W / 2, H * 0.38, 700);
-  g.addColorStop(0, '#3a0f1d'); g.addColorStop(1, C.bg);
+  const c = cardColors(s);
+  ctx.fillStyle = '#09070B'; ctx.fillRect(0, 0, W, H);
+  const g = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, W * 0.6);
+  g.addColorStop(0, `rgba(${rgb(c.elGlow)},0.26)`); g.addColorStop(1, 'rgba(9,7,11,0)');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = 'rgba(22,13,20,0.85)'; ctx.strokeStyle = C.line; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(60, 60, W - 120, H - 120, 24) : ctx.rect(60, 60, W - 120, H - 120); ctx.fill(); ctx.stroke();
+  const g2 = ctx.createRadialGradient(W / 2, H * 0.72, 0, W / 2, H * 0.72, W * 0.45);
+  g2.addColorStop(0, 'rgba(165,42,67,0.14)'); g2.addColorStop(1, 'rgba(9,7,11,0)');
+  ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H);
+
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillStyle = C.hi; ctx.font = `italic 30px "Snell Roundhand","Apple Chancery",cursive`;
-  ctx.fillText('Delusion Diagnosis', W / 2, 120);
-  ctx.fillStyle = C.sub; ctx.font = `400 28px ${SERIF}`; ctx.fillText('あなたの深淵', W / 2, 175);
-  const head = `${s.element.label} × ${s.isou.label}`;
-  ctx.fillStyle = C.text; ctx.shadowColor = 'rgba(165,42,67,0.8)'; ctx.shadowBlur = 24;
-  fitFont(ctx, head, 980, 88); ctx.fillText(head, W / 2, 268);
-  ctx.shadowBlur = 0;
-  const fat = `最も近しいファトゥス：${s.character.label}（${s.character.matchPercent}%一致）`;
-  fitFont(ctx, fat, 980, 38, 400); ctx.fillText(fat, W / 2, 365);
-  ctx.fillStyle = C.accent; ctx.fillRect(W / 2 - 180, 465, 360, 2);
-  ctx.fillStyle = C.sub; ctx.font = `400 22px ${SERIF}`;
-  ctx.fillText('邪眼診断｜作品解釈による独自の参照との近さ', W / 2, 510);
+  ctx.fillStyle = '#6E3A4A'; ctx.font = `28px ${SERIF}`;
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '10px';
+  ctx.fillText('DELUSION DIAGNOSIS', W / 2, 180);
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+
+  // 「元素 × 異相」（それぞれの色。長い異相名は文字を小さく）
+  const elText = s.element.label, isouText = s.isou.label;
+  const isouSize = isouText.length >= 4 ? 84 : 100;
+  ctx.font = `bold 130px ${SERIF}`; const elW = ctx.measureText(elText).width;
+  ctx.font = `56px ${SERIF}`; const xW = ctx.measureText(' × ').width;
+  ctx.font = `bold ${isouSize}px ${SERIF}`; const isW = ctx.measureText(isouText).width;
+  const startX = W / 2 - (elW + xW + isW) / 2;
+  ctx.textAlign = 'left';
+  ctx.font = `bold 130px ${SERIF}`; ctx.fillStyle = c.el; ctx.fillText(elText, startX, 340);
+  ctx.font = `56px ${SERIF}`; ctx.fillStyle = '#4A2232'; ctx.fillText(' × ', startX + elW, 340);
+  ctx.font = `bold ${isouSize}px ${SERIF}`; ctx.fillStyle = c.isou; ctx.fillText(isouText, startX + elW + xW, 340);
+  ctx.textAlign = 'center';
+
+  ctx.strokeStyle = c.el; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(W / 2 - 50, 430); ctx.lineTo(W / 2 + 50, 430); ctx.stroke();
+
+  ctx.fillStyle = '#B0909B'; ctx.font = `26px ${SERIF}`;
+  ctx.fillText('最も近しいファトゥス', W / 2, 500);
+  ctx.fillStyle = c.el; ctx.font = `bold ${s.character.label.length >= 6 ? 76 : 88}px ${SERIF}`;
+  ctx.fillText(s.character.label, W / 2, 610);
+  ctx.fillStyle = c.isou; ctx.font = `bold 140px ${SERIF}`;
+  ctx.fillText(`${s.character.matchPercent}%`, W / 2, 760);
+  ctx.fillStyle = '#6E3A4A'; ctx.font = `24px ${SERIF}`;
+  ctx.fillText('一 致', W / 2, 850);
+  ctx.fillStyle = '#4A2232'; ctx.font = `22px ${SERIF}`;
+  ctx.fillText('#邪眼診断　@mondayaxad', W / 2, 980);
   return canvas;
 }
 
-export function cardBlob(summary) {
-  return new Promise((resolve, reject) => {
-    try {
-      const canvas = drawCard(document.createElement('canvas'), summary);
-      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('blob_failed'))), 'image/png');
-    } catch (e) { reject(e); }
-  });
+export function cardDataUrl(summary) {
+  return drawCard(document.createElement('canvas'), summary).toDataURL('image/png');
 }

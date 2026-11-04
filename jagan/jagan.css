@@ -517,3 +517,25 @@ body { background: #09070B; background-image: none; }
 .rp-end { text-align: center; font-size: 11.5px; line-height: 1.9; color: #8A6E78; margin: 18px 0 40px; }
 .rp-end a { color: #C99AA7; }
 @media print { .night, .rp-banner, .rp-print, .rp-cta, .jf { display: none !important; } body { background: #0E070B; } }
+/* 画像を保存：元素診断と同じく、その場に画像を出して長押しで保存 */
+.jg-img-overlay { position: fixed; inset: 0; z-index: 3000; background: rgba(0, 0, 0, .95); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+.jg-img-overlay p { color: #F2C6D0; font-size: 13px; margin: 0 0 14px; text-align: center; font-weight: 600; line-height: 1.7; }
+.jg-img-overlay p small { font-weight: 400; color: #A58994; }
+.jg-img-overlay img { width: min(300px, 85vw); border-radius: 12px; -webkit-touch-callout: default; }
+.jg-img-overlay button { margin-top: 20px; background: transparent; border: 1px solid #4A2232; color: #C99AA7; border-radius: 8px; padding: 12px 24px; font-size: 13px; cursor: pointer; font-family: inherit; }
+/* ファトゥスのカード：元素診断と同じく名前・ラベル・一致度だけ。方法への小さな導線 */
+.rx-fatui-link { margin: 14px 0 0; font-size: 12px; }
+.rx-fatui-link a { color: #A58994; }
+/* ロック解除の背景：実際のレポートにモザイク */
+.rx-preview { position: relative; overflow: hidden; padding-bottom: 72px; }
+.rx-mosaic { max-height: 460px; overflow: hidden; filter: blur(5px) saturate(.9); opacity: .85; pointer-events: none; user-select: none; -webkit-user-select: none;
+  -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 100%); mask-image: linear-gradient(180deg, #000 55%, transparent 100%); }
+.rx-mosaic .rp-bar:last-child { border-bottom: 0; }
+.rx-preview-btn { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+  border: 0; border-radius: 999px; padding: 13px 28px; font-family: inherit; font-size: 15px; font-weight: 700; letter-spacing: .08em; color: #fff; cursor: not-allowed;
+  background: var(--pc, #C8405C); box-shadow: 0 0 22px color-mix(in srgb, var(--pc, #C8405C) 45%, transparent); }
+.rx-preview-btn svg { width: 16px; height: 16px; }
+.rp-radar { display: block; width: 72%; max-width: 260px; margin: 6px auto 10px; }
+.rp-radar text { font-size: 10px; fill: #A58994; font-family: var(--font-jp); dominant-baseline: middle; }
+.rx-mosaic { filter: blur(3.5px) saturate(.95); opacity: 1; }
+.rx-mosaic .rp-radar { width: 80%; }

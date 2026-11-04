@@ -50,18 +50,44 @@ export function tendencyWords(result, bundle, groupId, n) {
 function locks(words) {
   return `<div class="rx-locks">${words.map((w) => `<div class="rx-lock" style="--lc:${w.color}"><span class="rx-lock-ring">${lockSvg}</span><span class="rx-lock-word">${esc(w.word)}</span></div>`).join('')}</div>`;
 }
-function unlockCard(text, previewTitle) {
+// ロック解除の案内。背景には、その人の実際のレポートの該当部分をモザイク（ぼかし）で敷く（元素診断と同じ見せ方）。
+//   ぼかした部分は読み上げ・操作の対象から外す（aria-hidden・inert）。2位以下の人物名は伏せる。
+function unlockCard(text, previewTitle, previewHtml, color = '#C8405C') {
   return `<div class="rx-unlock">
       <span class="rx-unlock-icon">${lockSvg}</span>
       <p class="rx-unlock-title">今すぐロックを解除</p>
       <p class="rx-unlock-text">${esc(text)}</p>
       <p class="rx-unlock-price">${PRICE_LABEL}</p>
       <button type="button" class="rx-buy" data-buy disabled aria-disabled="true">全てのロックを解除する<small>準備中</small></button>
-      <div class="rx-preview" aria-hidden="true">
-        <p class="rx-preview-head">ロックの先にある内容 — <b>${esc(previewTitle)}</b></p>
-        <div class="rx-blur">${'<i></i>'.repeat(7)}</div>
+      <div class="rx-preview" style="--pc:${color}">
+        <p class="rx-preview-head" aria-hidden="true">レポートより — <b>${esc(previewTitle)}</b></p>
+        <div class="rx-mosaic" aria-hidden="true" inert>${previewHtml}</div>
+        <button type="button" class="rx-preview-btn" data-buy disabled aria-disabled="true">${lockSvg}今すぐロックを解除</button>
       </div>
     </div>`;
+}
+// 4〜6特性のレーダー（レポートのぼかし背景用）
+function radar(result, bundle, ids, color) {
+  const n = ids.length, R = 70, cx = 100, cy = 100;
+  const pt = (i, r) => { const a = -Math.PI / 2 + (2 * Math.PI * i) / n; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; };
+  const ring = (f) => ids.map((_, i) => pt(i, R * f).map((v) => v.toFixed(1)).join(',')).join(' ');
+  const poly = ids.map((id, i) => pt(i, R * Math.max(0.04, result.traits[id].score / 100)).map((v) => v.toFixed(1)).join(',')).join(' ');
+  return `<svg class="rp-radar" viewBox="0 0 200 200">${[1, 0.66, 0.33].map((f) => `<polygon points="${ring(f)}" fill="none" stroke="rgba(255,255,255,.08)"/>`).join('')}
+    <polygon points="${poly}" fill="${color}" fill-opacity=".28" stroke="${color}"/>
+    ${ids.map((id, i) => { const [x, y] = pt(i, R + 18); return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle">${esc(traitLabel(bundle, id))}</text>`; }).join('')}</svg>`;
+}
+function groupPreview(result, bundle, g) {
+  return radar(result, bundle, g.traits, g.color) + g.traits.map((id) => traitBar(result, id, g.color)).join('');
+}
+function characterPreview(result, bundle) {
+  const others = result.characterOrder.filter((c) => c.id !== result.character.id).slice(0, 3);
+  return others.map((c, i) => {
+    const ex = explainCharacter(result, bundle, c.id);
+    const row = (x) => `${esc(traitLabel(bundle, x.axis))}（あなた ${Math.round(x.userScore)}／参照 ${Math.round(x.referenceScore)}）`;
+    return `<div class="rp-match"><p class="rp-match-h"><span class="rp-match-no">${i + 2}</span><b>${'■'.repeat(Math.max(3, Math.min(6, c.name.length)))}</b><em>${c.displayScore}%</em></p>
+      <p class="rp-text sm"><b class="near">近い特性：</b>${ex.aligned.length ? ex.aligned.map(row).join('、') : esc(CHARACTER_NO_ALIGNED)}</p>
+      <p class="rp-text sm"><b class="far">差のある特性：</b>${ex.different.length ? ex.different.map(row).join('、') : esc(CHARACTER_NO_DIFFERENT)}</p></div>`;
+  }).join('');
 }
 function constellation(color, label) {
   const pts = [[100, 22], [168, 62], [160, 140], [100, 176], [40, 140], [32, 62]];
@@ -144,7 +170,6 @@ function fatuiCard(result, bundle) {
     return `<section class="rx-card rx-fatui"><p class="rx-kicker">最も近しいファトゥス</p>
       <p class="jg-pending-block">人物の比較に使える特性の得点差が小さく、特定の人物を示せないため、判定を保留しています。無理に誰かへ当てはめることはしません。</p></section>`;
   }
-  const axes = ch.usedAxes.map((a) => traitLabel(bundle, a));
   return `<section class="rx-card rx-fatui">
       <p class="rx-kicker">最も近しいファトゥス</p>
       <div class="rx-fatui-row">
@@ -154,8 +179,7 @@ function fatuiCard(result, bundle) {
         </div>
         <div class="rx-pct"><b>${esc(ch.match)}<small>%</small></b><span>一致度</span></div>
       </div>
-      <p class="jg-note">参照した特性：${esc(jaList(axes))}</p>
-      <p class="jg-note">${esc(BALANCE_NOTE)}<a href="/jagan/about">方法の説明</a></p>
+      <p class="rx-fatui-link"><a href="/jagan/about">一致度と人物の選び方について ›</a></p>
     </section>`;
 }
 
@@ -226,7 +250,7 @@ function whyCard(result, bundle) {
       <p class="rx-lead">次に近しいファトゥス 3名</p>
       <div class="rx-top-locked">${others.map((o, i) => `<div><span>${i + 2}位</span><b>${'■'.repeat(Math.max(3, Math.min(6, o.name.length)))}</b><em>--%</em></div>`).join('')}</div>
       ${locks(tendencyWords(result, bundle, null, 4))}
-      ${unlockCard('近しいファトゥス3名とあなたの、重なる特性と離れている特性を、物語とあわせて読み解きます。', '近しいファトゥス3名の共通点と相違点')}
+      ${unlockCard('近しいファトゥス3名とあなたの、重なる特性と離れている特性を、物語とあわせて読み解きます。', '近しいファトゥス3名の共通点と相違点', characterPreview(result, bundle), '#E2C08C')}
     </section>`;
 }
 
@@ -246,7 +270,7 @@ function foundationCard(result, bundle, g) {
       <hr class="rx-hr">
       <p class="rx-h4">${esc(g.lockTitle)}</p>
       ${locks(tendencyWords(result, bundle, g.id, 4))}
-      ${unlockCard(g.unlock, g.preview)}
+      ${unlockCard(g.unlock, g.preview, groupPreview(result, bundle, g), g.color)}
     </section>`;
 }
 
@@ -315,7 +339,7 @@ export function renderReport(result, bundle) {
 
   const cover = `<section class="rp-cover" style="--ec:${ec.main};--ed:${ec.dark}">
       <div class="rp-emblem"><svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="84" fill="none" stroke="color-mix(in srgb, var(--ec) 45%, transparent)"/><circle cx="100" cy="100" r="60" fill="none" stroke="rgba(255,255,255,.06)"/>
-        ${[[16, 100], [184, 100], [100, 16], [148, 168], [52, 168], [160, 40]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="3.5" fill="${i % 2 ? '#E2C08C' : ec.main}"/>`).join('')}</svg>
+        ${[[16, 100], [184, 100], [100, 16], [148, 168], [52, 168], [160, 40]].map(([x, y], i) => `<rect x="${x - 4.5}" y="${y - 4.5}" width="9" height="9" transform="rotate(45 ${x} ${y})" fill="${i % 2 ? '#E2C08C' : ec.main}"/>`).join('')}</svg>
         <b>${esc(el.label)}</b></div>
       <p class="rp-cover-en">DELUSION DIAGNOSIS — ${esc(el.label)}</p>
       <h1 class="rp-cover-title">邪眼診断<br>解析レポート</h1>
@@ -354,6 +378,7 @@ export function renderReport(result, bundle) {
       <h2 class="rp-h2" style="color:${g.color}">${esc(g.short)} — <span class="rp-h2-en">${esc(g.en)}</span></h2>
       <p class="rp-text">${esc(g.intro)}</p>
       <blockquote class="rp-quote" style="--ec:${g.color}">${quote}</blockquote>
+      ${radar(result, bundle, g.traits, g.color)}
       ${g.traits.map((id) => traitBar(result, id, g.color)).join('')}
       <p class="rp-note">${SCALE_NOTE}</p>
     </section>`;

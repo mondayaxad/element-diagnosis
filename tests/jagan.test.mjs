@@ -321,12 +321,15 @@ test('result page: deferred parts are not filled, no names leak, and the twelve 
   const html = renderResultPage(r, BUNDLE);
   const names = BUNDLE.characters.characters.filter((c) => html.includes(c.name)).map((c) => c.id);
   assert.deepEqual(names, [r.character.id]);
-  assert.ok(!html.includes('jg-domains') && !html.includes('rp-bar'));
-  for (const t of BUNDLE.items.traits) assert.ok(!html.includes(TRAIT_COPY[t.id].reflection), t.id);
-  assert.ok((html.match(/data-buy disabled/g) || []).length >= 5);
+  // ロック解除の背景は実際のレポートのモザイク：読み上げ・操作の対象外にし、2位以下の人物名は伏せる
+  assert.ok(html.includes('class="rx-mosaic" aria-hidden="true" inert'));
+  assert.equal((html.match(/class="rx-mosaic"/g) || []).length, 4);
+  // ファトゥスのカードに参照特性の説明は出さない（方法説明への導線だけ）
+  assert.ok(!html.includes('参照した特性：'));
+  assert.ok((html.match(/data-buy disabled/g) || []).length >= 9);
   assert.ok(!html.includes('邪眼解析レポート'));
   assert.ok(html.includes('¥1,000') && html.includes('全てのロックを解除する'));
-  assert.ok(html.includes('作品の描写に重ねた独自の参照と比較し、人物ごとの出現の偏りを補正して選定しています'));
+  assert.ok(html.includes('一致度と人物の選び方について'));
 });
 
 test('the report renders all twelve traits, three groups, the character section and the balance caveat; the sample is fictional', () => {
@@ -380,4 +383,9 @@ test('share page and method text are escaped and carry the required disclosure',
   const m = renderMethod();
   assert.ok(m.includes('固定の補正') && m.includes('PID-5'));
   assert.ok(m.includes('Krueger'));
+});
+
+test('every character region is shown as a nation name', () => {
+  const nations = ['モンド', '璃月', '稲妻', 'スメール', 'フォンテーヌ', 'ナタ', 'スネージナヤ', 'ナドクライ', 'カーンルイア'];
+  for (const c of BUNDLE.characters.characters) assert.ok(nations.includes(c.region_label), `${c.id}: ${c.region_label}`);
 });
