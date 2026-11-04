@@ -91,7 +91,7 @@ test('vercel.json：build で dist を作り、dist だけを配信する（clea
   // 診断結果の固有リンク（/result#r=）：index.html を返し、検索に載せない・Referer にパスより先を出さない
   // cleanUrls では /index.html を宛先にできない（404）。TOP（/）へ書き換える
   // 邪眼診断の共有ページ（/jagan/s/<公開ID>）：公開要約だけを返すサーバーのページへ
-  assert.deepEqual(v.rewrites, [{ source: '/result', destination: '/' }, { source: '/jagan/s/:id', destination: '/api/jagan-share-page?id=:id' }]);
+  assert.deepEqual(v.rewrites, [{ source: '/result', destination: '/' }, { source: '/jagan/s/:id', destination: '/api/jagan-share-page?id=:id' }, { source: '/jagan/share', destination: '/api/jagan-share-page' }]);
   const byPath = (src) => v.headers.filter((h) => h.source === src).flatMap((h) => h.headers).reduce((o, h) => Object.assign(o, { [h.key]: h.value }), {});
   // 全ページ（API を除く）：MIME の推測をさせない・他サイトに枠で埋め込ませない・Referer は origin まで
   assert.deepEqual(byPath('/((?!api/).*)'), { 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "frame-ancestors 'none'", 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'strict-origin-when-cross-origin' });

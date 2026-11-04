@@ -94,17 +94,36 @@ export function publicSummary(result) {
   };
 }
 
-// X の共有文（指示書 7章）。人物を保留した結果は人物の行を省く
+// 共有の URL（元素診断の共有と同じく、公開してよい結果だけを URL に載せる。DB に頼らずに OGP が出る）
+//   /jagan/share?e=<邪眼元素ID>&t=<異相の特性ID>&c=<人物ID>&m=<一致度>&v=<呼び名の版>.<デザインの版>
+//   回答・12特性の得点・結果ID は載せない。人物を保留した結果は c・m を付けない。
+export const SHARE_PATH = '/jagan/share';
+export const OG_DESIGN_VERSION = 'dti-og-2';
+export function shareQuery(s) {
+  const p = new URLSearchParams();
+  p.set('e', s.element.id);
+  p.set('t', s.isou.id);
+  if (s.character) { p.set('c', s.character.id); p.set('m', String(s.character.matchPercent)); }
+  p.set('v', `${s.namingVersion}.${OG_DESIGN_VERSION}`);
+  return p.toString();
+}
+export function shareUrl(origin, s) { return `${origin}${SHARE_PATH}?${shareQuery(s)}`; }
+
+// X の共有文（元素診断の共有文と同じ形）。人物を保留した結果は人物の行と人物のハッシュタグを省く
 export function shareTextFromSummary(s, url) {
-  const lines = ['邪眼診断をやってみました。', `私の結果は、${s.element.label}×${s.isou.label}「${s.dti.name}」（${s.dti.code}）。`];
-  if (s.character) lines.push(`最も近しいファトゥス：${s.character.label}（${s.character.matchPercent}%一致）`);
-  return `${lines.join('\n')}\n\n${url}\n#邪眼診断 #原神`;
+  const head = `私の結果は【${s.element.label} × ${s.isou.label}】`;
+  const fat = s.character ? `\n最も近しいファトゥス：${s.character.label}（${s.character.matchPercent}%一致）` : '';
+  const tags = ['#邪眼診断', `#${s.dti.code}`, ...(s.character ? [`#${s.character.label}`] : [])].join(' ');
+  return `邪眼診断をやってみました。\n\n${head}${fat}\n\n${url}\n\n${tags}`;
 }
 
 export function makeShareText(result, summaryUrl, siteOrigin) {
   const url = new URL(summaryUrl), origin = new URL(siteOrigin);
+  const s = publicSummary(result);
   if (origin.protocol !== 'https:' || origin.username || origin.password || origin.pathname !== '/' || origin.search || origin.hash ||
-    url.origin !== origin.origin || url.username || url.password || url.search || url.hash ||
-    !/^\/jagan\/s\/[A-Za-z0-9_-]{16,128}$/.test(url.pathname)) throw new Error('invalid_share_url');
-  return shareTextFromSummary(publicSummary(result), url.href);
+    url.origin !== origin.origin || url.username || url.password || url.hash) throw new Error('invalid_share_url');
+  const stateless = url.pathname === SHARE_PATH && url.search === `?${shareQuery(s)}`;
+  const stored = /^\/jagan\/s\/[A-Za-z0-9_-]{16,128}$/.test(url.pathname) && !url.search;
+  if (!stateless && !stored) throw new Error('invalid_share_url');
+  return shareTextFromSummary(s, url.href);
 }

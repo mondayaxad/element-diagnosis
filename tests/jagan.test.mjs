@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, explainCharacter } from '../jagan/engine/runtime.mjs';
+import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, shareUrl, explainCharacter } from '../jagan/engine/runtime.mjs';
 import { judge, characterRanking, scoreAnswers } from '../jagan/engine/judge.mjs';
 import { BUNDLE } from '../jagan/engine/data.mjs';
 import { judge as specJudge } from '../docs/jagan/spec_v0_3_balanced/runtime.mjs';
@@ -380,10 +380,16 @@ test('share text equals the template; OG params round-trip through the image par
   for (const a of [VARIED(), profile({ MAN: 5, CAL: 5 }), profile({ RSK: 5, IMP: 3 }), profile({ HOS: 4, SUS: 5, WDR: 1 })]) {
     const r = run(a);
     const s = publicSummary(r);
-    const url = 'https://example.invalid/jagan/s/fixture_shared_0001';
+    // 元素診断と同じ形の共有文。URL は公開の値だけを載せた /jagan/share?…（OGP が出る）
+    const url = shareUrl('https://example.invalid', s);
+    assert.match(url, /^https:\/\/example\.invalid\/jagan\/share\?e=[A-Z]{2}&t=[A-Z]{3}&c=[a-z]+&m=\d{1,3}&v=/);
+    assert.ok(!url.includes('ANX01') && !url.includes('score'));
     assert.equal(shareTextFromSummary(s, url), makeShareText(r, url, 'https://example.invalid'));
     const text = makeShareText(r, url, 'https://example.invalid');
-    assert.equal(text, `邪眼診断をやってみました。\n私の結果は、${s.element.label}×${s.isou.label}「${s.dti.name}」（${s.dti.code}）。\n最も近しいファトゥス：${s.character.label}（${s.character.matchPercent}%一致）\n\n${url}\n#邪眼診断 #原神`);
+    assert.equal(text, `邪眼診断をやってみました。\n\n私の結果は【${s.element.label} × ${s.isou.label}】\n最も近しいファトゥス：${s.character.label}（${s.character.matchPercent}%一致）\n\n${url}\n\n#邪眼診断 #${s.dti.code} #${s.character.label}`);
+    // 共有文の URL は、その結果と一致するものだけ（他人の値・他のサイト・余計な値は拒否）
+    assert.throws(() => makeShareText(r, url.replace(/m=\d+/, 'm=100'), 'https://example.invalid'), /invalid_share_url/);
+    assert.throws(() => makeShareText(r, `${url}&answers=1`, 'https://example.invalid'), /invalid_share_url/);
     const parsed = parseOg(new URLSearchParams(ogParams(s)));
     assert.equal(parsed.element, s.element.label);
     assert.equal(parsed.isou, s.isou.label);
@@ -394,8 +400,9 @@ test('share text equals the template; OG params round-trip through the image par
   }
   // 人物を保留した結果は人物の行を省く
   const flat = run(all(3));
-  const ft = makeShareText(flat, 'https://example.invalid/jagan/s/fixture_shared_0001', 'https://example.invalid');
-  assert.ok(!ft.includes('ファトゥス') && ft.includes(flat.dti.code));
+  const ft = makeShareText(flat, shareUrl('https://example.invalid', publicSummary(flat)), 'https://example.invalid');
+  assert.ok(!ft.includes('ファトゥス') && ft.includes(`#${flat.dti.code}`) && ft.endsWith(`#邪眼診断 #${flat.dti.code}`));
+  assert.ok(!shareUrl('https://example.invalid', publicSummary(flat)).includes('&c='));
   assert.equal(parseOg(new URLSearchParams(ogParams(publicSummary(flat)))).character, null);
   assert.equal(parseOg(new URLSearchParams('e=XX&t=ANX&c=pierro&m=50')), null);
   assert.equal(parseOg(new URLSearchParams('e=PY&t=AX')), null);
@@ -542,4 +549,26 @@ test('share HTML (no JS) carries absolute og:image, og:title, og:description, og
   assert.equal(meta('og:url'), `https://element-diagnosis-git-jagan-preview.vercel.app/jagan/s/${share.body.publicId}`);
   assert.equal(meta('twitter:card'), 'summary_large_image');
   assert.equal(page.headers['content-type'], 'text/html; charset=utf-8');
+});
+
+test('stateless share page (/jagan/share?…) needs no DB: summary from whitelisted ids, absolute OGP, og:url, 404 for bad values', async () => {
+  const page = createSharePageHandler({ env: {}, fetchImpl: async () => { throw new Error('no db'); } });
+  const s = publicSummary(run(VARIED()));
+  const q = ogParams(s);
+  const ok = await call(page, { method: 'GET', url: `/api/jagan-share-page?${q}` });
+  assert.equal(ok.status, 200);
+  const meta = (k) => (ok.body.match(new RegExp(`<meta (?:property|name)="${k}" content="([^"]*)"`)) || [])[1];
+  assert.equal(meta('og:image'), `https://element-diagnosis-git-jagan-preview.vercel.app/api/jagan-og?${q.replace(/&/g, '&amp;')}`.replace(/&amp;/g, '&amp;'));
+  assert.equal(meta('og:url').replace(/&amp;/g, '&'), `https://element-diagnosis-git-jagan-preview.vercel.app/jagan/share?${q}`);
+  assert.equal(meta('twitter:card'), 'summary_large_image');
+  assert.ok(ok.body.includes(s.dti.code) && ok.body.includes(s.dti.name) && ok.body.includes(s.character.label));
+  for (const bad of ['e=XX&t=ANX', 'e=PY&t=ANX&c=pierro&m=500', 'e=PY&t=ANX&c=%3Cscript%3E&m=50', '']) {
+    const r = await call(page, { method: 'GET', url: `/api/jagan-share-page?${bad}` });
+    assert.equal(r.status, 404, bad);
+    assert.ok(!r.body.includes('<script>'));
+  }
+  // 人物を保留した結果の共有は、人物の行を出さない
+  const flat = await call(page, { method: 'GET', url: `/api/jagan-share-page?${ogParams(publicSummary(run(all(3))))}` });
+  assert.equal(flat.status, 200);
+  assert.ok(!flat.body.includes('最も近しいファトゥス'));
 });

@@ -4,7 +4,7 @@
 //   ・この端末に残すもの（localStorage）：途中の回答、最後の結果（再表示用）、ログイン前の保存待ち、共有の取消用の値。
 //     ETI の pending（pendingDiagnosis_v1・v2）とは別のキーにする。
 //   ・GA4 へは操作の種類だけを送る（回答・12スコア・結果 ID・公開 ID は送らない）。
-import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, RESULT_SCHEMA_VERSION } from './engine/runtime.mjs';
+import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, shareUrl, RESULT_SCHEMA_VERSION } from './engine/runtime.mjs';
 import { BUNDLE } from './engine/data.mjs';
 import { renderResultPage, esc, heroGemsHtml } from './view.mjs';
 import { cardDataUrl } from './card.mjs';
@@ -265,60 +265,22 @@ async function saveImage() {
 }
 
 // X共有：本人の操作で共有ページを作り、内容を確認してから X の投稿画面を開く（自動投稿しない）
-let sharing = false;
 let currentShare = null;
 async function share() {
-  if (!current || sharing) return;
+  if (!current) return;
   const r = current.result;
   track('jagan_share_click', {});
-  const known = (store.get(K.shares) || {})[r.resultId];
-  sharing = true; const shareLabel = $('shareBtn').innerHTML; $('shareBtn').textContent = '共有ページを作成中…';
-  try {
-    let publicId = known && known.publicId;
-    if (!publicId) {
-      const token = await accessToken();
-      const res = await fetch('/api/jagan-share', { method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({ resultId: r.resultId, itemSetVersion: r.versions.itemSet, answers: current.answers }) });
-      const out = await res.json().catch(() => ({}));
-      if (!res.ok || !out.publicId) {
-        setStatus(res.status === 503 ? '共有は現在ご利用いただけません（準備中）。' : '共有ページを作成できませんでした。もう一度押すと再試行します。', true);
-        return;
-      }
-      publicId = out.publicId;
-      const all = store.get(K.shares) || {};
-      all[r.resultId] = { publicId, revokeToken: out.revokeToken || (known && known.revokeToken) || null };
-      store.set(K.shares, all);
-    }
-    const url = `${location.origin}/jagan/s/${publicId}`;
-    let text;
-    try { text = makeShareText(r, url, `${location.origin}/`); } catch { text = shareTextFromSummary(publicSummary(r), url); }
-    currentShare = { publicId, url, resultId: r.resultId };
-    $('shareText').textContent = text;
-    $('shareOpenX').href = `https://x.com/intent/post?text=${encodeURIComponent(text)}`;
-    $('shareStatus').textContent = '';
-    $('shareDialog').showModal();
-  } catch {
-    setStatus('通信に失敗しました。もう一度押すと再試行します。', true);
-  } finally { sharing = false; $('shareBtn').innerHTML = shareLabel; }
-}
-async function revokeShare() {
-  if (!currentShare) return;
-  const all = store.get(K.shares) || {};
-  const rec = all[currentShare.resultId] || {};
-  const token = await accessToken();
-  try {
-    const res = await fetch('/api/jagan-share', { method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-      body: JSON.stringify({ publicId: currentShare.publicId, revokeToken: rec.revokeToken || undefined }) });
-    if (res.ok) {
-      delete all[currentShare.resultId]; store.set(K.shares, all);
-      $('shareStatus').textContent = '共有を取り消しました。このURLでは結果が表示されなくなります。';
-      currentShare = null;
-    } else {
-      $('shareStatus').textContent = res.status === 403 ? 'この端末からは取り消せません（共有を作成した端末・アカウントで操作してください）。' : '取り消しに失敗しました。';
-    }
-  } catch { $('shareStatus').textContent = '通信に失敗しました。'; }
+  // 元素診断と同じく、公開してよい結果だけを載せた共有 URL を作る（サーバーへの登録なし。この URL から OGP が出る）
+  let s;
+  try { s = publicSummary(r); } catch { setStatus('この結果は共有できません。', true); return; }
+  const url = shareUrl(location.origin, s);
+  let text;
+  try { text = makeShareText(r, url, `${location.origin}/`); } catch { text = shareTextFromSummary(s, url); }
+  currentShare = { url };
+  $('shareText').textContent = text;
+  $('shareOpenX').href = `https://x.com/intent/post?text=${encodeURIComponent(text)}`;
+  $('shareStatus').textContent = '';
+  $('shareDialog').showModal();
 }
 
 // ---- 保存した結果の再表示（/jagan/?saved=<結果ID>。本人の行だけ RLS で読める） ----
@@ -381,7 +343,6 @@ function wire() {
     if (!currentShare) return;
     try { await navigator.clipboard.writeText(currentShare.url); $('shareStatus').textContent = 'URLをコピーしました。'; } catch { $('shareStatus').textContent = currentShare.url; }
   });
-  $('shareRevoke').addEventListener('click', revokeShare);
   $('shareClose').addEventListener('click', () => $('shareDialog').close());
   $('shareOpenX').addEventListener('click', () => track('jagan_share_open_x', {}));
   $('retryBtn').addEventListener('click', () => { store.del(K.progress); history.replaceState(null, '', '/jagan/'); startQuiz(null); });
