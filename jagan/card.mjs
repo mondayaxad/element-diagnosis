@@ -19,12 +19,13 @@ export function drawCard(canvas, s) {
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('canvas_unavailable');
   const c = cardColors(s);
-  ctx.fillStyle = '#09070B'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#0D0507'; ctx.fillRect(0, 0, W, H);
   const g = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, W * 0.6);
-  g.addColorStop(0, `rgba(${rgb(c.elGlow)},0.26)`); g.addColorStop(1, 'rgba(9,7,11,0)');
+  // 背景は元素の色ではなく赤黒（OGP と同じ世界観）
+  g.addColorStop(0, 'rgba(122,26,46,0.34)'); g.addColorStop(0.6, 'rgba(58,12,24,0.18)'); g.addColorStop(1, 'rgba(9,7,11,0)');
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   const g2 = ctx.createRadialGradient(W / 2, H * 0.72, 0, W / 2, H * 0.72, W * 0.45);
-  g2.addColorStop(0, 'rgba(165,42,67,0.14)'); g2.addColorStop(1, 'rgba(9,7,11,0)');
+  g2.addColorStop(0, 'rgba(165,42,67,0.16)'); g2.addColorStop(1, 'rgba(9,7,11,0)');
   ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H);
 
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';

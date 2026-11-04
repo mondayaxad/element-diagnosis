@@ -390,7 +390,7 @@ test('share text equals the template; OG params round-trip through the image par
     assert.equal(parsed.code, s.dti.code); assert.equal(parsed.name, s.dti.name);
     assert.equal(parsed.character.name, s.character.label);
     assert.equal(parsed.character.match, s.character.matchPercent);
-    assert.match(ogParams(s), /&v=dti-naming-v1-20261104\.dti-og-1$/);
+    assert.match(ogParams(s), /&v=dti-naming-v1-20261104\.dti-og-2$/);
   }
   // 人物を保留した結果は人物の行を省く
   const flat = run(all(3));
