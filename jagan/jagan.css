@@ -539,3 +539,19 @@ body { background: #09070B; background-image: none; }
 .rp-radar text { font-size: 10px; fill: #A58994; font-family: var(--font-jp); dominant-baseline: middle; }
 .rx-mosaic { filter: blur(3.5px) saturate(.95); opacity: 1; }
 .rx-mosaic .rp-radar { width: 80%; }
+
+/* ===== DTI 表示（あなたの深淵：邪眼元素 × 異相、4文字コード｜漢字三文字の呼び名） ===== */
+.rx-abyss { margin: 4px 0 2px; font-size: 13px; letter-spacing: .3em; color: #C99AA7; }
+.rx-dti { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px; margin: 2px 0 6px; }
+.rx-dti b { font-family: var(--font-en); font-size: 26px; letter-spacing: .12em; color: #E2C08C; text-shadow: 0 0 14px rgba(226, 192, 140, .25); }
+.rx-dti-sep { color: #6E3A4A; }
+.rx-dti-name { font-size: 24px; font-weight: 700; letter-spacing: .14em; color: #F4E6EA; }
+.rx-sub { font-size: 13px; color: #A58994; letter-spacing: .06em; }
+.rx-pair { margin: 14px 0 0; border-top: 1px solid #2E1520; padding-top: 12px; display: grid; gap: 8px; }
+.rx-pair p { margin: 0; font-size: 13.5px; line-height: 1.9; color: #D9C3CA; }
+.rx-pair b { margin-right: 8px; }
+.rx-legend { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 14px; margin: -10px 0 4px; }
+.rx-legend span { font-size: 11px; color: #A58994; display: inline-flex; align-items: center; gap: 6px; }
+.rx-legend span::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--lc); box-shadow: 0 0 6px var(--lc); }
+.rx-desire { background: linear-gradient(160deg, color-mix(in srgb, var(--ec) 9%, #12090E) 0%, #0F080C 75%); }
+.rp-cover-code { font-family: var(--font-en); letter-spacing: .2em; }

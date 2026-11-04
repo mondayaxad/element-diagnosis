@@ -4,7 +4,7 @@
 //   ・この端末に残すもの（localStorage）：途中の回答、最後の結果（再表示用）、ログイン前の保存待ち、共有の取消用の値。
 //     ETI の pending（pendingDiagnosis_v1・v2）とは別のキーにする。
 //   ・GA4 へは操作の種類だけを送る（回答・12スコア・結果 ID・公開 ID は送らない）。
-import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary } from './engine/runtime.mjs';
+import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, RESULT_SCHEMA_VERSION } from './engine/runtime.mjs';
 import { BUNDLE } from './engine/data.mjs';
 import { renderResultPage, esc, heroGemsHtml } from './view.mjs';
 import { cardDataUrl } from './card.mjs';
@@ -179,8 +179,8 @@ function showResult(record, { mode, savedAt } = {}) {
   const shareable = summaryOf(result) !== null;
   $('imageBtn').disabled = !shareable;
   $('shareBtn').disabled = !shareable;
-  $('pendingFix').hidden = !(!shareable && mode === 'fresh');
-  setStatus(shareable ? '' : '人物の判定を保留したため、画像保存・共有はできません。');
+  $('pendingFix').hidden = true;
+  setStatus(shareable ? '' : 'この結果は画像保存・共有できません。');
   const saveBtn = $('saveBtn');
   if (mode === 'saved') { saveBtn.textContent = '✓ 保存済み'; saveBtn.disabled = true; }
   else if (store.get(K.pending) && store.get(K.pending).resultId === result.resultId) { saveBtn.textContent = 'マイページに保存する（ログイン待ち）'; saveBtn.disabled = false; }
@@ -330,6 +330,12 @@ async function openSaved(resultId) {
   try {
     const { data, error } = await c.from('jagan_results').select('result_id,snapshot,created_at').eq('result_id', resultId).maybeSingle();
     if (error || !data) { message('保存した結果が見つかりませんでした（削除された、または別のアカウントの結果です）。'); return; }
+    // 保存時の判定のまま表示する。旧版の記録は今回の判定へ読み替えない（再判定しない）
+    if (!data.snapshot || data.snapshot.schemaVersion !== RESULT_SCHEMA_VERSION) {
+      const h = data.snapshot || {};
+      message(`この記録は旧版の判定（${h.schemaVersion || '版不明'}）で保存されています。現在の邪眼診断（DTI）とは判定の方法が異なるため、ここでは表示しません。新しく診断すると、DTIの結果として残せます。`);
+      return;
+    }
     showResult({ snapshot: data.snapshot }, { mode: 'saved', savedAt: data.created_at });
   } catch { message('読み込みに失敗しました。時間をおいて再度お試しください。'); }
 }
@@ -356,7 +362,11 @@ function wire() {
   document.querySelectorAll('[data-start]').forEach((b) => b.addEventListener('click', () => startQuiz(null)));
   document.querySelectorAll('[data-track]').forEach((a) => a.addEventListener('click', () => track(a.dataset.track, {})));
   $('resumeBtn').addEventListener('click', () => { const p = loadProgress(); if (p) startQuiz(p); });
-  $('lastResultBtn').addEventListener('click', () => { const l = store.get(K.last); if (l && l.v === VERSION) { showResult(l, { mode: 'fresh' }); history.replaceState(null, '', '/jagan/#result'); } });
+  $('lastResultBtn').addEventListener('click', (e) => {
+    const l = store.get(K.last);
+    if (l && l.v === VERSION && UUID_RE.test(l.resultId || '')) { e.preventDefault(); showResult(l, { mode: 'fresh' }); history.replaceState(null, '', '/jagan/#result'); }
+    // この端末に前回の結果が無いときは、リンク先（マイページの邪眼診断の記録）へ進む
+  });
   $('quizRoot').addEventListener('click', (e) => {
     const dot = e.target.closest('.qz-dot');
     const card = e.target.closest('.qz-card');
@@ -394,7 +404,7 @@ function boot() {
   if (location.hash === '#result' && validLast) { showResult(validLast, { mode: 'fresh' }); return; }
   const p = loadProgress();
   $('resumeBtn').hidden = !(p && answeredCount(p.answers) > 0);
-  $('lastResultBtn').hidden = !validLast;
+
   show('top');
 }
 boot();

@@ -256,7 +256,7 @@ function traceApiImports(root = ROOT, entries = apiEntryFiles(root)) {
 }
 
 // ブラウザとサーバーで共通に使う公開モジュール（秘密を含まない採点・設定）。API が読み込んでも公開してよい
-const SHARED_PUBLIC_MODULES = /^jagan\/(engine\/(judge|runtime|data)\.mjs|view\.mjs|site-copy\.mjs)$/;
+const SHARED_PUBLIC_MODULES = /^jagan\/(engine\/(judge|runtime|data|dti)\.mjs|view\.mjs|site-copy\.mjs)$/;
 // API のサーバー専用ファイル（api/ 以外の require 先）が dist に無いことを確かめる
 function apiFilesExposed(outDir, traced) {
   const dist = new Set(walk(outDir));

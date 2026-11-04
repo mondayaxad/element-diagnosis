@@ -59,11 +59,13 @@
 
   function rowHtml(row) {
     var h = row.headline || {};
-    var head = (h.element || '判定保留') + ' × ' + (h.type || '判定保留');
-    var fat = h.character ? ('最も近しいファトゥス：' + h.character + '（' + h.matchPercent + '%一致）') : '人物：判定保留';
+    // 保存時の見出しをそのまま出す（DTI のコード・呼び名が無い旧版の記録は、読み替えずにコードを出さない）
+    var head = (h.element || '—') + ' × ' + (h.type || '—');
+    var dti = (h.code && h.name) ? (h.code + '｜' + h.name) : '旧版の記録';
+    var fat = h.character ? ('最も近しいファトゥス：' + h.character + '（' + h.matchPercent + '%一致）') : '';
     var d = new Date(row.created_at);
     return '<li class="jg-mp-row">' +
-      '<div><div class="jg-mp-head">' + esc(head) + '</div><div class="jg-mp-sub">' + esc(fat) + '</div>' +
+      '<div><div class="jg-mp-head">' + esc(head) + '</div><div class="jg-mp-dti">' + esc(dti) + '</div>' + (fat ? '<div class="jg-mp-sub">' + esc(fat) + '</div>' : '') +
       '<div class="jg-mp-date">' + esc(isNaN(d) ? '' : d.toLocaleDateString('ja-JP')) + '</div></div>' +
       '<div class="jg-mp-ops"><a class="mp-btn" href="/jagan/?saved=' + encodeURIComponent(row.result_id) + '">開く ›</a>' +
       '<button type="button" class="jg-mp-del" data-jagan-del="' + esc(row.result_id) + '">削除</button></div></li>';
@@ -71,13 +73,13 @@
 
   function sectionHtml(inner) {
     return '<section class="mp-sec" id="jagan" aria-labelledby="mp-jagan-h">' +
-      '<div class="mp-sec-head" id="mp-jagan-h"><span class="mp-sec-en">DELUSION DIAGNOSIS</span><span class="mp-sec-ja">邪眼診断の記録</span></div>' +
+      '<div class="mp-sec-head" id="mp-jagan-h"><span class="mp-sec-en">DELUSION DIAGNOSIS</span><span class="mp-sec-ja">邪眼診断（DTI）の記録</span></div>' +
       inner + '</section>';
   }
 
   var STYLE = '.jg-mp-list{list-style:none;padding:0;margin:0}.jg-mp-row{display:flex;justify-content:space-between;gap:12px;align-items:center;' +
     'border:1px solid rgba(165,42,67,.45);border-radius:12px;padding:12px 14px;margin:8px 0;background:rgba(22,13,20,.6)}' +
-    '.jg-mp-head{font-size:17px}.jg-mp-sub,.jg-mp-date{font-size:12px;opacity:.75}.jg-mp-ops{display:flex;flex-direction:column;gap:6px;align-items:flex-end}' +
+    '.jg-mp-head{font-size:17px}.jg-mp-dti{font-size:13px;letter-spacing:.08em;color:#E2C08C}.jg-mp-sub,.jg-mp-date{font-size:12px;opacity:.75}.jg-mp-ops{display:flex;flex-direction:column;gap:6px;align-items:flex-end}' +
     '.jg-mp-del{background:none;border:0;color:inherit;opacity:.7;text-decoration:underline;font:inherit;font-size:12px;cursor:pointer}' +
     '.jg-mp-note{font-size:13px;opacity:.8;margin:6px 0}';
 

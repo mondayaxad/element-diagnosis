@@ -4,7 +4,7 @@
 //   ・無料の結果では 12 特性の数値を出さない（傾向の言葉だけ）。数値・項目別の読み解きはレポート（ロックの先）。
 import { explainCharacter, shareTextFromSummary } from './engine/runtime.mjs';
 import {
-  ELEMENT_COLOR, NEUTRAL_COLOR, ELEMENT_NAME, ISOU_COLOR, ELEMENT_TEXT, ISOU_TEXT, TRAIT_COPY, GROUPS, GROUP_OF,
+  ELEMENT_COLOR, NEUTRAL_COLOR, ELEMENT_NAME, ISOU_COLOR, ELEMENT_TEXT, ISOU_TEXT, ISOU_SHORT, ELEMENT_STORY, TRAIT_COPY, GROUPS, GROUP_OF,
   CHARACTER_ELEMENTS, CHARACTER_COPY, METHOD, METHOD_KEYS, BALANCE_NOTE, CHARACTER_GLOBAL_NOTICE, CHARACTER_NO_ALIGNED, CHARACTER_NO_DIFFERENT,
 } from './site-copy.mjs';
 
@@ -27,8 +27,10 @@ export function characterGradient(id) {
     : els.length === 1 ? [ELEMENT_COLOR[els[0]].main, '#F4E6EA'] : ['#E2C08C', '#C8405C'];
   return `linear-gradient(100deg, ${stops[0]} 0%, ${stops[1]} 100%)`;
 }
-const isouKey = (isou) => (isou.id || (isou.status === 'unmarked' ? 'NONE' : 'MIX'));
-const elementKey = (el) => (el.id || 'NONE');
+// 弧を描く曲線の四芒星（菱形の辺を内側へ反らせた形）。中心(x,y)・半径 r
+export function sparklePath(x, y, r) {
+  return `M${x},${y - r} Q${x},${y} ${x + r},${y} Q${x},${y} ${x},${y + r} Q${x},${y} ${x - r},${y} Q${x},${y} ${x},${y - r}Z`;
+}
 
 // 邪眼元素の判定に最も寄与した特性（重みが最大のもの）
 export function topContribution(result, bundle) {
@@ -38,13 +40,13 @@ export function topContribution(result, bundle) {
   return { axis, label: traitLabel(bundle, axis), score: result.traits[axis].displayScore };
 }
 
-// 傾向の言葉（50点から遠い順）。数値は出さない。groupId を渡すとその土台の特性だけ
+// 鍵マークの言葉：特性の名前（単語一語）。50点から遠い順。数値は出さない。色は土台のカテゴリ別。groupId を渡すとその土台の特性だけ
 export function tendencyWords(result, bundle, groupId, n) {
   const ids = groupId ? GROUPS.find((g) => g.id === groupId).traits : bundle.items.traits.map((t) => t.id);
   return ids.map((id) => ({ id, s: result.traits[id].score }))
     .sort((a, b) => Math.abs(b.s - 50) - Math.abs(a.s - 50) || a.id.localeCompare(b.id))
     .slice(0, n)
-    .map((x) => ({ word: TRAIT_COPY[x.id][x.s >= 50 ? 'hi' : 'lo'], color: GROUPS.find((g) => g.id === GROUP_OF[x.id]).color }));
+    .map((x) => ({ word: traitLabel(bundle, x.id), color: GROUPS.find((g) => g.id === GROUP_OF[x.id]).color }));
 }
 
 function locks(words) {
@@ -80,15 +82,17 @@ function groupPreview(result, bundle, g) {
   return radar(result, bundle, g.traits, g.color) + g.traits.map((id) => traitBar(result, id, g.color)).join('');
 }
 function characterPreview(result, bundle) {
-  const others = result.characterOrder.filter((c) => c.id !== result.character.id).slice(0, 3);
-  return others.map((c, i) => {
-    const ex = explainCharacter(result, bundle, c.id);
-    const row = (x) => `${esc(traitLabel(bundle, x.axis))}（あなた ${Math.round(x.userScore)}／参照 ${Math.round(x.referenceScore)}）`;
-    return `<div class="rp-match"><p class="rp-match-h"><span class="rp-match-no">${i + 2}</span><b>${'■'.repeat(Math.max(3, Math.min(6, c.name.length)))}</b><em>${c.displayScore}%</em></p>
+  const ch = result.character;
+  const ex = explainCharacter(result, bundle, ch.id);
+  const copy = CHARACTER_COPY[ch.id];
+  const row = (x) => `${esc(traitLabel(bundle, x.axis))}（あなた ${Math.round(x.userScore)}／参照 ${Math.round(x.referenceScore)}）`;
+  return `<div class="rp-match"><p class="rp-match-h"><b>${esc(ch.name)}</b><em>${ch.match}%</em></p>
+      <p class="rp-text sm">${esc(copy.story_context)}</p>
       <p class="rp-text sm"><b class="near">近い特性：</b>${ex.aligned.length ? ex.aligned.map(row).join('、') : esc(CHARACTER_NO_ALIGNED)}</p>
-      <p class="rp-text sm"><b class="far">差のある特性：</b>${ex.different.length ? ex.different.map(row).join('、') : esc(CHARACTER_NO_DIFFERENT)}</p></div>`;
-  }).join('');
+      <p class="rp-text sm"><b class="far">差のある特性：</b>${ex.different.length ? ex.different.map(row).join('、') : esc(CHARACTER_NO_DIFFERENT)}</p>
+      <p class="rp-text sm">${esc(copy.limit)}</p><p class="rp-q">${esc(copy.reflection)}</p></div>`;
 }
+
 function constellation(color, label) {
   const pts = [[100, 22], [168, 62], [160, 140], [100, 176], [40, 140], [32, 62]];
   return `<div class="rx-figure" aria-hidden="true"><svg viewBox="0 0 200 200">
@@ -131,55 +135,55 @@ export function heroGemsHtml() {
 //   今見えているもの→なぜ似ているか→土台ごとの解説と鍵→全てのロックを解除）
 // =====================================================================
 function mainCard(result, bundle) {
-  const el = result.element, isou = result.isou;
-  const et = ELEMENT_TEXT[elementKey(el)], it = ISOU_TEXT[isouKey(isou)];
-  const color = ISOU_COLOR[isouKey(isou)];
-  const contrib = topContribution(result, bundle);
-  const elLine = el.id ? `最も寄与：${contrib.label}（${contrib.score}点）` : '最高点が並びました';
-  const isouLine = isou.status === 'marked' ? `${isou.label}が最も強く表れた（${result.traits[isou.id].displayScore}点）`
-    : isou.status === 'unmarked' ? 'どの特性も60点未満' : `最高点が並ぶ（${jaList(isou.tiedIds.map((i) => traitLabel(bundle, i)))}）`;
-  const nearEl = el.id && el.nearTie ? '<p class="jg-note">2位の邪眼との差が5点以内です。一つの象徴だけで説明し切れるとは限りません。</p>' : '';
-  const nearIsou = isou.status === 'marked' && isou.nearTie ? '<p class="jg-note">次に高い特性との差が5点以内です。</p>' : '';
-  const summary = `つまり<b style="color:var(--ec)">【${esc(el.label)}×${esc(isou.label)}】</b>は、「${esc(et.essence)}」状態に、「${esc(it.essence)}」傾向が重なった組み合わせです。固定的な性格ではなく、今回の回答に表れた傾向の説明です。`;
+  const el = result.element, isou = result.isou, d = result.dti;
+  const color = ISOU_COLOR[isou.id];
+  const summary = `つまり<b style="color:var(--ec)">${esc(d.name)}（${esc(d.code)}）</b>は、「${esc(ELEMENT_TEXT[el.id].essence)}」邪眼の力が、「${esc(ISOU_TEXT[isou.id].essence)}」かたちで表に現れている姿です。今回の回答に表れた姿であり、固定的な性格ではありません。`;
   return `<section class="rx-card rx-main" style="${elementStyle(el.id)}">
-      <div class="rx-main-head"><span class="rx-kicker">あなたの邪眼</span><span class="rx-badge">JAGAN</span></div>
-      <div class="rx-eye">${gemSvg((ELEMENT_COLOR[el.id] || NEUTRAL_COLOR).main, 'main', 20)}</div>
+      <div class="rx-main-head"><span class="rx-kicker">邪眼診断 — DTI</span></div>
+      <div class="rx-eye">${gemSvg(ELEMENT_COLOR[el.id].main, 'main', 20)}</div>
+      <p class="rx-abyss">あなたの深淵</p>
       <h2 class="rx-title"><span class="rx-el">${esc(el.label)}</span><span class="rx-x">×</span><span class="rx-type" style="--tc:${color}">${esc(isou.label)}</span></h2>
-      <p class="rx-sub">${el.id ? esc(ELEMENT_NAME[el.id]) : esc(et.axis)} ／ ${esc(it.axis)}</p>
-      ${nearEl}${nearIsou}
-      <details class="rx-more">
-        <summary>もっと詳しく見る <span class="arw">▾</span></summary>
-        <p class="rx-more-h">邪眼と異相とは</p>
-        <p class="rx-more-lead">邪眼元素は、12の特性の得点を組み合わせて導いた「心の影の象徴」。異相は、12の特性のうち今回もっとも強く表れたもの、つまり影の現れ方です。</p>
-        <div class="rx-tiles">
-          <div class="rx-tile rx-tile-el"><b>邪眼（${esc(el.label)}）</b><span>——気質の軸</span><em>${esc(elLine)}</em></div>
-          <div class="rx-tile rx-tile-ty" style="--tc:${color}"><b>${esc(isou.label)}</b><span>——影の現れ方の軸</span><em>${esc(isouLine)}</em></div>
-        </div>
-        <p class="rx-sec-label">気質｜邪眼（${esc(el.label)}）</p>
-        <p class="rx-text">${esc(et.body)}</p>
-        <p class="rx-sec-label">影の現れ方｜異相（${esc(isou.label)}）</p>
-        <p class="rx-text">${esc(it.body)}</p>
-        <blockquote class="rx-summary">${summary}</blockquote>
-      </details>
+      <p class="rx-dti"><b>${esc(d.code)}</b><span class="rx-dti-sep">｜</span><span class="rx-dti-name">${esc(d.name)}</span></p>
+      <p class="rx-sub">邪眼：${esc(el.label)} ／ 異相：${esc(isou.label)}</p>
+      <div class="rx-pair">
+        <p><b style="color:var(--ec)">邪眼（${esc(el.label)}）</b>${esc(ELEMENT_NAME[el.id])}——${esc(ELEMENT_TEXT[el.id].essence)}邪眼。</p>
+        <p><b style="color:${color}">異相（${esc(isou.label)}）</b>${esc(ISOU_SHORT[isou.id])}</p>
+      </div>
+      <blockquote class="rx-summary">${summary}</blockquote>
     </section>`;
 }
 
-function fatuiCard(result, bundle) {
+function fatuiCard(result) {
   const ch = result.character;
   if (ch.status !== 'available') {
     return `<section class="rx-card rx-fatui"><p class="rx-kicker">最も近しいファトゥス</p>
-      <p class="jg-pending-block">人物の比較に使える特性の得点差が小さく、特定の人物を示せないため、判定を保留しています。無理に誰かへ当てはめることはしません。</p></section>`;
+      <p class="jg-pending-block">今回の回答では、人物の比較に使える特性の差が小さく、特定の人物を示せませんでした。無理に誰かへ当てはめることはしません。</p></section>`;
   }
   return `<section class="rx-card rx-fatui">
       <p class="rx-kicker">最も近しいファトゥス</p>
       <div class="rx-fatui-row">
         <div>
           <p class="rx-fatui-name${ch.name.length >= 6 ? ' is-long' : ''}" style="background-image:${characterGradient(ch.id)}">${esc(ch.name)}</p>
-          <div class="rx-tags"><span class="rx-tag">「${esc(ch.title)}」</span>${ch.tags.map((t) => `<span class="rx-tag rx-tag-type">${esc(t)}</span>`).join('')}<span class="rx-tag">${esc(ch.region)}</span></div>
+          <div class="rx-tags">${ch.tags.map((t) => `<span class="rx-tag rx-tag-type">${esc(t)}</span>`).join('')}<span class="rx-tag">${esc(ch.region)}</span></div>
         </div>
         <div class="rx-pct"><b>${esc(ch.match)}<small>%</small></b><span>一致度</span></div>
       </div>
       <p class="rx-fatui-link"><a href="/jagan/about">一致度と人物の選び方について ›</a></p>
+    </section>`;
+}
+
+// 4. 欲求が導くあなたの影（邪眼元素の説明。専門用語を使わず、欲求・力・代償で）と、あなたの欲求特性（単語一語・カテゴリ別の色）
+function desireCard(result, bundle) {
+  const el = result.element;
+  const top4 = result.traitRanking.slice(0, 4).map((t) => ({ word: t.label, color: GROUPS.find((g) => g.id === GROUP_OF[t.id]).color }));
+  return `<section class="rx-card rx-desire" style="${elementStyle(el.id)}">
+      <p class="rx-sec-h" style="--dot:var(--ec)"><i></i>欲求が導くあなたの影</p>
+      <p class="rx-text">${esc(ELEMENT_STORY[el.id])}</p>
+      <hr class="rx-hr">
+      <p class="rx-h4">あなたの欲求特性</p>
+      <p class="rx-lead">今回の回答で強く表れた4つ。読み解きはロックの先にあります。</p>
+      ${locks(top4)}
+      <div class="rx-legend">${GROUPS.map((g) => `<span style="--lc:${g.color}">${esc(g.short)}</span>`).join('')}</div>
     </section>`;
 }
 
@@ -219,12 +223,12 @@ function actions() {
 }
 
 function seeingCard() {
-  const open = ['邪眼元素と異相の判定結果', '最も近しいファトゥス1名', 'なぜ似ているかの簡易な理由'];
+  const open = ['邪眼元素と異相（DTIコード・呼び名）', '最も近しいファトゥス1名', '欲求が導くあなたの影'];
   const locked = ['12特性のスコアと、それぞれの読み解き', ...GROUPS.map((g) => `${g.short}（4特性）の詳細`), '近しいファトゥス3名との共通点・相違点', '判定根拠（なぜその組み合わせになったか）'];
   return `<section class="rx-card rx-seeing">
       <p class="rx-seeing-k">今、あなたが見ているもの</p>
       <ul>${open.map((t) => `<li class="on"><span>${checkSvg}</span>${esc(t)}</li>`).join('')}${locked.map((t) => `<li><span class="lk">${lockSvg}</span>${esc(t)}</li>`).join('')}</ul>
-      <p class="rx-seeing-foot">ここで見えているのは、あなたの深淵の一部分に過ぎません。</p>
+      <p class="rx-seeing-foot">ここで見えているのは、あなたの一部分に過ぎません。</p>
     </section>`;
 }
 
@@ -238,7 +242,6 @@ function whyCard(result, bundle) {
     ? `<b class="rx-grad" style="${nameStyle}">${esc(ch.name)}</b>との一致度は<b>${esc(ch.match)}%</b>。特に${esc(aligned.join(''))}が、${esc(ch.name)}の参照とあなたとで近い値を示しています。`
     : `<b class="rx-grad" style="${nameStyle}">${esc(ch.name)}</b>との一致度は<b>${esc(ch.match)}%</b>。参照した特性の中に際立って近い項目は限られますが、比較できる特性の中では最も近い参照です。`;
   const bars = [['参照した特性との近さ', ch.agreement, '#C98A5A'], ['あなたの目立つ特性との重なり', ch.coverage * 100, '#8E7CD0']];
-  const others = result.characterOrder.filter((c) => c.id !== ch.id).slice(0, 3);
   return `<section class="rx-card rx-why">
       <p class="rx-sec-h"><i></i>なぜあなたは似ているか</p>
       ${constellation('#E2C08C', 'CONSTELLATION OF SHADOWS')}
@@ -247,10 +250,8 @@ function whyCard(result, bundle) {
       <p class="jg-note">一致度は、この二つを合わせた近さです（補正を足す前の値）。比較に使えるのは、作品の描写から対応を置けた特性だけです。</p>
       <hr class="rx-hr">
       <p class="rx-h4">あなたの影の特性</p>
-      <p class="rx-lead">次に近しいファトゥス 3名</p>
-      <div class="rx-top-locked">${others.map((o, i) => `<div><span>${i + 2}位</span><b>${'■'.repeat(Math.max(3, Math.min(6, o.name.length)))}</b><em>--%</em></div>`).join('')}</div>
       ${locks(tendencyWords(result, bundle, null, 4))}
-      ${unlockCard('近しいファトゥス3名とあなたの、重なる特性と離れている特性を、物語とあわせて読み解きます。', '近しいファトゥス3名の共通点と相違点', characterPreview(result, bundle), '#E2C08C')}
+      ${unlockCard('最も近しいファトゥスとあなたの、重なる特性と離れている特性を、物語とあわせて読み解きます。', `${ch.name}との共通点と相違点`, characterPreview(result, bundle), '#E2C08C')}
     </section>`;
 }
 
@@ -294,7 +295,9 @@ function unlockAll() {
 }
 
 export function renderResultPage(result, bundle) {
-  return [mainCard(result, bundle), fatuiCard(result, bundle), cravingCard(result), actions(), seeingCard(), whyCard(result, bundle),
+  // 指示書 5章の順：1〜2 あなたの深淵 → 3 最も近しいファトゥス → 4 欲求が導くあなたの影 → 5 渇望する邪眼 → 6 保存・画像・X →
+  //   7 見えているのは一部分（土台ごとのロックと解除の案内）→ 8 内容と価値、最後に金額
+  return [mainCard(result, bundle), fatuiCard(result), desireCard(result, bundle), cravingCard(result), actions(), seeingCard(), whyCard(result, bundle),
     ...GROUPS.map((g) => foundationCard(result, bundle, g)), unlockAll()].join('\n');
 }
 
@@ -329,8 +332,9 @@ function listItems(result, ids, mark, note) {
 
 export function renderReport(result, bundle) {
   const el = result.element, isou = result.isou;
-  const et = ELEMENT_TEXT[elementKey(el)], it = ISOU_TEXT[isouKey(isou)];
-  const ec = ELEMENT_COLOR[el.id] || NEUTRAL_COLOR;
+  const et = ELEMENT_TEXT[el.id], it = ISOU_TEXT[isou.id];
+  const ec = ELEMENT_COLOR[el.id];
+  const d = result.dti;
   const ch = result.character;
   const sorted = result.traitRanking;
   const highs = sorted.slice(0, 3).map((t) => t.id);
@@ -339,12 +343,12 @@ export function renderReport(result, bundle) {
 
   const cover = `<section class="rp-cover" style="--ec:${ec.main};--ed:${ec.dark}">
       <div class="rp-emblem"><svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="84" fill="none" stroke="color-mix(in srgb, var(--ec) 45%, transparent)"/><circle cx="100" cy="100" r="60" fill="none" stroke="rgba(255,255,255,.06)"/>
-        ${[[16, 100], [184, 100], [100, 16], [148, 168], [52, 168], [160, 40]].map(([x, y], i) => `<rect x="${x - 4.5}" y="${y - 4.5}" width="9" height="9" transform="rotate(45 ${x} ${y})" fill="${i % 2 ? '#E2C08C' : ec.main}"/>`).join('')}</svg>
+        ${[[16, 100], [184, 100], [100, 16], [148, 168], [52, 168], [160, 40]].map(([x, y], i) => `<path d="${sparklePath(x, y, 8)}" fill="${i % 2 ? '#E2C08C' : ec.main}"/>`).join('')}</svg>
         <b>${esc(el.label)}</b></div>
       <p class="rp-cover-en">DELUSION DIAGNOSIS — ${esc(el.label)}</p>
       <h1 class="rp-cover-title">邪眼診断<br>解析レポート</h1>
-      <p class="rp-cover-code">${el.id ? esc(ELEMENT_NAME[el.id]) : esc(et.axis)}</p>
-      <p class="rp-cover-type">${esc(isou.label)}</p>
+      <p class="rp-cover-code">${esc(d.code)}</p>
+      <p class="rp-cover-type">${esc(d.name)}</p>
       <p class="rp-cover-sub">${esc(el.label)} × ${esc(isou.label)}${ch.status === 'available' ? ` × ${esc(ch.name)}` : ''}</p>
     </section>`;
 
@@ -354,7 +358,7 @@ export function renderReport(result, bundle) {
       ${listItems(result, lows, 'down', '。あなたの12特性の中で、相対的に控えめに表れています。')}`;
   const s01 = `<section class="rp-card">
       <p class="rp-no">01</p>
-      <h2 class="rp-h2">あなたの邪眼 — <span style="color:${ec.main}">${esc(el.label)}</span> × ${esc(isou.label)}</h2>
+      <h2 class="rp-h2">あなたの深淵 — <span style="color:${ec.main}">${esc(el.label)}</span> × ${esc(isou.label)}｜${esc(d.code)} ${esc(d.name)}</h2>
       <p class="rp-text">${esc(et.body)}</p>
       <p class="rp-text">${esc(it.body)}</p>
       <blockquote class="rp-quote" style="--ec:${ec.main}">この二つが重なるとき、「${esc(et.essence)}」状態に、「${esc(it.essence)}」傾向が重なった姿として表に現れます。</blockquote>

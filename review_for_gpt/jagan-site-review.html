@@ -558,6 +558,22 @@ body { background: #09070B; background-image: none; }
 .rx-mosaic { filter: blur(3.5px) saturate(.95); opacity: 1; }
 .rx-mosaic .rp-radar { width: 80%; }
 
+/* ===== DTI 表示（あなたの深淵：邪眼元素 × 異相、4文字コード｜漢字三文字の呼び名） ===== */
+.rx-abyss { margin: 4px 0 2px; font-size: 13px; letter-spacing: .3em; color: #C99AA7; }
+.rx-dti { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px; margin: 2px 0 6px; }
+.rx-dti b { font-family: var(--font-en); font-size: 26px; letter-spacing: .12em; color: #E2C08C; text-shadow: 0 0 14px rgba(226, 192, 140, .25); }
+.rx-dti-sep { color: #6E3A4A; }
+.rx-dti-name { font-size: 24px; font-weight: 700; letter-spacing: .14em; color: #F4E6EA; }
+.rx-sub { font-size: 13px; color: #A58994; letter-spacing: .06em; }
+.rx-pair { margin: 14px 0 0; border-top: 1px solid #2E1520; padding-top: 12px; display: grid; gap: 8px; }
+.rx-pair p { margin: 0; font-size: 13.5px; line-height: 1.9; color: #D9C3CA; }
+.rx-pair b { margin-right: 8px; }
+.rx-legend { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 14px; margin: -10px 0 4px; }
+.rx-legend span { font-size: 11px; color: #A58994; display: inline-flex; align-items: center; gap: 6px; }
+.rx-legend span::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--lc); box-shadow: 0 0 6px var(--lc); }
+.rx-desire { background: linear-gradient(160deg, color-mix(in srgb, var(--ec) 9%, #12090E) 0%, #0F080C 75%); }
+.rp-cover-code { font-family: var(--font-en); letter-spacing: .2em; }
+
 </style>
 
 
@@ -652,8 +668,7 @@ body { background: #09070B; background-image: none; }
         <div class="jt-cta-wrap">
           <button type="button" class="jt-cta" data-start="">診断をはじめる <span class="en">— Start</span></button>
           <button type="button" class="jt-sublink" id="resumeBtn" hidden="">途中から再開する <span class="arw">→</span></button>
-          <button type="button" class="jt-sublink" id="lastResultBtn" hidden="">前回の結果を見る <span class="arw">→</span></button>
-          <a href="/mypage#jagan" class="jt-sublink" data-track="jagan_mypage_entry">診断記録を見る <span class="arw">→</span></a>
+          <a href="/mypage#jagan" class="jt-sublink" id="lastResultBtn" data-track="jagan_mypage_entry">診断結果を見る <span class="arw">→</span></a>
         </div>
       </div>
       <span class="jt-scroll" aria-hidden="true"></span>
@@ -680,9 +695,10 @@ body { background: #09070B; background-image: none; }
           <details open="">
             <summary class="jt-link">診断設計と心理理論について <span class="arw">→</span></summary>
             <dl>
+              <div class="item"><dt>略称</dt><dd>DTI（Delusion Type Indicator／邪眼タイプ指標）<small>"What's your DTI?" — 例：HYDP｜縋望者（水×依存）</small></dd></div>
               <div class="item"><dt>診断形式</dt><dd>50問 / 5段階回答（補助選択肢なし・5問ずつ）<small>50 questions · 5-point scale</small></dd></div>
               <div class="item"><dt>測定する特性</dt><dd>不安・依存・猜疑・撤退・衝動・固執・完璧・敵意・顕示・操作・危険志向・冷淡（12特性。各0〜100に換算）<small>12 traits, each converted to 0–100</small></dd></div>
-              <div class="item"><dt>結果</dt><dd>7邪眼元素 × 異相（12特性のうち最も強いもの／未顕／複合）＋ ファトゥス11名<small>7 elements × isou (shadow form) · 11 Harbingers</small></dd></div>
+              <div class="item"><dt>結果</dt><dd>7邪眼元素 × 12異相＝84通り（必ず一つずつ）＋ ファトゥス11名<small>7 elements × 12 aspects = 84 types · 11 Harbingers</small></dd></div>
               <div class="item"><dt>参考にした研究</dt><dd class="jp">DSM-5 第III部の代替モデルと PID-5（Krueger et al., 2012）の特性の概念。設問はすべて独自に作成したもので、正式な PID-5 ではなく、その得点・百分位でもありません。<small>Original items informed by the PID-5 trait concepts</small></dd></div>
               <div class="item"><dt>人物との一致度</dt><dd class="jp">作品の描写を参考に設計した、人物ごとに2〜3の特性だけの部分的な参照との近さ。人物ごとの出現の偏りを抑える固定の補正を加えて選びます。人物本人の心理得点や科学的な一致確率ではありません。<small>Similarity to partial authored references, with a fixed balance offset</small></dd></div>
               <div class="item"><dt>料金</dt><dd class="jp">診断：無料 ／ 解析レポート：¥1,000（販売準備中）<small>Diagnosis: Free / Report: ¥1,000 (coming soon)</small></dd></div>
@@ -780,7 +796,7 @@ body { background: #09070B; background-image: none; }
   <div class="gpt-divider">画面3：診断結果（架空の回答。アコーデオンは開いた状態）</div><section id="view-result" data-view="">
     <p class="jg-note jg-center" id="savedBanner" hidden=""></p>
     <div id="resultBody" class="rx"><section class="rx-card rx-main" style="--ec:#3F82BC;--ed:#173A5C;--eg:rgba(63,130,188,.45)">
-      <div class="rx-main-head"><span class="rx-kicker">あなたの邪眼</span><span class="rx-badge">JAGAN</span></div>
+      <div class="rx-main-head"><span class="rx-kicker">邪眼診断 — DTI</span></div>
       <div class="rx-eye"><svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true">
       <defs><linearGradient id="jgm-main" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ffffff" stop-opacity="0.85"></stop><stop offset="45%" stop-color="#3F82BC"></stop><stop offset="100%" stop-color="#3F82BC" stop-opacity="0.55"></stop></linearGradient></defs>
       <ellipse cx="28" cy="28" rx="26" ry="8" fill="none" stroke="#3F82BC" stroke-width="1.3" opacity="0.55" transform="rotate(20 28 28)"></ellipse><ellipse cx="28" cy="28" rx="26" ry="8" fill="none" stroke="#3F82BC" stroke-width="0.6" stroke-dasharray="1 3" opacity="0.35" transform="rotate(20 28 28)"></ellipse>
@@ -791,34 +807,35 @@ body { background: #09070B; background-image: none; }
         <polygon points="26,40 30,40 28,46" fill="#3F82BC" opacity="0.6"></polygon>
         <polygon points="28,10 36,20 32,17" fill="#ffffff" opacity="0.4"></polygon>
       </g></svg></div>
+      <p class="rx-abyss">あなたの深淵</p>
       <h2 class="rx-title"><span class="rx-el">水</span><span class="rx-x">×</span><span class="rx-type" style="--tc:#7FA7D8">依存</span></h2>
-      <p class="rx-sub">寄る辺なき深淵 ／ 離れることへの不安</p>
-      <p class="jg-note">次に高い特性との差が5点以内です。</p>
-      <details class="rx-more" open="">
-        <summary>もっと詳しく見る <span class="arw">▾</span></summary>
-        <p class="rx-more-h">邪眼と異相とは</p>
-        <p class="rx-more-lead">邪眼元素は、12の特性の得点を組み合わせて導いた「心の影の象徴」。異相は、12の特性のうち今回もっとも強く表れたもの、つまり影の現れ方です。</p>
-        <div class="rx-tiles">
-          <div class="rx-tile rx-tile-el"><b>邪眼（水）</b><span>——気質の軸</span><em>最も寄与：依存（70点）</em></div>
-          <div class="rx-tile rx-tile-ty" style="--tc:#7FA7D8"><b>依存</b><span>——影の現れ方の軸</span><em>依存が最も強く表れた（70点）</em></div>
-        </div>
-        <p class="rx-sec-label">気質｜邪眼（水）</p>
-        <p class="rx-text">水の邪眼は、親しい相手との関係をめぐる不安が、心の水面を揺らしやすい状態を映します。離れることへの不安（分離不安）は、愛着の研究でも扱われてきた傾向で、関係を大切にしていることの裏返しでもあります。不安や猜疑が重なると、相手の沈黙や変化に敏感になり、確かめたくなる気持ちが強まりやすくなります。揺れそのものは弱さではなく、相手を大切に思う深さの表れでもあります。</p>
-        <p class="rx-sec-label">影の現れ方｜異相（依存）</p>
-        <p class="rx-text">依存（分離不安）は、親しい相手との距離や別れに、強い不安を覚えやすい傾向です。関係を大切にする力の裏返しでもあり、人に頼ること自体は自然なことです。相手の返事や予定の変化に揺れるとき、気持ちを言葉にして伝えられる関係は、不安を和らげる助けになります。</p>
-        <blockquote class="rx-summary">つまり<b style="color:var(--ec)">【水×依存】</b>は、「大切な関係を失う不安が、心の水面を揺らす」状態に、「大切な相手と離れることに、不安を感じやすい」傾向が重なった組み合わせです。固定的な性格ではなく、今回の回答に表れた傾向の説明です。</blockquote>
-      </details>
+      <p class="rx-dti"><b>HYDP</b><span class="rx-dti-sep">｜</span><span class="rx-dti-name">縋望者</span></p>
+      <p class="rx-sub">邪眼：水 ／ 異相：依存</p>
+      <div class="rx-pair">
+        <p><b style="color:var(--ec)">邪眼（水）</b>寄る辺なき深淵——大切な関係を失う不安が、心の水面を揺らす邪眼。</p>
+        <p><b style="color:#7FA7D8">異相（依存）</b>大切な人と離れることに不安を感じ、つながりを確かめたくなる現れ方です。</p>
+      </div>
+      <blockquote class="rx-summary">つまり<b style="color:var(--ec)">縋望者（HYDP）</b>は、「大切な関係を失う不安が、心の水面を揺らす」邪眼の力が、「大切な相手と離れることに、不安を感じやすい」かたちで表に現れている姿です。今回の回答に表れた姿であり、固定的な性格ではありません。</blockquote>
     </section>
 <section class="rx-card rx-fatui">
       <p class="rx-kicker">最も近しいファトゥス</p>
       <div class="rx-fatui-row">
         <div>
           <p class="rx-fatui-name" style="background-image:linear-gradient(100deg, #7DB3C6 0%, #F4E6EA 100%)">カピターノ</p>
-          <div class="rx-tags"><span class="rx-tag">「隊長」</span><span class="rx-tag rx-tag-type">責務</span><span class="rx-tag rx-tag-type">献身</span><span class="rx-tag">カーンルイア</span></div>
+          <div class="rx-tags"><span class="rx-tag rx-tag-type">責務</span><span class="rx-tag rx-tag-type">献身</span><span class="rx-tag">カーンルイア</span></div>
         </div>
         <div class="rx-pct"><b>70<small>%</small></b><span>一致度</span></div>
       </div>
       <p class="rx-fatui-link"><a href="/jagan/about">一致度と人物の選び方について ›</a></p>
+    </section>
+<section class="rx-card rx-desire" style="--ec:#3F82BC;--ed:#173A5C;--eg:rgba(63,130,188,.45)">
+      <p class="rx-sec-h" style="--dot:var(--ec)"><i></i>欲求が導くあなたの影</p>
+      <p class="rx-text">邪眼（水）は、大切な人とのつながりを失いたくないという願いを映す邪眼です。あなたが渇望しているのは、離れていても心が通い合っていると確かめられること。その力は、相手の小さな変化に気づき、関係を大切に守ろうとする深さです。代償は、返事の遅さや距離の変化に心が揺れやすく、確かめずにはいられなくなること。揺れを言葉にして伝えられたとき、水は静かな深みに変わります。</p>
+      <hr class="rx-hr">
+      <p class="rx-h4">あなたの欲求特性</p>
+      <p class="rx-lead">今回の回答で強く表れた4つ。読み解きはロックの先にあります。</p>
+      <div class="rx-locks"><div class="rx-lock" style="--lc:#C98A5A"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">依存</span></div><div class="rx-lock" style="--lc:#C98A5A"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">不安</span></div><div class="rx-lock" style="--lc:#8E7CD0"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">完璧</span></div><div class="rx-lock" style="--lc:#8E7CD0"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">固執</span></div></div>
+      <div class="rx-legend"><span style="--lc:#C98A5A">不安と距離</span><span style="--lc:#8E7CD0">行動のくせ</span><span style="--lc:#C8405C">他者との向き合い</span></div>
     </section>
 <section class="rx-card">
       <p class="rx-h3">あなたの渇望する邪眼</p>
@@ -849,8 +866,8 @@ body { background: #09070B; background-image: none; }
     </div>
 <section class="rx-card rx-seeing">
       <p class="rx-seeing-k">今、あなたが見ているもの</p>
-      <ul><li class="on"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>邪眼元素と異相の判定結果</li><li class="on"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>最も近しいファトゥス1名</li><li class="on"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>なぜ似ているかの簡易な理由</li><li><span class="lk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span>12特性のスコアと、それぞれの読み解き</li><li><span class="lk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span>不安と距離（4特性）の詳細</li><li><span class="lk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span>行動のくせ（4特性）の詳細</li><li><span class="lk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span>他者との向き合い（4特性）の詳細</li><li><span class="lk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span>近しいファトゥス3名との共通点・相違点</li><li><span class="lk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span>判定根拠（なぜその組み合わせになったか）</li></ul>
-      <p class="rx-seeing-foot">ここで見えているのは、あなたの深淵の一部分に過ぎません。</p>
+      <ul><li class="on"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>邪眼元素と異相（DTIコード・呼び名）</li><li class="on"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>最も近しいファトゥス1名</li><li class="on"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>欲求が導くあなたの影</li><li><span class="lk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span>12特性のスコアと、それぞれの読み解き</li><li><span class="lk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span>不安と距離（4特性）の詳細</li><li><span class="lk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span>行動のくせ（4特性）の詳細</li><li><span class="lk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span>他者との向き合い（4特性）の詳細</li><li><span class="lk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span>近しいファトゥス3名との共通点・相違点</li><li><span class="lk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span>判定根拠（なぜその組み合わせになったか）</li></ul>
+      <p class="rx-seeing-foot">ここで見えているのは、あなたの一部分に過ぎません。</p>
     </section>
 <section class="rx-card rx-why">
       <p class="rx-sec-h"><i></i>なぜあなたは似ているか</p>
@@ -867,24 +884,20 @@ body { background: #09070B; background-image: none; }
       <p class="jg-note">一致度は、この二つを合わせた近さです（補正を足す前の値）。比較に使えるのは、作品の描写から対応を置けた特性だけです。</p>
       <hr class="rx-hr">
       <p class="rx-h4">あなたの影の特性</p>
-      <p class="rx-lead">次に近しいファトゥス 3名</p>
-      <div class="rx-top-locked"><div><span>2位</span><b>■■■■■■</b><em>--%</em></div><div><span>3位</span><b>■■■■■■</b><em>--%</em></div><div><span>4位</span><b>■■■■■■</b><em>--%</em></div></div>
-      <div class="rx-locks"><div class="rx-lock" style="--lc:#C8405C"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">寄り添う心</span></div><div class="rx-lock" style="--lc:#8E7CD0"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">慎重な足取り</span></div><div class="rx-lock" style="--lc:#C8405C"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">控えめな佇まい</span></div><div class="rx-lock" style="--lc:#C8405C"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">穏やかな反応</span></div></div>
+      <div class="rx-locks"><div class="rx-lock" style="--lc:#C8405C"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">冷淡</span></div><div class="rx-lock" style="--lc:#8E7CD0"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">危険志向</span></div><div class="rx-lock" style="--lc:#C8405C"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">顕示</span></div><div class="rx-lock" style="--lc:#C8405C"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">敵意</span></div></div>
       <div class="rx-unlock">
       <span class="rx-unlock-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span>
       <p class="rx-unlock-title">今すぐロックを解除</p>
-      <p class="rx-unlock-text">近しいファトゥス3名とあなたの、重なる特性と離れている特性を、物語とあわせて読み解きます。</p>
+      <p class="rx-unlock-text">最も近しいファトゥスとあなたの、重なる特性と離れている特性を、物語とあわせて読み解きます。</p>
       <p class="rx-unlock-price">¥1,000</p>
       <button type="button" class="rx-buy" data-buy="" disabled="" aria-disabled="true">全てのロックを解除する<small>準備中</small></button>
       <div class="rx-preview" style="--pc:#E2C08C">
-        <p class="rx-preview-head" aria-hidden="true">レポートより — <b>近しいファトゥス3名の共通点と相違点</b></p>
-        <div class="rx-mosaic" aria-hidden="true" inert=""><div class="rp-match"><p class="rp-match-h"><span class="rp-match-no">2</span><b>■■■■■■</b><em>59%</em></p>
-      <p class="rp-text sm"><b class="near">近い特性：</b>敵意（あなた 19／参照 20）、冷淡（あなた 6／参照 20）</p>
-      <p class="rp-text sm"><b class="far">差のある特性：</b>撤退（あなた 31／参照 65）</p></div><div class="rp-match"><p class="rp-match-h"><span class="rp-match-no">3</span><b>■■■■■■</b><em>55%</em></p>
-      <p class="rp-text sm"><b class="near">近い特性：</b>衝動（あなた 20／参照 20）</p>
-      <p class="rp-text sm"><b class="far">差のある特性：</b>操作（あなた 31／参照 70）、冷淡（あなた 6／参照 30）</p></div><div class="rp-match"><p class="rp-match-h"><span class="rp-match-no">4</span><b>■■■■■■</b><em>51%</em></p>
-      <p class="rp-text sm"><b class="near">近い特性：</b>衝動（あなた 20／参照 30）</p>
-      <p class="rp-text sm"><b class="far">差のある特性：</b>操作（あなた 31／参照 75）</p></div></div>
+        <p class="rx-preview-head" aria-hidden="true">レポートより — <b>カピターノとの共通点と相違点</b></p>
+        <div class="rx-mosaic" aria-hidden="true" inert=""><div class="rp-match"><p class="rp-match-h"><b>カピターノ</b><em>70%</em></p>
+      <p class="rp-text sm">ナタでの物語では、救うべきもののために行動を続け、対立した相手との協働も選びます。</p>
+      <p class="rp-text sm"><b class="near">近い特性：</b>衝動（あなた 20／参照 25）、敵意（あなた 19／参照 25）、冷淡（あなた 6／参照 15）</p>
+      <p class="rp-text sm"><b class="far">差のある特性：</b>この比較条件では、大きな差として示す項目はありません。人物全体が同じという意味ではありません。</p>
+      <p class="rp-text sm">献身・責任感・戦闘力は測っていません。衝動・冷淡・敵意が低めの参照との近さだけを見ており、人物全体は表せません。</p><p class="rp-q">続けることが助けになった場面と、負担になった場面はありますか。</p></div></div>
         <button type="button" class="rx-preview-btn" data-buy="" disabled="" aria-disabled="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg>今すぐロックを解除</button>
       </div>
     </div>
@@ -901,10 +914,10 @@ body { background: #09070B; background-image: none; }
     </svg><span>ANXIETY, TRUST AND DISTANCE</span></div>
       <p class="rx-text">不安・依存・猜疑・撤退は、他者との距離や安心感をめぐって心が揺れるときに表れやすい特性です。心理学では、病的な水準だけでなく、誰にでもある程度ある連続的な傾向として研究されてきました。高いほど悪い、低いほど良いという意味ではなく、どんな場面で心が動きやすいかを知るための手がかりです。</p>
       <p class="rx-text">今回のあなたの回答では、この土台のうち<b>「依存」</b>が比較的はっきり表れています。</p>
-      <div class="rx-tags"><span class="rx-tag">離れることへの不安</span><span class="rx-tag">先を案じる心</span><span class="rx-tag">開かれた輪</span></div>
+      <div class="rx-tags"><span class="rx-tag">依存</span><span class="rx-tag">不安</span><span class="rx-tag">撤退</span></div>
       <hr class="rx-hr">
       <p class="rx-h4">あなたの揺れと距離の特性</p>
-      <div class="rx-locks"><div class="rx-lock" style="--lc:#C98A5A"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">離れることへの不安</span></div><div class="rx-lock" style="--lc:#C98A5A"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">先を案じる心</span></div><div class="rx-lock" style="--lc:#C98A5A"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">開かれた輪</span></div><div class="rx-lock" style="--lc:#C98A5A"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">素直に信じる心</span></div></div>
+      <div class="rx-locks"><div class="rx-lock" style="--lc:#C98A5A"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">依存</span></div><div class="rx-lock" style="--lc:#C98A5A"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">不安</span></div><div class="rx-lock" style="--lc:#C98A5A"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">撤退</span></div><div class="rx-lock" style="--lc:#C98A5A"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">猜疑</span></div></div>
       <div class="rx-unlock">
       <span class="rx-unlock-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span>
       <p class="rx-unlock-title">今すぐロックを解除</p>
@@ -952,10 +965,10 @@ body { background: #09070B; background-image: none; }
     </svg><span>IMPULSE, RISK AND RIGIDITY</span></div>
       <p class="rx-text">衝動・危険志向・固執・完璧は、行動の速さや切り替え方、基準の高さに表れる特性です。勢いよく動く側（衝動・危険志向）と、慎重に固める側（固執・完璧）は、どちらも強みと負担の両面をもちます。数値の高さは、良し悪しではなく、行動のくせの向きを示します。</p>
       <p class="rx-text">今回のあなたの回答では、この土台の特性は、<b>「完璧」</b>を含めて中程度に収まっています。</p>
-      <div class="rx-tags"><span class="rx-tag">慎重な足取り</span><span class="rx-tag">立ち止まる力</span><span class="rx-tag">細部への美意識</span></div>
+      <div class="rx-tags"><span class="rx-tag">危険志向</span><span class="rx-tag">衝動</span><span class="rx-tag">完璧</span></div>
       <hr class="rx-hr">
       <p class="rx-h4">あなたの行動のくせ</p>
-      <div class="rx-locks"><div class="rx-lock" style="--lc:#8E7CD0"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">慎重な足取り</span></div><div class="rx-lock" style="--lc:#8E7CD0"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">立ち止まる力</span></div><div class="rx-lock" style="--lc:#8E7CD0"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">細部への美意識</span></div><div class="rx-lock" style="--lc:#8E7CD0"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">切り替えの軽さ</span></div></div>
+      <div class="rx-locks"><div class="rx-lock" style="--lc:#8E7CD0"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">危険志向</span></div><div class="rx-lock" style="--lc:#8E7CD0"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">衝動</span></div><div class="rx-lock" style="--lc:#8E7CD0"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">完璧</span></div><div class="rx-lock" style="--lc:#8E7CD0"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">固執</span></div></div>
       <div class="rx-unlock">
       <span class="rx-unlock-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span>
       <p class="rx-unlock-title">今すぐロックを解除</p>
@@ -1003,10 +1016,10 @@ body { background: #09070B; background-image: none; }
     </svg><span>ANGER, ATTENTION AND INFLUENCE</span></div>
       <p class="rx-text">敵意・顕示・操作・冷淡は、他者に対してどう振る舞い、どう働きかけるかに表れる特性です。名前は重く聞こえますが、怒りは理不尽に声を上げる力、顕示は場を動かす力、操作は交渉の巧みさ、冷淡は冷静さとして働くこともあります。これは診断ではなく、向き合い方の傾向を言葉にしたものです。</p>
       <p class="rx-text">今回のあなたの回答では、この土台の特性は全体として控えめに表れています。</p>
-      <div class="rx-tags"><span class="rx-tag">寄り添う心</span><span class="rx-tag">控えめな佇まい</span><span class="rx-tag">穏やかな反応</span></div>
+      <div class="rx-tags"><span class="rx-tag">冷淡</span><span class="rx-tag">顕示</span><span class="rx-tag">敵意</span></div>
       <hr class="rx-hr">
       <p class="rx-h4">あなたの向き合い方の特性</p>
-      <div class="rx-locks"><div class="rx-lock" style="--lc:#C8405C"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">寄り添う心</span></div><div class="rx-lock" style="--lc:#C8405C"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">控えめな佇まい</span></div><div class="rx-lock" style="--lc:#C8405C"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">穏やかな反応</span></div><div class="rx-lock" style="--lc:#C8405C"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">率直なまなざし</span></div></div>
+      <div class="rx-locks"><div class="rx-lock" style="--lc:#C8405C"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">冷淡</span></div><div class="rx-lock" style="--lc:#C8405C"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">顕示</span></div><div class="rx-lock" style="--lc:#C8405C"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">敵意</span></div><div class="rx-lock" style="--lc:#C8405C"><span class="rx-lock-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span><span class="rx-lock-word">操作</span></div></div>
       <div class="rx-unlock">
       <span class="rx-unlock-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"></rect></svg></span>
       <p class="rx-unlock-title">今すぐロックを解除</p>

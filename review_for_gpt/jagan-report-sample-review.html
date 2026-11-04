@@ -551,6 +551,22 @@ body { background: #09070B; background-image: none; }
 .rx-mosaic { filter: blur(3.5px) saturate(.95); opacity: 1; }
 .rx-mosaic .rp-radar { width: 80%; }
 
+/* ===== DTI 表示（あなたの深淵：邪眼元素 × 異相、4文字コード｜漢字三文字の呼び名） ===== */
+.rx-abyss { margin: 4px 0 2px; font-size: 13px; letter-spacing: .3em; color: #C99AA7; }
+.rx-dti { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px; margin: 2px 0 6px; }
+.rx-dti b { font-family: var(--font-en); font-size: 26px; letter-spacing: .12em; color: #E2C08C; text-shadow: 0 0 14px rgba(226, 192, 140, .25); }
+.rx-dti-sep { color: #6E3A4A; }
+.rx-dti-name { font-size: 24px; font-weight: 700; letter-spacing: .14em; color: #F4E6EA; }
+.rx-sub { font-size: 13px; color: #A58994; letter-spacing: .06em; }
+.rx-pair { margin: 14px 0 0; border-top: 1px solid #2E1520; padding-top: 12px; display: grid; gap: 8px; }
+.rx-pair p { margin: 0; font-size: 13.5px; line-height: 1.9; color: #D9C3CA; }
+.rx-pair b { margin-right: 8px; }
+.rx-legend { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 14px; margin: -10px 0 4px; }
+.rx-legend span { font-size: 11px; color: #A58994; display: inline-flex; align-items: center; gap: 6px; }
+.rx-legend span::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--lc); box-shadow: 0 0 6px var(--lc); }
+.rx-desire { background: linear-gradient(160deg, color-mix(in srgb, var(--ec) 9%, #12090E) 0%, #0F080C 75%); }
+.rp-cover-code { font-family: var(--font-en); letter-spacing: .2em; }
+
 </style>
 
 <title>邪眼診断 解析レポート（サンプル）レビュー用</title>
@@ -561,18 +577,18 @@ body { background: #09070B; background-image: none; }
   <p class="rp-banner">これはサンプルレポートです（架空の回答から作成しています。人が受検した結果ではありません）。実際には、あなた自身の診断結果でこの内容が作られます。</p>
   <div id="sampleBody"><section class="rp-cover" style="--ec:#3F82BC;--ed:#173A5C">
       <div class="rp-emblem"><svg viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="84" fill="none" stroke="color-mix(in srgb, var(--ec) 45%, transparent)"></circle><circle cx="100" cy="100" r="60" fill="none" stroke="rgba(255,255,255,.06)"></circle>
-        <rect x="11.5" y="95.5" width="9" height="9" transform="rotate(45 16 100)" fill="#3F82BC"></rect><rect x="179.5" y="95.5" width="9" height="9" transform="rotate(45 184 100)" fill="#E2C08C"></rect><rect x="95.5" y="11.5" width="9" height="9" transform="rotate(45 100 16)" fill="#3F82BC"></rect><rect x="143.5" y="163.5" width="9" height="9" transform="rotate(45 148 168)" fill="#E2C08C"></rect><rect x="47.5" y="163.5" width="9" height="9" transform="rotate(45 52 168)" fill="#3F82BC"></rect><rect x="155.5" y="35.5" width="9" height="9" transform="rotate(45 160 40)" fill="#E2C08C"></rect></svg>
+        <path d="M16,92 Q16,100 24,100 Q16,100 16,108 Q16,100 8,100 Q16,100 16,92Z" fill="#3F82BC"></path><path d="M184,92 Q184,100 192,100 Q184,100 184,108 Q184,100 176,100 Q184,100 184,92Z" fill="#E2C08C"></path><path d="M100,8 Q100,16 108,16 Q100,16 100,24 Q100,16 92,16 Q100,16 100,8Z" fill="#3F82BC"></path><path d="M148,160 Q148,168 156,168 Q148,168 148,176 Q148,168 140,168 Q148,168 148,160Z" fill="#E2C08C"></path><path d="M52,160 Q52,168 60,168 Q52,168 52,176 Q52,168 44,168 Q52,168 52,160Z" fill="#3F82BC"></path><path d="M160,32 Q160,40 168,40 Q160,40 160,48 Q160,40 152,40 Q160,40 160,32Z" fill="#E2C08C"></path></svg>
         <b>水</b></div>
       <p class="rp-cover-en">DELUSION DIAGNOSIS — 水</p>
       <h1 class="rp-cover-title">邪眼診断<br>解析レポート</h1>
-      <p class="rp-cover-code">寄る辺なき深淵</p>
-      <p class="rp-cover-type">依存</p>
+      <p class="rp-cover-code">HYDP</p>
+      <p class="rp-cover-type">縋望者</p>
       <p class="rp-cover-sub">水 × 依存 × カピターノ</p>
     </section><section class="rp-card">
       <p class="rp-no">01</p>
-      <h2 class="rp-h2">あなたの邪眼 — <span style="color:#3F82BC">水</span> × 依存</h2>
+      <h2 class="rp-h2">あなたの深淵 — <span style="color:#3F82BC">水</span> × 依存｜HYDP 縋望者</h2>
       <p class="rp-text">水の邪眼は、親しい相手との関係をめぐる不安が、心の水面を揺らしやすい状態を映します。離れることへの不安（分離不安）は、愛着の研究でも扱われてきた傾向で、関係を大切にしていることの裏返しでもあります。不安や猜疑が重なると、相手の沈黙や変化に敏感になり、確かめたくなる気持ちが強まりやすくなります。揺れそのものは弱さではなく、相手を大切に思う深さの表れでもあります。</p>
-      <p class="rp-text">依存（分離不安）は、親しい相手との距離や別れに、強い不安を覚えやすい傾向です。関係を大切にする力の裏返しでもあり、人に頼ること自体は自然なことです。相手の返事や予定の変化に揺れるとき、気持ちを言葉にして伝えられる関係は、不安を和らげる助けになります。</p>
+      <p class="rp-text">依存は、親しい相手との距離や別れに、強い不安を覚えやすい傾向です。関係を大切にする力の裏返しでもあり、人に頼ること自体は自然なことです。相手の返事や予定の変化に揺れるとき、気持ちを言葉にして伝えられる関係は、不安を和らげる助けになります。</p>
       <blockquote class="rp-quote" style="--ec:#3F82BC">この二つが重なるとき、「大切な関係を失う不安が、心の水面を揺らす」状態に、「大切な相手と離れることに、不安を感じやすい」傾向が重なった姿として表に現れます。</blockquote>
       <div class="rx-figure" aria-hidden="true"><svg viewBox="0 0 200 200">
       <circle cx="100" cy="100" r="86" fill="none" stroke="rgba(200,64,92,.18)"></circle>

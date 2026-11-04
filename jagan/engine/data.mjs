@@ -1081,5 +1081,861 @@ export const BUNDLE = Object.freeze({
   "existing_eti_entitlement_grants_access": false,
   "billing": "one_time",
   "product_count": 1
+ },
+ "dti": {
+  "version": "dti-naming-v1-20261104",
+  "system": "DTI",
+  "english": "Delusion Type Indicator",
+  "japanese": "邪眼タイプ指標",
+  "elements": [
+   {
+    "id": "PY",
+    "label": "炎"
+   },
+   {
+    "id": "HY",
+    "label": "水"
+   },
+   {
+    "id": "CR",
+    "label": "氷"
+   },
+   {
+    "id": "EL",
+    "label": "雷"
+   },
+   {
+    "id": "AN",
+    "label": "風"
+   },
+   {
+    "id": "GE",
+    "label": "岩"
+   },
+   {
+    "id": "DE",
+    "label": "草"
+   }
+  ],
+  "aspects": [
+   {
+    "trait_id": "ANX",
+    "code": "AX",
+    "label": "不安"
+   },
+   {
+    "trait_id": "SEP",
+    "code": "DP",
+    "label": "依存"
+   },
+   {
+    "trait_id": "SUS",
+    "code": "SU",
+    "label": "猜疑"
+   },
+   {
+    "trait_id": "WDR",
+    "code": "WD",
+    "label": "撤退"
+   },
+   {
+    "trait_id": "IMP",
+    "code": "IM",
+    "label": "衝動"
+   },
+   {
+    "trait_id": "PSV",
+    "code": "PE",
+    "label": "固執"
+   },
+   {
+    "trait_id": "PRF",
+    "code": "PF",
+    "label": "完璧"
+   },
+   {
+    "trait_id": "HOS",
+    "code": "HO",
+    "label": "敵意"
+   },
+   {
+    "trait_id": "ATT",
+    "code": "AT",
+    "label": "顕示"
+   },
+   {
+    "trait_id": "MAN",
+    "code": "MN",
+    "label": "操作"
+   },
+   {
+    "trait_id": "RSK",
+    "code": "RK",
+    "label": "危険志向"
+   },
+   {
+    "trait_id": "CAL",
+    "code": "CL",
+    "label": "冷淡"
+   }
+  ],
+  "patterns": [
+   {
+    "code": "PYAX",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "ANX",
+    "aspect_code": "AX",
+    "aspect": "不安",
+    "name": "焦燥者"
+   },
+   {
+    "code": "HYAX",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "ANX",
+    "aspect_code": "AX",
+    "aspect": "不安",
+    "name": "憂溺者"
+   },
+   {
+    "code": "CRAX",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "ANX",
+    "aspect_code": "AX",
+    "aspect": "不安",
+    "name": "凍心者"
+   },
+   {
+    "code": "ELAX",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "ANX",
+    "aspect_code": "AX",
+    "aspect": "不安",
+    "name": "震慄者"
+   },
+   {
+    "code": "ANAX",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "ANX",
+    "aspect_code": "AX",
+    "aspect": "不安",
+    "name": "迷走者"
+   },
+   {
+    "code": "GEAX",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "ANX",
+    "aspect_code": "AX",
+    "aspect": "不安",
+    "name": "憂塞者"
+   },
+   {
+    "code": "DEAX",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "ANX",
+    "aspect_code": "AX",
+    "aspect": "不安",
+    "name": "憂根者"
+   },
+   {
+    "code": "PYDP",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "SEP",
+    "aspect_code": "DP",
+    "aspect": "依存",
+    "name": "焦恋者"
+   },
+   {
+    "code": "HYDP",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "SEP",
+    "aspect_code": "DP",
+    "aspect": "依存",
+    "name": "縋望者"
+   },
+   {
+    "code": "CRDP",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "SEP",
+    "aspect_code": "DP",
+    "aspect": "依存",
+    "name": "凍縁者"
+   },
+   {
+    "code": "ELDP",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "SEP",
+    "aspect_code": "DP",
+    "aspect": "依存",
+    "name": "繋雷者"
+   },
+   {
+    "code": "ANDP",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "SEP",
+    "aspect_code": "DP",
+    "aspect": "依存",
+    "name": "逐影者"
+   },
+   {
+    "code": "GEDP",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "SEP",
+    "aspect_code": "DP",
+    "aspect": "依存",
+    "name": "縛縁者"
+   },
+   {
+    "code": "DEDP",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "SEP",
+    "aspect_code": "DP",
+    "aspect": "依存",
+    "name": "絡根者"
+   },
+   {
+    "code": "PYSU",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "SUS",
+    "aspect_code": "SU",
+    "aspect": "猜疑",
+    "name": "疑焔者"
+   },
+   {
+    "code": "HYSU",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "SUS",
+    "aspect_code": "SU",
+    "aspect": "猜疑",
+    "name": "疑潮者"
+   },
+   {
+    "code": "CRSU",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "SUS",
+    "aspect_code": "SU",
+    "aspect": "猜疑",
+    "name": "疑氷者"
+   },
+   {
+    "code": "ELSU",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "SUS",
+    "aspect_code": "SU",
+    "aspect": "猜疑",
+    "name": "疑雷者"
+   },
+   {
+    "code": "ANSU",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "SUS",
+    "aspect_code": "SU",
+    "aspect": "猜疑",
+    "name": "疑風者"
+   },
+   {
+    "code": "GESU",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "SUS",
+    "aspect_code": "SU",
+    "aspect": "猜疑",
+    "name": "疑壁者"
+   },
+   {
+    "code": "DESU",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "SUS",
+    "aspect_code": "SU",
+    "aspect": "猜疑",
+    "name": "疑蔓者"
+   },
+   {
+    "code": "PYWD",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "WDR",
+    "aspect_code": "WD",
+    "aspect": "撤退",
+    "name": "灰隠者"
+   },
+   {
+    "code": "HYWD",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "WDR",
+    "aspect_code": "WD",
+    "aspect": "撤退",
+    "name": "潜淵者"
+   },
+   {
+    "code": "CRWD",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "WDR",
+    "aspect_code": "WD",
+    "aspect": "撤退",
+    "name": "閉氷者"
+   },
+   {
+    "code": "ELWD",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "WDR",
+    "aspect_code": "WD",
+    "aspect": "撤退",
+    "name": "雷隠者"
+   },
+   {
+    "code": "ANWD",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "WDR",
+    "aspect_code": "WD",
+    "aspect": "撤退",
+    "name": "逸風者"
+   },
+   {
+    "code": "GEWD",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "WDR",
+    "aspect_code": "WD",
+    "aspect": "撤退",
+    "name": "閉塞者"
+   },
+   {
+    "code": "DEWD",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "WDR",
+    "aspect_code": "WD",
+    "aspect": "撤退",
+    "name": "隠葉者"
+   },
+   {
+    "code": "PYIM",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "IMP",
+    "aspect_code": "IM",
+    "aspect": "衝動",
+    "name": "逸火者"
+   },
+   {
+    "code": "HYIM",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "IMP",
+    "aspect_code": "IM",
+    "aspect": "衝動",
+    "name": "奔流者"
+   },
+   {
+    "code": "CRIM",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "IMP",
+    "aspect_code": "IM",
+    "aspect": "衝動",
+    "name": "裂氷者"
+   },
+   {
+    "code": "ELIM",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "IMP",
+    "aspect_code": "IM",
+    "aspect": "衝動",
+    "name": "迸雷者"
+   },
+   {
+    "code": "ANIM",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "IMP",
+    "aspect_code": "IM",
+    "aspect": "衝動",
+    "name": "狂風者"
+   },
+   {
+    "code": "GEIM",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "IMP",
+    "aspect_code": "IM",
+    "aspect": "衝動",
+    "name": "砕岩者"
+   },
+   {
+    "code": "DEIM",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "IMP",
+    "aspect_code": "IM",
+    "aspect": "衝動",
+    "name": "乱芽者"
+   },
+   {
+    "code": "PYPE",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "PSV",
+    "aspect_code": "PE",
+    "aspect": "固執",
+    "name": "残火者"
+   },
+   {
+    "code": "HYPE",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "PSV",
+    "aspect_code": "PE",
+    "aspect": "固執",
+    "name": "滞潮者"
+   },
+   {
+    "code": "CRPE",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "PSV",
+    "aspect_code": "PE",
+    "aspect": "固執",
+    "name": "執氷者"
+   },
+   {
+    "code": "ELPE",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "PSV",
+    "aspect_code": "PE",
+    "aspect": "固執",
+    "name": "残雷者"
+   },
+   {
+    "code": "ANPE",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "PSV",
+    "aspect_code": "PE",
+    "aspect": "固執",
+    "name": "留風者"
+   },
+   {
+    "code": "GEPE",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "PSV",
+    "aspect_code": "PE",
+    "aspect": "固執",
+    "name": "執岩者"
+   },
+   {
+    "code": "DEPE",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "PSV",
+    "aspect_code": "PE",
+    "aspect": "固執",
+    "name": "執根者"
+   },
+   {
+    "code": "PYPF",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "PRF",
+    "aspect_code": "PF",
+    "aspect": "完璧",
+    "name": "鍛炎者"
+   },
+   {
+    "code": "HYPF",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "PRF",
+    "aspect_code": "PF",
+    "aspect": "完璧",
+    "name": "澄鏡者"
+   },
+   {
+    "code": "CRPF",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "PRF",
+    "aspect_code": "PF",
+    "aspect": "完璧",
+    "name": "凝晶者"
+   },
+   {
+    "code": "ELPF",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "PRF",
+    "aspect_code": "PF",
+    "aspect": "完璧",
+    "name": "律雷者"
+   },
+   {
+    "code": "ANPF",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "PRF",
+    "aspect_code": "PF",
+    "aspect": "完璧",
+    "name": "整風者"
+   },
+   {
+    "code": "GEPF",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "PRF",
+    "aspect_code": "PF",
+    "aspect": "完璧",
+    "name": "築城者"
+   },
+   {
+    "code": "DEPF",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "PRF",
+    "aspect_code": "PF",
+    "aspect": "完璧",
+    "name": "剪枝者"
+   },
+   {
+    "code": "PYHO",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "HOS",
+    "aspect_code": "HO",
+    "aspect": "敵意",
+    "name": "焚怒者"
+   },
+   {
+    "code": "HYHO",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "HOS",
+    "aspect_code": "HO",
+    "aspect": "敵意",
+    "name": "怒涛者"
+   },
+   {
+    "code": "CRHO",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "HOS",
+    "aspect_code": "HO",
+    "aspect": "敵意",
+    "name": "冷刃者"
+   },
+   {
+    "code": "ELHO",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "HOS",
+    "aspect_code": "HO",
+    "aspect": "敵意",
+    "name": "憤雷者"
+   },
+   {
+    "code": "ANHO",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "HOS",
+    "aspect_code": "HO",
+    "aspect": "敵意",
+    "name": "裂風者"
+   },
+   {
+    "code": "GEHO",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "HOS",
+    "aspect_code": "HO",
+    "aspect": "敵意",
+    "name": "破砦者"
+   },
+   {
+    "code": "DEHO",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "HOS",
+    "aspect_code": "HO",
+    "aspect": "敵意",
+    "name": "毒棘者"
+   },
+   {
+    "code": "PYAT",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "ATT",
+    "aspect_code": "AT",
+    "aspect": "顕示",
+    "name": "煌炎者"
+   },
+   {
+    "code": "HYAT",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "ATT",
+    "aspect_code": "AT",
+    "aspect": "顕示",
+    "name": "幻潮者"
+   },
+   {
+    "code": "CRAT",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "ATT",
+    "aspect_code": "AT",
+    "aspect": "顕示",
+    "name": "氷飾者"
+   },
+   {
+    "code": "ELAT",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "ATT",
+    "aspect_code": "AT",
+    "aspect": "顕示",
+    "name": "閃耀者"
+   },
+   {
+    "code": "ANAT",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "ATT",
+    "aspect_code": "AT",
+    "aspect": "顕示",
+    "name": "舞風者"
+   },
+   {
+    "code": "GEAT",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "ATT",
+    "aspect_code": "AT",
+    "aspect": "顕示",
+    "name": "誇塔者"
+   },
+   {
+    "code": "DEAT",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "ATT",
+    "aspect_code": "AT",
+    "aspect": "顕示",
+    "name": "華飾者"
+   },
+   {
+    "code": "PYMN",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "MAN",
+    "aspect_code": "MN",
+    "aspect": "操作",
+    "name": "繰炎者"
+   },
+   {
+    "code": "HYMN",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "MAN",
+    "aspect_code": "MN",
+    "aspect": "操作",
+    "name": "操潮者"
+   },
+   {
+    "code": "CRMN",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "MAN",
+    "aspect_code": "MN",
+    "aspect": "操作",
+    "name": "氷策者"
+   },
+   {
+    "code": "ELMN",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "MAN",
+    "aspect_code": "MN",
+    "aspect": "操作",
+    "name": "雷策者"
+   },
+   {
+    "code": "ANMN",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "MAN",
+    "aspect_code": "MN",
+    "aspect": "操作",
+    "name": "操風者"
+   },
+   {
+    "code": "GEMN",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "MAN",
+    "aspect_code": "MN",
+    "aspect": "操作",
+    "name": "掌握者"
+   },
+   {
+    "code": "DEMN",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "MAN",
+    "aspect_code": "MN",
+    "aspect": "操作",
+    "name": "操蔓者"
+   },
+   {
+    "code": "PYRK",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "RSK",
+    "aspect_code": "RK",
+    "aspect": "危険志向",
+    "name": "烈進者"
+   },
+   {
+    "code": "HYRK",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "RSK",
+    "aspect_code": "RK",
+    "aspect": "危険志向",
+    "name": "越瀬者"
+   },
+   {
+    "code": "CRRK",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "RSK",
+    "aspect_code": "RK",
+    "aspect": "危険志向",
+    "name": "薄氷者"
+   },
+   {
+    "code": "ELRK",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "RSK",
+    "aspect_code": "RK",
+    "aspect": "危険志向",
+    "name": "踏雷者"
+   },
+   {
+    "code": "ANRK",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "RSK",
+    "aspect_code": "RK",
+    "aspect": "危険志向",
+    "name": "越境者"
+   },
+   {
+    "code": "GERK",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "RSK",
+    "aspect_code": "RK",
+    "aspect": "危険志向",
+    "name": "崖行者"
+   },
+   {
+    "code": "DERK",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "RSK",
+    "aspect_code": "RK",
+    "aspect": "危険志向",
+    "name": "踏棘者"
+   },
+   {
+    "code": "PYCL",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "CAL",
+    "aspect_code": "CL",
+    "aspect": "冷淡",
+    "name": "灰心者"
+   },
+   {
+    "code": "HYCL",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "CAL",
+    "aspect_code": "CL",
+    "aspect": "冷淡",
+    "name": "沈黙者"
+   },
+   {
+    "code": "CRCL",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "CAL",
+    "aspect_code": "CL",
+    "aspect": "冷淡",
+    "name": "凍情者"
+   },
+   {
+    "code": "ELCL",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "CAL",
+    "aspect_code": "CL",
+    "aspect": "冷淡",
+    "name": "断雷者"
+   },
+   {
+    "code": "ANCL",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "CAL",
+    "aspect_code": "CL",
+    "aspect": "冷淡",
+    "name": "空心者"
+   },
+   {
+    "code": "GECL",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "CAL",
+    "aspect_code": "CL",
+    "aspect": "冷淡",
+    "name": "石心者"
+   },
+   {
+    "code": "DECL",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "CAL",
+    "aspect_code": "CL",
+    "aspect": "冷淡",
+    "name": "枯心者"
+   }
+  ]
  }
 });

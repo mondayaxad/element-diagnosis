@@ -10,8 +10,7 @@ const shade = (hex, k) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(hex.sli
 
 export function cardColors(s) {
   const el = ELEMENT_COLOR[s.element.id] || NEUTRAL_COLOR;
-  const isouKey = s.isou.id || (s.isou.label === '未顕' ? 'NONE' : 'MIX');
-  return { el: shade(el.main, 0.92), elGlow: el.main, isou: shade(ISOU_COLOR[isouKey], 0.88) };
+  return { el: shade(el.main, 0.92), elGlow: el.main, isou: shade(ISOU_COLOR[s.isou.id] || NEUTRAL_COLOR.main, 0.88) };
 }
 
 export function drawCard(canvas, s) {
@@ -31,7 +30,7 @@ export function drawCard(canvas, s) {
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillStyle = '#6E3A4A'; ctx.font = `28px ${SERIF}`;
   if ('letterSpacing' in ctx) ctx.letterSpacing = '10px';
-  ctx.fillText('DELUSION DIAGNOSIS', W / 2, 180);
+  ctx.fillText('DELUSION DIAGNOSIS — DTI', W / 2, 150);
   if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 
   // 「元素 × 異相」（それぞれの色。長い異相名は文字を小さく）
@@ -42,22 +41,40 @@ export function drawCard(canvas, s) {
   ctx.font = `bold ${isouSize}px ${SERIF}`; const isW = ctx.measureText(isouText).width;
   const startX = W / 2 - (elW + xW + isW) / 2;
   ctx.textAlign = 'left';
-  ctx.font = `bold 130px ${SERIF}`; ctx.fillStyle = c.el; ctx.fillText(elText, startX, 340);
-  ctx.font = `56px ${SERIF}`; ctx.fillStyle = '#4A2232'; ctx.fillText(' × ', startX + elW, 340);
-  ctx.font = `bold ${isouSize}px ${SERIF}`; ctx.fillStyle = c.isou; ctx.fillText(isouText, startX + elW + xW, 340);
+  ctx.font = `bold 130px ${SERIF}`; ctx.fillStyle = c.el; ctx.fillText(elText, startX, 300);
+  ctx.font = `56px ${SERIF}`; ctx.fillStyle = '#4A2232'; ctx.fillText(' × ', startX + elW, 300);
+  ctx.font = `bold ${isouSize}px ${SERIF}`; ctx.fillStyle = c.isou; ctx.fillText(isouText, startX + elW + xW, 300);
+  ctx.textAlign = 'center';
+
+  // 4文字コード｜漢字三文字の呼び名（dti-types.json と同じ定義）
+  ctx.font = `bold 44px ${SERIF}`; const codeW = ctx.measureText(s.dti.code).width;
+  ctx.font = `30px ${SERIF}`; const sepW = ctx.measureText('｜').width;
+  ctx.font = `bold 52px ${SERIF}`; const nameW = ctx.measureText(s.dti.name).width;
+  let x = W / 2 - (codeW + sepW + nameW) / 2;
+  ctx.textAlign = 'left';
+  ctx.font = `bold 44px ${SERIF}`; ctx.fillStyle = '#C9A867'; ctx.fillText(s.dti.code, x, 405); x += codeW;
+  ctx.font = `30px ${SERIF}`; ctx.fillStyle = '#4A2232'; ctx.fillText('｜', x, 405); x += sepW;
+  ctx.font = `bold 52px ${SERIF}`; ctx.fillStyle = '#EFE1E6'; ctx.fillText(s.dti.name, x, 405);
   ctx.textAlign = 'center';
 
   ctx.strokeStyle = c.el; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(W / 2 - 50, 430); ctx.lineTo(W / 2 + 50, 430); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W / 2 - 50, 478); ctx.lineTo(W / 2 + 50, 478); ctx.stroke();
 
-  ctx.fillStyle = '#B0909B'; ctx.font = `26px ${SERIF}`;
-  ctx.fillText('最も近しいファトゥス', W / 2, 500);
-  ctx.fillStyle = c.el; ctx.font = `bold ${s.character.label.length >= 6 ? 76 : 88}px ${SERIF}`;
-  ctx.fillText(s.character.label, W / 2, 610);
-  ctx.fillStyle = c.isou; ctx.font = `bold 140px ${SERIF}`;
-  ctx.fillText(`${s.character.matchPercent}%`, W / 2, 760);
-  ctx.fillStyle = '#6E3A4A'; ctx.font = `24px ${SERIF}`;
-  ctx.fillText('一 致', W / 2, 850);
+  if (s.character) {
+    ctx.fillStyle = '#B0909B'; ctx.font = `26px ${SERIF}`;
+    ctx.fillText('最も近しいファトゥス', W / 2, 540);
+    ctx.fillStyle = c.el; ctx.font = `bold ${s.character.label.length >= 6 ? 76 : 88}px ${SERIF}`;
+    ctx.fillText(s.character.label, W / 2, 640);
+    ctx.fillStyle = c.isou; ctx.font = `bold 140px ${SERIF}`;
+    ctx.fillText(`${s.character.matchPercent}%`, W / 2, 785);
+    ctx.fillStyle = '#6E3A4A'; ctx.font = `24px ${SERIF}`;
+    ctx.fillText('一 致', W / 2, 870);
+  } else {
+    ctx.fillStyle = '#B0909B'; ctx.font = `28px ${SERIF}`;
+    ctx.fillText(`邪眼：${s.element.label} ／ 異相：${s.isou.label}`, W / 2, 560);
+    ctx.fillStyle = '#6E3A4A'; ctx.font = `24px ${SERIF}`;
+    ctx.fillText('あなたの願いは、どんな深淵を映すのか。', W / 2, 640);
+  }
   ctx.fillStyle = '#4A2232'; ctx.font = `22px ${SERIF}`;
   ctx.fillText('#邪眼診断　@mondayaxad', W / 2, 980);
   return canvas;

@@ -9,7 +9,7 @@
 --
 -- 方針
 --   ・jagan_results：本人の保存結果。書き込みはサーバー（/api/jagan-save、service_role）だけ。サーバーが固定の版で再計算した
---     スナップショット・版・回答を保存する。ブラウザから送られた所有者・人物・一致率・購入済みは使わない。
+--     スナップショット・版・回答・DTI コード（邪眼元素2文字＋異相2文字）と呼び名の版を保存する。ブラウザから送られた所有者・人物・一致率・購入済みは使わない。
 --     本人（authenticated）は自分の行の SELECT・DELETE だけ（RLS）。他人の行は読めない・消せない。
 --     result_id はブラウザが作る UUID（同率の代表を決める種にも使う）。同じ本人の再送は同じ行（重複しない）。
 --     別の本人の result_id には上書きしない（API が 409）。
@@ -38,12 +38,14 @@ $$;
 create table if not exists public.jagan_results (
   result_id                uuid primary key,
   user_id                  uuid not null references auth.users(id) on delete cascade,
-  schema_version           text not null check (schema_version = 'jagan-result-2'),
+  schema_version           text not null check (schema_version = 'jagan-result-3'),
   engine_version           text not null check (length(engine_version) between 1 and 64),
   item_set_version         text not null check (length(item_set_version) between 1 and 64),
   scoring_version          text not null check (length(scoring_version) between 1 and 64),
   interpretation_version   text not null check (length(interpretation_version) between 1 and 64),
   character_model_version  text not null check (length(character_model_version) between 1 and 64),
+  dti_code                 text not null check (dti_code ~ '^[A-Z]{4}$'),
+  naming_version           text not null check (length(naming_version) between 1 and 64),
   answers                  jsonb not null check (jsonb_typeof(answers) = 'object'),
   snapshot                 jsonb not null check (jsonb_typeof(snapshot) = 'object'),
   headline                 jsonb not null check (jsonb_typeof(headline) = 'object'),
@@ -66,7 +68,7 @@ create table if not exists public.jagan_shares (
   public_id                text primary key check (public_id ~ '^[A-Za-z0-9_-]{22}$'),
   result_key               text not null unique check (result_key ~ '^[0-9a-f]{64}$'),
   user_id                  uuid references auth.users(id) on delete cascade,
-  summary                  jsonb not null check (jsonb_typeof(summary) = 'object' and summary->>'kind' = 'jagan-public-summary-2'),
+  summary                  jsonb not null check (jsonb_typeof(summary) = 'object' and summary->>'kind' = 'jagan-public-summary-3'),
   item_set_version         text not null check (length(item_set_version) between 1 and 64),
   revoke_token_hash        text check (revoke_token_hash is null or revoke_token_hash ~ '^[0-9a-f]{64}$'),
   created_at               timestamptz not null default now(),

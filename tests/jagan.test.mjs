@@ -12,7 +12,10 @@ import { BUNDLE } from '../jagan/engine/data.mjs';
 import { judge as specJudge } from '../docs/jagan/spec_v0_3_balanced/runtime.mjs';
 import { recompute, headlineOf, ogParams, renderSharePage, createSaveHandler, createShareHandler, createReportHandler, createSharePageHandler, jaganEnabled } from '../lib/jagan-api.mjs';
 import { renderResultPage, renderReport, renderMethod } from '../jagan/view.mjs';
-import { GROUPS, ISOU_TEXT, ELEMENT_TEXT, TRAIT_COPY, CHARACTER_COPY } from '../jagan/site-copy.mjs';
+import { GROUPS, ISOU_TEXT, ISOU_SHORT, ELEMENT_TEXT, ELEMENT_STORY, TRAIT_COPY, CHARACTER_COPY } from '../jagan/site-copy.mjs';
+import { fnv1a32, normalizedAnswers, selectIsou } from '../jagan/engine/dti.mjs';
+import { buildCardTree } from '../lib/jagan-og-card.mjs';
+import * as ETI from '../api/_og-data.mjs';
 import { parseOg } from '../lib/jagan-og-params.mjs';
 import { SAMPLE_ANSWERS, sampleResult } from '../jagan/sample.mjs';
 
@@ -78,8 +81,8 @@ test('questions: fifty, five at a time, five options only, no skip and no intro'
 test('every trait, element, isou and character has display copy', () => {
   for (const t of BUNDLE.items.traits) { assert.ok(TRAIT_COPY[t.id].meaning && TRAIT_COPY[t.id].limit && TRAIT_COPY[t.id].reflection, t.id); assert.ok(ISOU_TEXT[t.id].body, t.id); }
   for (const e of BUNDLE.core.elements) assert.ok(ELEMENT_TEXT[e.id].body, e.id);
-  for (const k of ['NONE', 'MIX']) assert.ok(ISOU_TEXT[k].body, k);
-  assert.ok(ELEMENT_TEXT.NONE.body);
+  for (const t of BUNDLE.items.traits) assert.ok(ISOU_SHORT[t.id], t.id);
+  for (const e of BUNDLE.core.elements) assert.ok(ELEMENT_STORY[e.id].startsWith(`邪眼（${e.label}）は、`), e.id);
   for (const c of BUNDLE.characters.characters) assert.ok(CHARACTER_COPY[c.id].story_context && CHARACTER_COPY[c.id].limit && CHARACTER_COPY[c.id].reflection, c.id);
 });
 
@@ -90,11 +93,18 @@ test('results are deterministic: key order, repeat calls and result id do not ch
   assert.deepEqual(run(a), run(a));
 });
 
-test('flat and low-contrast answers defer the character; weak/tied answers are not forced into a type', () => {
-  for (const v of [1, 2, 3, 4, 5]) assert.equal(run(all(v)).character.status, 'insufficient');
-  assert.equal(run(all(3)).isou.label, '未顕');
-  assert.equal(run(all(5)).isou.label, '複合');
-  assert.equal(run(all(3)).element.label, '未分化');
+test('every answer set gets exactly one element and one isou with a code and name; flat answers still defer only the character', () => {
+  for (const v of [1, 2, 3, 4, 5]) {
+    const r = run(all(v));
+    assert.equal(r.character.status, 'insufficient');
+    assert.equal(r.element.status, 'available'); assert.equal(r.isou.status, 'marked');
+    assert.match(r.dti.code, /^[A-Z]{4}$/); assert.match(r.dti.name, /^\p{Script=Han}{3}$/u);
+    assert.equal(r.dti.code, r.element.id + r.isou.code);
+  }
+  // 最高の特性が60点未満でも通常の結果を返す
+  const low = run(profile({ ANX: 3 }));
+  assert.ok(low.traits[low.isou.id].score < 60); assert.equal(low.isou.id, 'ANX');
+  for (const label of ['未顕', '複合', '未分化']) assert.ok(!JSON.stringify(run(all(3))).includes(label));
   assert.equal(run(profile({ SEP: 5 })).character.status, 'insufficient');
   assert.equal(run(profile({ MAN: 5, CAL: 5 })).character.id, 'dottore');
 });
@@ -203,7 +213,11 @@ test('save requires auth, registration and stores the server recomputation; retr
   assert.equal(row.user_id, UID);
   assert.deepEqual(row.snapshot, JSON.parse(JSON.stringify(run(VARIED()))));
   assert.deepEqual(row.headline, headlineOf(run(VARIED())));
-  assert.equal(row.schema_version, 'jagan-result-2');
+  assert.equal(row.schema_version, 'jagan-result-3');
+  assert.equal(row.dti_code, run(VARIED()).dti.code);
+  assert.equal(row.naming_version, BUNDLE.dti.version);
+  assert.equal(row.headline.code, run(VARIED()).dti.code);
+  assert.equal(row.headline.name, run(VARIED()).dti.name);
   assert.equal(row.interpretation_version, BUNDLE.core.version);
   assert.equal(row.character_model_version, BUNDLE.characters.version);
   const r2 = await call(h, { token: 'tok-a', body: saveBody() });
@@ -216,12 +230,19 @@ test('save requires auth, registration and stores the server recomputation; retr
   assert.equal((await call(h, { method: 'GET', token: 'tok-a' })).status, 405);
 });
 
-test('a flat answer set can be saved (the character is deferred), but its public summary cannot be shared', async () => {
+test('a flat answer set can be saved and shared; the character is omitted (no null or invented name)', async () => {
   const { db, fetchImpl } = fakeDb();
   const r = await call(createSaveHandler({ env: fakeEnv(), fetchImpl }), { token: 'tok-a', body: saveBody(all(3), RID2) });
   assert.equal(r.status, 200);
   assert.equal(db.jagan_results[0].headline.character, null);
-  assert.equal((await call(createShareHandler({ env: fakeEnv(), fetchImpl }), { body: saveBody(all(3), RID2) })).status, 422);
+  assert.match(db.jagan_results[0].dti_code, /^[A-Z]{4}$/);
+  const sh = await call(createShareHandler({ env: fakeEnv(), fetchImpl }), { body: saveBody(all(3), RID2) });
+  assert.equal(sh.status, 200);
+  assert.equal(sh.body.summary.character, null);
+  const page = await call(createSharePageHandler({ env: fakeEnv(), fetchImpl }), { method: 'GET', url: `/api/jagan-share-page?id=${sh.body.publicId}` });
+  assert.equal(page.status, 200);
+  assert.ok(!page.body.includes('最も近しいファトゥス') && !page.body.includes('null') && !page.body.includes('undefined'));
+  assert.ok(!page.body.includes('&amp;c=') && page.body.includes(sh.body.summary.dti.name));
 });
 
 test('save is refused before registration completes', async () => {
@@ -253,7 +274,7 @@ test('share stores only the public summary, separates the public id from the res
   assert.ok(!stored.includes(RID), 'result id must not be stored in shares');
   assert.ok(!stored.includes('"answers"') && !stored.includes('"traits"') && !stored.includes('ANX01'));
   assert.deepEqual(row.summary, publicSummary(run(VARIED())));
-  assert.deepEqual(Object.keys(row.summary).sort(), ['character', 'characterModelVersion', 'coreVersion', 'element', 'isou', 'kind'].sort());
+  assert.deepEqual(Object.keys(row.summary).sort(), ['character', 'characterModelVersion', 'coreVersion', 'dti', 'element', 'isou', 'kind', 'namingVersion'].sort());
   assert.equal(row.user_id, null);
   const r2 = await call(h, { body: saveBody() });
   assert.equal(r2.body.publicId, r1.body.publicId); assert.equal(r2.body.revokeToken, undefined);
@@ -314,7 +335,7 @@ test('report access is closed while sales are closed, and requires a jagan entit
 // ---- 表示 ----
 test('result page: deferred parts are not filled, no names leak, and the twelve scores are not shown for free', () => {
   const flat = renderResultPage(run(all(3)), BUNDLE);
-  assert.ok(flat.includes('未分化') && flat.includes('未顕') && flat.includes('判定を保留'));
+  assert.ok(flat.includes('特定の人物を示せませんでした') && !flat.includes('未分化') && !flat.includes('未顕') && !flat.includes('複合'));
   for (const c of BUNDLE.characters.characters) assert.ok(!flat.includes(c.name), c.name);
   assert.ok(!/\d+%\s*<\/b><span>一致度/.test(flat));
   const r = run(VARIED());
@@ -330,6 +351,17 @@ test('result page: deferred parts are not filled, no names leak, and the twelve 
   assert.ok(!html.includes('邪眼解析レポート'));
   assert.ok(html.includes('¥1,000') && html.includes('全てのロックを解除する'));
   assert.ok(html.includes('一致度と人物の選び方について'));
+  // 指示書 5章の順：深淵（コード・呼び名）→ファトゥス→欲求が導くあなたの影→渇望する邪眼→保存・画像・X→一部分→最後に金額
+  const order = ['あなたの深淵', `${r.dti.code}</b>`, '最も近しいファトゥス', '欲求が導くあなたの影', 'あなたの欲求特性', 'あなたの渇望する邪眼', 'saveBtn', 'imageBtn', 'shareBtn', 'あなたの一部分に過ぎません', 'UNLOCK EVERYTHING', 'rx-all-price'];
+  const pos = order.map((k) => html.indexOf(k));
+  assert.ok(pos.every((p) => p >= 0), JSON.stringify(order.filter((k, i) => pos[i] < 0)));
+  assert.deepEqual([...pos].sort((a, b) => a - b), pos);
+  assert.ok(html.includes(`<span class="rx-dti-name">${r.dti.name}</span>`));
+  // 近い候補・次点の行は出さない
+  assert.ok(!html.includes('近い候補') && !html.includes('次に近しい') && !html.includes('2位'));
+  // 鍵マークの言葉は単語一語（特性名）
+  const words = [...html.matchAll(/class="rx-lock-word">([^<]+)</g)].map((m) => m[1]);
+  assert.ok(words.length > 0 && words.every((w) => BUNDLE.items.traits.some((t) => t.label === w)), words.join(','));
 });
 
 test('the report renders all twelve traits, three groups, the character section and the balance caveat; the sample is fictional', () => {
@@ -340,6 +372,7 @@ test('the report renders all twelve traits, three groups, the character section 
   assert.ok(rep.includes('未対応の特性は、中立値で補わず'));
   const flat = renderReport(run(all(3)), BUNDLE);
   assert.ok(flat.includes('人物の判定を保留'));
+  assert.ok(rep.includes(sampleResult().dti.code) && rep.includes(sampleResult().dti.name));
   assert.deepEqual(Object.keys(SAMPLE_ANSWERS).sort(), BUNDLE.items.items.map((i) => i.id).sort());
 });
 
@@ -349,17 +382,26 @@ test('share text equals the template; OG params round-trip through the image par
     const s = publicSummary(r);
     const url = 'https://example.invalid/jagan/s/fixture_shared_0001';
     assert.equal(shareTextFromSummary(s, url), makeShareText(r, url, 'https://example.invalid'));
-    assert.ok(makeShareText(r, url, 'https://example.invalid').startsWith('邪眼診断をやってみました。\n私の結果は、【'));
+    const text = makeShareText(r, url, 'https://example.invalid');
+    assert.equal(text, `邪眼診断をやってみました。\n私の結果は、${s.element.label}×${s.isou.label}「${s.dti.name}」（${s.dti.code}）。\n最も近しいファトゥス：${s.character.label}（${s.character.matchPercent}%一致）\n\n${url}\n#邪眼診断 #原神`);
     const parsed = parseOg(new URLSearchParams(ogParams(s)));
     assert.equal(parsed.element, s.element.label);
     assert.equal(parsed.isou, s.isou.label);
-    assert.equal(parsed.character, s.character.label);
-    assert.equal(parsed.match, s.character.matchPercent);
+    assert.equal(parsed.code, s.dti.code); assert.equal(parsed.name, s.dti.name);
+    assert.equal(parsed.character.name, s.character.label);
+    assert.equal(parsed.character.match, s.character.matchPercent);
+    assert.match(ogParams(s), /&v=dti-naming-v1-20261104\.dti-og-1$/);
   }
-  assert.equal(parseOg(new URLSearchParams('e=XX&t=NONE&c=pierro&m=50')), null);
-  assert.equal(parseOg(new URLSearchParams('e=PY&t=NONE&c=pierro&m=500')), null);
+  // 人物を保留した結果は人物の行を省く
+  const flat = run(all(3));
+  const ft = makeShareText(flat, 'https://example.invalid/jagan/s/fixture_shared_0001', 'https://example.invalid');
+  assert.ok(!ft.includes('ファトゥス') && ft.includes(flat.dti.code));
+  assert.equal(parseOg(new URLSearchParams(ogParams(publicSummary(flat)))).character, null);
+  assert.equal(parseOg(new URLSearchParams('e=XX&t=ANX&c=pierro&m=50')), null);
+  assert.equal(parseOg(new URLSearchParams('e=PY&t=AX')), null);
+  assert.equal(parseOg(new URLSearchParams('e=PY&t=ANX&c=pierro&m=500')), null);
+  assert.equal(parseOg(new URLSearchParams('e=PY&t=ANX&c=<script>&m=50')), null);
   assert.throws(() => makeShareText(run(VARIED()), 'https://other.invalid/jagan/s/fixture_shared_0001', 'https://example.invalid'), /invalid_share_url/);
-  assert.throws(() => publicSummary(run(all(3))), /not_shareable/);
 });
 
 test('public summary is a strict projection without answers, trait scores or the private result id', () => {
@@ -388,4 +430,116 @@ test('share page and method text are escaped and carry the required disclosure',
 test('every character region is shown as a nation name', () => {
   const nations = ['モンド', '璃月', '稲妻', 'スメール', 'フォンテーヌ', 'ナタ', 'スネージナヤ', 'ナドクライ', 'カーンルイア'];
   for (const c of BUNDLE.characters.characters) assert.ok(nations.includes(c.region_label), `${c.id}: ${c.region_label}`);
+});
+
+// ---- DTI（2026-11-04 指示書） ----
+test('DTI: 84 unique four-letter codes and three-kanji names ending in 者, built from element + aspect codes', () => {
+  const d = BUNDLE.dti;
+  assert.equal(d.patterns.length, 84);
+  assert.equal(new Set(d.patterns.map((p) => p.code)).size, 84);
+  assert.equal(new Set(d.patterns.map((p) => p.name)).size, 84);
+  for (const p of d.patterns) {
+    assert.match(p.code, /^[A-Z]{4}$/); assert.match(p.name, /^\p{Script=Han}{2}者$/u);
+    assert.equal(p.code, p.element_id + p.aspect_code);
+  }
+  for (const e of BUNDLE.core.elements) for (const t of BUNDLE.items.traits) assert.ok(d.patterns.some((p) => p.element_id === e.id && p.trait_id === t.id), e.id + t.id);
+  assert.deepEqual(d.aspects.map((a) => a.code), ['AX', 'DP', 'SU', 'WD', 'IM', 'PE', 'PF', 'HO', 'AT', 'MN', 'RK', 'CL']);
+});
+
+test('DTI names and codes never collide with the current ETI definitions in this repository (case-insensitive)', () => {
+  const etiNames = Object.values(ETI.TYPE_NAME).flatMap((w) => Object.values(w));
+  const etiCodes = Object.entries(ETI.TYPE_NAME).flatMap(([el, w]) => Object.keys(w).map((wp) => (ETI.ELEMENT_CODE[el] + ETI.WEAPON_CODE[wp]).toUpperCase()));
+  assert.equal(etiNames.length, 35); assert.equal(new Set(etiCodes).size, 35);
+  for (const p of BUNDLE.dti.patterns) {
+    assert.ok(!etiNames.includes(p.name), p.name);
+    assert.ok(!etiCodes.includes(p.code.toUpperCase()), p.code);
+  }
+  const weaponCodes = Object.values(ETI.WEAPON_CODE);
+  for (const a of BUNDLE.dti.aspects) assert.ok(!weaponCodes.includes(a.code), a.code);
+});
+
+test('FNV-1a 32bit matches the standard test vectors and the normalized answer string is key-order independent', () => {
+  assert.equal(fnv1a32(''), 0x811c9dc5);
+  assert.equal(fnv1a32('a'), 0xe40c292c);
+  assert.equal(fnv1a32('foobar'), 0xbf9cf968);
+  const a = rand(7);
+  assert.equal(normalizedAnswers(a, BUNDLE.items), normalizedAnswers(Object.fromEntries(Object.entries(a).reverse()), BUNDLE.items));
+  assert.ok(normalizedAnswers(a, BUNDLE.items).startsWith('ANX01:'));
+});
+
+// 特性ごとに回答を並べて作る（同点処理の検査用）
+const byTrait = (spec, fill = 1) => {
+  const idx = {};
+  return Object.fromEntries(BUNDLE.items.items.map((i) => { idx[i.trait] = idx[i.trait] || 0; const v = spec[i.trait]; return [i.id, v ? v[idx[i.trait]++] : fill]; }));
+};
+
+test('isou tie-break: mean, then share of 5s, then share of 4s, then the fixed hash; 4-item and 5-item traits compared by mean', () => {
+  // 平均が最高の一つ
+  assert.equal(selectIsou(byTrait({ ANX: [4, 4, 4, 4], SEP: [4, 4, 4, 4, 3] }), BUNDLE.items).id, 'ANX');
+  // 4問と5問で平均が同じ（3.0）なら合計ではなく平均で同点→5の割合（ANX 1/4 > SEP 1/5）
+  let r = selectIsou(byTrait({ ANX: [5, 3, 2, 2], SEP: [5, 3, 3, 2, 2] }), BUNDLE.items);
+  assert.equal(r.id, 'ANX'); assert.equal(r.tieBreak, 'ratio5');
+  // 平均・5の割合が同じ→4の割合
+  r = selectIsou(byTrait({ ANX: [4, 4, 1, 3], WDR: [4, 3, 3, 2] }), BUNDLE.items);
+  assert.equal(r.id, 'ANX'); assert.equal(r.tieBreak, 'ratio4');
+  // 三軸以上が完全に同じ→固定ハッシュ（最小値。決定的）
+  const a3 = byTrait({ ANX: [4, 4, 3, 3], SUS: [4, 4, 3, 3], WDR: [4, 3, 4, 3] });
+  r = selectIsou(a3, BUNDLE.items);
+  assert.equal(r.tieBreak, 'hash');
+  const base = normalizedAnswers(a3, BUNDLE.items);
+  const expect = ['ANX', 'SUS', 'WDR'].sort((x, y) => fnv1a32(`${base}|isou:${x}`) - fnv1a32(`${base}|isou:${y}`) || (x < y ? -1 : 1))[0];
+  assert.equal(r.id, expect);
+  // 全軸同点（全問同じ値）でも一つに決まり、キー順・繰り返しで変わらない
+  for (const v of [1, 3, 5]) {
+    const x = selectIsou(all(v), BUNDLE.items);
+    assert.equal(x.tieBreak, 'hash');
+    assert.deepEqual(x, selectIsou(Object.fromEntries(Object.entries(all(v)).reverse()), BUNDLE.items));
+  }
+});
+
+test('element: base ranking is kept; only exact ties use the fixed hash, and the top-3 order follows the same rule', () => {
+  const r = run(VARIED());
+  const scores = r.element.ranking.map((e) => e.score);
+  assert.deepEqual([...scores].sort((a, b) => b - a), scores);
+  assert.equal(r.element.id, r.element.ranking[0].id);
+  const flat = run(all(2));
+  assert.equal(flat.element.tieBreak, 'hash');
+  assert.deepEqual(flat.element.top3, flat.element.ranking.slice(0, 3).map((e) => e.id));
+});
+
+test('character judgement, raw match and fixed balance offsets are unchanged from the base v0.3 for DTI results', () => {
+  for (let i = 0; i < 400; i++) {
+    const a = rand(i);
+    const spec = specJudge(a);
+    const r = run(a);
+    if (spec.character) { assert.equal(r.character.id, spec.character.id); assert.equal(r.character.match, spec.character.match); }
+    else assert.equal(r.character.status, 'insufficient');
+  }
+  const base = JSON.parse(fs.readFileSync(path.join(SPEC, 'characters.json'), 'utf8'));
+  for (const c of base.characters) assert.equal(BUNDLE.characters.characters.find((x) => x.id === c.id).selection_offset, c.selection_offset);
+});
+
+test('OG card: names come only from whitelisted ids, the character frame is omitted when deferred, long names fit the layout', () => {
+  const text = (node) => (node == null ? '' : typeof node === 'string' ? node : Array.isArray(node) ? node.map(text).join('') : text(node.props && node.props.children));
+  const v = parseOg(new URLSearchParams('e=EL&t=RSK&c=arlecchino&m=86'));
+  const t1 = text(buildCardTree(v));
+  for (const k of ['邪眼診断 — MY RESULT', 'DTI', '雷', '危険志向', 'ELRK', '踏雷者', '最も近しいファトゥス', 'アルレッキーノ', '86', '%一致']) assert.ok(t1.includes(k), k);
+  const t2 = text(buildCardTree(parseOg(new URLSearchParams('e=CR&t=WDR'))));
+  assert.ok(t2.includes('CRWD') && !t2.includes('ファトゥス') && !t2.includes('null'));
+  assert.ok(text(buildCardTree(null)).includes('Delusion Type Indicator'));
+});
+
+test('share HTML (no JS) carries absolute og:image, og:title, og:description, og:url and summary_large_image', async () => {
+  const { fetchImpl } = fakeDb();
+  const share = await call(createShareHandler({ env: fakeEnv(), fetchImpl }), { body: saveBody() });
+  const page = await call(createSharePageHandler({ env: fakeEnv(), fetchImpl }), { method: 'GET', url: `/api/jagan-share-page?id=${share.body.publicId}` });
+  const html = page.body;
+  const meta = (k) => (html.match(new RegExp(`<meta (?:property|name)="${k}" content="([^"]*)"`)) || [])[1];
+  const s = share.body.summary;
+  assert.match(meta('og:image'), /^https:\/\/[^/]+\/api\/jagan-og\?e=/);
+  assert.ok(meta('og:title').includes(s.dti.code) && meta('og:title').includes(s.dti.name));
+  assert.ok(meta('og:description').length > 0);
+  assert.equal(meta('og:url'), `https://element-diagnosis-git-jagan-preview.vercel.app/jagan/s/${share.body.publicId}`);
+  assert.equal(meta('twitter:card'), 'summary_large_image');
+  assert.equal(page.headers['content-type'], 'text/html; charset=utf-8');
 });

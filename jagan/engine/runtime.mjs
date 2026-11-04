@@ -1,54 +1,67 @@
-// jagan/engine/runtime.mjs — 画面・API・保存が使う結果の形（judge.mjs の計算結果に、順位・整数表示・版を付ける）。
-//   ・計算は judge.mjs（仕様の runtime.mjs と同じ）。ここでは式を変えない。
-//   ・人物の「一致度」は補正を足す前の近さ（match）。選定には固定補正を使う（人物の出現の偏りを抑えるため）。
-//   ・同じ50回答は、結果ID・時刻・人数によらず同じ結果になる。
-import { judge, rankTraits, ENGINE_VERSION } from './judge.mjs';
+// jagan/engine/runtime.mjs — 画面・API・保存が使う結果の形（DTI：邪眼元素×異相＝4文字コードと漢字三文字の呼び名）。
+//   ・12特性の得点・人物の選定（固定の均等補正・保留条件）は judge.mjs（基礎 v0.3 の runtime と同じ計算）。
+//   ・異相・邪眼元素は dti.mjs の規則で必ず一つずつ選ぶ（基礎 v0.3 の「未顕・複合・未分化」は使わない。2026-11-04 指示書）。
+//   ・人物の「一致度」は補正を足す前の近さ（match）。DTI のコード・呼び名は人物判定に使わない。
+//   ・同じ50回答は、結果ID・時刻・人数・キー順によらず同じ結果になる。
+import { judge, rankTraits, ENGINE_VERSION as JUDGE_VERSION } from './judge.mjs';
+import { selectIsou, orderElements, dtiPattern } from './dti.mjs';
 
-export { ENGINE_VERSION };
-export const RESULT_SCHEMA_VERSION = 'jagan-result-2';
+export const ENGINE_VERSION = 'jagan-engine-3.0.0-dti';
+export { JUDGE_VERSION };
+export const RESULT_SCHEMA_VERSION = 'jagan-result-3';
+export const PUBLIC_SUMMARY_KIND = 'jagan-public-summary-3';
 const EPS = 1e-8;
 
 export function validateBundle(bundle) {
-  if (!bundle || !bundle.items || !bundle.core || !bundle.characters || !bundle.product) throw new Error('missing_bundle');
-  const { items, core, characters, product } = bundle;
+  if (!bundle || !bundle.items || !bundle.core || !bundle.characters || !bundle.product || !bundle.dti) throw new Error('missing_bundle');
+  const { items, core, characters, product, dti } = bundle;
   if (items.diagnosis_key !== 'jagan' || items.items.length !== 50 || items.traits.length !== 12) throw new Error('invalid_item_set');
   if (items.auxiliary_options.length || items.allow_skip || items.intro_screen) throw new Error('invalid_item_options');
   if (characters.characters.length !== 11) throw new Error('invalid_character_model');
   const ids = characters.characters.map((c) => c.id);
   if (new Set(ids).size !== 11 || !ids.includes('pierro') || !ids.includes('pantalone')) throw new Error('invalid_character_roster');
   for (const e of core.elements) if (Math.abs(Object.values(e.weights).reduce((s, x) => s + x, 0) - 1) > 1e-9) throw new Error('invalid_element_weights');
+  if (dti.patterns.length !== core.elements.length * items.traits.length) throw new Error('invalid_dti_patterns');
   if (product.sales_open && (!Number.isInteger(product.price) || product.price <= 0)) throw new Error('sales_require_valid_price');
   return true;
 }
 
 function ranked(rows) {
-  const out = [];
-  for (let i = 0; i < rows.length; i++) {
-    const first = rows.findIndex((r) => Math.abs(r.score - rows[i].score) < EPS);
-    out.push({ ...rows[i], rank: first + 1, displayScore: Math.round(rows[i].score) });
-  }
-  return out;
+  return rows.map((r, i) => ({ ...r, rank: rows.findIndex((x) => Math.abs(x.score - r.score) < EPS) + 1, displayScore: Math.round(r.score) }));
 }
 
 export function computeDiagnosis(input, bundle) {
   validateBundle(bundle);
   if (!input || input.itemSetVersion !== bundle.items.item_set_version) throw new Error('item_set_version_mismatch');
-  const j = judge(input.answers, bundle);
+  const j = judge(input.answers, bundle); // 回答の検査（50問すべて 1〜5 の整数）もここで行う
+  const answers = Object.fromEntries(bundle.items.items.map((i) => [i.id, input.answers[i.id]]));
   const traitRanking = ranked(rankTraits(j.scores, bundle.items));
   const traits = Object.fromEntries(bundle.items.traits.map((t) => [t.id, { id: t.id, label: t.label, score: j.scores[t.id], displayScore: Math.round(j.scores[t.id]) }]));
-  const elementRanking = ranked(j.elementRanking);
-  const element = { status: j.element.id ? 'available' : 'undifferentiated', id: j.element.id, label: j.element.label, nearTie: Boolean(j.element.nearTie), tiedIds: j.element.tiedIds || [], top3: elementRanking.slice(0, 3).map((e) => e.id), ranking: elementRanking };
-  const isou = { status: j.isou.id ? 'marked' : (j.isou.label === '未顕' ? 'unmarked' : 'composite'), id: j.isou.id, label: j.isou.label, nearTie: Boolean(j.isou.nearTie), tiedIds: j.isou.tiedIds || [] };
+
+  // 邪眼元素（必ず一つ）
+  const elementRanking = orderElements(j.elementRanking, answers, bundle.items).map((e) => ({ ...e, displayScore: Math.round(e.score) }));
+  const top = elementRanking[0];
+  const element = { status: 'available', id: top.id, label: top.label, tieBreak: top.tied ? 'hash' : 'unique', top3: elementRanking.slice(0, 3).map((e) => e.id), ranking: elementRanking };
+
+  // 異相（必ず一つ）
+  const sel = selectIsou(answers, bundle.items);
+  const aspect = bundle.dti.aspects.find((a) => a.trait_id === sel.id);
+  const isou = { status: 'marked', id: sel.id, code: aspect.code, label: aspect.label, tieBreak: sel.tieBreak };
+
+  const p = dtiPattern(bundle.dti, element.id, isou.id);
+  const dti = { code: p.code, name: p.name, elementCode: p.element_id, aspectCode: p.aspect_code, namingVersion: bundle.dti.version };
+
   const characterOrder = j.privateDiagnostics.characterRanking.map((c) => ({ id: c.id, name: c.name, rawSimilarity: c.score, displayScore: Math.round(c.score), agreement: c.agreement, coverage: c.coverage, usedAxes: c.usedAxes }));
+  const winner = j.character && characterOrder.find((c) => c.id === j.character.id);
   const character = j.character
-    ? { status: 'available', id: j.character.id, name: j.character.name, title: j.character.title, tags: j.character.tags, region: j.character.region, match: j.character.match, rawSimilarity: j.character.rawSimilarity, usedAxes: j.character.usedAxes, rawGap: j.character.rawGap, agreement: characterOrder.find((c) => c.id === j.character.id).agreement, coverage: characterOrder.find((c) => c.id === j.character.id).coverage }
+    ? { status: 'available', id: j.character.id, name: j.character.name, title: j.character.title, tags: j.character.tags, region: j.character.region, match: j.character.match, rawSimilarity: j.character.rawSimilarity, usedAxes: j.character.usedAxes, rawGap: j.character.rawGap, agreement: winner.agreement, coverage: winner.coverage }
     : { status: 'insufficient', reason: 'mapped_profile_contrast_too_small' };
+
   return {
-    schemaVersion: RESULT_SCHEMA_VERSION, diagnosisKey: 'jagan', stage: 'implementation_candidate', publicReleaseVerified: false,
+    schemaVersion: RESULT_SCHEMA_VERSION, diagnosisKey: 'jagan', system: 'DTI', stage: 'implementation_candidate', publicReleaseVerified: false,
     resultId: input.resultId ?? null,
-    versions: { engine: ENGINE_VERSION, itemSet: bundle.items.item_set_version, scoring: bundle.core.version, interpretation: bundle.core.version, characterModel: bundle.characters.version },
-    answers: Object.fromEntries(bundle.items.items.map((i) => [i.id, input.answers[i.id]])),
-    traits, traitRanking, element, isou, character, characterOrder, mappedSpread: j.privateDiagnostics.mappedSpread,
+    versions: { engine: ENGINE_VERSION, judge: JUDGE_VERSION, itemSet: bundle.items.item_set_version, scoring: bundle.core.version, interpretation: bundle.core.version, characterModel: bundle.characters.version, naming: bundle.dti.version },
+    answers, traits, traitRanking, element, isou, dti, character, characterOrder, mappedSpread: j.privateDiagnostics.mappedSpread,
     // 設定の値のみ。購入の可否は必ずサーバーが別に確かめる
     sales: { open: bundle.product.sales_open, price: bundle.product.price, currency: bundle.product.currency },
   };
@@ -64,25 +77,28 @@ export function explainCharacter(result, bundle, characterId = result.character.
     aligned: rows.filter((x) => x.difference <= 15).sort((a, b) => a.difference - b.difference),
     different: rows.filter((x) => x.difference >= 20).sort((a, b) => b.difference - a.difference),
     unknownAxes: c.unknown_axes,
-    caution: '比較先は作品解釈から作った部分的な参照です。未対応の特性は比較に含めていません。',
-    thresholdMeaning: '15点・20点は説明を作るための設計値で、心理学上の基準ではありません。',
   };
 }
 
-// 公開してよい値の許可リスト。回答・12特性の得点・結果ID・所有者は含めない
+// 公開してよい値の許可リスト。回答・12特性の得点・結果ID・所有者は含めない。人物を保留した結果も共有できる（人物は null）
 export function publicSummary(result) {
-  if (!result || result.character.status !== 'available') throw new Error('result_not_shareable');
+  if (!result || result.schemaVersion !== RESULT_SCHEMA_VERSION) throw new Error('result_not_shareable');
+  const ch = result.character.status === 'available' ? { id: result.character.id, label: result.character.name, matchPercent: result.character.match } : null;
   return {
-    kind: 'jagan-public-summary-2',
+    kind: PUBLIC_SUMMARY_KIND,
     element: { id: result.element.id, label: result.element.label },
-    isou: { id: result.isou.id, label: result.isou.label },
-    character: { id: result.character.id, label: result.character.name, matchPercent: result.character.match },
-    coreVersion: result.versions.interpretation, characterModelVersion: result.versions.characterModel,
+    isou: { id: result.isou.id, code: result.isou.code, label: result.isou.label },
+    dti: { code: result.dti.code, name: result.dti.name },
+    character: ch,
+    namingVersion: result.versions.naming, coreVersion: result.versions.interpretation, characterModelVersion: result.versions.characterModel,
   };
 }
 
+// X の共有文（指示書 7章）。人物を保留した結果は人物の行を省く
 export function shareTextFromSummary(s, url) {
-  return `邪眼診断をやってみました。\n私の結果は、【${s.element.label}×${s.isou.label}】\n\n最も近しいファトゥス：${s.character.label}（${s.character.matchPercent}%一致）\n\n${url}\n#邪眼診断 #原神`;
+  const lines = ['邪眼診断をやってみました。', `私の結果は、${s.element.label}×${s.isou.label}「${s.dti.name}」（${s.dti.code}）。`];
+  if (s.character) lines.push(`最も近しいファトゥス：${s.character.label}（${s.character.matchPercent}%一致）`);
+  return `${lines.join('\n')}\n\n${url}\n#邪眼診断 #原神`;
 }
 
 export function makeShareText(result, summaryUrl, siteOrigin) {
