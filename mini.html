@@ -20,9 +20,10 @@
   h1 { font-size:24px; font-weight:400; letter-spacing:.14em; margin:0 0 8px; text-align:center; }
   .lead { font-size:13px; color:var(--sub); margin:0 0 28px; text-align:center; }
   .q { margin:0 0 32px; }
-  .q-head { display:flex; align-items:baseline; gap:10px; margin:0 0 12px; }
-  .q-no { font-family:'IM Fell English',serif; color:var(--gold); font-size:15px; letter-spacing:.1em; }
-  .q-title { font-size:16px; font-weight:400; margin:0; letter-spacing:.06em; }
+  .q-head { margin:0 0 6px; }
+  .q-no { display:block; font-family:'IM Fell English',serif; color:var(--gold); font-size:12.5px; letter-spacing:.24em; margin:0 0 2px; }
+  .q-title { font-size:16px; font-weight:400; margin:0; letter-spacing:.04em; line-height:1.7; }
+  .q-helper { font-size:12px; color:var(--dim); margin:0 0 12px; line-height:1.75; }
   .opts { display:grid; gap:8px; }
   .opt { display:block; width:100%; text-align:left; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:12px 14px;
     color:var(--fg); font-family:inherit; cursor:pointer; transition:border-color .15s, background .15s; }
@@ -66,12 +67,12 @@
 </head>
 <body>
 <main class="wrap">
-  <p class="preview-note">確認用の画面です（Preview）。設問の文言は仮のもので、人物像レポートの購入はまだできません。</p>
+  <p class="preview-note">確認用の画面です（Preview）。人物像レポートの購入はまだできません。</p>
 
   <section id="quiz">
     <p class="eyebrow">ELEMENT DIAGNOSIS · MINI</p>
     <h1>元素診断 Mini</h1>
-    <p class="lead">3つの問いに、ひとつずつ答えてください。</p>
+    <p class="lead">3つの問いで選んだ考え方から、あなたの人物像を描きます。<br>それぞれ、いちばん近いものをひとつ選んでください。</p>
     <div id="questions"></div>
 
     <div class="card" id="charCard">
@@ -128,8 +129,10 @@
 
 <script src="js/characters118_v2_1.js"></script>
 <script src="js/eti_mini_auto_map_v1.js"></script>
-<script src="js/eti_mini_choices_provisional.js"></script>
+<script src="js/eti_v2_prototypes.js"></script>
+<script src="js/eti_mini_choices_v1.js"></script>
 <script src="js/eti_mini_core.js"></script>
+<script src="js/eti_mini_manual_v1.js"></script>
 <script>
 (function () {
   'use strict';
@@ -142,32 +145,58 @@
   var $ = function (id) { return document.getElementById(id); };
 
   // ---- 3問 ----
+  // 選択肢の並びは来訪ごとに1回だけ並べ替え、回答中（再読み込みを含む同じタブの間）は固定する。
+  // 回答は表示位置ではなく内部キー（option.key）で持つので、並びが変わっても判定は同じ。
+  var ORDER_KEY = 'eti-mini-order:' + Q.version;
+  function shuffled(keys) {
+    var a = keys.slice();
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+  function loadOrder() {
+    var saved = null;
+    try { saved = JSON.parse(sessionStorage.getItem(ORDER_KEY) || 'null'); } catch (e) { saved = null; }
+    var order = {};
+    Q.questions.forEach(function (q) {
+      var keys = q.options.map(function (o) { return o.key; });
+      var s = saved && saved[q.id];
+      var valid = Array.isArray(s) && s.length === keys.length && keys.every(function (k) { return s.indexOf(k) >= 0; });
+      order[q.id] = valid ? s : shuffled(keys);
+    });
+    try { sessionStorage.setItem(ORDER_KEY, JSON.stringify(order)); } catch (e) { /* 保存できなくても表示は続ける */ }
+    return order;
+  }
+  var ORDER = loadOrder();
   var qWrap = $('questions');
   Q.questions.forEach(function (q, qi) {
     var sec = document.createElement('div');
     sec.className = 'q';
     var head = document.createElement('div');
     head.className = 'q-head';
-    var no = document.createElement('span'); no.className = 'q-no'; no.textContent = 'Q' + (qi + 1);
+    var no = document.createElement('span'); no.className = 'q-no'; no.textContent = 'QUESTION 0' + (qi + 1) + ' / 0' + Q.questions.length;
     var h = document.createElement('h2'); h.className = 'q-title'; h.id = 'qt-' + q.id; h.textContent = q.title;
     head.appendChild(no); head.appendChild(h);
+    var helper = document.createElement('p'); helper.className = 'q-helper'; helper.textContent = q.helper;
     var opts = document.createElement('div');
     opts.className = 'opts'; opts.setAttribute('role', 'radiogroup'); opts.setAttribute('aria-labelledby', h.id);
-    q.options.forEach(function (o) {
+    var byKey = {};
+    q.options.forEach(function (o) { byKey[o.key] = o; });
+    ORDER[q.id].forEach(function (key) {
+      var o = byKey[key];
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'opt'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', 'false');
-      b.dataset.axis = q.axis; b.dataset.value = o.value;
-      var t = document.createElement('span'); t.className = 'opt-title'; t.textContent = o.title;
-      var d = document.createElement('span'); d.className = 'opt-text'; d.textContent = o.text;
+      b.dataset.q = q.id; b.dataset.k = o.key; // 内部キー（画面には表示しない）
+      var t = document.createElement('span'); t.className = 'opt-title'; t.textContent = o.label;
+      var d = document.createElement('span'); d.className = 'opt-text'; d.textContent = o.detail;
       b.appendChild(t); b.appendChild(d);
       b.addEventListener('click', function () {
-        answers[q.axis] = o.value;
+        answers[q.id] = o.key;
         opts.querySelectorAll('.opt').forEach(function (x) { x.setAttribute('aria-checked', x === b ? 'true' : 'false'); });
         refresh();
       });
       opts.appendChild(b);
     });
-    sec.appendChild(head); sec.appendChild(opts);
+    sec.appendChild(head); sec.appendChild(helper); sec.appendChild(opts);
     qWrap.appendChild(sec);
   });
 
@@ -215,7 +244,9 @@
     $('rTypeLink').href = r.typePage;
     $('rMirrorLabel').textContent = userPicked ? 'あなたが選んだキャラクター' : '近しいキャラクター';
     $('rMirror').textContent = r.character.name;
-    $('rMirrorNote').textContent = userPicked ? '' : '答えた3つの問いから選んだキャラクターです。キャラクター自身の元素・武器種・国家は、あなたの結果と同じとは限りません。';
+    $('rMirrorNote').textContent = userPicked
+      ? '答えた3つの問いと、選んだキャラクターの人物像を合わせて判定しました。キャラクター自身の元素・武器種・国家は、あなたの結果と同じとは限りません。'
+      : '答えた3つの問いから選んだキャラクターです。キャラクター自身の元素・武器種・国家は、あなたの結果と同じとは限りません。';
     $('quiz').hidden = true; $('result').hidden = false;
     window.scrollTo(0, 0);
   }

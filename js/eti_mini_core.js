@@ -2,8 +2,8 @@
 //
 // 方針（docs/eti-mini/handoff_v1/README_Claude_実装指示書.md）
 //   ・キャラクター未選択：固定割当表（js/eti_mini_auto_map_v1.js）を key「元素|武器|国家の内部キー」で引くだけ。再抽選しない。
-//   ・キャラクター手動選択：結合式は未確定（ChatGPT が別途決める）。setManualCombiner() で計算を差し込むまで、
-//     manualResult() は結果を仮計算せず MANUAL_SELECTION_NOT_CONFIGURED を投げる。
+//   ・キャラクター手動選択：js/eti_mini_manual_v1.js（ETI-MINI-MANUAL-1.0.0）が setManualCombiner() で計算を差し込む。
+//     差し込まれていなければ manualResult() は結果を仮計算せず MANUAL_SELECTION_NOT_CONFIGURED を投げる。
 //   ・結果の ETI（元素・武器・国家）とキャラクターのゲーム内属性は一致しなくてよい。キャラクター側へ寄せない。
 //   ・点数・一致率・順位は扱わない（表示しない）。
 //   ・下の表示用の辞書は index.html の正本（TYPE_NAME・*_CODE・ELEMENTS.keyword・WEAPONS.style・NATION_MEANING）の写し。
@@ -11,7 +11,7 @@
 (function (root) {
   'use strict';
 
-  var CORE_VERSION = 'ETI-MINI-CORE-0.1.0';
+  var CORE_VERSION = 'ETI-MINI-CORE-0.2.0';
   var ELEMENT_KEYS = ['炎', '水', '氷', '雷', '風', '岩', '草'];
   var WEAPON_KEYS = ['片手剣', '両手剣', '長柄', '法器', '弓'];
   var NATION_KEYS = ['モンド', '璃月', '稲妻', 'スメール', 'フォンテーヌ', 'ナタ', 'スネージナヤ', 'ナドクライ'];
@@ -110,6 +110,7 @@
     t.answers = a;
     t.character = { name: character.name, selectedBy: 'user' };
     t.versions = { core: CORE_VERSION, manualCombiner: r.version };
+    if (typeof r.weight === 'number') t.versions.manualWeight = r.weight;
     return t;
   }
 

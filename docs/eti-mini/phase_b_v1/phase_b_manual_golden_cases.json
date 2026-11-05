@@ -1,0 +1,110 @@
+{
+  "model": "ETI-MINI-MANUAL-1.0.0",
+  "weight": 0.5,
+  "cases": [
+    {
+      "answers": {
+        "element": "炎",
+        "weapon": "片手剣",
+        "nation": "モンド"
+      },
+      "character": "ディルック",
+      "expected": {
+        "element": "炎",
+        "weapon": "長柄",
+        "nation": "モンド"
+      }
+    },
+    {
+      "answers": {
+        "element": "炎",
+        "weapon": "法器",
+        "nation": "ナドクライ"
+      },
+      "character": "辛炎",
+      "expected": {
+        "element": "炎",
+        "weapon": "法器",
+        "nation": "ナドクライ"
+      }
+    },
+    {
+      "answers": {
+        "element": "氷",
+        "weapon": "片手剣",
+        "nation": "モンド"
+      },
+      "character": "煙緋",
+      "expected": {
+        "element": "氷",
+        "weapon": "長柄",
+        "nation": "モンド"
+      }
+    },
+    {
+      "answers": {
+        "element": "氷",
+        "weapon": "法器",
+        "nation": "スメール"
+      },
+      "character": "アイノ",
+      "expected": {
+        "element": "水",
+        "weapon": "法器",
+        "nation": "スメール"
+      }
+    },
+    {
+      "answers": {
+        "element": "雷",
+        "weapon": "長柄",
+        "nation": "ナタ"
+      },
+      "character": "刻晴",
+      "expected": {
+        "element": "雷",
+        "weapon": "長柄",
+        "nation": "ナタ"
+      }
+    },
+    {
+      "answers": {
+        "element": "風",
+        "weapon": "弓",
+        "nation": "ナドクライ"
+      },
+      "character": "スクロース",
+      "expected": {
+        "element": "風",
+        "weapon": "弓",
+        "nation": "ナドクライ"
+      }
+    },
+    {
+      "answers": {
+        "element": "草",
+        "weapon": "長柄",
+        "nation": "スネージナヤ"
+      },
+      "character": "ナヒーダ",
+      "expected": {
+        "element": "草",
+        "weapon": "長柄",
+        "nation": "スネージナヤ"
+      }
+    },
+    {
+      "answers": {
+        "element": "草",
+        "weapon": "弓",
+        "nation": "璃月"
+      },
+      "character": "イネファ",
+      "expected": {
+        "element": "草",
+        "weapon": "弓",
+        "nation": "璃月"
+      }
+    }
+  ]
+}

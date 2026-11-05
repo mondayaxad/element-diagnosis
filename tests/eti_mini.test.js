@@ -14,13 +14,14 @@ const CAND_JSON = JSON.parse(read('docs/eti-mini/handoff_v1/data/eti_mini_auto_c
 const CHARS = require('../js/characters118_v2_1.js');
 
 // mini.html と同じ順で、ブラウザと同じく1つのグローバルに読み込む
-function loadMini() {
+const MINI_SCRIPTS = ['js/characters118_v2_1.js', 'js/eti_mini_auto_map_v1.js', 'js/eti_v2_prototypes.js', 'js/eti_mini_choices_v1.js', 'js/eti_mini_core.js', 'js/eti_mini_manual_v1.js'];
+function loadMini({ withManual = true } = {}) {
   const ctx = {};
   ctx.globalThis = ctx; ctx.window = ctx;
   vm.createContext(ctx);
-  for (const f of ['js/characters118_v2_1.js', 'js/eti_mini_auto_map_v1.js', 'js/eti_mini_choices_provisional.js', 'js/eti_mini_core.js']) {
-    vm.runInContext(read(f), ctx, { filename: f });
-  }
+  // classic script と同じく1つのスクリプトとして連結する（js/eti_v2_prototypes.js の const を他のファイルから参照できるように）
+  const files = MINI_SCRIPTS.filter((f) => withManual || f !== 'js/eti_mini_manual_v1.js');
+  vm.runInContext(files.map(read).join('\n;\n'), ctx, { filename: 'mini-scripts.js' });
   return ctx;
 }
 const ctx = loadMini();
@@ -145,7 +146,7 @@ test('35タイプ名・コード・国家コード・短い言葉は index.html 
 });
 
 test('手動選択：結合式が差し込まれるまで結果を仮計算しない', () => {
-  const c = loadMini().ETIMini;
+  const c = loadMini({ withManual: false }).ETIMini;
   assert.equal(c.isManualSelectionReady(), false);
   const ch = CHARS.find((x) => x.name === 'ナヒーダ');
   assert.throws(() => c.manualResult({ element: '炎', weapon: '弓', nation: 'モンド' }, ch), (e) => e.code === 'MANUAL_SELECTION_NOT_CONFIGURED');
@@ -155,7 +156,7 @@ test('手動選択：結合式が差し込まれるまで結果を仮計算し�
 });
 
 test('手動選択：差し込み口の形（試験用の仮の結合。本番の式ではない）', () => {
-  const c = loadMini().ETIMini;
+  const c = loadMini({ withManual: false }).ETIMini;
   c.setManualCombiner(({ answers }) => ({ ...answers, version: 'TEST-ONLY' }));
   const ch = CHARS.find((x) => x.name === 'ナヒーダ');
   const r = c.manualResult({ element: '炎', weapon: '弓', nation: 'モンド' }, ch);
@@ -168,23 +169,44 @@ test('手動選択：差し込み口の形（試験用の仮の結合。本番�
   assert.throws(() => c.manualResult({ element: '炎', weapon: '弓', nation: 'モンド' }, ch), (e) => e.code === 'INVALID_ANSWERS');
 });
 
-test('選択肢：7・5・8、値は内部キー、重複なし、属性の名前を文中に出さない', () => {
-  assert.equal(Q.provisional, true);
+test('選択肢（正式版）：正本 JSON から生成、7・5・8、内部キー、label・detail あり、属性の名前を文中に出さない', () => {
+  const B = require('../scripts/build-eti-mini-data.js');
+  assert.equal(read(B.CHOICES_OUT), B.renderChoices());
+  assert.equal(Q.version, 'ETI-MINI-CHOICES-1.0.0');
   const [q1, q2, q3] = Q.questions;
-  assert.deepEqual([q1.axis, q2.axis, q3.axis], ['element', 'weapon', 'nation']);
-  assert.deepEqual(q1.options.map((o) => o.value).sort(), M.ELEMENT_KEYS.slice().sort());
-  assert.deepEqual(q2.options.map((o) => o.value).sort(), M.WEAPON_KEYS.slice().sort());
-  assert.deepEqual(q3.options.map((o) => o.value).sort(), M.NATION_KEYS.slice().sort());
-  // 本家と同じ並びにしない（すぐ見抜かれないように）
-  assert.notDeepEqual(q1.options.map((o) => o.value), M.ELEMENT_KEYS);
-  assert.notDeepEqual(q2.options.map((o) => o.value), M.WEAPON_KEYS);
-  assert.notDeepEqual(q3.options.map((o) => o.value), M.NATION_KEYS);
-  const names = [...M.ELEMENT_KEYS, ...M.WEAPON_KEYS, ...M.NATION_KEYS, 'ナド・クライ', '剣', '槍', '元素', '国'];
+  assert.deepEqual(plain([q1.id, q2.id, q3.id]), ['element', 'weapon', 'nation']);
+  assert.deepEqual(plain(q1.options.map((o) => o.key)), plain(M.ELEMENT_KEYS));
+  assert.deepEqual(plain(q2.options.map((o) => o.key)), plain(M.WEAPON_KEYS));
+  assert.deepEqual(plain(q3.options.map((o) => o.key)), plain(M.NATION_KEYS));
+  const names = [...M.ELEMENT_KEYS, ...M.WEAPON_KEYS, ...M.NATION_KEYS, 'ナド・クライ', '元素', '武器', '国家'];
+  // 「アナタ」は国家名「ナタ」を文字列として含むが、属性の露出ではないので除いてから照合する
+  const visible = (t) => t.replace(/アナタ/g, '');
   for (const q of Q.questions) {
-    for (const s of [q.title, ...q.options.flatMap((o) => [o.title, o.text])]) {
-      for (const n of names) assert.ok(!s.includes(n), `「${s}」に「${n}」が含まれる`);
-      assert.ok(s.length > 0);
+    assert.ok(q.title && q.helper);
+    const labels = new Set();
+    for (const o of q.options) {
+      assert.ok(o.label && o.detail, `${q.id}/${o.key}`);
+      labels.add(o.label);
+      for (const s of [o.label, o.detail]) for (const n of names) assert.ok(!visible(s).includes(n), `「${s}」に「${n}」が含まれる`);
     }
+    for (const n of names) assert.ok(!visible(q.title).includes(n) && !visible(q.helper).includes(n), `${q.id} の問いに「${n}」`);
+    assert.equal(labels.size, q.options.length, `${q.id} の見出しが重複`);
+  }
+});
+
+test('選択肢の表示順を何度並べ替えても、内部キーで答えるので結果は同じ', () => {
+  const html = read('mini.html');
+  assert.match(html, /answers\[q\.id\] = o\.key/); // 位置ではなく内部キーで保持
+  let seed = 7;
+  const rnd = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+  const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const nahida = CHARS.find((x) => x.name === 'ナヒーダ');
+  for (let t = 0; t < 50; t++) {
+    const pick = Q.questions.map((q) => shuffle(q.options)[t % q.options.length].key);
+    const a = { element: pick[0], weapon: pick[1], nation: pick[2] };
+    const viaShuffledDisplay = Object.fromEntries(Q.questions.map((q, i) => [q.id, shuffle(q.options).find((o) => o.key === pick[i]).key]));
+    assert.deepEqual(plain(M.autoResult(viaShuffledDisplay)), plain(M.autoResult(a)));
+    assert.deepEqual(plain(M.manualResult(viaShuffledDisplay, nahida)), plain(M.manualResult(a, nahida)));
   }
 });
 
@@ -198,6 +220,9 @@ test('mini.html：点数・一致率・順位を出さない／本家の CTA が
   assert.match(html, /100問/);
   assert.match(html, /基本無料/);
   assert.match(html, /ETI_V2_CHARACTERS_2_1_0\.map/);
+  assert.match(html, /QUESTION 0/); // 問いの見出しは中立な表記
+  assert.doesNotMatch(html, /心理学的|測定された/);
+  for (const f of MINI_SCRIPTS) assert.ok(html.includes(`<script src="${f}"></script>`), f);
   // 旧版のキャラクター配列（index.html の CHARACTERS・2.0.1）を使わない
   assert.doesNotMatch(html, /characters118_v2\.js|ETI_V2_CHARACTERS\b(?!_2_1_0)/);
   assert.equal(CHARS.length, 118);
@@ -207,7 +232,7 @@ test('mini.html：点数・一致率・順位を出さない／本家の CTA が
 
 test('配信：Mini のページと JS は許可リストにあり、正本 JSON（docs）は配信しない', () => {
   const B = require('../scripts/build-public.js');
-  for (const f of ['mini.html', 'js/eti_mini_core.js', 'js/eti_mini_auto_map_v1.js', 'js/eti_mini_choices_provisional.js', 'js/characters118_v2_1.js']) {
+  for (const f of ['mini.html', ...MINI_SCRIPTS]) {
     assert.ok(B.PUBLIC_FILES.includes(f), f);
   }
   assert.ok(B.forbiddenIn(['docs/eti-mini/handoff_v1/data/eti_mini_758_5star_280_mapping.json']).length > 0);
