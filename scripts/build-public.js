@@ -69,6 +69,10 @@ const PUBLIC_FILES = [
   'type-preview.html',                                        // 同・入力画面とレポートの見本（確認用。noindex・リンクなし）
   'js/registration-onboarding.js',
   'assets/backgrounds/quiet-starry-lake.jpg',
+  'mini.html',                                                // 元素診断 Mini（3問。Preview の確認用・noindex。購入はまだ無い）
+  'js/eti_mini_core.js',                                      // 同・結果を決める層（固定割当表を引く・手動選択の結合は未接続）
+  'js/eti_mini_auto_map_v1.js',                               // 同・未選択時の固定割当（scripts/build-eti-mini-data.js が正本 JSON から生成）
+  'js/eti_mini_choices_provisional.js',                       // 同・3問の選択肢（仮の文言）
 ];
 // ディレクトリ直下の指定拡張子だけ（再帰しない）
 const PUBLIC_DIRS = [
