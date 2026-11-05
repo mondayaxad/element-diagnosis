@@ -1,0 +1,44 @@
+# 例：GitHub Actions への組み込み案（有効化していない。使う場合は .github/workflows/ にコピーして調整する）
+# 方針：リポジトリの Secrets は使わない。Supabase／Stripe の鍵は渡さない（渡すと tests/pg の安全装置が止める）。
+name: tests
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  model:                       # 模型の試験（PG 不要）
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
+
+  pg:                          # 実PG17の試験（使い捨ての PostgreSQL 17。合成データのみ）
+    runs-on: ubuntu-latest
+    # 対象のパスが変わった時だけ実行したい場合は、dorny/paths-filter 等で条件を付ける
+    #   api/** lib/** docs/sql/** tests/pg/** index.html report.html
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust      # 使い捨てのサービスコンテナだけ。外には公開されない
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      E2E_PG_EXTERNAL: '1'
+      E2E_PG_HOST: localhost
+      E2E_PG_PORT: '5432'
+      E2E_PG_USER: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: npm }
+      - run: npm ci
+      - run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - run: npm run test:pg

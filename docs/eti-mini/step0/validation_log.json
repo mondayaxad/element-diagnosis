@@ -1,0 +1,263 @@
+{
+  "sources_sha256": {
+    "js/ETI_v2_QUESTIONS_100.js": "6c602439e0bf82a88183f6f6a694dd20da974b3f01be07d396315786ae5ddab4",
+    "js/eti_v2_prototypes.js": "35d45e433f56b6df3d56fe07e1b8ffddd02649dd46c043ea37c603e0835e1d74",
+    "js/eti_v2_engine.js": "a49696b34497f25bf2c38635999b19766a1799837acd48f17602ae120685daa9",
+    "js/eti_v2_answer_collection.js": "f0a713f3b6012ee9648123ed5a6532659bab00c873f07b59f492dcc2200ceadd",
+    "js/characters118_v2.js": "8a4db1bf733bee21aca09b6da4a834b4008554855aa1eec254a989ce444cf235",
+    "js/characters118_v2_1.js": "a5b368ff82065df07c5a23963e8a8f051597b57b972933e06f5b9132355c1747",
+    "js/eti_mirror_selection_v21.js": "d7fb3bd8f3039243c06bf098646a4eb065edd31027215cb1ed8d31f4f53ccb1b",
+    "js/eti_v2_mirror_resolver.js": "031c7f9d54ed619b52faa37ece324d153826f35559b1ab4cc0728eb96e1ab0bb",
+    "js/eti_v2_legacy_adapter.js": "30f988fcc06fbca9b5d40c54c7b2a557961c793e804c4da3b152bd8dbdf02c12",
+    "index.html": "5669330a127089522870e2d0686bc6a408c533afcac8ddd050c1a76c35a59f54",
+    "report.html": "9eabd1959510b0c61f6d6121c88486f1e56b3e3ce74391aa5cb6a31402faea5d",
+    "mypage.html": "f61c5bcb1f44d13481d9fe2e4edd9827a506c976a68741535aef52b2feb31402",
+    "js/eti_type_reading.js": "e9ded76efa15f36538d36fa82907147bc6c7d9b34e73761d0bd4e9c7ecc0815b"
+  },
+  "checks": [
+    {
+      "name": "element prototypes = 7",
+      "ok": true,
+      "detail": [
+        "炎",
+        "水",
+        "氷",
+        "雷",
+        "風",
+        "岩",
+        "草"
+      ]
+    },
+    {
+      "name": "weapon prototypes = 5",
+      "ok": true,
+      "detail": [
+        "片手剣",
+        "両手剣",
+        "長柄",
+        "法器",
+        "弓"
+      ]
+    },
+    {
+      "name": "nation prototypes = 8",
+      "ok": true,
+      "detail": [
+        "モンド",
+        "璃月",
+        "稲妻",
+        "スメール",
+        "フォンテーヌ",
+        "ナタ",
+        "スネージナヤ",
+        "ナドクライ"
+      ]
+    },
+    {
+      "name": "element prototype keys == META.personalityAxes, int 0..100",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "weapon prototype keys == META.styleAxes, int 0..100",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "nation prototype keys == META.valueAxes, int 0..100",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "7x5x8 = 280",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "TYPE_NAME covers 35 element×weapon",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "35 type names unique",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "35 type codes unique",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "NATION_CODE covers 8 prototype nations (internal keys)",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "type/*.html = 35 and match code4 (lowercase)",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "type/*.html <title> contains 「name」(CODE)",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "index.html NATION_MEANING keys == 8 prototype nations",
+      "ok": true,
+      "detail": [
+        "モンド",
+        "璃月",
+        "稲妻",
+        "スメール",
+        "フォンテーヌ",
+        "ナタ",
+        "スネージナヤ",
+        "ナドクライ"
+      ]
+    },
+    {
+      "name": "index.html NATION_DESC keys == 8 prototype nations",
+      "ok": true,
+      "detail": [
+        "モンド",
+        "璃月",
+        "稲妻",
+        "スメール",
+        "フォンテーヌ",
+        "ナタ",
+        "スネージナヤ",
+        "ナドクライ"
+      ]
+    },
+    {
+      "name": "index.html NATION_TRAITS keys == 8 prototype nations",
+      "ok": true,
+      "detail": [
+        "モンド",
+        "璃月",
+        "稲妻",
+        "スメール",
+        "フォンテーヌ",
+        "ナタ",
+        "スネージナヤ",
+        "ナドクライ"
+      ]
+    },
+    {
+      "name": "index.html NATION_VALUES keys == 8 prototype nations",
+      "ok": true,
+      "detail": [
+        "モンド",
+        "璃月",
+        "稲妻",
+        "スメール",
+        "フォンテーヌ",
+        "ナタ",
+        "スネージナヤ",
+        "ナドクライ"
+      ]
+    },
+    {
+      "name": "NATION_MEANING[ナドクライ] == 月光",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "ETI-CHAR-2.1.0 count = 118",
+      "ok": true,
+      "detail": 118
+    },
+    {
+      "name": "ETI-CHAR-2.0.1 count = 118",
+      "ok": true,
+      "detail": 118
+    },
+    {
+      "name": "2.1.0 all 20 axes present, finite, 0..100, canonical key order",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "2.1.0 names unique",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "2.1.0 element ∈ 7 prototypes",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "2.1.0 weapon ∈ 5 prototypes",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "2.1.0 region ∈ 8 nations (after alias) or null",
+      "ok": true,
+      "detail": [
+        "モンド",
+        "ナタ",
+        "璃月",
+        "スメール",
+        "稲妻",
+        "フォンテーヌ",
+        "スネージナヤ",
+        null,
+        "ナド・クライ"
+      ]
+    },
+    {
+      "name": "2.0.1 and 2.1.0 have identical name order (canonicalIndex stable)",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "2.0.1 and 2.1.0 identical element/weapon/region",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "all 118 have a rarity/release entry in the UNVERIFIED table",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "UNVERIFIED table has no extra names",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "2.1.0 coordinates are integers",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "each raw element prototype classifies to itself",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "each raw weapon prototype classifies to itself",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "each raw nation prototype classifies to itself",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "rankByDistance exact tie keeps table insertion order (stable sort)",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "computeMirror deterministic for same input (2 runs)",
+      "ok": true,
+      "detail": null
+    }
+  ]
+}

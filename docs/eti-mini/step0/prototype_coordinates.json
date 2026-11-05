@@ -1,0 +1,534 @@
+{
+  "_title": "ETI v2 プロトタイプ座標（正本: js/eti_v2_prototypes.js）",
+  "_generated_by": "docs/eti-mini/step0/tools/build_step0.js",
+  "_generated_at": "2026-11-05",
+  "_repo_head": "9e6b77b408904823cdfb14d2be559111781df74c",
+  "_legend": {
+    "fact": "リポジトリのコード/データから機械的に抽出した値",
+    "inference": "Claude の推定・解釈（fact と区別）",
+    "unverified": "外部検証が必要な暫定値"
+  },
+  "fact": {
+    "translation_model_version": "ETI-TRANS-2.0.0",
+    "meta": {
+      "diagnosisVersion": "ETI-2.0",
+      "itemSetVersion": "ETI-ITEM-2.0.0",
+      "scoringVersion": "ETI-SCORE-2.0.0",
+      "translationModelVersion": "ETI-TRANS-2.0.0",
+      "characterProfileVersion": "ETI-CHAR-2.1.0",
+      "mirrorModelVersion": "ETI-MIRROR-2.1.0"
+    },
+    "scale": {
+      "range": "0..100（整数）",
+      "user_score_formula": "display = round(((mean(signed answers) + 2) / 4) * 100)。回答 -2..2、direction=-1 は符号反転（eti_v2_engine.js scoreSelfDomain/scoreValues）"
+    },
+    "ELEMENT_PROTOTYPES_V2": {
+      "domain": "PERSONALITY (Big Five)",
+      "axes": [
+        "O",
+        "C",
+        "E",
+        "A",
+        "N"
+      ],
+      "axis_labels_ja_type_reading": {
+        "O": "開放性",
+        "C": "誠実性",
+        "E": "外向性",
+        "A": "協調性",
+        "N": "感受性の鋭さ"
+      },
+      "table_order": [
+        "炎",
+        "水",
+        "氷",
+        "雷",
+        "風",
+        "岩",
+        "草"
+      ],
+      "values": {
+        "炎": {
+          "O": 50,
+          "C": 90,
+          "E": 90,
+          "A": 70,
+          "N": 50
+        },
+        "水": {
+          "O": 70,
+          "C": 70,
+          "E": 50,
+          "A": 70,
+          "N": 70
+        },
+        "氷": {
+          "O": 50,
+          "C": 70,
+          "E": 10,
+          "A": 30,
+          "N": 90
+        },
+        "雷": {
+          "O": 70,
+          "C": 70,
+          "E": 70,
+          "A": 30,
+          "N": 70
+        },
+        "風": {
+          "O": 90,
+          "C": 30,
+          "E": 50,
+          "A": 70,
+          "N": 50
+        },
+        "岩": {
+          "O": 30,
+          "C": 90,
+          "E": 50,
+          "A": 90,
+          "N": 30
+        },
+        "草": {
+          "O": 90,
+          "C": 70,
+          "E": 50,
+          "A": 90,
+          "N": 50
+        }
+      },
+      "ranking_function": "ETIv2.rankByDistance(ELEMENT_PROTOTYPES_V2, results.personality, META.personalityAxes)",
+      "distance": "sqrt(mean(((user[ax] - proto[ax]) / 100)^2))  — 5軸等重み（重み係数なし）。較正なし",
+      "direction": "distance 小さいほど近い（昇順で1位）",
+      "closeness_score": "clamp(round((1 - distance) * 100), 0, 100)（表示用。判定には不使用）",
+      "tie_order": "Array.prototype.sort（安定）→ 完全同点は表の挿入順 炎>水>氷>雷>風>岩>草。MIRROR の同率解消側（topAttributeNames）は |d - best| <= 1e-12 を同率集合として扱う",
+      "threshold": "なし（必ず1位を返す）"
+    },
+    "WEAPON_PROTOTYPES_V2": {
+      "domain": "STYLE",
+      "axes": [
+        "AGY",
+        "REL",
+        "ROL",
+        "REF",
+        "AUT"
+      ],
+      "axis_labels_ja_type_reading": {
+        "AGY": "主導性",
+        "REL": "関係調整",
+        "ROL": "役割持続",
+        "REF": "媒介思考",
+        "AUT": "自律距離"
+      },
+      "table_order": [
+        "片手剣",
+        "両手剣",
+        "長柄",
+        "法器",
+        "弓"
+      ],
+      "values": {
+        "片手剣": {
+          "AGY": 50,
+          "REL": 90,
+          "ROL": 60,
+          "REF": 45,
+          "AUT": 30
+        },
+        "両手剣": {
+          "AGY": 90,
+          "REL": 30,
+          "ROL": 60,
+          "REF": 30,
+          "AUT": 90
+        },
+        "長柄": {
+          "AGY": 55,
+          "REL": 70,
+          "ROL": 90,
+          "REF": 45,
+          "AUT": 45
+        },
+        "法器": {
+          "AGY": 30,
+          "REL": 45,
+          "ROL": 55,
+          "REF": 90,
+          "AUT": 65
+        },
+        "弓": {
+          "AGY": 45,
+          "REL": 35,
+          "ROL": 55,
+          "REF": 65,
+          "AUT": 90
+        }
+      },
+      "ranking_function": "ETIv2.rankByDistance(WEAPON_PROTOTYPES_V2, results.style, META.styleAxes)",
+      "distance": "元素と同じ（5軸等重みの正規化RMSE）",
+      "direction": "小さいほど近い",
+      "tie_order": "表の挿入順 片手剣>両手剣>長柄>法器>弓",
+      "threshold": "なし"
+    },
+    "NATION_PROTOTYPES_V2": {
+      "domain": "VALUES (Schwartz 10)",
+      "axes": [
+        "SD",
+        "ST",
+        "HE",
+        "AC",
+        "PO",
+        "SE",
+        "CO",
+        "TR",
+        "BE",
+        "UN"
+      ],
+      "axis_labels_ja_type_reading": {
+        "SD": "自分で選ぶこと",
+        "ST": "新しい刺激",
+        "HE": "楽しみ",
+        "AC": "達成",
+        "PO": "影響力",
+        "SE": "安定",
+        "CO": "節度",
+        "TR": "伝統",
+        "BE": "身近な人への思いやり",
+        "UN": "公正さ"
+      },
+      "table_order": [
+        "モンド",
+        "璃月",
+        "稲妻",
+        "スメール",
+        "フォンテーヌ",
+        "ナタ",
+        "スネージナヤ",
+        "ナドクライ"
+      ],
+      "values": {
+        "モンド": {
+          "SD": 90,
+          "ST": 80,
+          "HE": 65,
+          "AC": 45,
+          "PO": 25,
+          "SE": 35,
+          "CO": 20,
+          "TR": 25,
+          "BE": 55,
+          "UN": 70
+        },
+        "璃月": {
+          "SD": 45,
+          "ST": 35,
+          "HE": 40,
+          "AC": 85,
+          "PO": 60,
+          "SE": 70,
+          "CO": 65,
+          "TR": 85,
+          "BE": 60,
+          "UN": 50
+        },
+        "稲妻": {
+          "SD": 25,
+          "ST": 20,
+          "HE": 30,
+          "AC": 50,
+          "PO": 55,
+          "SE": 90,
+          "CO": 85,
+          "TR": 95,
+          "BE": 60,
+          "UN": 45
+        },
+        "スメール": {
+          "SD": 85,
+          "ST": 55,
+          "HE": 35,
+          "AC": 60,
+          "PO": 25,
+          "SE": 45,
+          "CO": 35,
+          "TR": 40,
+          "BE": 70,
+          "UN": 95
+        },
+        "フォンテーヌ": {
+          "SD": 55,
+          "ST": 45,
+          "HE": 50,
+          "AC": 60,
+          "PO": 45,
+          "SE": 65,
+          "CO": 80,
+          "TR": 55,
+          "BE": 65,
+          "UN": 95
+        },
+        "ナタ": {
+          "SD": 70,
+          "ST": 95,
+          "HE": 90,
+          "AC": 75,
+          "PO": 55,
+          "SE": 25,
+          "CO": 30,
+          "TR": 45,
+          "BE": 70,
+          "UN": 55
+        },
+        "スネージナヤ": {
+          "SD": 65,
+          "ST": 65,
+          "HE": 40,
+          "AC": 90,
+          "PO": 95,
+          "SE": 55,
+          "CO": 35,
+          "TR": 40,
+          "BE": 35,
+          "UN": 30
+        },
+        "ナドクライ": {
+          "SD": 90,
+          "ST": 60,
+          "HE": 25,
+          "AC": 30,
+          "PO": 20,
+          "SE": 60,
+          "CO": 20,
+          "TR": 35,
+          "BE": 50,
+          "UN": 70
+        }
+      },
+      "ranking_function": "ETIv2.rankNationsByCenteredValues(NATION_PROTOTYPES_V2, results.values, META.valueAxes)",
+      "distance": "user・proto をそれぞれ10軸平均で center → cosine 類似度 s → distance = (1 - s) / 2。user の centered ベクトルが全0なら全国家 s=0（同点→挿入順でモンド）。cos が null（片方が0ベクトル）も s=0",
+      "direction": "小さいほど近い",
+      "tie_order": "表の挿入順 モンド>璃月>稲妻>スメール>フォンテーヌ>ナタ>スネージナヤ>ナドクライ",
+      "threshold": "なし",
+      "note": "国家判定は results.values（display値, 0..100）を使い、results.valuesCentered は使わない"
+    },
+    "self_classification_check": {
+      "element": [
+        {
+          "input": "炎",
+          "top": "炎",
+          "d0": 0,
+          "second": "水",
+          "d1": 0.236643
+        },
+        {
+          "input": "水",
+          "top": "水",
+          "d0": 0,
+          "second": "草",
+          "d1": 0.154919
+        },
+        {
+          "input": "氷",
+          "top": "氷",
+          "d0": 0,
+          "second": "水",
+          "d1": 0.282843
+        },
+        {
+          "input": "雷",
+          "top": "雷",
+          "d0": 0,
+          "second": "水",
+          "d1": 0.2
+        },
+        {
+          "input": "風",
+          "top": "風",
+          "d0": 0,
+          "second": "草",
+          "d1": 0.2
+        },
+        {
+          "input": "岩",
+          "top": "岩",
+          "d0": 0,
+          "second": "炎",
+          "d1": 0.236643
+        },
+        {
+          "input": "草",
+          "top": "草",
+          "d0": 0,
+          "second": "水",
+          "d1": 0.154919
+        }
+      ],
+      "weapon": [
+        {
+          "input": "片手剣",
+          "top": "片手剣",
+          "d0": 0,
+          "second": "長柄",
+          "d1": 0.176068
+        },
+        {
+          "input": "両手剣",
+          "top": "両手剣",
+          "d0": 0,
+          "second": "弓",
+          "d1": 0.256905
+        },
+        {
+          "input": "長柄",
+          "top": "長柄",
+          "d0": 0,
+          "second": "片手剣",
+          "d1": 0.176068
+        },
+        {
+          "input": "法器",
+          "top": "法器",
+          "d0": 0,
+          "second": "弓",
+          "d1": 0.177482
+        },
+        {
+          "input": "弓",
+          "top": "弓",
+          "d0": 0,
+          "second": "法器",
+          "d1": 0.177482
+        }
+      ],
+      "nation": [
+        {
+          "input": "モンド",
+          "top": "モンド",
+          "d0": 0,
+          "second": "ナドクライ",
+          "d1": 0.129018
+        },
+        {
+          "input": "璃月",
+          "top": "璃月",
+          "d0": 0,
+          "second": "稲妻",
+          "d1": 0.111118
+        },
+        {
+          "input": "稲妻",
+          "top": "稲妻",
+          "d0": 0,
+          "second": "璃月",
+          "d1": 0.111118
+        },
+        {
+          "input": "スメール",
+          "top": "スメール",
+          "d0": 0,
+          "second": "ナドクライ",
+          "d1": 0.093706
+        },
+        {
+          "input": "フォンテーヌ",
+          "top": "フォンテーヌ",
+          "d0": 0,
+          "second": "スメール",
+          "d1": 0.254859
+        },
+        {
+          "input": "ナタ",
+          "top": "ナタ",
+          "d0": 0,
+          "second": "モンド",
+          "d1": 0.147322
+        },
+        {
+          "input": "スネージナヤ",
+          "top": "スネージナヤ",
+          "d0": 0,
+          "second": "ナタ",
+          "d1": 0.390751
+        },
+        {
+          "input": "ナドクライ",
+          "top": "ナドクライ",
+          "d0": 0,
+          "second": "スメール",
+          "d1": 0.093706
+        }
+      ]
+    },
+    "mirror_formula_ETI_MIRROR_2_1_0": {
+      "pSim": "1 - sqrt(mean(((userP - charP)/100)^2))",
+      "sSim": "1 - sqrt(mean(((userS - charS)/100)^2))",
+      "vSim": "(cos(center(userV), center(charV)) + 1) / 2、zero-vector なら 0.5",
+      "mirrorScoreRaw": "(0.40*pSim + 0.30*sSim + 0.30*vSim) * 100",
+      "mirrorScore": "round(mirrorScoreRaw)",
+      "ranking_sort": "raw desc → pSim desc → sSim desc → vSim desc → canonicalIndex asc（eti_v2_engine.js computeMirrorV2）",
+      "mirror_selection": "ETIMirrorSelectionV21: raw 最大から 1e-10pt 以内を同率集合 → 元素一致(元素1位集合) → 国家一致(事実 region) → 武器一致 → canonicalIndex 最小。rankings[0] と MIRROR が異なり得る"
+    }
+  },
+  "inference": {
+    "direct_reuse_as_representative_coordinate": {
+      "verdict": "判定の再現という意味では流用可能／MIRROR 代表点としてそのまま使うかは要設計（ChatGPT 判断事項）",
+      "reasons": [
+        "[fact] 生の代表値を入力すると、元素・武器・国家すべてが自分自身に判定される（self_classification_check：distance 0 / cos 1）。",
+        "[fact] 3つの表は軸が互いに独立（PERSONALITY 5・STYLE 5・VALUES 10）なので、Q1/Q2/Q3 の代表値をそのまま連結すると 20軸の完全なプロファイルになり、computeMirror に渡せる。",
+        "[fact] 代表値は 10/30/50/70/90 のような端寄りの値（例：氷 E=10, N=90）で、実ユーザー分布（js/eti_type_reading.js の POP_MEAN、本番797件）より極端。",
+        "[fact] 既存の preview 機能（release-c-preview の js/eti_type_reading.js、本番 main には未マージ）は、同じ課題に対し「母集団平均 + K(0.65) ×（代表値 − 平均）」で縮めた代表プロファイルを使っている。Mini で採用するかは未決定（ChatGPT の判断事項として提示するのみ）。",
+        "[inference] 生の代表値のまま MIRROR を計算すると、端の値に近い一部キャラへ排出が偏る可能性がある（参考測定 reference_measurement_raw_prototypes を参照）。"
+      ]
+    }
+  },
+  "reference_measurement_raw_prototypes": {
+    "_note": "判断材料の参考測定。採用案・推奨案ではない。重み・結合比率は未決定。生の代表値（Q1/Q2/Q3 の代表値をそのまま連結）を ETI-MIRROR-2.1.0 の computeMirror に渡した結果。",
+    "combos": 280,
+    "distinct_mirror_characters": 58,
+    "combos_with_raw_tie_at_top": 0,
+    "top10": [
+      [
+        "香菱",
+        15
+      ],
+      [
+        "辛炎",
+        14
+      ],
+      [
+        "煙緋",
+        12
+      ],
+      [
+        "ネフェル",
+        12
+      ],
+      [
+        "白朮",
+        11
+      ],
+      [
+        "アーロイ",
+        11
+      ],
+      [
+        "重雲",
+        10
+      ],
+      [
+        "カーヴェ",
+        10
+      ],
+      [
+        "千織",
+        10
+      ],
+      [
+        "オデット",
+        9
+      ]
+    ],
+    "never_selected_count": 60
+  }
+}

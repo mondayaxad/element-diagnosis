@@ -30,7 +30,8 @@ test('購入状態の照合キーは世代付き（element-v1:／ETI-2.0:）で�
   assert.match(fn, /`\$\{version\}:\$\{s\.encodedAnswers\}`/);
   // 再閲覧APIはクライアントから診断コードを受け取らず、diagnosis_session_id だけを受け取る
   const api = fs.readFileSync(path.join(ROOT, 'api', 'my-report-link.js'), 'utf8');
-  assert.match(api, /parseBody\(req\)\.diagnosis_session_id/);
+  assert.match(api, /body\.diagnosis_session_id/);
+  assert.doesNotMatch(api, /body\.(code|diagnosis_code|encoded_answers)/, "診断コードそのものは受け取らない（引き継ぎは署名付きリンクだけ）");
   assert.match(api, /const reference = diagnosisVersion === 'ETI-2\.0' \? `v2_\$\{code\}` : code;/);
 });
 

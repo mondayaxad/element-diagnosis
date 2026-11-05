@@ -99,7 +99,7 @@ const noScroll = (p) => p.evaluate(() => document.documentElement.scrollWidth <=
 
 
 
-test('D4：旧版（legacy-v1）の結果には旧 Payment Link も新しい Checkout も出さず、対象外と最新の診断への案内（販売中でも）', { skip: skip() }, async () => {
+test('旧版（legacy-v1）の結果：本番以外のドメインでは実際の決済に進ませず「準備中」。完全解析の導線は出さない', { skip: skip() }, async () => {
   for (const width of [320, 1280]) {
     const p = await page('/', { width, api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
     const legacyCode = await p.evaluate(() => { const a = {}; for (let i = 0; i < QUESTIONS.length; i++) a[i] = (i % 5) - 2; return encodeAnswers(a); });
@@ -108,12 +108,13 @@ test('D4：旧版（legacy-v1）の結果には旧 Payment Link も新しい Che
     await p.evaluate(() => { window.__opened = []; window.open = (u) => { window.__opened.push(String(u)); return null; }; });
     const btn = p.locator('#lockUnlockAllBtn');
     assert.equal(await btn.isDisabled(), true);
-    assert.equal((await p.locator('#legacyRetiredNote').innerText()).trim(), 'この結果は現在の解析商品の対象外です。最新の元素診断を受けてください。');
+    assert.match((await btn.innerText()).trim(), /準備中/);
+    assert.equal(await p.locator('#legacyRetiredNote').count(), 0);
     await btn.click({ force: true }).catch(() => {});
     for (const b of await p.locator('.lock-cta').all()) await b.click({ force: true }).catch(() => {});
-    assert.deepEqual(await p.evaluate(() => window.__opened), [], 'Payment Link を開かない');
+    assert.deepEqual(await p.evaluate(() => window.__opened), []);
     assert.equal(p.__calls.filter((c) => c.op === 'guest-checkout').length, 0, '新しい Checkout にも進まない');
-    assert.doesNotMatch(await p.content(), /buy\.stripe\.com/);
+    assert.equal(await p.locator('[data-buy-complete]').count(), 0, '完全解析は販売しない');
     assert.equal(await noScroll(p), true, String(width));
     await p.__ctx.close();
   }
@@ -163,7 +164,7 @@ test('サンプルからマイページ：sample_to_mypage を1回だけ（入�
 
 
 // ================= A：BEYOND THE RESULT（完全解析の訴求）
-test('BEYOND THE RESULT：¥1,000 の主導線の下。閉じた状態は予告だけ・展開でサンプルと ¥3,000（complete_13 の共通の申込）。320／390／1280px で重なり・はみ出しなし', { skip: skip() }, async () => {
+test('BEYOND THE RESULT：¥1,000 の主導線の下。閉じた状態でも価格（¥3,000）・全46ページ・サンプルが見える。展開で申込（¥3,000）（complete_13 の共通の申込）。320／390／1280px で重なり・はみ出しなし', { skip: skip() }, async () => {
   for (const width of [320, 390, 1280]) {
     const p = await resultPage({ width, api: { 'guest-status': [200, { salesOpen: true, purchases: [] }], 'guest-goals': GOALS, 'guest-checkout': CHECKOUT } });
     await p.evaluate(() => { window.__ev = []; window.gtag = function () { window.__ev.push(Array.from(arguments)); }; });
@@ -178,17 +179,20 @@ test('BEYOND THE RESULT：¥1,000 の主導線の下。閉じた状態は予告�
     assert.ok(b1.height >= 44, `${width}: ¥1,000 の大きさを保つ`);
     assert.equal(await fold.evaluate((d) => d.open), false);
     assert.equal(await fold.locator('[data-buy-complete]').isVisible(), false, '閉じた状態に ¥3,000 の導線を見せない');
-    assert.equal(await fold.locator('[data-ca-sample]').isVisible(), false);
+    const wrap = p.locator('.ca-reveal-wrap');
+    assert.equal(await wrap.locator('[data-ca-sample]').isVisible(), true, '閉じた状態でサンプルが見える');
+    assert.equal(await fold.locator('[data-ca-sample]').count(), 0, 'サンプルのリンクは details の外');
+    assert.match(await wrap.locator('.ca-reveal-teaser').innerText(), /完全解析｜全46ページ｜¥3,000/);
     assert.doesNotMatch(await fold.locator('summary').innerText(), /¥/);
     assert.equal(await noScroll(p), true, `${width}: 閉じた状態`);
     await fold.locator('summary').click();
     await fold.locator('[data-buy-complete]').waitFor();
-    assert.equal(await fold.locator('[data-ca-sample]').isVisible(), true);
+    assert.equal(await wrap.locator('[data-ca-sample]').isVisible(), true);
     assert.equal(await noScroll(p), true, `${width}: 開いた状態`);
     // 本文・ボタンが横にはみ出さない（カードの内側に収まる）
     const out = await p.evaluate(() => {
       const vw = document.documentElement.clientWidth;
-      return Array.from(document.querySelectorAll('details.ca-reveal *')).filter((el) => { const r = el.getBoundingClientRect(); return r.width && (r.right > vw + 0.5 || r.left < -0.5); }).map((el) => el.className || el.tagName);
+      return Array.from(document.querySelectorAll('.ca-reveal-wrap *')).filter((el) => { const r = el.getBoundingClientRect(); return r.width && (r.right > vw + 0.5 || r.left < -0.5); }).map((el) => el.className || el.tagName);
     });
     assert.deepEqual(out, [], `${width}: はみ出し`);
     // ¥3,000 を押すと、共通の目標の選択の画面（決済はまだ）

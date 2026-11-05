@@ -18,8 +18,19 @@
 | 申込の種類 | `offer` | 申込の内部の種類 |
 | 診断の版 | `diagnosis_version` | 診断の版 |
 | 共有の形 | `share_mode` | 結果の共有の形 |
+| 結果の出どころ | `result_origin` | `diagnosis_result` が、いま診断を完了した結果（`fresh`）か、共有リンク・固有リンク・保存済みを開き直した結果（`restored`）か |
 
 `value`・`currency`・`transaction_id`・`items` は GA4 の標準のため登録しない。
+
+### 流入元（UTM）の扱い
+
+`js/ga.js` は、`page_location` に、許可した `utm_source`・`utm_medium`・`utm_campaign`・`utm_content`・`utm_term` だけを残して送る（GA4 は、流入元を `page_location` の UTM から読む）。診断コード・トークンなど、ほかの問い合わせ文字列と `#` は、これまでどおり送らない。
+
+- 同じ値を、`config` の `campaign_source`・`campaign_medium`・`campaign_name`・`campaign_content`・`campaign_term`(GA4 の設定として、文書化された項目)にも、入れる(`utm_source`→`campaign_source`、`utm_medium`→`campaign_medium`、`utm_campaign`→`campaign_name`、`utm_content`→`campaign_content`、`utm_term`→`campaign_term`)。URL に無い・不正な値は、入れない。
+- 値は、英数字と `.` `_` `~` `-` の64文字まで。日本語・記号・空白・メール・URL・長い識別子は、捨てる（捨てた UTM は、流入元が参照元だけで判定される）。
+- 投稿・記事の URL の例：`https://element-diagnosis-five.vercel.app/?utm_source=x&utm_medium=social&utm_campaign=<名前>`。note は、`utm_source=note&utm_medium=referral`。
+- 流入元は、セッションの最初のヒットで決まる。UTM の反映は、GA4 の DebugView・リアルタイムで、確認する。
+- 診断の結果の共有リンク（`?dv=…&code=…`）に UTM を付ける場合は、X のカードのキャッシュが、URL ごとである点に、注意する（`?v=` と同じ扱い）。
 
 ## 2. キーイベント（管理 → データの表示 → イベント → 「キーイベントとしてマーク」）
 

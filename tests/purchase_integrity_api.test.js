@@ -1212,20 +1212,20 @@ test('1つだけ：ログイン中（マイページ）の ¥3,000 の画面を�
 
 
 
-test('決済画面の期限：注文の作成から 35 分（24 時間の画面を作らない）。同じ注文の再試行は同じ画面を受け取る', { skip }, async () => {
+test('決済画面の期限：注文の作成から約24時間（Stripe の上限 24 時間から5分の余裕）。同じ注文の再試行は同じ画面を受け取る', { skip }, async () => {
   const ctx = await setup();
   const p = await person(ctx);
   const r = await ctx.checkout(p.token, { diagnosisSessionId: p.sessionId, product: 'analysis' });
   assert.equal(r.code, 200);
   const o = (await ctx.rows('complete_orders')).find((x) => x.user_id === p.userId);
   const exp = ctx.stripe.st.lastCreate.params.expires_at;
-  assert.equal(exp, Math.floor(Date.parse(o.created_at) / 1000) + 35 * 60);
+  assert.equal(exp, Math.floor(Date.parse(o.created_at) / 1000) + (24 * 3600 - 5 * 60));
   assert.equal(ctx.stripe.st.sessions[ctx.csIdOf(r.body.checkoutUrl)].expires_at, exp);
   ctx.cookie = '';
   const g = await ctx.op('guest-checkout', { offer: 'analysis', code: CODE_B });
   assert.equal(g.code, 200);
   const go = (await ctx.rows('complete_orders')).find((x) => x.stripe_checkout_session_id === ctx.csIdOf(g.body.checkoutUrl));
-  assert.equal(ctx.stripe.st.lastCreate.params.expires_at, Math.floor(Date.parse(go.created_at) / 1000) + 35 * 60);
+  assert.equal(ctx.stripe.st.lastCreate.params.expires_at, Math.floor(Date.parse(go.created_at) / 1000) + (24 * 3600 - 5 * 60));
   await ctx.db.close();
 });
 

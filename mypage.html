@@ -5,6 +5,8 @@
      送る page_location は origin＋path だけ。イベントの値から記録 ID・メール・Stripe ID・トークンを落とす。 -->
 <script src="/js/ga.js"></script>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://checkout.stripe.com">
+<link rel="dns-prefetch" href="https://checkout.stripe.com">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>あなたの診断記録 — 元素診断</title>
 <meta name="robots" content="noindex">
@@ -1329,6 +1331,27 @@ const MP_CHECKOUT_ERRORS = {
 const MP_REFRESH_ERRORS = ['analysis_already_purchased', 'repurchase_not_allowed', 'checkout_in_progress', 'purchase_completed',
   'rights_suspended', 'offer_changed', 'legacy_purchase_not_eligible'];
 function mpCheckoutErrorText(code) { return MP_CHECKOUT_ERRORS[code] || 'お手続きを開始できませんでした。時間をおいて、もう一度お試しください。'; }
+// 購入対象トークンの取得は、押す前（指が触れた・ポインターが乗った時）に始めて、押した後の待ち時間を短くする。
+//   記録ごとに取得中・取得済みの Promise を 60 秒だけ共有する（失敗した取得は共有しない）
+const mpCtxCache = new Map();
+function mpRecordContext(id) {
+  const hit = mpCtxCache.get(id);
+  if (hit && Date.now() - hit.at < 60 * 1000) return hit.p;
+  const p = EdBuy.contextFromRecord(id).then((c) => {
+    if (!c || !c.ok || !c.body || !EdBuy.contextOk(c.body.context)) mpCtxCache.delete(id);
+    return c;
+  }, (err) => { mpCtxCache.delete(id); throw err; });
+  mpCtxCache.set(id, { p, at: Date.now() });
+  return p;
+}
+function mpPrefetchContext(e) {
+  const btn = e.target && e.target.closest && e.target.closest('[data-analysis-checkout], [data-complete-checkout]');
+  if (!btn || btn.disabled || typeof EdBuy === 'undefined') return;
+  const id = btn.getAttribute('data-analysis-checkout') || btn.getAttribute('data-complete-checkout');
+  if (id) mpRecordContext(id).catch(() => { /* 押した時に改めて取得する */ });
+}
+document.addEventListener('pointerdown', mpPrefetchContext, { passive: true });
+document.addEventListener('mouseover', mpPrefetchContext, { passive: true });
 // 申込（complete_13）：マイページの全ての入口（右上の「レポート」・最新の結果・過去の記録）で共通。
 //   この記録の購入対象トークンを作り、js/report-purchase.js（EdBuy）で申し込む。完全解析は共通の目標の選択の画面から
 document.addEventListener('click', async (e) => {
@@ -1349,21 +1372,30 @@ document.addEventListener('click', async (e) => {
     msg.textContent = text;
   };
   if (msg) msg.textContent = '';
-  const goal = product === 'complete' ? await EdBuy.goalDialog() : null;
-  if (product === 'complete' && !goal) return;
-  EdNavBusy.hold(btn, '決済画面へ移動しています…');
-  const c = await EdBuy.contextFromRecord(id);
-  if (!c.ok || !c.body || !EdBuy.contextOk(c.body.context)) {
+  try {
+    const goal = product === 'complete' ? await EdBuy.goalDialog() : null;
+    if (product === 'complete' && !goal) return;
+    EdNavBusy.hold(btn, '決済画面へ移動しています…');
+    const c = await mpRecordContext(id);
+    if (!c.ok || !c.body || !EdBuy.contextOk(c.body.context)) {
+      mpCtxCache.delete(id);
+      EdNavBusy.release(btn);
+      say(EdBuy.errorText(c.body && c.body.error === 'not_authenticated' ? 'context_expired' : (c.body && c.body.error)));
+      return;
+    }
+    // fromMypage：支払いの後、このマイページに登録して戻る
+    const r = await EdBuy.start({ context: c.body.context, product, goal, source: btn.getAttribute('data-source') || 'mypage_history', fromMypage: true });
+    if (r.ok) { EdNavBusy.handoff(btn); return; }
+    if (r.error === 'in_progress') return; // 先の申込が決済画面へ移動中（押せない表示のまま）
+    mpCtxCache.delete(id); // 期限切れなどの後は、次に押した時に取り直す
     EdNavBusy.release(btn);
-    say(EdBuy.errorText(c.body && c.body.error === 'not_authenticated' ? 'context_expired' : (c.body && c.body.error)));
-    return;
+    if (!r.silent) say(EdBuy.errorText(r.error));
+  } catch (err) {
+    // 予期しない例外：押せない表示のまま止めず、もう一度押せる状態へ戻す（決済画面へ移動を始めたボタンには触れない）
+    mpCtxCache.delete(id);
+    if (btn.getAttribute('data-nav-busy') !== 'away') EdNavBusy.release(btn);
+    say(EdBuy.errorText('unknown'));
   }
-  // fromMypage：支払いの後、このマイページに登録して戻る
-  const r = await EdBuy.start({ context: c.body.context, product, goal, source: btn.getAttribute('data-source') || 'mypage_history', fromMypage: true });
-  if (r.ok) { EdNavBusy.handoff(btn); return; }
-  if (r.error === 'in_progress') return; // 先の申込が決済画面へ移動中（押せない表示のまま）
-  EdNavBusy.release(btn);
-  if (!r.silent) say(EdBuy.errorText(r.error));
 });
 // サンプル（マイページから）：この記録を購入の対象として、サンプルページへ（同じタブ。トークンはフラグメント）
 document.addEventListener('click', async (e) => {
@@ -3710,6 +3742,22 @@ function caTabStops(root) {
   });
   return out;
 }
+// トップの「以前の結果からレポートを購入する」から来た（/mypage.html#buy）：最新の記録の購入シートを開く。
+//   ログインの往復（OAuth・メールのリンク）で # が消えても開けるよう、このタブに30分だけ控える
+const MP_BUY_INTENT_KEY = 'ed_mp_buy_intent_v1';
+(function () {
+  if (location.hash !== '#buy') return;
+  try { sessionStorage.setItem(MP_BUY_INTENT_KEY, String(Date.now())); } catch (e) { /* 控えられなくても、このページの表示では開く */ }
+  window.__mpBuyIntent = true;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* そのまま */ }
+})();
+function mpTakeBuyIntent() {
+  let at = 0;
+  try { at = Number(sessionStorage.getItem(MP_BUY_INTENT_KEY)) || 0; sessionStorage.removeItem(MP_BUY_INTENT_KEY); } catch (e) { at = 0; }
+  const fresh = window.__mpBuyIntent || (at && Date.now() - at < 30 * 60 * 1000);
+  window.__mpBuyIntent = false;
+  return !!fresh;
+}
 function caWireSheet(records) {
   const trigger = document.getElementById('mpUpgradeTrigger');
   const overlay = document.getElementById('mpUpgradeOverlay');
@@ -3721,6 +3769,10 @@ function caWireSheet(records) {
   if (records[0] && !caImpressions.has(impKey)) { caImpressions.add(impKey); CompleteAnalysis.track('mypage_upgrade_impression', caTrackParams(records[0])); }
   trigger.addEventListener('click', () => caOpenSheet());
   document.getElementById('mpUpgradeClose').addEventListener('click', () => caCloseSheet());
+  if (records[0] && mpTakeBuyIntent()) {
+    trackEvent('returning_route_open', { route: 'mypage_sheet' });
+    setTimeout(() => caOpenSheet(), 0);
+  }
   // オーバーレイ（外側）押下で閉じる。シート内部の押下では閉じない
   overlay.addEventListener('click', (e) => { if (e.target === overlay) caCloseSheet(); });
   overlay.addEventListener('keydown', (e) => {
@@ -3985,6 +4037,8 @@ async function initOnce() {
     return;
   }
   if (result.sessions.length === 0) {
+    // トップの「以前の結果からレポートを購入する」から来たが、保存した記録が無い：以前の結果（元素・武器・国家）を選ぶ画面へ
+    if (mpTakeBuyIntent()) { trackEvent('returning_route_open', { route: 'select_no_record' }); location.replace('/type-preview.html'); return; }
     renderEmpty(root, user);
     if (window.JaganMypage) await window.JaganMypage.render(root).catch(() => {});
     mpRenderedUserId = user.id;
