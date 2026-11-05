@@ -1,0 +1,2363 @@
+{
+  "_title": "Mini 自動候補（未選択時）— 暫定。レアリティ・実装Verは未検証",
+  "_generated_by": "docs/eti-mini/step0/tools/build_step0.js",
+  "_generated_at": "2026-11-05",
+  "_repo_head": "9e6b77b408904823cdfb14d2be559111781df74c",
+  "_legend": {
+    "fact": "リポジトリのコード/データから機械的に抽出した値",
+    "inference": "Claude の推定・解釈（fact と区別）",
+    "unverified": "外部検証が必要な暫定値"
+  },
+  "rule_from_spec": "Ver.7.0 まで・オデットを含む★5、主人公・アーロイ・『ドール』を除外",
+  "overall_status": "UNDETERMINED — レアリティ・実装Verがリポジトリに無く、外部一次出典で未検証。下の decision はすべて暫定。",
+  "explicit_exclusions": {
+    "主人公": {
+      "status": "n/a",
+      "fact": "ETI-CHAR-2.1.0 の118名に主人公（旅人/空/蛍）は存在しない（除外操作は不要）"
+    },
+    "アーロイ": {
+      "status": "excluded_confirmed",
+      "fact": "DB に存在（canonicalIndex 47、region=null）"
+    },
+    "ドール": {
+      "status": "unresolved",
+      "fact": "「ドール」という表記はリポジトリ全体に存在しない。",
+      "candidates": [
+        {
+          "name": "ドゥリン",
+          "element": "炎",
+          "weapon": "片手剣",
+          "rarity_unverified": 5,
+          "release_unverified": "6.2",
+          "why": "『ドール』指定の候補の一つ（音が近い）"
+        },
+        {
+          "name": "ドリー",
+          "element": "雷",
+          "weapon": "両手剣",
+          "rarity_unverified": 4,
+          "release_unverified": "3.0",
+          "why": "『ドール』指定の候補の一つ（表記が近い）。★4のため★5候補には元々入らない"
+        },
+        {
+          "name": "ダリア",
+          "element": "水",
+          "weapon": "片手剣",
+          "rarity_unverified": 4,
+          "release_unverified": "5.7",
+          "why": "『ドール』指定の候補の一つ（英 Dahlia）"
+        },
+        {
+          "name": "サンドローネ",
+          "element": "氷",
+          "weapon": "両手剣",
+          "rarity_unverified": 5,
+          "release_unverified": "6.7",
+          "why": "『ドール』指定の候補の一つ（「人形」の意の異名に由来する可能性）。検索要約で武器未確定の表あり"
+        }
+      ],
+      "impact": "ドリー・ダリアは★4（未検証）なので★5候補に元々入らず、除外しても結果に影響しない。ドゥリン・サンドローネは★5（未検証）で、どちらを指すかで候補数が変わる。要オーナー確認。"
+    }
+  },
+  "verification_needed": [
+    "全118名のレアリティ・実装Verを公式（HoYoLAB/公式サイト/ゲーム内）で照合",
+    "web_search_snippet 由来（6.0〜7.0）の名前同定（ニコ=Nicole?, ローエン=Lohen?, ファルカ=Varka?）",
+    "リンネアのレアリティ（★4/★5で食い違い）",
+    "『ドール』の指す人物"
+  ],
+  "summary": {
+    "decision_counts": {
+      "included_provisional": 63,
+      "excluded_provisional": 51,
+      "undetermined_doll_candidate": 2,
+      "excluded_confirmed": 1,
+      "undetermined": 1
+    },
+    "provisional_pool_size_if_doll_candidates_kept": 65,
+    "provisional_pool_size_if_doll_candidates_removed": 63,
+    "provisional_pool_by_element": {
+      "炎": 10,
+      "水": 11,
+      "氷": 12,
+      "雷": 8,
+      "風": 9,
+      "岩": 7,
+      "草": 8
+    },
+    "provisional_pool_by_weapon": {
+      "両手剣": 9,
+      "長柄": 12,
+      "法器": 18,
+      "弓": 9,
+      "片手剣": 17
+    },
+    "provisional_pool_by_region": {
+      "モンド": 10,
+      "ナタ": 7,
+      "スメール": 7,
+      "璃月": 11,
+      "スネージナヤ": 4,
+      "null": 2,
+      "フォンテーヌ": 9,
+      "稲妻": 10,
+      "ナドクライ": 5
+    }
+  },
+  "manual_selection_candidates": {
+    "rule": "現行DBの全キャラ（使用可能な座標あり）",
+    "count": 118,
+    "keys": [
+      {
+        "canonicalIndex": 0,
+        "key": "ディルック"
+      },
+      {
+        "canonicalIndex": 1,
+        "key": "マーヴィカ"
+      },
+      {
+        "canonicalIndex": 2,
+        "key": "嘉明"
+      },
+      {
+        "canonicalIndex": 3,
+        "key": "ディシア"
+      },
+      {
+        "canonicalIndex": 4,
+        "key": "辛炎"
+      },
+      {
+        "canonicalIndex": 5,
+        "key": "ベネット"
+      },
+      {
+        "canonicalIndex": 6,
+        "key": "胡桃"
+      },
+      {
+        "canonicalIndex": 7,
+        "key": "香菱"
+      },
+      {
+        "canonicalIndex": 8,
+        "key": "トーマ"
+      },
+      {
+        "canonicalIndex": 9,
+        "key": "シュヴルーズ"
+      },
+      {
+        "canonicalIndex": 10,
+        "key": "アルレッキーノ"
+      },
+      {
+        "canonicalIndex": 11,
+        "key": "ニコ"
+      },
+      {
+        "canonicalIndex": 12,
+        "key": "煙緋"
+      },
+      {
+        "canonicalIndex": 13,
+        "key": "クレー"
+      },
+      {
+        "canonicalIndex": 14,
+        "key": "リネ"
+      },
+      {
+        "canonicalIndex": 15,
+        "key": "アンバー"
+      },
+      {
+        "canonicalIndex": 16,
+        "key": "宵宮"
+      },
+      {
+        "canonicalIndex": 17,
+        "key": "ドゥリン"
+      },
+      {
+        "canonicalIndex": 18,
+        "key": "フリーナ"
+      },
+      {
+        "canonicalIndex": 19,
+        "key": "ニィロウ"
+      },
+      {
+        "canonicalIndex": 20,
+        "key": "神里綾人"
+      },
+      {
+        "canonicalIndex": 21,
+        "key": "行秋"
+      },
+      {
+        "canonicalIndex": 22,
+        "key": "タルタリヤ"
+      },
+      {
+        "canonicalIndex": 23,
+        "key": "夜蘭"
+      },
+      {
+        "canonicalIndex": 24,
+        "key": "シグウィン"
+      },
+      {
+        "canonicalIndex": 25,
+        "key": "モナ"
+      },
+      {
+        "canonicalIndex": 26,
+        "key": "珊瑚宮心海"
+      },
+      {
+        "canonicalIndex": 27,
+        "key": "ヌヴィレット"
+      },
+      {
+        "canonicalIndex": 28,
+        "key": "コロンビーナ"
+      },
+      {
+        "canonicalIndex": 29,
+        "key": "ムアラニ"
+      },
+      {
+        "canonicalIndex": 30,
+        "key": "バーバラ"
+      },
+      {
+        "canonicalIndex": 31,
+        "key": "アイノ"
+      },
+      {
+        "canonicalIndex": 32,
+        "key": "ダリア"
+      },
+      {
+        "canonicalIndex": 33,
+        "key": "キャンディス"
+      },
+      {
+        "canonicalIndex": 34,
+        "key": "オデット"
+      },
+      {
+        "canonicalIndex": 35,
+        "key": "神里綾華"
+      },
+      {
+        "canonicalIndex": 36,
+        "key": "スカーク"
+      },
+      {
+        "canonicalIndex": 37,
+        "key": "七七"
+      },
+      {
+        "canonicalIndex": 38,
+        "key": "レイラ"
+      },
+      {
+        "canonicalIndex": 39,
+        "key": "ガイア"
+      },
+      {
+        "canonicalIndex": 40,
+        "key": "申鶴"
+      },
+      {
+        "canonicalIndex": 41,
+        "key": "ロサリア"
+      },
+      {
+        "canonicalIndex": 42,
+        "key": "ミカ"
+      },
+      {
+        "canonicalIndex": 43,
+        "key": "エスコフィエ"
+      },
+      {
+        "canonicalIndex": 44,
+        "key": "ローエン"
+      },
+      {
+        "canonicalIndex": 45,
+        "key": "甘雨"
+      },
+      {
+        "canonicalIndex": 46,
+        "key": "ディオナ"
+      },
+      {
+        "canonicalIndex": 47,
+        "key": "アーロイ"
+      },
+      {
+        "canonicalIndex": 48,
+        "key": "リオセスリ"
+      },
+      {
+        "canonicalIndex": 49,
+        "key": "シャルロット"
+      },
+      {
+        "canonicalIndex": 50,
+        "key": "シトラリ"
+      },
+      {
+        "canonicalIndex": 51,
+        "key": "アリョーシャ"
+      },
+      {
+        "canonicalIndex": 52,
+        "key": "刻晴"
+      },
+      {
+        "canonicalIndex": 53,
+        "key": "クロリンデ"
+      },
+      {
+        "canonicalIndex": 54,
+        "key": "久岐忍"
+      },
+      {
+        "canonicalIndex": 55,
+        "key": "雷電将軍"
+      },
+      {
+        "canonicalIndex": 56,
+        "key": "セノ"
+      },
+      {
+        "canonicalIndex": 57,
+        "key": "イアンサ"
+      },
+      {
+        "canonicalIndex": 58,
+        "key": "フィッシュル"
+      },
+      {
+        "canonicalIndex": 59,
+        "key": "九条裟羅"
+      },
+      {
+        "canonicalIndex": 60,
+        "key": "オロルン"
+      },
+      {
+        "canonicalIndex": 61,
+        "key": "セトス"
+      },
+      {
+        "canonicalIndex": 62,
+        "key": "八重神子"
+      },
+      {
+        "canonicalIndex": 63,
+        "key": "リサ"
+      },
+      {
+        "canonicalIndex": 64,
+        "key": "ヴァレサ"
+      },
+      {
+        "canonicalIndex": 65,
+        "key": "レザー"
+      },
+      {
+        "canonicalIndex": 66,
+        "key": "北斗"
+      },
+      {
+        "canonicalIndex": 67,
+        "key": "ドリー"
+      },
+      {
+        "canonicalIndex": 68,
+        "key": "楓原万葉"
+      },
+      {
+        "canonicalIndex": 69,
+        "key": "ジン"
+      },
+      {
+        "canonicalIndex": 70,
+        "key": "リネット"
+      },
+      {
+        "canonicalIndex": 71,
+        "key": "ファルカ"
+      },
+      {
+        "canonicalIndex": 72,
+        "key": "早柚"
+      },
+      {
+        "canonicalIndex": 73,
+        "key": "ウェンティ"
+      },
+      {
+        "canonicalIndex": 74,
+        "key": "チャスカ"
+      },
+      {
+        "canonicalIndex": 75,
+        "key": "ファルザン"
+      },
+      {
+        "canonicalIndex": 76,
+        "key": "ヤフォダ"
+      },
+      {
+        "canonicalIndex": 77,
+        "key": "スクロース"
+      },
+      {
+        "canonicalIndex": 78,
+        "key": "放浪者"
+      },
+      {
+        "canonicalIndex": 79,
+        "key": "閑雲"
+      },
+      {
+        "canonicalIndex": 80,
+        "key": "藍硯"
+      },
+      {
+        "canonicalIndex": 81,
+        "key": "鹿野院平蔵"
+      },
+      {
+        "canonicalIndex": 82,
+        "key": "夢見月瑞希"
+      },
+      {
+        "canonicalIndex": 83,
+        "key": "イファ"
+      },
+      {
+        "canonicalIndex": 84,
+        "key": "プルーネ"
+      },
+      {
+        "canonicalIndex": 85,
+        "key": "鍾離"
+      },
+      {
+        "canonicalIndex": 86,
+        "key": "イルーガ"
+      },
+      {
+        "canonicalIndex": 87,
+        "key": "カチーナ"
+      },
+      {
+        "canonicalIndex": 88,
+        "key": "雲菫"
+      },
+      {
+        "canonicalIndex": 89,
+        "key": "ナヴィア"
+      },
+      {
+        "canonicalIndex": 90,
+        "key": "荒瀧一斗"
+      },
+      {
+        "canonicalIndex": 91,
+        "key": "ノエル"
+      },
+      {
+        "canonicalIndex": 92,
+        "key": "アルベド"
+      },
+      {
+        "canonicalIndex": 93,
+        "key": "茲白"
+      },
+      {
+        "canonicalIndex": 94,
+        "key": "千織"
+      },
+      {
+        "canonicalIndex": 95,
+        "key": "シロネン"
+      },
+      {
+        "canonicalIndex": 96,
+        "key": "ゴロー"
+      },
+      {
+        "canonicalIndex": 97,
+        "key": "リンネア"
+      },
+      {
+        "canonicalIndex": 98,
+        "key": "凝光"
+      },
+      {
+        "canonicalIndex": 99,
+        "key": "ナヒーダ"
+      },
+      {
+        "canonicalIndex": 100,
+        "key": "白朮"
+      },
+      {
+        "canonicalIndex": 101,
+        "key": "ラウマ"
+      },
+      {
+        "canonicalIndex": 102,
+        "key": "ネフェル"
+      },
+      {
+        "canonicalIndex": 103,
+        "key": "ティナリ"
+      },
+      {
+        "canonicalIndex": 104,
+        "key": "コレイ"
+      },
+      {
+        "canonicalIndex": 105,
+        "key": "アルハイゼン"
+      },
+      {
+        "canonicalIndex": 106,
+        "key": "綺良々"
+      },
+      {
+        "canonicalIndex": 107,
+        "key": "カーヴェ"
+      },
+      {
+        "canonicalIndex": 108,
+        "key": "キィニチ"
+      },
+      {
+        "canonicalIndex": 109,
+        "key": "エミリエ"
+      },
+      {
+        "canonicalIndex": 110,
+        "key": "ヨォーヨ"
+      },
+      {
+        "canonicalIndex": 111,
+        "key": "サンドローネ"
+      },
+      {
+        "canonicalIndex": 112,
+        "key": "魈"
+      },
+      {
+        "canonicalIndex": 113,
+        "key": "エウルア"
+      },
+      {
+        "canonicalIndex": 114,
+        "key": "重雲"
+      },
+      {
+        "canonicalIndex": 115,
+        "key": "フレミネ"
+      },
+      {
+        "canonicalIndex": 116,
+        "key": "フリンズ"
+      },
+      {
+        "canonicalIndex": 117,
+        "key": "イネファ"
+      }
+    ]
+  },
+  "auto_candidates": [
+    {
+      "canonicalIndex": 0,
+      "key": "ディルック",
+      "name": "ディルック",
+      "element": "炎",
+      "weapon": "両手剣",
+      "region_internal_key": "モンド",
+      "rarity": 5,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.1.0（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 1,
+      "key": "マーヴィカ",
+      "name": "マーヴィカ",
+      "element": "炎",
+      "weapon": "両手剣",
+      "region_internal_key": "ナタ",
+      "rarity": 5,
+      "release_version": "5.3",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.5.3（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 2,
+      "key": "嘉明",
+      "name": "嘉明",
+      "element": "炎",
+      "weapon": "両手剣",
+      "region_internal_key": "璃月",
+      "rarity": 4,
+      "release_version": "4.3",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 3,
+      "key": "ディシア",
+      "name": "ディシア",
+      "element": "炎",
+      "weapon": "両手剣",
+      "region_internal_key": "スメール",
+      "rarity": 5,
+      "release_version": "3.5",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.3.5（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 4,
+      "key": "辛炎",
+      "name": "辛炎",
+      "element": "炎",
+      "weapon": "両手剣",
+      "region_internal_key": "璃月",
+      "rarity": 4,
+      "release_version": "1.1",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 5,
+      "key": "ベネット",
+      "name": "ベネット",
+      "element": "炎",
+      "weapon": "片手剣",
+      "region_internal_key": "モンド",
+      "rarity": 4,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 6,
+      "key": "胡桃",
+      "name": "胡桃",
+      "element": "炎",
+      "weapon": "長柄",
+      "region_internal_key": "璃月",
+      "rarity": 5,
+      "release_version": "1.3",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.1.3（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 7,
+      "key": "香菱",
+      "name": "香菱",
+      "element": "炎",
+      "weapon": "長柄",
+      "region_internal_key": "璃月",
+      "rarity": 4,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 8,
+      "key": "トーマ",
+      "name": "トーマ",
+      "element": "炎",
+      "weapon": "長柄",
+      "region_internal_key": "稲妻",
+      "rarity": 4,
+      "release_version": "2.2",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 9,
+      "key": "シュヴルーズ",
+      "name": "シュヴルーズ",
+      "element": "炎",
+      "weapon": "長柄",
+      "region_internal_key": "フォンテーヌ",
+      "rarity": 4,
+      "release_version": "4.3",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 10,
+      "key": "アルレッキーノ",
+      "name": "アルレッキーノ",
+      "element": "炎",
+      "weapon": "長柄",
+      "region_internal_key": "スネージナヤ",
+      "rarity": 5,
+      "release_version": "4.6",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.4.6（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 11,
+      "key": "ニコ",
+      "name": "ニコ",
+      "element": "炎",
+      "weapon": "法器",
+      "region_internal_key": null,
+      "rarity": 5,
+      "release_version": "6.6",
+      "data_source": "web_search_snippet",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.6.6（未検証: web_search_snippet）",
+        "region が null（国家一致の同率解消では一致なし扱い）"
+      ]
+    },
+    {
+      "canonicalIndex": 12,
+      "key": "煙緋",
+      "name": "煙緋",
+      "element": "炎",
+      "weapon": "法器",
+      "region_internal_key": "璃月",
+      "rarity": 4,
+      "release_version": "1.5",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 13,
+      "key": "クレー",
+      "name": "クレー",
+      "element": "炎",
+      "weapon": "法器",
+      "region_internal_key": "モンド",
+      "rarity": 5,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.1.0（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 14,
+      "key": "リネ",
+      "name": "リネ",
+      "element": "炎",
+      "weapon": "弓",
+      "region_internal_key": "フォンテーヌ",
+      "rarity": 5,
+      "release_version": "4.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.4.0（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 15,
+      "key": "アンバー",
+      "name": "アンバー",
+      "element": "炎",
+      "weapon": "弓",
+      "region_internal_key": "モンド",
+      "rarity": 4,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 16,
+      "key": "宵宮",
+      "name": "宵宮",
+      "element": "炎",
+      "weapon": "弓",
+      "region_internal_key": "稲妻",
+      "rarity": 5,
+      "release_version": "2.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.2.0（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 17,
+      "key": "ドゥリン",
+      "name": "ドゥリン",
+      "element": "炎",
+      "weapon": "片手剣",
+      "region_internal_key": "モンド",
+      "rarity": 5,
+      "release_version": "6.2",
+      "data_source": "web_search_snippet",
+      "decision": "undetermined_doll_candidate",
+      "reasons": [
+        "★5・Ver.6.2（未検証: web_search_snippet）",
+        "『ドール』指定の同定候補。確定するまで除外有無は未確定"
+      ]
+    },
+    {
+      "canonicalIndex": 18,
+      "key": "フリーナ",
+      "name": "フリーナ",
+      "element": "水",
+      "weapon": "片手剣",
+      "region_internal_key": "フォンテーヌ",
+      "rarity": 5,
+      "release_version": "4.2",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.4.2（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 19,
+      "key": "ニィロウ",
+      "name": "ニィロウ",
+      "element": "水",
+      "weapon": "片手剣",
+      "region_internal_key": "スメール",
+      "rarity": 5,
+      "release_version": "3.1",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.3.1（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 20,
+      "key": "神里綾人",
+      "name": "神里綾人",
+      "element": "水",
+      "weapon": "片手剣",
+      "region_internal_key": "稲妻",
+      "rarity": 5,
+      "release_version": "2.6",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.2.6（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 21,
+      "key": "行秋",
+      "name": "行秋",
+      "element": "水",
+      "weapon": "片手剣",
+      "region_internal_key": "璃月",
+      "rarity": 4,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 22,
+      "key": "タルタリヤ",
+      "name": "タルタリヤ",
+      "element": "水",
+      "weapon": "弓",
+      "region_internal_key": "スネージナヤ",
+      "rarity": 5,
+      "release_version": "1.1",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.1.1（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 23,
+      "key": "夜蘭",
+      "name": "夜蘭",
+      "element": "水",
+      "weapon": "弓",
+      "region_internal_key": "璃月",
+      "rarity": 5,
+      "release_version": "2.7",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.2.7（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 24,
+      "key": "シグウィン",
+      "name": "シグウィン",
+      "element": "水",
+      "weapon": "弓",
+      "region_internal_key": "フォンテーヌ",
+      "rarity": 5,
+      "release_version": "4.7",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.4.7（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 25,
+      "key": "モナ",
+      "name": "モナ",
+      "element": "水",
+      "weapon": "法器",
+      "region_internal_key": "モンド",
+      "rarity": 5,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.1.0（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 26,
+      "key": "珊瑚宮心海",
+      "name": "珊瑚宮心海",
+      "element": "水",
+      "weapon": "法器",
+      "region_internal_key": "稲妻",
+      "rarity": 5,
+      "release_version": "2.1",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.2.1（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 27,
+      "key": "ヌヴィレット",
+      "name": "ヌヴィレット",
+      "element": "水",
+      "weapon": "法器",
+      "region_internal_key": "フォンテーヌ",
+      "rarity": 5,
+      "release_version": "4.1",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.4.1（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 28,
+      "key": "コロンビーナ",
+      "name": "コロンビーナ",
+      "element": "水",
+      "weapon": "法器",
+      "region_internal_key": "ナドクライ",
+      "rarity": 5,
+      "release_version": "6.3",
+      "data_source": "web_search_snippet",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.6.3（未検証: web_search_snippet）"
+      ]
+    },
+    {
+      "canonicalIndex": 29,
+      "key": "ムアラニ",
+      "name": "ムアラニ",
+      "element": "水",
+      "weapon": "法器",
+      "region_internal_key": "ナタ",
+      "rarity": 5,
+      "release_version": "5.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.5.0（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 30,
+      "key": "バーバラ",
+      "name": "バーバラ",
+      "element": "水",
+      "weapon": "法器",
+      "region_internal_key": "モンド",
+      "rarity": 4,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 31,
+      "key": "アイノ",
+      "name": "アイノ",
+      "element": "水",
+      "weapon": "両手剣",
+      "region_internal_key": "ナドクライ",
+      "rarity": 4,
+      "release_version": "6.0",
+      "data_source": "web_search_snippet",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 32,
+      "key": "ダリア",
+      "name": "ダリア",
+      "element": "水",
+      "weapon": "片手剣",
+      "region_internal_key": "モンド",
+      "rarity": 4,
+      "release_version": "5.7",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）",
+        "『ドール』指定の同定候補。確定するまで除外有無は未確定"
+      ]
+    },
+    {
+      "canonicalIndex": 33,
+      "key": "キャンディス",
+      "name": "キャンディス",
+      "element": "水",
+      "weapon": "長柄",
+      "region_internal_key": "スメール",
+      "rarity": 4,
+      "release_version": "3.1",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 34,
+      "key": "オデット",
+      "name": "オデット",
+      "element": "氷",
+      "weapon": "片手剣",
+      "region_internal_key": "スネージナヤ",
+      "rarity": 5,
+      "release_version": "7.0",
+      "data_source": "web_search_snippet",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.7.0（未検証: web_search_snippet）",
+        "指示書で「オデットを含む★5」と明記"
+      ]
+    },
+    {
+      "canonicalIndex": 35,
+      "key": "神里綾華",
+      "name": "神里綾華",
+      "element": "氷",
+      "weapon": "片手剣",
+      "region_internal_key": "稲妻",
+      "rarity": 5,
+      "release_version": "2.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.2.0（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 36,
+      "key": "スカーク",
+      "name": "スカーク",
+      "element": "氷",
+      "weapon": "片手剣",
+      "region_internal_key": null,
+      "rarity": 5,
+      "release_version": "5.7",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.5.7（未検証: claude_prior_knowledge）",
+        "region が null（国家一致の同率解消では一致なし扱い）"
+      ]
+    },
+    {
+      "canonicalIndex": 37,
+      "key": "七七",
+      "name": "七七",
+      "element": "氷",
+      "weapon": "片手剣",
+      "region_internal_key": "璃月",
+      "rarity": 5,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.1.0（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 38,
+      "key": "レイラ",
+      "name": "レイラ",
+      "element": "氷",
+      "weapon": "片手剣",
+      "region_internal_key": "スメール",
+      "rarity": 4,
+      "release_version": "3.2",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 39,
+      "key": "ガイア",
+      "name": "ガイア",
+      "element": "氷",
+      "weapon": "片手剣",
+      "region_internal_key": "モンド",
+      "rarity": 4,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 40,
+      "key": "申鶴",
+      "name": "申鶴",
+      "element": "氷",
+      "weapon": "長柄",
+      "region_internal_key": "璃月",
+      "rarity": 5,
+      "release_version": "2.4",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.2.4（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 41,
+      "key": "ロサリア",
+      "name": "ロサリア",
+      "element": "氷",
+      "weapon": "長柄",
+      "region_internal_key": "モンド",
+      "rarity": 4,
+      "release_version": "1.4",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 42,
+      "key": "ミカ",
+      "name": "ミカ",
+      "element": "氷",
+      "weapon": "長柄",
+      "region_internal_key": "モンド",
+      "rarity": 4,
+      "release_version": "3.5",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 43,
+      "key": "エスコフィエ",
+      "name": "エスコフィエ",
+      "element": "氷",
+      "weapon": "長柄",
+      "region_internal_key": "フォンテーヌ",
+      "rarity": 5,
+      "release_version": "5.6",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.5.6（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 44,
+      "key": "ローエン",
+      "name": "ローエン",
+      "element": "氷",
+      "weapon": "長柄",
+      "region_internal_key": "モンド",
+      "rarity": 5,
+      "release_version": "6.6",
+      "data_source": "web_search_snippet",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.6.6（未検証: web_search_snippet）"
+      ]
+    },
+    {
+      "canonicalIndex": 45,
+      "key": "甘雨",
+      "name": "甘雨",
+      "element": "氷",
+      "weapon": "弓",
+      "region_internal_key": "璃月",
+      "rarity": 5,
+      "release_version": "1.2",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.1.2（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 46,
+      "key": "ディオナ",
+      "name": "ディオナ",
+      "element": "氷",
+      "weapon": "弓",
+      "region_internal_key": "モンド",
+      "rarity": 4,
+      "release_version": "1.1",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 47,
+      "key": "アーロイ",
+      "name": "アーロイ",
+      "element": "氷",
+      "weapon": "弓",
+      "region_internal_key": null,
+      "rarity": 5,
+      "release_version": "2.1",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_confirmed",
+      "reasons": [
+        "指示書の明確な除外（アーロイ）"
+      ]
+    },
+    {
+      "canonicalIndex": 48,
+      "key": "リオセスリ",
+      "name": "リオセスリ",
+      "element": "氷",
+      "weapon": "法器",
+      "region_internal_key": "フォンテーヌ",
+      "rarity": 5,
+      "release_version": "4.1",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.4.1（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 49,
+      "key": "シャルロット",
+      "name": "シャルロット",
+      "element": "氷",
+      "weapon": "法器",
+      "region_internal_key": "フォンテーヌ",
+      "rarity": 4,
+      "release_version": "4.2",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 50,
+      "key": "シトラリ",
+      "name": "シトラリ",
+      "element": "氷",
+      "weapon": "法器",
+      "region_internal_key": "ナタ",
+      "rarity": 5,
+      "release_version": "5.3",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.5.3（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 51,
+      "key": "アリョーシャ",
+      "name": "アリョーシャ",
+      "element": "雷",
+      "weapon": "長柄",
+      "region_internal_key": "スネージナヤ",
+      "rarity": 4,
+      "release_version": "7.0",
+      "data_source": "web_search_snippet",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 52,
+      "key": "刻晴",
+      "name": "刻晴",
+      "element": "雷",
+      "weapon": "片手剣",
+      "region_internal_key": "璃月",
+      "rarity": 5,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.1.0（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 53,
+      "key": "クロリンデ",
+      "name": "クロリンデ",
+      "element": "雷",
+      "weapon": "片手剣",
+      "region_internal_key": "フォンテーヌ",
+      "rarity": 5,
+      "release_version": "4.7",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.4.7（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 54,
+      "key": "久岐忍",
+      "name": "久岐忍",
+      "element": "雷",
+      "weapon": "片手剣",
+      "region_internal_key": "稲妻",
+      "rarity": 4,
+      "release_version": "2.7",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 55,
+      "key": "雷電将軍",
+      "name": "雷電将軍",
+      "element": "雷",
+      "weapon": "長柄",
+      "region_internal_key": "稲妻",
+      "rarity": 5,
+      "release_version": "2.1",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.2.1（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 56,
+      "key": "セノ",
+      "name": "セノ",
+      "element": "雷",
+      "weapon": "長柄",
+      "region_internal_key": "スメール",
+      "rarity": 5,
+      "release_version": "3.1",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.3.1（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 57,
+      "key": "イアンサ",
+      "name": "イアンサ",
+      "element": "雷",
+      "weapon": "長柄",
+      "region_internal_key": "ナタ",
+      "rarity": 4,
+      "release_version": "5.5",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 58,
+      "key": "フィッシュル",
+      "name": "フィッシュル",
+      "element": "雷",
+      "weapon": "弓",
+      "region_internal_key": "モンド",
+      "rarity": 4,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 59,
+      "key": "九条裟羅",
+      "name": "九条裟羅",
+      "element": "雷",
+      "weapon": "弓",
+      "region_internal_key": "稲妻",
+      "rarity": 4,
+      "release_version": "2.1",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 60,
+      "key": "オロルン",
+      "name": "オロルン",
+      "element": "雷",
+      "weapon": "弓",
+      "region_internal_key": "ナタ",
+      "rarity": 4,
+      "release_version": "5.2",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 61,
+      "key": "セトス",
+      "name": "セトス",
+      "element": "雷",
+      "weapon": "弓",
+      "region_internal_key": "スメール",
+      "rarity": 4,
+      "release_version": "4.7",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 62,
+      "key": "八重神子",
+      "name": "八重神子",
+      "element": "雷",
+      "weapon": "法器",
+      "region_internal_key": "稲妻",
+      "rarity": 5,
+      "release_version": "2.5",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.2.5（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 63,
+      "key": "リサ",
+      "name": "リサ",
+      "element": "雷",
+      "weapon": "法器",
+      "region_internal_key": "モンド",
+      "rarity": 4,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 64,
+      "key": "ヴァレサ",
+      "name": "ヴァレサ",
+      "element": "雷",
+      "weapon": "法器",
+      "region_internal_key": "ナタ",
+      "rarity": 5,
+      "release_version": "5.5",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.5.5（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 65,
+      "key": "レザー",
+      "name": "レザー",
+      "element": "雷",
+      "weapon": "両手剣",
+      "region_internal_key": "モンド",
+      "rarity": 4,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 66,
+      "key": "北斗",
+      "name": "北斗",
+      "element": "雷",
+      "weapon": "両手剣",
+      "region_internal_key": "璃月",
+      "rarity": 4,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 67,
+      "key": "ドリー",
+      "name": "ドリー",
+      "element": "雷",
+      "weapon": "両手剣",
+      "region_internal_key": "スメール",
+      "rarity": 4,
+      "release_version": "3.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）",
+        "『ドール』指定の同定候補。確定するまで除外有無は未確定"
+      ]
+    },
+    {
+      "canonicalIndex": 68,
+      "key": "楓原万葉",
+      "name": "楓原万葉",
+      "element": "風",
+      "weapon": "片手剣",
+      "region_internal_key": "稲妻",
+      "rarity": 5,
+      "release_version": "1.6",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.1.6（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 69,
+      "key": "ジン",
+      "name": "ジン",
+      "element": "風",
+      "weapon": "片手剣",
+      "region_internal_key": "モンド",
+      "rarity": 5,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.1.0（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 70,
+      "key": "リネット",
+      "name": "リネット",
+      "element": "風",
+      "weapon": "片手剣",
+      "region_internal_key": "フォンテーヌ",
+      "rarity": 4,
+      "release_version": "4.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 71,
+      "key": "ファルカ",
+      "name": "ファルカ",
+      "element": "風",
+      "weapon": "両手剣",
+      "region_internal_key": "モンド",
+      "rarity": 5,
+      "release_version": "6.4",
+      "data_source": "web_search_snippet",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.6.4（未検証: web_search_snippet）"
+      ]
+    },
+    {
+      "canonicalIndex": 72,
+      "key": "早柚",
+      "name": "早柚",
+      "element": "風",
+      "weapon": "両手剣",
+      "region_internal_key": "稲妻",
+      "rarity": 4,
+      "release_version": "2.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 73,
+      "key": "ウェンティ",
+      "name": "ウェンティ",
+      "element": "風",
+      "weapon": "弓",
+      "region_internal_key": "モンド",
+      "rarity": 5,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.1.0（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 74,
+      "key": "チャスカ",
+      "name": "チャスカ",
+      "element": "風",
+      "weapon": "弓",
+      "region_internal_key": "ナタ",
+      "rarity": 5,
+      "release_version": "5.2",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.5.2（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 75,
+      "key": "ファルザン",
+      "name": "ファルザン",
+      "element": "風",
+      "weapon": "弓",
+      "region_internal_key": "スメール",
+      "rarity": 4,
+      "release_version": "3.3",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 76,
+      "key": "ヤフォダ",
+      "name": "ヤフォダ",
+      "element": "風",
+      "weapon": "弓",
+      "region_internal_key": "ナドクライ",
+      "rarity": 4,
+      "release_version": "6.2",
+      "data_source": "web_search_snippet",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 77,
+      "key": "スクロース",
+      "name": "スクロース",
+      "element": "風",
+      "weapon": "法器",
+      "region_internal_key": "モンド",
+      "rarity": 4,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 78,
+      "key": "放浪者",
+      "name": "放浪者",
+      "element": "風",
+      "weapon": "法器",
+      "region_internal_key": "スメール",
+      "rarity": 5,
+      "release_version": "3.3",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.3.3（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 79,
+      "key": "閑雲",
+      "name": "閑雲",
+      "element": "風",
+      "weapon": "法器",
+      "region_internal_key": "璃月",
+      "rarity": 5,
+      "release_version": "4.4",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.4.4（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 80,
+      "key": "藍硯",
+      "name": "藍硯",
+      "element": "風",
+      "weapon": "法器",
+      "region_internal_key": "璃月",
+      "rarity": 4,
+      "release_version": "5.3",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 81,
+      "key": "鹿野院平蔵",
+      "name": "鹿野院平蔵",
+      "element": "風",
+      "weapon": "法器",
+      "region_internal_key": "稲妻",
+      "rarity": 4,
+      "release_version": "2.8",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 82,
+      "key": "夢見月瑞希",
+      "name": "夢見月瑞希",
+      "element": "風",
+      "weapon": "法器",
+      "region_internal_key": "稲妻",
+      "rarity": 5,
+      "release_version": "5.4",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.5.4（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 83,
+      "key": "イファ",
+      "name": "イファ",
+      "element": "風",
+      "weapon": "法器",
+      "region_internal_key": "ナタ",
+      "rarity": 4,
+      "release_version": "5.6",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 84,
+      "key": "プルーネ",
+      "name": "プルーネ",
+      "element": "風",
+      "weapon": "法器",
+      "region_internal_key": "モンド",
+      "rarity": 4,
+      "release_version": "6.6",
+      "data_source": "web_search_snippet",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 85,
+      "key": "鍾離",
+      "name": "鍾離",
+      "element": "岩",
+      "weapon": "長柄",
+      "region_internal_key": "璃月",
+      "rarity": 5,
+      "release_version": "1.1",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.1.1（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 86,
+      "key": "イルーガ",
+      "name": "イルーガ",
+      "element": "岩",
+      "weapon": "長柄",
+      "region_internal_key": "ナドクライ",
+      "rarity": 4,
+      "release_version": "6.3",
+      "data_source": "web_search_snippet",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 87,
+      "key": "カチーナ",
+      "name": "カチーナ",
+      "element": "岩",
+      "weapon": "長柄",
+      "region_internal_key": "ナタ",
+      "rarity": 4,
+      "release_version": "5.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 88,
+      "key": "雲菫",
+      "name": "雲菫",
+      "element": "岩",
+      "weapon": "長柄",
+      "region_internal_key": "璃月",
+      "rarity": 4,
+      "release_version": "2.4",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 89,
+      "key": "ナヴィア",
+      "name": "ナヴィア",
+      "element": "岩",
+      "weapon": "両手剣",
+      "region_internal_key": "フォンテーヌ",
+      "rarity": 5,
+      "release_version": "4.3",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.4.3（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 90,
+      "key": "荒瀧一斗",
+      "name": "荒瀧一斗",
+      "element": "岩",
+      "weapon": "両手剣",
+      "region_internal_key": "稲妻",
+      "rarity": 5,
+      "release_version": "2.3",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.2.3（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 91,
+      "key": "ノエル",
+      "name": "ノエル",
+      "element": "岩",
+      "weapon": "両手剣",
+      "region_internal_key": "モンド",
+      "rarity": 4,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 92,
+      "key": "アルベド",
+      "name": "アルベド",
+      "element": "岩",
+      "weapon": "片手剣",
+      "region_internal_key": "モンド",
+      "rarity": 5,
+      "release_version": "1.2",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.1.2（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 93,
+      "key": "茲白",
+      "name": "茲白",
+      "element": "岩",
+      "weapon": "片手剣",
+      "region_internal_key": "璃月",
+      "rarity": 5,
+      "release_version": "6.3",
+      "data_source": "web_search_snippet",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.6.3（未検証: web_search_snippet）"
+      ]
+    },
+    {
+      "canonicalIndex": 94,
+      "key": "千織",
+      "name": "千織",
+      "element": "岩",
+      "weapon": "片手剣",
+      "region_internal_key": "稲妻",
+      "rarity": 5,
+      "release_version": "4.5",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.4.5（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 95,
+      "key": "シロネン",
+      "name": "シロネン",
+      "element": "岩",
+      "weapon": "片手剣",
+      "region_internal_key": "ナタ",
+      "rarity": 5,
+      "release_version": "5.1",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.5.1（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 96,
+      "key": "ゴロー",
+      "name": "ゴロー",
+      "element": "岩",
+      "weapon": "弓",
+      "region_internal_key": "稲妻",
+      "rarity": 4,
+      "release_version": "2.3",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 97,
+      "key": "リンネア",
+      "name": "リンネア",
+      "element": "岩",
+      "weapon": "弓",
+      "region_internal_key": "ナドクライ",
+      "rarity": null,
+      "release_version": "6.5",
+      "data_source": "web_search_snippet",
+      "decision": "undetermined",
+      "reasons": [
+        "レアリティ不明（出典間で食い違い）"
+      ]
+    },
+    {
+      "canonicalIndex": 98,
+      "key": "凝光",
+      "name": "凝光",
+      "element": "岩",
+      "weapon": "法器",
+      "region_internal_key": "璃月",
+      "rarity": 4,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 99,
+      "key": "ナヒーダ",
+      "name": "ナヒーダ",
+      "element": "草",
+      "weapon": "法器",
+      "region_internal_key": "スメール",
+      "rarity": 5,
+      "release_version": "3.2",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.3.2（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 100,
+      "key": "白朮",
+      "name": "白朮",
+      "element": "草",
+      "weapon": "法器",
+      "region_internal_key": "璃月",
+      "rarity": 5,
+      "release_version": "3.6",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.3.6（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 101,
+      "key": "ラウマ",
+      "name": "ラウマ",
+      "element": "草",
+      "weapon": "法器",
+      "region_internal_key": "ナドクライ",
+      "rarity": 5,
+      "release_version": "6.0",
+      "data_source": "web_search_snippet",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.6.0（未検証: web_search_snippet）"
+      ]
+    },
+    {
+      "canonicalIndex": 102,
+      "key": "ネフェル",
+      "name": "ネフェル",
+      "element": "草",
+      "weapon": "法器",
+      "region_internal_key": "ナドクライ",
+      "rarity": 5,
+      "release_version": "6.1",
+      "data_source": "web_search_snippet",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.6.1（未検証: web_search_snippet）"
+      ]
+    },
+    {
+      "canonicalIndex": 103,
+      "key": "ティナリ",
+      "name": "ティナリ",
+      "element": "草",
+      "weapon": "弓",
+      "region_internal_key": "スメール",
+      "rarity": 5,
+      "release_version": "3.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.3.0（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 104,
+      "key": "コレイ",
+      "name": "コレイ",
+      "element": "草",
+      "weapon": "弓",
+      "region_internal_key": "スメール",
+      "rarity": 4,
+      "release_version": "3.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 105,
+      "key": "アルハイゼン",
+      "name": "アルハイゼン",
+      "element": "草",
+      "weapon": "片手剣",
+      "region_internal_key": "スメール",
+      "rarity": 5,
+      "release_version": "3.4",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.3.4（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 106,
+      "key": "綺良々",
+      "name": "綺良々",
+      "element": "草",
+      "weapon": "片手剣",
+      "region_internal_key": "稲妻",
+      "rarity": 4,
+      "release_version": "3.7",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 107,
+      "key": "カーヴェ",
+      "name": "カーヴェ",
+      "element": "草",
+      "weapon": "両手剣",
+      "region_internal_key": "スメール",
+      "rarity": 4,
+      "release_version": "3.6",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 108,
+      "key": "キィニチ",
+      "name": "キィニチ",
+      "element": "草",
+      "weapon": "両手剣",
+      "region_internal_key": "ナタ",
+      "rarity": 5,
+      "release_version": "5.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.5.0（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 109,
+      "key": "エミリエ",
+      "name": "エミリエ",
+      "element": "草",
+      "weapon": "長柄",
+      "region_internal_key": "フォンテーヌ",
+      "rarity": 5,
+      "release_version": "4.8",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.4.8（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 110,
+      "key": "ヨォーヨ",
+      "name": "ヨォーヨ",
+      "element": "草",
+      "weapon": "長柄",
+      "region_internal_key": "璃月",
+      "rarity": 4,
+      "release_version": "3.4",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 111,
+      "key": "サンドローネ",
+      "name": "サンドローネ",
+      "element": "氷",
+      "weapon": "両手剣",
+      "region_internal_key": "スネージナヤ",
+      "rarity": 5,
+      "release_version": "6.7",
+      "data_source": "web_search_snippet",
+      "decision": "undetermined_doll_candidate",
+      "reasons": [
+        "★5・Ver.6.7（未検証: web_search_snippet）",
+        "『ドール』指定の同定候補。確定するまで除外有無は未確定"
+      ]
+    },
+    {
+      "canonicalIndex": 112,
+      "key": "魈",
+      "name": "魈",
+      "element": "風",
+      "weapon": "長柄",
+      "region_internal_key": "璃月",
+      "rarity": 5,
+      "release_version": "1.3",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.1.3（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 113,
+      "key": "エウルア",
+      "name": "エウルア",
+      "element": "氷",
+      "weapon": "両手剣",
+      "region_internal_key": "モンド",
+      "rarity": 5,
+      "release_version": "1.5",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.1.5（未検証: claude_prior_knowledge）"
+      ]
+    },
+    {
+      "canonicalIndex": 114,
+      "key": "重雲",
+      "name": "重雲",
+      "element": "氷",
+      "weapon": "両手剣",
+      "region_internal_key": "璃月",
+      "rarity": 4,
+      "release_version": "1.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 115,
+      "key": "フレミネ",
+      "name": "フレミネ",
+      "element": "氷",
+      "weapon": "両手剣",
+      "region_internal_key": "フォンテーヌ",
+      "rarity": 4,
+      "release_version": "4.0",
+      "data_source": "claude_prior_knowledge",
+      "decision": "excluded_provisional",
+      "reasons": [
+        "★4（未検証）"
+      ]
+    },
+    {
+      "canonicalIndex": 116,
+      "key": "フリンズ",
+      "name": "フリンズ",
+      "element": "雷",
+      "weapon": "長柄",
+      "region_internal_key": "ナドクライ",
+      "rarity": 5,
+      "release_version": "6.0",
+      "data_source": "web_search_snippet",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.6.0（未検証: web_search_snippet）"
+      ]
+    },
+    {
+      "canonicalIndex": 117,
+      "key": "イネファ",
+      "name": "イネファ",
+      "element": "雷",
+      "weapon": "長柄",
+      "region_internal_key": "ナドクライ",
+      "rarity": 5,
+      "release_version": "5.8",
+      "data_source": "claude_prior_knowledge",
+      "decision": "included_provisional",
+      "reasons": [
+        "★5・Ver.5.8（未検証: claude_prior_knowledge）"
+      ]
+    }
+  ]
+}
