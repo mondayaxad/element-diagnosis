@@ -68,6 +68,13 @@ function unlockCard(text, previewTitle, previewHtml, color = '#C8405C') {
       </div>
     </div>`;
 }
+// ぼかし背景に敷く値は、その人の実際の得点ではなく固定の見本値（HTML から本人の結果を読み取れないように）。
+//   文章（特性の説明・人物の物語）は誰にでも同じ公開の文言。人物の一致度も固定値。
+export const PREVIEW_SCORES = Object.freeze({ ANX: 68, SEP: 74, SUS: 57, WDR: 46, IMP: 38, PSV: 61, PRF: 66, HOS: 33, ATT: 42, MAN: 49, RSK: 27, CAL: 35 });
+export const PREVIEW_MATCH = 72;
+function previewResult(bundle) {
+  return { traits: Object.fromEntries(bundle.items.traits.map((t) => [t.id, { id: t.id, label: t.label, score: PREVIEW_SCORES[t.id], displayScore: PREVIEW_SCORES[t.id] }])) };
+}
 // 4〜6特性のレーダー（レポートのぼかし背景用）
 function radar(result, bundle, ids, color) {
   const n = ids.length, R = 70, cx = 100, cy = 100;
@@ -78,12 +85,13 @@ function radar(result, bundle, ids, color) {
     <polygon points="${poly}" fill="${color}" fill-opacity=".28" stroke="${color}"/>
     ${ids.map((id, i) => { const [x, y] = pt(i, R + 18); return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle">${esc(traitLabel(bundle, id))}</text>`; }).join('')}</svg>`;
 }
-function groupPreview(result, bundle, g) {
-  return radar(result, bundle, g.traits, g.color) + g.traits.map((id) => traitBar(result, id, g.color)).join('');
+function groupPreview(_result, bundle, g) {
+  const p = previewResult(bundle);
+  return radar(p, bundle, g.traits, g.color) + g.traits.map((id) => traitBar(p, id, g.color)).join('');
 }
 function characterPreview(result, bundle) {
-  const ch = result.character;
-  const ex = explainCharacter(result, bundle, ch.id);
+  const ch = { id: result.character.id, name: result.character.name, match: PREVIEW_MATCH };
+  const ex = explainCharacter(previewResult(bundle), bundle, ch.id);
   const copy = CHARACTER_COPY[ch.id];
   const row = (x) => `${esc(traitLabel(bundle, x.axis))}（あなた ${Math.round(x.userScore)}／参照 ${Math.round(x.referenceScore)}）`;
   return `<div class="rp-match"><p class="rp-match-h"><b>${esc(ch.name)}</b><em>${ch.match}%</em></p>

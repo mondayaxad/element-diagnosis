@@ -11,7 +11,7 @@ import { judge, characterRanking, scoreAnswers } from '../jagan/engine/judge.mjs
 import { BUNDLE } from '../jagan/engine/data.mjs';
 import { judge as specJudge } from '../docs/jagan/spec_v0_3_balanced/runtime.mjs';
 import { recompute, headlineOf, ogParams, renderSharePage, createSaveHandler, createShareHandler, createReportHandler, createSharePageHandler, jaganEnabled } from '../lib/jagan-api.mjs';
-import { renderResultPage, renderReport, renderMethod } from '../jagan/view.mjs';
+import { renderResultPage, renderReport, renderMethod, PREVIEW_SCORES, PREVIEW_MATCH } from '../jagan/view.mjs';
 import { GROUPS, ISOU_TEXT, ISOU_SHORT, ELEMENT_TEXT, ELEMENT_STORY, TRAIT_COPY, CHARACTER_COPY } from '../jagan/site-copy.mjs';
 import { fnv1a32, normalizedAnswers, selectIsou } from '../jagan/engine/dti.mjs';
 import { buildCardTree } from '../lib/jagan-og-card.mjs';
@@ -571,4 +571,15 @@ test('stateless share page (/jagan/share?…) needs no DB: summary from whitelis
   const flat = await call(page, { method: 'GET', url: `/api/jagan-share-page?${ogParams(publicSummary(run(all(3))))}` });
   assert.equal(flat.status, 200);
   assert.ok(!flat.body.includes('最も近しいファトゥス'));
+});
+
+test('unlock mosaics show fixed sample values, not the user\'s real scores', () => {
+  const mosaics = (html) => [...html.matchAll(/<div class="rx-mosaic"[^>]*>([\s\S]*?)<\/div>\s*<button type="button" class="rx-preview-btn"/g)].map((m) => m[1]);
+  const a = run(VARIED()), b = run(all(5));
+  const ma = mosaics(renderResultPage(a, BUNDLE)), mb = mosaics(renderResultPage(b, BUNDLE));
+  assert.equal(ma.length, 4);
+  // 人物の欄を除く 3 つの土台は、結果が違っても同じ見本の中身
+  assert.deepEqual(ma.slice(-3), mb.slice(-3));
+  for (const g of GROUPS) for (const id of g.traits) assert.ok(ma.join('').includes(`<b>${PREVIEW_SCORES[id]}</b>`), id);
+  assert.ok(ma[0].includes(`<em>${PREVIEW_MATCH}%</em>`) && !ma[0].includes(`<em>${a.character.match}%</em>`) || a.character.match === PREVIEW_MATCH);
 });
