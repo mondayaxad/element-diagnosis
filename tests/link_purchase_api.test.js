@@ -487,6 +487,64 @@ test('ケースC 完全解析：キャンセル後の再購入で MENTOR の目�
   await ctx.db.close();
 });
 
+test('PayPay：決済画面の支払い方法はカードと PayPay。金額・商品・期限・metadata は従来どおり。支払うと反映される', { skip }, async () => {
+  const ctx = await setup();
+  const { context } = await resultContext(ctx);
+  const a = await buyAndPay(ctx, context, 'analysis', { pay: false });
+  const p = ctx.stripe.st.lastCreate.params;
+  assert.deepEqual(p.payment_method_types, ['card', 'paypay']);
+  assert.deepEqual(Object.keys(p.metadata).sort(), ['app', 'env', 'order_id']);
+  assert.equal(p.mode, 'payment');
+  ctx.stripe.pay(a.cs, { customer_details: { email: 'buyer@example.test' } });
+  assert.equal((await purchases(ctx))[0].state, 'active');
+  await ctx.db.close();
+});
+
+test('PayPay：Stripe が PayPay 付きの作成を拒んだ時は、カードだけで作り直す（購入できなくならない）。注文は失敗にならない', { skip }, async () => {
+  const ctx = await setup();
+  const { context } = await resultContext(ctx);
+  ctx.stripe.fail('checkout.sessions.create', Object.assign(new Error('The payment method type "paypay" is invalid.'), { type: 'StripeInvalidRequestError', statusCode: 400, code: 'parameter_invalid_enum' }));
+  const a = await buyAndPay(ctx, context, 'analysis', { pay: false });
+  assert.deepEqual(ctx.stripe.st.lastCreate.params.payment_method_types, ['card']);
+  assert.match(ctx.stripe.st.lastCreate.opts.idempotencyKey, /_c$/);
+  const [order] = await ctx.rows('complete_orders');
+  assert.equal(order.status, 'checkout_open');
+  ctx.stripe.pay(a.cs, { customer_details: { email: 'buyer@example.test' } });
+  assert.equal((await purchases(ctx))[0].state, 'active');
+  await ctx.db.close();
+});
+
+test('PayPay：一時的な Stripe の失敗では、カードだけに切り替えない（注文は残り、次の要求で同じ決済画面）', { skip }, async () => {
+  const ctx = await setup();
+  const { context } = await resultContext(ctx);
+  ctx.stripe.fail('checkout.sessions.create');
+  const attempt = attemptId();
+  const r = await ctx.op('buy', { context, product: 'analysis', attempt, source: 'result' });
+  assert.notEqual(r.code, 200);
+  assert.equal(ctx.stripe.st.calls.filter((c) => c === 'checkout.sessions.create').length, 1);
+  await ctx.db.close();
+});
+
+test('PayPay：支払いの確定が後から届く場合（checkout.session.async_payment_succeeded）も、同じ処理で支払い済みになる', { skip }, async () => {
+  const ctx = await setup();
+  const { context } = await resultContext(ctx);
+  const a = await buyAndPay(ctx, context, 'analysis', { pay: false });
+  // 完了の通知（まだ未払い）→ 反映しない
+  ctx.stripe.st.sessions[a.cs].status = 'complete';
+  ctx.stripe.st.sessions[a.cs].payment_status = 'unpaid';
+  let w = await ctx.webhook({ type: 'checkout.session.completed', objectId: a.cs });
+  assert.equal(w.code, 200);
+  assert.notEqual((await ctx.rows('complete_orders'))[0].status, 'paid');
+  // 支払いが確定
+  ctx.stripe.st.sessions[a.cs].payment_status = 'paid';
+  w = await ctx.webhook({ type: 'checkout.session.async_payment_succeeded', objectId: a.cs });
+  assert.equal(w.code, 200);
+  await ctx.drain();
+  assert.equal((await ctx.rows('complete_orders'))[0].status, 'paid');
+  assert.equal((await purchases(ctx))[0].state, 'active');
+  await ctx.db.close();
+});
+
 test('固有リンク：未払いでは開けない（支払い待ち）。返金・異議申し立て・運営者の停止で開けない。再発行すると古いリンクは無効', { skip }, async () => {
   const ctx = await setup();
   const { context } = await resultContext(ctx);

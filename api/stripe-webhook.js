@@ -79,6 +79,9 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
     const found = await sessionFor(stripe, CP.idOf(obj), conn, ['line_items']);
     if (found.notOurs) return 'ignored:not_complete';
     if (found.mismatch) { await finish(conn, ev, 'ignored', found.mismatch); return `ignored:${found.mismatch}`; }
+    // まだ支払いが確定していない完了（確定が後から届く支払い方法）：注文は触らない（DB は未払いの完了を「失敗」にしてしまうため）。
+    //   確定した時の checkout.session.async_payment_succeeded、または購入完了ページの問い合わせ（Stripe の最新の状態）で反映する。期限が来れば expired で閉じる
+    if (found.session.payment_status !== 'paid') { await finish(conn, ev, 'ignored', 'awaiting_payment', found.orderId); return 'ignored:awaiting_payment'; }
     // 解析レポート（¥1,000）・完全解析（¥3,000／¥2,000）の適用は、購入完了ページの問い合わせと同じ共通処理（lib/complete-apply.js）
     return CA.applyPaidSession({
       env, fetchImpl, conn, session: found.session, orderId: found.orderId, eventId: ev.id, eventCreatedIso: ev.createdAt,
@@ -148,6 +151,8 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
 
   const HANDLERS = {
     'checkout.session.completed': onCheckoutCompleted,
+    // 支払いの確定が遅れる支払い方法（確定が後から届く場合）：確定した時に、同じ処理で反映する（Stripe の Webhook に、このイベントを追加する）
+    'checkout.session.async_payment_succeeded': onCheckoutCompleted,
     'checkout.session.expired': onCheckoutExpired,
     'charge.refunded': onRefund,
     'charge.dispute.created': onDispute,
@@ -212,7 +217,7 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
       const result = await handle(guard, stripe, ev, event.data.object);
       const kind = typeof result === 'string' && result.startsWith('ignored') ? 'ignored' : 'processed';
       // 支払い確定で生成物が queued になった：応答を待たせずに、応答の後で生成を始める（失敗しても状態確認の時に回収する）
-      if (ev.type === 'checkout.session.completed' && result === 'applied') {
+      if ((ev.type === 'checkout.session.completed' || ev.type === 'checkout.session.async_payment_succeeded') && result === 'applied') {
         RJ.scheduleReport(waitUntil, async () => {
           const rows = await CP.selectRows(fetchImpl, guard, `stripe_webhook_events?event_id=eq.${encodeURIComponent(ev.id)}&select=order_id`);
           const orderId = rows[0] && rows[0].order_id;

@@ -67,7 +67,7 @@
   <p>・アカウントの情報：メールアドレス、ログインに使うサービス（Google・X・メール）の識別子、各サービスから受け取る基本的なプロフィール情報。</p>
   <p>・登録・同意の記録：登録の完了日時、同意した利用規約・プライバシーポリシーの版、お知らせメールへの同意の日時と版、Kit への登録状況。</p>
   <p>・購入の情報：注文の状態・金額・日時、決済の識別番号（Stripe の決済セッションと支払いの番号）、レポートのリンクを元に戻せない形にした値（ハッシュ）、マイページに登録したアカウントと購入の対応。</p>
-  <p>　決済画面で入力されたカード情報・メールアドレス等は Stripe が取得します。運営者は、カード情報を受け取りません。メールアドレスは、本サイトのデータベースには保存しません。</p>
+  <p>　決済画面で入力されたカード情報・PayPay の決済に関する情報・メールアドレス等は Stripe が取得します。運営者は、カード情報を受け取りません。メールアドレスは、本サイトのデータベースには保存しません。</p>
   <p>・端末に保存される情報：Cookie・ブラウザの保存領域（下の「7. Cookie・ブラウザの保存領域について」）。</p>
   <p>・アクセスの情報：接続元の IP アドレス、ブラウザの種類など。ホスティング（Vercel）、データベース（Supabase）などのサービスが、運用のために記録します。</p>
   <p>・お問い合わせの内容：メール・X の DM でいただいた内容とやり取り。</p>
@@ -129,7 +129,7 @@
     <tr><td data-label="サービス">Supabase（Supabase, Inc.）</td><td data-label="目的">データベース・ログイン（認証）・レポートの保管</td><td data-label="渡る主な情報">診断の回答・結果、アカウントの情報、購入の記録</td><td data-label="プライバシーポリシー"><a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer">https://supabase.com/privacy</a></td></tr>
     <tr><td data-label="サービス">Resend（Resend, Inc.）</td><td data-label="目的">ログインの確認コードなど、認証メールの送信（Supabase の認証メールの送信に利用）</td><td data-label="渡る主な情報">メールアドレス、メールの内容</td><td data-label="プライバシーポリシー"><a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">https://resend.com/legal/privacy-policy</a></td></tr>
     <tr><td data-label="サービス">Vercel（Vercel Inc.）</td><td data-label="目的">本サイトの配信</td><td data-label="渡る主な情報">接続元の IP アドレス・ブラウザの情報</td><td data-label="プライバシーポリシー"><a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer">https://vercel.com/legal/privacy-policy</a></td></tr>
-    <tr><td data-label="サービス">Stripe（Stripe, Inc. ほか）</td><td data-label="目的">決済</td><td data-label="渡る主な情報">カード情報・メールアドレス・購入の内容（Stripe が取得）</td><td data-label="プライバシーポリシー"><a href="https://stripe.com/jp/privacy" target="_blank" rel="noopener noreferrer">https://stripe.com/jp/privacy</a></td></tr>
+    <tr><td data-label="サービス">Stripe（Stripe, Inc. ほか）</td><td data-label="目的">決済</td><td data-label="渡る主な情報">カード情報・PayPay の決済に関する情報・メールアドレス・購入の内容（Stripe が取得）</td><td data-label="プライバシーポリシー"><a href="https://stripe.com/jp/privacy" target="_blank" rel="noopener noreferrer">https://stripe.com/jp/privacy</a></td></tr>
     <tr><td data-label="サービス">Google（Google LLC）</td><td data-label="目的">ログイン・Google Analytics・Google Fonts</td><td data-label="渡る主な情報">ログインの情報、アクセスの情報、IP アドレス</td><td data-label="プライバシーポリシー"><a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">https://policies.google.com/privacy</a></td></tr>
     <tr><td data-label="サービス">X（X Corp.）</td><td data-label="目的">ログイン</td><td data-label="渡る主な情報">ログインの情報</td><td data-label="プライバシーポリシー"><a href="https://x.com/en/privacy" target="_blank" rel="noopener noreferrer">https://x.com/en/privacy</a></td></tr>
     <tr><td data-label="サービス">Kit（Kit Inc.）</td><td data-label="目的">お知らせメール</td><td data-label="渡る主な情報">メールアドレス（同意された方のみ）</td><td data-label="プライバシーポリシー"><a href="https://kit.com/privacy" target="_blank" rel="noopener noreferrer">https://kit.com/privacy</a></td></tr>
