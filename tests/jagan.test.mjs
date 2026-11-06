@@ -591,12 +591,41 @@ test('mypage emblems (pre-awakening): every element has an image, and the file n
   assert.deepEqual(Object.keys(map).sort(), labels, 'every element label is mapped');
   assert.equal(new Set(Object.values(map)).size, 7);
   for (const f of Object.values(map)) {
-    const p = path.join(ROOT, 'assets/emblems/jagan/record', `${f}.png`);
-    const b = fs.readFileSync(p);
-    assert.equal(b.subarray(1, 4).toString(), 'PNG', f);
-    assert.ok(b.length < 400 * 1024, `${f} is small enough (${b.length})`);
-    assert.equal(b.readUInt32BE(16), 360); assert.equal(b.readUInt32BE(20), 360);
+    for (const kind of ['record', 'awakened']) {
+      const b = fs.readFileSync(path.join(ROOT, 'assets/emblems/jagan', kind, `${f}.png`));
+      assert.equal(b.subarray(1, 4).toString(), 'PNG', `${kind}/${f}`);
+      assert.ok(b.length < 400 * 1024, `${kind}/${f} is small enough (${b.length})`);
+      assert.equal(b.readUInt32BE(16), 360); assert.equal(b.readUInt32BE(20), 360);
+    }
+    const [r, a] = ['record', 'awakened'].map((k) => fs.readFileSync(path.join(ROOT, 'assets/emblems/jagan', k, `${f}.png`)));
+    assert.ok(!r.equals(a), `${f}: the awakened image differs from the pre-awakening one`);
   }
   // ETI の証は上書きしない
   assert.ok(fs.existsSync(path.join(ROOT, 'assets/emblems/2026-autumn/record/pyro.png')));
+});
+
+test('mypage emblems: awakened only for a record with an active entitlement; a failed read stays pre-awakening', async () => {
+  const js = fs.readFileSync(path.join(ROOT, 'js/jagan-mypage.js'), 'utf8');
+  const rows = [['r1', '水'], ['r2', '炎'], ['r3', '氷']].map(([id, el]) => ({ result_id: id, created_at: '2026-11-01T00:00:00Z', headline: { element: el, type: '依存', code: 'HYDP', name: '縋望者' } }));
+  const run = async (ent) => {
+    let html = '';
+    const els = { root: { querySelector: () => null, appendChild() {} } };
+    const sandbox = {
+      window: { __ED_PUBLIC_CONFIG__: { appEnv: 'preview' }, confirm: () => false, alert() {} }, localStorage: { getItem: () => null, removeItem() {}, setItem() {} },
+      document: { getElementById: (id) => (id === 'jaganMpStyle' ? {} : null), createElement: () => ({ set innerHTML(v) { this._h = v; }, get innerHTML() { return this._h; }, get firstChild() { return { addEventListener() {}, innerHTML: this._h }; } }), head: { appendChild() {} } },
+      location: { hash: '', search: '' }, Date, encodeURIComponent, Promise, console,
+      supabaseClient: { auth: { getSession: async () => ({ data: { session: null } }) }, from: (t) => (t === 'jagan_results'
+        ? { select: () => ({ order: async () => ({ data: rows, error: null }) }) }
+        : { select: () => ({ eq: async () => ent }) }) },
+    };
+    sandbox.window.document = sandbox.document; sandbox.document.createElement = () => { const o = { _h: '' }; return Object.defineProperties(o, { innerHTML: { set(v) { o._h = v; html = v; }, get() { return o._h; } }, firstChild: { get() { return { addEventListener() {}, scrollIntoView() {} }; } } }); };
+    new Function('window', 'document', 'localStorage', 'location', 'supabaseClient', 'Date', 'encodeURIComponent', 'console', js).call(sandbox.window, sandbox.window, sandbox.document, sandbox.localStorage, sandbox.location, sandbox.supabaseClient, Date, encodeURIComponent, console);
+    await sandbox.window.JaganMypage.render(els.root);
+    return html;
+  };
+  const only = (h) => [...h.matchAll(/emblems\/jagan\/(record|awakened)\/([a-z]+)\.png/g)].map((m) => `${m[1]}:${m[2]}`);
+  assert.deepEqual(only(await run({ data: [{ result_id: 'r2', status: 'active' }], error: null })), ['record:hydro', 'awakened:pyro', 'record:cryo']);
+  assert.deepEqual(only(await run({ data: [], error: null })), ['record:hydro', 'record:pyro', 'record:cryo']);
+  assert.deepEqual(only(await run({ data: null, error: { message: 'x' } })), ['record:hydro', 'record:pyro', 'record:cryo'], 'a failed read is not treated as purchased');
+  assert.deepEqual(only(await run({ data: [{ result_id: 'r1', status: 'refunded' }], error: null })), ['record:hydro', 'record:pyro', 'record:cryo'], 'only active entitlements count');
 });

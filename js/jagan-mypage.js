@@ -57,15 +57,26 @@
     return r.data || [];
   }
 
-  // 証（覚醒前）：邪眼元素ごとの画像。保存時の見出し（h.element）の漢字から選ぶ。覚醒後の画像は販売の開始まで使わない
-  var EMBLEM_DIR = 'assets/emblems/jagan/record/';
+  // 証：邪眼元素ごとの画像。保存時の見出し（h.element）の漢字から選ぶ。
+  //   覚醒前（record）が既定。その記録に有効な購入権限（jagan_entitlements.status='active'）があるときだけ覚醒後（awakened）。
+  //   購入権限が読めないとき（取得の失敗・未購入）は覚醒前のまま（購入済みと誤って見せない）。
+  var EMBLEM_DIR = 'assets/emblems/jagan/';
   var EMBLEM_FILE = { '炎': 'pyro', '水': 'hydro', '風': 'anemo', '雷': 'electro', '草': 'dendro', '氷': 'cryo', '岩': 'geo' };
-  function emblemHtml(label) {
+  function emblemHtml(label, awakened) {
     var f = EMBLEM_FILE[label];
-    return f ? '<span class="jg-mp-emblem" aria-hidden="true"><img src="' + EMBLEM_DIR + f + '.png" alt="" width="72" height="72" loading="lazy" decoding="async"></span>' : '';
+    return f ? '<span class="jg-mp-emblem' + (awakened ? ' is-awakened' : '') + '" aria-hidden="true"><img src="' + EMBLEM_DIR + (awakened ? 'awakened/' : 'record/') + f + '.png" alt="" width="72" height="72" loading="lazy" decoding="async"></span>' : '';
+  }
+  async function loadAwakened() {
+    // 本人の行だけ（RLS）。失敗しても記録の表示は止めない
+    try {
+      var r = await supabaseClient.from('jagan_entitlements').select('result_id,status').eq('status', 'active');
+      if (r.error || !Array.isArray(r.data)) return {};
+      var m = {}; r.data.forEach(function (e) { if (e && e.status === 'active') m[e.result_id] = true; });
+      return m;
+    } catch (e) { return {}; }
   }
 
-  function rowHtml(row) {
+  function rowHtml(row, awakenedMap) {
     var h = row.headline || {};
     // 保存時の見出しをそのまま出す（DTI のコード・呼び名が無い旧版の記録は、読み替えずにコードを出さない）
     var head = (h.element || '—') + ' × ' + (h.type || '—');
@@ -73,7 +84,7 @@
     var fat = h.character ? ('最も近しいファトゥス：' + h.character + '（' + h.matchPercent + '%一致）') : '';
     var d = new Date(row.created_at);
     return '<li class="jg-mp-row">' +
-      emblemHtml(h.element) +
+      emblemHtml(h.element, !!(awakenedMap && awakenedMap[row.result_id])) +
       '<div class="jg-mp-body"><div class="jg-mp-head">' + esc(head) + '</div><div class="jg-mp-dti">' + esc(dti) + '</div>' + (fat ? '<div class="jg-mp-sub">' + esc(fat) + '</div>' : '') +
       '<div class="jg-mp-date">' + esc(isNaN(d) ? '' : d.toLocaleDateString('ja-JP')) + '</div></div>' +
       '<div class="jg-mp-ops"><a class="mp-btn" href="/jagan/?saved=' + encodeURIComponent(row.result_id) + '">開く ›</a>' +
@@ -105,13 +116,14 @@
     if (saved) lastOutcome = saved;
     var rows = null;
     try { rows = await loadRows(); } catch (e) { rows = null; }
+    var awakened = rows && rows.length ? await loadAwakened() : {};
     var note = '';
     if (lastOutcome && lastOutcome.ok) note = '<p class="jg-mp-note" role="status">邪眼診断の結果を保存しました。</p>';
     else if (lastOutcome && !lastOutcome.ok) note = '<p class="jg-mp-note" role="alert">邪眼診断の結果を保存できませんでした' + (hasPending() ? '（このページを開き直すと再試行します）' : '') + '。</p>';
     var inner;
     if (rows === null) inner = note + '<p class="jg-mp-note">邪眼診断の記録を読み込めませんでした。</p>';
     else if (!rows.length) inner = note + '<p class="jg-mp-note">まだ保存した結果はありません。<a href="/jagan/">邪眼診断を受ける ›</a></p>';
-    else inner = note + '<ul class="jg-mp-list">' + rows.map(rowHtml).join('') + '</ul><p class="jg-mp-note"><a href="/jagan/">邪眼診断をもう一度受ける ›</a></p>';
+    else inner = note + '<ul class="jg-mp-list">' + rows.map(function (r) { return rowHtml(r, awakened); }).join('') + '</ul><p class="jg-mp-note"><a href="/jagan/">邪眼診断をもう一度受ける ›</a></p>';
     var old = document.getElementById('jagan');
     if (old) old.remove();
     var acc = root.querySelector('[aria-labelledby="mp-acc-h"]');
