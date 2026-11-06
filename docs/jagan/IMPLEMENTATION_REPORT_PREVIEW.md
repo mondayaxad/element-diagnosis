@@ -112,3 +112,5 @@
 - 2026-11-06：MCP 経由の接続を止め、SQL Editor で適用する手順に切り替え（`docs/jagan/PREVIEW_SQL_EDITOR_RUNBOOK.md`）。
   jagan_01 は、既存の jagan_* 表・この版の履歴があれば何も変えずに止まるように改訂（`if not exists`・`drop policy`・`on conflict` を削除）。
   適用前・適用後の確認 SQL（jagan_00・jagan_02）を追加し、ローカルの使い捨て PostgreSQL で手順と RLS を検証（tests/pg/jagan_01.pg.test.js、5/5）。
+- 2026-11-06：Preview DB に jagan_01 を SQL Editor で適用（jagan_00 の全行が期待どおり → jagan_01 Success → jagan_02 の 32 行すべて ok=true。履歴 20261102120000 jagan_01_results_shares、3表とも 0 行）。
+  release-c-preview（84373ca まで）を取り込み、邪眼診断＋ビルドの検査 49/49、全体 772 件中 684 合格・失敗 1（save_cta_placement_ui の既存の 1 件。変更前の 5a0cf8b でも再現、evidence/ に記録）・skip 87。
