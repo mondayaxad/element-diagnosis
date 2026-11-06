@@ -109,3 +109,6 @@
 - 2026-11-05：SQL 実行の承認が時間切れで取り消し（実行前。直前の確認では jagan 表は0件、最新の履歴は 20261021200000）。
 - 2026-11-06：再確認しようとしたが、Preview DB への接続が `password authentication failed`（postgres・読み取り専用ユーザーとも）で失敗し、状態を読めない。
   DB の状態を確かめられないため、SQL の実行と release-c-preview へのマージは保留。
+- 2026-11-06：MCP 経由の接続を止め、SQL Editor で適用する手順に切り替え（`docs/jagan/PREVIEW_SQL_EDITOR_RUNBOOK.md`）。
+  jagan_01 は、既存の jagan_* 表・この版の履歴があれば何も変えずに止まるように改訂（`if not exists`・`drop policy`・`on conflict` を削除）。
+  適用前・適用後の確認 SQL（jagan_00・jagan_02）を追加し、ローカルの使い捨て PostgreSQL で手順と RLS を検証（tests/pg/jagan_01.pg.test.js、5/5）。

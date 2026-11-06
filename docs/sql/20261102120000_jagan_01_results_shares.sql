@@ -1,7 +1,12 @@
 -- ============================================================
 -- jagan_01：邪眼診断の保存結果・公開共有・購入権限の土台
--- 2026-11-02。Preview（element-diagnosis-preview）専用。未適用。
--- 【SQL Editor で実行する】表・権限・RLS の追加。最後に migration 履歴へ1行を追加する（二度当てしても増えない）。
+-- 2026-11-02 作成、2026-11-06 改訂。Preview（element-diagnosis-preview）専用。
+-- 【SQL Editor で実行する】実行順：jagan_00_preflight_READONLY.sql → この SQL → jagan_02_postcheck_READONLY.sql。
+--   表・権限・RLS の追加。最後に migration 履歴（supabase_migrations.schema_migrations）へ1行を追加する
+--   （既存の docs/sql の適用と同じく version・name を記録。CLI の db push と同じ版番号で、二重適用を防ぐ）。
+-- 【既存の表は上書き・削除しない】3 つの表・jagan_* の表・この版の履歴のどれかが既にあれば、
+--   何も変更せずにエラーで止まる（全体が 1 つのトランザクションなので途中まで作られることもない）。
+--   その場合は jagan_00 の結果を添えて報告し、内容を確かめてから対応を決める。
 -- 【本番では実行しない】本番は、Preview の確認後に Production 用の別ファイルで行う。
 -- 既存の表（ETI の diagnosis_sessions・購入・権利）は読まない・書き換えない・消さない（新しい表の追加だけ）。
 -- 仕様：docs/jagan/spec_v1_0_rc1/API_CONTRACT.md
@@ -31,11 +36,20 @@ begin
      or public.deployment_environment() is distinct from 'preview' then
     raise exception 'not a preview database';
   end if;
+  if to_regclass('public.jagan_results') is not null
+     or to_regclass('public.jagan_shares') is not null
+     or to_regclass('public.jagan_entitlements') is not null
+     or exists (select 1 from pg_class where relnamespace = 'public'::regnamespace and relname like 'jagan\_%') then
+    raise exception 'jagan objects already exist: stop and inspect (nothing was changed)';
+  end if;
+  if exists (select 1 from supabase_migrations.schema_migrations where version = '20261102120000') then
+    raise exception 'migration 20261102120000 is already recorded: stop and inspect (nothing was changed)';
+  end if;
 end
 $$;
 
 -- 1. 本人の保存結果
-create table if not exists public.jagan_results (
+create table public.jagan_results (
   result_id                uuid primary key,
   user_id                  uuid not null references auth.users(id) on delete cascade,
   schema_version           text not null check (schema_version = 'jagan-result-3'),
@@ -51,20 +65,18 @@ create table if not exists public.jagan_results (
   headline                 jsonb not null check (jsonb_typeof(headline) = 'object'),
   created_at               timestamptz not null default now()
 );
-create index if not exists jagan_results_user_created_idx on public.jagan_results (user_id, created_at desc);
+create index jagan_results_user_created_idx on public.jagan_results (user_id, created_at desc);
 revoke all on table public.jagan_results from public, anon, authenticated, service_role;
 grant select, delete on table public.jagan_results to authenticated;
 grant select, insert, delete on table public.jagan_results to service_role;
 alter table public.jagan_results enable row level security;
-drop policy if exists jagan_results_select_own on public.jagan_results;
 create policy jagan_results_select_own on public.jagan_results
   for select to authenticated using ((select auth.uid()) = user_id);
-drop policy if exists jagan_results_delete_own on public.jagan_results;
 create policy jagan_results_delete_own on public.jagan_results
   for delete to authenticated using ((select auth.uid()) = user_id);
 
 -- 2. 公開共有（公開要約だけ）
-create table if not exists public.jagan_shares (
+create table public.jagan_shares (
   public_id                text primary key check (public_id ~ '^[A-Za-z0-9_-]{22}$'),
   result_key               text not null unique check (result_key ~ '^[0-9a-f]{64}$'),
   user_id                  uuid references auth.users(id) on delete cascade,
@@ -74,14 +86,14 @@ create table if not exists public.jagan_shares (
   created_at               timestamptz not null default now(),
   revoked_at               timestamptz
 );
-create index if not exists jagan_shares_user_idx on public.jagan_shares (user_id) where user_id is not null;
+create index jagan_shares_user_idx on public.jagan_shares (user_id) where user_id is not null;
 revoke all on table public.jagan_shares from public, anon, authenticated, service_role;
 grant select, insert, update on table public.jagan_shares to service_role;
 alter table public.jagan_shares enable row level security;
 -- ポリシーは作らない（service_role は RLS を迂回する。anon・authenticated は権限なし）
 
 -- 3. 邪眼解析レポートの購入権限（土台。販売開始まで行は作らない）
-create table if not exists public.jagan_entitlements (
+create table public.jagan_entitlements (
   id            uuid primary key default gen_random_uuid(),
   user_id       uuid not null references auth.users(id) on delete restrict,
   result_id     uuid not null references public.jagan_results(result_id) on delete restrict,
@@ -94,7 +106,6 @@ revoke all on table public.jagan_entitlements from public, anon, authenticated, 
 grant select on table public.jagan_entitlements to authenticated;
 grant select, insert, update on table public.jagan_entitlements to service_role;
 alter table public.jagan_entitlements enable row level security;
-drop policy if exists jagan_entitlements_select_own on public.jagan_entitlements;
 create policy jagan_entitlements_select_own on public.jagan_entitlements
   for select to authenticated using ((select auth.uid()) = user_id);
 
@@ -119,7 +130,6 @@ end
 $$;
 
 insert into supabase_migrations.schema_migrations (version, name)
-values ('20261102120000', 'jagan_01_results_shares')
-on conflict (version) do nothing;
+values ('20261102120000', 'jagan_01_results_shares');
 
 commit;
