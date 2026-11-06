@@ -237,3 +237,17 @@ test('配信：Mini のページと JS は許可リストにあり、正本 JSON
   }
   assert.ok(B.forbiddenIn(['docs/eti-mini/handoff_v1/data/eti_mini_758_5star_280_mapping.json']).length > 0);
 });
+
+test('mini.html：本家と同じ夜の背景、1問ずつのページ送り（端末の戻るにも対応・動きを減らす設定に配慮）', () => {
+  const html = read('mini.html');
+  assert.match(html, /\/assets\/backgrounds\/quiet-starry-lake\.jpg/);
+  assert.match(html, /IM Fell English/);
+  assert.match(html, /id="pCover"/);
+  assert.match(html, /id="pQuestion"/);
+  assert.match(html, /id="pChar"/);
+  assert.match(html, /history\.pushState/);
+  assert.match(html, /popstate/);
+  assert.match(html, /prefers-reduced-motion/);
+  const B = require('../scripts/build-public.js');
+  assert.ok(B.PUBLIC_FILES.includes('assets/backgrounds/quiet-starry-lake.jpg'));
+});
