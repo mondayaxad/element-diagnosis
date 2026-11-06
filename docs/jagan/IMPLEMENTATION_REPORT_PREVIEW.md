@@ -90,3 +90,22 @@
 - 共有文：「邪眼診断をやってみました。／私の結果は【水 × 依存】／最も近しいファトゥス：…（…%一致）／URL／#邪眼診断 #HYDP #人物名」。人物を保留した結果は人物の行とハッシュタグを省く。
 - 共有URL：元素診断の /api/share と同じく、公開してよい値だけを URL に載せる `/jagan/share?e=…&t=…&c=…&m=…&v=…`（DB 不要。共有ページが OGP のメタタグを返す）。値は許可された ID から解決し、不正な値は 404。回答・12特性の得点・結果IDは載せない。
 - この方式の共有URLは取り消せない（方法説明に明記）。DB を使う共有（/jagan/s/<公開ID>・取り消し可）の API は残しているが、画面からは使っていない。
+
+## 2026-11-06 確認記録
+
+### ロック解除の背景（モザイク）
+- 背景に敷く得点は固定の見本値（`PREVIEW_SCORES`・一致度 `PREVIEW_MATCH`=72）。本人の得点は使わない。
+- `scripts/jagan-mosaic-check.mjs`：無作為な200件の回答で、3つの土台のモザイクは全件で同一（1通り）、人物のモザイクは人物ごとに同一（人物ID・公開の文言だけで決まる）。
+  有料部分の表示（rp-bar・レーダー・「あなた NN／参照 NN」）はモザイクの外に出ない。結果：`evidence/20261106_mosaic_check.txt`。
+- `/api/jagan-report` は販売前は誰にも本文を返さない（403 `sales_closed`）。購入前も 403 `not_purchased`（tests/jagan.test.mjs）。
+
+### 元素診断の既存テストの失敗（今回の変更とは無関係）
+- `tests/save_cta_placement_ui.test.js` の「Google・X の認証から戻ったマイページ…」が 700ms の待機で失敗する。
+- 変更前の `release-c-preview`（5a0cf8b）単体でも同じテストが同じ失敗（pass 33 / fail 1）：`evidence/20261106_save_cta_base_release-c-preview_5a0cf8b.txt`。
+- 今回のブランチ（1d751cb）も同じ1件だけ：`evidence/20261106_save_cta_jagan-preview_1d751cb.txt`。
+- 邪眼診断の検査（tests/jagan.test.mjs）は 35/35 合格。
+
+### Preview DB への適用（未完了）
+- 2026-11-05：SQL 実行の承認が時間切れで取り消し（実行前。直前の確認では jagan 表は0件、最新の履歴は 20261021200000）。
+- 2026-11-06：再確認しようとしたが、Preview DB への接続が `password authentication failed`（postgres・読み取り専用ユーザーとも）で失敗し、状態を読めない。
+  DB の状態を確かめられないため、SQL の実行と release-c-preview へのマージは保留。
