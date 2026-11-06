@@ -14,8 +14,24 @@ function h(type, props, ...children) {
 const box = (style, ...children) => h('div', { style: { display: 'flex', ...style } }, ...children);
 const abs = (style, ...children) => box({ position: 'absolute', ...style }, ...children);
 
+// 「・」（中黒）は同梱フォントに無いので、文字の代わりに小さな丸を描く（元素診断 Mini の「ナド・クライ」）。
+// 「・」を含まない文字列はそのまま返す（本家の画像は従来と同じツリー）
+function withDots(text, size, color) {
+  const s = String(text);
+  if (s.indexOf('・') < 0) return s;
+  const d = Math.max(3, Math.round(size * 0.2));
+  const parts = s.split('・');
+  const out = [];
+  parts.forEach((p, i) => {
+    if (i > 0) out.push(box({ width: d, height: d, borderRadius: 999, background: color, margin: `0 ${Math.round(size * 0.3)}px` }));
+    if (p) out.push(p);
+  });
+  return box({ alignItems: 'center' }, ...out);
+}
+
 /**
- * @param {object} d  { code, typeName, element, weapon, nation, mirrorName, mirrorElement, match }
+ * @param {object} d  { code, typeName, element, weapon, nation, mirrorName, mirrorElement, match, mirrorLabel?, brand? }
+ *   mirrorLabel・brand は元素診断 Mini 用（省略時は本家と同じ「最も近しいキャラクター」「元素診断」）。同梱フォントにある文字だけを使うこと
  * @param {object} o  { origin, backgroundUrl, showBackground=true, fontSerif, fontSans, part='all', baseUrl }
  *   正式背景（元素別JPEG）には円環・ノード・中央光が描き込まれているため、背景を使う場合は
  *   円環SVGと元素光のにじみを重ねない（二重描画しない）。背景なし（fallback）のときだけSVGで描く。
@@ -45,7 +61,7 @@ export function buildOgpCardTree(d, o = {}) {
 
   const bandStyle = { left: 0, bottom: 0, width: L.width, height: L.band.height, alignItems: 'center', justifyContent: 'center',
     background: OGP_COLORS.bandBg, borderTop: '1px solid rgba(150,180,235,.14)', fontSize: L.band.size, letterSpacing: 2, color: OGP_COLORS.bandText, fontFamily: serif };
-  const bandText = `元素診断 — 私の結果は【${d.element} × ${d.weapon} × ${d.nation}】`;
+  const bandText = `${d.brand || '元素診断'} — 私の結果は【${d.element} × ${d.weapon} × ${d.nation}】`;
 
   if (part === 'overlay') {
     // 下地の上に人ごとの情報だけ。下帯は地と線を下地に任せ、同じ箱（線は透明で幅を保つ）に文字だけ置く
@@ -54,7 +70,7 @@ export function buildOgpCardTree(d, o = {}) {
       d.mirrorName && o.mirrorPlateUrl ? h('img', { src: o.mirrorPlateUrl, width: L.mirror.width, height: L.mirror.height,
         style: { position: 'absolute', top: L.mirror.top, left: L.padLeft, width: L.mirror.width, height: L.mirror.height } }) : null,
       ...personLayers(),
-      abs({ ...bandStyle, background: 'transparent', borderTop: '1px solid rgba(0,0,0,0)' }, bandText),
+      abs({ ...bandStyle, background: 'transparent', borderTop: '1px solid rgba(0,0,0,0)' }, withDots(bandText, L.band.size, OGP_COLORS.bandText)),
     );
   }
 
@@ -64,14 +80,14 @@ export function buildOgpCardTree(d, o = {}) {
     abs({ top: L.tags.top, left: L.padLeft, gap: L.tags.gap },
       box(tagStyle(t.accent, t.accent + '66'), d.element),
       box(tagStyle(OGP_COLORS.weapon, 'rgba(195,205,220,.34)'), d.weapon),
-      box(tagStyle(OGP_COLORS.nation, 'rgba(224,200,144,.40)'), d.nation),
+      box(tagStyle(OGP_COLORS.nation, 'rgba(224,200,144,.40)'), withDots(d.nation, L.tags.size, OGP_COLORS.nation)),
     ),
     d.mirrorName ? abs({ top: L.mirror.top, left: L.padLeft, width: L.mirror.width, height: L.mirror.height, padding: `0 ${L.mirror.padX}px`,
       alignItems: 'center', justifyContent: 'space-between',
       // 札（事前生成）を下に置く時は、地・光を描かず、枠は透明で幅だけ保つ（文字の位置を変えない）
       ...(part === 'overlay' && o.mirrorPlateUrl ? { border: '1px solid rgba(0,0,0,0)' } : mirrorPlateStyle(charTheme)) },
       box({ flexDirection: 'column' },
-        box({ fontSize: L.mirror.labelSize, letterSpacing: 3, color: OGP_COLORS.label, marginBottom: 6, fontFamily: serif }, '最も近しいキャラクター'),
+        box({ fontSize: L.mirror.labelSize, letterSpacing: 3, color: OGP_COLORS.label, marginBottom: 6, fontFamily: serif }, d.mirrorLabel || '最も近しいキャラクター'),
         box({ fontSize: L.mirror.nameSize, fontWeight: 700, fontFamily: serif, color: charTheme.accent, letterSpacing: 2 }, d.mirrorName),
       ),
       d.match !== undefined && d.match !== '' ? box({ alignItems: 'baseline', color: ms.color, textShadow: `0 0 18px ${ms.glow}`, fontFamily: serif },
@@ -106,7 +122,7 @@ export function buildOgpCardTree(d, o = {}) {
       textShadow: `0 0 26px ${t.glow}` }, d.code),
     abs({ top: L.typeName.top, left: L.padLeft, fontSize: L.typeName.size, lineHeight: 1.2, letterSpacing: 6, fontWeight: 700, fontFamily: serif, color: OGP_COLORS.typeName }, d.typeName),
     ...(drawPerson ? personLayers() : []),
-    drawPerson ? abs(bandStyle, bandText) : abs(bandStyle),
+    drawPerson ? abs(bandStyle, withDots(bandText, L.band.size, OGP_COLORS.bandText)) : abs(bandStyle),
   );
 }
 

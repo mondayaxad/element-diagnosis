@@ -54,3 +54,23 @@ export function canonicalShareP(p) {
 export function packShareParams(el, w, nat, charIdx, match) {
   return ((PACK_ELEMENTS.indexOf(el) << 20) | (PACK_WEAPONS.indexOf(w) << 17) | (PACK_NATIONS.indexOf(nat) << 14) | (charIdx << 7) | match).toString(36);
 }
+
+// ---- 元素診断 Mini のシェア（m1）。js/eti_mini_share.js と同じ計算（tests/eti_mini_share.test.js が全件で一致を確かめる） ----
+// 結果の元素・武器・国家、表示するキャラクター（CHAR_NAMES の番号）、本人が選んだか（0/1）を混合基数で1つの整数にし、36進の小文字で表す。
+// 一致率は含めない（Mini では表示しない）。範囲外・先頭の0・大文字は受け付けない（正規形だけ）
+export const MINI_CHAR_COUNT = 118;
+export function packMiniShare(el, w, nat, charIdx, userPicked) {
+  const e = PACK_ELEMENTS.indexOf(el), wi = PACK_WEAPONS.indexOf(w), n = PACK_NATIONS.indexOf(nat);
+  if (e < 0 || wi < 0 || n < 0 || !Number.isInteger(charIdx) || charIdx < 0 || charIdx >= MINI_CHAR_COUNT) return null;
+  return ((((e * 5 + wi) * 8 + n) * 2 + (userPicked ? 1 : 0)) * MINI_CHAR_COUNT + charIdx).toString(36);
+}
+export function unpackMiniShare(s) {
+  if (typeof s !== 'string' || !/^[0-9a-z]{1,4}$/.test(s)) return null;
+  let v = parseInt(s, 36);
+  if (!(v >= 0 && v < 7 * 5 * 8 * 2 * MINI_CHAR_COUNT) || v.toString(36) !== s) return null;
+  const charIdx = v % MINI_CHAR_COUNT; v = (v - charIdx) / MINI_CHAR_COUNT;
+  const picked = v % 2; v = (v - picked) / 2;
+  const n = v % 8; v = (v - n) / 8;
+  const wi = v % 5; v = (v - wi) / 5;
+  return { el: PACK_ELEMENTS[v], w: PACK_WEAPONS[wi], nat: PACK_NATIONS[n], charIdx, userPicked: picked === 1 };
+}

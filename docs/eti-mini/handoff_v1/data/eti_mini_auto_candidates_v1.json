@@ -1,0 +1,411 @@
+{
+  "rule": "5-star playable characters first released up to and including Ver.7.0, excluding Traveler, Doll, Aloy",
+  "count": 66,
+  "source_index": "index (13).html CHARACTERS",
+  "candidate_names": [
+    "スカーク",
+    "ニコ",
+    "ドゥリン",
+    "ジン",
+    "アルベド",
+    "ディルック",
+    "ファルカ",
+    "エウルア",
+    "ローエン",
+    "クレー",
+    "モナ",
+    "ウェンティ",
+    "刻晴",
+    "七七",
+    "茲白",
+    "胡桃",
+    "魈",
+    "申鶴",
+    "鍾離",
+    "閑雲",
+    "白朮",
+    "夜蘭",
+    "甘雨",
+    "神里綾人",
+    "楓原万葉",
+    "神里綾華",
+    "千織",
+    "荒瀧一斗",
+    "雷電将軍",
+    "珊瑚宮心海",
+    "夢見月瑞希",
+    "八重神子",
+    "宵宮",
+    "ニィロウ",
+    "アルハイゼン",
+    "ディシア",
+    "セノ",
+    "放浪者",
+    "ナヒーダ",
+    "ティナリ",
+    "フリーナ",
+    "クロリンデ",
+    "ナヴィア",
+    "エミリエ",
+    "エスコフィエ",
+    "ヌヴィレット",
+    "リオセスリ",
+    "リネ",
+    "シグウィン",
+    "シロネン",
+    "マーヴィカ",
+    "キィニチ",
+    "ムアラニ",
+    "ヴァレサ",
+    "シトラリ",
+    "チャスカ",
+    "イネファ",
+    "フリンズ",
+    "コロンビーナ",
+    "ラウマ",
+    "ネフェル",
+    "リンネア",
+    "サンドローネ",
+    "アルレッキーノ",
+    "タルタリヤ",
+    "オデット"
+  ],
+  "candidates": [
+    {
+      "name": "スカーク",
+      "element": "氷",
+      "weapon": "片手剣"
+    },
+    {
+      "name": "ニコ",
+      "element": "炎",
+      "weapon": "法器"
+    },
+    {
+      "name": "ドゥリン",
+      "element": "炎",
+      "weapon": "片手剣"
+    },
+    {
+      "name": "ジン",
+      "element": "風",
+      "weapon": "片手剣"
+    },
+    {
+      "name": "アルベド",
+      "element": "岩",
+      "weapon": "片手剣"
+    },
+    {
+      "name": "ディルック",
+      "element": "炎",
+      "weapon": "両手剣"
+    },
+    {
+      "name": "ファルカ",
+      "element": "風",
+      "weapon": "両手剣"
+    },
+    {
+      "name": "エウルア",
+      "element": "氷",
+      "weapon": "両手剣"
+    },
+    {
+      "name": "ローエン",
+      "element": "氷",
+      "weapon": "長柄"
+    },
+    {
+      "name": "クレー",
+      "element": "炎",
+      "weapon": "法器"
+    },
+    {
+      "name": "モナ",
+      "element": "水",
+      "weapon": "法器"
+    },
+    {
+      "name": "ウェンティ",
+      "element": "風",
+      "weapon": "弓"
+    },
+    {
+      "name": "刻晴",
+      "element": "雷",
+      "weapon": "片手剣"
+    },
+    {
+      "name": "七七",
+      "element": "氷",
+      "weapon": "片手剣"
+    },
+    {
+      "name": "茲白",
+      "element": "岩",
+      "weapon": "片手剣"
+    },
+    {
+      "name": "胡桃",
+      "element": "炎",
+      "weapon": "長柄"
+    },
+    {
+      "name": "魈",
+      "element": "風",
+      "weapon": "長柄"
+    },
+    {
+      "name": "申鶴",
+      "element": "氷",
+      "weapon": "長柄"
+    },
+    {
+      "name": "鍾離",
+      "element": "岩",
+      "weapon": "長柄"
+    },
+    {
+      "name": "閑雲",
+      "element": "風",
+      "weapon": "法器"
+    },
+    {
+      "name": "白朮",
+      "element": "草",
+      "weapon": "法器"
+    },
+    {
+      "name": "夜蘭",
+      "element": "水",
+      "weapon": "弓"
+    },
+    {
+      "name": "甘雨",
+      "element": "氷",
+      "weapon": "弓"
+    },
+    {
+      "name": "神里綾人",
+      "element": "水",
+      "weapon": "片手剣"
+    },
+    {
+      "name": "楓原万葉",
+      "element": "風",
+      "weapon": "片手剣"
+    },
+    {
+      "name": "神里綾華",
+      "element": "氷",
+      "weapon": "片手剣"
+    },
+    {
+      "name": "千織",
+      "element": "岩",
+      "weapon": "片手剣"
+    },
+    {
+      "name": "荒瀧一斗",
+      "element": "岩",
+      "weapon": "両手剣"
+    },
+    {
+      "name": "雷電将軍",
+      "element": "雷",
+      "weapon": "長柄"
+    },
+    {
+      "name": "珊瑚宮心海",
+      "element": "水",
+      "weapon": "法器"
+    },
+    {
+      "name": "夢見月瑞希",
+      "element": "風",
+      "weapon": "法器"
+    },
+    {
+      "name": "八重神子",
+      "element": "雷",
+      "weapon": "法器"
+    },
+    {
+      "name": "宵宮",
+      "element": "炎",
+      "weapon": "弓"
+    },
+    {
+      "name": "ニィロウ",
+      "element": "水",
+      "weapon": "片手剣"
+    },
+    {
+      "name": "アルハイゼン",
+      "element": "草",
+      "weapon": "片手剣"
+    },
+    {
+      "name": "ディシア",
+      "element": "炎",
+      "weapon": "両手剣"
+    },
+    {
+      "name": "セノ",
+      "element": "雷",
+      "weapon": "長柄"
+    },
+    {
+      "name": "放浪者",
+      "element": "風",
+      "weapon": "法器"
+    },
+    {
+      "name": "ナヒーダ",
+      "element": "草",
+      "weapon": "法器"
+    },
+    {
+      "name": "ティナリ",
+      "element": "草",
+      "weapon": "弓"
+    },
+    {
+      "name": "フリーナ",
+      "element": "水",
+      "weapon": "片手剣"
+    },
+    {
+      "name": "クロリンデ",
+      "element": "雷",
+      "weapon": "片手剣"
+    },
+    {
+      "name": "ナヴィア",
+      "element": "岩",
+      "weapon": "両手剣"
+    },
+    {
+      "name": "エミリエ",
+      "element": "草",
+      "weapon": "長柄"
+    },
+    {
+      "name": "エスコフィエ",
+      "element": "氷",
+      "weapon": "長柄"
+    },
+    {
+      "name": "ヌヴィレット",
+      "element": "水",
+      "weapon": "法器"
+    },
+    {
+      "name": "リオセスリ",
+      "element": "氷",
+      "weapon": "法器"
+    },
+    {
+      "name": "リネ",
+      "element": "炎",
+      "weapon": "弓"
+    },
+    {
+      "name": "シグウィン",
+      "element": "水",
+      "weapon": "弓"
+    },
+    {
+      "name": "シロネン",
+      "element": "岩",
+      "weapon": "片手剣"
+    },
+    {
+      "name": "マーヴィカ",
+      "element": "炎",
+      "weapon": "両手剣"
+    },
+    {
+      "name": "キィニチ",
+      "element": "草",
+      "weapon": "両手剣"
+    },
+    {
+      "name": "ムアラニ",
+      "element": "水",
+      "weapon": "法器"
+    },
+    {
+      "name": "ヴァレサ",
+      "element": "雷",
+      "weapon": "法器"
+    },
+    {
+      "name": "シトラリ",
+      "element": "氷",
+      "weapon": "法器"
+    },
+    {
+      "name": "チャスカ",
+      "element": "風",
+      "weapon": "弓"
+    },
+    {
+      "name": "イネファ",
+      "element": "雷",
+      "weapon": "両手剣"
+    },
+    {
+      "name": "フリンズ",
+      "element": "雷",
+      "weapon": "長柄"
+    },
+    {
+      "name": "コロンビーナ",
+      "element": "水",
+      "weapon": "法器"
+    },
+    {
+      "name": "ラウマ",
+      "element": "草",
+      "weapon": "法器"
+    },
+    {
+      "name": "ネフェル",
+      "element": "草",
+      "weapon": "法器"
+    },
+    {
+      "name": "リンネア",
+      "element": "岩",
+      "weapon": "弓"
+    },
+    {
+      "name": "サンドローネ",
+      "element": "氷",
+      "weapon": "両手剣"
+    },
+    {
+      "name": "アルレッキーノ",
+      "element": "炎",
+      "weapon": "長柄"
+    },
+    {
+      "name": "タルタリヤ",
+      "element": "水",
+      "weapon": "弓"
+    },
+    {
+      "name": "オデット",
+      "element": "氷",
+      "weapon": "片手剣"
+    }
+  ],
+  "exclusions": [
+    "主人公",
+    "ドール",
+    "アーロイ"
+  ],
+  "manual_selection": "All 118 characters present in ETI v2 character database; Traveler and Doll absent from source dataset"
+}

@@ -1,0 +1,55 @@
+{
+  "inputs": 280,
+  "characters": 118,
+  "pairs": 33040,
+  "lambda": 0.5,
+  "change_count_by_number_of_axes": {
+    "0": 18870,
+    "1": 11747,
+    "2": 2287,
+    "3": 136
+  },
+  "attribute_changed_counts": {
+    "element": 8840,
+    "weapon": 5824,
+    "nation": 2065
+  },
+  "percent_at_least_one_axis_changed": 42.887,
+  "answer_combos_where_character_choice_changes_some_result": 280,
+  "weight_sensitivity_pct": {
+    "0.4": 13.511,
+    "0.45": 24.401,
+    "0.5": 42.887,
+    "0.55": 60.705,
+    "0.6": 72.83
+  },
+  "sample": [
+    {
+      "character": "嘉明",
+      "result": {
+        "element": "炎",
+        "weapon": "片手剣",
+        "nation": "モンド"
+      }
+    },
+    {
+      "character": "ディシア",
+      "result": {
+        "element": "炎",
+        "weapon": "片手剣",
+        "nation": "モンド"
+      }
+    },
+    {
+      "character": "辛炎",
+      "result": {
+        "element": "炎",
+        "weapon": "片手剣",
+        "nation": "モンド"
+      }
+    }
+  ],
+  "character_coordinate_version": "ETI-CHAR-2.1.0",
+  "prototype_version": "ETI-TRANS-2.0.0",
+  "tie_break": "prototype insertion order stable"
+}
