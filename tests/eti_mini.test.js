@@ -14,7 +14,7 @@ const CAND_JSON = JSON.parse(read('docs/eti-mini/handoff_v1/data/eti_mini_auto_c
 const CHARS = require('../js/characters118_v2_1.js');
 
 // 共鳴診断のページ（resonance.html。旧 mini.html）が読み込む JS（この順）
-const PAGE_SCRIPTS = ['js/characters118_v2_1.js', 'js/eti_mini_auto_map_v1.js', 'js/eti_v2_prototypes.js', 'js/eti_mini_choices_v1.js', 'js/eti_mini_core.js', 'js/eti_mini_share.js', 'js/resonance_candidates.js'];
+const PAGE_SCRIPTS = ['js/characters118_v2_1.js', 'js/eti_mini_auto_map_v1.js', 'js/eti_v2_prototypes.js', 'js/eti_mini_choices_v1.js', 'js/eti_mini_core.js', 'js/eti_mini_share.js', 'js/type_reading_chars.js', 'js/resonance_candidates.js'];
 // 試験用の読み込み：ページと同じ JS に、保存しておく 50:50 の結合エンジン（共鳴診断のページは読み込まない）を足したもの
 const MINI_SCRIPTS = ['js/characters118_v2_1.js', 'js/eti_mini_auto_map_v1.js', 'js/eti_v2_prototypes.js', 'js/eti_mini_choices_v1.js', 'js/eti_mini_core.js', 'js/eti_mini_manual_v1.js'];
 function loadMini({ withManual = true } = {}) {

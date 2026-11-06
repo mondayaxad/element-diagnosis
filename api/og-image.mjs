@@ -148,6 +148,9 @@ async function resonanceImage(m2, searchParams, origin) {
     match: '',
     pair,
     brand: '共鳴診断 RESONANCE',
+    // 上部の見出しは「共鳴診断 — MY RESULT」。下地は共鳴診断用（assets/ogp/bases-resonance/。scripts/build-ogp-bases.mjs --resonance）
+    header: '共鳴診断 — MY RESULT',
+    baseDir: 'bases-resonance',
   };
   return renderCard(data, origin);
 }
@@ -158,7 +161,7 @@ async function renderCard(data, origin) {
   const fontOpts = { fontSerif: 'Noto Serif JP', fontSans: 'Noto Serif JP' };
 
   // 下地（タイプ別・事前生成）があれば、人ごとの情報だけを重ねる
-  const baseUrl = await fetchImageDataUri(`${origin}/assets/ogp/bases/${code}.jpg`);
+  const baseUrl = await fetchImageDataUri(`${origin}/assets/ogp/${data.baseDir || 'bases'}/${code}.jpg`);
   let tree, render;
   if (baseUrl) {
     // MIRROR 欄の地・枠・内側の光も事前生成の札（キャラクターの元素ごと）。取れなければその場で描く

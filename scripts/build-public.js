@@ -76,7 +76,7 @@ const PUBLIC_FILES = [
   'js/eti_mini_choices_v1.js',                                // 同・3問20択の正式文言（scripts/build-eti-mini-data.js が正本 JSON から生成）
   'js/eti_mini_manual_v1.js',                                 // 同・キャラクター手動選択時の再判定（ETI-MINI-MANUAL-1.0.0・50:50）
   'js/eti_mini_share.js',                                     // 同・シェアの短い符号（m1：旧 Mini・/resonance?s=、m2：共鳴診断・/resonance?r=。/api/share・/api/og-image と同じ計算）
-  'js/resonance_candidates.js',                               // 同・SELF IMAGE の候補の出し方（差し替え可能。現在は暫定＝118名すべて）
+  'js/resonance_candidates.js',                               // 同・SELF IMAGE の候補（3つの答えの 758 で現れる人物＝js/type_reading_chars.js。差し替え可能）
 ];
 // ディレクトリ直下の指定拡張子だけ（再帰しない）
 const PUBLIC_DIRS = [
@@ -88,6 +88,7 @@ const PUBLIC_DIRS = [
   { dir: 'assets/ogp/backgrounds', ext: '.jpg' },              // api/og-image が自サイトから取得する背景（下地が無い時の描き方）
   { dir: 'assets/ogp/bases', ext: '.jpg' },                    // api/og-image の下地（タイプ別35枚。scripts/build-ogp-bases.mjs）
   { dir: 'assets/ogp/bases', ext: '.png' },                    // api/og-image の MIRROR 欄の札（元素別7枚）
+  { dir: 'assets/ogp/bases-resonance', ext: '.jpg' },          // 同・共鳴診断（m2）の下地（見出しだけ「共鳴診断 — MY RESULT」。build-ogp-bases.mjs --resonance）
   { dir: 'jagan', ext: '.html' },                              // 邪眼診断（/jagan/・/jagan/about・/jagan/sample）
   { dir: 'jagan', ext: '.mjs' },
   { dir: 'jagan', ext: '.css' },

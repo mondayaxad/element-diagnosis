@@ -166,13 +166,46 @@ test('名称：共鳴診断・RESONANCE・ELEMENT DIAGNOSIS PRESENTS、¥500 の
   assert.match(html, /<h2>回答に映る人物<\/h2>/);
 });
 
-test('候補の差し替え口：暫定は基本候補なし（118名から選ぶ）。差し込んだ候補は名簿にない名前・重複を落とす', () => {
-  const C = require('../js/resonance_candidates.js');
+test('候補：3つの答えの 758 で現れる人物（js/type_reading_chars.js）だけ。280 タイプすべてに 1 人以上、名簿の中。差し替え口は名簿にない名前・重複を落とす', () => {
+  const ctx = {}; ctx.globalThis = ctx; ctx.window = ctx; vm.createContext(ctx);
+  vm.runInContext(['js/type_reading_chars.js', 'js/resonance_candidates.js'].map(read).join('\n;\n'), ctx);
+  const C = ctx.ResonanceCandidates, T = ctx.EdTypeReadingChars;
   const names = CHARS.map((c) => c.name);
-  const a = { element: '炎', weapon: '弓', nation: 'モンド' };
-  assert.deepEqual(C.candidatesFor(a, names), { version: 'RESONANCE-CANDIDATES-INTERIM-0', primary: [] });
-  C.setProvider(() => ({ version: 'TEST', primary: ['ナヒーダ', 'ナヒーダ', '存在しない人', '胡桃'] }));
-  assert.deepEqual(C.candidatesFor(a, names), { version: 'TEST', primary: ['ナヒーダ', '胡桃'] });
+  let total = 0;
+  for (const element of SHARE_CODE.ELEMENTS) for (const weapon of SHARE_CODE.WEAPONS) for (const nation of SHARE_CODE.NATIONS) {
+    const r = C.candidatesFor({ element, weapon, nation }, names);
+    assert.equal(r.version, 'RESONANCE-CANDIDATES-TYPE-1');
+    assert.deepEqual(plain(r.names), plain(T.TYPES[`${element}|${weapon}|${nation}`].map((x) => x[0])));
+    assert.ok(r.names.length >= 1);
+    for (const n of r.names) assert.ok(names.includes(n), n);
+    total++;
+  }
+  assert.equal(total, 280);
+  C.setProvider(() => ({ version: 'TEST', names: ['ナヒーダ', 'ナヒーダ', '存在しない人', '胡桃'] }));
+  assert.deepEqual(plain(C.candidatesFor({ element: '炎', weapon: '弓', nation: 'モンド' }, names)), { version: 'TEST', names: ['ナヒーダ', '胡桃'] });
   C.setProvider(null);
-  assert.deepEqual(C.candidatesFor(a, names).primary, []);
+  assert.equal(C.candidatesFor({ element: '炎', weapon: '弓', nation: 'モンド' }, names).version, 'RESONANCE-CANDIDATES-TYPE-1');
+});
+
+test('画像の見出し：共鳴診断（m2）は「共鳴診断 — MY RESULT」の下地35枚を使い、本家・旧 m1 は従来の「元素診断 — MY RESULT」のまま', async () => {
+  const D = await imp('api/_og-data.mjs');
+  for (const el of D.PACK_ELEMENTS) for (const w of D.PACK_WEAPONS) {
+    const code = D.ELEMENT_CODE[el] + D.WEAPON_CODE[w];
+    assert.ok(fs.existsSync(path.join(ROOT, `assets/ogp/bases-resonance/${code}.jpg`)), code);
+    assert.ok(fs.existsSync(path.join(ROOT, `assets/ogp/bases/${code}.jpg`)), code);
+  }
+  assert.equal(fs.readdirSync(path.join(ROOT, 'assets/ogp/bases-resonance')).length, 35);
+  const B = require('../scripts/build-public.js');
+  assert.ok(B.PUBLIC_DIRS.some((d) => d.dir === 'assets/ogp/bases-resonance' && d.ext === '.jpg'));
+  const src = read('api/og-image.mjs');
+  assert.match(src, /header: '共鳴診断 — MY RESULT',\n    baseDir: 'bases-resonance',/);
+  assert.match(src, /\/assets\/ogp\/\$\{data\.baseDir \|\| 'bases'\}\/\$\{code\}\.jpg/);
+  assert.match(read('scripts/build-ogp-bases.mjs'), /RESONANCE_HEADER = '共鳴診断 — MY RESULT'/);
+  // カードの見出し：省略時は本家と同じ。共鳴診断の値を渡した時だけ変わる（下地が取れず1枚描く時も同じ見出し）
+  const { buildOgpCardTree } = await imp('js/ogp-card.mjs');
+  const texts = (node, out = []) => { if (node == null) return out; if (typeof node === 'string' || typeof node === 'number') { out.push(String(node)); return out; } const k = node.props && node.props.children; (Array.isArray(k) ? k : [k]).forEach((c) => texts(c, out)); return out; };
+  const d = { code: 'HYCT', typeName: '深識者', element: '水', weapon: '法器', nation: 'モンド' };
+  assert.ok(texts(buildOgpCardTree(d, { part: 'base' })).includes('元素診断 — MY RESULT'));
+  assert.ok(texts(buildOgpCardTree({ ...d, header: '共鳴診断 — MY RESULT' }, { part: 'base' })).includes('共鳴診断 — MY RESULT'));
+  assert.ok(!texts(buildOgpCardTree({ ...d, header: '共鳴診断 — MY RESULT' }, { part: 'base' })).includes('元素診断 — MY RESULT'));
 });

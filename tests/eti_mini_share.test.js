@@ -148,17 +148,20 @@ test('結果画面の画像を保存：本家と同じ色・同じ 1080×1080 �
   assert.match(html, /<script src="js\/eti_mini_share\.js"><\/script>/);
 });
 
-test('人物の選択（SELF IMAGE）：判定に使わない申告。暫定の候補は無く、登録 118 名すべて（五十音の行・名前で探せる）、「ほかの人物を見る」の構造', () => {
+test('人物の選択（SELF IMAGE）：判定に使わない申告。候補は 758 で現れる人物だけ（五十音の行・名前で探せる）、「選ばない」は無く1人必須', () => {
   const html = read('resonance.html');
-  assert.match(html, /var ALL_CHARS = ETI_V2_CHARACTERS_2_1_0\.map\(function \(c\) \{ return c\.name; \}\)\n    \.sort\(function \(a, b\) \{ return readingOf\(a\)\.localeCompare\(readingOf\(b\), 'ja'\); \}\);/);
-  const draw = html.slice(html.indexOf('function drawChars()'), html.indexOf("search.addEventListener('input', drawChars);"));
-  assert.ok(draw.length > 100);
-  assert.doesNotMatch(draw, /answers/);
-  assert.match(html, /<input id="charSearch" class="search" type="search"/);
-  assert.match(html, /id="showAllChars"[^>]*>ほかの人物を見る/);
+  assert.match(html, /candidates = c\.names\.slice\(\)\.sort\(function \(a, b\) \{ return readingOf\(a\)\.localeCompare\(readingOf\(b\), 'ja'\); \}\);/);
   assert.match(html, /ResonanceCandidates\.candidatesFor\(answers, ALL_CHARS\)/);
+  assert.match(html, /<script src="js\/type_reading_chars\.js"><\/script>\n<script src="js\/resonance_candidates\.js"><\/script>/);
+  assert.match(html, /<input id="charSearch" class="search" type="search"/);
+  assert.match(html, /<button type="button" class="cta" id="showResult" disabled>結果を見る<\/button>/);
+  assert.match(html, /\$\('showResult'\)\.disabled = !chosen;/);
+  assert.doesNotMatch(html, /showAllChars|ほかの人物を見る|b\.textContent = unknown/); // 118名の一覧・「選ばない」は無い
   assert.match(html, /選んでも、3つの問いの結果は変わりません/);
-  assert.match(html, /M\.resonanceResult\(answers, self\)/);
+  assert.match(html, /M\.resonanceResult\(answers, \{ name: chosen \}\)/);
+  const draw = html.slice(html.indexOf('function drawChars()'), html.indexOf("search.addEventListener('input', drawChars);"));
+  assert.match(draw, /candidates\.filter/);
+  assert.doesNotMatch(draw, /ALL_CHARS/);
   const READING = vm.runInNewContext('(' + /var READING = (\{[\s\S]*?\});/.exec(html)[1] + ')');
   for (const c of CHARS) if (/[^\u30A0-\u30FF]/.test(c.name)) assert.ok(READING[c.name], c.name);
 });

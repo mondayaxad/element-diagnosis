@@ -146,7 +146,6 @@
   .person h2 { font-size: 12px; font-weight: 400; letter-spacing: .14em; color: var(--t-sub); margin: 0 0 8px; }
   .person .mirror-name { font-size: 19px; letter-spacing: .1em; padding-left: .1em; margin: 0; word-break: keep-all; overflow-wrap: anywhere; }
   .price { text-align: center; font-size: 15px; letter-spacing: .12em; color: #d6bd84; margin: 0 0 8px; }
-  .chips.primary { justify-content: center; gap: 6px 8px; }
   .more { text-align: center; border-top: 1px solid rgba(150,180,240,.1); margin: 40px 0 0; padding: 34px 0 0; }
   .more h2 { font-size: 16px; font-weight: 600; letter-spacing: .12em; color: var(--t-head); margin: 0 0 10px; }
   .more p { font-size: 12.5px; color: var(--t-body); line-height: 1.9; margin: 0 0 22px; word-break: auto-phrase; }
@@ -187,19 +186,13 @@
       <div class="steps" aria-hidden="true"><i class="done"></i><i class="done"></i><i class="done"></i></div>
       <span class="spacer" aria-hidden="true"></span>
     </div>
-    <div class="sec-h"><span class="en">Self Image — optional</span><span class="jp">アナタに似ていると思う人物</span></div>
-    <p class="note">自分に似ていると思う人物がいれば、ひとり選んでください。<br>選んでも、3つの問いの結果は変わりません。<br>結果では、選んだ人物と、回答に映る人物を並べて映します。</p>
-    <div id="charPrimary" hidden>
-      <div id="charPrimaryList" class="chips primary" role="group" aria-label="候補の人物"></div>
-      <p style="text-align:center;margin:14px 0 0"><button type="button" class="link" id="showAllChars" aria-expanded="false">ほかの人物を見る <span class="arw">→</span></button></p>
-    </div>
-    <div id="charAll">
-      <label for="charSearch" class="q-no" style="margin-bottom:8px">SEARCH BY NAME</label>
-      <input id="charSearch" class="search" type="search" autocomplete="off" enterkeyhint="search" placeholder="名前で探す（例：なひーだ）" aria-controls="charList">
-      <div id="charList" role="group" aria-label="人物（登録118名・五十音順）"></div>
-    </div>
+    <div class="sec-h"><span class="en">Self Image</span><span class="jp">アナタに似ていると思う人物</span></div>
+    <p class="note">自分に似ていると思う人物を、ひとり選んでください。<br>あなたの3つの答えのタイプに現れる人物から選べます。<br>選んでも、3つの問いの結果は変わりません。</p>
+    <label for="charSearch" class="q-no" style="margin-bottom:8px">SEARCH BY NAME</label>
+    <input id="charSearch" class="search" type="search" autocomplete="off" enterkeyhint="search" placeholder="名前で探す（例：なひーだ）" aria-controls="charList">
+    <div id="charList" role="radiogroup" aria-label="アナタに似ていると思う人物（3つの答えのタイプに現れる人物・五十音順）"></div>
     <div class="actions">
-      <button type="button" class="cta" id="showResult">結果を見る</button>
+      <button type="button" class="cta" id="showResult" disabled>結果を見る</button>
       <p class="msg" id="quizMsg" role="status" aria-live="polite"></p>
     </div>
   </section>
@@ -261,6 +254,7 @@
 <script src="js/eti_mini_choices_v1.js"></script>
 <script src="js/eti_mini_core.js"></script>
 <script src="js/eti_mini_share.js"></script>
+<script src="js/type_reading_chars.js"></script>
 <script src="js/resonance_candidates.js"></script>
 <script>
 (function () {
@@ -336,7 +330,7 @@
       var dots = $('qSteps').children;
       for (var i = 0; i < dots.length; i++) dots[i].className = i < n ? 'done' : (i === n ? 'now' : '');
     }
-    if (step === 'char') { if (!chosen) search.value = ''; drawPrimary(); drawChars(); }
+    if (step === 'char') { loadCandidates(); if (!chosen) search.value = ''; drawChars(); }
     if (step !== 'result') setGlow(null);
   }
   function focusIn(step) {
@@ -384,8 +378,8 @@
   $('cBack').addEventListener('click', function () { history.back(); });
 
   // ---- キャラクター（任意） ----
-  // SELF IMAGE：自分に似ていると思う人物の申告（判定には使わない）。候補の出し方は js/resonance_candidates.js（差し替え可能）。
-  // 「ほかの人物を見る」では登録 118 名すべてを、本家「以前の結果から読む」と同じ五十音の行で並べる（漢字の名前は読みで並べる）。
+  // SELF IMAGE：自分に似ていると思う人物の申告（判定には使わない。必ず1人選ぶ）。候補は js/resonance_candidates.js（差し替え可能）。
+  // 並べ方は本家「以前の結果から読む」と同じ五十音の行（漢字の名前は読みで並べる）。
   var READING = { '嘉明': 'がみん', '辛炎': 'しんえん', '胡桃': 'ふーたお', '香菱': 'しゃんりん', '煙緋': 'えんひ', '宵宮': 'よいみや', '神里綾人': 'かみさとあやと', '行秋': 'ゆくも', '夜蘭': 'いぇらん',
     '珊瑚宮心海': 'さんごのみやここみ', '神里綾華': 'かみさとあやか', '七七': 'なな', '申鶴': 'しぇんは', '甘雨': 'かんう', '刻晴': 'こくせい', '久岐忍': 'くきしのぶ', '雷電将軍': 'らいでんしょうぐん',
     '九条裟羅': 'くじょうさら', '八重神子': 'やえみこ', '北斗': 'ほくと', '楓原万葉': 'かえではらかずは', '早柚': 'さゆ', '放浪者': 'ほうろうしゃ', '閑雲': 'かんうん', '藍硯': 'らんやん',
@@ -396,73 +390,56 @@
   function hira(s) { return String(s).replace(/[ァ-ヶ]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0x60); }); }
   function readingOf(name) { return READING[name] || hira(name); }
   function rowOf(name) { var c = readingOf(name).charAt(0); var r = ROWS.find(function (x) { return x[1].indexOf(c) >= 0; }); return r ? r[0] : '他'; }
-  // 登録 118 名すべて（ETI-CHAR-2.1.0）を五十音の行で並べる。どの3つの答えでも同じ 118 名
-  var ALL_CHARS = ETI_V2_CHARACTERS_2_1_0.map(function (c) { return c.name; })
-    .sort(function (a, b) { return readingOf(a).localeCompare(readingOf(b), 'ja'); });
+  // 名簿（ETI-CHAR-2.1.0 の 118 名）。候補はこの中から、3つの答えの 758 で現れる人物だけ（js/resonance_candidates.js）
+  var ALL_CHARS = ETI_V2_CHARACTERS_2_1_0.map(function (c) { return c.name; });
   // 名前で探す：カタカナ・ひらがな・漢字の読み（ひらがな）のどれでも、空白・「・」の有無を問わず部分一致
   function norm(s) { return hira(String(s || '').normalize('NFKC')).replace(/[\s・･ー\-]/g, ''); }
   var SEARCH_KEY = {};
   ALL_CHARS.forEach(function (n) { SEARCH_KEY[n] = norm(n) + ' ' + norm(readingOf(n)); });
   var list = $('charList'), search = $('charSearch');
+  var candidates = [], candidateVersion = null;
+  // 3つの答えが決まった時に候補を作り直す（五十音で並べる）。答えを変えて候補から外れたら選び直し
+  function loadCandidates() {
+    var c = ResonanceCandidates.candidatesFor(answers, ALL_CHARS);
+    candidateVersion = c.version;
+    candidates = c.names.slice().sort(function (a, b) { return readingOf(a).localeCompare(readingOf(b), 'ja'); });
+    if (chosen && candidates.indexOf(chosen) < 0) chosen = null;
+  }
   function drawChars() {
     var q = norm(search.value);
-    var shown = q ? ALL_CHARS.filter(function (n) { return SEARCH_KEY[n].indexOf(q) >= 0; }) : ALL_CHARS;
+    var shown = q ? candidates.filter(function (n) { return SEARCH_KEY[n].indexOf(q) >= 0; }) : candidates;
     var groups = {};
     shown.forEach(function (n) { var r = rowOf(n); (groups[r] = groups[r] || []).push(n); });
     list.textContent = '';
-    function row(k, names, unknown) {
+    function row(k, names) {
       var div = document.createElement('div'); div.className = 'kana-row';
       var ks = document.createElement('span'); ks.className = 'k'; ks.textContent = k;
       var chips = document.createElement('div'); chips.className = 'chips';
       names.forEach(function (n) {
         var b = document.createElement('button');
-        b.type = 'button'; b.className = 'chip' + (unknown ? ' unknown' : '');
-        b.textContent = unknown ? '選ばない' : n;
-        b.dataset.v = unknown ? '' : n;
-        b.setAttribute('aria-pressed', String(unknown ? !chosen : chosen === n));
+        b.type = 'button'; b.className = 'chip'; b.setAttribute('role', 'radio');
+        b.textContent = n; b.dataset.v = n;
+        b.setAttribute('aria-checked', String(chosen === n)); b.setAttribute('aria-pressed', String(chosen === n));
         chips.appendChild(b);
       });
       div.appendChild(ks); div.appendChild(chips); list.appendChild(div);
     }
     // 選んでいる人物は、検索で絞っても先頭に残す（選んだことが見えるように）
-    if (chosen && shown.indexOf(chosen) < 0) row('選択中', [chosen], false);
-    row('', [''], true);
-    ROWS.map(function (r) { return r[0]; }).concat(['他']).forEach(function (r) { if (groups[r]) row(r, groups[r], false); });
+    if (chosen && shown.indexOf(chosen) < 0) row('選択中', [chosen]);
+    ROWS.map(function (r) { return r[0]; }).concat(['他']).forEach(function (r) { if (groups[r]) row(r, groups[r]); });
     if (q && !shown.length) {
       var p = document.createElement('p'); p.className = 'chars-empty'; p.textContent = '見つかりませんでした'; list.appendChild(p);
     }
+    $('showResult').disabled = !chosen; // 「選ばない」は無い：1人選ぶまで結果へ進めない
   }
   search.addEventListener('input', drawChars);
-  // 基本候補（js/resonance_candidates.js。暫定版は候補なし＝最初から 118 名）
-  var candidateVersion = null;
-  function drawPrimary() {
-    var c = ResonanceCandidates.candidatesFor(answers, ALL_CHARS);
-    candidateVersion = c.version;
-    var box = $('charPrimaryList'); box.textContent = '';
-    c.primary.forEach(function (n) {
-      var b = document.createElement('button');
-      b.type = 'button'; b.className = 'chip'; b.textContent = n; b.dataset.v = n;
-      b.setAttribute('aria-pressed', String(chosen === n));
-      box.appendChild(b);
-    });
-    var hasPrimary = c.primary.length > 0;
-    $('charPrimary').hidden = !hasPrimary;
-    $('charAll').hidden = hasPrimary && !(chosen && c.primary.indexOf(chosen) < 0) && $('showAllChars').getAttribute('aria-expanded') !== 'true';
-  }
-  $('showAllChars').addEventListener('click', function () {
-    var open = $('charAll').hidden;
-    $('charAll').hidden = !open;
-    this.setAttribute('aria-expanded', String(open));
-    if (open) search.focus();
-  });
-  function pick(e) {
+  list.addEventListener('click', function (e) {
     var b = e.target.closest('.chip'); if (!b) return;
-    chosen = b.dataset.v || null;
-    document.querySelectorAll('#pChar .chip').forEach(function (x) { x.setAttribute('aria-pressed', String((x.dataset.v || null) === chosen)); });
+    chosen = b.dataset.v;
+    list.querySelectorAll('.chip').forEach(function (x) { var on = x.dataset.v === chosen; x.setAttribute('aria-checked', String(on)); x.setAttribute('aria-pressed', String(on)); });
+    $('showResult').disabled = false;
     $('quizMsg').textContent = '';
-  }
-  list.addEventListener('click', pick);
-  $('charPrimaryList').addEventListener('click', pick);
+  });
   function choose(name) { chosen = name || null; }
 
   // ---- 結果 ----
@@ -495,8 +472,9 @@
     if (busy) return;
     if (!complete()) { go('q' + firstUnanswered(), false); return; }
     try {
-      var self = chosen && CHAR_INDEX[chosen] !== undefined ? { name: chosen } : null;
-      var r = M.resonanceResult(answers, self);
+      // アナタが選んだ人物は必須（候補の中から1人）
+      if (!chosen || candidates.indexOf(chosen) < 0 || CHAR_INDEX[chosen] === undefined) { $('quizMsg').textContent = '似ていると思う人物を、ひとり選んでください。'; return; }
+      var r = M.resonanceResult(answers, { name: chosen });
       r.versions.candidates = candidateVersion;
       fill(r);
       go('result', true);
