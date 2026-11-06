@@ -15,7 +15,8 @@ const box = (style, ...children) => h('div', { style: { display: 'flex', ...styl
 const abs = (style, ...children) => box({ position: 'absolute', ...style }, ...children);
 
 /**
- * @param {object} d  { code, typeName, element, weapon, nation, mirrorName, mirrorElement, match }
+ * @param {object} d  { code, typeName, element, weapon, nation, mirrorName, mirrorElement, match, mirrorLabel?, brand? }
+ *   mirrorLabel・brand は元素診断 Mini 用（省略時は本家と同じ「最も近しいキャラクター」「元素診断」）。同梱フォントにある文字だけを使うこと
  * @param {object} o  { origin, backgroundUrl, showBackground=true, fontSerif, fontSans, part='all', baseUrl }
  *   正式背景（元素別JPEG）には円環・ノード・中央光が描き込まれているため、背景を使う場合は
  *   円環SVGと元素光のにじみを重ねない（二重描画しない）。背景なし（fallback）のときだけSVGで描く。
@@ -45,7 +46,7 @@ export function buildOgpCardTree(d, o = {}) {
 
   const bandStyle = { left: 0, bottom: 0, width: L.width, height: L.band.height, alignItems: 'center', justifyContent: 'center',
     background: OGP_COLORS.bandBg, borderTop: '1px solid rgba(150,180,235,.14)', fontSize: L.band.size, letterSpacing: 2, color: OGP_COLORS.bandText, fontFamily: serif };
-  const bandText = `元素診断 — 私の結果は【${d.element} × ${d.weapon} × ${d.nation}】`;
+  const bandText = `${d.brand || '元素診断'} — 私の結果は【${d.element} × ${d.weapon} × ${d.nation}】`;
 
   if (part === 'overlay') {
     // 下地の上に人ごとの情報だけ。下帯は地と線を下地に任せ、同じ箱（線は透明で幅を保つ）に文字だけ置く
@@ -71,7 +72,7 @@ export function buildOgpCardTree(d, o = {}) {
       // 札（事前生成）を下に置く時は、地・光を描かず、枠は透明で幅だけ保つ（文字の位置を変えない）
       ...(part === 'overlay' && o.mirrorPlateUrl ? { border: '1px solid rgba(0,0,0,0)' } : mirrorPlateStyle(charTheme)) },
       box({ flexDirection: 'column' },
-        box({ fontSize: L.mirror.labelSize, letterSpacing: 3, color: OGP_COLORS.label, marginBottom: 6, fontFamily: serif }, '最も近しいキャラクター'),
+        box({ fontSize: L.mirror.labelSize, letterSpacing: 3, color: OGP_COLORS.label, marginBottom: 6, fontFamily: serif }, d.mirrorLabel || '最も近しいキャラクター'),
         box({ fontSize: L.mirror.nameSize, fontWeight: 700, fontFamily: serif, color: charTheme.accent, letterSpacing: 2 }, d.mirrorName),
       ),
       d.match !== undefined && d.match !== '' ? box({ alignItems: 'baseline', color: ms.color, textShadow: `0 0 18px ${ms.glow}`, fontFamily: serif },

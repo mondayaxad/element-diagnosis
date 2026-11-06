@@ -21,7 +21,7 @@ import { buildOgpCardTree } from '../js/ogp-card.mjs';
 import { ELEMENT_KEY } from '../js/ogp-theme.mjs';
 import { CHAR_ELEMENT } from './_ogp-char-element.mjs';
 import { OG_FONT_WOFF_BASE64 } from './_og-font.mjs';
-import { ELEMENT_CODE, WEAPON_CODE, TYPE_NAME, ELEMENT_NAME, WEAPON_NAME, NATION_NAME, CHAR_NAMES, unpackShareParams, canonicalShareP, packShareParams } from './_og-data.mjs';
+import { ELEMENT_CODE, WEAPON_CODE, TYPE_NAME, ELEMENT_NAME, WEAPON_NAME, NATION_NAME, CHAR_NAMES, unpackShareParams, canonicalShareP, packShareParams, unpackMiniShare } from './_og-data.mjs';
 
 export const config = { runtime: 'edge' };
 
@@ -58,6 +58,9 @@ export default async function handler(req) {
   const reqUrl = new URL(req.url);
   const { searchParams } = reqUrl;
   const origin = reqUrl.origin;
+  // 元素診断 Mini（m1）：同じ描き方（下地・札・同梱フォント・長期キャッシュ）で、一致率なし・見出しだけ Mini 用
+  const mini = searchParams.get('m1');
+  if (mini !== null) return miniImage(mini, searchParams, origin);
   let el, w, nat, charIdx, match;
   const packed = searchParams.get('p');
   if (packed !== null) {
@@ -99,7 +102,31 @@ export default async function handler(req) {
     mirrorElement: CHAR_ELEMENT[charName] || el,
     match: matchText,
   };
+  return renderCard(data, origin);
+}
 
+// 元素診断 Mini のシェア画像。m1 は正規形だけ（js/eti_mini_share.js と同じ符号）。余分なパラメータは正規形の URL へ転送する
+async function miniImage(m1, searchParams, origin) {
+  const u = unpackMiniShare(m1);
+  if (!u || !CHAR_NAMES[u.charIdx]) return new Response('invalid', { status: 400, headers: { 'Cache-Control': 'public, max-age=86400, s-maxage=86400' } });
+  if ([...searchParams.keys()].some((k) => k !== 'm1')) {
+    return new Response(null, { status: 308, headers: { Location: `${origin}/api/og-image?m1=${m1}`, ...CACHE_HEADERS } });
+  }
+  const charName = CHAR_NAMES[u.charIdx];
+  const data = {
+    code: ELEMENT_CODE[u.el] + WEAPON_CODE[u.w], typeName: TYPE_NAME[u.el][u.w], element: u.el, weapon: u.w, nation: u.nat,
+    mirrorName: charName,
+    mirrorElement: CHAR_ELEMENT[charName] || u.el,
+    match: '', // Mini は一致率を出さない
+    // 同梱フォント（必要な文字だけ）にある文字で書く：本人が選んだキャラは「私のキャラクター」、自動は本家と同じ見出し
+    mirrorLabel: u.userPicked ? '私のキャラクター' : '最も近しいキャラクター',
+    brand: '元素診断 MINI',
+  };
+  return renderCard(data, origin);
+}
+
+async function renderCard(data, origin) {
+  const el = data.element, code = data.code, charName = data.mirrorName;
   const fonts = [{ name: 'Noto Serif JP', data: loadFont(), weight: 700, style: 'normal' }];
   const fontOpts = { fontSerif: 'Noto Serif JP', fontSans: 'Noto Serif JP' };
 

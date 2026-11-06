@@ -201,12 +201,12 @@ test('不正な入力：結果を出さずに止める', () => {
   assert.throws(() => MAN.computeManual(ok, ch, null), (e) => e.code === 'PROTOTYPES_MISSING');
 });
 
-test('手動選択の候補：登録118名、表示名・検索用の正規化名とも重複なし', () => {
+test('手動選択の対象：登録118名、表示名・正規化名とも重複なし、全員で判定できる', () => {
   assert.equal(CHARS.length, 118);
   assert.equal(new Set(CHARS.map((c) => c.name)).size, 118);
   const norm = (s) => String(s).normalize('NFKC').replace(/[ぁ-ゖ]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) + 0x60)).replace(/[\s・･]/g, '');
   assert.equal(new Set(CHARS.map((c) => norm(c.name))).size, 118);
   for (const c of CHARS) assert.equal(c.profile_version, 'ETI-CHAR-2.1.0');
-  // mini.html の検索と同じ正規化
-  assert.ok(read('mini.html').includes("normalize('NFKC')"));
+  // 手動選択の判定は 118 名のどれでも計算できる（画面では、3つの答えのタイプで現れるキャラクターに絞って並べる）
+  for (const c of CHARS) assert.ok(MAN.computeManual({ element: '炎', weapon: '弓', nation: 'モンド' }, c, PROTOS).element);
 });

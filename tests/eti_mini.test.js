@@ -227,7 +227,9 @@ test('mini.html：点数・一致率・順位を出さない／本家の CTA が
   assert.doesNotMatch(html, /characters118_v2\.js|ETI_V2_CHARACTERS\b(?!_2_1_0)/);
   assert.equal(CHARS.length, 118);
   // 購入の導線が無い（Phase A）
-  assert.doesNotMatch(html, /checkout|stripe|\/api\//i);
+  assert.doesNotMatch(html, /checkout|stripe/i);
+  // 呼ぶ API はシェア専用の /api/share（本家と同じ。リンクを作るだけ）だけ
+  assert.deepEqual([...new Set(html.match(/\/api\/[a-z-]+/g) || [])], ['/api/share']);
 });
 
 test('配信：Mini のページと JS は許可リストにあり、正本 JSON（docs）は配信しない', () => {
