@@ -114,3 +114,7 @@
   適用前・適用後の確認 SQL（jagan_00・jagan_02）を追加し、ローカルの使い捨て PostgreSQL で手順と RLS を検証（tests/pg/jagan_01.pg.test.js、5/5）。
 - 2026-11-06：Preview DB に jagan_01 を SQL Editor で適用（jagan_00 の全行が期待どおり → jagan_01 Success → jagan_02 の 32 行すべて ok=true。履歴 20261102120000 jagan_01_results_shares、3表とも 0 行）。
   release-c-preview（84373ca まで）を取り込み、邪眼診断＋ビルドの検査 49/49、全体 772 件中 684 合格・失敗 1（save_cta_placement_ui の既存の 1 件。変更前の 5a0cf8b でも再現、evidence/ に記録）・skip 87。
+- 2026-11-06：release-c-preview（de6ac15）の Vercel Preview（dpl_GLVBvLkbRbFk8C2u3WQP36PnzQCm・READY）で、未ログインの動作を確認（scripts/jagan-preview-e2e.mjs）。
+  50問に答える → 結果（深淵 風×撤退 ANWD｜逸風者・ロック解除ボタン9個すべて無効）→ 共有文（【風 × 撤退】・#邪眼診断 #ANWD #サンドローネ・/jagan/share のURL）。
+  /jagan/share は og:image・twitter:card を返し、/api/jagan-og は画像を返す。/api/jagan-save・/api/jagan-report は未ログインで 401（503 ではない＝環境ガードは通過）。
+  未確認（ログインが必要）：保存の書き込み、マイページの表示、購入権限（販売前は 403 sales_closed の想定）。
