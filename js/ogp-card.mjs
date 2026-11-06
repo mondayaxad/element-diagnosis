@@ -32,6 +32,7 @@ function withDots(text, size, color) {
 /**
  * @param {object} d  { code, typeName, element, weapon, nation, mirrorName, mirrorElement, match, mirrorLabel?, brand? }
  *   mirrorLabel・brand は元素診断 Mini 用（省略時は本家と同じ「最も近しいキャラクター」「元素診断」）。同梱フォントにある文字だけを使うこと
+ *   pair は共鳴診断用：[{ label, name, element }, …]（2人まで）。あれば MIRROR 欄の位置に人物を横に並べる（一致率は描かない）
  * @param {object} o  { origin, backgroundUrl, showBackground=true, fontSerif, fontSans, part='all', baseUrl }
  *   正式背景（元素別JPEG）には円環・ノード・中央光が描き込まれているため、背景を使う場合は
  *   円環SVGと元素光のにじみを重ねない（二重描画しない）。背景なし（fallback）のときだけSVGで描く。
@@ -74,14 +75,35 @@ export function buildOgpCardTree(d, o = {}) {
     );
   }
 
-  // 人ごとに変わる情報（タグ・MIRROR・一致度）
-  function personLayers() {
-    return [
-    abs({ top: L.tags.top, left: L.padLeft, gap: L.tags.gap },
+  function tagsLayer() {
+    return abs({ top: L.tags.top, left: L.padLeft, gap: L.tags.gap },
       box(tagStyle(t.accent, t.accent + '66'), d.element),
       box(tagStyle(OGP_COLORS.weapon, 'rgba(195,205,220,.34)'), d.weapon),
       box(tagStyle(OGP_COLORS.nation, 'rgba(224,200,144,.40)'), withDots(d.nation, L.tags.size, OGP_COLORS.nation)),
-    ),
+    );
+  }
+  // 共鳴診断：MIRROR 欄の位置に人物を横に並べる（SELF IMAGE と MIRROR。1人なら欄いっぱい）
+  function pairLayer() {
+    const n = d.pair.length, gap = 14;
+    const w = n === 1 ? L.mirror.width : Math.floor((L.mirror.width - gap * (n - 1)) / n);
+    return abs({ top: L.mirror.top, left: L.padLeft, width: L.mirror.width, height: L.mirror.height, gap },
+      ...d.pair.map((p) => {
+        const th = themeFor(p.element || d.element);
+        const len = String(p.name).length;
+        const size = n === 1 ? L.mirror.nameSize : len <= 4 ? 38 : len <= 6 ? 32 : 28;
+        return box({ width: w, height: L.mirror.height, flexDirection: 'column', justifyContent: 'center', padding: `0 ${n === 1 ? L.mirror.padX : 20}px`, ...mirrorPlateStyle(th) },
+          box({ fontSize: L.mirror.labelSize, letterSpacing: 3, color: OGP_COLORS.label, marginBottom: 6, fontFamily: serif }, p.label),
+          box({ fontSize: size, fontWeight: 700, fontFamily: serif, color: th.accent, letterSpacing: 2 }, p.name),
+        );
+      }),
+    );
+  }
+
+  // 人ごとに変わる情報（タグ・MIRROR・一致度）
+  function personLayers() {
+    if (d.pair && d.pair.length) return [tagsLayer(), pairLayer()];
+    return [
+    tagsLayer(),
     d.mirrorName ? abs({ top: L.mirror.top, left: L.padLeft, width: L.mirror.width, height: L.mirror.height, padding: `0 ${L.mirror.padX}px`,
       alignItems: 'center', justifyContent: 'space-between',
       // 札（事前生成）を下に置く時は、地・光を描かず、枠は透明で幅だけ保つ（文字の位置を変えない）

@@ -13,7 +13,9 @@ const MAP_JSON = JSON.parse(read('docs/eti-mini/handoff_v1/data/eti_mini_758_5st
 const CAND_JSON = JSON.parse(read('docs/eti-mini/handoff_v1/data/eti_mini_auto_candidates_v1.json'));
 const CHARS = require('../js/characters118_v2_1.js');
 
-// mini.html と同じ順で、ブラウザと同じく1つのグローバルに読み込む
+// 共鳴診断のページ（resonance.html。旧 mini.html）が読み込む JS（この順）
+const PAGE_SCRIPTS = ['js/characters118_v2_1.js', 'js/eti_mini_auto_map_v1.js', 'js/eti_v2_prototypes.js', 'js/eti_mini_choices_v1.js', 'js/eti_mini_core.js', 'js/eti_mini_share.js', 'js/resonance_candidates.js'];
+// 試験用の読み込み：ページと同じ JS に、保存しておく 50:50 の結合エンジン（共鳴診断のページは読み込まない）を足したもの
 const MINI_SCRIPTS = ['js/characters118_v2_1.js', 'js/eti_mini_auto_map_v1.js', 'js/eti_v2_prototypes.js', 'js/eti_mini_choices_v1.js', 'js/eti_mini_core.js', 'js/eti_mini_manual_v1.js'];
 function loadMini({ withManual = true } = {}) {
   const ctx = {};
@@ -186,24 +188,27 @@ test('選択肢（正式版）：正本 JSON から生成、7・5・8、内部�
   }
 });
 
-test('選択肢の表示：元素・武器種・国家の名前＋見出し＋一文、本家と同じ並び（並べ替えない）、回答は内部キー', () => {
-  const html = read('mini.html');
+test('選択肢の表示（共鳴診断）：見出し＋一文だけ（属性名を出さない）、固定の混ぜ順（本家の順でも乱数でもない）、回答は内部キー', () => {
+  const html = read('resonance.html');
   assert.match(html, /answers\[q\.id\] = o\.key/); // 位置ではなく内部キーで保持
-  // 名前（国家は画面だけ「ナド・クライ」）・見出し・一文の3つを表示する
-  assert.match(html, /nm\.appendChild\(document\.createTextNode\(M\.displayNation\(o\.key\)\)\)/);
   assert.match(html, /t\.textContent = o\.label/);
   assert.match(html, /d\.textContent = o\.detail/);
-  assert.match(html, /b\.appendChild\(nm\); b\.appendChild\(t\); b\.appendChild\(d\);/);
-  // 問いの見出しに区分（元素・武器種・国家）を出す
-  assert.match(html, /var CATEGORY = \{ element: '元素', weapon: '武器種', nation: '国家' \};/);
-  // 並べ替えをしない（正本 JSON＝本家の代表座標の表と同じ順）
-  assert.match(html, /q\.options\.forEach\(function \(o\) \{\n      var b = document\.createElement\('button'\);/);
+  assert.match(html, /b\.appendChild\(t\); b\.appendChild\(d\);/);
+  assert.doesNotMatch(html, /opt-name|displayNation\(o\.key\)|CATEGORY/); // 名前・区分は出さない
   assert.doesNotMatch(html, /Math\.random|shuffle/);
-  assert.equal(M.displayNation('ナドクライ'), 'ナド・クライ');
+  const order = vm.runInNewContext('(' + /var FIXED_ORDER = (\{[\s\S]*?\});/.exec(html)[1] + ')');
+  for (const [id, keys] of [['element', M.ELEMENT_KEYS], ['weapon', M.WEAPON_KEYS], ['nation', M.NATION_KEYS]]) {
+    assert.deepEqual([...order[id]].sort(), plain(keys).sort(), id); // 内部キーをちょうど1回ずつ
+    assert.notDeepEqual(Array.from(order[id]), plain(keys), id); // 本家の並びではない
+  }
+  assert.match(html, /FIXED_ORDER\[q\.id\]\.forEach/);
+  // 選択肢の文言に属性名を含まない（正本 JSON の見出し・一文）。「アナタ」は国家名「ナタ」を文字列として含むので除いて照合
+  const names = [...M.ELEMENT_KEYS, ...M.WEAPON_KEYS, ...M.NATION_KEYS, 'ナド・クライ'];
+  for (const q of Q.questions) for (const o of q.options) for (const t of [o.label, o.detail]) for (const n of names) assert.ok(!t.replace(/アナタ/g, '').includes(n), `「${t}」に「${n}」`);
 });
 
-test('mini.html：点数・一致率・順位を出さない／本家の CTA が最下部／手動選択は登録118名から', () => {
-  const html = read('mini.html');
+test('resonance.html：点数・一致率・順位を出さない／本家の CTA が最下部／人物は登録118名から', () => {
+  const html = read('resonance.html');
   assert.match(html, /<meta name="robots" content="noindex/);
   assert.doesNotMatch(html, /mirrorScore|internal_rank|regret|一致率|一致度|スコア|％|%<\//);
   const cta = html.indexOf('元素診断で、もっと深く自分を知る');
@@ -214,7 +219,9 @@ test('mini.html：点数・一致率・順位を出さない／本家の CTA が
   assert.match(html, /ETI_V2_CHARACTERS_2_1_0\.map/);
   assert.match(html, /QUESTION 0/); // 問いの見出しは中立な表記
   assert.doesNotMatch(html, /心理学的|測定された/);
-  for (const f of MINI_SCRIPTS) assert.ok(html.includes(`<script src="${f}"></script>`), f);
+  for (const f of PAGE_SCRIPTS) assert.ok(html.includes(`<script src="${f}"></script>`), f);
+  // 50:50 の結合エンジンは保存するが、共鳴診断のページは読み込まない（選んだ人物で 758 を変えない）
+  assert.doesNotMatch(html, /eti_mini_manual_v1\.js|manualResult|setManualCombiner/);
   // 旧版のキャラクター配列（index.html の CHARACTERS・2.0.1）を使わない
   assert.doesNotMatch(html, /characters118_v2\.js|ETI_V2_CHARACTERS\b(?!_2_1_0)/);
   assert.equal(CHARS.length, 118);
@@ -224,16 +231,16 @@ test('mini.html：点数・一致率・順位を出さない／本家の CTA が
   assert.deepEqual([...new Set(html.match(/\/api\/[a-z-]+/g) || [])], ['/api/share']);
 });
 
-test('配信：Mini のページと JS は許可リストにあり、正本 JSON（docs）は配信しない', () => {
+test('配信：共鳴診断のページと JS は許可リストにあり、正本 JSON（docs）は配信しない', () => {
   const B = require('../scripts/build-public.js');
-  for (const f of ['mini.html', ...MINI_SCRIPTS]) {
+  for (const f of ['resonance.html', ...PAGE_SCRIPTS]) {
     assert.ok(B.PUBLIC_FILES.includes(f), f);
   }
   assert.ok(B.forbiddenIn(['docs/eti-mini/handoff_v1/data/eti_mini_758_5star_280_mapping.json']).length > 0);
 });
 
-test('mini.html：本家と同じ夜の背景、1問ずつのページ送り（端末の戻るにも対応・動きを減らす設定に配慮）', () => {
-  const html = read('mini.html');
+test('resonance.html：本家と同じ夜の背景、1問ずつのページ送り（端末の戻るにも対応・動きを減らす設定に配慮）', () => {
+  const html = read('resonance.html');
   assert.match(html, /\/assets\/backgrounds\/quiet-starry-lake\.jpg/);
   assert.match(html, /IM Fell English/);
   assert.match(html, /id="pCover"/);

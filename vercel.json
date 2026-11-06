@@ -2,6 +2,18 @@
   "buildCommand": "node scripts/build-public.js",
   "outputDirectory": "dist",
   "cleanUrls": true,
+  "redirects": [
+    {
+      "source": "/mini",
+      "destination": "/resonance",
+      "permanent": true
+    },
+    {
+      "source": "/mini.html",
+      "destination": "/resonance",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/result",

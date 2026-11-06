@@ -67,12 +67,12 @@ test('キャラクターの番号：画像・シェアページ・ブラウザ�
   assert.equal(BROWSER.CHAR_COUNT, names.length);
 });
 
-test('シェアページ（/api/share?m1=）：Mini の画像と、人を /mini?s= へ移す。一致率を出さない', async () => {
+test('旧 Mini のシェアページ（/api/share?m1=）：従来の画像のまま、人は共鳴診断の /resonance?s= へ移す。一致率を出さない', async () => {
   const code = BROWSER.pack('水', '法器', 'ナドクライ', CHARS.findIndex((c) => c.name === 'アイノ'), true);
   const r = await callShare('m1=' + code);
   assert.equal(r.status, 200);
   assert.match(r.body, new RegExp(`<meta property="og:image" content="https://example\\.test/api/og-image\\?m1=${code}">`));
-  assert.match(r.body, new RegExp(`window\\.location\\.replace\\("https://example\\.test/mini\\?s=${code}"\\)`));
+  assert.match(r.body, new RegExp(`window\\.location\\.replace\\("https://example\\.test/resonance\\?s=${code}"\\)`));
   assert.match(r.body, /twitter:card" content="summary_large_image"/);
   assert.match(r.body, /【水 × 法器 × ナド・クライ】/);
   assert.match(r.body, /私のキャラクター：アイノ/);
@@ -81,7 +81,7 @@ test('シェアページ（/api/share?m1=）：Mini の画像と、人を /mini?
   assert.match(auto.body, /近しいキャラクター：ディルック/);
   // 壊れた値：Mini のトップへ（結果の画像は出さない）
   const bad = await callShare('m1=zzzz');
-  assert.match(bad.body, /window\.location\.replace\("https:\/\/example\.test\/mini"\)/);
+  assert.match(bad.body, /window\.location\.replace\("https:\/\/example\.test\/resonance"\)/);
   assert.doesNotMatch(bad.body, /og-image\?m1=/);
   // 本家のシェア（p）は従来どおり
   const main = await callShare('dv=ETI-2.0&code=abc&mv=2.1.0&p=' + ((1 << 20) | (0 << 17) | (4 << 14) | (10 << 7) | 75).toString(36));
@@ -128,8 +128,8 @@ test('画像のフォント：Mini で新しく描く文字は、同梱フォン
   for (const s of ['私のキャラクター', '元素診断 MINI']) for (const ch of s) assert.ok(covered.has(ch), `「${ch}」（${s}）`);
 });
 
-test('結果画面の画像を保存：本家と同じ色・同じ 1080×1080 の構成。Xの投稿文はシェア専用 URL 付き・一致率なし', () => {
-  const html = read('mini.html');
+test('結果画面の画像を保存：本家と同じ色・同じ 1080×1080 の構成（SELF IMAGE と MIRROR の2人）。Xの投稿文は m2 のシェア URL 付き・数値なし', () => {
+  const html = read('resonance.html');
   const EL = constFrom('index.html', 'ELEMENTS'), W = constFrom('index.html', 'WEAPONS');
   const elColor = vm.runInNewContext('(' + /var SHARE_EL_COLOR = (\{[^}]+\});/.exec(html)[1] + ')');
   const wColor = vm.runInNewContext('(' + /var SHARE_WP_COLOR = (\{[^}]+\});/.exec(html)[1] + ')');
@@ -138,29 +138,33 @@ test('結果画面の画像を保存：本家と同じ色・同じ 1080×1080 �
   assert.match(html, /<canvas id="share-canvas-el" width="1080" height="1080"/);
   assert.match(html, /id="saveImgBtn"/);
   assert.match(html, /id="tweetShareBtn"/);
-  assert.match(html, /'\/api\/share\?m1=' \+ code/);
+  assert.match(html, /'\/api\/share\?m2=' \+ code/);
+  assert.match(html, /S\.packResonance\(r\.element, r\.weapon, r\.nation, CHAR_INDEX\[r\.mirror\.name\], r\.self \? CHAR_INDEX\[r\.self\.name\] : null\)/);
   assert.match(html, /https:\/\/twitter\.com\/intent\/tweet\?text=/);
-  assert.match(html, /#元素診断 #' \+ r\.typeCode4/);
-  assert.doesNotMatch(html, /%一致|一 致|matchPct/);
+  assert.match(html, /#共鳴診断 #元素診断 #' \+ r\.typeCode4/);
+  assert.match(html, /\['SELF IMAGE', 'アナタが選んだ人物'/);
+  assert.match(html, /\['MIRROR', '回答に映る人物'/);
+  assert.doesNotMatch(html, /%一致|一 致|matchPct|最も近しいキャラクター|近しいキャラクター/);
   assert.match(html, /<script src="js\/eti_mini_share\.js"><\/script>/);
 });
 
-test('キャラクター選択：答えに関係なく登録 118 名すべて、五十音の行、名前で探せる', () => {
-  const html = read('mini.html');
-  // 118 名は ETI-CHAR-2.1.0 の全員。並びは読み（五十音）。答え（answers）からは決めない
+test('人物の選択（SELF IMAGE）：判定に使わない申告。暫定の候補は無く、登録 118 名すべて（五十音の行・名前で探せる）、「ほかの人物を見る」の構造', () => {
+  const html = read('resonance.html');
   assert.match(html, /var ALL_CHARS = ETI_V2_CHARACTERS_2_1_0\.map\(function \(c\) \{ return c\.name; \}\)\n    \.sort\(function \(a, b\) \{ return readingOf\(a\)\.localeCompare\(readingOf\(b\), 'ja'\); \}\);/);
   const draw = html.slice(html.indexOf('function drawChars()'), html.indexOf("search.addEventListener('input', drawChars);"));
   assert.ok(draw.length > 100);
   assert.doesNotMatch(draw, /answers/);
-  assert.doesNotMatch(html, /type_reading_chars|EdTypeReadingChars/);
   assert.match(html, /<input id="charSearch" class="search" type="search"/);
-  assert.match(html, /元素診断（100問）を受けたことがあれば/);
-  // 読みの表：漢字の名前（カタカナだけでない名前）は全員に読みがある（五十音の行・ひらがな検索に使う）
+  assert.match(html, /id="showAllChars"[^>]*>ほかの人物を見る/);
+  assert.match(html, /ResonanceCandidates\.candidatesFor\(answers, ALL_CHARS\)/);
+  assert.match(html, /選んでも、3つの問いの結果は変わりません/);
+  assert.match(html, /M\.resonanceResult\(answers, self\)/);
   const READING = vm.runInNewContext('(' + /var READING = (\{[\s\S]*?\});/.exec(html)[1] + ')');
   for (const c of CHARS) if (/[^\u30A0-\u30FF]/.test(c.name)) assert.ok(READING[c.name], c.name);
 });
 
 test('配信：Mini のシェアの JS は公開ビルドに入る', () => {
   const B = require('../scripts/build-public.js');
-  for (const f of ['js/eti_mini_share.js', 'assets/ogp/ogp-top-20261009.jpg']) assert.ok(B.PUBLIC_FILES.includes(f), f);
+  for (const f of ['js/eti_mini_share.js', 'js/resonance_candidates.js', 'resonance.html', 'assets/ogp/ogp-top-20261009.jpg']) assert.ok(B.PUBLIC_FILES.includes(f), f);
+  assert.ok(!B.PUBLIC_FILES.includes('mini.html'));
 });

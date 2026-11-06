@@ -48,11 +48,24 @@ function unpackMiniShare(s) {
   return { el: PACK_ELEMENTS[v], w: PACK_WEAPONS[wi], nat: PACK_NATIONS[n], charIdx, userPicked: picked === 1 };
 }
 const MINI_NATION_DISPLAY = { 'ナドクライ': 'ナド・クライ' };
+// 共鳴診断（m2）：js/eti_mini_share.js の unpackResonance と同じ計算
+function unpackResonanceShare(s) {
+  if (typeof s !== 'string' || !/^[0-9a-z]{1,5}$/.test(s)) return null;
+  let v = parseInt(s, 36);
+  const C = MINI_CHAR_COUNT;
+  if (!(v >= 0 && v < 280 * C * (C + 1)) || v.toString(36) !== s) return null;
+  const self = v % (C + 1); v = (v - self) / (C + 1);
+  const mirror = v % C; v = (v - mirror) / C;
+  const n = v % 8; v = (v - n) / 8;
+  const wi = v % 5; v = (v - wi) / 5;
+  return { el: PACK_ELEMENTS[v], w: PACK_WEAPONS[wi], nat: PACK_NATIONS[n], mirrorIdx: mirror, selfIdx: self === C ? null : self };
+}
 
-// Mini のシェアページ：クローラーには Mini の結果の og:image、人には /mini?s=（その結果の表示）へ移す
+// 旧 元素診断 Mini のシェアページ（m1）：クローラーには従来の画像、人には /resonance?s=（その結果の表示）へ移す
 function miniSharePage(m1, origin) {
   const u = unpackMiniShare(m1);
-  const redirectUrl = u ? `${origin}/mini?s=${m1}` : `${origin}/mini`;
+  // 旧 Mini のリンク：共鳴診断のページ（/resonance）で、旧形式（s）のまま表示する
+  const redirectUrl = u ? `${origin}/resonance?s=${m1}` : `${origin}/resonance`;
   const nation = u ? (MINI_NATION_DISPLAY[u.nat] || u.nat) : '';
   const charName = u ? (CHAR_NAMES[u.charIdx] || '') : '';
   const title = u ? `元素診断 Mini — 私の結果は【${u.el} × ${u.w} × ${nation}】` : '元素診断 Mini';
@@ -60,6 +73,45 @@ function miniSharePage(m1, origin) {
     ? `${u.userPicked ? '私のキャラクター' : '近しいキャラクター'}：${charName}。3つの問いで、あなたの元素・武器種・国家を見つけてみませんか。`
     : '3つの問いで、あなたの元素・武器種・国家を見つけてみませんか。';
   const ogImageUrl = u ? `${origin}/api/og-image?m1=${m1}` : `${origin}/assets/ogp/ogp-top-20261009.jpg`;
+  return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>${esc(title)}</title>
+<meta name="description" content="${esc(description)}">
+<meta property="og:title" content="${esc(title)}">
+<meta property="og:description" content="${esc(description)}">
+<meta property="og:image" content="${esc(ogImageUrl)}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="${esc(redirectUrl)}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${esc(title)}">
+<meta name="twitter:description" content="${esc(description)}">
+<meta name="twitter:image" content="${esc(ogImageUrl)}">
+<meta http-equiv="refresh" content="0;url=${esc(redirectUrl)}">
+<script>window.location.replace(${JSON.stringify(redirectUrl)});</script>
+</head>
+<body>
+  <p>結果ページへ移動しています… <a href="${esc(redirectUrl)}">移動しない場合はこちら</a></p>
+</body>
+</html>`;
+}
+
+// 共鳴診断のシェアページ（m2）：クローラーには2人表示の og:image、人は /resonance?r= へ
+function resonanceSharePage(m2, origin) {
+  const u = unpackResonanceShare(m2);
+  const redirectUrl = u ? `${origin}/resonance?r=${m2}` : `${origin}/resonance`;
+  const nation = u ? (MINI_NATION_DISPLAY[u.nat] || u.nat) : '';
+  const mirror = u ? (CHAR_NAMES[u.mirrorIdx] || '') : '';
+  const self = u && u.selfIdx !== null ? (CHAR_NAMES[u.selfIdx] || '') : '';
+  const title = u ? `共鳴診断 — 私の結果は【${u.el} × ${u.w} × ${nation}】` : '共鳴診断';
+  const lead = '3つの問いで、あなたの元素・武器種・国家と、あなたに共鳴する人物を見つけてみませんか。';
+  const description = u ? `${self ? `私が選んだ人物：${self}／` : ''}回答に映る人物：${mirror}。${lead}` : lead;
+  const ogImageUrl = u ? `${origin}/api/og-image?m2=${m2}` : `${origin}/assets/ogp/ogp-top-20261009.jpg`;
+  return sharePageHtml(title, description, ogImageUrl, redirectUrl);
+}
+
+function sharePageHtml(title, description, ogImageUrl, redirectUrl) {
   return `<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -95,6 +147,12 @@ module.exports = async function handler(req, res) {
   const searchParams = url.searchParams;
   const origin = `https://${req.headers.host}`;
   // 元素診断 Mini のシェア（本家と同じ /api/share を使い、m1 があれば Mini のページを返す）
+  const resonanceParam = searchParams.get('m2');
+  if (resonanceParam !== null) {
+    res.setHeader('content-type', 'text/html; charset=utf-8');
+    res.status(200).send(resonanceSharePage(resonanceParam, origin));
+    return;
+  }
   const miniParam = searchParams.get('m1');
   if (miniParam !== null) {
     res.setHeader('content-type', 'text/html; charset=utf-8');
@@ -165,3 +223,4 @@ module.exports = async function handler(req, res) {
   res.status(200).send(html);
 }
 module.exports._unpackMiniShare = unpackMiniShare;
+module.exports._unpackResonanceShare = unpackResonanceShare;
