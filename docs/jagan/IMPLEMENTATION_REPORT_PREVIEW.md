@@ -126,3 +126,5 @@
   マイページ（js/jagan-mypage.js）：その記録に有効な購入権限（jagan_entitlements.status='active'、本人の行だけ＝RLS）があるときだけ覚醒後。
   権限を読めない・未購入・返金済みは覚醒前のまま（購入済みと誤って見せない）。販売前（sales_open=false）は購入権限の行が作られないため、全記録が覚醒前。
   画像（確認用の模擬。実データではない）：evidence/20261106_mypage_emblems_awakened_mock.png
+- 2026-11-06：実物の mypage.html を、ログイン済み・登録完了を模して開き、邪眼診断の記録と証の見た目を確認（scripts/jagan-mypage-shot.mjs。supabase-js・/api/* は模擬。実データではない）。
+  記録の下の「邪眼診断をもう一度受ける ›」が既定の青で暗い背景に合わないため、金色（#E2C08C）に直した。画像：evidence/20261106_mypage_real_{full,section}_mock.png

@@ -102,7 +102,7 @@
     '.jg-mp-body{flex:1;min-width:0}.jg-mp-emblem{flex:none;display:inline-flex;width:72px;height:72px}.jg-mp-emblem img{display:block;width:72px;height:72px;object-fit:contain;transform:translateZ(0)}' +
     '.jg-mp-head{font-size:17px}.jg-mp-dti{font-size:13px;letter-spacing:.08em;color:#E2C08C}.jg-mp-sub,.jg-mp-date{font-size:12px;opacity:.75}.jg-mp-ops{display:flex;flex-direction:column;gap:6px;align-items:flex-end}' +
     '.jg-mp-del{background:none;border:0;color:inherit;opacity:.7;text-decoration:underline;font:inherit;font-size:12px;cursor:pointer}' +
-    '.jg-mp-note{font-size:13px;opacity:.8;margin:6px 0}';
+    '.jg-mp-note{font-size:13px;opacity:.8;margin:6px 0}.jg-mp-note a{color:#E2C08C;text-decoration:underline;text-underline-offset:3px}.jg-mp-note a:hover{color:#F0D3A6}';
 
   async function render(root) {
     if (!root || typeof supabaseClient === 'undefined' || supabaseClient.unavailable) return;
