@@ -583,3 +583,20 @@ test('unlock mosaics show fixed sample values, not the user\'s real scores', () 
   for (const g of GROUPS) for (const id of g.traits) assert.ok(ma.join('').includes(`<b>${PREVIEW_SCORES[id]}</b>`), id);
   assert.ok(ma[0].includes(`<em>${PREVIEW_MATCH}%</em>`) && !ma[0].includes(`<em>${a.character.match}%</em>`) || a.character.match === PREVIEW_MATCH);
 });
+
+test('mypage emblems (pre-awakening): every element has an image, and the file name follows the element label', () => {
+  const js = fs.readFileSync(path.join(ROOT, 'js/jagan-mypage.js'), 'utf8');
+  const map = Object.fromEntries([...js.matchAll(/'(.)': '([a-z]+)'/g)].map((m) => [m[1], m[2]]));
+  const labels = BUNDLE.core.elements.map((e) => e.label).sort();
+  assert.deepEqual(Object.keys(map).sort(), labels, 'every element label is mapped');
+  assert.equal(new Set(Object.values(map)).size, 7);
+  for (const f of Object.values(map)) {
+    const p = path.join(ROOT, 'assets/emblems/jagan/record', `${f}.png`);
+    const b = fs.readFileSync(p);
+    assert.equal(b.subarray(1, 4).toString(), 'PNG', f);
+    assert.ok(b.length < 400 * 1024, `${f} is small enough (${b.length})`);
+    assert.equal(b.readUInt32BE(16), 360); assert.equal(b.readUInt32BE(20), 360);
+  }
+  // ETI の証は上書きしない
+  assert.ok(fs.existsSync(path.join(ROOT, 'assets/emblems/2026-autumn/record/pyro.png')));
+});

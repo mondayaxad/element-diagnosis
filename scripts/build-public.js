@@ -84,6 +84,7 @@ const PUBLIC_DIRS = [
   { dir: 'assets/complete', ext: '.webp' },                    // 完全解析の三つの人物像の図（js/lens-constellation.js）
   { dir: 'assets/emblems/2026-autumn/record', ext: '.png' },   // マイページの記録エンブレム
   { dir: 'assets/emblems/2026-autumn/awakened', ext: '.png' }, // マイページの覚醒エンブレム
+  { dir: 'assets/emblems/jagan/record', ext: '.png' },        // 邪眼診断のマイページの証（覚醒前。元素ごと7枚）
   { dir: 'assets/ogp/backgrounds', ext: '.jpg' },              // api/og-image が自サイトから取得する背景（下地が無い時の描き方）
   { dir: 'assets/ogp/bases', ext: '.jpg' },                    // api/og-image の下地（タイプ別35枚。scripts/build-ogp-bases.mjs）
   { dir: 'assets/ogp/bases', ext: '.png' },                    // api/og-image の MIRROR 欄の札（元素別7枚）
