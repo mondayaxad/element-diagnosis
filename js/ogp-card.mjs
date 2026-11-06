@@ -32,6 +32,7 @@ function withDots(text, size, color) {
 /**
  * @param {object} d  { code, typeName, element, weapon, nation, mirrorName, mirrorElement, match, mirrorLabel?, brand? }
  *   mirrorLabel・brand は元素診断 Mini 用（省略時は本家と同じ「最も近しいキャラクター」「元素診断」）。同梱フォントにある文字だけを使うこと
+ *   header は上部の見出し（下地に含まれる部分。省略時は本家と同じ「元素診断 — MY RESULT」。共鳴診断は「共鳴診断 — MY RESULT」）
  *   pair は共鳴診断用：[{ label, name, element }, …]（2人まで）。あれば MIRROR 欄の位置に人物を横に並べる（一致率は描かない）
  * @param {object} o  { origin, backgroundUrl, showBackground=true, fontSerif, fontSans, part='all', baseUrl }
  *   正式背景（元素別JPEG）には円環・ノード・中央光が描き込まれているため、背景を使う場合は
@@ -138,7 +139,7 @@ export function buildOgpCardTree(d, o = {}) {
       style: { position: 'absolute', left: L.ring.cx - L.ring.size / 2, top: L.ring.cy - L.ring.size / 2, width: L.ring.size, height: L.ring.size } }),
 
     // ---- Layer 3：情報 ----
-    abs({ top: L.header.top, left: L.padLeft, fontSize: L.header.size, letterSpacing: L.header.tracking, color: OGP_COLORS.header, fontFamily: serif }, '元素診断 — MY RESULT'),
+    abs({ top: L.header.top, left: L.padLeft, fontSize: L.header.size, letterSpacing: L.header.tracking, color: OGP_COLORS.header, fontFamily: serif }, d.header || '元素診断 — MY RESULT'),
     abs({ top: L.code.top, left: L.padLeft - 6, fontSize: L.code.size, lineHeight: 1, letterSpacing: L.code.tracking, fontWeight: 700, fontFamily: serif,
       color: 'transparent', backgroundImage: codeGradient(t), backgroundClip: 'text', WebkitBackgroundClip: 'text',
       textShadow: `0 0 26px ${t.glow}` }, d.code),

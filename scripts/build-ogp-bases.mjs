@@ -9,6 +9,9 @@
 // 実行（開発用。デザイン・背景・フォント・タイプ名を変えた時だけ作り直してコミットする）：
 //   npm i --no-save @vercel/og@0.6.3   … まだ無い場合
 //   node scripts/build-ogp-bases.mjs [--quality 90]
+//   node scripts/build-ogp-bases.mjs --resonance [--quality 95]
+//     … 共鳴診断用の下地35枚だけを assets/ogp/bases-resonance/ に作る（見出しが「共鳴診断 — MY RESULT」。ほかは本家と同じ）。
+//       本家の下地・札・api/_og-font.mjs は作り直さない
 //   JPEG への変換には ImageMagick（convert）を使う。
 import fs from 'fs';
 import path from 'path';
@@ -22,7 +25,9 @@ import { ELEMENT_KEY, OGP_LAYOUT } from '../js/ogp-theme.mjs';
 import { ELEMENT_CODE, WEAPON_CODE, TYPE_NAME, PACK_ELEMENTS, PACK_WEAPONS } from '../api/_og-data.mjs';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-const OUT = path.join(ROOT, 'assets/ogp/bases');
+const RESONANCE = process.argv.includes('--resonance');
+export const RESONANCE_HEADER = '共鳴診断 — MY RESULT';
+const OUT = path.join(ROOT, RESONANCE ? 'assets/ogp/bases-resonance' : 'assets/ogp/bases');
 const qi = process.argv.indexOf('--quality');
 const QUALITY = qi > 0 ? Number(process.argv[qi + 1]) : 90;
 const font = fs.readFileSync(path.join(ROOT, 'assets/ogp/fonts/noto-serif-jp-700-og.woff'));
@@ -35,7 +40,7 @@ for (const el of PACK_ELEMENTS) {
   const backgroundUrl = 'data:image/jpeg;base64,' + bg.toString('base64');
   for (const w of PACK_WEAPONS) {
     const code = ELEMENT_CODE[el] + WEAPON_CODE[w];
-    const tree = buildOgpCardTree({ code, typeName: TYPE_NAME[el][w], element: el, weapon: w }, {
+    const tree = buildOgpCardTree({ code, typeName: TYPE_NAME[el][w], element: el, weapon: w, ...(RESONANCE ? { header: RESONANCE_HEADER } : {}) }, {
       part: 'base', backgroundUrl, showBackground: true, fontSerif: 'Noto Serif JP', fontSans: 'Noto Serif JP',
     });
     const png = Buffer.from(await new ImageResponse(tree, { width: 1200, height: 630, fonts }).arrayBuffer());
@@ -47,6 +52,7 @@ for (const el of PACK_ELEMENTS) {
     console.log(code, fs.statSync(out).size);
   }
 }
+if (RESONANCE) { fs.rmSync(tmp, { recursive: true, force: true }); process.exit(0); }
 const { width: MW, height: MH } = OGP_LAYOUT.mirror;
 for (const el of PACK_ELEMENTS) {
   const m = MIRROR_PLATE_MARGIN;
