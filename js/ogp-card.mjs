@@ -14,6 +14,21 @@ function h(type, props, ...children) {
 const box = (style, ...children) => h('div', { style: { display: 'flex', ...style } }, ...children);
 const abs = (style, ...children) => box({ position: 'absolute', ...style }, ...children);
 
+// 「・」（中黒）は同梱フォントに無いので、文字の代わりに小さな丸を描く（元素診断 Mini の「ナド・クライ」）。
+// 「・」を含まない文字列はそのまま返す（本家の画像は従来と同じツリー）
+function withDots(text, size, color) {
+  const s = String(text);
+  if (s.indexOf('・') < 0) return s;
+  const d = Math.max(3, Math.round(size * 0.2));
+  const parts = s.split('・');
+  const out = [];
+  parts.forEach((p, i) => {
+    if (i > 0) out.push(box({ width: d, height: d, borderRadius: 999, background: color, margin: `0 ${Math.round(size * 0.3)}px` }));
+    if (p) out.push(p);
+  });
+  return box({ alignItems: 'center' }, ...out);
+}
+
 /**
  * @param {object} d  { code, typeName, element, weapon, nation, mirrorName, mirrorElement, match, mirrorLabel?, brand? }
  *   mirrorLabel・brand は元素診断 Mini 用（省略時は本家と同じ「最も近しいキャラクター」「元素診断」）。同梱フォントにある文字だけを使うこと
@@ -55,7 +70,7 @@ export function buildOgpCardTree(d, o = {}) {
       d.mirrorName && o.mirrorPlateUrl ? h('img', { src: o.mirrorPlateUrl, width: L.mirror.width, height: L.mirror.height,
         style: { position: 'absolute', top: L.mirror.top, left: L.padLeft, width: L.mirror.width, height: L.mirror.height } }) : null,
       ...personLayers(),
-      abs({ ...bandStyle, background: 'transparent', borderTop: '1px solid rgba(0,0,0,0)' }, bandText),
+      abs({ ...bandStyle, background: 'transparent', borderTop: '1px solid rgba(0,0,0,0)' }, withDots(bandText, L.band.size, OGP_COLORS.bandText)),
     );
   }
 
@@ -65,7 +80,7 @@ export function buildOgpCardTree(d, o = {}) {
     abs({ top: L.tags.top, left: L.padLeft, gap: L.tags.gap },
       box(tagStyle(t.accent, t.accent + '66'), d.element),
       box(tagStyle(OGP_COLORS.weapon, 'rgba(195,205,220,.34)'), d.weapon),
-      box(tagStyle(OGP_COLORS.nation, 'rgba(224,200,144,.40)'), d.nation),
+      box(tagStyle(OGP_COLORS.nation, 'rgba(224,200,144,.40)'), withDots(d.nation, L.tags.size, OGP_COLORS.nation)),
     ),
     d.mirrorName ? abs({ top: L.mirror.top, left: L.padLeft, width: L.mirror.width, height: L.mirror.height, padding: `0 ${L.mirror.padX}px`,
       alignItems: 'center', justifyContent: 'space-between',
@@ -107,7 +122,7 @@ export function buildOgpCardTree(d, o = {}) {
       textShadow: `0 0 26px ${t.glow}` }, d.code),
     abs({ top: L.typeName.top, left: L.padLeft, fontSize: L.typeName.size, lineHeight: 1.2, letterSpacing: 6, fontWeight: 700, fontFamily: serif, color: OGP_COLORS.typeName }, d.typeName),
     ...(drawPerson ? personLayers() : []),
-    drawPerson ? abs(bandStyle, bandText) : abs(bandStyle),
+    drawPerson ? abs(bandStyle, withDots(bandText, L.band.size, OGP_COLORS.bandText)) : abs(bandStyle),
   );
 }
 

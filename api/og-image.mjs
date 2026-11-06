@@ -114,7 +114,8 @@ async function miniImage(m1, searchParams, origin) {
   }
   const charName = CHAR_NAMES[u.charIdx];
   const data = {
-    code: ELEMENT_CODE[u.el] + WEAPON_CODE[u.w], typeName: TYPE_NAME[u.el][u.w], element: u.el, weapon: u.w, nation: u.nat,
+    // 国家は画面と同じ「ナド・クライ」（「・」は js/ogp-card.mjs が小さな丸で描く）
+    code: ELEMENT_CODE[u.el] + WEAPON_CODE[u.w], typeName: TYPE_NAME[u.el][u.w], element: u.el, weapon: u.w, nation: u.nat === 'ナドクライ' ? 'ナド・クライ' : u.nat,
     mirrorName: charName,
     mirrorElement: CHAR_ELEMENT[charName] || u.el,
     match: '', // Mini は一致率を出さない

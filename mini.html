@@ -87,6 +87,8 @@
   .opts { display: grid; gap: 10px; }
   .opt { position: relative; display: block; width: 100%; text-align: left; border-radius: 6px; border: 1px solid var(--line); background: rgba(10,12,26,.5); padding: 14px 16px 13px; cursor: pointer; transition: border-color .3s ease, background .3s ease, box-shadow .3s ease, opacity .3s ease; }
   .opt:hover { border-color: rgba(150,180,240,.34); }
+  .opt-name { display: flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: .24em; color: #8fb0d8; margin: 0 0 4px; }
+  .opt-name .dot { width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff 0, color-mix(in srgb, var(--c) 40%, #fff) 30%, var(--c) 70%); box-shadow: 0 0 6px 1px color-mix(in srgb, var(--c) 70%, transparent); }
   .opt-title { display: block; font-size: 15px; letter-spacing: .08em; color: #d3dcf0; transition: color .3s, text-shadow .3s; }
   .opt-text { display: block; font-size: 12.5px; color: var(--t-body); line-height: 1.8; margin-top: 4px; }
   .opts.has-pick .opt:not([aria-checked="true"]) { opacity: .55; }
@@ -99,6 +101,9 @@
   .sec-h .en { display: block; font-family: var(--font-en); font-style: italic; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: #5d7cab; margin-bottom: 8px; }
   .sec-h .jp { display: block; font-size: 17px; font-weight: 600; letter-spacing: .14em; color: #f1eeff; }
   .note { text-align: center; font-size: 12.5px; color: var(--t-body); line-height: 1.9; margin: 0 0 22px; word-break: auto-phrase; }
+  .search { width: 100%; min-height: 46px; background: rgba(10,12,26,.55); border: 1px solid var(--line); border-radius: 6px; color: var(--t-head); font-family: var(--font-jp); font-size: 16px; letter-spacing: .06em; padding: 10px 14px; margin: 0 0 6px; }
+  .search::placeholder { color: var(--t-en); }
+  .chars-empty { color: var(--t-sub); font-size: 12.5px; text-align: center; letter-spacing: .08em; padding: 14px 0; margin: 0; }
   /* 近しいキャラクター：五十音の行ごとの名前（文字だけ・選ぶと光る。本家「以前の結果から読む」画面と同じ） */
   .kana-row { display: grid; grid-template-columns: 2em 1fr; gap: 6px 12px; align-items: baseline; padding: 10px 0; border-top: 1px solid rgba(150,180,240,.08); }
   .kana-row:first-child { border-top: 0; }
@@ -176,8 +181,10 @@
       <span class="spacer" aria-hidden="true"></span>
     </div>
     <div class="sec-h"><span class="en">Your Character — optional</span><span class="jp">あなたのキャラクター</span></div>
-    <p class="note">元素診断（100問）を受けたことがあれば、そのときの<br>「最も近しいキャラクター」を選んでください。<br>あなたの3つの答えのタイプで現れるキャラクターだけを並べています。</p>
-    <div id="charList" role="group" aria-label="キャラクター"></div>
+    <p class="note">元素診断（100問）を受けたことがあれば、そのときの<br>「最も近しいキャラクター」を選んでください。<br>選ばなければ、答えから近しいキャラクターを映します。</p>
+    <label for="charSearch" class="q-no" style="margin-bottom:8px">SEARCH BY NAME</label>
+    <input id="charSearch" class="search" type="search" autocomplete="off" enterkeyhint="search" placeholder="名前で探す（例：なひーだ）" aria-controls="charList">
+    <div id="charList" role="group" aria-label="キャラクター（登録118名・五十音順）"></div>
     <div class="actions">
       <button type="button" class="cta" id="showResult">結果を見る</button>
       <p class="msg" id="quizMsg" role="status" aria-live="polite"></p>
@@ -231,14 +238,13 @@
 <script src="js/eti_mini_choices_v1.js"></script>
 <script src="js/eti_mini_core.js"></script>
 <script src="js/eti_mini_manual_v1.js"></script>
-<script src="js/type_reading_chars.js"></script>
 <script src="js/eti_mini_share.js"></script>
 <script>
 (function () {
   'use strict';
   var M = window.ETIMini, Q = window.ETI_MINI_CHOICES;
   /* global ETI_V2_CHARACTERS_2_1_0 */
-  /* global ETI_V2_CHARACTERS_2_1_0, EdTypeReadingChars */
+  /* global ETI_V2_CHARACTERS_2_1_0 */
   var S = window.ETIMiniShare;
   // キャラクターの番号（ETI-CHAR-2.1.0 の並び。シェアの符号・api/_og-data.mjs の CHAR_NAMES と同じ）
   var CHAR_INDEX = {};
@@ -247,54 +253,35 @@
   var chosen = null;
   var $ = function (id) { return document.getElementById(id); };
   var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // 結果ページだけ、判定された元素の色で夜空の下をほのかに灯す（問いの間は属性の色を出さない）
+  // 元素の色（選択肢の小さな光と、結果ページで夜空の下をほのかに灯す色）
   var ELEMENT_GLOW = { '炎': '#d9784a', '水': '#4a9ad0', '氷': '#8ab8e8', '雷': '#a070e0', '風': '#5cc4a0', '岩': '#d0a850', '草': '#7cbf4a' };
   var DEFAULT_GLOW = '#7aa2cf';
   function setGlow(c) { document.documentElement.style.setProperty('--ac', c || DEFAULT_GLOW); }
 
   // ---- 3問 ----
-  // 選択肢の並びは来訪ごとに1回だけ並べ替え、回答中（再読み込みを含む同じタブの間）は固定する。
-  // 回答は表示位置ではなく内部キー（option.key）で持つので、並びが変わっても判定は同じ。
-  var ORDER_KEY = 'eti-mini-order:' + Q.version;
-  function shuffled(keys) {
-    var a = keys.slice();
-    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
-    return a;
-  }
-  function loadOrder() {
-    var saved = null;
-    try { saved = JSON.parse(sessionStorage.getItem(ORDER_KEY) || 'null'); } catch (e) { saved = null; }
-    var order = {};
-    Q.questions.forEach(function (q) {
-      var keys = q.options.map(function (o) { return o.key; });
-      var s = saved && saved[q.id];
-      var valid = Array.isArray(s) && s.length === keys.length && keys.every(function (k) { return s.indexOf(k) >= 0; });
-      order[q.id] = valid ? s : shuffled(keys);
-    });
-    try { sessionStorage.setItem(ORDER_KEY, JSON.stringify(order)); } catch (e) { /* 保存できなくても表示は続ける */ }
-    return order;
-  }
-  var ORDER = loadOrder();
+  // 本家 100問診断のポータブル版として、各選択肢に元素・武器種・国家の名前を出し、本家と同じ並び（代表座標の表の順）で並べる。
+  // 回答は表示位置ではなく内部キー（option.key）で持つ。国家は画面だけ「ナド・クライ」と書く（内部キーはナドクライのまま）
+  var CATEGORY = { element: '元素', weapon: '武器種', nation: '国家' };
   var qWrap = $('questions');
   var qBlocks = [];
   Q.questions.forEach(function (q, qi) {
     var sec = document.createElement('div');
     sec.className = 'q'; sec.hidden = true;
-    var no = document.createElement('span'); no.className = 'q-no'; no.textContent = 'QUESTION 0' + (qi + 1) + ' / 0' + Q.questions.length;
+    var no = document.createElement('span'); no.className = 'q-no'; no.textContent = 'QUESTION 0' + (qi + 1) + ' / 0' + Q.questions.length + ' ・ ' + CATEGORY[q.id];
     var h = document.createElement('h2'); h.className = 'q-title'; h.id = 'qt-' + q.id; h.textContent = q.title; h.tabIndex = -1;
     var helper = document.createElement('p'); helper.className = 'q-helper'; helper.textContent = q.helper;
     var opts = document.createElement('div');
     opts.className = 'opts'; opts.setAttribute('role', 'radiogroup'); opts.setAttribute('aria-labelledby', h.id);
-    var byKey = {};
-    q.options.forEach(function (o) { byKey[o.key] = o; });
-    ORDER[q.id].forEach(function (key) {
-      var o = byKey[key];
+    q.options.forEach(function (o) {
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'opt'; b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', 'false');
-      b.dataset.q = q.id; b.dataset.k = o.key; // 内部キー（画面には表示しない）
+      b.dataset.q = q.id; b.dataset.k = o.key; // 内部キー
+      var nm = document.createElement('span'); nm.className = 'opt-name';
+      if (q.id === 'element') { var dot = document.createElement('span'); dot.className = 'dot'; dot.style.setProperty('--c', ELEMENT_GLOW[o.key]); dot.setAttribute('aria-hidden', 'true'); nm.appendChild(dot); }
+      nm.appendChild(document.createTextNode(M.displayNation(o.key)));
       var t = document.createElement('span'); t.className = 'opt-title'; t.textContent = o.label;
       var d = document.createElement('span'); d.className = 'opt-text'; d.textContent = o.detail;
-      b.appendChild(t); b.appendChild(d);
+      b.appendChild(nm); b.appendChild(t); b.appendChild(d);
       b.addEventListener('click', function () {
         if (busy) return;
         answers[q.id] = o.key;
@@ -322,7 +309,7 @@
       var dots = $('qSteps').children;
       for (var i = 0; i < dots.length; i++) dots[i].className = i < n ? 'done' : (i === n ? 'now' : '');
     }
-    if (step === 'char') drawChars();
+    if (step === 'char') { if (!chosen) search.value = ''; drawChars(); }
     if (step !== 'result') setGlow(null);
   }
   function focusIn(step) {
@@ -371,8 +358,7 @@
 
   // ---- キャラクター（任意） ----
   // 元素診断（100問）を受けた人には、そのときの「最も近しいキャラクター」を選んでもらう。
-  // 並べるのは、3つの答え（元素|武器|国家）のタイプで、100問の診断で「最も近しいキャラクター」になり得る人物だけ
-  // （本家「以前の結果から読む」と同じ表 js/type_reading_chars.js）。並べ方も同じ五十音の行。
+  // 並べ方は本家「以前の結果から読む」と同じ五十音の行（漢字の名前は読みで並べる）。
   var READING = { '嘉明': 'がみん', '辛炎': 'しんえん', '胡桃': 'ふーたお', '香菱': 'しゃんりん', '煙緋': 'えんひ', '宵宮': 'よいみや', '神里綾人': 'かみさとあやと', '行秋': 'ゆくも', '夜蘭': 'いぇらん',
     '珊瑚宮心海': 'さんごのみやここみ', '神里綾華': 'かみさとあやか', '七七': 'なな', '申鶴': 'しぇんは', '甘雨': 'かんう', '刻晴': 'こくせい', '久岐忍': 'くきしのぶ', '雷電将軍': 'らいでんしょうぐん',
     '九条裟羅': 'くじょうさら', '八重神子': 'やえみこ', '北斗': 'ほくと', '楓原万葉': 'かえではらかずは', '早柚': 'さゆ', '放浪者': 'ほうろうしゃ', '閑雲': 'かんうん', '藍硯': 'らんやん',
@@ -383,17 +369,19 @@
   function hira(s) { return String(s).replace(/[ァ-ヶ]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0x60); }); }
   function readingOf(name) { return READING[name] || hira(name); }
   function rowOf(name) { var c = readingOf(name).charAt(0); var r = ROWS.find(function (x) { return x[1].indexOf(c) >= 0; }); return r ? r[0] : '他'; }
-  function candidatesFor(a) {
-    var rows = EdTypeReadingChars.TYPES[a.element + '|' + a.weapon + '|' + a.nation] || [];
-    return rows.map(function (x) { return x[0]; }).filter(function (n) { return CHAR_INDEX[n] !== undefined; });
-  }
-  var list = $('charList');
+  // 登録 118 名すべて（ETI-CHAR-2.1.0）を五十音の行で並べる。どの3つの答えでも同じ 118 名
+  var ALL_CHARS = ETI_V2_CHARACTERS_2_1_0.map(function (c) { return c.name; })
+    .sort(function (a, b) { return readingOf(a).localeCompare(readingOf(b), 'ja'); });
+  // 名前で探す：カタカナ・ひらがな・漢字の読み（ひらがな）のどれでも、空白・「・」の有無を問わず部分一致
+  function norm(s) { return hira(String(s || '').normalize('NFKC')).replace(/[\s・･ー\-]/g, ''); }
+  var SEARCH_KEY = {};
+  ALL_CHARS.forEach(function (n) { SEARCH_KEY[n] = norm(n) + ' ' + norm(readingOf(n)); });
+  var list = $('charList'), search = $('charSearch');
   function drawChars() {
-    var allowed = candidatesFor(answers);
-    if (chosen && allowed.indexOf(chosen) < 0) chosen = null; // 答えを変えて候補から外れたら選び直し
-    var sorted = allowed.slice().sort(function (a, b) { return readingOf(a).localeCompare(readingOf(b), 'ja'); });
+    var q = norm(search.value);
+    var shown = q ? ALL_CHARS.filter(function (n) { return SEARCH_KEY[n].indexOf(q) >= 0; }) : ALL_CHARS;
     var groups = {};
-    sorted.forEach(function (n) { var r = rowOf(n); (groups[r] = groups[r] || []).push(n); });
+    shown.forEach(function (n) { var r = rowOf(n); (groups[r] = groups[r] || []).push(n); });
     list.textContent = '';
     function row(k, names, unknown) {
       var div = document.createElement('div'); div.className = 'kana-row';
@@ -409,9 +397,15 @@
       });
       div.appendChild(ks); div.appendChild(chips); list.appendChild(div);
     }
+    // 選んでいる人物は、検索で絞っても先頭に残す（選んだことが見えるように）
+    if (chosen && shown.indexOf(chosen) < 0) row('選択中', [chosen], false);
     row('', [''], true);
     ROWS.map(function (r) { return r[0]; }).concat(['他']).forEach(function (r) { if (groups[r]) row(r, groups[r], false); });
+    if (q && !shown.length) {
+      var p = document.createElement('p'); p.className = 'chars-empty'; p.textContent = '見つかりませんでした'; list.appendChild(p);
+    }
   }
+  search.addEventListener('input', drawChars);
   list.addEventListener('click', function (e) {
     var b = e.target.closest('.chip'); if (!b) return;
     chosen = b.dataset.v || null;

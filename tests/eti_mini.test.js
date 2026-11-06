@@ -169,7 +169,7 @@ test('手動選択：差し込み口の形（試験用の仮の結合。本番�
   assert.throws(() => c.manualResult({ element: '炎', weapon: '弓', nation: 'モンド' }, ch), (e) => e.code === 'INVALID_ANSWERS');
 });
 
-test('選択肢（正式版）：正本 JSON から生成、7・5・8、内部キー、label・detail あり、属性の名前を文中に出さない', () => {
+test('選択肢（正式版）：正本 JSON から生成、7・5・8、内部キー（本家の並び）、label・detail あり', () => {
   const B = require('../scripts/build-eti-mini-data.js');
   assert.equal(read(B.CHOICES_OUT), B.renderChoices());
   assert.equal(Q.version, 'ETI-MINI-CHOICES-1.0.0');
@@ -178,36 +178,28 @@ test('選択肢（正式版）：正本 JSON から生成、7・5・8、内部�
   assert.deepEqual(plain(q1.options.map((o) => o.key)), plain(M.ELEMENT_KEYS));
   assert.deepEqual(plain(q2.options.map((o) => o.key)), plain(M.WEAPON_KEYS));
   assert.deepEqual(plain(q3.options.map((o) => o.key)), plain(M.NATION_KEYS));
-  const names = [...M.ELEMENT_KEYS, ...M.WEAPON_KEYS, ...M.NATION_KEYS, 'ナド・クライ', '元素', '武器', '国家'];
-  // 「アナタ」は国家名「ナタ」を文字列として含むが、属性の露出ではないので除いてから照合する
-  const visible = (t) => t.replace(/アナタ/g, '');
   for (const q of Q.questions) {
     assert.ok(q.title && q.helper);
     const labels = new Set();
-    for (const o of q.options) {
-      assert.ok(o.label && o.detail, `${q.id}/${o.key}`);
-      labels.add(o.label);
-      for (const s of [o.label, o.detail]) for (const n of names) assert.ok(!visible(s).includes(n), `「${s}」に「${n}」が含まれる`);
-    }
-    for (const n of names) assert.ok(!visible(q.title).includes(n) && !visible(q.helper).includes(n), `${q.id} の問いに「${n}」`);
+    for (const o of q.options) { assert.ok(o.label && o.detail, `${q.id}/${o.key}`); labels.add(o.label); }
     assert.equal(labels.size, q.options.length, `${q.id} の見出しが重複`);
   }
 });
 
-test('選択肢の表示順を何度並べ替えても、内部キーで答えるので結果は同じ', () => {
+test('選択肢の表示：元素・武器種・国家の名前＋見出し＋一文、本家と同じ並び（並べ替えない）、回答は内部キー', () => {
   const html = read('mini.html');
   assert.match(html, /answers\[q\.id\] = o\.key/); // 位置ではなく内部キーで保持
-  let seed = 7;
-  const rnd = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
-  const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-  const nahida = CHARS.find((x) => x.name === 'ナヒーダ');
-  for (let t = 0; t < 50; t++) {
-    const pick = Q.questions.map((q) => shuffle(q.options)[t % q.options.length].key);
-    const a = { element: pick[0], weapon: pick[1], nation: pick[2] };
-    const viaShuffledDisplay = Object.fromEntries(Q.questions.map((q, i) => [q.id, shuffle(q.options).find((o) => o.key === pick[i]).key]));
-    assert.deepEqual(plain(M.autoResult(viaShuffledDisplay)), plain(M.autoResult(a)));
-    assert.deepEqual(plain(M.manualResult(viaShuffledDisplay, nahida)), plain(M.manualResult(a, nahida)));
-  }
+  // 名前（国家は画面だけ「ナド・クライ」）・見出し・一文の3つを表示する
+  assert.match(html, /nm\.appendChild\(document\.createTextNode\(M\.displayNation\(o\.key\)\)\)/);
+  assert.match(html, /t\.textContent = o\.label/);
+  assert.match(html, /d\.textContent = o\.detail/);
+  assert.match(html, /b\.appendChild\(nm\); b\.appendChild\(t\); b\.appendChild\(d\);/);
+  // 問いの見出しに区分（元素・武器種・国家）を出す
+  assert.match(html, /var CATEGORY = \{ element: '元素', weapon: '武器種', nation: '国家' \};/);
+  // 並べ替えをしない（正本 JSON＝本家の代表座標の表と同じ順）
+  assert.match(html, /q\.options\.forEach\(function \(o\) \{\n      var b = document\.createElement\('button'\);/);
+  assert.doesNotMatch(html, /Math\.random|shuffle/);
+  assert.equal(M.displayNation('ナドクライ'), 'ナド・クライ');
 });
 
 test('mini.html：点数・一致率・順位を出さない／本家の CTA が最下部／手動選択は登録118名から', () => {
