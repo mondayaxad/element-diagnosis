@@ -70,12 +70,13 @@ const PUBLIC_FILES = [
   'js/registration-onboarding.js',
   'js/jagan-mypage.js',                                       // マイページの「邪眼診断の記録」（Preview）
   'assets/backgrounds/quiet-starry-lake.jpg',
-  'mini.html',                                                // 元素診断 Mini（3問。Preview の確認用・noindex。購入はまだ無い）
+  'resonance.html',                                           // 共鳴診断（旧 元素診断 Mini。/mini は vercel.json で /resonance へ転送）。Preview の確認用・noindex。購入はまだ無い
   'js/eti_mini_core.js',                                      // 同・結果を決める層（固定割当表を引く・手動選択の結合は未接続）
   'js/eti_mini_auto_map_v1.js',                               // 同・未選択時の固定割当（scripts/build-eti-mini-data.js が正本 JSON から生成）
   'js/eti_mini_choices_v1.js',                                // 同・3問20択の正式文言（scripts/build-eti-mini-data.js が正本 JSON から生成）
   'js/eti_mini_manual_v1.js',                                 // 同・キャラクター手動選択時の再判定（ETI-MINI-MANUAL-1.0.0・50:50）
-  'js/eti_mini_share.js',                                     // 同・シェアの短い符号（/api/share?m1=・/api/og-image?m1=・/mini?s= と同じ計算）
+  'js/eti_mini_share.js',                                     // 同・シェアの短い符号（m1：旧 Mini・/resonance?s=、m2：共鳴診断・/resonance?r=。/api/share・/api/og-image と同じ計算）
+  'js/resonance_candidates.js',                               // 同・SELF IMAGE の候補の出し方（差し替え可能。現在は暫定＝118名すべて）
 ];
 // ディレクトリ直下の指定拡張子だけ（再帰しない）
 const PUBLIC_DIRS = [

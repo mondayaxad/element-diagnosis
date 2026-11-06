@@ -114,8 +114,23 @@
     return t;
   }
 
+  // 共鳴診断の結果：758 は3問だけで決まり、回答に映る人物（MIRROR）は固定割当表。
+  // 本人が選んだ人物（SELF IMAGE）は自己認識の申告として並べて表示するだけで、758・MIRROR を変えない（50:50 の結合は使わない）
+  var RESONANCE_VERSION = 'RESONANCE-C0';
+  function resonanceResult(answers, selfCharacter) {
+    var r = autoResult(answers);
+    if (selfCharacter !== null && selfCharacter !== undefined && (typeof selfCharacter.name !== 'string' || !selfCharacter.name)) {
+      throw MiniError('INVALID_CHARACTER', 'キャラクターが不明です');
+    }
+    r.mirror = { name: r.character.name, role: 'mirror' };
+    r.self = selfCharacter ? { name: selfCharacter.name, role: 'self' } : null;
+    delete r.character;
+    r.versions.resonance = RESONANCE_VERSION;
+    return r;
+  }
+
   var api = {
-    CORE_VERSION: CORE_VERSION,
+    CORE_VERSION: CORE_VERSION, RESONANCE_VERSION: RESONANCE_VERSION, resonanceResult: resonanceResult,
     ELEMENT_KEYS: ELEMENT_KEYS, WEAPON_KEYS: WEAPON_KEYS, NATION_KEYS: NATION_KEYS,
     ELEMENT_CODE: ELEMENT_CODE, WEAPON_CODE: WEAPON_CODE, NATION_CODE: NATION_CODE, TYPE_NAME: TYPE_NAME,
     ELEMENT_KEYWORD: ELEMENT_KEYWORD, WEAPON_STYLE: WEAPON_STYLE, NATION_MEANING: NATION_MEANING,

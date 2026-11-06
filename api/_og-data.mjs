@@ -74,3 +74,17 @@ export function unpackMiniShare(s) {
   const wi = v % 5; v = (v - wi) / 5;
   return { el: PACK_ELEMENTS[v], w: PACK_WEAPONS[wi], nat: PACK_NATIONS[n], charIdx, userPicked: picked === 1 };
 }
+
+// ---- 共鳴診断（m2）。js/eti_mini_share.js の packResonance / unpackResonance と同じ計算 ----
+// タイプ 280 × 回答に映る人物 118 × 本人が選んだ人物 119（118 = 選ばない）。範囲外・先頭の0・大文字は受け付けない（正規形だけ）
+export function unpackResonanceShare(s) {
+  if (typeof s !== 'string' || !/^[0-9a-z]{1,5}$/.test(s)) return null;
+  let v = parseInt(s, 36);
+  const C = MINI_CHAR_COUNT;
+  if (!(v >= 0 && v < 280 * C * (C + 1)) || v.toString(36) !== s) return null;
+  const self = v % (C + 1); v = (v - self) / (C + 1);
+  const mirror = v % C; v = (v - mirror) / C;
+  const n = v % 8; v = (v - n) / 8;
+  const wi = v % 5; v = (v - wi) / 5;
+  return { el: PACK_ELEMENTS[v], w: PACK_WEAPONS[wi], nat: PACK_NATIONS[n], mirrorIdx: mirror, selfIdx: self === C ? null : self };
+}

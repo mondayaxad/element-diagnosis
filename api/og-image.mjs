@@ -21,7 +21,7 @@ import { buildOgpCardTree } from '../js/ogp-card.mjs';
 import { ELEMENT_KEY } from '../js/ogp-theme.mjs';
 import { CHAR_ELEMENT } from './_ogp-char-element.mjs';
 import { OG_FONT_WOFF_BASE64 } from './_og-font.mjs';
-import { ELEMENT_CODE, WEAPON_CODE, TYPE_NAME, ELEMENT_NAME, WEAPON_NAME, NATION_NAME, CHAR_NAMES, unpackShareParams, canonicalShareP, packShareParams, unpackMiniShare } from './_og-data.mjs';
+import { ELEMENT_CODE, WEAPON_CODE, TYPE_NAME, ELEMENT_NAME, WEAPON_NAME, NATION_NAME, CHAR_NAMES, unpackShareParams, canonicalShareP, packShareParams, unpackMiniShare, unpackResonanceShare } from './_og-data.mjs';
 
 export const config = { runtime: 'edge' };
 
@@ -61,6 +61,9 @@ export default async function handler(req) {
   // 元素診断 Mini（m1）：同じ描き方（下地・札・同梱フォント・長期キャッシュ）で、一致率なし・見出しだけ Mini 用
   const mini = searchParams.get('m1');
   if (mini !== null) return miniImage(mini, searchParams, origin);
+  // 共鳴診断（m2）：同じ描き方で、MIRROR 欄に「SELF IMAGE（本人が選んだ人物）」と「MIRROR（回答に映る人物）」を並べる
+  const resonance = searchParams.get('m2');
+  if (resonance !== null) return resonanceImage(resonance, searchParams, origin);
   let el, w, nat, charIdx, match;
   const packed = searchParams.get('p');
   if (packed !== null) {
@@ -122,6 +125,29 @@ async function miniImage(m1, searchParams, origin) {
     // 同梱フォント（必要な文字だけ）にある文字で書く：本人が選んだキャラは「私のキャラクター」、自動は本家と同じ見出し
     mirrorLabel: u.userPicked ? '私のキャラクター' : '最も近しいキャラクター',
     brand: '元素診断 MINI',
+  };
+  return renderCard(data, origin);
+}
+
+// 共鳴診断のシェア画像。m2 は正規形だけ（js/eti_mini_share.js の packResonance と同じ符号）。
+// 見出しは同梱フォントにある英字（SELF IMAGE・MIRROR）。「最も近しいキャラクター」とは書かない
+async function resonanceImage(m2, searchParams, origin) {
+  const u = unpackResonanceShare(m2);
+  if (!u || !CHAR_NAMES[u.mirrorIdx] || (u.selfIdx !== null && !CHAR_NAMES[u.selfIdx])) {
+    return new Response('invalid', { status: 400, headers: { 'Cache-Control': 'public, max-age=86400, s-maxage=86400' } });
+  }
+  if ([...searchParams.keys()].some((k) => k !== 'm2')) {
+    return new Response(null, { status: 308, headers: { Location: `${origin}/api/og-image?m2=${m2}`, ...CACHE_HEADERS } });
+  }
+  const person = (idx, label) => ({ label, name: CHAR_NAMES[idx], element: CHAR_ELEMENT[CHAR_NAMES[idx]] || u.el });
+  const pair = u.selfIdx !== null ? [person(u.selfIdx, 'SELF IMAGE'), person(u.mirrorIdx, 'MIRROR')] : [person(u.mirrorIdx, 'MIRROR')];
+  const data = {
+    code: ELEMENT_CODE[u.el] + WEAPON_CODE[u.w], typeName: TYPE_NAME[u.el][u.w], element: u.el, weapon: u.w,
+    nation: u.nat === 'ナドクライ' ? 'ナド・クライ' : u.nat,
+    mirrorName: '', // 札（1人用の事前生成）は使わず、pair を描く
+    match: '',
+    pair,
+    brand: '共鳴診断 RESONANCE',
   };
   return renderCard(data, origin);
 }
