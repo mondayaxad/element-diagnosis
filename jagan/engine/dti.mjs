@@ -70,3 +70,13 @@ export function dtiPattern(dti, elementId, traitId) {
   if (!p) throw new Error('dti_pattern_missing');
   return p;
 }
+
+// 異相の全体の並び（完全解析の「異相の全体順位」）：selectIsou と同じ規則で12特性すべてを並べる。
+//   平均（交差積）→ 5の割合 → 4の割合 → 固定ハッシュ。1位は必ず selectIsou の結果と同じ。
+export function orderIsou(answers, items) {
+  const t = traitTallies(answers, items);
+  const hashOrder = byHash(normalizedAnswers(answers, items), 'isou', t.map((x) => x.id));
+  const hi = (id) => hashOrder.indexOf(id);
+  return [...t].sort((a, b) => cmp(b, a, 'sum') || cmp(b, a, 'c5') || cmp(b, a, 'c4') || hi(a.id) - hi(b.id))
+    .map((x, i) => ({ id: x.id, rank: i + 1, mean: x.sum / x.n }));
+}

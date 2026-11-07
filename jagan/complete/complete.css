@@ -1,0 +1,77 @@
+/* 邪眼完全解析「DIPPER」（叩き台）の紙面。A4 縦（794×1123 の比）を1ページとし、画面では縦に並べる。印刷・PDF は1ページずつ改ページ */
+:root { --bg: #07050a; --paper: #100a10; --line: #2a1820; --fg: #efe1e6; --sub: #b9a3ad; --dim: #85707a; --gold: #e2c08c; --rose: #c8405c; }
+* { box-sizing: border-box; }
+body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', serif; line-height: 1.85; -webkit-font-smoothing: antialiased; }
+.dp-bar-top { max-width: 820px; margin: 0 auto; padding: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 12px; color: var(--sub); }
+.dp-bar-top button, .dp-bar-top select { font: inherit; color: var(--fg); background: #1a0d14; border: 1px solid #5a2232; border-radius: 6px; padding: 6px 10px; }
+.dp-book { max-width: 820px; margin: 0 auto; padding: 0 12px 48px; display: flex; flex-direction: column; gap: 18px; }
+.dp-page { position: relative; aspect-ratio: 794 / 1123; width: 100%; background:
+  radial-gradient(120% 60% at 85% 0%, rgba(122,26,46,.22), transparent 60%), radial-gradient(90% 50% at 0% 100%, rgba(58,12,24,.35), transparent 60%), var(--paper);
+  border: 1px solid var(--line); border-radius: 6px; overflow: hidden; container-type: inline-size; }
+.dp-inner { position: absolute; inset: 5.5cqw 6cqw 7cqw; overflow: hidden; font-size: 1.95cqw; }
+.dp-foot { position: absolute; left: 6cqw; right: 6cqw; bottom: 2.6cqw; display: flex; justify-content: space-between; font-size: 1.35cqw; color: var(--dim); letter-spacing: .12em; border-top: 1px solid var(--line); padding-top: 1cqw; }
+.dp-head { display: flex; gap: 2.4cqw; align-items: flex-start; margin-bottom: 2.6cqw; padding-bottom: 1.6cqw; border-bottom: 1px solid var(--line); }
+.dp-num { font-family: 'IM Fell English', serif; font-size: 5.2cqw; line-height: 1; color: var(--rose); opacity: .85; }
+.dp-kicker { font-size: 1.4cqw; letter-spacing: .3em; color: var(--gold); }
+.dp-title { margin: .4cqw 0 0; font-size: 3.4cqw; font-weight: 700; letter-spacing: .06em; }
+.dp-p { margin: 0 0 1.4cqw; color: var(--fg); }
+.dp-lead { font-size: 2.3cqw; color: #f5e8ec; }
+.dp-note { font-size: 1.55cqw; color: var(--dim); margin: 1cqw 0 0; }
+.dp-li { margin: .3cqw 0 .9cqw; font-size: 1.75cqw; color: var(--sub); }
+.dp-k { font-size: 1.6cqw; letter-spacing: .14em; color: var(--c, var(--gold)); font-weight: 700; margin-bottom: .8cqw; }
+.dp-k2 { font-size: 1.5cqw; letter-spacing: .14em; color: var(--gold); margin: 1.4cqw 0 .6cqw; }
+.dp-big { font-size: 4.6cqw; font-weight: 700; color: var(--c, var(--fg)); line-height: 1.3; }
+.dp-big small { display: block; font-size: 1.7cqw; color: var(--sub); font-weight: 400; letter-spacing: .08em; margin-top: .4cqw; }
+.dp-card { border: 1px solid color-mix(in srgb, var(--c, #c8405c) 40%, var(--line)); border-left: .5cqw solid var(--c, #c8405c); border-radius: 1cqw; padding: 1.8cqw 2.2cqw; margin-bottom: 1.6cqw;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--c, #c8405c) 10%, transparent), transparent 70%); }
+.dp-pair, .dp-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.8cqw; }
+.dp-row { display: grid; grid-template-columns: 11em 1fr 3em; align-items: center; gap: 1.2cqw; margin: .5cqw 0; }
+.dp-row small { margin-left: .6em; color: var(--dim); font-size: .8em; }
+.dp-row b { text-align: right; font-variant-numeric: tabular-nums; }
+.dp-row.big { grid-template-columns: 9em 1fr; } .dp-row.big em { font-style: normal; color: var(--sub); }
+.dp-bar { height: .7cqw; border-radius: 1cqw; background: #1c0f16; overflow: hidden; display: block; }
+.dp-bar i { display: block; height: 100%; border-radius: 1cqw; background: linear-gradient(90deg, color-mix(in srgb, var(--c) 35%, #0b0306), var(--c)); }
+.dp-rrow, .dp-frow { display: grid; grid-template-columns: 3.4em 7.5em 1fr 16em 3.2em; align-items: center; gap: .4cqw 1.2cqw; padding: .9cqw 0; border-bottom: 1px solid var(--line); }
+.dp-rrow.compact { padding: .55cqw 0; }
+.dp-rrow .dp-rd, .dp-frow .dp-rd { grid-column: 2 / -1; font-size: 1.55cqw; color: var(--dim); }
+.dp-rrow.top .dp-rk, .dp-frow.sel .dp-rk { color: var(--gold); }
+.dp-rk { font-family: 'IM Fell English', serif; color: var(--dim); letter-spacing: .1em; }
+.dp-rn { font-weight: 700; } .dp-rs { color: var(--sub); font-size: 1.6cqw; }
+.dp-rrow b, .dp-frow b { text-align: right; font-variant-numeric: tabular-nums; }
+.dp-fname { font-weight: 700; background-image: linear-gradient(100deg, color-mix(in srgb, var(--a) 88%, #0b0306), color-mix(in srgb, var(--b) 92%, #0b0306)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.dp-hero { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid color-mix(in srgb, var(--c) 55%, transparent); padding-bottom: 1.4cqw; margin-bottom: 2cqw; }
+.dp-score { font-family: 'IM Fell English', serif; font-size: 8cqw; line-height: 1; color: var(--c); }
+.dp-quote { margin: 1.6cqw 0; padding: 1.4cqw 2cqw; border-left: .4cqw solid var(--gold); color: #f2dfc0; background: rgba(226,192,140,.06); }
+.dp-trio { font-size: 6cqw; font-weight: 700; text-align: center; margin: 3cqw 0 1cqw; letter-spacing: .06em; }
+.dp-trio b { color: var(--dim); font-weight: 400; margin: 0 1.2cqw; }
+.dp-typename { text-align: center; font-size: 2.6cqw; color: var(--gold); letter-spacing: .2em; margin-bottom: 3cqw; }
+.dp-layers { display: grid; gap: 1.2cqw; margin: 2cqw 0; }
+.dp-layer { display: grid; grid-template-columns: 9em 6em 1fr; gap: 1.6cqw; align-items: center; padding: 2cqw; border: 1px solid color-mix(in srgb, var(--c) 45%, var(--line)); border-radius: 1cqw; background: color-mix(in srgb, var(--c) 9%, transparent); }
+.dp-layer span { color: var(--sub); font-size: 1.6cqw; letter-spacing: .1em; } .dp-layer b { font-size: 3.6cqw; color: var(--c); } .dp-layer em { font-style: normal; }
+.dp-day { display: grid; grid-template-columns: 5em 6em 1fr; gap: .4cqw 1.4cqw; align-items: baseline; padding: 1cqw 0; border-bottom: 1px solid var(--line); }
+.dp-day p { margin: 0; } .dp-write { grid-column: 1 / -1; height: 3cqw; border-bottom: 1px dashed #3a2430; }
+.dp-check { display: grid; grid-template-columns: 2em 9em 1fr; gap: 1.2cqw; padding: 1.2cqw 0; border-bottom: 1px solid var(--line); }
+.dp-check em { font-style: normal; color: var(--sub); }
+.dp-toc { columns: 2; font-size: 1.65cqw; color: var(--sub); padding-left: 0; list-style: none; margin-top: 2cqw; }
+.dp-toc span { color: var(--rose); margin-right: 1em; font-family: 'IM Fell English', serif; }
+.dp-dict .dp-inner { font-size: 1.7cqw; }
+.dp-dcard { border-left: .45cqw solid var(--c); padding: .8cqw 1.6cqw; margin-bottom: 1cqw; background: color-mix(in srgb, var(--c) 7%, transparent); border-radius: .6cqw; }
+.dp-dcard p { margin: .2cqw 0; }
+.dp-dgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.6cqw; }
+.dp-dgrid .dp-dcard { margin-bottom: 1.2cqw; }
+/* 表紙 */
+.dp-cover .dp-inner { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.dp-cover { background: radial-gradient(70% 50% at 50% 34%, color-mix(in srgb, var(--ec) 30%, transparent), transparent 70%), radial-gradient(120% 70% at 50% 100%, rgba(122,26,46,.35), transparent 60%), #0b0508; }
+.dp-cover-emblem img { width: 38cqw; height: 38cqw; object-fit: contain; filter: drop-shadow(0 0 4cqw color-mix(in srgb, var(--ec) 45%, transparent)); }
+.dp-cover-label { margin-top: 3cqw; font-size: 2.4cqw; letter-spacing: .4em; color: var(--sub); } .dp-cover-label b { color: var(--gold); letter-spacing: .3em; }
+.dp-cover-en { font-family: 'IM Fell English', serif; font-size: 1.5cqw; letter-spacing: .3em; color: var(--dim); margin-top: .6cqw; }
+.dp-cover-code { margin-top: 4cqw; font-size: 2.4cqw; letter-spacing: .5em; color: var(--gold); }
+.dp-cover-name { margin: 1cqw 0; font-size: 9cqw; letter-spacing: .14em; font-weight: 700; }
+.dp-cover-combo { font-size: 4.4cqw; font-weight: 700; } .dp-cover-combo b { color: var(--dim); margin: 0 1.6cqw; font-weight: 400; }
+.dp-cover-fatui { margin-top: 3cqw; font-size: 2cqw; color: var(--sub); }
+.dp-cover-date { margin-top: 3cqw; font-size: 1.5cqw; color: var(--dim); letter-spacing: .2em; }
+@media print {
+  body.dp { background: #fff; } .dp-bar-top { display: none; } .dp-book { padding: 0; gap: 0; max-width: none; }
+  .dp-page { border: 0; border-radius: 0; break-after: page; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @page { size: A4; margin: 0; }
+}

@@ -644,6 +644,9 @@ test('mypage の色（js/jagan-mypage.js）：異相・元素の色は jagan/sit
   assert.deepEqual(Object.keys(jm.COLORS.FATUI_TONE).sort(), BUNDLE.characters.characters.map((c) => c.id).sort(), '11人すべて');
   assert.deepEqual(jm.COLORS.FATUI_TONE, { pierro: ['EL', 'CR'], scaramouche: ['EL', 'AN'], capitano: ['CR', 'WHITE'], sandrone: ['CR', 'GE'], tartaglia: ['HY', 'EL'],
     columbina: ['HY', 'WHITE'], dottore: ['PY', 'DE'], signora: ['CR', 'PY'], pantalone: ['DE', 'EL'], arlecchino: ['PY', 'BLACK'], pulcinella: ['CR', 'HY'] });
+  assert.deepEqual(jm.COLORS.FATUI_TONE, SC.FATUI_TONE, 'マイページと完全解析で同じ組み合わせ（正本は site-copy）');
+  assert.equal(jm.COLORS.WHITE.toLowerCase(), SC.FATUI_TONE_EXTRA.WHITE.toLowerCase());
+  assert.equal(jm.COLORS.BLACK, SC.FATUI_TONE_EXTRA.BLACK);
   const lum = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)).reduce((a, b) => a + b, 0);
   for (const [id, [a]] of Object.entries(jm.COLORS.FATUI_TONE)) {
     const t = jm.fatuiTone(id);
@@ -672,4 +675,45 @@ test('mypage の開示（購入済みだけ）：三つの土台の上位2特性
   assert.equal(out.sessions[1].insight, null, '未購入には開示を作らない');
   jm = loadJaganMypage({ rows, ent: { data: null, error: { message: 'x' } } });
   assert.ok((await jm.load()).sessions.every((s) => s.insight === null), '権利を読めなければ作らない');
+});
+
+// ---- 邪眼完全解析 DIPPER（叩き台）
+test('完全解析 DIPPER：33ページ・指示の順。順位（邪眼7・異相12・ファトゥス11＝6＋5）は結果と同じ規則で、1位は結果と一致。どの結果でも空欄・未定義を出さない', async () => {
+  const { buildComplete } = await import('../jagan/complete/model.mjs');
+  const { renderComplete, PAGE_TITLES } = await import('../jagan/complete/view.mjs');
+  const { orderIsou, selectIsou } = await import('../jagan/engine/dti.mjs');
+  const { sampleComplete } = await import('../jagan/complete-sample.mjs');
+  assert.equal(PAGE_TITLES.length, 33);
+  assert.deepEqual(PAGE_TITLES.slice(0, 9), ['表紙', 'このレポートの読み方', '邪眼と異相 — あなたの影の正体', 'ファトゥスはなぜ現れるのか', 'あなたの深層',
+    '邪眼元素の全体順位', '異相の全体順位', 'ファトゥスの順位 1–6', 'ファトゥスの順位 7–11']);
+  assert.deepEqual(PAGE_TITLES.slice(-6), ['弱点をどう活かすか', '人物から得るもの', '7日間の観察実験', '再読時の判断材料', '邪眼辞典', '異相辞典']);
+  const codes = new Set();
+  for (let seed = 0; seed < 400; seed++) {
+    const { result, html } = sampleComplete(seed);
+    codes.add(result.dti.code);
+    const m = buildComplete(result, BUNDLE);
+    assert.equal(m.elements.length, 7); assert.equal(m.isous.length, 12); assert.equal(m.fatui.length, 11);
+    assert.equal(m.fatuiTop.length, 6); assert.equal(m.fatuiRest.length, 5);
+    assert.equal(m.element.id, result.element.id); assert.equal(m.isou.id, result.isou.id);
+    assert.equal(orderIsou(result.answers, BUNDLE.items)[0].id, selectIsou(result.answers, BUNDLE.items).id);
+    if (m.character) { assert.equal(m.character.id, result.character.id); assert.equal(m.character.match, result.character.match); }
+    assert.equal((html.match(/class="dp-page /g) || []).length, 33, `seed ${seed}`);
+    assert.ok(!/undefined|NaN|\[object/.test(html), `seed ${seed}`);
+    assert.ok(html.includes(result.dti.code) && html.includes(result.dti.name));
+  }
+  assert.ok(codes.size >= 60, `いろいろな DTI で確かめた（${codes.size}）`);
+});
+
+test('完全解析 DIPPER：文章の辞書が、邪眼7・異相12・ファトゥス11・ドメイン3のすべてをそろえている', async () => {
+  const C = await import('../jagan/complete/copy.mjs');
+  const SC = await import('../jagan/site-copy.mjs');
+  assert.deepEqual(Object.keys(C.ELEMENT_DEEP).sort(), BUNDLE.core.elements.map((e) => e.id).sort());
+  assert.deepEqual(Object.keys(C.TRAIT_DEEP).sort(), BUNDLE.items.traits.map((t) => t.id).sort());
+  assert.deepEqual(Object.keys(C.FATUI_DEEP).sort(), BUNDLE.characters.characters.map((c) => c.id).sort());
+  assert.deepEqual(Object.keys(C.DOMAIN_DEEP).sort(), SC.GROUPS.map((g) => g.id).sort());
+  for (const v of Object.values(C.ELEMENT_DEEP)) for (const k of ['strength', 'use', 'low', 'dict']) assert.ok(v[k] && v[k].length > 10, k);
+  for (const v of Object.values(C.TRAIT_DEEP)) for (const k of ['strength', 'use', 'weak', 'low', 'exp', 'recheck']) assert.ok(v[k] && v[k].length > 8, k);
+  // 病名を断定しない（「判定するものではありません」の否定の言い方だけ）
+  const all = JSON.stringify(C);
+  for (const w of ['障害です', '病気です', 'サイコパスです']) assert.ok(!all.includes(w), w);
 });

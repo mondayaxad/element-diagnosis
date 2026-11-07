@@ -127,6 +127,12 @@ export const CHARACTER_ELEMENTS = {
   pulcinella: ['HY', 'CR'], pantalone: ['DE'], signora: ['CR', 'PY'], scaramouche: ['EL', 'AN'], dottore: ['PY', 'DE'],
 };
 
+// ファトゥスの色の組み合わせ（オーナー指定・2026-11-07。マイページの円グラフ・名前、完全解析の人物名で使う）。WHITE・BLACK は元素以外の色
+//   結果ページの人物名（CHARACTER_ELEMENTS・characterGradient）とは別の指定
+export const FATUI_TONE = { pierro: ['EL', 'CR'], scaramouche: ['EL', 'AN'], capitano: ['CR', 'WHITE'], sandrone: ['CR', 'GE'], tartaglia: ['HY', 'EL'],
+  columbina: ['HY', 'WHITE'], dottore: ['PY', 'DE'], signora: ['CR', 'PY'], pantalone: ['DE', 'EL'], arlecchino: ['PY', 'BLACK'], pulcinella: ['CR', 'HY'] };
+export const FATUI_TONE_EXTRA = { WHITE: '#ECE8F2', BLACK: '#2a1016' };
+
 // 方法の説明（方法説明ページ・レポートで共通）
 export const METHOD = {
   short_notice: 'パーソナリティの特性研究を参考にした独自の自己理解コンテンツです。医療診断ではありません。',

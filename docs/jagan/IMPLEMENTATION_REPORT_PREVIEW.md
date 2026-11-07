@@ -136,3 +136,7 @@
 - 2026-11-07：Preview DB に jagan_02 を SQL Editor で適用（適用前の確認 11 行すべて ok → 適用 Success → 適用後の確認 46 行すべて ok。
   履歴 20261107120000 jagan_02_orders_links_registrations、jagan_orders 0 行、関数 7 つは invoker・search_path=""・ブラウザのロールは実行不可）。
 - 2026-11-07：オーナーの承認で、Vercel の Preview（release-c-preview）に JAGAN_SALES_OPEN=true を追加（本番には設定しない）。
+- 2026-11-07：マイページの購入済みの邪眼の記録に「深く読み解いた記録」（三つの土台の上位2特性と数値・ファトゥス上位4名）を開示。
+- 2026-11-07：邪眼完全解析「DIPPER」の叩き台（33ページ。販売・購入には未接続）。jagan/complete/{copy,model,view}.mjs・complete.css、
+  見本 /jagan/complete-sample（?seed= で別の回答）。順位は結果と同じ規則（異相の全体順位は orderIsou：1位は必ず結果の異相）。
+  ファトゥスの色はオーナー指定の組み合わせ（site-copy の FATUI_TONE を正本に、マイページと共通）。見本の PDF：evidence/20261107_dipper_complete_sample.pdf

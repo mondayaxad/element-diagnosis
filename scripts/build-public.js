@@ -94,6 +94,8 @@ const PUBLIC_DIRS = [
   { dir: 'jagan', ext: '.html' },                              // 邪眼診断（/jagan/・/jagan/about・/jagan/sample）
   { dir: 'jagan', ext: '.mjs' },
   { dir: 'jagan', ext: '.css' },
+  { dir: 'jagan/complete', ext: '.mjs' },                       // 邪眼完全解析 DIPPER（叩き台）の中身・紙面・文章
+  { dir: 'jagan/complete', ext: '.css' },
   { dir: 'jagan/engine', ext: '.mjs' },                        // 邪眼診断の採点（仕様の runtime.mjs・math.mjs と生成した data.mjs。サーバーも同じものを使う）
 ];
 
