@@ -1,0 +1,2303 @@
+{
+  "title": "共鳴診断66名 地域修正・重点11名深掘り監査 v2.1",
+  "updated": "2026-11-07",
+  "source": "v2資料への訂正：千織の稲妻出身とフォンテーヌ活動拠点を分離",
+  "caveat": "人物の心理スコアの検証ではない。ゲーム内テキストに関する一部事実は非公式転記からの確認にとどまり、ゲーム内原本の照合前。",
+  "region_counts": {
+    "無所属（国別）": 2,
+    "モンド": 10,
+    "璃月": 11,
+    "稲妻": 10,
+    "フォンテーヌ": 11,
+    "スメール": 7,
+    "ナタ": 7,
+    "ナド・クライ": 6,
+    "スネージナヤ": 2
+  },
+  "deep_review_count": 11,
+  "characters": [
+    {
+      "name": "スカーク",
+      "group": "NAT",
+      "region_section": "ナタ・スカーク",
+      "eti_element": "氷",
+      "eti_weapon": "片手剣",
+      "officially_supported_summary": "カーンルイア五大罪人の一人スルトロッチの弟子を名乗り、タルタリヤの師匠でもある武人。",
+      "interpretation_for_report_NOT_CANON": "極限の鍛錬、師弟関係、他者との距離を比較する題材。",
+      "caution_or_need_more_evidence": "「孤独だから他者を拒む」など内面の断定は不可。",
+      "evidence_depth": "B",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/Natlan?char=0"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "solitary",
+        "平静",
+        "規律",
+        "自律",
+        "生存",
+        "距離感"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%B9%E3%82%AB%E3%83%BC%E3%82%AF",
+      "region_category_v2": "無所属（国別）",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "ナタ・スカーク",
+      "org_note_v2": "スカークは師弟関係等あり／ニコは魔女会所属。国別「無所属」と区別",
+      "deep_research_v2": {
+        "facts": [
+          "公式紹介では出自不明の武人で、五大罪人スルトロッチの弟子、タルタリヤに武芸を教えた師匠とされる。",
+          "公式実装情報には深淵の裂け目・原始胎海への立ち入りと「孤独に戦う」という説明がある。",
+          "国別分類は無所属とする。ただし組織的な関係（師弟など）がないという意味ではない。"
+        ],
+        "reading": "鍛錬における孤立性・圧倒的な実力・師としての役割を併記し、安易に「人が嫌い」「感情がない」と決めつけない。",
+        "avoid": "公式サイトでナタのページに載ることは、ナタ出身の根拠ではない。深淵での暮らしと国籍を混同しない。",
+        "sources": [
+          [
+            "公式・キャラクター紹介",
+            "https://genshin.hoyoverse.com/ja/news/detail/156886"
+          ],
+          [
+            "公式・実装詳細",
+            "https://genshin.hoyoverse.com/ja/news/detail/157064"
+          ],
+          [
+            "HoYoWiki・キャラ所属参考",
+            "https://wiki.hoyolab.com/pc/genshin/entry/7706?lang=ja-jp"
+          ]
+        ]
+      },
+      "deep_review_status_v2": "公式紹介とゲーム内転記の照合済み。ゲーム内テキストは非公式ミラー経由、原本照合未完了。"
+    },
+    {
+      "name": "ニコ",
+      "group": "MON",
+      "region_section": "モンド・魔女会",
+      "eti_element": "炎",
+      "eti_weapon": "法器",
+      "officially_supported_summary": "魔女会の魔女N、ニコ・リヤン。「世界線の観測者」と紹介される。",
+      "interpretation_for_report_NOT_CANON": "観察する者の立ち位置、知識と介入の距離という主題。",
+      "caution_or_need_more_evidence": "動機・性格の詳細は公式短文だけでは特定できない。",
+      "evidence_depth": "B",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/mondstadt?char=4"
+      },
+      "extra_official_sources": [
+        {
+          "title": "魔女会のニコと世界に関わる場面のティザー",
+          "url": "https://genshin.hoyoverse.com/en/news/detail/157790"
+        }
+      ],
+      "eti_basis_tags_NOT_CANON": [
+        "知的探究",
+        "神秘",
+        "寡黙",
+        "創造",
+        "情報",
+        "自律"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%8B%E3%82%B3",
+      "region_category_v2": "無所属（国別）",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "モンド・魔女会",
+      "org_note_v2": "スカークは師弟関係等あり／ニコは魔女会所属。国別「無所属」と区別",
+      "deep_research_v2": {
+        "facts": [
+          "魔女会の魔女N／ニコ・リヤン。公式地域紹介では「世界線の観測者」と説明される。",
+          "公式配信会社の紹介は、生き残った天の使いで、長い時間を通じて知識を積み重ね、迷う者に助言・援助を与える人物とする。",
+          "声を発さずに意志を伝える性質があり、魔女会とのつながりは明確。国別は無所属でも「組織無所属」ではない。"
+        ],
+        "reading": "「知識を持つ観測者」で終わらせず、知識を何に使うか（迷い人を導く）を固有性にする。沈黙と無関心は異なる。",
+        "avoid": "魔女会がモンドの紹介ページにあることだけでモンド出身・モンド所属国としない。",
+        "sources": [
+          [
+            "公式・地域紹介",
+            "https://genshin.hoyoverse.com/ja/character/mondstadt?char=4"
+          ],
+          [
+            "COGNOSPHERE配信資料",
+            "https://prtimes.jp/main/html/rd/p/000000406.000096124.html"
+          ],
+          [
+            "PlayStation公式ブログ",
+            "https://blog.ja.playstation.com/2026/05/08/20260508-genshin-post-launch-update-o/"
+          ]
+        ]
+      },
+      "deep_review_status_v2": "公式紹介とゲーム内転記の照合済み。ゲーム内テキストは非公式ミラー経由、原本照合未完了。"
+    },
+    {
+      "name": "ドゥリン",
+      "group": "MON",
+      "region_section": "モンド・魔女会",
+      "eti_element": "炎",
+      "eti_weapon": "片手剣",
+      "officially_supported_summary": "童話の世界で暮らしていた龍で、今は人間としての生き方を学ぼうとしている。",
+      "interpretation_for_report_NOT_CANON": "異質な存在が社会になじむ過程、学習と帰属の葛藤。",
+      "caution_or_need_more_evidence": "シムランカの存在と別の竜の設定を混同しない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/mondstadt?char=4"
+      },
+      "extra_official_sources": [
+        {
+          "title": "童話の悪龍から人の世界に歩み始めた公式紹介",
+          "url": "https://genshin.hoyoverse.com/m/en/news/detail/164248"
+        }
+      ],
+      "eti_basis_tags_NOT_CANON": [
+        "慎重",
+        "共感",
+        "好奇心",
+        "創造",
+        "anxious",
+        "平和"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%89%E3%82%A5%E3%83%AA%E3%83%B3",
+      "region_category_v2": "モンド",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "モンド・魔女会"
+    },
+    {
+      "name": "ジン",
+      "group": "MON",
+      "region_section": "モンド・魔女会",
+      "eti_element": "風",
+      "eti_weapon": "片手剣",
+      "officially_supported_summary": "西風騎士団代理団長として、人々を守るため日夜職務に励む。",
+      "interpretation_for_report_NOT_CANON": "公的責務と自分の休息との緊張関係。",
+      "caution_or_need_more_evidence": "「他者のため自己犠牲を常に望む」まで断定しない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/mondstadt?char=4"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "主導",
+        "役割責任",
+        "奉仕",
+        "規律",
+        "保護",
+        "共同体"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%B8%E3%83%B3",
+      "region_category_v2": "モンド",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "モンド・魔女会"
+    },
+    {
+      "name": "アルベド",
+      "group": "MON",
+      "region_section": "モンド・魔女会",
+      "eti_element": "岩",
+      "eti_weapon": "片手剣",
+      "officially_supported_summary": "騎士団の錬金術師・調査隊長。名誉や富ではなく、人類の古い知識の探究を重視する。",
+      "interpretation_for_report_NOT_CANON": "地位より探究を優先する価値基準、未知への好奇心。",
+      "caution_or_need_more_evidence": "創造物としての出自・人間観は別途キャラストーリー確認を推奨。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/mondstadt?char=4"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "researcher",
+        "知的探究",
+        "創造",
+        "寡黙",
+        "自律",
+        "役割責任"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%A2%E3%83%AB%E3%83%99%E3%83%89",
+      "region_category_v2": "モンド",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "モンド・魔女会"
+    },
+    {
+      "name": "ディルック",
+      "group": "MON",
+      "region_section": "モンド・魔女会",
+      "eti_element": "炎",
+      "eti_weapon": "両手剣",
+      "officially_supported_summary": "モンドの富豪で、表向きの礼節の背後に、モンドを守ろうとする強い意志を持つ。",
+      "interpretation_for_report_NOT_CANON": "表面の冷静さと行動を支える信念の対比。",
+      "caution_or_need_more_evidence": "過去の経緯・義兄弟関係は本資料の一次根拠から外す。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/mondstadt?char=4"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "役割責任",
+        "保護",
+        "自律",
+        "寡黙",
+        "規律",
+        "公正"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%87%E3%82%A3%E3%83%AB%E3%83%83%E3%82%AF",
+      "region_category_v2": "モンド",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "モンド・魔女会"
+    },
+    {
+      "name": "ファルカ",
+      "group": "MON",
+      "region_section": "モンド・魔女会",
+      "eti_element": "風",
+      "eti_weapon": "両手剣",
+      "officially_supported_summary": "西風騎士団の大団長・北風騎士。モンドを守る立場にある。",
+      "interpretation_for_report_NOT_CANON": "大きな責任を負いつつ前へ進む指導者像。",
+      "caution_or_need_more_evidence": "細部の人格は公式ティザー等で補充。",
+      "evidence_depth": "B",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/mondstadt?char=4"
+      },
+      "extra_official_sources": [
+        {
+          "title": "古い血筋・神の恩恵に頼らぬ努力という紹介",
+          "url": "https://genshin.hoyoverse.com/en/news/detail/162729"
+        }
+      ],
+      "eti_basis_tags_NOT_CANON": [
+        "主導",
+        "冒険",
+        "安定",
+        "自律",
+        "粘り強さ",
+        "共同体"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%95%E3%82%A1%E3%83%AB%E3%82%AB",
+      "region_category_v2": "モンド",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "モンド・魔女会",
+      "deep_research_v2": {
+        "facts": [
+          "西風騎士団大団長で「北風騎士」。モンドの守護と大遠征の指揮が中心的な役割。",
+          "公式2026年2月の逸話では、博士の陰謀が収束しても遠征軍が帰還しない理由に触れている。",
+          "魔女会・風神との関係が語られる人物でもあり、単なる武闘派に還元できない。"
+        ],
+        "reading": "強さの誇示ではなく、責任・長期的な使命・組織を率いながら自由に動く姿を重点に置く。",
+        "avoid": "「豪放だから無計画」「正義感が強いから常に慎重」のどちらも決めつけない。",
+        "sources": [
+          [
+            "公式・遠征の逸話",
+            "https://genshin.hoyoverse.com/ja/news/detail/162723"
+          ],
+          [
+            "公式・キャラ能力紹介",
+            "https://genshin.hoyoverse.com/ja/news/detail/162722"
+          ],
+          [
+            "ゲーム内設定転記・補助",
+            "https://wikiwiki.jp/genshinwiki/%E3%83%95%E3%82%A1%E3%83%AB%E3%82%AB"
+          ]
+        ]
+      },
+      "deep_review_status_v2": "公式紹介とゲーム内転記の照合済み。ゲーム内テキストは非公式ミラー経由、原本照合未完了。"
+    },
+    {
+      "name": "エウルア",
+      "group": "MON",
+      "region_section": "モンド・魔女会",
+      "eti_element": "氷",
+      "eti_weapon": "両手剣",
+      "officially_supported_summary": "旧貴族の家系に生まれ、その血筋への偏見の中で自分なりの処世術を持ち、家族とも袂を分かった騎士。",
+      "interpretation_for_report_NOT_CANON": "家系での評価と個人としての選択の対立。",
+      "caution_or_need_more_evidence": "「復讐」の言い回しを単純な残虐性と解さない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/mondstadt?char=4"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "自律",
+        "役割責任",
+        "保護",
+        "寡黙",
+        "反骨",
+        "規律"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%A8%E3%82%A6%E3%83%AB%E3%82%A2",
+      "region_category_v2": "モンド",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "モンド・魔女会"
+    },
+    {
+      "name": "ローエン",
+      "group": "MON",
+      "region_section": "モンド・魔女会",
+      "eti_element": "氷",
+      "eti_weapon": "長柄",
+      "officially_supported_summary": "西風騎士団第5小隊副隊長。槍を用い、戦場の最前線に立つ若い騎士。",
+      "interpretation_for_report_NOT_CANON": "戦いへの情熱と組織内の責務の両立。",
+      "caution_or_need_more_evidence": "公式補足では悪戯好き・戦い自体への情熱もあるため単なる無口な実務家にしない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/mondstadt?char=4"
+      },
+      "extra_official_sources": [
+        {
+          "title": "戦闘への純粋な熱意・悪戯好き・危機時に前線に立つという公式紹介",
+          "url": "https://genshin.hoyoverse.com/en/news/detail/164609"
+        }
+      ],
+      "eti_basis_tags_NOT_CANON": [
+        "競争",
+        "実利",
+        "戦術",
+        "自律",
+        "生存",
+        "型破り"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%AD%E3%83%BC%E3%82%A8%E3%83%B3",
+      "region_category_v2": "モンド",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "モンド・魔女会"
+    },
+    {
+      "name": "クレー",
+      "group": "MON",
+      "region_section": "モンド・魔女会",
+      "eti_element": "炎",
+      "eti_weapon": "法器",
+      "officially_supported_summary": "西風騎士団の火花騎士。爆発が好きで、しばしば代理団長の反省室に入る。",
+      "interpretation_for_report_NOT_CANON": "遊び・探究・規律の衝突を朗らかに描ける。",
+      "caution_or_need_more_evidence": "危険行為を性格的な悪意に結びつけない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/mondstadt?char=4"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "遊び心",
+        "創造",
+        "社交",
+        "衝動",
+        "新奇",
+        "冒険"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%AF%E3%83%AC%E3%83%BC",
+      "region_category_v2": "モンド",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "モンド・魔女会"
+    },
+    {
+      "name": "モナ",
+      "group": "MON",
+      "region_section": "モンド・魔女会",
+      "eti_element": "水",
+      "eti_weapon": "法器",
+      "officially_supported_summary": "優れた占星術師で学識があり高慢な面もあるが、占いを金儲けの手段にしない信念がある。",
+      "interpretation_for_report_NOT_CANON": "困窮よりも専門上の信念を選ぶ葛藤。",
+      "caution_or_need_more_evidence": "貧しさを人格の欠陥として扱わない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/mondstadt?char=4"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "知的探究",
+        "神秘",
+        "自律",
+        "自負",
+        "規律",
+        "好奇心"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%A2%E3%83%8A",
+      "region_category_v2": "モンド",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "モンド・魔女会"
+    },
+    {
+      "name": "ウェンティ",
+      "group": "MON",
+      "region_section": "モンド・魔女会",
+      "eti_element": "風",
+      "eti_weapon": "弓",
+      "officially_supported_summary": "古今の詩を歌う謎の吟遊詩人で、リンゴや賑やかな場を好む。",
+      "interpretation_for_report_NOT_CANON": "軽やかな表現や自由を通じて人をつなぐ人物像。",
+      "caution_or_need_more_evidence": "正体・統治哲学の深い解釈は別途物語確認。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/mondstadt?char=4"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "自由",
+        "芸術",
+        "表現",
+        "遊び心",
+        "共感",
+        "自律"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%A6%E3%82%A7%E3%83%B3%E3%83%86%E3%82%A3",
+      "region_category_v2": "モンド",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "モンド・魔女会"
+    },
+    {
+      "name": "刻晴",
+      "group": "LIY",
+      "region_section": "璃月",
+      "eti_element": "雷",
+      "eti_weapon": "片手剣",
+      "officially_supported_summary": "璃月七星の玉衡。人間のことは人間がより良くできると信じ、努力で証明しようとする。",
+      "interpretation_for_report_NOT_CANON": "権威より当事者としての責任を選ぶ自律性。",
+      "caution_or_need_more_evidence": "反神的な単純図式にせず、複雑な敬意の変化は別資料へ。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/liyue?char=2"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "主導",
+        "達成",
+        "自律",
+        "役割責任",
+        "実利",
+        "改革"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E5%88%BB%E6%99%B4",
+      "region_category_v2": "璃月",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "璃月"
+    },
+    {
+      "name": "七七",
+      "group": "LIY",
+      "region_section": "璃月",
+      "eti_element": "氷",
+      "eti_weapon": "片手剣",
+      "officially_supported_summary": "不卜廬の薬採りで、仙人との縁で不死身となった。記憶の弱さを補うためノートを使う。",
+      "interpretation_for_report_NOT_CANON": "自分の弱みを生活の工夫で補い続ける姿。",
+      "caution_or_need_more_evidence": "「感情が乏しい」と機械的に決めつけない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/liyue?char=2"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "寡黙",
+        "役割責任",
+        "習慣",
+        "ケア",
+        "平静"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E4%B8%83%E4%B8%83",
+      "region_category_v2": "璃月",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "璃月"
+    },
+    {
+      "name": "茲白",
+      "group": "LIY",
+      "region_section": "璃月",
+      "eti_element": "岩",
+      "eti_weapon": "片手剣",
+      "officially_supported_summary": "璃月の伝説に登場する白馬の仙人で、仙人たちの物語の中でも謎に包まれる存在。",
+      "interpretation_for_report_NOT_CANON": "神秘・伝承と個人の自由の主題。",
+      "caution_or_need_more_evidence": "動機・対人姿勢は公式プロフィール短文では不明。",
+      "evidence_depth": "B",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/liyue?char=2"
+      },
+      "extra_official_sources": [
+        {
+          "title": "兹白が謎に包まれた白馬の仙人であるとの紹介",
+          "url": "https://genshin.hoyoverse.com/ja/news/detail/162159"
+        }
+      ],
+      "eti_basis_tags_NOT_CANON": [
+        "神秘",
+        "伝統",
+        "保護",
+        "自律",
+        "寡黙",
+        "探索"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E5%85%B9%E7%99%BD",
+      "region_category_v2": "璃月",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "璃月",
+      "deep_research_v2": {
+        "facts": [
+          "璃月の白馬の仙人として語られ、伝承ごとに描写が異なる神秘的な存在。",
+          "2026年の公式更新でプレイアブルの岩元素・片手剣キャラとして紹介される。",
+          "公式漫画では海灯祭の後、徐々に璃月の日常に馴染む様子が紹介されている。"
+        ],
+        "reading": "「伝説が作る像」と「現在の暮らし」の距離に着目。長い時を生きた存在でも人間社会への関わりが変化していく。",
+        "avoid": "伝承の一説（過去の具体的な姿・神通力）を歴史的事実として断定しない。",
+        "sources": [
+          [
+            "公式・Ver.更新と紹介",
+            "https://genshin.hoyoverse.com/ja/news/detail/162159"
+          ],
+          [
+            "公式・日常漫画",
+            "https://genshin.hoyoverse.com/ja/news/detail/162576"
+          ],
+          [
+            "ゲーム内キャラ説明転記・補助",
+            "https://wikiwiki.jp/genshinwiki/%E5%85%B9%E7%99%BD"
+          ]
+        ]
+      },
+      "deep_review_status_v2": "公式紹介とゲーム内転記の照合済み。ゲーム内テキストは非公式ミラー経由、原本照合未完了。"
+    },
+    {
+      "name": "胡桃",
+      "group": "LIY",
+      "region_section": "璃月",
+      "eti_element": "炎",
+      "eti_weapon": "長柄",
+      "officially_supported_summary": "往生堂77代堂主。送りの儀礼を丁寧に行い、詩作も好む。",
+      "interpretation_for_report_NOT_CANON": "軽妙な表現と死生を扱う責務の同居。",
+      "caution_or_need_more_evidence": "冗談好きという面だけで生死への態度を軽く扱わない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/liyue?char=2"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "遊び心",
+        "創造",
+        "自律",
+        "役割責任",
+        "伝統",
+        "社交"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E8%83%A1%E6%A1%83",
+      "region_category_v2": "璃月",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "璃月"
+    },
+    {
+      "name": "魈",
+      "group": "LIY",
+      "region_section": "璃月",
+      "eti_element": "風",
+      "eti_weapon": "長柄",
+      "officially_supported_summary": "璃月を守護する三眼五顕仙人の一人・護法夜叉。古くから伝説が伝わる。",
+      "interpretation_for_report_NOT_CANON": "重い守護の役割と個人の居場所を考える素材。",
+      "caution_or_need_more_evidence": "孤独・業障・過去の体験は公式開発者解説等で慎重に記述。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/liyue?char=2"
+      },
+      "extra_official_sources": [
+        {
+          "title": "開発者による魈のキャラクター設計・守護者としての位置づけ",
+          "url": "https://genshin.hoyoverse.com/m/ja/news/detail/8647"
+        }
+      ],
+      "eti_basis_tags_NOT_CANON": [
+        "役割責任",
+        "保護",
+        "solitary",
+        "平静",
+        "過去の負荷",
+        "忠誠"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%B7%E3%83%A7%E3%82%A6",
+      "region_category_v2": "璃月",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "璃月"
+    },
+    {
+      "name": "申鶴",
+      "group": "LIY",
+      "region_section": "璃月",
+      "eti_element": "氷",
+      "eti_weapon": "長柄",
+      "officially_supported_summary": "人間でありながら仙人の弟子として山野で暮らし、赤紐を身につけ修身した。",
+      "interpretation_for_report_NOT_CANON": "自分を抑制しながら人と関わる難しさ。",
+      "caution_or_need_more_evidence": "赤紐の意味や過去の詳細は人物任務の確認が必要。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/liyue?char=2"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "solitary",
+        "平静",
+        "自律",
+        "保護",
+        "寡黙",
+        "過去の負荷"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E7%94%B3%E9%B6%B4",
+      "region_category_v2": "璃月",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "璃月"
+    },
+    {
+      "name": "鍾離",
+      "group": "LIY",
+      "region_section": "璃月",
+      "eti_element": "岩",
+      "eti_weapon": "長柄",
+      "officially_supported_summary": "往生堂の客卿。博識で、儀礼や規則を重んじる。",
+      "interpretation_for_report_NOT_CANON": "伝統や約束を今の生活へ持ち込む態度。",
+      "caution_or_need_more_evidence": "契約の神としての歴史を絡める場合は魔神任務を別に確認。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/liyue?char=2"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "伝統",
+        "知的探究",
+        "役割責任",
+        "平静",
+        "寡黙",
+        "保護"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E9%8D%BE%E9%9B%A2",
+      "region_category_v2": "璃月",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "璃月"
+    },
+    {
+      "name": "閑雲",
+      "group": "LIY",
+      "region_section": "璃月",
+      "eti_element": "風",
+      "eti_weapon": "法器",
+      "officially_supported_summary": "璃月港へ移ってきた謎の女性で、自分では内向的・人付き合いが苦手と語る。",
+      "interpretation_for_report_NOT_CANON": "自己紹介と他者から見た印象の違い。",
+      "caution_or_need_more_evidence": "発明好き・弟子との関係は別途物語で確認する。",
+      "evidence_depth": "B",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/liyue?char=2"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "researcher",
+        "技能",
+        "指導",
+        "保護",
+        "自負",
+        "社交"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E9%96%91%E9%9B%B2",
+      "region_category_v2": "璃月",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "璃月",
+      "deep_research_v2": {
+        "facts": [
+          "「留雲借風真君」として長年璃月を守り、帰終ら旧友や弟子の甘雨・申鶴との関係が深い。",
+          "仕掛けの術・研究への強い没頭と、弟子たちへの世話焼きな側面が同居する。",
+          "ゲーム内ストーリーでは、かつて戦で守った人々を、今度は暮らしを便利にする発明でも支えたいという転換が描かれる。"
+        ],
+        "reading": "技術的な探究心と、世代を越えた保護・継承を結び付ける。「高慢な仙人」だけでは足りない。",
+        "avoid": "帰終との関係や弟子への言動は、エピソードに基づく文脈を保つ。人物の心理数値には直結させない。",
+        "sources": [
+          [
+            "公式・璃月紹介",
+            "https://genshin.hoyoverse.com/ja/character/liyue?char=2"
+          ],
+          [
+            "ゲーム内ストーリー転記・補助",
+            "https://genshin-impact.fandom.com/ja/wiki/%E9%96%91%E9%9B%B2/%E3%83%97%E3%83%AD%E3%83%95%E3%82%A3%E3%83%BC%E3%83%AB"
+          ]
+        ]
+      },
+      "deep_review_status_v2": "公式紹介とゲーム内転記の照合済み。ゲーム内テキストは非公式ミラー経由、原本照合未完了。"
+    },
+    {
+      "name": "白朮",
+      "group": "LIY",
+      "region_section": "璃月",
+      "eti_element": "草",
+      "eti_weapon": "法器",
+      "officially_supported_summary": "不卜廬の店主。長生という白蛇を伴い、柔軟な医術と仁心で病を癒す。",
+      "interpretation_for_report_NOT_CANON": "型にとらわれない治療と人を助ける責務。",
+      "caution_or_need_more_evidence": "治療のために何でも正当化する人物とは書かない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/liyue?char=2"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "治癒",
+        "知的探究",
+        "戦略",
+        "共感",
+        "自律",
+        "粘り強さ"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E7%99%BD%E6%9C%AE",
+      "region_category_v2": "璃月",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "璃月"
+    },
+    {
+      "name": "夜蘭",
+      "group": "LIY",
+      "region_section": "璃月",
+      "eti_element": "水",
+      "eti_weapon": "弓",
+      "officially_supported_summary": "総務司所属と名乗るが名簿に存在せず、姿や所在をつかませない謎の人物。",
+      "interpretation_for_report_NOT_CANON": "表に出ない活動、情報と自律のテーマ。",
+      "caution_or_need_more_evidence": "何を目的に動くかは公式短文のみで断定しない。",
+      "evidence_depth": "B",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/liyue?char=2"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "戦略",
+        "自律",
+        "寡黙",
+        "情報",
+        "実利",
+        "役割責任"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E5%A4%9C%E8%98%AD",
+      "region_category_v2": "璃月",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "璃月",
+      "deep_research_v2": {
+        "facts": [
+          "璃月の情報活動に関与しつつ、官の名簿に姿を残さない秘密性が特徴。",
+          "岩上茶室を引き継ぎ、情報を集める拠点として運用するだけでなく、賽遊びを楽しむ一面もある。",
+          "ゲーム内では複数の立場・変装・交渉を通じて情勢を観察し、危険に備える姿が描かれる。"
+        ],
+        "reading": "「謎が多い女性」ではなく、危険を読み、変数を扱い、情報を組み立てる能動的な判断力を言語化する。",
+        "avoid": "隠密や賭けを無責任・他者操作好きと短絡させない。",
+        "sources": [
+          [
+            "公式・璃月紹介",
+            "https://genshin.hoyoverse.com/ja/character/liyue?char=2"
+          ],
+          [
+            "ゲーム内ストーリー転記・補助",
+            "https://wikiwiki.jp/genshinwiki/%E5%A4%9C%E8%98%AD"
+          ]
+        ]
+      },
+      "deep_review_status_v2": "公式紹介とゲーム内転記の照合済み。ゲーム内テキストは非公式ミラー経由、原本照合未完了。"
+    },
+    {
+      "name": "甘雨",
+      "group": "LIY",
+      "region_section": "璃月",
+      "eti_element": "氷",
+      "eti_weapon": "弓",
+      "officially_supported_summary": "人と仙獣の血を引く璃月七星の秘書。契約と市民の幸福のため勤勉に働く。",
+      "interpretation_for_report_NOT_CANON": "所属の違いと献身、約束を守る姿勢の共存。",
+      "caution_or_need_more_evidence": "多忙・勤労だけをアイデンティティにしない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/liyue?char=2"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "役割責任",
+        "奉仕",
+        "寡黙",
+        "anxious",
+        "忠誠",
+        "伝統"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E7%94%98%E9%9B%A8",
+      "region_category_v2": "璃月",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "璃月"
+    },
+    {
+      "name": "神里綾人",
+      "group": "INA",
+      "region_section": "稲妻",
+      "eti_element": "水",
+      "eti_weapon": "片手剣",
+      "officially_supported_summary": "社奉行神里家の当主。綿密な計画で目的を達するが、真に重視する目的は表には見えにくい。",
+      "interpretation_for_report_NOT_CANON": "表向きの礼節と内側の戦略性。",
+      "caution_or_need_more_evidence": "策略家＝人を操るだけの人物、と単純化しない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/m/ja/character/inazuma"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "主導",
+        "戦略",
+        "寡黙",
+        "役割責任",
+        "実利",
+        "自律"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E7%A5%9E%E9%87%8C%E7%B6%BE%E4%BA%BA",
+      "region_category_v2": "稲妻",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "稲妻"
+    },
+    {
+      "name": "楓原万葉",
+      "group": "INA",
+      "region_section": "稲妻",
+      "eti_element": "風",
+      "eti_weapon": "片手剣",
+      "officially_supported_summary": "温和な浪人。過去の重荷を胸に秘め、自由そうに見えて自分の指針を持つ。",
+      "interpretation_for_report_NOT_CANON": "旅の自由と譲れない信念の両立。",
+      "caution_or_need_more_evidence": "悲しみの具体的な出来事は別途物語で検証。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/m/ja/character/inazuma"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "自由",
+        "芸術",
+        "探索",
+        "共感",
+        "寡黙",
+        "自律"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E6%A5%93%E5%8E%9F%E4%B8%87%E8%91%89",
+      "region_category_v2": "稲妻",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "稲妻"
+    },
+    {
+      "name": "神里綾華",
+      "group": "INA",
+      "region_section": "稲妻",
+      "eti_element": "氷",
+      "eti_weapon": "片手剣",
+      "officially_supported_summary": "神里家の令嬢。賢明・誠実で周囲から慕われる。",
+      "interpretation_for_report_NOT_CANON": "公的な役割と個人としての望みの距離。",
+      "caution_or_need_more_evidence": "理想の令嬢像だけで複雑さを消さない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/m/ja/character/inazuma"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "役割責任",
+        "共感",
+        "伝統",
+        "寡黙",
+        "規律",
+        "奉仕"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E7%A5%9E%E9%87%8C%E7%B6%BE%E8%8F%AF",
+      "region_category_v2": "稲妻",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "稲妻"
+    },
+    {
+      "name": "千織",
+      "group": "FON",
+      "region_section": "フォンテーヌ",
+      "eti_element": "岩",
+      "eti_weapon": "片手剣",
+      "officially_supported_summary": "フォンテーヌで活躍する、率直な物言いと独創的な美意識を持つ服飾デザイナー。",
+      "interpretation_for_report_NOT_CANON": "他者の評価より自分の創作を貫くこと。",
+      "caution_or_need_more_evidence": "作品評価を単なる自己中心性と混同しない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介（英語版）",
+        "url": "https://genshin.hoyoverse.com/en/character/Fontaine?char=0"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "創造",
+        "自律",
+        "野心",
+        "実利",
+        "技能",
+        "率直"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E5%8D%83%E7%B9%94",
+      "region_category_v2": "稲妻",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "フォンテーヌ",
+      "region_note_v2": "国別分類は稲妻（公式紹介に稲妻出身と明記）。フォンテーヌは千織屋の活動拠点。group・region_sectionはv1出典掲載枠として変更しない。",
+      "region_verification_sources_v2_1": [
+        {
+          "title": "ファミ通：公式紹介の引用（2024-01-29）",
+          "url": "https://www.famitsu.com/news/202401/29332761.html"
+        },
+        {
+          "title": "電撃オンライン：公式紹介の引用（2024-01-29）",
+          "url": "https://dengekionline.com/articles/219226/"
+        }
+      ]
+    },
+    {
+      "name": "荒瀧一斗",
+      "group": "INA",
+      "region_section": "稲妻",
+      "eti_element": "岩",
+      "eti_weapon": "両手剣",
+      "officially_supported_summary": "鬼族の末裔で、豪快・熱血・快活な人物。",
+      "interpretation_for_report_NOT_CANON": "外へあふれる活力と集団への帰属。",
+      "caution_or_need_more_evidence": "仲間思い等の具体的な場面は本人任務確認が必要。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/m/ja/character/inazuma"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "主導",
+        "社交",
+        "遊び心",
+        "衝動",
+        "競争",
+        "忠誠"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E8%8D%92%E7%80%A7%E4%B8%80%E6%96%97",
+      "region_category_v2": "稲妻",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "稲妻"
+    },
+    {
+      "name": "雷電将軍",
+      "group": "INA",
+      "region_section": "稲妻",
+      "eti_element": "雷",
+      "eti_weapon": "長柄",
+      "officially_supported_summary": "稲妻幕府の最高主宰。永遠を追う孤独な統治者。",
+      "interpretation_for_report_NOT_CANON": "失うことへの抵抗と変化を受け入れる難しさ。",
+      "caution_or_need_more_evidence": "将軍人形と影の区別を付けず内面を断定しない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/m/ja/character/inazuma"
+      },
+      "extra_official_sources": [
+        {
+          "title": "永遠を求める統治と稲妻の葛藤",
+          "url": "https://genshin.hoyoverse.com/en/news/detail/104025"
+        }
+      ],
+      "eti_basis_tags_NOT_CANON": [
+        "主導",
+        "伝統",
+        "秩序",
+        "平静",
+        "役割責任",
+        "solitary"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E9%9B%B7%E9%9B%BB%E5%B0%86%E8%BB%8D",
+      "region_category_v2": "稲妻",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "稲妻"
+    },
+    {
+      "name": "珊瑚宮心海",
+      "group": "INA",
+      "region_section": "稲妻",
+      "eti_element": "水",
+      "eti_weapon": "法器",
+      "officially_supported_summary": "海祇島の現人神の巫女・指導者。軍略・内政・外交を担う。",
+      "interpretation_for_report_NOT_CANON": "人々を率いる責任と個人の内面の距離。",
+      "caution_or_need_more_evidence": "戦略性と社交的な好みは同じではない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/m/ja/character/inazuma"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "主導",
+        "戦略",
+        "役割責任",
+        "保護",
+        "知的探究",
+        "内向"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E7%8F%8A%E7%91%9A%E5%AE%AE%E5%BF%83%E6%B5%B7",
+      "region_category_v2": "稲妻",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "稲妻"
+    },
+    {
+      "name": "夢見月瑞希",
+      "group": "INA",
+      "region_section": "稲妻",
+      "eti_element": "風",
+      "eti_weapon": "法器",
+      "officially_supported_summary": "夢喰い獏で心理療法士、秋沙銭湯の大株主でもある。",
+      "interpretation_for_report_NOT_CANON": "他者の悩みに関わる専門職の視点。",
+      "caution_or_need_more_evidence": "実在の臨床的妥当性や心理療法の効果とは区別。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/m/ja/character/inazuma"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "治癒",
+        "共感",
+        "社交",
+        "寡黙",
+        "役割責任",
+        "専門性"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E5%A4%A2%E8%A6%8B%E6%9C%88%E7%91%9E%E5%B8%8C",
+      "region_category_v2": "稲妻",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "稲妻"
+    },
+    {
+      "name": "八重神子",
+      "group": "INA",
+      "region_section": "稲妻",
+      "eti_element": "雷",
+      "eti_weapon": "法器",
+      "officially_supported_summary": "鳴神大社の大巫女で、永遠の眷属・友人、出版社の編集長でもある。",
+      "interpretation_for_report_NOT_CANON": "多面的な役割と素顔の見えにくさ。",
+      "caution_or_need_more_evidence": "人をからかう場面のみから性格を決めない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/m/ja/character/inazuma"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "戦略",
+        "遊び心",
+        "自律",
+        "社交",
+        "神秘",
+        "情報"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E5%85%AB%E9%87%8D%E7%A5%9E%E5%AD%90",
+      "region_category_v2": "稲妻",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "稲妻"
+    },
+    {
+      "name": "宵宮",
+      "group": "INA",
+      "region_section": "稲妻",
+      "eti_element": "炎",
+      "eti_weapon": "弓",
+      "officially_supported_summary": "長野原花火屋の店主。熱意と無邪気さ、職人としてのこだわりを併せ持つ。",
+      "interpretation_for_report_NOT_CANON": "人を楽しませることと仕事の完成度の両立。",
+      "caution_or_need_more_evidence": "明るさのみで苦労の不在を推測しない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/m/ja/character/inazuma"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "芸術",
+        "創造",
+        "社交",
+        "共同体",
+        "共感",
+        "遊び心"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E5%AE%B5%E5%AE%AE",
+      "region_category_v2": "稲妻",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "稲妻"
+    },
+    {
+      "name": "ニィロウ",
+      "group": "SUM",
+      "region_section": "スメール",
+      "eti_element": "水",
+      "eti_weapon": "片手剣",
+      "officially_supported_summary": "ズバイルシアターの看板役者。優雅な踊りと素朴で親しみやすい人柄。",
+      "interpretation_for_report_NOT_CANON": "芸術表現と身近な人との交流。",
+      "caution_or_need_more_evidence": "舞台での姿と平時の性格を同一視しない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/sumeru?char=0"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "芸術",
+        "表現",
+        "共感",
+        "社交",
+        "共同体",
+        "穏やか"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%8B%E3%82%A3%E3%83%AD%E3%82%A6",
+      "region_category_v2": "スメール",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "スメール"
+    },
+    {
+      "name": "アルハイゼン",
+      "group": "SUM",
+      "region_section": "スメール",
+      "eti_element": "草",
+      "eti_weapon": "片手剣",
+      "officially_supported_summary": "教令院の書記官。優れた知恵を持ち、悠々自適で所在を知られにくい。",
+      "interpretation_for_report_NOT_CANON": "能力や地位より自分の生活の裁量を守る選択。",
+      "caution_or_need_more_evidence": "冷静さを無感情と誤読しない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/sumeru?char=0"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "知的探究",
+        "自律",
+        "実利",
+        "寡黙",
+        "安定",
+        "情報"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%A2%E3%83%AB%E3%83%8F%E3%82%A4%E3%82%BC%E3%83%B3",
+      "region_category_v2": "スメール",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "スメール"
+    },
+    {
+      "name": "ディシア",
+      "group": "SUM",
+      "region_section": "スメール",
+      "eti_element": "炎",
+      "eti_weapon": "両手剣",
+      "officially_supported_summary": "砂漠を渡るエルマイト旅団の腕利き傭兵。強さと勇敢さで知られる。",
+      "interpretation_for_report_NOT_CANON": "実戦的な強さと自分なりの守る対象。",
+      "caution_or_need_more_evidence": "保護者的な側面は公式短文のみでは確定できない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/sumeru?char=0"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "保護",
+        "忠誠",
+        "共感",
+        "社交",
+        "実利",
+        "生存"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%87%E3%82%A3%E3%82%B7%E3%82%A2",
+      "region_category_v2": "スメール",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "スメール"
+    },
+    {
+      "name": "セノ",
+      "group": "SUM",
+      "region_section": "スメール",
+      "eti_element": "雷",
+      "eti_weapon": "長柄",
+      "officially_supported_summary": "教令院の大マハマトラ。規律を担う一方、独特のユーモアも持つ。",
+      "interpretation_for_report_NOT_CANON": "厳格な職務と遊び心のギャップ。",
+      "caution_or_need_more_evidence": "冷酷な処罰者だけの一面的説明は避ける。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/sumeru?char=0"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "公正",
+        "役割責任",
+        "規律",
+        "平静",
+        "主導",
+        "伝統"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%BB%E3%83%8E",
+      "region_category_v2": "スメール",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "スメール"
+    },
+    {
+      "name": "放浪者",
+      "group": "SUM",
+      "region_section": "スメール",
+      "eti_element": "風",
+      "eti_weapon": "法器",
+      "officially_supported_summary": "人形としての存在でありながら、喜怒哀楽・悲しみを持つ者として描かれている。",
+      "interpretation_for_report_NOT_CANON": "「人らしさ」をどう見いだすか、過去と自己像。",
+      "caution_or_need_more_evidence": "過去の名前・各段階の変化は別途人物任務の照合が必要。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/sumeru?char=0"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "自律",
+        "solitary",
+        "反骨",
+        "過去の負荷",
+        "実利",
+        "自立"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E6%94%BE%E6%B5%AA%E8%80%85",
+      "region_category_v2": "スメール",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "スメール"
+    },
+    {
+      "name": "ナヒーダ",
+      "group": "SUM",
+      "region_section": "スメール",
+      "eti_element": "草",
+      "eti_weapon": "法器",
+      "officially_supported_summary": "クラクサナリデビとして重責を担い、孤独を経験しても立ち止まらない。",
+      "interpretation_for_report_NOT_CANON": "学ぶ姿勢と人々を守る責任、孤独と希望。",
+      "caution_or_need_more_evidence": "幼い外見だけで未熟さを表現しない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/sumeru?char=0"
+      },
+      "extra_official_sources": [
+        {
+          "title": "責任を担い学ぶ姿勢の公式紹介",
+          "url": "https://genshin.hoyoverse.com/en/news/detail/104437"
+        }
+      ],
+      "eti_basis_tags_NOT_CANON": [
+        "知的探究",
+        "共感",
+        "主導",
+        "好奇心",
+        "共同体",
+        "役割責任"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%8A%E3%83%92%E3%83%BC%E3%83%80",
+      "region_category_v2": "スメール",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "スメール"
+    },
+    {
+      "name": "ティナリ",
+      "group": "SUM",
+      "region_section": "スメール",
+      "eti_element": "草",
+      "eti_weapon": "弓",
+      "officially_supported_summary": "アビディアの森のレンジャー長・植物学者。巡回・保護・指導を担当する。",
+      "interpretation_for_report_NOT_CANON": "知識を実践と環境保護に結び付ける責任。",
+      "caution_or_need_more_evidence": "単なる知識欲だけでなく現場での指導を含める。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/sumeru?char=0"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "知的探究",
+        "指導",
+        "役割責任",
+        "実利",
+        "共感",
+        "規律"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%86%E3%82%A3%E3%83%8A%E3%83%AA",
+      "region_category_v2": "スメール",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "スメール"
+    },
+    {
+      "name": "フリーナ",
+      "group": "FON",
+      "region_section": "フォンテーヌ",
+      "eti_element": "水",
+      "eti_weapon": "片手剣",
+      "officially_supported_summary": "フォンテーヌで人々に愛され、公開裁判の舞台と観客の視線に強い関心を示す人物。",
+      "interpretation_for_report_NOT_CANON": "見られる役割と本人の内面の違い。",
+      "caution_or_need_more_evidence": "500年の役割や演技の背景は魔神任務で要照合。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介（英語版）",
+        "url": "https://genshin.hoyoverse.com/en/character/Fontaine?char=0"
+      },
+      "extra_official_sources": [
+        {
+          "title": "舞台と終幕を含む公式キャラクター紹介",
+          "url": "https://genshin.hoyoverse.com/en/news/detail/113561"
+        }
+      ],
+      "eti_basis_tags_NOT_CANON": [
+        "表現",
+        "社交",
+        "創造",
+        "anxious",
+        "過去の負荷",
+        "共感"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%95%E3%83%AA%E3%83%BC%E3%83%8A",
+      "region_category_v2": "フォンテーヌ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "フォンテーヌ"
+    },
+    {
+      "name": "クロリンデ",
+      "group": "FON",
+      "region_section": "フォンテーヌ",
+      "eti_element": "雷",
+      "eti_weapon": "片手剣",
+      "officially_supported_summary": "フォンテーヌで司法を支える強力な決闘代理人。剣で正義を守る。",
+      "interpretation_for_report_NOT_CANON": "一貫した責務と行動で示す正義。",
+      "caution_or_need_more_evidence": "感情表出の少なさを無関心と書かない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介（英語版）",
+        "url": "https://genshin.hoyoverse.com/en/character/Fontaine?char=0"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "公正",
+        "規律",
+        "平静",
+        "役割責任",
+        "保護",
+        "自律"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%AF%E3%83%AD%E3%83%AA%E3%83%B3%E3%83%87",
+      "region_category_v2": "フォンテーヌ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "フォンテーヌ"
+    },
+    {
+      "name": "ナヴィア",
+      "group": "FON",
+      "region_section": "フォンテーヌ",
+      "eti_element": "岩",
+      "eti_weapon": "両手剣",
+      "officially_supported_summary": "棘薔薇の会の会長。人々の難題を助ける明るい姿勢を持つ。",
+      "interpretation_for_report_NOT_CANON": "困難の中でも人のため動く指導者。",
+      "caution_or_need_more_evidence": "家族の過去や悲しみは別途個人任務の確認が必要。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介（英語版）",
+        "url": "https://genshin.hoyoverse.com/en/character/Fontaine?char=0"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "主導",
+        "社交",
+        "共感",
+        "保護",
+        "共同体",
+        "回復力"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%8A%E3%83%B4%E3%82%A3%E3%82%A2",
+      "region_category_v2": "フォンテーヌ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "フォンテーヌ"
+    },
+    {
+      "name": "エミリエ",
+      "group": "FON",
+      "region_section": "フォンテーヌ",
+      "eti_element": "草",
+      "eti_weapon": "長柄",
+      "officially_supported_summary": "フォンテーヌの著名な調香師で、優雅さと謎めいた面を持つ。",
+      "interpretation_for_report_NOT_CANON": "感覚・技術と観察の両立。",
+      "caution_or_need_more_evidence": "別の職務や危険な任務の詳細は公式短文にない。",
+      "evidence_depth": "B",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介（英語版）",
+        "url": "https://genshin.hoyoverse.com/en/character/Fontaine?char=0"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "researcher",
+        "実利",
+        "寡黙",
+        "共感",
+        "専門性",
+        "情報"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%A8%E3%83%9F%E3%83%AA%E3%82%A8",
+      "region_category_v2": "フォンテーヌ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "フォンテーヌ",
+      "deep_research_v2": {
+        "facts": [
+          "フォンテーヌの調香師。香りを選び、相手に合うものを提案する専門性がある。",
+          "同時に事件後の現場を清める「特殊清掃人」の仕事も請け負う。",
+          "ゲーム内記述では、遺族の苦しみを消せなくても、その負担を少しでも分かち合いたいという姿勢が示される。"
+        ],
+        "reading": "美を扱う繊細さと、誰も好んで担わない後始末を引き受ける実務性を両立して描く。",
+        "avoid": "職業上の清掃を「秘密を隠滅する仕事」と誤読しない。",
+        "sources": [
+          [
+            "公式・香水イベント",
+            "https://genshin.hoyoverse.com/ja/news/detail/125079"
+          ],
+          [
+            "公式・エミリエのメモ",
+            "https://genshin.hoyoverse.com/ja/news/detail/157479"
+          ],
+          [
+            "ゲーム内ストーリー転記・補助",
+            "https://wikiwiki.jp/genshinwiki/%E3%82%A8%E3%83%9F%E3%83%AA%E3%82%A8"
+          ]
+        ]
+      },
+      "deep_review_status_v2": "公式紹介とゲーム内転記の照合済み。ゲーム内テキストは非公式ミラー経由、原本照合未完了。"
+    },
+    {
+      "name": "エスコフィエ",
+      "group": "FON",
+      "region_section": "フォンテーヌ",
+      "eti_element": "氷",
+      "eti_weapon": "長柄",
+      "officially_supported_summary": "フォンテーヌの厳格な料理人。高い完成度を求め、料理の研鑽を続ける。",
+      "interpretation_for_report_NOT_CANON": "完璧さを追う職人気質と実践。",
+      "caution_or_need_more_evidence": "高い基準を他者への苛烈さと自動的に結びつけない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介（英語版）",
+        "url": "https://genshin.hoyoverse.com/en/character/Fontaine?char=0"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "技能",
+        "researcher",
+        "規律",
+        "完成度",
+        "実利",
+        "主導"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%A8%E3%82%B9%E3%82%B3%E3%83%95%E3%82%A3%E3%82%A8",
+      "region_category_v2": "フォンテーヌ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "フォンテーヌ"
+    },
+    {
+      "name": "ヌヴィレット",
+      "group": "FON",
+      "region_section": "フォンテーヌ",
+      "eti_element": "水",
+      "eti_weapon": "法器",
+      "officially_supported_summary": "フォンテーヌの最高審判官。近寄りがたい印象を持たれ、秘密を抱えている可能性が示唆される。",
+      "interpretation_for_report_NOT_CANON": "公正さを体現する役割と対人距離。",
+      "caution_or_need_more_evidence": "正体や水龍としての物語は別資料で確認。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介（英語版）",
+        "url": "https://genshin.hoyoverse.com/en/character/Fontaine?char=0"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "公正",
+        "役割責任",
+        "平静",
+        "共感",
+        "寡黙",
+        "主導"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%8C%E3%83%B4%E3%82%A3%E3%83%AC%E3%83%83%E3%83%88",
+      "region_category_v2": "フォンテーヌ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "フォンテーヌ"
+    },
+    {
+      "name": "リオセスリ",
+      "group": "FON",
+      "region_section": "フォンテーヌ",
+      "eti_element": "氷",
+      "eti_weapon": "法器",
+      "officially_supported_summary": "メロピデ要塞の管理者で公爵。目立つことを避けながら頼りにされる。",
+      "interpretation_for_report_NOT_CANON": "目立たず秩序を支える実務家。",
+      "caution_or_need_more_evidence": "過去の罪や子ども時代については未確認。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介（英語版）",
+        "url": "https://genshin.hoyoverse.com/en/character/Fontaine?char=0"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "主導",
+        "実利",
+        "戦略",
+        "保護",
+        "平静",
+        "公正"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%AA%E3%82%AA%E3%82%BB%E3%82%B9%E3%83%AA",
+      "region_category_v2": "フォンテーヌ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "フォンテーヌ"
+    },
+    {
+      "name": "リネ",
+      "group": "FON",
+      "region_section": "フォンテーヌ",
+      "eti_element": "炎",
+      "eti_weapon": "弓",
+      "officially_supported_summary": "フォンテーヌで名高い奇術師。話術と技巧で観客を魅了し、本心が読みにくい。",
+      "interpretation_for_report_NOT_CANON": "表現する顔と隠している思いの対比。",
+      "caution_or_need_more_evidence": "家族への責任や組織との関係は魔神任務を別途確認。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介（英語版）",
+        "url": "https://genshin.hoyoverse.com/en/character/Fontaine?char=0"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "表現",
+        "戦略",
+        "家族",
+        "新奇性",
+        "役割責任",
+        "内面の警戒"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%AA%E3%83%8D",
+      "region_category_v2": "フォンテーヌ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "フォンテーヌ"
+    },
+    {
+      "name": "シグウィン",
+      "group": "FON",
+      "region_section": "フォンテーヌ",
+      "eti_element": "水",
+      "eti_weapon": "弓",
+      "officially_supported_summary": "メロピデ要塞の看護師長。メリュジーヌならではの視点で周囲を観察し世話する。",
+      "interpretation_for_report_NOT_CANON": "他者への世話と独自の物の見方。",
+      "caution_or_need_more_evidence": "人間観や人間への変化などは別資料で確認。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介（英語版）",
+        "url": "https://genshin.hoyoverse.com/en/character/Fontaine?char=0"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "治癒",
+        "ケア",
+        "共感",
+        "役割責任",
+        "共同体",
+        "観察"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%B7%E3%82%B0%E3%82%A6%E3%82%A3%E3%83%B3",
+      "region_category_v2": "フォンテーヌ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "フォンテーヌ"
+    },
+    {
+      "name": "シロネン",
+      "group": "NAT",
+      "region_section": "ナタ・スカーク",
+      "eti_element": "岩",
+      "eti_weapon": "片手剣",
+      "officially_supported_summary": "ナタの鍛冶職人。忙しい仕事と心地よい生活のバランスを取る。",
+      "interpretation_for_report_NOT_CANON": "高い技能と休息の両立。",
+      "caution_or_need_more_evidence": "「怠け者」といった単純な属性付けを避ける。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/Natlan?char=0"
+      },
+      "extra_official_sources": [
+        {
+          "title": "責務と生活の両立についての公式紹介",
+          "url": "https://genshin.hoyoverse.com/en/news/detail/126213"
+        }
+      ],
+      "eti_basis_tags_NOT_CANON": [
+        "技能",
+        "実利",
+        "自律",
+        "余裕",
+        "規律"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%B7%E3%83%AD%E3%83%8D%E3%83%B3",
+      "region_category_v2": "ナタ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "ナタ・スカーク"
+    },
+    {
+      "name": "マーヴィカ",
+      "group": "NAT",
+      "region_section": "ナタ・スカーク",
+      "eti_element": "炎",
+      "eti_weapon": "両手剣",
+      "officially_supported_summary": "ナタの神・指導者。炎をもって人々に希望を与え、脅威に立ち向かう。",
+      "interpretation_for_report_NOT_CANON": "指導者としての希望と犠牲の責任。",
+      "caution_or_need_more_evidence": "個人の来歴は魔神任務の確認が必要。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/Natlan?char=0"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "主導",
+        "役割責任",
+        "保護",
+        "戦略",
+        "社交",
+        "安定"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%9E%E3%83%BC%E3%83%B4%E3%82%A3%E3%82%AB",
+      "region_category_v2": "ナタ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "ナタ・スカーク"
+    },
+    {
+      "name": "キィニチ",
+      "group": "NAT",
+      "region_section": "ナタ・スカーク",
+      "eti_element": "草",
+      "eti_weapon": "両手剣",
+      "officially_supported_summary": "竜狩り人で、敬遠される依頼にも臆せず、代償を冷静に見積もる。",
+      "interpretation_for_report_NOT_CANON": "感情より実利を優先するように見える判断。",
+      "caution_or_need_more_evidence": "冷酷な人物像と決めつけず契約への姿勢を扱う。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/Natlan?char=0"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "実利",
+        "自律",
+        "粘り強さ",
+        "生存",
+        "規律"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%AD%E3%82%A3%E3%83%8B%E3%83%81",
+      "region_category_v2": "ナタ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "ナタ・スカーク"
+    },
+    {
+      "name": "ムアラニ",
+      "group": "NAT",
+      "region_section": "ナタ・スカーク",
+      "eti_element": "水",
+      "eti_weapon": "法器",
+      "officially_supported_summary": "流泉の衆のガイドとして旅人を案内する。",
+      "interpretation_for_report_NOT_CANON": "新しい人や場所を歓迎する開放性。",
+      "caution_or_need_more_evidence": "明るさ・楽観を全状況の性格と断定しない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/Natlan?char=0"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "冒険",
+        "社交",
+        "楽観",
+        "遊び心",
+        "共同体",
+        "新奇"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%A0%E3%82%A2%E3%83%A9%E3%83%8B",
+      "region_category_v2": "ナタ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "ナタ・スカーク"
+    },
+    {
+      "name": "ヴァレサ",
+      "group": "NAT",
+      "region_section": "ナタ・スカーク",
+      "eti_element": "雷",
+      "eti_weapon": "法器",
+      "officially_supported_summary": "普段はのんびりした果樹園の世話係だが、戦いになると闘志を見せる。",
+      "interpretation_for_report_NOT_CANON": "日常の穏やかさと勝負時の力強さの二面性。",
+      "caution_or_need_more_evidence": "食欲等の補足設定は別の資料で確認。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/Natlan?char=0"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "遊び心",
+        "社交",
+        "楽観",
+        "保護",
+        "共同体",
+        "競争"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%B4%E3%82%A1%E3%83%AC%E3%82%B5",
+      "region_category_v2": "ナタ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "ナタ・スカーク"
+    },
+    {
+      "name": "シトラリ",
+      "group": "NAT",
+      "region_section": "ナタ・スカーク",
+      "eti_element": "氷",
+      "eti_weapon": "法器",
+      "officially_supported_summary": "謎煙の主の伝説的シャーマン。「黒曜石の老婆」と呼ばれ、怖れられつつ頼りにされる。",
+      "interpretation_for_report_NOT_CANON": "厳しさと保護・助力が同居する姿。",
+      "caution_or_need_more_evidence": "単なる毒舌・引きこもりではない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/Natlan?char=0"
+      },
+      "extra_official_sources": [
+        {
+          "title": "謎煙の主の大シャーマンとしての紹介",
+          "url": "https://genshin.hoyoverse.com/ja/news/detail/127791"
+        }
+      ],
+      "eti_basis_tags_NOT_CANON": [
+        "知的探究",
+        "神秘",
+        "solitary",
+        "省エネ",
+        "自律",
+        "伝統"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%B7%E3%83%88%E3%83%A9%E3%83%AA",
+      "region_category_v2": "ナタ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "ナタ・スカーク"
+    },
+    {
+      "name": "チャスカ",
+      "group": "NAT",
+      "region_section": "ナタ・スカーク",
+      "eti_element": "風",
+      "eti_weapon": "弓",
+      "officially_supported_summary": "トラロカンの調停者。人と竜の争いを言葉や武力で収める。",
+      "interpretation_for_report_NOT_CANON": "対立と向き合う現実的な仲裁。",
+      "caution_or_need_more_evidence": "争いを好む人物と誤読しない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/Natlan?char=0"
+      },
+      "extra_official_sources": [
+        {
+          "title": "争いの仲裁・竜に育てられた背景",
+          "url": "https://genshin.hoyoverse.com/news/detail/126916"
+        }
+      ],
+      "eti_basis_tags_NOT_CANON": [
+        "mediator",
+        "主導",
+        "実利",
+        "保護",
+        "規律",
+        "共同体"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%81%E3%83%A3%E3%82%B9%E3%82%AB",
+      "region_category_v2": "ナタ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "ナタ・スカーク"
+    },
+    {
+      "name": "イネファ",
+      "group": "SNE",
+      "region_section": "スネージナヤ・ナド・クライ",
+      "eti_element": "雷",
+      "eti_weapon": "長柄",
+      "officially_supported_summary": "ナド・クライの工房で作られたロボット。各地の部品が体に使われている。",
+      "interpretation_for_report_NOT_CANON": "異なる出自が統合される自己像や所属感。",
+      "caution_or_need_more_evidence": "自己意識・個別の家族関係は公式短文だけでは確定しない。",
+      "evidence_depth": "B",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/snezhnaya?char=1"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "researcher",
+        "役割責任",
+        "ケア",
+        "自律",
+        "実利",
+        "忠誠"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%A4%E3%83%8D%E3%83%95%E3%82%A1",
+      "region_category_v2": "ナド・クライ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "スネージナヤ・ナド・クライ",
+      "deep_research_v2": {
+        "facts": [
+          "ナド・クライの工房でアイノと暮らすロボット。外見の機械性だけでは言い切れない人間関係を持つ。",
+          "公式紹介には、工房にある設計資料を通して彼女の構造や生活を描く内容がある。",
+          "ゲーム内ストーリーには、古い小さなロボットをアイノが家族として大切にし、その意味をイネファが理解していくエピソードがある。"
+        ],
+        "reading": "作られた存在でありながら「自分の考えを尊重されること」と「家族の意味」を獲得していく側面を描く。",
+        "avoid": "機械なので感情がない・命令に従うだけ、という決めつけをしない。",
+        "sources": [
+          [
+            "公式・英語キャラ紹介",
+            "https://genshin.hoyoverse.com/en/news/detail/157807"
+          ],
+          [
+            "公式・地域紹介",
+            "https://genshin.hoyoverse.com/ja/character/snezhnaya?char=1"
+          ],
+          [
+            "ゲーム内物語転記・補助",
+            "https://wikiwiki.jp/genshinwiki/%E7%89%A9%E8%AA%9E"
+          ]
+        ]
+      },
+      "deep_review_status_v2": "公式紹介とゲーム内転記の照合済み。ゲーム内テキストは非公式ミラー経由、原本照合未完了。"
+    },
+    {
+      "name": "フリンズ",
+      "group": "SNE",
+      "region_section": "スネージナヤ・ナド・クライ",
+      "eti_element": "雷",
+      "eti_weapon": "長柄",
+      "officially_supported_summary": "ナド・クライのライトキーパーの一人で、正式な姓名を名乗る。",
+      "interpretation_for_report_NOT_CANON": "丁寧さと任務を通じた責任感という読み。",
+      "caution_or_need_more_evidence": "具体的な行動の動機や孤独は短文では不明。",
+      "evidence_depth": "B",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/snezhnaya?char=1"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "役割責任",
+        "保護",
+        "solitary",
+        "平静",
+        "共感",
+        "自律"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%95%E3%83%AA%E3%83%B3%E3%82%BA",
+      "region_category_v2": "ナド・クライ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "スネージナヤ・ナド・クライ",
+      "deep_research_v2": {
+        "facts": [
+          "ナド・クライのライトキーパーの一人で、灯台と墓地を長く守る紳士。",
+          "彼が守る島は人影が少なく、寂れた灯台と死者の記憶が物語の舞台になっている。",
+          "ゲーム内の人物評は教養だけでなく、行動力や戦術的な理解にも触れる。"
+        ],
+        "reading": "孤独な見張り番という記号だけでなく、静かな継続・危険から人々を守る役割・教養と実行力を組み合わせる。",
+        "avoid": "孤独な場所にいることを、他者を憎んでいる証拠にしない。",
+        "sources": [
+          [
+            "公式・地域紹介",
+            "https://genshin.hoyoverse.com/ja/character/snezhnaya?char=1"
+          ],
+          [
+            "公式・ライトキーパー背景",
+            "https://genshin.hoyoverse.com/ja/news/detail/158865"
+          ],
+          [
+            "ゲーム内物語転記・補助",
+            "https://wikiwiki.jp/genshinwiki/%E3%83%95%E3%83%AA%E3%83%B3%E3%82%BA"
+          ]
+        ]
+      },
+      "deep_review_status_v2": "公式紹介とゲーム内転記の照合済み。ゲーム内テキストは非公式ミラー経由、原本照合未完了。"
+    },
+    {
+      "name": "コロンビーナ",
+      "group": "SNE",
+      "region_section": "スネージナヤ・ナド・クライ",
+      "eti_element": "水",
+      "eti_weapon": "法器",
+      "officially_supported_summary": "元ファデュイ執行官第三位「少女」。月神と呼ばれ、様々な呼称より仲間から呼ばれる「コロンビーナ」の名を好む。",
+      "interpretation_for_report_NOT_CANON": "外から付けられた役割と、仲間に呼ばれる自己の名前。",
+      "caution_or_need_more_evidence": "静か・従順といった固定イメージは禁物。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/snezhnaya?char=1"
+      },
+      "extra_official_sources": [
+        {
+          "title": "ナド・クライ人物群の初期公式紹介",
+          "url": "https://genshin.hoyoverse.com/en/news/detail/157790"
+        }
+      ],
+      "eti_basis_tags_NOT_CANON": [
+        "神秘",
+        "寡黙",
+        "自律",
+        "solitary",
+        "共感",
+        "自己同一性"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%B3%E3%83%AD%E3%83%B3%E3%83%93%E3%83%BC%E3%83%8A",
+      "region_category_v2": "ナド・クライ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "スネージナヤ・ナド・クライ"
+    },
+    {
+      "name": "ラウマ",
+      "group": "SNE",
+      "region_section": "スネージナヤ・ナド・クライ",
+      "eti_element": "草",
+      "eti_weapon": "法器",
+      "officially_supported_summary": "霜月の子の詠月使・蒼樹の聖女。月光や動物と強い結び付きがある。",
+      "interpretation_for_report_NOT_CANON": "信仰と共同体、自然とのつながり。",
+      "caution_or_need_more_evidence": "特定の宗教観・献身を本人の言葉として断定しない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/snezhnaya?char=1"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "信仰",
+        "治癒",
+        "共感",
+        "共同体",
+        "伝統",
+        "保護"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%A9%E3%82%A6%E3%83%9E",
+      "region_category_v2": "ナド・クライ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "スネージナヤ・ナド・クライ"
+    },
+    {
+      "name": "ネフェル",
+      "group": "SNE",
+      "region_section": "スネージナヤ・ナド・クライ",
+      "eti_element": "草",
+      "eti_weapon": "法器",
+      "officially_supported_summary": "「秘聞の館」の博識で有能なオーナー。",
+      "interpretation_for_report_NOT_CANON": "知識を集め運用する主体性・情報管理。",
+      "caution_or_need_more_evidence": "商才や他者操作などは公式一文だけでは確認できない。",
+      "evidence_depth": "B",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/snezhnaya?char=1"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "情報",
+        "戦略",
+        "自律",
+        "商才",
+        "寡黙",
+        "実利"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%8D%E3%83%95%E3%82%A7%E3%83%AB",
+      "region_category_v2": "ナド・クライ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "スネージナヤ・ナド・クライ",
+      "deep_research_v2": {
+        "facts": [
+          "ナド・クライで「秘聞の館」を営む情報活動の専門家。猫探しのような小さな依頼から重大な捜査まで受ける。",
+          "ゲーム内資料では、秘聞の館が情報網への入口であること、顧客が得た情報をどう使うかは選択に委ねる側面が描かれる。",
+          "彼女は人の表情や交渉をよく観察し、過去そのものへの未練より将来への期待を語る。スメールとの過去の縁も描かれる。"
+        ],
+        "reading": "人の情報を操る冷徹さだけでなく、情報への責任、依頼を完遂する実務、過去に縛られない前進という多面性を描く。",
+        "avoid": "スメールの出身・旧縁と、現在のナド・クライでの活動地域を混同しない。公式紹介にない過去の細部は注記付きで扱う。",
+        "sources": [
+          [
+            "公式・地域紹介",
+            "https://genshin.hoyoverse.com/ja/character/snezhnaya?char=1"
+          ],
+          [
+            "公式・逸話",
+            "https://genshin.hoyoverse.com/ja/news/detail/160191"
+          ],
+          [
+            "公式紹介転載・報道",
+            "https://www.4gamer.net/games/486/G048621/20250912060/"
+          ],
+          [
+            "ゲーム内物語転記・補助",
+            "https://wikiwiki.jp/genshinwiki/%E3%83%8D%E3%83%95%E3%82%A7%E3%83%AB"
+          ]
+        ]
+      },
+      "deep_review_status_v2": "公式紹介とゲーム内転記の照合済み。ゲーム内テキストは非公式ミラー経由、原本照合未完了。"
+    },
+    {
+      "name": "リンネア",
+      "group": "SNE",
+      "region_section": "スネージナヤ・ナド・クライ",
+      "eti_element": "岩",
+      "eti_weapon": "弓",
+      "officially_supported_summary": "冒険者協会の顧問。フェイの子どもながら人間の中で育った「取り替え子」。",
+      "interpretation_for_report_NOT_CANON": "出自と帰属の問題、多様な存在の連帯。",
+      "caution_or_need_more_evidence": "種族的特徴を性格の欠陥や孤独の証拠にしない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/snezhnaya?char=1"
+      },
+      "extra_official_sources": [
+        {
+          "title": "異なる出自の存在との連帯を描くティザー",
+          "url": "https://genshin.hoyoverse.com/en/news/detail/163393"
+        },
+        {
+          "title": "ナド・クライ冒険者協会の顧問・博物学者",
+          "url": "https://genshin.hoyoverse.com/en/news/detail/163454"
+        }
+      ],
+      "eti_basis_tags_NOT_CANON": [
+        "探索",
+        "researcher",
+        "実利",
+        "自律",
+        "冒険",
+        "好奇心"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%83%AA%E3%83%B3%E3%83%8D%E3%82%A2",
+      "region_category_v2": "ナド・クライ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "スネージナヤ・ナド・クライ"
+    },
+    {
+      "name": "サンドローネ",
+      "group": "SNE",
+      "region_section": "スネージナヤ・ナド・クライ",
+      "eti_element": "氷",
+      "eti_weapon": "両手剣",
+      "officially_supported_summary": "ファデュイ執行官第七位「傀儡」。数理により万物を解析し、社交の場にも出席する。",
+      "interpretation_for_report_NOT_CANON": "合理的な研究と社交の組み合わせ。",
+      "caution_or_need_more_evidence": "寡黙・完全孤立と描くと公式の社交描写と矛盾し得る。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/snezhnaya?char=1"
+      },
+      "extra_official_sources": [
+        {
+          "title": "ファデュイ「傀儡」としての紹介",
+          "url": "https://genshin.hoyoverse.com/en/news/detail/157790"
+        },
+        {
+          "title": "歯車と再会を描く公式ティザー（詩的表現）",
+          "url": "https://genshin.hoyoverse.com/en/news/detail/164974"
+        }
+      ],
+      "eti_basis_tags_NOT_CANON": [
+        "researcher",
+        "技能",
+        "戦略",
+        "自律",
+        "寡黙",
+        "完成度"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%B5%E3%83%B3%E3%83%89%E3%83%AD%E3%83%BC%E3%83%8D",
+      "region_category_v2": "フォンテーヌ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "スネージナヤ・ナド・クライ",
+      "region_note_v2": "ユーザー指定のフォンテーヌ分類。元の公式掲載はスネージナヤ欄。フォンテーヌ由来の物語的関係と現所属ファデュイを分離。"
+    },
+    {
+      "name": "アルレッキーノ",
+      "group": "SNE",
+      "region_section": "スネージナヤ・ナド・クライ",
+      "eti_element": "炎",
+      "eti_weapon": "長柄",
+      "officially_supported_summary": "ファデュイ執行官第四位「召使」。壁炉の家で子どもたちに「お父様」と呼ばれる。",
+      "interpretation_for_report_NOT_CANON": "厳格な役割と保護者的な側面の緊張。",
+      "caution_or_need_more_evidence": "子どもの扱いや動機の評価は伝説任務で詳しく確認。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/snezhnaya?char=1"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "主導",
+        "役割責任",
+        "保護",
+        "距離感",
+        "戦略",
+        "苛烈"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%A2%E3%83%AB%E3%83%AC%E3%83%83%E3%82%AD%E3%83%BC%E3%83%8E",
+      "region_category_v2": "フォンテーヌ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "スネージナヤ・ナド・クライ",
+      "region_note_v2": "ユーザー指定のフォンテーヌ分類。現在の所属組織ファデュイと、物語舞台・出自の区別に注意。"
+    },
+    {
+      "name": "タルタリヤ",
+      "group": "SNE",
+      "region_section": "スネージナヤ・ナド・クライ",
+      "eti_element": "水",
+      "eti_weapon": "弓",
+      "officially_supported_summary": "スネージナヤから来たファデュイ執行官。若い見た目とは異なる鍛えられた戦士として紹介される。",
+      "interpretation_for_report_NOT_CANON": "親しみやすい外見と戦いへの向き合い方の対照。",
+      "caution_or_need_more_evidence": "家族との関係や戦闘を好む理由は別途人物任務等で検証。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/snezhnaya?char=1"
+      },
+      "extra_official_sources": [],
+      "eti_basis_tags_NOT_CANON": [
+        "競争",
+        "冒険",
+        "社交",
+        "家族",
+        "野心",
+        "忠誠"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%BF%E3%83%AB%E3%82%BF%E3%83%AA%E3%83%A4",
+      "region_category_v2": "スネージナヤ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "スネージナヤ・ナド・クライ"
+    },
+    {
+      "name": "オデット",
+      "group": "SNE",
+      "region_section": "スネージナヤ・ナド・クライ",
+      "eti_element": "氷",
+      "eti_weapon": "片手剣",
+      "officially_supported_summary": "コロレフスキー劇団のプリンシパル。氷のように澄んで揺るがない意志を持つと紹介される。",
+      "interpretation_for_report_NOT_CANON": "舞台での規律と個人の自由の間の葛藤。",
+      "caution_or_need_more_evidence": "ティザーの飛翔・解放を事実の行動史としては扱わない。",
+      "evidence_depth": "A",
+      "primary_source": {
+        "title": "公式地域別キャラクター紹介",
+        "url": "https://genshin.hoyoverse.com/ja/character/snezhnaya?char=1"
+      },
+      "extra_official_sources": [
+        {
+          "title": "解放と飛翔の暗喩を含む公式ティザー",
+          "url": "https://genshin.hoyoverse.com/en/news/detail/165566"
+        },
+        {
+          "title": "別離と任務への道を描く公式PV",
+          "url": "https://genshin.hoyoverse.com/en/news/detail/165643"
+        }
+      ],
+      "eti_basis_tags_NOT_CANON": [
+        "規律",
+        "完成度",
+        "自律",
+        "伝統",
+        "内なる情愛",
+        "痛みの抑制"
+      ],
+      "eti_source_profile_version": "ETI-CHAR-2.1.0",
+      "original_community_url_FOR_FUTURE_REVIEW": "https://wikiwiki.jp/genshinwiki/%E3%82%AA%E3%83%87%E3%83%83%E3%83%88",
+      "region_category_v2": "スネージナヤ",
+      "region_category_rule_v2": "国別監査用分類。出身・居住・所属組織と同一とは限らない",
+      "region_section_original_v1": "スネージナヤ・ナド・クライ",
+      "deep_research_v2": {
+        "facts": [
+          "スネージナヤのコロレフスキー劇団のプリンシパルで、ファデュイの任務と舞台活動を並行している。",
+          "公的には冷淡で揺るぎない踊り手だが、公式紹介は徹底した稽古と演技の精度を強調する。",
+          "ゲーム内ストーリーの転記では、父の殉職と母の負傷による生活の激変、ファデュイに進む選択、厳しい訓練とバレエへの執着、ロザリン（シニョーラ）への恩義・反発の複雑さが語られる。",
+          "同じく転記には、同僚ヴォジャニーツァや若手の演者に対して淡々と援助する場面もある。"
+        ],
+        "reading": "「冷たい完璧主義者」と片づけず、喪失を背景に培った自律と仕事の正確さ、踊ることへの愛、他者との不器用だが具体的な関わりを軸にする。",
+        "avoid": "感情を表に出さないこと＝感情がない、シニョーラに恩があること＝過去の厳しい訓練を全面的に肯定、とは解釈しない。個別の心理的理由は推論であり断定しない。",
+        "sources": [
+          [
+            "公式紹介引用・4Gamer",
+            "https://www.4gamer.net/games/486/G048621/20260703017/"
+          ],
+          [
+            "公式・キャラ地域紹介",
+            "https://genshin.hoyoverse.com/ja/character/snezhnaya?char=1"
+          ],
+          [
+            "ゲーム内の好感度物語・ボイスの転記（非公式、要原文照合）",
+            "https://genshin.honeyhunterworld.com/odette_150/?lang=JA"
+          ],
+          [
+            "ゲーム内人物語転記（非公式、要原文照合）",
+            "https://wikiwiki.jp/genshinwiki/%E7%89%A9%E8%AA%9E/%E7%89%A9%E8%AA%9E_%E3%82%A2_3"
+          ]
+        ]
+      },
+      "deep_review_status_v2": "公式紹介とゲーム内転記の照合済み。ゲーム内テキストは非公式ミラー経由、原本照合未完了。"
+    }
+  ]
+}

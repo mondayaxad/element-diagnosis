@@ -43,7 +43,8 @@ create table public.resonance_reports (
   chart_version     text not null,
   created_at        timestamptz not null default now(),
   revoked_at        timestamptz,              -- 返金・異議などで閲覧を止めた時刻（行は消さない）
-  constraint resonance_reports_no_draft check (not (snapshot ? 'draft_missing'))  -- 未執筆の辞書が残るものは保存できない
+  constraint resonance_reports_no_draft check (not (snapshot ? 'draft_missing')),  -- 未執筆の辞書が残るものは保存できない
+  constraint resonance_reports_approved_text check (snapshot->'model'->>'dictionary_status' = 'APPROVED')  -- 承認前の辞書（レビュー用 v2.2 など）の文章は保存できない
 );
 
 -- 3. 閲覧の権利（推測できない乱数のリンク。DB にはハッシュだけ）

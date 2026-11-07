@@ -1,0 +1,48 @@
+{
+  "schema": "v2-compatible",
+  "source_audit_sha256": "52d6f3fe867e718bbbc373257165dc8864df9226c3f097edbd3d490fd55aa75b",
+  "previous_dictionary_sha256": "9d41efe29d4845b998b5f98026d47fdfce402c99fd1f502e42aa4de18acc5774",
+  "required_families": {
+    "elementInner": 7,
+    "weaponRelation": 5,
+    "nationValue": 8,
+    "comboInteraction": 35,
+    "nationLens": 8,
+    "weaponAction": 5,
+    "nationPriority": 8,
+    "symbolMeaning": 1,
+    "axisCommon": 20,
+    "axisDifference": 20,
+    "domainScene": 3,
+    "characterModel": 66,
+    "characterReading": 66,
+    "journeyIntro": 1,
+    "journeyElement": 7,
+    "journeyCombo": 40
+  },
+  "required_keys": 300,
+  "characters": 66,
+  "patterns": 280,
+  "unique_char_model": 66,
+  "unique_char_reading": 66,
+  "changed_keys_by_family": {
+    "comboInteraction": 35,
+    "symbolMeaning": 1,
+    "domainScene": 3,
+    "characterModel": 66,
+    "characterReading": 66,
+    "journeyIntro": 1,
+    "journeyCombo": 40
+  },
+  "changed_required_keys": 212,
+  "character_name_coverage": "66/66",
+  "official_lore_source": "audited v2.1 dataset, not independently verified in this turn",
+  "scope": "C-2 editorial draft, not approved for sale",
+  "known_limitations": [
+    "B級の追加資料にはゲーム内テキストの非公式転記が含まれ、最終照合が必要",
+    "一人のキャラが4〜5個の758に現れるため固有文はどの758にも適用できる表現にしている",
+    "全280の原稿は辞書結合レベルで検証。図の軸選択と統合したレポート全章の実動作はClaude側で回帰確認する",
+    "実際の人物心理を直接測定した数値ではない"
+  ],
+  "new_dictionary_sha256": "48fe1ace684f889265d3a5604ae32ce47a40cd7b3b76db743a11d6c17961dd46"
+}
