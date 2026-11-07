@@ -88,3 +88,15 @@ export function unpackResonanceShare(s) {
   const wi = v % 5; v = (v - wi) / 5;
   return { el: PACK_ELEMENTS[v], w: PACK_WEAPONS[wi], nat: PACK_NATIONS[n], mirrorIdx: mirror, selfIdx: self === C ? null : self };
 }
+
+// ---- 共鳴診断 Character Reveal（m3）。js/eti_mini_share.js の packReveal / unpackReveal と同じ計算 ----
+// タイプ 280 × 人物 118。範囲外・先頭の0・大文字は受け付けない（正規形だけ）
+export function unpackRevealShare(s) {
+  if (typeof s !== 'string' || !/^[0-9a-z]{1,3}$/.test(s)) return null;
+  let v = parseInt(s, 36);
+  if (!(v >= 0 && v < 280 * MINI_CHAR_COUNT) || v.toString(36) !== s) return null;
+  const c = v % MINI_CHAR_COUNT; v = (v - c) / MINI_CHAR_COUNT;
+  const n = v % 8; v = (v - n) / 8;
+  const wi = v % 5; v = (v - wi) / 5;
+  return { el: PACK_ELEMENTS[v], w: PACK_WEAPONS[wi], nat: PACK_NATIONS[n], charIdx: c };
+}

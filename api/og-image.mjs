@@ -21,7 +21,7 @@ import { buildOgpCardTree } from '../js/ogp-card.mjs';
 import { ELEMENT_KEY } from '../js/ogp-theme.mjs';
 import { CHAR_ELEMENT } from './_ogp-char-element.mjs';
 import { OG_FONT_WOFF_BASE64 } from './_og-font.mjs';
-import { ELEMENT_CODE, WEAPON_CODE, TYPE_NAME, ELEMENT_NAME, WEAPON_NAME, NATION_NAME, CHAR_NAMES, unpackShareParams, canonicalShareP, packShareParams, unpackMiniShare, unpackResonanceShare } from './_og-data.mjs';
+import { ELEMENT_CODE, WEAPON_CODE, TYPE_NAME, ELEMENT_NAME, WEAPON_NAME, NATION_NAME, CHAR_NAMES, unpackShareParams, canonicalShareP, packShareParams, unpackMiniShare, unpackResonanceShare, unpackRevealShare } from './_og-data.mjs';
 
 export const config = { runtime: 'edge' };
 
@@ -62,6 +62,9 @@ export default async function handler(req) {
   const mini = searchParams.get('m1');
   if (mini !== null) return miniImage(mini, searchParams, origin);
   // 共鳴診断（m2）：同じ描き方で、MIRROR 欄に「SELF IMAGE（本人が選んだ人物）」と「MIRROR（回答に映る人物）」を並べる
+  // 共鳴診断 Character Reveal（m3）：人物名を大きく。下地は共鳴診断用（見出し「共鳴診断 — MY RESULT」）
+  const reveal = searchParams.get('m3');
+  if (reveal !== null) return revealImage(reveal, searchParams, origin);
   const resonance = searchParams.get('m2');
   if (resonance !== null) return resonanceImage(resonance, searchParams, origin);
   let el, w, nat, charIdx, match;
@@ -149,6 +152,27 @@ async function resonanceImage(m2, searchParams, origin) {
     pair,
     brand: '共鳴診断 RESONANCE',
     // 上部の見出しは「共鳴診断 — MY RESULT」。下地は共鳴診断用（assets/ogp/bases-resonance/。scripts/build-ogp-bases.mjs --resonance）
+    header: '共鳴診断 — MY RESULT',
+    baseDir: 'bases-resonance',
+  };
+  return renderCard(data, origin);
+}
+
+// 共鳴診断 Character Reveal の画像。m3 は正規形だけ（js/eti_mini_share.js の packReveal と同じ符号）。余分なパラメータは正規形へ
+async function revealImage(m3, searchParams, origin) {
+  const u = unpackRevealShare(m3);
+  if (!u || !CHAR_NAMES[u.charIdx]) return new Response('invalid', { status: 400, headers: { 'Cache-Control': 'public, max-age=86400, s-maxage=86400' } });
+  if ([...searchParams.keys()].some((k) => k !== 'm3')) {
+    return new Response(null, { status: 308, headers: { Location: `${origin}/api/og-image?m3=${m3}`, ...CACHE_HEADERS } });
+  }
+  const name = CHAR_NAMES[u.charIdx];
+  const data = {
+    code: ELEMENT_CODE[u.el] + WEAPON_CODE[u.w], typeName: TYPE_NAME[u.el][u.w], element: u.el, weapon: u.w,
+    nation: u.nat === 'ナドクライ' ? 'ナド・クライ' : u.nat,
+    mirrorName: '', match: '',
+    // 見出しは同梱フォントにある英字（「アナタに共鳴する人物」の文字はフォントに無い）。円・色は本人の元素（下地の円環）、名前の色は人物の元素
+    hero: { label: 'YOUR RESONANCE', name, element: CHAR_ELEMENT[name] || u.el },
+    bandText: 'ELEMENT DIAGNOSIS PRESENTS — 共鳴診断 RESONANCE',
     header: '共鳴診断 — MY RESULT',
     baseDir: 'bases-resonance',
   };

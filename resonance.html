@@ -95,64 +95,78 @@
   .opt[aria-checked="true"] .opt-title { color: #f1eeff; text-shadow: 0 0 8px color-mix(in srgb, var(--ac) 70%, transparent); }
   .opt[aria-checked="true"]::before { content: ''; position: absolute; top: -4px; left: 50%; width: 6px; height: 6px; margin-left: -3px; transform: rotate(45deg); background: #dfe8ff; box-shadow: 0 0 8px 1px color-mix(in srgb, var(--ac) 80%, #fff); }
 
-  /* キャラクター（任意） */
-  .sec-h { text-align: center; margin: 0 0 18px; }
-  .sec-h .en { display: block; font-family: var(--font-en); font-style: italic; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: #5d7cab; margin-bottom: 8px; }
-  .sec-h .jp { display: block; font-size: 17px; font-weight: 600; letter-spacing: .14em; color: #f1eeff; }
-  .note { text-align: center; font-size: 12.5px; color: var(--t-body); line-height: 1.9; margin: 0 0 22px; word-break: auto-phrase; }
-  .search { width: 100%; min-height: 46px; background: rgba(10,12,26,.55); border: 1px solid var(--line); border-radius: 6px; color: var(--t-head); font-family: var(--font-jp); font-size: 16px; letter-spacing: .06em; padding: 10px 14px; margin: 0 0 6px; }
-  .search::placeholder { color: var(--t-en); }
-  .chars-empty { color: var(--t-sub); font-size: 12.5px; text-align: center; letter-spacing: .08em; padding: 14px 0; margin: 0; }
-  /* 人物の一覧：五十音の行ごとの名前（文字だけ・選ぶと光る。本家「以前の結果から読む」画面と同じ） */
-  .kana-row { display: grid; grid-template-columns: 2em 1fr; gap: 6px 12px; align-items: baseline; padding: 10px 0; border-top: 1px solid rgba(150,180,240,.08); }
-  .kana-row:first-child { border-top: 0; }
-  .kana-row .k { font-size: 12px; color: #5d7cab; text-align: center; letter-spacing: .1em; }
-  .chips { display: flex; flex-wrap: wrap; gap: 2px 4px; }
-  .chip { min-height: 40px; padding: 6px 10px; border: 0; border-bottom: 1px solid transparent; background: none; color: #a9b8d6; font-size: 14px; letter-spacing: .06em; cursor: pointer; transition: color .25s ease, text-shadow .25s ease, border-color .25s ease; }
-  .chip:hover { color: #e2e4f6; }
-  .chip[aria-pressed="true"] { color: #f1eeff; border-bottom-color: color-mix(in srgb, var(--ac) 80%, #fff); text-shadow: 0 0 10px color-mix(in srgb, var(--ac) 80%, transparent); }
-  .chip.unknown { color: var(--t-sub); font-size: 13px; }
-  /* シェア（本家の結果画面と同じ2つのボタン） */
-  .share { display: flex; gap: 8px; margin: 22px 0 0; }
-  .share button { flex: 1; border: none; border-radius: 8px; padding: 12px 6px; min-height: 46px; font-size: 12.5px; letter-spacing: .06em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
-  .share .save { background: linear-gradient(135deg, #1a3048, #1a4a78); color: #e0f4ff; }
-  .share .x { background: #000; color: #fff; border: 1px solid rgba(255,255,255,.12); }
-  .save-overlay { position: fixed; inset: 0; z-index: 3000; background: rgba(0,0,0,.95); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-  .save-overlay p { color: #d0ecf8; font-size: 13px; margin: 0 0 14px; text-align: center; font-weight: 600; }
-  .save-overlay img { width: min(300px, 85vw); border-radius: 12px; -webkit-touch-callout: default; }
-  .save-overlay button { margin-top: 20px; background: transparent; border: 1px solid #1e3448; color: #6a90b0; border-radius: 8px; padding: 12px 24px; font-size: 13px; cursor: pointer; }
-  .actions { text-align: center; margin: 30px 0 0; display: flex; flex-direction: column; align-items: center; gap: 16px; }
-  .msg { font-size: 12.5px; color: #d6bd84; text-align: center; margin: 0; min-height: 1em; }
+  .desc .small-desc { display: block; margin-top: 12px; font-size: 12px; color: var(--t-sub); line-height: 1.85; }
+  /* ---- 登場演出（本家 OGP の元素の円を、正式背景の円の部分だけ丸く見せる。新しい画像は使わない） ---- */
+  .reveal { text-align: center; padding: 6px 0 4px; cursor: default; }
+  .reveal.play { cursor: pointer; }
+  .orb-wrap { position: relative; --d: min(66vw, 264px); width: var(--d); height: var(--d); margin: 4px auto 22px; }
+  .orb { position: absolute; inset: 0; border-radius: 50%; background-repeat: no-repeat; background-size: calc(var(--d) * 1200 / 560) auto;
+    background-position: calc(var(--d) * -650 / 560) calc(var(--d) * -2 / 560);
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 58%, rgba(0,0,0,.6) 66%, transparent 72%); mask-image: radial-gradient(circle at 50% 50%, #000 58%, rgba(0,0,0,.6) 66%, transparent 72%); }
+  .orb-glow { position: absolute; inset: -18%; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--ac) 30%, transparent) 0%, color-mix(in srgb, var(--ac) 10%, transparent) 38%, transparent 66%); pointer-events: none; }
+  .r-lead { font-size: 14px; letter-spacing: .24em; color: #b9c6e6; margin: 0 0 10px; }
+  .r-name { font-size: clamp(30px, 11vw, 52px); font-weight: 700; letter-spacing: .14em; padding-left: .14em; line-height: 1.25; color: #f6f3ff; margin: 0 0 16px; overflow-wrap: anywhere; word-break: keep-all;
+    text-shadow: 0 0 28px color-mix(in srgb, var(--ac) 60%, transparent), 0 2px 18px rgba(7,7,15,.85); }
+  .r-name.long { font-size: clamp(26px, 9vw, 44px); letter-spacing: .08em; padding-left: .08em; }
+  .r-758 { font-size: 15px; letter-spacing: .18em; color: #e2e4f6; margin: 0 0 4px; }
+  .r-type { margin: 0 0 4px; font-size: 18px; letter-spacing: .3em; padding-left: .3em; color: #e8d8a8; }
+  .r-code { font-family: var(--font-en); font-size: 13px; letter-spacing: .3em; color: var(--gold); margin: 0; }
+  /* 演出：星の光 → 円 → 光の広がり → 「アナタに共鳴する人物は――」 → 名前 → 758・タイプ名（合計 約2.8秒。タップで省略） */
+  .reveal.play .rv { opacity: 0; }
+  .reveal.play .rv-orb { animation: rvOrb 1s ease-out .2s forwards; }
+  .reveal.play .orb-glow { opacity: 0; animation: rvGlow 1.4s ease-out .8s forwards; }
+  .reveal.play .rv-lead { animation: rvFade .7s ease-out 1.3s forwards; }
+  .reveal.play .rv-name { animation: rvName 1s ease-out 1.85s forwards; }
+  .reveal.play .rv-info { animation: rvFade .7s ease-out 2.5s forwards; }
+  @keyframes rvOrb { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: scale(1); } }
+  @keyframes rvGlow { 0% { opacity: 0; transform: scale(.8); } 60% { opacity: 1; } 100% { opacity: .85; transform: scale(1); } }
+  @keyframes rvFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes rvName { from { opacity: 0; filter: blur(8px); letter-spacing: .3em; } to { opacity: 1; filter: none; } }
+  .after { transition: opacity .6s ease; }
+  .reveal.play ~ .after { opacity: 0; pointer-events: none; }
+  .night .stars { position: absolute; inset: 0; opacity: 0; background:
+    radial-gradient(1px 1px at 18% 22%, rgba(220,230,255,.8), transparent), radial-gradient(1px 1px at 72% 14%, rgba(220,230,255,.7), transparent),
+    radial-gradient(1.5px 1.5px at 84% 38%, rgba(220,230,255,.6), transparent), radial-gradient(1px 1px at 30% 64%, rgba(220,230,255,.5), transparent),
+    radial-gradient(1px 1px at 58% 46%, rgba(220,230,255,.6), transparent), radial-gradient(1.5px 1.5px at 12% 82%, rgba(220,230,255,.5), transparent); transition: opacity 1.2s ease; }
+  body.revealing .night .stars, body.revealed .night .stars { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { .reveal.play .rv, .reveal.play .orb-glow { animation: none; opacity: 1; } .reveal.play ~ .after { opacity: 1; pointer-events: auto; } }
 
-  /* 結果 */
-  .r-label { text-align: center; font-family: var(--font-en); font-style: italic; font-size: 11px; letter-spacing: .3em; color: #5d7cab; margin: 0 0 10px; }
-  .type-name { text-align: center; font-size: clamp(30px, 9vw, 40px); font-weight: 700; letter-spacing: .24em; padding-left: .24em; color: #f1eeff; margin: 0 0 6px; text-shadow: 0 0 30px color-mix(in srgb, var(--ac) 45%, transparent), 0 2px 18px rgba(7,7,15,.8); }
-  .type-code { text-align: center; font-family: var(--font-en); font-size: 18px; letter-spacing: .3em; padding-left: .3em; color: var(--gold); margin: 0 0 22px; }
-  .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 24px; }
-  .facts div { border: 1px solid var(--line); border-radius: 6px; background: rgba(10,12,26,.5); padding: 10px 4px 9px; text-align: center; }
-  .facts dt { font-size: 10.5px; letter-spacing: .2em; color: var(--t-sub); margin: 0 0 2px; }
-  .facts dd { margin: 0; font-size: 14.5px; letter-spacing: .04em; color: #f1eeff; white-space: nowrap; }
-  .phrase { font-size: 14px; line-height: 2.1; color: var(--t-body); margin: 0 0 12px; word-break: auto-phrase; }
-  .phrase strong { font-weight: 400; color: #e8d8a8; }
-  .panel { border-top: 1px solid rgba(150,180,240,.1); padding: 26px 0 0; margin: 26px 0 0; }
-  .panel h2 { text-align: center; font-size: 13px; font-weight: 400; letter-spacing: .3em; color: var(--t-sub); margin: 0 0 10px; }
-  .mirror-name { text-align: center; font-size: 24px; letter-spacing: .2em; padding-left: .2em; color: #f1eeff; margin: 0 0 10px; text-shadow: 0 0 18px color-mix(in srgb, var(--ac) 40%, transparent); }
-  .panel p.small { text-align: center; font-size: 12px; color: var(--t-sub); line-height: 1.85; margin: 0; word-break: auto-phrase; }
-  .retry { text-align: center; margin: 30px 0 0; }
-  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 14px; }
-  .pair.single { grid-template-columns: 1fr; }
-  .person { border: 1px solid var(--line); border-radius: 8px; background: rgba(10,12,26,.5); padding: 14px 8px 12px; text-align: center; }
-  .person .en { font-family: var(--font-en); font-style: italic; font-size: 10.5px; letter-spacing: .26em; color: #5d7cab; margin: 0 0 4px; }
-  .person h2 { font-size: 12px; font-weight: 400; letter-spacing: .14em; color: var(--t-sub); margin: 0 0 8px; }
-  .person .mirror-name { font-size: 19px; letter-spacing: .1em; padding-left: .1em; margin: 0; word-break: keep-all; overflow-wrap: anywhere; }
-  .price { text-align: center; font-size: 15px; letter-spacing: .12em; color: #d6bd84; margin: 0 0 8px; }
-  .more { text-align: center; border-top: 1px solid rgba(150,180,240,.1); margin: 40px 0 0; padding: 34px 0 0; }
+  /* 結果の説明・ボタン */
+  .r-label { text-align: center; font-family: var(--font-en); font-style: italic; font-size: 11px; letter-spacing: .3em; color: #5d7cab; margin: 0 0 12px; line-height: 1.8; }
+  .r-label span { display: block; }
+  .about { font-size: 13.5px; line-height: 2.05; color: var(--t-body); margin: 26px 0 0; word-break: auto-phrase; }
+  .about strong { font-weight: 400; color: #e8d8a8; }
+  .about .small { display: block; margin-top: 10px; font-size: 12px; color: var(--t-sub); line-height: 1.85; }
+  .sec { border-top: 1px solid rgba(150,180,240,.1); margin: 34px 0 0; padding: 30px 0 0; }
+  .sec-h { text-align: center; margin: 0 0 16px; }
+  .sec-h .en { display: block; font-family: var(--font-en); font-style: italic; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: #5d7cab; margin-bottom: 8px; }
+  .sec-h .jp { display: block; font-size: 16px; font-weight: 600; letter-spacing: .12em; color: #f1eeff; }
+  .price { text-align: center; font-size: 15px; letter-spacing: .12em; color: #d6bd84; margin: -6px 0 14px; }
+  .demo-note { text-align: center; font-size: 11.5px; color: #c9a860; letter-spacing: .06em; margin: 0 0 16px; }
+  .demo-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: d; }
+  .demo-list li { border: 1px solid var(--line); border-radius: 8px; background: rgba(10,12,26,.5); padding: 12px 14px 11px 44px; position: relative; }
+  .demo-list li::before { counter-increment: d; content: counter(d, decimal-leading-zero); position: absolute; left: 14px; top: 13px; font-family: var(--font-en); font-size: 13px; color: var(--gold); }
+  .demo-list b { display: block; font-weight: 600; font-size: 14px; letter-spacing: .06em; color: #e2e4f6; }
+  .demo-list span { display: block; font-size: 12px; color: var(--t-body); line-height: 1.8; margin-top: 2px; }
+  .demo-list .demo-char { display: inline; margin: 0; font-size: inherit; color: #e2e4f6; }
+  .demo-fig { position: relative; margin: 16px 0 0; border: 1px solid var(--line); border-radius: 8px; background: rgba(10,12,26,.5); padding: 14px; overflow: hidden; }
+  .demo-fig svg { display: block; width: 100%; height: auto; filter: blur(2.5px); opacity: .7; }
+  .demo-fig .lock { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: rgba(7,7,15,.35); text-align: center; }
+  .demo-fig .lock b { font-family: var(--font-en); font-style: italic; font-weight: 400; font-size: 12px; letter-spacing: .3em; color: #c9a860; }
+  .demo-fig .lock span { font-size: 12px; color: #d3dcf0; letter-spacing: .06em; }
+  .buy { display: block; width: 100%; margin: 18px 0 0; padding: 15px 12px; letter-spacing: .08em; }
+  .buy-note { text-align: center; font-size: 11.5px; color: var(--t-sub); margin: 8px 0 0; }
+  .xshare { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 56px; margin: 0; border: 1px solid rgba(255,255,255,.14); border-radius: 8px; background: #000; color: #fff; font-family: var(--font-jp); font-size: 15px; letter-spacing: .14em; cursor: pointer; }
+  .xshare:hover { background: #111; }
+  .more { text-align: center; }
   .more h2 { font-size: 16px; font-weight: 600; letter-spacing: .12em; color: var(--t-head); margin: 0 0 10px; }
   .more p { font-size: 12.5px; color: var(--t-body); line-height: 1.9; margin: 0 0 22px; word-break: auto-phrase; }
+  .retry { text-align: center; margin: 26px 0 0; }
+  .shared-note { text-align: center; font-size: 12px; color: var(--t-sub); margin: 0 0 6px; }
 </style>
 </head>
 <body>
-<div class="night" aria-hidden="true"><div class="photo"></div><div class="tint"></div><div class="aura"></div></div>
+<div class="night" aria-hidden="true"><div class="photo"></div><div class="tint"></div><div class="stars"></div><div class="aura"></div></div>
 
 <main class="stage">
   <p class="preview-note">PREVIEW ・ 人物像レポートの購入はまだできません</p>
@@ -164,7 +178,7 @@
       <h1 class="title">共鳴診断</h1>
       <p class="sub">RESONANCE</p>
       <div class="spark" aria-hidden="true"></div>
-      <p class="desc">3つの問いで選んだ考え方から、あなたの元素・武器種・国家と、<br>あなたの回答に映る人物を描きます。<br>それぞれ、いちばん近いものをひとつ選んでください。<span class="en">Three questions, one resonance.</span></p>
+      <p class="desc">3つの問いから、アナタに共鳴する人物を。<span class="small-desc">本編の100問の元素診断で使っている心理モデルと判定の仕組みを応用した、3問の簡易診断です。3つの問いで心の特性を細かく測るものではありません。</span><span class="en">Three questions, one resonance.</span></p>
       <p><button type="button" class="cta" id="startBtn">はじめる</button></p>
     </div>
   </section>
@@ -179,74 +193,70 @@
     <div id="questions"></div>
   </section>
 
-  <!-- キャラクター（任意） -->
-  <section class="page" id="pChar" data-step="char" hidden>
-    <div class="head">
-      <button type="button" class="back" id="cBack">← 前へ</button>
-      <div class="steps" aria-hidden="true"><i class="done"></i><i class="done"></i><i class="done"></i></div>
-      <span class="spacer" aria-hidden="true"></span>
-    </div>
-    <div class="sec-h"><span class="en">Self Image</span><span class="jp">アナタに似ていると思う人物</span></div>
-    <p class="note">自分に似ていると思う人物を、ひとり選んでください。<br>あなたの3つの答えのタイプに現れる人物から選べます。<br>選んでも、3つの問いの結果は変わりません。</p>
-    <label for="charSearch" class="q-no" style="margin-bottom:8px">SEARCH BY NAME</label>
-    <input id="charSearch" class="search" type="search" autocomplete="off" enterkeyhint="search" placeholder="名前で探す（例：なひーだ）" aria-controls="charList">
-    <div id="charList" role="radiogroup" aria-label="アナタに似ていると思う人物（3つの答えのタイプに現れる人物・五十音順）"></div>
-    <div class="actions">
-      <button type="button" class="cta" id="showResult" disabled>結果を見る</button>
-      <p class="msg" id="quizMsg" role="status" aria-live="polite"></p>
-    </div>
-  </section>
-
-  <!-- 結果 -->
-  <section class="page" id="result" data-step="result" hidden aria-live="polite">
-    <p class="r-label" id="rLabel">YOUR ELEMENT TYPE</p>
-    <p class="type-name" id="rTypeName"></p>
-    <p class="type-code" id="rTypeCode"></p>
-    <dl class="facts">
-      <div><dt>元素</dt><dd id="rElement"></dd></div>
-      <div><dt>武器種</dt><dd id="rWeapon"></dd></div>
-      <div><dt>国家</dt><dd id="rNation"></dd></div>
-    </dl>
-    <p class="phrase" id="rPhrase"></p>
-    <p style="text-align:center;margin:0"><a class="link" id="rTypeLink" href="/">このタイプの解説を読む <span class="arw">→</span></a></p>
-
-    <div class="panel">
-      <div class="pair" id="rPair">
-        <div class="person" id="rSelfBox">
-          <p class="en">SELF IMAGE</p>
-          <h2>アナタが選んだ人物</h2>
-          <p class="mirror-name" id="rSelf"></p>
-        </div>
-        <div class="person">
-          <p class="en">MIRROR</p>
-          <h2>回答に映る人物</h2>
-          <p class="mirror-name" id="rMirror"></p>
-        </div>
+  <!-- 結果（登場演出 → 無料結果 → レポートの見本 → 購入（準備中）→ Xでシェア → 100問） -->
+  <section class="page" id="result" data-step="result" hidden>
+    <p class="r-label" id="rLabel"><span>ELEMENT DIAGNOSIS PRESENTS</span><span>共鳴診断 — RESONANCE</span></p>
+    <div class="reveal" id="reveal" aria-live="polite">
+      <div class="orb-wrap rv rv-orb" id="rOrbWrap" role="img" aria-label="">
+        <div class="orb-glow"></div>
+        <div class="orb" id="rOrb"></div>
       </div>
-      <p class="small" id="rMirrorNote"></p>
-      <div class="share" id="shareRow">
-        <button type="button" class="save" id="saveImgBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>画像を保存</button>
-        <button type="button" class="x" id="tweetShareBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="white" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.845L1.254 2.25H8.08l4.253 5.622 5.91-5.622z"/></svg>Xでシェア</button>
+      <p class="r-lead rv rv-lead">アナタに共鳴する人物は――</p>
+      <p class="r-name rv rv-name" id="rName"></p>
+      <div class="rv rv-info">
+        <p class="r-758" id="r758"></p>
+        <p class="r-type" id="rTypeName"></p>
+        <p class="r-code" id="rTypeCode"></p>
       </div>
-      <p class="retry" id="tryRow" hidden><button type="button" class="cta" id="tryMini">あなたも共鳴診断をする</button></p>
     </div>
-    <div class="panel" id="reportPanel">
-      <h2>共鳴診断｜人物像レポート</h2>
-      <p class="price">税込500円・買い切り</p>
-      <p class="small">3つの選択から描く人物像、元素・武器種・国家、選んだ人物と回答に映る人物の共通点と相違点を読み解くレポートです。<br>ただいま準備中です（購入はまだできません）。</p>
-    </div>
-    <p class="retry" id="retryRow"><button type="button" class="link" id="retry">最初から答え直す <span class="arw">→</span></button></p>
 
-    <div class="more">
-      <h2>元素診断で、もっと深く自分を知る</h2>
-      <p>100問に答える本編の元素診断（基本無料）では、<br>元素・武器種・国家とキャラクターを、より詳しく読み解きます。</p>
-      <a class="cta" href="/">100問の元素診断へ</a>
+    <div class="after" id="after">
+      <p class="shared-note" id="sharedNote" hidden></p>
+      <p class="about" id="rAbout"></p>
+
+      <!-- ¥500 人物像レポートの見本（非販売。利用者のデータから数値・図を作らない） -->
+      <div class="sec" id="reportDemo">
+        <div class="sec-h"><span class="en">Sample — Persona Report</span><span class="jp">共鳴診断｜人物像レポート</span></div>
+        <p class="price">税込500円・買い切り</p>
+        <p class="demo-note">以下は内容の見本です。実際のレポートの文章・図とは異なります。</p>
+        <ol class="demo-list">
+          <li><b>アナタと MIRROR の人物像</b><span>3つの選択から描くアナタの人物像と、<span class="demo-char"></span>の人物像を並べて読み解きます。</span></li>
+          <li><b>性格・行動・価値観の共鳴</b><span>性格（PERSONA）・行動の傾向（STYLE）・価値観（VALUES）のどこで響き合い、どこで異なるかを、図と文章で。</span></li>
+          <li><b>元素・武器種・国家の意味</b><span>アナタの元素・武器種・国家が、それぞれ何を象徴しているか。</span></li>
+          <li><b>人物との共鳴解説</b><span><span class="demo-char"></span>とアナタの共通点と相違点。</span></li>
+          <li><b>レポートで読める内容</b><span>自己理解につながる解釈と、日々に持ち帰る問い。数値で点を付けたり、割合で比べたりはしません。</span></li>
+        </ol>
+        <div class="demo-fig" aria-hidden="true">
+          <svg viewBox="0 0 320 150" xmlns="http://www.w3.org/2000/svg">
+            <g font-family="serif" font-size="9" fill="#8e9dbf" letter-spacing="1.5"><text x="0" y="24">PERSONA</text><text x="0" y="74">STYLE</text><text x="0" y="124">VALUES</text></g>
+            <g fill="none" stroke-width="2" stroke-linecap="round">
+              <path d="M70 26 C110 6 150 40 190 20 S260 30 300 16" stroke="#86b6e6"/><path d="M70 30 C110 44 150 10 190 30 S260 14 300 28" stroke="#d6bd84"/>
+              <path d="M70 76 C110 60 150 90 190 70 S260 80 300 64" stroke="#86b6e6"/><path d="M70 72 C110 88 150 60 190 80 S260 66 300 78" stroke="#d6bd84"/>
+              <path d="M70 126 C110 110 150 140 190 118 S260 132 300 114" stroke="#86b6e6"/><path d="M70 122 C110 136 150 108 190 128 S260 116 300 128" stroke="#d6bd84"/>
+            </g>
+          </svg>
+          <div class="lock"><b>SAMPLE</b><span>図は見本です（購入後のレポートで表示）</span></div>
+        </div>
+        <button type="button" class="cta buy" id="buyBtn" disabled>人物像レポートを読む（準備中）</button>
+        <p class="buy-note">販売開始まで、購入はできません。</p>
+      </div>
+
+      <div class="sec" id="shareSec">
+        <button type="button" class="xshare" id="tweetShareBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="white" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.845L1.254 2.25H8.08l4.253 5.622 5.91-5.622z"/></svg>Xでシェアする</button>
+      </div>
+      <div class="sec" id="trySec" hidden style="text-align:center">
+        <button type="button" class="cta" id="tryBtn">アナタも共鳴診断をする</button>
+      </div>
+
+      <div class="sec more">
+        <h2>元素診断で、もっと深く自分を知る</h2>
+        <p>100問に答える本編の元素診断（基本無料）では、<br>元素・武器種・国家とキャラクターを、より詳しく読み解きます。</p>
+        <a class="cta" href="/">100問の元素診断へ</a>
+      </div>
+      <p class="retry" id="retryRow"><button type="button" class="link" id="retry">最初から答え直す <span class="arw">→</span></button></p>
     </div>
   </section>
 </main>
-
-<!-- シェア画像描画用（非表示。本家と同じ 1080×1080） -->
-<canvas id="share-canvas-el" width="1080" height="1080" style="display:none"></canvas>
 
 <script src="js/characters118_v2_1.js"></script>
 <script src="js/eti_mini_auto_map_v1.js"></script>
@@ -254,24 +264,21 @@
 <script src="js/eti_mini_choices_v1.js"></script>
 <script src="js/eti_mini_core.js"></script>
 <script src="js/eti_mini_share.js"></script>
-<script src="js/type_reading_chars.js"></script>
-<script src="js/resonance_candidates.js"></script>
 <script>
 (function () {
   'use strict';
-  var M = window.ETIMini, Q = window.ETI_MINI_CHOICES;
   /* global ETI_V2_CHARACTERS_2_1_0 */
-  /* global ETI_V2_CHARACTERS_2_1_0 */
-  var S = window.ETIMiniShare;
+  var M = window.ETIMini, Q = window.ETI_MINI_CHOICES, S = window.ETIMiniShare;
   // キャラクターの番号（ETI-CHAR-2.1.0 の並び。シェアの符号・api/_og-data.mjs の CHAR_NAMES と同じ）
   var CHAR_INDEX = {};
-  ETI_V2_CHARACTERS_2_1_0.map(function (c, i) { CHAR_INDEX[c.name] = i; return c; });
+  ETI_V2_CHARACTERS_2_1_0.forEach(function (c, i) { CHAR_INDEX[c.name] = i; });
   var answers = { element: null, weapon: null, nation: null };
-  var chosen = null;
   var $ = function (id) { return document.getElementById(id); };
   var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // 元素の色（結果ページで夜空の下をほのかに灯す。問いの間は使わない）
+  // 元素の色（結果ページで夜空の下と円の光を灯す。問いの間は使わない）
   var ELEMENT_GLOW = { '炎': '#d9784a', '水': '#4a9ad0', '氷': '#8ab8e8', '雷': '#a070e0', '風': '#5cc4a0', '岩': '#d0a850', '草': '#7cbf4a' };
+  // 本家 OGP の正式背景（元素別。円環と、該当元素の点灯が描き込まれている）。js/ogp-theme.mjs の ELEMENT_KEY と同じ
+  var ELEMENT_KEY = { '水': 'hydro', '炎': 'pyro', '風': 'anemo', '雷': 'electro', '草': 'dendro', '氷': 'cryo', '岩': 'geo' };
   var DEFAULT_GLOW = '#7aa2cf';
   function setGlow(c) { document.documentElement.style.setProperty('--ac', c || DEFAULT_GLOW); }
 
@@ -308,8 +315,8 @@
         answers[q.id] = o.key;
         opts.classList.add('has-pick');
         opts.querySelectorAll('.opt').forEach(function (x) { x.setAttribute('aria-checked', x === b ? 'true' : 'false'); });
-        // 選んだ光を一瞬見せてから、ページをめくる
-        setTimeout(function () { go(qi + 1 < Q.questions.length ? 'q' + (qi + 1) : 'char', true); }, REDUCED ? 120 : 380);
+        // 選んだ光を一瞬見せてから、ページをめくる。3問目のあとは結果（登場演出）へ
+        setTimeout(function () { if (qi + 1 < Q.questions.length) go('q' + (qi + 1), true); else showResult(); }, REDUCED ? 120 : 380);
       });
       opts.appendChild(b);
     });
@@ -318,11 +325,11 @@
     qBlocks.push(sec);
   });
 
-  // ---- ページ送り（表紙 → 問い1〜3 → キャラ → 結果）。端末の「戻る」でも1ページずつ戻る ----
-  var STEPS = ['cover', 'q0', 'q1', 'q2', 'char', 'result'];
+  // ---- ページ送り（表紙 → 問い1〜3 → 結果）。端末の「戻る」でも1ページずつ戻る ----
+  var STEPS = ['cover', 'q0', 'q1', 'q2', 'result'];
   var current = 'cover';
   var busy = false;
-  function pageOf(step) { return step === 'cover' ? $('pCover') : step === 'char' ? $('pChar') : step === 'result' ? $('result') : $('pQuestion'); }
+  function pageOf(step) { return step === 'cover' ? $('pCover') : step === 'result' ? $('result') : $('pQuestion'); }
   function prepare(step) {
     if (step.charAt(0) === 'q') {
       var n = +step.slice(1);
@@ -330,8 +337,8 @@
       var dots = $('qSteps').children;
       for (var i = 0; i < dots.length; i++) dots[i].className = i < n ? 'done' : (i === n ? 'now' : '');
     }
-    if (step === 'char') { loadCandidates(); if (!chosen) search.value = ''; drawChars(); }
-    if (step !== 'result') setGlow(null);
+    if (step === 'result') onResultShown();
+    else { setGlow(null); document.body.classList.remove('revealed', 'revealing'); }
   }
   function focusIn(step) {
     var el = step.charAt(0) === 'q' ? $('qt-' + Q.questions[+step.slice(1)].id) : null;
@@ -365,8 +372,7 @@
     var to = (ev.state && ev.state.miniStep) || 'cover';
     if (STEPS.indexOf(to) < 0) to = 'cover';
     // 答えていない問いより先へは進めない
-    if ((to === 'char' || to === 'result') && !complete()) to = 'q' + firstUnanswered();
-    if (to === 'result' && !lastResult) to = 'char';
+    if (to === 'result' && (!complete() || !lastResult)) to = complete() ? 'q2' : 'q' + firstUnanswered();
     if (to === current) return;
     swap(to, STEPS.indexOf(to) > STEPS.indexOf(current));
     current = to;
@@ -375,235 +381,133 @@
 
   $('startBtn').addEventListener('click', function () { go('q0', true); });
   $('qBack').addEventListener('click', function () { history.back(); });
-  $('cBack').addEventListener('click', function () { history.back(); });
-
-  // ---- キャラクター（任意） ----
-  // SELF IMAGE：自分に似ていると思う人物の申告（判定には使わない。必ず1人選ぶ）。候補は js/resonance_candidates.js（差し替え可能）。
-  // 並べ方は本家「以前の結果から読む」と同じ五十音の行（漢字の名前は読みで並べる）。
-  var READING = { '嘉明': 'がみん', '辛炎': 'しんえん', '胡桃': 'ふーたお', '香菱': 'しゃんりん', '煙緋': 'えんひ', '宵宮': 'よいみや', '神里綾人': 'かみさとあやと', '行秋': 'ゆくも', '夜蘭': 'いぇらん',
-    '珊瑚宮心海': 'さんごのみやここみ', '神里綾華': 'かみさとあやか', '七七': 'なな', '申鶴': 'しぇんは', '甘雨': 'かんう', '刻晴': 'こくせい', '久岐忍': 'くきしのぶ', '雷電将軍': 'らいでんしょうぐん',
-    '九条裟羅': 'くじょうさら', '八重神子': 'やえみこ', '北斗': 'ほくと', '楓原万葉': 'かえではらかずは', '早柚': 'さゆ', '放浪者': 'ほうろうしゃ', '閑雲': 'かんうん', '藍硯': 'らんやん',
-    '鹿野院平蔵': 'しかのいんへいぞう', '夢見月瑞希': 'ゆめみづきみずき', '鍾離': 'しょうり', '雲菫': 'うんきん', '荒瀧一斗': 'あらたきいっと', '茲白': 'つーばい', '千織': 'ちおり', '凝光': 'ぎょうこう',
-    '白朮': 'びゃくじゅつ', '綺良々': 'きらら', '魈': 'しょう', '重雲': 'ちょううん' };
-  var ROWS = [['あ', 'あいうえおぁぃぅぇぉゔ'], ['か', 'かきくけこがぎぐげご'], ['さ', 'さしすせそざじずぜぞ'], ['た', 'たちつてとだぢづでどっ'], ['な', 'なにぬねの'],
-    ['は', 'はひふへほばびぶべぼぱぴぷぺぽ'], ['ま', 'まみむめも'], ['や', 'やゆよゃゅょ'], ['ら', 'らりるれろ'], ['わ', 'わをん']];
-  function hira(s) { return String(s).replace(/[ァ-ヶ]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0x60); }); }
-  function readingOf(name) { return READING[name] || hira(name); }
-  function rowOf(name) { var c = readingOf(name).charAt(0); var r = ROWS.find(function (x) { return x[1].indexOf(c) >= 0; }); return r ? r[0] : '他'; }
-  // 名簿（ETI-CHAR-2.1.0 の 118 名）。候補はこの中から、3つの答えの 758 で現れる人物だけ（js/resonance_candidates.js）
-  var ALL_CHARS = ETI_V2_CHARACTERS_2_1_0.map(function (c) { return c.name; });
-  // 名前で探す：カタカナ・ひらがな・漢字の読み（ひらがな）のどれでも、空白・「・」の有無を問わず部分一致
-  function norm(s) { return hira(String(s || '').normalize('NFKC')).replace(/[\s・･ー\-]/g, ''); }
-  var SEARCH_KEY = {};
-  ALL_CHARS.forEach(function (n) { SEARCH_KEY[n] = norm(n) + ' ' + norm(readingOf(n)); });
-  var list = $('charList'), search = $('charSearch');
-  var candidates = [], candidateVersion = null;
-  // 3つの答えが決まった時に候補を作り直す（五十音で並べる）。答えを変えて候補から外れたら選び直し
-  function loadCandidates() {
-    var c = ResonanceCandidates.candidatesFor(answers, ALL_CHARS);
-    candidateVersion = c.version;
-    candidates = c.names.slice().sort(function (a, b) { return readingOf(a).localeCompare(readingOf(b), 'ja'); });
-    if (chosen && candidates.indexOf(chosen) < 0) chosen = null;
-  }
-  function drawChars() {
-    var q = norm(search.value);
-    var shown = q ? candidates.filter(function (n) { return SEARCH_KEY[n].indexOf(q) >= 0; }) : candidates;
-    var groups = {};
-    shown.forEach(function (n) { var r = rowOf(n); (groups[r] = groups[r] || []).push(n); });
-    list.textContent = '';
-    function row(k, names) {
-      var div = document.createElement('div'); div.className = 'kana-row';
-      var ks = document.createElement('span'); ks.className = 'k'; ks.textContent = k;
-      var chips = document.createElement('div'); chips.className = 'chips';
-      names.forEach(function (n) {
-        var b = document.createElement('button');
-        b.type = 'button'; b.className = 'chip'; b.setAttribute('role', 'radio');
-        b.textContent = n; b.dataset.v = n;
-        b.setAttribute('aria-checked', String(chosen === n)); b.setAttribute('aria-pressed', String(chosen === n));
-        chips.appendChild(b);
-      });
-      div.appendChild(ks); div.appendChild(chips); list.appendChild(div);
-    }
-    // 選んでいる人物は、検索で絞っても先頭に残す（選んだことが見えるように）
-    if (chosen && shown.indexOf(chosen) < 0) row('選択中', [chosen]);
-    ROWS.map(function (r) { return r[0]; }).concat(['他']).forEach(function (r) { if (groups[r]) row(r, groups[r]); });
-    if (q && !shown.length) {
-      var p = document.createElement('p'); p.className = 'chars-empty'; p.textContent = '見つかりませんでした'; list.appendChild(p);
-    }
-    $('showResult').disabled = !chosen; // 「選ばない」は無い：1人選ぶまで結果へ進めない
-  }
-  search.addEventListener('input', drawChars);
-  list.addEventListener('click', function (e) {
-    var b = e.target.closest('.chip'); if (!b) return;
-    chosen = b.dataset.v;
-    list.querySelectorAll('.chip').forEach(function (x) { var on = x.dataset.v === chosen; x.setAttribute('aria-checked', String(on)); x.setAttribute('aria-pressed', String(on)); });
-    $('showResult').disabled = false;
-    $('quizMsg').textContent = '';
-  });
-  function choose(name) { chosen = name || null; }
 
   // ---- 結果 ----
-  // 758 は3問だけで決まり、回答に映る人物（MIRROR）は固定割当表。選んだ人物（SELF IMAGE）は並べて表示するだけ
-  var lastResult = null, lastShare = null;
+  // 758 は3問だけで決まり、アナタに共鳴する人物は 280 通りの固定割当（ETIMini.resonanceResult。人物を選ぶ工程は無い）
+  var lastResult = null, lastShare = null, playNext = false, revealTimer = null;
   function complete() { return !!(answers.element && answers.weapon && answers.nation); }
   function firstUnanswered() { for (var i = 0; i < Q.questions.length; i++) if (!answers[Q.questions[i].id]) return i; return 0; }
-  // r：ETIMini.resonanceResult の戻り値（または共有リンクから組み立てた同じ形）
+  // r：{ element, weapon, nation, nationDisplay, typeName, typeCode, typeCode4, words, person: { name } }
   function fill(r) {
-    $('rTypeName').textContent = r.typeName;
+    var name = r.person.name;
+    $('rName').textContent = name;
+    $('rName').classList.toggle('long', name.length >= 6);
+    $('r758').textContent = r.element + ' × ' + r.weapon + ' × ' + r.nationDisplay;
+    $('rTypeName').textContent = '「' + r.typeName + '」';
     $('rTypeCode').textContent = r.typeCode;
-    $('rElement').textContent = r.element;
-    $('rWeapon').textContent = r.weapon;
-    $('rNation').textContent = r.nationDisplay;
-    var p = $('rPhrase'); p.textContent = '';
+    $('rOrb').style.backgroundImage = "url('/assets/ogp/backgrounds/" + ELEMENT_KEY[r.element] + ".jpg')";
+    $('rOrbWrap').setAttribute('aria-label', 'アナタの元素（' + r.element + '）の円');
+    var p = $('rAbout'); p.textContent = '';
     [['「', r.words.elementKeyword, '」という気質を持ちながら、'], ['「', r.words.weaponStyle, '」というかたちで人と関わり、'], ['「', r.words.nationMeaning, '」を大切にする人。']]
       .forEach(function (part) { p.appendChild(document.createTextNode(part[0])); var s = document.createElement('strong'); s.textContent = part[1]; p.appendChild(s); p.appendChild(document.createTextNode(part[2])); });
-    $('rTypeLink').href = r.typePage;
-    $('rMirror').textContent = r.mirror.name;
-    $('rSelf').textContent = r.self ? r.self.name : '';
-    $('rSelfBox').hidden = !r.self;
-    $('rPair').classList.toggle('single', !r.self);
-    $('rMirrorNote').textContent = r.self
-      ? '選んだ人物は、あなたの申告です。回答に映る人物は、3つの答えから映した人物です。どちらも、元素・武器種・国家があなたと同じとは限りません。'
-      : '回答に映る人物は、3つの答えから映した人物です。元素・武器種・国家があなたと同じとは限りません。';
+    var small = document.createElement('span'); small.className = 'small';
+    small.textContent = name + 'は、3つの答えから映した、アナタに共鳴する人物です。円はアナタの元素（' + r.element + '）を表します。人物自身の元素・武器種・国家は、アナタの結果と同じとは限りません。';
+    p.appendChild(small);
+    document.querySelectorAll('.demo-char').forEach(function (el) { el.textContent = name; });
     lastResult = r;
-    lastShare = S.packResonance(r.element, r.weapon, r.nation, CHAR_INDEX[r.mirror.name], r.self ? CHAR_INDEX[r.self.name] : null);
+    lastShare = S.packReveal(r.element, r.weapon, r.nation, CHAR_INDEX[name]);
   }
-  function run() {
-    if (busy) return;
-    if (!complete()) { go('q' + firstUnanswered(), false); return; }
-    try {
-      // アナタが選んだ人物は必須（候補の中から1人）
-      if (!chosen || candidates.indexOf(chosen) < 0 || CHAR_INDEX[chosen] === undefined) { $('quizMsg').textContent = '似ていると思う人物を、ひとり選んでください。'; return; }
-      var r = M.resonanceResult(answers, { name: chosen });
-      r.versions.candidates = candidateVersion;
-      fill(r);
-      go('result', true);
-      setTimeout(function () { setGlow(ELEMENT_GLOW[r.element]); }, REDUCED ? 220 : 560);
-    } catch (e) {
-      $('quizMsg').textContent = e && e.code === 'INVALID_ANSWERS' ? '3つの問いすべてに答えてください。' : '結果を表示できませんでした。時間をおいてもう一度お試しください。';
+  // 登場演出：play=true なら順に現れる（約2.8秒。タップで省略）。false（共有リンク・戻る・動きを減らす設定）はすぐ全部を出す
+  function setReveal(play) {
+    var rv = $('reveal');
+    clearTimeout(revealTimer);
+    rv.classList.remove('play');
+    document.body.classList.remove('revealing');
+    if (play && !REDUCED) {
+      void rv.offsetWidth; // アニメーションを最初から
+      rv.classList.add('play');
+      document.body.classList.add('revealing');
+      revealTimer = setTimeout(finishReveal, 3300);
+    } else {
+      finishReveal();
     }
   }
-  $('showResult').addEventListener('click', run);
+  function finishReveal() {
+    clearTimeout(revealTimer);
+    $('reveal').classList.remove('play');
+    document.body.classList.remove('revealing');
+    document.body.classList.add('revealed');
+  }
+  $('reveal').addEventListener('click', function () { if (this.classList.contains('play')) finishReveal(); });
+  function showResult() {
+    if (busy) return;
+    if (!complete()) { go('q' + firstUnanswered(), false); return; }
+    var r = M.resonanceResult(answers, null);
+    r.person = { name: r.mirror.name };
+    fill(r);
+    playNext = true;
+    go('result', true);
+  }
+  function onResultShown() {
+    setGlow(ELEMENT_GLOW[lastResult.element]);
+    setReveal(playNext);
+    playNext = false;
+  }
   $('retry').addEventListener('click', function () {
     answers = { element: null, weapon: null, nation: null };
     lastResult = null; lastShare = null;
+    document.body.classList.remove('revealed');
     document.querySelectorAll('.opt').forEach(function (x) { x.setAttribute('aria-checked', 'false'); });
     document.querySelectorAll('.opts').forEach(function (x) { x.classList.remove('has-pick'); });
-    choose(null);
     go('q0', false);
   });
 
-  // ---- 画像を保存・Xでシェア（本家の結果画面と同じ仕組み。数値は出さない） ----
-  // 本家 index.html の ELEMENTS・WEAPONS の色（tests/eti_mini_share.test.js が index.html と一致することを確かめる）
-  var SHARE_EL_COLOR = { '炎': '#c84a20', '水': '#2a7aaa', '氷': '#4a80c0', '雷': '#9040d0', '風': '#3a8a60', '岩': '#a07830', '草': '#4a8020' };
-  var SHARE_WP_COLOR = { '片手剣': '#9060d0', '両手剣': '#c07030', '長柄': '#608040', '法器': '#5878b0', '弓': '#c0a030' };
-  function hexToRgb(hex) { return parseInt(hex.slice(1, 3), 16) + ',' + parseInt(hex.slice(3, 5), 16) + ',' + parseInt(hex.slice(5, 7), 16); }
-  // 本家 drawShareCanvas と同じ 1080×1080 の構成。人物の欄は SELF IMAGE と MIRROR の2人（選ばなければ MIRROR だけ）
-  function drawShareCanvas(r) {
-    var elColor = SHARE_EL_COLOR[r.element] || '#c84a20', wColor = SHARE_WP_COLOR[r.weapon] || '#7ab8e8';
-    var canvas = $('share-canvas-el'), ctx = canvas.getContext('2d'), W = 1080, H = 1080;
-    ctx.fillStyle = '#07070f'; ctx.fillRect(0, 0, W, H);
-    var grad = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, W * 0.6);
-    grad.addColorStop(0, 'rgba(' + hexToRgb(elColor) + ',0.28)'); grad.addColorStop(1, 'rgba(7,7,15,0)');
-    ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#2a4a68'; ctx.font = '24px "Hiragino Mincho ProN", serif'; ctx.letterSpacing = '8px';
-    ctx.fillText('ELEMENT DIAGNOSIS PRESENTS', W / 2, 130);
-    ctx.fillStyle = '#6a9cc0'; ctx.font = '40px "Hiragino Mincho ProN", serif'; ctx.letterSpacing = '12px';
-    ctx.fillText('共鳴診断  RESONANCE', W / 2, 190); ctx.letterSpacing = '0px';
-    ctx.font = 'bold 120px "Hiragino Mincho ProN", serif'; var elWidth = ctx.measureText(r.element).width;
-    ctx.font = '52px serif'; var xWidth = ctx.measureText(' × ').width;
-    ctx.font = 'bold 92px "Hiragino Mincho ProN", serif'; var wpWidth = ctx.measureText(r.weapon).width;
-    var startX = W / 2 - (elWidth + xWidth + wpWidth) / 2;
-    ctx.textAlign = 'left';
-    ctx.font = 'bold 120px "Hiragino Mincho ProN", serif'; ctx.fillStyle = elColor; ctx.fillText(r.element, startX, 330);
-    ctx.font = '52px serif'; ctx.fillStyle = '#1a3048'; ctx.fillText(' × ', startX + elWidth, 330);
-    ctx.font = 'bold 92px "Hiragino Mincho ProN", serif'; ctx.fillStyle = wColor; ctx.fillText(r.weapon, startX + elWidth + xWidth, 330);
-    ctx.textAlign = 'center';
-    ctx.fillStyle = wColor; ctx.font = 'bold 64px "Hiragino Mincho ProN", serif'; ctx.fillText('「' + r.typeName + '」', W / 2, 450);
-    ctx.fillStyle = '#2a4a68'; ctx.font = '28px "Hiragino Mincho ProN", serif'; ctx.letterSpacing = '8px'; ctx.fillText(r.typeCode + '　' + r.nationDisplay, W / 2, 520); ctx.letterSpacing = '0px';
-    ctx.strokeStyle = elColor; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(W / 2 - 50, 580); ctx.lineTo(W / 2 + 50, 580); ctx.stroke();
-    var people = r.self ? [['SELF IMAGE', 'アナタが選んだ人物', r.self.name, W / 4], ['MIRROR', '回答に映る人物', r.mirror.name, W * 3 / 4]] : [['MIRROR', '回答に映る人物', r.mirror.name, W / 2]];
-    people.forEach(function (p) {
-      ctx.fillStyle = '#5d7cab'; ctx.font = 'italic 24px "Times New Roman", serif'; ctx.letterSpacing = '6px'; ctx.fillText(p[0], p[3], 650); ctx.letterSpacing = '0px';
-      ctx.fillStyle = '#6a9cc0'; ctx.font = '26px "Hiragino Mincho ProN", serif'; ctx.fillText(p[1], p[3], 700);
-      var size = r.self ? (p[2].length <= 4 ? 72 : p[2].length <= 6 ? 56 : 46) : 88;
-      ctx.fillStyle = elColor; ctx.font = 'bold ' + size + 'px "Hiragino Mincho ProN", serif'; ctx.fillText(p[2], p[3], 800);
-    });
-    ctx.fillStyle = '#2a2040'; ctx.font = '22px "Hiragino Mincho ProN", serif'; ctx.fillText('#共鳴診断　#元素診断　@mondayaxad', W / 2, 980);
-    return canvas.toDataURL('image/png');
-  }
-  // 「画像を保存」：その場に画像を出して長押し保存を案内（本家と同じ）
-  function saveShareImage() {
-    if (!lastResult) return;
-    var dataUrl = drawShareCanvas(lastResult);
-    var overlay = $('save-img-overlay');
-    if (!overlay) { overlay = document.createElement('div'); overlay.id = 'save-img-overlay'; overlay.className = 'save-overlay'; document.body.appendChild(overlay); }
-    overlay.textContent = '';
-    var p = document.createElement('p'); p.textContent = '画像を長押しして「写真に保存」を選んでください';
-    var img = document.createElement('img'); img.src = dataUrl; img.alt = '診断結果の画像';
-    var close = document.createElement('button'); close.type = 'button'; close.textContent = '閉じる';
-    close.addEventListener('click', function () { overlay.hidden = true; });
-    overlay.appendChild(p); overlay.appendChild(img); overlay.appendChild(close);
-    overlay.hidden = false;
-    close.focus();
-  }
-  // 「Xでシェア」：シェア専用 URL（/api/share?m2=…。クローラーには2人表示の画像、人は /resonance?r=… へ）
-  function shareUrlOf(code) { return window.location.origin + '/api/share?m2=' + code; }
-  function tweetShareResult() {
+  // ---- Xでシェア（本家と同じ仕組み：/api/share?m3=… → クローラーには人物名を大きく描いた画像、人は /resonance?c=…） ----
+  function shareUrlOf(code) { return window.location.origin + '/api/share?m3=' + code; }
+  $('tweetShareBtn').addEventListener('click', function () {
     if (!lastResult || !lastShare) return;
     var r = lastResult;
-    var text = '共鳴診断をやってみました。\n\n私の結果は【' + r.element + ' × ' + r.weapon + ' × ' + r.nationDisplay + '】「' + r.typeName + '」\n' +
-      (r.self ? '私が選んだ人物：' + r.self.name + '\n' : '') + '回答に映る人物：' + r.mirror.name + '\n\n' + shareUrlOf(lastShare) +
-      '\n\n#共鳴診断 #元素診断 #' + r.typeCode4;
+    var text = '共鳴診断をやってみました。\n\n私に共鳴する人物は――「' + r.person.name + '」\n【' + r.element + ' × ' + r.weapon + ' × ' + r.nationDisplay + '】「' + r.typeName + '」\n\n' +
+      shareUrlOf(lastShare) + '\n\n#共鳴診断 #元素診断 #' + r.person.name;
     window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank', 'noopener');
-  }
-  $('saveImgBtn').addEventListener('click', saveShareImage);
-  $('tweetShareBtn').addEventListener('click', tweetShareResult);
+  });
 
-  // ---- シェアされた結果：符号から表示するだけ（判定はし直さない） ----
-  //   r=（共鳴診断・m2）：SELF IMAGE と MIRROR
-  //   s=（旧 Mini・m1）：1人だけ。本人が選んでいれば SELF IMAGE、答えからなら MIRROR として表示する
+  // ---- シェアされた結果：符号から表示するだけ（判定はし直さない・演出は繰り返さない） ----
+  //   c=（m3・現行）：アナタに共鳴する人物
+  //   r=（m2・旧 2人表示）：回答に映る人物（MIRROR）を主役に。当時選ばれた人物は小さく添える
+  //   s=（m1・旧 Mini）：表示していた人物を主役に。本人が選んだ人物だった場合はそう添える
   function sharedResult(params) {
-    var r2 = params.get('r'), s1 = params.get('s');
-    var u, type;
+    var c3 = params.get('c'), r2 = params.get('r'), s1 = params.get('s'), u, r, ch;
+    if (c3) {
+      u = S.unpackReveal(c3); ch = u && ETI_V2_CHARACTERS_2_1_0[u.charIndex];
+      if (!u || !ch) return null;
+      r = M.describeType(u.element, u.weapon, u.nation); r.person = { name: ch.name }; return r;
+    }
     if (r2) {
-      u = S.unpackResonance(r2);
-      if (!u || !ETI_V2_CHARACTERS_2_1_0[u.mirrorIndex] || (u.selfIndex !== null && !ETI_V2_CHARACTERS_2_1_0[u.selfIndex])) return null;
-      type = M.describeType(u.element, u.weapon, u.nation);
-      type.mirror = { name: ETI_V2_CHARACTERS_2_1_0[u.mirrorIndex].name, role: 'mirror' };
-      type.self = u.selfIndex !== null ? { name: ETI_V2_CHARACTERS_2_1_0[u.selfIndex].name, role: 'self' } : null;
-      return type;
+      u = S.unpackResonance(r2); ch = u && ETI_V2_CHARACTERS_2_1_0[u.mirrorIndex];
+      if (!u || !ch || (u.selfIndex !== null && !ETI_V2_CHARACTERS_2_1_0[u.selfIndex])) return null;
+      r = M.describeType(u.element, u.weapon, u.nation); r.person = { name: ch.name };
+      if (u.selfIndex !== null) r.note = 'シェアした人が選んだ人物：' + ETI_V2_CHARACTERS_2_1_0[u.selfIndex].name;
+      return r;
     }
     if (s1) {
-      u = S.unpack(s1);
-      if (!u || !ETI_V2_CHARACTERS_2_1_0[u.charIndex]) return null;
-      type = M.describeType(u.element, u.weapon, u.nation);
-      var name = ETI_V2_CHARACTERS_2_1_0[u.charIndex].name;
-      type.legacy = true;
-      if (u.userPicked) { type.self = { name: name, role: 'self' }; type.mirror = null; } else { type.mirror = { name: name, role: 'mirror' }; type.self = null; }
-      return type;
+      u = S.unpack(s1); ch = u && ETI_V2_CHARACTERS_2_1_0[u.charIndex];
+      if (!u || !ch) return null;
+      r = M.describeType(u.element, u.weapon, u.nation); r.person = { name: ch.name };
+      if (u.userPicked) r.note = 'この人物は、シェアした人が選んだ人物です';
+      return r;
     }
     return null;
   }
   function showShared(r) {
-    fill(r.mirror ? r : Object.assign({}, r, { mirror: { name: '' } }));
-    if (!r.mirror) { $('rMirror').closest('.person').hidden = true; $('rPair').classList.add('single'); }
-    $('rLabel').textContent = 'SHARED RESULT';
-    $('rMirrorNote').textContent = '共鳴診断の3つの問いから描いた結果です。あなたの結果も、3つの問いで見つけてみませんか。';
-    $('shareRow').hidden = true; $('retryRow').hidden = true; $('reportPanel').hidden = true;
-    $('tryRow').hidden = false;
+    fill(r);
+    $('rLabel').firstChild.textContent = 'SHARED RESULT';
+    if (r.note) { $('sharedNote').textContent = r.note; $('sharedNote').hidden = false; }
+    $('reportDemo').hidden = true; $('shareSec').hidden = true; $('retryRow').hidden = true;
+    $('trySec').hidden = false;
     $('pCover').hidden = true; $('result').hidden = false;
     current = 'result';
     try { history.replaceState({ miniStep: 'result' }, ''); } catch (e) { /* なし */ }
     setGlow(ELEMENT_GLOW[r.element]);
+    setReveal(false);
   }
-  $('tryMini').addEventListener('click', function () {
+  $('tryBtn').addEventListener('click', function () {
     try { history.replaceState({ miniStep: 'cover' }, '', window.location.pathname); } catch (e) { /* なし */ }
-    $('rLabel').textContent = 'YOUR ELEMENT TYPE';
-    $('shareRow').hidden = false; $('retryRow').hidden = false; $('reportPanel').hidden = false; $('tryRow').hidden = true;
-    $('rMirror').closest('.person').hidden = false;
+    $('rLabel').firstChild.textContent = 'ELEMENT DIAGNOSIS PRESENTS';
+    $('sharedNote').hidden = true;
+    $('reportDemo').hidden = false; $('shareSec').hidden = false; $('retryRow').hidden = false; $('trySec').hidden = true;
     lastResult = null; lastShare = null;
+    document.body.classList.remove('revealed');
     go('cover', false, true);
     try { history.pushState({ miniStep: 'cover' }, ''); } catch (e) { /* なし */ }
   });

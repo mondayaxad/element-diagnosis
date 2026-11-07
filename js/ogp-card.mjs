@@ -33,6 +33,8 @@ function withDots(text, size, color) {
  * @param {object} d  { code, typeName, element, weapon, nation, mirrorName, mirrorElement, match, mirrorLabel?, brand? }
  *   mirrorLabel・brand は元素診断 Mini 用（省略時は本家と同じ「最も近しいキャラクター」「元素診断」）。同梱フォントにある文字だけを使うこと
  *   header は上部の見出し（下地に含まれる部分。省略時は本家と同じ「元素診断 — MY RESULT」。共鳴診断は「共鳴診断 — MY RESULT」）
+ *   hero は共鳴診断 Character Reveal（m3）用：{ label, name, element }。MIRROR 欄の位置に人物名を大きく描く（一致率は描かない）
+ *   bandText は下帯の文言をそのまま指定する（省略時は「brand — 私の結果は【…】」）
  *   pair は共鳴診断用：[{ label, name, element }, …]（2人まで）。あれば MIRROR 欄の位置に人物を横に並べる（一致率は描かない）
  * @param {object} o  { origin, backgroundUrl, showBackground=true, fontSerif, fontSans, part='all', baseUrl }
  *   正式背景（元素別JPEG）には円環・ノード・中央光が描き込まれているため、背景を使う場合は
@@ -63,7 +65,7 @@ export function buildOgpCardTree(d, o = {}) {
 
   const bandStyle = { left: 0, bottom: 0, width: L.width, height: L.band.height, alignItems: 'center', justifyContent: 'center',
     background: OGP_COLORS.bandBg, borderTop: '1px solid rgba(150,180,235,.14)', fontSize: L.band.size, letterSpacing: 2, color: OGP_COLORS.bandText, fontFamily: serif };
-  const bandText = `${d.brand || '元素診断'} — 私の結果は【${d.element} × ${d.weapon} × ${d.nation}】`;
+  const bandText = d.bandText || `${d.brand || '元素診断'} — 私の結果は【${d.element} × ${d.weapon} × ${d.nation}】`;
 
   if (part === 'overlay') {
     // 下地の上に人ごとの情報だけ。下帯は地と線を下地に任せ、同じ箱（線は透明で幅を保つ）に文字だけ置く
@@ -100,8 +102,21 @@ export function buildOgpCardTree(d, o = {}) {
     );
   }
 
+  // 共鳴診断 Character Reveal：MIRROR 欄の位置に、人物名を大きく（タイムラインでも読める大きさ）
+  function heroLayer() {
+    const th = themeFor(d.hero.element || d.element);
+    const len = String(d.hero.name).length;
+    const size = len <= 3 ? 66 : len <= 5 ? 64 : len <= 6 ? 58 : 54;
+    return abs({ top: L.mirror.top - 6, left: L.padLeft, width: L.mirror.width, height: L.mirror.height + 12, flexDirection: 'column', justifyContent: 'center',
+      padding: `0 ${L.mirror.padX}px`, ...mirrorPlateStyle(th) },
+      box({ fontSize: L.mirror.labelSize, letterSpacing: 4, color: OGP_COLORS.label, marginBottom: 4, fontFamily: serif }, d.hero.label),
+      box({ fontSize: size, fontWeight: 700, fontFamily: serif, color: th.accent, letterSpacing: 4, lineHeight: 1.1 }, d.hero.name),
+    );
+  }
+
   // 人ごとに変わる情報（タグ・MIRROR・一致度）
   function personLayers() {
+    if (d.hero) return [tagsLayer(), heroLayer()];
     if (d.pair && d.pair.length) return [tagsLayer(), pairLayer()];
     return [
     tagsLayer(),

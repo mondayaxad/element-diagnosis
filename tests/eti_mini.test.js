@@ -14,7 +14,7 @@ const CAND_JSON = JSON.parse(read('docs/eti-mini/handoff_v1/data/eti_mini_auto_c
 const CHARS = require('../js/characters118_v2_1.js');
 
 // 共鳴診断のページ（resonance.html。旧 mini.html）が読み込む JS（この順）
-const PAGE_SCRIPTS = ['js/characters118_v2_1.js', 'js/eti_mini_auto_map_v1.js', 'js/eti_v2_prototypes.js', 'js/eti_mini_choices_v1.js', 'js/eti_mini_core.js', 'js/eti_mini_share.js', 'js/type_reading_chars.js', 'js/resonance_candidates.js'];
+const PAGE_SCRIPTS = ['js/characters118_v2_1.js', 'js/eti_mini_auto_map_v1.js', 'js/eti_v2_prototypes.js', 'js/eti_mini_choices_v1.js', 'js/eti_mini_core.js', 'js/eti_mini_share.js'];
 // 試験用の読み込み：ページと同じ JS に、保存しておく 50:50 の結合エンジン（共鳴診断のページは読み込まない）を足したもの
 const MINI_SCRIPTS = ['js/characters118_v2_1.js', 'js/eti_mini_auto_map_v1.js', 'js/eti_v2_prototypes.js', 'js/eti_mini_choices_v1.js', 'js/eti_mini_core.js', 'js/eti_mini_manual_v1.js'];
 function loadMini({ withManual = true } = {}) {
@@ -207,16 +207,16 @@ test('選択肢の表示（共鳴診断）：見出し＋一文だけ（属性�
   for (const q of Q.questions) for (const o of q.options) for (const t of [o.label, o.detail]) for (const n of names) assert.ok(!t.replace(/アナタ/g, '').includes(n), `「${t}」に「${n}」`);
 });
 
-test('resonance.html：点数・一致率・順位を出さない／本家の CTA が最下部／人物は登録118名から', () => {
+test('resonance.html：点数・一致率・順位を出さない／本家の CTA が最下部', () => {
   const html = read('resonance.html');
   assert.match(html, /<meta name="robots" content="noindex/);
   assert.doesNotMatch(html, /mirrorScore|internal_rank|regret|一致率|一致度|スコア|％|%<\//);
   const cta = html.indexOf('元素診断で、もっと深く自分を知る');
-  const report = html.indexOf('人物像レポート</h2>');
-  assert.ok(cta > 0 && report > 0 && cta > report, '本家への案内は Mini のレポート案内より下');
+  const report = html.indexOf('id="reportDemo"');
+  assert.ok(cta > 0 && report > 0 && cta > report, '本家への案内はレポートの見本より下');
   assert.match(html, /100問/);
   assert.match(html, /基本無料/);
-  assert.match(html, /ETI_V2_CHARACTERS_2_1_0\.map/);
+  assert.match(html, /ETI_V2_CHARACTERS_2_1_0\.forEach/);
   assert.match(html, /QUESTION 0/); // 問いの見出しは中立な表記
   assert.doesNotMatch(html, /心理学的|測定された/);
   for (const f of PAGE_SCRIPTS) assert.ok(html.includes(`<script src="${f}"></script>`), f);
@@ -245,7 +245,8 @@ test('resonance.html：本家と同じ夜の背景、1問ずつのページ送�
   assert.match(html, /IM Fell English/);
   assert.match(html, /id="pCover"/);
   assert.match(html, /id="pQuestion"/);
-  assert.match(html, /id="pChar"/);
+  assert.match(html, /id="result"/);
+  assert.doesNotMatch(html, /id="pChar"/); // 人物を選ぶページは無い
   assert.match(html, /history\.pushState/);
   assert.match(html, /popstate/);
   assert.match(html, /prefers-reduced-motion/);

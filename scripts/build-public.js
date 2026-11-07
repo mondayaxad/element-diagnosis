@@ -75,8 +75,7 @@ const PUBLIC_FILES = [
   'js/eti_mini_auto_map_v1.js',                               // 同・未選択時の固定割当（scripts/build-eti-mini-data.js が正本 JSON から生成）
   'js/eti_mini_choices_v1.js',                                // 同・3問20択の正式文言（scripts/build-eti-mini-data.js が正本 JSON から生成）
   'js/eti_mini_manual_v1.js',                                 // 同・キャラクター手動選択時の再判定（ETI-MINI-MANUAL-1.0.0・50:50）
-  'js/eti_mini_share.js',                                     // 同・シェアの短い符号（m1：旧 Mini・/resonance?s=、m2：共鳴診断・/resonance?r=。/api/share・/api/og-image と同じ計算）
-  'js/resonance_candidates.js',                               // 同・SELF IMAGE の候補（3つの答えの 758 で現れる人物＝js/type_reading_chars.js。差し替え可能）
+  'js/eti_mini_share.js',                                     // 同・シェアの短い符号（m3：現行・/resonance?c=、m2：旧 2人表示・?r=、m1：旧 Mini・?s=。/api/share・/api/og-image と同じ計算）
 ];
 // ディレクトリ直下の指定拡張子だけ（再帰しない）
 const PUBLIC_DIRS = [
