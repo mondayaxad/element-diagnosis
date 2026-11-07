@@ -128,10 +128,10 @@ test('7. スナップショット：同じ入力なら同じ内容。再閲覧�
 });
 
 test('本文：辞書が無い所は〔未執筆〕で示して販売用には作れない。数値・一致率・「最も似る」などの言葉を出さない。章の順は人物名 → PERSONA → RESONANCE → …', () => {
-  assert.throws(() => R.buildSnapshot({ element: '水', weapon: '法器', nation: 'フォンテーヌ' }, PURCHASE), (e) => e.code === 'DICTIONARY_INCOMPLETE' && e.missing.length > 0);
+  assert.throws(() => R.buildSnapshot({ element: '水', weapon: '法器', nation: 'フォンテーヌ' }, PURCHASE, { dict: R.DICT }), (e) => e.code === 'DICTIONARY_INCOMPLETE' && e.missing.length > 0);
   const families = new Set();
   for (const a of ALL) {
-    const s = R.buildSnapshot(a, PURCHASE, { allowMissing: true });
+    const s = R.buildSnapshot(a, PURCHASE, { allowMissing: true, dict: R.DICT }); // 空の辞書（スキーマだけ）
     s.draft_missing.forEach((k) => families.add(k.split(':')[0]));
     const all = Object.values(s.text).map((t) => (Array.isArray(t) ? t.map((p) => p.label + p.body).join('') : t)).join('') + R.renderReportHtml(s).replace(/<svg[\s\S]*?<\/svg>/g, '');
     assert.doesNotMatch(all.replace(/〔未執筆：[^〕]*〕/g, '').split(R.DISCLAIMER).join(''), /[0-9０-９]+\s*(%|％|点|位)|一致率|類似度|最も似|最も近|一番|1位|１位|精密|測定した結果です|診断します/);
@@ -165,7 +165,7 @@ test('辞書の雛形（ChatGPT へ渡す dictionary_template_v2.json。C-1 レ�
   const fams = Object.keys(t).filter((k) => !k.startsWith('_'));
   assert.deepEqual(fams.sort(), Object.keys(R.DICT).sort());
   const need = new Set();
-  for (const a of ALL) R.buildSnapshot(a, PURCHASE, { allowMissing: true }).draft_missing.forEach((k) => need.add(k));
+  for (const a of ALL) R.buildSnapshot(a, PURCHASE, { allowMissing: true, dict: R.DICT }).draft_missing.forEach((k) => need.add(k));
   const have = new Set(fams.flatMap((f) => Object.keys(t[f]).map((k) => f + ':' + k)));
   assert.deepEqual([...need].sort(), [...have].sort());
   assert.equal(need.size, 300); // comboLine 280 → comboInteraction 35＋nationLens 8、characterModel 66 を追加
@@ -210,4 +210,90 @@ test('C-1 レビュー：組み合わせ固有の上書き（comboOverride）は
   const over = R.buildSnapshot(a, PURCHASE, { dict: { ...full, comboOverride: { '水|法器|フォンテーヌ': '［上書き］' } } });
   assert.match(over.text.persona, /［上書き］$/);
   assert.doesNotMatch(over.text.persona, /comboInteraction/);
+});
+
+// ---------------------------------------------------------------- C-2：本文辞書 v2.2（レビュー版）
+test('C-2：辞書 v2.2 は受け取ったファイルのまま lib/ に置き sha256 で固定。読むのは辞書本体だけで、300キーすべてに文がある', () => {
+  const raw = fs.readFileSync(path.join(ROOT, R.DICTIONARY_FILE));
+  assert.equal(require('crypto').createHash('sha256').update(raw).digest('hex'), R.DICTIONARY_SHA256);
+  assert.equal(R.DICTIONARY_SHA256, '48fe1ace684f889265d3a5604ae32ce47a40cd7b3b76db743a11d6c17961dd46'); // ChatGPT の検証結果 new_dictionary_sha256
+  assert.match(R.DICTIONARY_FILE, /^lib\//); // 公開しない場所
+  assert.deepEqual(Object.keys(R.DICTIONARY).sort(), [...Object.keys(R.DICT), 'comboOverride'].sort()); // メタデータ（_about など）は読まない
+  const t = JSON.parse(read('docs/eti-mini/phase_c/dictionary_template_v2.json'));
+  for (const f of Object.keys(R.DICT)) for (const k of Object.keys(t[f])) assert.ok(typeof R.DICTIONARY[f][k] === 'string' && R.DICTIONARY[f][k].length > 0, f + ':' + k);
+});
+
+test('C-2：辞書 v2.2 で 280通りを組み立てると、未執筆・句読点の重なり・禁止語・同じ文の重複が無い', () => {
+  const PUNCT = /。。|、。|。、|？。|\?。|！。|、、|「」|\s{2,}/;
+  const FORB = /類似度|一致率|一致度|最も似|最も近|一番|1位|１位|[0-9０-９]+\s*(%|％|点|位)|精密|診断します/;
+  let anata = 0;
+  for (const a of ALL) {
+    const s = R.buildSnapshot(a, PURCHASE);
+    assert.ok(!('draft_missing' in s), JSON.stringify(a));
+    const parts = Object.values(s.text).map((t) => (Array.isArray(t) ? t.map((p) => p.body).join('') : t));
+    const all = parts.join('');
+    assert.doesNotMatch(all, /未執筆/);
+    assert.doesNotMatch(all, PUNCT, JSON.stringify(a));
+    assert.doesNotMatch(all.split(R.DISCLAIMER).join(''), FORB, JSON.stringify(a));
+    if (/あなた/.test(all)) anata++;
+    const sents = all.split(/(?<=。)/).map((x) => x.trim()).filter(Boolean);
+    assert.equal(new Set(sents).size, sents.length, '同じ文が2回：' + JSON.stringify(a));
+  }
+  // 「あなた」表記（サイトは「アナタ」）は ChatGPT へ返却済みの既知の3件（ウェンティ・八重神子・閑雲の characterReading）だけ
+  const known = ['ウェンティ', '八重神子', '閑雲'];
+  assert.deepEqual(Object.entries(R.DICTIONARY.characterReading).filter(([, v]) => /あなた/.test(v)).map(([k]) => k).sort(), known.sort());
+  assert.ok(anata > 0);
+});
+
+test('C-2：登録モデルの説明（66名）が名指しする特徴・価値観は登録座標と合っている', () => {
+  const TRAIT = { '新しい見方への関心': 'O', '段取りと責任への意識': 'C', '人に向かって働きかける活発さ': 'E', '相手への歩み寄り': 'A',
+    '自分から方針を示す姿勢': 'AGY', '周囲との調整': 'REL', '引き受けた役割を継続する意識': 'ROL', '考えを整理して橋渡しする姿勢': 'REF', '自分の間合いを守る姿勢': 'AUT' };
+  const VW = { '自分で選ぶこと': 'SD', '変化と刺激': 'ST', '身近な人への思いやり': 'BE', '公正さ': 'UN', '達成': 'AC', '節度': 'CO', '安定': 'SE', '楽しみ': 'HE', '影響力': 'PO', '伝統': 'TR' };
+  assert.equal(Object.keys(R.DICTIONARY.characterModel).length, 66);
+  for (const [n, t] of Object.entries(R.DICTIONARY.characterModel)) {
+    const c = CHARS.find((x) => x.name === n);
+    assert.ok(c, n);
+    const m = t.match(/登録モデルでは、(.+?)が目立ち、価値観の中では「(.+?)」が相対的に前に出る/);
+    assert.ok(m, n);
+    const f = Object.keys(TRAIT).filter((p) => m[1].includes(p)).map((p) => TRAIT[p]);
+    assert.equal(f.length, 2, n);
+    const val = (ax) => (R.AXES.persona.includes(ax) ? c.personality[ax] : c.style[ax]);
+    const pMax = Math.max(...R.AXES.persona.map((a) => c.personality[a])), sMax = Math.max(...R.AXES.style.map((a) => c.style[a]));
+    const both = [...R.AXES.persona.map((a) => c.personality[a]), ...R.AXES.style.map((a) => c.style[a])].sort((x, y) => y - x);
+    const ok = f.every((ax) => val(ax) === (R.AXES.persona.includes(ax) ? pMax : sMax)) || f.every((ax) => val(ax) >= both[1]);
+    assert.ok(ok, n + ' ' + f.join('+'));
+    const cv = R._internal.center(c.values, R.AXES.values);
+    assert.equal(cv[R.AXES.values.indexOf(VW[m[2]])], Math.max(...cv), n + ' ' + m[2]);
+  }
+  // 国家の代表モデルの説明（nationPriority）が挙げる価値観は、その国家の相対優先度の上位
+  const LBL = Object.fromEntries(Object.entries(R.LABEL).map(([k, v]) => [v, k]));
+  for (const [n, t] of Object.entries(R.DICTIONARY.nationPriority)) {
+    const labs = [...t.matchAll(/「(.+?)」/g)].map((x) => LBL[x[1]]);
+    const cv = R._internal.center(PROTO.NATION_PROTOTYPES_V2[n], R.AXES.values);
+    const th = cv.slice().sort((x, y) => y - x)[labs.length - 1];
+    for (const ax of labs) assert.ok(cv[R.AXES.values.indexOf(ax)] >= th, n + ' ' + ax);
+  }
+});
+
+test('C-2：行動・価値観の章は、共鳴の章で挙げた軸（同じ役割）を繰り返さない。価値観の共通点は向きの同じ軸から', () => {
+  for (const a of ALL) {
+    const m = R.modelVectors(a), an = R.analyze(m);
+    for (const d of ['style', 'values']) {
+      if (an.common.domain === d) assert.notEqual(an.chapter[d].near, an.common.axis, JSON.stringify(a));
+      if (an.differ.domain === d) assert.notEqual(an.chapter[d].far, an.differ.axis, JSON.stringify(a));
+    }
+    const cu = R._internal.center(m.you.values, R.AXES.values), cc = R._internal.center(m.char.values, R.AXES.values);
+    const i = R.AXES.values.indexOf(an.chapter.values.near);
+    if (R.AXES.values.some((_, k) => cu[k] !== 0 && Math.sign(cu[k]) === Math.sign(cc[k]) && R.AXES.values[k] !== (an.common.domain === 'values' ? an.common.axis : null))) assert.equal(Math.sign(cu[i]), Math.sign(cc[i]), JSON.stringify(a));
+  }
+});
+
+test('C-2：辞書 v2.2 はレビュー版。作ったスナップショットは販売用ではなく（REVIEW_NOT_FOR_SALE）、DB 草案も承認済みの文章しか保存できない', () => {
+  const s = R.buildSnapshot(ALL[0], PURCHASE);
+  assert.equal(s.model.dictionary_version, 'RESONANCE-TEXT-C2-2.2-REVIEW');
+  assert.equal(s.model.dictionary_sha256, R.DICTIONARY_SHA256);
+  assert.equal(s.model.dictionary_status, 'REVIEW_NOT_FOR_SALE');
+  assert.deepEqual(R.APPROVED_DICTIONARY_SHA256, []);
+  assert.match(read('docs/sql/resonance_01_orders_reports_DRAFT_DO_NOT_RUN.sql'), /check \(snapshot->'model'->>'dictionary_status' = 'APPROVED'\)/);
+  assert.equal(R.buildSnapshot(ALL[0], PURCHASE, { dict: { ...R.DICTIONARY } }).model.dictionary_status, 'REVIEW_NOT_FOR_SALE'); // 別の辞書でも承認なしは販売用でない
 });
