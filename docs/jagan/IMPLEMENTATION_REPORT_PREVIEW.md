@@ -128,3 +128,8 @@
   画像（確認用の模擬。実データではない）：evidence/20261106_mypage_emblems_awakened_mock.png
 - 2026-11-06：実物の mypage.html を、ログイン済み・登録完了を模して開き、邪眼診断の記録と証の見た目を確認（scripts/jagan-mypage-shot.mjs。supabase-js・/api/* は模擬。実データではない）。
   記録の下の「邪眼診断をもう一度受ける ›」が既定の青で暗い背景に合わないため、金色（#E2C08C）に直した。画像：evidence/20261106_mypage_real_{full,section}_mock.png
+
+## 2026-11-07 邪眼解析レポートの購入とマイページの統合
+- 購入：ETI の complete_13 と同じ考え方（ログイン不要・固有リンク・マイページへの登録・Webhook と問い合わせの両方で反映）。手順は `docs/jagan/PURCHASE_PREVIEW_RUNBOOK.md`。
+- マイページ（元素診断と共通）：RECORDS・INSIGHTS の数、最新のあなた、記録章、これまでのあなた、右上のレポートに邪眼の記録を同じ規則で並べる。
+- 検査：全体 797 件中 709 合格・失敗 1（既存の save_cta_placement_ui）・skip 87。邪眼 46/46。実PG（jagan_01・02）11/11。
