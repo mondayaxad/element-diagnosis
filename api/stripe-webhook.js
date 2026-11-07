@@ -75,9 +75,16 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
     return sessionFor(stripe, s.id, conn);
   }
 
+  // 邪眼解析レポートの注文（metadata.app が 'element-diagnosis-jagan'）。ETI の注文でないイベントだけをここで見る（lib/jagan-purchase.mjs）。
+  //   邪眼の注文でもなければ null（ETI と同じく 'ignored:not_complete'）
+  async function jagan(conn, stripe, ev, obj) {
+    const JP = await import('../lib/jagan-purchase.mjs');
+    return JP.handleWebhook({ fetchImpl, conn, stripe, type: ev.type, obj });
+  }
+
   async function onCheckoutCompleted(conn, stripe, ev, obj) {
     const found = await sessionFor(stripe, CP.idOf(obj), conn, ['line_items']);
-    if (found.notOurs) return 'ignored:not_complete';
+    if (found.notOurs) return (await jagan(conn, stripe, ev, obj)) || 'ignored:not_complete';
     if (found.mismatch) { await finish(conn, ev, 'ignored', found.mismatch); return `ignored:${found.mismatch}`; }
     // 解析レポート（¥1,000）・完全解析（¥3,000／¥2,000）の適用は、購入完了ページの問い合わせと同じ共通処理（lib/complete-apply.js）
     return CA.applyPaidSession({
@@ -87,7 +94,7 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
 
   async function onCheckoutExpired(conn, stripe, ev, obj) {
     const found = await sessionFor(stripe, CP.idOf(obj), conn);
-    if (found.notOurs) return 'ignored:not_complete';
+    if (found.notOurs) return (await jagan(conn, stripe, ev, obj)) || 'ignored:not_complete';
     if (found.mismatch) { await finish(conn, ev, 'ignored', found.mismatch); return `ignored:${found.mismatch}`; }
     if (found.session.status !== 'expired') throw new CP.PaymentError('session_not_expired', true);
     return CP.rpc(fetchImpl, conn, 'complete_apply_checkout_expired', {
@@ -105,7 +112,7 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
     if (!charge) return 'ignored:not_complete';
     const pi = CP.idOf(charge.payment_intent);
     const found = await sessionForPaymentIntent(stripe, pi, conn);
-    if (found.notOurs) return 'ignored:not_complete';
+    if (found.notOurs) return (await jagan(conn, stripe, ev, obj)) || 'ignored:not_complete';
     const mismatch = found.mismatch || (charge.livemode !== CP.livemodeOf(conn) ? 'livemode_mismatch' : charge.currency !== 'jpy' ? 'currency_mismatch' : null);
     if (mismatch) { await finish(conn, ev, 'ignored', mismatch); return `ignored:${mismatch}`; }
     const result = await CP.rpc(fetchImpl, conn, 'complete_apply_refund', {
@@ -131,7 +138,7 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
       pi = charge ? CP.idOf(charge.payment_intent) : null;
     }
     const found = await sessionForPaymentIntent(stripe, pi, conn);
-    if (found.notOurs) return 'ignored:not_complete';
+    if (found.notOurs) return (await jagan(conn, stripe, ev, obj)) || 'ignored:not_complete';
     let action;
     if (ev.type === 'charge.dispute.created') action = 'opened';
     else if (dispute.status === 'won' || dispute.status === 'warning_closed') action = 'won';

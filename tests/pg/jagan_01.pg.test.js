@@ -9,39 +9,9 @@ const { dropDb } = require('./db_setup');
 const SKIP = pg.enabled() ? false : 'E2E_PG=1 が無いため skip（実PGの試験）';
 const SQL = (f) => path.join(__dirname, '..', '..', 'docs', 'sql', f);
 const PRE = SQL('jagan_00_preflight_READONLY.sql'), APPLY = SQL('20261102120000_jagan_01_results_shares.sql'), POST = SQL('jagan_02_postcheck_READONLY.sql');
-// Supabase の Preview に必要な部分だけを持つ最小の使い捨てDB（PG16・17 のどちらでも作れる）。
-//   ロール・auth.users・auth.uid()・migration 履歴・deployment_environment()、
-//   そして Supabase と同じ「public の新しい表に anon・authenticated・service_role へ全権限」の既定権限（jagan_01 の revoke を確かめるため）。
-function createDb(env) {
-  const db = pg.newDbName();
-  pg.sql('postgres', `create database ${db}`);
-  try {
-    pg.sqlText(db, `
-      do $$ begin
-        if not exists (select 1 from pg_roles where rolname='anon') then create role anon nologin; end if;
-        if not exists (select 1 from pg_roles where rolname='authenticated') then create role authenticated nologin; end if;
-        if not exists (select 1 from pg_roles where rolname='service_role') then create role service_role nologin bypassrls; end if;
-      end $$;
-      create schema auth;
-      create table auth.users (id uuid primary key);
-      create function auth.uid() returns uuid language sql stable as $f$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $f$;
-      grant usage on schema auth to anon, authenticated, service_role;
-      grant execute on function auth.uid() to anon, authenticated, service_role;
-      create schema supabase_migrations;
-      create table supabase_migrations.schema_migrations (version text primary key, statements text[], name text);
-      insert into supabase_migrations.schema_migrations (version, name) values ('20261021200000', 'complete_16_close_old_consent_versions');
-      create function public.deployment_environment() returns text language sql immutable as $f$ select '${env}'::text $f$;
-      grant usage on schema public to anon, authenticated, service_role;
-      alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
-    `);
-  } catch (e) { dropDb(db); throw e; }
-  return db;
-}
+const { createDb, rows, run, fingerprint } = require('./jagan_fixture');
 const createPreviewLikeDb = () => createDb('preview');
 const createProdLikeDb = () => createDb('production');
-const rows = (out) => out.split('\n').filter(Boolean).map((l) => l.split('|'));
-const run = (db, file) => pg.sqlText(db, require('fs').readFileSync(file, 'utf8'));
-const fingerprint = (db) => pg.sql(db, "select md5(string_agg(x, E'\\n' order by x)) from (select c.relname||':'||coalesce(array_to_string(c.relacl, ','),'') x from pg_class c where c.relnamespace='public'::regnamespace union all select version||':'||coalesce(name,'') from supabase_migrations.schema_migrations union all select tablename||'.'||policyname from pg_policies where schemaname='public') s");
 
 test('jagan_00 → jagan_01 → jagan_02：未適用の Preview 相当で、確認がすべて ok になる', { skip: SKIP }, () => {
   const db = createPreviewLikeDb();

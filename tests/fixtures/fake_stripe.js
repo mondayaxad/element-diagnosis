@@ -36,7 +36,9 @@ function fakeStripe({ prices = {}, livemode = false } = {}) {
             if (st.idem[key].sig !== sig) throw stripeError('StripeIdempotencyError', 400, 'idempotency_error');
             return clone(st.sessions[st.idem[key].id]);
           }
-          const price = st.prices[params.line_items[0].price];
+          // price_data（金額を決済画面に直接指定。Stripe のカタログの Price を使わない）にも対応する
+          const li0 = params.line_items[0];
+          const price = li0.price_data ? { unit_amount: li0.price_data.unit_amount, currency: li0.price_data.currency } : st.prices[li0.price];
           if (!price) throw missing();
           // Stripe：expires_at は作成から 30 分〜24 時間（範囲外は invalid_request_error）
           const nowSec = Math.floor(Date.now() / 1000);
@@ -51,7 +53,7 @@ function fakeStripe({ prices = {}, livemode = false } = {}) {
             payment_intent: null, customer_details: null,
             // Stripe の line item：Price は作成時点の内容（後で Price の設定を変えても、この決済の値は変わらない）
             line_items: { data: params.line_items.map((li) => {
-              const pr = st.prices[li.price] || { id: li.price };
+              const pr = li.price_data ? { unit_amount: li.price_data.unit_amount, currency: li.price_data.currency } : (st.prices[li.price] || { id: li.price });
               return { price: clone(pr), quantity: li.quantity, amount_total: (pr.unit_amount || 0) * li.quantity, currency: pr.currency };
             }) },
           };
@@ -104,7 +106,7 @@ function fakeStripe({ prices = {}, livemode = false } = {}) {
       return { chargeId: ch, paymentIntentId: s.payment_intent };
     },
     expire(sessionId) { st.sessions[sessionId].status = 'expired'; },
-    refund(chargeId, amount) { st.charges[chargeId].amount_refunded = amount; },
+    refund(chargeId, amount) { st.charges[chargeId].amount_refunded = amount; st.charges[chargeId].refunded = amount >= st.charges[chargeId].amount; },
     dispute(chargeId, status = 'needs_response') {
       const du = rid('du_');
       st.disputes[du] = { id: du, livemode, charge: chargeId, payment_intent: st.charges[chargeId].payment_intent, status };

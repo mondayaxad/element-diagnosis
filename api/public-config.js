@@ -49,6 +49,8 @@ function buildPublicConfig(env, { host } = {}) {
       completeSalesOpen: env.COMPLETE_SALES_OPEN === 'true',
       // 記録単位の権利 API（/api/my-entitlements の records）がある
       completeApiReady: true,
+      // 邪眼解析レポートの販売（Preview の JAGAN_SALES_OPEN=true のときだけ。本番の開始は別に判断する。購入 API も同じ値で止める）
+      jaganSalesOpen: env.JAGAN_SALES_OPEN === 'true' && sb.appEnv === 'preview',
     },
   };
 }
