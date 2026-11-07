@@ -170,17 +170,17 @@ test('名称・コピー：共鳴診断・RESONANCE・ELEMENT DIAGNOSIS PRESENTS
   assert.doesNotMatch(html, /元素診断 Mini|最も近しいキャラクター|類似度1位|心理学的|測定された/);
 });
 
-test('登場演出：本家 OGP の元素の円（正式背景）を、完了画面・シェアされたページ・OGP とも本人の元素の星座として使う／名前も本人の元素カラーのグラデーション／順に現れる／タップで省略／繰り返さない', async () => {
+test('登場演出：本家 OGP の元素の円（正式背景）を、完了画面・シェアされたページとも現れたキャラの元素の星座として使う／名前もキャラの元素カラーのグラデーション／順に現れる／タップで省略／繰り返さない', async () => {
   const html = read('resonance.html');
   const T = await imp('js/ogp-theme.mjs');
   const key = vm.runInNewContext('(' + /var ELEMENT_KEY = (\{[^}]+\});/.exec(html)[1] + ')');
   assert.deepEqual(plain(key), plain(T.ELEMENT_KEY));
   for (const k of Object.values(key)) assert.ok(fs.existsSync(path.join(ROOT, `assets/ogp/backgrounds/${k}.jpg`)), k);
-  assert.ok(html.includes("var nameColor = NAME_COLOR[r.element];"));
-  assert.doesNotMatch(html, /charEl/); // キャラの元素は色に使わない
+  assert.ok(html.includes("var charEl = ETI_V2_CHARACTERS_2_1_0[CHAR_INDEX[name]].element;"));
+  assert.ok(html.includes("var nameColor = NAME_COLOR[charEl];"));
   assert.ok(html.includes(`$('rOrb').style.backgroundImage = "url('/assets/ogp/backgrounds/" + ELEMENT_KEY[elKey] + ".jpg')"`));
-  assert.ok(html.includes('setOrb(lastResult.element, ')); // 完了画面：本人の元素の星座
-  assert.ok(html.includes("setOrb(r.element, 'シェアした人の元素（' + r.element + '）の星座');\n    setReveal(false);")); // Xシェアから：本人の元素（OGP と同じ）、演出なし
+  assert.ok(html.includes('setOrb(lastResult.charElement, ')); // 完了画面：キャラの元素の星座
+  assert.ok(html.includes("setOrb(r.charElement, r.person.name + 'の元素（' + r.charElement + '）の星座');\n    setReveal(false);")); // Xシェアから：キャラの元素（OGP と同じ）、演出なし
   // 名前のグラデーション：本家 OGP の元素テーマ（accentSoft・accent）と、ページの元素の深い色
   const nameColor = vm.runInNewContext('(' + /var NAME_COLOR = (\{[\s\S]*?\});/.exec(html)[1] + ')');
   const glow = vm.runInNewContext('(' + /var ELEMENT_GLOW = (\{[^}]+\});/.exec(html)[1] + ')');
@@ -281,25 +281,33 @@ test('画像（/api/og-image?m3=）：共鳴診断の下地に人物名を大き
   const src = read('api/og-image.mjs');
   const iM3 = src.indexOf("searchParams.get('m3')"), iP = src.indexOf("searchParams.get('p')");
   assert.ok(iM3 > 0 && iM3 < iP);
-  assert.ok(src.includes("hero: { label: 'YOUR RESONANCE', name, element: u.el }")); // 名前の色も本人の元素
-  assert.ok(src.includes("bandText: 'ELEMENT DIAGNOSIS PRESENTS — 共鳴診断 RESONANCE'"));
-  assert.ok(src.includes('Location: `${origin}/api/og-image?m3=${m3}`'));
-  const { buildOgpCardTree } = await imp('js/ogp-card.mjs');
+  // 人物が主役のカード：背景（星座）と名前の色は人物の元素、情報は本家と同じ（タイプコード4文字・タイプ名・元素／武器種／国家・下帯）
+  assert.ok(src.includes("const charElement = CHAR_ELEMENT[name] || u.el;"));
+  assert.ok(src.includes("code: ELEMENT_CODE[u.el] + WEAPON_CODE[u.w], typeName: TYPE_NAME[u.el][u.w]"));
+  assert.ok(src.includes('`${origin}/assets/ogp/bases-reveal/${key}.jpg`'));
+  const { buildRevealCardTree, revealNameSize, REVEAL_LAYOUT } = await imp('js/ogp-card.mjs');
   const texts = (node, out = []) => { if (node == null) return out; if (typeof node === 'string' || typeof node === 'number') { out.push(String(node)); return out; } const k = node.props && node.props.children; (Array.isArray(k) ? k : [k]).forEach((c) => texts(c, out)); return out; };
-  const d = { code: 'CRSW', typeName: '宿縁者', element: '氷', weapon: '片手剣', nation: 'スネージナヤ', mirrorName: '', match: '', hero: { label: 'YOUR RESONANCE', name: 'アルレッキーノ', element: '炎' }, bandText: 'ELEMENT DIAGNOSIS PRESENTS — 共鳴診断 RESONANCE', header: '共鳴診断 — MY RESULT' };
-  for (const o of [{}, { part: 'overlay', baseUrl: 'data:,' }]) {
-    const t = texts(buildOgpCardTree(d, o)).join('|');
-    assert.match(t, /YOUR RESONANCE\|アルレッキーノ/);
-    assert.match(t, /(^|\|)氷\|片手剣\|スネージナヤ\|/);
-    assert.match(t, /ELEMENT DIAGNOSIS PRESENTS — 共鳴診断 RESONANCE/);
-    assert.doesNotMatch(t, /最も近しい|一致|SELF IMAGE/);
+  const imgs = (node, out = []) => { if (node == null || typeof node !== 'object') return out; if (node.type === 'img') out.push(node.props.src); const k = node.props && node.props.children; (Array.isArray(k) ? k : [k]).forEach((c) => imgs(c, out)); return out; };
+  const d = { name: 'アルレッキーノ', charElement: '炎', code: 'CRSW', typeName: '宿縁者', element: '氷', weapon: '片手剣', nation: 'スネージナヤ', header: '共鳴診断 — MY RESULT' };
+  for (const o of [{ backgroundUrl: 'data:bg' }, { part: 'overlay', baseUrl: 'data:base' }]) {
+    const t = texts(buildRevealCardTree(d, o)).join('|');
+    assert.match(t, /アルレッキーノ\|YOUR TYPE\|CRSW\|宿縁者\|氷\|片手剣\|スネージナヤ\|共鳴診断 — 私の結果は【氷 × 片手剣 × スネージナヤ】/);
+    assert.doesNotMatch(t, /最も近しい|一致|SELF IMAGE|-/);
   }
+  const base = texts(buildRevealCardTree({ charElement: '炎', element: '炎', name: '', header: '共鳴診断 — MY RESULT' }, { part: 'base', backgroundUrl: 'data:bg' })).join('|');
+  assert.equal(base, '共鳴診断 — MY RESULT|YOUR RESONANCE'); // 下地は人物の元素だけで決まる（人ごとの文字を含まない）
+  assert.deepEqual(imgs(buildRevealCardTree(d, { backgroundUrl: 'data:bg' })), ['data:bg']);
+  // 下地7枚（人物の元素ごと）と公開の許可
+  const T = await imp('js/ogp-theme.mjs');
+  for (const key of Object.values(T.ELEMENT_KEY)) assert.ok(fs.existsSync(path.join(ROOT, `assets/ogp/bases-reveal/${key}.jpg`)), key);
+  assert.equal(fs.readdirSync(path.join(ROOT, 'assets/ogp/bases-reveal')).length, 7);
+  assert.ok(require('../scripts/build-public.js').PUBLIC_DIRS.some((x) => x.dir === 'assets/ogp/bases-reveal' && x.ext === '.jpg'));
+  // 名前は最長でも左の欄（円環の手前）に収まる大きさ
   const D = await imp('api/_og-data.mjs');
-  assert.ok(Math.max(...D.CHAR_NAMES.map((n) => n.length)) <= 7);
-  assert.ok(54 * 7 + 4 * 7 + 28 * 2 <= 590); // 最長 7 文字でも欄（590px）に収まる大きさ
+  for (const n of D.CHAR_NAMES) assert.ok(revealNameSize(n) * 1.06 * n.length + 6 * n.length <= REVEAL_LAYOUT.nameWidth + 6 * 7 + 40, n);
   const covered = new Set([...Object.keys(D.ELEMENT_CODE), ...Object.keys(D.WEAPON_CODE), ...D.PACK_NATIONS, ...Object.values(D.TYPE_NAME).flatMap(Object.values),
     ...D.CHAR_NAMES, '最も近しいキャラクター', '元素診断 — 私の結果は【】×', '元素診断 — MY RESULT', '0123456789%一致', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ '].join(''));
-  for (const str of ['YOUR RESONANCE', 'ELEMENT DIAGNOSIS PRESENTS — 共鳴診断 RESONANCE', '共鳴診断 — MY RESULT']) for (const ch of str) assert.ok(covered.has(ch), `「${ch}」`);
+  for (const str of ['YOUR RESONANCE', 'YOUR TYPE', '共鳴診断 — 私の結果は【】×', '共鳴診断 — MY RESULT']) for (const ch of str) assert.ok(covered.has(ch), `「${ch}」`);
 });
 
 test('画像の見出し：共鳴診断（m2）は「共鳴診断 — MY RESULT」の下地35枚を使い、本家・旧 m1 は従来の「元素診断 — MY RESULT」のまま', async () => {

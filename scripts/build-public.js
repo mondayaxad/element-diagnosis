@@ -90,6 +90,7 @@ const PUBLIC_DIRS = [
   { dir: 'assets/ogp/bases', ext: '.jpg' },                    // api/og-image の下地（タイプ別35枚。scripts/build-ogp-bases.mjs）
   { dir: 'assets/ogp/bases', ext: '.png' },                    // api/og-image の MIRROR 欄の札（元素別7枚）
   { dir: 'assets/ogp/bases-resonance', ext: '.jpg' },          // 同・共鳴診断（m2）の下地（見出しだけ「共鳴診断 — MY RESULT」。build-ogp-bases.mjs --resonance）
+  { dir: 'assets/ogp/bases-reveal', ext: '.jpg' },             // 同・共鳴診断 Character Reveal（m3）の下地（人物の元素ごと7枚。build-ogp-bases.mjs --reveal）
   { dir: 'jagan', ext: '.html' },                              // 邪眼診断（/jagan/・/jagan/about・/jagan/sample）
   { dir: 'jagan', ext: '.mjs' },
   { dir: 'jagan', ext: '.css' },

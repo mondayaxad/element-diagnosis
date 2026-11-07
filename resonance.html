@@ -105,7 +105,7 @@
     -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 58%, rgba(0,0,0,.6) 66%, transparent 72%); mask-image: radial-gradient(circle at 50% 50%, #000 58%, rgba(0,0,0,.6) 66%, transparent 72%); }
   .orb-glow { position: absolute; inset: -18%; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--ac) 30%, transparent) 0%, color-mix(in srgb, var(--ac) 10%, transparent) 38%, transparent 66%); pointer-events: none; }
   .r-lead { font-size: 14px; letter-spacing: .24em; color: #b9c6e6; margin: 0 0 10px; }
-  /* 名前：本人（3つの答え）の元素カラーのグラデーション（js/ogp-theme.mjs の accentSoft → accent → 深い色） */
+  /* 名前：そのキャラの元素カラーのグラデーション（js/ogp-theme.mjs の accentSoft → accent → 深い色） */
   .r-name { font-size: clamp(30px, 11vw, 52px); font-weight: 700; letter-spacing: .14em; padding-left: .14em; line-height: 1.25; margin: 0 0 16px; overflow-wrap: anywhere; word-break: keep-all;
     filter: drop-shadow(0 0 16px color-mix(in srgb, var(--name-glow, #7aa2cf) 55%, transparent)) drop-shadow(0 2px 10px rgba(7,7,15,.8)); }
   .r-name span { color: transparent; background-image: var(--name-grad, linear-gradient(100deg, #fff, #cfd8f0)); -webkit-background-clip: text; background-clip: text; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
@@ -351,7 +351,7 @@
   var answers = { element: null, weapon: null, nation: null };
   var $ = function (id) { return document.getElementById(id); };
   var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // 元素の色（結果ページで、本人（3つの答え）の元素の色で夜空の下と星座の光を灯す。問いの間は使わない）
+  // 元素の色（結果ページで、現れたキャラの元素の色で夜空の下と星座の光を灯す。問いの間は使わない）
   var ELEMENT_GLOW = { '炎': '#d9784a', '水': '#4a9ad0', '氷': '#8ab8e8', '雷': '#a070e0', '風': '#5cc4a0', '岩': '#d0a850', '草': '#7cbf4a' };
   // 本家 OGP の正式背景（元素別。円環と、該当元素の点灯が描き込まれている）。js/ogp-theme.mjs の ELEMENT_KEY と同じ
   var ELEMENT_KEY = { '水': 'hydro', '炎': 'pyro', '風': 'anemo', '雷': 'electro', '草': 'dendro', '氷': 'cryo', '岩': 'geo' };
@@ -469,7 +469,7 @@
   function complete() { return !!(answers.element && answers.weapon && answers.nation); }
   function firstUnanswered() { for (var i = 0; i < Q.questions.length; i++) if (!answers[Q.questions[i].id]) return i; return 0; }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
-  // 星座（円）を出す：完了画面もシェアされたページも、本人（3つの答え）の元素（OGP 画像と同じ）
+  // 星座（円）を出す：完了画面もシェアされたページも、現れたキャラの元素（OGP 画像と同じ）
   function setOrb(elKey, label) {
     $('rOrb').style.backgroundImage = "url('/assets/ogp/backgrounds/" + ELEMENT_KEY[elKey] + ".jpg')";
     $('rOrbWrap').setAttribute('aria-label', label);
@@ -480,8 +480,10 @@
     var name = r.person.name;
     $('rName').textContent = name;
     $('rNameBox').classList.toggle('long', name.length >= 6);
-    // 星座・夜空の灯り・名前のグラデーションは、すべて本人（3つの答え）の元素。OGP 画像も同じ
-    var nameColor = NAME_COLOR[r.element];
+    // 星座・夜空の灯り・名前のグラデーションは、現れたキャラの元素（OGP 画像も同じ）。本人の 758 は文字で示す
+    var charEl = ETI_V2_CHARACTERS_2_1_0[CHAR_INDEX[name]].element;
+    r.charElement = charEl;
+    var nameColor = NAME_COLOR[charEl];
     $('result').style.setProperty('--name-grad', 'linear-gradient(100deg, ' + nameColor[0] + ' 0%, ' + nameColor[1] + ' 55%, ' + nameColor[2] + ' 100%)');
     $('result').style.setProperty('--name-glow', nameColor[1]);
     $('r758').textContent = r.element + ' × ' + r.weapon + ' × ' + r.nationDisplay;
@@ -527,7 +529,7 @@
     go('result', true);
   }
   function onResultShown() {
-    setOrb(lastResult.element, 'アナタの元素（' + lastResult.element + '）の星座');
+    setOrb(lastResult.charElement, lastResult.person.name + 'の元素（' + lastResult.charElement + '）の星座');
     setReveal(playNext);
     playNext = false;
   }
@@ -586,7 +588,7 @@
     $('pCover').hidden = true; $('result').hidden = false;
     current = 'result';
     try { history.replaceState({ miniStep: 'result' }, ''); } catch (e) { /* なし */ }
-    setOrb(r.element, 'シェアした人の元素（' + r.element + '）の星座');
+    setOrb(r.charElement, r.person.name + 'の元素（' + r.charElement + '）の星座');
     setReveal(false);
   }
   $('tryBtn').addEventListener('click', function () {

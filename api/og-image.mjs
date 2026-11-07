@@ -17,7 +17,7 @@
 //   ・下地が取れない時（Preview の保護など）は、従来どおり1枚をすべて描く。
 import { ImageResponse } from '@vercel/og';
 // 新デザイン（7元素の正式背景＋情報レイヤー）。Webプレビュー（ogp-card-demo.html）と同じ組み立てを使う。
-import { buildOgpCardTree } from '../js/ogp-card.mjs';
+import { buildOgpCardTree, buildRevealCardTree } from '../js/ogp-card.mjs';
 import { ELEMENT_KEY } from '../js/ogp-theme.mjs';
 import { CHAR_ELEMENT } from './_ogp-char-element.mjs';
 import { OG_FONT_WOFF_BASE64 } from './_og-font.mjs';
@@ -166,17 +166,31 @@ async function revealImage(m3, searchParams, origin) {
     return new Response(null, { status: 308, headers: { Location: `${origin}/api/og-image?m3=${m3}`, ...CACHE_HEADERS } });
   }
   const name = CHAR_NAMES[u.charIdx];
+  // 人物が主役のカード（js/ogp-card.mjs の buildRevealCardTree）。情報は本家と同じ（タイプコード4文字・タイプ名・元素／武器種／国家・下帯）。
+  // 背景（星座）と名前・飾りの色は人物の元素。下地は人物の元素ごとの7枚（assets/ogp/bases-reveal/。scripts/build-ogp-bases.mjs --reveal）
+  const charElement = CHAR_ELEMENT[name] || u.el;
   const data = {
-    code: ELEMENT_CODE[u.el] + WEAPON_CODE[u.w], typeName: TYPE_NAME[u.el][u.w], element: u.el, weapon: u.w,
+    name, charElement, code: ELEMENT_CODE[u.el] + WEAPON_CODE[u.w], typeName: TYPE_NAME[u.el][u.w], element: u.el, weapon: u.w,
     nation: u.nat === 'ナドクライ' ? 'ナド・クライ' : u.nat,
-    mirrorName: '', match: '',
-    // 見出しは同梱フォントにある英字（「アナタに共鳴する人物」の文字はフォントに無い）。円・名前の色ともに本人の元素（オーナー指示：すべて本人の元素）
-    hero: { label: 'YOUR RESONANCE', name, element: u.el },
-    bandText: 'ELEMENT DIAGNOSIS PRESENTS — 共鳴診断 RESONANCE',
     header: '共鳴診断 — MY RESULT',
-    baseDir: 'bases-resonance',
   };
-  return renderCard(data, origin);
+  return renderRevealCard(data, origin);
+}
+
+async function renderRevealCard(data, origin) {
+  const fonts = [{ name: 'Noto Serif JP', data: loadFont(), weight: 700, style: 'normal' }];
+  const key = ELEMENT_KEY[data.charElement] || 'anemo';
+  const baseUrl = await fetchImageDataUri(`${origin}/assets/ogp/bases-reveal/${key}.jpg`);
+  let tree, render;
+  if (baseUrl) {
+    tree = buildRevealCardTree(data, { part: 'overlay', baseUrl, fontSerif: 'Noto Serif JP' });
+    render = 'base';
+  } else {
+    const backgroundUrl = await fetchImageDataUri(`${origin}/assets/ogp/backgrounds/${key}.jpg`);
+    tree = buildRevealCardTree(data, { backgroundUrl, fontSerif: 'Noto Serif JP' });
+    render = backgroundUrl ? 'full' : 'plain';
+  }
+  return new ImageResponse(tree, { width: 1200, height: 630, fonts, headers: { ...CACHE_HEADERS, 'x-og-render': render } });
 }
 
 async function renderCard(data, origin) {
