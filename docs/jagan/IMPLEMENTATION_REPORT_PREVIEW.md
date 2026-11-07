@@ -135,3 +135,4 @@
 - 検査：全体 797 件中 709 合格・失敗 1（既存の save_cta_placement_ui）・skip 87。邪眼 46/46。実PG（jagan_01・02）11/11。
 - 2026-11-07：Preview DB に jagan_02 を SQL Editor で適用（適用前の確認 11 行すべて ok → 適用 Success → 適用後の確認 46 行すべて ok。
   履歴 20261107120000 jagan_02_orders_links_registrations、jagan_orders 0 行、関数 7 つは invoker・search_path=""・ブラウザのロールは実行不可）。
+- 2026-11-07：オーナーの承認で、Vercel の Preview（release-c-preview）に JAGAN_SALES_OPEN=true を追加（本番には設定しない）。
