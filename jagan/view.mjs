@@ -297,7 +297,7 @@ function unlockAll() {
       <div class="rx-all-list"><p class="rx-all-k">ご利用いただける内容</p>${items.map(([h, d]) => `<p><b>✓ ${esc(h)}</b><span>${esc(d)}</span></p>`).join('')}</div>
       <p class="rx-all-price">${PRICE_LABEL}<small>買い切り</small></p>
       <button type="button" class="rx-buy rx-buy-all" data-buy disabled aria-disabled="true">全てのロックを解除する<small>準備中</small></button>
-      <p class="jg-small jg-center">販売開始の準備中です。現在は購入できません。</p>
+      <p class="jg-small jg-center rx-sales-note">販売開始の準備中です。現在は購入できません。</p>
       <p class="jg-center"><a class="rx-link" href="/jagan/sample">内容のサンプルを見る</a></p>
     </section>`;
 }

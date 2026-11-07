@@ -8,6 +8,7 @@ import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, s
 import { BUNDLE } from './engine/data.mjs';
 import { renderResultPage, esc, heroGemsHtml } from './view.mjs';
 import { cardDataUrl } from './card.mjs';
+import { supabaseClient, accessToken, salesOpen, buy, buyErrorText } from './client.mjs';
 
 const ITEMS = BUNDLE.items;
 const VERSION = ITEMS.item_set_version;
@@ -27,25 +28,7 @@ function track(name, params) { try { if (typeof window.gtag === 'function') wind
 const newResultId = () => (crypto.randomUUID ? crypto.randomUUID()
   : '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) => (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)));
 
-// ---- Supabase（ETI と同じ公開設定。本番ホストでは本番の設定だけを使う） ----
-function supabaseClient() {
-  if (supabaseClient.c !== undefined) return supabaseClient.c;
-  const cfg = window.__ED_PUBLIC_CONFIG__;
-  let c = null;
-  try {
-    const ok = cfg && /^[a-z0-9]{20}$/.test(cfg.projectRef || '') && cfg.supabaseUrl === `https://${cfg.projectRef}.supabase.co`
-      && typeof cfg.supabaseAnonKey === 'string' && !cfg.supabaseAnonKey.startsWith('sb_secret_')
-      && ((location.hostname === 'element-diagnosis-five.vercel.app') === (cfg.appEnv === 'production'));
-    if (ok && window.supabase && typeof window.supabase.createClient === 'function') c = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
-  } catch { c = null; }
-  supabaseClient.c = c;
-  return c;
-}
-async function accessToken() {
-  const c = supabaseClient();
-  if (!c) return null;
-  try { const { data } = await c.auth.getSession(); return data && data.session ? data.session.access_token : null; } catch { return null; }
-}
+// ---- Supabase（ETI と同じ公開設定。本番ホストでは本番の設定だけを使う）と購入の呼び出しは jagan/client.mjs（レポートのページと共通） ----
 
 // ---- 画面 ----
 function show(view) {
@@ -307,7 +290,7 @@ function bindResult() {
   $('saveBtn').addEventListener('click', save);
   $('imageBtn').addEventListener('click', saveImage);
   $('shareBtn').addEventListener('click', share);
-  document.querySelectorAll('#resultBody [data-buy]').forEach((b) => b.addEventListener('click', () => track('jagan_report_cta', { state: 'closed' })));
+  setupBuy();
   $('fixAnswersBtn').addEventListener('click', () => {
     if (!current || current.mode !== 'fresh') return;
     const answers = {};
@@ -317,6 +300,56 @@ function bindResult() {
     saveProgress(); show('quiz'); renderQuiz();
   });
   document.querySelectorAll('#resultBody .rx-more').forEach((d) => d.addEventListener('toggle', () => { if (d.open) track('jagan_detail_open', {}); }));
+}
+
+// ---- 邪眼解析レポートの申込（販売中だけ。金額・商品はサーバーが決める）。ログイン中で購入済みの記録は「レポートを読む」 ----
+async function ownedResult(resultId) {
+  const c = supabaseClient();
+  if (!c || !(await accessToken())) return false;
+  try {
+    const { data, error } = await c.from('jagan_entitlements').select('result_id').eq('result_id', resultId).eq('status', 'active').limit(1);
+    return !error && Array.isArray(data) && data.length > 0;
+  } catch { return false; }
+}
+async function setupBuy() {
+  const btns = Array.from(document.querySelectorAll('#resultBody [data-buy]'));
+  if (!salesOpen() || !current) {
+    btns.forEach((b) => b.addEventListener('click', () => track('jagan_report_cta', { state: 'closed' })));
+    return;
+  }
+  const shown = current;
+  const owned = await ownedResult(shown.result.resultId);
+  if (current !== shown) return; // 待っている間に別の結果を表示した
+  document.querySelectorAll('#resultBody .rx-sales-note').forEach((n) => { n.hidden = true; });
+  btns.forEach((b) => {
+    b.disabled = false;
+    b.removeAttribute('aria-disabled');
+    const small = b.querySelector('small');
+    if (small) small.remove();
+    if (owned && b.classList.contains('rx-buy')) b.textContent = 'レポートを読む';
+    b.addEventListener('click', () => onBuy(b, owned));
+  });
+}
+async function onBuy(btn, owned) {
+  if (!current) return;
+  const r = current.result;
+  if (owned) { track('jagan_report_read', { source: 'result' }); location.assign(`/jagan/report?r=${encodeURIComponent(r.resultId)}`); return; }
+  track('jagan_report_cta', { state: 'open' });
+  const old = btn.parentElement && btn.parentElement.querySelector('.rx-buy-error');
+  if (old) old.remove();
+  const label = btn.innerHTML;
+  btn.disabled = true;
+  btn.textContent = '決済の画面を準備しています…';
+  const out = await buy({ resultId: r.resultId, itemSetVersion: r.versions.itemSet, answers: current.answers, source: current.mode === 'saved' ? 'saved_result' : 'result' });
+  if (out.ok) return;
+  btn.disabled = false;
+  btn.innerHTML = label;
+  if (out.error === 'in_progress') return;
+  const p = document.createElement('p');
+  p.className = 'jg-small rx-buy-error';
+  p.setAttribute('role', 'alert');
+  p.textContent = buyErrorText(out.error);
+  btn.insertAdjacentElement('afterend', p);
 }
 
 // ---- 起動 ----
@@ -363,6 +396,13 @@ function boot() {
   const last = store.get(K.last);
   const validLast = last && last.v === VERSION && UUID_RE.test(last.resultId || '') ? last : null;
   if (location.hash === '#result' && validLast) { showResult(validLast, { mode: 'fresh' }); return; }
+  // 決済の画面で中止して戻った：前の結果に戻す（お支払いはされていない）
+  if (params.get('checkout') === 'canceled' && validLast) {
+    showResult(validLast, { mode: 'fresh' });
+    setStatus('お支払いは完了していません（決済を中止しました）。もう一度お申し込みいただけます。');
+    try { history.replaceState(null, '', '/jagan/#result'); } catch { /* noop */ }
+    return;
+  }
   const p = loadProgress();
   $('resumeBtn').hidden = !(p && answeredCount(p.answers) > 0);
 

@@ -555,3 +555,9 @@ body { background: #09070B; background-image: none; }
 .rx-legend span::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--lc); box-shadow: 0 0 6px var(--lc); }
 .rx-desire { background: linear-gradient(160deg, color-mix(in srgb, var(--ec) 9%, #12090E) 0%, #0F080C 75%); }
 .rp-cover-code { font-family: var(--font-en); letter-spacing: .2em; }
+
+/* 邪眼解析レポート（購入したレポート /jagan/report）：最下部の「このレポートを残す」 */
+.rp-keep { margin-top: 24px; }
+.rp-keep-ops { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; margin: 14px 0 6px; }
+.rp-keep-ops .rp-cta-btn { flex: 1 1 100%; }
+.rx-buy-error { color: #F2A7B5; text-align: center; margin-top: 8px; }
