@@ -1,158 +1,243 @@
-/* js/jagan-mypage.js — マイページの「邪眼診断の記録」（2026-11-02・Preview）。
-   ・元素診断（ETI）の記録・購入・ランクの表示には触れない。記録の一覧の後ろ（アカウント欄の前）に別の欄として足す。
-   ・邪眼診断の結果ページで、未ログインのまま「マイページ保存」を押した場合の保存待ち（jagan_pending_save_v1）を、
-     ログイン・登録完了の後に /api/jagan-save で保存する（サーバーが再計算・本人を確認。24時間で破棄）。
-   ・一覧は本人の行だけ（RLS）。削除は本人の行だけ（RLS）。共有の取消は結果ページから行う。
-   ・mypage.html の initOnce() が、記録を描いた後（記録なし・ありの両方）に JaganMypage.render(root) を呼ぶ。 */
+/* js/jagan-mypage.js — マイページの邪眼診断（2026-11-07・Preview）。マイページは元素診断と共通。
+   邪眼診断の記録は、元素診断と同じ欄（RECORDS・INSIGHTS の数、LATEST RESULT、YOUR COLLECTION、THE RECORDS、右上のレポート）に
+   並ぶ（描画は mypage.html の MP_KINDS.jagan ほか）。このファイルは、記録・権利の読み込みと、保存・登録・申込だけを受け持つ。
+   ・保存待ち（jagan_pending_save_v1）：邪眼の結果ページで、未ログインのまま「マイページに保存」した結果を、ログイン・登録完了の後に保存する。
+   ・登録の予定（jagan_register_v1）：購入したレポートの最下部「マイページに登録する」を、ログインの後に行う（固有リンクの秘密値）。
+   ・記録は本人の行だけ（RLS）。権利（jagan_entitlements）も本人の行だけ。権利を読めなければ、購入状態は「未確認」（購入済みと誤って見せない）。
+   ・申込（¥1,000）：本人の記録の resultId だけを送る（回答・金額は送らない。サーバーが本人の行から決める）。販売中だけ。
+   ・本番（appEnv=production）では、邪眼診断の公開判断（DB の適用を含む）が済むまで何もしない。 */
 (function () {
   'use strict';
   var PENDING_KEY = 'jagan_pending_save_v1';
+  var REGISTER_KEY = 'jagan_register_v1';
+  var FRESH_KEY = 'jagan_buy_fresh_v1';
   var PENDING_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+  var REGISTER_MAX_AGE_MS = 2 * 60 * 60 * 1000;
   var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
-  var lastOutcome = null;
+  var TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;
+  var SCHEMA = 'jagan-result-3';
+  // 共有の URL（jagan/engine/runtime.mjs の shareQuery と同じ。テストで一致を確かめる）
+  var SHARE_PATH = '/jagan/share';
+  var OG_DESIGN_VERSION = 'dti-og-2';
+  var notes = [];
   var inFlight = null;
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
   }
+  function enabled() {
+    var cfg = window.__ED_PUBLIC_CONFIG__;
+    return !!(cfg && cfg.appEnv !== 'production' && typeof supabaseClient !== 'undefined' && !supabaseClient.unavailable);
+  }
+  function salesOpen() { var c = window.__ED_PUBLIC_CONFIG__; return !!(c && c.jaganSalesOpen === true); }
+  function store(kind, fn) { try { return fn(kind === 'local' ? window.localStorage : window.sessionStorage); } catch (e) { return null; } }
   function readPending() {
-    try {
-      var v = JSON.parse(localStorage.getItem(PENDING_KEY) || 'null');
-      if (!v || !UUID_RE.test(v.resultId || '') || !(Date.now() - Number(v.at) < PENDING_MAX_AGE_MS)) { localStorage.removeItem(PENDING_KEY); return null; }
+    return store('local', function (s) {
+      var v = JSON.parse(s.getItem(PENDING_KEY) || 'null');
+      if (!v || !UUID_RE.test(v.resultId || '') || !(Date.now() - Number(v.at) < PENDING_MAX_AGE_MS)) { s.removeItem(PENDING_KEY); return null; }
       return v;
-    } catch (e) { return null; }
+    });
   }
   function hasPending() { return !!readPending(); }
+  function readRegister() {
+    return store('session', function (s) {
+      var v = JSON.parse(s.getItem(REGISTER_KEY) || 'null');
+      if (!v || !TOKEN_RE.test(v.t || '') || !(Date.now() - Number(v.at) < REGISTER_MAX_AGE_MS)) { s.removeItem(REGISTER_KEY); return null; }
+      return v.t;
+    });
+  }
+  function hasRegister() { return !!readRegister(); }
   async function token() {
     try { var r = await supabaseClient.auth.getSession(); return r.data && r.data.session ? r.data.session.access_token : null; } catch (e) { return null; }
   }
+  async function api(path, body, t) {
+    var headers = { 'Content-Type': 'application/json' };
+    if (t) headers.Authorization = 'Bearer ' + t;
+    try {
+      var res = await fetch(path, { method: 'POST', headers: headers, body: JSON.stringify(body) });
+      var out = await res.json().catch(function () { return {}; });
+      return { ok: res.ok, status: res.status, body: out || {} };
+    } catch (e) { return { ok: false, status: 0, body: { error: 'network' } }; }
+  }
+  function track(name, params) { try { if (typeof trackEvent === 'function') trackEvent(name, params || {}); } catch (e) { /* 計測だけ */ } }
 
   // 保存待ちの保存（登録完了の後だけ呼ばれる。失敗しても保存待ちは残す＝次に開いたときに再試行）
-  async function savePending() {
+  async function savePending(t) {
     var p = readPending();
-    if (!p) return null;
+    if (!p) return;
     if (inFlight) return inFlight;
     inFlight = (async function () {
-      var t = await token();
-      if (!t) return null;
-      try {
-        var res = await fetch('/api/jagan-save', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + t },
-          body: JSON.stringify({ resultId: p.resultId, itemSetVersion: p.itemSetVersion, answers: p.answers }) });
-        var out = await res.json().catch(function () { return {}; });
-        if (res.ok && out.ok) {
-          localStorage.removeItem(PENDING_KEY);
-          if (typeof trackEvent === 'function') trackEvent('jagan_save_success', { source: 'mypage' });
-          return { ok: true };
-        }
-        if (res.status === 400 || res.status === 409) localStorage.removeItem(PENDING_KEY); // 直せない保存待ちは残さない
-        return { ok: false, status: res.status };
-      } catch (e) { return { ok: false, status: 0 }; }
+      var r = await api('/api/jagan-save', { resultId: p.resultId, itemSetVersion: p.itemSetVersion, answers: p.answers }, t);
+      if (r.ok && r.body.ok) {
+        store('local', function (s) { s.removeItem(PENDING_KEY); });
+        track('jagan_save_success', { source: 'mypage' });
+        notes.push({ ok: true, text: '邪眼診断の結果を保存しました。' });
+        return;
+      }
+      if (r.status === 400 || r.status === 409) store('local', function (s) { s.removeItem(PENDING_KEY); }); // 直せない保存待ちは残さない
+      notes.push({ ok: false, text: '邪眼診断の結果を保存できませんでした' + (hasPending() ? '（このページを開き直すと再試行します）' : '') + '。' });
     })();
     try { return await inFlight; } finally { inFlight = null; }
   }
-
-  async function loadRows() {
-    var r = await supabaseClient.from('jagan_results').select('result_id,headline,created_at,interpretation_version').order('created_at', { ascending: false });
-    if (r.error) throw r.error;
-    return r.data || [];
-  }
-
-  // 証：邪眼元素ごとの画像。保存時の見出し（h.element）の漢字から選ぶ。
-  //   覚醒前（record）が既定。その記録に有効な購入権限（jagan_entitlements.status='active'）があるときだけ覚醒後（awakened）。
-  //   購入権限が読めないとき（取得の失敗・未購入）は覚醒前のまま（購入済みと誤って見せない）。
-  var EMBLEM_DIR = 'assets/emblems/jagan/';
-  var EMBLEM_FILE = { '炎': 'pyro', '水': 'hydro', '風': 'anemo', '雷': 'electro', '草': 'dendro', '氷': 'cryo', '岩': 'geo' };
-  function emblemHtml(label, awakened) {
-    var f = EMBLEM_FILE[label];
-    return f ? '<span class="jg-mp-emblem' + (awakened ? ' is-awakened' : '') + '" aria-hidden="true"><img src="' + EMBLEM_DIR + (awakened ? 'awakened/' : 'record/') + f + '.png" alt="" width="72" height="72" loading="lazy" decoding="async"></span>' : '';
-  }
-  async function loadAwakened() {
-    // 本人の行だけ（RLS）。失敗しても記録の表示は止めない
-    try {
-      var r = await supabaseClient.from('jagan_entitlements').select('result_id,status').eq('status', 'active');
-      if (r.error || !Array.isArray(r.data)) return {};
-      var m = {}; r.data.forEach(function (e) { if (e && e.status === 'active') m[e.result_id] = true; });
-      return m;
-    } catch (e) { return {}; }
-  }
-
-  function rowHtml(row, awakenedMap) {
-    var h = row.headline || {};
-    // 保存時の見出しをそのまま出す（DTI のコード・呼び名が無い旧版の記録は、読み替えずにコードを出さない）
-    var head = (h.element || '—') + ' × ' + (h.type || '—');
-    var dti = (h.code && h.name) ? (h.code + '｜' + h.name) : '旧版の記録';
-    var fat = h.character ? ('最も近しいファトゥス：' + h.character + '（' + h.matchPercent + '%一致）') : '';
-    var d = new Date(row.created_at);
-    return '<li class="jg-mp-row">' +
-      emblemHtml(h.element, !!(awakenedMap && awakenedMap[row.result_id])) +
-      '<div class="jg-mp-body"><div class="jg-mp-head">' + esc(head) + '</div><div class="jg-mp-dti">' + esc(dti) + '</div>' + (fat ? '<div class="jg-mp-sub">' + esc(fat) + '</div>' : '') +
-      '<div class="jg-mp-date">' + esc(isNaN(d) ? '' : d.toLocaleDateString('ja-JP')) + '</div></div>' +
-      '<div class="jg-mp-ops"><a class="mp-btn" href="/jagan/?saved=' + encodeURIComponent(row.result_id) + '">開く ›</a>' +
-      '<button type="button" class="jg-mp-del" data-jagan-del="' + esc(row.result_id) + '">削除</button></div></li>';
-  }
-
-  function sectionHtml(inner) {
-    return '<section class="mp-sec" id="jagan" aria-labelledby="mp-jagan-h">' +
-      '<div class="mp-sec-head" id="mp-jagan-h"><span class="mp-sec-en">DELUSION DIAGNOSIS</span><span class="mp-sec-ja">邪眼診断（DTI）の記録</span></div>' +
-      inner + '</section>';
-  }
-
-  var STYLE = '.jg-mp-list{list-style:none;padding:0;margin:0}.jg-mp-row{display:flex;justify-content:space-between;gap:12px;align-items:center;' +
-    'border:1px solid rgba(165,42,67,.45);border-radius:12px;padding:12px 14px;margin:8px 0;background:rgba(22,13,20,.6)}' +
-    '.jg-mp-body{flex:1;min-width:0}.jg-mp-emblem{flex:none;display:inline-flex;width:72px;height:72px}.jg-mp-emblem img{display:block;width:72px;height:72px;object-fit:contain;transform:translateZ(0)}' +
-    '.jg-mp-head{font-size:17px}.jg-mp-dti{font-size:13px;letter-spacing:.08em;color:#E2C08C}.jg-mp-sub,.jg-mp-date{font-size:12px;opacity:.75}.jg-mp-ops{display:flex;flex-direction:column;gap:6px;align-items:flex-end}' +
-    '.jg-mp-del{background:none;border:0;color:inherit;opacity:.7;text-decoration:underline;font:inherit;font-size:12px;cursor:pointer}' +
-    '.jg-mp-note{font-size:13px;opacity:.8;margin:6px 0}.jg-mp-note a{color:#E2C08C;text-decoration:underline;text-underline-offset:3px}.jg-mp-note a:hover{color:#F0D3A6}';
-
-  async function render(root) {
-    if (!root || typeof supabaseClient === 'undefined' || supabaseClient.unavailable) return;
-    // 本番では、邪眼診断の公開判断（DB の適用を含む）が済むまで表示しない（Preview の確認用）
-    var cfg = window.__ED_PUBLIC_CONFIG__;
-    if (!cfg || cfg.appEnv === 'production') return;
-    if (!document.getElementById('jaganMpStyle')) {
-      var st = document.createElement('style'); st.id = 'jaganMpStyle'; st.textContent = STYLE; document.head.appendChild(st);
+  // 購入したレポートの登録（ログインの後）。直せない結果（リンクが無い・止まっている）は予定を消す
+  async function registerPending(t) {
+    var tok = readRegister();
+    if (!tok) return;
+    var r = await api('/api/jagan-report?op=link-register', { token: tok }, t);
+    if (r.ok || r.status === 404 || r.status === 409) store('session', function (s) { s.removeItem(REGISTER_KEY); });
+    if (r.ok) {
+      track('jagan_report_register_done', { result: r.body.result, source: 'mypage' });
+      notes.push({ ok: true, text: r.body.result === 'already' ? '購入した邪眼解析レポートは、すでにこのマイページに登録されています。' : '購入した邪眼解析レポートを、このマイページに登録しました。' });
+    } else {
+      notes.push({ ok: false, text: r.status === 404 || r.status === 409 ? '購入した邪眼解析レポートを登録できませんでした（リンクが正しくない、または返金などで停止しています）。'
+        : r.status === 403 ? '登録（利用規約への同意）を完了してから、レポートのページでもう一度「マイページに登録する」を押してください。'
+        : '購入した邪眼解析レポートを登録できませんでした。時間をおいて、このページを開き直してください。' });
     }
-    var saved = await savePending();
-    if (saved) lastOutcome = saved;
-    var rows = null;
-    try { rows = await loadRows(); } catch (e) { rows = null; }
-    var awakened = rows && rows.length ? await loadAwakened() : {};
-    var note = '';
-    if (lastOutcome && lastOutcome.ok) note = '<p class="jg-mp-note" role="status">邪眼診断の結果を保存しました。</p>';
-    else if (lastOutcome && !lastOutcome.ok) note = '<p class="jg-mp-note" role="alert">邪眼診断の結果を保存できませんでした' + (hasPending() ? '（このページを開き直すと再試行します）' : '') + '。</p>';
-    var inner;
-    if (rows === null) inner = note + '<p class="jg-mp-note">邪眼診断の記録を読み込めませんでした。</p>';
-    else if (!rows.length) inner = note + '<p class="jg-mp-note">まだ保存した結果はありません。<a href="/jagan/">邪眼診断を受ける ›</a></p>';
-    else inner = note + '<ul class="jg-mp-list">' + rows.map(function (r) { return rowHtml(r, awakened); }).join('') + '</ul><p class="jg-mp-note"><a href="/jagan/">邪眼診断をもう一度受ける ›</a></p>';
-    var old = document.getElementById('jagan');
-    if (old) old.remove();
-    var acc = root.querySelector('[aria-labelledby="mp-acc-h"]');
-    var wrap = document.createElement('div');
-    wrap.innerHTML = sectionHtml(inner);
-    var sec = wrap.firstChild;
-    if (acc) acc.parentNode.insertBefore(sec, acc); else root.appendChild(sec);
-    sec.addEventListener('click', onDelete);
-    if (location.hash === '#jagan' || (lastOutcome && lastOutcome.ok && /from=jagan/.test(location.search))) sec.scrollIntoView({ block: 'start' });
   }
 
-  async function onDelete(e) {
-    var b = e.target.closest('[data-jagan-del]');
-    if (!b) return;
-    if (!window.confirm('この邪眼診断の結果を削除しますか？（元に戻せません。元素診断の記録には影響しません）')) return;
-    b.disabled = true;
-    var r = await supabaseClient.from('jagan_results').delete().eq('result_id', b.getAttribute('data-jagan-del'));
-    if (r.error) { b.disabled = false; window.alert('削除できませんでした。'); return; }
-    lastOutcome = null;
-    var root = document.getElementById('root');
-    render(root);
+  function top3(snap) {
+    var tr = snap && Array.isArray(snap.traitRanking) ? snap.traitRanking : [];
+    return tr.slice(0, 3).filter(function (t) { return t && typeof t.label === 'string' && typeof t.score === 'number' && isFinite(t.score); })
+      .map(function (t) { return { id: t.id, label: t.label, score: Math.max(0, Math.min(100, Math.round(t.score))) }; });
   }
+  // マイページの記録の元（mypage.html の MP_KINDS.jagan.normalize が描画用の形に直す）
+  function toSession(row, ent) {
+    var snap = row.snapshot || {};
+    var dtiOk = snap.schemaVersion === SCHEMA;
+    var ch = dtiOk && snap.character && snap.character.status === 'available' ? snap.character : null;
+    return {
+      diagnosisType: 'jagan', id: row.result_id, completedAt: row.created_at, headline: row.headline || {},
+      isDti: dtiOk,
+      elementId: dtiOk && snap.element ? snap.element.id : null,
+      isouId: dtiOk && snap.isou ? snap.isou.id : null,
+      namingVersion: dtiOk && snap.versions ? snap.versions.naming : null,
+      top3: dtiOk ? top3(snap) : [],
+      character: ch ? { id: ch.id, name: ch.name, match: ch.match } : null,
+      entKnown: ent.ok, purchased: ent.ok && ent.set[row.result_id] === true,
+    };
+  }
+
+  // マイページの描画の前に呼ぶ：保存待ち・登録の予定を片付けてから、本人の邪眼の記録と権利を読む。
+  //   { ok, sessions, notes }。記録を読めなければ ok=false（元素診断の表示は止めない）
+  async function load() {
+    notes = [];
+    if (!enabled()) return { ok: true, sessions: [], notes: [] };
+    var t = await token();
+    if (!t) return { ok: true, sessions: [], notes: [] };
+    await savePending(t);
+    await registerPending(t);
+    var rows;
+    try {
+      var r = await supabaseClient.from('jagan_results').select('result_id,headline,created_at,snapshot').order('created_at', { ascending: false });
+      if (r.error) throw r.error;
+      rows = r.data || [];
+    } catch (e) {
+      return { ok: false, sessions: [], notes: notes.concat([{ ok: false, text: '邪眼診断の記録を読み込めませんでした。時間をおいて、ページを読み込み直してください。' }]) };
+    }
+    var ent = { ok: false, set: {} };
+    if (rows.length) {
+      try {
+        var e = await supabaseClient.from('jagan_entitlements').select('result_id,status').eq('status', 'active');
+        if (!e.error && Array.isArray(e.data)) {
+          ent.ok = true;
+          e.data.forEach(function (x) { if (x && x.status === 'active') ent.set[x.result_id] = true; });
+        }
+      } catch (err) { ent.ok = false; }
+    }
+    return { ok: true, sessions: rows.map(function (row) { return toSession(row, ent); }), notes: notes.slice() };
+  }
+
+  function notesHtml(list) {
+    return (list || []).map(function (n) { return '<p class="mp-jg-note' + (n.ok ? '' : ' is-error') + '" role="' + (n.ok ? 'status' : 'alert') + '">' + esc(n.text) + '</p>'; }).join('');
+  }
+
+  // 共有（結果ページの共有と同じ文・同じ URL。公開してよい値だけ）
+  function shareUrlOf(s) {
+    if (!s || !s.isDti || !s.elementId || !s.isouId || !s.namingVersion) return null;
+    var q = new URLSearchParams();
+    q.set('e', s.elementId);
+    q.set('t', s.isouId);
+    if (s.character) { q.set('c', s.character.id); q.set('m', String(s.character.match)); }
+    q.set('v', s.namingVersion + '.' + OG_DESIGN_VERSION);
+    return location.origin + SHARE_PATH + '?' + q.toString();
+  }
+  function shareTextOf(s, url) {
+    var h = s.headline || {};
+    var head = '私の結果は【' + h.element + ' × ' + h.type + '】';
+    var fat = s.character ? '\n最も近しいファトゥス：' + s.character.name + '（' + s.character.match + '%一致）' : '';
+    var tags = ['#邪眼診断', '#' + h.code].concat(s.character ? ['#' + s.character.name] : []).join(' ');
+    return '邪眼診断をやってみました。\n\n' + head + fat + '\n\n' + url + '\n\n' + tags;
+  }
+  function share(s) {
+    var url = shareUrlOf(s);
+    if (!url) return false;
+    track('mypage_share_click', { diagnosis_type: 'jagan', share_mode: 'jagan_share' });
+    window.open('https://x.com/intent/post?text=' + encodeURIComponent(shareTextOf(s, url)), '_blank', 'noopener');
+    return true;
+  }
+
+  // 申込（マイページの全ての入口で共通：最新の結果・過去の記録・右上のレポート）
+  var buying = false;
+  function randomAttempt() {
+    var b = new Uint8Array(18);
+    crypto.getRandomValues(b);
+    return btoa(String.fromCharCode.apply(null, Array.prototype.slice.call(b))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  var BUY_ERRORS = {
+    sales_closed: '現在、お申し込みを受け付けていません（準備中）。',
+    purchase_completed: 'この記録のレポートは、お支払いが完了しています。表示を更新します。',
+    record_not_found: 'この記録を確認できませんでした。ページを読み込み直してください。',
+    not_authenticated: 'ログインの有効期限が切れました。もう一度ログインしてください。',
+    too_many_attempts: 'お申し込みが続いたため、しばらく時間をおいてからお試しください。',
+    network: '通信できませんでした。電波の良い場所で、もう一度お試しください。',
+  };
+  async function startBuy(btn) {
+    if (buying) return;
+    var id = btn.getAttribute('data-jagan-buy');
+    if (!UUID_RE.test(id || '') || !salesOpen()) return;
+    buying = true;
+    var label = btn.innerHTML;
+    btn.disabled = true;
+    btn.textContent = '決済の画面を準備しています…';
+    var old = btn.parentElement && btn.parentElement.querySelector('.mp-jg-buy-error');
+    if (old) old.remove();
+    var source = btn.getAttribute('data-source') || 'mypage';
+    track('checkout_start', { product: 'jagan_report', value: 1000, currency: 'JPY', source: source });
+    var t = await token();
+    var r = t ? await api('/api/jagan-report?op=buy', { resultId: id, attempt: randomAttempt(), source: /^[a-z_]{1,32}$/.test(source) ? source : 'mypage' }, t) : { ok: false, body: { error: 'not_authenticated' } };
+    if (r.ok && typeof r.body.checkoutUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(r.body.checkoutUrl)) {
+      store('session', function (s) { s.setItem(FRESH_KEY, String(Date.now())); });
+      track('checkout_redirect', { product: 'jagan_report', value: 1000, currency: 'JPY', source: source });
+      location.assign(r.body.checkoutUrl);
+      return;
+    }
+    buying = false;
+    btn.disabled = false;
+    btn.innerHTML = label;
+    var code = (r.body && r.body.error) || 'unknown';
+    track('checkout_failed', { product: 'jagan_report', reason: code, source: source });
+    var p = document.createElement('p');
+    p.className = 'mp-jg-buy-error';
+    p.setAttribute('role', 'alert');
+    p.textContent = BUY_ERRORS[code] || 'お手続きを開始できませんでした。時間をおいて、もう一度お試しください。';
+    btn.insertAdjacentElement('afterend', p);
+    if (code === 'purchase_completed' && typeof init === 'function') setTimeout(function () { init(); }, 1200);
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target && e.target.closest && e.target.closest('[data-jagan-buy]');
+    if (!b || b.disabled) return;
+    e.preventDefault();
+    startBuy(b);
+  });
 
   // ログイン画面（未ログイン）での案内
   function gateNote() {
-    if (!hasPending()) return;
     var g = document.getElementById('gateMsg');
-    if (g && !g.textContent) g.textContent = 'ログイン（または新規登録）すると、邪眼診断の結果をこのマイページに保存します。';
+    if (!g || g.textContent) return;
+    if (hasRegister()) g.textContent = 'ログイン（または新規登録）すると、購入した邪眼解析レポートをこのマイページに登録します。';
+    else if (hasPending()) g.textContent = 'ログイン（または新規登録）すると、邪眼診断の結果をこのマイページに保存します。';
   }
 
-  window.JaganMypage = { render: render, gateNote: gateNote, hasPending: hasPending };
+  window.JaganMypage = { load: load, notesHtml: notesHtml, gateNote: gateNote, hasPending: hasPending, hasRegister: hasRegister,
+    salesOpen: salesOpen, share: share, shareUrlOf: shareUrlOf, shareTextOf: shareTextOf, esc: esc };
 })();

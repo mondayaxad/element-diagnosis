@@ -584,11 +584,12 @@ test('unlock mosaics show fixed sample values, not the user\'s real scores', () 
   assert.ok(ma[0].includes(`<em>${PREVIEW_MATCH}%</em>`) && !ma[0].includes(`<em>${a.character.match}%</em>`) || a.character.match === PREVIEW_MATCH);
 });
 
-test('mypage emblems (pre-awakening): every element has an image, and the file name follows the element label', () => {
-  const js = fs.readFileSync(path.join(ROOT, 'js/jagan-mypage.js'), 'utf8');
-  const map = Object.fromEntries([...js.matchAll(/'(.)': '([a-z]+)'/g)].map((m) => [m[1], m[2]]));
-  const labels = BUNDLE.core.elements.map((e) => e.label).sort();
-  assert.deepEqual(Object.keys(map).sort(), labels, 'every element label is mapped');
+test('mypage emblems (pre-awakening / awakened): every element has both images, named by the element label (mypage.html)', () => {
+  const html = fs.readFileSync(path.join(ROOT, 'mypage.html'), 'utf8');
+  const m = /const MP_JAGAN_EMBLEM = (\{[^}]+\});/.exec(html);
+  assert.ok(m, 'MP_JAGAN_EMBLEM');
+  const map = JSON.parse(m[1].replace(/'/g, '"'));
+  assert.deepEqual(Object.keys(map).sort(), BUNDLE.core.elements.map((e) => e.label).sort(), 'every element label is mapped');
   assert.equal(new Set(Object.values(map)).size, 7);
   for (const f of Object.values(map)) {
     for (const kind of ['record', 'awakened']) {
@@ -604,28 +605,33 @@ test('mypage emblems (pre-awakening): every element has an image, and the file n
   assert.ok(fs.existsSync(path.join(ROOT, 'assets/emblems/2026-autumn/record/pyro.png')));
 });
 
-test('mypage emblems: awakened only for a record with an active entitlement; a failed read stays pre-awakening', async () => {
+// js/jagan-mypage.js を、模擬の Supabase で読み込む
+function loadJaganMypage({ rows, ent, token = 'tok' }) {
   const js = fs.readFileSync(path.join(ROOT, 'js/jagan-mypage.js'), 'utf8');
-  const rows = [['r1', '水'], ['r2', '炎'], ['r3', '氷']].map(([id, el]) => ({ result_id: id, created_at: '2026-11-01T00:00:00Z', headline: { element: el, type: '依存', code: 'HYDP', name: '縋望者' } }));
-  const run = async (ent) => {
-    let html = '';
-    const els = { root: { querySelector: () => null, appendChild() {} } };
-    const sandbox = {
-      window: { __ED_PUBLIC_CONFIG__: { appEnv: 'preview' }, confirm: () => false, alert() {} }, localStorage: { getItem: () => null, removeItem() {}, setItem() {} },
-      document: { getElementById: (id) => (id === 'jaganMpStyle' ? {} : null), createElement: () => ({ set innerHTML(v) { this._h = v; }, get innerHTML() { return this._h; }, get firstChild() { return { addEventListener() {}, innerHTML: this._h }; } }), head: { appendChild() {} } },
-      location: { hash: '', search: '' }, Date, encodeURIComponent, Promise, console,
-      supabaseClient: { auth: { getSession: async () => ({ data: { session: null } }) }, from: (t) => (t === 'jagan_results'
-        ? { select: () => ({ order: async () => ({ data: rows, error: null }) }) }
-        : { select: () => ({ eq: async () => ent }) }) },
-    };
-    sandbox.window.document = sandbox.document; sandbox.document.createElement = () => { const o = { _h: '' }; return Object.defineProperties(o, { innerHTML: { set(v) { o._h = v; html = v; }, get() { return o._h; } }, firstChild: { get() { return { addEventListener() {}, scrollIntoView() {} }; } } }); };
-    new Function('window', 'document', 'localStorage', 'location', 'supabaseClient', 'Date', 'encodeURIComponent', 'console', js).call(sandbox.window, sandbox.window, sandbox.document, sandbox.localStorage, sandbox.location, sandbox.supabaseClient, Date, encodeURIComponent, console);
-    await sandbox.window.JaganMypage.render(els.root);
-    return html;
-  };
-  const only = (h) => [...h.matchAll(/emblems\/jagan\/(record|awakened)\/([a-z]+)\.png/g)].map((m) => `${m[1]}:${m[2]}`);
-  assert.deepEqual(only(await run({ data: [{ result_id: 'r2', status: 'active' }], error: null })), ['record:hydro', 'awakened:pyro', 'record:cryo']);
-  assert.deepEqual(only(await run({ data: [], error: null })), ['record:hydro', 'record:pyro', 'record:cryo']);
-  assert.deepEqual(only(await run({ data: null, error: { message: 'x' } })), ['record:hydro', 'record:pyro', 'record:cryo'], 'a failed read is not treated as purchased');
-  assert.deepEqual(only(await run({ data: [{ result_id: 'r1', status: 'refunded' }], error: null })), ['record:hydro', 'record:pyro', 'record:cryo'], 'only active entitlements count');
+  const win = { __ED_PUBLIC_CONFIG__: { appEnv: 'preview', jaganSalesOpen: true }, localStorage: { getItem: () => null, removeItem() {}, setItem() {} }, sessionStorage: { getItem: () => null, removeItem() {}, setItem() {} } };
+  const supa = { auth: { getSession: async () => ({ data: { session: token ? { access_token: token } : null } }) },
+    from: (t) => (t === 'jagan_results' ? { select: () => ({ order: async () => ({ data: rows, error: null }) }) } : { select: () => ({ eq: async () => ent }) }) };
+  const doc = { addEventListener() {}, getElementById: () => null };
+  new Function('window', 'document', 'supabaseClient', 'location', 'fetch', js)(win, doc, supa, { origin: 'https://example.test' }, async () => ({ ok: false, status: 500, json: async () => ({}) }));
+  return win.JaganMypage;
+}
+test('mypage (js/jagan-mypage.js)：権利が active の記録だけ購入済み。権利を読めなければ「未確認」（購入済みと見せない）。共有の URL は結果ページと同じ', async () => {
+  const r1 = run(VARIED()), r2 = run(all(2));
+  const rows = [r1, r2].map((r, i) => ({ result_id: `0000000${i}-0000-4000-8000-000000000000`, created_at: '2026-11-0' + (i + 1), headline: headlineOf(r), snapshot: r }));
+  let jm = loadJaganMypage({ rows, ent: { data: [{ result_id: rows[1].result_id, status: 'active' }, { result_id: rows[0].result_id, status: 'refunded' }], error: null } });
+  let out = await jm.load();
+  assert.equal(out.ok, true);
+  assert.deepEqual(out.sessions.map((s) => [s.purchased, s.entKnown]), [[false, true], [true, true]]);
+  assert.equal(out.sessions[0].top3.length, 3);
+  assert.deepEqual(out.sessions[0].top3.map((t) => t.id), r1.traitRanking.slice(0, 3).map((t) => t.id));
+  // 共有：結果ページ（runtime の shareUrl）と同じ URL・同じ文
+  const s0 = out.sessions[0];
+  assert.equal(jm.shareUrlOf(s0), shareUrl('https://example.test', publicSummary(r1)));
+  assert.equal(jm.shareTextOf(s0, 'U'), shareTextFromSummary(publicSummary(r1), 'U'));
+  jm = loadJaganMypage({ rows, ent: { data: null, error: { message: 'x' } } });
+  out = await jm.load();
+  assert.deepEqual(out.sessions.map((s) => [s.purchased, s.entKnown]), [[false, false], [false, false]]);
+  // ログインしていなければ何も読まない
+  jm = loadJaganMypage({ rows, ent: { data: [], error: null }, token: null });
+  assert.deepEqual((await jm.load()).sessions, []);
 });

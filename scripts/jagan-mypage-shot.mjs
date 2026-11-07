@@ -16,12 +16,20 @@ const srv = http.createServer((q, r) => {
 }).listen(0);
 const base = `http://localhost:${srv.address().port}`;
 
-const EL = ['炎', '水', '風', '雷', '草', '氷', '岩'];
-const NAMES = { 炎: ['PY', '焔の者'], 水: ['HY', '縋望者'], 風: ['AN', '逸風者'], 雷: ['EL', '閃雷者'], 草: ['DE', '蔓の者'], 氷: ['CR', '凍れる者'], 岩: ['GE', '巌の者'] };
-const rows = [['水', '依存', 'DP', '縋望者', 'カピターノ', 71, '2026-11-06'], ['炎', '衝動', 'IM', '焔衝者', 'アルレッキーノ', 83, '2026-11-04'], ['風', '撤退', 'WD', '逸風者', 'サンドローネ', 82, '2026-11-02']]
-  .map(([el, ty, c2, name, ch, m, d], i) => ({ result_id: `00000000-0000-4000-8000-00000000000${i}`, created_at: `${d}T03:00:00Z`, interpretation_version: 'x',
-    headline: { element: el, type: ty, code: NAMES[el][0] + c2, name, character: ch, matchPercent: m } }));
-
+const { computeDiagnosis } = await import('/home/user/element-diagnosis/jagan/engine/runtime.mjs');
+const { BUNDLE } = await import('/home/user/element-diagnosis/jagan/engine/data.mjs');
+const { headlineOf } = await import('/home/user/element-diagnosis/lib/jagan-api.mjs');
+const ids = BUNDLE.items.items.map((i) => i.id);
+let seed = Number(process.env.SEED || 11); const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+const dates = ['2026-11-07', '2026-11-03', '2026-10-28'];
+const rows = dates.map((d, k) => {
+  const answers = Object.fromEntries(ids.map((id) => [id, 1 + Math.floor(rnd() * 5)]));
+  const rid = `00000000-0000-4000-8000-00000000000${k}`;
+  const r = computeDiagnosis({ answers, resultId: rid, itemSetVersion: BUNDLE.items.item_set_version }, BUNDLE);
+  return { result_id: rid, created_at: `${d}T03:00:00Z`, headline: headlineOf(r), snapshot: r };
+});
+const ENT = (process.env.ENT || '1').split(',').filter(Boolean).map((i) => ({ result_id: rows[Number(i)].result_id, status: 'active' }));
+const SALES = process.env.SALES !== '0';
 const STUB = `
 (function(){
   var user={id:'u-1',email:'tester@example.com',app_metadata:{provider:'email'},identities:[{provider:'email'}],user_metadata:{}};
@@ -48,22 +56,25 @@ page.on('pageerror', (e) => errs.push(String(e).slice(0, 160)));
 await page.route('**/*', async (route) => {
   const u = new URL(route.request().url());
   if (u.hostname === 'cdn.jsdelivr.net' && /supabase/.test(u.pathname)) return route.fulfill({ status: 200, contentType: 'text/javascript', body: STUB });
-  if (u.pathname === '/api/public-config') return route.fulfill({ status: 200, contentType: 'text/javascript', body: `window.__ED_PUBLIC_CONFIG__=Object.freeze({appEnv:'preview',supabaseUrl:'https://qelqehkigydgrwedbgtr.supabase.co',supabaseAnonKey:'sb_publishable_x',projectRef:'qelqehkigydgrwedbgtr',completeSalesOpen:false,completeApiReady:false});window.__JG_ROWS=${JSON.stringify(rows)};window.__JG_ENT=${JSON.stringify([{ result_id: rows[1].result_id, status: 'active' }])};` });
+  if (u.pathname === '/api/public-config') return route.fulfill({ status: 200, contentType: 'text/javascript', body: `window.__ED_PUBLIC_CONFIG__=Object.freeze({appEnv:'preview',supabaseUrl:'https://qelqehkigydgrwedbgtr.supabase.co',supabaseAnonKey:'sb_publishable_x',projectRef:'qelqehkigydgrwedbgtr',completeSalesOpen:false,completeApiReady:false,jaganSalesOpen:${SALES}});window.__JG_ROWS=${JSON.stringify(rows)};window.__JG_ENT=${JSON.stringify(ENT)};` });
   if (u.hostname === 'localhost' && /\/mypage(\.html)?$/.test(u.pathname)) { const html = fs.readFileSync(path.join(ROOT, 'mypage.html'), 'utf8').replace(/ integrity="[^"]+"/g, '').replace(/ crossorigin="anonymous"/g, ''); return route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: html }); }
   if (u.pathname.startsWith('/api/')) return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
   if (u.hostname === 'localhost') return route.continue();
   return route.abort();
 });
-await page.goto(base + '/mypage.html#jagan', { waitUntil: 'load' });
-try { await page.waitForSelector('#jagan .jg-mp-row', { timeout: 20000 }); } catch (e) {
+await page.goto(base + '/mypage.html', { waitUntil: 'load' });
+try { await page.waitForSelector('.mp-latest', { timeout: 20000 }); } catch (e) {
   console.log('BODY:', (await page.evaluate(() => document.getElementById('root') ? document.getElementById('root').innerText.slice(0, 300) : document.body.innerText.slice(0, 300))).replace(/\s+/g, ' '), errs.slice(0, 5));
   await page.screenshot({ path: OUT + '-debug.png' }); await browser.close(); srv.close(); process.exit(1);
 }
-await page.waitForFunction(() => [...document.querySelectorAll('#jagan img')].every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 15000 });
+await page.evaluate(() => { document.querySelectorAll('details.mp-latest-fold, details.mp-rec').forEach((d, i) => { if (i < 2) d.open = true; }); document.querySelectorAll('img').forEach((i) => { i.loading = 'eager'; }); });
+await page.waitForFunction(() => [...document.querySelectorAll('.mp-emblem img')].every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 15000 });
 await page.waitForTimeout(500);
-const info = await page.evaluate(() => ({ rows: document.querySelectorAll('#jagan .jg-mp-row').length, imgs: [...document.querySelectorAll('#jagan img')].map((i) => i.getAttribute('src').replace('assets/emblems/jagan/', '')), overflowX: document.documentElement.scrollWidth > innerWidth }));
+const info = await page.evaluate(() => ({ stats: [...document.querySelectorAll('.mp-stat')].map((x) => x.innerText.replace(/\s+/g, ' ')), trigger: (document.getElementById('mpUpgradeTrigger') || {}).textContent, recs: document.querySelectorAll('details.mp-rec').length, badges: document.querySelectorAll('.mp-badge').length, imgs: [...document.querySelectorAll('.mp-emblem img')].map((i) => i.getAttribute('src').replace('assets/emblems/jagan/', '')), buy: document.querySelectorAll('[data-jagan-buy]').length, pending: document.querySelectorAll('.mp-latest .is-pending, .mp-rec .is-pending').length, chips: [...document.querySelectorAll('.mp-latest .mp-chip')].map((c) => c.textContent), read: [...document.querySelectorAll('a[href^="/jagan/report?r="]')].length, overflowX: document.documentElement.scrollWidth > innerWidth }));
 console.log(JSON.stringify(info), errs.slice(0, 3));
 await page.screenshot({ path: OUT + '-full.png', fullPage: true });
-await page.locator('#jagan').scrollIntoViewIfNeeded();
-await page.locator('#jagan').screenshot({ path: OUT + '-section.png' });
+await page.locator('.mp-latest').first().screenshot({ path: OUT + '-latest.png' });
+await page.click('#mpUpgradeTrigger');
+await page.waitForTimeout(300);
+await page.screenshot({ path: OUT + '-sheet.png' });
 await browser.close(); srv.close();
