@@ -105,7 +105,7 @@
     -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 58%, rgba(0,0,0,.6) 66%, transparent 72%); mask-image: radial-gradient(circle at 50% 50%, #000 58%, rgba(0,0,0,.6) 66%, transparent 72%); }
   .orb-glow { position: absolute; inset: -18%; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--ac) 30%, transparent) 0%, color-mix(in srgb, var(--ac) 10%, transparent) 38%, transparent 66%); pointer-events: none; }
   .r-lead { font-size: 14px; letter-spacing: .24em; color: #b9c6e6; margin: 0 0 10px; }
-  /* 名前：そのキャラの元素カラーのグラデーション（js/ogp-theme.mjs の accentSoft → accent → 深い色） */
+  /* 名前：本人（3つの答え）の元素カラーのグラデーション（js/ogp-theme.mjs の accentSoft → accent → 深い色） */
   .r-name { font-size: clamp(30px, 11vw, 52px); font-weight: 700; letter-spacing: .14em; padding-left: .14em; line-height: 1.25; margin: 0 0 16px; overflow-wrap: anywhere; word-break: keep-all;
     filter: drop-shadow(0 0 16px color-mix(in srgb, var(--name-glow, #7aa2cf) 55%, transparent)) drop-shadow(0 2px 10px rgba(7,7,15,.8)); }
   .r-name span { color: transparent; background-image: var(--name-grad, linear-gradient(100deg, #fff, #cfd8f0)); -webkit-background-clip: text; background-clip: text; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
@@ -138,19 +138,6 @@
   .r-label span { display: block; }
   .about { font-size: 13.5px; line-height: 2.05; color: var(--t-body); margin: 26px 0 0; word-break: auto-phrase; }
   .about strong { font-weight: 400; color: #e8d8a8; }
-  .eti { margin: 30px 0 0; }
-  .eti-h { text-align: center; margin: 0 0 14px; }
-  .eti-h .en { display: block; font-family: var(--font-en); font-style: italic; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: #5d7cab; margin-bottom: 6px; }
-  .eti-h .jp { display: block; font-size: 15px; font-weight: 600; letter-spacing: .12em; color: #f1eeff; }
-  .eti-rows { display: grid; gap: 10px; }
-  .eti-row { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: start; border: 1px solid var(--line); border-radius: 8px; background: rgba(10,12,26,.5); padding: 12px 14px; }
-  .eti-code { display: flex; align-items: center; justify-content: center; height: 40px; border-radius: 6px; border: 1px solid rgba(214,189,132,.35); font-family: var(--font-en); font-size: 15px; letter-spacing: .08em; color: var(--gold); }
-  .eti-axis { margin: 0 0 2px; font-size: 11.5px; letter-spacing: .14em; color: var(--t-sub); }
-  .eti-axis b { font-weight: 400; color: #d3dcf0; }
-  .eti-word { margin: 0 0 4px; font-size: 15.5px; letter-spacing: .06em; color: #e8d8a8; }
-  .eti-plain { margin: 0; font-size: 12.5px; line-height: 1.85; color: var(--t-body); word-break: auto-phrase; }
-  .eti .about { margin-top: 16px; }
-  .about .lead { display: block; font-size: 12px; letter-spacing: .14em; color: var(--t-sub); margin-bottom: 4px; }
   .about .small { display: block; margin-top: 10px; font-size: 12px; color: var(--t-sub); line-height: 1.85; }
   .sec { border-top: 1px solid rgba(150,180,240,.1); margin: 34px 0 0; padding: 30px 0 0; }
   .sec-h { text-align: center; margin: 0 0 16px; }
@@ -245,11 +232,7 @@
 
     <div class="after" id="after">
       <p class="shared-note" id="sharedNote" hidden></p>
-      <div class="eti">
-        <p class="eti-h"><span class="en">Your Type</span><span class="jp">3つの答えが表すもの</span></p>
-        <div class="eti-rows" id="rEtiRows"></div>
-        <p class="about" id="rAbout"></p>
-      </div>
+      <p class="about" id="rAbout"></p>
 
       <!-- ¥500 人物像レポートの見本（非販売。利用者のデータから数値・図を作らない） -->
       <div class="sec" id="reportDemo">
@@ -368,7 +351,7 @@
   var answers = { element: null, weapon: null, nation: null };
   var $ = function (id) { return document.getElementById(id); };
   var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // 元素の色（結果ページで、現れたキャラの元素の色で夜空の下と星座の光を灯す。問いの間は使わない）
+  // 元素の色（結果ページで、本人（3つの答え）の元素の色で夜空の下と星座の光を灯す。問いの間は使わない）
   var ELEMENT_GLOW = { '炎': '#d9784a', '水': '#4a9ad0', '氷': '#8ab8e8', '雷': '#a070e0', '風': '#5cc4a0', '岩': '#d0a850', '草': '#7cbf4a' };
   // 本家 OGP の正式背景（元素別。円環と、該当元素の点灯が描き込まれている）。js/ogp-theme.mjs の ELEMENT_KEY と同じ
   var ELEMENT_KEY = { '水': 'hydro', '炎': 'pyro', '風': 'anemo', '雷': 'electro', '草': 'dendro', '氷': 'cryo', '岩': 'geo' };
@@ -486,7 +469,7 @@
   function complete() { return !!(answers.element && answers.weapon && answers.nation); }
   function firstUnanswered() { for (var i = 0; i < Q.questions.length; i++) if (!answers[Q.questions[i].id]) return i; return 0; }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
-  // 星座（円）を出す：完了画面＝現れたキャラの元素、シェアされたページ＝シェアした人（本人）の元素（OGP 画像と同じ）
+  // 星座（円）を出す：完了画面もシェアされたページも、本人（3つの答え）の元素（OGP 画像と同じ）
   function setOrb(elKey, label) {
     $('rOrb').style.backgroundImage = "url('/assets/ogp/backgrounds/" + ELEMENT_KEY[elKey] + ".jpg')";
     $('rOrbWrap').setAttribute('aria-label', label);
@@ -497,31 +480,14 @@
     var name = r.person.name;
     $('rName').textContent = name;
     $('rNameBox').classList.toggle('long', name.length >= 6);
-    // キャラの元素：円（星座）と名前のグラデーションに使う（本人の 758 とは別）
-    var charEl = ETI_V2_CHARACTERS_2_1_0[CHAR_INDEX[name]].element;
-    r.charElement = charEl;
-    var nameColor = NAME_COLOR[charEl];
+    // 星座・夜空の灯り・名前のグラデーションは、すべて本人（3つの答え）の元素。OGP 画像も同じ
+    var nameColor = NAME_COLOR[r.element];
     $('result').style.setProperty('--name-grad', 'linear-gradient(100deg, ' + nameColor[0] + ' 0%, ' + nameColor[1] + ' 55%, ' + nameColor[2] + ' 100%)');
     $('result').style.setProperty('--name-glow', nameColor[1]);
     $('r758').textContent = r.element + ' × ' + r.weapon + ' × ' + r.nationDisplay;
     $('rTypeName').textContent = '「' + r.typeName + '」';
     $('rTypeCode').textContent = r.typeCode;
-    // 3つの答え（元素・武器種・国家）を1行ずつ：コード・軸・黄色の言葉（本家と同じ）・ふつうの言葉での一文（本家の説明文）
-    var rows = $('rEtiRows'); rows.textContent = '';
-    var code = r.typeCode.replace('-', '').match(/^(..)(..)(.)$/);
-    [[code[1], '気質', '元素', r.element, '「' + r.words.elementKeyword + '」', r.words.elementPlain],
-     [code[2], '人との関わり方', '武器種', r.weapon, '「' + r.words.weaponStyle + '」', r.words.weaponPlain],
-     [code[3], '大切にするもの', '国家', r.nationDisplay, '「' + r.words.nationMeaning + '」', r.words.nationPlain]]
-      .forEach(function (x) {
-        var row = el('div', 'eti-row'), body = el('div');
-        row.appendChild(el('span', 'eti-code', x[0]));
-        var ax = el('p', 'eti-axis', x[1] + '　｜　' + x[2] + ' '); ax.appendChild(el('b', null, x[3])); body.appendChild(ax);
-        body.appendChild(el('p', 'eti-word', x[4]));
-        body.appendChild(el('p', 'eti-plain', x[5]));
-        row.appendChild(body); rows.appendChild(row);
-      });
     var p = $('rAbout'); p.textContent = '';
-    p.appendChild(el('span', 'lead', 'つまり ' + r.typeCode + '「' + r.typeName + '」は――'));
     [['「', r.words.elementKeyword, '」という気質を持ちながら、'], ['「', r.words.weaponStyle, '」というかたちで人と関わり、'], ['「', r.words.nationMeaning, '」を大切にする人。']]
       .forEach(function (part) { p.appendChild(document.createTextNode(part[0])); p.appendChild(el('strong', null, part[1])); p.appendChild(document.createTextNode(part[2])); });
     p.appendChild(el('span', 'small', name + 'は、3つの答えから映した、アナタに共鳴する人物です。人物自身の元素・武器種・国家は、アナタの結果と同じとは限りません。'));
@@ -561,7 +527,7 @@
     go('result', true);
   }
   function onResultShown() {
-    setOrb(lastResult.charElement, lastResult.person.name + 'の元素（' + lastResult.charElement + '）の星座');
+    setOrb(lastResult.element, 'アナタの元素（' + lastResult.element + '）の星座');
     setReveal(playNext);
     playNext = false;
   }

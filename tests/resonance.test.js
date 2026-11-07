@@ -170,15 +170,16 @@ test('名称・コピー：共鳴診断・RESONANCE・ELEMENT DIAGNOSIS PRESENTS
   assert.doesNotMatch(html, /元素診断 Mini|最も近しいキャラクター|類似度1位|心理学的|測定された/);
 });
 
-test('登場演出：本家 OGP の元素の円（正式背景）を、完了画面では現れたキャラの元素、シェアされたページではシェアした人の元素の星座として使う／名前はキャラの元素カラーのグラデーション／順に現れる／タップで省略／繰り返さない', async () => {
+test('登場演出：本家 OGP の元素の円（正式背景）を、完了画面・シェアされたページ・OGP とも本人の元素の星座として使う／名前も本人の元素カラーのグラデーション／順に現れる／タップで省略／繰り返さない', async () => {
   const html = read('resonance.html');
   const T = await imp('js/ogp-theme.mjs');
   const key = vm.runInNewContext('(' + /var ELEMENT_KEY = (\{[^}]+\});/.exec(html)[1] + ')');
   assert.deepEqual(plain(key), plain(T.ELEMENT_KEY));
   for (const k of Object.values(key)) assert.ok(fs.existsSync(path.join(ROOT, `assets/ogp/backgrounds/${k}.jpg`)), k);
-  assert.ok(html.includes("var charEl = ETI_V2_CHARACTERS_2_1_0[CHAR_INDEX[name]].element;"));
+  assert.ok(html.includes("var nameColor = NAME_COLOR[r.element];"));
+  assert.doesNotMatch(html, /charEl/); // キャラの元素は色に使わない
   assert.ok(html.includes(`$('rOrb').style.backgroundImage = "url('/assets/ogp/backgrounds/" + ELEMENT_KEY[elKey] + ".jpg')"`));
-  assert.ok(html.includes('setOrb(lastResult.charElement, ')); // 完了画面：キャラの元素の星座
+  assert.ok(html.includes('setOrb(lastResult.element, ')); // 完了画面：本人の元素の星座
   assert.ok(html.includes("setOrb(r.element, 'シェアした人の元素（' + r.element + '）の星座');\n    setReveal(false);")); // Xシェアから：本人の元素（OGP と同じ）、演出なし
   // 名前のグラデーション：本家 OGP の元素テーマ（accentSoft・accent）と、ページの元素の深い色
   const nameColor = vm.runInNewContext('(' + /var NAME_COLOR = (\{[\s\S]*?\});/.exec(html)[1] + ')');
@@ -197,14 +198,6 @@ test('登場演出：本家 OGP の元素の円（正式背景）を、完了画
   assert.ok(html.includes("if (this.classList.contains('play')) finishReveal();")); // タップで省略
   assert.ok(html.includes('setReveal(playNext);\n    playNext = false;')); // 3問目のあとだけ演出、戻る・進むでは繰り返さない
   assert.doesNotMatch(html, /Math\.random/); // 再抽選・ランダム排出なし
-});
-
-test('タイプの解説：3つの答えを1行ずつ（コード・軸・黄色の言葉・本家の説明文の一文）＋まとめの一文', () => {
-  const html = read('resonance.html');
-  for (const t of ['3つの答えが表すもの', "'気質', '元素'", "'人との関わり方', '武器種'", "'大切にするもの', '国家'", 'r.words.elementPlain', 'r.words.weaponPlain', 'r.words.nationPlain', "'つまり ' + r.typeCode"]) assert.ok(html.includes(t), t);
-  const r = loadPage().ETIMini.describeType('水', '法器', 'フォンテーヌ');
-  assert.equal(r.words.elementPlain, '水は、周囲との調和を保ちながら、内側に見せない部分を抱える元素です。');
-  assert.equal(r.words.nationPlain, '公正さと調和を重んじ、誰に対しても等しくあることに、価値を置きます。');
 });
 
 test('結果の並び：登場演出 → 説明 → ¥500 レポートの見本（非販売・数値なし）→ 購入（準備中・押せない）→ Xでシェア → 100問の元素診断', () => {
@@ -288,7 +281,7 @@ test('画像（/api/og-image?m3=）：共鳴診断の下地に人物名を大き
   const src = read('api/og-image.mjs');
   const iM3 = src.indexOf("searchParams.get('m3')"), iP = src.indexOf("searchParams.get('p')");
   assert.ok(iM3 > 0 && iM3 < iP);
-  assert.ok(src.includes("hero: { label: 'YOUR RESONANCE', name, element: CHAR_ELEMENT[name] || u.el }"));
+  assert.ok(src.includes("hero: { label: 'YOUR RESONANCE', name, element: u.el }")); // 名前の色も本人の元素
   assert.ok(src.includes("bandText: 'ELEMENT DIAGNOSIS PRESENTS — 共鳴診断 RESONANCE'"));
   assert.ok(src.includes('Location: `${origin}/api/og-image?m3=${m3}`'));
   const { buildOgpCardTree } = await imp('js/ogp-card.mjs');

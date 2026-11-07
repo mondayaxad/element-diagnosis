@@ -133,11 +133,6 @@ test('35タイプ名・コード・国家コード・短い言葉は index.html 
   const EL = constFrom('index.html', 'ELEMENTS'), W = constFrom('index.html', 'WEAPONS');
   for (const e of M.ELEMENT_KEYS) assert.equal(M.ELEMENT_KEYWORD[e], EL[e].keyword);
   for (const w of M.WEAPON_KEYS) assert.equal(M.WEAPON_STYLE[w], W[w].style);
-  // ふつうの言葉での一文：本家の説明文（ELEMENT_DESC・WEAPON_DESC の最初の一文、NATION_DESC の二文目）の写し
-  const ED = constFrom('index.html', 'ELEMENT_DESC'), WD = constFrom('index.html', 'WEAPON_DESC'), ND = constFrom('index.html', 'NATION_DESC');
-  for (const e of M.ELEMENT_KEYS) assert.equal(M.ELEMENT_PLAIN[e], ED[e].split('。')[0] + '。', e);
-  for (const w of M.WEAPON_KEYS) assert.equal(M.WEAPON_PLAIN[w], WD[w].split('。')[0] + '。', w);
-  for (const n of M.NATION_KEYS) assert.equal(M.NATION_PLAIN[n], ND[n].split('。')[1] + '。', n);
   const names = new Set(), codes = new Set();
   for (const e of M.ELEMENT_KEYS) for (const w of M.WEAPON_KEYS) {
     const t = M.describeType(e, w, 'モンド');

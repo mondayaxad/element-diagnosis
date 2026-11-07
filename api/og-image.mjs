@@ -170,8 +170,8 @@ async function revealImage(m3, searchParams, origin) {
     code: ELEMENT_CODE[u.el] + WEAPON_CODE[u.w], typeName: TYPE_NAME[u.el][u.w], element: u.el, weapon: u.w,
     nation: u.nat === 'ナドクライ' ? 'ナド・クライ' : u.nat,
     mirrorName: '', match: '',
-    // 見出しは同梱フォントにある英字（「アナタに共鳴する人物」の文字はフォントに無い）。円・色は本人の元素（下地の円環）、名前の色は人物の元素
-    hero: { label: 'YOUR RESONANCE', name, element: CHAR_ELEMENT[name] || u.el },
+    // 見出しは同梱フォントにある英字（「アナタに共鳴する人物」の文字はフォントに無い）。円・名前の色ともに本人の元素（オーナー指示：すべて本人の元素）
+    hero: { label: 'YOUR RESONANCE', name, element: u.el },
     bandText: 'ELEMENT DIAGNOSIS PRESENTS — 共鳴診断 RESONANCE',
     header: '共鳴診断 — MY RESULT',
     baseDir: 'bases-resonance',
