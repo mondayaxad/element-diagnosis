@@ -170,20 +170,31 @@ test('名称・コピー：共鳴診断・RESONANCE・ELEMENT DIAGNOSIS PRESENTS
   assert.doesNotMatch(html, /元素診断 Mini|最も近しいキャラクター|類似度1位|心理学的|測定された/);
 });
 
-test('登場演出：本家 OGP の元素の円（正式背景）を本人の元素で使う／順に現れる／タップで省略／動きを減らす設定・共有リンク・戻るでは繰り返さない', async () => {
+test('登場演出：本家 OGP の元素の円（正式背景）を、現れたキャラの元素の星座として使う／名前はキャラの元素カラーのグラデーション／順に現れる／タップで省略／繰り返さない', async () => {
   const html = read('resonance.html');
   const T = await imp('js/ogp-theme.mjs');
   const key = vm.runInNewContext('(' + /var ELEMENT_KEY = (\{[^}]+\});/.exec(html)[1] + ')');
   assert.deepEqual(plain(key), plain(T.ELEMENT_KEY));
   for (const k of Object.values(key)) assert.ok(fs.existsSync(path.join(ROOT, `assets/ogp/backgrounds/${k}.jpg`)), k);
-  assert.ok(html.includes(`$('rOrb').style.backgroundImage = "url('/assets/ogp/backgrounds/" + ELEMENT_KEY[r.element] + ".jpg')"`)); // 本人の 758 の元素
+  assert.ok(html.includes("var charEl = ETI_V2_CHARACTERS_2_1_0[CHAR_INDEX[name]].element;"));
+  assert.ok(html.includes(`$('rOrb').style.backgroundImage = "url('/assets/ogp/backgrounds/" + ELEMENT_KEY[charEl] + ".jpg')"`)); // キャラの元素の星座
+  assert.ok(html.includes('setGlow(ELEMENT_GLOW[lastResult.charElement]);'));
+  // 名前のグラデーション：本家 OGP の元素テーマ（accentSoft・accent）と、ページの元素の深い色
+  const nameColor = vm.runInNewContext('(' + /var NAME_COLOR = (\{[\s\S]*?\});/.exec(html)[1] + ')');
+  const glow = vm.runInNewContext('(' + /var ELEMENT_GLOW = (\{[^}]+\});/.exec(html)[1] + ')');
+  for (const [jp] of Object.entries(T.ELEMENT_KEY)) {
+    const th = T.themeFor(jp);
+    assert.deepEqual(Array.from(nameColor[jp]), [th.accentSoft, th.accent, glow[jp]], jp);
+  }
+  assert.ok(html.includes("background-clip: text"));
+  assert.ok(html.includes("'linear-gradient(100deg, ' + nameColor[0] + ' 0%, ' + nameColor[1] + ' 55%, ' + nameColor[2] + ' 100%)'"));
   const order = ['.rv-orb { animation: rvOrb 1s ease-out .2s', '.orb-glow { opacity: 0; animation: rvGlow 1.4s ease-out .8s', '.rv-lead { animation: rvFade .7s ease-out 1.3s', '.rv-name { animation: rvName 1s ease-out 1.85s', '.rv-info { animation: rvFade .7s ease-out 2.5s'];
   let last = -1;
   for (const o of order) { const i = html.indexOf(o); assert.ok(i > last, o); last = i; }
   assert.ok(html.includes('@media (prefers-reduced-motion: reduce) { .reveal.play .rv, .reveal.play .orb-glow { animation: none; opacity: 1; }'));
   assert.ok(html.includes('if (play && !REDUCED)'));
   assert.ok(html.includes("if (this.classList.contains('play')) finishReveal();")); // タップで省略
-  assert.ok(html.includes('setGlow(ELEMENT_GLOW[r.element]);\n    setReveal(false);')); // 共有リンクは演出なし
+  assert.ok(html.includes('setGlow(ELEMENT_GLOW[r.charElement]);\n    setReveal(false);')); // 共有リンクは演出なし
   assert.ok(html.includes('setReveal(playNext);\n    playNext = false;')); // 3問目のあとだけ演出、戻る・進むでは繰り返さない
   assert.doesNotMatch(html, /Math\.random/); // 再抽選・ランダム排出なし
 });
@@ -195,13 +206,22 @@ test('結果の並び：登場演出 → 説明 → ¥500 レポートの見本�
   assert.ok(html.includes('<button type="button" class="cta buy" id="buyBtn" disabled>'));
   assert.match(html, /共鳴診断｜人物像レポート/);
   assert.match(html, /税込500円・買い切り/);
-  assert.match(html, /以下は内容の見本です。実際のレポートの文章・図とは異なります。/);
+  assert.match(html, /見本の表示です。図の形は実際のレポートとは異なります（購入後に、アナタの結果で描かれます）。/);
   assert.doesNotMatch(html, /1,?000円|checkout|stripe/i);
-  // 見本の図は固定の見本（利用者のデータから数値・図を作らない）
-  const fig = html.slice(html.indexOf('<div class="demo-fig"'), html.indexOf('id="buyBtn"'));
-  assert.match(fig, /SAMPLE/);
-  assert.doesNotMatch(html, /querySelector\([^)]*demo-fig|getElementById\('demo/);
-  assert.doesNotMatch(fig, /\d+\s*%|\d+\s*点/);
+  // 見本：項目ごとの図（PERSONA・STYLE・VALUES・SYMBOLS・RESONANCE・JOURNEY）。軸・項目名は見せ、中身はぼかして鍵
+  const demo = html.slice(html.indexOf('id="reportDemo"'), html.indexOf('id="buyBtn"'));
+  const labels = [...demo.matchAll(/<p class="lk-en">([A-Z]+)<\/p>/g)].map((m) => m[1]);
+  assert.deepEqual(labels, ['PERSONA', 'STYLE', 'VALUES', 'SYMBOLS', 'RESONANCE', 'JOURNEY']);
+  assert.equal((demo.match(/class="lock-badge"/g) || []).length, 6);
+  assert.equal((demo.match(/filter="url\(#lockBlur\)"/g) || []).length, 4); // 図の中身だけをぼかす
+  for (const ax of ['開放性', '誠実性', '外向性', '協調性', '感受性', '主導性', '関係調整', '役割持続', '媒介思考', '自律距離']) assert.ok(demo.includes(ax), ax);
+  assert.match(demo, /象徴的な近さ/);
+  assert.match(demo, /心の測定値ではありません/);
+  // 固定の見本（利用者のデータから数値・図を作らない）：スクリプトは見本の図の形に触れない。見える文字に数値・割合は無い
+  assert.doesNotMatch(html, /querySelector[^;]*\.(viz|lk|locks)\b|getElementById\('(demo|locks)/);
+  const visible = demo.replace(/<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, ' ');
+  assert.doesNotMatch(visible, /\d+\s*(%|％|点)/);
+  assert.doesNotMatch(demo, /<ol|demo-list/); // 01〜05 の番号付きリストはやめた
 });
 
 test('m3 の符号：ブラウザ・画像（_og-data.mjs）・シェアページ（share.js）の計算が全 33,040 通りで一致し、正規形だけ（最大3文字）。m1・m2 とはパラメータ名で分ける', async () => {

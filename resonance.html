@@ -105,8 +105,10 @@
     -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 58%, rgba(0,0,0,.6) 66%, transparent 72%); mask-image: radial-gradient(circle at 50% 50%, #000 58%, rgba(0,0,0,.6) 66%, transparent 72%); }
   .orb-glow { position: absolute; inset: -18%; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--ac) 30%, transparent) 0%, color-mix(in srgb, var(--ac) 10%, transparent) 38%, transparent 66%); pointer-events: none; }
   .r-lead { font-size: 14px; letter-spacing: .24em; color: #b9c6e6; margin: 0 0 10px; }
-  .r-name { font-size: clamp(30px, 11vw, 52px); font-weight: 700; letter-spacing: .14em; padding-left: .14em; line-height: 1.25; color: #f6f3ff; margin: 0 0 16px; overflow-wrap: anywhere; word-break: keep-all;
-    text-shadow: 0 0 28px color-mix(in srgb, var(--ac) 60%, transparent), 0 2px 18px rgba(7,7,15,.85); }
+  /* 名前：そのキャラの元素カラーのグラデーション（js/ogp-theme.mjs の accentSoft → accent → 深い色） */
+  .r-name { font-size: clamp(30px, 11vw, 52px); font-weight: 700; letter-spacing: .14em; padding-left: .14em; line-height: 1.25; margin: 0 0 16px; overflow-wrap: anywhere; word-break: keep-all;
+    filter: drop-shadow(0 0 16px color-mix(in srgb, var(--name-glow, #7aa2cf) 55%, transparent)) drop-shadow(0 2px 10px rgba(7,7,15,.8)); }
+  .r-name span { color: transparent; background-image: var(--name-grad, linear-gradient(100deg, #fff, #cfd8f0)); -webkit-background-clip: text; background-clip: text; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
   .r-name.long { font-size: clamp(26px, 9vw, 44px); letter-spacing: .08em; padding-left: .08em; }
   .r-758 { font-size: 15px; letter-spacing: .18em; color: #e2e4f6; margin: 0 0 4px; }
   .r-type { margin: 0 0 4px; font-size: 18px; letter-spacing: .3em; padding-left: .3em; color: #e8d8a8; }
@@ -143,17 +145,34 @@
   .sec-h .jp { display: block; font-size: 16px; font-weight: 600; letter-spacing: .12em; color: #f1eeff; }
   .price { text-align: center; font-size: 15px; letter-spacing: .12em; color: #d6bd84; margin: -6px 0 14px; }
   .demo-note { text-align: center; font-size: 11.5px; color: #c9a860; letter-spacing: .06em; margin: 0 0 16px; }
-  .demo-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: d; }
-  .demo-list li { border: 1px solid var(--line); border-radius: 8px; background: rgba(10,12,26,.5); padding: 12px 14px 11px 44px; position: relative; }
-  .demo-list li::before { counter-increment: d; content: counter(d, decimal-leading-zero); position: absolute; left: 14px; top: 13px; font-family: var(--font-en); font-size: 13px; color: var(--gold); }
-  .demo-list b { display: block; font-weight: 600; font-size: 14px; letter-spacing: .06em; color: #e2e4f6; }
-  .demo-list span { display: block; font-size: 12px; color: var(--t-body); line-height: 1.8; margin-top: 2px; }
-  .demo-list .demo-char { display: inline; margin: 0; font-size: inherit; color: #e2e4f6; }
-  .demo-fig { position: relative; margin: 16px 0 0; border: 1px solid var(--line); border-radius: 8px; background: rgba(10,12,26,.5); padding: 14px; overflow: hidden; }
-  .demo-fig svg { display: block; width: 100%; height: auto; filter: blur(2.5px); opacity: .7; }
-  .demo-fig .lock { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: rgba(7,7,15,.35); text-align: center; }
-  .demo-fig .lock b { font-family: var(--font-en); font-style: italic; font-weight: 400; font-size: 12px; letter-spacing: .3em; color: #c9a860; }
-  .demo-fig .lock span { font-size: 12px; color: #d3dcf0; letter-spacing: .06em; }
+  /* ¥500 レポートの見本：項目ごとの図（軸・項目名は見せ、中身はぼかして鍵。固定の見本で、利用者のデータからは作らない） */
+  .locks { display: grid; gap: 12px; }
+  .lk { border: 1px solid var(--line); border-radius: 10px; background: linear-gradient(180deg, rgba(14,16,34,.7), rgba(10,12,26,.5)); padding: 14px 14px 12px; }
+  .lk-en { margin: 0; font-family: var(--font-en); font-style: italic; font-size: 11px; letter-spacing: .3em; color: var(--gold); }
+  .lk h3 { margin: 2px 0 4px; font-size: 15px; font-weight: 600; letter-spacing: .06em; color: #f1eeff; }
+  .lk h3 .demo-char { background-image: var(--name-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lk-desc { margin: 0 0 10px; font-size: 12px; line-height: 1.8; color: var(--t-body); }
+  .viz { position: relative; border-radius: 8px; background: rgba(5,7,15,.55); border: 1px solid rgba(150,180,240,.08); padding: 36px 8px 8px; overflow: hidden; }
+  .viz svg { display: block; width: 100%; height: auto; }
+  .viz .grid polygon, .viz .grid circle, .viz .grid line { fill: none; stroke: rgba(150,180,240,.18); stroke-width: 1; }
+  .viz .track rect { fill: rgba(150,180,240,.06); }
+  .viz .axis text { font-family: var(--font-jp); font-size: 10px; fill: #a9b8d6; text-anchor: middle; letter-spacing: .04em; }
+  .viz .axis.left text { text-anchor: end; }
+  .viz .axis.small text { font-size: 9px; }
+  .viz .axis.el text { font-size: 11px; fill: #d3dcf0; }
+  .viz .legend text { font-family: var(--font-jp); font-size: 10px; fill: #a9b8d6; }
+  .viz .you { fill: color-mix(in srgb, var(--c-you, #7aa2cf) 30%, transparent); stroke: var(--c-you, #7aa2cf); stroke-width: 2; }
+  .viz .char { fill: color-mix(in srgb, var(--name-glow, #d6bd84) 26%, transparent); stroke: var(--name-glow, #d6bd84); stroke-width: 2; }
+  .viz .you-bar, .viz .you-dot { fill: var(--c-you, #7aa2cf); }
+  .viz .char-bar, .viz .char-dot { fill: var(--name-glow, #d6bd84); }
+  .viz .sym-bar { fill: rgba(169,184,214,.45); }
+  .viz.text { padding: 38px 14px 12px; }
+  .viz .tl { margin: 0 0 10px; }
+  .viz .tl b { display: block; font-size: 11px; font-weight: 400; letter-spacing: .2em; color: #a9b8d6; margin: 0 0 6px; }
+  .viz .tl i { display: block; height: 8px; border-radius: 4px; margin: 0 0 7px; background: linear-gradient(90deg, color-mix(in srgb, var(--name-glow, #d6bd84) 55%, #fff), color-mix(in srgb, var(--c-you, #7aa2cf) 60%, transparent)); filter: blur(2.6px); opacity: .7; }
+  .viz.quote .tl i { height: 10px; }
+  .lock-badge { position: absolute; right: 8px; top: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-family: var(--font-en); font-size: 10px; letter-spacing: .18em; color: #e8d8a8; background: rgba(7,7,15,.78); border: 1px solid rgba(214,189,132,.4); }
+  .lock-badge::before { content: ''; width: 7px; height: 6px; border: 1.2px solid #e8d8a8; border-radius: 1px; box-shadow: 0 -4px 0 -1.5px transparent; }
   .buy { display: block; width: 100%; margin: 18px 0 0; padding: 15px 12px; letter-spacing: .08em; }
   .buy-note { text-align: center; font-size: 11.5px; color: var(--t-sub); margin: 8px 0 0; }
   .xshare { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 56px; margin: 0; border: 1px solid rgba(255,255,255,.14); border-radius: 8px; background: #000; color: #fff; font-family: var(--font-jp); font-size: 15px; letter-spacing: .14em; cursor: pointer; }
@@ -202,7 +221,7 @@
         <div class="orb" id="rOrb"></div>
       </div>
       <p class="r-lead rv rv-lead">アナタに共鳴する人物は――</p>
-      <p class="r-name rv rv-name" id="rName"></p>
+      <div class="rv rv-name"><p class="r-name" id="rNameBox"><span id="rName"></span></p></div>
       <div class="rv rv-info">
         <p class="r-758" id="r758"></p>
         <p class="r-type" id="rTypeName"></p>
@@ -218,24 +237,80 @@
       <div class="sec" id="reportDemo">
         <div class="sec-h"><span class="en">Sample — Persona Report</span><span class="jp">共鳴診断｜人物像レポート</span></div>
         <p class="price">税込500円・買い切り</p>
-        <p class="demo-note">以下は内容の見本です。実際のレポートの文章・図とは異なります。</p>
-        <ol class="demo-list">
-          <li><b>アナタと MIRROR の人物像</b><span>3つの選択から描くアナタの人物像と、<span class="demo-char"></span>の人物像を並べて読み解きます。</span></li>
-          <li><b>性格・行動・価値観の共鳴</b><span>性格（PERSONA）・行動の傾向（STYLE）・価値観（VALUES）のどこで響き合い、どこで異なるかを、図と文章で。</span></li>
-          <li><b>元素・武器種・国家の意味</b><span>アナタの元素・武器種・国家が、それぞれ何を象徴しているか。</span></li>
-          <li><b>人物との共鳴解説</b><span><span class="demo-char"></span>とアナタの共通点と相違点。</span></li>
-          <li><b>レポートで読める内容</b><span>自己理解につながる解釈と、日々に持ち帰る問い。数値で点を付けたり、割合で比べたりはしません。</span></li>
-        </ol>
-        <div class="demo-fig" aria-hidden="true">
-          <svg viewBox="0 0 320 150" xmlns="http://www.w3.org/2000/svg">
-            <g font-family="serif" font-size="9" fill="#8e9dbf" letter-spacing="1.5"><text x="0" y="24">PERSONA</text><text x="0" y="74">STYLE</text><text x="0" y="124">VALUES</text></g>
-            <g fill="none" stroke-width="2" stroke-linecap="round">
-              <path d="M70 26 C110 6 150 40 190 20 S260 30 300 16" stroke="#86b6e6"/><path d="M70 30 C110 44 150 10 190 30 S260 14 300 28" stroke="#d6bd84"/>
-              <path d="M70 76 C110 60 150 90 190 70 S260 80 300 64" stroke="#86b6e6"/><path d="M70 72 C110 88 150 60 190 80 S260 66 300 78" stroke="#d6bd84"/>
-              <path d="M70 126 C110 110 150 140 190 118 S260 132 300 114" stroke="#86b6e6"/><path d="M70 122 C110 136 150 108 190 128 S260 116 300 128" stroke="#d6bd84"/>
-            </g>
-          </svg>
-          <div class="lock"><b>SAMPLE</b><span>図は見本です（購入後のレポートで表示）</span></div>
+        <p class="demo-note">見本の表示です。図の形は実際のレポートとは異なります（購入後に、アナタの結果で描かれます）。</p>
+        <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><filter id="lockBlur" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="3.2"/></filter></defs></svg>
+        <div class="locks">
+          <article class="lk">
+            <p class="lk-en">PERSONA</p>
+            <h3>アナタ × <span class="demo-char"></span>　性格の重なり</h3>
+            <p class="lk-desc">開放性・誠実性・外向性・協調性・感受性。5つの軸で、ふたりが重なるところと離れるところをチャートで。</p>
+            <div class="viz" aria-hidden="true">
+              <svg viewBox="0 0 300 170">
+                <g class="grid"><polygon points="150,22 199,58 181,116 119,116 101,58"/><polygon points="150,46 176,65 166,96 134,96 124,65"/><line x1="150" y1="78" x2="150" y2="22"/><line x1="150" y1="78" x2="199" y2="58"/><line x1="150" y1="78" x2="181" y2="116"/><line x1="150" y1="78" x2="119" y2="116"/><line x1="150" y1="78" x2="101" y2="58"/></g>
+                <g class="axis"><text x="150" y="14">開放性</text><text x="232" y="60">誠実性</text><text x="196" y="134">外向性</text><text x="104" y="134">協調性</text><text x="68" y="60">感受性</text></g>
+                <g filter="url(#lockBlur)"><polygon class="you" points="150,30 190,62 170,104 126,110 112,60"/><polygon class="char" points="150,48 196,58 178,112 136,100 106,66"/></g>
+                <g class="legend"><circle class="you-dot" cx="98" cy="158" r="4"/><text x="108" y="161">アナタ</text><circle class="char-dot" cx="168" cy="158" r="4"/><text x="178" y="161" class="demo-char-svg"></text></g>
+              </svg>
+              <span class="lock-badge">LOCKED ・ 購入後に表示</span>
+            </div>
+          </article>
+          <article class="lk">
+            <p class="lk-en">STYLE</p>
+            <h3>行動の傾向の比較</h3>
+            <p class="lk-desc">主導性・関係調整・役割持続・媒介思考・自律距離。行動の5つの傾向を、ふたり並べて比べます。</p>
+            <div class="viz" aria-hidden="true">
+              <svg viewBox="0 0 300 150">
+                <g class="axis left"><text x="66" y="22">主導性</text><text x="66" y="50">関係調整</text><text x="66" y="78">役割持続</text><text x="66" y="106">媒介思考</text><text x="66" y="134">自律距離</text></g>
+                <g class="track"><rect x="76" y="12" width="210" height="14" rx="7"/><rect x="76" y="40" width="210" height="14" rx="7"/><rect x="76" y="68" width="210" height="14" rx="7"/><rect x="76" y="96" width="210" height="14" rx="7"/><rect x="76" y="124" width="210" height="14" rx="7"/></g>
+                <g filter="url(#lockBlur)"><rect class="you-bar" x="76" y="13" width="150" height="6" rx="3"/><rect class="char-bar" x="76" y="20" width="110" height="5" rx="2.5"/><rect class="you-bar" x="76" y="41" width="90" height="6" rx="3"/><rect class="char-bar" x="76" y="48" width="170" height="5" rx="2.5"/><rect class="you-bar" x="76" y="69" width="180" height="6" rx="3"/><rect class="char-bar" x="76" y="76" width="140" height="5" rx="2.5"/><rect class="you-bar" x="76" y="97" width="120" height="6" rx="3"/><rect class="char-bar" x="76" y="104" width="190" height="5" rx="2.5"/><rect class="you-bar" x="76" y="125" width="160" height="6" rx="3"/><rect class="char-bar" x="76" y="132" width="100" height="5" rx="2.5"/></g>
+              </svg>
+              <span class="lock-badge">LOCKED ・ 購入後に表示</span>
+            </div>
+          </article>
+          <article class="lk">
+            <p class="lk-en">VALUES</p>
+            <h3>価値観の地図</h3>
+            <p class="lk-desc">大切にする10の価値観の配置。共鳴する価値観と、すれ違う価値観を一枚の図に。</p>
+            <div class="viz" aria-hidden="true">
+              <svg viewBox="0 0 300 170">
+                <g class="grid"><circle cx="150" cy="84" r="64"/><circle cx="150" cy="84" r="36"/></g>
+                <g class="axis small"><text x="150" y="12">自分で選ぶ</text><text x="214" y="30">新しい刺激</text><text x="244" y="76">楽しみ</text><text x="236" y="128">達成</text><text x="196" y="164">影響力</text><text x="104" y="164">安定</text><text x="64" y="128">節度</text><text x="56" y="76">伝統</text><text x="86" y="30">思いやり</text><text x="150" y="88">公正さ</text></g>
+                <g filter="url(#lockBlur)"><circle class="you-dot" cx="150" cy="30" r="7"/><circle class="char-dot" cx="196" cy="44" r="6"/><circle class="you-dot" cx="204" cy="112" r="6"/><circle class="char-dot" cx="112" cy="128" r="7"/><circle class="you-dot" cx="98" cy="64" r="5"/><circle class="char-dot" cx="170" cy="96" r="5"/></g>
+              </svg>
+              <span class="lock-badge">LOCKED ・ 購入後に表示</span>
+            </div>
+          </article>
+          <article class="lk">
+            <p class="lk-en">SYMBOLS</p>
+            <h3>元素・武器種・国家の象徴</h3>
+            <p class="lk-desc">アナタの元素・武器種・国家が象徴するもの。代表座標から見た、ほかの元素との「象徴的な近さ」も（心の測定値ではありません）。</p>
+            <div class="viz" aria-hidden="true">
+              <svg viewBox="0 0 300 150">
+                <g class="axis left el"><text x="40" y="20">炎</text><text x="40" y="39">水</text><text x="40" y="58">氷</text><text x="40" y="77">雷</text><text x="40" y="96">風</text><text x="40" y="115">岩</text><text x="40" y="134">草</text></g>
+                <g filter="url(#lockBlur)"><rect class="you-bar" x="50" y="11" width="180" height="11" rx="5"/><rect class="sym-bar" x="50" y="30" width="120" height="11" rx="5"/><rect class="sym-bar" x="50" y="49" width="200" height="11" rx="5"/><rect class="sym-bar" x="50" y="68" width="90" height="11" rx="5"/><rect class="sym-bar" x="50" y="87" width="150" height="11" rx="5"/><rect class="sym-bar" x="50" y="106" width="70" height="11" rx="5"/><rect class="sym-bar" x="50" y="125" width="130" height="11" rx="5"/></g>
+              </svg>
+              <span class="lock-badge">LOCKED ・ 購入後に表示</span>
+            </div>
+          </article>
+          <article class="lk">
+            <p class="lk-en">RESONANCE</p>
+            <h3><span class="demo-char"></span>との共通点・相違点</h3>
+            <p class="lk-desc">ふたりの人物像はどこで響き合い、どこで異なるのか。言葉で読み解きます。</p>
+            <div class="viz text" aria-hidden="true">
+              <div class="tl"><b>共通点</b><i style="width:92%"></i><i style="width:78%"></i><i style="width:64%"></i></div>
+              <div class="tl"><b>相違点</b><i style="width:86%"></i><i style="width:70%"></i><i style="width:58%"></i></div>
+              <span class="lock-badge">LOCKED ・ 購入後に表示</span>
+            </div>
+          </article>
+          <article class="lk">
+            <p class="lk-en">JOURNEY</p>
+            <h3>自己理解の問い</h3>
+            <p class="lk-desc">結果を日々に持ち帰るための、アナタへの問い。</p>
+            <div class="viz text quote" aria-hidden="true">
+              <div class="tl"><i style="width:88%"></i><i style="width:74%"></i></div>
+              <span class="lock-badge">LOCKED ・ 購入後に表示</span>
+            </div>
+          </article>
         </div>
         <button type="button" class="cta buy" id="buyBtn" disabled>人物像レポートを読む（準備中）</button>
         <p class="buy-note">販売開始まで、購入はできません。</p>
@@ -275,11 +350,16 @@
   var answers = { element: null, weapon: null, nation: null };
   var $ = function (id) { return document.getElementById(id); };
   var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // 元素の色（結果ページで夜空の下と円の光を灯す。問いの間は使わない）
+  // 元素の色（結果ページで、現れたキャラの元素の色で夜空の下と星座の光を灯す。問いの間は使わない）
   var ELEMENT_GLOW = { '炎': '#d9784a', '水': '#4a9ad0', '氷': '#8ab8e8', '雷': '#a070e0', '風': '#5cc4a0', '岩': '#d0a850', '草': '#7cbf4a' };
   // 本家 OGP の正式背景（元素別。円環と、該当元素の点灯が描き込まれている）。js/ogp-theme.mjs の ELEMENT_KEY と同じ
   var ELEMENT_KEY = { '水': 'hydro', '炎': 'pyro', '風': 'anemo', '雷': 'electro', '草': 'dendro', '氷': 'cryo', '岩': 'geo' };
   var DEFAULT_GLOW = '#7aa2cf';
+  // 名前のグラデーション：js/ogp-theme.mjs の accentSoft・accent と、深い色（ELEMENT_GLOW）（tests/resonance.test.js が一致を確かめる）
+  var NAME_COLOR = {
+    '水': ['#bfe9ff', '#8fd8ff', '#4a9ad0'], '炎': ['#ffc2ae', '#ff9774', '#d9784a'], '風': ['#b8eee0', '#7ddcc3', '#5cc4a0'],
+    '雷': ['#ddc5ff', '#bb8cff', '#a070e0'], '草': ['#c6eab9', '#8fcf7a', '#7cbf4a'], '氷': ['#dbf1ff', '#a9ddff', '#8ab8e8'], '岩': ['#ecd4a7', '#d7ad68', '#d0a850'],
+  };
   function setGlow(c) { document.documentElement.style.setProperty('--ac', c || DEFAULT_GLOW); }
 
   // ---- 3問 ----
@@ -391,19 +471,26 @@
   function fill(r) {
     var name = r.person.name;
     $('rName').textContent = name;
-    $('rName').classList.toggle('long', name.length >= 6);
+    $('rNameBox').classList.toggle('long', name.length >= 6);
+    // キャラの元素：円（星座）と名前のグラデーションに使う（本人の 758 とは別）
+    var charEl = ETI_V2_CHARACTERS_2_1_0[CHAR_INDEX[name]].element;
+    r.charElement = charEl;
+    var nameColor = NAME_COLOR[charEl];
+    $('result').style.setProperty('--name-grad', 'linear-gradient(100deg, ' + nameColor[0] + ' 0%, ' + nameColor[1] + ' 55%, ' + nameColor[2] + ' 100%)');
+    $('result').style.setProperty('--name-glow', nameColor[1]);
     $('r758').textContent = r.element + ' × ' + r.weapon + ' × ' + r.nationDisplay;
     $('rTypeName').textContent = '「' + r.typeName + '」';
     $('rTypeCode').textContent = r.typeCode;
-    $('rOrb').style.backgroundImage = "url('/assets/ogp/backgrounds/" + ELEMENT_KEY[r.element] + ".jpg')";
-    $('rOrbWrap').setAttribute('aria-label', 'アナタの元素（' + r.element + '）の円');
+    $('rOrb').style.backgroundImage = "url('/assets/ogp/backgrounds/" + ELEMENT_KEY[charEl] + ".jpg')";
+    $('rOrbWrap').setAttribute('aria-label', name + 'の元素（' + charEl + '）の星座');
     var p = $('rAbout'); p.textContent = '';
     [['「', r.words.elementKeyword, '」という気質を持ちながら、'], ['「', r.words.weaponStyle, '」というかたちで人と関わり、'], ['「', r.words.nationMeaning, '」を大切にする人。']]
       .forEach(function (part) { p.appendChild(document.createTextNode(part[0])); var s = document.createElement('strong'); s.textContent = part[1]; p.appendChild(s); p.appendChild(document.createTextNode(part[2])); });
     var small = document.createElement('span'); small.className = 'small';
-    small.textContent = name + 'は、3つの答えから映した、アナタに共鳴する人物です。円はアナタの元素（' + r.element + '）を表します。人物自身の元素・武器種・国家は、アナタの結果と同じとは限りません。';
+    small.textContent = name + 'は、3つの答えから映した、アナタに共鳴する人物です。星座は' + name + 'の元素（' + charEl + '）を表します。人物自身の元素・武器種・国家は、アナタの結果と同じとは限りません。';
     p.appendChild(small);
-    document.querySelectorAll('.demo-char').forEach(function (el) { el.textContent = name; });
+    document.querySelectorAll('.demo-char, .demo-char-svg').forEach(function (el) { el.textContent = name; });
+    $('result').style.setProperty('--c-you', ELEMENT_GLOW[r.element]); // 見本の図の「アナタ」の色＝本人の元素
     lastResult = r;
     lastShare = S.packReveal(r.element, r.weapon, r.nation, CHAR_INDEX[name]);
   }
@@ -439,7 +526,7 @@
     go('result', true);
   }
   function onResultShown() {
-    setGlow(ELEMENT_GLOW[lastResult.element]);
+    setGlow(ELEMENT_GLOW[lastResult.charElement]);
     setReveal(playNext);
     playNext = false;
   }
@@ -498,7 +585,7 @@
     $('pCover').hidden = true; $('result').hidden = false;
     current = 'result';
     try { history.replaceState({ miniStep: 'result' }, ''); } catch (e) { /* なし */ }
-    setGlow(ELEMENT_GLOW[r.element]);
+    setGlow(ELEMENT_GLOW[r.charElement]);
     setReveal(false);
   }
   $('tryBtn').addEventListener('click', function () {
