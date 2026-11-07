@@ -492,7 +492,6 @@
     var p = $('rAbout'); p.textContent = '';
     [['「', r.words.elementKeyword, '」という気質を持ちながら、'], ['「', r.words.weaponStyle, '」というかたちで人と関わり、'], ['「', r.words.nationMeaning, '」を大切にする人。']]
       .forEach(function (part) { p.appendChild(document.createTextNode(part[0])); p.appendChild(el('strong', null, part[1])); p.appendChild(document.createTextNode(part[2])); });
-    p.appendChild(el('span', 'small', name + 'は、3つの答えから映した、アナタに共鳴する人物です。人物自身の元素・武器種・国家は、アナタの結果と同じとは限りません。'));
     document.querySelectorAll('.demo-char, .demo-char-svg').forEach(function (el) { el.textContent = name; });
     lastResult = r;
     lastShare = S.packReveal(r.element, r.weapon, r.nation, CHAR_INDEX[name]);

@@ -291,8 +291,8 @@ test('画像（/api/og-image?m3=）：共鳴診断の下地に人物名を大き
   const d = { name: 'アルレッキーノ', charElement: '炎', code: 'CRSW', typeName: '宿縁者', element: '氷', weapon: '片手剣', nation: 'スネージナヤ', header: '共鳴診断 — MY RESULT' };
   for (const o of [{ backgroundUrl: 'data:bg' }, { part: 'overlay', baseUrl: 'data:base' }]) {
     const t = texts(buildRevealCardTree(d, o)).join('|');
-    assert.match(t, /アルレッキーノ\|YOUR TYPE\|CRSW\|宿縁者\|氷\|片手剣\|スネージナヤ\|共鳴診断 — 私の結果は【氷 × 片手剣 × スネージナヤ】/);
-    assert.doesNotMatch(t, /最も近しい|一致|SELF IMAGE|-/);
+    assert.match(t, /アルレッキーノ\|YOUR TYPE\|CRSW\|宿縁者\|氷\|片手剣\|スネージナヤ$/);
+    assert.doesNotMatch(t, /最も近しい|一致|SELF IMAGE|私の結果は|-/); // 下帯の文は描かない
   }
   const base = texts(buildRevealCardTree({ charElement: '炎', element: '炎', name: '', header: '共鳴診断 — MY RESULT' }, { part: 'base', backgroundUrl: 'data:bg' })).join('|');
   assert.equal(base, '共鳴診断 — MY RESULT|YOUR RESONANCE'); // 下地は人物の元素だけで決まる（人ごとの文字を含まない）
@@ -307,7 +307,7 @@ test('画像（/api/og-image?m3=）：共鳴診断の下地に人物名を大き
   for (const n of D.CHAR_NAMES) assert.ok(revealNameSize(n) * 1.06 * n.length + 6 * n.length <= REVEAL_LAYOUT.nameWidth + 6 * 7 + 40, n);
   const covered = new Set([...Object.keys(D.ELEMENT_CODE), ...Object.keys(D.WEAPON_CODE), ...D.PACK_NATIONS, ...Object.values(D.TYPE_NAME).flatMap(Object.values),
     ...D.CHAR_NAMES, '最も近しいキャラクター', '元素診断 — 私の結果は【】×', '元素診断 — MY RESULT', '0123456789%一致', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ '].join(''));
-  for (const str of ['YOUR RESONANCE', 'YOUR TYPE', '共鳴診断 — 私の結果は【】×', '共鳴診断 — MY RESULT']) for (const ch of str) assert.ok(covered.has(ch), `「${ch}」`);
+  for (const str of ['YOUR RESONANCE', 'YOUR TYPE', '共鳴診断 — MY RESULT']) for (const ch of str) assert.ok(covered.has(ch), `「${ch}」`);
 });
 
 test('画像の見出し：共鳴診断（m2）は「共鳴診断 — MY RESULT」の下地35枚を使い、本家・旧 m1 は従来の「元素診断 — MY RESULT」のまま', async () => {

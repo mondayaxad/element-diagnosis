@@ -166,7 +166,7 @@ async function revealImage(m3, searchParams, origin) {
     return new Response(null, { status: 308, headers: { Location: `${origin}/api/og-image?m3=${m3}`, ...CACHE_HEADERS } });
   }
   const name = CHAR_NAMES[u.charIdx];
-  // 人物が主役のカード（js/ogp-card.mjs の buildRevealCardTree）。情報は本家と同じ（タイプコード4文字・タイプ名・元素／武器種／国家・下帯）。
+  // 人物が主役のカード（js/ogp-card.mjs の buildRevealCardTree）。情報は本家と同じ（タイプコード4文字・タイプ名・元素／武器種／国家。下帯の文は描かない）。
   // 背景（星座）と名前・飾りの色は人物の元素。下地は人物の元素ごとの7枚（assets/ogp/bases-reveal/。scripts/build-ogp-bases.mjs --reveal）
   const charElement = CHAR_ELEMENT[name] || u.el;
   const data = {
