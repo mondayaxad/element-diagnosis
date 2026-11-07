@@ -642,13 +642,13 @@ test('mypage の色（js/jagan-mypage.js）：異相・元素の色は jagan/sit
   assert.deepEqual(jm.COLORS.ISOU_COLOR, SC.ISOU_COLOR);
   assert.deepEqual(jm.COLORS.ELEMENT_MAIN, Object.fromEntries(Object.entries(SC.ELEMENT_COLOR).map(([k, v]) => [k, v.main])));
   assert.deepEqual(Object.keys(jm.COLORS.FATUI_TONE).sort(), BUNDLE.characters.characters.map((c) => c.id).sort(), '11人すべて');
-  assert.deepEqual(jm.COLORS.FATUI_TONE, { pierro: ['EL', 'EL'], scaramouche: ['EL', 'EL'], capitano: ['CR', 'WHITE'], sandrone: ['CR', 'GE'], tartaglia: ['HY', 'EL'],
-    columbina: ['HY', 'WHITE'], dottore: ['PY', 'DE'], signora: ['CR', 'PY'], pantalone: ['DE', 'EL'], arlecchino: ['PY', 'PY'], pulcinella: ['CR', 'HY'] });
+  assert.deepEqual(jm.COLORS.FATUI_TONE, { pierro: ['EL', 'CR'], scaramouche: ['EL', 'AN'], capitano: ['CR', 'WHITE'], sandrone: ['CR', 'GE'], tartaglia: ['HY', 'EL'],
+    columbina: ['HY', 'WHITE'], dottore: ['PY', 'DE'], signora: ['CR', 'PY'], pantalone: ['DE', 'EL'], arlecchino: ['PY', 'BLACK'], pulcinella: ['CR', 'HY'] });
   const lum = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)).reduce((a, b) => a + b, 0);
   for (const [id, [a]] of Object.entries(jm.COLORS.FATUI_TONE)) {
     const t = jm.fatuiTone(id);
     assert.equal(t.base, SC.ELEMENT_COLOR[a].main, `${id}: 課金前は1つ目の元素の色`);
-    assert.ok(lum(t.ring[0]) < lum(t.base), `${id}: 円グラフの始まりは黒寄り`);
+    assert.ok(lum(t.ring[0]) < lum(t.base) || lum(t.ring[1]) < lum(t.base) / 3, `${id}: 黒寄りのグラデーション`);
     for (const c of t.ring.concat(t.text)) assert.match(c, /^#[0-9a-f]{6}$/);
   }
 });

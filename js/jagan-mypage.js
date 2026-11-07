@@ -24,12 +24,13 @@
     HOS: '#E0694F', ATT: '#E08AA8', MAN: '#C88AD8', RSK: '#E07A5A', CAL: '#9AA7B5' };
   var ELEMENT_MAIN = { PY: '#C9503C', HY: '#3F82BC', CR: '#7DB3C6', EL: '#9563CF', AN: '#4FAE98', GE: '#C9A04E', DE: '#78A84A' };
   // ファトゥスの色（マイページの円グラフ・名前）。課金前は1つ目の色の単色、課金後は黒寄りのグラデーション（オーナー指定・2026-11-07）
-  //   ピエロ・スカラマシュ＝雷、カピターノ＝氷と白、サンドローネ＝氷と岩、タルタリヤ＝水と雷、コロンビーナ＝水と白、
-  //   ドットーレ＝炎と草、シニョーラ＝氷と炎、パンタローネ＝草と雷、アルレッキーノ＝炎、プルチネッラ＝氷と水
+  //   ピエロ＝雷と氷、スカラマシュ＝雷と風、カピターノ＝氷と白、サンドローネ＝氷と岩、タルタリヤ＝水と雷、コロンビーナ＝水と白、
+  //   ドットーレ＝炎と草、シニョーラ＝氷と炎、パンタローネ＝草と雷、アルレッキーノ＝炎と黒、プルチネッラ＝氷と水
   var WHITE = '#ECE8F2';
-  var FATUI_TONE = { pierro: ['EL', 'EL'], scaramouche: ['EL', 'EL'], capitano: ['CR', 'WHITE'], sandrone: ['CR', 'GE'], tartaglia: ['HY', 'EL'],
-    columbina: ['HY', 'WHITE'], dottore: ['PY', 'DE'], signora: ['CR', 'PY'], pantalone: ['DE', 'EL'], arlecchino: ['PY', 'PY'], pulcinella: ['CR', 'HY'] };
-  function hexOf(k) { return k === 'WHITE' ? WHITE : ELEMENT_MAIN[k]; }
+  var FATUI_TONE = { pierro: ['EL', 'CR'], scaramouche: ['EL', 'AN'], capitano: ['CR', 'WHITE'], sandrone: ['CR', 'GE'], tartaglia: ['HY', 'EL'],
+    columbina: ['HY', 'WHITE'], dottore: ['PY', 'DE'], signora: ['CR', 'PY'], pantalone: ['DE', 'EL'], arlecchino: ['PY', 'BLACK'], pulcinella: ['CR', 'HY'] };
+  var BLACK = '#2a1016'; // 「黒」：暗い地の上でも円周が消えない、ごく暗い赤黒
+  function hexOf(k) { return k === 'WHITE' ? WHITE : k === 'BLACK' ? BLACK : ELEMENT_MAIN[k]; }
   // a と b を t（0〜1）で混ぜる（#RRGGBB）
   function mix(a, b, t) {
     var x = [1, 3, 5].map(function (i) { return parseInt(a.slice(i, i + 2), 16); });
@@ -43,6 +44,8 @@
     if (!t) return { base: '#C99AA7', ring: [mix('#C99AA7', INK, 0.5), '#C99AA7'], text: ['#C99AA7', '#E2C08C'] };
     var a = hexOf(t[0]), b = hexOf(t[1]);
     var same = t[0] === t[1];
+    // 「黒」で終わる（アルレッキーノ）：色から黒へ沈む。名前の文字は読める暗さまで
+    if (t[1] === 'BLACK') return { base: a, ring: [mix(a, INK, 0.1), b], text: [mix(a, INK, 0.05), mix(a, INK, 0.5)] };
     return {
       base: a,
       ring: [mix(a, INK, 0.55), same ? mix(a, INK, 0.08) : mix(b, INK, 0.12)],
@@ -270,5 +273,5 @@
 
   window.JaganMypage = { load: load, notesHtml: notesHtml, gateNote: gateNote, hasPending: hasPending, hasRegister: hasRegister,
     salesOpen: salesOpen, share: share, shareUrlOf: shareUrlOf, shareTextOf: shareTextOf, esc: esc, fatuiTone: fatuiTone, mix: mix,
-    COLORS: { ISOU_COLOR: ISOU_COLOR, ELEMENT_MAIN: ELEMENT_MAIN, FATUI_TONE: FATUI_TONE, WHITE: WHITE, INK: INK } };
+    COLORS: { ISOU_COLOR: ISOU_COLOR, ELEMENT_MAIN: ELEMENT_MAIN, FATUI_TONE: FATUI_TONE, WHITE: WHITE, BLACK: BLACK, INK: INK } };
 })();
