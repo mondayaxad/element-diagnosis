@@ -635,3 +635,16 @@ test('mypage (js/jagan-mypage.js)：権利が active の記録だけ購入済み
   jm = loadJaganMypage({ rows, ent: { data: [], error: null }, token: null });
   assert.deepEqual((await jm.load()).sessions, []);
 });
+
+test('mypage の色（js/jagan-mypage.js）は jagan/site-copy.mjs と同じ：異相の色・元素の色・ファトゥスのグラデーション', async () => {
+  const jm = loadJaganMypage({ rows: [], ent: { data: [], error: null } });
+  const SC = await import('../jagan/site-copy.mjs');
+  assert.deepEqual(jm.COLORS.ISOU_COLOR, SC.ISOU_COLOR);
+  assert.deepEqual(jm.COLORS.ELEMENT_MAIN, Object.fromEntries(Object.entries(SC.ELEMENT_COLOR).map(([k, v]) => [k, v.main])));
+  assert.deepEqual(jm.COLORS.CHARACTER_ELEMENTS, SC.CHARACTER_ELEMENTS);
+  const { characterGradient } = await import('../jagan/view.mjs');
+  for (const id of Object.keys(SC.CHARACTER_ELEMENTS)) {
+    const [a, b] = jm.characterStops(id);
+    assert.equal(characterGradient(id), `linear-gradient(100deg, ${a} 0%, ${b} 100%)`, id);
+  }
+});

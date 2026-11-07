@@ -29,6 +29,9 @@ test('邪眼の記録：RECORDS・INSIGHTS に数え、最新・記録章・こ�
   assert.equal(i.read, 1);
   assert.equal(i.buy, 3);
   assert.equal(i.overflowX, false);
+  // 申込のボタンは赤黒（元素の青ではない）。これまでのあなたの印は「邪眼」
+  assert.ok(i.ctaBg.every((b) => /linear-gradient/.test(b) && /28, 6, 12|74, 15, 31/.test(b)), JSON.stringify(i.ctaBg));
+  assert.ok(i.recChips.every((c) => c.includes('邪眼')));
 });
 
 test('最新が購入済み：INSIGHT・覚醒の証・「邪眼解析レポートを読む」。販売前は申込のボタンを押せない（準備中）', { timeout: 180000 }, () => {

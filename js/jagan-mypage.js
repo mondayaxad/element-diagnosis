@@ -19,6 +19,17 @@
   // 共有の URL（jagan/engine/runtime.mjs の shareQuery と同じ。テストで一致を確かめる）
   var SHARE_PATH = '/jagan/share';
   var OG_DESIGN_VERSION = 'dti-og-2';
+  // 色（jagan/site-copy.mjs の ISOU_COLOR・ELEMENT_COLOR・CHARACTER_ELEMENTS と同じ値。テストで一致を確かめる）
+  var ISOU_COLOR = { ANX: '#B59AD8', SEP: '#7FA7D8', SUS: '#9FB0C8', WDR: '#8FC0D0', IMP: '#E0A050', PSV: '#B8A27A', PRF: '#D8C27A',
+    HOS: '#E0694F', ATT: '#E08AA8', MAN: '#C88AD8', RSK: '#E07A5A', CAL: '#9AA7B5' };
+  var ELEMENT_MAIN = { PY: '#C9503C', HY: '#3F82BC', CR: '#7DB3C6', EL: '#9563CF', AN: '#4FAE98', GE: '#C9A04E', DE: '#78A84A' };
+  var CHARACTER_ELEMENTS = { pierro: ['EL'], capitano: ['CR'], columbina: ['HY'], tartaglia: ['HY', 'EL'], sandrone: ['CR', 'GE'], arlecchino: ['PY'],
+    pulcinella: ['HY', 'CR'], pantalone: ['DE'], signora: ['CR', 'PY'], scaramouche: ['EL', 'AN'], dottore: ['PY', 'DE'] };
+  // ファトゥスのグラデーション（結果ページの人物名と同じ：jagan/view.mjs の characterGradient）
+  function characterStops(id) {
+    var els = CHARACTER_ELEMENTS[id] || [];
+    return els.length >= 2 ? [ELEMENT_MAIN[els[0]], ELEMENT_MAIN[els[1]]] : els.length === 1 ? [ELEMENT_MAIN[els[0]], '#F4E6EA'] : ['#E2C08C', '#C8405C'];
+  }
   var notes = [];
   var inFlight = null;
 
@@ -98,7 +109,7 @@
   function top3(snap) {
     var tr = snap && Array.isArray(snap.traitRanking) ? snap.traitRanking : [];
     return tr.slice(0, 3).filter(function (t) { return t && typeof t.label === 'string' && typeof t.score === 'number' && isFinite(t.score); })
-      .map(function (t) { return { id: t.id, label: t.label, score: Math.max(0, Math.min(100, Math.round(t.score))) }; });
+      .map(function (t) { return { id: t.id, label: t.label, score: Math.max(0, Math.min(100, Math.round(t.score))), color: ISOU_COLOR[t.id] || '#C99AA7' }; });
   }
   // マイページの記録の元（mypage.html の MP_KINDS.jagan.normalize が描画用の形に直す）
   function toSession(row, ent) {
@@ -112,7 +123,7 @@
       isouId: dtiOk && snap.isou ? snap.isou.id : null,
       namingVersion: dtiOk && snap.versions ? snap.versions.naming : null,
       top3: dtiOk ? top3(snap) : [],
-      character: ch ? { id: ch.id, name: ch.name, match: ch.match } : null,
+      character: ch ? { id: ch.id, name: ch.name, match: ch.match, grad: characterStops(ch.id) } : null,
       entKnown: ent.ok, purchased: ent.ok && ent.set[row.result_id] === true,
     };
   }
@@ -239,5 +250,6 @@
   }
 
   window.JaganMypage = { load: load, notesHtml: notesHtml, gateNote: gateNote, hasPending: hasPending, hasRegister: hasRegister,
-    salesOpen: salesOpen, share: share, shareUrlOf: shareUrlOf, shareTextOf: shareTextOf, esc: esc };
+    salesOpen: salesOpen, share: share, shareUrlOf: shareUrlOf, shareTextOf: shareTextOf, esc: esc, characterStops: characterStops,
+    COLORS: { ISOU_COLOR: ISOU_COLOR, ELEMENT_MAIN: ELEMENT_MAIN, CHARACTER_ELEMENTS: CHARACTER_ELEMENTS } };
 })();
