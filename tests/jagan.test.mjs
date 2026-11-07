@@ -652,3 +652,24 @@ test('mypage の色（js/jagan-mypage.js）：異相・元素の色は jagan/sit
     for (const c of t.ring.concat(t.text)) assert.match(c, /^#[0-9a-f]{6}$/);
   }
 });
+
+test('mypage の開示（購入済みだけ）：三つの土台の上位2特性と数値・ファトゥス上位4名。未購入・権利が読めない記録には作らない', async () => {
+  const SC = await import('../jagan/site-copy.mjs');
+  const r1 = run(VARIED()), r2 = run(all(2));
+  const rows = [r1, r2].map((r, i) => ({ result_id: `0000000${i}-0000-4000-8000-000000000000`, created_at: '2026-11-0' + (i + 1), headline: headlineOf(r), snapshot: r }));
+  let jm = loadJaganMypage({ rows, ent: { data: [{ result_id: rows[0].result_id, status: 'active' }], error: null } });
+  assert.deepEqual(jm.GROUPS.map((g) => [g.id, g.short, g.color, g.traits]), SC.GROUPS.map((g) => [g.id, g.short, g.color, g.traits]));
+  const out = await jm.load();
+  const ins = out.sessions[0].insight;
+  assert.ok(ins && ins.groups.length === 3 && ins.fatui.length === 4);
+  for (const g of ins.groups) {
+    const want = SC.GROUPS.find((x) => x.id === g.id).traits.map((id) => ({ id, s: Math.round(r1.traits[id].score) })).sort((a, b) => b.s - a.s)[0];
+    assert.equal(g.top[0].score, want.s, g.id);
+  }
+  assert.equal(ins.fatui[0].id, r1.character.id);
+  assert.equal(ins.fatui[0].match, r1.character.match, '1位は結果ページと同じ一致度');
+  assert.deepEqual(ins.fatui.map((f) => f.id), r1.characterOrder.slice(0, 4).map((c) => c.id), '並びは結果・レポートと同じ（補正後の順）');
+  assert.equal(out.sessions[1].insight, null, '未購入には開示を作らない');
+  jm = loadJaganMypage({ rows, ent: { data: null, error: { message: 'x' } } });
+  assert.ok((await jm.load()).sessions.every((s) => s.insight === null), '権利を読めなければ作らない');
+});

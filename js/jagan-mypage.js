@@ -52,6 +52,29 @@
       text: [mix(a, INK, 0.12), same ? mix(a, WHITE, 0.25) : mix(b, INK, 0.05)],
     };
   }
+  // 三つの土台（jagan/site-copy.mjs の GROUPS と同じ。テストで一致を確かめる）。note はマイページの一行説明
+  var GROUPS = [
+    { id: 'inner', short: '不安と距離', color: '#C98A5A', traits: ['ANX', 'SEP', 'SUS', 'WDR'], note: '他者との距離や安心感をめぐって、心が揺れやすいところ' },
+    { id: 'action', short: '行動のくせ', color: '#8E7CD0', traits: ['IMP', 'RSK', 'PSV', 'PRF'], note: '動き出す速さ、切り替え方、基準の高さ' },
+    { id: 'relating', short: '他者との向き合い', color: '#C8405C', traits: ['HOS', 'ATT', 'MAN', 'CAL'], note: '他者への振る舞い方と、働きかけ方' },
+  ];
+  // 購入済みの記録だけ：マイページで開示する内容（三つの土台の上位2特性・ファトゥス上位4名）。未購入には作らない
+  function insightOf(snap) {
+    var traits = snap.traits || {};
+    var groups = GROUPS.map(function (g) {
+      var top = g.traits.map(function (id) { var t = traits[id]; return t && typeof t.score === 'number' ? { id: id, label: t.label, score: Math.max(0, Math.min(100, Math.round(t.score))), color: ISOU_COLOR[id] } : null; })
+        .filter(Boolean).sort(function (a, b) { return b.score - a.score || g.traits.indexOf(a.id) - g.traits.indexOf(b.id); }).slice(0, 2);
+      return { id: g.id, short: g.short, color: g.color, note: g.note, top: top };
+    });
+    var ch = snap.character && snap.character.status === 'available' ? snap.character : null;
+    var order = Array.isArray(snap.characterOrder) ? snap.characterOrder : [];
+    var fatui = order.slice(0, 4).map(function (c, i) {
+      // 1位は結果ページと同じ一致度（character.match）
+      var m = i === 0 && ch && ch.id === c.id ? ch.match : Math.round(c.displayScore);
+      return { id: c.id, name: c.name, match: m, tone: fatuiTone(c.id) };
+    });
+    return { groups: groups, fatui: fatui };
+  }
   var notes = [];
   var inFlight = null;
 
@@ -147,6 +170,7 @@
       top3: dtiOk ? top3(snap) : [],
       character: ch ? { id: ch.id, name: ch.name, match: ch.match, tone: fatuiTone(ch.id) } : null,
       entKnown: ent.ok, purchased: ent.ok && ent.set[row.result_id] === true,
+      insight: dtiOk && ent.ok && ent.set[row.result_id] === true ? insightOf(snap) : null,
     };
   }
 
@@ -273,5 +297,5 @@
 
   window.JaganMypage = { load: load, notesHtml: notesHtml, gateNote: gateNote, hasPending: hasPending, hasRegister: hasRegister,
     salesOpen: salesOpen, share: share, shareUrlOf: shareUrlOf, shareTextOf: shareTextOf, esc: esc, fatuiTone: fatuiTone, mix: mix,
-    COLORS: { ISOU_COLOR: ISOU_COLOR, ELEMENT_MAIN: ELEMENT_MAIN, FATUI_TONE: FATUI_TONE, WHITE: WHITE, BLACK: BLACK, INK: INK } };
+    GROUPS: GROUPS, COLORS: { ISOU_COLOR: ISOU_COLOR, ELEMENT_MAIN: ELEMENT_MAIN, FATUI_TONE: FATUI_TONE, WHITE: WHITE, BLACK: BLACK, INK: INK } };
 })();

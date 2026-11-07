@@ -472,6 +472,7 @@
   .mp-jg-buy-error { font-size: 12px; color: #f2a7b5; margin: 8px 0 0; }
   .mp-chip.eti { color: #a9c9ec; border-color: rgba(122,184,232,.45); background: rgba(122,184,232,.10); }
   .mp-jg-fill { position: relative; height: 100%; border-radius: 3px; }
+  .mp-jg-card .mp-gauge.mp-mirror-row { grid-template-columns: 7.4em 1fr 2.8em; }
   /* まだ読み解いていないもの（邪眼）：項目ごとの色 */
   .mp-lockbox .mp-locked-row[data-domain="jg-traits"] { --dc1: #e88aa6; --dc2: #f4bccb; }
   .mp-lockbox .mp-locked-row[data-domain="jg-ground"] { --dc1: #b59ad8; --dc2: #d6c4ee; }
@@ -1771,6 +1772,15 @@ const MP_JAGAN_EMBLEM = { '炎': 'pyro', '水': 'hydro', '風': 'anemo', '雷': 
 const MP_JG_ISOU = '#e3a3b4';
 // 色の値は #RRGGBB だけを使う（style に入れる前に確かめる）
 function mpHex(v) { return /^#[0-9a-fA-F]{6}$/.test(String(v || '')) ? v : null; }
+// 購入済みの記録の開示（三つの土台・ファトゥス上位4名）。表示の前に値を確かめる
+function mpJaganInsightData(x) {
+  if (!x || !Array.isArray(x.groups) || !Array.isArray(x.fatui)) return null;
+  return {
+    groups: x.groups.map((g) => ({ short: mpEsc(g.short), note: mpEsc(g.note), color: mpHex(g.color) || '#c99aa7',
+      top: (g.top || []).map((t) => ({ label: mpEsc(t.label), score: mpNum(t.score), color: mpHex(t.color) || '#c99aa7' })).filter((t) => t.score !== null) })),
+    fatui: x.fatui.map((f) => ({ name: mpEsc(f.name), match: mpNum(f.match), tone: mpTone(f.tone) })).filter((f) => f.match !== null),
+  };
+}
 function mpTone(t) {
   const ok = t && mpHex(t.base) && Array.isArray(t.ring) && Array.isArray(t.text) && t.ring.concat(t.text).every(mpHex);
   return ok ? { base: t.base, ring: t.ring.slice(0, 2), text: t.text.slice(0, 2) } : null;
@@ -1890,6 +1900,7 @@ const MP_KINDS = {
         resultUrl: '/jagan/?saved=' + encodeURIComponent(s.id),
         top3: Array.isArray(s.top3) ? s.top3.map((t) => ({ label: mpEsc(t.label), score: mpNum(t.score), color: mpHex(t.color) })).filter((t) => t.score !== null) : [],
         fatui: s.character && mpNum(s.character.match) !== null ? { name: mpEsc(s.character.name), match: mpNum(s.character.match), tone: mpTone(s.character.tone) } : null,
+        insight: mpJaganInsightData(s.insight),
       };
     },
     freeListHtml(r) {
@@ -2767,10 +2778,26 @@ function mpJaganLockedHtml(r, where) {
     </div>`;
 }
 function mpJaganInsightHtml(r, where) {
+  // 購入済み：元素診断の「深く読み解いた記録」と同じ部品で、三つの土台（上位2特性と数値）とファトゥス上位4名を開示する
+  const x = r.insight;
+  const cards = x ? x.groups.map((g) => {
+    const c2 = g.top[1] ? g.top[1].color : g.color;
+    const title = g.top.length ? `<div class="tag"><span class="a1" style="color:${g.top[0].color}">${g.top[0].label}</span>${g.top[1] ? `<span class="mp-x"> × </span><span class="a2" style="color:${g.top[1].color}">${g.top[1].label}</span>` : ''}</div>` : '';
+    const body = g.top.map((t) => `
+      <div class="mp-gauge"><span class="nm">${t.label}</span><span class="track"><span class="fill" style="display:block;width:${Math.max(0, Math.min(100, t.score))}%;--g1:color-mix(in srgb, ${t.color} 45%, #0b0306);--g2:${t.color}"></span></span><span class="val">${t.score}</span></div>`).join('');
+    return `<div class="mp-insight-card mp-jg-card" style="--d1:${g.color};--d2:${c2}"><div class="t">${g.short}</div>${title}${body}<div class="n">${g.note}</div></div>`;
+  }) : [];
+  if (x && x.fatui.length) {
+    const rows = x.fatui.map((f) => {
+      const tone = f.tone || { text: ['#c99aa7', '#c99aa7'], ring: ['#4a2232', '#c99aa7'] };
+      return `<div class="mp-gauge mp-mirror-row"><span class="nm" style="background-image:linear-gradient(100deg, ${tone.text[0]}, ${tone.text[1]});-webkit-background-clip:text;background-clip:text;color:transparent">${f.name}</span><span class="track"><span class="fill" style="display:block;width:${Math.max(0, Math.min(100, f.match))}%;--g1:${tone.ring[0]};--g2:${tone.ring[1]}"></span></span><span class="val">${f.match}%</span></div>`;
+    }).join('');
+    cards.push(`<div class="mp-insight-card mp-jg-card" style="--d1:#e2c08c;--d2:#c8405c"><div class="t">FATUI</div>${rows}<div class="n">11人の執行官のうち、あなたの影に近い4人（並びは人物ごとの出やすさの偏りを補正した順、％は補正前の一致度）</div></div>`);
+  }
   return `
     <div class="mp-jg-insight">
-      <div class="mp-seen-title">深く読み解いた記録</div>
-      <p class="mp-jg-insight-t">12特性のスコアと読み解き・三つの土台・判定根拠・近しいファトゥス3名を、いつでも読み返せます。</p>
+      <div class="mp-insight-head">深く読み解いた記録</div>
+      ${cards.length ? `<div class="mp-insight-grid">${cards.join('')}</div>` : '<p class="mp-jg-insight-t">12特性のスコアと読み解き・三つの土台・判定根拠・近しいファトゥス3名を、いつでも読み返せます。</p>'}
       ${mpJaganActionsHtml(r, where === 'latest' ? 'mypage_latest' : 'mypage_history')}
     </div>`;
 }
