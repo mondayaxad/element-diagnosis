@@ -36,21 +36,21 @@
 | style:AGY | 30 |
 | persona:O | 30 |
 | values:SD | 20 |
-| values:SE | 19 |
 | style:ROL | 18 |
+| values:SE | 17 |
 | persona:C | 16 |
 | values:HE | 15 |
-| values:ST | 12 |
 | style:REF | 12 |
+| values:CO | 12 |
 | persona:E | 11 |
+| values:ST | 11 |
 | values:UN | 11 |
-| values:BE | 10 |
+| values:BE | 11 |
 | persona:A | 9 |
 | persona:N | 8 |
-| values:CO | 7 |
 | style:AUT | 7 |
-| values:PO | 6 |
-| values:AC | 5 |
+| values:PO | 4 |
+| values:AC | 4 |
 | values:TR | 3 |
 
 | 相違点の軸 | 件数 |

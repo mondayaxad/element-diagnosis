@@ -12,11 +12,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "ROL"
+   "axis": "ROL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "C",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -39,11 +47,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "A"
+   "axis": "A",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -66,11 +83,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "A"
+   "axis": "A",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -93,11 +119,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "A"
+   "axis": "A",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -120,11 +155,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -147,11 +190,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "persona",
-   "axis": "E"
+   "axis": "E",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "C",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -174,11 +225,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "E"
+   "axis": "E",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "PO",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -201,11 +261,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -228,11 +297,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "ST"
+   "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -255,17 +333,25 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
   "styleFar": "REL",
   "styleFarSmall": false,
-  "valuesNear": "PO",
+  "valuesNear": "UN",
   "valuesFar": "BE",
   "valuesFarSmall": false
  },
@@ -282,11 +368,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -309,11 +403,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "HE"
+   "axis": "HE",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -336,11 +439,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "TR"
+   "axis": "TR",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -363,11 +475,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SD"
+   "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -390,11 +511,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "N"
+   "axis": "N",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -417,11 +546,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "A"
+   "axis": "A",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -444,11 +582,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "CO",
+   "info": {
+    "you": -1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -471,17 +618,26 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "BE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
   "styleFar": "AGY",
   "styleFarSmall": false,
-  "valuesNear": "PO",
+  "valuesNear": "UN",
   "valuesFar": "BE",
   "valuesFarSmall": false
  },
@@ -498,11 +654,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "ROL"
+   "axis": "ROL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -525,11 +690,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -552,11 +726,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -579,11 +761,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "REF"
+   "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "C",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -606,11 +796,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "E"
+   "axis": "E",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "PO",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -633,11 +832,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "CO",
+   "info": {
+    "you": -1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -660,11 +868,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "ST"
+   "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -687,11 +904,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "C"
+   "axis": "C",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -714,11 +940,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "CO"
+   "axis": "CO",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -741,11 +976,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "ST"
+   "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -768,11 +1012,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SD"
+   "axis": "SD",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -795,11 +1048,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "E"
+   "axis": "E",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -822,17 +1083,26 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "SE"
+   "axis": "CO",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
   "styleFar": "AGY",
   "styleFarSmall": false,
-  "valuesNear": "SE",
+  "valuesNear": "CO",
   "valuesFar": "PO",
   "valuesFarSmall": false
  },
@@ -849,11 +1119,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "REF"
+   "axis": "REF",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -876,11 +1154,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "ST"
+   "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -903,17 +1190,25 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "low",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
   "styleFar": "AUT",
   "styleFarSmall": false,
-  "valuesNear": "PO",
+  "valuesNear": "SE",
   "valuesFar": "SD",
   "valuesFarSmall": false
  },
@@ -930,11 +1225,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "UN"
+   "axis": "UN",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -957,11 +1261,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "HE"
+   "axis": "HE",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -984,11 +1297,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "TR"
+   "axis": "TR",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AUT",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -1011,11 +1333,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "E"
+   "axis": "E",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -1038,11 +1368,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -1065,11 +1403,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "AUT"
+   "axis": "AUT",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -1092,11 +1438,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -1119,17 +1474,26 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
   "styleFar": "REF",
   "styleFarSmall": false,
-  "valuesNear": "PO",
+  "valuesNear": "UN",
   "valuesFar": "TR",
   "valuesFarSmall": false
  },
@@ -1146,11 +1510,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "ROL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -1173,11 +1545,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SE"
+   "axis": "SE",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -1200,11 +1581,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "A"
+   "axis": "A",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "BE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -1227,11 +1617,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -1254,11 +1653,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -1281,11 +1688,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SE"
+   "axis": "SE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AUT",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -1308,11 +1724,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "ST"
+   "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -1335,11 +1760,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -1362,11 +1795,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -1389,11 +1830,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -1416,11 +1865,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -1443,11 +1900,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "SD"
+   "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "N",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -1470,11 +1936,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -1497,11 +1971,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SE"
+   "axis": "SE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -1524,17 +2007,26 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "C"
+   "axis": "C",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
   "styleFar": "REF",
   "styleFarSmall": false,
-  "valuesNear": "AC",
+  "valuesNear": "PO",
   "valuesFar": "SD",
   "valuesFarSmall": false
  },
@@ -1551,17 +2043,26 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
   "styleFar": "REF",
   "styleFarSmall": false,
-  "valuesNear": "PO",
+  "valuesNear": "UN",
   "valuesFar": "TR",
   "valuesFarSmall": false
  },
@@ -1578,11 +2079,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SE",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -1605,11 +2115,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SE"
+   "axis": "SE",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -1632,11 +2151,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "A"
+   "axis": "A",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "BE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -1659,11 +2187,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "C"
+   "axis": "C",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SE",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -1686,11 +2223,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -1713,11 +2258,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "persona",
-   "axis": "C"
+   "axis": "C",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -1740,11 +2294,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REF"
+   "axis": "REF",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "CO",
+   "info": {
+    "you": -1,
+    "char": 0,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -1767,17 +2330,26 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
   "styleFar": "AGY",
   "styleFarSmall": false,
-  "valuesNear": "PO",
+  "valuesNear": "UN",
   "valuesFar": "TR",
   "valuesFarSmall": false
  },
@@ -1794,11 +2366,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "UN"
+   "axis": "UN",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -1821,11 +2402,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REF"
+   "axis": "REF",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "BE",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -1848,11 +2438,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "HE"
+   "axis": "HE",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -1875,11 +2474,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AUT"
+   "axis": "AUT",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "HE",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -1902,17 +2510,26 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "SE"
+   "axis": "CO",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "N",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
   "styleFar": "AGY",
   "styleFarSmall": false,
-  "valuesNear": "SE",
+  "valuesNear": "CO",
   "valuesFar": "PO",
   "valuesFarSmall": false
  },
@@ -1929,11 +2546,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "REF"
+   "axis": "REF",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "CO",
+   "info": {
+    "you": -1,
+    "char": 0,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -1956,11 +2582,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "SD"
+   "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "N",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -1983,11 +2618,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SD",
+   "info": {
+    "you": -1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -2010,11 +2654,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "UN"
+   "axis": "UN",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -2037,11 +2690,21 @@
   "farDomain": "values",
   "common": {
    "domain": "values",
-   "axis": "SD"
+   "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "BE",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -2064,11 +2727,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "HE"
+   "axis": "HE",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -2091,11 +2763,21 @@
   "farDomain": "values",
   "common": {
    "domain": "values",
-   "axis": "PO"
+   "axis": "PO",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -2118,11 +2800,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "PO",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -2145,11 +2836,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -2172,17 +2871,26 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "AC"
+   "axis": "PO",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "N",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
   "styleFar": "AUT",
   "styleFarSmall": false,
-  "valuesNear": "AC",
+  "valuesNear": "PO",
   "valuesFar": "SD",
   "valuesFarSmall": false
  },
@@ -2199,17 +2907,26 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
   "styleFar": "REF",
   "styleFarSmall": false,
-  "valuesNear": "PO",
+  "valuesNear": "UN",
   "valuesFar": "TR",
   "valuesFarSmall": false
  },
@@ -2226,11 +2943,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -2253,17 +2978,26 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "ST"
+   "axis": "BE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "A",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
   "styleFar": "AUT",
   "styleFarSmall": false,
-  "valuesNear": "ST",
+  "valuesNear": "BE",
   "valuesFar": "UN",
   "valuesFarSmall": false
  },
@@ -2280,11 +3014,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "HE"
+   "axis": "HE",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -2307,11 +3050,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "N",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -2334,11 +3085,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SD"
+   "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -2361,11 +3121,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "SE"
+   "axis": "SE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "A",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -2388,11 +3157,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SD"
+   "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -2415,11 +3193,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "AC"
+   "axis": "AC",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -2442,11 +3229,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -2469,11 +3264,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "C"
+   "axis": "C",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -2496,11 +3299,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "AC"
+   "axis": "AC",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -2523,11 +3335,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "SD"
+   "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -2550,11 +3371,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "PO",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -2577,11 +3407,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SE"
+   "axis": "SE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -2604,17 +3443,25 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "N",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
   "styleFar": "REF",
   "styleFarSmall": false,
-  "valuesNear": "AC",
+  "valuesNear": "PO",
   "valuesFar": "SD",
   "valuesFarSmall": false
  },
@@ -2631,11 +3478,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "ROL"
+   "axis": "ROL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "AC",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -2658,11 +3514,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "ROL"
+   "axis": "ROL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -2685,11 +3550,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "C"
+   "axis": "C",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AUT",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -2712,11 +3585,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "HE"
+   "axis": "HE",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "N",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -2739,11 +3621,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "N",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -2766,11 +3656,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "ROL"
+   "axis": "ROL",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "N",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -2793,11 +3691,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SE"
+   "axis": "SE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AUT",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -2820,11 +3727,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "N",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -2847,11 +3762,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "AC",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -2874,11 +3798,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SD",
+   "info": {
+    "you": -1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -2901,11 +3834,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -2928,11 +3870,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "HE"
+   "axis": "HE",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -2955,11 +3906,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SE",
+   "info": {
+    "you": -1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -2982,11 +3942,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AUT"
+   "axis": "AUT",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "PO",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -3009,11 +3978,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SE"
+   "axis": "SE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -3036,11 +4014,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "REF"
+   "axis": "REF",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "O",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -3063,11 +4049,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REF"
+   "axis": "REF",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "AC",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -3090,11 +4085,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "REF"
+   "axis": "REF",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "N",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -3117,17 +4120,26 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
   "styleFar": "ROL",
   "styleFarSmall": false,
-  "valuesNear": "ST",
+  "valuesNear": "BE",
   "valuesFar": "UN",
   "valuesFarSmall": false
  },
@@ -3144,11 +4156,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "C"
+   "axis": "C",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "N",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -3171,11 +4191,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "N",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -3198,11 +4226,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AUT"
+   "axis": "AUT",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "PO",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -3225,11 +4262,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -3252,11 +4298,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "E"
+   "axis": "E",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "CO",
+   "info": {
+    "you": -1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -3279,11 +4334,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -3306,11 +4370,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "AC"
+   "axis": "AC",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "ROL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -3333,11 +4406,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -3360,11 +4442,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "HE"
+   "axis": "HE",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -3387,11 +4478,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "BE"
+   "axis": "BE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "A",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -3414,11 +4514,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "CO"
+   "axis": "CO",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -3441,11 +4550,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -3468,11 +4586,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SD"
+   "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -3495,11 +4622,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SD",
+   "info": {
+    "you": -1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -3522,11 +4658,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "UN"
+   "axis": "UN",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "ROL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -3549,11 +4694,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "N"
+   "axis": "N",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -3576,11 +4729,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "HE"
+   "axis": "HE",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -3603,11 +4765,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SD"
+   "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -3630,11 +4801,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -3657,11 +4836,19 @@
   "farDomain": "style",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "low",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -3684,11 +4871,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "CO",
+   "info": {
+    "you": -1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -3711,17 +4907,26 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "ROL"
+   "axis": "ROL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "BE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
   "styleFar": "AGY",
   "styleFarSmall": false,
-  "valuesNear": "PO",
+  "valuesNear": "UN",
   "valuesFar": "BE",
   "valuesFarSmall": false
  },
@@ -3738,11 +4943,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -3765,11 +4978,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -3792,11 +5014,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "HE"
+   "axis": "HE",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -3819,11 +5050,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "REF"
+   "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "N",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -3846,11 +5085,21 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SD"
+   "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "PO",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -3873,11 +5122,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "SE"
+   "axis": "SE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -3900,11 +5158,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -3927,17 +5194,26 @@
   "farDomain": "values",
   "common": {
    "domain": "values",
-   "axis": "PO"
+   "axis": "SE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "N",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
   "styleFar": "AGY",
   "styleFarSmall": false,
-  "valuesNear": "PO",
+  "valuesNear": "SE",
   "valuesFar": "SD",
   "valuesFarSmall": false
  },
@@ -3954,11 +5230,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "UN"
+   "axis": "UN",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -3981,11 +5266,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -4008,11 +5302,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "HE"
+   "axis": "HE",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -4035,11 +5338,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AUT"
+   "axis": "AUT",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "HE",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -4062,11 +5374,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "PO",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -4089,17 +5410,25 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REL",
   "styleFar": "AGY",
   "styleFarSmall": false,
-  "valuesNear": "BE",
+  "valuesNear": "HE",
   "valuesFar": "CO",
   "valuesFarSmall": false
  },
@@ -4116,11 +5445,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "REF"
+   "axis": "REF",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -4143,17 +5480,26 @@
   "farDomain": "values",
   "common": {
    "domain": "values",
-   "axis": "PO"
+   "axis": "SE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "N",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
   "styleFar": "AUT",
   "styleFarSmall": false,
-  "valuesNear": "PO",
+  "valuesNear": "SE",
   "valuesFar": "SD",
   "valuesFarSmall": false
  },
@@ -4170,11 +5516,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "UN"
+   "axis": "UN",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -4197,11 +5552,21 @@
   "farDomain": "values",
   "common": {
    "domain": "values",
-   "axis": "SD"
+   "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -4224,11 +5589,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "HE"
+   "axis": "HE",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -4251,11 +5625,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "E"
+   "axis": "E",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -4278,11 +5661,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "PO",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -4305,11 +5697,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "REF"
+   "axis": "REF",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -4332,11 +5732,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "HE"
+   "axis": "HE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AUT",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -4359,11 +5768,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SD",
+   "info": {
+    "you": -1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -4386,11 +5804,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -4413,11 +5840,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -4440,11 +5876,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -4467,11 +5912,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "UN"
+   "axis": "UN",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -4494,11 +5948,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "CO"
+   "axis": "CO",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -4521,11 +5984,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SE"
+   "axis": "SE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AUT",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -4548,11 +6020,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "HE"
+   "axis": "HE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -4575,17 +6056,26 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "PO"
+   "axis": "SE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "C",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REL",
   "styleFar": "REF",
   "styleFarSmall": false,
-  "valuesNear": "PO",
+  "valuesNear": "SE",
   "valuesFar": "SD",
   "valuesFarSmall": false
  },
@@ -4602,11 +6092,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "BE"
+   "axis": "BE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -4629,11 +6128,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SE"
+   "axis": "SE",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -4656,11 +6164,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -4683,11 +6199,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "UN"
+   "axis": "UN",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -4710,11 +6235,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "E"
+   "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -4737,11 +6270,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "N"
+   "axis": "N",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -4764,11 +6305,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "HE"
+   "axis": "HE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -4791,11 +6341,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SD",
+   "info": {
+    "you": -1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -4818,11 +6377,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -4845,11 +6413,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -4872,11 +6449,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "C",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -4899,11 +6484,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "BE"
+   "axis": "BE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -4926,11 +6520,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "CO"
+   "axis": "CO",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "C",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -4953,11 +6556,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "BE"
+   "axis": "BE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "C",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -4980,11 +6592,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SD"
+   "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -5007,11 +6628,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REF"
+   "axis": "REF",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SD",
+   "info": {
+    "you": -1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -5034,11 +6664,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "BE"
+   "axis": "BE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "C",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -5061,11 +6700,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "ROL"
+   "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -5088,11 +6736,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -5115,11 +6772,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "A"
+   "axis": "A",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -5142,11 +6807,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AUT"
+   "axis": "AUT",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "PO",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -5169,11 +6843,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "ROL"
+   "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": -1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -5196,11 +6879,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "persona",
-   "axis": "A"
+   "axis": "A",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "CO",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -5223,11 +6915,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -5250,11 +6951,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "BE"
+   "axis": "BE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "C",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -5277,11 +6987,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "ROL"
+   "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -5304,11 +7022,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -5331,11 +7058,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "A"
+   "axis": "A",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -5358,11 +7093,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "low",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "PO",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -5385,11 +7129,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "ROL"
+   "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -5412,11 +7164,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "ROL"
+   "axis": "ROL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "O",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -5439,11 +7199,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -5466,11 +7235,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "E"
+   "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -5493,11 +7271,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -5520,11 +7307,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "BE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -5547,11 +7343,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -5574,11 +7379,20 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "N"
+   "axis": "N",
+   "info": {
+    "level": "low",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "PO",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -5601,11 +7415,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -5628,11 +7451,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "ST"
+   "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -5655,11 +7487,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "C"
+   "axis": "C",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "ROL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -5682,11 +7522,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "CO"
+   "axis": "CO",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "ROL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -5709,11 +7558,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "N"
+   "axis": "N",
+   "info": {
+    "level": "low",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -5736,11 +7593,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "TR"
+   "axis": "TR",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -5763,11 +7629,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "AC"
+   "axis": "AC",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "C",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -5790,11 +7665,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "persona",
-   "axis": "E"
+   "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "A",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -5817,11 +7700,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SE"
+   "axis": "SE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -5844,11 +7736,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -5871,11 +7772,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "ROL"
+   "axis": "ROL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -5898,11 +7808,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "ROL"
+   "axis": "ROL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -5925,11 +7844,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -5952,11 +7880,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "SD"
+   "axis": "SD",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "O",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -5979,11 +7916,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -6006,11 +7952,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "PO",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -6033,11 +7988,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -6060,11 +8024,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "ROL"
+   "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "O",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -6087,11 +8059,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -6114,11 +8095,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "UN"
+   "axis": "UN",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -6141,11 +8131,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "ST"
+   "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "O",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -6168,11 +8167,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SD"
+   "axis": "SD",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -6195,11 +8203,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "N"
+   "axis": "N",
+   "info": {
+    "level": "low",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -6222,17 +8238,26 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "SE"
+   "axis": "CO",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "O",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REL",
   "styleFar": "AGY",
   "styleFarSmall": false,
-  "valuesNear": "SE",
+  "valuesNear": "CO",
   "valuesFar": "PO",
   "valuesFarSmall": false
  },
@@ -6249,11 +8274,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "ROL"
+   "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "O",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -6276,11 +8309,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "ST"
+   "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "O",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -6303,11 +8345,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -6330,11 +8381,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "UN"
+   "axis": "UN",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -6357,11 +8417,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -6384,11 +8453,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SD"
+   "axis": "SD",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -6411,11 +8489,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "N"
+   "axis": "N",
+   "info": {
+    "level": "low",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -6438,11 +8524,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "REL"
+   "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "A",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -6465,11 +8559,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "N"
+   "axis": "N",
+   "info": {
+    "level": "low",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -6492,11 +8595,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "ROL"
+   "axis": "ROL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": -1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -6519,11 +8631,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "C"
+   "axis": "C",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": 1,
+    "char": 0,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -6546,11 +8667,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "C"
+   "axis": "C",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -6573,11 +8703,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SE"
+   "axis": "SE",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -6600,11 +8739,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "C"
+   "axis": "C",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -6627,11 +8775,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "BE"
+   "axis": "BE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -6654,11 +8811,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "C"
+   "axis": "C",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AUT",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -6681,11 +8846,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AUT",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -6708,11 +8881,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SD"
+   "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -6735,11 +8917,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "E"
+   "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -6762,11 +8952,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "CO"
+   "axis": "CO",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "ROL",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REL",
@@ -6789,11 +8988,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "ST"
+   "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -6816,11 +9024,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SD"
+   "axis": "SD",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -6843,11 +9060,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "UN"
+   "axis": "UN",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -6870,11 +9096,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "CO"
+   "axis": "CO",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -6897,11 +9132,19 @@
   "farDomain": "style",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -6924,11 +9167,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": -1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -6951,11 +9203,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "C"
+   "axis": "C",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": 1,
+    "char": 0,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -6978,11 +9239,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -7005,11 +9275,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SE"
+   "axis": "SE",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REF",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -7032,11 +9311,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "C"
+   "axis": "C",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -7059,11 +9347,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "BE"
+   "axis": "BE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -7086,11 +9383,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "C"
+   "axis": "C",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "PO",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -7113,11 +9419,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "BE"
+   "axis": "BE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "AUT",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -7140,11 +9455,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "ROL"
+   "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -7167,11 +9491,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "C"
+   "axis": "C",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SD",
+   "info": {
+    "you": -1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -7194,11 +9527,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "AUT"
+   "axis": "AUT",
+   "info": {
+    "level": "high",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SD",
+   "info": {
+    "you": -1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -7221,11 +9563,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "ST"
+   "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "A",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -7248,11 +9599,20 @@
   "farDomain": "values",
   "common": {
    "domain": "persona",
-   "axis": "O"
+   "axis": "O",
+   "info": {
+    "level": "high",
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "UN",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AUT",
@@ -7275,11 +9635,21 @@
   "farDomain": "values",
   "common": {
    "domain": "values",
-   "axis": "PO"
+   "axis": "PO",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -7302,17 +9672,26 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "SE"
+   "axis": "CO",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "A",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
   "styleFar": "AGY",
   "styleFarSmall": false,
-  "valuesNear": "SE",
+  "valuesNear": "CO",
   "valuesFar": "PO",
   "valuesFarSmall": false
  },
@@ -7329,11 +9708,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "ROL"
+   "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "PO",
+   "info": {
+    "you": -1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -7356,11 +9744,20 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "SD"
+   "axis": "SD",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "C",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -7383,11 +9780,20 @@
   "farDomain": "values",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "TR",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -7410,11 +9816,21 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "BE"
+   "axis": "BE",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "SD",
+   "info": {
+    "you": -1,
+    "char": 1,
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -7437,11 +9853,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "ST"
+   "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": 1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "REL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "AGY",
@@ -7464,11 +9889,20 @@
   "farDomain": "style",
   "common": {
    "domain": "values",
-   "axis": "SD"
+   "axis": "SD",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": true
+   }
   },
   "differ": {
    "domain": "style",
    "axis": "ROL",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   },
    "isSmall": false
   },
   "styleNear": "REF",
@@ -7491,11 +9925,21 @@
   "farDomain": "values",
   "common": {
    "domain": "values",
-   "axis": "PO"
+   "axis": "PO",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "values",
    "axis": "ST",
+   "info": {
+    "you": 1,
+    "char": -1,
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "ROL",
@@ -7518,17 +9962,26 @@
   "farDomain": "persona",
   "common": {
    "domain": "values",
-   "axis": "SE"
+   "axis": "CO",
+   "info": {
+    "you": -1,
+    "char": -1,
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "A",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "REL",
   "styleFar": "REF",
   "styleFarSmall": false,
-  "valuesNear": "SE",
+  "valuesNear": "CO",
   "valuesFar": "PO",
   "valuesFarSmall": false
  },
@@ -7545,11 +9998,19 @@
   "farDomain": "persona",
   "common": {
    "domain": "style",
-   "axis": "AGY"
+   "axis": "AGY",
+   "info": {
+    "level": "mid",
+    "youHigher": false
+   }
   },
   "differ": {
    "domain": "persona",
    "axis": "E",
+   "info": {
+    "level": "mid",
+    "youHigher": true
+   },
    "isSmall": false
   },
   "styleNear": "AGY",

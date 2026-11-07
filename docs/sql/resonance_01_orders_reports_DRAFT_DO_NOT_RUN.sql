@@ -36,9 +36,9 @@ create index resonance_orders_status_idx on public.resonance_orders (status, cre
 create table public.resonance_reports (
   id                uuid primary key default gen_random_uuid(),
   order_id          uuid not null unique references public.resonance_orders(id) on delete restrict,
-  snapshot          jsonb not null,           -- RESONANCE-REPORT-SNAPSHOT-1（lib/resonance_report_v1.js の buildSnapshot）
+  snapshot          jsonb not null,           -- RESONANCE-REPORT-SNAPSHOT-2（lib/resonance_report_v1.js の buildSnapshot）
   snapshot_sha256   text not null check (snapshot_sha256 ~ '^[0-9a-f]{64}$'),
-  schema_version    text not null check (schema_version = 'RESONANCE-REPORT-SNAPSHOT-1'),
+  schema_version    text not null check (schema_version = 'RESONANCE-REPORT-SNAPSHOT-2'),
   text_version      text not null,
   chart_version     text not null,
   created_at        timestamptz not null default now(),

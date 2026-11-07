@@ -108,7 +108,8 @@ test('7. スナップショット：同じ入力なら同じ内容。再閲覧�
   const a = { element: '氷', weapon: '法器', nation: 'ナドクライ' };
   const s1 = R.buildSnapshot(a, PURCHASE, { allowMissing: true }), s2 = R.buildSnapshot(a, PURCHASE, { allowMissing: true });
   assert.deepEqual(s1, s2);
-  assert.equal(s1.schema_version, 'RESONANCE-REPORT-SNAPSHOT-1');
+  assert.equal(s1.schema_version, 'RESONANCE-REPORT-SNAPSHOT-2');
+  assert.match(read('docs/sql/resonance_01_orders_reports_DRAFT_DO_NOT_RUN.sql'), /check \(schema_version = 'RESONANCE-REPORT-SNAPSHOT-2'\)/);
   assert.deepEqual(s1.input, a);
   assert.equal(s1.result.nation_display, 'ナド・クライ');
   assert.equal(s1.result.mirror_character, MAP.rows['氷|法器|ナドクライ']);
@@ -132,8 +133,8 @@ test('本文：辞書が無い所は〔未執筆〕で示して販売用には�
   for (const a of ALL) {
     const s = R.buildSnapshot(a, PURCHASE, { allowMissing: true });
     s.draft_missing.forEach((k) => families.add(k.split(':')[0]));
-    const all = Object.values(s.text).join('') + R.renderReportHtml(s).replace(/<svg[\s\S]*?<\/svg>/g, '');
-    assert.doesNotMatch(all.replace(/〔未執筆：[^〕]*〕/g, '').split(R.DISCLAIMER).join(''), /[0-9０-９]+\s*(%|％|点|位)|一致率|類似度|最も似|最も近|一番高|精密|測定した結果です|診断します/);
+    const all = Object.values(s.text).map((t) => (Array.isArray(t) ? t.map((p) => p.label + p.body).join('') : t)).join('') + R.renderReportHtml(s).replace(/<svg[\s\S]*?<\/svg>/g, '');
+    assert.doesNotMatch(all.replace(/〔未執筆：[^〕]*〕/g, '').split(R.DISCLAIMER).join(''), /[0-9０-９]+\s*(%|％|点|位)|一致率|類似度|最も似|最も近|一番|1位|１位|精密|測定した結果です|診断します/);
     assert.ok(all.includes(R.DISCLAIMER));
   }
   assert.deepEqual([...families].sort(), Object.keys(R.DICT).sort()); // 不足辞書の一覧＝辞書の全種類
@@ -159,13 +160,54 @@ test('監査ファイル（280件）は計算器と一致している（作り�
   }
 });
 
-test('辞書の雛形（ChatGPT へ渡す dictionary_template_v1.json）は計算器の辞書と同じキーで、280件に要るキーがすべてある', () => {
-  const t = JSON.parse(read('docs/eti-mini/phase_c/dictionary_template_v1.json'));
+test('辞書の雛形（ChatGPT へ渡す dictionary_template_v2.json。C-1 レビュー後のスキーマ）は計算器の辞書と同じキーで、280件に要るキーがすべてある', () => {
+  const t = JSON.parse(read('docs/eti-mini/phase_c/dictionary_template_v2.json'));
   const fams = Object.keys(t).filter((k) => !k.startsWith('_'));
   assert.deepEqual(fams.sort(), Object.keys(R.DICT).sort());
   const need = new Set();
   for (const a of ALL) R.buildSnapshot(a, PURCHASE, { allowMissing: true }).draft_missing.forEach((k) => need.add(k));
   const have = new Set(fams.flatMap((f) => Object.keys(t[f]).map((k) => f + ':' + k)));
   assert.deepEqual([...need].sort(), [...have].sort());
-  assert.equal(need.size, 456);
+  assert.equal(need.size, 300); // comboLine 280 → comboInteraction 35＋nationLens 8、characterModel 66 を追加
+  assert.ok(!('comboLine' in t));
+});
+
+test('C-1 レビュー：RESONANCE は5区分（回答の人物像／登録モデル／共通／相違／解釈）で、割当を「似ているから」と説明しない', () => {
+  for (const a of ALL) {
+    const s = R.buildSnapshot(a, PURCHASE, { allowMissing: true });
+    assert.deepEqual(s.text.resonance.map((p) => p.part), ['answers', 'character', 'common', 'difference', 'reading']);
+    assert.equal(s.text.resonance[1].label, `${s.result.mirror_character}の登録モデル`);
+    assert.match(s.text.resonance[0].body, /アナタを測定したものではありません/);
+    assert.match(s.text.resonance[1].body, /共鳴しうる人物として割り当てられています/);
+    assert.doesNotMatch(JSON.stringify(s.text), /似ているから|最も似|類似度|1位/);
+  }
+  const html = R.renderReportHtml(R.buildSnapshot(ALL[0], PURCHASE, { allowMissing: true }));
+  for (const lbl of ['回答から構成した人物像', '両者に共通する性質', '異なる性質', 'そこから考えられる解釈']) assert.ok(html.includes(`<h3>${lbl}</h3>`), lbl);
+});
+
+test('C-1 レビュー：VALUES は図も本文も平均中心化した相対優先度（同じ基準）。共通点は向きの同じ軸から選び、図には読み方を添える', () => {
+  for (const a of ALL) {
+    const m = R.modelVectors(a), s = R.buildSnapshot(a, PURCHASE, { allowMissing: true });
+    const cu = R._internal.center(m.you.values, R.AXES.values), cc = R._internal.center(m.char.values, R.AXES.values);
+    assert.equal(s.figures.values.basis, 'centered');
+    assert.deepEqual(s.figures.values.you, cu.map((x) => Math.round(x * 10) / 10));
+    assert.deepEqual(s.figures.values.char, cc.map((x) => Math.round(x * 10) / 10));
+    const an = R.analyze(m), i = R.AXES.values.indexOf(an.axes.values.near);
+    const sameSignExists = R.AXES.values.some((_, k) => cu[k] !== 0 && Math.sign(cu[k]) === Math.sign(cc[k]));
+    if (sameSignExists) assert.equal(Math.sign(cu[i]), Math.sign(cc[i]), a.element + a.weapon + a.nation);
+  }
+  const s0 = R.buildSnapshot(ALL[0], PURCHASE, { allowMissing: true });
+  assert.ok(R.renderReportHtml(s0).includes(R.VALUES_READING));
+  const svg = R.renderFigures(s0.figures).values;
+  assert.match(svg, /← 控えめ/); assert.match(svg, /重視 →/);
+});
+
+test('C-1 レビュー：組み合わせ固有の上書き（comboOverride）は任意。あれば相互作用＋国家の読み方の代わりに使う', () => {
+  const full = Object.fromEntries(Object.keys(R.DICT).map((k) => [k, new Proxy({}, { get: (_, key) => `［${k}/${String(key)}］` })]));
+  const a = { element: '水', weapon: '法器', nation: 'フォンテーヌ' };
+  const base = R.buildSnapshot(a, PURCHASE, { dict: full });
+  assert.match(base.text.persona, /［comboInteraction\/水\|法器］［nationLens\/フォンテーヌ］$/);
+  const over = R.buildSnapshot(a, PURCHASE, { dict: { ...full, comboOverride: { '水|法器|フォンテーヌ': '［上書き］' } } });
+  assert.match(over.text.persona, /［上書き］$/);
+  assert.doesNotMatch(over.text.persona, /comboInteraction/);
 });
