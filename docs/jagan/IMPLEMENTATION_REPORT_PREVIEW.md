@@ -133,3 +133,5 @@
 - 購入：ETI の complete_13 と同じ考え方（ログイン不要・固有リンク・マイページへの登録・Webhook と問い合わせの両方で反映）。手順は `docs/jagan/PURCHASE_PREVIEW_RUNBOOK.md`。
 - マイページ（元素診断と共通）：RECORDS・INSIGHTS の数、最新のあなた、記録章、これまでのあなた、右上のレポートに邪眼の記録を同じ規則で並べる。
 - 検査：全体 797 件中 709 合格・失敗 1（既存の save_cta_placement_ui）・skip 87。邪眼 46/46。実PG（jagan_01・02）11/11。
+- 2026-11-07：Preview DB に jagan_02 を SQL Editor で適用（適用前の確認 11 行すべて ok → 適用 Success → 適用後の確認 46 行すべて ok。
+  履歴 20261107120000 jagan_02_orders_links_registrations、jagan_orders 0 行、関数 7 つは invoker・search_path=""・ブラウザのロールは実行不可）。
