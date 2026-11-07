@@ -23,12 +23,31 @@
   var ISOU_COLOR = { ANX: '#B59AD8', SEP: '#7FA7D8', SUS: '#9FB0C8', WDR: '#8FC0D0', IMP: '#E0A050', PSV: '#B8A27A', PRF: '#D8C27A',
     HOS: '#E0694F', ATT: '#E08AA8', MAN: '#C88AD8', RSK: '#E07A5A', CAL: '#9AA7B5' };
   var ELEMENT_MAIN = { PY: '#C9503C', HY: '#3F82BC', CR: '#7DB3C6', EL: '#9563CF', AN: '#4FAE98', GE: '#C9A04E', DE: '#78A84A' };
-  var CHARACTER_ELEMENTS = { pierro: ['EL'], capitano: ['CR'], columbina: ['HY'], tartaglia: ['HY', 'EL'], sandrone: ['CR', 'GE'], arlecchino: ['PY'],
-    pulcinella: ['HY', 'CR'], pantalone: ['DE'], signora: ['CR', 'PY'], scaramouche: ['EL', 'AN'], dottore: ['PY', 'DE'] };
-  // ファトゥスのグラデーション（結果ページの人物名と同じ：jagan/view.mjs の characterGradient）
-  function characterStops(id) {
-    var els = CHARACTER_ELEMENTS[id] || [];
-    return els.length >= 2 ? [ELEMENT_MAIN[els[0]], ELEMENT_MAIN[els[1]]] : els.length === 1 ? [ELEMENT_MAIN[els[0]], '#F4E6EA'] : ['#E2C08C', '#C8405C'];
+  // ファトゥスの色（マイページの円グラフ・名前）。課金前は1つ目の色の単色、課金後は黒寄りのグラデーション（オーナー指定・2026-11-07）
+  //   ピエロ・スカラマシュ＝雷、カピターノ＝氷と白、サンドローネ＝氷と岩、タルタリヤ＝水と雷、コロンビーナ＝水と白、
+  //   ドットーレ＝炎と草、シニョーラ＝氷と炎、パンタローネ＝草と雷、アルレッキーノ＝炎、プルチネッラ＝氷と水
+  var WHITE = '#ECE8F2';
+  var FATUI_TONE = { pierro: ['EL', 'EL'], scaramouche: ['EL', 'EL'], capitano: ['CR', 'WHITE'], sandrone: ['CR', 'GE'], tartaglia: ['HY', 'EL'],
+    columbina: ['HY', 'WHITE'], dottore: ['PY', 'DE'], signora: ['CR', 'PY'], pantalone: ['DE', 'EL'], arlecchino: ['PY', 'PY'], pulcinella: ['CR', 'HY'] };
+  function hexOf(k) { return k === 'WHITE' ? WHITE : ELEMENT_MAIN[k]; }
+  // a と b を t（0〜1）で混ぜる（#RRGGBB）
+  function mix(a, b, t) {
+    var x = [1, 3, 5].map(function (i) { return parseInt(a.slice(i, i + 2), 16); });
+    var y = [1, 3, 5].map(function (i) { return parseInt(b.slice(i, i + 2), 16); });
+    return '#' + x.map(function (v, i) { return ('0' + Math.round(v + (y[i] - v) * t).toString(16)).slice(-2); }).join('');
+  }
+  var INK = '#0B0306'; // 黒寄りの赤黒（邪眼の地色）
+  // { base：課金前の単色, ring：[始, 終]（円グラフ）, text：[始, 終]（名前の文字。暗い地で読める明るさ） }
+  function fatuiTone(id) {
+    var t = FATUI_TONE[id];
+    if (!t) return { base: '#C99AA7', ring: [mix('#C99AA7', INK, 0.5), '#C99AA7'], text: ['#C99AA7', '#E2C08C'] };
+    var a = hexOf(t[0]), b = hexOf(t[1]);
+    var same = t[0] === t[1];
+    return {
+      base: a,
+      ring: [mix(a, INK, 0.55), same ? mix(a, INK, 0.08) : mix(b, INK, 0.12)],
+      text: [mix(a, INK, 0.12), same ? mix(a, WHITE, 0.25) : mix(b, INK, 0.05)],
+    };
   }
   var notes = [];
   var inFlight = null;
@@ -123,7 +142,7 @@
       isouId: dtiOk && snap.isou ? snap.isou.id : null,
       namingVersion: dtiOk && snap.versions ? snap.versions.naming : null,
       top3: dtiOk ? top3(snap) : [],
-      character: ch ? { id: ch.id, name: ch.name, match: ch.match, grad: characterStops(ch.id) } : null,
+      character: ch ? { id: ch.id, name: ch.name, match: ch.match, tone: fatuiTone(ch.id) } : null,
       entKnown: ent.ok, purchased: ent.ok && ent.set[row.result_id] === true,
     };
   }
@@ -250,6 +269,6 @@
   }
 
   window.JaganMypage = { load: load, notesHtml: notesHtml, gateNote: gateNote, hasPending: hasPending, hasRegister: hasRegister,
-    salesOpen: salesOpen, share: share, shareUrlOf: shareUrlOf, shareTextOf: shareTextOf, esc: esc, characterStops: characterStops,
-    COLORS: { ISOU_COLOR: ISOU_COLOR, ELEMENT_MAIN: ELEMENT_MAIN, CHARACTER_ELEMENTS: CHARACTER_ELEMENTS } };
+    salesOpen: salesOpen, share: share, shareUrlOf: shareUrlOf, shareTextOf: shareTextOf, esc: esc, fatuiTone: fatuiTone, mix: mix,
+    COLORS: { ISOU_COLOR: ISOU_COLOR, ELEMENT_MAIN: ELEMENT_MAIN, FATUI_TONE: FATUI_TONE, WHITE: WHITE, INK: INK } };
 })();

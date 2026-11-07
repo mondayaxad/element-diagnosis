@@ -1771,6 +1771,10 @@ const MP_JAGAN_EMBLEM = { '炎': 'pyro', '水': 'hydro', '風': 'anemo', '雷': 
 const MP_JG_ISOU = '#e3a3b4';
 // 色の値は #RRGGBB だけを使う（style に入れる前に確かめる）
 function mpHex(v) { return /^#[0-9a-fA-F]{6}$/.test(String(v || '')) ? v : null; }
+function mpTone(t) {
+  const ok = t && mpHex(t.base) && Array.isArray(t.ring) && Array.isArray(t.text) && t.ring.concat(t.text).every(mpHex);
+  return ok ? { base: t.base, ring: t.ring.slice(0, 2), text: t.text.slice(0, 2) } : null;
+}
 function mpEmblemSrc(record) {
   if (record && record.kind === 'jagan') {
     const f = MP_JAGAN_EMBLEM[record.el];
@@ -1885,8 +1889,7 @@ const MP_KINDS = {
         purchased: s.purchased === true, entKnown: s.entKnown === true,
         resultUrl: '/jagan/?saved=' + encodeURIComponent(s.id),
         top3: Array.isArray(s.top3) ? s.top3.map((t) => ({ label: mpEsc(t.label), score: mpNum(t.score), color: mpHex(t.color) })).filter((t) => t.score !== null) : [],
-        fatui: s.character && mpNum(s.character.match) !== null
-          ? { name: mpEsc(s.character.name), match: mpNum(s.character.match), grad: Array.isArray(s.character.grad) ? s.character.grad.map(mpHex) : [null, null] } : null,
+        fatui: s.character && mpNum(s.character.match) !== null ? { name: mpEsc(s.character.name), match: mpNum(s.character.match), tone: mpTone(s.character.tone) } : null,
       };
     },
     freeListHtml(r) {
@@ -2708,7 +2711,7 @@ function mpJaganVizHtml(r) {
         <div class="mp-viz-title">あなたの異相</div>
         ${r.top3.map((t, i) => {
           const c = t.color || MP_JG_ISOU;
-          const fill = awake ? `background:linear-gradient(90deg, color-mix(in srgb, ${c} 55%, #2a0d16), ${c} 70%, color-mix(in srgb, ${c} 55%, #ffffff));box-shadow:0 0 6px color-mix(in srgb, ${c} 45%, transparent);opacity:1`
+          const fill = awake ? `background:linear-gradient(90deg, color-mix(in srgb, ${c} 30%, #0b0306) 0%, color-mix(in srgb, ${c} 70%, #0b0306) 55%, ${c} 100%);box-shadow:0 0 5px color-mix(in srgb, ${c} 32%, transparent);opacity:1`
             : `background:${c};opacity:${i === 0 ? '.9' : '.6'}`;
           return `
           <div class="mp-eltop mp-jg-trait">
@@ -2719,11 +2722,12 @@ function mpJaganVizHtml(r) {
       </div>` : '<div></div>';
   let ring = '';
   if (r.fatui) {
-    const g = r.fatui.grad[0] && r.fatui.grad[1] ? r.fatui.grad : [MP_EL_COLOR[r.el] || r.color, MP_EL_GLOW_END[r.el] || r.color];
-    const nameStyle = awake ? `background-image:linear-gradient(100deg, ${g[0]}, ${g[1]});-webkit-background-clip:text;background-clip:text;color:transparent` : `color:${mpElText(r.el)}`;
+    // 課金前は1つ目の色の単色、課金後は黒寄りのグラデーション（js/jagan-mypage.js の fatuiTone）
+    const tone = r.fatui.tone || { base: mpElText(r.el), ring: [mpElText(r.el), mpElText(r.el)], text: [mpElText(r.el), mpElText(r.el)] };
+    const nameStyle = awake ? `background-image:linear-gradient(100deg, ${tone.text[0]}, ${tone.text[1]});-webkit-background-clip:text;background-clip:text;color:transparent` : `color:${tone.base}`;
     ring = `
-      <div class="mp-ring" style="--rc:${awake ? g[0] : mpElText(r.el)}" role="img" aria-label="最も近しいファトゥス ${r.fatui.name} 一致度${r.fatui.match}%">
-        ${mpRingSvg(r.fatui.match, mpElText(r.el), g)}
+      <div class="mp-ring" style="--rc:${tone.base}" role="img" aria-label="最も近しいファトゥス ${r.fatui.name} 一致度${r.fatui.match}%">
+        ${mpRingSvg(r.fatui.match, tone.base, tone.ring)}
         <span class="lbl">FATUI</span>
         <span class="who" style="${nameStyle}">${r.fatui.name}</span>
       </div>`;
