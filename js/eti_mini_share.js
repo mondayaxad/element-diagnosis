@@ -1,4 +1,4 @@
-// eti_mini_share.js — 共鳴診断（旧 元素診断 Mini）のシェア用の短い符号。m1（旧・1人表示、/mini?s=）と m2（共鳴診断・2人表示、/resonance?r=）。
+// eti_mini_share.js — 共鳴診断（旧 元素診断 Mini）のシェア用の短い符号。m1（旧 Mini、/resonance?s=）・m2（旧 2人表示、/resonance?r=）・m3（現行、/resonance?c=）。
 //
 // 本家（index.html の packShareParams → /api/share → /api/og-image）と同じ仕組みで、表示する結果だけを1つの短い値に詰める。
 //   値：結果の元素・武器・国家（内部キー）、表示するキャラクター（ETI-CHAR-2.1.0 の並び＝api/_og-data.mjs の CHAR_NAMES の番号）、
@@ -53,8 +53,27 @@
     var w = v % 5; v = (v - w) / 5;
     return { element: ELEMENTS[v], weapon: WEAPONS[w], nation: NATIONS[n], mirrorIndex: mirror, selfIndex: self === SELF_NONE ? null : self };
   }
+  // ---- 共鳴診断 Character Reveal（m3・版 RESONANCE-SHARE-3）：758 と、アナタに共鳴する人物（1人）だけ ----
+  //   混合基数：タイプ 280 × 人物 118 = 33,040 通り（36進で最大3文字）。人物は割当表から引き直さず値として持つ
+  //   （割当表の版が変わっても過去のリンクの表示は変わらない）。m1・m2 とはパラメータ名で分ける（同じ値でも衝突しない）
+  var TOTAL3 = 280 * CHAR_COUNT;
+  function packReveal(element, weapon, nation, charIndex) {
+    var e = ELEMENTS.indexOf(element), w = WEAPONS.indexOf(weapon), n = NATIONS.indexOf(nation);
+    if (e < 0 || w < 0 || n < 0 || !(charIndex >= 0 && charIndex < CHAR_COUNT && charIndex % 1 === 0)) return null;
+    return (((e * 5 + w) * 8 + n) * CHAR_COUNT + charIndex).toString(36);
+  }
+  function unpackReveal(s) {
+    if (typeof s !== 'string' || !/^[0-9a-z]{1,3}$/.test(s)) return null;
+    var v = parseInt(s, 36);
+    if (!(v >= 0 && v < TOTAL3) || v.toString(36) !== s) return null;
+    var c = v % CHAR_COUNT; v = (v - c) / CHAR_COUNT;
+    var n = v % 8; v = (v - n) / 8;
+    var w = v % 5; v = (v - w) / 5;
+    return { element: ELEMENTS[v], weapon: WEAPONS[w], nation: NATIONS[n], charIndex: c };
+  }
   var api = { ELEMENTS: ELEMENTS, WEAPONS: WEAPONS, NATIONS: NATIONS, CHAR_COUNT: CHAR_COUNT, TOTAL: TOTAL, pack: pack, unpack: unpack,
-    TOTAL2: TOTAL2, packResonance: packResonance, unpackResonance: unpackResonance };
+    TOTAL2: TOTAL2, packResonance: packResonance, unpackResonance: unpackResonance,
+    REVEAL_VERSION: 'RESONANCE-SHARE-3', TOTAL3: TOTAL3, packReveal: packReveal, unpackReveal: unpackReveal };
   root.ETIMiniShare = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

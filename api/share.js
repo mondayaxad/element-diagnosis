@@ -97,7 +97,30 @@ function miniSharePage(m1, origin) {
 </html>`;
 }
 
-// 共鳴診断のシェアページ（m2）：クローラーには2人表示の og:image、人は /resonance?r= へ
+// 共鳴診断 Character Reveal（m3）：js/eti_mini_share.js の unpackReveal と同じ計算
+function unpackRevealShare(s) {
+  if (typeof s !== 'string' || !/^[0-9a-z]{1,3}$/.test(s)) return null;
+  let v = parseInt(s, 36);
+  if (!(v >= 0 && v < 280 * MINI_CHAR_COUNT) || v.toString(36) !== s) return null;
+  const c = v % MINI_CHAR_COUNT; v = (v - c) / MINI_CHAR_COUNT;
+  const n = v % 8; v = (v - n) / 8;
+  const wi = v % 5; v = (v - wi) / 5;
+  return { el: PACK_ELEMENTS[v], w: PACK_WEAPONS[wi], nat: PACK_NATIONS[n], charIdx: c };
+}
+// 共鳴診断のシェアページ（m3）：クローラーには人物名を大きく描いた og:image、人は /resonance?c= へ
+function revealSharePage(m3, origin) {
+  const u = unpackRevealShare(m3);
+  const name = u ? (CHAR_NAMES[u.charIdx] || '') : '';
+  const ok = u && name;
+  const redirectUrl = ok ? `${origin}/resonance?c=${m3}` : `${origin}/resonance`;
+  const nation = ok ? (MINI_NATION_DISPLAY[u.nat] || u.nat) : '';
+  const lead = '3つの問いから、アナタに共鳴する人物を。元素診断 PRESENTS 共鳴診断。';
+  const title = ok ? `共鳴診断 — 私に共鳴する人物は「${name}」【${u.el} × ${u.w} × ${nation}】` : '共鳴診断 — RESONANCE';
+  const ogImageUrl = ok ? `${origin}/api/og-image?m3=${m3}` : `${origin}/assets/ogp/ogp-top-20261009.jpg`;
+  return sharePageHtml(title, lead, ogImageUrl, redirectUrl);
+}
+
+// 旧 共鳴診断のシェアページ（m2・2人表示）：クローラーには2人表示の og:image、人は /resonance?r= へ
 function resonanceSharePage(m2, origin) {
   const u = unpackResonanceShare(m2);
   const redirectUrl = u ? `${origin}/resonance?r=${m2}` : `${origin}/resonance`;
@@ -147,6 +170,12 @@ module.exports = async function handler(req, res) {
   const searchParams = url.searchParams;
   const origin = `https://${req.headers.host}`;
   // 元素診断 Mini のシェア（本家と同じ /api/share を使い、m1 があれば Mini のページを返す）
+  const revealParam = searchParams.get('m3');
+  if (revealParam !== null) {
+    res.setHeader('content-type', 'text/html; charset=utf-8');
+    res.status(200).send(revealSharePage(revealParam, origin));
+    return;
+  }
   const resonanceParam = searchParams.get('m2');
   if (resonanceParam !== null) {
     res.setHeader('content-type', 'text/html; charset=utf-8');
@@ -224,3 +253,4 @@ module.exports = async function handler(req, res) {
 }
 module.exports._unpackMiniShare = unpackMiniShare;
 module.exports._unpackResonanceShare = unpackResonanceShare;
+module.exports._unpackRevealShare = unpackRevealShare;

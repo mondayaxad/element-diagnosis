@@ -33,6 +33,8 @@ function withDots(text, size, color) {
  * @param {object} d  { code, typeName, element, weapon, nation, mirrorName, mirrorElement, match, mirrorLabel?, brand? }
  *   mirrorLabel・brand は元素診断 Mini 用（省略時は本家と同じ「最も近しいキャラクター」「元素診断」）。同梱フォントにある文字だけを使うこと
  *   header は上部の見出し（下地に含まれる部分。省略時は本家と同じ「元素診断 — MY RESULT」。共鳴診断は「共鳴診断 — MY RESULT」）
+ *   hero は共鳴診断 Character Reveal（m3）用：{ label, name, element }。MIRROR 欄の位置に人物名を大きく描く（一致率は描かない）
+ *   bandText は下帯の文言をそのまま指定する（省略時は「brand — 私の結果は【…】」）
  *   pair は共鳴診断用：[{ label, name, element }, …]（2人まで）。あれば MIRROR 欄の位置に人物を横に並べる（一致率は描かない）
  * @param {object} o  { origin, backgroundUrl, showBackground=true, fontSerif, fontSans, part='all', baseUrl }
  *   正式背景（元素別JPEG）には円環・ノード・中央光が描き込まれているため、背景を使う場合は
@@ -63,7 +65,7 @@ export function buildOgpCardTree(d, o = {}) {
 
   const bandStyle = { left: 0, bottom: 0, width: L.width, height: L.band.height, alignItems: 'center', justifyContent: 'center',
     background: OGP_COLORS.bandBg, borderTop: '1px solid rgba(150,180,235,.14)', fontSize: L.band.size, letterSpacing: 2, color: OGP_COLORS.bandText, fontFamily: serif };
-  const bandText = `${d.brand || '元素診断'} — 私の結果は【${d.element} × ${d.weapon} × ${d.nation}】`;
+  const bandText = d.bandText || `${d.brand || '元素診断'} — 私の結果は【${d.element} × ${d.weapon} × ${d.nation}】`;
 
   if (part === 'overlay') {
     // 下地の上に人ごとの情報だけ。下帯は地と線を下地に任せ、同じ箱（線は透明で幅を保つ）に文字だけ置く
@@ -100,8 +102,21 @@ export function buildOgpCardTree(d, o = {}) {
     );
   }
 
+  // 共鳴診断 Character Reveal：MIRROR 欄の位置に、人物名を大きく（タイムラインでも読める大きさ）
+  function heroLayer() {
+    const th = themeFor(d.hero.element || d.element);
+    const len = String(d.hero.name).length;
+    const size = len <= 3 ? 66 : len <= 5 ? 64 : len <= 6 ? 58 : 54;
+    return abs({ top: L.mirror.top - 6, left: L.padLeft, width: L.mirror.width, height: L.mirror.height + 12, flexDirection: 'column', justifyContent: 'center',
+      padding: `0 ${L.mirror.padX}px`, ...mirrorPlateStyle(th) },
+      box({ fontSize: L.mirror.labelSize, letterSpacing: 4, color: OGP_COLORS.label, marginBottom: 4, fontFamily: serif }, d.hero.label),
+      box({ fontSize: size, fontWeight: 700, fontFamily: serif, color: th.accent, letterSpacing: 4, lineHeight: 1.1 }, d.hero.name),
+    );
+  }
+
   // 人ごとに変わる情報（タグ・MIRROR・一致度）
   function personLayers() {
+    if (d.hero) return [tagsLayer(), heroLayer()];
     if (d.pair && d.pair.length) return [tagsLayer(), pairLayer()];
     return [
     tagsLayer(),
@@ -185,4 +200,65 @@ export function treeToDom(node, doc = document) {
   if (node.type === 'div' && !style.display) el.style.display = 'flex';
   [].concat(children === undefined ? [] : children).forEach(c => el.appendChild(treeToDom(c, doc)));
   return el;
+}
+
+// ---- 共鳴診断 Character Reveal（m3）のシェアカード：人物が主役のレイアウト ----
+// 情報は本家と同じ（見出し・タイプコード・タイプ名・元素／武器種／国家）に、アナタに共鳴する人物の名前。下帯の文は描かない（オーナー指示）。
+// 人物名をいちばん大きく、背景（星座の円環）・名前のグラデーション・飾りの色は人物の元素。元素のタグだけは本人の元素の色（情報として）。
+//   d: { name, charElement, code（本家と同じ4文字。例 HYCT。「-」は同梱フォントに無い）, typeName, element, weapon, nation（表示名）, header }
+//   o: { part: 'all'|'base'|'overlay', backgroundUrl, baseUrl, fontSerif }
+//   'base' は人物の元素だけで決まる部分（背景・暗いoverlay・名前の後ろの光・枠・見出し・YOUR RESONANCE）。
+//   scripts/build-ogp-bases.mjs --reveal が assets/ogp/bases-reveal/<元素キー>.jpg（7枚）に事前に作る
+export const REVEAL_LAYOUT = { labelTop: 118, nameTop: 158, nameMaxSize: 120, nameWidth: 620, ruleTop: 326, typeLabelTop: 350, codeTop: 378, codeSize: 60, tagsTop: 484 };
+export function revealNameSize(name) {
+  const len = Math.max(1, String(name).length);
+  return Math.min(REVEAL_LAYOUT.nameMaxSize, Math.floor(REVEAL_LAYOUT.nameWidth / len / 1.06));
+}
+export function buildRevealCardTree(d, o = {}) {
+  const part = o.part || 'all';
+  const R = REVEAL_LAYOUT;
+  const ct = themeFor(d.charElement);
+  const ut = themeFor(d.element);
+  const serif = o.fontSerif || 'Noto Serif JP';
+  const tagStyle = (color, border) => ({
+    fontSize: L.tags.size, color, padding: `${L.tags.padY}px ${L.tags.padX}px`, borderRadius: 999,
+    border: `1px solid ${border}`, background: OGP_COLORS.tagBg, letterSpacing: 2, fontFamily: serif,
+  });
+  const baseLayers = () => [
+    o.backgroundUrl ? h('img', { src: o.backgroundUrl, width: L.width, height: L.height, style: { position: 'absolute', top: 0, left: 0, width: L.width, height: L.height } }) : null,
+    abs({ top: 0, left: 0, width: L.width, height: L.height, background: 'rgba(3,5,12,.22)' }),
+    abs({ top: 0, left: 0, width: L.width, height: L.height, background: 'linear-gradient(90deg, rgba(4,6,15,.82) 0%, rgba(4,7,16,.60) 44%, rgba(5,8,18,.16) 64%, rgba(5,8,18,.08) 100%)' }),
+    // 名前の後ろの光（人物の元素）
+    abs({ top: 90, left: -40, width: 760, height: 280, background: `radial-gradient(ellipse at center, ${ct.glow} 0%, rgba(0,0,0,0) 70%)` }),
+    o.backgroundUrl ? null : h('img', { src: svgDataUri(ringSvg(ct)), width: L.ring.size, height: L.ring.size,
+      style: { position: 'absolute', left: L.ring.cx - L.ring.size / 2, top: L.ring.cy - L.ring.size / 2, width: L.ring.size, height: L.ring.size } }),
+    abs({ top: L.frameInset, left: L.frameInset, width: L.width - L.frameInset * 2, height: L.height - L.frameInset * 2,
+      border: `1px solid ${ct.accent}38`, borderRadius: 10, boxShadow: `inset 0 0 30px ${ct.glow}` }),
+    abs({ top: L.header.top, left: L.padLeft, fontSize: L.header.size, letterSpacing: L.header.tracking, color: OGP_COLORS.header, fontFamily: serif }, d.header || '共鳴診断 — MY RESULT'),
+    abs({ top: REVEAL_LAYOUT.labelTop, left: L.padLeft, fontSize: 17, letterSpacing: 7, color: ct.accentSoft, fontFamily: serif }, 'YOUR RESONANCE'),
+  ];
+  const size = revealNameSize(d.name);
+  const personLayers = () => [
+    abs({ top: R.nameTop + Math.round((R.nameMaxSize - size) * 0.6), left: L.padLeft - 4, fontSize: size, lineHeight: 1.1, letterSpacing: 6, fontWeight: 700, fontFamily: serif,
+      color: 'transparent', backgroundImage: `linear-gradient(100deg, ${ct.accentSoft} 0%, ${ct.accent} 60%, ${ct.accentSoft} 100%)`, backgroundClip: 'text', WebkitBackgroundClip: 'text' }, d.name),
+    abs({ top: R.ruleTop, left: L.padLeft, width: 180, height: 1, background: `linear-gradient(90deg, ${ct.accent}, rgba(0,0,0,0))` }),
+    abs({ top: R.typeLabelTop, left: L.padLeft, fontSize: 14, letterSpacing: 6, color: OGP_COLORS.label, fontFamily: serif }, 'YOUR TYPE'),
+    abs({ top: R.codeTop, left: L.padLeft, alignItems: 'baseline', fontFamily: serif },
+      box({ fontSize: R.codeSize, fontWeight: 700, letterSpacing: 4, lineHeight: 1, color: '#f1eeff' }, d.code),
+      box({ fontSize: 44, fontWeight: 700, letterSpacing: 6, lineHeight: 1, color: OGP_COLORS.header, marginLeft: 26 }, d.typeName)),
+    abs({ top: R.tagsTop, left: L.padLeft, gap: L.tags.gap },
+      box(tagStyle(ut.accent, ut.accent + '66'), d.element),
+      box(tagStyle(OGP_COLORS.weapon, 'rgba(195,205,220,.34)'), d.weapon),
+      box(tagStyle(OGP_COLORS.nation, 'rgba(224,200,144,.40)'), withDots(d.nation, L.tags.size, OGP_COLORS.nation))),
+  ];
+  if (part === 'base') {
+    return box({ width: L.width, height: L.height, position: 'relative', overflow: 'hidden', background: OGP_COLORS.base, fontFamily: serif }, ...baseLayers());
+  }
+  if (part === 'overlay') {
+    return box({ width: L.width, height: L.height, position: 'relative', background: OGP_COLORS.base, fontFamily: serif },
+      h('img', { src: o.baseUrl, width: L.width, height: L.height, style: { position: 'absolute', top: 0, left: 0, width: L.width, height: L.height } }),
+      ...personLayers());
+  }
+  return box({ width: L.width, height: L.height, position: 'relative', overflow: 'hidden', background: OGP_COLORS.base, fontFamily: serif },
+    ...baseLayers(), ...personLayers());
 }

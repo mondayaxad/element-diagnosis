@@ -17,11 +17,11 @@
 //   ・下地が取れない時（Preview の保護など）は、従来どおり1枚をすべて描く。
 import { ImageResponse } from '@vercel/og';
 // 新デザイン（7元素の正式背景＋情報レイヤー）。Webプレビュー（ogp-card-demo.html）と同じ組み立てを使う。
-import { buildOgpCardTree } from '../js/ogp-card.mjs';
+import { buildOgpCardTree, buildRevealCardTree } from '../js/ogp-card.mjs';
 import { ELEMENT_KEY } from '../js/ogp-theme.mjs';
 import { CHAR_ELEMENT } from './_ogp-char-element.mjs';
 import { OG_FONT_WOFF_BASE64 } from './_og-font.mjs';
-import { ELEMENT_CODE, WEAPON_CODE, TYPE_NAME, ELEMENT_NAME, WEAPON_NAME, NATION_NAME, CHAR_NAMES, unpackShareParams, canonicalShareP, packShareParams, unpackMiniShare, unpackResonanceShare } from './_og-data.mjs';
+import { ELEMENT_CODE, WEAPON_CODE, TYPE_NAME, ELEMENT_NAME, WEAPON_NAME, NATION_NAME, CHAR_NAMES, unpackShareParams, canonicalShareP, packShareParams, unpackMiniShare, unpackResonanceShare, unpackRevealShare } from './_og-data.mjs';
 
 export const config = { runtime: 'edge' };
 
@@ -62,6 +62,9 @@ export default async function handler(req) {
   const mini = searchParams.get('m1');
   if (mini !== null) return miniImage(mini, searchParams, origin);
   // 共鳴診断（m2）：同じ描き方で、MIRROR 欄に「SELF IMAGE（本人が選んだ人物）」と「MIRROR（回答に映る人物）」を並べる
+  // 共鳴診断 Character Reveal（m3）：人物名を大きく。下地は共鳴診断用（見出し「共鳴診断 — MY RESULT」）
+  const reveal = searchParams.get('m3');
+  if (reveal !== null) return revealImage(reveal, searchParams, origin);
   const resonance = searchParams.get('m2');
   if (resonance !== null) return resonanceImage(resonance, searchParams, origin);
   let el, w, nat, charIdx, match;
@@ -153,6 +156,41 @@ async function resonanceImage(m2, searchParams, origin) {
     baseDir: 'bases-resonance',
   };
   return renderCard(data, origin);
+}
+
+// 共鳴診断 Character Reveal の画像。m3 は正規形だけ（js/eti_mini_share.js の packReveal と同じ符号）。余分なパラメータは正規形へ
+async function revealImage(m3, searchParams, origin) {
+  const u = unpackRevealShare(m3);
+  if (!u || !CHAR_NAMES[u.charIdx]) return new Response('invalid', { status: 400, headers: { 'Cache-Control': 'public, max-age=86400, s-maxage=86400' } });
+  if ([...searchParams.keys()].some((k) => k !== 'm3')) {
+    return new Response(null, { status: 308, headers: { Location: `${origin}/api/og-image?m3=${m3}`, ...CACHE_HEADERS } });
+  }
+  const name = CHAR_NAMES[u.charIdx];
+  // 人物が主役のカード（js/ogp-card.mjs の buildRevealCardTree）。情報は本家と同じ（タイプコード4文字・タイプ名・元素／武器種／国家。下帯の文は描かない）。
+  // 背景（星座）と名前・飾りの色は人物の元素。下地は人物の元素ごとの7枚（assets/ogp/bases-reveal/。scripts/build-ogp-bases.mjs --reveal）
+  const charElement = CHAR_ELEMENT[name] || u.el;
+  const data = {
+    name, charElement, code: ELEMENT_CODE[u.el] + WEAPON_CODE[u.w], typeName: TYPE_NAME[u.el][u.w], element: u.el, weapon: u.w,
+    nation: u.nat === 'ナドクライ' ? 'ナド・クライ' : u.nat,
+    header: '共鳴診断 — MY RESULT',
+  };
+  return renderRevealCard(data, origin);
+}
+
+async function renderRevealCard(data, origin) {
+  const fonts = [{ name: 'Noto Serif JP', data: loadFont(), weight: 700, style: 'normal' }];
+  const key = ELEMENT_KEY[data.charElement] || 'anemo';
+  const baseUrl = await fetchImageDataUri(`${origin}/assets/ogp/bases-reveal/${key}.jpg`);
+  let tree, render;
+  if (baseUrl) {
+    tree = buildRevealCardTree(data, { part: 'overlay', baseUrl, fontSerif: 'Noto Serif JP' });
+    render = 'base';
+  } else {
+    const backgroundUrl = await fetchImageDataUri(`${origin}/assets/ogp/backgrounds/${key}.jpg`);
+    tree = buildRevealCardTree(data, { backgroundUrl, fontSerif: 'Noto Serif JP' });
+    render = backgroundUrl ? 'full' : 'plain';
+  }
+  return new ImageResponse(tree, { width: 1200, height: 630, fonts, headers: { ...CACHE_HEADERS, 'x-og-render': render } });
 }
 
 async function renderCard(data, origin) {

@@ -12,6 +12,9 @@
 //   node scripts/build-ogp-bases.mjs --resonance [--quality 95]
 //     … 共鳴診断用の下地35枚だけを assets/ogp/bases-resonance/ に作る（見出しが「共鳴診断 — MY RESULT」。ほかは本家と同じ）。
 //       本家の下地・札・api/_og-font.mjs は作り直さない
+//   node scripts/build-ogp-bases.mjs --reveal [--quality 95]
+//     … 共鳴診断 Character Reveal（m3）の下地7枚（人物の元素ごと）だけを assets/ogp/bases-reveal/<元素キー>.jpg に作る
+//       （js/ogp-card.mjs の buildRevealCardTree(part:'base')）。ほかは作り直さない
 //   JPEG への変換には ImageMagick（convert）を使う。
 import fs from 'fs';
 import path from 'path';
@@ -20,7 +23,7 @@ import crypto from 'crypto';
 import { execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { ImageResponse } from '@vercel/og';
-import { buildOgpCardTree, buildMirrorPlateTree, MIRROR_PLATE_MARGIN } from '../js/ogp-card.mjs';
+import { buildOgpCardTree, buildMirrorPlateTree, buildRevealCardTree, MIRROR_PLATE_MARGIN } from '../js/ogp-card.mjs';
 import { ELEMENT_KEY, OGP_LAYOUT } from '../js/ogp-theme.mjs';
 import { ELEMENT_CODE, WEAPON_CODE, TYPE_NAME, PACK_ELEMENTS, PACK_WEAPONS } from '../api/_og-data.mjs';
 
@@ -34,6 +37,23 @@ const font = fs.readFileSync(path.join(ROOT, 'assets/ogp/fonts/noto-serif-jp-700
 const fonts = [{ name: 'Noto Serif JP', data: font, weight: 700, style: 'normal' }];
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ogp-bases-'));
 fs.mkdirSync(OUT, { recursive: true });
+
+if (process.argv.includes('--reveal')) {
+  const outDir = path.join(ROOT, 'assets/ogp/bases-reveal');
+  fs.mkdirSync(outDir, { recursive: true });
+  for (const el of PACK_ELEMENTS) {
+    const key = ELEMENT_KEY[el];
+    const backgroundUrl = 'data:image/jpeg;base64,' + fs.readFileSync(path.join(ROOT, `assets/ogp/backgrounds/${key}.jpg`)).toString('base64');
+    const tree = buildRevealCardTree({ charElement: el, element: el, name: '', header: RESONANCE_HEADER }, { part: 'base', backgroundUrl, fontSerif: 'Noto Serif JP' });
+    const pngPath = path.join(tmp, key + '.png');
+    fs.writeFileSync(pngPath, Buffer.from(await new ImageResponse(tree, { width: 1200, height: 630, fonts }).arrayBuffer()));
+    const out = path.join(outDir, key + '.jpg');
+    execFileSync('convert', [pngPath, '-strip', '-interlace', 'none', '-sampling-factor', '4:4:4', '-quality', String(QUALITY), out]);
+    console.log(path.relative(ROOT, out), fs.statSync(out).size);
+  }
+  fs.rmSync(tmp, { recursive: true, force: true });
+  process.exit(0);
+}
 
 for (const el of PACK_ELEMENTS) {
   const bg = fs.readFileSync(path.join(ROOT, `assets/ogp/backgrounds/${ELEMENT_KEY[el]}.jpg`));
