@@ -33,6 +33,25 @@
   var ELEMENT_KEYWORD = { '炎': '情熱を義務が統べる', '水': '底を見せず流れる', '氷': '感情を封じ宿命を負う', '雷': '信念を貫き二極を走る', '風': '形なく流れ昇華する', '岩': '動かず他者を支える', '草': '知り感じ繋がり続ける' };
   var WEAPON_STYLE = { '片手剣': '関係依存型', '両手剣': '自己駆動型', '長柄': '役割献身型', '法器': '媒介思考型', '弓': '距離保持型' };
   var NATION_MEANING = { 'モンド': '自由', '璃月': '契約', '稲妻': '永遠', 'スメール': '知恵', 'フォンテーヌ': '正義', 'ナタ': '戦争', 'スネージナヤ': '慈愛', 'ナドクライ': '月光' };
+  // ふつうの言葉での一文（index.html の ELEMENT_DESC・WEAPON_DESC の最初の一文、NATION_DESC の二文目の写し。tests/eti_mini.test.js が一致を確かめる）
+  var ELEMENT_PLAIN = {
+    '炎': '炎は、義務感と情熱がせめぎ合う元素です。', '水': '水は、周囲との調和を保ちながら、内側に見せない部分を抱える元素です。',
+    '氷': '氷は、外への発信を抑え、内側の解像度を高める元素です。', '雷': '雷は、信念を貫く強さと、型を破る衝動がせめぎ合う元素です。',
+    '風': '風は、七元素の中でもっとも定まった形を持たない元素です。', '岩': '岩は、誠実さと協調性を土台に、守り支える性質を持つ元素です。',
+    '草': '草は、知性と共生が結びつく元素です。',
+  };
+  var WEAPON_PLAIN = {
+    '片手剣': '片手剣は、他者との関わりの中で力を発揮する武器です。', '両手剣': '両手剣は、独力で道を切り拓く武器です。',
+    '長柄': '長柄は、間合いを保ちながら集団を守る武器です。', '法器': '法器は、術式という抽象を介して世界と接続する武器です。',
+    '弓': '弓は、距離を取りながら精密に狙いを定める武器です。',
+  };
+  var NATION_PLAIN = {
+    'モンド': '誰にも縛られず、自分の意志で選び取ることに、何よりの価値を置きます。', '璃月': '交わした約束を守り、目に見える成果を積み上げることに、価値を置きます。',
+    '稲妻': '変わらないものを守り、受け継がれる伝統に、価値を置きます。', 'スメール': '物事の真実を追い求め、知識を分かち合うことに、価値を置きます。',
+    'フォンテーヌ': '公正さと調和を重んじ、誰に対しても等しくあることに、価値を置きます。', 'ナタ': '真っ向からぶつかり合う戦いの中でこそ、生きる実感を得ることに、価値を置きます。',
+    'スネージナヤ': '大切なものを守るためなら、厳しい現実にも立ち向かい、自らが痛みを引き受けることに価値を置きます。',
+    'ナドクライ': '表舞台の喧騒から離れ、静かな場所で自分の価値観を保つことに、価値を置きます。',
+  };
 
   function MiniError(code, message) {
     var e = new Error(message || code);
@@ -74,7 +93,8 @@
       typeName: TYPE_NAME[el][w],
       typePage: '/type/' + typeCode4(el, w).toLowerCase(),
       // 既存の結果画面の一文（index.html の「この4文字の意味するところ」）と同じ素材
-      words: { elementKeyword: ELEMENT_KEYWORD[el], weaponStyle: WEAPON_STYLE[w], nationMeaning: NATION_MEANING[n] },
+      words: { elementKeyword: ELEMENT_KEYWORD[el], weaponStyle: WEAPON_STYLE[w], nationMeaning: NATION_MEANING[n],
+        elementPlain: ELEMENT_PLAIN[el], weaponPlain: WEAPON_PLAIN[w], nationPlain: NATION_PLAIN[n] },
     };
   }
 
@@ -134,6 +154,7 @@
     ELEMENT_KEYS: ELEMENT_KEYS, WEAPON_KEYS: WEAPON_KEYS, NATION_KEYS: NATION_KEYS,
     ELEMENT_CODE: ELEMENT_CODE, WEAPON_CODE: WEAPON_CODE, NATION_CODE: NATION_CODE, TYPE_NAME: TYPE_NAME,
     ELEMENT_KEYWORD: ELEMENT_KEYWORD, WEAPON_STYLE: WEAPON_STYLE, NATION_MEANING: NATION_MEANING,
+    ELEMENT_PLAIN: ELEMENT_PLAIN, WEAPON_PLAIN: WEAPON_PLAIN, NATION_PLAIN: NATION_PLAIN,
     validateAnswers: validateAnswers, keyOf: keyOf, displayNation: displayNation, describeType: describeType,
     autoResult: autoResult, manualResult: manualResult, setManualCombiner: setManualCombiner, isManualSelectionReady: isManualSelectionReady,
   };

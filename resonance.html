@@ -138,6 +138,19 @@
   .r-label span { display: block; }
   .about { font-size: 13.5px; line-height: 2.05; color: var(--t-body); margin: 26px 0 0; word-break: auto-phrase; }
   .about strong { font-weight: 400; color: #e8d8a8; }
+  .eti { margin: 30px 0 0; }
+  .eti-h { text-align: center; margin: 0 0 14px; }
+  .eti-h .en { display: block; font-family: var(--font-en); font-style: italic; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: #5d7cab; margin-bottom: 6px; }
+  .eti-h .jp { display: block; font-size: 15px; font-weight: 600; letter-spacing: .12em; color: #f1eeff; }
+  .eti-rows { display: grid; gap: 10px; }
+  .eti-row { display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: start; border: 1px solid var(--line); border-radius: 8px; background: rgba(10,12,26,.5); padding: 12px 14px; }
+  .eti-code { display: flex; align-items: center; justify-content: center; height: 40px; border-radius: 6px; border: 1px solid rgba(214,189,132,.35); font-family: var(--font-en); font-size: 15px; letter-spacing: .08em; color: var(--gold); }
+  .eti-axis { margin: 0 0 2px; font-size: 11.5px; letter-spacing: .14em; color: var(--t-sub); }
+  .eti-axis b { font-weight: 400; color: #d3dcf0; }
+  .eti-word { margin: 0 0 4px; font-size: 15.5px; letter-spacing: .06em; color: #e8d8a8; }
+  .eti-plain { margin: 0; font-size: 12.5px; line-height: 1.85; color: var(--t-body); word-break: auto-phrase; }
+  .eti .about { margin-top: 16px; }
+  .about .lead { display: block; font-size: 12px; letter-spacing: .14em; color: var(--t-sub); margin-bottom: 4px; }
   .about .small { display: block; margin-top: 10px; font-size: 12px; color: var(--t-sub); line-height: 1.85; }
   .sec { border-top: 1px solid rgba(150,180,240,.1); margin: 34px 0 0; padding: 30px 0 0; }
   .sec-h { text-align: center; margin: 0 0 16px; }
@@ -145,7 +158,8 @@
   .sec-h .jp { display: block; font-size: 16px; font-weight: 600; letter-spacing: .12em; color: #f1eeff; }
   .price { text-align: center; font-size: 15px; letter-spacing: .12em; color: #d6bd84; margin: -6px 0 14px; }
   .demo-note { text-align: center; font-size: 11.5px; color: #c9a860; letter-spacing: .06em; margin: 0 0 16px; }
-  /* ¥500 レポートの見本：項目ごとの図（軸・項目名は見せ、中身はぼかして鍵。固定の見本で、利用者のデータからは作らない） */
+  /* ¥500 レポートの見本：項目ごとの図（軸・項目名は見せ、中身はぼかして鍵）。図は全員同じ固定のダミー（形も色も変えない）。
+     結果ごとに変わるのは PERSONA（性格の重なり）の人物名だけ */
   .locks { display: grid; gap: 12px; }
   .lk { border: 1px solid var(--line); border-radius: 10px; background: linear-gradient(180deg, rgba(14,16,34,.7), rgba(10,12,26,.5)); padding: 14px 14px 12px; }
   .lk-en { margin: 0; font-family: var(--font-en); font-style: italic; font-size: 11px; letter-spacing: .3em; color: var(--gold); }
@@ -161,15 +175,15 @@
   .viz .axis.small text { font-size: 9px; }
   .viz .axis.el text { font-size: 11px; fill: #d3dcf0; }
   .viz .legend text { font-family: var(--font-jp); font-size: 10px; fill: #a9b8d6; }
-  .viz .you { fill: color-mix(in srgb, var(--c-you, #7aa2cf) 30%, transparent); stroke: var(--c-you, #7aa2cf); stroke-width: 2; }
-  .viz .char { fill: color-mix(in srgb, var(--name-glow, #d6bd84) 26%, transparent); stroke: var(--name-glow, #d6bd84); stroke-width: 2; }
-  .viz .you-bar, .viz .you-dot { fill: var(--c-you, #7aa2cf); }
-  .viz .char-bar, .viz .char-dot { fill: var(--name-glow, #d6bd84); }
+  .viz .you { fill: color-mix(in srgb, #7aa2cf 30%, transparent); stroke: #7aa2cf; stroke-width: 2; }
+  .viz .char { fill: color-mix(in srgb, #d6bd84 26%, transparent); stroke: #d6bd84; stroke-width: 2; }
+  .viz .you-bar, .viz .you-dot { fill: #7aa2cf; }
+  .viz .char-bar, .viz .char-dot { fill: #d6bd84; }
   .viz .sym-bar { fill: rgba(169,184,214,.45); }
   .viz.text { padding: 38px 14px 12px; }
   .viz .tl { margin: 0 0 10px; }
   .viz .tl b { display: block; font-size: 11px; font-weight: 400; letter-spacing: .2em; color: #a9b8d6; margin: 0 0 6px; }
-  .viz .tl i { display: block; height: 8px; border-radius: 4px; margin: 0 0 7px; background: linear-gradient(90deg, color-mix(in srgb, var(--name-glow, #d6bd84) 55%, #fff), color-mix(in srgb, var(--c-you, #7aa2cf) 60%, transparent)); filter: blur(2.6px); opacity: .7; }
+  .viz .tl i { display: block; height: 8px; border-radius: 4px; margin: 0 0 7px; background: linear-gradient(90deg, color-mix(in srgb, #d6bd84 55%, #fff), color-mix(in srgb, #7aa2cf 60%, transparent)); filter: blur(2.6px); opacity: .7; }
   .viz.quote .tl i { height: 10px; }
   .lock-badge { position: absolute; right: 8px; top: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-family: var(--font-en); font-size: 10px; letter-spacing: .18em; color: #e8d8a8; background: rgba(7,7,15,.78); border: 1px solid rgba(214,189,132,.4); }
   .lock-badge::before { content: ''; width: 7px; height: 6px; border: 1.2px solid #e8d8a8; border-radius: 1px; box-shadow: 0 -4px 0 -1.5px transparent; }
@@ -231,7 +245,11 @@
 
     <div class="after" id="after">
       <p class="shared-note" id="sharedNote" hidden></p>
-      <p class="about" id="rAbout"></p>
+      <div class="eti">
+        <p class="eti-h"><span class="en">Your Type</span><span class="jp">3つの答えが表すもの</span></p>
+        <div class="eti-rows" id="rEtiRows"></div>
+        <p class="about" id="rAbout"></p>
+      </div>
 
       <!-- ¥500 人物像レポートの見本（非販売。利用者のデータから数値・図を作らない） -->
       <div class="sec" id="reportDemo">
@@ -294,7 +312,7 @@
           </article>
           <article class="lk">
             <p class="lk-en">RESONANCE</p>
-            <h3><span class="demo-char"></span>との共通点・相違点</h3>
+            <h3>共鳴する人物との共通点・相違点</h3>
             <p class="lk-desc">ふたりの人物像はどこで響き合い、どこで異なるのか。言葉で読み解きます。</p>
             <div class="viz text" aria-hidden="true">
               <div class="tl"><b>共通点</b><i style="width:92%"></i><i style="width:78%"></i><i style="width:64%"></i></div>
@@ -467,6 +485,13 @@
   var lastResult = null, lastShare = null, playNext = false, revealTimer = null;
   function complete() { return !!(answers.element && answers.weapon && answers.nation); }
   function firstUnanswered() { for (var i = 0; i < Q.questions.length; i++) if (!answers[Q.questions[i].id]) return i; return 0; }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
+  // 星座（円）を出す：完了画面＝現れたキャラの元素、シェアされたページ＝シェアした人（本人）の元素（OGP 画像と同じ）
+  function setOrb(elKey, label) {
+    $('rOrb').style.backgroundImage = "url('/assets/ogp/backgrounds/" + ELEMENT_KEY[elKey] + ".jpg')";
+    $('rOrbWrap').setAttribute('aria-label', label);
+    setGlow(ELEMENT_GLOW[elKey]);
+  }
   // r：{ element, weapon, nation, nationDisplay, typeName, typeCode, typeCode4, words, person: { name } }
   function fill(r) {
     var name = r.person.name;
@@ -481,16 +506,26 @@
     $('r758').textContent = r.element + ' × ' + r.weapon + ' × ' + r.nationDisplay;
     $('rTypeName').textContent = '「' + r.typeName + '」';
     $('rTypeCode').textContent = r.typeCode;
-    $('rOrb').style.backgroundImage = "url('/assets/ogp/backgrounds/" + ELEMENT_KEY[charEl] + ".jpg')";
-    $('rOrbWrap').setAttribute('aria-label', name + 'の元素（' + charEl + '）の星座');
+    // 3つの答え（元素・武器種・国家）を1行ずつ：コード・軸・黄色の言葉（本家と同じ）・ふつうの言葉での一文（本家の説明文）
+    var rows = $('rEtiRows'); rows.textContent = '';
+    var code = r.typeCode.replace('-', '').match(/^(..)(..)(.)$/);
+    [[code[1], '気質', '元素', r.element, '「' + r.words.elementKeyword + '」', r.words.elementPlain],
+     [code[2], '人との関わり方', '武器種', r.weapon, '「' + r.words.weaponStyle + '」', r.words.weaponPlain],
+     [code[3], '大切にするもの', '国家', r.nationDisplay, '「' + r.words.nationMeaning + '」', r.words.nationPlain]]
+      .forEach(function (x) {
+        var row = el('div', 'eti-row'), body = el('div');
+        row.appendChild(el('span', 'eti-code', x[0]));
+        var ax = el('p', 'eti-axis', x[1] + '　｜　' + x[2] + ' '); ax.appendChild(el('b', null, x[3])); body.appendChild(ax);
+        body.appendChild(el('p', 'eti-word', x[4]));
+        body.appendChild(el('p', 'eti-plain', x[5]));
+        row.appendChild(body); rows.appendChild(row);
+      });
     var p = $('rAbout'); p.textContent = '';
+    p.appendChild(el('span', 'lead', 'つまり ' + r.typeCode + '「' + r.typeName + '」は――'));
     [['「', r.words.elementKeyword, '」という気質を持ちながら、'], ['「', r.words.weaponStyle, '」というかたちで人と関わり、'], ['「', r.words.nationMeaning, '」を大切にする人。']]
-      .forEach(function (part) { p.appendChild(document.createTextNode(part[0])); var s = document.createElement('strong'); s.textContent = part[1]; p.appendChild(s); p.appendChild(document.createTextNode(part[2])); });
-    var small = document.createElement('span'); small.className = 'small';
-    small.textContent = name + 'は、3つの答えから映した、アナタに共鳴する人物です。星座は' + name + 'の元素（' + charEl + '）を表します。人物自身の元素・武器種・国家は、アナタの結果と同じとは限りません。';
-    p.appendChild(small);
+      .forEach(function (part) { p.appendChild(document.createTextNode(part[0])); p.appendChild(el('strong', null, part[1])); p.appendChild(document.createTextNode(part[2])); });
+    p.appendChild(el('span', 'small', name + 'は、3つの答えから映した、アナタに共鳴する人物です。人物自身の元素・武器種・国家は、アナタの結果と同じとは限りません。'));
     document.querySelectorAll('.demo-char, .demo-char-svg').forEach(function (el) { el.textContent = name; });
-    $('result').style.setProperty('--c-you', ELEMENT_GLOW[r.element]); // 見本の図の「アナタ」の色＝本人の元素
     lastResult = r;
     lastShare = S.packReveal(r.element, r.weapon, r.nation, CHAR_INDEX[name]);
   }
@@ -526,7 +561,7 @@
     go('result', true);
   }
   function onResultShown() {
-    setGlow(ELEMENT_GLOW[lastResult.charElement]);
+    setOrb(lastResult.charElement, lastResult.person.name + 'の元素（' + lastResult.charElement + '）の星座');
     setReveal(playNext);
     playNext = false;
   }
@@ -585,7 +620,7 @@
     $('pCover').hidden = true; $('result').hidden = false;
     current = 'result';
     try { history.replaceState({ miniStep: 'result' }, ''); } catch (e) { /* なし */ }
-    setGlow(ELEMENT_GLOW[r.charElement]);
+    setOrb(r.element, 'シェアした人の元素（' + r.element + '）の星座');
     setReveal(false);
   }
   $('tryBtn').addEventListener('click', function () {

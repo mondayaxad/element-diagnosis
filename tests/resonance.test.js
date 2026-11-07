@@ -170,15 +170,16 @@ test('名称・コピー：共鳴診断・RESONANCE・ELEMENT DIAGNOSIS PRESENTS
   assert.doesNotMatch(html, /元素診断 Mini|最も近しいキャラクター|類似度1位|心理学的|測定された/);
 });
 
-test('登場演出：本家 OGP の元素の円（正式背景）を、現れたキャラの元素の星座として使う／名前はキャラの元素カラーのグラデーション／順に現れる／タップで省略／繰り返さない', async () => {
+test('登場演出：本家 OGP の元素の円（正式背景）を、完了画面では現れたキャラの元素、シェアされたページではシェアした人の元素の星座として使う／名前はキャラの元素カラーのグラデーション／順に現れる／タップで省略／繰り返さない', async () => {
   const html = read('resonance.html');
   const T = await imp('js/ogp-theme.mjs');
   const key = vm.runInNewContext('(' + /var ELEMENT_KEY = (\{[^}]+\});/.exec(html)[1] + ')');
   assert.deepEqual(plain(key), plain(T.ELEMENT_KEY));
   for (const k of Object.values(key)) assert.ok(fs.existsSync(path.join(ROOT, `assets/ogp/backgrounds/${k}.jpg`)), k);
   assert.ok(html.includes("var charEl = ETI_V2_CHARACTERS_2_1_0[CHAR_INDEX[name]].element;"));
-  assert.ok(html.includes(`$('rOrb').style.backgroundImage = "url('/assets/ogp/backgrounds/" + ELEMENT_KEY[charEl] + ".jpg')"`)); // キャラの元素の星座
-  assert.ok(html.includes('setGlow(ELEMENT_GLOW[lastResult.charElement]);'));
+  assert.ok(html.includes(`$('rOrb').style.backgroundImage = "url('/assets/ogp/backgrounds/" + ELEMENT_KEY[elKey] + ".jpg')"`));
+  assert.ok(html.includes('setOrb(lastResult.charElement, ')); // 完了画面：キャラの元素の星座
+  assert.ok(html.includes("setOrb(r.element, 'シェアした人の元素（' + r.element + '）の星座');\n    setReveal(false);")); // Xシェアから：本人の元素（OGP と同じ）、演出なし
   // 名前のグラデーション：本家 OGP の元素テーマ（accentSoft・accent）と、ページの元素の深い色
   const nameColor = vm.runInNewContext('(' + /var NAME_COLOR = (\{[\s\S]*?\});/.exec(html)[1] + ')');
   const glow = vm.runInNewContext('(' + /var ELEMENT_GLOW = (\{[^}]+\});/.exec(html)[1] + ')');
@@ -194,9 +195,16 @@ test('登場演出：本家 OGP の元素の円（正式背景）を、現れた
   assert.ok(html.includes('@media (prefers-reduced-motion: reduce) { .reveal.play .rv, .reveal.play .orb-glow { animation: none; opacity: 1; }'));
   assert.ok(html.includes('if (play && !REDUCED)'));
   assert.ok(html.includes("if (this.classList.contains('play')) finishReveal();")); // タップで省略
-  assert.ok(html.includes('setGlow(ELEMENT_GLOW[r.charElement]);\n    setReveal(false);')); // 共有リンクは演出なし
   assert.ok(html.includes('setReveal(playNext);\n    playNext = false;')); // 3問目のあとだけ演出、戻る・進むでは繰り返さない
   assert.doesNotMatch(html, /Math\.random/); // 再抽選・ランダム排出なし
+});
+
+test('タイプの解説：3つの答えを1行ずつ（コード・軸・黄色の言葉・本家の説明文の一文）＋まとめの一文', () => {
+  const html = read('resonance.html');
+  for (const t of ['3つの答えが表すもの', "'気質', '元素'", "'人との関わり方', '武器種'", "'大切にするもの', '国家'", 'r.words.elementPlain', 'r.words.weaponPlain', 'r.words.nationPlain', "'つまり ' + r.typeCode"]) assert.ok(html.includes(t), t);
+  const r = loadPage().ETIMini.describeType('水', '法器', 'フォンテーヌ');
+  assert.equal(r.words.elementPlain, '水は、周囲との調和を保ちながら、内側に見せない部分を抱える元素です。');
+  assert.equal(r.words.nationPlain, '公正さと調和を重んじ、誰に対しても等しくあることに、価値を置きます。');
 });
 
 test('結果の並び：登場演出 → 説明 → ¥500 レポートの見本（非販売・数値なし）→ 購入（準備中・押せない）→ Xでシェア → 100問の元素診断', () => {
@@ -222,6 +230,12 @@ test('結果の並び：登場演出 → 説明 → ¥500 レポートの見本�
   const visible = demo.replace(/<style[\s\S]*?<\/style>/g, '').replace(/<[^>]+>/g, ' ');
   assert.doesNotMatch(visible, /\d+\s*(%|％|点)/);
   assert.doesNotMatch(demo, /<ol|demo-list/); // 01〜05 の番号付きリストはやめた
+  // 図は全員同じダミー（色も固定）。結果ごとに変わるのは PERSONA（性格の重なり）の人物名だけ
+  assert.doesNotMatch(html, /--c-you/);
+  for (const line of html.split('\n').filter((l) => l.trim().startsWith('.viz'))) assert.doesNotMatch(line, /var\(--(c-you|name-glow|ac)\b/, line);
+  const persona = demo.slice(demo.indexOf('>PERSONA<'), demo.indexOf('>STYLE<'));
+  assert.equal((persona.match(/demo-char/g) || []).length, 2); // 見出しと凡例
+  assert.equal((demo.match(/demo-char/g) || []).length, 2);
 });
 
 test('m3 の符号：ブラウザ・画像（_og-data.mjs）・シェアページ（share.js）の計算が全 33,040 通りで一致し、正規形だけ（最大3文字）。m1・m2 とはパラメータ名で分ける', async () => {
