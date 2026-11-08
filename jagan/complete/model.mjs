@@ -6,7 +6,7 @@
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
-import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, DICT_PAGE, ELEMENT_MISREAD, TRAIT_DICT_HL, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
+import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, DICT_PAGE, ELEMENT_MISREAD, TRAIT_DICT_HL, OVERVIEW_COPY, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
 
 const r1 = (x) => Math.round(x * 10) / 10;
 
@@ -87,7 +87,7 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
   const rdom = responseDomains(score, traitLabel, isous);
   const next = { ...NEXT_PAGE, example: NEXT_EXAMPLE[isous[0].id], exampleFor: isous[0].label, hints: [...isous.slice(0, 3).map((x) => ({ label: x.label, color: x.color })), { label: `邪眼・${elements[0].label}`, color: elements[0].color.main }] };
   return {
-    product: PRODUCT, detailLabels: DETAIL_LABELS, combo, mirror, rdom, next, reread: rereadOf(elements[0], isous, byScore), dict: dictOf(elements, isous), fixed: FIXED, panel: PANEL, diagnosedAt,
+    product: PRODUCT, detailLabels: DETAIL_LABELS, combo, mirror, rdom, next, reread: rereadOf(elements[0], isous, byScore), dict: dictOf(elements, isous), ov: overviewOf(elements, isous, byScore, peaks, valleys), fixed: FIXED, panel: PANEL, diagnosedAt,
     live: { intro: LIVE_INTRO, rows: LIVE_ROWS }, read: { intro: READ_INTRO, rows: READ_ROWS },
     peaks, valleys, themes,
     gapE: { a: elements[0], b: elements[1], d: elements[0].score - elements[1].score },
@@ -324,4 +324,40 @@ export function dictOf(elements, isous) {
   for (const e of elements) { e.misread = ELEMENT_MISREAD[e.id]; e.detail2 = ELEMENT_DETAIL[e.id]; }
   const doms = RESPONSE_DOMAINS.list.map((d) => ({ en: d.en, label: d.label, color: d.color, items: d.traits.map((id) => ({ ...isous.find((x) => x.id === id), hl: TRAIT_DICT_HL[id] })) }));
   return { ...DICT_PAGE, groups: [doms.slice(0, 2), doms.slice(2)] };
+}
+
+// 03・04・05 の下部：得点から長所への読み替えをせず、「当てはまりが多い／少ない」で書く
+export function contrastOf(e) {
+  const s = [...e.parts].sort((a, b) => b.score - a.score);
+  let cut = 0, gap = -1;
+  for (let i = 0; i < s.length - 1; i++) if (s[i].score - s[i + 1].score > gap) { gap = s[i].score - s[i + 1].score; cut = i + 1; }
+  return gap >= 10 ? `今回の${e.label}では、${s.slice(cut).map((t) => `${SH(t.id).verb}こと`).join('や')}よりも、${s.slice(0, cut).map((t) => SH(t.id).short).join('や')}への当てはまりが目立ちます。`
+    : `今回の${e.label}では、${s.map((t) => t.label).join('・')}が近い得点で重なっています。`;
+}
+export function overviewOf(elements, isous, byScore, peaks, valleys) {
+  const O = OVERVIEW_COPY, e = elements[0], x = isous[0];
+  const pin = peaks.filter((p) => e.parts.some((q) => q.id === p.id)), rest = e.parts.filter((q) => !peaks.some((p) => p.id === q.id));
+  const three = [
+    `${peaks.map((p) => `${p.label}${p.score}`).join('・')}が、12特性の中で目立っています。`,
+    pin.length === peaks.length ? `${e.label}${e.score}は、その${'一二三'[pin.length - 1]}特性に${rest.map((q) => `${q.label}${q.score}`).join('・')}を加えて算出しています。` : `${e.label}${e.score}は、${e.parts.map((q) => `${q.label}${q.score}`).join('・')}を組み合わせて算出しています。`,
+    `${valleys.map((v) => `${v.label}${v.score}`).join('・')}への当てはまりは少なく、すべての特性が同じ強さで表れている配置ではありません。`,
+  ];
+  const other = isous.slice(1, 3).find((t) => !e.parts.some((p) => p.id === t.id) && !peaks.some((p) => p.id === t.id));
+  const check = `${SH(peaks[0].id).short}と、${SH(peaks[1].id).short}が、同じ場面で重なることはあるでしょうか。`
+    + (other ? `一方、${other.label}${other.score}が表す「${SH(other.id).short}」は、別の場面に現れる可能性もあります。` : '')
+    + '得点だけで一つの原因にまとめず、経験と照らして読みます。';
+  // 04：1位の邪眼の算出と、次点との関係
+  const [a, b, c] = elements;
+  const eRead = [`${a.label}${a.score}は、${a.parts.map((q) => q.label).join('・')}の得点を、それぞれの重みに従って組み合わせた結果です。${contrastOf(a)}`,
+    `${a.parts.map((q) => `「${SH(q.id).verb}こと」`).join('、')}は、同じ反応ではありません。${a.label}という名前だけでまとめず、どの反応が自分の経験に重なるかを確認してください。`];
+  const shared = [b, c].map((z) => ({ z, sh: z.parts.filter((q) => a.parts.some((p) => p.id === q.id)).map((q) => q.label) }));
+  const eNext = `2位の${b.label}${b.score}、3位の${c.label}${c.score}は、${[...new Set([b, c].flatMap((z) => z.parts.map((q) => q.label)))].join('・')}を含む、別の特性の組み合わせです。`
+    + (shared.some((v) => v.sh.length) ? `${shared.filter((v) => v.sh.length).map((v) => `${v.z.label}は${v.sh.join('・')}を${a.label}と共有しています`).join('。')}。` : '')
+    + O.eNextFixed;
+  const d = a.score - b.score;
+  const eGap = `${a.label}${a.score}と${b.label}${b.score}の差は${d}です。今回の算出では${a.label}が上回っていますが、この差だけで性格の確かさや、生活への影響の大きさは判断できません。`;
+  const lowE = elements.slice(-2), lowI = isous.slice(-3);
+  const eLow = `${lowE.map((z) => z.label).join('と')}が下位です。これは、${[...new Set(lowE.flatMap((z) => z.parts.map((q) => q.label)))].join('・')}など、その邪眼を構成する反応への当てはまりが相対的に少なかったことを示します。反対の性質があるという意味ではありません。`;
+  const iLow = `${lowI.map((z) => z.label).join('・')}が下位です。これらの反応への当てはまりが、今回の回答では相対的に少なかったことを示します。反対の長所があるという意味ではありません。`;
+  return { ...O, three, check, eRead, eNext, eGap, eLow, iLow, eTop: `${e.text.essence}。${e.parts.map((q) => q.label).join('・')}を組み合わせた邪眼です。` };
 }

@@ -678,15 +678,15 @@ test('mypage の開示（購入済みだけ）：三つの土台の上位2特性
 });
 
 // ---- 邪眼完全解析 DIPPER（叩き台）
-test('完全解析 DIPPER：27ページ・指示の順。順位（邪眼7・異相12・ファトゥス11＝6＋5）は結果と同じ規則で、1位は結果と一致。どの結果でも空欄・未定義を出さない', async () => {
+test('完全解析 DIPPER：23ページ・指示の順。順位（邪眼7・異相12・ファトゥス11＝6＋5）は結果と同じ規則で、1位は結果と一致。どの結果でも空欄・未定義を出さない', async () => {
   const { buildComplete } = await import('../jagan/complete/model.mjs');
   const { renderComplete, PAGE_TITLES } = await import('../jagan/complete/view.mjs');
   const { orderIsou, selectIsou } = await import('../jagan/engine/dti.mjs');
   const { sampleComplete } = await import('../jagan/complete-sample.mjs');
-  assert.equal(PAGE_TITLES.length, 27);
-  assert.deepEqual(PAGE_TITLES.slice(0, 9), ['表紙', 'このレポートの読み方', 'あなたの影', '邪眼（特性）の全体順位', '異相の全体順位', 'ファトゥス TOP11',
-    '邪眼と異相 — あなたの影の正体', 'ファトゥスはなぜ現れるのか', 'あなたの深層']);
-  assert.deepEqual(PAGE_TITLES.slice(-6), ['あなたの影に、次の一手を', '人物から得るもの', '再読 — あなたの影を読み直す', '邪眼辞典（7邪眼）', '異相辞典 I（不安と対人警戒・衝動と刺激）', '異相辞典 II（固執と基準・他者への働きかけ）']);
+  assert.equal(PAGE_TITLES.length, 23);
+  assert.deepEqual(PAGE_TITLES.slice(0, 8), ['表紙', 'このレポートの読み方', 'あなたの影', '邪眼（特性）の全体順位', '異相の全体順位', 'ファトゥス TOP11',
+    '上位の邪眼との付き合い方', '上位の異相を読み解く']);
+  assert.deepEqual(PAGE_TITLES.slice(-6), ['あなたの反応領域', 'あなたの影に、次の一手を', '再読 — あなたの影を読み直す', '邪眼辞典（7邪眼）', '異相辞典 I（不安と対人警戒・衝動と刺激）', '異相辞典 II（固執と基準・他者への働きかけ）']);
   const codes = new Set();
   for (let seed = 0; seed < 400; seed++) {
     const { result, html } = sampleComplete(seed);
@@ -697,7 +697,7 @@ test('完全解析 DIPPER：27ページ・指示の順。順位（邪眼7・異�
     assert.equal(m.element.id, result.element.id); assert.equal(m.isou.id, result.isou.id);
     assert.equal(orderIsou(result.answers, BUNDLE.items)[0].id, selectIsou(result.answers, BUNDLE.items).id);
     if (m.character) { assert.equal(m.character.id, result.character.id); assert.equal(m.character.match, result.character.match); }
-    assert.equal((html.match(/class="dp-page /g) || []).length, 27, `seed ${seed}`);
+    assert.equal((html.match(/class="dp-page /g) || []).length, 23, `seed ${seed}`);
     assert.ok(!/undefined|NaN|\[object/.test(html), `seed ${seed}`);
     assert.ok(html.includes(result.dti.code) && html.includes(result.dti.name));
     // 06 ファトゥス TOP11：11名すべて・下に TOP3 の説明
@@ -738,7 +738,7 @@ test('完全解析 DIPPER 10・11：上位の邪眼との付き合い方（5観�
   assert.equal(C.TRAIT_READ.SEP.notSame, '人に頼ることや、関係を望むこと自体とは区別する。');
   for (let seed = 0; seed < 60; seed++) {
     const { result, html } = sampleComplete(seed);
-    const p10 = html.split('id="dp10"')[1].split('<section')[0], p11 = html.split('id="dp11"')[1].split('<section')[0];
+    const p10 = html.split('id="dp07"')[1].split('<section')[0], p11 = html.split('id="dp08"')[1].split('<section')[0];
     assert.ok(p10.includes('上位の邪眼との付き合い方') && p11.includes('上位の異相を読み解く'));
     assert.equal((p10.match(/class="dp-mx-cell/g) || []).length, 15);
     assert.equal((p11.match(/class="dp-mx-cell/g) || []).length, 18);
@@ -766,9 +766,9 @@ test('完全解析 DIPPER 12–17：上位3つの邪眼・異相の個別ペー�
   for (let s = 0; s < 200; s++) {
     const r = sampleComplete(s); const mm = buildComplete(r.result, BUNDLE);
     const pages = renderComplete(mm).split('<section').slice(1);
-    for (const p of pages.slice(11, 17)) {
+    for (const p of pages.slice(8, 14)) {
       assert.ok(!p.includes('弱いとき') && !p.includes('強みとしての顔'));
-      for (const k of ['あなたの場合', 'この反応が表れうる場面', '自分の内側と、相手への伝わり方', '負担に気づくサイン', 'この傾向との付き合い方', 'ある日の場面', '自分を受け止めるための一文', 'RANK']) assert.ok(p.includes(k), k);
+      for (const k of ['あなたの場合', 'この反応が表れうる場面', '自分の内側と、相手への伝わり方', '負担に気づくサイン', 'この傾向との付き合い方', 'ある日の場面', '自分を受け止めるための一文']) assert.ok(p.includes(k), k);
       assert.ok(!/undefined|NaN/.test(p));
     }
   }
@@ -801,7 +801,7 @@ test('完全解析 DIPPER 19：上位3名のファトゥスとの交わり（重
   const { PAGE_TITLES } = await import('../jagan/complete/view.mjs');
   const { sampleComplete } = await import('../jagan/complete-sample.mjs');
   assert.ok(!PAGE_TITLES.some((t) => t.includes('二層統合')));
-  assert.equal(PAGE_TITLES[18], '上位3名のファトゥスとの交わり');
+  assert.equal(PAGE_TITLES[15], '上位3名のファトゥスとの交わり');
   const m = buildComplete(sampleComplete(0).result, BUNDLE);
   const cap = m.mirror.people[0];
   assert.equal(cap.f.name, 'カピターノ');
@@ -815,7 +815,7 @@ test('完全解析 DIPPER 19：上位3名のファトゥスとの交わり（重
       for (const t of [p.aligned, p.different, p.main, p.you]) { assert.ok(t.length > 20); assert.ok(!/献身|責任感|優しい|共感力が高い/.test(t)); }
       assert.ok(p.rows.every((x) => p.f.rows.includes(x)));
     }
-    const p19 = r.html.split('id="dp19"')[1].split('<section')[0];
+    const p19 = r.html.split('id="dp16"')[1].split('<section')[0];
     assert.equal((p19.match(/class="dp-mcard"/g) || []).length, 3);
     assert.ok(p19.includes('三人との比較から見えるあなた') && p19.includes('比較から見えるあなた'));
   }
@@ -863,7 +863,7 @@ test('完全解析 DIPPER：再読 — あなたの影を読み直す（結果�
   assert.equal(r.more.label, '完璧'); assert.equal(r.more.score, 56);
   assert.match(r.lowText, /測っていない長所を示すものではありません/);
   const p = html.split(`id="dp${String(PAGE_TITLES.indexOf('再読 — あなたの影を読み直す') + 1).padStart(2, '0')}"`)[1].split('<section')[0];
-  assert.ok(p.includes(`href="#dp${String(PAGE_TITLES.indexOf('異相 1位') + 1).padStart(2, '0')}"`));
+  assert.ok(p.includes(`href="#dp${String(PAGE_TITLES.indexOf('異相を読む（1）') + 1).padStart(2, '0')}"`));
   assert.ok(!p.includes('実際に試せたか'));
 });
 
@@ -886,4 +886,26 @@ test('完全解析 DIPPER：観察実験を削除。辞典は邪眼7（あなた
   assert.deepEqual(Object.keys(C.TRAIT_DICT_HL).sort(), BUNDLE.items.traits.map((t) => t.id).sort());
   for (const v of Object.values(C.TRAIT_DICT_HL)) { assert.ok(!/力|才能|強み/.test(v.hi + v.lo)); assert.match(v.lo, /少ない。$/); }
   assert.ok(!(p1 + p2).includes('先に動く力') && !(p1 + p2).includes('立ち止まる力'));
+});
+
+test('完全解析 DIPPER：03・04・06 の下部（根拠 → 意味 → 経験で確かめる視点）。7・8・9・人物から得るものを削除。個別ページの目次は結果の名前、順位表記なし', async () => {
+  const { PAGE_TITLES } = await import('../jagan/complete/view.mjs');
+  const { buildComplete } = await import('../jagan/complete/model.mjs');
+  const { sampleComplete } = await import('../jagan/complete-sample.mjs');
+  assert.ok(!PAGE_TITLES.some((t) => /あなたの深層|ファトゥスはなぜ|影の正体|人物から得るもの/.test(t)));
+  const { result, html } = sampleComplete(0);
+  const m = buildComplete(result, BUNDLE);
+  assert.deepEqual(m.ov.three, ['依存70・不安69が、12特性の中で目立っています。', '水64は、その二特性に猜疑44を加えて算出しています。', '危険志向6・冷淡6への当てはまりは少なく、すべての特性が同じ強さで表れている配置ではありません。']);
+  assert.match(m.ov.check, /一方、完璧56が表す「「まだ不十分」という感覚」は、別の場面に現れる可能性もあります。/);
+  assert.match(m.ov.eRead[0], /^水64は、依存・不安・猜疑の得点を、それぞれの重みに従って組み合わせた結果です。/);
+  assert.match(m.ov.eGap, /^水64と草47の差は17です。/);
+  const p2 = html.split('id="dp02"')[1].split('<section')[0];
+  assert.ok(p2.includes('邪眼を読む — 水（関係の揺れ）') && !p2.includes('邪眼 1位'));
+  for (let s = 0; s < 200; s++) {
+    const r = sampleComplete(s);
+    const head = r.html.split('id="dp03"')[1].split('id="dp07"')[0];
+    assert.ok(!/寄り添|慎重な足取り|すでに使っている強み|過剰使用|活かし方/.test(head), `seed ${s}`);
+    const det = r.html.split('id="dp09"')[1].split('id="dp15"')[0];
+    assert.ok(!/RANK|位 —/.test(det));
+  }
 });

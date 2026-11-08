@@ -6,21 +6,25 @@ const pad = (n) => String(n).padStart(2, '0');
 
 export const PAGE_TITLES = [
   '表紙', 'このレポートの読み方', 'あなたの影', '邪眼（特性）の全体順位', '異相の全体順位', 'ファトゥス TOP11',
-  '邪眼と異相 — あなたの影の正体', 'ファトゥスはなぜ現れるのか', 'あなたの深層',
   '上位の邪眼との付き合い方', '上位の異相を読み解く',
-  '邪眼 1位', '邪眼 2位', '邪眼 3位', '異相 1位', '異相 2位', '異相 3位',
+  '邪眼を読む（1）', '邪眼を読む（2）', '邪眼を読む（3）', '異相を読む（1）', '異相を読む（2）', '異相を読む（3）',
   '邪眼×異相――あなたの影はどう表れるか', '上位3名のファトゥスとの交わり',
   '四つの反応領域', 'あなたの反応領域',
-  'あなたの影に、次の一手を', '人物から得るもの', '再読 — あなたの影を読み直す', '邪眼辞典（7邪眼）', '異相辞典 I（不安と対人警戒・衝動と刺激）', '異相辞典 II（固執と基準・他者への働きかけ）',
+  'あなたの影に、次の一手を', '再読 — あなたの影を読み直す', '邪眼辞典（7邪眼）', '異相辞典 I（不安と対人警戒・衝動と刺激）', '異相辞典 II（固執と基準・他者への働きかけ）',
 ];
 
 export function renderComplete(m) {
   const TOTAL = PAGE_TITLES.length;
+  // 目次・見出しに出す名前：上位の邪眼・異相の個別ページは、順位ではなく結果の名前で出す
+  const DYN = {};
+  m.topE.forEach((e, i) => { DYN[`邪眼を読む（${i + 1}）`] = `邪眼を読む — ${e.label}（${e.detail.head}）`; });
+  m.topI.forEach((x, i) => { DYN[`異相を読む（${i + 1}）`] = `異相を読む — ${x.label}（${x.text.axis}）`; });
+  const nameOf = (t) => DYN[t] || t;
   const pages = [];
   const page = (kind, kicker, title, body, o = {}) => {
     const n = pages.length + 1;
     const head = o.head === false ? '' : `<header class="dp-head"><span class="dp-num">${pad(n)}</span><div><div class="dp-kicker">${E(kicker)}</div><h2 class="dp-title">${E(title)}</h2></div>${o.sub ? `<span class="dp-sub">${E(o.sub)}</span>` : ''}</header>`;
-    pages.push(`<section class="dp-page ${kind}" id="dp${pad(n)}" data-page="${n}" aria-label="P${pad(n)} ${E(PAGE_TITLES[n - 1])}"${o.style ? ` style="${o.style}"` : ''}>
+    pages.push(`<section class="dp-page ${kind}" id="dp${pad(n)}" data-page="${n}" aria-label="P${pad(n)} ${E(nameOf(PAGE_TITLES[n - 1]))}"${o.style ? ` style="${o.style}"` : ''}>
   <div class="dp-inner">${head}${body}</div>
   <footer class="dp-foot"><span>${E(m.product.footer)}</span><span>${E(kicker)}</span><span>${pad(n)} / ${TOTAL}</span></footer>
 </section>`);
@@ -46,7 +50,7 @@ export function renderComplete(m) {
 
   // P02 読み方
   page('dp-text', 'GUIDE', 'このレポートの読み方', `${m.fixed.guide.map((p) => `<p class="dp-p">${E(p)}</p>`).join('')}
-    <ol class="dp-toc">${PAGE_TITLES.slice(2).map((t, i) => `<li><span>${pad(i + 3)}</span>${E(t)}</li>`).join('')}</ol>`);
+    <ol class="dp-toc">${PAGE_TITLES.slice(2).map((t, i) => `<li><a href="#dp${pad(i + 3)}"><span>${pad(i + 3)}</span>${E(nameOf(t))}</a></li>`).join('')}</ol>`);
 
   // P03 あなたの影（元素診断の「あなたの核 — Executive Portrait」と同じ組み立て：左にラベルカード、右に DTI の解説）
   const labelCard = (k, en, name, score, sub, c) => `<div class="dp-lcard" style="--c:${c}"><div class="dp-lk">${E(k)}<span>· ${E(en)}</span></div>
@@ -60,15 +64,21 @@ export function renderComplete(m) {
         ${labelCard('異相', 'ISOU', E(is1.label), is1.score, `2位 ${E(m.gapI.b.label)} ${m.gapI.b.score} ／ 差 ${m.gapI.d}`, is1.color)}
         <div class="dp-lcard plain"><div class="dp-lk">12特性の山（根拠）</div>${m.peaks.map(miniRow).join('')}
           <div class="dp-lk" style="margin-top:12px">12特性の谷（根拠）</div>${m.valleys.map(miniRow).join('')}</div>
-        ${ch ? labelCard('ファトゥス', 'FATUI', fatuiName(ch), null, E(ch.deep.gain), ch.elements[0] || '#E2C08C') : ''}
+        ${ch ? labelCard('ファトゥス', 'FATUI', fatuiName(ch), null, `${E(ch.title)}｜一致度 ${ch.match}%｜比較：${ch.rows.map((r) => E(r.label)).join('・')}`, ch.elements[0] || '#E2C08C') : ''}
       </div>
       <div class="dp-main">
         <div class="dp-dtih"><span class="dp-dtiname">${E(m.dti.name)}</span><span class="dp-dticode">${E(m.dti.code)}</span></div>
-        <p class="dp-p">${E(el1.label)}・${E(is1.label)}${ch ? `・${E(ch.name)}` : ''}という三つの結果は、同じ影の言い換えではありません。<b>影のかたち（邪眼）、影の現れ方（異相）、影を映す鏡（ファトゥス）</b>が、別々の層から読まれています。</p>
-        <p class="dp-p">影のかたちでは、${E(el1.text.essence)}${E(el1.label)}が一位にあり、${m.gapE.d >= 10 ? `次点の${E(m.gapE.b.label)}とは差があります` : `次点の${E(m.gapE.b.label)}とも近く、二つの影が並んで表れやすい状態です`}。影の現れ方では${E(is1.label)}が${m.gapI.d >= 5 ? 'はっきり' : ''}一位です。${E(is1.label)}は、${E(is1.text.essence)}現れ方です。${ch ? `影を映す鏡としては、${E(ch.name)}（${E(ch.title)}）が最も近く現れました。` : ''}</p>
-        <p class="dp-p">数値の山は${m.peaks.map((x) => `${E(x.label)}（${E(x.copy.hi)}）`).join('と')}です。数値の谷は${m.valleys.map((x) => `${E(x.label)}`).join('と')}です。${m.valleys.map((x) => `${E(x.label)}が低いことは、${E(x.copy.lo)}として表れやすい方向です。`).join('')}</p>
-        <div class="dp-quote">${E(el1.deep.aphorism)}</div>
+        <p class="dp-p">${E(el1.label)}・${E(is1.label)}${ch ? `・${E(ch.name)}` : ''}という三つの結果は、同じ影の言い換えではありません。<b>邪眼は複数の特性の組み合わせ、異相は12特性の中で最も目立った一つの特性${ch ? '、ファトゥスは比較に使った特性が近い人物' : ''}</b>として、別々に読まれています。</p>
+        <p class="dp-p">邪眼では、${E(el1.parts.map((x) => x.label).join('・'))}を組み合わせた${E(el1.label)}が一位で、${m.gapE.d >= 10 ? `次点の${E(m.gapE.b.label)}とは${m.gapE.d}点の差があります` : `次点の${E(m.gapE.b.label)}とは${m.gapE.d}点差です`}。異相では${E(is1.label)}が一位です。${E(is1.label)}は、${E(is1.text.essence)}傾向です。${ch ? `比較に使った特性が最も近い人物は、${E(ch.name)}（一致度 ${ch.match}%）でした。` : ''}</p>
+        <p class="dp-p">数値の山は${m.peaks.map((x) => `${E(x.label)}${x.score}`).join('と')}、数値の谷は${m.valleys.map((x) => `${E(x.label)}${x.score}`).join('と')}です。谷の特性は、その反応への当てはまりが少なかったことを示すだけで、反対の長所を示すものではありません。</p>
+        <div class="dp-quote">${E(el1.detail.accept)}</div>
       </div>
+    </div>
+    <div class="dp-flow"><div class="dp-pk">${E(m.ov.flowTitle)}</div><div class="dp-flowrow">${m.ov.flow.map(([k, [f, t], d]) => `<div><b>${E(k)}</b><span>P${pad(PAGE_TITLES.indexOf(f) + 1)}–P${pad(PAGE_TITLES.indexOf(t) + 1)}</span><small>${E(d)}</small></div>`).join('')}</div></div>
+    <div class="dp-c3">
+      <div class="dp-c3c ok"><b>${E(m.ov.shadowCards[0])}</b><ol>${m.ov.three.map((t) => `<li>${E(t)}</li>`).join('')}</ol></div>
+      <div class="dp-c3c ng"><b>${E(m.ov.shadowCards[1])}</b><p>${E(m.ov.check)}</p></div>
+      <div class="dp-c3c qq"><b>${E(m.ov.shadowCards[2])}</b><p class="q">「${E(m.ov.shadowQ)}」</p><p>${E(m.ov.shadowQNote)}</p></div>
     </div>`, { sub: 'The shadow' });
 
   // P04・P05 全体順位（元素診断の「元素（気質）の全体順位」と同じ組み立て）
@@ -83,18 +93,21 @@ export function renderComplete(m) {
   const eRows = m.elements.map((e) => ({ rank: e.rank, label: e.label, theme: e.deep.theme, score: e.score, line: e.text.essence, c: e.color.main }));
   const lowE = m.elements.slice(-2);
   page('dp-wide', 'OVERVIEW · JAGAN', '邪眼（特性）の全体順位', `
-    <p class="dp-p dp-lead">${E(el1.label)}が一位で、${m.gapE.d >= 10 ? `次点の${E(m.gapE.b.label)}とは差があります` : `次点の${E(m.gapE.b.label)}とは僅差です`}。${E(el1.label)}は、${E(el1.text.essence)}影のかたちです。${m.gapE.d >= 10 ? 'この傾向が、影のかたちの中で比較的はっきり表れています。' : '上位の二つの影が、場面によって入れ替わりながら表れやすい状態です。'}</p>
+    <p class="dp-p dp-lead">${E(el1.label)}が一位で、${m.gapE.d >= 10 ? `次点の${E(m.gapE.b.label)}とは差があります` : `次点の${E(m.gapE.b.label)}とは僅差です`}。${E(el1.label)}は、${E(el1.parts.map((x) => x.label).join('・'))}を組み合わせた邪眼です。順位は、各邪眼を構成する特性への当てはまりの大きさを比べたものです。</p>
     <div class="dp-split">
       <div class="dp-main">${legend('7邪眼のプロフィールスコア（/100）')}${rankCards(eRows, 7)}${gapBar(m.gapE)}</div>
       ${panel([
-        ['邪眼とは', `<p>${E(m.panel.jaganIs)}</p>`],
-        ['上位3', `<p>${m.topE.map((e) => `<b style="color:${e.color.main}">${E(e.label)}</b> ${E(e.deep.theme)}`).join('／')}</p>`],
-        ['下位', `<p>${lowE.map((e) => E(e.label)).join('と')}。${E(lowE[lowE.length - 1].deep.low)}</p>`],
-        ['すでに使っている強み', `<p>${E(el1.deep.strength)}</p>`],
-        ['過剰使用のサイン', `<p>${E(el1.deep.overuse)}</p>`, 'warn'],
-        ['活かし方', `<ul>${el1.deep.bullets.map((b) => `<li>${E(b)}</li>`).join('')}</ul>`, 'box'],
+        [m.ov.panelE[0], `<p>${E(m.panel.jaganIs)}</p>`],
+        [m.ov.panelE[1], `<p><b style="color:${elc}">${E(el1.label)}</b>　${E(m.ov.eTop)}</p>`],
+        [m.ov.panelE[2], `<p>${E(m.ov.eLow)}</p>`],
+        [m.ov.panelE[3], `<p>「${E(el1.live.ask)}」</p>`, 'box'],
       ])}
-    </div>`, { sub: 'Overview' });
+    </div>
+    <div class="dp-etop" style="--c:${elc}"><div class="dp-pk">${E(m.ov.eTopTitle)}</div>
+      <table class="dp-ctab"><thead><tr><th>特性</th><th>得点</th><th></th><th>${E(el1.label)}への寄与</th></tr></thead><tbody>
+      ${el1.parts.map((x) => `<tr><td>${E(x.label)}</td><td>${x.score}</td><td class="bar">${bar(x.score, elc)}</td><td>${x.weight}％</td></tr>`).join('')}</tbody></table>
+      ${m.ov.eRead.map((t) => `<p>${E(t)}</p>`).join('')}</div>
+    <div class="dp-ac2"><div class="dp-acb"><div class="dp-pk">${E(m.ov.eNextTitle)}</div><p>${E(m.ov.eNext)}</p></div><div class="dp-acb"><div class="dp-pk">${E(m.ov.eGapTitle)}</div><p>${E(m.ov.eGap)}</p></div></div>`, { sub: 'Overview' });
 
   const iRows = m.isous.map((x) => ({ rank: x.rank, label: x.label, theme: x.deep.theme, score: x.score, line: x.text.essence, c: x.color }));
   const lowI = m.isous.slice(-3);
@@ -103,12 +116,10 @@ export function renderComplete(m) {
     <div class="dp-split">
       <div class="dp-main">${legend('12異相のプロフィールスコア（/100）')}${rankCards(iRows, 12)}${gapBar(m.gapI)}</div>
       ${panel([
-        ['異相とは', `<p>${E(m.panel.isouIs)}</p>`],
-        ['上位3', `<p>${m.topI.map((x) => `<b style="color:${x.color}">${E(x.label)}</b> ${E(x.deep.theme)}`).join('／')}</p>`],
-        ['下位', `<p>${lowI.map((x) => E(x.label)).join('・')}。${E(lowI[lowI.length - 1].deep.low)}</p>`],
-        ['すでに使っている強み', `<p>${E(is1.deep.strength)}</p>`],
-        ['過剰使用のサイン', `<p>${E(is1.deep.overuse)}</p>`, 'warn'],
-        ['活かし方', `<ul><li>${E(is1.deep.use.split('。')[0])}。</li><li>${E(is1.deep.weak.split('。').filter(Boolean).slice(-1)[0])}。</li></ul>`, 'box'],
+        [m.ov.panelI[0], `<p>${E(m.panel.isouIs)}</p>`],
+        [m.ov.panelI[1], `<p>${m.topI.map((x) => `<b style="color:${x.color}">${E(x.label)}</b> ${x.score}`).join('／')}</p>`],
+        [m.ov.panelI[2], `<p>${E(m.ov.iLow)}</p>`],
+        [m.ov.panelI[3], `<p>「${E(is1.read.ask)}」</p>`, 'box'],
       ])}
     </div>`, { sub: 'Overview' });
 
@@ -116,46 +127,20 @@ export function renderComplete(m) {
   const fRow = (f) => `<div class="dp-fcard${f.rank <= 3 ? ' top' : ''}"><span class="dp-rk">${pad(f.rank)}</span>
       <div class="dp-fbody"><div class="dp-fhead"><i class="dot" style="background:${f.elements[0] || '#C8405C'}"></i>${fatuiName(f)}<b>${f.match}</b>${f.selected ? '<span class="dp-ftag">FATUI</span>' : ''}
         <span class="dp-chips">${f.chips.map((c) => `<i style="--c:${c.color}">${E(c.label)}</i>`).join('')}<i>${E(f.title)}</i><i>${E(f.region || '—')}</i></span></div>
-        <div class="dp-rline">${E(f.deep.relate)}</div></div></div>`;
+        <div class="dp-rline">比較に使う特性：${f.rows.map((r) => `${E(r.label)}（あなた${r.you}／参照${r.ref}）`).join('・')}</div></div></div>`;
   page('dp-wide dp-compact', 'FATUI', 'ファトゥス TOP11', `
     <div class="dp-def"><span>DEFINITION</span><p>${E(m.panel.fatuiDefinition)}</p></div>
     <div class="dp-split">
       <div class="dp-main">${m.fatui.map(fRow).join('')}</div>
       ${panel([
         ['この順位の読み方', `<p>${E(m.panel.fatuiReading)}</p>`],
-        ['上位に反復するテーマ', `<p>${m.themes.length ? `上位5名には「${m.themes.map(E).join('」「')}」の物語を持つ人物が多く並びます。` : '上位5名の物語のテーマは、それぞれに異なります。'}上位の多くは、あなたと同じく<b>${E(m.peaks[0].label)}</b>の近くに参照点を持つ人物です。</p>`],
+        ['上位に反復するテーマ', `<p>${m.themes.length ? `上位5名には「${m.themes.map(E).join('」「')}」の物語を持つ人物が多く並びます。` : '上位5名の物語のテーマは、それぞれに異なります。'}</p>`],
         ['同じではない', `<p>${E(m.panel.fatuiNotSame)}</p>`, 'warn'],
       ])}
     </div>
-    <div class="dp-top3">${m.topF.map((f) => `<div class="dp-t3" style="--c:${f.elements[0] || '#C8405C'}"><div class="dp-t3h">${pad(f.rank)}　${fatuiName(f)}</div><p>${E(f.compare)}</p></div>`).join('')}</div>`, { sub: 'Self-understanding' });
-
-  // P07 邪眼と異相（深い説明）
-  page('dp-text', 'JAGAN & ISOU', '邪眼と異相 — あなたの影の正体', `
-    <div class="dp-pair">
-      <div class="dp-card" style="--c:${elc}"><div class="dp-k">邪眼元素</div><div class="dp-big">${E(el1.label)}<small>${E(el1.name)}</small></div>
-        <p class="dp-p">${E(m.fixed.jaganWhat)}</p><p class="dp-p">${E(el1.story)}</p>
-        <div class="dp-parts">${el1.parts.map((x) => `<div class="dp-row"><span>${E(x.label)}<small>寄与 ${x.weight}%</small></span>${bar(x.score, elc)}<b>${x.score}</b></div>`).join('')}</div></div>
-      <div class="dp-card" style="--c:${is1.color}"><div class="dp-k">異相</div><div class="dp-big">${E(is1.label)}<small>${E(is1.text.axis)}</small></div>
-        <p class="dp-p">${E(m.fixed.isouWhat)}</p><p class="dp-p">${E(is1.text.body)}</p>
-        <p class="dp-note">${E(is1.copy.limit)}</p></div>
-    </div>`);
-
-  // P08 ファトゥスはなぜ現れるのか
-  page('dp-text', 'WHY FATUI', 'ファトゥスはなぜ現れるのか', `${m.fixed.fatuiWhy.map((p) => `<p class="dp-p">${E(p)}</p>`).join('')}
-    ${ch ? `<div class="dp-card" style="--c:#E2C08C"><div class="dp-k">あなたに現れたファトゥス</div><div class="dp-big">${fatuiName(ch)}<small>${E(ch.title)}｜${E(ch.tags.join('・'))}｜一致度 ${ch.match}%</small></div>
-      <p class="dp-p">${E(ch.copy.story_context)}</p>
-      <div class="dp-cols"><div><div class="dp-k2">重なる特性</div>${ch.aligned.length ? ch.aligned.map((x) => `<p class="dp-li">${E(x.label)}　あなた ${x.you}／参照 ${x.ref}</p>`).join('') : '<p class="dp-li">明確に近い項目は限られています</p>'}</div>
-        <div><div class="dp-k2">離れている特性</div>${ch.different.length ? ch.different.map((x) => `<p class="dp-li">${E(x.label)}　あなた ${x.you}／参照 ${x.ref}</p>`).join('') : '<p class="dp-li">大きな差はありません</p>'}</div></div>
-      <p class="dp-note">${E(ch.copy.limit)}</p></div>` : '<p class="dp-p">あなたの回答は、どの人物の参照点とも特定できるほどの差が出ませんでした。人物の参照は、順位のページで確かめてください。</p>'}`);
-
-  // P09 あなたの深層
-  page('dp-depth', 'YOUR ABYSS', 'あなたの深層', `
-    <div class="dp-trio"><span style="color:${elc}">${E(el1.label)}</span><b>・</b><span style="color:${is1.color}">${E(is1.label)}</span>${ch ? `<b>・</b>${fatuiName(ch)}` : ''}</div>
-    <div class="dp-typename">${E(m.dti.code)}｜${E(m.dti.name)}</div>
-    <p class="dp-p dp-lead">${E(m.overview)}</p>
-    <p class="dp-p">${E(el1.text.body)}</p>
-    <p class="dp-p">${E(is1.short)}</p>
-    <div class="dp-quote">${E(is1.copy.reflection)}</div>`);
+    <div class="dp-top3">${m.mirror.people.map((p) => `<div class="dp-t3" style="--c:${p.f.elements[0] || '#C8405C'}"><div class="dp-t3h">${pad(p.f.rank)}　${fatuiName(p.f)}　<small>${p.f.match}%</small></div>
+      <dl class="dp-t3dl"><dt>${E(m.ov.fCards[0])}</dt><dd>${E(p.aligned)}</dd><dt>${E(m.ov.fCards[1])}</dt><dd>${E(p.different)}</dd><dt class="gold">${E(m.ov.fCards[2])}</dt><dd>${E(p.main)}</dd></dl></div>`).join('')}</div>
+    <div class="dp-fsteps">${m.ov.fSteps.map(([k, t], i) => `<div><span class="dp-nnum">${i + 1}</span><b>${E(k)}</b><p>${E(t)}</p></div>`).join('')}</div>`, { sub: 'Self-understanding' });
 
   // P10・P11 上位の邪眼との付き合い方／上位の異相を読み解く（オーナー案・2026-11-08）。上位3つを3列に並べた比較表
   //   邪眼は「複数の特性が重なると、どんな反応のまとまりとして見えるか」、異相は「その特性そのものは何を意味し、自分にどう当てはまるか」
@@ -177,7 +162,7 @@ export function renderComplete(m) {
   const dHead = (o) => `<div class="dp-dh" style="--c:${o.c}">
       <div class="dp-demb">${o.emblem}</div>
       <div class="dp-dmain"><div class="dp-dkick">${E(o.kick)}</div><div class="dp-dname"><b>${E(o.label)}</b><span>── ${E(o.head)}</span></div><p class="dp-dtag">${E(o.tagline)}</p></div>
-      <div class="dp-drank"><div class="dp-drk">RANK <b>${pad(o.rank)}</b></div><div class="dp-dsc">${o.score}<small>/100</small></div>${o.next ? `<div class="dp-dnext">次点 ${E(o.next.label)} ${o.next.score}　<b>${o.next.d >= 0 ? '+' : ''}${o.next.d}</b></div>` : ''}</div>
+      <div class="dp-drank"><div class="dp-dsc">${o.score}<small>/100</small></div>${o.next ? `<div class="dp-dnext">次点 ${E(o.next.label)} ${o.next.score}　<b>${o.next.d >= 0 ? '+' : ''}${o.next.d}</b></div>` : ''}</div>
     </div>`;
   const side = (d, c) => `<div class="dp-dside">
       <div class="dp-dc"><div class="dp-dck">${E(L.scenes)}</div><p>${E(d.scenes)}</p></div>
@@ -190,8 +175,8 @@ export function renderComplete(m) {
       <div class="dp-dday"><div class="dp-dck">${E(L.day)}</div><p>${E(d.day)}</p></div>`;
   for (const e of m.topE) {
     const d = e.detail, c = e.color.main;
-    page('dp-wide dp-detail', `JAGAN ${pad(e.rank)}`, `邪眼 ${e.rank}位 — ${e.label}`, `
-      ${dHead({ c, rank: e.rank, score: e.score, next: d.next, label: e.label, head: d.head, tagline: d.tagline, kick: `JAGAN ${pad(e.rank)} · ${e.name}`,
+    page('dp-wide dp-detail', 'JAGAN', nameOf(`邪眼を読む（${e.rank}）`), `
+      ${dHead({ c, rank: e.rank, score: e.score, next: d.next, label: e.label, head: d.head, tagline: d.tagline, kick: `JAGAN · ${e.name}`,
         emblem: `<img src="/assets/emblems/jagan/record/${{ PY: 'pyro', HY: 'hydro', CR: 'cryo', EL: 'electro', AN: 'anemo', GE: 'geo', DE: 'dendro' }[e.id]}.png" alt="${E(e.label)}の邪眼の証" width="120" height="120">` })}
       <div class="dp-dchips"><span class="dp-dchk">${E(L.basisE)}</span>${e.parts.map((x) => `<span class="dp-dchip${x.id === d.core ? ' core' : ''}" style="--c:${c}">${E(x.label)} ${x.score}<i>重み ${x.weight}%</i>${x.id === d.core ? '<em>核</em>' : ''}</span>`).join('')}</div>
       <div class="dp-dsplit"><div>
@@ -203,15 +188,15 @@ export function renderComplete(m) {
   }
   for (const x of m.topI) {
     const d = x.detail, c = x.color;
-    page('dp-wide dp-detail', `ISOU ${pad(x.rank)}`, `異相 ${x.rank}位 — ${x.label}`, `
-      ${dHead({ c, rank: x.rank, score: x.score, next: d.next, label: x.label, head: x.text.axis, tagline: d.tagline, kick: `ISOU ${pad(x.rank)} · ${x.aspect.code}`,
+    page('dp-wide dp-detail', 'ISOU', nameOf(`異相を読む（${x.rank}）`), `
+      ${dHead({ c, rank: x.rank, score: x.score, next: d.next, label: x.label, head: x.text.axis, tagline: d.tagline, kick: `ISOU · ${x.aspect.code}`,
         emblem: `<span class="dp-dcode">${E(x.aspect.code)}</span>` })}
-      <div class="dp-dchips"><span class="dp-dchk">${E(L.basisI)}</span><span class="dp-dchip core" style="--c:${c}">12特性中 ${x.rank}位</span><span class="dp-dchip" style="--c:${c}">得点 ${x.score}</span><span class="dp-dchip" style="--c:#85707a">12特性の平均 ${d.overall}</span>${d.inc.map((e) => `<span class="dp-dchip" style="--c:${e.color}">${E(e.label)}の計算に含まれる</span>`).join('')}</div>
+      <div class="dp-dchips"><span class="dp-dchk">${E(L.basisI)}</span><span class="dp-dchip" style="--c:${c}">得点 ${x.score}</span><span class="dp-dchip" style="--c:#85707a">12特性の平均 ${d.overall}</span>${d.inc.map((e) => `<span class="dp-dchip" style="--c:${e.color}">${E(e.label)}の計算に含まれる</span>`).join('')}</div>
       <div class="dp-dsplit"><div>
         <div class="dp-dmeans" style="--c:${c}"><div class="dp-dck">${E(L.means)}</div><p>${E(d.means)}</p></div>
         ${youBlock(d, c)}
         <div class="dp-dbasis"><div class="dp-dck">${E(L.basisI)}　<small>前後の順位</small></div>
-          ${d.near.map((t) => `<div class="dp-row${t.self ? ' self' : ''}"><span style="color:${t.color}">${pad(t.rank)}　${E(t.label)}</span>${bar(t.score, t.color)}<b>${t.score}</b></div>`).join('')}</div>
+          ${d.near.map((t) => `<div class="dp-row${t.self ? ' self' : ''}"><span style="color:${t.color}">${E(t.label)}</span>${bar(t.score, t.color)}<b>${t.score}</b></div>`).join('')}</div>
         <p class="dp-note">${E(x.copy.limit)}</p>
       </div>${side(d, c)}</div>`);
   }
@@ -297,10 +282,6 @@ export function renderComplete(m) {
       <div class="dp-acclose">${E(X.closing)}</div>`, { sub: X.sub });
   }
 
-  // P29 人物から得るもの
-  page('dp-text', 'FROM FATUI', '人物から得るもの', `<p class="dp-p">上位3名の物語から、あなたの影の扱い方として借りられる視点です。人物と同じ行動をとるという意味ではありません。</p>
-    ${m.topF.map((f) => `<div class="dp-card" style="--c:${f.elements[0] || '#C8405C'}"><div class="dp-k">${fatuiName(f)}</div><p class="dp-p">${E(f.deep.gain)}</p><p class="dp-li">${E(f.copy.association_theme)}</p></div>`).join('')}`);
-
   // 再読 — あなたの影を読み直す（オーナー案・2026-11-08）。①結果の要点 → ②経験に照らす4つの問い（2×2・記入欄）→ ③書き換え → 読み返すページ（番号は構成から自動）
   { const RR = m.reread, num = (t) => PAGE_TITLES.indexOf(t) + 1;
     page('dp-wide dp-reread', RR.kicker, RR.title, `<p class="dp-p dp-lead">${E(RR.intro)}</p>
@@ -314,7 +295,7 @@ export function renderComplete(m) {
       <p class="dp-rrhint"><span>${E(RR.exFor)}が上位のあなたへ</span>${E(RR.ex.hint)}</p>
       <div class="dp-pk" style="margin-top:12px">③ ${E(RR.s3)}</div>
       <div class="dp-rr3">${[RR.ex.before, RR.ex.now, RR.ex.check].map((eg, i) => `<div class="dp-acb"><b>${E(RR.rewrite[i])}</b><small>例：${E(eg)}</small><span class="dp-wline"></span><span class="dp-wline"></span></div>`).join('')}</div>
-      <div class="dp-rrlinks"><span>${E(RR.linksTitle)}</span>${RR.links.map(([k, t]) => `<a href="#dp${pad(num(t))}"><small>${E(k)}</small>P${pad(num(t))} ${E(t)}</a>`).join('')}</div>
+      <div class="dp-rrlinks"><span>${E(RR.linksTitle)}</span>${RR.links.map(([k, t]) => `<a href="#dp${pad(num(t))}"><small>${E(k)}</small>P${pad(num(t))} ${E(nameOf(t))}</a>`).join('')}</div>
       <div class="dp-acclose">${E(RR.closing)}</div>`, { sub: RR.sub });
   }
 
