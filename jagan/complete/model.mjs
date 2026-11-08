@@ -6,7 +6,7 @@
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
-import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS } from './copy.mjs';
+import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL } from './copy.mjs';
 
 const r1 = (x) => Math.round(x * 10) / 10;
 
@@ -78,8 +78,11 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
     f.compare = `${f.name}とは、${al.length ? `${al.join('・')}の数値が近く、影の向きが重なります。` : '参照した特性の中で、明確に重なる項目は限られています。'}`
       + (df ? `一方で、${df.label}は${df.ref > df.you ? `${f.name}の方がはっきりしています` : 'あなたの方がはっきりしています'}（あなた ${df.you}／参照 ${df.ref}）。` : '大きく離れている特性はありません。');
   }
+  // P12–P17 個別ページ：見出しの次点との差、根拠、「あなたの場合」の冒頭（今回の得点から組み立てる）
+  for (const e of topE) e.detail = elementDetail(e, elements[e.rank]);
+  for (const x of topI) x.detail = isouDetail(x, isous, topE, r1(overall));
   return {
-    product: PRODUCT, fixed: FIXED, panel: PANEL, diagnosedAt,
+    product: PRODUCT, detailLabels: DETAIL_LABELS, fixed: FIXED, panel: PANEL, diagnosedAt,
     live: { intro: LIVE_INTRO, rows: LIVE_ROWS }, read: { intro: READ_INTRO, rows: READ_ROWS },
     peaks, valleys, themes,
     gapE: { a: elements[0], b: elements[1], d: elements[0].score - elements[1].score },
@@ -92,4 +95,52 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
     domains, domainOrder, overall: r1(overall), days,
     emblem: { PY: 'pyro', HY: 'hydro', CR: 'cryo', EL: 'electro', AN: 'anemo', GE: 'geo', DE: 'dendro' }[el.id],
   };
+}
+
+const N = (id) => TRAIT_PHRASE[id].noun, ONLY = (id) => TRAIT_PHRASE[id].only;
+const CLOSE = 5;
+
+// 邪眼：構成特性（計算上の重みの順）の得点の並びから、今回の現れ方の文を選ぶ（オーナー案の水・草・岩の書き方を一般化）
+//   ①上位2つが近く、3つ目が離れている → 「主に A と B」＋「C だけで説明することはできない」
+//   ②得点が最も高い特性が、重みの最も大きい特性ではない → 「A が比較的高い。B や C に加え、A が〜の一因になっていないか」
+//   ③それ以外 → 高い特性と低い特性の配置
+export function elementYou(e, d) {
+  const L = e.label, parts = e.parts, core = parts[0];
+  const s = [...parts].sort((a, b) => b.score - a.score || b.weight - a.weight);
+  const out = [];
+  if (s[0].score - s[1].score <= CLOSE && s[1].score - s[2].score >= 10) {
+    out.push(`今回の${L}を形づくっているのは、主に${s[0].label}と${s[1].label}です。${N(s[0].id)}と、${N(s[1].id)}が、近い得点で表れています。`);
+    out.push(`一方、${s[2].label}の得点は二つより低く、今回の${L}を「${ONLY(s[2].id)}」だけで説明することはできません。`);
+  } else if (s[0].id !== core.id && s[0].score > core.score) {
+    const others = parts.filter((p) => p.id !== s[0].id).map((p) => N(p.id));
+    out.push(`今回の${L}では、構成特性の中で${s[0].label}の得点が比較的高く出ています（計算上の重みが最も大きいのは${core.label}）。${others.join('や、')}に加え、${N(s[0].id)}が、${d.loop}一因になっていないかを検討できます。`);
+  } else if (s[0].score - s[2].score >= 10) {
+    out.push(`今回の${L}は、構成特性の中では${s[0].label}が高く、${s[2].label}が低い配置です。そのため、「${ONLY(s[2].id)}」だけでなく、${N(s[0].id)}から来る反応に目を向けます。`);
+  } else {
+    out.push(`今回の${L}では、${parts.map((p) => p.label).join('・')}の三つが近い得点で重なっています。どれか一つではなく、${N(s[0].id)}と、${N(s[1].id)}が組み合わさって表れていないかを見ていきます。`);
+  }
+  return out;
+}
+function elementDetail(e, next) {
+  const d = ELEMENT_DETAIL[e.id];
+  return { ...d, you: [...elementYou(e, d), ...d.read], next: next ? { label: next.label, score: next.score, d: e.score - next.score } : null, core: e.parts[0].id };
+}
+
+// 異相：12特性の中での位置（隣の順位との近さ）と、上位の邪眼の計算に含まれているか
+export function isouYou(x, isous, topE) {
+  const r = x.rank, out = [];
+  const nb = r === 1 ? isous[1] : isous[r - 2];
+  const gap = Math.abs(x.score - nb.score), close = gap <= CLOSE;
+  if (r === 1) out.push(`今回の回答では${x.label}が最上位で、${close ? `${nb.label}も近い得点です。` : `2位の${nb.label}とは${gap}点の差があります。`}`);
+  else out.push(`今回の回答で${x.label}は${r}位です。${close ? `${r - 1}位の${nb.label}と近い得点です。` : `${r - 1}位の${nb.label}とは${gap}点の差があります。`}`);
+  if (close) out.push(`${N(x.id)}と、${N(nb.id)}が重なって表れていないかを確かめます。`);
+  const inc = topE.filter((e) => e.parts.some((p) => p.id === x.id));
+  if (inc.length) out.push(`${x.label}は、上位の邪眼のうち${inc.map((e) => e.label).join('と')}の計算にも含まれています。${inc.length >= 2 ? '複数の結果に同じ特性が現れていますが、それぞれ独立した証拠ではありません。' : ''}`);
+  return { lines: out, inc: inc.map((e) => ({ label: e.label, color: e.color.main })) };
+}
+function isouDetail(x, isous, topE, overall) {
+  const d = TRAIT_DETAIL[x.id], y = isouYou(x, isous, topE), next = isous[x.rank];
+  const near = isous.slice(Math.max(0, x.rank - 2), x.rank + 1).map((t) => ({ label: t.label, rank: t.rank, score: t.score, color: t.color, self: t.id === x.id }));
+  return { ...d, you: [y.lines.join(''), d.read], inc: y.inc, near, overall,
+    next: next ? { label: next.label, score: next.score, d: x.score - next.score } : null };
 }

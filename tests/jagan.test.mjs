@@ -745,3 +745,31 @@ test('完全解析 DIPPER 10・11：上位の邪眼との付き合い方（5観�
     assert.ok(p10.includes(C.ELEMENT_LIVE[result.element.id].accept.replace(/、/g, '、')), '1位の邪眼の一文');
   }
 });
+
+test('完全解析 DIPPER 12–17：上位3つの邪眼・異相の個別ページ（元素診断と同じ組み立て）。「あなたの場合」は今回の得点から組み立て、弱いときの一般論・強みへの読み替えを置かない', async () => {
+  const C = await import('../jagan/complete/copy.mjs');
+  const { buildComplete } = await import('../jagan/complete/model.mjs');
+  const { renderComplete } = await import('../jagan/complete/view.mjs');
+  const { sampleComplete } = await import('../jagan/complete-sample.mjs');
+  assert.deepEqual(Object.keys(C.ELEMENT_DETAIL).sort(), BUNDLE.core.elements.map((e) => e.id).sort());
+  assert.deepEqual(Object.keys(C.TRAIT_DETAIL).sort(), BUNDLE.items.traits.map((t) => t.id).sort());
+  assert.deepEqual(Object.keys(C.TRAIT_PHRASE).sort(), BUNDLE.items.traits.map((t) => t.id).sort());
+  for (const v of Object.values(C.ELEMENT_DETAIL)) for (const k of ['head', 'tagline', 'loop', 'scenes', 'inner', 'signs', 'coexist', 'day', 'accept']) { assert.ok(v[k] && v[k].length > 3, k); assert.ok(!v[k].includes('才能')); }
+  for (const v of Object.values(C.TRAIT_DETAIL)) for (const k of ['tagline', 'means', 'read', 'scenes', 'inner', 'signs', 'coexist', 'day', 'accept']) { assert.ok(v[k] && v[k].length > 3, k); assert.ok(!v[k].includes('才能')); }
+  // 見本の回答（HYDP 縋望者）では、オーナー案の文になる
+  const { result } = sampleComplete(0);
+  const m = buildComplete(result, BUNDLE);
+  assert.equal(m.topE[0].detail.you[0], '今回の水を形づくっているのは、主に依存と不安です。大切な相手と離れることへの不安と、悪い展開を予想する心配が、近い得点で表れています。');
+  assert.equal(m.topE[0].detail.you[1], '一方、猜疑の得点は二つより低く、今回の水を「相手を強く疑う傾向」だけで説明することはできません。');
+  assert.match(m.topE[1].detail.you[0], /構成特性の中で完璧の得点が比較的高く出ています.*「まだ十分ではない」という感覚が、確認を続ける一因になっていないか/);
+  assert.match(m.topI[2].detail.you[0], /草と岩の計算にも含まれています。複数の結果に同じ特性が現れていますが、それぞれ独立した証拠ではありません。/);
+  for (let s = 0; s < 200; s++) {
+    const r = sampleComplete(s); const mm = buildComplete(r.result, BUNDLE);
+    const pages = renderComplete(mm).split('<section').slice(1);
+    for (const p of pages.slice(11, 17)) {
+      assert.ok(!p.includes('弱いとき') && !p.includes('強みとしての顔'));
+      for (const k of ['あなたの場合', 'この反応が表れうる場面', '自分の内側と、相手への伝わり方', '負担に気づくサイン', 'この傾向との付き合い方', 'ある日の場面', '自分を受け止めるための一文', 'RANK']) assert.ok(p.includes(k), k);
+      assert.ok(!/undefined|NaN/.test(p));
+    }
+  }
+});
