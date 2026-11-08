@@ -6,7 +6,7 @@
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
-import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
+import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
 
 const r1 = (x) => Math.round(x * 10) / 10;
 
@@ -87,7 +87,7 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
   const rdom = responseDomains(score, traitLabel, isous);
   const next = { ...NEXT_PAGE, example: NEXT_EXAMPLE[isous[0].id], exampleFor: isous[0].label, hints: [...isous.slice(0, 3).map((x) => ({ label: x.label, color: x.color })), { label: `邪眼・${elements[0].label}`, color: elements[0].color.main }] };
   return {
-    product: PRODUCT, detailLabels: DETAIL_LABELS, combo, mirror, rdom, next, fixed: FIXED, panel: PANEL, diagnosedAt,
+    product: PRODUCT, detailLabels: DETAIL_LABELS, combo, mirror, rdom, next, reread: rereadOf(elements[0], isous, byScore), fixed: FIXED, panel: PANEL, diagnosedAt,
     live: { intro: LIVE_INTRO, rows: LIVE_ROWS }, read: { intro: READ_INTRO, rows: READ_ROWS },
     peaks, valleys, themes,
     gapE: { a: elements[0], b: elements[1], d: elements[0].score - elements[1].score },
@@ -298,3 +298,23 @@ export function responseDomains(score, traitLabel, isous) {
   return { ...R, list, think };
 }
 
+
+// 再読：①今回の結果で覚えておきたいこと（得点配置から読めることと、読めないこと）を組み立てる
+export function rereadOf(e, isous, byScore) {
+  const x = isous[0], L = e.label, X = x.label, parts = e.parts;
+  const s = [...parts].sort((a, b) => b.score - a.score);
+  const r1 = [`${L}は、${parts.map((p) => `${p.label}${p.score}`).join('・')}を組み合わせた結果です。`];
+  let cut = 0, gap = -1;
+  for (let i = 0; i < s.length - 1; i++) if (s[i].score - s[i + 1].score > gap) { gap = s[i].score - s[i + 1].score; cut = i + 1; }
+  if (gap >= 10) r1.push(`今回は、${s.slice(cut).map((t) => `${SH(t.id).verb}こと`).join('や')}よりも、${s.slice(0, cut).map((t) => SH(t.id).short).join('や')}への当てはまりが目立ちました。`);
+  else r1.push('三つの特性が近い得点で重なっています。');
+  const inc = parts.some((p) => p.id === x.id);
+  const r2 = inc ? `${L}と${X}は、別々の証拠が一致した結果ではありません。${X}は、${L}の算出にも使われている特性です。「${ELEMENT_COMBO[e.id].when}場面」を振り返るための、二つの見方として読んでください。`
+    : `${X}は、${L}の算出には含まれていない特性です。二つを一つの理由にまとめず、それぞれが表れる場面を別々に振り返ってください。`;
+  const other = isous.slice(1, 3).find((t) => !parts.some((p) => p.id === t.id));
+  const more = other ? { label: other.label, score: other.score, color: other.color,
+    text: `${X}や${L}とは別に、${SH(other.id).verb}場面も、振り返る候補です。同じ場面で重なるか、別の場面に現れるかは、実際の経験から確かめます。` } : null;
+  const low = byScore[byScore.length - 1];
+  const lowText = `${low.label}${low.score}のような低い得点は、その反応への当てはまりが少なかったことを示すだけで、測っていない長所を示すものではありません。`;
+  return { ...REREAD_PAGE, head: `邪眼：${L}／異相：${X}`, eColor: e.color.main, xColor: x.color, r1: r1.join(''), r2, more, lowText, ex: REREAD_EXAMPLE[x.id], exFor: X };
+}

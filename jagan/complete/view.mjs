@@ -11,7 +11,7 @@ export const PAGE_TITLES = [
   '邪眼 1位', '邪眼 2位', '邪眼 3位', '異相 1位', '異相 2位', '異相 3位',
   '邪眼×異相――あなたの影はどう表れるか', '上位3名のファトゥスとの交わり',
   '四つの反応領域', 'あなたの反応領域',
-  'あなたの影に、次の一手を', '人物から得るもの', '7日間の観察実験', '再読時の判断材料', '邪眼辞典', '異相辞典',
+  'あなたの影に、次の一手を', '人物から得るもの', '7日間の観察実験', '再読 — あなたの影を読み直す', '邪眼辞典', '異相辞典',
 ];
 
 export function renderComplete(m) {
@@ -305,10 +305,22 @@ export function renderComplete(m) {
   page('dp-text', '7 DAYS', '7日間の観察実験', `<p class="dp-p">${E(m.fixed.experiment)}</p>
     ${m.days.map((d) => `<div class="dp-day"><span class="dp-rk">DAY ${d.day}</span><b style="color:${d.color}">${E(d.label)}</b><p>${E(d.q)}</p><span class="dp-write" aria-hidden="true"></span></div>`).join('')}`);
 
-  // P31 再読時の判断材料
-  page('dp-text', 'RE-READ', '再読時の判断材料', `<p class="dp-p">${E(m.fixed.recheck)}</p>
-    ${m.topI.map((x) => `<div class="dp-check"><span>□</span><b style="color:${x.color}">${E(x.label)}</b><em>${E(x.deep.recheck)}</em></div>`).join('')}
-    <div class="dp-check"><span>□</span><b style="color:${elc}">邪眼（${E(el1.label)}）</b><em>${E(el1.deep.use.split('。')[0])}。を、実際に試せたか。</em></div>`);
+  // 再読 — あなたの影を読み直す（オーナー案・2026-11-08）。①結果の要点 → ②経験に照らす4つの問い（2×2・記入欄）→ ③書き換え → 読み返すページ（番号は構成から自動）
+  { const RR = m.reread, num = (t) => PAGE_TITLES.indexOf(t) + 1;
+    page('dp-wide dp-reread', RR.kicker, RR.title, `<p class="dp-p dp-lead">${E(RR.intro)}</p>
+      <div class="dp-rr1"><div class="dp-pk">① ${E(RR.s1)}</div>
+        <div class="dp-rrhead"><span style="color:${RR.eColor}">${E(RR.head.split('／')[0])}</span>／<span style="color:${RR.xColor}">${E(RR.head.split('／')[1])}</span></div>
+        <p>${E(RR.r1)}</p><p>${E(RR.r2)}</p>
+        ${RR.more ? `<p class="dp-rrmore"><b>${E(RR.moreLabel || '')}${E('もう一つの注目点')}：<span style="color:${RR.more.color}">${E(RR.more.label)}${RR.more.score}</span></b>${E(RR.more.text)}</p>` : ''}
+        <p class="dp-note">${E(RR.lowText)}</p></div>
+      <div class="dp-pk" style="margin-top:4px">② ${E(RR.s2)}</div>
+      <div class="dp-rrq">${RR.questions.map((q) => `<div class="dp-acb"><b>${E(q.k)}</b><p>${E(q.q)}</p><span class="dp-wline"></span><span class="dp-wline"></span></div>`).join('')}</div>
+      <p class="dp-rrhint"><span>${E(RR.exFor)}が上位のあなたへ</span>${E(RR.ex.hint)}</p>
+      <div class="dp-pk" style="margin-top:12px">③ ${E(RR.s3)}</div>
+      <div class="dp-rr3">${[RR.ex.before, RR.ex.now, RR.ex.check].map((eg, i) => `<div class="dp-acb"><b>${E(RR.rewrite[i])}</b><small>例：${E(eg)}</small><span class="dp-wline"></span><span class="dp-wline"></span></div>`).join('')}</div>
+      <div class="dp-rrlinks"><span>${E(RR.linksTitle)}</span>${RR.links.map(([k, t]) => `<a href="#dp${pad(num(t))}"><small>${E(k)}</small>P${pad(num(t))} ${E(t)}</a>`).join('')}</div>
+      <div class="dp-acclose">${E(RR.closing)}</div>`, { sub: RR.sub });
+  }
 
   // P32・P33 辞典
   page('dp-dict', 'DICTIONARY', '邪眼辞典', '<div class="dp-dgrid">' + [...m.elements].sort((a, b) => a.id.localeCompare(b.id)).map((e) => `<div class="dp-dcard" style="--c:${e.color.main}"><div class="dp-k">${E(e.label)}｜${E(e.name)}</div><p>${E(e.deep.dict)}</p><p class="dp-li">${E(e.text.essence)}</p></div>`).join('') + '</div>');

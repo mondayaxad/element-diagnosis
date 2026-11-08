@@ -686,7 +686,7 @@ test('完全解析 DIPPER：27ページ・指示の順。順位（邪眼7・異�
   assert.equal(PAGE_TITLES.length, 27);
   assert.deepEqual(PAGE_TITLES.slice(0, 9), ['表紙', 'このレポートの読み方', 'あなたの影', '邪眼（特性）の全体順位', '異相の全体順位', 'ファトゥス TOP11',
     '邪眼と異相 — あなたの影の正体', 'ファトゥスはなぜ現れるのか', 'あなたの深層']);
-  assert.deepEqual(PAGE_TITLES.slice(-6), ['あなたの影に、次の一手を', '人物から得るもの', '7日間の観察実験', '再読時の判断材料', '邪眼辞典', '異相辞典']);
+  assert.deepEqual(PAGE_TITLES.slice(-6), ['あなたの影に、次の一手を', '人物から得るもの', '7日間の観察実験', '再読 — あなたの影を読み直す', '邪眼辞典', '異相辞典']);
   const codes = new Set();
   for (let seed = 0; seed < 400; seed++) {
     const { result, html } = sampleComplete(seed);
@@ -847,4 +847,22 @@ test('完全解析 DIPPER：四つの反応領域（12特性を4領域に・重�
     assert.ok(!/最も問題|ドメイン平均|弱点をどう活かすか|強みとしての顔/.test(r.html));
     assert.ok(r.html.includes('同じ気持ちが生まれても、次の行動まで同じである必要はありません。'));
   }
+});
+
+test('完全解析 DIPPER：再読 — あなたの影を読み直す（結果の要点・経験に照らす4つの問い・書き換え・読み返すページの番号は構成から）', async () => {
+  const C = await import('../jagan/complete/copy.mjs');
+  const { buildComplete } = await import('../jagan/complete/model.mjs');
+  const { PAGE_TITLES } = await import('../jagan/complete/view.mjs');
+  const { sampleComplete } = await import('../jagan/complete-sample.mjs');
+  assert.deepEqual(Object.keys(C.REREAD_EXAMPLE).sort(), BUNDLE.items.traits.map((t) => t.id).sort());
+  for (const [, t] of C.REREAD_PAGE.links) assert.ok(PAGE_TITLES.includes(t), t);
+  const { result, html } = sampleComplete(0);
+  const r = buildComplete(result, BUNDLE).reread;
+  assert.equal(r.r1, '水は、依存70・不安69・猜疑44を組み合わせた結果です。今回は、相手を疑うことよりも、離れることへの不安や先行きへの心配への当てはまりが目立ちました。');
+  assert.match(r.r2, /水と依存は、別々の証拠が一致した結果ではありません。依存は、水の算出にも使われている特性です。/);
+  assert.equal(r.more.label, '完璧'); assert.equal(r.more.score, 56);
+  assert.match(r.lowText, /測っていない長所を示すものではありません/);
+  const p = html.split(`id="dp${String(PAGE_TITLES.indexOf('再読 — あなたの影を読み直す') + 1).padStart(2, '0')}"`)[1].split('<section')[0];
+  assert.ok(p.includes(`href="#dp${String(PAGE_TITLES.indexOf('異相 1位') + 1).padStart(2, '0')}"`));
+  assert.ok(!p.includes('実際に試せたか'));
 });
