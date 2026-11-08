@@ -10,9 +10,8 @@ export const PAGE_TITLES = [
   '上位の邪眼との付き合い方', '上位の異相を読み解く',
   '邪眼 1位', '邪眼 2位', '邪眼 3位', '異相 1位', '異相 2位', '異相 3位',
   '邪眼×異相――あなたの影はどう表れるか', '上位3名のファトゥスとの交わり',
-  '下位の邪眼', '下位の異相', '強みとは何か',
   '四つの反応領域', 'あなたの反応領域',
-  '自分の影をどう受け止めるか', '人物から得るもの', '7日間の観察実験', '再読時の判断材料', '邪眼辞典', '異相辞典',
+  'あなたの影に、次の一手を', '人物から得るもの', '7日間の観察実験', '再読時の判断材料', '邪眼辞典', '異相辞典',
 ];
 
 export function renderComplete(m) {
@@ -261,15 +260,6 @@ export function renderComplete(m) {
       <p class="dp-note">${E(ML.refNote)}</p>`, { sub: ML.sub });
   }
 
-  // P21・P22 下位
-  page('dp-text', 'LOWER JAGAN', '下位の邪眼', `<p class="dp-p">下位の邪眼は、あなたの中で表れにくい影のかたちです。表れにくいことは欠点ではなく、別の強みの裏返しでもあります。</p>${m.lowE.map((e) => `<div class="dp-card" style="--c:${e.color.main}"><div class="dp-k">${pad(e.rank)}　${E(e.label)}｜${E(e.name)}　${e.score}</div><p class="dp-p">${E(e.deep.low)}</p></div>`).join('')}`);
-  page('dp-text', 'LOWER ISOU', '下位の異相', `<p class="dp-p">下位の異相は、あなたの中で表れにくい特性です。低いことで生まれる穏やかさと、手薄になりやすい点の両方があります。</p>${m.lowI.map((x) => `<div class="dp-card" style="--c:${x.color}"><div class="dp-k">${pad(x.rank)}　${E(x.label)}｜${E(x.copy.lo)}　${x.score}</div><p class="dp-p">${E(x.deep.low)}</p></div>`).join('')}`);
-
-  // P23 強みとは何か
-  page('dp-text', 'STRENGTH', '強みとは何か', `${m.fixed.strength.map((p) => `<p class="dp-p">${E(p)}</p>`).join('')}
-    ${m.topI.map((x) => `<div class="dp-row big"><span style="color:${x.color}">${E(x.label)}</span><em>${E(x.deep.strength)}</em></div>`).join('')}
-    <div class="dp-row big"><span style="color:${elc}">邪眼（${E(el1.label)}）</span><em>${E(el1.deep.strength)}</em></div>`);
-
   // 四つの反応領域（オーナー案・2026-11-08。元素診断「四つの貢献ドメイン」の2×2を引き継ぐ）→ あなたの反応領域（内訳と解釈。平均の順位はつけない）
   { const R = m.rdom, codeOf = (id) => m.isous.find((x) => x.id === id).aspect.code;
     page('dp-wide dp-rdom', R.kicker, R.title, `<p class="dp-p dp-lead">${E(R.intro)}</p>
@@ -289,15 +279,22 @@ export function renderComplete(m) {
       <p class="dp-note">${E(R.note)}</p>`, { sub: R.youSub });
   }
 
-  // 自分の影をどう受け止めるか（オーナー案・2026-11-08。旧「弱点をどう活かすか」を置き換え）
-  { const A = m.accept;
-    page('dp-wide dp-accept', A.kicker, A.title, `<p class="dp-p dp-lead">${E(A.intro)}</p>
-      <div class="dp-ac3">${A.steps.map((x, i) => `<div class="dp-acs"><span class="dp-rk">${pad(i + 1)}</span><b>${E(x.k)}</b><small>${E(x.sub)}</small><p>${E(x.text)}</p></div>`).join('')}</div>
-      <div class="dp-ac2"><div class="dp-acb left" style="--c:${m.isou.color}"><div class="dp-pk">${E(A.leftTitle)}</div>${A.left.map((t) => `<p>${E(t)}</p>`).join('')}</div>
-        <div class="dp-acb"><div class="dp-pk">${E(A.rightTitle)}</div><p>${E(A.right)}</p></div></div>
-      <div class="dp-ac2 small">${A.bottom.map((x) => `<div class="dp-acb"><div class="dp-pk">${E(x.k)}</div><p>${E(x.text)}</p></div>`).join('')}</div>
-      <p class="dp-note">${E(A.bottomNote)}</p>
-      <div class="dp-acclose">${E(A.closing)}</div>`, { sub: A.sub });
+  // あなたの影に、次の一手を（オーナー案・2026-11-08。元素診断「カテゴリ別・7日間の観察実験」の組み立てを引き継ぐ）
+  { const X = m.next, ex = X.example, blank = '<span class="dp-blank"></span>';
+    page('dp-wide dp-next', X.kicker, X.title, `<p class="dp-p dp-lead">${E(X.intro)}</p>
+      <div class="dp-ac3">${X.steps.map((s, i) => `<div class="dp-acs"><span class="dp-nnum">${i + 1}</span><b>${E(s.k)}</b><small>${E(s.head)}</small><p>${E(s.text)}</p>
+        ${i === 0 ? `<div class="dp-nhint"><span>${E(X.hint)}</span>${X.hints.map((h) => `<i style="--c:${h.color}">${E(h.label)}</i>`).join('')}</div>` : ''}</div>`).join('')}</div>
+      <div class="dp-nex" style="--c:${m.isou.color}"><div class="dp-pk">${E(X.exampleLabel)}　<small>${E(X.exampleFor)}</small></div>
+        <div class="dp-nextitle">${E(ex.title)}</div><p>${E(ex.action)}</p>
+        <p class="dp-nref"><b>${E(X.reflectLabel)}</b>${E(ex.reflect)}</p><p class="dp-note">${E(X.exampleNote)}</p></div>
+      <div class="dp-nwrite"><div class="dp-pk">${E(X.writeTitle)}</div>
+        <p>${E(X.write[0])}${blank}${E(X.write[1])}<br>${E(X.write[2])}${blank}${E(X.write[3])}<br>${blank}${E(X.write[4])}</p></div>
+      <div class="dp-nlog"><div class="dp-pk">${E(X.logTitle)}　<small>${E(X.logNote)}</small></div>
+        <table class="dp-ctab"><thead><tr>${X.logHead.map((h) => `<th>${E(h)}</th>`).join('')}</tr></thead><tbody>
+        <tr class="eg"><td>例</td>${ex.log.map((t) => `<td>${E(t)}</td>`).join('')}</tr>
+        ${Array.from({ length: X.logRows }, () => '<tr class="w"><td></td><td></td><td></td><td></td></tr>').join('')}</tbody></table></div>
+      <div class="dp-nafter"><div class="dp-pk">${E(X.afterTitle)}</div><div class="dp-nopts">${X.after.map((a) => `<div><span>□</span><b>${E(a.k)}</b><p>${E(a.text)}</p></div>`).join('')}</div></div>
+      <div class="dp-acclose">${E(X.closing)}</div>`, { sub: X.sub });
   }
 
   // P29 人物から得るもの

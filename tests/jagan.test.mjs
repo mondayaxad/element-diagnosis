@@ -678,15 +678,15 @@ test('mypage の開示（購入済みだけ）：三つの土台の上位2特性
 });
 
 // ---- 邪眼完全解析 DIPPER（叩き台）
-test('完全解析 DIPPER：30ページ・指示の順。順位（邪眼7・異相12・ファトゥス11＝6＋5）は結果と同じ規則で、1位は結果と一致。どの結果でも空欄・未定義を出さない', async () => {
+test('完全解析 DIPPER：27ページ・指示の順。順位（邪眼7・異相12・ファトゥス11＝6＋5）は結果と同じ規則で、1位は結果と一致。どの結果でも空欄・未定義を出さない', async () => {
   const { buildComplete } = await import('../jagan/complete/model.mjs');
   const { renderComplete, PAGE_TITLES } = await import('../jagan/complete/view.mjs');
   const { orderIsou, selectIsou } = await import('../jagan/engine/dti.mjs');
   const { sampleComplete } = await import('../jagan/complete-sample.mjs');
-  assert.equal(PAGE_TITLES.length, 30);
+  assert.equal(PAGE_TITLES.length, 27);
   assert.deepEqual(PAGE_TITLES.slice(0, 9), ['表紙', 'このレポートの読み方', 'あなたの影', '邪眼（特性）の全体順位', '異相の全体順位', 'ファトゥス TOP11',
     '邪眼と異相 — あなたの影の正体', 'ファトゥスはなぜ現れるのか', 'あなたの深層']);
-  assert.deepEqual(PAGE_TITLES.slice(-6), ['自分の影をどう受け止めるか', '人物から得るもの', '7日間の観察実験', '再読時の判断材料', '邪眼辞典', '異相辞典']);
+  assert.deepEqual(PAGE_TITLES.slice(-6), ['あなたの影に、次の一手を', '人物から得るもの', '7日間の観察実験', '再読時の判断材料', '邪眼辞典', '異相辞典']);
   const codes = new Set();
   for (let seed = 0; seed < 400; seed++) {
     const { result, html } = sampleComplete(seed);
@@ -697,7 +697,7 @@ test('完全解析 DIPPER：30ページ・指示の順。順位（邪眼7・異�
     assert.equal(m.element.id, result.element.id); assert.equal(m.isou.id, result.isou.id);
     assert.equal(orderIsou(result.answers, BUNDLE.items)[0].id, selectIsou(result.answers, BUNDLE.items).id);
     if (m.character) { assert.equal(m.character.id, result.character.id); assert.equal(m.character.match, result.character.match); }
-    assert.equal((html.match(/class="dp-page /g) || []).length, 30, `seed ${seed}`);
+    assert.equal((html.match(/class="dp-page /g) || []).length, 27, `seed ${seed}`);
     assert.ok(!/undefined|NaN|\[object/.test(html), `seed ${seed}`);
     assert.ok(html.includes(result.dti.code) && html.includes(result.dti.name));
     // 06 ファトゥス TOP11：11名すべて・下に TOP3 の説明
@@ -835,15 +835,16 @@ test('完全解析 DIPPER：四つの反応領域（12特性を4領域に・重�
   assert.equal(m.rdom.list[0].you[0], '今回は、離れることへの不安と、先行きへの心配が目立っています。相手を疑うことや関わりを控えることよりも、依存と不安をめぐる反応から、自分の経験を振り返れます。');
   assert.match(m.rdom.list[3].you[0], /^四特性の中では操作が高いものの、今回の上位特性ではありません。領域内で最も高いという理由だけで、他者を強く操作する人とは判断しません。/);
   assert.match(m.rdom.think, /依存や不安への当てはまりと、衝動や敵意への当てはまりに違いがあります/);
-  assert.match(m.accept.left[0], /^今回は、依存と不安が上位にあります。/);
-  assert.match(m.accept.left[1], /^完璧も上位にあるため、.*二つが同じ場面で起きるとは限りません。$/);
+  assert.equal(m.next.example.title, '返事が来ないと、何度も確かめたくなるあなたへ');
+  assert.deepEqual(Object.keys(C.NEXT_EXAMPLE).sort(), BUNDLE.items.traits.map((t) => t.id).sort());
+  assert.ok(!PAGE_TITLES.some((t) => /強みとは何か|下位の|受け止めるか/.test(t)));
   for (let s = 0; s < 300; s++) {
     const r = sampleComplete(s), mm = buildComplete(r.result, BUNDLE);
     for (const d of mm.rdom.list) {
       assert.ok(d.you.length >= 1 && d.you.every((t) => t.length > 10));
       if (Math.max(...d.ts.map((t) => t.score)) <= 35) assert.ok(!d.you.join('').includes('が目立っています'));
     }
-    assert.ok(!/最も問題|ドメイン平均|弱点をどう活かすか/.test(r.html));
-    assert.ok(r.html.includes('その傾向がある自分を認めることと、その反応に従い続けることは、別に考えられます。'));
+    assert.ok(!/最も問題|ドメイン平均|弱点をどう活かすか|強みとしての顔/.test(r.html));
+    assert.ok(r.html.includes('同じ気持ちが生まれても、次の行動まで同じである必要はありません。'));
   }
 });

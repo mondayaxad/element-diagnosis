@@ -265,3 +265,20 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-ac2.small .dp-acb { padding: 10px 16px; } .dp-ac2.small p { color: var(--sub); }
 .dp-acclose { margin-top: 16px; text-align: center; font-size: 18px; letter-spacing: .06em; padding: 14px 8px; border-top: 1px solid var(--line2); border-bottom: 1px solid var(--line2); color: #f2dfc0; }
 @media (max-width: 760px) { .dp-rdrow, .dp-ac3, .dp-ac2 { grid-template-columns: 1fr; } }
+/* あなたの影に、次の一手を */
+.dp-nnum { font-family: 'IM Fell English', serif; font-size: 30px; color: var(--rose); margin-right: 10px; line-height: 1; }
+.dp-nhint { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line2); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.dp-nhint span { width: 100%; font-size: 11.5px; color: var(--dim); letter-spacing: .1em; }
+.dp-nhint i { font-style: normal; font-size: 12.5px; padding: 1px 9px; border-radius: 5px; border: 1px solid color-mix(in srgb, var(--c) 60%, transparent); color: var(--c); }
+.dp-nex { border: 1px solid color-mix(in srgb, var(--c) 45%, var(--line2)); border-left: 3px solid var(--c); border-radius: 10px; padding: 14px 20px; margin-bottom: 12px; background: color-mix(in srgb, var(--c) 7%, rgba(18,9,14,.6)); }
+.dp-nex .dp-pk small { color: var(--c); letter-spacing: .06em; } .dp-nextitle { font-size: 19px; font-weight: 700; margin: 2px 0 6px; } .dp-nex p { margin: 0 0 6px; font-size: 14.5px; }
+.dp-nref b { color: var(--gold); font-size: 13px; margin-right: 10px; }
+.dp-nwrite { border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--line2)); border-radius: 12px; padding: 16px 22px; margin-bottom: 12px; background: rgba(226,192,140,.04); }
+.dp-nwrite p { margin: 4px 0 0; font-size: 17px; line-height: 2.5; }
+.dp-blank { display: inline-block; width: 14em; max-width: 60%; border-bottom: 1px solid color-mix(in srgb, var(--gold) 60%, transparent); margin: 0 .4em; vertical-align: -4px; height: 1.2em; }
+.dp-nlog, .dp-nafter { border: 1px solid var(--line2); border-radius: 10px; padding: 12px 18px; margin-bottom: 12px; background: rgba(18,9,14,.6); }
+.dp-nlog .dp-pk small, .dp-nafter .dp-pk small { color: var(--dim); letter-spacing: .04em; font-size: 12px; }
+.dp-nlog td:first-child { width: 4em; font-weight: 400; } .dp-nlog tr.eg td { color: var(--sub); font-size: 13px; } .dp-nlog tr.w td { height: 38px; }
+.dp-nopts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; } .dp-nopts span { color: var(--gold); margin-right: 8px; } .dp-nopts b { font-size: 15px; } .dp-nopts p { margin: 2px 0 0; font-size: 13.5px; color: var(--sub); }
+@media (max-width: 760px) { .dp-nopts { grid-template-columns: 1fr; } .dp-blank { width: 8em; } }
+.dp-nlog .dp-ctab td:nth-child(2) { text-align: left; white-space: normal; } .dp-nlog .dp-ctab td { width: 30%; } .dp-nlog .dp-ctab td:first-child { width: 4em; }

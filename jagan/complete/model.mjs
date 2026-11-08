@@ -6,7 +6,7 @@
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
-import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, ACCEPT_PAGE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
+import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
 
 const r1 = (x) => Math.round(x * 10) / 10;
 
@@ -85,9 +85,9 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
   const combo = comboOf(elements[0], isous[0]);
   const mirror = mirrorOf(topF, elements[0], isous);
   const rdom = responseDomains(score, traitLabel, isous);
-  const accept = acceptPage(isous, elements[0]);
+  const next = { ...NEXT_PAGE, example: NEXT_EXAMPLE[isous[0].id], exampleFor: isous[0].label, hints: [...isous.slice(0, 3).map((x) => ({ label: x.label, color: x.color })), { label: `邪眼・${elements[0].label}`, color: elements[0].color.main }] };
   return {
-    product: PRODUCT, detailLabels: DETAIL_LABELS, combo, mirror, rdom, accept, fixed: FIXED, panel: PANEL, diagnosedAt,
+    product: PRODUCT, detailLabels: DETAIL_LABELS, combo, mirror, rdom, next, fixed: FIXED, panel: PANEL, diagnosedAt,
     live: { intro: LIVE_INTRO, rows: LIVE_ROWS }, read: { intro: READ_INTRO, rows: READ_ROWS },
     peaks, valleys, themes,
     gapE: { a: elements[0], b: elements[1], d: elements[0].score - elements[1].score },
@@ -298,12 +298,3 @@ export function responseDomains(score, traitLabel, isous) {
   return { ...R, list, think };
 }
 
-// 自分の影をどう受け止めるか：左のカードだけ今回の上位の異相から組み立てる（ほかは共通の説明）
-export function acceptPage(isous, e) {
-  const [a, b, c] = isous;
-  const dom = (id) => RESPONSE_DOMAINS.list.find((d) => d.traits.includes(id));
-  const left = [`今回は、${a.label}と${b.label}が上位にあります。${ELEMENT_COMBO[e.id].when}とき、${SH(a.id).short}と、${SH(b.id).short}がどう表れるかが、理解の入口です。`];
-  if (dom(c.id) !== dom(a.id) && dom(c.id) !== dom(b.id)) left.push(`${c.label}も上位にあるため、${a.label}や${b.label}とは別に、${SH(c.id).verb}場面があるかも振り返れます。二つが同じ場面で起きるとは限りません。`);
-  else left.push(`${c.label}も上位にあり、${dom(c.id).label}の領域の反応が重なっています。同じ領域でも、それぞれの特性がどの場面で表れるかを分けて見ていきます。`);
-  return { ...ACCEPT_PAGE, left };
-}
