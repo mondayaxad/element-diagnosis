@@ -6,7 +6,7 @@
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
-import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, typeOverview } from './copy.mjs';
+import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview } from './copy.mjs';
 
 const r1 = (x) => Math.round(x * 10) / 10;
 
@@ -63,8 +63,26 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
   // 7日間の観察：上位の異相から順に（足りなければ次の順位へ）
   const days = isous.slice(0, 7).map((x, i) => ({ day: i + 1, label: x.label, color: x.color, q: x.deep.exp }));
 
+  // 12特性の山（上位2）・谷（下位2）：数値の高い順（異相の選定の規則ではなく、得点そのもの）
+  const byScore = bundle.items.traits.map((t) => ({ id: t.id, label: t.label, score: Math.round(score(t.id)), color: ISOU_COLOR[t.id], copy: TRAIT_COPY[t.id] }))
+    .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
+  const peaks = byScore.slice(0, 2), valleys = byScore.slice(-2).reverse();
+  // ファトゥスのタグ（色の組み合わせの元素）と、上位5名に繰り返し現れる物語のテーマ
+  for (const f of fatui) f.chips = f.tone.filter((k) => ELEMENT_COLOR[k]).map((k) => ({ label: bundle.core.elements.find((e) => e.id === k).label, color: ELEMENT_COLOR[k].main }));
+  const tagCount = {};
+  fatui.slice(0, 5).forEach((f) => f.tags.forEach((t) => { tagCount[t] = (tagCount[t] || 0) + 1; }));
+  const themes = Object.entries(tagCount).filter(([, n]) => n >= 2).sort((a, b) => b[1] - a[1]).map(([t]) => t).slice(0, 3);
+  // TOP3 の比較の文（重なる特性・離れている特性から）
+  for (const f of fatui.slice(0, 3)) {
+    const al = f.aligned.map((x) => x.label), df = f.different[0];
+    f.compare = `${f.name}とは、${al.length ? `${al.join('・')}の数値が近く、影の向きが重なります。` : '参照した特性の中で、明確に重なる項目は限られています。'}`
+      + (df ? `一方で、${df.label}は${df.ref > df.you ? `${f.name}の方がはっきりしています` : 'あなたの方がはっきりしています'}（あなた ${df.you}／参照 ${df.ref}）。` : '大きく離れている特性はありません。');
+  }
   return {
-    product: PRODUCT, fixed: FIXED, diagnosedAt,
+    product: PRODUCT, fixed: FIXED, panel: PANEL, diagnosedAt,
+    peaks, valleys, themes,
+    gapE: { a: elements[0], b: elements[1], d: elements[0].score - elements[1].score },
+    gapI: { a: isous[0], b: isous[1], d: isous[0].score - isous[1].score },
     dti: { code: result.dti.code, name: result.dti.name },
     element: elements[0], isou: isous[0], character: ch ? fatui[0] : null,
     overview: typeOverview({ name: result.dti.name, code: result.dti.code, element: el.label, isou: is.label, elText: ELEMENT_TEXT[el.id], isouText: ISOU_TEXT[is.id] }),

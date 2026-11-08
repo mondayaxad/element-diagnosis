@@ -684,8 +684,8 @@ test('完全解析 DIPPER：33ページ・指示の順。順位（邪眼7・異�
   const { orderIsou, selectIsou } = await import('../jagan/engine/dti.mjs');
   const { sampleComplete } = await import('../jagan/complete-sample.mjs');
   assert.equal(PAGE_TITLES.length, 33);
-  assert.deepEqual(PAGE_TITLES.slice(0, 9), ['表紙', 'このレポートの読み方', '邪眼と異相 — あなたの影の正体', 'ファトゥスはなぜ現れるのか', 'あなたの深層',
-    '邪眼元素の全体順位', '異相の全体順位', 'ファトゥスの順位 1–6', 'ファトゥスの順位 7–11']);
+  assert.deepEqual(PAGE_TITLES.slice(0, 9), ['表紙', 'このレポートの読み方', 'あなたの影', '邪眼（特性）の全体順位', '異相の全体順位', 'ファトゥス TOP11',
+    '邪眼と異相 — あなたの影の正体', 'ファトゥスはなぜ現れるのか', 'あなたの深層']);
   assert.deepEqual(PAGE_TITLES.slice(-6), ['弱点をどう活かすか', '人物から得るもの', '7日間の観察実験', '再読時の判断材料', '邪眼辞典', '異相辞典']);
   const codes = new Set();
   for (let seed = 0; seed < 400; seed++) {
@@ -700,6 +700,12 @@ test('完全解析 DIPPER：33ページ・指示の順。順位（邪眼7・異�
     assert.equal((html.match(/class="dp-page /g) || []).length, 33, `seed ${seed}`);
     assert.ok(!/undefined|NaN|\[object/.test(html), `seed ${seed}`);
     assert.ok(html.includes(result.dti.code) && html.includes(result.dti.name));
+    // 06 ファトゥス TOP11：11名すべて・下に TOP3 の説明
+    const p6 = html.split('id="dp06"')[1].split('<section')[0];
+    assert.equal((p6.match(/class="dp-fcard/g) || []).length, 11);
+    assert.equal((p6.match(/class="dp-t3"/g) || []).length, 3);
+    // 05 異相の全体順位：12項目
+    assert.equal((html.split('id="dp05"')[1].split('<section')[0].match(/class="dp-rcard/g) || []).length, 12);
   }
   assert.ok(codes.size >= 60, `いろいろな DTI で確かめた（${codes.size}）`);
 });
