@@ -3,7 +3,7 @@ import { computeDiagnosis } from './engine/runtime.mjs';
 import { BUNDLE } from './engine/data.mjs';
 import { SAMPLE_ANSWERS } from './sample.mjs';
 import { buildComplete } from './complete/model.mjs';
-import { renderComplete } from './complete/view.mjs';
+import { renderComplete, fitPages } from './complete/view.mjs';
 
 export function answersForSeed(seed) {
   if (!seed) return { ...SAMPLE_ANSWERS };
@@ -23,6 +23,8 @@ if (typeof document !== 'undefined' && document.getElementById('dpBook')) {
   // 紙面は全ページ同じ大きさ（1240×1754）。画面では組み替えずに、幅に合わせて縮小する
   const fit = () => document.getElementById('dpBook').style.setProperty('--z', String(Math.min(1, (document.documentElement.clientWidth - 16) / 1240)));
   fit(); addEventListener('resize', fit);
+  const fill = () => fitPages(document.getElementById('dpBook'));
+  fill(); if (document.fonts) document.fonts.ready.then(fill);
   document.getElementById('dpInfo').textContent = `邪眼完全解析「DIPPER」の叩き台（架空の回答・seed ${seed}：${result.dti.code}｜${result.dti.name}。販売していません）`;
   document.getElementById('dpNext').addEventListener('click', () => { location.search = `?seed=${seed + 1}`; });
   document.getElementById('dpPrint').addEventListener('click', () => window.print());

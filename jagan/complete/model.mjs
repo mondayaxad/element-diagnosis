@@ -6,7 +6,7 @@
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
-import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, DICT_PAGE, ELEMENT_MISREAD, TRAIT_DICT_HL, OVERVIEW_COPY, FATUI_SPLIT, TRAIT_SCENE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
+import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, DICT_PAGE, ELEMENT_MISREAD, TRAIT_DICT_HL, OVERVIEW_COPY, FATUI_SPLIT, TRAIT_SCENE, GUIDE_PAGE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
 
 const r1 = (x) => Math.round(x * 10) / 10;
 
@@ -87,7 +87,7 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
   const rdom = responseDomains(score, traitLabel, isous);
   const next = { ...NEXT_PAGE, example: NEXT_EXAMPLE[isous[0].id], exampleFor: isous[0].label, hints: [...isous.slice(0, 3).map((x) => ({ label: x.label, color: x.color })), { label: `邪眼・${elements[0].label}`, color: elements[0].color.main }] };
   return {
-    product: PRODUCT, detailLabels: DETAIL_LABELS, combo, mirror, rdom, next, reread: rereadOf(elements[0], isous, byScore), dict: dictOf(elements, isous), ov: overviewOf(elements, isous, byScore, peaks, valleys), fixed: FIXED, panel: PANEL, diagnosedAt,
+    product: PRODUCT, detailLabels: DETAIL_LABELS, combo, mirror, rdom, next, guide: GUIDE_PAGE, reread: rereadOf(elements[0], isous, byScore), dict: dictOf(elements, isous), ov: overviewOf(elements, isous, byScore, peaks, valleys), fixed: FIXED, panel: PANEL, diagnosedAt,
     live: { intro: LIVE_INTRO, rows: LIVE_ROWS }, read: { intro: READ_INTRO, rows: READ_ROWS },
     peaks, valleys, themes,
     gapE: { a: elements[0], b: elements[1], d: elements[0].score - elements[1].score },

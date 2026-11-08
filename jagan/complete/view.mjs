@@ -25,7 +25,7 @@ export function renderComplete(m) {
     const n = pages.length + 1;
     const head = o.head === false ? '' : `<header class="dp-head"><span class="dp-num">${pad(n)}</span><div><div class="dp-kicker">${E(kicker)}</div><h2 class="dp-title">${E(title)}</h2></div>${o.sub ? `<span class="dp-sub">${E(o.sub)}</span>` : ''}</header>`;
     pages.push(`<section class="dp-page ${kind}" id="dp${pad(n)}" data-page="${n}" aria-label="P${pad(n)} ${E(nameOf(PAGE_TITLES[n - 1]))}"${o.style ? ` style="${o.style}"` : ''}>
-  <div class="dp-inner">${head}${body}</div>
+  <div class="dp-inner">${head}<div class="dp-body">${body}</div></div>
   <footer class="dp-foot"><span>${E(m.product.footer)}</span><span>${E(kicker)}</span><span>${pad(n)} / ${TOTAL}</span></footer>
 </section>`);
   };
@@ -49,8 +49,16 @@ export function renderComplete(m) {
     ${m.diagnosedAt ? `<div class="dp-cover-date">診断日　${E(m.diagnosedAt)}</div>` : ''}`, { head: false, style: `--ec:${elc};--ed:${el1.color.dark}` });
 
   // P02 読み方
-  page('dp-text', 'GUIDE', 'このレポートの読み方', `${m.fixed.guide.map((p) => `<p class="dp-p">${E(p)}</p>`).join('')}
-    <ol class="dp-toc">${PAGE_TITLES.slice(2).map((t, i) => `<li><a href="#dp${pad(i + 3)}"><span>${pad(i + 3)}</span>${E(nameOf(t))}</a></li>`).join('')}</ol>`);
+  { const G = m.guide;
+    page('dp-wide dp-guide', 'GUIDE', 'このレポートの読み方', `<p class="dp-p dp-lead">${E(m.fixed.guide[0])}</p>
+    <div class="dp-glens">${G.lenses.map((l) => `<div class="dp-gl"><div class="dp-rden">${E(l.en)}</div><b>${E(l.k)}</b><p class="q">${E(l.q)}</p><p>${E(l.text)}</p></div>`).join('')}</div>
+    <div class="dp-gsplit"><div><div class="dp-dsec" style="--c:var(--rose)">${E(G.promisesTitle)}</div>
+      <ol class="dp-gprom">${G.promises.map(([a, b], i) => `<li><span>${pad(i + 1)}</span><div><b>${E(a)}</b><p>${E(b)}</p></div></li>`).join('')}</ol></div>
+      <div><div class="dp-dsec" style="--c:var(--rose)">${E(G.flowTitle)}</div>
+      <div class="dp-gflow">${m.ov.flow.map(([k, [f, t], d]) => `<div><b>${E(k)}</b><span>P${pad(PAGE_TITLES.indexOf(f) + 1)}–P${pad(PAGE_TITLES.indexOf(t) + 1)}</span><small>${E(d)}</small></div>`).join('')}</div></div></div>
+    <div class="dp-dsec" style="--c:var(--rose);margin-top:22px">${E(G.tocTitle)}</div>
+    <ol class="dp-toc">${PAGE_TITLES.slice(2).map((t, i) => `<li><a href="#dp${pad(i + 3)}"><span>${pad(i + 3)}</span>${E(nameOf(t))}</a></li>`).join('')}</ol>`, { sub: 'How to read' });
+  }
 
   // P03 あなたの影（元素診断の「あなたの核 — Executive Portrait」と同じ組み立て：左にラベルカード、右に DTI の解説）
   const labelCard = (k, en, name, score, sub, c) => `<div class="dp-lcard" style="--c:${c}"><div class="dp-lk">${E(k)}<span>· ${E(en)}</span></div>
@@ -323,4 +331,20 @@ export function renderComplete(m) {
 
   if (pages.length !== TOTAL) throw new Error(`page_count_${pages.length}`);
   return pages.join('\n');
+}
+
+// 固定紙面の最適化：各ページで、本文（見出しの下）を紙面の高さに合わせて少し拡大する（最大 1.24 倍。縮小はしない）。
+//   CSS の zoom は折り返しも変えるので、二分探索で収まる最大の倍率を探す。表紙は対象外。描画後に一度呼ぶ。
+export function fitPages(root, { max = 1.24 } = {}) {
+  for (const pg of root.querySelectorAll('.dp-page:not(.dp-cover)')) {
+    const inner = pg.querySelector('.dp-inner'), body = pg.querySelector('.dp-body'), head = pg.querySelector('.dp-head');
+    if (!inner || !body) continue;
+    const cs = getComputedStyle(inner);
+    const avail = inner.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - (head ? head.getBoundingClientRect().height + parseFloat(getComputedStyle(head).marginBottom) : 0) - 4;
+    body.style.zoom = '1';
+    if (body.getBoundingClientRect().height >= avail) continue;
+    let lo = 1, hi = max;
+    for (let i = 0; i < 9; i++) { const mid = (lo + hi) / 2; body.style.zoom = String(mid); if (body.getBoundingClientRect().height <= avail) lo = mid; else hi = mid; }
+    body.style.zoom = String(Math.floor(lo * 1000) / 1000);
+  }
 }
