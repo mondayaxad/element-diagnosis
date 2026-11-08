@@ -9,7 +9,7 @@ export const PAGE_TITLES = [
   '邪眼と異相 — あなたの影の正体', 'ファトゥスはなぜ現れるのか', 'あなたの深層',
   '上位の邪眼との付き合い方', '上位の異相を読み解く',
   '邪眼 1位', '邪眼 2位', '邪眼 3位', '異相 1位', '異相 2位', '異相 3位',
-  '邪眼×異相――あなたの影はどう表れるか', '二層統合 — あなたの存在構造', '上位3名のファトゥスとの関わり',
+  '邪眼×異相――あなたの影はどう表れるか', '上位3名のファトゥスとの交わり',
   '下位の邪眼', '下位の異相', '強みとは何か',
   'ドメイン — 不安と距離', 'ドメイン — 行動のくせ', 'ドメイン — 他者との向き合い', 'あなたのドメイン平均',
   '弱点をどう活かすか', '人物から得るもの', '7日間の観察実験', '再読時の判断材料', '邪眼辞典', '異相辞典',
@@ -245,23 +245,21 @@ export function renderComplete(m) {
       </div>`, { sub: 'Two layers' });
   }
 
-  // P19 二層統合
-  page('dp-text', 'TWO LAYERS', '二層統合 — あなたの存在構造', `
-    <p class="dp-p">邪眼元素は「影の土台」（複数の特性が重なった、長く続きやすい傾向）、異相は「影の表面」（いま最も強く表れている一つの特性）です。二つを重ねると、あなたの存在構造が見えてきます。</p>
-    <div class="dp-layers">
-      <div class="dp-layer" style="--c:${is1.color}"><span>表面｜異相</span><b>${E(is1.label)}</b><em>${E(is1.text.essence)}</em></div>
-      <div class="dp-layer" style="--c:${elc}"><span>土台｜邪眼</span><b>${E(el1.label)}</b><em>${E(el1.text.essence)}</em></div>
-    </div>
-    <p class="dp-p">${el1.parts.some((x) => x.id === is1.id)
-      ? `あなたの異相（${E(is1.label)}）は、邪眼（${E(el1.label)}）をつくる特性の一つです。土台と表面が同じ向きを向いているため、影がはっきり表れやすく、扱い方を覚えれば強みとしても安定します。`
-      : `あなたの異相（${E(is1.label)}）は、邪眼（${E(el1.label)}）をつくる特性とは別の特性です。土台と表面が違う向きを持つため、場面によって表れる顔が変わりやすく、その揺れ自体があなたの幅になります。`}</p>`);
-
-  // P20 上位3名のファトゥスとの関わり
-  page('dp-text', 'FATUI TOP 3', '上位3名のファトゥスとの関わり', m.topF.map((f) => `<div class="dp-card" style="--c:${f.elements[0] || '#C8405C'}"><div class="dp-k">${pad(f.rank)}　${fatuiName(f)}　${f.match}%</div>
-    <p class="dp-p">${E(f.copy.story_context)}</p>
-    <p class="dp-li">重なる特性：${f.aligned.length ? f.aligned.map((x) => `${E(x.label)}（${x.you}／${x.ref}）`).join('、') : '限られています'}</p>
-    <p class="dp-li">離れている特性：${f.different.length ? f.different.map((x) => `${E(x.label)}（${x.you}／${x.ref}）`).join('、') : '大きな差はありません'}</p>
-    <div class="dp-quote">${E(f.copy.reflection)}</div></div>`).join(''));
+  // P19 上位3名のファトゥスとの交わり（オーナー案・2026-11-08。元素診断「MIRROR 上位3名との交わり」と同じ組み立て）
+  //   「二層統合」は削除（邪眼×異相のページで重なりを説明する）
+  { const M = m.mirror, ML = M.labels;
+    page('dp-wide dp-mirror', ML.kicker, ML.title, `<p class="dp-p dp-lead">${E(ML.intro)}</p>
+      ${M.people.map((p) => { const f = p.f; return `<article class="dp-mcard" style="--c:${f.elements[0] || '#C8405C'}">
+        <header class="dp-mch"><span class="dp-mrk">${pad(f.rank)}</span><i class="dot" style="background:${f.elements[0] || '#C8405C'}"></i><span class="dp-mname">${fatuiName(f)}</span>
+          <span class="dp-mmeta"><b>一致度 ${f.match}%</b><i>${E(f.title)}</i><i>${E(f.region || '—')}</i>${f.tags.map((t) => `<i class="tag">${E(t)}</i>`).join('')}</span></header>
+        <p class="dp-mstory"><span>${E(ML.story)}</span>${E(f.copy.story_context)}</p>
+        <div class="dp-mvals">${p.rows.map((r) => `<span class="${r.diff <= 15 ? 'near' : r.diff >= 20 ? 'far' : ''}">${E(r.label)}<b>${r.you}</b><small>／参照 ${r.ref}</small></span>`).join('')}</div>
+        <dl class="dp-mdl"><dt>${E(ML.aligned)}</dt><dd>${E(p.aligned)}</dd><dt>${E(ML.different)}</dt><dd>${E(p.different)}</dd>
+          <dt>${E(ML.main)}</dt><dd>${E(p.main)}</dd><dt class="gold">${E(ML.you)}</dt><dd>${E(p.you)}</dd></dl>
+      </article>`; }).join('')}
+      <div class="dp-msum"><div class="dp-pk">${E(ML.sumTitle)}</div>${M.sum.map((t) => `<p>${E(t)}</p>`).join('')}</div>
+      <p class="dp-note">${E(ML.refNote)}</p>`, { sub: ML.sub });
+  }
 
   // P21・P22 下位
   page('dp-text', 'LOWER JAGAN', '下位の邪眼', `<p class="dp-p">下位の邪眼は、あなたの中で表れにくい影のかたちです。表れにくいことは欠点ではなく、別の強みの裏返しでもあります。</p>${m.lowE.map((e) => `<div class="dp-card" style="--c:${e.color.main}"><div class="dp-k">${pad(e.rank)}　${E(e.label)}｜${E(e.name)}　${e.score}</div><p class="dp-p">${E(e.deep.low)}</p></div>`).join('')}`);

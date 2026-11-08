@@ -209,3 +209,23 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-c4c.ok { --t: #7fc8a0; } .dp-c4c.ng { --t: #d98a5f; } .dp-c4c.ac { --t: var(--c); } .dp-c4c.qq { --t: var(--gold); } .dp-c4c.qq p { color: #f2dfc0; font-style: italic; }
 @media (max-width: 760px) { .dp-cbar { grid-template-columns: 1fr; } .dp-clink i { width: 2px; height: 28px; } .dp-clink i::before, .dp-clink i::after { display: none; } .dp-c4 { grid-template-columns: 1fr; } .dp-ccard b { font-size: 32px; } }
 @media (min-width: 761px) and (max-width: 1000px) { .dp-c4 { grid-template-columns: 1fr 1fr; } }
+/* P19 上位3名のファトゥスとの交わり（元素診断 MIRROR と同じ横長カード） */
+.dp-mcard { border: 1px solid var(--line2); border-left: 3px solid color-mix(in srgb, var(--c) 75%, #fff 0%); border-radius: 12px; padding: 14px 22px 8px; margin-bottom: 14px; background: rgba(18,9,14,.6); }
+.dp-mch { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.dp-mrk { font-family: 'IM Fell English', serif; font-size: 30px; line-height: 1; color: color-mix(in srgb, var(--c) 70%, #fff); }
+.dp-mch .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.dp-mname { font-size: 26px; font-weight: 700; letter-spacing: .04em; }
+.dp-mmeta { margin-left: auto; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.dp-mmeta b { font-weight: 400; font-size: 13px; color: var(--fg); margin-right: 4px; } .dp-mmeta i { font-style: normal; font-size: 11.5px; padding: 1px 8px; border-radius: 5px; border: 1px solid var(--line2); color: var(--sub); }
+.dp-mmeta i.tag { border-color: color-mix(in srgb, var(--gold) 40%, transparent); color: #e8d2ad; }
+.dp-mstory { margin: 6px 0 8px; font-size: 14px; color: color-mix(in srgb, var(--c) 45%, var(--fg)); } .dp-mstory span { font-size: 11px; letter-spacing: .12em; color: var(--dim); margin-right: 10px; }
+.dp-mvals { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 0; border-top: 1px dashed var(--line2); }
+.dp-mvals span { font-size: 13px; padding: 3px 12px; border-radius: 6px; border: 1px solid var(--line2); color: var(--sub); }
+.dp-mvals span b { color: var(--fg); font-size: 16px; margin-left: 8px; font-variant-numeric: tabular-nums; } .dp-mvals span small { color: var(--dim); margin-left: 2px; }
+.dp-mvals span.near { border-color: color-mix(in srgb, #7fc8a0 55%, transparent); } .dp-mvals span.far { border-color: color-mix(in srgb, #d98a5f 60%, transparent); border-style: dashed; }
+.dp-mdl { display: grid; grid-template-columns: 11em 1fr; margin: 0; }
+.dp-mdl dt, .dp-mdl dd { padding: 9px 0; border-top: 1px dashed var(--line2); margin: 0; font-size: 14px; } .dp-mdl dt { font-size: 12.5px; letter-spacing: .12em; color: var(--sub); }
+.dp-mdl dt.gold { color: var(--gold); font-weight: 700; } .dp-mdl dt.gold + dd { color: #f2dfc0; }
+.dp-msum { border: 1px solid color-mix(in srgb, var(--gold) 35%, var(--line2)); border-radius: 12px; padding: 14px 22px; background: rgba(226,192,140,.05); }
+.dp-msum p { margin: 4px 0; font-size: 14.5px; }
+@media (max-width: 760px) { .dp-mdl { grid-template-columns: 1fr; } .dp-mdl dd { border-top: 0; padding-top: 0; } .dp-mmeta { margin-left: 0; width: 100%; } }

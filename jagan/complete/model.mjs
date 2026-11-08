@@ -6,7 +6,7 @@
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
-import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
+import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
 
 const r1 = (x) => Math.round(x * 10) / 10;
 
@@ -40,6 +40,7 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
       elements: (FATUI_TONE[c.id] || []).map((k) => (ELEMENT_COLOR[k] ? ELEMENT_COLOR[k].main : FATUI_TONE_EXTRA[k] === FATUI_TONE_EXTRA.BLACK ? '#7a2a2a' : FATUI_TONE_EXTRA[k])),
       tone: FATUI_TONE[c.id] || [],
       aligned: ex.aligned.map((x) => ({ label: traitLabel(x.axis), you: Math.round(x.userScore), ref: Math.round(x.referenceScore) })),
+      rows: ex.rows.map((x) => ({ id: x.axis, label: traitLabel(x.axis), you: Math.round(x.userScore), ref: Math.round(x.referenceScore), diff: Math.round(Math.abs(x.userScore - x.referenceScore)) })).sort((a, b) => a.diff - b.diff),
       different: ex.different.map((x) => ({ label: traitLabel(x.axis), you: Math.round(x.userScore), ref: Math.round(x.referenceScore) })),
       copy: CHARACTER_COPY[c.id], deep: FATUI_DEEP[c.id], selected: !!(ch && ch.id === c.id),
     };
@@ -82,8 +83,9 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
   for (const e of topE) e.detail = elementDetail(e, elements[e.rank]);
   for (const x of topI) x.detail = isouDetail(x, isous, topE, r1(overall));
   const combo = comboOf(elements[0], isous[0]);
+  const mirror = mirrorOf(topF, elements[0], isous);
   return {
-    product: PRODUCT, detailLabels: DETAIL_LABELS, combo, fixed: FIXED, panel: PANEL, diagnosedAt,
+    product: PRODUCT, detailLabels: DETAIL_LABELS, combo, mirror, fixed: FIXED, panel: PANEL, diagnosedAt,
     live: { intro: LIVE_INTRO, rows: LIVE_ROWS }, read: { intro: READ_INTRO, rows: READ_ROWS },
     peaks, valleys, themes,
     gapE: { a: elements[0], b: elements[1], d: elements[0].score - elements[1].score },
@@ -184,4 +186,70 @@ export function comboOf(e, x) {
     x: { label: X, color: x.color, sub: `${ISOU_TEXT[x.id].essence}。` },
     aware: ec.aware, accept: `${tc.feel}自分を否定せず、その気持ちをどう表しているかまで見つめる。`,
   };
+}
+
+// P19 上位3名のファトゥスとの交わり。explainCharacter と同じ閾値：重なる＝差15以内、異なる＝差20以上
+const level = (v) => (v <= 35 ? 'low' : v >= 65 ? 'high' : 'mid');
+const LEVEL_WORD = { low: '低め', high: '高め', mid: '中ほど' };
+export function mirrorOf(topF, e, isous) {
+  const x = isous[0];
+  const mainIds = [...new Set([...e.parts.map((p) => p.id), x.id])];
+  const mainLabels = mainIds.map((id) => (e.parts.find((p) => p.id === id) || x).label);
+  const people = topF.map((f) => {
+    const rows = f.rows, al = rows.filter((r) => r.diff <= 15), df = rows.filter((r) => r.diff >= 20).sort((a, b) => b.diff - a.diff);
+    const nameOf = (r) => `${r.label}はあなた${r.you}／参照${r.ref}`;
+    // 重なる特性
+    let aligned;
+    if (al.length) {
+      const lv = [...new Set(al.flatMap((r) => [level(r.you), level(r.ref)]))];
+      const how = lv.length === 1 ? `${al.length >= 2 ? (al.length === rows.length ? `この${'一二三四五'[al.length - 1]}特性がいずれも` : 'これらがいずれも') : 'この特性が'}${LEVEL_WORD[lv[0]]}の値で近づいている` : `${al.length >= 2 ? 'これらの特性の' : 'この特性の'}数値が近い`;
+      aligned = `${al.map(nameOf).join('、')}です。今回の近さは、${how}ことから生じています。${al.map((r) => N(r.id)).join('、')}についての回答が、人物の参照値に近い配置です。`;
+    } else {
+      const r = rows[0];
+      aligned = `比較している特性の中に、15点以内まで近いものはありません。最も近いのは${r.label}（あなた${r.you}／参照${r.ref}）です。近さは、ほかの人物と比べた相対的なものです。`;
+    }
+    // 異なる特性
+    let different;
+    if (df.length) {
+      different = df.map((r) => `${r.label}は${r.ref > r.you ? `${f.name}の参照値の方が高く` : 'あなたの方が高く'}（あなた${r.you}／参照${r.ref}）`).join('、') + `、ここに違いがあります。同じ人物に近いと出ても、${df.length >= 2 ? 'これらの特性' : 'この特性'}での反応の表れ方は異なると読めます。`;
+    } else {
+      const r = [...rows].sort((a, b) => b.diff - a.diff)[0];
+      const n = `${'一二三四五'[rows.length - 1]}特性`;
+      different = r.diff > 15
+        ? `比較している${n}に、20点以上離れているものはありません。ただし、${r.label}は差が${r.diff}点あり（あなた${r.you}／参照${r.ref}）、${r.you > r.ref ? 'あなた' : `${f.name}の参照値`}の方が高く出ています。この差だけで、人物との人柄の違いまでは判断できません。`
+        : `比較している${n}に、大きな数値差はありません。` + (r.diff >= 8 ? `${r.label}は${r.you < r.ref ? 'あなたの方が低い' : 'あなたの方が高い'}ものの、この差だけで、人物との人柄の違いまでは判断できません。` : '');
+    }
+    // 邪眼・異相との関係
+    const ov = rows.filter((r) => mainIds.includes(r.id));
+    let main;
+    if (!ov.length) {
+      main = `あなたの主結果は${e.label}×${x.label}ですが、${f.name}との比較には${mainLabels.join('・')}を使用していません。${ELEMENT_COMBO[e.id].about}への近さではなく、${rows.map((r) => r.label).join('・')}という別の側面で近づいています。`;
+    } else {
+      const role = (r) => [e.parts.some((p) => p.id === r.id) ? `邪眼（${e.label}）の構成特性` : '', r.id === x.id ? '異相' : ''].filter(Boolean).join('であり、');
+      main = `${f.name}との比較に使う特性のうち、${ov.map((r) => `${r.label}は${role(r)}`).join('、')}でもあります。`;
+      const ovAl = ov.filter((r) => r.diff <= 15), rest = al.filter((r) => !mainIds.includes(r.id));
+      main += ovAl.length ? `${ovAl.map((r) => r.label).join('・')}が近いため、主結果と同じ側面でも人物に近づいています。` : `ただし、この特性は数値が離れており、近さは${rest.length ? `主に${rest.map((r) => r.label).join('・')}` : '主結果とは別の特性'}によるものです。`;
+    }
+    // 比較から見えるあなた（今回の得点配置から。人物の美点を当てはめない）
+    const top2 = isous.slice(0, 2).map((t) => t.label).join('や');
+    const lows = al.filter((r) => level(r.you) === 'low' && !mainIds.includes(r.id)), highs = al.filter((r) => level(r.you) === 'high');
+    let you;
+    if (lows.length && !ov.some((r) => r.diff <= 15)) you = `今回の回答には、${top2}が上位にある一方、${lows.map((r) => r.label).join('・')}は低いという配置があります。上位の特性として内側で感じている反応と、外へ表れにくい反応を分けて振り返ることが、自分を理解する手がかりになります。`;
+    else if (highs.length) you = `${highs.map((r) => r.label).join('・')}が高く、人物の参照値とも近い配置です。${highs.some((r) => mainIds.includes(r.id)) ? `${highs.filter((r) => mainIds.includes(r.id)).map((r) => r.label).join('・')}は主結果（${e.label}×${x.label}）を形づくる特性でもあり、今回の結果の中心にある反応が、この人物との比較にも表れています。` : '主結果とは別に、この特性もあなたの回答で目立っています。'}ただし、人物と同じ動機や経験を持つという意味ではありません。`;
+    else you = `${f.name}との比較では、${al.length ? `${al.map((r) => r.label).join('・')}が近く` : '近い特性が限られ'}${df.length ? `、${df.map((r) => r.label).join('・')}が離れています` : 'ています'}。同じ人物に近いと出ても、どの特性で近いかによって、自分の読み方は変わります。`;
+    return { f, rows, aligned, different, main, you };
+  });
+  // まとめ：繰り返し近さの根拠になる特性と、人物ごとの一致理由
+  const cnt = {};
+  people.forEach((p) => p.rows.filter((r) => r.diff <= 15).forEach((r) => { (cnt[r.id] = cnt[r.id] || { label: r.label, names: [] }).names.push(p.f.name); }));
+  const rep = Object.values(cnt).filter((v) => v.names.length >= 2);
+  const reasons = people.map((p) => { const al = p.rows.filter((r) => r.diff <= 15); return `${p.f.name}：${al.length ? al.map((r) => r.label).join('・') : `最も近い${p.rows[0].label}`}`; }).join('／');
+  const sum = [];
+  if (rep.length) sum.push(`${rep.map((v) => `${v.label}は${v.names.join('・')}との比較`).join('、')}で、近さの根拠になっています。同じ特性を繰り返し参照しているため、それぞれを独立した証拠として数えることはできません。`);
+  else sum.push('三人との近さは、それぞれ異なる特性で表れています。');
+  sum.push(`人物ごとの一致理由は、${reasons}です。`);
+  const anyMain = people.some((p) => p.rows.some((r) => r.diff <= 15 && mainIds.includes(r.id)));
+  sum.push(anyMain ? `主結果（${e.label}×${x.label}）を形づくる特性が近さに含まれる人物と、別の特性で近い人物を分けて読むと、どの反応が人物との比較に表れているかが見えます。`
+    : `三人とも、主結果（${e.label}×${x.label}）を形づくる特性とは別の側面で近づいています。主結果で見た反応とは別に、どんな特性が人物との比較に表れているかを確かめてください。`);
+  return { labels: MIRROR_LABELS, people, sum };
 }
