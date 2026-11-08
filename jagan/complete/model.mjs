@@ -6,7 +6,7 @@
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
-import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
+import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, DICT_PAGE, ELEMENT_MISREAD, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
 
 const r1 = (x) => Math.round(x * 10) / 10;
 
@@ -87,7 +87,7 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
   const rdom = responseDomains(score, traitLabel, isous);
   const next = { ...NEXT_PAGE, example: NEXT_EXAMPLE[isous[0].id], exampleFor: isous[0].label, hints: [...isous.slice(0, 3).map((x) => ({ label: x.label, color: x.color })), { label: `邪眼・${elements[0].label}`, color: elements[0].color.main }] };
   return {
-    product: PRODUCT, detailLabels: DETAIL_LABELS, combo, mirror, rdom, next, reread: rereadOf(elements[0], isous, byScore), fixed: FIXED, panel: PANEL, diagnosedAt,
+    product: PRODUCT, detailLabels: DETAIL_LABELS, combo, mirror, rdom, next, reread: rereadOf(elements[0], isous, byScore), dict: dictOf(elements, isous), fixed: FIXED, panel: PANEL, diagnosedAt,
     live: { intro: LIVE_INTRO, rows: LIVE_ROWS }, read: { intro: READ_INTRO, rows: READ_ROWS },
     peaks, valleys, themes,
     gapE: { a: elements[0], b: elements[1], d: elements[0].score - elements[1].score },
@@ -317,4 +317,11 @@ export function rereadOf(e, isous, byScore) {
   const low = byScore[byScore.length - 1];
   const lowText = `${low.label}${low.score}のような低い得点は、その反応への当てはまりが少なかったことを示すだけで、測っていない長所を示すものではありません。`;
   return { ...REREAD_PAGE, head: `邪眼：${L}／異相：${X}`, eColor: e.color.main, xColor: x.color, r1: r1.join(''), r2, more, lowText, ex: REREAD_EXAMPLE[x.id], exFor: X };
+}
+
+// 辞典：邪眼7（あなたの順位の順）と、異相12（四つの反応領域の順。I＝前半2領域、II＝後半2領域）
+export function dictOf(elements, isous) {
+  for (const e of elements) { e.misread = ELEMENT_MISREAD[e.id]; e.detail2 = ELEMENT_DETAIL[e.id]; }
+  const doms = RESPONSE_DOMAINS.list.map((d) => ({ en: d.en, label: d.label, color: d.color, items: d.traits.map((id) => isous.find((x) => x.id === id)) }));
+  return { ...DICT_PAGE, groups: [doms.slice(0, 2), doms.slice(2)] };
 }

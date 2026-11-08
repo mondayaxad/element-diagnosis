@@ -11,7 +11,7 @@ export const PAGE_TITLES = [
   '邪眼 1位', '邪眼 2位', '邪眼 3位', '異相 1位', '異相 2位', '異相 3位',
   '邪眼×異相――あなたの影はどう表れるか', '上位3名のファトゥスとの交わり',
   '四つの反応領域', 'あなたの反応領域',
-  'あなたの影に、次の一手を', '人物から得るもの', '7日間の観察実験', '再読 — あなたの影を読み直す', '邪眼辞典', '異相辞典',
+  'あなたの影に、次の一手を', '人物から得るもの', '再読 — あなたの影を読み直す', '邪眼辞典（7邪眼）', '異相辞典 I（不安と対人警戒・衝動と刺激）', '異相辞典 II（固執と基準・他者への働きかけ）',
 ];
 
 export function renderComplete(m) {
@@ -301,10 +301,6 @@ export function renderComplete(m) {
   page('dp-text', 'FROM FATUI', '人物から得るもの', `<p class="dp-p">上位3名の物語から、あなたの影の扱い方として借りられる視点です。人物と同じ行動をとるという意味ではありません。</p>
     ${m.topF.map((f) => `<div class="dp-card" style="--c:${f.elements[0] || '#C8405C'}"><div class="dp-k">${fatuiName(f)}</div><p class="dp-p">${E(f.deep.gain)}</p><p class="dp-li">${E(f.copy.association_theme)}</p></div>`).join('')}`);
 
-  // P30 7日間の観察実験
-  page('dp-text', '7 DAYS', '7日間の観察実験', `<p class="dp-p">${E(m.fixed.experiment)}</p>
-    ${m.days.map((d) => `<div class="dp-day"><span class="dp-rk">DAY ${d.day}</span><b style="color:${d.color}">${E(d.label)}</b><p>${E(d.q)}</p><span class="dp-write" aria-hidden="true"></span></div>`).join('')}`);
-
   // 再読 — あなたの影を読み直す（オーナー案・2026-11-08）。①結果の要点 → ②経験に照らす4つの問い（2×2・記入欄）→ ③書き換え → 読み返すページ（番号は構成から自動）
   { const RR = m.reread, num = (t) => PAGE_TITLES.indexOf(t) + 1;
     page('dp-wide dp-reread', RR.kicker, RR.title, `<p class="dp-p dp-lead">${E(RR.intro)}</p>
@@ -322,9 +318,25 @@ export function renderComplete(m) {
       <div class="dp-acclose">${E(RR.closing)}</div>`, { sub: RR.sub });
   }
 
-  // P32・P33 辞典
-  page('dp-dict', 'DICTIONARY', '邪眼辞典', '<div class="dp-dgrid">' + [...m.elements].sort((a, b) => a.id.localeCompare(b.id)).map((e) => `<div class="dp-dcard" style="--c:${e.color.main}"><div class="dp-k">${E(e.label)}｜${E(e.name)}</div><p>${E(e.deep.dict)}</p><p class="dp-li">${E(e.text.essence)}</p></div>`).join('') + '</div>');
-  page('dp-dict', 'DICTIONARY', '異相辞典', '<div class="dp-dgrid">' + [...m.isous].sort((a, b) => a.aspect.code.localeCompare(b.aspect.code)).map((x) => `<div class="dp-dcard" style="--c:${x.color}"><div class="dp-k">${E(x.aspect.code)}｜${E(x.label)}</div><p>${E(x.copy.meaning)}</p><p class="dp-li">高い：${E(x.copy.hi)}／低い：${E(x.copy.lo)}</p></div>`).join('') + '</div>');
+  // 辞典（元素診断の「元素辞典」「VALUES辞典」と同じ組み立て。あなたの得点・順位を表示する）
+  { const D = m.dict, DL = D.labels;
+    page('dp-wide dp-dictw', D.eKicker, D.eTitle, `<p class="dp-p dp-lead">${E(D.eIntro)}</p>
+      <div class="dp-edict">${m.elements.map((e) => `<div class="dp-edc" style="--c:${e.color.main}">
+        <div class="dp-edh"><span class="dp-rk">${pad(e.rank)}</span><b>${E(e.label)}</b><small>${E(e.name)}｜${E(e.text.axis)}</small><em>${e.score}</em></div>
+        ${bar(e.score, e.color.main)}
+        <p class="dp-edess">${E(e.text.essence)}</p>
+        <div class="dp-edcols"><div><span>${E(DL.scenes)}</span><p>${E(e.detail2.scenes)}</p></div>
+          <div><span>${E(DL.parts)}</span><p>${e.parts.map((x) => `${E(x.label)}<b>${x.score}</b><i>重み${x.weight}%</i>`).join('　')}</p></div></div>
+        <div class="dp-edmis"><span>${E(DL.misread)}</span><p>${E(e.misread)}</p></div></div>`).join('')}</div>`, { sub: D.sub });
+    D.groups.forEach((g, gi) => page('dp-wide dp-dictw', D.iKickers[gi], D.iTitles[gi], `<p class="dp-p dp-lead">${E(D.iIntro)}</p>
+      ${g.map((d) => `<div class="dp-idgrp" style="--d:${d.color}"><div class="dp-idgh">${E(d.en)}　<b>${E(d.label)}</b></div>
+        ${d.items.map((x) => `<div class="dp-idc" style="--c:${d.color}">
+          <div class="dp-idh"><span class="dp-idcode">${E(x.aspect.code)}</span><b>${E(x.label)}</b><em>${x.score}</em><small>12特性中 ${x.rank}位</small></div>
+          <div class="dp-idbar"><span>低</span><i><u style="width:${Math.max(1, x.score)}%"></u><s style="left:${x.score}%"></s></i><span>高</span></div>
+          <p class="dp-idmean"><b>${E(DL.means)}：</b>${E(x.read.means)}</p>
+          <div class="dp-edcols"><div><span>${E(DL.hi)}</span><p>${E(x.copy.hi)}</p></div><div><span>${E(DL.lo)}</span><p>${E(x.copy.lo)}</p></div></div>
+          <div class="dp-edmis"><span>${E(DL.misread)}</span><p>${E(x.read.notSame)}</p></div></div>`).join('')}</div>`).join('')}`, { sub: D.sub }));
+  }
 
   if (pages.length !== TOTAL) throw new Error(`page_count_${pages.length}`);
   return pages.join('\n');

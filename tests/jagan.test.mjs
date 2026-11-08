@@ -686,7 +686,7 @@ test('完全解析 DIPPER：27ページ・指示の順。順位（邪眼7・異�
   assert.equal(PAGE_TITLES.length, 27);
   assert.deepEqual(PAGE_TITLES.slice(0, 9), ['表紙', 'このレポートの読み方', 'あなたの影', '邪眼（特性）の全体順位', '異相の全体順位', 'ファトゥス TOP11',
     '邪眼と異相 — あなたの影の正体', 'ファトゥスはなぜ現れるのか', 'あなたの深層']);
-  assert.deepEqual(PAGE_TITLES.slice(-6), ['あなたの影に、次の一手を', '人物から得るもの', '7日間の観察実験', '再読 — あなたの影を読み直す', '邪眼辞典', '異相辞典']);
+  assert.deepEqual(PAGE_TITLES.slice(-6), ['あなたの影に、次の一手を', '人物から得るもの', '再読 — あなたの影を読み直す', '邪眼辞典（7邪眼）', '異相辞典 I（不安と対人警戒・衝動と刺激）', '異相辞典 II（固執と基準・他者への働きかけ）']);
   const codes = new Set();
   for (let seed = 0; seed < 400; seed++) {
     const { result, html } = sampleComplete(seed);
@@ -865,4 +865,21 @@ test('完全解析 DIPPER：再読 — あなたの影を読み直す（結果�
   const p = html.split(`id="dp${String(PAGE_TITLES.indexOf('再読 — あなたの影を読み直す') + 1).padStart(2, '0')}"`)[1].split('<section')[0];
   assert.ok(p.includes(`href="#dp${String(PAGE_TITLES.indexOf('異相 1位') + 1).padStart(2, '0')}"`));
   assert.ok(!p.includes('実際に試せたか'));
+});
+
+test('完全解析 DIPPER：観察実験を削除。辞典は邪眼7（あなたの順位の順・得点・構成特性）と異相12（四領域の順・得点・印）', async () => {
+  const { PAGE_TITLES } = await import('../jagan/complete/view.mjs');
+  const { buildComplete } = await import('../jagan/complete/model.mjs');
+  const { sampleComplete } = await import('../jagan/complete-sample.mjs');
+  assert.ok(!PAGE_TITLES.some((t) => t.includes('観察実験')));
+  const { result, html } = sampleComplete(0);
+  const m = buildComplete(result, BUNDLE);
+  assert.equal(m.dict.groups.flat().flatMap((d) => d.items).length, 12);
+  const pe = html.split(`id="dp${String(PAGE_TITLES.indexOf('邪眼辞典（7邪眼）') + 1).padStart(2, '0')}"`)[1].split('<section')[0];
+  assert.equal((pe.match(/class="dp-edc"/g) || []).length, 7);
+  assert.ok(pe.indexOf('>水<') < pe.indexOf('>草<'));
+  const p1 = html.split(`id="dp${String(PAGE_TITLES.length - 1).padStart(2, '0')}"`)[1].split('<section')[0];
+  const p2 = html.split(`id="dp${String(PAGE_TITLES.length).padStart(2, '0')}"`)[1];
+  assert.equal((p1.match(/class="dp-idc"/g) || []).length + (p2.match(/class="dp-idc"/g) || []).length, 12);
+  assert.ok(p1.includes('>依存</b><em>70</em>'));
 });

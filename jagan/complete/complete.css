@@ -298,3 +298,24 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-rrlinks a { flex: 1 1 200px; text-decoration: none; color: var(--fg); font-size: 13.5px; border: 1px solid var(--line2); border-radius: 8px; padding: 8px 12px; background: rgba(18,9,14,.6); }
 .dp-rrlinks a small { display: block; font-size: 11.5px; color: var(--sub); }
 @media (max-width: 760px) { .dp-rrq, .dp-rr3 { grid-template-columns: 1fr; } }
+/* 辞典（元素診断の元素辞典・VALUES辞典と同じ組み立て） */
+.dp-edict { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.dp-edc { border: 1px solid var(--line2); border-left: 3px solid var(--c); border-radius: 10px; padding: 14px 20px; background: rgba(24,12,18,.72); }
+.dp-edc:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.dp-edh { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; } .dp-edh .dp-rk { font-size: 18px; } .dp-edh b { font-size: 24px; color: var(--c); }
+.dp-edh small { margin-left: auto; font-size: 12px; color: var(--sub); } .dp-edh em { font-style: normal; font-family: 'IM Fell English', serif; font-size: 28px; line-height: 1; }
+.dp-edess { margin: 8px 0 6px; font-size: 15px; }
+.dp-edcols { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 18px; }
+.dp-edcols span, .dp-edmis span { display: block; font-size: 11.5px; letter-spacing: .12em; color: var(--dim); }
+.dp-edcols p { margin: 0 0 6px; font-size: 13.5px; } .dp-edcols p b { margin-left: 4px; font-variant-numeric: tabular-nums; } .dp-edcols p i { font-style: normal; font-size: 11px; color: var(--dim); margin-left: 4px; }
+.dp-edmis p { margin: 0; font-size: 13.5px; color: #e8a07a; }
+.dp-idgrp { margin-bottom: 14px; } .dp-idgh { font-size: 11.5px; letter-spacing: .24em; color: var(--d); margin-bottom: 6px; } .dp-idgh b { font-size: 16px; letter-spacing: .08em; margin-left: 6px; }
+.dp-idc { border: 1px solid var(--line2); border-left: 3px solid var(--c); border-radius: 10px; padding: 12px 20px; margin-bottom: 10px; background: rgba(24,12,18,.72); }
+.dp-idh { display: flex; align-items: baseline; gap: 10px; } .dp-idcode { font-family: 'IM Fell English', serif; color: var(--c); font-size: 18px; } .dp-idh b { font-size: 21px; color: var(--c); }
+.dp-idh em { font-style: normal; font-size: 22px; font-variant-numeric: tabular-nums; } .dp-idh small { margin-left: auto; font-size: 12px; color: var(--sub); }
+.dp-idbar { display: grid; grid-template-columns: 2em 1fr 2em; gap: 10px; align-items: center; margin: 6px 0 8px; font-size: 11.5px; color: var(--dim); }
+.dp-idbar i { position: relative; display: block; height: 7px; border-radius: 6px; background: #1c0f16; }
+.dp-idbar u { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; background: linear-gradient(90deg, color-mix(in srgb, var(--c) 25%, #0b0306), var(--c)); }
+.dp-idbar s { position: absolute; top: 50%; width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px; border-radius: 50%; background: #f5e8ec; border: 2px solid var(--c); box-shadow: 0 0 8px color-mix(in srgb, var(--c) 60%, transparent); }
+.dp-idmean { margin: 0 0 6px; font-size: 14px; } .dp-idmean b { color: var(--sub); font-weight: 400; }
+@media (max-width: 760px) { .dp-edict, .dp-edcols { grid-template-columns: 1fr; } }
