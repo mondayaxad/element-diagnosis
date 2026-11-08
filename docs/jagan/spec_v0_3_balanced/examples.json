@@ -1,9 +1,8 @@
 [
   {
-    "name": "敵意と不信",
+    "name": "敵意が高め",
     "profile": {
-      "HOS": 4,
-      "SUS": 4
+      "HOS": 4
     },
     "expected": "pierro",
     "answers": {
@@ -16,10 +15,10 @@
       "SEP03": 2,
       "SEP04": 2,
       "SEP05": 2,
-      "SUS01": 4,
-      "SUS02": 4,
-      "SUS03": 4,
-      "SUS05": 4,
+      "SUS01": 2,
+      "SUS02": 2,
+      "SUS03": 2,
+      "SUS05": 2,
       "WDR02": 2,
       "WDR03": 2,
       "WDR04": 2,
@@ -58,7 +57,7 @@
       "CAL03": 2,
       "CAL04": 2
     },
-    "headline": "炎 × 複合",
+    "headline": "炎 × 敵意",
     "character": {
       "id": "pierro",
       "name": "ピエロ",
@@ -68,11 +67,10 @@
         "反逆"
       ],
       "region": "カーンルイア",
-      "match": 95,
-      "rawSimilarity": 94.6966991411009,
+      "match": 100,
+      "rawSimilarity": 100,
       "usedAxes": [
-        "HOS",
-        "SUS"
+        "HOS"
       ],
       "selectionMethod": "fixed_balance_offset",
       "rawGap": 0
@@ -242,11 +240,11 @@
     "semanticCheck": true
   },
   {
-    "name": "対人距離と低い敵意",
+    "name": "敵意・冷淡が低く、衝動は中程度",
     "profile": {
-      "WDR": 5,
       "HOS": 1,
-      "CAL": 1
+      "CAL": 1,
+      "IMP": 3
     },
     "expected": "columbina",
     "answers": {
@@ -263,15 +261,15 @@
       "SUS02": 2,
       "SUS03": 2,
       "SUS05": 2,
-      "WDR02": 5,
-      "WDR03": 5,
-      "WDR04": 5,
-      "WDR05": 5,
-      "IMP01": 2,
-      "IMP02": 2,
-      "IMP03": 2,
-      "IMP04": 2,
-      "IMP05": 2,
+      "WDR02": 2,
+      "WDR03": 2,
+      "WDR04": 2,
+      "WDR05": 2,
+      "IMP01": 3,
+      "IMP02": 3,
+      "IMP03": 3,
+      "IMP04": 3,
+      "IMP05": 3,
       "PSV01": 2,
       "PSV02": 2,
       "PSV04": 2,
@@ -301,7 +299,7 @@
       "CAL03": 1,
       "CAL04": 1
     },
-    "headline": "氷 × 撤退",
+    "headline": "雷 × 未顕",
     "character": {
       "id": "columbina",
       "name": "コロンビーナ",
@@ -311,10 +309,9 @@
         "帰属"
       ],
       "region": "ナドクライ",
-      "match": 81,
-      "rawSimilarity": 80.51442841485014,
+      "match": 85,
+      "rawSimilarity": 85,
       "usedAxes": [
-        "WDR",
         "HOS",
         "CAL"
       ],
@@ -324,11 +321,12 @@
     "semanticCheck": true
   },
   {
-    "name": "誘導と低い衝動",
+    "name": "誘導が中程度、敵意は低い",
     "profile": {
-      "MAN": 4,
-      "IMP": 1,
-      "CAL": 2
+      "MAN": 3,
+      "HOS": 1,
+      "WDR": 1,
+      "RSK": 1
     },
     "expected": "arlecchino",
     "answers": {
@@ -345,15 +343,15 @@
       "SUS02": 2,
       "SUS03": 2,
       "SUS05": 2,
-      "WDR02": 2,
-      "WDR03": 2,
-      "WDR04": 2,
-      "WDR05": 2,
-      "IMP01": 1,
-      "IMP02": 1,
-      "IMP03": 1,
-      "IMP04": 1,
-      "IMP05": 1,
+      "WDR02": 1,
+      "WDR03": 1,
+      "WDR04": 1,
+      "WDR05": 1,
+      "IMP01": 2,
+      "IMP02": 2,
+      "IMP03": 2,
+      "IMP04": 2,
+      "IMP05": 2,
       "PSV01": 2,
       "PSV02": 2,
       "PSV04": 2,
@@ -362,28 +360,28 @@
       "PRF02": 2,
       "PRF04": 2,
       "PRF05": 2,
-      "HOS01": 2,
-      "HOS03": 2,
-      "HOS04": 2,
-      "HOS05": 2,
+      "HOS01": 1,
+      "HOS03": 1,
+      "HOS04": 1,
+      "HOS05": 1,
       "ATT01": 2,
       "ATT02": 2,
       "ATT03": 2,
       "ATT05": 2,
-      "MAN01": 4,
-      "MAN02": 4,
-      "MAN03": 4,
-      "MAN04": 4,
-      "RSK01": 2,
-      "RSK02": 2,
-      "RSK03": 2,
-      "RSK04": 2,
+      "MAN01": 3,
+      "MAN02": 3,
+      "MAN03": 3,
+      "MAN04": 3,
+      "RSK01": 1,
+      "RSK02": 1,
+      "RSK03": 1,
+      "RSK04": 1,
       "CAL01": 2,
       "CAL02": 2,
       "CAL03": 2,
       "CAL04": 2
     },
-    "headline": "岩 × 操作",
+    "headline": "岩 × 未顕",
     "character": {
       "id": "arlecchino",
       "name": "アルレッキーノ",
@@ -406,10 +404,9 @@
     "semanticCheck": true
   },
   {
-    "name": "誘導とやや中程度の衝動",
+    "name": "誘導が高め",
     "profile": {
-      "MAN": 4,
-      "IMP": 3
+      "MAN": 4
     },
     "expected": "pulcinella",
     "answers": {
@@ -430,11 +427,11 @@
       "WDR03": 2,
       "WDR04": 2,
       "WDR05": 2,
-      "IMP01": 3,
-      "IMP02": 3,
-      "IMP03": 3,
-      "IMP04": 3,
-      "IMP05": 3,
+      "IMP01": 2,
+      "IMP02": 2,
+      "IMP03": 2,
+      "IMP04": 2,
+      "IMP05": 2,
       "PSV01": 2,
       "PSV02": 2,
       "PSV04": 2,
@@ -474,11 +471,10 @@
         "交渉"
       ],
       "region": "スネージナヤ",
-      "match": 89,
-      "rawSimilarity": 89.39339828220179,
+      "match": 100,
+      "rawSimilarity": 100,
       "usedAxes": [
-        "MAN",
-        "IMP"
+        "MAN"
       ],
       "selectionMethod": "fixed_balance_offset",
       "rawGap": 0
@@ -728,10 +724,9 @@
     "semanticCheck": true
   },
   {
-    "name": "誘導が強く冷淡は中程度",
+    "name": "誘導がさらに強い",
     "profile": {
-      "MAN": 5,
-      "CAL": 3
+      "MAN": 5
     },
     "expected": "pantalone",
     "answers": {
@@ -781,10 +776,10 @@
       "RSK02": 2,
       "RSK03": 2,
       "RSK04": 2,
-      "CAL01": 3,
-      "CAL02": 3,
-      "CAL03": 3,
-      "CAL04": 3
+      "CAL01": 2,
+      "CAL02": 2,
+      "CAL03": 2,
+      "CAL04": 2
     },
     "headline": "岩 × 操作",
     "character": {
@@ -796,11 +791,10 @@
         "野心"
       ],
       "region": "璃月",
-      "match": 92,
-      "rawSimilarity": 91.61474508437578,
+      "match": 89,
+      "rawSimilarity": 88.75,
       "usedAxes": [
-        "MAN",
-        "CAL"
+        "MAN"
       ],
       "selectionMethod": "fixed_balance_offset",
       "rawGap": 0
@@ -808,10 +802,9 @@
     "semanticCheck": true
   },
   {
-    "name": "危険への接近と中程度の衝動",
+    "name": "危険への接近",
     "profile": {
-      "RSK": 5,
-      "IMP": 3
+      "RSK": 5
     },
     "expected": "tartaglia",
     "answers": {
@@ -832,11 +825,11 @@
       "WDR03": 2,
       "WDR04": 2,
       "WDR05": 2,
-      "IMP01": 3,
-      "IMP02": 3,
-      "IMP03": 3,
-      "IMP04": 3,
-      "IMP05": 3,
+      "IMP01": 2,
+      "IMP02": 2,
+      "IMP03": 2,
+      "IMP04": 2,
+      "IMP05": 2,
       "PSV01": 2,
       "PSV02": 2,
       "PSV04": 2,
@@ -876,11 +869,10 @@
         "挑戦"
       ],
       "region": "スネージナヤ",
-      "match": 92,
-      "rawSimilarity": 91.61474508437578,
+      "match": 89,
+      "rawSimilarity": 88.75,
       "usedAxes": [
-        "RSK",
-        "IMP"
+        "RSK"
       ],
       "selectionMethod": "fixed_balance_offset",
       "rawGap": 0

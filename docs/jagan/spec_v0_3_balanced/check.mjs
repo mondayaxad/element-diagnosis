@@ -16,7 +16,7 @@ check('操作・冷淡の例は博士',()=>assert.equal(judge(profile({MAN:5,CAL
 const examples=JSON.parse(readFileSync(new URL('./examples.json',import.meta.url),'utf8'));
 check('11名の中心例と保留例が想定に対応',()=>{assert.equal(examples.filter(x=>x.expected).length,11);for(const x of examples)assert.equal(judge(x.answers).character?.id??null,x.expected);});
 check('同じ回答はキー順・繰り返しによらず同じ結果',()=>{const a=profile({RSK:5,IMP:3});assert.deepEqual(judge(a),judge(Object.fromEntries(Object.entries(a).reverse())));assert.deepEqual(judge(a),judge(a));});
-check('全人物に未確認軸を明示し、中立値で補完しない',()=>{for(const c of characters.characters){assert.ok(Object.keys(c.anchors).length>=2);assert.equal(Object.keys(c.anchors).length+c.unknown_axes.length,12);assert.ok(c.unknown_axes.every(k=>c.anchors[k]===undefined));}});
+check('全人物に未確認軸を明示し、中立値で補完しない',()=>{for(const c of characters.characters){assert.ok(Object.keys(c.anchors).length>=1); /* 0.4.0（2026-11-08）：根拠のない参照を未対応にした結果、1特性だけの人物を認める */assert.equal(Object.keys(c.anchors).length+c.unknown_axes.length,12);assert.ok(c.unknown_axes.every(k=>c.anchors[k]===undefined));}});
 check('補正前の一致度を表示し、補正値を足さない',()=>{const r=judge(profile({MAN:4,IMP:3}));const p=characterRanking(r.scores).find(x=>x.id===r.character.id);assert.equal(r.character.match,Math.round(p.score));assert.equal(p.selectionScore,p.score+p.selectionOffset);});
 check('人物補正が邪眼・異相の得点を変更しない',()=>{const r=judge(profile({MAN:5,CAL:5}));assert.deepEqual(r.scores,scoreAnswers(profile({MAN:5,CAL:5})));assert.equal(r.isou.label,'複合');});
 check('3つの独立確認群で目標9.09%から±0.75pt以内',()=>{const r=JSON.parse(readFileSync(new URL('./balance-report.json',import.meta.url),'utf8'));assert.equal(r.holdouts.reduce((s,x)=>s+x.total,0),99000);for(const h of r.holdouts)assert.ok(h.maximum_deviation_percentage_points<.75);});

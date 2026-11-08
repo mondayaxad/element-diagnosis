@@ -656,7 +656,7 @@ export const BUNDLE = Object.freeze({
   "reference_note": "元素係数・閾値は独自の演出設計。学術的な標準値ではない。"
  },
  "characters": {
-  "version": "jagan-character-balance-0.3.0-candidate",
+  "version": "jagan-character-balance-0.4.0-candidate",
   "status": "synthetic_calibration_candidate",
   "launch_ready": false,
   "axes": [
@@ -699,8 +699,7 @@ export const BUNDLE = Object.freeze({
      "反逆"
     ],
     "anchors": {
-     "HOS": 75,
-     "SUS": 65
+     "HOS": 75
     },
     "unknown_axes": [
      "ANX",
@@ -712,16 +711,17 @@ export const BUNDLE = Object.freeze({
      "ATT",
      "MAN",
      "RSK",
-     "CAL"
+     "CAL",
+     "SUS"
     ],
-    "rationale": "喪失を背景にした敵対と不信を物語上の参照にする。固執・依存の座標は推定しない。",
+    "rationale": "「嗤笑の面」の、災厄を阻止できなかった経緯・怒り・天理への反逆から、敵意を物語上の参照にする（値は編集上の設定）。世界への反逆を広い対人不信と結びつけず、猜疑は未対応とする。固執・依存も推定しない。",
     "region_label": "カーンルイア",
     "source_urls": [
      "https://genshin-impact.fandom.com/ja/wiki/嗤笑の面"
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": -1.04309072
+    "selection_offset": -0.93109866
    },
    {
     "id": "capitano",
@@ -754,7 +754,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": -6.5172877
+    "selection_offset": -3.97961752
    },
    {
     "id": "dottore",
@@ -787,7 +787,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": 1.43494074
+    "selection_offset": 4.1500107
    },
    {
     "id": "columbina",
@@ -798,7 +798,6 @@ export const BUNDLE = Object.freeze({
      "帰属"
     ],
     "anchors": {
-     "WDR": 65,
      "HOS": 20,
      "CAL": 20
     },
@@ -811,16 +810,17 @@ export const BUNDLE = Object.freeze({
      "PRF",
      "ATT",
      "MAN",
-     "RSK"
+     "RSK",
+     "WDR"
     ],
-    "rationale": "ファデュイから距離を取る時期と、人に安らぎを願う描写への連想。帰属から依存を推定しない。時期による違い・対応根拠の弱さが残る。",
+    "rationale": "敵意・冷淡の低さを参照にする（値は編集上の設定。個別の描写での確認が残る）。組織を離れたことを撤退特性とせず、撤退は未対応とする。所属期と後年の描写を混ぜない。帰属から依存を推定しない。",
     "region_label": "ナドクライ",
     "source_urls": [
      "https://genshin-impact.fandom.com/ja/wiki/コロンビーナ/プロフィール"
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": -1.52676805
+    "selection_offset": -4.74274228
    },
    {
     "id": "arlecchino",
@@ -853,7 +853,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": 2.29190267
+    "selection_offset": 1.8228039
    },
    {
     "id": "pulcinella",
@@ -864,8 +864,7 @@ export const BUNDLE = Object.freeze({
      "交渉"
     ],
     "anchors": {
-     "MAN": 75,
-     "IMP": 30
+     "MAN": 75
     },
     "unknown_axes": [
      "ANX",
@@ -877,16 +876,17 @@ export const BUNDLE = Object.freeze({
      "HOS",
      "ATT",
      "RSK",
-     "CAL"
+     "CAL",
+     "IMP"
     ],
-    "rationale": "政治上の誘導と計画的な関与への連想。他者による人質評を確定した内面とせず、冷淡は未対応とする。",
+    "rationale": "アルレッキーノによる評価（市長としての手腕と、壁炉の家を代価とする扱いへの批判）から、操作を連想の参照にする（値は編集上の設定）。他者の評価を内面と確定しない。衝動・冷淡は根拠がないため未対応とする。",
     "region_label": "スネージナヤ",
     "source_urls": [
      "https://genshin-impact.fandom.com/ja/wiki/「雄鶏」"
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": 4.50831377
+    "selection_offset": 0.86379029
    },
    {
     "id": "scaramouche",
@@ -919,7 +919,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": 1.54694846
+    "selection_offset": 2.52510058
    },
    {
     "id": "sandrone",
@@ -952,7 +952,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": -2.16520875
+    "selection_offset": -1.24129835
    },
    {
     "id": "signora",
@@ -985,7 +985,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": 0.83189851
+    "selection_offset": 2.82571996
    },
    {
     "id": "pantalone",
@@ -996,8 +996,7 @@ export const BUNDLE = Object.freeze({
      "野心"
     ],
     "anchors": {
-     "MAN": 85,
-     "CAL": 55
+     "MAN": 85
     },
     "unknown_axes": [
      "ANX",
@@ -1009,16 +1008,17 @@ export const BUNDLE = Object.freeze({
      "PRF",
      "HOS",
      "ATT",
-     "RSK"
+     "RSK",
+     "CAL"
     ],
-    "rationale": "経済と対人上の誘導、他者の扱いへの連想。富・貧困・計画性から完璧や不安を設定しない。冷淡の対応根拠は特に要確認。",
+    "rationale": "経済と対人上の誘導への連想として、操作を参照にする（値は編集上の設定。経済面の手腕と対人場面の操作は区別して再確認が必要）。冷淡は根拠がないため未対応とし、中間値で埋めない。富・貧困・計画性から完璧や不安を設定しない。",
     "region_label": "璃月",
     "source_urls": [
      "https://genshin-impact.fandom.com/ja/wiki/「富者」"
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": 2.06066004
+    "selection_offset": 2.27024484
    },
    {
     "id": "tartaglia",
@@ -1029,8 +1029,7 @@ export const BUNDLE = Object.freeze({
      "挑戦"
     ],
     "anchors": {
-     "RSK": 85,
-     "IMP": 45
+     "RSK": 85
     },
     "unknown_axes": [
      "ANX",
@@ -1042,16 +1041,17 @@ export const BUNDLE = Object.freeze({
      "HOS",
      "ATT",
      "MAN",
-     "CAL"
+     "CAL",
+     "IMP"
     ],
-    "rationale": "危険への接近を中心に、計画的な行動も含む参照。戦闘好きから極端な衝動性を設定しない。数値は仮説。",
+    "rationale": "プロフィールの、危険な戦いを追い求める描写から、危険志向を参照にする（値は編集上の設定）。衝動の程度は未確定のため未対応とする。家族への思いを比較していない特性の一致に使わない。",
     "region_label": "スネージナヤ",
     "source_urls": [
      "https://genshin-impact.fandom.com/ja/wiki/タルタリヤ/プロフィール"
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": -1.42230898
+    "selection_offset": -3.56291348
    }
   ],
   "calibration": {
@@ -1063,8 +1063,8 @@ export const BUNDLE = Object.freeze({
    "optimizer_success": true,
    "not_live_user_distribution": true,
    "target_share": 0.09090909090909091,
-   "offset_mean": -1.2111523905001707e-16,
-   "anchor_sha256": "bcc0bbaf62983100fa6e8f3a1754906bb6c66944c27ef6b80b96abcb33f686e4"
+   "offset_mean": 4.0371746350005693e-17,
+   "anchor_sha256": "a2c29f9666845b54209bd4139f9bf14961453a703374ccf21b00ea83b58dd018"
   }
  },
  "product": {

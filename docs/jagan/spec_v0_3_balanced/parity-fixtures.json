@@ -14,19 +14,19 @@
       "RSK": 37.5,
       "CAL": 6.25
     },
-    "winner": "pulcinella",
+    "winner": "pantalone",
     "raw": {
-      "pulcinella": 64.12042986334593,
-      "arlecchino": 61.863510191264695,
-      "columbina": 64.93187269150812,
-      "pantalone": 57.44576844930069,
-      "scaramouche": 53.954724449593925,
-      "pierro": 56.39812862659771,
+      "pierro": 42.1875,
       "capitano": 58.409908409897334,
+      "dottore": 38.89840461025558,
+      "columbina": 65.57824160519917,
+      "arlecchino": 61.863510191264695,
+      "pulcinella": 73.95833333333333,
+      "scaramouche": 53.954724449593925,
       "sandrone": 52.72574180528114,
-      "tartaglia": 50.76133946417299,
       "signora": 48.03051386377821,
-      "dottore": 38.89840461025558
+      "pantalone": 81.45833333333333,
+      "tartaglia": 39.375
     }
   },
   {
@@ -46,17 +46,17 @@
     },
     "winner": "arlecchino",
     "raw": {
-      "arlecchino": 60.99000563966807,
-      "columbina": 63.346103538348665,
-      "pulcinella": 56.712741372064535,
-      "pantalone": 57.8972012763951,
-      "dottore": 48.71520446700513,
+      "pierro": 28.125,
       "capitano": 56.11726387537689,
+      "dottore": 48.71520446700513,
+      "columbina": 56.838971118382936,
+      "arlecchino": 60.99000563966807,
+      "pulcinella": 56.25,
+      "scaramouche": 35.14350568116325,
       "sandrone": 49.32054361594996,
       "signora": 43.68488489145841,
-      "pierro": 44.76904019629924,
-      "scaramouche": 35.14350568116325,
-      "tartaglia": 28.454281547600964
+      "pantalone": 48.75,
+      "tartaglia": 15.937500000000002
     }
   },
   {
@@ -76,17 +76,17 @@
     },
     "winner": "sandrone",
     "raw": {
-      "sandrone": 75.13614308264296,
-      "tartaglia": 60.351404309247314,
-      "signora": 55.51191790748353,
-      "columbina": 49.807315241976255,
-      "pulcinella": 42.942600466618295,
-      "pierro": 48.10350507639621,
-      "arlecchino": 43.15537329278404,
+      "pierro": 67.34913793103448,
+      "capitano": 43.501239104348564,
       "dottore": 43.19616512622588,
-      "pantalone": 40.33143273469742,
+      "columbina": 37.617241217767074,
+      "arlecchino": 43.15537329278404,
+      "pulcinella": 32.8125,
       "scaramouche": 35.60217755704453,
-      "capitano": 43.501239104348564
+      "sandrone": 75.13614308264296,
+      "signora": 55.51191790748353,
+      "pantalone": 25.3125,
+      "tartaglia": 54.29956896551724
     }
   },
   {
@@ -104,19 +104,19 @@
       "RSK": 6.25,
       "CAL": 87.5
     },
-    "winner": "pulcinella",
+    "winner": "dottore",
     "raw": {
-      "pulcinella": 65.8451925113167,
-      "dottore": 65.00686759291109,
-      "pantalone": 59.9427872508575,
-      "arlecchino": 57.262939943211606,
-      "columbina": 48.01180529318287,
-      "signora": 44.4180874731741,
+      "pierro": 18.75,
       "capitano": 48.61073724621874,
-      "pierro": 38.58464705704195,
+      "dottore": 65.00686759291109,
+      "columbina": 44.482604783669544,
+      "arlecchino": 57.262939943211606,
+      "pulcinella": 62.07386363636363,
       "scaramouche": 29.907621053786528,
       "sandrone": 33.447487102161915,
-      "tartaglia": 31.91068052144476
+      "signora": 44.4180874731741,
+      "pantalone": 54.57386363636363,
+      "tartaglia": 15.937500000000002
     }
   },
   {
@@ -136,17 +136,17 @@
     },
     "winner": "signora",
     "raw": {
-      "signora": 74.74330735328193,
-      "scaramouche": 73.02736583758106,
-      "pantalone": 65.0536965739321,
-      "pierro": 66.98985213592823,
-      "sandrone": 67.01995935904992,
-      "dottore": 57.00657894736842,
-      "pulcinella": 43.86859981632337,
-      "columbina": 49.27021999408829,
-      "arlecchino": 45.36349985209919,
+      "pierro": 77.63157894736842,
       "capitano": 40.091546556506735,
-      "tartaglia": 32.00239160886027
+      "dottore": 57.00657894736842,
+      "columbina": 42.085612324794816,
+      "arlecchino": 45.36349985209919,
+      "pulcinella": 66.9407894736842,
+      "scaramouche": 73.02736583758106,
+      "sandrone": 67.01995935904992,
+      "signora": 74.74330735328193,
+      "pantalone": 59.44078947368421,
+      "tartaglia": 20.625
     }
   },
   {
@@ -166,17 +166,17 @@
     },
     "winner": "scaramouche",
     "raw": {
-      "scaramouche": 76.32352941176471,
-      "signora": 72.16430559540369,
-      "pierro": 69.54395483826988,
-      "pantalone": 56.5628872499794,
+      "pierro": 62.13235294117647,
+      "capitano": 39.30301649739893,
       "dottore": 55.28546527009841,
-      "pulcinella": 48.43573724519284,
+      "columbina": 32.33779109521727,
       "arlecchino": 47.586698368697355,
-      "tartaglia": 41.50013297780089,
+      "pulcinella": 56.25,
+      "scaramouche": 76.32352941176471,
       "sandrone": 39.96931158362155,
-      "columbina": 34.68743810659473,
-      "capitano": 39.30301649739893
+      "signora": 72.16430559540369,
+      "pantalone": 48.75,
+      "tartaglia": 30.0
     }
   },
   {
@@ -196,17 +196,17 @@
     },
     "winner": "scaramouche",
     "raw": {
+      "pierro": 72.45535714285714,
+      "capitano": 42.298188035810966,
+      "dottore": 38.851331848709854,
+      "columbina": 35.2584830801697,
+      "arlecchino": 41.42934648596163,
+      "pulcinella": 28.125,
       "scaramouche": 69.06282507317833,
       "sandrone": 72.00224418061467,
-      "pierro": 64.00196908109402,
       "signora": 53.43024558451923,
-      "tartaglia": 49.800599895533225,
-      "pulcinella": 41.06172307519134,
-      "columbina": 46.8885386633449,
-      "arlecchino": 41.42934648596163,
-      "dottore": 38.851331848709854,
-      "pantalone": 36.40372991155092,
-      "capitano": 42.298188035810966
+      "pantalone": 20.625,
+      "tartaglia": 39.375
     }
   },
   {
@@ -226,17 +226,17 @@
     },
     "winner": "tartaglia",
     "raw": {
-      "tartaglia": 74.11015086441515,
-      "columbina": 74.04452522805741,
+      "pierro": 37.5,
       "capitano": 69.89370792550994,
-      "sandrone": 58.13462265136009,
-      "pierro": 49.167480242936826,
+      "dottore": 16.123805744596563,
+      "columbina": 71.25,
       "arlecchino": 44.22390588866092,
+      "pulcinella": 18.75,
       "scaramouche": 38.39409309741171,
-      "pulcinella": 35.2197196701054,
-      "signora": 31.48276203617698,
-      "pantalone": 27.196692060067644,
-      "dottore": 16.123805744596563
+      "sandrone": 58.13462265136009,
+      "signora": 31.48276203617697,
+      "pantalone": 11.250000000000002,
+      "tartaglia": 79.64673913043478
     }
   },
   {
@@ -256,17 +256,17 @@
     },
     "winner": "scaramouche",
     "raw": {
-      "scaramouche": 65.8811556551509,
-      "pierro": 66.78314896669104,
-      "columbina": 60.06851585574963,
-      "sandrone": 57.599333256308825,
+      "pierro": 51.5625,
       "capitano": 59.99023755184646,
+      "dottore": 9.801609850204121,
+      "columbina": 58.533592434140346,
       "arlecchino": 43.28625347345413,
-      "pulcinella": 35.2197196701054,
+      "pulcinella": 23.4375,
+      "scaramouche": 65.8811556551509,
+      "sandrone": 57.599333256308825,
       "signora": 31.719032040630147,
-      "pantalone": 24.05914504913566,
-      "tartaglia": 23.99448559224209,
-      "dottore": 9.801609850204121
+      "pantalone": 15.937500000000002,
+      "tartaglia": 11.250000000000002
     }
   },
   {
@@ -284,19 +284,19 @@
       "RSK": 93.75,
       "CAL": 0.0
     },
-    "winner": "pulcinella",
+    "winner": "tartaglia",
     "raw": {
-      "pulcinella": 70.33781074833504,
-      "tartaglia": 73.35667707128792,
-      "arlecchino": 62.7512336060275,
-      "signora": 55.93246011441629,
-      "sandrone": 53.287017515486596,
-      "pierro": 49.13950379682837,
-      "pantalone": 45.48549441130323,
+      "pierro": 64.25,
       "capitano": 49.770506793662946,
-      "columbina": 44.41795471012455,
+      "dottore": 27.09188129672688,
+      "columbina": 39.26786078866024,
+      "arlecchino": 62.7512336060275,
+      "pulcinella": 67.625,
       "scaramouche": 40.9011347762793,
-      "dottore": 27.09188129672688
+      "sandrone": 53.287017515486596,
+      "signora": 55.93246011441629,
+      "pantalone": 60.125,
+      "tartaglia": 75.4375
     }
   },
   {
@@ -314,19 +314,19 @@
       "RSK": 43.75,
       "CAL": 18.75
     },
-    "winner": "pulcinella",
+    "winner": "arlecchino",
     "raw": {
-      "pulcinella": 58.02115286599234,
-      "arlecchino": 58.645169864838095,
+      "pierro": 18.75,
       "capitano": 59.604815079058,
-      "tartaglia": 52.96376386210658,
-      "pantalone": 48.27713847423895,
-      "columbina": 45.546978614240615,
-      "pierro": 42.297464554858266,
-      "scaramouche": 36.07541099333904,
       "dottore": 31.66660406655162,
+      "columbina": 64.37270245429254,
+      "arlecchino": 58.645169864838095,
+      "pulcinella": 56.25,
+      "scaramouche": 36.07541099333904,
+      "sandrone": 22.366241821431746,
       "signora": 32.212598597834905,
-      "sandrone": 22.366241821431746
+      "pantalone": 48.75,
+      "tartaglia": 44.0625
     }
   },
   {
@@ -346,17 +346,17 @@
     },
     "winner": "scaramouche",
     "raw": {
+      "pierro": 71.18055555555556,
+      "capitano": 43.94370226380991,
+      "dottore": 37.08467751492606,
+      "columbina": 40.84866973253897,
+      "arlecchino": 43.30867421181653,
+      "pulcinella": 37.5,
       "scaramouche": 74.61407931564351,
-      "pierro": 76.41232252384891,
       "sandrone": 72.32683232673627,
       "signora": 61.601470320770325,
-      "columbina": 51.727247505913915,
-      "pantalone": 44.09921618198601,
-      "arlecchino": 43.30867421181653,
-      "pulcinella": 38.51472016386528,
-      "tartaglia": 40.48260097085046,
-      "dottore": 37.08467751492606,
-      "capitano": 43.94370226380991
+      "pantalone": 30.0,
+      "tartaglia": 30.0
     }
   },
   {
@@ -376,17 +376,17 @@
     },
     "winner": "arlecchino",
     "raw": {
+      "pierro": 56.25,
+      "capitano": 63.72398840458205,
+      "dottore": 34.855848314833366,
+      "columbina": 59.07629273300341,
       "arlecchino": 68.9548149921335,
-      "pulcinella": 65.07043209461699,
-      "pierro": 67.16284600896208,
+      "pulcinella": 62.604166666666664,
       "scaramouche": 63.745404908585066,
       "sandrone": 63.93253131616092,
-      "columbina": 63.124198741653885,
-      "capitano": 63.72398840458205,
-      "tartaglia": 56.020370842717995,
-      "pantalone": 52.129943551099664,
       "signora": 50.85560435803628,
-      "dottore": 34.855848314833366
+      "pantalone": 55.104166666666664,
+      "tartaglia": 55.104166666666664
     }
   },
   {
@@ -406,17 +406,17 @@
     },
     "winner": "sandrone",
     "raw": {
-      "sandrone": 80.73959135850502,
-      "pierro": 75.06492483930325,
-      "scaramouche": 71.21845143614914,
-      "pulcinella": 65.85281906987888,
-      "arlecchino": 65.76427966051813,
-      "columbina": 66.67005235844314,
-      "signora": 56.634402323115005,
+      "pierro": 68.75,
       "capitano": 60.93181912065135,
-      "pantalone": 52.025776884433,
-      "tartaglia": 39.64120843941355,
-      "dottore": 34.7516816481667
+      "dottore": 34.7516816481667,
+      "columbina": 55.576224742239326,
+      "arlecchino": 65.76427966051813,
+      "pulcinella": 62.5,
+      "scaramouche": 71.21845143614914,
+      "sandrone": 80.73959135850502,
+      "signora": 56.634402323115005,
+      "pantalone": 55.0,
+      "tartaglia": 25.3125
     }
   },
   {
@@ -436,17 +436,17 @@
     },
     "winner": "scaramouche",
     "raw": {
+      "pierro": 64.50892857142857,
+      "capitano": 43.23353479782331,
+      "dottore": 26.112289459992184,
+      "columbina": 38.04691342164547,
+      "arlecchino": 50.73935824680292,
+      "pulcinella": 66.6454081632653,
       "scaramouche": 77.09426513616853,
       "sandrone": 65.36525492862425,
-      "pierro": 63.939899793843765,
-      "pulcinella": 53.292765464252966,
-      "arlecchino": 50.73935824680292,
       "signora": 51.007053304519005,
-      "pantalone": 44.50590257456854,
-      "columbina": 47.24198540316352,
-      "capitano": 43.23353479782331,
-      "tartaglia": 35.43017691183283,
-      "dottore": 26.112289459992184
+      "pantalone": 59.14540816326531,
+      "tartaglia": 20.625
     }
   },
   {
@@ -464,19 +464,19 @@
       "RSK": 37.5,
       "CAL": 0.0
     },
-    "winner": "columbina",
+    "winner": "capitano",
     "raw": {
-      "columbina": 68.16115925248461,
+      "pierro": 42.1875,
       "capitano": 66.12257955541138,
-      "pulcinella": 54.71877407551506,
-      "sandrone": 61.10135960121552,
+      "dottore": 19.74314239390734,
+      "columbina": 62.83054220086203,
       "arlecchino": 54.4034286833949,
-      "pierro": 54.90952490610798,
+      "pulcinella": 46.875,
       "scaramouche": 49.814911165350196,
-      "tartaglia": 49.49724279612105,
-      "pantalone": 36.459741016697876,
+      "sandrone": 61.10135960121552,
       "signora": 35.86007672784731,
-      "dottore": 19.74314239390734
+      "pantalone": 39.375,
+      "tartaglia": 39.375
     }
   },
   {
@@ -496,17 +496,17 @@
     },
     "winner": "arlecchino",
     "raw": {
-      "arlecchino": 54.97262685310927,
-      "pulcinella": 50.679146679238414,
-      "pantalone": 50.38526397977525,
+      "pierro": 28.125,
       "capitano": 56.401304408402474,
       "dottore": 44.765398294337714,
-      "columbina": 47.60107275890057,
-      "signora": 43.55400432937433,
-      "tartaglia": 29.91706860545779,
-      "pierro": 29.509509063706513,
+      "columbina": 56.27937488716597,
+      "arlecchino": 54.97262685310927,
+      "pulcinella": 42.1875,
+      "scaramouche": 16.40437502999904,
       "sandrone": 29.12472326377747,
-      "scaramouche": 16.40437502999904
+      "signora": 43.55400432937433,
+      "pantalone": 34.6875,
+      "tartaglia": 11.250000000000002
     }
   },
   {
@@ -526,17 +526,17 @@
     },
     "winner": "signora",
     "raw": {
-      "signora": 71.68527259831376,
-      "dottore": 59.10254776572792,
-      "pierro": 61.26132836527234,
-      "pantalone": 55.02728769569355,
-      "pulcinella": 51.27101648662663,
-      "sandrone": 57.789983173604035,
-      "scaramouche": 50.58380733788066,
-      "arlecchino": 48.40239270076565,
-      "columbina": 43.59629402040497,
+      "pierro": 74.77678571428571,
       "capitano": 43.14290030586115,
-      "tartaglia": 30.768120631496217
+      "dottore": 59.10254776572792,
+      "columbina": 36.4833249095657,
+      "arlecchino": 48.40239270076565,
+      "pulcinella": 56.25,
+      "scaramouche": 50.58380733788066,
+      "sandrone": 57.789983173604035,
+      "signora": 71.68527259831376,
+      "pantalone": 48.75,
+      "tartaglia": 11.250000000000002
     }
   },
   {
@@ -556,17 +556,17 @@
     },
     "winner": "scaramouche",
     "raw": {
-      "scaramouche": 78.5078415729415,
-      "tartaglia": 73.75817524551643,
-      "pierro": 66.13720498332106,
-      "sandrone": 64.4781595572845,
-      "arlecchino": 51.543757494005995,
-      "signora": 52.77418919818125,
-      "pulcinella": 44.90493577636027,
-      "columbina": 47.650813978612874,
+      "pierro": 61.378205128205124,
       "capitano": 46.46077140138242,
-      "pantalone": 37.67619517988553,
-      "dottore": 26.025157925216334
+      "dottore": 26.025157925216334,
+      "columbina": 37.28435255721193,
+      "arlecchino": 51.543757494005995,
+      "pulcinella": 32.8125,
+      "scaramouche": 78.5078415729415,
+      "sandrone": 64.4781595572845,
+      "signora": 52.77418919818125,
+      "pantalone": 25.3125,
+      "tartaglia": 75.3926282051282
     }
   },
   {
@@ -586,17 +586,17 @@
     },
     "winner": "dottore",
     "raw": {
-      "dottore": 71.15276396539667,
-      "signora": 67.51576991477863,
-      "pantalone": 63.22987050834894,
-      "sandrone": 61.78646702354737,
-      "tartaglia": 59.07003121386375,
-      "pulcinella": 49.36270033584563,
-      "arlecchino": 47.83593758372988,
-      "columbina": 47.02695680833438,
-      "pierro": 39.95634623679748,
+      "pierro": 61.770833333333336,
       "capitano": 41.33585140265448,
-      "scaramouche": 27.33186347802895
+      "dottore": 71.15276396539667,
+      "columbina": 40.20052158439083,
+      "arlecchino": 47.83593758372988,
+      "pulcinella": 72.8125,
+      "scaramouche": 27.33186347802895,
+      "sandrone": 61.78646702354737,
+      "signora": 67.51576991477863,
+      "pantalone": 65.3125,
+      "tartaglia": 76.35416666666667
     }
   },
   {
@@ -616,17 +616,17 @@
     },
     "winner": "pantalone",
     "raw": {
-      "pantalone": 74.2060587928039,
+      "pierro": 51.5625,
+      "capitano": 51.25332648169797,
       "dottore": 70.27041102422021,
-      "pulcinella": 65.17842740836144,
+      "columbina": 48.447391758857485,
       "arlecchino": 62.267865083307626,
+      "pulcinella": 70.03676470588235,
+      "scaramouche": 55.18419578160251,
       "sandrone": 65.45904102218336,
       "signora": 62.147116442017015,
-      "scaramouche": 55.18419578160251,
-      "pierro": 57.627536043283826,
-      "columbina": 55.87447713381918,
-      "capitano": 51.25332648169797,
-      "tartaglia": 44.98535513703352
+      "pantalone": 77.53676470588235,
+      "tartaglia": 44.0625
     }
   },
   {
@@ -644,19 +644,19 @@
       "RSK": 62.5,
       "CAL": 25.0
     },
-    "winner": "scaramouche",
+    "winner": "pantalone",
     "raw": {
-      "scaramouche": 74.70250678474595,
-      "pierro": 71.41485077823317,
-      "signora": 67.47816042863924,
-      "pulcinella": 63.698457599829005,
-      "pantalone": 63.430568798829086,
-      "arlecchino": 62.09041118003833,
-      "sandrone": 64.21876263954458,
-      "tartaglia": 63.454695293368786,
-      "columbina": 49.20308547084868,
+      "pierro": 63.39285714285714,
+      "capitano": 47.362065237796244,
       "dottore": 44.681898603493565,
-      "capitano": 47.362065237796244
+      "columbina": 39.63366696002727,
+      "arlecchino": 62.09041118003833,
+      "pulcinella": 74.77678571428571,
+      "scaramouche": 74.70250678474595,
+      "sandrone": 64.21876263954458,
+      "signora": 67.47816042863924,
+      "pantalone": 76.65178571428571,
+      "tartaglia": 59.910714285714285
     }
   },
   {
@@ -674,19 +674,19 @@
       "RSK": 50.0,
       "CAL": 62.5
     },
-    "winner": "columbina",
+    "winner": "sandrone",
     "raw": {
-      "columbina": 62.459082008544684,
-      "sandrone": 59.18057252792429,
-      "tartaglia": 56.421465898623275,
-      "arlecchino": 50.74255176997085,
-      "pulcinella": 48.270619275725764,
-      "pantalone": 48.39251035658685,
-      "signora": 46.226944795360644,
+      "pierro": 37.5,
       "capitano": 53.14250697041074,
-      "pierro": 46.18807619882005,
       "dottore": 42.77264467114931,
-      "scaramouche": 34.17297827265624
+      "columbina": 54.479440974271625,
+      "arlecchino": 50.74255176997085,
+      "pulcinella": 42.1875,
+      "scaramouche": 34.17297827265624,
+      "sandrone": 59.18057252792429,
+      "signora": 46.226944795360644,
+      "pantalone": 34.6875,
+      "tartaglia": 48.75
     }
   },
   {
@@ -706,17 +706,17 @@
     },
     "winner": "tartaglia",
     "raw": {
-      "tartaglia": 76.08941874764619,
-      "pierro": 68.69902810044098,
+      "pierro": 69.67905405405405,
+      "capitano": 37.50951936365104,
+      "dottore": 52.062499546972326,
+      "columbina": 28.948691922881476,
+      "arlecchino": 44.550881632246735,
+      "pulcinella": 46.875,
+      "scaramouche": 60.4452103903548,
       "sandrone": 69.45790206570715,
       "signora": 63.74940755223334,
-      "scaramouche": 60.4452103903548,
-      "pulcinella": 52.46097134967879,
-      "dottore": 52.062499546972326,
-      "pantalone": 45.70523879917713,
-      "arlecchino": 44.550881632246735,
-      "columbina": 42.15384623688176,
-      "capitano": 37.50951936365104
+      "pantalone": 39.375,
+      "tartaglia": 77.17905405405405
     }
   },
   {
@@ -734,19 +734,19 @@
       "RSK": 12.5,
       "CAL": 43.75
     },
-    "winner": "columbina",
+    "winner": "pierro",
     "raw": {
-      "columbina": 52.77757502113997,
+      "pierro": 62.5,
+      "capitano": 53.21888431259659,
+      "dottore": 27.136975224866944,
+      "columbina": 53.57940498975388,
+      "arlecchino": 45.5205540671341,
+      "pulcinella": 28.125,
+      "scaramouche": 34.15163298899679,
       "sandrone": 52.90106975476757,
       "signora": 47.244070429165205,
-      "arlecchino": 45.5205540671341,
-      "capitano": 53.21888431259659,
-      "pierro": 46.99778681645972,
-      "pulcinella": 39.335954439508825,
-      "tartaglia": 39.80675878498232,
-      "pantalone": 36.09092630728662,
-      "scaramouche": 34.15163298899679,
-      "dottore": 27.136975224866944
+      "pantalone": 20.625,
+      "tartaglia": 20.625
     }
   },
   {
@@ -766,17 +766,17 @@
     },
     "winner": "pulcinella",
     "raw": {
-      "pulcinella": 74.85081846187086,
-      "arlecchino": 65.43360166123858,
-      "pierro": 65.72561407955806,
-      "signora": 62.79579031603281,
-      "sandrone": 65.24901626122336,
-      "scaramouche": 55.04809305216637,
-      "pantalone": 52.496504078778585,
-      "columbina": 54.55024714858568,
+      "pierro": 79.24107142857143,
       "capitano": 57.44523350639855,
-      "tartaglia": 49.800599895533225,
-      "dottore": 33.75477751574236
+      "dottore": 33.75477751574236,
+      "columbina": 49.758014612432184,
+      "arlecchino": 65.43360166123858,
+      "pulcinella": 82.14285714285714,
+      "scaramouche": 55.04809305216637,
+      "sandrone": 65.24901626122336,
+      "signora": 62.79579031603281,
+      "pantalone": 74.64285714285714,
+      "tartaglia": 39.375
     }
   },
   {
@@ -794,19 +794,19 @@
       "RSK": 68.75,
       "CAL": 43.75
     },
-    "winner": "pantalone",
+    "winner": "pulcinella",
     "raw": {
-      "pantalone": 66.86218135546973,
-      "columbina": 56.83732364159951,
-      "dottore": 50.350912408335056,
-      "tartaglia": 53.179134629671864,
-      "pulcinella": 46.32296615896709,
-      "arlecchino": 48.440625138901225,
-      "signora": 44.62513431259659,
-      "pierro": 44.65861664198532,
+      "pierro": 28.125,
       "capitano": 46.051067576558516,
+      "dottore": 50.350912408335056,
+      "columbina": 61.79155987161996,
+      "arlecchino": 48.440625138901225,
+      "pulcinella": 72.65625,
       "scaramouche": 37.757581848709854,
-      "sandrone": 38.75740916235431
+      "sandrone": 38.75740916235431,
+      "signora": 44.62513431259659,
+      "pantalone": 65.15625,
+      "tartaglia": 65.15625
     }
   },
   {
@@ -824,19 +824,19 @@
       "RSK": 75.0,
       "CAL": 37.5
     },
-    "winner": "pulcinella",
+    "winner": "pierro",
     "raw": {
-      "pulcinella": 69.39988194517619,
-      "pantalone": 71.35454565834173,
-      "sandrone": 74.30740875176247,
-      "tartaglia": 73.50158154100163,
-      "signora": 69.25795884048944,
-      "pierro": 70.89120255780517,
-      "arlecchino": 66.82874545881127,
-      "scaramouche": 58.65178581939946,
-      "columbina": 57.65578692973165,
+      "pierro": 78.84615384615384,
+      "capitano": 53.75452488847157,
       "dottore": 53.81750373522034,
-      "capitano": 53.75452488847157
+      "columbina": 48.23710187618914,
+      "arlecchino": 66.82874545881127,
+      "pulcinella": 67.66826923076923,
+      "scaramouche": 58.65178581939946,
+      "sandrone": 74.30740875176247,
+      "signora": 69.25795884048944,
+      "pantalone": 75.16826923076923,
+      "tartaglia": 71.34615384615384
     }
   },
   {
@@ -856,17 +856,17 @@
     },
     "winner": "scaramouche",
     "raw": {
-      "scaramouche": 73.96814268869693,
-      "pierro": 72.67188703775753,
-      "sandrone": 65.40548638971731,
-      "signora": 50.167527871181505,
-      "columbina": 49.191975209743134,
-      "arlecchino": 41.52245782394343,
-      "pulcinella": 34.54889469990463,
+      "pierro": 66.40625,
       "capitano": 45.51616678165486,
-      "tartaglia": 39.556245442392104,
-      "pantalone": 32.21773421585762,
-      "dottore": 22.57958040395899
+      "dottore": 22.57958040395899,
+      "columbina": 40.270875172778105,
+      "arlecchino": 41.52245782394343,
+      "pulcinella": 23.4375,
+      "scaramouche": 73.96814268869693,
+      "sandrone": 65.40548638971731,
+      "signora": 50.16752787118149,
+      "pantalone": 15.937500000000002,
+      "tartaglia": 25.3125
     }
   },
   {
@@ -884,19 +884,19 @@
       "RSK": 100.0,
       "CAL": 25.0
     },
-    "winner": "columbina",
+    "winner": "tartaglia",
     "raw": {
-      "columbina": 69.20493330033935,
-      "arlecchino": 61.98708574146437,
-      "tartaglia": 62.48757338591611,
+      "pierro": 32.8125,
       "capitano": 65.40874421673576,
-      "pulcinella": 54.1841218957739,
-      "sandrone": 56.6420488526288,
-      "pantalone": 47.950241163274676,
-      "pierro": 41.79476109670343,
-      "signora": 39.61429049036885,
       "dottore": 32.69287792670127,
-      "scaramouche": 29.586857457064262
+      "columbina": 72.26674129929127,
+      "arlecchino": 61.98708574146437,
+      "pulcinella": 51.5625,
+      "scaramouche": 29.586857457064262,
+      "sandrone": 56.6420488526288,
+      "signora": 39.61429049036885,
+      "pantalone": 44.0625,
+      "tartaglia": 73.27380952380952
     }
   },
   {
@@ -914,19 +914,19 @@
       "RSK": 25.0,
       "CAL": 0.0
     },
-    "winner": "pulcinella",
+    "winner": "pantalone",
     "raw": {
-      "pulcinella": 57.479741646200196,
-      "arlecchino": 54.321280342378,
-      "pantalone": 50.768060299236495,
-      "pierro": 52.72574180528114,
-      "signora": 46.72272776195721,
+      "pierro": 56.25,
       "capitano": 52.967880960598755,
-      "columbina": 47.42198565886224,
-      "tartaglia": 42.454679353408764,
+      "dottore": 32.53190850204054,
+      "columbina": 55.87867682402705,
+      "arlecchino": 54.321280342378,
+      "pulcinella": 66.2405303030303,
       "scaramouche": 39.46763689078646,
       "sandrone": 40.91313944494154,
-      "dottore": 32.53190850204054
+      "signora": 46.72272776195721,
+      "pantalone": 73.7405303030303,
+      "tartaglia": 30.0
     }
   },
   {
@@ -946,17 +946,17 @@
     },
     "winner": "sandrone",
     "raw": {
-      "sandrone": 60.198895781180845,
-      "tartaglia": 48.77512362993869,
-      "columbina": 48.68674699575924,
-      "pulcinella": 41.84774116858702,
-      "signora": 43.41403646913992,
-      "arlecchino": 41.18705024619359,
-      "pierro": 43.56228255542397,
-      "dottore": 39.27296801684757,
-      "pantalone": 35.46109176623382,
+      "pierro": 42.1875,
       "capitano": 43.70974629680344,
-      "scaramouche": 30.466282963073922
+      "dottore": 39.27296801684757,
+      "columbina": 37.870433143292516,
+      "arlecchino": 41.18705024619359,
+      "pulcinella": 28.125,
+      "scaramouche": 30.466282963073922,
+      "sandrone": 60.198895781180845,
+      "signora": 43.41403646913992,
+      "pantalone": 20.625,
+      "tartaglia": 39.375
     }
   },
   {
@@ -976,17 +976,17 @@
     },
     "winner": "tartaglia",
     "raw": {
-      "tartaglia": 64.88177306598726,
-      "signora": 52.45277258211699,
-      "arlecchino": 46.086855644170484,
-      "pulcinella": 41.1439869051163,
-      "pantalone": 43.069900563888,
-      "columbina": 45.943000814241664,
+      "pierro": 62.408088235294116,
       "capitano": 49.92758642389436,
-      "pierro": 43.76540659308335,
-      "sandrone": 43.00170693303067,
       "dottore": 34.52431285326956,
-      "scaramouche": 31.033260175096736
+      "columbina": 51.51652888365755,
+      "arlecchino": 46.086855644170484,
+      "pulcinella": 37.5,
+      "scaramouche": 31.033260175096736,
+      "sandrone": 43.00170693303067,
+      "signora": 52.45277258211699,
+      "pantalone": 30.0,
+      "tartaglia": 79.5404411764706
     }
   },
   {
@@ -1004,19 +1004,19 @@
       "RSK": 75.0,
       "CAL": 50.0
     },
-    "winner": "pantalone",
+    "winner": "pulcinella",
     "raw": {
-      "pantalone": 71.34345665991155,
-      "signora": 72.38088877409338,
-      "scaramouche": 67.62395417195806,
-      "pierro": 67.35743967848828,
-      "tartaglia": 67.7199462987865,
-      "pulcinella": 61.17336311766881,
-      "sandrone": 63.5311898603148,
-      "arlecchino": 57.95525569414894,
+      "pierro": 60.79545454545455,
+      "capitano": 41.336591342975325,
       "dottore": 54.617016072237455,
-      "columbina": 44.72654793381406,
-      "capitano": 41.336591342975325
+      "columbina": 34.234032144474895,
+      "arlecchino": 57.95525569414894,
+      "pulcinella": 77.27272727272727,
+      "scaramouche": 67.62395417195806,
+      "sandrone": 63.5311898603148,
+      "signora": 72.38088877409338,
+      "pantalone": 69.77272727272727,
+      "tartaglia": 69.77272727272727
     }
   },
   {
@@ -1036,17 +1036,17 @@
     },
     "winner": "columbina",
     "raw": {
-      "columbina": 50.30854462065874,
+      "pierro": 23.4375,
       "capitano": 55.14153414483314,
+      "dottore": 19.74314239390734,
+      "columbina": 63.19717658248671,
       "arlecchino": 43.35114844358916,
-      "pulcinella": 35.29799976892648,
-      "pierro": 35.73116992288922,
-      "tartaglia": 35.534247305316555,
-      "pantalone": 28.976483592624092,
-      "signora": 27.847695244558825,
-      "sandrone": 29.509509063706513,
+      "pulcinella": 18.75,
       "scaramouche": 23.93851362695168,
-      "dottore": 19.74314239390734
+      "sandrone": 29.509509063706513,
+      "signora": 27.847695244558825,
+      "pantalone": 11.250000000000002,
+      "tartaglia": 11.250000000000002
     }
   },
   {
@@ -1066,17 +1066,17 @@
     },
     "winner": "signora",
     "raw": {
-      "signora": 77.71744895527598,
+      "pierro": 65.42467948717949,
+      "capitano": 40.61445760198946,
       "dottore": 71.55975450154867,
-      "pantalone": 69.97779536308576,
-      "tartaglia": 69.18675190050145,
-      "pulcinella": 61.935637087008494,
-      "sandrone": 64.41013893202307,
+      "columbina": 33.26073401044734,
       "arlecchino": 54.809956023535165,
-      "pierro": 56.059056362929866,
+      "pulcinella": 73.5176282051282,
       "scaramouche": 47.60528685005708,
-      "columbina": 44.556732473227285,
-      "capitano": 40.61445760198946
+      "sandrone": 64.41013893202307,
+      "signora": 77.71744895527598,
+      "pantalone": 75.3926282051282,
+      "tartaglia": 68.87820512820512
     }
   },
   {
@@ -1096,17 +1096,17 @@
     },
     "winner": "columbina",
     "raw": {
-      "columbina": 62.88483001563742,
-      "arlecchino": 52.08669651211953,
-      "pulcinella": 49.117031235990765,
-      "pierro": 52.820787323977044,
+      "pierro": 37.5,
       "capitano": 56.71156537833474,
-      "pantalone": 45.877078936858005,
+      "dottore": 29.951198337247632,
+      "columbina": 72.26674129929127,
+      "arlecchino": 52.08669651211953,
+      "pulcinella": 51.5625,
       "scaramouche": 43.8794015966688,
       "sandrone": 45.9223829638672,
       "signora": 40.28295177438036,
-      "tartaglia": 42.08108529758998,
-      "dottore": 29.951198337247632
+      "pantalone": 44.0625,
+      "tartaglia": 25.3125
     }
   },
   {
@@ -1126,17 +1126,17 @@
     },
     "winner": "signora",
     "raw": {
-      "signora": 76.1114560165782,
-      "scaramouche": 72.11792031858054,
-      "pierro": 68.83026431206775,
-      "pantalone": 64.30531691217024,
-      "dottore": 59.858595636081624,
-      "pulcinella": 54.17890939550968,
-      "arlecchino": 51.607619810600774,
-      "sandrone": 39.35011653718192,
+      "pierro": 61.51315789473684,
       "capitano": 39.42464569505373,
-      "columbina": 34.35392826848835,
-      "tartaglia": 32.94025481029457
+      "dottore": 59.858595636081624,
+      "columbina": 32.55376447187776,
+      "arlecchino": 51.607619810600774,
+      "pulcinella": 66.9407894736842,
+      "scaramouche": 72.11792031858054,
+      "sandrone": 39.35011653718192,
+      "signora": 76.1114560165782,
+      "pantalone": 59.44078947368421,
+      "tartaglia": 15.937500000000002
     }
   },
   {
@@ -1154,19 +1154,19 @@
       "RSK": 31.25,
       "CAL": 37.5
     },
-    "winner": "sandrone",
+    "winner": "pierro",
     "raw": {
-      "sandrone": 65.49269482489967,
-      "pierro": 62.133386588572456,
-      "scaramouche": 54.034163175683595,
-      "signora": 49.82299230833821,
-      "columbina": 50.65625807383911,
-      "arlecchino": 44.12885904683794,
+      "pierro": 68.5461956521739,
       "capitano": 51.16864853865959,
-      "tartaglia": 45.57683470035897,
-      "pulcinella": 35.2197196701054,
-      "pantalone": 28.976483592624092,
-      "dottore": 19.74314239390734
+      "dottore": 19.74314239390734,
+      "columbina": 42.41082082495202,
+      "arlecchino": 44.12885904683794,
+      "pulcinella": 18.75,
+      "scaramouche": 54.034163175683595,
+      "sandrone": 65.49269482489967,
+      "signora": 49.82299230833821,
+      "pantalone": 11.250000000000002,
+      "tartaglia": 34.6875
     }
   },
   {
@@ -1186,17 +1186,17 @@
     },
     "winner": "sandrone",
     "raw": {
-      "sandrone": 81.15232857884853,
-      "columbina": 64.90124611734787,
-      "arlecchino": 59.519417404373954,
-      "pulcinella": 56.893867578911276,
-      "pierro": 58.69095927324434,
-      "signora": 54.88408664353733,
+      "pierro": 68.40277777777777,
       "capitano": 59.11391312572889,
-      "pantalone": 47.950241163274676,
-      "scaramouche": 45.75834398164391,
       "dottore": 32.69287792670127,
-      "tartaglia": 33.231244856352255
+      "columbina": 55.083305708571146,
+      "arlecchino": 59.519417404373954,
+      "pulcinella": 51.5625,
+      "scaramouche": 45.75834398164391,
+      "sandrone": 81.15232857884853,
+      "signora": 54.88408664353733,
+      "pantalone": 44.0625,
+      "tartaglia": 15.937500000000002
     }
   },
   {
@@ -1216,17 +1216,17 @@
     },
     "winner": "pantalone",
     "raw": {
-      "pantalone": 74.65542769484779,
-      "pulcinella": 69.70882887495306,
-      "signora": 72.26011430585031,
-      "arlecchino": 66.38202589406193,
-      "pierro": 62.34859026522244,
-      "dottore": 58.69377841744341,
-      "scaramouche": 54.73094005260584,
-      "tartaglia": 53.621710779391165,
+      "pierro": 65.9375,
       "capitano": 46.594641616201756,
+      "dottore": 58.69377841744341,
+      "columbina": 37.77605740666795,
+      "arlecchino": 66.38202589406193,
+      "pulcinella": 65.9375,
+      "scaramouche": 54.73094005260584,
       "sandrone": 37.40302882686376,
-      "columbina": 35.494250722519
+      "signora": 72.26011430585031,
+      "pantalone": 73.4375,
+      "tartaglia": 48.75
     }
   },
   {
@@ -1246,17 +1246,17 @@
     },
     "winner": "tartaglia",
     "raw": {
-      "tartaglia": 73.08744630205715,
-      "arlecchino": 62.62168604978852,
-      "pulcinella": 58.413931862855506,
+      "pierro": 46.875,
       "capitano": 65.71922349692656,
-      "pantalone": 49.75703996655701,
-      "columbina": 53.040342386548915,
-      "signora": 47.326541370836935,
-      "pierro": 43.42280663793883,
-      "sandrone": 41.79476109670343,
       "dottore": 35.34696378270637,
-      "scaramouche": 30.17122418998038
+      "columbina": 63.96693534755642,
+      "arlecchino": 62.62168604978852,
+      "pulcinella": 51.5625,
+      "scaramouche": 30.17122418998038,
+      "sandrone": 41.79476109670343,
+      "signora": 47.326541370836935,
+      "pantalone": 44.0625,
+      "tartaglia": 75.16826923076923
     }
   },
   {
@@ -1276,17 +1276,17 @@
     },
     "winner": "dottore",
     "raw": {
+      "pierro": 46.875,
+      "capitano": 49.83900381374785,
       "dottore": 78.43701329037964,
-      "pulcinella": 67.93079562023584,
-      "pantalone": 69.45015405228531,
+      "columbina": 45.24972166440253,
       "arlecchino": 59.678484538742275,
-      "signora": 60.15979953856609,
-      "pierro": 57.64346420151901,
+      "pulcinella": 62.70161290322581,
       "scaramouche": 49.882900593179826,
-      "columbina": 47.81665199159164,
-      "tartaglia": 47.66741299291265,
       "sandrone": 47.595157533293495,
-      "capitano": 49.83900381374785
+      "signora": 60.15979953856609,
+      "pantalone": 70.20161290322581,
+      "tartaglia": 39.375
     }
   },
   {
@@ -1306,17 +1306,17 @@
     },
     "winner": "tartaglia",
     "raw": {
-      "tartaglia": 60.820568252256045,
-      "pantalone": 56.399488557168944,
-      "dottore": 55.12206657728796,
-      "sandrone": 56.94178618329848,
-      "columbina": 56.12203411930245,
-      "signora": 50.05143651175424,
-      "pulcinella": 45.91513944610129,
-      "arlecchino": 45.76455534842868,
-      "pierro": 41.04230573198468,
+      "pierro": 37.5,
       "capitano": 44.42882269829715,
-      "scaramouche": 28.087514988011986
+      "dottore": 55.12206657728796,
+      "columbina": 48.489341493127824,
+      "arlecchino": 45.76455534842868,
+      "pulcinella": 56.25,
+      "scaramouche": 28.087514988011986,
+      "sandrone": 56.94178618329848,
+      "signora": 50.05143651175424,
+      "pantalone": 48.75,
+      "tartaglia": 69.30555555555556
     }
   },
   {
@@ -1336,17 +1336,17 @@
     },
     "winner": "dottore",
     "raw": {
-      "dottore": 68.55635411024966,
-      "sandrone": 62.41592263802745,
-      "pantalone": 57.71587939249117,
-      "signora": 55.95170874053627,
-      "pulcinella": 51.61922150029332,
-      "pierro": 54.80753085590066,
-      "scaramouche": 50.1261210987778,
-      "arlecchino": 44.215242507624524,
-      "columbina": 47.39416828185704,
+      "pierro": 46.875,
       "capitano": 38.746579280489016,
-      "tartaglia": 31.5242506178529
+      "dottore": 68.55635411024966,
+      "columbina": 38.302125172778105,
+      "arlecchino": 44.215242507624524,
+      "pulcinella": 71.8125,
+      "scaramouche": 50.1261210987778,
+      "sandrone": 62.41592263802745,
+      "signora": 55.95170874053627,
+      "pantalone": 64.3125,
+      "tartaglia": 15.937500000000002
     }
   },
   {
@@ -1366,17 +1366,17 @@
     },
     "winner": "pierro",
     "raw": {
-      "pierro": 72.24565585718226,
-      "scaramouche": 62.22668760454855,
-      "tartaglia": 61.12726637821283,
-      "signora": 57.801812801620684,
-      "pulcinella": 47.82058309814208,
-      "arlecchino": 48.37876751690409,
-      "sandrone": 50.11703743196736,
+      "pierro": 67.29166666666667,
+      "capitano": 46.21891682623251,
       "dottore": 45.50305720067356,
-      "pantalone": 43.812014251964776,
-      "columbina": 43.027712876482326,
-      "capitano": 46.21891682623251
+      "columbina": 39.364738519122376,
+      "arlecchino": 48.37876751690409,
+      "pulcinella": 37.5,
+      "scaramouche": 62.22668760454855,
+      "sandrone": 50.11703743196736,
+      "signora": 57.801812801620684,
+      "pantalone": 30.0,
+      "tartaglia": 65.3125
     }
   },
   {
@@ -1394,19 +1394,19 @@
       "RSK": 68.75,
       "CAL": 12.5
     },
-    "winner": "tartaglia",
+    "winner": "pierro",
     "raw": {
-      "tartaglia": 70.10667707128792,
-      "sandrone": 68.21746106958042,
-      "pierro": 63.41318149546656,
-      "pulcinella": 53.81789338557187,
-      "arlecchino": 55.99393600058129,
-      "signora": 55.741531714240445,
-      "scaramouche": 53.9639413964542,
-      "columbina": 54.09870628876372,
+      "pierro": 73.125,
       "capitano": 54.224361744604245,
-      "pantalone": 41.1979567925251,
-      "dottore": 25.356741394223526
+      "dottore": 25.356741394223526,
+      "columbina": 46.48242616444022,
+      "arlecchino": 55.99393600058129,
+      "pulcinella": 46.875,
+      "scaramouche": 53.9639413964542,
+      "sandrone": 68.21746106958042,
+      "signora": 55.741531714240445,
+      "pantalone": 39.375,
+      "tartaglia": 66.5625
     }
   },
   {
@@ -1426,17 +1426,17 @@
     },
     "winner": "signora",
     "raw": {
-      "signora": 81.33724128022766,
-      "pantalone": 73.37087392637612,
-      "dottore": 63.38745767499748,
-      "sandrone": 63.46370931765329,
-      "pierro": 60.35802426973188,
-      "pulcinella": 52.839353394663476,
-      "arlecchino": 52.487982990900115,
-      "scaramouche": 52.25880085684302,
-      "columbina": 46.28132174826551,
+      "pierro": 66.77083333333333,
       "capitano": 42.31483408517791,
-      "tartaglia": 29.601199791066453
+      "dottore": 63.38745767499748,
+      "columbina": 37.3586205281119,
+      "arlecchino": 52.487982990900115,
+      "pulcinella": 78.33333333333333,
+      "scaramouche": 52.25880085684302,
+      "sandrone": 63.46370931765329,
+      "signora": 81.33724128022766,
+      "pantalone": 70.83333333333333,
+      "tartaglia": 11.250000000000002
     }
   },
   {
@@ -1456,17 +1456,17 @@
     },
     "winner": "sandrone",
     "raw": {
-      "sandrone": 81.3116407130536,
-      "arlecchino": 71.41934341859783,
-      "columbina": 74.7137216791431,
-      "pulcinella": 67.48660665273083,
-      "pantalone": 58.00119361240686,
-      "signora": 55.898313947509905,
+      "pierro": 56.25,
       "capitano": 62.088794837429,
-      "pierro": 49.984379879763125,
       "dottore": 41.84571297139628,
+      "columbina": 58.00821659963263,
+      "arlecchino": 71.41934341859783,
+      "pulcinella": 63.71527777777778,
       "scaramouche": 36.757353648054114,
-      "tartaglia": 31.91068052144476
+      "sandrone": 81.3116407130536,
+      "signora": 55.898313947509905,
+      "pantalone": 56.21527777777778,
+      "tartaglia": 15.937500000000002
     }
   },
   {
@@ -1484,19 +1484,19 @@
       "RSK": 100.0,
       "CAL": 0.0
     },
-    "winner": "pulcinella",
+    "winner": "pantalone",
     "raw": {
-      "pulcinella": 69.65376542795033,
-      "arlecchino": 64.67276598765645,
-      "sandrone": 67.64688335402485,
-      "pierro": 66.43068833210123,
-      "tartaglia": 66.10914022740052,
-      "columbina": 56.989749718527136,
-      "scaramouche": 53.18006745068771,
-      "pantalone": 51.71502999620619,
+      "pierro": 67.41071428571429,
       "capitano": 59.088720367254574,
+      "dottore": 33.47887819901023,
+      "columbina": 51.87572005648974,
+      "arlecchino": 64.67276598765645,
+      "pulcinella": 67.1875,
+      "scaramouche": 53.18006745068771,
+      "sandrone": 67.64688335402485,
       "signora": 51.52585719701901,
-      "dottore": 33.47887819901023
+      "pantalone": 74.6875,
+      "tartaglia": 70.89285714285714
     }
   },
   {
@@ -1514,19 +1514,19 @@
       "RSK": 18.75,
       "CAL": 93.75
     },
-    "winner": "pierro",
+    "winner": "signora",
     "raw": {
-      "pierro": 74.04912527297108,
-      "signora": 69.4266988325965,
-      "scaramouche": 67.84803318841803,
+      "pierro": 72.58522727272727,
+      "capitano": 40.99182871196655,
       "dottore": 67.09913325433095,
-      "sandrone": 69.92675554013793,
-      "pantalone": 58.05482208886323,
-      "pulcinella": 54.776995519911594,
+      "columbina": 35.69138351307013,
       "arlecchino": 48.24594267242827,
-      "columbina": 47.464562758821245,
-      "tartaglia": 39.461548472695135,
-      "capitano": 40.99182871196655
+      "pulcinella": 67.14015151515152,
+      "scaramouche": 67.84803318841803,
+      "sandrone": 69.92675554013793,
+      "signora": 69.42669883259651,
+      "pantalone": 59.640151515151516,
+      "tartaglia": 25.3125
     }
   },
   {
@@ -1544,19 +1544,19 @@
       "RSK": 31.25,
       "CAL": 37.5
     },
-    "winner": "columbina",
+    "winner": "sandrone",
     "raw": {
-      "columbina": 77.11892700489976,
-      "sandrone": 64.89790767551467,
-      "arlecchino": 57.22866598985884,
+      "pierro": 37.5,
       "capitano": 64.88831894539786,
-      "pulcinella": 51.788590494112604,
-      "pantalone": 45.02198070877596,
-      "tartaglia": 45.57683470035897,
-      "signora": 41.85878934393012,
       "dottore": 33.21546619112521,
-      "pierro": 34.08695864244507,
-      "scaramouche": 20.84770823755471
+      "columbina": 65.34784674282469,
+      "arlecchino": 57.22866598985884,
+      "pulcinella": 42.1875,
+      "scaramouche": 20.84770823755471,
+      "sandrone": 64.89790767551467,
+      "signora": 41.85878934393012,
+      "pantalone": 34.6875,
+      "tartaglia": 34.6875
     }
   },
   {
@@ -1576,17 +1576,17 @@
     },
     "winner": "tartaglia",
     "raw": {
-      "tartaglia": 66.20667238280805,
-      "sandrone": 65.57089997231286,
-      "pierro": 61.501882508471375,
-      "signora": 57.418974588049664,
-      "scaramouche": 56.00859323225823,
-      "pantalone": 52.540034702058215,
-      "pulcinella": 49.988649188272525,
+      "pierro": 56.25,
+      "capitano": 44.313256030700714,
       "dottore": 51.0663408403361,
+      "columbina": 43.62676720184682,
       "arlecchino": 47.34588376583309,
-      "columbina": 50.628019491560934,
-      "capitano": 44.313256030700714
+      "pulcinella": 51.5625,
+      "scaramouche": 56.00859323225823,
+      "sandrone": 65.57089997231286,
+      "signora": 57.418974588049664,
+      "pantalone": 44.0625,
+      "tartaglia": 71.67824074074073
     }
   },
   {
@@ -1606,17 +1606,17 @@
     },
     "winner": "pierro",
     "raw": {
-      "pierro": 79.46792180931678,
-      "scaramouche": 69.14638400481313,
-      "tartaglia": 65.65844750986427,
-      "arlecchino": 60.90628464527539,
-      "sandrone": 62.47495371532462,
-      "pulcinella": 54.23696757154678,
-      "signora": 57.69266348840482,
-      "columbina": 55.629379094603486,
+      "pierro": 74.47916666666667,
       "capitano": 58.77738869391834,
-      "pantalone": 46.83596458912537,
-      "dottore": 33.21546619112521
+      "dottore": 33.21546619112521,
+      "columbina": 52.633594732757466,
+      "arlecchino": 60.90628464527539,
+      "pulcinella": 46.875,
+      "scaramouche": 69.14638400481313,
+      "sandrone": 62.47495371532462,
+      "signora": 57.69266348840482,
+      "pantalone": 39.375,
+      "tartaglia": 73.05555555555556
     }
   },
   {
@@ -1634,19 +1634,19 @@
       "RSK": 25.0,
       "CAL": 18.75
     },
-    "winner": "pierro",
+    "winner": "scaramouche",
     "raw": {
-      "pierro": 65.59895996453983,
-      "scaramouche": 61.756299546255434,
-      "signora": 52.37351456024653,
-      "arlecchino": 44.08117894662129,
-      "pulcinella": 39.134963178731475,
-      "sandrone": 43.07160683056579,
-      "pantalone": 37.82366238956559,
-      "tartaglia": 40.55176515216938,
-      "columbina": 39.62282325614124,
+      "pierro": 62.31060606060606,
       "capitano": 43.30066977049451,
-      "dottore": 23.85252251454623
+      "dottore": 23.85252251454623,
+      "columbina": 38.62902050073097,
+      "arlecchino": 44.08117894662129,
+      "pulcinella": 37.5,
+      "scaramouche": 61.756299546255434,
+      "sandrone": 43.07160683056579,
+      "signora": 52.37351456024653,
+      "pantalone": 30.0,
+      "tartaglia": 30.0
     }
   },
   {
@@ -1664,19 +1664,19 @@
       "RSK": 81.25,
       "CAL": 6.25
     },
-    "winner": "tartaglia",
+    "winner": "pulcinella",
     "raw": {
-      "tartaglia": 63.355745499578035,
-      "pulcinella": 52.93412890727421,
+      "pierro": 51.5625,
+      "capitano": 52.244687395467196,
+      "dottore": 32.7488682844913,
+      "columbina": 60.44608622225623,
       "arlecchino": 53.350642839437,
-      "pantalone": 51.31935009564988,
-      "pierro": 52.92391530128134,
-      "signora": 47.48278263356244,
-      "columbina": 49.348337042211085,
-      "capitano": 52.24468739546721,
+      "pulcinella": 73.88392857142857,
       "scaramouche": 39.84062513887654,
       "sandrone": 39.99093309405405,
-      "dottore": 32.7488682844913
+      "signora": 47.48278263356244,
+      "pantalone": 66.38392857142857,
+      "tartaglia": 78.13988095238095
     }
   },
   {
@@ -1694,19 +1694,19 @@
       "RSK": 62.5,
       "CAL": 25.0
     },
-    "winner": "sandrone",
+    "winner": "pierro",
     "raw": {
-      "sandrone": 70.94910382056186,
-      "arlecchino": 65.19574798005755,
-      "signora": 63.13424480262436,
-      "pierro": 64.53554853308518,
-      "pulcinella": 57.164210835748264,
-      "scaramouche": 55.330010467292354,
-      "pantalone": 53.889689788032506,
-      "columbina": 53.9799503298361,
-      "tartaglia": 50.17013409418116,
+      "pierro": 71.18055555555556,
       "capitano": 51.08761747023985,
-      "dottore": 37.08467751492606
+      "dottore": 37.08467751492606,
+      "columbina": 44.660199832286835,
+      "arlecchino": 65.19574798005755,
+      "pulcinella": 61.863425925925924,
+      "scaramouche": 55.330010467292354,
+      "sandrone": 70.94910382056186,
+      "signora": 63.13424480262436,
+      "pantalone": 54.363425925925924,
+      "tartaglia": 59.976851851851855
     }
   },
   {
@@ -1724,19 +1724,19 @@
       "RSK": 25.0,
       "CAL": 6.25
     },
-    "winner": "pulcinella",
+    "winner": "pantalone",
     "raw": {
-      "pulcinella": 76.19007082519374,
-      "arlecchino": 68.851186988164,
-      "columbina": 68.3183297125791,
+      "pierro": 28.125,
       "capitano": 68.39300796504189,
-      "pantalone": 54.5048138225594,
-      "pierro": 46.187149250680974,
-      "sandrone": 46.522243338198855,
+      "dottore": 35.777887494391074,
+      "columbina": 66.69372883749874,
+      "arlecchino": 68.851186988164,
+      "pulcinella": 75.74728260869566,
       "scaramouche": 39.2861144574055,
+      "sandrone": 46.522243338198855,
       "signora": 39.73533159888473,
-      "tartaglia": 41.45898033750316,
-      "dottore": 35.777887494391074
+      "pantalone": 77.62228260869566,
+      "tartaglia": 30.0
     }
   },
   {
@@ -1756,17 +1756,17 @@
     },
     "winner": "signora",
     "raw": {
-      "signora": 75.1579124222058,
-      "pantalone": 64.92211762656368,
-      "tartaglia": 59.848346030033824,
+      "pierro": 61.25,
+      "capitano": 37.98770107727128,
       "dottore": 56.875,
-      "pierro": 54.984379879763125,
-      "pulcinella": 48.79378066795018,
-      "sandrone": 55.11648230002439,
+      "columbina": 33.2082700925539,
       "arlecchino": 48.647996610637556,
+      "pulcinella": 66.875,
       "scaramouche": 47.741280248590144,
-      "columbina": 40.95930822447944,
-      "capitano": 37.98770107727128
+      "sandrone": 55.11648230002439,
+      "signora": 75.1579124222058,
+      "pantalone": 59.375,
+      "tartaglia": 68.75
     }
   },
   {
@@ -1786,17 +1786,17 @@
     },
     "winner": "pantalone",
     "raw": {
-      "pantalone": 69.44316215691171,
-      "pulcinella": 63.27553438649075,
-      "arlecchino": 61.86789894969492,
-      "dottore": 53.32376080823359,
+      "pierro": 28.125,
       "capitano": 58.30266823613865,
-      "tartaglia": 49.945768449300694,
-      "signora": 45.66536460687999,
-      "columbina": 45.671579483374835,
-      "pierro": 33.76598321015766,
+      "dottore": 53.32376080823359,
+      "columbina": 64.90281598662281,
+      "arlecchino": 61.86789894969492,
+      "pulcinella": 62.916666666666664,
+      "scaramouche": 20.928920478457243,
       "sandrone": 26.448722339159808,
-      "scaramouche": 20.928920478457243
+      "signora": 45.66536460687999,
+      "pantalone": 70.41666666666667,
+      "tartaglia": 39.375
     }
   },
   {
@@ -1814,19 +1814,19 @@
       "RSK": 75.0,
       "CAL": 0.0
     },
-    "winner": "pulcinella",
+    "winner": "pierro",
     "raw": {
-      "pulcinella": 73.09903821649809,
-      "sandrone": 75.9466991411009,
-      "arlecchino": 64.16306455689804,
-      "tartaglia": 66.26645877436857,
-      "pierro": 60.22635960121552,
-      "columbina": 55.541295248496084,
-      "signora": 51.98664212944379,
-      "scaramouche": 48.530573529378884,
+      "pierro": 78.125,
       "capitano": 55.521073349968596,
-      "pantalone": 46.929134629671864,
-      "dottore": 28.301656313810376
+      "dottore": 28.301656313810376,
+      "columbina": 47.08822745516216,
+      "arlecchino": 64.16306455689804,
+      "pulcinella": 72.65625,
+      "scaramouche": 48.530573529378884,
+      "sandrone": 75.9466991411009,
+      "signora": 51.98664212944379,
+      "pantalone": 65.15625,
+      "tartaglia": 70.625
     }
   },
   {
@@ -1846,17 +1846,17 @@
     },
     "winner": "scaramouche",
     "raw": {
-      "scaramouche": 75.63900858080274,
-      "signora": 73.97397137591337,
-      "pierro": 65.99331107243601,
-      "dottore": 61.05506430484577,
-      "pantalone": 58.89915872150588,
-      "pulcinella": 52.93428710074565,
-      "sandrone": 57.11357624719711,
-      "arlecchino": 49.48320271065235,
-      "columbina": 43.22308533485378,
+      "pierro": 74.10037878787878,
       "capitano": 42.18992377308109,
-      "tartaglia": 36.41966361560525
+      "dottore": 61.05506430484577,
+      "columbina": 36.63825757575757,
+      "arlecchino": 49.48320271065235,
+      "pulcinella": 61.69507575757576,
+      "scaramouche": 75.63900858080274,
+      "sandrone": 57.11357624719711,
+      "signora": 73.97397137591337,
+      "pantalone": 54.19507575757576,
+      "tartaglia": 20.625
     }
   },
   {
@@ -1876,17 +1876,17 @@
     },
     "winner": "scaramouche",
     "raw": {
-      "scaramouche": 80.4420731707317,
-      "pierro": 68.66686712833074,
-      "sandrone": 68.10357536527731,
-      "tartaglia": 63.84433186503117,
-      "signora": 59.77861456931428,
-      "pulcinella": 47.82058309814208,
-      "arlecchino": 45.47491777748124,
+      "pierro": 69.28353658536585,
+      "capitano": 39.30872451235447,
       "dottore": 44.7395173191089,
-      "pantalone": 41.3893479626076,
-      "columbina": 41.434534656343466,
-      "capitano": 39.30872451235447
+      "columbina": 29.906251747626236,
+      "arlecchino": 45.47491777748124,
+      "pulcinella": 37.5,
+      "scaramouche": 80.4420731707317,
+      "sandrone": 68.10357536527731,
+      "signora": 59.77861456931428,
+      "pantalone": 30.0,
+      "tartaglia": 68.6280487804878
     }
   },
   {
@@ -1906,17 +1906,17 @@
     },
     "winner": "sandrone",
     "raw": {
-      "sandrone": 78.31429248094314,
-      "pierro": 75.680043021438,
-      "scaramouche": 65.35850521693433,
-      "tartaglia": 61.437795484764656,
-      "signora": 56.20816879389381,
-      "arlecchino": 49.26254497235658,
-      "columbina": 52.41019877934209,
-      "pulcinella": 43.75859493196569,
-      "pantalone": 41.38961625584357,
+      "pierro": 72.58522727272727,
       "capitano": 49.05147460678469,
-      "dottore": 37.84196318870273
+      "dottore": 37.84196318870273,
+      "columbina": 42.98295454545455,
+      "arlecchino": 49.26254497235658,
+      "pulcinella": 32.8125,
+      "scaramouche": 65.35850521693433,
+      "sandrone": 78.31429248094314,
+      "signora": 56.20816879389381,
+      "pantalone": 25.3125,
+      "tartaglia": 75.97537878787878
     }
   },
   {
@@ -1934,19 +1934,19 @@
       "RSK": 62.5,
       "CAL": 75.0
     },
-    "winner": "sandrone",
+    "winner": "pierro",
     "raw": {
+      "pierro": 76.26488095238095,
+      "capitano": 48.52129104540222,
+      "dottore": 41.14760102449419,
+      "columbina": 42.05757714475427,
+      "arlecchino": 46.020634616156684,
+      "pulcinella": 32.8125,
+      "scaramouche": 52.07190257597589,
       "sandrone": 68.98441759821507,
       "signora": 63.04564686013305,
-      "pierro": 62.749423603367575,
-      "tartaglia": 60.706736359307385,
-      "scaramouche": 52.07190257597589,
-      "columbina": 51.058410102939725,
-      "arlecchino": 46.020634616156684,
-      "pantalone": 43.06144389116092,
-      "pulcinella": 40.59629985857304,
-      "dottore": 41.14760102449419,
-      "capitano": 48.52129104540222
+      "pantalone": 25.3125,
+      "tartaglia": 60.50595238095238
     }
   },
   {
@@ -1966,17 +1966,17 @@
     },
     "winner": "columbina",
     "raw": {
-      "columbina": 68.78559367156642,
-      "tartaglia": 60.77897139018464,
-      "sandrone": 55.5528972944096,
-      "pulcinella": 48.17240056388565,
+      "pierro": 37.5,
       "capitano": 59.139829204151525,
+      "dottore": 18.001079368772253,
+      "columbina": 64.06696519716506,
       "arlecchino": 49.23510410304497,
-      "pierro": 51.228148543078476,
+      "pulcinella": 42.1875,
       "scaramouche": 41.29950941838331,
-      "pantalone": 34.216056123457115,
+      "sandrone": 55.5528972944096,
       "signora": 33.182175226944196,
-      "dottore": 18.001079368772253
+      "pantalone": 34.6875,
+      "tartaglia": 54.826388888888886
     }
   },
   {
@@ -1996,17 +1996,17 @@
     },
     "winner": "dottore",
     "raw": {
-      "dottore": 55.86049109673746,
-      "pulcinella": 52.6516548533934,
-      "pantalone": 50.45410513703352,
-      "arlecchino": 46.96156490731632,
-      "columbina": 43.121404461796075,
-      "signora": 39.985825358862726,
-      "pierro": 37.998247701813696,
+      "pierro": 18.75,
       "capitano": 42.74190864957775,
+      "dottore": 55.86049109673746,
+      "columbina": 39.9442348502169,
+      "arlecchino": 46.96156490731632,
+      "pulcinella": 51.5625,
       "scaramouche": 30.101568219253632,
       "sandrone": 31.509699357212988,
-      "tartaglia": 30.538983592624092
+      "signora": 39.985825358862726,
+      "pantalone": 44.0625,
+      "tartaglia": 11.250000000000002
     }
   },
   {
@@ -2026,17 +2026,17 @@
     },
     "winner": "pantalone",
     "raw": {
-      "pantalone": 86.01768234679608,
-      "pulcinella": 75.85938131977228,
-      "arlecchino": 70.40079497461943,
-      "dottore": 69.55232213836564,
-      "signora": 67.73082418258161,
-      "pierro": 56.6168704208179,
-      "tartaglia": 53.11384213138359,
-      "columbina": 51.24851715094634,
+      "pierro": 51.5625,
       "capitano": 55.551804936515296,
+      "dottore": 69.55232213836564,
+      "columbina": 53.80261927546817,
+      "arlecchino": 70.40079497461943,
+      "pulcinella": 76.33928571428571,
       "scaramouche": 44.240569281519534,
-      "sandrone": 46.18807619882005
+      "sandrone": 46.18807619882005,
+      "signora": 67.73082418258161,
+      "pantalone": 83.83928571428571,
+      "tartaglia": 44.0625
     }
   },
   {
@@ -2054,19 +2054,19 @@
       "RSK": 37.5,
       "CAL": 6.25
     },
-    "winner": "pulcinella",
+    "winner": "pantalone",
     "raw": {
-      "pulcinella": 68.17679828587615,
+      "pierro": 62.70161290322581,
+      "capitano": 48.64357749267433,
+      "dottore": 36.72097376040782,
+      "columbina": 38.403107376030086,
       "arlecchino": 64.18192305366568,
+      "pulcinella": 62.70161290322581,
+      "scaramouche": 39.35274767950511,
       "sandrone": 66.58051379161832,
       "signora": 58.609788508141946,
-      "pantalone": 54.40185406650048,
-      "columbina": 49.81607010372659,
-      "tartaglia": 48.77512362993869,
-      "pierro": 47.59111670005418,
-      "capitano": 48.64357749267433,
-      "scaramouche": 39.35274767950511,
-      "dottore": 36.72097376040782
+      "pantalone": 70.20161290322581,
+      "tartaglia": 39.375
     }
   },
   {
@@ -2086,17 +2086,17 @@
     },
     "winner": "scaramouche",
     "raw": {
-      "scaramouche": 87.5,
-      "pierro": 80.72042542650517,
-      "pulcinella": 70.60251028530023,
-      "arlecchino": 67.13553779135276,
-      "signora": 67.80181280162068,
-      "pantalone": 52.830576129454386,
+      "pierro": 69.58333333333333,
       "capitano": 55.39162345057223,
-      "sandrone": 44.44070866813474,
-      "columbina": 43.581412983475715,
       "dottore": 34.721945772284556,
-      "tartaglia": 29.746806051948116
+      "columbina": 45.720890168220166,
+      "arlecchino": 67.13553779135276,
+      "pulcinella": 68.95833333333333,
+      "scaramouche": 87.5,
+      "sandrone": 44.44070866813474,
+      "signora": 67.80181280162068,
+      "pantalone": 61.458333333333336,
+      "tartaglia": 11.250000000000002
     }
   },
   {
@@ -2116,17 +2116,17 @@
     },
     "winner": "dottore",
     "raw": {
+      "pierro": 75.1201923076923,
+      "capitano": 43.46410377601019,
       "dottore": 85.10983460300338,
-      "signora": 77.64348204937973,
-      "sandrone": 73.38002199381947,
-      "pulcinella": 66.31181529008312,
-      "pantalone": 66.90698502829176,
-      "pierro": 68.06085097693449,
-      "scaramouche": 57.44482897917375,
+      "columbina": 35.6969108023756,
       "arlecchino": 55.81463489473752,
-      "columbina": 49.930764526757436,
-      "tartaglia": 40.324205070135555,
-      "capitano": 43.46410377601019
+      "pulcinella": 71.39423076923077,
+      "scaramouche": 57.44482897917375,
+      "sandrone": 73.38002199381947,
+      "signora": 77.64348204937973,
+      "pantalone": 78.89423076923077,
+      "tartaglia": 25.3125
     }
   },
   {
@@ -2144,19 +2144,19 @@
       "RSK": 50.0,
       "CAL": 25.0
     },
-    "winner": "sandrone",
+    "winner": "pantalone",
     "raw": {
-      "sandrone": 79.03880200880022,
-      "pulcinella": 71.66683473592136,
-      "arlecchino": 68.56523135441735,
-      "pierro": 71.73612049147715,
-      "scaramouche": 67.88964708832304,
-      "pantalone": 65.55668941237879,
-      "signora": 62.4272777649461,
-      "columbina": 62.78771954729956,
-      "tartaglia": 56.426613041100985,
+      "pierro": 67.79891304347827,
       "capitano": 58.51004839142937,
-      "dottore": 47.02479633110834
+      "dottore": 47.02479633110834,
+      "columbina": 54.479440974271625,
+      "arlecchino": 68.56523135441735,
+      "pulcinella": 72.14673913043478,
+      "scaramouche": 67.88964708832304,
+      "sandrone": 79.03880200880022,
+      "signora": 62.4272777649461,
+      "pantalone": 79.64673913043478,
+      "tartaglia": 48.75
     }
   },
   {
@@ -2174,19 +2174,19 @@
       "RSK": 37.5,
       "CAL": 18.75
     },
-    "winner": "capitano",
+    "winner": "columbina",
     "raw": {
+      "pierro": 42.1875,
       "capitano": 66.28915008452103,
-      "columbina": 51.74445630607618,
+      "dottore": 19.16953326699659,
+      "columbina": 68.9970710274067,
       "arlecchino": 47.62457192115528,
-      "tartaglia": 49.800599895533225,
-      "pulcinella": 41.06172307519134,
-      "signora": 35.469058795672474,
-      "sandrone": 37.33046136962918,
-      "pantalone": 32.0127880570861,
-      "pierro": 33.447487102161915,
+      "pulcinella": 28.125,
       "scaramouche": 20.20234308727243,
-      "dottore": 19.16953326699659
+      "sandrone": 37.33046136962918,
+      "signora": 35.469058795672474,
+      "pantalone": 20.625,
+      "tartaglia": 39.375
     }
   },
   {
@@ -2204,19 +2204,19 @@
       "RSK": 37.5,
       "CAL": 62.5
     },
-    "winner": "pantalone",
+    "winner": "signora",
     "raw": {
-      "pantalone": 79.26398881761854,
-      "pulcinella": 72.00549850648372,
-      "signora": 74.5154529763461,
-      "dottore": 72.63950846442319,
-      "arlecchino": 68.88396480545552,
-      "sandrone": 61.00581533708573,
-      "pierro": 58.54476044283498,
-      "columbina": 52.65859814910786,
+      "pierro": 68.25657894736842,
       "capitano": 54.05783877819106,
+      "dottore": 72.63950846442319,
+      "columbina": 48.38815789473684,
+      "arlecchino": 68.88396480545552,
+      "pulcinella": 66.77631578947368,
       "scaramouche": 45.61214515123455,
-      "tartaglia": 47.66741299291265
+      "sandrone": 61.00581533708573,
+      "signora": 74.5154529763461,
+      "pantalone": 74.27631578947368,
+      "tartaglia": 39.375
     }
   },
   {
@@ -2234,19 +2234,19 @@
       "RSK": 93.75,
       "CAL": 18.75
     },
-    "winner": "tartaglia",
+    "winner": "pulcinella",
     "raw": {
-      "tartaglia": 73.72519513670825,
-      "pulcinella": 66.71897967755062,
-      "arlecchino": 63.28393018368573,
-      "columbina": 62.88483001563742,
-      "pantalone": 57.38303697080261,
+      "pierro": 37.5,
       "capitano": 64.05357506991439,
-      "pierro": 47.28364435013755,
+      "dottore": 38.71127765793827,
+      "columbina": 72.26674129929127,
+      "arlecchino": 63.28393018368573,
+      "pulcinella": 77.32558139534883,
       "scaramouche": 44.273733545485406,
-      "signora": 44.4506408060489,
       "sandrone": 45.9223829638672,
-      "dottore": 38.71127765793827
+      "signora": 44.4506408060489,
+      "pantalone": 69.82558139534883,
+      "tartaglia": 72.50726744186046
     }
   },
   {
@@ -2266,17 +2266,17 @@
     },
     "winner": "scaramouche",
     "raw": {
+      "pierro": 79.54545454545455,
+      "capitano": 49.77952288683857,
+      "dottore": 37.295115225363766,
+      "columbina": 45.748147774530594,
+      "arlecchino": 47.87824796834904,
+      "pulcinella": 37.5,
       "scaramouche": 78.2989564257839,
       "sandrone": 78.97336769721352,
-      "pierro": 74.43120943111337,
       "signora": 60.36451105833353,
-      "columbina": 56.98531208365061,
-      "arlecchino": 47.87824796834904,
-      "pulcinella": 43.87114656337871,
-      "pantalone": 44.30965389242372,
-      "tartaglia": 46.90079452080427,
-      "capitano": 49.77952288683857,
-      "dottore": 37.295115225363766
+      "pantalone": 30.0,
+      "tartaglia": 34.6875
     }
   },
   {
@@ -2296,17 +2296,17 @@
     },
     "winner": "capitano",
     "raw": {
+      "pierro": 32.8125,
       "capitano": 58.404952694300825,
-      "columbina": 51.01957830935994,
-      "arlecchino": 46.53902567167242,
-      "tartaglia": 44.58538462967187,
-      "pulcinella": 38.44351010935267,
-      "signora": 36.47913407006026,
-      "pantalone": 34.70183309164637,
-      "sandrone": 36.38000639241379,
-      "pierro": 34.19451151346182,
       "dottore": 28.58461527608612,
-      "scaramouche": 21.091711995046627
+      "columbina": 57.23469648965362,
+      "arlecchino": 46.53902567167242,
+      "pulcinella": 23.4375,
+      "scaramouche": 21.091711995046627,
+      "sandrone": 36.38000639241379,
+      "signora": 36.47913407006026,
+      "pantalone": 15.937500000000002,
+      "tartaglia": 34.6875
     }
   },
   {
@@ -2326,17 +2326,17 @@
     },
     "winner": "dottore",
     "raw": {
-      "dottore": 76.7215424190314,
-      "signora": 74.09800900791136,
-      "pantalone": 67.56346227557877,
-      "pulcinella": 58.76409384536594,
-      "arlecchino": 51.78166439966202,
-      "tartaglia": 45.62177027584929,
-      "pierro": 42.82868800516937,
-      "sandrone": 38.848863404349835,
-      "scaramouche": 34.372960623491494,
+      "pierro": 61.01190476190476,
       "capitano": 37.23191341570237,
-      "columbina": 32.23476923376162
+      "dottore": 76.7215424190314,
+      "columbina": 29.30470723840912,
+      "arlecchino": 51.78166439966202,
+      "pulcinella": 69.19642857142857,
+      "scaramouche": 34.372960623491494,
+      "sandrone": 38.848863404349835,
+      "signora": 74.09800900791136,
+      "pantalone": 76.69642857142857,
+      "tartaglia": 34.6875
     }
   },
   {
@@ -2356,17 +2356,17 @@
     },
     "winner": "scaramouche",
     "raw": {
-      "scaramouche": 82.76608460300338,
-      "pantalone": 75.59168696318805,
-      "signora": 75.41545550823034,
-      "pulcinella": 67.7938097583159,
-      "pierro": 69.62371106958042,
-      "arlecchino": 62.551419864838095,
-      "tartaglia": 64.33899549024504,
+      "pierro": 66.40625,
+      "capitano": 45.35314849938492,
       "dottore": 57.191434708936626,
+      "columbina": 38.24480740666795,
+      "arlecchino": 62.551419864838095,
+      "pulcinella": 74.21875,
+      "scaramouche": 82.76608460300338,
       "sandrone": 49.881241060483525,
-      "columbina": 41.886704710124555,
-      "capitano": 45.35314849938492
+      "signora": 75.41545550823034,
+      "pantalone": 76.09375,
+      "tartaglia": 59.6875
     }
   },
   {
@@ -2384,19 +2384,19 @@
       "RSK": 0.0,
       "CAL": 6.25
     },
-    "winner": "pulcinella",
+    "winner": "pantalone",
     "raw": {
-      "pulcinella": 70.38692678198683,
-      "arlecchino": 64.67569203316975,
-      "pierro": 62.899392201072985,
-      "pantalone": 57.00717195807262,
-      "scaramouche": 56.97068846515852,
-      "columbina": 58.17716395788154,
+      "pierro": 51.5625,
       "capitano": 60.94792052755181,
-      "signora": 50.90047466120789,
-      "sandrone": 52.14152748705636,
       "dottore": 38.459808119027514,
-      "tartaglia": 29.8440203295289
+      "columbina": 60.44608622225623,
+      "arlecchino": 64.67569203316975,
+      "pulcinella": 73.51973684210526,
+      "scaramouche": 56.97068846515852,
+      "sandrone": 52.14152748705636,
+      "signora": 50.90047466120789,
+      "pantalone": 81.01973684210526,
+      "tartaglia": 11.250000000000002
     }
   },
   {
@@ -2416,17 +2416,17 @@
     },
     "winner": "sandrone",
     "raw": {
-      "sandrone": 69.79122701337985,
-      "columbina": 58.09734135037486,
-      "pierro": 52.72574180528114,
-      "arlecchino": 45.10040075209778,
-      "signora": 45.762870184032,
+      "pierro": 56.25,
       "capitano": 51.632487901769764,
-      "scaramouche": 39.46763689078646,
-      "pulcinella": 35.2197196701054,
-      "pantalone": 35.320256956606435,
       "dottore": 30.52446109498545,
-      "tartaglia": 23.99448559224209
+      "columbina": 49.68409170479823,
+      "arlecchino": 45.10040075209778,
+      "pulcinella": 23.4375,
+      "scaramouche": 39.46763689078646,
+      "sandrone": 69.79122701337985,
+      "signora": 45.762870184032,
+      "pantalone": 15.937500000000002,
+      "tartaglia": 11.250000000000002
     }
   },
   {
@@ -2446,17 +2446,17 @@
     },
     "winner": "tartaglia",
     "raw": {
-      "tartaglia": 75.90542769484779,
-      "sandrone": 71.1697009765575,
-      "scaramouche": 63.652466902248364,
-      "pierro": 63.939899793843765,
-      "columbina": 60.31701953006436,
-      "pulcinella": 49.48862845464792,
-      "arlecchino": 50.119425875796196,
+      "pierro": 61.830357142857146,
       "capitano": 57.386629305990986,
+      "dottore": 18.001079368772253,
+      "columbina": 53.9365350891752,
+      "arlecchino": 50.119425875796196,
+      "pulcinella": 42.1875,
+      "scaramouche": 63.652466902248364,
+      "sandrone": 71.1697009765575,
       "signora": 40.83988383815729,
-      "pantalone": 34.216056123457115,
-      "dottore": 18.001079368772253
+      "pantalone": 34.6875,
+      "tartaglia": 74.6875
     }
   },
   {
@@ -2476,17 +2476,17 @@
     },
     "winner": "pantalone",
     "raw": {
-      "pantalone": 75.55304704038822,
-      "signora": 73.51649855420573,
-      "pierro": 75.00153492805487,
+      "pierro": 72.45535714285714,
+      "capitano": 46.93825408681356,
       "dottore": 64.69547401501765,
-      "pulcinella": 59.8984076100596,
-      "scaramouche": 62.1584835089177,
-      "tartaglia": 64.02431997687081,
+      "columbina": 44.27250707781598,
       "arlecchino": 56.30910378605667,
+      "pulcinella": 73.88392857142857,
+      "scaramouche": 62.1584835089177,
       "sandrone": 57.156289387862294,
-      "columbina": 48.13996099672886,
-      "capitano": 46.93825408681356
+      "signora": 73.51649855420573,
+      "pantalone": 75.75892857142857,
+      "tartaglia": 64.95535714285714
     }
   },
   {
@@ -2504,19 +2504,19 @@
       "RSK": 31.25,
       "CAL": 93.75
     },
-    "winner": "pulcinella",
+    "winner": "dottore",
     "raw": {
-      "pulcinella": 69.90075589933532,
-      "dottore": 72.12305669930703,
-      "pantalone": 63.07874553383931,
-      "arlecchino": 58.03272365316842,
-      "signora": 55.40205814964358,
-      "columbina": 51.61751038445841,
-      "sandrone": 47.11823932881927,
-      "tartaglia": 46.21859731310859,
+      "pierro": 32.8125,
       "capitano": 49.57796847638061,
-      "pierro": 31.864810986272467,
-      "scaramouche": 18.679731390466532
+      "dottore": 72.12305669930703,
+      "columbina": 45.093064981367476,
+      "arlecchino": 58.03272365316842,
+      "pulcinella": 68.25657894736842,
+      "scaramouche": 18.679731390466532,
+      "sandrone": 47.11823932881927,
+      "signora": 55.402058149643565,
+      "pantalone": 60.75657894736842,
+      "tartaglia": 34.6875
     }
   },
   {
@@ -2534,19 +2534,19 @@
       "RSK": 87.5,
       "CAL": 0.0
     },
-    "winner": "tartaglia",
+    "winner": "pantalone",
     "raw": {
-      "tartaglia": 77.392507550735,
-      "pulcinella": 66.71119148193361,
-      "sandrone": 67.1987033125008,
-      "arlecchino": 60.196218421623165,
-      "signora": 55.70452167822571,
-      "pantalone": 51.71502999620619,
-      "columbina": 52.20091019899059,
-      "pierro": 48.13158265103246,
+      "pierro": 74.77678571428571,
       "capitano": 52.03006039717498,
+      "dottore": 33.47887819901023,
+      "columbina": 45.29372889814647,
+      "arlecchino": 60.196218421623165,
+      "pulcinella": 67.1875,
       "scaramouche": 37.44378290613264,
-      "dottore": 33.47887819901023
+      "sandrone": 67.1987033125008,
+      "signora": 55.70452167822571,
+      "pantalone": 74.6875,
+      "tartaglia": 78.48214285714286
     }
   },
   {
@@ -2564,19 +2564,19 @@
       "RSK": 100.0,
       "CAL": 6.25
     },
-    "winner": "tartaglia",
+    "winner": "sandrone",
     "raw": {
-      "tartaglia": 75.77059660384988,
-      "sandrone": 73.00149612040978,
-      "pierro": 64.30627205503237,
-      "columbina": 60.389425087118674,
-      "scaramouche": 51.08913301398958,
+      "pierro": 68.00595238095238,
       "capitano": 57.09742539316672,
+      "dottore": 16.68629422468505,
+      "columbina": 53.69167969002749,
       "arlecchino": 47.12797619047619,
-      "pulcinella": 43.271007691577246,
+      "pulcinella": 32.8125,
+      "scaramouche": 51.08913301398958,
+      "sandrone": 73.00149612040978,
       "signora": 42.24449962174517,
-      "pantalone": 31.378537034505595,
-      "dottore": 16.68629422468505
+      "pantalone": 25.3125,
+      "tartaglia": 73.27380952380952
     }
   },
   {
@@ -2594,19 +2594,19 @@
       "RSK": 31.25,
       "CAL": 31.25
     },
-    "winner": "pulcinella",
+    "winner": "pantalone",
     "raw": {
-      "pulcinella": 68.79452481526694,
-      "arlecchino": 70.3204190747977,
-      "pantalone": 68.43622528764205,
-      "columbina": 70.10961033195164,
+      "pierro": 42.1875,
       "capitano": 66.98999648876482,
+      "dottore": 51.72831865013788,
+      "columbina": 66.5625,
+      "arlecchino": 70.3204190747977,
+      "pulcinella": 64.58333333333333,
+      "scaramouche": 43.719658990944126,
       "sandrone": 57.996514828799896,
       "signora": 52.93557951006541,
-      "dottore": 51.72831865013788,
-      "pierro": 53.843542227882324,
-      "scaramouche": 43.719658990944126,
-      "tartaglia": 43.277016908083816
+      "pantalone": 72.08333333333333,
+      "tartaglia": 34.6875
     }
   },
   {
@@ -2626,17 +2626,17 @@
     },
     "winner": "pantalone",
     "raw": {
-      "pantalone": 76.58081923904669,
-      "tartaglia": 63.24869995567479,
-      "pulcinella": 55.35716462450189,
-      "dottore": 58.29085945403961,
-      "arlecchino": 54.422438436253444,
-      "columbina": 55.32738658057857,
-      "signora": 51.71364944768915,
+      "pierro": 37.5,
       "capitano": 50.10078728751927,
+      "dottore": 58.29085945403961,
+      "columbina": 58.87064012429507,
+      "arlecchino": 54.422438436253444,
+      "pulcinella": 70.17045454545455,
+      "scaramouche": 28.087514988011986,
       "sandrone": 43.56228255542397,
-      "pierro": 41.04230573198468,
-      "scaramouche": 28.087514988011986
+      "signora": 51.71364944768915,
+      "pantalone": 77.67045454545455,
+      "tartaglia": 75.97537878787878
     }
   },
   {
@@ -2656,17 +2656,17 @@
     },
     "winner": "signora",
     "raw": {
-      "signora": 76.08172835403815,
-      "sandrone": 74.14075679394412,
-      "pulcinella": 59.81465386993253,
-      "pantalone": 60.73695786868719,
-      "dottore": 59.72354881279604,
-      "arlecchino": 58.083335205409085,
-      "tartaglia": 50.2732988455994,
-      "columbina": 50.299300297588715,
-      "pierro": 44.679901888966434,
+      "pierro": 74.6228448275862,
       "capitano": 46.23219617944613,
-      "scaramouche": 33.99407343281013
+      "dottore": 59.72354881279604,
+      "columbina": 39.10191212012373,
+      "arlecchino": 58.083335205409085,
+      "pulcinella": 61.79956896551724,
+      "scaramouche": 33.99407343281013,
+      "sandrone": 74.14075679394412,
+      "signora": 76.08172835403815,
+      "pantalone": 54.29956896551724,
+      "tartaglia": 54.29956896551724
     }
   },
   {
@@ -2684,19 +2684,19 @@
       "RSK": 6.25,
       "CAL": 62.5
     },
-    "winner": "pantalone",
+    "winner": "pulcinella",
     "raw": {
-      "pantalone": 75.92520257386202,
-      "pulcinella": 66.68412189577388,
-      "arlecchino": 66.29058910333943,
-      "dottore": 66.98578861853777,
-      "signora": 62.11078623918657,
+      "pierro": 42.1875,
       "capitano": 57.32293404709473,
-      "pierro": 50.472233527591634,
-      "columbina": 49.515372955430394,
+      "dottore": 66.98578861853777,
+      "columbina": 55.851360200205626,
+      "arlecchino": 66.29058910333943,
+      "pulcinella": 76.5625,
       "scaramouche": 38.73316662396619,
-      "tartaglia": 37.6285370345056,
-      "sandrone": 37.33046136962918
+      "sandrone": 37.33046136962918,
+      "signora": 62.11078623918657,
+      "pantalone": 69.0625,
+      "tartaglia": 15.937500000000002
     }
   },
   {
@@ -2714,19 +2714,19 @@
       "RSK": 0.0,
       "CAL": 50.0
     },
-    "winner": "columbina",
+    "winner": "sandrone",
     "raw": {
-      "columbina": 68.02636255165825,
-      "sandrone": 66.19135760306521,
+      "pierro": 42.1875,
       "capitano": 57.595124605444596,
-      "arlecchino": 47.9746213023758,
-      "pulcinella": 39.5419206579798,
-      "pierro": 43.56228255542397,
-      "signora": 40.30405508204166,
-      "pantalone": 36.459741016697876,
-      "scaramouche": 30.466282963073922,
       "dottore": 28.747888561709964,
-      "tartaglia": 25.45864653519244
+      "columbina": 58.00821659963263,
+      "arlecchino": 47.9746213023758,
+      "pulcinella": 28.125,
+      "scaramouche": 30.466282963073922,
+      "sandrone": 66.19135760306521,
+      "signora": 40.30405508204164,
+      "pantalone": 20.625,
+      "tartaglia": 11.250000000000002
     }
   },
   {
@@ -2746,17 +2746,17 @@
     },
     "winner": "pierro",
     "raw": {
-      "pierro": 68.69902810044098,
-      "sandrone": 66.75519936300444,
-      "scaramouche": 60.4452103903548,
-      "tartaglia": 50.390760542438926,
-      "columbina": 49.901819550624325,
-      "signora": 44.80428215700341,
-      "arlecchino": 40.128445422904534,
-      "pulcinella": 36.76296841211352,
+      "pierro": 69.67905405405405,
       "capitano": 43.030380935064514,
-      "pantalone": 31.834258375419978,
-      "dottore": 16.123805744596563
+      "dottore": 16.123805744596563,
+      "columbina": 41.71847701954178,
+      "arlecchino": 40.128445422904534,
+      "pulcinella": 37.5,
+      "scaramouche": 60.4452103903548,
+      "sandrone": 66.75519936300444,
+      "signora": 44.80428215700341,
+      "pantalone": 30.0,
+      "tartaglia": 54.11317567567568
     }
   },
   {
@@ -2774,19 +2774,19 @@
       "RSK": 50.0,
       "CAL": 12.5
     },
-    "winner": "columbina",
+    "winner": "pantalone",
     "raw": {
-      "columbina": 72.71377699861831,
-      "pulcinella": 65.07176665695755,
-      "arlecchino": 64.82332415430027,
-      "pantalone": 63.598346030033824,
-      "tartaglia": 56.08963847423895,
+      "pierro": 23.4375,
       "capitano": 57.115193477720275,
       "dottore": 46.058682302561856,
+      "columbina": 66.69372883749874,
+      "arlecchino": 64.82332415430027,
+      "pulcinella": 68.75,
+      "scaramouche": 16.254571321463658,
       "sandrone": 48.354796936746745,
       "signora": 44.50767692075713,
-      "pierro": 29.12472326377747,
-      "scaramouche": 16.254571321463658
+      "pantalone": 76.25,
+      "tartaglia": 48.75
     }
   },
   {
@@ -2806,17 +2806,17 @@
     },
     "winner": "tartaglia",
     "raw": {
-      "tartaglia": 64.57731536857588,
-      "columbina": 63.812800948906045,
-      "sandrone": 60.77718329238942,
-      "pulcinella": 52.96335959981172,
-      "scaramouche": 55.68229824839568,
-      "pierro": 58.125638510076996,
+      "pierro": 51.5625,
+      "capitano": 55.640548483677264,
+      "dottore": 37.30713657567257,
+      "columbina": 61.0630605493889,
       "arlecchino": 54.59615529307191,
-      "pantalone": 52.568463536239875,
+      "pulcinella": 56.25,
+      "scaramouche": 55.68229824839568,
+      "sandrone": 60.77718329238942,
       "signora": 50.350107758856225,
-      "capitano": 55.64054848367727,
-      "dottore": 37.30713657567257
+      "pantalone": 48.75,
+      "tartaglia": 65.23185483870968
     }
   },
   {
@@ -2834,19 +2834,19 @@
       "RSK": 75.0,
       "CAL": 56.25
     },
-    "winner": "sandrone",
+    "winner": "pierro",
     "raw": {
-      "sandrone": 67.16284600896208,
-      "pierro": 60.198895781180845,
-      "tartaglia": 58.98831520180377,
-      "scaramouche": 50.74965568216849,
-      "signora": 49.43404927456043,
-      "columbina": 49.24003323736715,
-      "arlecchino": 36.38525371219042,
+      "pierro": 69.91071428571429,
       "capitano": 42.049631148780286,
-      "pulcinella": 29.166715268375558,
-      "pantalone": 30.631354319743505,
-      "dottore": 24.738935513183616
+      "dottore": 24.738935513183616,
+      "columbina": 39.36718825105749,
+      "arlecchino": 36.38525371219042,
+      "pulcinella": 18.75,
+      "scaramouche": 50.74965568216849,
+      "sandrone": 67.16284600896208,
+      "signora": 49.43404927456043,
+      "pantalone": 11.250000000000002,
+      "tartaglia": 70.35714285714286
     }
   },
   {
@@ -2866,17 +2866,17 @@
     },
     "winner": "tartaglia",
     "raw": {
-      "tartaglia": 77.9211956521739,
-      "sandrone": 72.5451867140614,
-      "columbina": 59.90572317215462,
-      "pierro": 51.76610635685142,
-      "signora": 48.8982747880825,
-      "arlecchino": 47.411364432070954,
+      "pierro": 67.79891304347827,
       "capitano": 55.160955211782856,
-      "pulcinella": 41.06172307519134,
+      "dottore": 27.136975224866944,
+      "columbina": 51.35433925487749,
+      "arlecchino": 47.411364432070954,
+      "pulcinella": 28.125,
       "scaramouche": 39.132893858590485,
-      "pantalone": 36.09092630728662,
-      "dottore": 27.136975224866944
+      "sandrone": 72.5451867140614,
+      "signora": 48.8982747880825,
+      "pantalone": 20.625,
+      "tartaglia": 76.0461956521739
     }
   },
   {
@@ -2896,17 +2896,17 @@
     },
     "winner": "arlecchino",
     "raw": {
-      "arlecchino": 68.88075890631592,
-      "pulcinella": 62.398170504487275,
-      "tartaglia": 64.0170718143907,
+      "pierro": 51.5625,
       "capitano": 64.3245682171633,
-      "pierro": 58.78978773373204,
-      "pantalone": 53.96376386210658,
-      "signora": 50.41695507763003,
-      "scaramouche": 47.11952162359494,
-      "columbina": 44.95608682694613,
       "dottore": 37.15875158900013,
-      "sandrone": 33.65954519934499
+      "columbina": 62.12856542086315,
+      "arlecchino": 68.88075890631592,
+      "pulcinella": 61.9375,
+      "scaramouche": 47.11952162359494,
+      "sandrone": 33.65954519934499,
+      "signora": 50.41695507763003,
+      "pantalone": 54.4375,
+      "tartaglia": 71.75
     }
   },
   {
@@ -2924,19 +2924,19 @@
       "RSK": 50.0,
       "CAL": 62.5
     },
-    "winner": "tartaglia",
+    "winner": "arlecchino",
     "raw": {
-      "tartaglia": 56.25,
-      "pulcinella": 49.48862845464792,
-      "arlecchino": 51.46055851365794,
-      "pantalone": 48.14167423618551,
-      "pierro": 48.6401879788674,
+      "pierro": 32.8125,
       "capitano": 53.523106971173135,
-      "scaramouche": 42.959959212838676,
-      "signora": 43.67154970251155,
-      "columbina": 45.52032525224399,
       "dottore": 42.52180855074797,
-      "sandrone": 31.057343830282637
+      "columbina": 54.374301665316246,
+      "arlecchino": 51.46055851365794,
+      "pulcinella": 42.1875,
+      "scaramouche": 42.959959212838676,
+      "sandrone": 31.057343830282637,
+      "signora": 43.67154970251155,
+      "pantalone": 34.6875,
+      "tartaglia": 48.75
     }
   },
   {
@@ -2954,19 +2954,19 @@
       "RSK": 56.25,
       "CAL": 81.25
     },
-    "winner": "pulcinella",
+    "winner": "dottore",
     "raw": {
-      "pulcinella": 56.893867578911276,
-      "dottore": 58.96570838664453,
-      "signora": 59.39781904508347,
-      "tartaglia": 61.52431997687081,
-      "pantalone": 57.99860264243518,
-      "arlecchino": 56.9574497194174,
-      "columbina": 53.88465825551756,
-      "pierro": 50.33822542881393,
-      "sandrone": 50.33822542881393,
+      "pierro": 46.875,
       "capitano": 53.62734929975292,
-      "scaramouche": 37.453154260311024
+      "dottore": 58.96570838664453,
+      "columbina": 50.14603502845783,
+      "arlecchino": 56.9574497194174,
+      "pulcinella": 51.5625,
+      "scaramouche": 37.453154260311024,
+      "sandrone": 50.33822542881393,
+      "signora": 59.39781904508347,
+      "pantalone": 44.0625,
+      "tartaglia": 55.223214285714285
     }
   },
   {
@@ -2986,17 +2986,17 @@
     },
     "winner": "arlecchino",
     "raw": {
-      "arlecchino": 69.80383582939284,
-      "pulcinella": 62.68973962555601,
-      "signora": 65.83416061373872,
-      "sandrone": 68.36581681818674,
-      "pantalone": 57.03569870220527,
-      "columbina": 52.549401099394785,
-      "pierro": 45.7590909355723,
+      "pierro": 63.94230769230769,
       "capitano": 48.93796769357568,
       "dottore": 39.49345546493231,
+      "columbina": 40.18311750947782,
+      "arlecchino": 69.80383582939284,
+      "pulcinella": 67.54807692307692,
       "scaramouche": 37.30336355389442,
-      "tartaglia": 31.40372991155092
+      "sandrone": 68.36581681818674,
+      "signora": 65.83416061373872,
+      "pantalone": 60.04807692307692,
+      "tartaglia": 20.625
     }
   },
   {
@@ -3016,17 +3016,17 @@
     },
     "winner": "scaramouche",
     "raw": {
-      "scaramouche": 80.557468599372,
-      "pierro": 67.40310325704723,
-      "sandrone": 68.22272123820215,
-      "tartaglia": 66.61070785770158,
-      "signora": 60.57093794692169,
-      "pulcinella": 50.72989094550109,
-      "arlecchino": 52.59656559358328,
-      "pantalone": 50.552990980490065,
-      "columbina": 51.390547169213576,
+      "pierro": 66.2405303030303,
       "capitano": 46.26946320688809,
-      "dottore": 34.52431285326956
+      "dottore": 34.52431285326956,
+      "columbina": 41.10140306480204,
+      "arlecchino": 52.59656559358328,
+      "pulcinella": 56.25,
+      "scaramouche": 80.557468599372,
+      "sandrone": 68.22272123820215,
+      "signora": 60.57093794692169,
+      "pantalone": 48.75,
+      "tartaglia": 77.67045454545455
     }
   },
   {
@@ -3044,19 +3044,19 @@
       "RSK": 37.5,
       "CAL": 25.0
     },
-    "winner": "pierro",
+    "winner": "scaramouche",
     "raw": {
-      "pierro": 68.70130754742362,
-      "scaramouche": 65.2838664470466,
-      "columbina": 60.315824844411594,
-      "sandrone": 59.538353903933775,
+      "pierro": 56.25,
       "capitano": 63.34077618363898,
+      "dottore": 18.777350399283023,
+      "columbina": 58.87064012429507,
       "arlecchino": 47.22615045136883,
-      "tartaglia": 47.66741299291265,
-      "pulcinella": 38.44351010935267,
+      "pulcinella": 23.4375,
+      "scaramouche": 65.2838664470466,
+      "sandrone": 59.538353903933775,
       "signora": 39.059782711424795,
-      "pantalone": 30.308675862926147,
-      "dottore": 18.777350399283023
+      "pantalone": 15.937500000000002,
+      "tartaglia": 39.375
     }
   },
   {
@@ -3074,19 +3074,19 @@
       "RSK": 68.75,
       "CAL": 93.75
     },
-    "winner": "dottore",
+    "winner": "tartaglia",
     "raw": {
-      "dottore": 60.54827296598957,
-      "arlecchino": 56.28921194090896,
-      "pantalone": 55.95177430328902,
-      "columbina": 58.06238522486311,
-      "pulcinella": 49.531729298988516,
-      "tartaglia": 55.39603963912259,
-      "signora": 51.87500789699873,
+      "pierro": 28.125,
       "capitano": 52.277600813045865,
+      "dottore": 60.54827296598957,
+      "columbina": 49.147970312297666,
+      "arlecchino": 56.28921194090896,
+      "pulcinella": 46.875,
+      "scaramouche": 16.40437502999904,
       "sandrone": 47.35836373953664,
-      "pierro": 29.509509063706513,
-      "scaramouche": 16.40437502999904
+      "signora": 51.87500789699873,
+      "pantalone": 39.375,
+      "tartaglia": 68.58173076923077
     }
   },
   {
@@ -3104,19 +3104,19 @@
       "RSK": 93.75,
       "CAL": 31.25
     },
-    "winner": "scaramouche",
+    "winner": "pierro",
     "raw": {
-      "scaramouche": 69.87244897959184,
-      "arlecchino": 67.07270408163265,
-      "sandrone": 66.84287440609701,
-      "pulcinella": 59.46278898604794,
-      "signora": 61.18723608118071,
-      "pierro": 62.56089597344497,
-      "pantalone": 55.73361991626173,
-      "tartaglia": 57.503736333074606,
-      "columbina": 52.476236860884065,
+      "pierro": 77.04081632653062,
       "capitano": 52.871006904443725,
-      "dottore": 39.578139275251154
+      "dottore": 39.578139275251154,
+      "columbina": 47.26873287365483,
+      "arlecchino": 67.07270408163265,
+      "pulcinella": 61.44770408163265,
+      "scaramouche": 69.87244897959184,
+      "sandrone": 66.84287440609701,
+      "signora": 61.18723608118071,
+      "pantalone": 53.94770408163265,
+      "tartaglia": 72.00892857142857
     }
   },
   {
@@ -3134,19 +3134,19 @@
       "RSK": 25.0,
       "CAL": 25.0
     },
-    "winner": "pulcinella",
+    "winner": "pantalone",
     "raw": {
-      "pulcinella": 72.82473250752246,
-      "arlecchino": 69.62252075272062,
-      "signora": 67.7555084734091,
-      "sandrone": 69.93819521585026,
-      "pantalone": 64.59050583749956,
-      "pierro": 61.00617241788002,
-      "scaramouche": 52.90694900499116,
-      "columbina": 52.88562297839978,
-      "dottore": 46.05861275622912,
+      "pierro": 67.41898148148148,
       "capitano": 50.91553075604191,
-      "tartaglia": 42.93256616908675
+      "dottore": 46.05861275622912,
+      "columbina": 42.27985424325322,
+      "arlecchino": 69.62252075272062,
+      "pulcinella": 71.18055555555556,
+      "scaramouche": 52.90694900499116,
+      "sandrone": 69.93819521585026,
+      "signora": 67.7555084734091,
+      "pantalone": 78.68055555555556,
+      "tartaglia": 30.0
     }
   },
   {
@@ -3166,17 +3166,17 @@
     },
     "winner": "dottore",
     "raw": {
-      "dottore": 77.05818965517241,
-      "pantalone": 69.55818965517241,
-      "signora": 53.68423351470716,
-      "pulcinella": 48.93611271069123,
-      "tartaglia": 54.068143250361516,
-      "arlecchino": 49.09006506351493,
-      "columbina": 40.6334985562057,
+      "pierro": 32.8125,
       "capitano": 42.790759718744624,
-      "pierro": 36.38000639241379,
+      "dottore": 77.05818965517241,
+      "columbina": 46.82086335665472,
+      "arlecchino": 49.09006506351493,
+      "pulcinella": 74.6228448275862,
+      "scaramouche": 23.4034203531862,
       "sandrone": 28.27053843531899,
-      "scaramouche": 23.4034203531862
+      "signora": 53.68423351470716,
+      "pantalone": 76.4978448275862,
+      "tartaglia": 65.39870689655173
     }
   },
   {
@@ -3194,19 +3194,19 @@
       "RSK": 50.0,
       "CAL": 62.5
     },
-    "winner": "pantalone",
+    "winner": "dottore",
     "raw": {
-      "pantalone": 81.73109408077643,
-      "dottore": 75.10661372758108,
-      "pulcinella": 65.07176665695755,
-      "arlecchino": 65.7233617146959,
-      "signora": 66.27405032652732,
-      "tartaglia": 56.08963847423895,
-      "columbina": 53.43354462065874,
-      "pierro": 52.14152748705636,
+      "pierro": 46.875,
       "capitano": 53.60167669596149,
+      "dottore": 75.10661372758108,
+      "columbina": 53.75,
+      "arlecchino": 65.7233617146959,
+      "pulcinella": 68.75,
+      "scaramouche": 39.59152974746014,
       "sandrone": 47.595157533293495,
-      "scaramouche": 39.59152974746014
+      "signora": 66.27405032652732,
+      "pantalone": 76.25,
+      "tartaglia": 48.75
     }
   },
   {
@@ -3226,17 +3226,17 @@
     },
     "winner": "pantalone",
     "raw": {
-      "pantalone": 74.69001040462125,
-      "pulcinella": 70.8675716338946,
-      "dottore": 71.88968744358299,
-      "signora": 67.93771395091818,
-      "arlecchino": 63.05933135419758,
-      "scaramouche": 63.17627642605789,
-      "pierro": 63.46370931765329,
+      "pierro": 61.770833333333336,
       "capitano": 51.275452665217436,
-      "columbina": 39.8082806078665,
+      "dottore": 71.88968744358299,
+      "columbina": 46.11550781313412,
+      "arlecchino": 63.05933135419758,
+      "pulcinella": 66.77083333333333,
+      "scaramouche": 63.17627642605789,
       "sandrone": 35.78880245675794,
-      "tartaglia": 29.335954207659178
+      "signora": 67.93771395091818,
+      "pantalone": 74.27083333333333,
+      "tartaglia": 11.250000000000002
     }
   },
   {
@@ -3256,17 +3256,17 @@
     },
     "winner": "signora",
     "raw": {
-      "signora": 82.74129027235576,
-      "pulcinella": 72.73749023744222,
-      "pantalone": 70.54886618177598,
+      "pierro": 67.41898148148148,
+      "capitano": 45.58020207068304,
       "dottore": 71.1574074074074,
-      "pierro": 66.45221316096767,
+      "columbina": 36.394637144350476,
       "arlecchino": 62.79445330176589,
-      "tartaglia": 65.56712962962963,
+      "pulcinella": 78.70370370370371,
       "scaramouche": 59.51515426799401,
       "sandrone": 56.42198197281212,
-      "columbina": 43.6062410698039,
-      "capitano": 45.58020207068304
+      "signora": 82.74129027235576,
+      "pantalone": 71.20370370370371,
+      "tartaglia": 76.81712962962963
     }
   },
   {
@@ -3286,17 +3286,17 @@
     },
     "winner": "scaramouche",
     "raw": {
-      "scaramouche": 79.6718923226377,
-      "signora": 78.16956894539786,
-      "pantalone": 74.61966173398037,
-      "pulcinella": 71.9566769519669,
+      "pierro": 62.5,
+      "capitano": 43.27398321310005,
       "dottore": 70.68401396539667,
-      "pierro": 66.51350431663846,
+      "columbina": 33.910672366614605,
       "arlecchino": 62.121786954754405,
+      "pulcinella": 70.3125,
+      "scaramouche": 79.6718923226377,
       "sandrone": 58.439640511381675,
-      "tartaglia": 49.49724279612105,
-      "columbina": 42.51099243980207,
-      "capitano": 43.27398321310005
+      "signora": 78.16956894539786,
+      "pantalone": 77.8125,
+      "tartaglia": 39.375
     }
   },
   {
@@ -3316,17 +3316,17 @@
     },
     "winner": "pantalone",
     "raw": {
-      "pantalone": 80.27526926261045,
-      "dottore": 69.41769623723988,
-      "pulcinella": 65.295233006885,
-      "arlecchino": 63.055135532088414,
-      "tartaglia": 64.59436114133031,
-      "signora": 50.25926656691024,
+      "pierro": 23.4375,
       "capitano": 52.826553681204054,
-      "columbina": 45.82016424829157,
-      "pierro": 31.057343830282637,
+      "dottore": 69.41769623723988,
+      "columbina": 54.08850508685289,
+      "arlecchino": 63.055135532088414,
+      "pulcinella": 77.25694444444444,
+      "scaramouche": 18.36848133547891,
       "sandrone": 27.040666640892518,
-      "scaramouche": 18.36848133547891
+      "signora": 50.25926656691024,
+      "pantalone": 79.13194444444444,
+      "tartaglia": 60.90277777777778
     }
   },
   {
@@ -3346,17 +3346,17 @@
     },
     "winner": "tartaglia",
     "raw": {
-      "tartaglia": 65.47286272118704,
-      "columbina": 54.34565105357888,
-      "sandrone": 50.582345639989136,
-      "arlecchino": 45.31938269825305,
-      "pulcinella": 41.321690724963645,
+      "pierro": 28.125,
       "capitano": 49.3580410174005,
-      "pierro": 43.662767469235575,
+      "dottore": 37.314761053630704,
+      "columbina": 45.95113994628455,
+      "arlecchino": 45.31938269825305,
+      "pulcinella": 28.125,
       "scaramouche": 38.78534928892482,
-      "pantalone": 37.78491717405207,
+      "sandrone": 50.582345639989136,
       "signora": 37.99501942495943,
-      "dottore": 37.314761053630704
+      "pantalone": 20.625,
+      "tartaglia": 73.5845588235294
     }
   },
   {
@@ -3376,17 +3376,17 @@
     },
     "winner": "columbina",
     "raw": {
-      "columbina": 68.50806912457567,
-      "arlecchino": 57.1875,
+      "pierro": 23.4375,
       "capitano": 61.53346160849047,
-      "pulcinella": 48.59976029938365,
-      "pierro": 47.95183941162651,
-      "pantalone": 43.83605599013501,
-      "tartaglia": 44.98535513703352,
+      "dottore": 30.9375,
+      "columbina": 65.57824160519917,
+      "arlecchino": 57.1875,
+      "pulcinella": 42.1875,
       "scaramouche": 40.957020286494,
       "sandrone": 44.37815169112257,
       "signora": 34.28255710079524,
-      "dottore": 30.9375
+      "pantalone": 34.6875,
+      "tartaglia": 44.0625
     }
   },
   {
@@ -3406,17 +3406,17 @@
     },
     "winner": "sandrone",
     "raw": {
-      "sandrone": 68.61030152638504,
-      "pulcinella": 59.86873838290409,
-      "columbina": 65.72293101468274,
-      "arlecchino": 60.29588705497676,
-      "pantalone": 55.50315530335742,
-      "signora": 53.12053616973213,
+      "pierro": 51.5625,
       "capitano": 58.06434511895096,
-      "tartaglia": 49.800599895533225,
-      "pierro": 48.08052372119769,
       "dottore": 42.57144270669754,
-      "scaramouche": 34.823995617719774
+      "columbina": 57.1875,
+      "arlecchino": 60.29588705497676,
+      "pulcinella": 56.25,
+      "scaramouche": 34.823995617719774,
+      "sandrone": 68.61030152638504,
+      "signora": 53.12053616973213,
+      "pantalone": 48.75,
+      "tartaglia": 39.375
     }
   },
   {
@@ -3436,17 +3436,17 @@
     },
     "winner": "sandrone",
     "raw": {
-      "sandrone": 69.50315866924218,
-      "pierro": 65.93266658964215,
-      "tartaglia": 65.18250989462639,
-      "columbina": 64.27262938662008,
-      "scaramouche": 58.238785556475506,
-      "arlecchino": 50.15461367571134,
+      "pierro": 51.5625,
       "capitano": 56.889120515889644,
+      "dottore": 35.555279105617885,
+      "columbina": 53.347092878065894,
+      "arlecchino": 50.15461367571134,
+      "pulcinella": 28.125,
+      "scaramouche": 58.238785556475506,
+      "sandrone": 69.50315866924218,
       "signora": 48.50501767725319,
-      "pulcinella": 41.84774116858702,
-      "pantalone": 40.5125514265011,
-      "dottore": 35.555279105617885
+      "pantalone": 20.625,
+      "tartaglia": 62.291666666666664
     }
   },
   {
@@ -3466,17 +3466,17 @@
     },
     "winner": "dottore",
     "raw": {
+      "pierro": 68.88586956521739,
+      "capitano": 40.713026951208306,
       "dottore": 76.15218424097756,
-      "scaramouche": 74.96826520727818,
-      "signora": 73.84175246002378,
-      "pierro": 71.94535904169183,
-      "pantalone": 66.99410409752494,
-      "pulcinella": 64.02753226769649,
-      "sandrone": 66.53267846088477,
+      "columbina": 32.640157207702345,
       "arlecchino": 56.78422105600783,
-      "tartaglia": 57.311589949063105,
-      "columbina": 43.39788551789007,
-      "capitano": 40.713026951208306
+      "pulcinella": 68.88586956521739,
+      "scaramouche": 74.96826520727818,
+      "sandrone": 66.53267846088477,
+      "signora": 73.84175246002378,
+      "pantalone": 76.38586956521739,
+      "tartaglia": 68.09782608695652
     }
   },
   {
@@ -3494,19 +3494,19 @@
       "RSK": 68.75,
       "CAL": 50.0
     },
-    "winner": "sandrone",
+    "winner": "pulcinella",
     "raw": {
-      "sandrone": 68.49112789254077,
-      "pantalone": 64.05854677229632,
-      "signora": 59.476639207365345,
-      "tartaglia": 61.39318661316188,
-      "scaramouche": 57.472493927715306,
-      "pulcinella": 54.077694820610894,
-      "columbina": 58.051397896636196,
-      "pierro": 57.31784563958681,
-      "arlecchino": 53.29748705119173,
+      "pierro": 56.25,
+      "capitano": 49.00495341711291,
       "dottore": 50.53918212377757,
-      "capitano": 49.00495341711291
+      "columbina": 52.5,
+      "arlecchino": 53.29748705119172,
+      "pulcinella": 66.90705128205128,
+      "scaramouche": 57.472493927715306,
+      "sandrone": 68.49112789254077,
+      "signora": 59.476639207365345,
+      "pantalone": 59.407051282051285,
+      "tartaglia": 64.73557692307692
     }
   },
   {
@@ -3526,17 +3526,17 @@
     },
     "winner": "columbina",
     "raw": {
-      "columbina": 64.16115925248461,
-      "arlecchino": 53.96020377567144,
-      "pulcinella": 49.552146456886284,
+      "pierro": 18.75,
       "capitano": 57.39551671878775,
-      "pantalone": 43.311667910333306,
-      "tartaglia": 43.4059003807901,
-      "pierro": 37.03880245675794,
+      "dottore": 28.064102057966338,
+      "columbina": 64.37270245429254,
+      "arlecchino": 53.96020377567144,
+      "pulcinella": 46.875,
+      "scaramouche": 26.977488333722754,
       "sandrone": 38.06678324326461,
       "signora": 30.798092872026437,
-      "dottore": 28.064102057966338,
-      "scaramouche": 26.977488333722754
+      "pantalone": 39.375,
+      "tartaglia": 20.625
     }
   },
   {
@@ -3556,17 +3556,17 @@
     },
     "winner": "tartaglia",
     "raw": {
-      "tartaglia": 71.35142173671213,
-      "sandrone": 64.50829558908838,
-      "columbina": 60.14063078275431,
-      "arlecchino": 54.35091291596732,
-      "pulcinella": 51.788590494112604,
-      "signora": 50.219538069517874,
-      "pantalone": 48.00431159882287,
+      "pierro": 46.875,
       "capitano": 55.3458456119094,
       "dottore": 42.384445913385335,
-      "pierro": 35.20315260601664,
-      "scaramouche": 22.016733183957037
+      "columbina": 52.410714285714285,
+      "arlecchino": 54.35091291596732,
+      "pulcinella": 42.1875,
+      "scaramouche": 22.016733183957037,
+      "sandrone": 64.50829558908838,
+      "signora": 50.219538069517874,
+      "pantalone": 34.6875,
+      "tartaglia": 70.89285714285714
     }
   },
   {
@@ -3586,17 +3586,17 @@
     },
     "winner": "scaramouche",
     "raw": {
-      "scaramouche": 78.2256426427927,
-      "arlecchino": 71.98362384053847,
-      "pulcinella": 68.94502994853946,
-      "sandrone": 69.95133203732235,
-      "pierro": 66.58051379161832,
-      "signora": 62.891921012141616,
-      "pantalone": 58.28326202706668,
-      "columbina": 53.71013476156058,
+      "pierro": 70.46370967741936,
       "capitano": 52.19173029901347,
-      "tartaglia": 44.47721138231305,
-      "dottore": 39.61150271420234
+      "dottore": 39.61150271420234,
+      "columbina": 44.03529132630376,
+      "arlecchino": 71.98362384053847,
+      "pulcinella": 78.2258064516129,
+      "scaramouche": 78.2256426427927,
+      "sandrone": 69.95133203732235,
+      "signora": 62.891921012141616,
+      "pantalone": 70.7258064516129,
+      "tartaglia": 39.375
     }
   },
   {
@@ -3616,17 +3616,17 @@
     },
     "winner": "dottore",
     "raw": {
+      "pierro": 56.25,
+      "capitano": 46.36995816765588,
       "dottore": 80.47098259858252,
-      "pulcinella": 67.97518538265035,
-      "pantalone": 66.9545718143907,
+      "columbina": 40.513907970419666,
+      "arlecchino": 57.43482742794108,
+      "pulcinella": 62.5,
+      "scaramouche": 57.60002841744341,
       "sandrone": 68.72588610428895,
       "signora": 63.72580544510393,
-      "pierro": 63.09331769365656,
-      "arlecchino": 57.43482742794108,
-      "scaramouche": 57.60002841744341,
-      "tartaglia": 55.05745557545377,
-      "columbina": 50.00495465148989,
-      "capitano": 46.36995816765588
+      "pantalone": 70.0,
+      "tartaglia": 48.75
     }
   },
   {
@@ -3644,19 +3644,19 @@
       "RSK": 87.5,
       "CAL": 81.25
     },
-    "winner": "pierro",
+    "winner": "tartaglia",
     "raw": {
-      "pierro": 70.94229406120773,
-      "signora": 66.99336557173356,
-      "sandrone": 68.43237825342685,
-      "tartaglia": 65.79170703870076,
+      "pierro": 66.97635135135135,
+      "capitano": 42.994239094628526,
       "dottore": 60.56366381344528,
-      "pantalone": 58.40775823010539,
-      "scaramouche": 58.85918591310103,
-      "pulcinella": 52.52478669124524,
+      "columbina": 40.19323057230558,
       "arlecchino": 48.66420189165153,
-      "columbina": 49.473147757115946,
-      "capitano": 42.994239094628526
+      "pulcinella": 61.61317567567568,
+      "scaramouche": 58.85918591310103,
+      "sandrone": 68.43237825342685,
+      "signora": 66.99336557173356,
+      "pantalone": 54.11317567567568,
+      "tartaglia": 77.17905405405405
     }
   },
   {
@@ -3676,17 +3676,17 @@
     },
     "winner": "columbina",
     "raw": {
-      "columbina": 74.76940189183222,
-      "tartaglia": 69.11047180757228,
+      "pierro": 37.5,
       "capitano": 71.4223022715367,
+      "dottore": 19.16953326699659,
+      "columbina": 72.26674129929127,
       "arlecchino": 59.130876841975706,
-      "pulcinella": 52.968971497129594,
-      "sandrone": 55.73854354241704,
-      "pierro": 47.31595676206238,
+      "pulcinella": 28.125,
       "scaramouche": 35.84885059158543,
+      "sandrone": 55.73854354241704,
       "signora": 33.817526862146806,
-      "pantalone": 32.0127880570861,
-      "dottore": 19.16953326699659
+      "pantalone": 20.625,
+      "tartaglia": 48.75
     }
   },
   {
@@ -3706,17 +3706,17 @@
     },
     "winner": "pantalone",
     "raw": {
-      "pantalone": 71.4609168595763,
-      "pulcinella": 55.31508128822659,
-      "arlecchino": 56.81878399503235,
-      "dottore": 52.72600116989732,
-      "tartaglia": 49.46634858048,
-      "signora": 47.02489624234092,
-      "columbina": 48.25795971228074,
+      "pierro": 28.125,
       "capitano": 51.54576943249312,
-      "pierro": 45.366189668132,
+      "dottore": 52.72600116989732,
+      "columbina": 64.90281598662281,
+      "arlecchino": 56.81878399503235,
+      "pulcinella": 76.26488095238095,
       "scaramouche": 36.57707906313162,
-      "sandrone": 29.12472326377747
+      "sandrone": 29.12472326377747,
+      "signora": 47.02489624234092,
+      "pantalone": 78.13988095238095,
+      "tartaglia": 44.0625
     }
   },
   {
@@ -3736,17 +3736,17 @@
     },
     "winner": "pantalone",
     "raw": {
-      "pantalone": 84.95967631655108,
-      "pulcinella": 75.16911271440696,
-      "dottore": 76.35238000757771,
-      "arlecchino": 70.83358499806334,
-      "signora": 70.43222891398061,
-      "columbina": 54.35923187740677,
-      "sandrone": 52.14152748705636,
+      "pierro": 51.5625,
       "capitano": 55.01547789012513,
-      "pierro": 36.75160848970247,
-      "tartaglia": 33.231244856352255,
-      "scaramouche": 23.680972552814296
+      "dottore": 76.35238000757771,
+      "columbina": 52.7518547828278,
+      "arlecchino": 70.83358499806334,
+      "pulcinella": 73.4375,
+      "scaramouche": 23.680972552814296,
+      "sandrone": 52.14152748705636,
+      "signora": 70.43222891398061,
+      "pantalone": 80.9375,
+      "tartaglia": 15.937500000000002
     }
   },
   {
@@ -3764,19 +3764,19 @@
       "RSK": 50.0,
       "CAL": 0.0
     },
-    "winner": "pulcinella",
+    "winner": "pantalone",
     "raw": {
-      "pulcinella": 72.59029382812115,
-      "arlecchino": 67.61280037742519,
-      "columbina": 69.77605466584372,
+      "pierro": 28.125,
       "capitano": 66.54515671345708,
-      "pantalone": 55.87764455499155,
-      "tartaglia": 53.621710779391165,
+      "dottore": 38.08767933036474,
+      "columbina": 63.67214439975509,
+      "arlecchino": 67.61280037742519,
+      "pulcinella": 67.36111111111111,
+      "scaramouche": 28.440121718103686,
       "sandrone": 51.12773586278257,
       "signora": 41.99213135182838,
-      "dottore": 38.08767933036474,
-      "pierro": 39.99093309405405,
-      "scaramouche": 28.440121718103686
+      "pantalone": 74.86111111111111,
+      "tartaglia": 48.75
     }
   },
   {
@@ -3796,17 +3796,17 @@
     },
     "winner": "tartaglia",
     "raw": {
-      "tartaglia": 56.79066948864066,
-      "sandrone": 56.72248793768445,
-      "columbina": 55.75653704327906,
-      "pierro": 50.382706828621004,
-      "scaramouche": 41.44132110131276,
-      "signora": 41.38696727887347,
-      "arlecchino": 38.521935744296464,
-      "pantalone": 37.746490098275956,
-      "pulcinella": 33.908322860561455,
+      "pierro": 37.5,
       "capitano": 44.06332562227376,
-      "dottore": 35.76824101905697
+      "dottore": 35.76824101905697,
+      "columbina": 48.34314266271846,
+      "arlecchino": 38.521935744296464,
+      "pulcinella": 28.125,
+      "scaramouche": 41.44132110131276,
+      "sandrone": 56.72248793768445,
+      "signora": 41.38696727887347,
+      "pantalone": 20.625,
+      "tartaglia": 64.78618421052632
     }
   },
   {
@@ -3824,19 +3824,19 @@
       "RSK": 75.0,
       "CAL": 56.25
     },
-    "winner": "pantalone",
+    "winner": "pulcinella",
     "raw": {
-      "pantalone": 65.13250634835023,
+      "pierro": 56.25,
+      "capitano": 42.63759307230382,
+      "dottore": 53.99531391578692,
+      "columbina": 50.74038509280788,
+      "arlecchino": 46.03634671283231,
+      "pulcinella": 67.01388888888889,
+      "scaramouche": 49.57030420739549,
       "sandrone": 68.8116407130536,
       "signora": 61.12746156930866,
-      "pierro": 61.647578134658474,
-      "columbina": 57.276634279667796,
-      "dottore": 53.99531391578692,
-      "tartaglia": 53.686980269254775,
-      "scaramouche": 49.57030420739549,
-      "pulcinella": 44.234096892346756,
-      "arlecchino": 46.03634671283231,
-      "capitano": 42.63759307230382
+      "pantalone": 59.513888888888886,
+      "tartaglia": 70.27777777777777
     }
   }
 ]
