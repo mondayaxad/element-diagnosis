@@ -773,3 +773,25 @@ test('完全解析 DIPPER 12–17：上位3つの邪眼・異相の個別ペー�
     }
   }
 });
+
+test('完全解析 DIPPER 18：邪眼×異相――計算上の関係（異相が邪眼の構成特性に含まれるか）で文を分け、因果を決めない', async () => {
+  const C = await import('../jagan/complete/copy.mjs');
+  const { buildComplete } = await import('../jagan/complete/model.mjs');
+  const { sampleComplete } = await import('../jagan/complete-sample.mjs');
+  assert.deepEqual(Object.keys(C.ELEMENT_COMBO).sort(), BUNDLE.core.elements.map((e) => e.id).sort());
+  assert.deepEqual(Object.keys(C.TRAIT_COMBO).sort(), BUNDLE.items.traits.map((t) => t.id).sort());
+  const m = buildComplete(sampleComplete(0).result, BUNDLE);
+  assert.equal(m.combo.inc, true); assert.equal(m.combo.tag, '構成特性の重なり');
+  assert.match(m.combo.you[0], /^今回の水は、依存70・不安69・猜疑44から計算されています。その中で、依存は水の計算に最も大きな重み（50%）を持ち/);
+  assert.match(m.combo.you[2], /さらに深い性格が証明されたという意味ではありません/);
+  let seen = { inc: 0, sep: 0 };
+  for (let s = 0; s < 300; s++) {
+    const r = sampleComplete(s), c = buildComplete(r.result, BUNDLE).combo;
+    const inParts = BUNDLE.core.elements.find((e) => e.id === r.result.element.id).weights[r.result.isou.id] != null;
+    assert.equal(c.inc, inParts);
+    seen[c.inc ? 'inc' : 'sep']++;
+    if (!c.inc) { assert.match(c.you[1], /原因と結果で結ぶことはできません/); assert.match(c.q, /それとも、別々の場面で起きているか。$/); }
+    assert.ok(r.html.includes('邪眼×異相――あなたの影はどう表れるか'));
+  }
+  assert.ok(seen.inc > 0 && seen.sep > 0);
+});

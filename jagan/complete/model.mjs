@@ -6,7 +6,7 @@
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
-import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL } from './copy.mjs';
+import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
 
 const r1 = (x) => Math.round(x * 10) / 10;
 
@@ -81,8 +81,9 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
   // P12–P17 個別ページ：見出しの次点との差、根拠、「あなたの場合」の冒頭（今回の得点から組み立てる）
   for (const e of topE) e.detail = elementDetail(e, elements[e.rank]);
   for (const x of topI) x.detail = isouDetail(x, isous, topE, r1(overall));
+  const combo = comboOf(elements[0], isous[0]);
   return {
-    product: PRODUCT, detailLabels: DETAIL_LABELS, fixed: FIXED, panel: PANEL, diagnosedAt,
+    product: PRODUCT, detailLabels: DETAIL_LABELS, combo, fixed: FIXED, panel: PANEL, diagnosedAt,
     live: { intro: LIVE_INTRO, rows: LIVE_ROWS }, read: { intro: READ_INTRO, rows: READ_ROWS },
     peaks, valleys, themes,
     gapE: { a: elements[0], b: elements[1], d: elements[0].score - elements[1].score },
@@ -143,4 +144,44 @@ function isouDetail(x, isous, topE, overall) {
   const near = isous.slice(Math.max(0, x.rank - 2), x.rank + 1).map((t) => ({ label: t.label, rank: t.rank, score: t.score, color: t.color, self: t.id === x.id }));
   return { ...d, you: [y.lines.join(''), d.read], inc: y.inc, near, overall,
     next: next ? { label: next.label, score: next.score, d: x.score - next.score } : null };
+}
+
+// P18 邪眼×異相：計算上の関係（異相が邪眼の構成特性に含まれるか）→ 重なりの読み方 → 日常の例 → 根拠
+export function comboOf(e, x) {
+  const L = e.label, X = x.label, ec = ELEMENT_COMBO[e.id], tc = TRAIT_COMBO[x.id], ed = ELEMENT_DETAIL[e.id], td = TRAIT_DETAIL[x.id];
+  const parts = e.parts, part = parts.find((p) => p.id === x.id), inc = !!part;
+  const list = parts.map((p) => `${p.label}${p.score}`).join('・');
+  const you = [];
+  let relation, headline, day, heavy, q, rows;
+  if (inc) {
+    const w = parts[0].id === x.id ? `最も大きな重み（${part.weight}%）を持ち` : `${part.weight}%の重みを持ち`;
+    relation = `異相の${X}は、${L}の計算に使われる三つの特性の一つです（重み${part.weight}%）。同じ特性が、邪眼の得点にも直接使われています。`;
+    headline = `${ec.ctx}、${N(x.id)}が目立つ組み合わせです。`;
+    you.push(`今回の${L}は、${list}から計算されています。その中で、${X}は${L}の計算に${w}、12特性の中でも最上位に選ばれています。`);
+    const others = parts.filter((p) => p.id !== x.id).sort((a, b) => a.score - b.score);
+    const nb = others.find((p) => Math.abs(p.score - x.score) <= CLOSE);
+    you.push(`そのため、今回の${L}を理解する入口は、${N(others[0].id)}だけでなく、${N(x.id)}にあります。${nb ? `${nb.label}の得点も近いため、${N(nb.id)}にも目を向けられます。` : ''}`);
+    you.push(`${L}と${X}は、同じ回答の一部を共有しています。二つの結果がそろったことから、さらに深い性格が証明されたという意味ではありません。全体のまとまりを、${X}という特性から具体的に読み直す関係です。`);
+    day = [{ text: td.day }, { text: `この場面が自分に重なるなら、次の問いで振り返れます。「${_EL_LIVE[e.id].ask}」`, note: true }];
+    heavy = td.signs;
+    q = ec.q;
+    rows = parts.map((p) => ({ label: p.label, score: p.score, see: N(p.id), self: p.id === x.id, color: x.color }));
+  } else {
+    const top = [...parts].sort((a, b) => b.score - a.score)[0];
+    relation = `異相の${X}は、${L}の計算に使われる三つの特性（${parts.map((p) => p.label).join('・')}）には含まれていません。別の特性が最上位にありながら、合成した得点では${L}が上位になっています。`;
+    headline = `${ec.about}に関する反応と、${N(x.id)}が、どちらも表れた組み合わせです。`;
+    you.push(`${L}は${list}から計算されていますが、個別の特性では${X}（${x.score}）が最上位になっています。${L}の構成特性の中で最も高いのは${top.label}（${top.score}）です。`);
+    you.push(`したがって、「${L}の反応があるから${X}が表れる」と、二つを原因と結果で結ぶことはできません。`);
+    you.push(`同じ場面で重なることもあれば、別々の場面でそれぞれに表れている可能性もあります。「日常の例」にある二つの場面を見比べ、同じときに起きているかを確かめてください。`);
+    day = [{ head: `${L}の場面`, text: ed.day }, { head: `${X}の場面`, text: td.day }];
+    heavy = `${ed.signs}${td.signs}`;
+    q = `${ec.when}ときほど、${tc.want}か。それとも、別々の場面で起きているか。`;
+    rows = [...parts.map((p) => ({ label: p.label, score: p.score, see: N(p.id), color: e.color.main })), { label: X, score: x.score, see: N(x.id), self: true, sep: true, color: x.color }];
+  }
+  return {
+    labels: COMBO_LABELS, inc, tag: inc ? COMBO_LABELS.incTag : COMBO_LABELS.sepTag, relation, headline, you, day, rows, heavy, q,
+    e: { label: L, color: e.color.main, sub: `${parts.map((p) => p.label).join('・')}をまとめた、${ec.about}に関する反応。` },
+    x: { label: X, color: x.color, sub: `${ISOU_TEXT[x.id].essence}。` },
+    aware: ec.aware, accept: `${tc.feel}自分を否定せず、その気持ちをどう表しているかまで見つめる。`,
+  };
 }

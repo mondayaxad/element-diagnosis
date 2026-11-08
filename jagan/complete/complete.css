@@ -186,3 +186,26 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
   .dp-dname b { font-size: 32px; } .dp-dname span { font-size: 15px; margin-left: 8px; } .dp-dsc { font-size: 38px; }
   .dp-dsplit { grid-template-columns: 1fr; }
 }
+/* P18 邪眼×異相 */
+.dp-cbar { display: grid; grid-template-columns: minmax(0, 1fr) 190px minmax(0, 1fr); gap: 16px; align-items: center; }
+.dp-ccard { border: 1px solid color-mix(in srgb, var(--c) 55%, var(--line2)); border-radius: 12px; padding: 14px 20px; background: linear-gradient(120deg, color-mix(in srgb, var(--c) 14%, rgba(18,9,14,.8)), rgba(18,9,14,.7)); }
+.dp-ccard b { display: block; font-size: 40px; color: var(--c); line-height: 1.3; letter-spacing: .06em; } .dp-ccard p { margin: 4px 0 0; font-size: 14px; color: var(--sub); }
+.dp-clink { position: relative; display: grid; justify-items: center; gap: 12px; }
+.dp-clink i { display: block; width: 100%; height: 2px; background: linear-gradient(90deg, var(--a), var(--b)); position: relative; }
+.dp-clink i::before, .dp-clink i::after { content: ''; position: absolute; top: -5px; width: 12px; height: 12px; border-radius: 50%; background: var(--a); left: -2px; } .dp-clink i::after { left: auto; right: -2px; background: var(--b); }
+.dp-clink span { font-size: 12.5px; letter-spacing: .1em; padding: 4px 12px; border-radius: 6px; color: #12070c; font-weight: 700; }
+.dp-clink span.inc { background: linear-gradient(90deg, var(--a), var(--b)); } .dp-clink span.sep { background: transparent; color: var(--fg); border: 1px dashed var(--line2); }
+.dp-crel { margin: 14px 0 0; font-size: 13.5px; color: var(--sub); } .dp-crel span { font-size: 11.5px; letter-spacing: .16em; color: var(--gold); margin-right: 10px; border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent); padding: 1px 8px; border-radius: 5px; }
+.dp-chead { text-align: center; font-size: 20px; letter-spacing: .08em; padding: 14px 8px; margin: 14px 0 18px; border-top: 1px solid var(--line2); border-bottom: 1px solid var(--line2); color: #f5e8ec; }
+.dp-cday { padding: 8px 0; border-bottom: 1px dashed var(--line2); } .dp-cday p { margin: 0; font-size: 14px; } .dp-cday b { font-size: 12.5px; color: var(--sub); letter-spacing: .1em; }
+.dp-cday.note p { color: var(--sub); font-size: 13px; }
+.dp-ctab { width: 100%; border-collapse: collapse; font-size: 13.5px; } .dp-ctab th { white-space: nowrap; text-align: left; font-weight: 400; font-size: 11.5px; color: var(--dim); letter-spacing: .1em; padding: 4px 6px; border-bottom: 1px solid var(--line2); }
+.dp-ctab td { padding: 7px 6px; border-bottom: 1px solid var(--line); vertical-align: top; } .dp-ctab td:nth-child(2) { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; } .dp-ctab td:first-child { white-space: nowrap; font-weight: 700; }
+.dp-ctab tr:not(.self) td { color: var(--sub); } .dp-ctab tr.self td:last-child, .dp-ctab tr.self td:nth-child(2) { color: var(--fg); }
+.dp-ctab tr.sep td { border-top: 1px dashed var(--line2); } .dp-ctab small { margin-left: 6px; font-size: 10.5px; color: var(--dim); font-weight: 400; }
+.dp-c4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.dp-c4c { border: 1px solid var(--line2); border-top: 3px solid var(--t, var(--line2)); border-radius: 10px; padding: 12px 14px; background: rgba(18,9,14,.6); }
+.dp-c4c b { font-size: 14px; } .dp-c4c p { margin: 6px 0 0; font-size: 13.5px; color: var(--sub); }
+.dp-c4c.ok { --t: #7fc8a0; } .dp-c4c.ng { --t: #d98a5f; } .dp-c4c.ac { --t: var(--c); } .dp-c4c.qq { --t: var(--gold); } .dp-c4c.qq p { color: #f2dfc0; font-style: italic; }
+@media (max-width: 760px) { .dp-cbar { grid-template-columns: 1fr; } .dp-clink i { width: 2px; height: 28px; } .dp-clink i::before, .dp-clink i::after { display: none; } .dp-c4 { grid-template-columns: 1fr; } .dp-ccard b { font-size: 32px; } }
+@media (min-width: 761px) and (max-width: 1000px) { .dp-c4 { grid-template-columns: 1fr 1fr; } }

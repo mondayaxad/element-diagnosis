@@ -9,7 +9,7 @@ export const PAGE_TITLES = [
   '邪眼と異相 — あなたの影の正体', 'ファトゥスはなぜ現れるのか', 'あなたの深層',
   '上位の邪眼との付き合い方', '上位の異相を読み解く',
   '邪眼 1位', '邪眼 2位', '邪眼 3位', '異相 1位', '異相 2位', '異相 3位',
-  '邪眼 × 異相', '二層統合 — あなたの存在構造', '上位3名のファトゥスとの関わり',
+  '邪眼×異相――あなたの影はどう表れるか', '二層統合 — あなたの存在構造', '上位3名のファトゥスとの関わり',
   '下位の邪眼', '下位の異相', '強みとは何か',
   'ドメイン — 不安と距離', 'ドメイン — 行動のくせ', 'ドメイン — 他者との向き合い', 'あなたのドメイン平均',
   '弱点をどう活かすか', '人物から得るもの', '7日間の観察実験', '再読時の判断材料', '邪眼辞典', '異相辞典',
@@ -217,13 +217,33 @@ export function renderComplete(m) {
       </div>${side(d, c)}</div>`);
   }
 
-  // P18 邪眼 × 異相
-  page('dp-text', 'JAGAN × ISOU', '邪眼 × 異相', `
-    <div class="dp-trio"><span style="color:${elc}">${E(el1.label)}</span><b>×</b><span style="color:${is1.color}">${E(is1.label)}</span><b>＝</b><span>${E(m.dti.name)}</span></div>
-    <p class="dp-p dp-lead">${E(m.overview)}</p>
-    <div class="dp-cols"><div class="dp-card" style="--c:${elc}"><div class="dp-k">邪眼が渇望するもの</div><p class="dp-p">${E(el1.story)}</p></div>
-      <div class="dp-card" style="--c:${is1.color}"><div class="dp-k">異相が表に出す影</div><p class="dp-p">${E(is1.text.body)}</p></div></div>
-    <p class="dp-p">邪眼（${E(el1.label)}）の活かし方：${E(el1.deep.use)}</p><p class="dp-p">異相（${E(is1.label)}）の活かし方：${E(is1.deep.use)}</p>`);
+  // P18 邪眼×異相――あなたの影はどう表れるか（オーナー案・2026-11-08）。計算上の関係 → 重なりの読み方 → 日常の例・根拠 → 理解／負担／受け止め／問い
+  { const c = m.combo, CL = c.labels;
+    page('dp-wide dp-combo', 'JAGAN × ISOU', CL.title, `
+      <div class="dp-cbar">
+        <div class="dp-ccard" style="--c:${c.e.color}"><div class="dp-lk">邪眼<span>· 1位</span></div><b>${E(c.e.label)}</b><p>${E(c.e.sub)}</p></div>
+        <div class="dp-clink" style="--a:${c.e.color};--b:${c.x.color}"><i></i><span class="${c.inc ? 'inc' : 'sep'}">${E(c.tag)}</span></div>
+        <div class="dp-ccard" style="--c:${c.x.color}"><div class="dp-lk">異相<span>· 1位</span></div><b>${E(c.x.label)}</b><p>${E(c.x.sub)}</p></div>
+      </div>
+      <p class="dp-crel"><span>計算上の関係</span>${E(c.relation)}</p>
+      <div class="dp-chead">${E(c.headline)}</div>
+      <div class="dp-dsplit"><div>
+        <div class="dp-dsec" style="--c:${c.x.color}">${E(CL.you)}</div>${c.you.map((t) => `<p class="dp-p">${E(t)}</p>`).join('')}
+      </div><div class="dp-panel">
+        <div class="dp-pk">${E(CL.day)}</div>
+        ${c.day.map((d) => `<div class="dp-cday${d.note ? ' note' : ''}">${d.head ? `<b>${E(d.head)}</b>` : ''}<p>${E(d.text)}</p></div>`).join('')}
+        <div class="dp-pk" style="margin-top:14px">${E(CL.basis)}</div>
+        <table class="dp-ctab"><thead><tr><th>特性</th><th>得点</th><th>この組み合わせで見ること</th></tr></thead><tbody>
+        ${c.rows.map((r) => `<tr class="${r.self ? 'self' : ''}${r.sep ? ' sep' : ''}"><td style="color:${r.color}">${E(r.label)}${r.sep ? '<small>異相</small>' : ''}</td><td>${r.score}</td><td>${E(r.see)}</td></tr>`).join('')}
+        </tbody></table>
+      </div></div>
+      <div class="dp-c4">
+        <div class="dp-c4c ok"><b>${E(CL.aware)}</b><p>${E(c.aware)}</p></div>
+        <div class="dp-c4c ng"><b>${E(CL.heavy)}</b><p>${E(c.heavy)}</p></div>
+        <div class="dp-c4c ac" style="--c:${c.x.color}"><b>${E(CL.accept)}</b><p>${E(c.accept)}</p></div>
+        <div class="dp-c4c qq"><b>${E(CL.q)}</b><p>「${E(c.q)}」</p></div>
+      </div>`, { sub: 'Two layers' });
+  }
 
   // P19 二層統合
   page('dp-text', 'TWO LAYERS', '二層統合 — あなたの存在構造', `
