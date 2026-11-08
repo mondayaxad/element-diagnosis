@@ -229,3 +229,22 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-msum { border: 1px solid color-mix(in srgb, var(--gold) 35%, var(--line2)); border-radius: 12px; padding: 14px 22px; background: rgba(226,192,140,.05); }
 .dp-msum p { margin: 4px 0; font-size: 14.5px; }
 @media (max-width: 760px) { .dp-mdl { grid-template-columns: 1fr; } .dp-mdl dd { border-top: 0; padding-top: 0; } .dp-mmeta { margin-left: 0; width: 100%; } }
+/* 四つの反応領域・あなたの反応領域（2×2） */
+.dp-rd4 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: stretch; margin: 6px 0 18px; }
+.dp-rdc { border: 1px solid var(--line); border-top: 3px solid var(--c); border-radius: 4px 4px 12px 12px; padding: 16px 20px; background: rgba(24,12,18,.72); }
+.dp-rden { font-size: 11.5px; letter-spacing: .26em; color: var(--c); }
+.dp-rdname { font-size: 28px; font-weight: 700; color: var(--c); letter-spacing: .06em; line-height: 1.4; }
+.dp-rdlead { margin: 2px 0 10px; font-size: 15px; }
+.dp-rdtags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.dp-rdtags span { font-size: 13px; padding: 2px 10px; border-radius: 6px; border: 1px solid color-mix(in srgb, var(--c) 60%, transparent); background: color-mix(in srgb, var(--c) 10%, transparent); color: var(--fg); }
+.dp-rdread, .dp-rdknow, .dp-rdscene, .dp-rdq { margin: 0; font-size: 14px; color: var(--sub); } .dp-rdread b, .dp-rdknow b, .dp-rdscene b, .dp-rdq b { color: var(--c); margin-right: 10px; font-size: 13px; letter-spacing: .08em; }
+.dp-rdknow { margin-bottom: 8px; }
+.dp-rdbars { border-top: 1px dashed var(--line2); border-bottom: 1px dashed var(--line2); padding: 6px 0; margin-bottom: 8px; }
+.dp-rdbars .dp-row { grid-template-columns: 8em 1fr 2.4em; font-size: 14px; margin: 3px 0; } .dp-rdbars .dp-row i { font-style: normal; font-size: 11px; color: var(--c); margin-right: 8px; letter-spacing: .06em; }
+.dp-rdk { font-size: 13px; letter-spacing: .14em; color: var(--gold); font-weight: 700; margin: 4px 0; }
+.dp-rdp { margin: 0 0 6px; font-size: 14px; }
+.dp-rdscene { padding-top: 6px; border-top: 1px dashed var(--line2); margin-top: 6px; }
+.dp-rdq { margin-top: 6px; color: #f2dfc0; } .dp-rdq b { color: var(--gold); }
+.dp-rdtab { width: 100%; border-collapse: collapse; font-size: 14px; } .dp-rdtab th { text-align: left; font-weight: 400; font-size: 12px; letter-spacing: .14em; color: var(--gold); padding: 6px 8px; border-bottom: 1px solid var(--line2); }
+.dp-rdtab td { padding: 9px 8px; border-bottom: 1px solid var(--line); } .dp-rdtab td:first-child { font-weight: 700; white-space: nowrap; }
+@media (max-width: 760px) { .dp-rd4 { grid-template-columns: 1fr; } .dp-rdtab td:nth-child(2) { white-space: normal; } }

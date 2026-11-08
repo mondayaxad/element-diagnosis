@@ -6,7 +6,7 @@
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
-import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
+import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
 
 const r1 = (x) => Math.round(x * 10) / 10;
 
@@ -84,8 +84,9 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
   for (const x of topI) x.detail = isouDetail(x, isous, topE, r1(overall));
   const combo = comboOf(elements[0], isous[0]);
   const mirror = mirrorOf(topF, elements[0], isous);
+  const rdom = responseDomains(score, traitLabel);
   return {
-    product: PRODUCT, detailLabels: DETAIL_LABELS, combo, mirror, fixed: FIXED, panel: PANEL, diagnosedAt,
+    product: PRODUCT, detailLabels: DETAIL_LABELS, combo, mirror, rdom, fixed: FIXED, panel: PANEL, diagnosedAt,
     live: { intro: LIVE_INTRO, rows: LIVE_ROWS }, read: { intro: READ_INTRO, rows: READ_ROWS },
     peaks, valleys, themes,
     gapE: { a: elements[0], b: elements[1], d: elements[0].score - elements[1].score },
@@ -252,4 +253,39 @@ export function mirrorOf(topF, e, isous) {
   sum.push(anyMain ? `主結果（${e.label}×${x.label}）を形づくる特性が近さに含まれる人物と、別の特性で近い人物を分けて読むと、どの反応が人物との比較に表れているかが見えます。`
     : `三人とも、主結果（${e.label}×${x.label}）を形づくる特性とは別の側面で近づいています。主結果で見た反応とは別に、どんな特性が人物との比較に表れているかを確かめてください。`);
   return { labels: MIRROR_LABELS, people, sum };
+}
+
+// 四つの反応領域：各領域の特性の得点と、その違いから「あなたの場合」を組み立てる（領域平均の順位はつけない）
+export function responseDomains(score, traitLabel) {
+  const R = RESPONSE_DOMAINS;
+  const list = R.list.map((d) => {
+    const ts = d.traits.map((id) => ({ id, label: traitLabel(id), score: Math.round(score(id)), color: d.color, code: null }));
+    const s = [...ts].sort((a, b) => b.score - a.score);
+    const lab = (arr) => arr.map((t) => `${t.label}${t.score}`).join('・');
+    const you = [];
+    if (s[0].score <= 35) {
+      // いずれも低め：違いを「目立つ反応」として読まない
+      you.push(`この領域は、${lab(ts)}で、いずれも低めの得点です。${s[0].score - s[s.length - 1].score >= 10 ? `その中では${s[0].label}がやや高く出ていますが、この領域の反応が目立つ配置ではありません。` : ''}`);
+      you.push(`低いことは、${d.lowNot}という意味ではありません。どんな場面で、これらの反応が起きにくいのかを振り返れます。`);
+    } else if (ts.length === 2) {
+      const [a, b] = s;
+      you.push(`この領域は、${lab(ts)}です。`);
+      you.push(a.score - b.score >= 10 ? `${a.label}の方が高く、${d.pair[a.id]}` : d.pair.close);
+    } else {
+      let cut = 0, gap = -1;
+      for (let i = 0; i < s.length - 1; i++) if (s[i].score - s[i + 1].score > gap) { gap = s[i].score - s[i + 1].score; cut = i + 1; }
+      if (gap >= 10) {
+        const hi = s.slice(0, cut), lo = s.slice(cut);
+        you.push(`この領域では、${lab(hi)}に対し、${lab(lo)}という配置です。`);
+        const say = (arr, j) => (arr.length >= 3 ? arr.map((t) => t.label).join('・') : arr.map((t) => N(t.id)).join(j));
+        you.push(`今回の回答では、${say(lo, 'や、')}よりも、${say(hi, 'と、')}が目立っています。この違いから、この領域の反応が起きるとき、何が中心になっているのかを考えられます。`);
+      } else {
+        you.push(`この領域では、${lab(s)}と、近い得点で並んでいます。どれか一つではなく、それぞれがどの場面で表れるかを見ていきます。`);
+      }
+    }
+    if (d.id === 'anx' && score('SEP') >= 55 && score('WDR') >= 55) you.push('依存と撤退がともに高めです。得点だけで「近づきたいのに離れる」と決めず、つながりを求めることと関わりを控えることが、同じ相手との間で起きるのか、別の場面なのかを確かめます。');
+    if (d.caution) you.push(d.caution);
+    return { ...d, ts, you };
+  });
+  return { ...R, list };
 }

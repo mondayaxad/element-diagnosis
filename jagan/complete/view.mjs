@@ -11,7 +11,7 @@ export const PAGE_TITLES = [
   '邪眼 1位', '邪眼 2位', '邪眼 3位', '異相 1位', '異相 2位', '異相 3位',
   '邪眼×異相――あなたの影はどう表れるか', '上位3名のファトゥスとの交わり',
   '下位の邪眼', '下位の異相', '強みとは何か',
-  'ドメイン — 不安と距離', 'ドメイン — 行動のくせ', 'ドメイン — 他者との向き合い', 'あなたのドメイン平均',
+  '四つの反応領域', 'あなたの反応領域',
   '弱点をどう活かすか', '人物から得るもの', '7日間の観察実験', '再読時の判断材料', '邪眼辞典', '異相辞典',
 ];
 
@@ -270,17 +270,24 @@ export function renderComplete(m) {
     ${m.topI.map((x) => `<div class="dp-row big"><span style="color:${x.color}">${E(x.label)}</span><em>${E(x.deep.strength)}</em></div>`).join('')}
     <div class="dp-row big"><span style="color:${elc}">邪眼（${E(el1.label)}）</span><em>${E(el1.deep.strength)}</em></div>`);
 
-  // P24–P26 ドメイン
-  for (const d of m.domains) {
-    page('dp-text', `DOMAIN｜${d.deep.en}`, `ドメイン — ${d.label}`, `
-      <div class="dp-hero" style="--c:${d.color}"><div class="dp-big">${E(d.label)}<small>${E(d.deep.note)}</small></div><div class="dp-score">${d.avg}</div></div>
-      <p class="dp-p">${E(d.intro)}</p>
-      ${d.traits.map((t) => `<div class="dp-row"><span style="color:${t.color}">${E(t.label)}</span>${bar(t.score, t.color)}<b>${t.score}</b></div><p class="dp-li">${E(t.deep.strength)}</p>`).join('')}`);
+  // 四つの反応領域（オーナー案・2026-11-08。元素診断「四つの貢献ドメイン」の2×2を引き継ぐ）→ あなたの反応領域（内訳と解釈。平均の順位はつけない）
+  { const R = m.rdom, codeOf = (id) => m.isous.find((x) => x.id === id).aspect.code;
+    page('dp-wide dp-rdom', R.kicker, R.title, `<p class="dp-p dp-lead">${E(R.intro)}</p>
+      <div class="dp-rd4">${R.list.map((d) => `<div class="dp-rdc" style="--c:${d.color}"><div class="dp-rden">${E(d.en)}</div><div class="dp-rdname">${E(d.label)}</div><p class="dp-rdlead">${E(d.lead)}</p>
+        <div class="dp-rdtags">${d.ts.map((t) => `<span>${E(codeOf(t.id))} ${E(t.label)}</span>`).join('')}</div>
+        <p class="dp-rdread"><b>${E(R.readLabel)}</b>${E(d.read)}</p></div>`).join('')}</div>
+      <table class="dp-rdtab"><thead><tr>${R.tableHead.map((h) => `<th>${E(h)}</th>`).join('')}</tr></thead><tbody>
+      ${R.list.map((d) => `<tr><td style="color:${d.color}">${E(d.label)}</td><td>${d.ts.map((t) => E(t.label)).join('・')}</td><td>${E(d.q)}</td></tr>`).join('')}</tbody></table>
+      <p class="dp-note">${E(R.note)}</p>`, { sub: R.sub });
+    page('dp-wide dp-rdom', R.youKicker, R.youTitle, `<p class="dp-p dp-lead">${E(R.youIntro)}</p>
+      <div class="dp-rd4">${R.list.map((d) => `<div class="dp-rdc you" style="--c:${d.color}"><div class="dp-rden">${E(d.en)}</div><div class="dp-rdname">${E(d.label)}</div>
+        <p class="dp-rdknow"><b>${E(R.labels.know)}</b>${E(d.read)}</p>
+        <div class="dp-rdbars">${d.ts.map((t) => `<div class="dp-row"><span><i>${E(codeOf(t.id))}</i>${E(t.label)}</span>${bar(t.score, d.color)}<b>${t.score}</b></div>`).join('')}</div>
+        <div class="dp-rdk">${E(R.labels.you)}</div>${d.you.map((t) => `<p class="dp-rdp">${E(t)}</p>`).join('')}
+        <p class="dp-rdscene"><b>${E(R.labels.scene)}</b>${E(d.scene)}</p>
+        <p class="dp-rdq"><b>${E(R.labels.q)}</b>「${E(d.qYou)}」</p></div>`).join('')}</div>
+      <p class="dp-note">${E(R.note)}</p>`, { sub: R.youSub });
   }
-  // P27 ドメイン平均
-  page('dp-text', 'DOMAIN AVERAGE', 'あなたのドメイン平均', `<p class="dp-p">${E(m.fixed.domainAvg)}</p>
-    ${m.domainOrder.map((d, i) => `<div class="dp-rrow"><span class="dp-rk">${pad(i + 1)}</span><span class="dp-rn" style="color:${d.color}">${E(d.label)}</span>${bar(d.avg, d.color)}<b>${d.avg}</b><span class="dp-rd">12特性の平均（${m.overall}）より ${d.diff >= 0 ? '+' : ''}${d.diff}</span></div>`).join('')}
-    <p class="dp-p">影が最も表れやすいのは「${E(m.domainOrder[0].label)}」の土台です。${E(m.domainOrder[0].deep.note)}</p>`);
 
   // P28 弱点をどう活かすか
   page('dp-text', 'WEAKNESS', '弱点をどう活かすか', `<p class="dp-p">${E(m.fixed.weakness)}</p>${m.topI.map((x) => `<div class="dp-card" style="--c:${x.color}"><div class="dp-k">${E(x.label)}</div><p class="dp-p">${E(x.deep.weak)}</p></div>`).join('')}`);

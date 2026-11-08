@@ -678,12 +678,12 @@ test('mypage の開示（購入済みだけ）：三つの土台の上位2特性
 });
 
 // ---- 邪眼完全解析 DIPPER（叩き台）
-test('完全解析 DIPPER：32ページ・指示の順。順位（邪眼7・異相12・ファトゥス11＝6＋5）は結果と同じ規則で、1位は結果と一致。どの結果でも空欄・未定義を出さない', async () => {
+test('完全解析 DIPPER：30ページ・指示の順。順位（邪眼7・異相12・ファトゥス11＝6＋5）は結果と同じ規則で、1位は結果と一致。どの結果でも空欄・未定義を出さない', async () => {
   const { buildComplete } = await import('../jagan/complete/model.mjs');
   const { renderComplete, PAGE_TITLES } = await import('../jagan/complete/view.mjs');
   const { orderIsou, selectIsou } = await import('../jagan/engine/dti.mjs');
   const { sampleComplete } = await import('../jagan/complete-sample.mjs');
-  assert.equal(PAGE_TITLES.length, 32);
+  assert.equal(PAGE_TITLES.length, 30);
   assert.deepEqual(PAGE_TITLES.slice(0, 9), ['表紙', 'このレポートの読み方', 'あなたの影', '邪眼（特性）の全体順位', '異相の全体順位', 'ファトゥス TOP11',
     '邪眼と異相 — あなたの影の正体', 'ファトゥスはなぜ現れるのか', 'あなたの深層']);
   assert.deepEqual(PAGE_TITLES.slice(-6), ['弱点をどう活かすか', '人物から得るもの', '7日間の観察実験', '再読時の判断材料', '邪眼辞典', '異相辞典']);
@@ -697,7 +697,7 @@ test('完全解析 DIPPER：32ページ・指示の順。順位（邪眼7・異�
     assert.equal(m.element.id, result.element.id); assert.equal(m.isou.id, result.isou.id);
     assert.equal(orderIsou(result.answers, BUNDLE.items)[0].id, selectIsou(result.answers, BUNDLE.items).id);
     if (m.character) { assert.equal(m.character.id, result.character.id); assert.equal(m.character.match, result.character.match); }
-    assert.equal((html.match(/class="dp-page /g) || []).length, 32, `seed ${seed}`);
+    assert.equal((html.match(/class="dp-page /g) || []).length, 30, `seed ${seed}`);
     assert.ok(!/undefined|NaN|\[object/.test(html), `seed ${seed}`);
     assert.ok(html.includes(result.dti.code) && html.includes(result.dti.name));
     // 06 ファトゥス TOP11：11名すべて・下に TOP3 の説明
@@ -818,5 +818,27 @@ test('完全解析 DIPPER 19：上位3名のファトゥスとの交わり（重
     const p19 = r.html.split('id="dp19"')[1].split('<section')[0];
     assert.equal((p19.match(/class="dp-mcard"/g) || []).length, 3);
     assert.ok(p19.includes('三人との比較から見えるあなた') && p19.includes('比較から見えるあなた'));
+  }
+});
+
+test('完全解析 DIPPER：四つの反応領域（12特性を4領域に・重複なし）とあなたの反応領域（内訳と解釈。平均の順位・判定を出さない）', async () => {
+  const C = await import('../jagan/complete/copy.mjs');
+  const { buildComplete } = await import('../jagan/complete/model.mjs');
+  const { PAGE_TITLES } = await import('../jagan/complete/view.mjs');
+  const { sampleComplete } = await import('../jagan/complete-sample.mjs');
+  const all = C.RESPONSE_DOMAINS.list.flatMap((d) => d.traits);
+  assert.deepEqual([...all].sort(), BUNDLE.items.traits.map((t) => t.id).sort());
+  assert.deepEqual(C.RESPONSE_DOMAINS.list.map((d) => d.label), ['不安と対人警戒', '衝動と刺激', '固執と基準', '他者への働きかけ']);
+  assert.ok(PAGE_TITLES.includes('四つの反応領域') && PAGE_TITLES.includes('あなたの反応領域'));
+  assert.ok(!PAGE_TITLES.some((t) => t.includes('ドメイン')));
+  const m = buildComplete(sampleComplete(0).result, BUNDLE);
+  assert.equal(m.rdom.list[0].you[0], 'この領域では、依存70・不安69に対し、猜疑44・撤退31という配置です。');
+  for (let s = 0; s < 300; s++) {
+    const r = sampleComplete(s), mm = buildComplete(r.result, BUNDLE);
+    for (const d of mm.rdom.list) {
+      assert.ok(d.you.length >= 1 && d.you.every((t) => t.length > 10));
+      if (Math.max(...d.ts.map((t) => t.score)) <= 35) assert.ok(!d.you.join('').includes('が目立っています'));
+    }
+    assert.ok(!/最も問題|ドメイン平均/.test(r.html));
   }
 });
