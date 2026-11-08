@@ -12,7 +12,7 @@ export const PAGE_TITLES = [
   '邪眼×異相――あなたの影はどう表れるか', '上位3名のファトゥスとの交わり',
   '下位の邪眼', '下位の異相', '強みとは何か',
   '四つの反応領域', 'あなたの反応領域',
-  '弱点をどう活かすか', '人物から得るもの', '7日間の観察実験', '再読時の判断材料', '邪眼辞典', '異相辞典',
+  '自分の影をどう受け止めるか', '人物から得るもの', '7日間の観察実験', '再読時の判断材料', '邪眼辞典', '異相辞典',
 ];
 
 export function renderComplete(m) {
@@ -280,17 +280,25 @@ export function renderComplete(m) {
       ${R.list.map((d) => `<tr><td style="color:${d.color}">${E(d.label)}</td><td>${d.ts.map((t) => E(t.label)).join('・')}</td><td>${E(d.q)}</td></tr>`).join('')}</tbody></table>
       <p class="dp-note">${E(R.note)}</p>`, { sub: R.sub });
     page('dp-wide dp-rdom', R.youKicker, R.youTitle, `<p class="dp-p dp-lead">${E(R.youIntro)}</p>
-      <div class="dp-rd4">${R.list.map((d) => `<div class="dp-rdc you" style="--c:${d.color}"><div class="dp-rden">${E(d.en)}</div><div class="dp-rdname">${E(d.label)}</div>
-        <p class="dp-rdknow"><b>${E(R.labels.know)}</b>${E(d.read)}</p>
+      ${R.list.map((d) => `<div class="dp-rdrow" style="--c:${d.color}">
+        <div class="dp-rdl"><div class="dp-rden">${E(d.en)}</div><div class="dp-rdname">${E(d.label)}</div><p>${E(d.lead)}</p></div>
         <div class="dp-rdbars">${d.ts.map((t) => `<div class="dp-row"><span><i>${E(codeOf(t.id))}</i>${E(t.label)}</span>${bar(t.score, d.color)}<b>${t.score}</b></div>`).join('')}</div>
-        <div class="dp-rdk">${E(R.labels.you)}</div>${d.you.map((t) => `<p class="dp-rdp">${E(t)}</p>`).join('')}
-        <p class="dp-rdscene"><b>${E(R.labels.scene)}</b>${E(d.scene)}</p>
-        <p class="dp-rdq"><b>${E(R.labels.q)}</b>「${E(d.qYou)}」</p></div>`).join('')}</div>
+        <div class="dp-rdyou"><b>${E(R.labels.you)}</b>${d.you.map((t) => E(t)).join('')}</div>
+      </div>`).join('')}
+      <div class="dp-msum"><div class="dp-pk">${E(R.labels.think)}</div><p>${E(R.think)}</p></div>
       <p class="dp-note">${E(R.note)}</p>`, { sub: R.youSub });
   }
 
-  // P28 弱点をどう活かすか
-  page('dp-text', 'WEAKNESS', '弱点をどう活かすか', `<p class="dp-p">${E(m.fixed.weakness)}</p>${m.topI.map((x) => `<div class="dp-card" style="--c:${x.color}"><div class="dp-k">${E(x.label)}</div><p class="dp-p">${E(x.deep.weak)}</p></div>`).join('')}`);
+  // 自分の影をどう受け止めるか（オーナー案・2026-11-08。旧「弱点をどう活かすか」を置き換え）
+  { const A = m.accept;
+    page('dp-wide dp-accept', A.kicker, A.title, `<p class="dp-p dp-lead">${E(A.intro)}</p>
+      <div class="dp-ac3">${A.steps.map((x, i) => `<div class="dp-acs"><span class="dp-rk">${pad(i + 1)}</span><b>${E(x.k)}</b><small>${E(x.sub)}</small><p>${E(x.text)}</p></div>`).join('')}</div>
+      <div class="dp-ac2"><div class="dp-acb left" style="--c:${m.isou.color}"><div class="dp-pk">${E(A.leftTitle)}</div>${A.left.map((t) => `<p>${E(t)}</p>`).join('')}</div>
+        <div class="dp-acb"><div class="dp-pk">${E(A.rightTitle)}</div><p>${E(A.right)}</p></div></div>
+      <div class="dp-ac2 small">${A.bottom.map((x) => `<div class="dp-acb"><div class="dp-pk">${E(x.k)}</div><p>${E(x.text)}</p></div>`).join('')}</div>
+      <p class="dp-note">${E(A.bottomNote)}</p>
+      <div class="dp-acclose">${E(A.closing)}</div>`, { sub: A.sub });
+  }
 
   // P29 人物から得るもの
   page('dp-text', 'FROM FATUI', '人物から得るもの', `<p class="dp-p">上位3名の物語から、あなたの影の扱い方として借りられる視点です。人物と同じ行動をとるという意味ではありません。</p>

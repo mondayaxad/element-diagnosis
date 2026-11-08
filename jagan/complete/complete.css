@@ -248,3 +248,20 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-rdtab { width: 100%; border-collapse: collapse; font-size: 14px; } .dp-rdtab th { text-align: left; font-weight: 400; font-size: 12px; letter-spacing: .14em; color: var(--gold); padding: 6px 8px; border-bottom: 1px solid var(--line2); }
 .dp-rdtab td { padding: 9px 8px; border-bottom: 1px solid var(--line); } .dp-rdtab td:first-child { font-weight: 700; white-space: nowrap; }
 @media (max-width: 760px) { .dp-rd4 { grid-template-columns: 1fr; } .dp-rdtab td:nth-child(2) { white-space: normal; } }
+/* あなたの反応領域（横長カード4段） */
+.dp-rdrow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 6px 26px; border: 1px solid var(--line); border-left: 3px solid var(--c); border-radius: 10px; padding: 14px 20px; margin-bottom: 12px; background: rgba(24,12,18,.72); }
+.dp-rdrow .dp-rdname { font-size: 24px; } .dp-rdl p { margin: 0; font-size: 14px; color: var(--sub); }
+.dp-rdrow .dp-rdbars { border: 0; margin: 0; align-self: center; }
+.dp-rdyou { grid-column: 1 / -1; border-top: 1px dashed var(--line2); padding-top: 8px; font-size: 14px; }
+.dp-rdyou b { color: var(--c); font-size: 13px; letter-spacing: .1em; margin-right: 12px; }
+/* 自分の影をどう受け止めるか */
+.dp-ac3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 6px 0 14px; }
+.dp-acs { border: 1px solid var(--line2); border-top: 3px solid var(--rose); border-radius: 4px 4px 10px 10px; padding: 12px 16px; background: rgba(24,12,18,.72); }
+.dp-acs .dp-rk { font-size: 16px; margin-right: 8px; } .dp-acs b { font-size: 20px; } .dp-acs small { display: block; color: var(--gold); font-size: 12.5px; letter-spacing: .1em; margin: 2px 0 6px; }
+.dp-acs p, .dp-acb p { margin: 0 0 6px; font-size: 14px; }
+.dp-ac2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.dp-acb { border: 1px solid var(--line2); border-radius: 10px; padding: 14px 18px; background: rgba(18,9,14,.6); }
+.dp-acb.left { border-left: 3px solid var(--c); background: color-mix(in srgb, var(--c) 7%, rgba(18,9,14,.6)); }
+.dp-ac2.small .dp-acb { padding: 10px 16px; } .dp-ac2.small p { color: var(--sub); }
+.dp-acclose { margin-top: 16px; text-align: center; font-size: 18px; letter-spacing: .06em; padding: 14px 8px; border-top: 1px solid var(--line2); border-bottom: 1px solid var(--line2); color: #f2dfc0; }
+@media (max-width: 760px) { .dp-rdrow, .dp-ac3, .dp-ac2 { grid-template-columns: 1fr; } }

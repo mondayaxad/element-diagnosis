@@ -6,7 +6,7 @@
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
-import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
+import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, ACCEPT_PAGE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
 
 const r1 = (x) => Math.round(x * 10) / 10;
 
@@ -84,9 +84,10 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
   for (const x of topI) x.detail = isouDetail(x, isous, topE, r1(overall));
   const combo = comboOf(elements[0], isous[0]);
   const mirror = mirrorOf(topF, elements[0], isous);
-  const rdom = responseDomains(score, traitLabel);
+  const rdom = responseDomains(score, traitLabel, isous);
+  const accept = acceptPage(isous, elements[0]);
   return {
-    product: PRODUCT, detailLabels: DETAIL_LABELS, combo, mirror, rdom, fixed: FIXED, panel: PANEL, diagnosedAt,
+    product: PRODUCT, detailLabels: DETAIL_LABELS, combo, mirror, rdom, accept, fixed: FIXED, panel: PANEL, diagnosedAt,
     live: { intro: LIVE_INTRO, rows: LIVE_ROWS }, read: { intro: READ_INTRO, rows: READ_ROWS },
     peaks, valleys, themes,
     gapE: { a: elements[0], b: elements[1], d: elements[0].score - elements[1].score },
@@ -256,36 +257,53 @@ export function mirrorOf(topF, e, isous) {
 }
 
 // 四つの反応領域：各領域の特性の得点と、その違いから「あなたの場合」を組み立てる（領域平均の順位はつけない）
-export function responseDomains(score, traitLabel) {
-  const R = RESPONSE_DOMAINS;
+const SH = (id) => TRAIT_SHORT[id];
+export function responseDomains(score, traitLabel, isous) {
+  const R = RESPONSE_DOMAINS, top3 = isous.slice(0, 3).map((x) => x.id);
   const list = R.list.map((d) => {
-    const ts = d.traits.map((id) => ({ id, label: traitLabel(id), score: Math.round(score(id)), color: d.color, code: null }));
+    const ts = d.traits.map((id) => ({ id, label: traitLabel(id), score: Math.round(score(id)) }));
     const s = [...ts].sort((a, b) => b.score - a.score);
-    const lab = (arr) => arr.map((t) => `${t.label}${t.score}`).join('・');
+    const koto = (arr) => arr.map((t) => `${SH(t.id).verb}こと`).join('や');
     const you = [];
-    if (s[0].score <= 35) {
-      // いずれも低め：違いを「目立つ反応」として読まない
-      you.push(`この領域は、${lab(ts)}で、いずれも低めの得点です。${s[0].score - s[s.length - 1].score >= 10 ? `その中では${s[0].label}がやや高く出ていますが、この領域の反応が目立つ配置ではありません。` : ''}`);
-      you.push(`低いことは、${d.lowNot}という意味ではありません。どんな場面で、これらの反応が起きにくいのかを振り返れます。`);
+    if (ts.length >= 3 && !top3.includes(s[0].id) && s[0].score - s[1].score >= 8) {
+      // 領域内で最も高いが、今回の上位特性ではない
+      you.push(`${'一二三四五'[ts.length - 1]}特性の中では${s[0].label}が高いものの、今回の上位特性ではありません。領域内で最も高いという理由だけで、${SH(s[0].id).judgeNot}とは判断しません。各特性の意味と、実際の関わりを照らして読みます。`);
+    } else if (s[0].score <= 35) {
+      you.push(`${koto(ts)}への当てはまりは少ない配置です。これは、${d.lowNot}という意味ではありません。`);
     } else if (ts.length === 2) {
       const [a, b] = s;
-      you.push(`この領域は、${lab(ts)}です。`);
-      you.push(a.score - b.score >= 10 ? `${a.label}の方が高く、${d.pair[a.id]}` : d.pair.close);
+      you.push(a.score - b.score >= 10 ? `この二特性では、${a.label}の得点が上回っています。${d.pair[a.id]}` : d.pair.close);
     } else {
       let cut = 0, gap = -1;
       for (let i = 0; i < s.length - 1; i++) if (s[i].score - s[i + 1].score > gap) { gap = s[i].score - s[i + 1].score; cut = i + 1; }
       if (gap >= 10) {
         const hi = s.slice(0, cut), lo = s.slice(cut);
-        you.push(`この領域では、${lab(hi)}に対し、${lab(lo)}という配置です。`);
-        const say = (arr, j) => (arr.length >= 3 ? arr.map((t) => t.label).join('・') : arr.map((t) => N(t.id)).join(j));
-        you.push(`今回の回答では、${say(lo, 'や、')}よりも、${say(hi, 'と、')}が目立っています。この違いから、この領域の反応が起きるとき、何が中心になっているのかを考えられます。`);
+        you.push(`今回は、${hi.map((t) => SH(t.id).short).join('と、')}が目立っています。${lo.length >= 3 ? `${lo.map((t) => t.label).join('・')}への当てはまり` : koto(lo)}よりも、${hi.length === 1 ? `${SH(hi[0].id).verb}反応` : `${hi.map((t) => t.label).join('と')}をめぐる反応`}から、自分の経験を振り返れます。`);
       } else {
-        you.push(`この領域では、${lab(s)}と、近い得点で並んでいます。どれか一つではなく、それぞれがどの場面で表れるかを見ていきます。`);
+        you.push(`${s.map((t) => t.label).join('・')}が、近い得点で並んでいます。どれか一つではなく、それぞれがどの場面で表れるかを見ていきます。`);
       }
+      if (d.caution) you.push(d.caution);
     }
-    if (d.id === 'anx' && score('SEP') >= 55 && score('WDR') >= 55) you.push('依存と撤退がともに高めです。得点だけで「近づきたいのに離れる」と決めず、つながりを求めることと関わりを控えることが、同じ相手との間で起きるのか、別の場面なのかを確かめます。');
-    if (d.caution) you.push(d.caution);
-    return { ...d, ts, you };
+    if (d.id === 'anx' && score('SEP') >= 55 && score('WDR') >= 55) you.push('依存と撤退がともに高めです。得点だけで「近づきたいのに離れる」と決めず、同じ相手との間で起きるのか、別の場面なのかを確かめます。');
+    return { ...d, ts, you, line: s.map((t) => `${t.label}${t.score}`).join('・') };
   });
-  return { ...R, list };
+  // この配置から考えること：内側で感じる反応（不安と対人警戒）と、外に表す反応（衝動・敵意）の違い
+  const inner = R.list[0].traits.map((id) => ({ id, label: traitLabel(id), score: score(id) })).sort((a, b) => b.score - a.score);
+  const outerMax = Math.max(score('IMP'), score('HOS'));
+  const outerAll = ['IMP', 'RSK', 'HOS', 'ATT', 'MAN', 'CAL'].map((id) => ({ id, label: traitLabel(id), score: score(id) })).sort((a, b) => b.score - a.score);
+  let think;
+  if (inner[0].score >= outerMax + 15) think = `今回の回答では、${inner[0].label}や${inner[1].label}への当てはまりと、衝動や敵意への当てはまりに違いがあります。心の内側で感じることと、外に表す行動を分けて振り返ると、自分の経験をより具体的に理解できます。`;
+  else if (outerAll[0].score >= inner[0].score + 15) think = `今回の回答では、${outerAll[0].label}や${outerAll[1].label}への当てはまりが、${inner[0].label}など不安や距離をめぐる反応より高く出ています。外に表れる反応と、その手前で感じていることを分けて振り返ると、自分の経験をより具体的に理解できます。`;
+  else think = '今回の回答では、領域の間で大きな偏りは見られません。どの領域の反応が、どんな場面で表れるかを一つずつ照らし合わせると、自分の経験をより具体的に理解できます。';
+  return { ...R, list, think };
+}
+
+// 自分の影をどう受け止めるか：左のカードだけ今回の上位の異相から組み立てる（ほかは共通の説明）
+export function acceptPage(isous, e) {
+  const [a, b, c] = isous;
+  const dom = (id) => RESPONSE_DOMAINS.list.find((d) => d.traits.includes(id));
+  const left = [`今回は、${a.label}と${b.label}が上位にあります。${ELEMENT_COMBO[e.id].when}とき、${SH(a.id).short}と、${SH(b.id).short}がどう表れるかが、理解の入口です。`];
+  if (dom(c.id) !== dom(a.id) && dom(c.id) !== dom(b.id)) left.push(`${c.label}も上位にあるため、${a.label}や${b.label}とは別に、${SH(c.id).verb}場面があるかも振り返れます。二つが同じ場面で起きるとは限りません。`);
+  else left.push(`${c.label}も上位にあり、${dom(c.id).label}の領域の反応が重なっています。同じ領域でも、それぞれの特性がどの場面で表れるかを分けて見ていきます。`);
+  return { ...ACCEPT_PAGE, left };
 }
