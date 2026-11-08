@@ -2,11 +2,11 @@
 //   画面（view.mjs）はこの中身だけを使う。数値・順位はすべて結果と同じ版の計算から取る（新しい採点はしない）。
 //   ・邪眼元素の全体順位：result.element.ranking（1位の選定と同じ規則）
 //   ・異相の全体順位：orderIsou（1位は必ず result.isou と同じ）
-//   ・ファトゥスの順位：result.characterOrder（人物ごとの出やすさの偏りを補正した順）。1位の一致度は結果ページと同じ character.match
+//   ・ファトゥスの並び：result.characterOrder（表示する一致度の高い順）。「あなたのファトゥス」（selected）は、近い人物の中から出やすさの偏りを抑えて選んだ1名
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
-import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, DICT_PAGE, ELEMENT_MISREAD, TRAIT_DICT_HL, OVERVIEW_COPY, FATUI_SPLIT, TRAIT_SCENE, GUIDE_PAGE, ELEMENT_LINE, TRAIT_LINE, FATUI_LINE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
+import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, DICT_PAGE, ELEMENT_MISREAD, TRAIT_DICT_HL, OVERVIEW_COPY, FATUI_SPLIT, TRAIT_SCENE, GUIDE_PAGE, ELEMENT_LINE, TRAIT_LINE, FATUI_LINE, COMBO_FLOW, TRAIT_RECEIVE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
 
 const r1 = (x) => Math.round(x * 10) / 10;
 
@@ -35,7 +35,7 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
     const meta = bundle.characters.characters.find((x) => x.id === c.id);
     return {
       id: c.id, name: c.name, rank: i + 1, title: meta.title, tags: meta.tags, region: meta.region_label,
-      match: i === 0 && ch && ch.id === c.id ? ch.match : Math.round(c.rawSimilarity),
+      match: Math.round(c.rawSimilarity), raw: c.rawSimilarity,
       // 人物名の色：オーナー指定の組み合わせ（マイページと同じ）。黒で終わる人物は、文字が読める暗さまで
       // 人物名の文字色だけは、オーナー指定の組み合わせ（マイページと同じ）を使う。元素の札や、邪眼との結びつけはレポートで扱わない（2026-11-08 オーナー指定）
       elements: (FATUI_TONE[c.id] || []).map((k) => (ELEMENT_COLOR[k] ? ELEMENT_COLOR[k].main : FATUI_TONE_EXTRA[k] === FATUI_TONE_EXTRA.BLACK ? '#7a2a2a' : FATUI_TONE_EXTRA[k])),
@@ -43,7 +43,7 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
       aligned: ex.aligned.map((x) => ({ label: traitLabel(x.axis), you: Math.round(x.userScore), ref: Math.round(x.referenceScore) })),
       rows: ex.rows.map((x) => ({ id: x.axis, label: traitLabel(x.axis), you: Math.round(x.userScore), ref: Math.round(x.referenceScore), diff: Math.round(Math.abs(x.userScore - x.referenceScore)) })).sort((a, b) => a.diff - b.diff),
       different: ex.different.map((x) => ({ label: traitLabel(x.axis), you: Math.round(x.userScore), ref: Math.round(x.referenceScore) })),
-      copy: CHARACTER_COPY[c.id], deep: FATUI_DEEP[c.id], meta, selected: !!(ch && ch.id === c.id),
+      copy: CHARACTER_COPY[c.id], deep: FATUI_DEEP[c.id], meta, selected: !!c.selected,
     };
   });
 
@@ -59,7 +59,9 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
 
   const topI = isous.slice(0, 3), lowI = isous.slice(-3).reverse();
   const topE = elements.slice(0, 3), lowE = elements.slice(-2).reverse();
-  const topF = fatui.slice(0, 3);
+  // 上位3名：あなたのファトゥスと、それ以外で一致度の高い2名（一覧の順とは別に、選ばれた人物を必ず含める）
+  const selF = fatui.find((f) => f.selected);
+  const topF = selF ? [selF, ...fatui.filter((f) => !f.selected).slice(0, 2)] : fatui.slice(0, 3);
   // 各邪眼元素に連なるファトゥス（色の組み合わせにその元素を含む人物。順位の高い順）
   // 7日間の観察：上位の異相から順に（足りなければ次の順位へ）
   const days = isous.slice(0, 7).map((x, i) => ({ day: i + 1, label: x.label, color: x.color, q: x.deep.exp }));
@@ -92,7 +94,7 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
     gapE: { a: elements[0], b: elements[1], d: elements[0].score - elements[1].score },
     gapI: { a: isous[0], b: isous[1], d: isous[0].score - isous[1].score },
     dti: { code: result.dti.code, name: result.dti.name },
-    element: elements[0], isou: isous[0], character: ch ? fatui[0] : null,
+    element: elements[0], isou: isous[0], character: ch ? selF : null,
     overview: typeOverview({ name: result.dti.name, code: result.dti.code, element: el.label, isou: is.label, elText: ELEMENT_TEXT[el.id], isouText: ISOU_TEXT[is.id] }),
     elements, isous, fatui, fatuiTop: fatui.slice(0, 6), fatuiRest: fatui.slice(6),
     topE, lowE, topI, lowI, topF,
@@ -181,7 +183,15 @@ export function comboOf(e, x) {
     q = `${ec.when}ときほど、${tc.want}か。それとも、別々の場面で起きているか。`;
     rows = [...parts.map((p) => ({ label: p.label, score: p.score, see: N(p.id), color: e.color.main })), { label: X, score: x.score, see: N(x.id), self: true, sep: true, color: x.color }];
   }
+  // 今回の得点から読む流れ。受け止め方の冒頭は、邪眼の構成特性のうち低いものと異相を比べる（今回の回答での強弱）
+  const lowPart = [...parts].filter((p) => p.id !== x.id).sort((a, b) => a.score - b.score)[0];
+  const closeP = parts.find((p) => p.id !== x.id && Math.abs(p.score - x.score) <= CLOSE);
+  const receive = (inc && lowPart && x.score - lowPart.score >= 10 ? `${N(lowPart.id)}より、${N(x.id)}のほうが、回答に強く表れています。` : '')
+    + (closeP ? `${x.label}${x.score}と${closeP.label}${closeP.score}は近い得点で、どちらかが際立っているわけではありません。` : '')
+    + TRAIT_RECEIVE[x.id];
+  const flow = { ...COMBO_FLOW, items: [td.scenes, receive, TRAIT_READ[x.id].daily, td.signs, `「${_EL_LIVE[e.id].ask}」${td.coexist}`] };
   return {
+    flow,
     labels: COMBO_LABELS, inc, tag: inc ? COMBO_LABELS.incTag : COMBO_LABELS.sepTag, relation, headline, you, day, rows, heavy, q,
     e: { label: L, color: e.color.main, sub: `${parts.map((p) => p.label).join('・')}をまとめた、${ec.about}に関する反応。` },
     x: { label: X, color: x.color, sub: `${ISOU_TEXT[x.id].essence}。` },
@@ -266,7 +276,14 @@ export function mirrorOf(topF, e, isous) {
     if (qT) { usedQ.add(qT.id); question = `${sc(qT)}を、最近の出来事から一つ思い出せますか。そのとき、相手や状況はどうでしたか。`; }
     else if (qD) { usedQ.add(qD.id); question = `${f.name}との比較で差があった${qD.label}について、${sc(qD)}を思い出せますか。人物の参照とは違う、あなた自身の場面として説明してみてください。`; }
     else question = f.copy.reflection;
-    return { f, rows, aligned, different, main, you, shortAl, shortDf, proseAl, proseDf, proseOverlap, story: { fact: f.copy.story_context, dti: meta.rationale }, overlap, question };
+    // 16 の各項目（主語は回答者。比較していない特性は「扱っていない」とする）
+    const topUser = isous.slice(0, 2);
+    const feature = `あなたの回答では、${topUser.map((t) => t.label).join('と')}が目立っています。${main}`;
+    const notCompared = isous.slice(0, 3).filter((t) => !rows.some((r) => r.id === t.id)).map((t) => t.label);
+    const differ = `${proseDf}${notCompared.length ? `なお、${notCompared.join('・')}は、${f.name}との照合では扱っていません。` : ''}`;
+    const scene = `${f.copy.story_context}（照合に使う特性：${rows.map((r) => r.label).join('・')}）`;
+    const proseShort = `${al.length ? `${al.map((r) => r.label).join('・')}で近い配置です。` : 'はっきり近い特性は少ない配置です。'}${df.length ? `${df.map((r) => r.label).join('・')}は離れています。` : ''}`;
+    return { f, rows, aligned, different, main, you, shortAl, shortDf, proseAl, proseDf, proseOverlap, feature, differ, scene, proseShort, story: { fact: f.copy.story_context, dti: meta.rationale }, overlap, question };
   });
   // まとめ：繰り返し近さの根拠になる特性と、人物ごとの一致理由
   const cnt = {};

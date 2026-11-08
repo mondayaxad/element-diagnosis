@@ -72,7 +72,7 @@
       "usedAxes": [
         "HOS"
       ],
-      "selectionMethod": "fixed_balance_offset",
+      "selectionMethod": "fixed_balance_offset_within_gap",
       "rawGap": 0
     },
     "semanticCheck": true
@@ -154,7 +154,7 @@
         "CAL",
         "HOS"
       ],
-      "selectionMethod": "fixed_balance_offset",
+      "selectionMethod": "fixed_balance_offset_within_gap",
       "rawGap": 0
     },
     "semanticCheck": true
@@ -234,7 +234,7 @@
         "MAN",
         "CAL"
       ],
-      "selectionMethod": "fixed_balance_offset",
+      "selectionMethod": "fixed_balance_offset_within_gap",
       "rawGap": 0
     },
     "semanticCheck": true
@@ -315,7 +315,7 @@
         "HOS",
         "CAL"
       ],
-      "selectionMethod": "fixed_balance_offset",
+      "selectionMethod": "fixed_balance_offset_within_gap",
       "rawGap": 0
     },
     "semanticCheck": true
@@ -398,7 +398,7 @@
         "IMP",
         "CAL"
       ],
-      "selectionMethod": "fixed_balance_offset",
+      "selectionMethod": "fixed_balance_offset_within_gap",
       "rawGap": 0
     },
     "semanticCheck": true
@@ -476,7 +476,7 @@
       "usedAxes": [
         "MAN"
       ],
-      "selectionMethod": "fixed_balance_offset",
+      "selectionMethod": "fixed_balance_offset_within_gap",
       "rawGap": 0
     },
     "semanticCheck": true
@@ -556,7 +556,7 @@
         "HOS",
         "SUS"
       ],
-      "selectionMethod": "fixed_balance_offset",
+      "selectionMethod": "fixed_balance_offset_within_gap",
       "rawGap": 0
     },
     "semanticCheck": true
@@ -636,7 +636,7 @@
         "WDR",
         "HOS"
       ],
-      "selectionMethod": "fixed_balance_offset",
+      "selectionMethod": "fixed_balance_offset_within_gap",
       "rawGap": 0
     },
     "semanticCheck": true
@@ -718,7 +718,7 @@
         "MAN",
         "CAL"
       ],
-      "selectionMethod": "fixed_balance_offset",
+      "selectionMethod": "fixed_balance_offset_within_gap",
       "rawGap": 0
     },
     "semanticCheck": true
@@ -796,7 +796,7 @@
       "usedAxes": [
         "MAN"
       ],
-      "selectionMethod": "fixed_balance_offset",
+      "selectionMethod": "fixed_balance_offset_within_gap",
       "rawGap": 0
     },
     "semanticCheck": true
@@ -874,7 +874,7 @@
       "usedAxes": [
         "RSK"
       ],
-      "selectionMethod": "fixed_balance_offset",
+      "selectionMethod": "fixed_balance_offset_within_gap",
       "rawGap": 0
     },
     "semanticCheck": true

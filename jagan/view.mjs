@@ -286,7 +286,7 @@ function foundationCard(result, bundle, g) {
 function unlockAll() {
   const items = [
     ['12特性のスコアと読み解き', '三つの土台の全特性を、数値と意味・読み方の限界とともに解説'],
-    ...GROUPS.map((g) => [g.short, `${g.traits.length}つの特性が、強みとして働く面と負担になる面`]),
+    ...GROUPS.map((g) => [g.short, `${g.traits.length}つの特性が、どんな場面で表れ、どんな負担につながるか`]),
     ['邪眼元素と異相の判定根拠', 'なぜその組み合わせに至ったか、寄与した特性から解説'],
     ['近しいファトゥス3名', '参照した特性との共通点・相違点と、物語からの振り返りの問い'],
   ];

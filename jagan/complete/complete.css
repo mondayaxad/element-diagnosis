@@ -371,3 +371,7 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-t3p { margin: 6px 0 0; font-size: 13.5px; line-height: 1.85; color: var(--sub); }
 .dp-mline { margin: 4px 0 8px; font-size: 14.5px; color: #e8a0b0; padding-bottom: 8px; border-bottom: 1px dashed var(--line2); }
 .dp-mdl { grid-template-columns: 11.5em 1fr; }
+.dp-t3sel { display: block; font-size: 11px; letter-spacing: .1em; color: var(--gold); margin-bottom: 4px; font-weight: 400; }
+.dp-cflow { margin-top: 16px; } .dp-cflow ol { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.dp-cflow li { border: 1px solid var(--line2); border-top: 3px solid color-mix(in srgb, var(--rose) 70%, transparent); border-radius: 4px 4px 10px 10px; padding: 10px 12px; background: rgba(24,12,18,.72); }
+.dp-cflow li span { font-family: 'IM Fell English', serif; color: var(--rose); font-size: 15px; margin-right: 6px; } .dp-cflow li b { font-size: 13.5px; } .dp-cflow li p { margin: 6px 0 0; font-size: 13px; line-height: 1.8; color: var(--sub); }

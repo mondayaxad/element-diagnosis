@@ -10,6 +10,7 @@ import { TOKEN_RE, UUID_RE, linkOpen, openOwn, register, accessToken, supabaseCl
 
 const $ = (id) => document.getElementById(id);
 function track(name, params) { try { if (typeof window.gtag === 'function') window.gtag('event', name, params || {}); } catch { /* 計測だけ */ } }
+const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 function status(html) { $('rpStatus').hidden = false; $('rpStatus').innerHTML = html; }
 const fail = (text, extra = '') => status(`<p>${text}</p>${extra}<p class="jg-small"><a href="/jagan/">邪眼診断のトップへ</a>　<a href="/mypage#jagan">マイページ</a></p>`);
 
@@ -22,7 +23,12 @@ function render(report) {
   try { result = computeDiagnosis({ answers: report.answers, resultId: report.resultId, itemSetVersion: report.itemSetVersion }, BUNDLE); }
   catch { fail('レポートを表示できませんでした（版が違う可能性があります）。お問い合わせください。'); return false; }
   $('rpStatus').hidden = true;
-  $('rpBody').innerHTML = renderReport(result, BUNDLE);
+  // 保存時の人物と、いまの版で計算した人物が違うとき（人物判定の版の更新）は、黙って上書きせずに説明を添える
+  const saved = report.headline && report.headline.character;
+  const now = result.character.status === 'available' ? result.character.name : null;
+  const note = saved && saved !== now
+    ? `<p class="rp-vnote">保存時の「最も近しいファトゥス」は${esc(saved)}（${esc(report.headline.matchPercent)}%）でした。人物の判定の版を更新したため、この表示は新しい版で計算しています。邪眼・異相の結果は変わりません。</p>` : '';
+  $('rpBody').innerHTML = note + renderReport(result, BUNDLE);
   $('rpEnd').hidden = false;
   $('rpKeep').hidden = false;
   document.title = `邪眼解析レポート ${result.dti.code}｜邪眼診断`;

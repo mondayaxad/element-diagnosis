@@ -54,7 +54,9 @@ test('the site engine returns exactly the spec runtime result for 2,000 varied a
   const fixtures = JSON.parse(fs.readFileSync(path.join(SPEC, 'parity-fixtures.json'), 'utf8'));
   for (const f of fixtures) {
     const got = characterRanking(f.scores, BUNDLE.characters);
-    assert.equal(got[0].id, f.winner);
+    // 0.5.0：補正は最も近い人物から selection_max_gap 点以内の人物にだけ使う
+    const mx = Math.max(...got.map((c) => c.score));
+    assert.equal(got.find((c) => c.score >= mx - BUNDLE.characters.selection_max_gap - 1e-9).id, f.winner);
     for (const c of got) assert.ok(Math.abs(c.score - f.raw[c.id]) < 1e-8);
   }
 });
@@ -922,8 +924,11 @@ test('完全解析 DIPPER：06＝比較の要点（近さに寄与した特性�
     assert.ok(!/あなた\d|参照\d|class="dp-chips"><i style/.test(p6), '06 は文章で、人物の元素の札を出さない');
     assert.ok(!p6.includes('あなたの結果との関係') && !p6.includes('重なる反応を拾う'));
     const p16 = html.split(`id="dp${String(n16).padStart(2, '0')}"`)[1].split('<section')[0];
-    for (const k of ['人物の描写', 'あなたと重なるところ', 'あなたと異なるところ', '邪眼・異相との関係', '自分に戻す問い', '作品の描写', 'DTI の参照の置き方']) assert.ok(p16.includes(k), k);
+    for (const k of ['あなたの回答に出ている特徴', 'その人物と重なる反応', '読み方を支える原作の場面', 'その人物と異なるところ', '自分の日常で確かめる問い', '照合に使う特性']) assert.ok(p16.includes(k), k);
     assert.ok(!/あなた\d|参照\s?\d|dp-mvals/.test(p16), '16 は数値ではなく文章で');
+    // 一覧は表示する一致度の順（丸め前の値で降順）、あなたのファトゥスは最も近い人物から 5 ポイント以内
+    const fl = buildComplete(result, BUNDLE).fatui; for (let i = 1; i < fl.length; i++) assert.ok(fl[i - 1].raw >= fl[i].raw);
+    const sel = fl.find((f) => f.selected); if (sel) assert.ok(fl[0].raw - sel.raw <= BUNDLE.characters.selection_max_gap + 1e-9);
     assert.ok(!/寄与 \d|[>（]重み ?\d|計算上の重み/.test(html));
     const m = buildComplete(result, BUNDLE);
     const qs = m.mirror.people.map((p) => p.question);

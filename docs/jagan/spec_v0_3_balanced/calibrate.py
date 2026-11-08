@@ -33,17 +33,24 @@ def raw_scores(x):
 def eligible(x):
  return np.ptp(x[:,[aix[k] for k in model['mapped_axes']]],axis=1)>=model['minimum_mapped_spread']
 x,labels=profile_set(20261103);train=raw_scores(x[eligible(x)]);temp=.12
-# The gauge constraint is handled by centering; sum of offsets has no effect on winners.
-def loss(b):
- z=(train+b)/temp;lse=logsumexp(z,axis=1);p=np.exp(z-lse[:,None]);return float(temp*lse.mean()-b.mean()),p.mean(0)-1/nchar
-fit=minimize(loss,np.zeros(nchar),jac=True,method='L-BFGS-B',options={'maxiter':1200,'ftol':1e-13,'gtol':1e-9,'maxls':50})
-b=fit.x-fit.x.mean()
+# 0.5.0：補正は「補正前の近さが最も近い人物から selection_max_gap 点以内」の人物にだけ使う。
+#   この条件のもとで、各人物の出現率が 1/11 に近づくよう、固定補正を反復で求める（実利用者のカウンターは使わない）。
+G=float(model.get('selection_max_gap',float('inf')))
+def pick(raw,b):
+ mx=raw.max(1,keepdims=True);v=np.where(raw>=mx-G-1e-9,raw+b,-np.inf);return v.argmax(1)
+b=np.zeros(nchar)
+for it in range(1500):
+ share=np.bincount(pick(train,b),minlength=nchar)/len(train);lr=1.5 if it<600 else (.5 if it<1200 else .15)
+ b=b+lr*(1/nchar-share)*nchar
+b=b-b.mean()
+class _F: success=True
+fit=_F()
 for c,v in zip(chars,b):c['selection_offset']=round(float(v),8)
-model['calibration']={'seed':20261103,'baseline':'four_equal_synthetic_cohorts','train_n':len(x),'eligible_train_n':int(eligible(x).sum()),'temperature':temp,'optimizer_success':bool(fit.success),'not_live_user_distribution':True,'target_share':1/nchar,'offset_mean':float(b.mean()),'anchor_sha256':hashlib.sha256(json.dumps([c['anchors'] for c in chars],sort_keys=True).encode()).hexdigest()}
+model['calibration']={'seed':20261103,'baseline':'four_equal_synthetic_cohorts','train_n':len(x),'eligible_train_n':int(eligible(x).sum()),'temperature':temp,'selection_max_gap':G,'method':'iterative_share_matching_within_gap','optimizer_success':bool(fit.success),'not_live_user_distribution':True,'target_share':1/nchar,'offset_mean':float(b.mean()),'anchor_sha256':hashlib.sha256(json.dumps([c['anchors'] for c in chars],sort_keys=True).encode()).hexdigest()}
 (root/'characters.json').write_text(json.dumps(model,ensure_ascii=False,indent=2)+'\n')
 report={'train':{},'holdouts':[]};cohorts=[]
 def metrics(raw):
- base=raw.argmax(1);win=(raw+b).argmax(1);before=np.bincount(base,minlength=nchar)/len(raw);after=np.bincount(win,minlength=nchar)/len(raw)
+ base=raw.argmax(1);win=pick(raw,b);before=np.bincount(base,minlength=nchar)/len(raw);after=np.bincount(win,minlength=nchar)/len(raw)
  gap=raw.max(1)-raw[np.arange(len(raw)),win]
  return {'n':len(raw),'before':before.tolist(),'after':after.tolist(),'changed':float(np.mean(win!=base)),'gap_mean':float(gap.mean()),'gap_p95':float(np.quantile(gap,.95)),'gap_max':float(gap.max()),'maximum_deviation_percentage_points':float(np.abs(after-1/nchar).max()*100)}
 report['train']=metrics(train)

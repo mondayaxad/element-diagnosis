@@ -561,3 +561,4 @@ body { background: #09070B; background-image: none; }
 .rp-keep-ops { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; margin: 14px 0 6px; }
 .rp-keep-ops .rp-cta-btn { flex: 1 1 100%; }
 .rx-buy-error { color: #F2A7B5; text-align: center; margin-top: 8px; }
+.rp-vnote { margin: 0 0 16px; padding: 12px 16px; border: 1px solid rgba(226,192,140,.45); border-radius: 10px; background: rgba(226,192,140,.07); color: #f2dfc0; font-size: 14px; line-height: 1.8; }

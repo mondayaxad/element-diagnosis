@@ -656,7 +656,7 @@ export const BUNDLE = Object.freeze({
   "reference_note": "元素係数・閾値は独自の演出設計。学術的な標準値ではない。"
  },
  "characters": {
-  "version": "jagan-character-balance-0.4.0-candidate",
+  "version": "jagan-character-balance-0.5.0-candidate",
   "status": "synthetic_calibration_candidate",
   "launch_ready": false,
   "axes": [
@@ -687,7 +687,7 @@ export const BUNDLE = Object.freeze({
   "salience_start": 50,
   "minimum_mapped_spread": 10,
   "similarity_display": "raw_association_score_before_balance_offset",
-  "selection": "raw_association_score_plus_fixed_balance_offset",
+  "selection": "raw_association_score_plus_fixed_balance_offset_within_max_gap",
   "unknown_handling": "excluded_not_imputed",
   "characters": [
    {
@@ -721,7 +721,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": -0.93109866
+    "selection_offset": 5.13626883
    },
    {
     "id": "capitano",
@@ -754,7 +754,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": -3.97961752
+    "selection_offset": -34.34770213
    },
    {
     "id": "dottore",
@@ -787,7 +787,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": 4.1500107
+    "selection_offset": 11.56586837
    },
    {
     "id": "columbina",
@@ -820,7 +820,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": -4.74274228
+    "selection_offset": -35.1800967
    },
    {
     "id": "arlecchino",
@@ -853,7 +853,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": 1.8228039
+    "selection_offset": 10.97441871
    },
    {
     "id": "pulcinella",
@@ -886,7 +886,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": 0.86379029
+    "selection_offset": 8.07219208
    },
    {
     "id": "scaramouche",
@@ -919,7 +919,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": 2.52510058
+    "selection_offset": 9.34152545
    },
    {
     "id": "sandrone",
@@ -952,7 +952,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": -1.24129835
+    "selection_offset": 4.62226635
    },
    {
     "id": "signora",
@@ -985,7 +985,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": 2.82571996
+    "selection_offset": 9.78731773
    },
    {
     "id": "pantalone",
@@ -1018,7 +1018,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": 2.27024484
+    "selection_offset": 9.14771577
    },
    {
     "id": "tartaglia",
@@ -1051,7 +1051,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": -3.56291348
+    "selection_offset": 0.88022554
    }
   ],
   "calibration": {
@@ -1060,12 +1060,15 @@ export const BUNDLE = Object.freeze({
    "train_n": 33000,
    "eligible_train_n": 32987,
    "temperature": 0.12,
+   "selection_max_gap": 5,
+   "method": "iterative_share_matching_within_gap",
    "optimizer_success": true,
    "not_live_user_distribution": true,
    "target_share": 0.09090909090909091,
-   "offset_mean": 4.0371746350005693e-17,
+   "offset_mean": 8.074349270001138e-16,
    "anchor_sha256": "a2c29f9666845b54209bd4139f9bf14961453a703374ccf21b00ea83b58dd018"
-  }
+  },
+  "selection_max_gap": 5
  },
  "product": {
   "status": "implementation_candidate",

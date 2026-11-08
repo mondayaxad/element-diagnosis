@@ -1,7 +1,7 @@
 // jagan/engine/runtime.mjs — 画面・API・保存が使う結果の形（DTI：邪眼元素×異相＝4文字コードと漢字三文字の呼び名）。
 //   ・12特性の得点・人物の選定（固定の均等補正・保留条件）は judge.mjs（基礎 v0.3 の runtime と同じ計算）。
 //   ・異相・邪眼元素は dti.mjs の規則で必ず一つずつ選ぶ（基礎 v0.3 の「未顕・複合・未分化」は使わない。2026-11-04 指示書）。
-//   ・人物の「一致度」は補正を足す前の近さ（match）。DTI のコード・呼び名は人物判定に使わない。
+//   ・人物の「一致度」は補正を足す前の近さ（match）。一覧（characterOrder）も一致度の順。DTI のコード・呼び名は人物判定に使わない。
 //   ・同じ50回答は、結果ID・時刻・人数・キー順によらず同じ結果になる。
 import { judge, rankTraits, ENGINE_VERSION as JUDGE_VERSION } from './judge.mjs';
 import { selectIsou, orderElements, dtiPattern } from './dti.mjs';
@@ -51,7 +51,11 @@ export function computeDiagnosis(input, bundle) {
   const p = dtiPattern(bundle.dti, element.id, isou.id);
   const dti = { code: p.code, name: p.name, elementCode: p.element_id, aspectCode: p.aspect_code, namingVersion: bundle.dti.version };
 
-  const characterOrder = j.privateDiagnostics.characterRanking.map((c) => ({ id: c.id, name: c.name, rawSimilarity: c.score, displayScore: Math.round(c.score), agreement: c.agreement, coverage: c.coverage, usedAxes: c.usedAxes }));
+  // 表示用の人物の並び（0.5.0）：表示する一致度（補正前の近さ）の高い順。丸め前の値で並べ、同点は ID 順。
+  //   均等化の補正は「あなたのファトゥス」1名の選定にだけ使い、この並びには混ぜない（selected で示す）。
+  const characterOrder = j.privateDiagnostics.characterRanking
+    .map((c) => ({ id: c.id, name: c.name, rawSimilarity: c.score, displayScore: Math.round(c.score), agreement: c.agreement, coverage: c.coverage, usedAxes: c.usedAxes, selected: !!(j.character && j.character.id === c.id) }))
+    .sort((a, b) => b.rawSimilarity - a.rawSimilarity || a.id.localeCompare(b.id));
   const winner = j.character && characterOrder.find((c) => c.id === j.character.id);
   const character = j.character
     ? { status: 'available', id: j.character.id, name: j.character.name, title: j.character.title, tags: j.character.tags, region: j.character.region, match: j.character.match, rawSimilarity: j.character.rawSimilarity, usedAxes: j.character.usedAxes, rawGap: j.character.rawGap, agreement: winner.agreement, coverage: winner.coverage }

@@ -314,7 +314,7 @@
       "RSK": 43.75,
       "CAL": 18.75
     },
-    "winner": "arlecchino",
+    "winner": "columbina",
     "raw": {
       "pierro": 18.75,
       "capitano": 59.604815079058,
@@ -584,7 +584,7 @@
       "RSK": 81.25,
       "CAL": 87.5
     },
-    "winner": "dottore",
+    "winner": "pulcinella",
     "raw": {
       "pierro": 61.770833333333336,
       "capitano": 41.33585140265448,
@@ -824,7 +824,7 @@
       "RSK": 75.0,
       "CAL": 37.5
     },
-    "winner": "pierro",
+    "winner": "pantalone",
     "raw": {
       "pierro": 78.84615384615384,
       "capitano": 53.75452488847157,
@@ -2444,7 +2444,7 @@
       "RSK": 93.75,
       "CAL": 0.0
     },
-    "winner": "tartaglia",
+    "winner": "sandrone",
     "raw": {
       "pierro": 61.830357142857146,
       "capitano": 57.386629305990986,
@@ -2594,7 +2594,7 @@
       "RSK": 31.25,
       "CAL": 31.25
     },
-    "winner": "pantalone",
+    "winner": "arlecchino",
     "raw": {
       "pierro": 42.1875,
       "capitano": 66.98999648876482,
@@ -2864,7 +2864,7 @@
       "RSK": 93.75,
       "CAL": 43.75
     },
-    "winner": "tartaglia",
+    "winner": "sandrone",
     "raw": {
       "pierro": 67.79891304347827,
       "capitano": 55.160955211782856,
@@ -3224,7 +3224,7 @@
       "RSK": 0.0,
       "CAL": 68.75
     },
-    "winner": "pantalone",
+    "winner": "dottore",
     "raw": {
       "pierro": 61.770833333333336,
       "capitano": 51.275452665217436,

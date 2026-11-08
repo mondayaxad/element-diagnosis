@@ -49,12 +49,15 @@ export function judge(answers, bundle) {
   const spread = Math.max(...mapped) - Math.min(...mapped);
   let character = null;
   if (spread >= characters.minimum_mapped_spread) {
-    const best = ranked[0].selectionScore;
-    const same = ranked.filter((c) => Math.abs(c.selectionScore - best) < EPS);
+    // 0.5.0：均等化の補正は、補正前の近さが最も近い人物から selection_max_gap 点以内の人物にだけ使う（本人から大きく離れた人物を選ばない）
+    const maxRaw = Math.max(...ranked.map((c) => c.score));
+    const pool = ranked.filter((c) => c.score >= maxRaw - (characters.selection_max_gap ?? Infinity) - EPS);
+    const best = pool[0].selectionScore;
+    const same = pool.filter((c) => Math.abs(c.selectionScore - best) < EPS);
     const key = items.items.map((i) => `${i.id}:${answers[i.id]}`).join('|');
     const win = [...same].sort((a, b) => hash(key + a.id) - hash(key + b.id) || a.id.localeCompare(b.id))[0];
     const meta = characters.characters.find((c) => c.id === win.id);
-    character = { id: win.id, name: win.name, title: meta.title, tags: meta.tags, region: meta.region_label, match: Math.round(win.score), rawSimilarity: win.score, usedAxes: win.usedAxes, selectionMethod: 'fixed_balance_offset', rawGap: Math.max(...ranked.map((c) => c.score)) - win.score };
+    character = { id: win.id, name: win.name, title: meta.title, tags: meta.tags, region: meta.region_label, match: Math.round(win.score), rawSimilarity: win.score, usedAxes: win.usedAxes, selectionMethod: 'fixed_balance_offset_within_gap', rawGap: Math.max(...ranked.map((c) => c.score)) - win.score };
   }
   return { itemSetVersion: items.item_set_version, coreVersion: core.version, characterVersion: characters.version, scores, isou, element, elementRanking: elements, character, characterStatus: character ? 'authored_story_association' : 'insufficient_mapped_profile_contrast', headline: `${element.label} × ${isou.label}`, privateDiagnostics: { characterRanking: ranked, mappedSpread: spread }, validated: false };
 }
