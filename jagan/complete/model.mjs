@@ -37,8 +37,9 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
       id: c.id, name: c.name, rank: i + 1, title: meta.title, tags: meta.tags, region: meta.region_label,
       match: i === 0 && ch && ch.id === c.id ? ch.match : Math.round(c.rawSimilarity),
       // 人物名の色：オーナー指定の組み合わせ（マイページと同じ）。黒で終わる人物は、文字が読める暗さまで
-      // 人物の元素は未確定要素が多いため、レポートでは扱わない（色・札・邪眼との結びつけをしない。2026-11-08 オーナー指定）
-      elements: [], tone: [], line: FATUI_LINE[c.id],
+      // 人物名の文字色だけは、オーナー指定の組み合わせ（マイページと同じ）を使う。元素の札や、邪眼との結びつけはレポートで扱わない（2026-11-08 オーナー指定）
+      elements: (FATUI_TONE[c.id] || []).map((k) => (ELEMENT_COLOR[k] ? ELEMENT_COLOR[k].main : FATUI_TONE_EXTRA[k] === FATUI_TONE_EXTRA.BLACK ? '#7a2a2a' : FATUI_TONE_EXTRA[k])),
+      tone: FATUI_TONE[c.id] || [], line: FATUI_LINE[c.id],
       aligned: ex.aligned.map((x) => ({ label: traitLabel(x.axis), you: Math.round(x.userScore), ref: Math.round(x.referenceScore) })),
       rows: ex.rows.map((x) => ({ id: x.axis, label: traitLabel(x.axis), you: Math.round(x.userScore), ref: Math.round(x.referenceScore), diff: Math.round(Math.abs(x.userScore - x.referenceScore)) })).sort((a, b) => a.diff - b.diff),
       different: ex.different.map((x) => ({ label: traitLabel(x.axis), you: Math.round(x.userScore), ref: Math.round(x.referenceScore) })),
