@@ -1,5 +1,5 @@
 // 完全解析サンプル（complete-sample.html）と TOP の OGP 画像のテスト。
-//   ・承認済みの8ページ版を公開する。どこからもリンクしない（X の返信で直接共有する）・noindex,nofollow,noarchive。
+//   ・運営者の実際の診断結果から作った42ページ版（元素・武器種・国家の辞典 P39〜P42 を除く。scripts/build-complete-sample.js）を公開する。どこからもリンクしない（X の返信で直接共有する）・noindex,nofollow,noarchive。
 //   ・script・form・iframe・外部への読み込みを含まない。CTA は /mypage だけ（Stripe へ直接送らない）。
 //   ・OGP は TOP とサンプルだけが新しい 1200×630 の画像を使う（絶対 URL・summary_large_image）。
 //   実行: node --test tests/complete_sample_public.test.js
@@ -27,8 +27,11 @@ function jpegSize(buf) {
   throw new Error('SOF が見つかりません');
 }
 
-test('サンプル：8ページ・noindex,nofollow,noarchive・同じサイトの script だけ（戻る・販売中の設定・共通の申込・申込欄）・form／iframe なし', () => {
-  assert.equal((SAMPLE.match(/<section class="page/g) || []).length, 8);
+test('サンプル：42ページ・noindex,nofollow,noarchive・同じサイトの script だけ（戻る・販売中の設定・共通の申込・申込欄）・form／iframe なし', () => {
+  assert.equal((SAMPLE.match(/<section class="page/g) || []).length, 42);
+  const ids = [...SAMPLE.matchAll(/<section class="page [^>]*id="p(\d+)"/g)].map((m) => m[1]);
+  assert.deepEqual(ids.filter((i) => ['39', '40', '41', '42'].includes(i)), [], '元素・武器種・国家の辞典は掲載しない');
+  assert.ok(ids.includes('01') && ids.includes('43') && ids.includes('46'));
   assert.match(SAMPLE, /<meta name="robots" content="noindex,nofollow,noarchive">/);
   let rest = SAMPLE;
   for (const src of ['/js/ga.js', '/js/sample-return.js', '/api/public-config?format=js', '/js/report-purchase.js', '/js/sample-buy.js']) rest = rest.replace(`<script src="${src}"></script>`, '');
