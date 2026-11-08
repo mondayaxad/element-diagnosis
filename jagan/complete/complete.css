@@ -368,3 +368,6 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-rdom .dp-rdc { padding: 22px 24px; } .dp-rdom .dp-rdname { font-size: 30px; } .dp-rdom .dp-rdlead { font-size: 16px; margin-bottom: 14px; }
 .dp-rdom .dp-rdtags span { font-size: 14px; padding: 4px 12px; } .dp-rdom .dp-rdread { font-size: 15px; line-height: 1.95; }
 .dp-rdom .dp-rdtab { font-size: 15px; } .dp-rdom .dp-rdtab td { padding: 13px 8px; } .dp-rdom .dp-rd4 { gap: 20px; margin-bottom: 26px; }
+.dp-t3p { margin: 6px 0 0; font-size: 13.5px; line-height: 1.85; color: var(--sub); }
+.dp-mline { margin: 4px 0 8px; font-size: 14.5px; color: #e8a0b0; padding-bottom: 8px; border-bottom: 1px dashed var(--line2); }
+.dp-mdl { grid-template-columns: 11.5em 1fr; }

@@ -6,7 +6,7 @@
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
-import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, DICT_PAGE, ELEMENT_MISREAD, TRAIT_DICT_HL, OVERVIEW_COPY, FATUI_SPLIT, TRAIT_SCENE, GUIDE_PAGE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
+import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, DICT_PAGE, ELEMENT_MISREAD, TRAIT_DICT_HL, OVERVIEW_COPY, FATUI_SPLIT, TRAIT_SCENE, GUIDE_PAGE, ELEMENT_LINE, TRAIT_LINE, FATUI_LINE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
 
 const r1 = (x) => Math.round(x * 10) / 10;
 
@@ -18,13 +18,13 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
 
   const elements = el.ranking.map((e, i) => ({
     id: e.id, label: e.label, rank: i + 1, score: Math.round(e.score), name: ELEMENT_NAME[e.id], color: ELEMENT_COLOR[e.id],
-    text: ELEMENT_TEXT[e.id], deep: ELEMENT_DEEP[e.id], live: ELEMENT_LIVE[e.id], story: ELEMENT_STORY[e.id],
+    text: ELEMENT_TEXT[e.id], line: ELEMENT_LINE[e.id], deep: ELEMENT_DEEP[e.id], live: ELEMENT_LIVE[e.id], story: ELEMENT_STORY[e.id],
     parts: Object.entries(bundle.core.elements.find((x) => x.id === e.id).weights).sort((a, b) => b[1] - a[1])
       .map(([t, w]) => ({ id: t, label: traitLabel(t), weight: Math.round(w * 100), score: Math.round(score(t)) })),
   }));
   const isous = orderIsou(result.answers, bundle.items).map((x) => ({
     id: x.id, label: traitLabel(x.id), rank: x.rank, score: Math.round(score(x.id)), color: ISOU_COLOR[x.id],
-    text: ISOU_TEXT[x.id], short: ISOU_SHORT[x.id], copy: TRAIT_COPY[x.id], deep: TRAIT_DEEP[x.id], read: TRAIT_READ[x.id],
+    text: ISOU_TEXT[x.id], line: TRAIT_LINE[x.id], short: ISOU_SHORT[x.id], copy: TRAIT_COPY[x.id], deep: TRAIT_DEEP[x.id], read: TRAIT_READ[x.id],
     aspect: bundle.dti.aspects.find((a) => a.trait_id === x.id),
   }));
   if (isous[0].id !== is.id) throw new Error('isou_order_mismatch');
@@ -37,8 +37,8 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
       id: c.id, name: c.name, rank: i + 1, title: meta.title, tags: meta.tags, region: meta.region_label,
       match: i === 0 && ch && ch.id === c.id ? ch.match : Math.round(c.rawSimilarity),
       // 人物名の色：オーナー指定の組み合わせ（マイページと同じ）。黒で終わる人物は、文字が読める暗さまで
-      elements: (FATUI_TONE[c.id] || []).map((k) => (ELEMENT_COLOR[k] ? ELEMENT_COLOR[k].main : FATUI_TONE_EXTRA[k] === FATUI_TONE_EXTRA.BLACK ? '#7a2a2a' : FATUI_TONE_EXTRA[k])),
-      tone: FATUI_TONE[c.id] || [],
+      // 人物の元素は未確定要素が多いため、レポートでは扱わない（色・札・邪眼との結びつけをしない。2026-11-08 オーナー指定）
+      elements: [], tone: [], line: FATUI_LINE[c.id],
       aligned: ex.aligned.map((x) => ({ label: traitLabel(x.axis), you: Math.round(x.userScore), ref: Math.round(x.referenceScore) })),
       rows: ex.rows.map((x) => ({ id: x.axis, label: traitLabel(x.axis), you: Math.round(x.userScore), ref: Math.round(x.referenceScore), diff: Math.round(Math.abs(x.userScore - x.referenceScore)) })).sort((a, b) => a.diff - b.diff),
       different: ex.different.map((x) => ({ label: traitLabel(x.axis), you: Math.round(x.userScore), ref: Math.round(x.referenceScore) })),
@@ -60,7 +60,6 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
   const topE = elements.slice(0, 3), lowE = elements.slice(-2).reverse();
   const topF = fatui.slice(0, 3);
   // 各邪眼元素に連なるファトゥス（色の組み合わせにその元素を含む人物。順位の高い順）
-  for (const e of elements) e.fatui = fatui.filter((f) => f.tone.includes(e.id)).slice(0, 3).map((f) => ({ name: f.name, rank: f.rank, elements: f.elements }));
   // 7日間の観察：上位の異相から順に（足りなければ次の順位へ）
   const days = isous.slice(0, 7).map((x, i) => ({ day: i + 1, label: x.label, color: x.color, q: x.deep.exp }));
 
@@ -69,7 +68,6 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
     .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id));
   const peaks = byScore.slice(0, 2), valleys = byScore.slice(-2).reverse();
   // ファトゥスのタグ（色の組み合わせの元素）と、上位5名に繰り返し現れる物語のテーマ
-  for (const f of fatui) f.chips = f.tone.filter((k) => ELEMENT_COLOR[k]).map((k) => ({ label: bundle.core.elements.find((e) => e.id === k).label, color: ELEMENT_COLOR[k].main }));
   const tagCount = {};
   fatui.slice(0, 5).forEach((f) => f.tags.forEach((t) => { tagCount[t] = (tagCount[t] || 0) + 1; }));
   const themes = Object.entries(tagCount).filter(([, n]) => n >= 2).sort((a, b) => b[1] - a[1]).map(([t]) => t).slice(0, 3);
@@ -241,6 +239,16 @@ export function mirrorOf(topF, e, isous) {
     if (lows.length && !ov.some((r) => r.diff <= 15)) you = `今回の回答には、${top2}が上位にある一方、${lows.map((r) => r.label).join('・')}は低いという配置があります。上位の特性として内側で感じている反応と、外へ表れにくい反応を分けて振り返ることが、自分を理解する手がかりになります。`;
     else if (highs.length) you = `${highs.map((r) => r.label).join('・')}が高く、人物の参照値とも近い配置です。${highs.some((r) => mainIds.includes(r.id)) ? `${highs.filter((r) => mainIds.includes(r.id)).map((r) => r.label).join('・')}は主結果（${e.label}×${x.label}）を形づくる特性でもあり、今回の結果の中心にある反応が、この人物との比較にも表れています。` : '主結果とは別に、この特性もあなたの回答で目立っています。'}ただし、人物と同じ動機や経験を持つという意味ではありません。`;
     else you = `${f.name}との比較では、${al.length ? `${al.map((r) => r.label).join('・')}が近く` : '近い特性が限られ'}${df.length ? `、${df.map((r) => r.label).join('・')}が離れています` : 'ています'}。同じ人物に近いと出ても、どの特性で近いかによって、自分の読み方は変わります。`;
+    // 文章（数値を出さない）版：06 の下部と 16 で使う
+    const sideW = (r) => ({ low: '控えめ', high: 'はっきり', mid: '中ほど' }[level(r.you)]);
+    const lvs = [...new Set(al.flatMap((r) => [level(r.you), level(r.ref)]))];
+    const proseAl = al.length ? `${f.name}と重なるのは、${al.map((r) => N(r.id)).join('、')}についての回答です。${lvs.length === 1 ? `${al.length >= 2 ? 'いずれも' : ''}${LEVEL_WORD[lvs[0]]}の側で近づいています。` : 'それぞれの高さが近い配置です。'}`
+      : `${f.name}とは、比較した特性の中にはっきり近いものは少なく、${rows[0].label}の配置が最も近い程度です。`;
+    const mild = [...rows].sort((a, b) => b.diff - a.diff)[0];
+    const proseDf = df.length ? `一方で、${df.map((r) => r.label).join('と')}は${df.every((r) => r.ref > r.you) ? `${f.name}の参照の方がはっきりしており` : df.every((r) => r.ref < r.you) ? 'あなたの方がはっきりしており' : 'あなたと参照で向きが分かれており'}、この点での反応の表れ方は異なると読めます。`
+      : mild && mild.diff >= 8 ? `比較している特性に大きな違いはありません。${mild.label}はあなたの方が${mild.you < mild.ref ? '控えめ' : 'はっきりしています'}${mild.you < mild.ref ? 'ですが' : 'が'}、この差だけで人柄の違いまでは判断できません。` : '比較している特性に、目立った違いはありません。';
+    const proseOverlap = `${proseAl}${al.length ? `振り返る候補として、${al.map((r) => `「${TRAIT_SCENE[r.id][level(r.you) === 'high' ? 'hi' : 'lo']}」`).join('や')}が挙げられます。` : ''}`;
+    void sideW;
     // 06 用（要点）：近さに寄与した特性・主な違い
     const lvAll = [...new Set(al.flatMap((r) => [level(r.you), level(r.ref)]))];
     const shortAl = al.length ? `${al.map((r) => `${r.label}（あなた${r.you}／参照${r.ref}）`).join('・')}。${lvAll.length === 1 ? `${al.length >= 2 ? 'いずれも' : ''}${LEVEL_WORD[lvAll[0]]}の値で近い配置です。` : '数値の近さが一致度に寄与しています。'}`
@@ -257,7 +265,7 @@ export function mirrorOf(topF, e, isous) {
     if (qT) { usedQ.add(qT.id); question = `${sc(qT)}を、最近の出来事から一つ思い出せますか。そのとき、相手や状況はどうでしたか。`; }
     else if (qD) { usedQ.add(qD.id); question = `${f.name}との比較で差があった${qD.label}について、${sc(qD)}を思い出せますか。人物の参照とは違う、あなた自身の場面として説明してみてください。`; }
     else question = f.copy.reflection;
-    return { f, rows, aligned, different, main, you, shortAl, shortDf, story: { fact: f.copy.story_context, dti: meta.rationale }, overlap, question };
+    return { f, rows, aligned, different, main, you, shortAl, shortDf, proseAl, proseDf, proseOverlap, story: { fact: f.copy.story_context, dti: meta.rationale }, overlap, question };
   });
   // まとめ：繰り返し近さの根拠になる特性と、人物ごとの一致理由
   const cnt = {};

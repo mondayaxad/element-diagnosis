@@ -918,10 +918,12 @@ test('完全解析 DIPPER：06＝比較の要点（近さに寄与した特性�
   for (let s = 0; s < 200; s++) {
     const { result, html } = sampleComplete(s);
     const p6 = html.split('id="dp06"')[1].split('<section')[0];
-    assert.ok(p6.includes('近さに寄与した特性') && p6.includes('主な違い') && p6.includes(`href="#dp${String(n16).padStart(2, '0')}"`));
+    assert.ok(p6.includes(`href="#dp${String(n16).padStart(2, '0')}"`));
+    assert.ok(!/あなた\d|参照\d|class="dp-chips"><i style/.test(p6), '06 は文章で、人物の元素の札を出さない');
     assert.ok(!p6.includes('あなたの結果との関係') && !p6.includes('重なる反応を拾う'));
     const p16 = html.split(`id="dp${String(n16).padStart(2, '0')}"`)[1].split('<section')[0];
     for (const k of ['人物の描写', 'あなたと重なるところ', 'あなたと異なるところ', '邪眼・異相との関係', '自分に戻す問い', '作品の描写', 'DTI の参照の置き方']) assert.ok(p16.includes(k), k);
+    assert.ok(!/あなた\d|参照\s?\d|dp-mvals/.test(p16), '16 は数値ではなく文章で');
     assert.ok(!/寄与 \d|[>（]重み ?\d|計算上の重み/.test(html));
     const m = buildComplete(result, BUNDLE);
     const qs = m.mirror.people.map((p) => p.question);

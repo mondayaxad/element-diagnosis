@@ -72,7 +72,7 @@ export function renderComplete(m) {
         ${labelCard('異相', 'ISOU', E(is1.label), is1.score, `2位 ${E(m.gapI.b.label)} ${m.gapI.b.score} ／ 差 ${m.gapI.d}`, is1.color)}
         <div class="dp-lcard plain"><div class="dp-lk">12特性の山（根拠）</div>${m.peaks.map(miniRow).join('')}
           <div class="dp-lk" style="margin-top:12px">12特性の谷（根拠）</div>${m.valleys.map(miniRow).join('')}</div>
-        ${ch ? labelCard('ファトゥス', 'FATUI', fatuiName(ch), null, `${E(ch.title)}｜一致度 ${ch.match}%｜比較：${ch.rows.map((r) => E(r.label)).join('・')}`, ch.elements[0] || '#E2C08C') : ''}
+        ${ch ? labelCard('ファトゥス', 'FATUI', fatuiName(ch), null, E(ch.title), '#E2C08C') : ''}
       </div>
       <div class="dp-main">
         <div class="dp-dtih"><span class="dp-dtiname">${E(m.dti.name)}</span><span class="dp-dticode">${E(m.dti.code)}</span></div>
@@ -98,7 +98,7 @@ export function renderComplete(m) {
   const gapBar = (g, unit) => `<div class="dp-gap"><span class="dp-gaptag">1位－2位</span>${E(g.a.label)} ${g.a.score} − ${E(g.b.label)} ${g.b.score} ＝ <b>${g.d}</b>${unit || ''}</div>`;
   const legend = (n) => `<div class="dp-legend"><span>${n}</span><i class="t">上位</i><i class="m">中位</i><i class="l">下位</i></div>`;
 
-  const eRows = m.elements.map((e) => ({ rank: e.rank, label: e.label, theme: e.deep.theme, score: e.score, line: e.text.essence, c: e.color.main }));
+  const eRows = m.elements.map((e) => ({ rank: e.rank, label: e.label, theme: e.deep.theme, score: e.score, line: e.line, c: e.color.main }));
   const lowE = m.elements.slice(-2);
   page('dp-wide dp-compact', 'OVERVIEW · JAGAN', '邪眼（特性）の全体順位', `
     <p class="dp-p dp-lead">${E(el1.label)}が一位で、${m.gapE.d >= 10 ? `次点の${E(m.gapE.b.label)}とは差があります` : `次点の${E(m.gapE.b.label)}とは僅差です`}。${E(el1.label)}は、${E(el1.parts.map((x) => x.label).join('・'))}を組み合わせた邪眼です。順位は、各邪眼を構成する特性への当てはまりの大きさを比べたものです。</p>
@@ -117,7 +117,7 @@ export function renderComplete(m) {
       ${m.ov.eRead.map((t) => `<p>${E(t)}</p>`).join('')}</div>
     <div class="dp-ac2"><div class="dp-acb"><div class="dp-pk">${E(m.ov.eNextTitle)}</div><p>${E(m.ov.eNext)}</p></div><div class="dp-acb"><div class="dp-pk">${E(m.ov.eGapTitle)}</div><p>${E(m.ov.eGap)}</p></div></div>`, { sub: 'Overview' });
 
-  const iRows = m.isous.map((x) => ({ rank: x.rank, label: x.label, theme: x.deep.theme, score: x.score, line: x.text.essence, c: x.color }));
+  const iRows = m.isous.map((x) => ({ rank: x.rank, label: x.label, theme: x.deep.theme, score: x.score, line: x.line, c: x.color }));
   const lowI = m.isous.slice(-3);
   page('dp-wide dp-compact', 'OVERVIEW · ISOU', '異相の全体順位', `
     <p class="dp-p dp-lead">${E(is1.label)}が一位で、${m.gapI.d >= 5 ? `次点の${E(m.gapI.b.label)}とは差があります` : `次点の${E(m.gapI.b.label)}とは僅差です`}。12特性を、あなたの異相を選んだのと同じ規則（回答の平均 → 5と答えた割合 → 4と答えた割合）で並べています。</p>
@@ -134,8 +134,8 @@ export function renderComplete(m) {
   // P06 ファトゥス TOP11（元素診断の「MIRROR TOP10」と同じ組み立て）
   const fRow = (f) => `<div class="dp-fcard${f.rank <= 3 ? ' top' : ''}"><span class="dp-rk">${pad(f.rank)}</span>
       <div class="dp-fbody"><div class="dp-fhead"><i class="dot" style="background:${f.elements[0] || '#C8405C'}"></i>${fatuiName(f)}<b>${f.match}</b>${f.selected ? '<span class="dp-ftag">FATUI</span>' : ''}
-        <span class="dp-chips">${f.chips.map((c) => `<i style="--c:${c.color}">${E(c.label)}</i>`).join('')}<i>${E(f.title)}</i><i>${E(f.region || '—')}</i></span></div>
-        <div class="dp-rline">比較に使う特性：${f.rows.map((r) => `${E(r.label)}（あなた${r.you}／参照${r.ref}）`).join('・')}</div></div></div>`;
+        <span class="dp-chips"><i>${E(f.title)}</i><i>${E(f.region || '—')}</i></span></div>
+        <div class="dp-rline">${E(f.line)}</div></div></div>`;
   page('dp-wide dp-compact', 'FATUI', 'ファトゥス TOP11', `
     <div class="dp-def"><span>DEFINITION</span><p>${E(m.panel.fatuiDefinition)}</p></div>
     <div class="dp-split">
@@ -147,7 +147,7 @@ export function renderComplete(m) {
       ])}
     </div>
     <div class="dp-top3">${m.mirror.people.map((p) => `<div class="dp-t3" style="--c:${p.f.elements[0] || '#C8405C'}"><div class="dp-t3h">${pad(p.f.rank)}　${fatuiName(p.f)}　<small>${p.f.match}%</small></div>
-      <dl class="dp-t3dl"><dt>${E(m.mirror.labels.split.topCards[0])}</dt><dd>${E(p.shortAl)}</dd><dt>${E(m.mirror.labels.split.topCards[1])}</dt><dd>${E(p.shortDf)}</dd></dl></div>`).join('')}</div>
+      <p class="dp-t3p">${E(p.proseAl)}${E(p.proseDf)}</p></div>`).join('')}</div>
     <div class="dp-msum"><p><b>${E(m.mirror.labels.split.topNote[0])}</b></p><p>${E(m.mirror.labels.split.topNote[1])}<a class="dp-xref" href="#dp${pad(PAGE_TITLES.indexOf('上位3名のファトゥスとの交わり') + 1)}">「上位3名のファトゥスとの交わり」（P${pad(PAGE_TITLES.indexOf('上位3名のファトゥスとの交わり') + 1)}）</a>${E(m.mirror.labels.split.topNote[2])}</p></div>`, { sub: 'Self-understanding' });
 
   // P10・P11 上位の邪眼との付き合い方／上位の異相を読み解く（オーナー案・2026-11-08）。上位3つを3列に並べた比較表
@@ -191,7 +191,6 @@ export function renderComplete(m) {
         ${youBlock(d, c)}
         <div class="dp-dbasis"><div class="dp-dck">${E(L.basisE)}　<small>算出の重み：${e.parts.map((x) => `${E(x.label)}${x.weight}%`).join('・')}</small></div>
           ${e.parts.map((x) => `<div class="dp-row"><span>${E(x.label)}<small>算出の重み ${x.weight}%</small></span>${bar(x.score, c)}<b>${x.score}</b></div>`).join('')}</div>
-        ${e.fatui.length ? `<p class="dp-li">この邪眼に連なるファトゥス：${e.fatui.map((f) => `${fatuiName(f)}（${f.rank}位）`).join('　')}</p>` : ''}
       </div>${side(d, c)}</div>`);
   }
   for (const x of m.topI) {
@@ -244,11 +243,11 @@ export function renderComplete(m) {
       ${M.people.map((p) => { const f = p.f; return `<article class="dp-mcard" style="--c:${f.elements[0] || '#C8405C'}">
         <header class="dp-mch"><span class="dp-mrk">${pad(f.rank)}</span><i class="dot" style="background:${f.elements[0] || '#C8405C'}"></i><span class="dp-mname">${fatuiName(f)}</span>
           <span class="dp-mmeta"><b>一致度 ${f.match}%</b><i>${E(f.title)}</i><i>${E(f.region || '—')}</i>${f.tags.map((t) => `<i class="tag">${E(t)}</i>`).join('')}</span></header>
-        <div class="dp-mvals">${p.rows.map((r) => `<span class="${r.diff <= 15 ? 'near' : r.diff >= 20 ? 'far' : ''}">${E(r.label)}<b>${r.you}</b><small>／参照 ${r.ref}</small></span>`).join('')}</div>
+        <p class="dp-mline">${E(f.line)}</p>
         <dl class="dp-mdl">
           <dt>1. ${E(ML.split.mirrorItems[0])}</dt><dd><span class="dp-mtag">${E(ML.split.storyFact)}</span>${E(p.story.fact)}<br><span class="dp-mtag dti">${E(ML.split.storyDti)}</span>${E(p.story.dti)}</dd>
-          <dt>2. ${E(ML.split.mirrorItems[1])}</dt><dd>${E(p.overlap)}</dd>
-          <dt>3. ${E(ML.split.mirrorItems[2])}</dt><dd>${E(p.different)}</dd>
+          <dt>2. ${E(ML.split.mirrorItems[1])}</dt><dd>${E(p.proseOverlap)}</dd>
+          <dt>3. ${E(ML.split.mirrorItems[2])}</dt><dd>${E(p.proseDf)}</dd>
           <dt>4. ${E(ML.split.mirrorItems[3])}</dt><dd>${E(p.main)}</dd>
           <dt class="gold">5. ${E(ML.split.mirrorItems[4])}</dt><dd>「${E(p.question)}」</dd></dl>
       </article>`; }).join('')}
