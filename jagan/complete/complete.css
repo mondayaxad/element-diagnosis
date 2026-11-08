@@ -121,10 +121,7 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-mx-row.em { color: #e8a0b0; }
 .dp-mx-cell { border: 1px solid var(--line2); border-radius: 8px; padding: 12px 14px; font-size: 13.5px; line-height: 1.85; background: rgba(18,9,14,.55); }
 .dp-mx-cell.accept { border-color: color-mix(in srgb, var(--c) 45%, var(--line2)); background: color-mix(in srgb, var(--c) 9%, rgba(18,9,14,.6)); color: #f5e8ec; }
-@media (max-width: 760px) {
-  .dp-matrix { grid-template-columns: 1fr; } .dp-mx-corner { display: none; }
-  .dp-mx-row { padding-top: 10px; }
-}
+
 /* 表紙 */
 .dp-cover { background: radial-gradient(70% 50% at 50% 34%, color-mix(in srgb, var(--ec) 28%, transparent), transparent 70%), radial-gradient(120% 70% at 50% 100%, rgba(122,26,46,.35), transparent 60%), #0b0508; }
 .dp-cover .dp-inner { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 70px 40px 50px; }
@@ -136,19 +133,7 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-cover-combo { font-size: 34px; font-weight: 700; } .dp-cover-combo b { color: var(--dim); margin: 0 14px; font-weight: 400; }
 .dp-cover-fatui { margin-top: 22px; font-size: 15px; color: var(--sub); }
 .dp-cover-date { margin-top: 22px; font-size: 12px; color: var(--dim); letter-spacing: .2em; }
-@media (max-width: 760px) {
-  body.dp { font-size: 14px; } .dp-inner { padding: 26px 18px 20px; } .dp-foot { padding: 10px 18px 14px; }
-  .dp-split, .dp-wide .dp-split:has(> .dp-side), .dp-pair, .dp-cols, .dp-top3, .dp-dgrid { grid-template-columns: 1fr; }
-  .dp-title { font-size: 23px; } .dp-num { font-size: 34px; } .dp-sub { display: none; }
-  .dp-cover-name { font-size: 48px; } .dp-dtiname { font-size: 34px; } .dp-chips { margin-left: 0; width: 100%; }
-  .dp-rline, .dp-rcard .dp-bar { margin-left: 0; } .dp-toc { columns: 1; }
-}
-@media print {
-  body.dp { background: #fff; } .dp-bar-top { display: none; } .dp-book { padding: 0; gap: 0; max-width: none; }
-  .dp-page { border: 0; border-radius: 0; break-after: page; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-}
-/* P12–P17 個別ページ（元素診断の個別ページと同じ組み立て） */
-.dp-dh { display: grid; grid-template-columns: 120px 1fr auto; gap: 26px; align-items: center; padding-bottom: 18px; margin-bottom: 16px; border-bottom: 1px solid var(--line2); }
+
 .dp-demb img { width: 120px; height: 120px; object-fit: contain; filter: drop-shadow(0 0 18px color-mix(in srgb, var(--c) 40%, transparent)); }
 .dp-dcode { display: grid; place-items: center; width: 110px; height: 110px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--c) 60%, transparent); font-family: 'IM Fell English', serif; font-size: 34px; letter-spacing: .08em; color: var(--c);
   background: radial-gradient(circle, color-mix(in srgb, var(--c) 22%, transparent), transparent 70%); box-shadow: 0 0 26px color-mix(in srgb, var(--c) 25%, transparent); }
@@ -180,12 +165,7 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-dc { border: 1px solid var(--line2); border-radius: 10px; padding: 12px 16px; background: rgba(18,9,14,.6); }
 .dp-dc.sign { border-left: 4px solid #d98a5f; } .dp-dc.sign .dp-dck { color: #e8a07a; }
 .dp-dc.live { border-left: 4px solid var(--c); background: color-mix(in srgb, var(--c) 8%, rgba(18,9,14,.6)); } .dp-dc.live .dp-dck { color: color-mix(in srgb, var(--c) 75%, #fff); }
-@media (max-width: 760px) {
-  .dp-dh { grid-template-columns: 72px 1fr; gap: 14px; } .dp-demb img { width: 72px; height: 72px; } .dp-dcode { width: 68px; height: 68px; font-size: 22px; }
-  .dp-drank { grid-column: 1 / -1; text-align: left; border-left: 0; padding-left: 0; display: flex; gap: 14px; align-items: baseline; }
-  .dp-dname b { font-size: 32px; } .dp-dname span { font-size: 15px; margin-left: 8px; } .dp-dsc { font-size: 38px; }
-  .dp-dsplit { grid-template-columns: 1fr; }
-}
+
 /* P18 邪眼×異相 */
 .dp-cbar { display: grid; grid-template-columns: minmax(0, 1fr) 190px minmax(0, 1fr); gap: 16px; align-items: center; }
 .dp-ccard { border: 1px solid color-mix(in srgb, var(--c) 55%, var(--line2)); border-radius: 12px; padding: 14px 20px; background: linear-gradient(120deg, color-mix(in srgb, var(--c) 14%, rgba(18,9,14,.8)), rgba(18,9,14,.7)); }
@@ -207,8 +187,8 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-c4c { border: 1px solid var(--line2); border-top: 3px solid var(--t, var(--line2)); border-radius: 10px; padding: 12px 14px; background: rgba(18,9,14,.6); }
 .dp-c4c b { font-size: 14px; } .dp-c4c p { margin: 6px 0 0; font-size: 13.5px; color: var(--sub); }
 .dp-c4c.ok { --t: #7fc8a0; } .dp-c4c.ng { --t: #d98a5f; } .dp-c4c.ac { --t: var(--c); } .dp-c4c.qq { --t: var(--gold); } .dp-c4c.qq p { color: #f2dfc0; font-style: italic; }
-@media (max-width: 760px) { .dp-cbar { grid-template-columns: 1fr; } .dp-clink i { width: 2px; height: 28px; } .dp-clink i::before, .dp-clink i::after { display: none; } .dp-c4 { grid-template-columns: 1fr; } .dp-ccard b { font-size: 32px; } }
-@media (min-width: 761px) and (max-width: 1000px) { .dp-c4 { grid-template-columns: 1fr 1fr; } }
+
+
 /* P19 上位3名のファトゥスとの交わり（元素診断 MIRROR と同じ横長カード） */
 .dp-mcard { border: 1px solid var(--line2); border-left: 3px solid color-mix(in srgb, var(--c) 75%, #fff 0%); border-radius: 12px; padding: 14px 22px 8px; margin-bottom: 14px; background: rgba(18,9,14,.6); }
 .dp-mch { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
@@ -228,7 +208,7 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-mdl dt.gold { color: var(--gold); font-weight: 700; } .dp-mdl dt.gold + dd { color: #f2dfc0; }
 .dp-msum { border: 1px solid color-mix(in srgb, var(--gold) 35%, var(--line2)); border-radius: 12px; padding: 14px 22px; background: rgba(226,192,140,.05); }
 .dp-msum p { margin: 4px 0; font-size: 14.5px; }
-@media (max-width: 760px) { .dp-mdl { grid-template-columns: 1fr; } .dp-mdl dd { border-top: 0; padding-top: 0; } .dp-mmeta { margin-left: 0; width: 100%; } }
+
 /* 四つの反応領域・あなたの反応領域（2×2） */
 .dp-rd4 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: stretch; margin: 6px 0 18px; }
 .dp-rdc { border: 1px solid var(--line); border-top: 3px solid var(--c); border-radius: 4px 4px 12px 12px; padding: 16px 20px; background: rgba(24,12,18,.72); }
@@ -247,7 +227,7 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-rdq { margin-top: 6px; color: #f2dfc0; } .dp-rdq b { color: var(--gold); }
 .dp-rdtab { width: 100%; border-collapse: collapse; font-size: 14px; } .dp-rdtab th { text-align: left; font-weight: 400; font-size: 12px; letter-spacing: .14em; color: var(--gold); padding: 6px 8px; border-bottom: 1px solid var(--line2); }
 .dp-rdtab td { padding: 9px 8px; border-bottom: 1px solid var(--line); } .dp-rdtab td:first-child { font-weight: 700; white-space: nowrap; }
-@media (max-width: 760px) { .dp-rd4 { grid-template-columns: 1fr; } .dp-rdtab td:nth-child(2) { white-space: normal; } }
+
 /* あなたの反応領域（横長カード4段） */
 .dp-rdrow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 6px 26px; border: 1px solid var(--line); border-left: 3px solid var(--c); border-radius: 10px; padding: 14px 20px; margin-bottom: 12px; background: rgba(24,12,18,.72); }
 .dp-rdrow .dp-rdname { font-size: 24px; } .dp-rdl p { margin: 0; font-size: 14px; color: var(--sub); }
@@ -264,7 +244,7 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-acb.left { border-left: 3px solid var(--c); background: color-mix(in srgb, var(--c) 7%, rgba(18,9,14,.6)); }
 .dp-ac2.small .dp-acb { padding: 10px 16px; } .dp-ac2.small p { color: var(--sub); }
 .dp-acclose { margin-top: 16px; text-align: center; font-size: 18px; letter-spacing: .06em; padding: 14px 8px; border-top: 1px solid var(--line2); border-bottom: 1px solid var(--line2); color: #f2dfc0; }
-@media (max-width: 760px) { .dp-rdrow, .dp-ac3, .dp-ac2 { grid-template-columns: 1fr; } }
+
 /* あなたの影に、次の一手を */
 .dp-nnum { font-family: 'IM Fell English', serif; font-size: 30px; color: var(--rose); margin-right: 10px; line-height: 1; }
 .dp-nhint { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line2); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -280,7 +260,7 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-nlog .dp-pk small, .dp-nafter .dp-pk small { color: var(--dim); letter-spacing: .04em; font-size: 12px; }
 .dp-nlog td:first-child { width: 4em; font-weight: 400; } .dp-nlog tr.eg td { color: var(--sub); font-size: 13px; } .dp-nlog tr.w td { height: 38px; }
 .dp-nopts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; } .dp-nopts span { color: var(--gold); margin-right: 8px; } .dp-nopts b { font-size: 15px; } .dp-nopts p { margin: 2px 0 0; font-size: 13.5px; color: var(--sub); }
-@media (max-width: 760px) { .dp-nopts { grid-template-columns: 1fr; } .dp-blank { width: 8em; } }
+
 .dp-nlog .dp-ctab td:nth-child(2) { text-align: left; white-space: normal; } .dp-nlog .dp-ctab td { width: 30%; } .dp-nlog .dp-ctab td:first-child { width: 4em; }
 /* 再読 — あなたの影を読み直す */
 .dp-rr1 { border: 1px solid var(--line2); border-left: 3px solid var(--rose); border-radius: 10px; padding: 14px 20px; margin-bottom: 14px; background: rgba(24,12,18,.72); }
@@ -297,7 +277,7 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-rrlinks > span { width: 100%; font-size: 12.5px; letter-spacing: .14em; color: var(--gold); }
 .dp-rrlinks a { flex: 1 1 200px; text-decoration: none; color: var(--fg); font-size: 13.5px; border: 1px solid var(--line2); border-radius: 8px; padding: 8px 12px; background: rgba(18,9,14,.6); }
 .dp-rrlinks a small { display: block; font-size: 11.5px; color: var(--sub); }
-@media (max-width: 760px) { .dp-rrq, .dp-rr3 { grid-template-columns: 1fr; } }
+
 /* 辞典（元素診断の元素辞典・VALUES辞典と同じ組み立て） */
 .dp-edict { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .dp-edc { border: 1px solid var(--line2); border-left: 3px solid var(--c); border-radius: 10px; padding: 14px 20px; background: rgba(24,12,18,.72); }
@@ -318,7 +298,7 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-idbar u { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; background: linear-gradient(90deg, color-mix(in srgb, var(--c) 25%, #0b0306), var(--c)); }
 .dp-idbar s { position: absolute; top: 50%; width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px; border-radius: 50%; background: #f5e8ec; border: 2px solid var(--c); box-shadow: 0 0 8px color-mix(in srgb, var(--c) 60%, transparent); }
 .dp-idmean { margin: 0 0 6px; font-size: 14px; } .dp-idmean b { color: var(--sub); font-weight: 400; }
-@media (max-width: 760px) { .dp-edict, .dp-edcols { grid-template-columns: 1fr; } }
+
 /* 03 あなたの影・04 邪眼順位・06 ファトゥスの下部（根拠 → 意味 → 経験で確かめる視点） */
 .dp-toc a { color: inherit; text-decoration: none; } .dp-toc a:hover { color: var(--fg); }
 .dp-flow { margin-top: 18px; border-top: 1px solid var(--line2); padding-top: 10px; }
@@ -335,6 +315,33 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-t3dl dd { margin: 2px 0 0; font-size: 13px; } .dp-t3h small { font-size: 12px; color: var(--sub); }
 .dp-fsteps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
 .dp-fsteps div { border: 1px solid var(--line2); border-radius: 10px; padding: 10px 14px; background: rgba(18,9,14,.6); } .dp-fsteps b { font-size: 15px; } .dp-fsteps p { margin: 4px 0 0; font-size: 13px; color: var(--sub); }
-@media (max-width: 760px) { .dp-flowrow, .dp-c3, .dp-fsteps { grid-template-columns: 1fr; } }
+
 .dp-xref { color: var(--gold); text-decoration: underline; text-underline-offset: 3px; }
 .dp-mtag { display: inline-block; font-size: 11px; letter-spacing: .1em; padding: 0 7px; margin-right: 8px; border-radius: 4px; border: 1px solid var(--line2); color: var(--sub); } .dp-mtag.dti { border-color: color-mix(in srgb, var(--gold) 45%, transparent); color: #e8d2ad; }
+
+/* ===== 紙面の大きさを固定（2026-11-08）：元素診断の完全解析と同じく、全ページを同じ大きさ（A4縦の比率・1240×1754）にする。
+   画面ではページ全体を画面の幅に合わせて縮小する（--z は complete-sample.mjs が設定。組み替えはしない）。印刷・PDFは A4 1ページ＝1紙面 ===== */
+.dp-book { width: 1240px; max-width: none; padding: 0 0 56px; gap: 28px; zoom: var(--z, 1); margin: 0 auto; }
+.dp-page { -webkit-print-color-adjust: exact; print-color-adjust: exact; width: 1240px; height: 1754px; display: flex; flex-direction: column; flex-shrink: 0; }
+.dp-inner { flex: 1; min-height: 0; overflow: hidden; padding: 52px 64px 24px; }
+.dp-foot { padding: 14px 64px 22px; }
+.dp-cover .dp-inner { justify-content: center; }
+@media print {
+  @page { size: A4; margin: 0; }
+  .dp-bar-top { display: none; }
+  .dp-book { zoom: 1; width: auto; padding: 0; gap: 0; }
+  .dp-page { zoom: 0.6403; break-after: page; page-break-after: always; border-radius: 0; }
+  body.dp { background: #07050a; }
+}
+/* 固定紙面に収めるための詰め（2026-11-08） */
+.dp-compact .dp-rcard { padding: 6px 16px 8px; margin-bottom: 7px; } .dp-compact .dp-rline { margin-bottom: 4px; }
+.dp-compact .dp-rname { font-size: 19px; } .dp-compact .dp-rhead b { font-size: 22px; }
+.dp-mcard { padding: 12px 20px 6px; margin-bottom: 12px; } .dp-mstory { margin: 4px 0 6px; }
+.dp-mdl { grid-template-columns: 9.5em 1fr; } .dp-mdl dt, .dp-mdl dd { padding: 6px 0; font-size: 13px; line-height: 1.75; } .dp-mdl dt { font-size: 12px; }
+.dp-mvals { padding: 6px 0; } .dp-mvals span { font-size: 12.5px; padding: 2px 10px; }
+.dp-msum p { font-size: 13.5px; }
+.dp-edcols.three { grid-template-columns: 1fr 1fr 1.25fr; } .dp-edcols.three .dp-edmis p { margin: 0; }
+.dp-idc { padding: 10px 18px; margin-bottom: 8px; } .dp-idbar { margin: 4px 0 6px; } .dp-idmean { margin-bottom: 4px; } .dp-idgrp { margin-bottom: 10px; }
+.dp-mirror .dp-lead { font-size: 15px; margin-bottom: 10px; } .dp-mirror .dp-head { margin-bottom: 14px; }
+.dp-mdl dt, .dp-mdl dd { padding: 5px 0; line-height: 1.7; }
+.dp-compact .dp-fcard { padding: 6px 14px; margin-bottom: 6px; } .dp-t3dl dd { font-size: 12.5px; line-height: 1.7; }

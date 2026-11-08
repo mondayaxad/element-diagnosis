@@ -92,7 +92,7 @@ export function renderComplete(m) {
 
   const eRows = m.elements.map((e) => ({ rank: e.rank, label: e.label, theme: e.deep.theme, score: e.score, line: e.text.essence, c: e.color.main }));
   const lowE = m.elements.slice(-2);
-  page('dp-wide', 'OVERVIEW · JAGAN', '邪眼（特性）の全体順位', `
+  page('dp-wide dp-compact', 'OVERVIEW · JAGAN', '邪眼（特性）の全体順位', `
     <p class="dp-p dp-lead">${E(el1.label)}が一位で、${m.gapE.d >= 10 ? `次点の${E(m.gapE.b.label)}とは差があります` : `次点の${E(m.gapE.b.label)}とは僅差です`}。${E(el1.label)}は、${E(el1.parts.map((x) => x.label).join('・'))}を組み合わせた邪眼です。順位は、各邪眼を構成する特性への当てはまりの大きさを比べたものです。</p>
     <div class="dp-split">
       <div class="dp-main">${legend('7邪眼のプロフィールスコア（/100）')}${rankCards(eRows, 7)}${gapBar(m.gapE)}</div>
@@ -318,8 +318,7 @@ export function renderComplete(m) {
           <div class="dp-idh"><span class="dp-idcode">${E(x.aspect.code)}</span><b>${E(x.label)}</b><em>${x.score}</em><small>12特性中 ${x.rank}位</small></div>
           <div class="dp-idbar"><span>低</span><i><u style="width:${Math.max(1, x.score)}%"></u><s style="left:${x.score}%"></s></i><span>高</span></div>
           <p class="dp-idmean"><b>${E(DL.means)}：</b>${E(x.read.means)}</p>
-          <div class="dp-edcols"><div><span>${E(DL.hi)}</span><p>${E(x.hl.hi)}</p></div><div><span>${E(DL.lo)}</span><p>${E(x.hl.lo)}</p></div></div>
-          <div class="dp-edmis"><span>${E(DL.misread)}</span><p>${E(x.read.notSame)}</p></div></div>`).join('')}</div>`).join('')}`, { sub: D.sub }));
+          <div class="dp-edcols three"><div><span>${E(DL.hi)}</span><p>${E(x.hl.hi)}</p></div><div><span>${E(DL.lo)}</span><p>${E(x.hl.lo)}</p></div><div class="dp-edmis"><span>${E(DL.misread)}</span><p>${E(x.read.notSame)}</p></div></div></div>`).join('')}</div>`).join('')}`, { sub: D.sub }));
   }
 
   if (pages.length !== TOTAL) throw new Error(`page_count_${pages.length}`);

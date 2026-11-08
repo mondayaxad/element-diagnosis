@@ -267,7 +267,6 @@ export function mirrorOf(topF, e, isous) {
   const sum = [];
   if (rep.length) sum.push(`${rep.map((v) => `${v.label}は${v.names.join('・')}との比較`).join('、')}で、近さの根拠になっています。同じ特性を繰り返し参照しているため、それぞれを独立した証拠として数えることはできません。`);
   else sum.push('三人との近さは、それぞれ異なる特性で表れています。');
-  sum.push(`人物ごとの一致理由は、${reasons}です。`);
   const anyMain = people.some((p) => p.rows.some((r) => r.diff <= 15 && mainIds.includes(r.id)));
   sum.push(anyMain ? `主結果（${e.label}×${x.label}）を形づくる特性が近さに含まれる人物と、別の特性で近い人物を分けて読むと、どの反応が人物との比較に表れているかが見えます。`
     : `三人とも、主結果（${e.label}×${x.label}）を形づくる特性とは別の側面で近づいています。主結果で見た反応とは別に、どんな特性が人物との比較に表れているかを確かめてください。`);
