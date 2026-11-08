@@ -723,3 +723,25 @@ test('完全解析 DIPPER：文章の辞書が、邪眼7・異相12・ファト�
   const all = JSON.stringify(C);
   for (const w of ['障害です', '病気です', 'サイコパスです']) assert.ok(!all.includes(w), w);
 });
+
+test('完全解析 DIPPER 10・11：上位の邪眼との付き合い方（5観点）・上位の異相を読み解く（6観点）。全7邪眼・全12異相の文がそろい、才能への読み替えをしない', async () => {
+  const C = await import('../jagan/complete/copy.mjs');
+  const { sampleComplete } = await import('../jagan/complete-sample.mjs');
+  assert.deepEqual(C.LIVE_ROWS.map((r) => r[1]), ['表れやすい反応', '負担になる場面', '自分を理解する問い', '付き合い方', '受け止めるための一文']);
+  assert.deepEqual(C.READ_ROWS.map((r) => r[1]), ['この特性が示すこと', '日常での表れ方', '負担を感じるとき', '混同しないこと', '自分を理解する問い', '付き合い方']);
+  assert.deepEqual(Object.keys(C.ELEMENT_LIVE).sort(), BUNDLE.core.elements.map((e) => e.id).sort());
+  assert.deepEqual(Object.keys(C.TRAIT_READ).sort(), BUNDLE.items.traits.map((t) => t.id).sort());
+  for (const v of Object.values(C.ELEMENT_LIVE)) for (const [k] of C.LIVE_ROWS) { assert.ok(v[k] && v[k].length > 10, k); assert.ok(!v[k].includes('才能')); }
+  for (const v of Object.values(C.TRAIT_READ)) for (const [k] of C.READ_ROWS) { assert.ok(v[k] && v[k].length > 10, k); assert.ok(!v[k].includes('才能')); }
+  // オーナー案の文をそのまま使う（水・依存の例）
+  assert.equal(C.ELEMENT_LIVE.HY.accept, '不安があることと、関係が壊れていることは、同じではありません。');
+  assert.equal(C.TRAIT_READ.SEP.notSame, '人に頼ることや、関係を望むこと自体とは区別する。');
+  for (let seed = 0; seed < 60; seed++) {
+    const { result, html } = sampleComplete(seed);
+    const p10 = html.split('id="dp10"')[1].split('<section')[0], p11 = html.split('id="dp11"')[1].split('<section')[0];
+    assert.ok(p10.includes('上位の邪眼との付き合い方') && p11.includes('上位の異相を読み解く'));
+    assert.equal((p10.match(/class="dp-mx-cell/g) || []).length, 15);
+    assert.equal((p11.match(/class="dp-mx-cell/g) || []).length, 18);
+    assert.ok(p10.includes(C.ELEMENT_LIVE[result.element.id].accept.replace(/、/g, '、')), '1位の邪眼の一文');
+  }
+});

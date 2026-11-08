@@ -6,7 +6,7 @@
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
-import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview } from './copy.mjs';
+import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS } from './copy.mjs';
 
 const r1 = (x) => Math.round(x * 10) / 10;
 
@@ -18,13 +18,13 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
 
   const elements = el.ranking.map((e, i) => ({
     id: e.id, label: e.label, rank: i + 1, score: Math.round(e.score), name: ELEMENT_NAME[e.id], color: ELEMENT_COLOR[e.id],
-    text: ELEMENT_TEXT[e.id], deep: ELEMENT_DEEP[e.id], story: ELEMENT_STORY[e.id],
+    text: ELEMENT_TEXT[e.id], deep: ELEMENT_DEEP[e.id], live: ELEMENT_LIVE[e.id], story: ELEMENT_STORY[e.id],
     parts: Object.entries(bundle.core.elements.find((x) => x.id === e.id).weights).sort((a, b) => b[1] - a[1])
       .map(([t, w]) => ({ id: t, label: traitLabel(t), weight: Math.round(w * 100), score: Math.round(score(t)) })),
   }));
   const isous = orderIsou(result.answers, bundle.items).map((x) => ({
     id: x.id, label: traitLabel(x.id), rank: x.rank, score: Math.round(score(x.id)), color: ISOU_COLOR[x.id],
-    text: ISOU_TEXT[x.id], short: ISOU_SHORT[x.id], copy: TRAIT_COPY[x.id], deep: TRAIT_DEEP[x.id],
+    text: ISOU_TEXT[x.id], short: ISOU_SHORT[x.id], copy: TRAIT_COPY[x.id], deep: TRAIT_DEEP[x.id], read: TRAIT_READ[x.id],
     aspect: bundle.dti.aspects.find((a) => a.trait_id === x.id),
   }));
   if (isous[0].id !== is.id) throw new Error('isou_order_mismatch');
@@ -80,6 +80,7 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
   }
   return {
     product: PRODUCT, fixed: FIXED, panel: PANEL, diagnosedAt,
+    live: { intro: LIVE_INTRO, rows: LIVE_ROWS }, read: { intro: READ_INTRO, rows: READ_ROWS },
     peaks, valleys, themes,
     gapE: { a: elements[0], b: elements[1], d: elements[0].score - elements[1].score },
     gapI: { a: isous[0], b: isous[1], d: isous[0].score - isous[1].score },

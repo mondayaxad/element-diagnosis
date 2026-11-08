@@ -112,6 +112,19 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-top3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 20px; }
 .dp-t3 { border-top: 3px solid var(--c); border-radius: 0 0 12px 12px; padding: 14px 16px; background: rgba(18,9,14,.6); }
 .dp-t3h { font-size: 17px; margin-bottom: 6px; } .dp-t3 p { margin: 0; font-size: 13.5px; color: var(--sub); }
+/* P10・P11 比較表（上位3列 × 観点の行） */
+.dp-matrix { display: grid; grid-template-columns: 9.5em repeat(var(--cols), minmax(0, 1fr)); gap: 8px; margin: 18px 0 10px; }
+.dp-mx-col { border-top: 3px solid var(--c); border-radius: 8px 8px 0 0; padding: 10px 14px; background: linear-gradient(180deg, color-mix(in srgb, var(--c) 20%, rgba(18,9,14,.8)), rgba(18,9,14,.75)); display: grid; grid-template-columns: auto 1fr auto; column-gap: 8px; align-items: baseline; }
+.dp-mx-col .dp-rk { font-size: 15px; } .dp-mx-col b { font-size: 22px; color: var(--c); } .dp-mx-col small { grid-column: 1 / -1; font-size: 12px; color: var(--sub); }
+.dp-mx-col em { font-style: normal; font-family: 'IM Fell English', serif; font-size: 20px; color: var(--fg); }
+.dp-mx-row { font-size: 13px; letter-spacing: .1em; color: var(--gold); padding: 12px 6px 0 0; font-weight: 700; }
+.dp-mx-row.em { color: #e8a0b0; }
+.dp-mx-cell { border: 1px solid var(--line2); border-radius: 8px; padding: 12px 14px; font-size: 13.5px; line-height: 1.85; background: rgba(18,9,14,.55); }
+.dp-mx-cell.accept { border-color: color-mix(in srgb, var(--c) 45%, var(--line2)); background: color-mix(in srgb, var(--c) 9%, rgba(18,9,14,.6)); color: #f5e8ec; }
+@media (max-width: 760px) {
+  .dp-matrix { grid-template-columns: 1fr; } .dp-mx-corner { display: none; }
+  .dp-mx-row { padding-top: 10px; }
+}
 /* 表紙 */
 .dp-cover { background: radial-gradient(70% 50% at 50% 34%, color-mix(in srgb, var(--ec) 28%, transparent), transparent 70%), radial-gradient(120% 70% at 50% 100%, rgba(122,26,46,.35), transparent 60%), #0b0508; }
 .dp-cover .dp-inner { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 70px 40px 50px; }

@@ -7,7 +7,7 @@ const pad = (n) => String(n).padStart(2, '0');
 export const PAGE_TITLES = [
   '表紙', 'このレポートの読み方', 'あなたの影', '邪眼（特性）の全体順位', '異相の全体順位', 'ファトゥス TOP11',
   '邪眼と異相 — あなたの影の正体', 'ファトゥスはなぜ現れるのか', 'あなたの深層',
-  '上位の邪眼の活かし方', '上位の異相の活かし方',
+  '上位の邪眼との付き合い方', '上位の異相を読み解く',
   '邪眼 1位', '邪眼 2位', '邪眼 3位', '異相 1位', '異相 2位', '異相 3位',
   '邪眼 × 異相', '二層統合 — あなたの存在構造', '上位3名のファトゥスとの関わり',
   '下位の邪眼', '下位の異相', '強みとは何か',
@@ -158,11 +158,18 @@ export function renderComplete(m) {
     <p class="dp-p">${E(is1.short)}</p>
     <div class="dp-quote">${E(is1.copy.reflection)}</div>`);
 
-  // P10・P11 活かし方
-  page('dp-text', 'USE YOUR JAGAN', '上位の邪眼の活かし方', m.topE.map((e) => `<div class="dp-card" style="--c:${e.color.main}"><div class="dp-k">${pad(e.rank)}　${E(e.label)}｜${E(e.name)}</div>
-    <p class="dp-p"><b>強みとしての顔：</b>${E(e.deep.strength)}</p><p class="dp-p">${E(e.deep.use)}</p></div>`).join(''));
-  page('dp-text', 'USE YOUR ISOU', '上位の異相の活かし方', m.topI.map((x) => `<div class="dp-card" style="--c:${x.color}"><div class="dp-k">${pad(x.rank)}　${E(x.label)}｜${E(x.text.axis)}</div>
-    <p class="dp-p"><b>強みとしての顔：</b>${E(x.deep.strength)}</p><p class="dp-p">${E(x.deep.use)}</p></div>`).join(''));
+  // P10・P11 上位の邪眼との付き合い方／上位の異相を読み解く（オーナー案・2026-11-08）。上位3つを3列に並べた比較表
+  //   邪眼は「複数の特性が重なると、どんな反応のまとまりとして見えるか」、異相は「その特性そのものは何を意味し、自分にどう当てはまるか」
+  const matrix = (cols, rows, get) => `<div class="dp-matrix" style="--cols:${cols.length}">
+      <div class="dp-mx-corner"></div>${cols.map((c) => `<div class="dp-mx-col" style="--c:${c.c}"><span class="dp-rk">${pad(c.rank)}</span><b>${E(c.label)}</b><small>${E(c.sub)}</small><em>${c.score}</em></div>`).join('')}
+      ${rows.map(([key, name]) => `<div class="dp-mx-row${key === 'accept' || key === 'live' ? ' em' : ''}">${E(name)}</div>${cols.map((c) => `<div class="dp-mx-cell${key === 'accept' ? ' accept' : ''}" style="--c:${c.c}">${E(get(c, key))}</div>`).join('')}`).join('')}
+    </div>`;
+  page('dp-wide', 'TOP THEMES · JAGAN', '上位の邪眼との付き合い方', `<p class="dp-p dp-lead">${E(m.live.intro)}</p>
+    ${matrix(m.topE.map((e) => ({ rank: e.rank, label: e.label, sub: e.name, score: e.score, c: e.color.main, src: e.live })), m.live.rows, (c, k) => c.src[k])}
+    <p class="dp-note">水・草・岩などの邪眼を「才能」として説明するのではなく、自分の中で起きていることに気づくための見取り図として使います。ここに書いた反応が、いつもあなたに起きているという意味ではありません。</p>`, { sub: 'Top themes' });
+  page('dp-wide', 'TOP THEMES · ISOU', '上位の異相を読み解く', `<p class="dp-p dp-lead">${E(m.read.intro)}</p>
+    ${matrix(m.topI.map((x) => ({ rank: x.rank, label: x.label, sub: x.text.axis, score: x.score, c: x.color, src: x.read })), m.read.rows, (c, k) => c.src[k])}
+    <p class="dp-note">主結果としての異相は一つ（${E(is1.label)}）のままです。このページでは、上位の三つを読み比べて、自分の経験を説明する言葉を探します。</p>`, { sub: 'Top themes' });
 
   // P12–P14 上位3邪眼の詳細
   for (const e of m.topE) {
