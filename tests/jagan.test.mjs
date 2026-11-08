@@ -882,4 +882,8 @@ test('完全解析 DIPPER：観察実験を削除。辞典は邪眼7（あなた
   const p2 = html.split(`id="dp${String(PAGE_TITLES.length).padStart(2, '0')}"`)[1];
   assert.equal((p1.match(/class="dp-idc"/g) || []).length + (p2.match(/class="dp-idc"/g) || []).length, 12);
   assert.ok(p1.includes('>依存</b><em>70</em>'));
+  const C = await import('../jagan/complete/copy.mjs');
+  assert.deepEqual(Object.keys(C.TRAIT_DICT_HL).sort(), BUNDLE.items.traits.map((t) => t.id).sort());
+  for (const v of Object.values(C.TRAIT_DICT_HL)) { assert.ok(!/力|才能|強み/.test(v.hi + v.lo)); assert.match(v.lo, /少ない。$/); }
+  assert.ok(!(p1 + p2).includes('先に動く力') && !(p1 + p2).includes('立ち止まる力'));
 });

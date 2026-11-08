@@ -334,7 +334,7 @@ export function renderComplete(m) {
           <div class="dp-idh"><span class="dp-idcode">${E(x.aspect.code)}</span><b>${E(x.label)}</b><em>${x.score}</em><small>12特性中 ${x.rank}位</small></div>
           <div class="dp-idbar"><span>低</span><i><u style="width:${Math.max(1, x.score)}%"></u><s style="left:${x.score}%"></s></i><span>高</span></div>
           <p class="dp-idmean"><b>${E(DL.means)}：</b>${E(x.read.means)}</p>
-          <div class="dp-edcols"><div><span>${E(DL.hi)}</span><p>${E(x.copy.hi)}</p></div><div><span>${E(DL.lo)}</span><p>${E(x.copy.lo)}</p></div></div>
+          <div class="dp-edcols"><div><span>${E(DL.hi)}</span><p>${E(x.hl.hi)}</p></div><div><span>${E(DL.lo)}</span><p>${E(x.hl.lo)}</p></div></div>
           <div class="dp-edmis"><span>${E(DL.misread)}</span><p>${E(x.read.notSame)}</p></div></div>`).join('')}</div>`).join('')}`, { sub: D.sub }));
   }
 
