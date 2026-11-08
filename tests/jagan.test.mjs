@@ -935,3 +935,33 @@ test('完全解析 DIPPER：06＝比較の要点（近さに寄与した特性�
     assert.ok(qs.every((q) => q.length > 10));
   }
 });
+
+test('完全解析 DIPPER：回答パターン（全体に低い・高い・中央・一特性突出・僅差・同点・同じ邪眼×異相で配置違い）で、本文の「特性名＋得点」が実際の得点と一致し、強さを誇張しない', async () => {
+  const { buildComplete } = await import('../jagan/complete/model.mjs');
+  const { renderComplete } = await import('../jagan/complete/view.mjs');
+  const traits = BUNDLE.items.traits;
+  const make = (f) => Object.fromEntries(BUNDLE.items.items.map((it, k) => [it.id, f(it.trait, k)]));
+  const pats = {
+    全体に低い: make(() => 1), 全体に低い2: make((t, k) => (k % 3 ? 1 : 2)), 全体に高い: make((t, k) => (k % 4 ? 5 : 4)), 中央: make((t, k) => 3 + ((k % 3) - 1) * (k % 2)),
+    一特性突出: make((t) => (t === 'HOS' ? 5 : 2)), 僅差: make((t, k) => (t === 'SEP' ? 5 : t === 'ANX' ? (k % 5 ? 5 : 4) : 2)),
+    同点: make((t) => (t === 'SEP' || t === 'ANX' ? 5 : 2)), 水依存A: make((t) => ({ SEP: 5, ANX: 4, SUS: 2 }[t] || 2)), 水依存B: make((t) => ({ SEP: 5, ANX: 2, SUS: 4 }[t] || 2)),
+  };
+  for (const [name, answers] of Object.entries(pats)) {
+    const result = computeDiagnosis({ answers, resultId: `pat-${name}`, itemSetVersion: BUNDLE.items.item_set_version }, BUNDLE);
+    const m = buildComplete(result, BUNDLE);
+    const html = renderComplete(m);
+    assert.ok(!/undefined|NaN|\[object/.test(html), name);
+    const text = html.replace(/<[^>]+>/g, ' ');
+    for (const t of traits) {
+      const s = Math.round(result.traits[t.id].score);
+      for (const mm of text.matchAll(new RegExp(`${t.label}(\\d{1,3})(?![\\d%％])`, 'g'))) assert.equal(+mm[1], s, `${name}: ${t.label}${mm[1]} と実際の ${s}`);
+    }
+    for (const e of m.elements) for (const mm of text.matchAll(new RegExp(`(?<![一-龯])${e.label}(\\d{1,3})(?![\\d%％])`, 'g'))) assert.equal(+mm[1], e.score, `${name}: ${e.label}${mm[1]}`);
+    assert.ok(!/圧倒的|非常に強い|相乗効果|増幅/.test(text), name);
+    const fl = m.fatui; for (let i = 1; i < fl.length; i++) assert.ok(fl[i - 1].raw >= fl[i].raw, name);
+  }
+  // 同じ邪眼×異相でも、他の特性の配置が違えば「あなたの場合」の文が変わる
+  const a = buildComplete(computeDiagnosis({ answers: pats.水依存A, resultId: 'a', itemSetVersion: BUNDLE.items.item_set_version }, BUNDLE), BUNDLE);
+  const b = buildComplete(computeDiagnosis({ answers: pats.水依存B, resultId: 'b', itemSetVersion: BUNDLE.items.item_set_version }, BUNDLE), BUNDLE);
+  if (a.dti.code === b.dti.code) assert.notEqual(a.combo.you.join(''), b.combo.you.join(''));
+});

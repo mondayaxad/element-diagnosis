@@ -330,7 +330,7 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
   @page { size: A4; margin: 0; }
   .dp-bar-top { display: none; }
   .dp-book { zoom: 1; width: auto; padding: 0; gap: 0; }
-  .dp-page { zoom: 0.6403; break-after: page; page-break-after: always; border-radius: 0; }
+  .dp-page { zoom: 0.6395; break-after: page; overflow: hidden; page-break-after: always; border-radius: 0; }
   body.dp { background: #07050a; }
 }
 /* 固定紙面に収めるための詰め（2026-11-08） */
@@ -375,3 +375,6 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-cflow { margin-top: 16px; } .dp-cflow ol { list-style: none; margin: 8px 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
 .dp-cflow li { border: 1px solid var(--line2); border-top: 3px solid color-mix(in srgb, var(--rose) 70%, transparent); border-radius: 4px 4px 10px 10px; padding: 10px 12px; background: rgba(24,12,18,.72); }
 .dp-cflow li span { font-family: 'IM Fell English', serif; color: var(--rose); font-size: 15px; margin-right: 6px; } .dp-cflow li b { font-size: 13.5px; } .dp-cflow li p { margin: 6px 0 0; font-size: 13px; line-height: 1.8; color: var(--sub); }
+.dp-mirror .dp-mdl { grid-template-columns: 13.5em 1fr; }
+@media print { .dp-fname { background: none !important; color: color-mix(in srgb, var(--a) 85%, #fff) !important; -webkit-text-fill-color: currentColor; } }
+@media print { .dp-page *, .dp-page { box-shadow: none !important; } .dp-cover-emblem img, .dp-demb img { filter: none !important; } }

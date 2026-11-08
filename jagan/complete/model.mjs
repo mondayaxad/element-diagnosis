@@ -278,7 +278,7 @@ export function mirrorOf(topF, e, isous) {
     else question = f.copy.reflection;
     // 16 の各項目（主語は回答者。比較していない特性は「扱っていない」とする）
     const topUser = isous.slice(0, 2);
-    const feature = `あなたの回答では、${topUser.map((t) => t.label).join('と')}が目立っています。${main}`;
+    const feature = `${topUser[0].score <= 35 ? `全体に低めの回答の中では、${topUser.map((t) => t.label).join('と')}が相対的に高く出ています。` : `あなたの回答では、${topUser.map((t) => t.label).join('と')}が目立っています。`}${main}`;
     const notCompared = isous.slice(0, 3).filter((t) => !rows.some((r) => r.id === t.id)).map((t) => t.label);
     const differ = `${proseDf}${notCompared.length ? `なお、${notCompared.join('・')}は、${f.name}との照合では扱っていません。` : ''}`;
     const scene = `${f.copy.story_context}（照合に使う特性：${rows.map((r) => r.label).join('・')}）`;
@@ -381,7 +381,7 @@ export function overviewOf(elements, isous, byScore, peaks, valleys) {
   const O = OVERVIEW_COPY, e = elements[0], x = isous[0];
   const pin = peaks.filter((p) => e.parts.some((q) => q.id === p.id)), rest = e.parts.filter((q) => !peaks.some((p) => p.id === q.id));
   const three = [
-    `${peaks.map((p) => `${p.label}${p.score}`).join('・')}が、12特性の中で目立っています。`,
+    peaks[0].score <= 35 ? `全体に低めの回答の中では、${peaks.map((p) => `${p.label}${p.score}`).join('・')}が相対的に高く出ています。強い傾向という意味ではありません。` : `${peaks.map((p) => `${p.label}${p.score}`).join('・')}が、12特性の中で目立っています。`,
     pin.length === peaks.length ? `${e.label}${e.score}は、その${'一二三'[pin.length - 1]}特性に${rest.map((q) => `${q.label}${q.score}`).join('・')}を加えて算出しています。` : `${e.label}${e.score}は、${e.parts.map((q) => `${q.label}${q.score}`).join('・')}を組み合わせて算出しています。`,
     `${valleys.map((v) => `${v.label}${v.score}`).join('・')}への当てはまりは少なく、すべての特性が同じ強さで表れている配置ではありません。`,
   ];
