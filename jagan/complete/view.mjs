@@ -104,7 +104,7 @@ export function renderComplete(m) {
       ])}
     </div>
     <div class="dp-etop" style="--c:${elc}"><div class="dp-pk">${E(m.ov.eTopTitle)}</div>
-      <table class="dp-ctab"><thead><tr><th>特性</th><th>得点</th><th></th><th>${E(el1.label)}への寄与</th></tr></thead><tbody>
+      <table class="dp-ctab"><thead><tr><th>特性</th><th>得点</th><th></th><th>算出の重み</th></tr></thead><tbody>
       ${el1.parts.map((x) => `<tr><td>${E(x.label)}</td><td>${x.score}</td><td class="bar">${bar(x.score, elc)}</td><td>${x.weight}％</td></tr>`).join('')}</tbody></table>
       ${m.ov.eRead.map((t) => `<p>${E(t)}</p>`).join('')}</div>
     <div class="dp-ac2"><div class="dp-acb"><div class="dp-pk">${E(m.ov.eNextTitle)}</div><p>${E(m.ov.eNext)}</p></div><div class="dp-acb"><div class="dp-pk">${E(m.ov.eGapTitle)}</div><p>${E(m.ov.eGap)}</p></div></div>`, { sub: 'Overview' });
@@ -139,8 +139,8 @@ export function renderComplete(m) {
       ])}
     </div>
     <div class="dp-top3">${m.mirror.people.map((p) => `<div class="dp-t3" style="--c:${p.f.elements[0] || '#C8405C'}"><div class="dp-t3h">${pad(p.f.rank)}　${fatuiName(p.f)}　<small>${p.f.match}%</small></div>
-      <dl class="dp-t3dl"><dt>${E(m.ov.fCards[0])}</dt><dd>${E(p.aligned)}</dd><dt>${E(m.ov.fCards[1])}</dt><dd>${E(p.different)}</dd><dt class="gold">${E(m.ov.fCards[2])}</dt><dd>${E(p.main)}</dd></dl></div>`).join('')}</div>
-    <div class="dp-fsteps">${m.ov.fSteps.map(([k, t], i) => `<div><span class="dp-nnum">${i + 1}</span><b>${E(k)}</b><p>${E(t)}</p></div>`).join('')}</div>`, { sub: 'Self-understanding' });
+      <dl class="dp-t3dl"><dt>${E(m.mirror.labels.split.topCards[0])}</dt><dd>${E(p.shortAl)}</dd><dt>${E(m.mirror.labels.split.topCards[1])}</dt><dd>${E(p.shortDf)}</dd></dl></div>`).join('')}</div>
+    <div class="dp-msum"><p><b>${E(m.mirror.labels.split.topNote[0])}</b></p><p>${E(m.mirror.labels.split.topNote[1])}<a class="dp-xref" href="#dp${pad(PAGE_TITLES.indexOf('上位3名のファトゥスとの交わり') + 1)}">「上位3名のファトゥスとの交わり」（P${pad(PAGE_TITLES.indexOf('上位3名のファトゥスとの交わり') + 1)}）</a>${E(m.mirror.labels.split.topNote[2])}</p></div>`, { sub: 'Self-understanding' });
 
   // P10・P11 上位の邪眼との付き合い方／上位の異相を読み解く（オーナー案・2026-11-08）。上位3つを3列に並べた比較表
   //   邪眼は「複数の特性が重なると、どんな反応のまとまりとして見えるか」、異相は「その特性そのものは何を意味し、自分にどう当てはまるか」
@@ -178,11 +178,11 @@ export function renderComplete(m) {
     page('dp-wide dp-detail', 'JAGAN', nameOf(`邪眼を読む（${e.rank}）`), `
       ${dHead({ c, rank: e.rank, score: e.score, next: d.next, label: e.label, head: d.head, tagline: d.tagline, kick: `JAGAN · ${e.name}`,
         emblem: `<img src="/assets/emblems/jagan/record/${{ PY: 'pyro', HY: 'hydro', CR: 'cryo', EL: 'electro', AN: 'anemo', GE: 'geo', DE: 'dendro' }[e.id]}.png" alt="${E(e.label)}の邪眼の証" width="120" height="120">` })}
-      <div class="dp-dchips"><span class="dp-dchk">${E(L.basisE)}</span>${e.parts.map((x) => `<span class="dp-dchip${x.id === d.core ? ' core' : ''}" style="--c:${c}">${E(x.label)} ${x.score}<i>重み ${x.weight}%</i>${x.id === d.core ? '<em>核</em>' : ''}</span>`).join('')}</div>
+      <div class="dp-dchips"><span class="dp-dchk">${E(L.basisE)}</span>${e.parts.map((x) => `<span class="dp-dchip${x.id === d.core ? ' core' : ''}" style="--c:${c}">${E(x.label)} ${x.score}<i>算出の重み ${x.weight}%</i>${x.id === d.core ? '<em>核</em>' : ''}</span>`).join('')}</div>
       <div class="dp-dsplit"><div>
         ${youBlock(d, c)}
-        <div class="dp-dbasis"><div class="dp-dck">${E(L.basisE)}　<small>計算上の重み：${e.parts.map((x) => `${E(x.label)}${x.weight}%`).join('・')}</small></div>
-          ${e.parts.map((x) => `<div class="dp-row"><span>${E(x.label)}<small>重み ${x.weight}%</small></span>${bar(x.score, c)}<b>${x.score}</b></div>`).join('')}</div>
+        <div class="dp-dbasis"><div class="dp-dck">${E(L.basisE)}　<small>算出の重み：${e.parts.map((x) => `${E(x.label)}${x.weight}%`).join('・')}</small></div>
+          ${e.parts.map((x) => `<div class="dp-row"><span>${E(x.label)}<small>算出の重み ${x.weight}%</small></span>${bar(x.score, c)}<b>${x.score}</b></div>`).join('')}</div>
         ${e.fatui.length ? `<p class="dp-li">この邪眼に連なるファトゥス：${e.fatui.map((f) => `${fatuiName(f)}（${f.rank}位）`).join('　')}</p>` : ''}
       </div>${side(d, c)}</div>`);
   }
@@ -236,10 +236,13 @@ export function renderComplete(m) {
       ${M.people.map((p) => { const f = p.f; return `<article class="dp-mcard" style="--c:${f.elements[0] || '#C8405C'}">
         <header class="dp-mch"><span class="dp-mrk">${pad(f.rank)}</span><i class="dot" style="background:${f.elements[0] || '#C8405C'}"></i><span class="dp-mname">${fatuiName(f)}</span>
           <span class="dp-mmeta"><b>一致度 ${f.match}%</b><i>${E(f.title)}</i><i>${E(f.region || '—')}</i>${f.tags.map((t) => `<i class="tag">${E(t)}</i>`).join('')}</span></header>
-        <p class="dp-mstory"><span>${E(ML.story)}</span>${E(f.copy.story_context)}</p>
         <div class="dp-mvals">${p.rows.map((r) => `<span class="${r.diff <= 15 ? 'near' : r.diff >= 20 ? 'far' : ''}">${E(r.label)}<b>${r.you}</b><small>／参照 ${r.ref}</small></span>`).join('')}</div>
-        <dl class="dp-mdl"><dt>${E(ML.aligned)}</dt><dd>${E(p.aligned)}</dd><dt>${E(ML.different)}</dt><dd>${E(p.different)}</dd>
-          <dt>${E(ML.main)}</dt><dd>${E(p.main)}</dd><dt class="gold">${E(ML.you)}</dt><dd>${E(p.you)}</dd></dl>
+        <dl class="dp-mdl">
+          <dt>1. ${E(ML.split.mirrorItems[0])}</dt><dd><span class="dp-mtag">${E(ML.split.storyFact)}</span>${E(p.story.fact)}<br><span class="dp-mtag dti">${E(ML.split.storyDti)}</span>${E(p.story.dti)}</dd>
+          <dt>2. ${E(ML.split.mirrorItems[1])}</dt><dd>${E(p.overlap)}</dd>
+          <dt>3. ${E(ML.split.mirrorItems[2])}</dt><dd>${E(p.different)}</dd>
+          <dt>4. ${E(ML.split.mirrorItems[3])}</dt><dd>${E(p.main)}</dd>
+          <dt class="gold">5. ${E(ML.split.mirrorItems[4])}</dt><dd>「${E(p.question)}」</dd></dl>
       </article>`; }).join('')}
       <div class="dp-msum"><div class="dp-pk">${E(ML.sumTitle)}</div>${M.sum.map((t) => `<p>${E(t)}</p>`).join('')}</div>
       <p class="dp-note">${E(ML.refNote)}</p>`, { sub: ML.sub });
@@ -307,7 +310,7 @@ export function renderComplete(m) {
         ${bar(e.score, e.color.main)}
         <p class="dp-edess">${E(e.text.essence)}</p>
         <div class="dp-edcols"><div><span>${E(DL.scenes)}</span><p>${E(e.detail2.scenes)}</p></div>
-          <div><span>${E(DL.parts)}</span><p>${e.parts.map((x) => `${E(x.label)}<b>${x.score}</b><i>重み${x.weight}%</i>`).join('　')}</p></div></div>
+          <div><span>${E(DL.parts)}</span><p>${e.parts.map((x) => `${E(x.label)}<b>${x.score}</b><i>算出の重み${x.weight}%</i>`).join('　')}</p></div></div>
         <div class="dp-edmis"><span>${E(DL.misread)}</span><p>${E(e.misread)}</p></div></div>`).join('')}</div>`, { sub: D.sub });
     D.groups.forEach((g, gi) => page('dp-wide dp-dictw', D.iKickers[gi], D.iTitles[gi], `<p class="dp-p dp-lead">${E(D.iIntro)}</p>
       ${g.map((d) => `<div class="dp-idgrp" style="--d:${d.color}"><div class="dp-idgh">${E(d.en)}　<b>${E(d.label)}</b></div>

@@ -782,7 +782,7 @@ test('完全解析 DIPPER 18：邪眼×異相――計算上の関係（異相�
   assert.deepEqual(Object.keys(C.TRAIT_COMBO).sort(), BUNDLE.items.traits.map((t) => t.id).sort());
   const m = buildComplete(sampleComplete(0).result, BUNDLE);
   assert.equal(m.combo.inc, true); assert.equal(m.combo.tag, '構成特性の重なり');
-  assert.match(m.combo.you[0], /^今回の水は、依存70・不安69・猜疑44から計算されています。その中で、依存は水の計算に最も大きな重み（50%）を持ち/);
+  assert.match(m.combo.you[0], /^今回の水は、依存70・不安69・猜疑44から計算されています。その中で、依存は水の計算に最も大きな算出の重み（50%）を持ち/);
   assert.match(m.combo.you[2], /さらに深い性格が証明されたという意味ではありません/);
   let seen = { inc: 0, sep: 0 };
   for (let s = 0; s < 300; s++) {
@@ -897,7 +897,7 @@ test('完全解析 DIPPER：03・04・06 の下部（根拠 → 意味 → 経�
   const m = buildComplete(result, BUNDLE);
   assert.deepEqual(m.ov.three, ['依存70・不安69が、12特性の中で目立っています。', '水64は、その二特性に猜疑44を加えて算出しています。', '危険志向6・冷淡6への当てはまりは少なく、すべての特性が同じ強さで表れている配置ではありません。']);
   assert.match(m.ov.check, /一方、完璧56が表す「「まだ不十分」という感覚」は、別の場面に現れる可能性もあります。/);
-  assert.match(m.ov.eRead[0], /^水64は、依存・不安・猜疑の得点を、それぞれの重みに従って組み合わせた結果です。/);
+  assert.match(m.ov.eRead[0], /^水64は、依存・不安・猜疑の得点を、それぞれの算出の重みに従って組み合わせた結果です。/);
   assert.match(m.ov.eGap, /^水64と草47の差は17です。/);
   const p2 = html.split('id="dp02"')[1].split('<section')[0];
   assert.ok(p2.includes('邪眼を読む — 水（関係の揺れ）') && !p2.includes('邪眼 1位'));
@@ -907,5 +907,24 @@ test('完全解析 DIPPER：03・04・06 の下部（根拠 → 意味 → 経�
     assert.ok(!/寄り添|慎重な足取り|すでに使っている強み|過剰使用|活かし方/.test(head), `seed ${s}`);
     const det = r.html.split('id="dp09"')[1].split('id="dp15"')[0];
     assert.ok(!/RANK|位 —/.test(det));
+  }
+});
+
+test('完全解析 DIPPER：06＝比較の要点（近さに寄与した特性・主な違い・16へのリンク）、16＝人物の描写／重なる／異なる／邪眼・異相／自分に戻す問い。表記は「算出の重み」', async () => {
+  const { PAGE_TITLES } = await import('../jagan/complete/view.mjs');
+  const { buildComplete } = await import('../jagan/complete/model.mjs');
+  const { sampleComplete } = await import('../jagan/complete-sample.mjs');
+  const n16 = PAGE_TITLES.indexOf('上位3名のファトゥスとの交わり') + 1;
+  for (let s = 0; s < 200; s++) {
+    const { result, html } = sampleComplete(s);
+    const p6 = html.split('id="dp06"')[1].split('<section')[0];
+    assert.ok(p6.includes('近さに寄与した特性') && p6.includes('主な違い') && p6.includes(`href="#dp${String(n16).padStart(2, '0')}"`));
+    assert.ok(!p6.includes('あなたの結果との関係') && !p6.includes('重なる反応を拾う'));
+    const p16 = html.split(`id="dp${String(n16).padStart(2, '0')}"`)[1].split('<section')[0];
+    for (const k of ['人物の描写', 'あなたと重なるところ', 'あなたと異なるところ', '邪眼・異相との関係', '自分に戻す問い', '作品の描写', 'DTI の参照の置き方']) assert.ok(p16.includes(k), k);
+    assert.ok(!/寄与 \d|[>（]重み ?\d|計算上の重み/.test(html));
+    const m = buildComplete(result, BUNDLE);
+    const qs = m.mirror.people.map((p) => p.question);
+    assert.ok(qs.every((q) => q.length > 10));
   }
 });

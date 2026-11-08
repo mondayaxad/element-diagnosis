@@ -6,7 +6,7 @@
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
-import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, DICT_PAGE, ELEMENT_MISREAD, TRAIT_DICT_HL, OVERVIEW_COPY, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
+import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, DICT_PAGE, ELEMENT_MISREAD, TRAIT_DICT_HL, OVERVIEW_COPY, FATUI_SPLIT, TRAIT_SCENE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
 
 const r1 = (x) => Math.round(x * 10) / 10;
 
@@ -42,7 +42,7 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
       aligned: ex.aligned.map((x) => ({ label: traitLabel(x.axis), you: Math.round(x.userScore), ref: Math.round(x.referenceScore) })),
       rows: ex.rows.map((x) => ({ id: x.axis, label: traitLabel(x.axis), you: Math.round(x.userScore), ref: Math.round(x.referenceScore), diff: Math.round(Math.abs(x.userScore - x.referenceScore)) })).sort((a, b) => a.diff - b.diff),
       different: ex.different.map((x) => ({ label: traitLabel(x.axis), you: Math.round(x.userScore), ref: Math.round(x.referenceScore) })),
-      copy: CHARACTER_COPY[c.id], deep: FATUI_DEEP[c.id], selected: !!(ch && ch.id === c.id),
+      copy: CHARACTER_COPY[c.id], deep: FATUI_DEEP[c.id], meta, selected: !!(ch && ch.id === c.id),
     };
   });
 
@@ -118,7 +118,7 @@ export function elementYou(e, d) {
     out.push(`一方、${s[2].label}の得点は二つより低く、今回の${L}を「${ONLY(s[2].id)}」だけで説明することはできません。`);
   } else if (s[0].id !== core.id && s[0].score > core.score) {
     const others = parts.filter((p) => p.id !== s[0].id).map((p) => N(p.id));
-    out.push(`今回の${L}では、構成特性の中で${s[0].label}の得点が比較的高く出ています（計算上の重みが最も大きいのは${core.label}）。${others.join('や、')}に加え、${N(s[0].id)}が、${d.loop}一因になっていないかを検討できます。`);
+    out.push(`今回の${L}では、構成特性の中で${s[0].label}の得点が比較的高く出ています（算出の重みが最も大きいのは${core.label}）。${others.join('や、')}に加え、${N(s[0].id)}が、${d.loop}一因になっていないかを検討できます。`);
   } else if (s[0].score - s[2].score >= 10) {
     out.push(`今回の${L}は、構成特性の中では${s[0].label}が高く、${s[2].label}が低い配置です。そのため、「${ONLY(s[2].id)}」だけでなく、${N(s[0].id)}から来る反応に目を向けます。`);
   } else {
@@ -158,8 +158,8 @@ export function comboOf(e, x) {
   const you = [];
   let relation, headline, day, heavy, q, rows;
   if (inc) {
-    const w = parts[0].id === x.id ? `最も大きな重み（${part.weight}%）を持ち` : `${part.weight}%の重みを持ち`;
-    relation = `異相の${X}は、${L}の計算に使われる三つの特性の一つです（重み${part.weight}%）。同じ特性が、邪眼の得点にも直接使われています。`;
+    const w = parts[0].id === x.id ? `最も大きな算出の重み（${part.weight}%）を持ち` : `${part.weight}%の算出の重みを持ち`;
+    relation = `異相の${X}は、${L}の計算に使われる三つの特性の一つです（算出の重み${part.weight}%）。同じ特性が、邪眼の得点にも直接使われています。`;
     headline = `${ec.ctx}、${N(x.id)}が目立つ組み合わせです。`;
     you.push(`今回の${L}は、${list}から計算されています。その中で、${X}は${L}の計算に${w}、12特性の中でも最上位に選ばれています。`);
     const others = parts.filter((p) => p.id !== x.id).sort((a, b) => a.score - b.score);
@@ -194,9 +194,11 @@ export function comboOf(e, x) {
 const level = (v) => (v <= 35 ? 'low' : v >= 65 ? 'high' : 'mid');
 const LEVEL_WORD = { low: '低め', high: '高め', mid: '中ほど' };
 export function mirrorOf(topF, e, isous) {
+  const M = { ...MIRROR_LABELS, split: FATUI_SPLIT };
   const x = isous[0];
   const mainIds = [...new Set([...e.parts.map((p) => p.id), x.id])];
   const mainLabels = mainIds.map((id) => (e.parts.find((p) => p.id === id) || x).label);
+  const usedQ = new Set();
   const people = topF.map((f) => {
     const rows = f.rows, al = rows.filter((r) => r.diff <= 15), df = rows.filter((r) => r.diff >= 20).sort((a, b) => b.diff - a.diff);
     const nameOf = (r) => `${r.label}はあなた${r.you}／参照${r.ref}`;
@@ -239,7 +241,23 @@ export function mirrorOf(topF, e, isous) {
     if (lows.length && !ov.some((r) => r.diff <= 15)) you = `今回の回答には、${top2}が上位にある一方、${lows.map((r) => r.label).join('・')}は低いという配置があります。上位の特性として内側で感じている反応と、外へ表れにくい反応を分けて振り返ることが、自分を理解する手がかりになります。`;
     else if (highs.length) you = `${highs.map((r) => r.label).join('・')}が高く、人物の参照値とも近い配置です。${highs.some((r) => mainIds.includes(r.id)) ? `${highs.filter((r) => mainIds.includes(r.id)).map((r) => r.label).join('・')}は主結果（${e.label}×${x.label}）を形づくる特性でもあり、今回の結果の中心にある反応が、この人物との比較にも表れています。` : '主結果とは別に、この特性もあなたの回答で目立っています。'}ただし、人物と同じ動機や経験を持つという意味ではありません。`;
     else you = `${f.name}との比較では、${al.length ? `${al.map((r) => r.label).join('・')}が近く` : '近い特性が限られ'}${df.length ? `、${df.map((r) => r.label).join('・')}が離れています` : 'ています'}。同じ人物に近いと出ても、どの特性で近いかによって、自分の読み方は変わります。`;
-    return { f, rows, aligned, different, main, you };
+    // 06 用（要点）：近さに寄与した特性・主な違い
+    const lvAll = [...new Set(al.flatMap((r) => [level(r.you), level(r.ref)]))];
+    const shortAl = al.length ? `${al.map((r) => `${r.label}（あなた${r.you}／参照${r.ref}）`).join('・')}。${lvAll.length === 1 ? `${al.length >= 2 ? 'いずれも' : ''}${LEVEL_WORD[lvAll[0]]}の値で近い配置です。` : '数値の近さが一致度に寄与しています。'}`
+      : `15点以内まで近い特性はありません。最も近いのは${rows[0].label}（あなた${rows[0].you}／参照${rows[0].ref}）です。`;
+    const big = df[0];
+    const shortDf = big ? `${big.label}（あなた${big.you}／参照${big.ref}、差${big.diff}）。${big.ref > big.you ? `${f.name}の参照値の方が高い特性です。` : 'あなたの方が高い特性です。'}` : '比較した特性に、20点以上の差はありません。';
+    // 16 用：人物の描写（作品の描写と DTI の解釈を分ける）・重なるところ（振り返る候補）・自分に戻す問い
+    const meta = f.meta;
+    const overlap = al.length ? `${aligned}${al.length ? `振り返る候補として、${al.map((r) => `「${TRAIT_SCENE[r.id][level(r.you) === 'high' ? 'hi' : 'lo']}」`).join('や')}が挙げられます。` : ''}` : aligned;
+    // 三人で同じ問いにならないよう、まだ使っていない重なる特性 → なければ差の目立つ特性 → なければ人物の問い
+    const sc = (r) => TRAIT_SCENE[r.id][level(r.you) === 'high' ? 'hi' : 'lo'];
+    const qT = al.find((r) => !usedQ.has(r.id)), qD = df.find((r) => !usedQ.has(r.id));
+    let question;
+    if (qT) { usedQ.add(qT.id); question = `${sc(qT)}を、最近の出来事から一つ思い出せますか。そのとき、相手や状況はどうでしたか。`; }
+    else if (qD) { usedQ.add(qD.id); question = `${f.name}との比較で差があった${qD.label}について、${sc(qD)}を思い出せますか。人物の参照とは違う、あなた自身の場面として説明してみてください。`; }
+    else question = f.copy.reflection;
+    return { f, rows, aligned, different, main, you, shortAl, shortDf, story: { fact: f.copy.story_context, dti: meta.rationale }, overlap, question };
   });
   // まとめ：繰り返し近さの根拠になる特性と、人物ごとの一致理由
   const cnt = {};
@@ -253,7 +271,7 @@ export function mirrorOf(topF, e, isous) {
   const anyMain = people.some((p) => p.rows.some((r) => r.diff <= 15 && mainIds.includes(r.id)));
   sum.push(anyMain ? `主結果（${e.label}×${x.label}）を形づくる特性が近さに含まれる人物と、別の特性で近い人物を分けて読むと、どの反応が人物との比較に表れているかが見えます。`
     : `三人とも、主結果（${e.label}×${x.label}）を形づくる特性とは別の側面で近づいています。主結果で見た反応とは別に、どんな特性が人物との比較に表れているかを確かめてください。`);
-  return { labels: MIRROR_LABELS, people, sum };
+  return { labels: M, people, sum };
 }
 
 // 四つの反応領域：各領域の特性の得点と、その違いから「あなたの場合」を組み立てる（領域平均の順位はつけない）
@@ -348,7 +366,7 @@ export function overviewOf(elements, isous, byScore, peaks, valleys) {
     + '得点だけで一つの原因にまとめず、経験と照らして読みます。';
   // 04：1位の邪眼の算出と、次点との関係
   const [a, b, c] = elements;
-  const eRead = [`${a.label}${a.score}は、${a.parts.map((q) => q.label).join('・')}の得点を、それぞれの重みに従って組み合わせた結果です。${contrastOf(a)}`,
+  const eRead = [`${a.label}${a.score}は、${a.parts.map((q) => q.label).join('・')}の得点を、それぞれの算出の重みに従って組み合わせた結果です。${contrastOf(a)}`,
     `${a.parts.map((q) => `「${SH(q.id).verb}こと」`).join('、')}は、同じ反応ではありません。${a.label}という名前だけでまとめず、どの反応が自分の経験に重なるかを確認してください。`];
   const shared = [b, c].map((z) => ({ z, sh: z.parts.filter((q) => a.parts.some((p) => p.id === q.id)).map((q) => q.label) }));
   const eNext = `2位の${b.label}${b.score}、3位の${c.label}${c.score}は、${[...new Set([b, c].flatMap((z) => z.parts.map((q) => q.label)))].join('・')}を含む、別の特性の組み合わせです。`
