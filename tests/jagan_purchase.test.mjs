@@ -148,6 +148,7 @@ test('販売：Preview は JAGAN_SALES_OPEN=true のときだけ。本番は pro
   assert.equal(salesOpen({ JAGAN_SALES_OPEN: 'true' }, 'preview'), true);
   assert.equal(salesOpen({}, 'preview'), false);
   assert.equal(salesOpen({ JAGAN_SALES_OPEN: 'true' }, 'production'), BUNDLE.product.sales_open === true);
+  assert.equal(salesOpen({}, 'production'), false, '本番も JAGAN_SALES_OPEN が無ければ売らない');
   const { call } = setup({ ...ENV, JAGAN_SALES_OPEN: 'false' });
   assert.deepEqual((await call('buy', buyBody())).body, { error: 'sales_closed' });
 });

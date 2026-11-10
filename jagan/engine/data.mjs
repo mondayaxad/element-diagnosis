@@ -1078,7 +1078,7 @@ export const BUNDLE = Object.freeze({
   "currency": "JPY",
   "price": 1000,
   "price_status": "confirmed",
-  "sales_open": false,
+  "sales_open": true,
   "scope": "one_result_report",
   "free_result_enabled": true,
   "external_data_analysis": false,

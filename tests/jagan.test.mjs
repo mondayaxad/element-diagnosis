@@ -59,9 +59,9 @@ test('the site engine returns exactly the spec runtime result for 2,000 varied a
   }
 });
 
-test('product stays one closed 1,000 JPY one-time item', () => {
+test('product: 1,000 JPY one-time item. sales_open=true（実際に売るかは環境変数 JAGAN_SALES_OPEN・JAGAN_PRODUCTION_ENABLED で決める）', () => {
   assert.equal(BUNDLE.product.price, 1000);
-  assert.equal(BUNDLE.product.sales_open, false);
+  assert.equal(BUNDLE.product.sales_open, true);
   assert.equal(BUNDLE.product.billing, 'one_time');
   assert.equal(BUNDLE.product.existing_eti_entitlement_grants_access, false);
 });

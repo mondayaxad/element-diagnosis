@@ -47,8 +47,11 @@ test('Production：本番の URL・公開キー・環境名・Ref の4項目だ�
     supabaseAnonKey: PROD_ENV.SUPABASE_ANON_KEY, projectRef: PROD_REF,
     completeSalesOpen: false, completeApiReady: true, jaganSalesOpen: false,
   });
-  // 邪眼の販売は本番では JAGAN_SALES_OPEN があっても開かない（Preview だけ）
+  // 邪眼の販売：本番は JAGAN_PRODUCTION_ENABLED=true かつ JAGAN_SALES_OPEN=true のときだけ（どちらか一方では開かない）
   assert.equal(JSON.parse(call({ ...PROD_ENV, JAGAN_SALES_OPEN: 'true' }).body).jaganSalesOpen, false);
+  assert.equal(JSON.parse(call({ ...PROD_ENV, JAGAN_PRODUCTION_ENABLED: 'true' }).body).jaganSalesOpen, false);
+  assert.equal(JSON.parse(call({ ...PROD_ENV, JAGAN_PRODUCTION_ENABLED: 'true', JAGAN_SALES_OPEN: 'true' }).body).jaganSalesOpen, true);
+  assert.equal(JSON.parse(call({ ...PROD_ENV, JAGAN_PRODUCTION_ENABLED: 'true', JAGAN_SALES_OPEN: 'TRUE' }).body).jaganSalesOpen, false);
   // 販売フラグは COMPLETE_SALES_OPEN が文字列 'true' の時だけ true（秘密値ではない）
   assert.equal(JSON.parse(call({ ...PROD_ENV, COMPLETE_SALES_OPEN: 'true' }).body).completeSalesOpen, true);
   assert.equal(JSON.parse(call({ ...PROD_ENV, COMPLETE_SALES_OPEN: 'TRUE' }).body).completeSalesOpen, false);
