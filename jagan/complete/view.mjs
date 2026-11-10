@@ -330,14 +330,23 @@ export function renderComplete(m) {
 
 // 固定紙面の最適化：各ページで、本文（見出しの下）を紙面の高さに合わせて少し拡大する（最大 1.24 倍。縮小はしない）。
 //   CSS の zoom は折り返しも変えるので、二分探索で収まる最大の倍率を探す。表紙は対象外。描画後に一度呼ぶ。
-export function fitPages(root, { max = 1.24 } = {}) {
+export function fitPages(root, { max = 1.24, min = 0.6 } = {}) {
   for (const pg of root.querySelectorAll('.dp-page:not(.dp-cover)')) {
     const inner = pg.querySelector('.dp-inner'), body = pg.querySelector('.dp-body'), head = pg.querySelector('.dp-head');
     if (!inner || !body) continue;
     const cs = getComputedStyle(inner);
-    const avail = inner.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - (head ? head.getBoundingClientRect().height + parseFloat(getComputedStyle(head).marginBottom) : 0) - 4;
+    // スマホでは紙面全体を zoom で縮めて表示するため、getBoundingClientRect（縮めた後）と clientHeight・余白（縮める前）が食い違う。
+    // 同じ物差し（縮めた後の大きさ）にそろえて比べる（そろえないと、スマホで全ページが拡大されて見切れる）
+    const k = inner.offsetHeight ? inner.getBoundingClientRect().height / inner.offsetHeight : 1;
+    const avail = inner.getBoundingClientRect().height - (parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + 4) * k - (head ? head.getBoundingClientRect().height + parseFloat(getComputedStyle(head).marginBottom) * k : 0);
     body.style.zoom = '1';
-    if (body.getBoundingClientRect().height >= avail) continue;
+    // 文字の多い回答・端末の字形（iPhone のヒラギノなど）で紙面からはみ出す時は、収まるまで縮める（見切れを出さない）
+    if (body.getBoundingClientRect().height > avail) {
+      let lo2 = min, hi2 = 1;
+      for (let i = 0; i < 10; i++) { const mid = (lo2 + hi2) / 2; body.style.zoom = String(mid); if (body.getBoundingClientRect().height <= avail) lo2 = mid; else hi2 = mid; }
+      body.style.zoom = String(Math.floor(lo2 * 1000) / 1000);
+      continue;
+    }
     let lo = 1, hi = max;
     for (let i = 0; i < 9; i++) { const mid = (lo + hi) / 2; body.style.zoom = String(mid); if (body.getBoundingClientRect().height <= avail) lo = mid; else hi = mid; }
     body.style.zoom = String(Math.floor(lo * 1000) / 1000);

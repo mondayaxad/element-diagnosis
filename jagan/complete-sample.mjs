@@ -24,7 +24,10 @@ if (typeof document !== 'undefined' && document.getElementById('dpBook')) {
   const fit = () => document.getElementById('dpBook').style.setProperty('--z', String(Math.min(1, (document.documentElement.clientWidth - 16) / 1240)));
   fit(); addEventListener('resize', fit);
   const fill = () => fitPages(document.getElementById('dpBook'));
-  fill(); if (document.fonts) document.fonts.ready.then(fill);
+  fill();
+  // 字形（Web フォント）が後から届くと行の折り返しが変わり、合わせた倍率のままでは見切れる。フォントが届くたび・読み込み完了・少し後にも合わせ直す
+  if (document.fonts) { document.fonts.ready.then(fill); document.fonts.addEventListener('loadingdone', fill); }
+  addEventListener('load', fill); setTimeout(fill, 1500); setTimeout(fill, 4000);
   document.getElementById('dpInfo').textContent = `邪眼完全解析「DIPPER」のサンプル（架空の回答・${result.dti.code}｜${result.dti.name}。人が受検した結果ではありません）`;
   document.getElementById('dpNext').addEventListener('click', () => { location.search = `?seed=${seed + 1}`; });
   document.getElementById('dpPrint').addEventListener('click', () => window.print());

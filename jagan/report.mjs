@@ -99,7 +99,7 @@ async function fromLink(token) {
 }
 
 function wireLinkKeep(token) {
-  $('rpKeepLead').textContent = 'このページのリンク（URL）を知っている人は、このレポートを開けます。リンクを保存し、共有する場合はご注意ください。マイページに登録すると、マイページの記録から、いつでも開けます（別のアカウントにも登録できます）。';
+  $('rpKeepLead').textContent = 'このページのリンク（URL）を知っている人は、このレポートを開けます。リンクを保存し、共有する場合はご注意ください。マイページに登録すると、マイページの記録から、いつでも開けます。';
   const reg = $('registerBtn');
   const copy = $('copyBtn');
   reg.hidden = false; copy.hidden = false;
