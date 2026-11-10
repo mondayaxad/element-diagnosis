@@ -304,17 +304,21 @@ function bindResult() {
 
 // ---- 邪眼解析レポートの申込（販売中だけ。金額・商品はサーバーが決める）。ログイン中で購入済みの記録は「レポートを読む」 ----
 async function ownedResult(resultId) {
+  // ログイン中の本人の権利（商品ごと）。確かめられない時は、どちらも未購入として扱う（購入はサーバーが改めて確かめる）
+  const out = { report: false, complete: false };
   const c = supabaseClient();
-  if (!c || !(await accessToken())) return false;
+  if (!c || !(await accessToken())) return out;
   try {
-    const { data, error } = await c.from('jagan_entitlements').select('result_id').eq('result_id', resultId).eq('status', 'active').limit(1);
-    return !error && Array.isArray(data) && data.length > 0;
-  } catch { return false; }
+    const { data, error } = await c.from('jagan_entitlements').select('product_key').eq('result_id', resultId).eq('status', 'active');
+    if (!error && Array.isArray(data)) data.forEach((e) => { if (e.product_key === 'jagan_complete_v1') out.complete = true; else out.report = true; });
+  } catch { /* 未購入として扱う */ }
+  return out;
 }
+const productOfBtn = (b) => (b.getAttribute('data-buy') === 'complete' ? 'complete' : 'report');
 async function setupBuy() {
   const btns = Array.from(document.querySelectorAll('#resultBody [data-buy]'));
   if (!salesOpen() || !current) {
-    btns.forEach((b) => b.addEventListener('click', () => track('jagan_report_cta', { state: 'closed' })));
+    btns.forEach((b) => b.addEventListener('click', () => track(productOfBtn(b) === 'complete' ? 'jagan_complete_cta' : 'jagan_report_cta', { state: 'closed' })));
     return;
   }
   const shown = current;
@@ -322,29 +326,44 @@ async function setupBuy() {
   if (current !== shown) return; // 待っている間に別の結果を表示した
   document.querySelectorAll('#resultBody .rx-sales-note').forEach((n) => { n.hidden = true; });
   btns.forEach((b) => {
+    const product = productOfBtn(b);
+    const own = owned[product];
     b.disabled = false;
     b.removeAttribute('aria-disabled');
-    const small = b.querySelector('small');
-    if (small) small.remove();
-    if (owned && b.classList.contains('rx-buy')) b.textContent = 'レポートを読む';
-    b.addEventListener('click', () => onBuy(b, owned));
+    if (product === 'complete') {
+      if (own) { b.classList.add('is-read'); b.innerHTML = '<span class="dp-buy-main">完全解析を読む</span><span class="dp-buy-sub">購入済み・全23ページ</span>'; }
+    } else {
+      const small = b.querySelector('small');
+      if (small) small.remove();
+      if (own && b.classList.contains('rx-buy')) b.textContent = 'レポートを読む';
+    }
+    b.addEventListener('click', () => onBuy(b, product, own));
   });
 }
-async function onBuy(btn, owned) {
+async function onBuy(btn, product, owned) {
   if (!current) return;
   const r = current.result;
-  if (owned) { track('jagan_report_read', { source: 'result' }); location.assign(`/jagan/report?r=${encodeURIComponent(r.resultId)}`); return; }
-  track('jagan_report_cta', { state: 'open' });
-  const old = btn.parentElement && btn.parentElement.querySelector('.rx-buy-error');
+  const isC = product === 'complete';
+  if (owned) {
+    track(isC ? 'jagan_complete_read' : 'jagan_report_read', { source: 'result' });
+    location.assign(`${isC ? '/jagan/dipper' : '/jagan/report'}?r=${encodeURIComponent(r.resultId)}`);
+    return;
+  }
+  track(isC ? 'jagan_complete_cta' : 'jagan_report_cta', { state: 'open' });
+  const box = isC ? btn.closest('.dp-fold') : null;
+  const msg = box ? box.querySelector('[data-dipper-msg]') : null;
+  const old = !isC && btn.parentElement && btn.parentElement.querySelector('.rx-buy-error');
   if (old) old.remove();
+  if (msg) msg.textContent = '';
   const label = btn.innerHTML;
   btn.disabled = true;
   btn.textContent = '決済の画面を準備しています…';
-  const out = await buy({ resultId: r.resultId, itemSetVersion: r.versions.itemSet, answers: current.answers, source: current.mode === 'saved' ? 'saved_result' : 'result' });
+  const out = await buy({ resultId: r.resultId, itemSetVersion: r.versions.itemSet, answers: current.answers, source: current.mode === 'saved' ? 'saved_result' : 'result', product });
   if (out.ok) return;
   btn.disabled = false;
   btn.innerHTML = label;
   if (out.error === 'in_progress') return;
+  if (msg) { msg.textContent = buyErrorText(out.error); return; }
   const p = document.createElement('p');
   p.className = 'jg-small rx-buy-error';
   p.setAttribute('role', 'alert');

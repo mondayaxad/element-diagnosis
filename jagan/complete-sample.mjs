@@ -25,7 +25,7 @@ if (typeof document !== 'undefined' && document.getElementById('dpBook')) {
   fit(); addEventListener('resize', fit);
   const fill = () => fitPages(document.getElementById('dpBook'));
   fill(); if (document.fonts) document.fonts.ready.then(fill);
-  document.getElementById('dpInfo').textContent = `邪眼完全解析「DIPPER」の叩き台（架空の回答・seed ${seed}：${result.dti.code}｜${result.dti.name}。販売していません）`;
+  document.getElementById('dpInfo').textContent = `邪眼完全解析「DIPPER」のサンプル（架空の回答・${result.dti.code}｜${result.dti.name}。人が受検した結果ではありません）`;
   document.getElementById('dpNext').addEventListener('click', () => { location.search = `?seed=${seed + 1}`; });
   document.getElementById('dpPrint').addEventListener('click', () => window.print());
 }

@@ -27,7 +27,10 @@ test('邪眼の記録：RECORDS・INSIGHTS に数え、最新・記録章・こ�
   assert.equal(i.imgs.filter((s) => s.startsWith('awakened/')).length, 2);
   assert.equal(i.imgs.length, 7);
   assert.equal(i.read, 1);
-  assert.equal(i.buy, 3);
+  assert.equal(i.buy, 3, '解析レポート ¥1,000 は未購入の2件（最新とこれまで）＋もう1件');
+  // 完全解析 ¥3,000：未購入の記録すべて（最新・これまで3件＝4）。どちらも未購入の記録は「その先を見る」の中
+  assert.equal(i.buyComplete, 4);
+  assert.equal(i.reveal, 3);
   assert.equal(i.overflowX, false);
   // 申込のボタンは赤黒（元素の青ではない）。これまでのあなたの印は「邪眼」
   assert.ok(i.ctaBg.every((b) => /linear-gradient/.test(b) && /28, 6, 12|74, 15, 31/.test(b)), JSON.stringify(i.ctaBg));
@@ -41,4 +44,14 @@ test('最新が購入済み：INSIGHT・覚醒の証・「邪眼解析レポー�
   assert.equal(i.buy, 0, '販売前は申込を出さない');
   assert.ok(i.pending >= 2, '準備中のボタン');
   assert.equal(i.read, 2, '最新とこれまでの同じ記録');
+});
+
+test('完全解析：両方購入＝COMPLETE、片方だけ＝INSIGHT。完全解析だけ購入の記録は「完全解析を読む」と ¥1,000 の申込', { timeout: 180000 }, () => {
+  const i = run({ ENT: '0', CENT: '0,1', SALES: '1' });
+  assert.deepEqual(i.chips, ['2026.11.07', 'NEW', 'COMPLETE', '邪眼診断']);
+  assert.ok(i.completeChip >= 2, '最新とこれまでの COMPLETE');
+  assert.equal(i.readComplete, 3, '最新・これまで（2件）の「完全解析を読む」');
+  assert.deepEqual(i.stats, ['RECORDS 03 残してきた自分', 'INSIGHTS 02 深く読み解いた自分']);
+  assert.equal(i.buy, 2, '2件目（完全解析だけ）と3件目の解析レポート ¥1,000');
+  assert.equal(i.buyComplete, 1, '3件目だけ ¥3,000');
 });

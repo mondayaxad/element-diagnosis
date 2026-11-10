@@ -283,6 +283,82 @@ function foundationCard(result, bundle, g) {
     </section>`;
 }
 
+// ---- 完全解析「DIPPER」（¥3,000）の案内（元素診断の「BEYOND THE RESULT｜この先にあるもの」と同じ組み立て・2026-11-10）
+//   閉じた状態：予告・三つの視点・価格・サンプルへの入口だけ。「その先を見る」を開くと、星図・三つの視点・ご利用いただける内容・申込。
+//   ¥1,000 の主導線（解析レポート）の後に置く。決済ボタンは data-buy="complete"（販売中だけ有効。app.mjs・report.mjs が配線）。
+export const DIPPER_LENSES = [
+  { key: 'shadow', en: 'SHADOW', head: '邪眼×異相──あなたの影はどう表れるか', body: '上位3つの邪眼と異相を一つずつ読み解き、二つが重なる場面・受け止め方・気持ちと行動・負担のサインまで、5段の流れでたどります。' },
+  { key: 'fatui', en: 'FATUI', head: '上位3名のファトゥスとの交わり', body: 'あなたの回答と重なる反応を、人物の具体的な姿と、あなた自身の場面に重ねて読みます。TOP11の全員との一致度も収録します。' },
+  { key: 'next', en: 'NEXT', head: '四つの反応領域と、次の一手', body: '12特性を四つの反応領域で捉え直し、あなたの影に合わせた次の一手と、7日間の記録・読み直しの問いへつなげます。' },
+];
+export const DIPPER_CONTENTS = [
+  ['上位3つの邪眼・異相を、1つずつ詳しく', 'あなたの得点から組み立てる「あなたの場合」・場面・負担のサイン・付き合い方'],
+  ['邪眼×異相の重なり', '二つの結果が同じ場面でどう表れるかを、5段の流れで'],
+  ['ファトゥスTOP11と、上位3名との交わり', '重なるところ・人物の姿・自分に重ねて読む問い'],
+  ['四つの反応領域と、あなたの配置', '不安と対人警戒・衝動と刺激・固執と基準・他者への働きかけ'],
+  ['あなたの影に、次の一手を', '一つ選び、決めて、確かめる。7日間の記録と再読の問い'],
+  ['邪眼辞典・異相辞典', '7邪眼・12特性を、あなたの得点と順位つきで'],
+];
+const DIPPER_MAP = `<svg class="dp-map" viewBox="0 0 320 180" role="img" aria-label="SHADOW・FATUI・NEXT の三つの視点を結ぶ星図">
+  <defs>
+    <radialGradient id="dpm-g1"><stop offset="0" stop-color="#ff9fb6"/><stop offset=".4" stop-color="#c8405c" stop-opacity=".7"/><stop offset="1" stop-color="#c8405c" stop-opacity="0"/></radialGradient>
+    <radialGradient id="dpm-g2"><stop offset="0" stop-color="#e6d0ff"/><stop offset=".4" stop-color="#9a6cd8" stop-opacity=".7"/><stop offset="1" stop-color="#9a6cd8" stop-opacity="0"/></radialGradient>
+    <radialGradient id="dpm-g3"><stop offset="0" stop-color="#fff1cc"/><stop offset=".4" stop-color="#e2c08c" stop-opacity=".7"/><stop offset="1" stop-color="#e2c08c" stop-opacity="0"/></radialGradient>
+    <radialGradient id="dpm-c"><stop offset="0" stop-color="#ffffff"/><stop offset=".3" stop-color="#f0b9c6" stop-opacity=".8"/><stop offset="1" stop-color="#c8405c" stop-opacity="0"/></radialGradient>
+  </defs>
+  <g fill="#fff" opacity=".55"><circle cx="22" cy="30" r=".8"/><circle cx="60" cy="150" r=".7"/><circle cx="110" cy="22" r=".6"/><circle cx="150" cy="160" r=".8"/><circle cx="210" cy="18" r=".7"/><circle cx="268" cy="150" r=".6"/><circle cx="300" cy="40" r=".8"/><circle cx="182" cy="110" r=".5"/><circle cx="96" cy="96" r=".5"/></g>
+  <g stroke-width=".8" fill="none" stroke-dasharray="2 3">
+    <path d="M70 118 Q120 70 160 90" stroke="#c8405c" opacity=".7"/><path d="M160 90 Q200 60 252 52" stroke="#e2c08c" opacity=".7"/><path d="M160 90 Q190 130 236 136" stroke="#9a6cd8" opacity=".7"/>
+  </g>
+  <circle cx="160" cy="90" r="26" fill="url(#dpm-c)"/><path d="M160 76 L164 90 L160 104 L156 90 Z" fill="#fff4f7" opacity=".9"/>
+  <circle cx="70" cy="118" r="16" fill="url(#dpm-g1)"/><circle cx="70" cy="118" r="2.4" fill="#ffd9e2"/>
+  <circle cx="236" cy="136" r="16" fill="url(#dpm-g2)"/><circle cx="236" cy="136" r="2.4" fill="#efe2ff"/>
+  <circle cx="252" cy="52" r="16" fill="url(#dpm-g3)"/><circle cx="252" cy="52" r="2.4" fill="#fff4d8"/>
+  <g font-family="IM Fell English, serif" font-size="8.5" letter-spacing="2">
+    <text x="30" y="146" fill="#f0a3b6">SHADOW</text><text x="214" y="164" fill="#c9a8f0">FATUI</text><text x="268" y="40" fill="#e2c08c">NEXT</text>
+    <text x="160" y="128" fill="#efe1e6" text-anchor="middle" opacity=".75">YOU</text>
+  </g>
+</svg>`;
+export function dipperLensListHtml() {
+  return `<ul class="dp-lens-list" aria-label="完全解析の三つの視点">${DIPPER_LENSES.map((l) => `<li class="dp-lens dp-lens--${l.key}"><span class="dp-lens-en">${l.en}</span><span class="dp-lens-head">${esc(l.head)}</span><span class="dp-lens-body">${esc(l.body)}</span></li>`).join('')}</ul>`;
+}
+export function dipperContentsHtml() {
+  return `<div class="rx-all-list dp-contents"><p class="rx-all-k">完全解析でご利用いただける内容</p>${DIPPER_CONTENTS.map(([h, d]) => `<p><b>✓ ${esc(h)}</b><span>${esc(d)}</span></p>`).join('')}</div>`;
+}
+export function dipperMapHtml() { return DIPPER_MAP; }
+// 申込のボタン（販売前は押せない「準備中」。app.mjs・report.mjs が販売中なら有効にする）
+export function dipperBuyButtonHtml(cls = '') {
+  return `<button type="button" class="dp-buy ${cls}" data-buy="complete" disabled aria-disabled="true"><span class="dp-buy-main">まだ見えていない深淵を読む</span><span class="dp-buy-sub">完全解析「DIPPER」 ¥3,000<small class="dp-buy-pending">（準備中）</small></span></button>`;
+}
+export function dipperFoldHtml({ where = 'result' } = {}) {
+  const report = where === 'report';
+  return `<div class="dp-fold" data-dipper-fold="${where}">
+      <div class="dp-fold-teaser">
+        <span class="dp-fold-eyebrow">${report ? 'BEYOND THE REPORT' : 'BEYOND THE RESULT'}｜この先にあるもの</span>
+        <span class="dp-fold-lead">${report ? 'このレポートが描いたのは、あなたの深淵の輪郭。<br>その奥にある影の表れ方を、23ページで読み解く。' : 'まだ、ここには現れていない深淵があります。<br>三つの視点から、あなたの影を最後まで読む。'}</span>
+        <span class="dp-fold-lens">SHADOW・FATUI・NEXT</span>
+        <span class="dp-fold-price">完全解析「DIPPER」｜全23ページ｜¥3,000</span>
+        <a class="dp-sample-link" href="/jagan/complete-sample" data-dipper-sample>
+          <span class="dp-sample-icon" aria-hidden="true"></span><span class="dp-sample-text"><b>完全解析のサンプルを読む</b><small>架空の回答で作った、全23ページをそのまま読めます</small></span><span class="dp-sample-go" aria-hidden="true">→</span></a>
+      </div>
+      <details class="dp-reveal" data-dipper-reveal>
+        <summary><span class="dp-reveal-more">その先を見る</span></summary>
+        <div class="dp-fold-body">
+          <div class="dp-reveal-stars" aria-hidden="true"><i></i><i></i><i></i></div>
+          <p class="dp-fold-text">${report ? 'このレポートでは、12特性と三つの土台、判定の根拠を読み解きました。' : 'この結果が示すのは、あなたの深淵の入り口です。'}</p>
+          <p class="dp-fold-text">完全解析では、<br>邪眼と異相が重なって表れる場面、<br>あなたと重なるファトゥスの姿、<br>そして次に打てる一手を、<br>三つの視点からひとつの記録へ結びます。</p>
+          ${DIPPER_MAP}
+          ${dipperLensListHtml()}
+          ${dipperContentsHtml()}
+          <p class="dp-fold-pages">全23ページの完全解析（A4・PDFで保存できます）</p>
+          <div data-dipper-cta>${dipperBuyButtonHtml()}</div>
+          <p class="dp-fold-note">解析レポート（¥1,000）とは別の商品です。お支払いの後、すぐにお読みいただけます。</p>
+          <p class="jg-small dp-fold-msg" data-dipper-msg role="status"></p>
+        </div>
+      </details>
+    </div>`;
+}
+
 function unlockAll() {
   const items = [
     ['12特性のスコアと読み解き', '三つの土台の全特性を、数値と意味・読み方の限界とともに解説'],
@@ -299,6 +375,7 @@ function unlockAll() {
       <button type="button" class="rx-buy rx-buy-all" data-buy disabled aria-disabled="true">全てのロックを解除する<small>準備中</small></button>
       <p class="jg-small jg-center rx-sales-note">販売開始の準備中です。現在は購入できません。</p>
       <p class="jg-center"><a class="rx-link" href="/jagan/sample">内容のサンプルを見る</a></p>
+      ${dipperFoldHtml({ where: 'result' })}
     </section>`;
 }
 

@@ -5,8 +5,8 @@
 //   本文は、買った回答から同じ版の計算（jagan/engine）で作る（サンプルと同じ renderReport）。
 import { computeDiagnosis } from './engine/runtime.mjs';
 import { BUNDLE } from './engine/data.mjs';
-import { renderReport } from './view.mjs';
-import { TOKEN_RE, UUID_RE, linkOpen, openOwn, register, accessToken, supabaseClient, setRegisterIntent, freshPurchase, reportUrlOf } from './client.mjs';
+import { renderReport, dipperFoldHtml } from './view.mjs';
+import { TOKEN_RE, UUID_RE, linkOpen, openOwn, register, accessToken, supabaseClient, setRegisterIntent, freshPurchase, reportUrlOf, buy, buyErrorText, salesOpen } from './client.mjs';
 
 const $ = (id) => document.getElementById(id);
 function track(name, params) { try { if (typeof window.gtag === 'function') window.gtag('event', name, params || {}); } catch { /* 計測だけ */ } }
@@ -31,8 +31,48 @@ function render(report) {
   $('rpBody').innerHTML = note + renderReport(result, BUNDLE);
   $('rpEnd').hidden = false;
   $('rpKeep').hidden = false;
+  showDipper(report, result);
   document.title = `邪眼解析レポート ${result.dti.code}｜邪眼診断`;
   return true;
+}
+
+// レポートを読み終えた終端：完全解析「DIPPER」（¥3,000）の案内（元素診断の解析レポート末尾「BEYOND THE REPORT」と同じ）。
+//   このレポートの回答（買った回答）で申し込む。マイページから開いた時は、完全解析の権利があれば「完全解析を読む」
+async function ownsComplete(resultId) {
+  const c = supabaseClient();
+  if (!c || !(await accessToken())) return false;
+  try {
+    const { data, error } = await c.from('jagan_entitlements').select('product_key').eq('result_id', resultId).eq('product_key', 'jagan_complete_v1').eq('status', 'active').limit(1);
+    return !error && Array.isArray(data) && data.length > 0;
+  } catch { return false; }
+}
+async function showDipper(report, result) {
+  const box = $('rpDipper');
+  box.innerHTML = dipperFoldHtml({ where: 'report' });
+  box.hidden = false;
+  const btn = box.querySelector('[data-buy="complete"]');
+  const msg = box.querySelector('[data-dipper-msg]');
+  const fromMypage = !!new URLSearchParams(location.search).get('r');
+  if (fromMypage && await ownsComplete(result.resultId)) {
+    btn.disabled = false; btn.removeAttribute('aria-disabled'); btn.classList.add('is-read');
+    btn.innerHTML = '<span class="dp-buy-main">完全解析を読む</span><span class="dp-buy-sub">購入済み・全23ページ</span>';
+    btn.addEventListener('click', () => { track('jagan_complete_read', { source: 'report' }); location.assign(`/jagan/dipper?r=${encodeURIComponent(result.resultId)}`); });
+    return;
+  }
+  if (!salesOpen()) return;
+  btn.disabled = false; btn.removeAttribute('aria-disabled');
+  btn.addEventListener('click', async () => {
+    track('jagan_complete_cta', { state: 'open', source: 'report' });
+    msg.textContent = '';
+    const label = btn.innerHTML;
+    btn.disabled = true;
+    btn.textContent = '決済の画面を準備しています…';
+    const out = await buy({ resultId: result.resultId, itemSetVersion: result.versions.itemSet, answers: result.answers, source: 'report', product: 'complete' });
+    if (out.ok) return;
+    btn.disabled = false;
+    btn.innerHTML = label;
+    if (out.error !== 'in_progress') msg.textContent = buyErrorText(out.error);
+  });
 }
 
 async function fromLink(token) {
@@ -44,6 +84,8 @@ async function fromLink(token) {
     if (r.status === 404) { fail('リンクが正しくありません。購入したレポートのリンク（URL）から開いてください。'); return; }
     if (!r.ok) { fail('レポートを開けませんでした。時間をおいて、もう一度開いてください。', '<p><button type="button" class="rp-print" onclick="location.reload()">もう一度開く</button></p>'); return; }
     if (r.body.state === 'paid') {
+      // 完全解析（¥3,000）の固有リンクだった：完全解析のページで開く
+      if (r.body.report && r.body.report.product === 'complete') { location.replace(`/jagan/dipper#t=${token}`); return; }
       if (!render(r.body.report)) return;
       track('jagan_report_open', { source: fresh ? 'checkout' : 'link' });
       wireLinkKeep(token);

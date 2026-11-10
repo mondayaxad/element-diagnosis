@@ -75,6 +75,22 @@
     });
     return { groups: groups, fatui: fatui };
   }
+  // 完全解析を購入済みの記録だけ：マイページで開示する内容（邪眼の上位3つの得点・四つの反応領域の全特性）。未購入には作らない
+  var DOMAINS = [
+    { id: 'anx', label: '不安と対人警戒', color: '#A493C9', traits: ['ANX', 'SEP', 'SUS', 'WDR'] },
+    { id: 'imp', label: '衝動と刺激', color: '#D0704A', traits: ['IMP', 'RSK'] },
+    { id: 'per', label: '固執と基準', color: '#C2A35E', traits: ['PSV', 'PRF'] },
+    { id: 'rel', label: '他者への働きかけ', color: '#C8405C', traits: ['HOS', 'ATT', 'MAN', 'CAL'] },
+  ];
+  function completeOf(snap) {
+    var traits = snap.traits || {};
+    var rk = snap.element && Array.isArray(snap.element.ranking) ? snap.element.ranking : [];
+    var elements = rk.slice(0, 3).map(function (e) { return { id: e.id, label: e.label, score: Math.max(0, Math.min(100, Math.round(e.score))), color: ELEMENT_MAIN[e.id] || '#C99AA7' }; });
+    var domains = DOMAINS.map(function (d) {
+      return { id: d.id, label: d.label, color: d.color, traits: d.traits.map(function (id) { var t = traits[id]; return t && typeof t.score === 'number' ? { id: id, label: t.label, score: Math.max(0, Math.min(100, Math.round(t.score))), color: ISOU_COLOR[id] } : null; }).filter(Boolean) };
+    });
+    return { elements: elements, domains: domains };
+  }
   var notes = [];
   var inFlight = null;
 
@@ -169,8 +185,11 @@
       namingVersion: dtiOk && snap.versions ? snap.versions.naming : null,
       top3: dtiOk ? top3(snap) : [],
       character: ch ? { id: ch.id, name: ch.name, match: ch.match, tone: fatuiTone(ch.id) } : null,
-      entKnown: ent.ok, purchased: ent.ok && ent.set[row.result_id] === true,
-      insight: dtiOk && ent.ok && ent.set[row.result_id] === true ? insightOf(snap) : null,
+      // 商品ごとの権利：解析レポート（¥1,000）＝purchased、完全解析「DIPPER」（¥3,000）＝completeOwned。片方だけ INSIGHT、両方 COMPLETE
+      entKnown: ent.ok, purchased: ent.ok && !!(ent.set[row.result_id] && ent.set[row.result_id].report),
+      completeOwned: ent.ok && !!(ent.set[row.result_id] && ent.set[row.result_id].complete),
+      insight: dtiOk && ent.ok && ent.set[row.result_id] && ent.set[row.result_id].report ? insightOf(snap) : null,
+      complete: dtiOk && ent.ok && ent.set[row.result_id] && ent.set[row.result_id].complete ? completeOf(snap) : null,
     };
   }
 
@@ -194,10 +213,14 @@
     var ent = { ok: false, set: {} };
     if (rows.length) {
       try {
-        var e = await supabaseClient.from('jagan_entitlements').select('result_id,status').eq('status', 'active');
+        var e = await supabaseClient.from('jagan_entitlements').select('result_id,status,product_key').eq('status', 'active');
         if (!e.error && Array.isArray(e.data)) {
           ent.ok = true;
-          e.data.forEach(function (x) { if (x && x.status === 'active') ent.set[x.result_id] = true; });
+          e.data.forEach(function (x) {
+            if (!x || x.status !== 'active') return;
+            var o = ent.set[x.result_id] || (ent.set[x.result_id] = { report: false, complete: false });
+            if (x.product_key === 'jagan_complete_v1') o.complete = true; else o.report = true;
+          });
         }
       } catch (err) { ent.ok = false; }
     }
@@ -259,12 +282,16 @@
     var old = btn.parentElement && btn.parentElement.querySelector('.mp-jg-buy-error');
     if (old) old.remove();
     var source = btn.getAttribute('data-source') || 'mypage';
-    track('checkout_start', { product: 'jagan_report', value: 1000, currency: 'JPY', source: source });
+    var isC = btn.getAttribute('data-product') === 'complete';
+    var prod = isC ? 'jagan_complete' : 'jagan_report', value = isC ? 3000 : 1000;
+    track('checkout_start', { product: prod, value: value, currency: 'JPY', source: source });
     var t = await token();
-    var r = t ? await api('/api/jagan-report?op=buy', { resultId: id, attempt: randomAttempt(), source: /^[a-z_]{1,32}$/.test(source) ? source : 'mypage' }, t) : { ok: false, body: { error: 'not_authenticated' } };
+    var body = { resultId: id, attempt: randomAttempt(), source: /^[a-z_]{1,32}$/.test(source) ? source : 'mypage' };
+    if (isC) body.product = 'complete';
+    var r = t ? await api('/api/jagan-report?op=buy', body, t) : { ok: false, body: { error: 'not_authenticated' } };
     if (r.ok && typeof r.body.checkoutUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(r.body.checkoutUrl)) {
       store('session', function (s) { s.setItem(FRESH_KEY, String(Date.now())); });
-      track('checkout_redirect', { product: 'jagan_report', value: 1000, currency: 'JPY', source: source });
+      track('checkout_redirect', { product: prod, value: value, currency: 'JPY', source: source });
       location.assign(r.body.checkoutUrl);
       return;
     }
@@ -272,7 +299,7 @@
     btn.disabled = false;
     btn.innerHTML = label;
     var code = (r.body && r.body.error) || 'unknown';
-    track('checkout_failed', { product: 'jagan_report', reason: code, source: source });
+    track('checkout_failed', { product: prod, reason: code, source: source });
     var p = document.createElement('p');
     p.className = 'mp-jg-buy-error';
     p.setAttribute('role', 'alert');

@@ -77,7 +77,8 @@ test('サンプル：OGP は新しい画像の絶対 URL・summary_large_image',
 
 test('サンプルへのリンクは、診断結果の欄・解析レポートの最下部・共通の申込（EdBuy.sampleHref）だけ（ナビ・sitemap・タイプページからはリンクしない）', () => {
   for (const p of ['mypage.html', 'privacy.html', 'terms.html', 'sitemap.xml', 'robots.txt', 'complete-analysis.js']) {
-    assert.doesNotMatch(read(p), /complete-sample/, `${p} がサンプルを参照しています`);
+    // 元素診断の完全解析サンプル（/complete-sample.html）だけを対象にする。邪眼の完全解析サンプル（/jagan/complete-sample）は別の商品
+    assert.doesNotMatch(read(p), /(?<!jagan\/)complete-sample/, `${p} がサンプルを参照しています`);
   }
   const index = read('index.html');
   assert.equal((index.match(/complete-sample/g) || []).length, 1, 'index は完全解析の欄の1か所だけ');

@@ -391,3 +391,28 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-mdl dt.rose { color: var(--rose); }
 .dp-fname-p { display: none; font-weight: 700; }
 @media print { .dp-fname { display: none !important; } .dp-fname-p { display: inline; } }
+/* ---- 購入した完全解析のページ（/jagan/dipper）：状態・最後のページの後の「残す」欄（2026-11-10） ---- */
+body.dp-live { margin: 0; }
+.dp-live .dp-status { max-width: 560px; margin: 40px auto; padding: 24px 20px; text-align: center; color: #e8dbe0; background: rgba(20,10,16,.85); border: 1px solid #3a1a26; border-radius: 12px; font-size: 14px; line-height: 1.9; }
+.dp-live .dp-status[hidden] { display: none; }
+.dp-live .dp-status a { color: #c99aa7; }
+.dp-thanks { max-width: 1240px; margin: 12px auto 0; padding: 12px 16px; border: 1px solid rgba(201,168,96,.4); border-radius: 10px; color: #f0e6cc; background: rgba(40,28,10,.6); font-size: 13px; line-height: 1.8; }
+.dp-vnote { max-width: 1240px; margin: 10px auto; padding: 10px 14px; border-left: 2px solid #8a6e78; color: #c9b8be; font-size: 12.5px; line-height: 1.8; }
+.dp-keep { max-width: 640px; margin: 28px auto 20px; padding: 28px 22px 24px; text-align: center; border: 1px solid rgba(214,189,132,.35); border-radius: 14px;
+  background: radial-gradient(120% 140% at 50% 0%, rgba(200,64,92,.14), transparent 60%), linear-gradient(170deg, #150a10, #0b070c); color: #e8dbe0; }
+.dp-keep[hidden] { display: none; }
+.dp-keep-en { margin: 0; font-family: 'IM Fell English', serif; font-size: 12px; letter-spacing: .3em; color: #c9a860; }
+.dp-keep-h { margin: 10px 0 0; font-size: 17px; font-weight: 700; letter-spacing: .06em; line-height: 1.7; }
+.dp-keep-lead { margin: 12px 0 0; font-size: 13px; line-height: 1.9; color: #c4b2b9; }
+.dp-keep-ops { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 18px; }
+.dp-keep-reg { flex: 1 1 100%; min-height: 52px; border-radius: 10px; border: 1px solid rgba(214,189,132,.6); color: #f6ecd4; font-family: inherit; font-size: 15px; font-weight: 700; letter-spacing: .12em; cursor: pointer;
+  background: linear-gradient(115deg, #3a1020 0%, #6a1f3a 55%, #8a5a2a 100%); box-shadow: 0 0 22px rgba(200,64,92,.25); }
+.dp-keep-reg[hidden], .dp-keep-sub[hidden] { display: none; }
+.dp-keep-reg:disabled { opacity: .7; cursor: default; }
+.dp-keep-sub { min-height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid #3a1a26; background: transparent; color: #c99aa7; font-family: inherit; font-size: 13px; cursor: pointer; }
+.dp-keep-msg { margin: 12px 0 0; font-size: 12.5px; color: #e0c8cf; min-height: 1em; }
+.dp-keep-msg a, .dp-keep-note a, .dp-keep-end a { color: #c99aa7; }
+.dp-keep-note { margin: 6px 0 0; font-size: 12.5px; }
+.dp-keep-end { margin: 16px 0 0; font-size: 11.5px; color: #8a6e78; line-height: 1.8; }
+.dp-live .dp-foot { max-width: 1240px; margin: 0 auto; }
+@media print { .dp-keep, .dp-thanks, .dp-status, .dp-foot, .dp-vnote { display: none !important; } }

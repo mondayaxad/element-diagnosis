@@ -54,10 +54,11 @@ export function buy(opts) {
   buying = buyOnce(opts).finally(() => { buying = null; });
   return buying;
 }
-async function buyOnce({ resultId, itemSetVersion, answers, source }) {
+async function buyOnce({ resultId, itemSetVersion, answers, source, product }) {
   if (!salesOpen()) return { ok: false, error: 'sales_closed' };
   const token = await accessToken();
   const body = { resultId, attempt: randomAttempt() };
+  if (product === 'complete') body.product = 'complete';
   if (answers) { body.itemSetVersion = itemSetVersion; body.answers = answers; }
   if (/^[a-z_]{1,32}$/.test(String(source || ''))) body.source = source;
   let r = await call('buy', body, { token });
@@ -82,7 +83,7 @@ export function buyErrorText(code) { return BUY_ERRORS[code] || 'お手続きを
 
 // 固有リンク・マイページからの閲覧
 export function linkOpen(token) { return call('link-open', { token }); }
-export async function openOwn(resultId) { return call('open', { resultId }, { token: await accessToken() }); }
+export async function openOwn(resultId, product) { return call('open', product === 'complete' ? { resultId, product } : { resultId }, { token: await accessToken() }); }
 export async function register(token) { return call('link-register', { token }, { token: await accessToken() }); }
 
 // マイページへの登録の予定（ログインしていない時：マイページでログインした後に登録する）
@@ -94,4 +95,9 @@ export function freshPurchase() {
   const at = Number(session((s) => { const v = s.getItem(FRESH_KEY); s.removeItem(FRESH_KEY); return v; }));
   return Number.isFinite(at) && Date.now() - at < 2 * 60 * 60 * 1000;
 }
-export function reportUrlOf(token) { return `${location.origin}/jagan/report#t=${token}`; }
+export function reportUrlOf(token, product) { return `${location.origin}/jagan/${product === 'complete' ? 'dipper' : 'report'}#t=${token}`; }
+// 商品ごとの価格・名前（表示用。金額はサーバーが決める）
+export const PRODUCT_INFO = Object.freeze({
+  report: { price: '¥1,000', name: '邪眼解析レポート', path: '/jagan/report' },
+  complete: { price: '¥3,000', name: '完全解析「DIPPER」', path: '/jagan/dipper', pages: 23 },
+});

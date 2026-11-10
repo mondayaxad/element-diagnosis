@@ -279,7 +279,7 @@ test('完全解析（¥3,000）：商品を選んで購入し、戻り先は完�
   assert.equal(r1.body.amount, 3000);
   const p = stripe.st.lastCreate.params;
   assert.deepEqual(p.line_items, [{ price_data: { currency: 'jpy', unit_amount: 3000, product_data: { name: '邪眼完全解析レポート「DIPPER」' } }, quantity: 1 }]);
-  assert.match(p.success_url, new RegExp(`^${ORIGIN}/jagan/complete#t=[A-Za-z0-9_-]{43}$`));
+  assert.match(p.success_url, new RegExp(`^${ORIGIN}/jagan/dipper#t=[A-Za-z0-9_-]{43}$`));
   assert.match(p.custom_text.submit.message, /3,000円・税込/);
   const o = db.t.jagan_orders[0];
   assert.equal(o.product_key, 'jagan_complete_v1');
