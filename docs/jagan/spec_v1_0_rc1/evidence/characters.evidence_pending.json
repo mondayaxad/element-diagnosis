@@ -1,0 +1,307 @@
+{
+  "status": "blocked_pending_evidence_scoring",
+  "launch_ready": false,
+  "profile_version": "jagan-characters-pending-0.5.0",
+  "common_axes": [],
+  "reason": "11名に共通する比較軸と、人物ごとの根拠付き参照値が未確定。unknownを50点で補完しない。",
+  "characters": [
+    {
+      "id": "pierro",
+      "name": "ピエロ",
+      "title": "道化",
+      "reference_era": "ファデュイ設立後の統括官期",
+      "research_sources": [
+        "S01",
+        "S02",
+        "S03"
+      ],
+      "target_share": 0.09090909090909091,
+      "profile": {
+        "AUT_S": null,
+        "AUT_F": null,
+        "COM_S": null,
+        "COM_F": null,
+        "REL_S": null,
+        "REL_F": null,
+        "REAPP": null,
+        "SUPPR": null,
+        "CLAR_D": null,
+        "ACC_D": null,
+        "IMP_D": null,
+        "GOAL_D": null
+      },
+      "evidence_bounds": {},
+      "production_eligible": false
+    },
+    {
+      "id": "capitano",
+      "name": "カピターノ",
+      "title": "隊長",
+      "reference_era": "ナタでの在任期",
+      "research_sources": [
+        "S04",
+        "S05"
+      ],
+      "target_share": 0.09090909090909091,
+      "profile": {
+        "AUT_S": null,
+        "AUT_F": null,
+        "COM_S": null,
+        "COM_F": null,
+        "REL_S": null,
+        "REL_F": null,
+        "REAPP": null,
+        "SUPPR": null,
+        "CLAR_D": null,
+        "ACC_D": null,
+        "IMP_D": null,
+        "GOAL_D": null
+      },
+      "evidence_bounds": {},
+      "production_eligible": false
+    },
+    {
+      "id": "dottore",
+      "name": "ドットーレ",
+      "title": "博士",
+      "reference_era": "スメールでナヒーダと交渉した個体",
+      "research_sources": [
+        "S06"
+      ],
+      "target_share": 0.09090909090909091,
+      "profile": {
+        "AUT_S": null,
+        "AUT_F": null,
+        "COM_S": null,
+        "COM_F": null,
+        "REL_S": null,
+        "REL_F": null,
+        "REAPP": null,
+        "SUPPR": null,
+        "CLAR_D": null,
+        "ACC_D": null,
+        "IMP_D": null,
+        "GOAL_D": null
+      },
+      "evidence_bounds": {},
+      "production_eligible": false
+    },
+    {
+      "id": "columbina",
+      "name": "コロンビーナ",
+      "title": "少女",
+      "reference_era": "ファデュイ所属期",
+      "research_sources": [
+        "S07",
+        "S08",
+        "S09"
+      ],
+      "target_share": 0.09090909090909091,
+      "profile": {
+        "AUT_S": null,
+        "AUT_F": null,
+        "COM_S": null,
+        "COM_F": null,
+        "REL_S": null,
+        "REL_F": null,
+        "REAPP": null,
+        "SUPPR": null,
+        "CLAR_D": null,
+        "ACC_D": null,
+        "IMP_D": null,
+        "GOAL_D": null
+      },
+      "evidence_bounds": {},
+      "production_eligible": false
+    },
+    {
+      "id": "arlecchino",
+      "name": "アルレッキーノ",
+      "title": "召使",
+      "reference_era": "壁炉の家を継いだ後",
+      "research_sources": [
+        "S10",
+        "S11"
+      ],
+      "target_share": 0.09090909090909091,
+      "profile": {
+        "AUT_S": null,
+        "AUT_F": null,
+        "COM_S": null,
+        "COM_F": null,
+        "REL_S": null,
+        "REL_F": null,
+        "REAPP": null,
+        "SUPPR": null,
+        "CLAR_D": null,
+        "ACC_D": null,
+        "IMP_D": null,
+        "GOAL_D": null
+      },
+      "evidence_bounds": {},
+      "production_eligible": false
+    },
+    {
+      "id": "pulcinella",
+      "name": "プルチネッラ",
+      "title": "雄鶏",
+      "reference_era": "市長・執行官としての活動期",
+      "research_sources": [
+        "S12"
+      ],
+      "target_share": 0.09090909090909091,
+      "profile": {
+        "AUT_S": null,
+        "AUT_F": null,
+        "COM_S": null,
+        "COM_F": null,
+        "REL_S": null,
+        "REL_F": null,
+        "REAPP": null,
+        "SUPPR": null,
+        "CLAR_D": null,
+        "ACC_D": null,
+        "IMP_D": null,
+        "GOAL_D": null
+      },
+      "evidence_bounds": {},
+      "production_eligible": false
+    },
+    {
+      "id": "scaramouche",
+      "name": "スカラマシュ",
+      "title": "散兵",
+      "reference_era": "執行官期から造神計画での敗北まで",
+      "research_sources": [
+        "S13",
+        "S14"
+      ],
+      "target_share": 0.09090909090909091,
+      "profile": {
+        "AUT_S": null,
+        "AUT_F": null,
+        "COM_S": null,
+        "COM_F": null,
+        "REL_S": null,
+        "REL_F": null,
+        "REAPP": null,
+        "SUPPR": null,
+        "CLAR_D": null,
+        "ACC_D": null,
+        "IMP_D": null,
+        "GOAL_D": null
+      },
+      "evidence_bounds": {},
+      "production_eligible": false
+    },
+    {
+      "id": "sandrone",
+      "name": "サンドローネ",
+      "title": "傀儡",
+      "reference_era": "執行官・研究者としての活動期",
+      "research_sources": [
+        "S15",
+        "S16"
+      ],
+      "target_share": 0.09090909090909091,
+      "profile": {
+        "AUT_S": null,
+        "AUT_F": null,
+        "COM_S": null,
+        "COM_F": null,
+        "REL_S": null,
+        "REL_F": null,
+        "REAPP": null,
+        "SUPPR": null,
+        "CLAR_D": null,
+        "ACC_D": null,
+        "IMP_D": null,
+        "GOAL_D": null
+      },
+      "evidence_bounds": {},
+      "production_eligible": false
+    },
+    {
+      "id": "signora",
+      "name": "シニョーラ",
+      "title": "淑女",
+      "reference_era": "氷の邪眼を授かった後の執行官期",
+      "research_sources": [
+        "S17",
+        "S18"
+      ],
+      "target_share": 0.09090909090909091,
+      "profile": {
+        "AUT_S": null,
+        "AUT_F": null,
+        "COM_S": null,
+        "COM_F": null,
+        "REL_S": null,
+        "REL_F": null,
+        "REAPP": null,
+        "SUPPR": null,
+        "CLAR_D": null,
+        "ACC_D": null,
+        "IMP_D": null,
+        "GOAL_D": null
+      },
+      "evidence_bounds": {},
+      "production_eligible": false
+    },
+    {
+      "id": "pantalone",
+      "name": "パンタローネ",
+      "title": "富者",
+      "reference_era": "北国銀行・経済政策を担う執行官期",
+      "research_sources": [
+        "S02",
+        "S21",
+        "S22"
+      ],
+      "target_share": 0.09090909090909091,
+      "profile": {
+        "AUT_S": null,
+        "AUT_F": null,
+        "COM_S": null,
+        "COM_F": null,
+        "REL_S": null,
+        "REL_F": null,
+        "REAPP": null,
+        "SUPPR": null,
+        "CLAR_D": null,
+        "ACC_D": null,
+        "IMP_D": null,
+        "GOAL_D": null
+      },
+      "evidence_bounds": {},
+      "production_eligible": false
+    },
+    {
+      "id": "tartaglia",
+      "name": "タルタリヤ",
+      "title": "公子",
+      "reference_era": "執行官期",
+      "research_sources": [
+        "S19",
+        "S20"
+      ],
+      "target_share": 0.09090909090909091,
+      "profile": {
+        "AUT_S": null,
+        "AUT_F": null,
+        "COM_S": null,
+        "COM_F": null,
+        "REL_S": null,
+        "REL_F": null,
+        "REAPP": null,
+        "SUPPR": null,
+        "CLAR_D": null,
+        "ACC_D": null,
+        "IMP_D": null,
+        "GOAL_D": null
+      },
+      "evidence_bounds": {},
+      "production_eligible": false
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "kind": "alternative_association_experiment",
+  "real_user_data": false,
+  "production_ready": false,
+  "training_n": 5500,
+  "holdout_n": 5500,
+  "runs": [
+    {
+      "temperature": 0.08,
+      "success": true,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "iterations": 34
+    },
+    {
+      "temperature": 0.035,
+      "success": true,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "iterations": 16
+    },
+    {
+      "temperature": 0.015,
+      "success": true,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "iterations": 35
+    },
+    {
+      "temperature": 0.005,
+      "success": true,
+      "message": "CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH",
+      "iterations": 23
+    }
+  ],
+  "target_percent": 9.090909090909092,
+  "max_reference_change_points": 9.999848683099987,
+  "rows": [
+    {
+      "id": "pierro",
+      "name": "ピエロ",
+      "before_percent": 1.709090909090909,
+      "after_percent": 8.945454545454545
+    },
+    {
+      "id": "capitano",
+      "name": "カピターノ",
+      "before_percent": 2.272727272727273,
+      "after_percent": 8.418181818181818
+    },
+    {
+      "id": "dottore",
+      "name": "ドットーレ",
+      "before_percent": 1.7454545454545456,
+      "after_percent": 9.527272727272727
+    },
+    {
+      "id": "columbina",
+      "name": "コロンビーナ",
+      "before_percent": 16.51818181818182,
+      "after_percent": 9.345454545454546
+    },
+    {
+      "id": "arlecchino",
+      "name": "アルレッキーノ",
+      "before_percent": 1.6727272727272726,
+      "after_percent": 9.436363636363636
+    },
+    {
+      "id": "pulcinella",
+      "name": "プルチネッラ",
+      "before_percent": 8.954545454545453,
+      "after_percent": 9.127272727272727
+    },
+    {
+      "id": "scaramouche",
+      "name": "スカラマシュ",
+      "before_percent": 25.272727272727273,
+      "after_percent": 9.10909090909091
+    },
+    {
+      "id": "sandrone",
+      "name": "サンドローネ",
+      "before_percent": 17.118181818181817,
+      "after_percent": 9.036363636363637
+    },
+    {
+      "id": "signora",
+      "name": "シニョーラ",
+      "before_percent": 5.336363636363636,
+      "after_percent": 8.927272727272726
+    },
+    {
+      "id": "pantalone",
+      "name": "パンタローネ",
+      "before_percent": 5.281818181818182,
+      "after_percent": 8.945454545454545
+    },
+    {
+      "id": "tartaglia",
+      "name": "タルタリヤ",
+      "before_percent": 14.118181818181819,
+      "after_percent": 9.181818181818182
+    }
+  ],
+  "max_deviation_before_pp": 16.181818181818183,
+  "max_deviation_after_pp": 0.6727272727272735
+}

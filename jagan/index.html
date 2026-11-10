@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#09070B">
+<title>邪眼診断｜あなたの願いは、どんな深淵を映すのか。</title>
+<meta name="description" content="独自の50問から、あなたの深淵を映す邪眼元素と型、あなたのファトゥスを示す自己理解コンテンツ。医療診断ではありません。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="邪眼診断">
+<meta property="og:description" content="あなたの願いは、どんな深淵を映すのか。">
+<meta property="og:image" content="/api/jagan-og">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/jagan/jagan.css">
+<script src="/js/ga.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous"></script>
+<script src="/api/public-config?format=js"></script>
+<script type="module" src="/jagan/app.mjs"></script>
+</head>
+<body>
+<div class="night" aria-hidden="true"><div class="photo"></div><div class="tint"></div></div>
+<main id="app">
+  <!-- ===== TOP（元素診断の TOP と同じ構成。赤黒の配色。背景・人物の画像なし） ===== -->
+  <div class="jt" id="view-top" data-view>
+    <section class="jt-hero" id="top">
+      <a href="/mypage#jagan" class="jt-mypage" data-track="jagan_mypage_entry"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><circle cx="8" cy="5.4" r="2.6"/><path d="M2.8 14.2c.6-2.7 2.7-4.3 5.2-4.3s4.6 1.6 5.2 4.3" stroke-linecap="round"/></svg><span>マイページ</span></a>
+      <div class="jt-gems" id="heroGems" aria-hidden="true"></div>
+      <div class="jt-eye" aria-hidden="true">
+        <svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="92" fill="none" stroke="rgba(165,42,67,.22)"/><circle cx="100" cy="100" r="64" fill="none" stroke="rgba(165,42,67,.16)" stroke-dasharray="2 6"/><path d="M28 100 Q100 40 172 100 Q100 160 28 100Z" fill="none" stroke="rgba(200,64,92,.32)"/><ellipse cx="100" cy="100" rx="9" ry="30" fill="rgba(200,64,92,.28)"/></svg>
+      </div>
+      <div class="jt-content">
+        <p class="jt-en"><span class="rule" aria-hidden="true"></span><span>Delusion Diagnosis — Know Your Abyss</span><span class="rule" aria-hidden="true"></span></p>
+        <h1 class="jt-title">邪眼診断</h1>
+        <p class="jt-sub">あなたの願いは、どんな深淵を映すのか。</p>
+        <div class="jt-spark" aria-hidden="true"></div>
+        <p class="jt-desc jp">
+          心の奥には、ふだんは見せない影がある。<br>
+          50の問いに答えることで、あなたの<strong class="k-el">邪眼元素（心の影の象徴）</strong>と<strong class="k-ty">異相（影の現れ方）</strong>、そして<strong class="k-fa">あなたのファトゥス</strong>が映し出される。
+          <br><span class="theory-line">パーソナリティの特性研究（DSM-5の代替モデル・PID-5）を参考にした、自己理解のための診断。</span>
+          <span class="en">Everyone carries a shadow. 50 questions to reveal your Delusion element, the shape your shadow takes, and the Fatui Harbinger closest to you — a self-understanding diagnosis informed by research on personality trait models (DSM-5 alternative model, PID-5). Not a clinical assessment.</span>
+        </p>
+        <div class="jt-cta-wrap">
+          <button type="button" class="jt-cta" data-start>診断をはじめる <span class="en">— Start</span></button>
+          <button type="button" class="jt-sublink" id="resumeBtn" hidden>途中から再開する <span class="arw">→</span></button>
+          <a href="/mypage#jagan" class="jt-sublink" id="lastResultBtn" data-track="jagan_mypage_entry">診断結果を見る <span class="arw">→</span></a>
+        </div>
+      </div>
+      <span class="jt-scroll" aria-hidden="true"></span>
+    </section>
+
+    <div class="jt-deep">
+      <!-- ABOUT -->
+      <section class="jt-about jt-wrap">
+        <p class="jt-eyebrow">About this Diagnosis</p>
+        <h2 class="jt-h2">なぜ、邪眼で心の影を測るのか</h2>
+        <p class="jt-body jp">
+          人のパーソナリティは、「ある・ない」ではなく、程度の違いで捉えられる。心理学では、不安や猜疑、衝動、敵意といった、ふだんは表に出しにくい傾向も、誰もがある程度もつ<span class="q">特性（次元）</span>として研究されてきた。DSM-5の代替モデルや、その測定のための質問票PID-5は、そうした特性を整理した代表的な枠組みだ。
+        </p>
+        <p class="jt-body jp">
+          ただし、特性の名前や数値は正確でも、心に留まりにくい。そこでワタシは、原神の<span class="q">「邪眼」</span>に着目した。願いと引き換えに力を与え、その代償を持ち主に求める道具として描かれる邪眼。そして、それぞれの願いと代償を抱えて生きる、ファトゥスの執行官たち。心の影の傾向を、7つの邪眼元素と11人の物語に重ねることで、自分の影を物語として受け取れる診断を設計した。
+        </p>
+        <p class="jt-body triad jp">
+          <b class="k-el">邪眼元素</b>は、12の特性を物語の象徴に束ねたもの。<b class="k-ty">異相</b>は、12の特性のうち最も強く表れたもの、影の現れ方。<b class="k-fa">ファトゥス</b>は、あなたの回答に最も近い、物語の参照。3つが重なって、あなたの深淵の輪郭を描く。特性が高いことは、異常や欠点を意味しない。
+        </p>
+        <p class="jt-en-note">Research on personality trait models (the DSM-5 alternative model and the PID-5) provides the reference framework. The Delusions and the eleven Harbingers provide the story that makes the shadow visible. High scores do not mean a disorder, and this is not a medical or clinical assessment.</p>
+        <a class="jt-link" href="/jagan/about">方法と限界について読む <span class="arw">→</span></a>
+        <div class="jt-theory">
+          <p class="jt-theory-names">Personality Trait Models<i>/</i>DSM-5 Alternative Model<i>/</i>PID-5</p>
+          <details>
+            <summary class="jt-link">診断設計と心理理論について <span class="arw">→</span></summary>
+            <dl>
+              <div class="item"><dt>略称</dt><dd>DTI（Delusion Type Indicator／邪眼タイプ指標）<small>"What's your DTI?" — 例：HYDP｜縋望者（水×依存）</small></dd></div>
+              <div class="item"><dt>診断形式</dt><dd>50問 / 5段階回答（補助選択肢なし・5問ずつ）<small>50 questions · 5-point scale</small></dd></div>
+              <div class="item"><dt>測定する特性</dt><dd>不安・依存・猜疑・撤退・衝動・固執・完璧・敵意・顕示・操作・危険志向・冷淡（12特性。各0〜100に換算）<small>12 traits, each converted to 0–100</small></dd></div>
+              <div class="item"><dt>結果</dt><dd>7邪眼元素 × 12異相＝84通り（必ず一つずつ）＋ ファトゥス11名<small>7 elements × 12 aspects = 84 types · 11 Harbingers</small></dd></div>
+              <div class="item"><dt>参考にした研究</dt><dd class="jp">DSM-5 第III部の代替モデルと PID-5（Krueger et al., 2012）の特性の概念。設問はすべて独自に作成したもので、正式な PID-5 ではなく、その得点・百分位でもありません。<small>Original items informed by the PID-5 trait concepts</small></dd></div>
+              <div class="item"><dt>人物との一致度</dt><dd class="jp">作品の描写を参考に設計した、人物ごとに1〜3の特性だけの部分的な参照との近さ。11名が偏りなく現れるよう、人物ごとの小さな固定の補正を加えた値で、その高い順に並べます。人物本人の心理得点や科学的な一致確率ではありません。<small>Similarity to partial authored references, with a fixed balance offset</small></dd></div>
+              <div class="item"><dt>料金</dt><dd class="jp">診断：無料 ／ 解析レポート：¥1,000（販売準備中）<small>Diagnosis: Free / Report: ¥1,000 (coming soon)</small></dd></div>
+            </dl>
+          </details>
+        </div>
+      </section>
+
+      <div class="jt-obs jt-wrap">
+        <section aria-labelledby="jt-rec-h">
+          <p class="jt-eyebrow">Results That Stay With You</p>
+          <h2 class="jt-h2" id="jt-rec-h">記録として、残す</h2>
+          <p class="jt-lead jp">診断結果は、あなたの記録としてマイページに保存できます。<br>元素診断の記録とは別に、邪眼診断の記録として残ります。</p>
+          <div class="jt-timeline" aria-hidden="true">
+            <svg viewBox="0 0 320 44">
+              <line x1="6" y1="16" x2="306" y2="16" stroke="rgba(165,42,67,.25)" stroke-width="1"/>
+              <circle cx="40" cy="16" r="2.2" fill="#6b2a3d"/><circle cx="112" cy="16" r="2.2" fill="#8a3348"/><circle cx="190" cy="16" r="2.4" fill="#a52a43"/>
+              <circle cx="290" cy="16" r="7" fill="none" stroke="#c8405c" stroke-opacity=".45"/><circle cx="290" cy="16" r="3.2" fill="#f2b8c6"/>
+              <text x="6" y="40">PAST</text><text x="306" y="40" text-anchor="end" class="now">NOW</text>
+            </svg>
+          </div>
+          <a class="jt-link" href="/mypage#jagan" data-track="jagan_mypage_entry">診断記録を見る <span class="arw">→</span></a>
+        </section>
+
+        <section class="jt-line" aria-labelledby="jt-line-h">
+          <p class="jt-eyebrow">Stay Connected</p>
+          <h2 class="jt-h2" id="jt-line-h">旅の続きを、静かに受け取る</h2>
+          <p class="jt-lead jp">診断の更新や、新しい観測、<br>先行体験の案内などを公式LINEからお届けします。<br>必要なときだけ、静かにお知らせします。</p>
+          <a class="jt-link jt-line-link" href="https://line.me/R/ti/p/@307ttqfu?oat_content=url&amp;ts=09190026#~" target="_blank" rel="noopener"><span class="jt-line-dot" aria-hidden="true"></span>公式LINEを追加する <span class="arw">→</span></a>
+        </section>
+      </div>
+
+      <section class="jt-final jt-wrap">
+        <div class="jt-spark" aria-hidden="true"></div>
+        <p class="jt-copy">自分の深淵を覗く。</p>
+        <div class="jt-cta-wrap"><button type="button" class="jt-cta" data-start>診断をはじめる <span class="en">— Start</span></button></div>
+      </section>
+
+    </div>
+  </div>
+
+<section id="diagnosis" class="jd"><div class="jg-wrap">
+  <!-- 質問（元素診断と同じ形式：5問ずつ、1〜5の丸を押して進む） -->
+  <section id="view-quiz" data-view hidden>
+    <div class="qz" id="quizRoot"></div>
+  </section>
+
+  <!-- 結果 -->
+  <section id="view-result" data-view hidden>
+    <p class="jg-note jg-center" id="savedBanner" hidden></p>
+    <div id="resultBody" class="rx"></div>
+    <div class="rx-end">
+      <button type="button" class="rx-end-btn" id="retryBtn">もう一度診断する</button>
+      <a class="rx-end-btn" href="/jagan/about">理論を見る</a>
+    </div>
+  </section>
+
+  <!-- 読み込みの失敗など -->
+  <section id="view-message" data-view hidden>
+    <div class="jg-card"><p id="messageText"></p><div class="jg-btn-row"><a class="jg-btn" href="/jagan/">邪眼診断のトップへ</a></div></div>
+  </section>
+
+  <dialog class="jg-dialog" id="shareDialog" aria-labelledby="shareDialogTitle">
+    <h2 class="jg-h3" id="shareDialogTitle">共有する内容</h2>
+    <pre class="jg-sharetext" id="shareText"></pre>
+    <p class="jg-small">X の投稿画面が開きます。投稿はあなたが確定するまで行われません。共有のURLと画像には、邪眼元素・異相・DTIコード・人物・一致度だけを載せます（回答と12特性のスコアは載せません）。</p>
+    <div class="jg-btn-row">
+      <a class="jg-btn jg-btn-primary" id="shareOpenX" href="#" target="_blank" rel="noopener">X の投稿画面を開く</a>
+      <button type="button" class="jg-btn" id="shareCopy">URLをコピー</button>
+    </div>
+    <div class="jg-btn-row" style="margin-top:12px">
+      <button type="button" class="jg-linkbtn" id="shareClose">閉じる</button>
+    </div>
+    <p class="jg-status" id="shareStatus" role="status" aria-live="polite"></p>
+  </dialog>
+
+</div></section>
+</main>
+
+<footer class="jf">
+  <p class="jf-copy">邪眼診断 — An original self-understanding framework inspired by Genshin Impact. Not a medical diagnosis. For entertainment purposes. © マンデーアクスト / @mondayaxad</p>
+  <div class="jf-links">
+    <a href="/">元素診断</a>
+    <a href="/jagan/about">邪眼診断について</a>
+    <a href="/tokushoho">特定商取引法に基づく表記</a>
+    <a href="/privacy.html">プライバシーポリシー</a>
+    <a href="/terms.html">利用規約</a>
+    <button type="button" class="jf-op" data-operator>運営者情報</button>
+    <a href="mailto:yaduns0522@gmail.com">お問い合わせ</a>
+  </div>
+</footer>
+<dialog class="jg-dialog jf-dialog" id="operatorDialog" aria-labelledby="opH">
+  <h2 id="opH" class="jg-h3">運営者情報</h2>
+  <p class="jf-k">運営者</p><p>マンデーアクスト</p>
+  <p class="jf-k">X（旧Twitter）</p><p>@mondayaxad</p>
+  <p class="jf-k">本サイトについて</p><p>パーソナリティの特性研究（DSM-5の代替モデル・PID-5）を参考にした、邪眼元素・異相・ファトゥスによる独自の自己理解診断です。原神の公式コンテンツではありません。医療診断ではありません。</p>
+  <p class="jf-k">お問い合わせ</p><p>メール（yaduns0522@gmail.com）までご連絡ください。XのDM（@mondayaxad）でも受け付けます。</p>
+  <div class="jg-btn-row"><button type="button" class="jg-linkbtn" data-operator-close>閉じる</button></div>
+</dialog>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#09070B">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/jagan/jagan.css">
+<script src="/js/ga.js"></script>
+<title>邪眼診断について</title>
+</head>
+<body>
+<div class="night" aria-hidden="true"><div class="photo"></div><div class="tint"></div></div>
+<main class="jg-wrap" id="app">
+  <p class="jg-center"><a href="/jagan/">‹ 邪眼診断のトップへ</a></p>
+  <section class="jg-card">
+    <h1 class="jg-h3">邪眼診断について</h1>
+    <div id="methodBody"></div>
+  </section>
+  <section class="jg-card">
+    <h2 class="jg-h3">12特性と判定のしくみ</h2>
+    <p>50問は、パーソナリティの特性研究（DSM-5の代替モデルとPID-5）で扱われてきた特性の概念を参考に、この診断のために独自に作った設問です。不安・依存・猜疑・撤退・衝動・固執・完璧・敵意・顕示・操作・危険志向・冷淡の12特性を、4〜5問ずつで測ります。正式なPID-5ではなく、その得点や百分位でもありません。</p>
+    <p>各特性は、回答（1〜5）の平均を0〜100に換算します。項目数が違うため、合計点では比べません。すべての設問に回答が必要で、回答できない設問を中間の値で埋めることはしません。5問ずつ、5段階だけで答えます。</p>
+    <p><b>異相</b>は、12特性のうち最も高いもの、<b>邪眼元素</b>は、12特性のうち複数を作者が決めた重みで合わせた7つの得点のうち最も高いものです。どちらも必ず一つずつ選び、その組み合わせを<b>DTI</b>（Delusion Type Indicator／邪眼タイプ指標）の4文字コードと漢字三文字の呼び名（84通り）で示します。例：HYDP｜縋望者（水×依存）。</p>
+    <p>最も高い特性が同じ得点で並ぶときは、「とても当てはまる（5）」と答えた割合、次に「やや当てはまる（4）」と答えた割合が高い方を選び、それでも並ぶときは回答から作る固定の値で一つに決めます。邪眼元素が同じ得点で並ぶときも同じ固定の値で決めます。これは結果を一つに示すための選び方で、特性や元素の強さの差を示すものではありません。
+    <p><b>あなたのファトゥス</b>は、作品の描写を参考に作者が設計した「部分的な参照」（人物ごとに1〜3の特性だけ）との近さで選びます。対応を置けない特性は、中立値で補わず比較に含めません。11名が偏りなく現れるよう、近さに人物ごとの小さな調整を加えた値を「一致度」とし、その高い順に並べます。表示する一致度と順位は同じ値です。</p>
+    <p>人工の回答での確認では、11名がおよそ均等に出るよう補正を調整しています。実際の利用者で同じ割合になる保証はなく、人数や時刻でその場の結果を入れ替えることはありません。同じ回答には、いつでも同じ結果を返します。人物の比較に使える特性の差が小さい回答は、人物の判定を保留します。</p>
+  </section>
+  <section class="jg-card">
+    <h2 class="jg-h3">保存・共有について</h2>
+    <p>回答は、診断中と結果の再表示のために、この端末（ブラウザ）に一時的に残ります。マイページ保存は、ログインしたあなたが押したときだけ行い、回答と、保存時の版での結果を保存します。</p>
+    <p>X共有・共有ページには、邪眼元素・異相・DTIコードと呼び名・あなたのファトゥスと一致度だけを載せます（人物の判定を保留した結果は人物を載せません）。回答と12特性のスコアは載せません。共有のURLには結果の表示に必要な値だけが入っているため、URLを知っている人は誰でも同じ共有ページを開けます（取り消しはできません）。</p>
+  </section>
+</main>
+<footer class="jf">
+  <p class="jf-copy">邪眼診断 — An original self-understanding framework inspired by Genshin Impact. Not a medical diagnosis. For entertainment purposes. © マンデーアクスト / @mondayaxad</p>
+  <div class="jf-links"><a href="/jagan/">邪眼診断</a><a href="/">元素診断</a><a href="/tokushoho">特定商取引法に基づく表記</a><a href="/privacy.html">プライバシーポリシー</a><a href="/terms.html">利用規約</a><a href="mailto:yaduns0522@gmail.com">お問い合わせ</a></div>
+</footer>
+
+<script type="module">
+  import { renderMethod } from '/jagan/view.mjs';
+  document.getElementById('methodBody').innerHTML = renderMethod();
+</script>
+</body>
+</html>

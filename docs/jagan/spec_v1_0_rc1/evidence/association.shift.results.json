@@ -1,0 +1,58 @@
+{
+  "kind": "synthetic_shift_sensitivity",
+  "real_user_data": false,
+  "production_ready": false,
+  "scenarios": [
+    {
+      "scenario": "lower_distress",
+      "n": 5500,
+      "share_percent": {
+        "pierro": 4.781818181818181,
+        "capitano": 19.581818181818182,
+        "dottore": 9.036363636363637,
+        "columbina": 4.5636363636363635,
+        "arlecchino": 12.381818181818181,
+        "pulcinella": 9.454545454545455,
+        "scaramouche": 2.2545454545454544,
+        "sandrone": 7.363636363636364,
+        "signora": 4.5636363636363635,
+        "pantalone": 4.454545454545455,
+        "tartaglia": 21.563636363636363
+      }
+    },
+    {
+      "scenario": "higher_distress",
+      "n": 5500,
+      "share_percent": {
+        "pierro": 9.272727272727273,
+        "capitano": 2.6,
+        "dottore": 5.2727272727272725,
+        "columbina": 11.10909090909091,
+        "arlecchino": 4.454545454545455,
+        "pulcinella": 5.290909090909091,
+        "scaramouche": 27.47272727272727,
+        "sandrone": 6.381818181818182,
+        "signora": 12.254545454545454,
+        "pantalone": 13.272727272727272,
+        "tartaglia": 2.618181818181818
+      }
+    },
+    {
+      "scenario": "more_suppression",
+      "n": 5500,
+      "share_percent": {
+        "pierro": 16.854545454545455,
+        "capitano": 6.127272727272727,
+        "dottore": 4.2,
+        "columbina": 2.4181818181818184,
+        "arlecchino": 22.254545454545454,
+        "pulcinella": 8.618181818181817,
+        "scaramouche": 7.563636363636364,
+        "sandrone": 2.5272727272727273,
+        "signora": 16.836363636363636,
+        "pantalone": 10.272727272727272,
+        "tartaglia": 2.327272727272727
+      }
+    }
+  ]
+}

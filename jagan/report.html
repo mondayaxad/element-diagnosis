@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#09070B">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/jagan/jagan.css">
+<script src="/js/ga.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous"></script>
+<script src="/api/public-config?format=js"></script>
+<title>邪眼解析レポート｜邪眼診断</title>
+</head>
+<body>
+<div class="night" aria-hidden="true"><div class="photo"></div><div class="tint"></div></div>
+<main class="jg-wrap rp" id="app">
+  <p class="rp-banner" id="rpThanks" hidden>ご購入ありがとうございます。このページのリンク（URL）が、あなたのレポートの固有リンクです。必ず保存してください。</p>
+  <div id="rpStatus" class="jg-card jg-center" role="status" aria-live="polite"><p>レポートを準備しています…</p></div>
+  <div id="rpBody"></div>
+  <section class="rp-card rp-dipper" id="rpDipper" hidden aria-label="完全解析「DIPPER」"></section>
+  <section class="rp-card rp-keep" id="rpKeep" hidden aria-labelledby="rpKeepH">
+    <p class="rp-cta-h" id="rpKeepH">このレポートを残す</p>
+    <p class="rp-text" id="rpKeepLead"></p>
+    <div class="rp-keep-ops">
+      <button type="button" class="rx-buy rp-cta-btn" id="registerBtn" hidden>マイページに登録する</button>
+      <button type="button" class="rp-print" id="copyBtn" hidden>リンクをコピー</button>
+      <button type="button" class="rp-print" id="printBtn">このレポートをPDFで保存する</button>
+    </div>
+    <p class="jg-small" id="keepStatus" role="status" aria-live="polite"></p>
+    <p class="jg-small" id="keepNote"></p>
+  </section>
+  <p class="rp-end" id="rpEnd" hidden>ここまでが、解析レポートの全内容です。<br>ご不明点があれば <a href="mailto:yaduns0522@gmail.com">yaduns0522@gmail.com</a> までご連絡ください。</p>
+</main>
+<footer class="jf">
+  <p class="jf-copy">邪眼診断 — An original self-understanding framework inspired by Genshin Impact. Not a medical diagnosis. For entertainment purposes. © マンデーアクスト / @mondayaxad</p>
+  <div class="jf-links"><a href="/jagan/">邪眼診断</a><a href="/">元素診断</a><a href="/mypage#jagan">マイページ</a><a href="/tokushoho">特定商取引法に基づく表記</a><a href="/privacy.html">プライバシーポリシー</a><a href="/terms.html">利用規約</a><a href="mailto:yaduns0522@gmail.com">お問い合わせ</a></div>
+</footer>
+<script type="module" src="/jagan/report.mjs"></script>
+</body>
+</html>

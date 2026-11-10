@@ -150,3 +150,26 @@ SHA-256 は `docs/sql/production/SHA256SUMS`。SQL Editor へ貼る前に、手�
   切り替え中の状態（36項目：01〜03 後・04a 後 deploy 前・04a 後の新コード・04b 後・障害時・04a／04b の rollback）、旧 main の DB 操作（全段階）が合格。
 - アプリ試験：DB を使う試験を本番の構成（Production・Stripe Live・prod_01〜04b の DB）でも実行し全件合格（`COMPLETE_DB_STRIPE_MODE=live`）。
 - Preview の最終状態との構造の差は、意図したもの（Live 限定の制約・注文の記録・Webhook の照合・Preview 専用の関数と制約が無いこと）だけ。
+
+## 9. 段階 6：邪眼診断（prod_06_jagan）【草案・2026-11-10・未適用】
+
+> **本番には未適用。** 適用は、邪眼のリリース（邪眼だけを切り出したコードの Production への deploy）の直前に、運営者の承認を得てから行う。
+
+| ファイル | 種類 | 内容 |
+|---|---|---|
+| `prod_06_jagan.sql` | 適用 | 邪眼の保存・共有・注文・閲覧権（¥1,000 解析レポート／¥3,000 完全解析）。Preview の jagan_01〜03 と同じ（Preview 判定と履歴行を除き、注文は Live だけ）。台帳に stage 6 |
+| `prod_86_postcheck_06_READONLY.sql` | 読み取り | 台帳・邪眼の表（RLS）・関数7・ブラウザの実行権限0・Live だけの制約・商品と金額・件数 |
+| `prod_96_rollback_06_DRAFT_DO_NOT_RUN.sql` | 戻し草案 | 邪眼の表が全て空の時だけ。データがあれば止まる（前へ直す） |
+
+順序：
+1. `prod_80_invariants_READONLY.sql` を実行して結果を控える。
+2. `prod_06_jagan.sql` → 成功。
+3. `prod_86_postcheck_06_READONLY.sql`：`ledger.stages` に `6:prod_06_jagan`、`jagan.functions = 7`、`jagan.browser_exec = 0`、`jagan.orders_live_only = 1`、`jagan.rows` が全て 0。
+4. `prod_80`：手順 1 と完全一致（既存の表・旧購入・ETI の注文に変化がないこと）。
+5. 邪眼のコードを Production に deploy し、環境変数 `JAGAN_PRODUCTION_ENABLED=true`（無料の保存・共有）・`JAGAN_SALES_OPEN=true`（販売）を設定。
+
+既存への影響：既存の表・関数・権限には触れない（追加のみ）。台帳の段階の範囲を 1〜5 から 1〜6 に広げる（`migration_ledger_stage_check`）。
+
+検証（2026-11-10・ローカル、本番相当 PG17.9・合成データ）：`docs/sql/production/local_check/stage6.sh` が 17 項目合格
+（prod_01〜04b の上に適用・台帳・postcheck・prod_80 の不変項目が適用前と同じ・二度適用は止まる・Test の注文は作れない・¥1,000／¥3,000 の支払いで2つの権利・
+データがあると rollback は止まる・空なら rollback で段階 5 と同じ構造・再適用で同じ構造）。

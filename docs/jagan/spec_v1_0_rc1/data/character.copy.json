@@ -1,0 +1,153 @@
+{
+  "status": "implementation_candidate",
+  "version": "jagan-character-copy-1.0.0-rc1",
+  "global_notice": "共通点は作品解釈による回答参照パターンとの比較です。人物全体や善悪の一致ではありません。",
+  "no_aligned_axes": "総合では最上位ですが、個別項目に明確な近さを示せる部分は限られています。",
+  "no_different_axes": "この比較条件では、大きな差として示す項目はありません。人物全体が同じという意味ではありません。",
+  "close_candidates": "複数の参照パターンが近い結果です。一人だけの人物像で説明し切れるとは限りません。",
+  "characters": {
+    "pierro": {
+      "name": "ピエロ",
+      "title": "道化",
+      "story_context": "ファデュイの統括官として、失われたものへの思いを大義につなぎ、長期的な活動を続ける姿が描かれます。",
+      "association_theme": "長く抱えている思いと、日々続けている行動との関係を振り返るための連想です。",
+      "limit": "怒りがあるから感情を受容できない、という判定ではありません。",
+      "reflection": "今も続けている行動には、どんな意味を感じていますか。",
+      "source_urls": [
+        "https://genshin-impact.fandom.com/ja/wiki/嗤笑の面"
+      ],
+      "source_access": "wiki_transcription_or_summary; see evidence notes",
+      "numeric_model_origin": "authored_hypothesis_not_official_character_score"
+    },
+    "capitano": {
+      "name": "カピターノ",
+      "title": "隊長",
+      "story_context": "ナタでの物語では、救うべきもののために行動を続け、対立した相手との協働も選びます。",
+      "association_theme": "気持ちが揺れる中でも必要なことを続けるあり方を振り返る連想です。",
+      "limit": "献身や戦闘力を心理得点として測ったものではありません。",
+      "reflection": "続けることが助けになった場面と、負担になった場面はありますか。",
+      "source_urls": [
+        "https://genshin-impact.fandom.com/ja/wiki/「隊長」"
+      ],
+      "source_access": "wiki_transcription_or_summary; see evidence notes",
+      "numeric_model_origin": "authored_hypothesis_not_official_character_score"
+    },
+    "dottore": {
+      "name": "ドットーレ",
+      "title": "博士",
+      "story_context": "スメールでの物語では、研究目的に向けた活動と、交渉に応じて手段を組み替える姿が描かれます。",
+      "association_theme": "目的への関わり方や、出来事の扱い方について考えるための連想です。",
+      "limit": "残虐性、知能、共感性、道徳性が似ているという意味ではありません。",
+      "reflection": "物事を説明できることと、気持ちを理解できることに違いはありますか。",
+      "source_urls": [
+        "https://genshin-impact.fandom.com/ja/wiki/「博士」"
+      ],
+      "source_access": "wiki_transcription_or_summary; see evidence notes",
+      "numeric_model_origin": "authored_hypothesis_not_official_character_score"
+    },
+    "columbina": {
+      "name": "コロンビーナ",
+      "title": "少女",
+      "story_context": "所属期を振り返るプロフィールには、選択の余地への新鮮さと、期待される役割に自分が置き去りになる感覚が語られます。",
+      "association_theme": "自分の意思や、人とのつながりをどう感じているかを振り返る連想です。",
+      "limit": "神秘的に見えることから感情理解の困難を判定するものではありません。",
+      "reflection": "期待される役割と、自分のままでいられる感覚に違いはありますか。",
+      "source_urls": [
+        "https://genshin-impact.fandom.com/ja/wiki/コロンビーナ/プロフィール"
+      ],
+      "source_access": "wiki_transcription_or_summary; see evidence notes",
+      "numeric_model_origin": "authored_hypothesis_not_official_character_score"
+    },
+    "arlecchino": {
+      "name": "アルレッキーノ",
+      "title": "召使",
+      "story_context": "壁炉の家を率いる姿には、感情の起源を認識して扱う教えと、厳しさの中にある関わりが描かれます。",
+      "association_theme": "感情を理解すること、表に出すこと、行動を続けることを分けて考える連想です。",
+      "limit": "冷静であることを感情の欠如や、本人の常に低い困難度と同一視しません。",
+      "reflection": "表に出さない気持ちを、自分自身ではどのくらい把握できていますか。",
+      "source_urls": [
+        "https://genshin-impact.fandom.com/ja/wiki/アルレッキーノ/プロフィール"
+      ],
+      "source_access": "wiki_transcription_or_summary; see evidence notes",
+      "numeric_model_origin": "authored_hypothesis_not_official_character_score"
+    },
+    "pulcinella": {
+      "name": "プルチネッラ",
+      "title": "雄鶏",
+      "story_context": "市長としての手腕や継続的な働きかけが語られる一方、その世話や関わりへの評価は、語り手によって異なります。",
+      "association_theme": "人との関係や、目的に向けた行動をどう保つかを考えるための連想です。",
+      "limit": "他人を操作したい気持ちや、善意の有無を測ったものではありません。",
+      "reflection": "自分から見た関わり方と、相手から見た関わり方に違いはありそうですか。",
+      "source_urls": [
+        "https://genshin-impact.fandom.com/ja/wiki/「雄鶏」"
+      ],
+      "source_access": "wiki_transcription_or_summary; see evidence notes",
+      "numeric_model_origin": "authored_hypothesis_not_official_character_score"
+    },
+    "scaramouche": {
+      "name": "スカラマシュ",
+      "title": "散兵",
+      "story_context": "執行官期の物語には、裏切りと受け止めた経験、心を巡る葛藤、目的へ向かう行動が描かれます。後に、その経験の理解が変わる場面もあります。",
+      "association_theme": "つながりの中での傷つきと、その後の感情や行動を考えるための連想です。",
+      "limit": "愛着タイプ、危険性、復讐心、加害性が一致するという意味ではありません。",
+      "reflection": "当時の受け止め方と、今の見方に違いが生まれた経験はありますか。",
+      "source_urls": [
+        "https://genshin-impact.fandom.com/ja/wiki/夜を飛ぶ鳥は三段へと落ちる"
+      ],
+      "source_access": "wiki_transcription_or_summary; see evidence notes",
+      "numeric_model_origin": "authored_hypothesis_not_official_character_score"
+    },
+    "sandrone": {
+      "name": "サンドローネ",
+      "title": "傀儡",
+      "story_context": "研究に没頭する姿と、相手によって異なる関わりが語られます。周囲からの評価だけで一つの内面を決めることはできません。",
+      "association_theme": "集中する活動と、対人場面での感情の扱い方を考えるための連想です。",
+      "limit": "研究志向や完璧主義を直接測定した結果ではありません。",
+      "reflection": "集中しやすい場面と、人との関わりで負担が増す場面には違いがありますか。",
+      "source_urls": [
+        "https://genshin-impact.fandom.com/ja/wiki/「傀儡」"
+      ],
+      "source_access": "wiki_transcription_or_summary; see evidence notes",
+      "numeric_model_origin": "authored_hypothesis_not_official_character_score"
+    },
+    "signora": {
+      "name": "シニョーラ",
+      "title": "淑女",
+      "story_context": "喪失を経た強い感情と、執行官としての目的遂行が描かれます。氷の邪眼には、自身の炎を抑える役割がありました。",
+      "association_theme": "内に抱えるものと、表に出すもの、行動へ移すものを分けて振り返る連想です。",
+      "limit": "悲嘆や復讐心の得点ではなく、氷の邪眼が表出抑制の心理得点を証明するわけでもありません。",
+      "reflection": "抱えている気持ちと、日々の行動の間にどんな距離を置いていますか。",
+      "source_urls": [
+        "https://genshin-impact.fandom.com/ja/wiki/シニョーラ"
+      ],
+      "source_access": "wiki_transcription_or_summary; see evidence notes",
+      "numeric_model_origin": "authored_hypothesis_not_official_character_score"
+    },
+    "pantalone": {
+      "name": "パンタローネ",
+      "title": "富者",
+      "story_context": "経済を通じた長期的な計画を進める人物として描かれます。アルレッキーノからは、計画能力と、その奥にある感情について異なる評価が語られます。",
+      "association_theme": "計画を続けることと、内側にある気持ちとの関係を考えるための連想です。",
+      "limit": "貧困経験から現在の有能感阻害を判定したり、憎しみから衝動性を決めたりするものではありません。",
+      "reflection": "自分が説明している行動の理由と、感じている気持ちは一致していますか。",
+      "source_urls": [
+        "https://genshin-impact.fandom.com/ja/wiki/「富者」"
+      ],
+      "source_access": "wiki_transcription_or_summary; see evidence notes",
+      "numeric_model_origin": "authored_hypothesis_not_official_character_score"
+    },
+    "tartaglia": {
+      "name": "タルタリヤ",
+      "title": "公子",
+      "story_context": "強敵や挑戦への意欲と、家族への手紙や弟との関わりが描かれます。一つの場面だけでは捉えきれない姿があります。",
+      "association_theme": "取り組みへの関与と、大切な相手とのつながりを考えるための連想です。",
+      "limit": "戦闘好きや危険選好を、感情下で行動を止められないことと同一視しません。",
+      "reflection": "挑戦したい気持ちと、守りたい日常はどのように両立していますか。",
+      "source_urls": [
+        "https://genshin-impact.fandom.com/ja/wiki/タルタリヤ/プロフィール"
+      ],
+      "source_access": "wiki_transcription_or_summary; see evidence notes",
+      "numeric_model_origin": "authored_hypothesis_not_official_character_score"
+    }
+  }
+}

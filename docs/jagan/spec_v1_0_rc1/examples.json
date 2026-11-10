@@ -1,0 +1,3942 @@
+[
+  {
+    "name": "中間回答",
+    "purpose": "全て3。明確な型・元素差を捏造しない。",
+    "fictional": true,
+    "input": {
+      "answers": {
+        "JG001": 3,
+        "JG002": 3,
+        "JG003": 3,
+        "JG004": 3,
+        "JG005": 3,
+        "JG006": 3,
+        "JG007": 3,
+        "JG008": 3,
+        "JG009": 3,
+        "JG010": 3,
+        "JG011": 3,
+        "JG012": 3,
+        "JG013": 3,
+        "JG014": 3,
+        "JG015": 3,
+        "JG016": 3,
+        "JG017": 3,
+        "JG018": 3,
+        "JG019": 3,
+        "JG020": 3,
+        "JG021": 3,
+        "JG022": 3,
+        "JG023": 3,
+        "JG024": 3,
+        "JG025": 3,
+        "JG026": 3,
+        "JG027": 3,
+        "JG028": 3,
+        "JG029": 3,
+        "JG030": 3,
+        "JG031": 3,
+        "JG032": 3,
+        "JG033": 3,
+        "JG034": 3,
+        "JG035": 3,
+        "JG036": 3,
+        "JG037": 3,
+        "JG038": 3,
+        "JG039": 3,
+        "JG040": 3,
+        "JG041": 3,
+        "JG042": 3,
+        "JG043": 3,
+        "JG044": 3,
+        "JG045": 3,
+        "JG046": 3,
+        "JG047": 3,
+        "JG048": 3,
+        "JG049": 3,
+        "JG050": 3
+      },
+      "resultId": "fictional-case-1",
+      "itemSetVersion": "jagan-items-1.0.0-rc1"
+    },
+    "result": {
+      "schemaVersion": "jagan-result-1",
+      "diagnosisKey": "jagan",
+      "stage": "implementation_candidate",
+      "publicReleaseVerified": false,
+      "resultId": "fictional-case-1",
+      "versions": {
+        "engine": "jagan-engine-1.0.0-rc1",
+        "itemSet": "jagan-items-1.0.0-rc1",
+        "scoring": "jagan-scores-1.0.0-rc1",
+        "interpretation": "jagan-interpretation-1.0.0-rc1",
+        "characterModel": "jagan-story-reference-1.0.0-rc1",
+        "calibration": "story-reference-synthetic-0.5.0"
+      },
+      "answers": {
+        "JG001": 3,
+        "JG002": 3,
+        "JG003": 3,
+        "JG004": 3,
+        "JG005": 3,
+        "JG006": 3,
+        "JG007": 3,
+        "JG008": 3,
+        "JG009": 3,
+        "JG010": 3,
+        "JG011": 3,
+        "JG012": 3,
+        "JG013": 3,
+        "JG014": 3,
+        "JG015": 3,
+        "JG016": 3,
+        "JG017": 3,
+        "JG018": 3,
+        "JG019": 3,
+        "JG020": 3,
+        "JG021": 3,
+        "JG022": 3,
+        "JG023": 3,
+        "JG024": 3,
+        "JG025": 3,
+        "JG026": 3,
+        "JG027": 3,
+        "JG028": 3,
+        "JG029": 3,
+        "JG030": 3,
+        "JG031": 3,
+        "JG032": 3,
+        "JG033": 3,
+        "JG034": 3,
+        "JG035": 3,
+        "JG036": 3,
+        "JG037": 3,
+        "JG038": 3,
+        "JG039": 3,
+        "JG040": 3,
+        "JG041": 3,
+        "JG042": 3,
+        "JG043": 3,
+        "JG044": 3,
+        "JG045": 3,
+        "JG046": 3,
+        "JG047": 3,
+        "JG048": 3,
+        "JG049": 3,
+        "JG050": 3
+      },
+      "domains": {
+        "AUT_S": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "AUT_F": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "COM_S": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "COM_F": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REL_S": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REL_F": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REAPP": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 5,
+          "total": 5,
+          "missing": 0,
+          "status": "complete"
+        },
+        "SUPPR": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 5,
+          "total": 5,
+          "missing": 0,
+          "status": "complete"
+        },
+        "CLAR_D": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "ACC_D": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "IMP_D": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "GOAL_D": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        }
+      },
+      "elements": {
+        "status": "available",
+        "primary": "EL",
+        "top3": [
+          "EL",
+          "HY",
+          "CR"
+        ],
+        "rankings": [
+          {
+            "id": "EL",
+            "label": "雷",
+            "score": 50,
+            "rank": 1,
+            "displayScore": 50
+          },
+          {
+            "id": "HY",
+            "label": "水",
+            "score": 50.00000000000001,
+            "rank": 1,
+            "displayScore": 50
+          },
+          {
+            "id": "CR",
+            "label": "氷",
+            "score": 50,
+            "rank": 1,
+            "displayScore": 50
+          },
+          {
+            "id": "DE",
+            "label": "草",
+            "score": 50,
+            "rank": 1,
+            "displayScore": 50
+          },
+          {
+            "id": "PY",
+            "label": "炎",
+            "score": 50,
+            "rank": 1,
+            "displayScore": 50
+          },
+          {
+            "id": "AN",
+            "label": "風",
+            "score": 50,
+            "rank": 1,
+            "displayScore": 50
+          },
+          {
+            "id": "GE",
+            "label": "岩",
+            "score": 50,
+            "rank": 1,
+            "displayScore": 50
+          }
+        ],
+        "ties": [
+          "EL",
+          "HY",
+          "CR",
+          "DE",
+          "PY",
+          "AN",
+          "GE"
+        ],
+        "close": [
+          "EL",
+          "HY",
+          "CR",
+          "DE",
+          "PY",
+          "AN",
+          "GE"
+        ],
+        "differentiation": "close"
+      },
+      "types": {
+        "status": "no_marked_pattern",
+        "primary": null,
+        "rankings": [
+          {
+            "id": "STALL",
+            "label": "停滞型",
+            "score": 50,
+            "rank": 1,
+            "displayScore": 50
+          },
+          {
+            "id": "CONTAIN",
+            "label": "封蔵型",
+            "score": 50,
+            "rank": 1,
+            "displayScore": 50
+          },
+          {
+            "id": "RESIST",
+            "label": "抗心型",
+            "score": 50,
+            "rank": 1,
+            "displayScore": 50
+          },
+          {
+            "id": "CONFUSE",
+            "label": "混迷型",
+            "score": 50,
+            "rank": 1,
+            "displayScore": 50
+          },
+          {
+            "id": "REFRAME",
+            "label": "転化型",
+            "score": 50,
+            "rank": 1,
+            "displayScore": 50
+          },
+          {
+            "id": "SURGE",
+            "label": "奔流型",
+            "score": 50,
+            "rank": 1,
+            "displayScore": 50
+          }
+        ],
+        "close": [],
+        "differentiation": "none",
+        "label": "明確な偏りなし"
+      },
+      "characters": {
+        "status": "available",
+        "modelType": "authored_story_association",
+        "primary": "pulcinella",
+        "rankings": [
+          {
+            "id": "pulcinella",
+            "label": "プルチネッラ",
+            "score": 85.4357543998845,
+            "rank": 1,
+            "displayScore": 85
+          },
+          {
+            "id": "pierro",
+            "label": "ピエロ",
+            "score": 83.8270223906619,
+            "rank": 2,
+            "displayScore": 84
+          },
+          {
+            "id": "pantalone",
+            "label": "パンタローネ",
+            "score": 83.60027455244293,
+            "rank": 3,
+            "displayScore": 84
+          },
+          {
+            "id": "dottore",
+            "label": "ドットーレ",
+            "score": 83.55163919113564,
+            "rank": 4,
+            "displayScore": 84
+          },
+          {
+            "id": "capitano",
+            "label": "カピターノ",
+            "score": 83.4534194436643,
+            "rank": 5,
+            "displayScore": 83
+          },
+          {
+            "id": "arlecchino",
+            "label": "アルレッキーノ",
+            "score": 83.14848104129543,
+            "rank": 6,
+            "displayScore": 83
+          },
+          {
+            "id": "sandrone",
+            "label": "サンドローネ",
+            "score": 81.75055635743892,
+            "rank": 7,
+            "displayScore": 82
+          },
+          {
+            "id": "signora",
+            "label": "シニョーラ",
+            "score": 81.28596696441926,
+            "rank": 8,
+            "displayScore": 81
+          },
+          {
+            "id": "columbina",
+            "label": "コロンビーナ",
+            "score": 79.6775470730333,
+            "rank": 9,
+            "displayScore": 80
+          },
+          {
+            "id": "tartaglia",
+            "label": "タルタリヤ",
+            "score": 77.84927956043865,
+            "rank": 10,
+            "displayScore": 78
+          },
+          {
+            "id": "scaramouche",
+            "label": "スカラマシュ",
+            "score": 76.14356023986444,
+            "rank": 11,
+            "displayScore": 76
+          }
+        ],
+        "ties": [
+          "pulcinella"
+        ],
+        "closeCandidates": [
+          "pulcinella",
+          "pierro",
+          "pantalone",
+          "dottore",
+          "capitano",
+          "arlecchino"
+        ],
+        "gapToSecond": 1.6087320092226065,
+        "notice": "公式描写を参考に設計した独自の回答参照パターンとの近さです。人物本人の心理得点や科学的な一致確率ではありません。"
+      },
+      "quality": {
+        "answered": 50,
+        "missing": 0,
+        "uniformAnswers": true
+      },
+      "sales": {
+        "open": false,
+        "price": 1000,
+        "currency": "JPY"
+      }
+    },
+    "explanation": {
+      "status": "available",
+      "characterId": "pulcinella",
+      "caution": "比較先は作品解釈から作った回答参照パターンです。",
+      "aligned": [
+        {
+          "axis": "REL_S",
+          "userScore": 50,
+          "referenceScore": 49.0860337186754,
+          "difference": 0.9139662813245977
+        },
+        {
+          "axis": "REAPP",
+          "userScore": 50,
+          "referenceScore": 56.519782926178785,
+          "difference": 6.5197829261787845
+        },
+        {
+          "axis": "REL_F",
+          "userScore": 50,
+          "referenceScore": 41.65083717949546,
+          "difference": 8.349162820504539
+        }
+      ],
+      "different": [
+        {
+          "axis": "GOAL_D",
+          "userScore": 50,
+          "referenceScore": 24.007438433405532,
+          "difference": 25.992561566594468
+        },
+        {
+          "axis": "IMP_D",
+          "userScore": 50,
+          "referenceScore": 28.69885910541467,
+          "difference": 21.30114089458533
+        }
+      ],
+      "thresholdMeaning": "15点・20点は説明を作るための設計値で、心理学上の基準ではありません。"
+    },
+    "publicSummary": {
+      "kind": "jagan-public-summary-1",
+      "element": {
+        "id": "EL",
+        "label": "雷",
+        "hasExactTie": true
+      },
+      "type": {
+        "id": null,
+        "label": "型の偏りなし",
+        "hasExactTie": false
+      },
+      "character": {
+        "id": "pulcinella",
+        "label": "プルチネッラ",
+        "matchPercent": 85,
+        "hasExactTie": false
+      },
+      "interpretationVersion": "jagan-interpretation-1.0.0-rc1",
+      "characterModelVersion": "jagan-story-reference-1.0.0-rc1"
+    },
+    "shareText": "邪眼診断をやってみました。\n私の結果は、【雷×型の偏りなし】\n\n最も近しいファトゥス：プルチネッラ（85%一致）\n※元素に同率候補があります。\n\nhttps://example.invalid/jagan/s/fictional_case_01\n#邪眼診断 #原神"
+  },
+  {
+    "name": "全て最低",
+    "purpose": "全て1。困難が低いことと、充足が高いことは同じではない。",
+    "fictional": true,
+    "input": {
+      "answers": {
+        "JG001": 1,
+        "JG002": 1,
+        "JG003": 1,
+        "JG004": 1,
+        "JG005": 1,
+        "JG006": 1,
+        "JG007": 1,
+        "JG008": 1,
+        "JG009": 1,
+        "JG010": 1,
+        "JG011": 1,
+        "JG012": 1,
+        "JG013": 1,
+        "JG014": 1,
+        "JG015": 1,
+        "JG016": 1,
+        "JG017": 1,
+        "JG018": 1,
+        "JG019": 1,
+        "JG020": 1,
+        "JG021": 1,
+        "JG022": 1,
+        "JG023": 1,
+        "JG024": 1,
+        "JG025": 1,
+        "JG026": 1,
+        "JG027": 1,
+        "JG028": 1,
+        "JG029": 1,
+        "JG030": 1,
+        "JG031": 1,
+        "JG032": 1,
+        "JG033": 1,
+        "JG034": 1,
+        "JG035": 1,
+        "JG036": 1,
+        "JG037": 1,
+        "JG038": 1,
+        "JG039": 1,
+        "JG040": 1,
+        "JG041": 1,
+        "JG042": 1,
+        "JG043": 1,
+        "JG044": 1,
+        "JG045": 1,
+        "JG046": 1,
+        "JG047": 1,
+        "JG048": 1,
+        "JG049": 1,
+        "JG050": 1
+      },
+      "resultId": "fictional-case-2",
+      "itemSetVersion": "jagan-items-1.0.0-rc1"
+    },
+    "result": {
+      "schemaVersion": "jagan-result-1",
+      "diagnosisKey": "jagan",
+      "stage": "implementation_candidate",
+      "publicReleaseVerified": false,
+      "resultId": "fictional-case-2",
+      "versions": {
+        "engine": "jagan-engine-1.0.0-rc1",
+        "itemSet": "jagan-items-1.0.0-rc1",
+        "scoring": "jagan-scores-1.0.0-rc1",
+        "interpretation": "jagan-interpretation-1.0.0-rc1",
+        "characterModel": "jagan-story-reference-1.0.0-rc1",
+        "calibration": "story-reference-synthetic-0.5.0"
+      },
+      "answers": {
+        "JG001": 1,
+        "JG002": 1,
+        "JG003": 1,
+        "JG004": 1,
+        "JG005": 1,
+        "JG006": 1,
+        "JG007": 1,
+        "JG008": 1,
+        "JG009": 1,
+        "JG010": 1,
+        "JG011": 1,
+        "JG012": 1,
+        "JG013": 1,
+        "JG014": 1,
+        "JG015": 1,
+        "JG016": 1,
+        "JG017": 1,
+        "JG018": 1,
+        "JG019": 1,
+        "JG020": 1,
+        "JG021": 1,
+        "JG022": 1,
+        "JG023": 1,
+        "JG024": 1,
+        "JG025": 1,
+        "JG026": 1,
+        "JG027": 1,
+        "JG028": 1,
+        "JG029": 1,
+        "JG030": 1,
+        "JG031": 1,
+        "JG032": 1,
+        "JG033": 1,
+        "JG034": 1,
+        "JG035": 1,
+        "JG036": 1,
+        "JG037": 1,
+        "JG038": 1,
+        "JG039": 1,
+        "JG040": 1,
+        "JG041": 1,
+        "JG042": 1,
+        "JG043": 1,
+        "JG044": 1,
+        "JG045": 1,
+        "JG046": 1,
+        "JG047": 1,
+        "JG048": 1,
+        "JG049": 1,
+        "JG050": 1
+      },
+      "domains": {
+        "AUT_S": {
+          "mean": 1,
+          "score": 0,
+          "displayScore": 0,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "AUT_F": {
+          "mean": 1,
+          "score": 0,
+          "displayScore": 0,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "COM_S": {
+          "mean": 1,
+          "score": 0,
+          "displayScore": 0,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "COM_F": {
+          "mean": 1,
+          "score": 0,
+          "displayScore": 0,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REL_S": {
+          "mean": 1,
+          "score": 0,
+          "displayScore": 0,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REL_F": {
+          "mean": 1,
+          "score": 0,
+          "displayScore": 0,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REAPP": {
+          "mean": 1,
+          "score": 0,
+          "displayScore": 0,
+          "answered": 5,
+          "total": 5,
+          "missing": 0,
+          "status": "complete"
+        },
+        "SUPPR": {
+          "mean": 1,
+          "score": 0,
+          "displayScore": 0,
+          "answered": 5,
+          "total": 5,
+          "missing": 0,
+          "status": "complete"
+        },
+        "CLAR_D": {
+          "mean": 1,
+          "score": 0,
+          "displayScore": 0,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "ACC_D": {
+          "mean": 1,
+          "score": 0,
+          "displayScore": 0,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "IMP_D": {
+          "mean": 1,
+          "score": 0,
+          "displayScore": 0,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "GOAL_D": {
+          "mean": 1,
+          "score": 0,
+          "displayScore": 0,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        }
+      },
+      "elements": {
+        "status": "available",
+        "primary": "AN",
+        "top3": [
+          "AN",
+          "DE",
+          "GE"
+        ],
+        "rankings": [
+          {
+            "id": "AN",
+            "label": "風",
+            "score": 35,
+            "rank": 1,
+            "displayScore": 35
+          },
+          {
+            "id": "DE",
+            "label": "草",
+            "score": 34.86894062015764,
+            "rank": 2,
+            "displayScore": 35
+          },
+          {
+            "id": "GE",
+            "label": "岩",
+            "score": 25,
+            "rank": 3,
+            "displayScore": 25
+          },
+          {
+            "id": "CR",
+            "label": "氷",
+            "score": 25,
+            "rank": 3,
+            "displayScore": 25
+          },
+          {
+            "id": "EL",
+            "label": "雷",
+            "score": 25,
+            "rank": 3,
+            "displayScore": 25
+          },
+          {
+            "id": "HY",
+            "label": "水",
+            "score": 16.570771418891773,
+            "rank": 6,
+            "displayScore": 17
+          },
+          {
+            "id": "PY",
+            "label": "炎",
+            "score": 15.83417680920859,
+            "rank": 7,
+            "displayScore": 16
+          }
+        ],
+        "ties": [
+          "AN"
+        ],
+        "close": [
+          "AN",
+          "DE"
+        ],
+        "differentiation": "close"
+      },
+      "types": {
+        "status": "no_marked_pattern",
+        "primary": null,
+        "rankings": [
+          {
+            "id": "SURGE",
+            "label": "奔流型",
+            "score": 0,
+            "rank": 1,
+            "displayScore": 0
+          },
+          {
+            "id": "CONFUSE",
+            "label": "混迷型",
+            "score": 0,
+            "rank": 1,
+            "displayScore": 0
+          },
+          {
+            "id": "CONTAIN",
+            "label": "封蔵型",
+            "score": 0,
+            "rank": 1,
+            "displayScore": 0
+          },
+          {
+            "id": "REFRAME",
+            "label": "転化型",
+            "score": 0,
+            "rank": 1,
+            "displayScore": 0
+          },
+          {
+            "id": "STALL",
+            "label": "停滞型",
+            "score": 0,
+            "rank": 1,
+            "displayScore": 0
+          },
+          {
+            "id": "RESIST",
+            "label": "抗心型",
+            "score": 0,
+            "rank": 1,
+            "displayScore": 0
+          }
+        ],
+        "close": [],
+        "differentiation": "none",
+        "label": "明確な偏りなし"
+      },
+      "characters": {
+        "status": "available",
+        "modelType": "authored_story_association",
+        "primary": "columbina",
+        "rankings": [
+          {
+            "id": "columbina",
+            "label": "コロンビーナ",
+            "score": 57.79791238597309,
+            "rank": 1,
+            "displayScore": 58
+          },
+          {
+            "id": "sandrone",
+            "label": "サンドローネ",
+            "score": 56.99796849586314,
+            "rank": 2,
+            "displayScore": 57
+          },
+          {
+            "id": "tartaglia",
+            "label": "タルタリヤ",
+            "score": 55.26141272404619,
+            "rank": 3,
+            "displayScore": 55
+          },
+          {
+            "id": "capitano",
+            "label": "カピターノ",
+            "score": 52.52996754738022,
+            "rank": 4,
+            "displayScore": 53
+          },
+          {
+            "id": "pulcinella",
+            "label": "プルチネッラ",
+            "score": 52.06332216924614,
+            "rank": 5,
+            "displayScore": 52
+          },
+          {
+            "id": "dottore",
+            "label": "ドットーレ",
+            "score": 51.146894424642,
+            "rank": 6,
+            "displayScore": 51
+          },
+          {
+            "id": "arlecchino",
+            "label": "アルレッキーノ",
+            "score": 47.899967571614766,
+            "rank": 7,
+            "displayScore": 48
+          },
+          {
+            "id": "signora",
+            "label": "シニョーラ",
+            "score": 45.29365500626107,
+            "rank": 8,
+            "displayScore": 45
+          },
+          {
+            "id": "pierro",
+            "label": "ピエロ",
+            "score": 44.23659034144307,
+            "rank": 9,
+            "displayScore": 44
+          },
+          {
+            "id": "pantalone",
+            "label": "パンタローネ",
+            "score": 43.21903767009702,
+            "rank": 10,
+            "displayScore": 43
+          },
+          {
+            "id": "scaramouche",
+            "label": "スカラマシュ",
+            "score": 42.435052529407926,
+            "rank": 11,
+            "displayScore": 42
+          }
+        ],
+        "ties": [
+          "columbina"
+        ],
+        "closeCandidates": [
+          "columbina",
+          "sandrone",
+          "tartaglia"
+        ],
+        "gapToSecond": 0.7999438901099509,
+        "notice": "公式描写を参考に設計した独自の回答参照パターンとの近さです。人物本人の心理得点や科学的な一致確率ではありません。"
+      },
+      "quality": {
+        "answered": 50,
+        "missing": 0,
+        "uniformAnswers": true
+      },
+      "sales": {
+        "open": false,
+        "price": 1000,
+        "currency": "JPY"
+      }
+    },
+    "explanation": {
+      "status": "available",
+      "characterId": "columbina",
+      "caution": "比較先は作品解釈から作った回答参照パターンです。",
+      "aligned": [],
+      "different": [
+        {
+          "axis": "REL_F",
+          "userScore": 0,
+          "referenceScore": 81.69106172447788,
+          "difference": 81.69106172447788
+        },
+        {
+          "axis": "AUT_F",
+          "userScore": 0,
+          "referenceScore": 74.710131429695,
+          "difference": 74.710131429695
+        },
+        {
+          "axis": "COM_S",
+          "userScore": 0,
+          "referenceScore": 57.341158805520976,
+          "difference": 57.341158805520976
+        }
+      ],
+      "thresholdMeaning": "15点・20点は説明を作るための設計値で、心理学上の基準ではありません。"
+    },
+    "publicSummary": {
+      "kind": "jagan-public-summary-1",
+      "element": {
+        "id": "AN",
+        "label": "風",
+        "hasExactTie": false
+      },
+      "type": {
+        "id": null,
+        "label": "型の偏りなし",
+        "hasExactTie": false
+      },
+      "character": {
+        "id": "columbina",
+        "label": "コロンビーナ",
+        "matchPercent": 58,
+        "hasExactTie": false
+      },
+      "interpretationVersion": "jagan-interpretation-1.0.0-rc1",
+      "characterModelVersion": "jagan-story-reference-1.0.0-rc1"
+    },
+    "shareText": "邪眼診断をやってみました。\n私の結果は、【風×型の偏りなし】\n\n最も近しいファトゥス：コロンビーナ（58%一致）\n\nhttps://example.invalid/jagan/s/fictional_case_02\n#邪眼診断 #原神"
+  },
+  {
+    "name": "全て最高",
+    "purpose": "全て5。矛盾と断定せず、複数場面の混在・拮抗を表示する。",
+    "fictional": true,
+    "input": {
+      "answers": {
+        "JG001": 5,
+        "JG002": 5,
+        "JG003": 5,
+        "JG004": 5,
+        "JG005": 5,
+        "JG006": 5,
+        "JG007": 5,
+        "JG008": 5,
+        "JG009": 5,
+        "JG010": 5,
+        "JG011": 5,
+        "JG012": 5,
+        "JG013": 5,
+        "JG014": 5,
+        "JG015": 5,
+        "JG016": 5,
+        "JG017": 5,
+        "JG018": 5,
+        "JG019": 5,
+        "JG020": 5,
+        "JG021": 5,
+        "JG022": 5,
+        "JG023": 5,
+        "JG024": 5,
+        "JG025": 5,
+        "JG026": 5,
+        "JG027": 5,
+        "JG028": 5,
+        "JG029": 5,
+        "JG030": 5,
+        "JG031": 5,
+        "JG032": 5,
+        "JG033": 5,
+        "JG034": 5,
+        "JG035": 5,
+        "JG036": 5,
+        "JG037": 5,
+        "JG038": 5,
+        "JG039": 5,
+        "JG040": 5,
+        "JG041": 5,
+        "JG042": 5,
+        "JG043": 5,
+        "JG044": 5,
+        "JG045": 5,
+        "JG046": 5,
+        "JG047": 5,
+        "JG048": 5,
+        "JG049": 5,
+        "JG050": 5
+      },
+      "resultId": "fictional-case-3",
+      "itemSetVersion": "jagan-items-1.0.0-rc1"
+    },
+    "result": {
+      "schemaVersion": "jagan-result-1",
+      "diagnosisKey": "jagan",
+      "stage": "implementation_candidate",
+      "publicReleaseVerified": false,
+      "resultId": "fictional-case-3",
+      "versions": {
+        "engine": "jagan-engine-1.0.0-rc1",
+        "itemSet": "jagan-items-1.0.0-rc1",
+        "scoring": "jagan-scores-1.0.0-rc1",
+        "interpretation": "jagan-interpretation-1.0.0-rc1",
+        "characterModel": "jagan-story-reference-1.0.0-rc1",
+        "calibration": "story-reference-synthetic-0.5.0"
+      },
+      "answers": {
+        "JG001": 5,
+        "JG002": 5,
+        "JG003": 5,
+        "JG004": 5,
+        "JG005": 5,
+        "JG006": 5,
+        "JG007": 5,
+        "JG008": 5,
+        "JG009": 5,
+        "JG010": 5,
+        "JG011": 5,
+        "JG012": 5,
+        "JG013": 5,
+        "JG014": 5,
+        "JG015": 5,
+        "JG016": 5,
+        "JG017": 5,
+        "JG018": 5,
+        "JG019": 5,
+        "JG020": 5,
+        "JG021": 5,
+        "JG022": 5,
+        "JG023": 5,
+        "JG024": 5,
+        "JG025": 5,
+        "JG026": 5,
+        "JG027": 5,
+        "JG028": 5,
+        "JG029": 5,
+        "JG030": 5,
+        "JG031": 5,
+        "JG032": 5,
+        "JG033": 5,
+        "JG034": 5,
+        "JG035": 5,
+        "JG036": 5,
+        "JG037": 5,
+        "JG038": 5,
+        "JG039": 5,
+        "JG040": 5,
+        "JG041": 5,
+        "JG042": 5,
+        "JG043": 5,
+        "JG044": 5,
+        "JG045": 5,
+        "JG046": 5,
+        "JG047": 5,
+        "JG048": 5,
+        "JG049": 5,
+        "JG050": 5
+      },
+      "domains": {
+        "AUT_S": {
+          "mean": 5,
+          "score": 100,
+          "displayScore": 100,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "AUT_F": {
+          "mean": 5,
+          "score": 100,
+          "displayScore": 100,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "COM_S": {
+          "mean": 5,
+          "score": 100,
+          "displayScore": 100,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "COM_F": {
+          "mean": 5,
+          "score": 100,
+          "displayScore": 100,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REL_S": {
+          "mean": 5,
+          "score": 100,
+          "displayScore": 100,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REL_F": {
+          "mean": 5,
+          "score": 100,
+          "displayScore": 100,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REAPP": {
+          "mean": 5,
+          "score": 100,
+          "displayScore": 100,
+          "answered": 5,
+          "total": 5,
+          "missing": 0,
+          "status": "complete"
+        },
+        "SUPPR": {
+          "mean": 5,
+          "score": 100,
+          "displayScore": 100,
+          "answered": 5,
+          "total": 5,
+          "missing": 0,
+          "status": "complete"
+        },
+        "CLAR_D": {
+          "mean": 5,
+          "score": 100,
+          "displayScore": 100,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "ACC_D": {
+          "mean": 5,
+          "score": 100,
+          "displayScore": 100,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "IMP_D": {
+          "mean": 5,
+          "score": 100,
+          "displayScore": 100,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "GOAL_D": {
+          "mean": 5,
+          "score": 100,
+          "displayScore": 100,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        }
+      },
+      "elements": {
+        "status": "available",
+        "primary": "PY",
+        "top3": [
+          "PY",
+          "HY",
+          "GE"
+        ],
+        "rankings": [
+          {
+            "id": "PY",
+            "label": "炎",
+            "score": 84.16582319079141,
+            "rank": 1,
+            "displayScore": 84
+          },
+          {
+            "id": "HY",
+            "label": "水",
+            "score": 83.42922858110823,
+            "rank": 2,
+            "displayScore": 83
+          },
+          {
+            "id": "GE",
+            "label": "岩",
+            "score": 75,
+            "rank": 3,
+            "displayScore": 75
+          },
+          {
+            "id": "EL",
+            "label": "雷",
+            "score": 75,
+            "rank": 3,
+            "displayScore": 75
+          },
+          {
+            "id": "CR",
+            "label": "氷",
+            "score": 75,
+            "rank": 3,
+            "displayScore": 75
+          },
+          {
+            "id": "DE",
+            "label": "草",
+            "score": 65.13105937984236,
+            "rank": 6,
+            "displayScore": 65
+          },
+          {
+            "id": "AN",
+            "label": "風",
+            "score": 65,
+            "rank": 7,
+            "displayScore": 65
+          }
+        ],
+        "ties": [
+          "PY"
+        ],
+        "close": [
+          "PY",
+          "HY"
+        ],
+        "differentiation": "close"
+      },
+      "types": {
+        "status": "available",
+        "primary": "STALL",
+        "rankings": [
+          {
+            "id": "STALL",
+            "label": "停滞型",
+            "score": 100,
+            "rank": 1,
+            "displayScore": 100
+          },
+          {
+            "id": "CONTAIN",
+            "label": "封蔵型",
+            "score": 100,
+            "rank": 1,
+            "displayScore": 100
+          },
+          {
+            "id": "SURGE",
+            "label": "奔流型",
+            "score": 100,
+            "rank": 1,
+            "displayScore": 100
+          },
+          {
+            "id": "RESIST",
+            "label": "抗心型",
+            "score": 100,
+            "rank": 1,
+            "displayScore": 100
+          },
+          {
+            "id": "CONFUSE",
+            "label": "混迷型",
+            "score": 100,
+            "rank": 1,
+            "displayScore": 100
+          },
+          {
+            "id": "REFRAME",
+            "label": "転化型",
+            "score": 100,
+            "rank": 1,
+            "displayScore": 100
+          }
+        ],
+        "close": [
+          "STALL",
+          "CONTAIN",
+          "SURGE",
+          "RESIST",
+          "CONFUSE",
+          "REFRAME"
+        ],
+        "differentiation": "co_dominant",
+        "label": "停滞型"
+      },
+      "characters": {
+        "status": "available",
+        "modelType": "authored_story_association",
+        "primary": "pantalone",
+        "rankings": [
+          {
+            "id": "pantalone",
+            "label": "パンタローネ",
+            "score": 51.8977723343228,
+            "rank": 1,
+            "displayScore": 52
+          },
+          {
+            "id": "pierro",
+            "label": "ピエロ",
+            "score": 50.87187615269373,
+            "rank": 2,
+            "displayScore": 51
+          },
+          {
+            "id": "signora",
+            "label": "シニョーラ",
+            "score": 47.96495524802895,
+            "rank": 3,
+            "displayScore": 48
+          },
+          {
+            "id": "scaramouche",
+            "label": "スカラマシュ",
+            "score": 46.853633625938954,
+            "rank": 4,
+            "displayScore": 47
+          },
+          {
+            "id": "arlecchino",
+            "label": "アルレッキーノ",
+            "score": 46.58152001982492,
+            "rank": 5,
+            "displayScore": 47
+          },
+          {
+            "id": "pulcinella",
+            "label": "プルチネッラ",
+            "score": 44.08658999531975,
+            "rank": 6,
+            "displayScore": 44
+          },
+          {
+            "id": "dottore",
+            "label": "ドットーレ",
+            "score": 43.83532050977149,
+            "rank": 7,
+            "displayScore": 44
+          },
+          {
+            "id": "capitano",
+            "label": "カピターノ",
+            "score": 42.60509887488404,
+            "rank": 8,
+            "displayScore": 43
+          },
+          {
+            "id": "sandrone",
+            "label": "サンドローネ",
+            "score": 38.21885665477494,
+            "rank": 9,
+            "displayScore": 38
+          },
+          {
+            "id": "tartaglia",
+            "label": "タルタリヤ",
+            "score": 36.914600417092814,
+            "rank": 10,
+            "displayScore": 37
+          },
+          {
+            "id": "columbina",
+            "label": "コロンビーナ",
+            "score": 36.399779977145116,
+            "rank": 11,
+            "displayScore": 36
+          }
+        ],
+        "ties": [
+          "pantalone"
+        ],
+        "closeCandidates": [
+          "pantalone",
+          "pierro"
+        ],
+        "gapToSecond": 1.0258961816290721,
+        "notice": "公式描写を参考に設計した独自の回答参照パターンとの近さです。人物本人の心理得点や科学的な一致確率ではありません。"
+      },
+      "quality": {
+        "answered": 50,
+        "missing": 0,
+        "uniformAnswers": true
+      },
+      "sales": {
+        "open": false,
+        "price": 1000,
+        "currency": "JPY"
+      }
+    },
+    "explanation": {
+      "status": "available",
+      "characterId": "pantalone",
+      "caution": "比較先は作品解釈から作った回答参照パターンです。",
+      "aligned": [],
+      "different": [
+        {
+          "axis": "GOAL_D",
+          "userScore": 100,
+          "referenceScore": 27.400836202797514,
+          "difference": 72.5991637972025
+        },
+        {
+          "axis": "REL_S",
+          "userScore": 100,
+          "referenceScore": 32.85405757934745,
+          "difference": 67.14594242065255
+        },
+        {
+          "axis": "CLAR_D",
+          "userScore": 100,
+          "referenceScore": 37.15467281746353,
+          "difference": 62.84532718253647
+        }
+      ],
+      "thresholdMeaning": "15点・20点は説明を作るための設計値で、心理学上の基準ではありません。"
+    },
+    "publicSummary": {
+      "kind": "jagan-public-summary-1",
+      "element": {
+        "id": "PY",
+        "label": "炎",
+        "hasExactTie": false
+      },
+      "type": {
+        "id": "STALL",
+        "label": "停滞型",
+        "hasExactTie": true
+      },
+      "character": {
+        "id": "pantalone",
+        "label": "パンタローネ",
+        "matchPercent": 52,
+        "hasExactTie": false
+      },
+      "interpretationVersion": "jagan-interpretation-1.0.0-rc1",
+      "characterModelVersion": "jagan-story-reference-1.0.0-rc1"
+    },
+    "shareText": "邪眼診断をやってみました。\n私の結果は、【炎×停滞型】\n\n最も近しいファトゥス：パンタローネ（52%一致）\n※型に同率候補があります。\n\nhttps://example.invalid/jagan/s/fictional_case_03\n#邪眼診断 #原神"
+  },
+  {
+    "name": "表出抑制が多い仮例",
+    "purpose": "表出抑制の5問だけを5。他の感情の困難まで高いと解釈しない。",
+    "fictional": true,
+    "input": {
+      "answers": {
+        "JG001": 3,
+        "JG002": 3,
+        "JG003": 3,
+        "JG004": 3,
+        "JG005": 3,
+        "JG006": 3,
+        "JG007": 3,
+        "JG008": 3,
+        "JG009": 3,
+        "JG010": 3,
+        "JG011": 3,
+        "JG012": 3,
+        "JG013": 3,
+        "JG014": 3,
+        "JG015": 3,
+        "JG016": 3,
+        "JG017": 3,
+        "JG018": 3,
+        "JG019": 3,
+        "JG020": 3,
+        "JG021": 3,
+        "JG022": 3,
+        "JG023": 3,
+        "JG024": 3,
+        "JG025": 3,
+        "JG026": 3,
+        "JG027": 3,
+        "JG028": 3,
+        "JG029": 3,
+        "JG030": 5,
+        "JG031": 5,
+        "JG032": 5,
+        "JG033": 5,
+        "JG034": 5,
+        "JG035": 3,
+        "JG036": 3,
+        "JG037": 3,
+        "JG038": 3,
+        "JG039": 3,
+        "JG040": 3,
+        "JG041": 3,
+        "JG042": 3,
+        "JG043": 3,
+        "JG044": 3,
+        "JG045": 3,
+        "JG046": 3,
+        "JG047": 3,
+        "JG048": 3,
+        "JG049": 3,
+        "JG050": 3
+      },
+      "resultId": "fictional-case-4",
+      "itemSetVersion": "jagan-items-1.0.0-rc1"
+    },
+    "result": {
+      "schemaVersion": "jagan-result-1",
+      "diagnosisKey": "jagan",
+      "stage": "implementation_candidate",
+      "publicReleaseVerified": false,
+      "resultId": "fictional-case-4",
+      "versions": {
+        "engine": "jagan-engine-1.0.0-rc1",
+        "itemSet": "jagan-items-1.0.0-rc1",
+        "scoring": "jagan-scores-1.0.0-rc1",
+        "interpretation": "jagan-interpretation-1.0.0-rc1",
+        "characterModel": "jagan-story-reference-1.0.0-rc1",
+        "calibration": "story-reference-synthetic-0.5.0"
+      },
+      "answers": {
+        "JG001": 3,
+        "JG002": 3,
+        "JG003": 3,
+        "JG004": 3,
+        "JG005": 3,
+        "JG006": 3,
+        "JG007": 3,
+        "JG008": 3,
+        "JG009": 3,
+        "JG010": 3,
+        "JG011": 3,
+        "JG012": 3,
+        "JG013": 3,
+        "JG014": 3,
+        "JG015": 3,
+        "JG016": 3,
+        "JG017": 3,
+        "JG018": 3,
+        "JG019": 3,
+        "JG020": 3,
+        "JG021": 3,
+        "JG022": 3,
+        "JG023": 3,
+        "JG024": 3,
+        "JG025": 3,
+        "JG026": 3,
+        "JG027": 3,
+        "JG028": 3,
+        "JG029": 3,
+        "JG030": 5,
+        "JG031": 5,
+        "JG032": 5,
+        "JG033": 5,
+        "JG034": 5,
+        "JG035": 3,
+        "JG036": 3,
+        "JG037": 3,
+        "JG038": 3,
+        "JG039": 3,
+        "JG040": 3,
+        "JG041": 3,
+        "JG042": 3,
+        "JG043": 3,
+        "JG044": 3,
+        "JG045": 3,
+        "JG046": 3,
+        "JG047": 3,
+        "JG048": 3,
+        "JG049": 3,
+        "JG050": 3
+      },
+      "domains": {
+        "AUT_S": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "AUT_F": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "COM_S": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "COM_F": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REL_S": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REL_F": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REAPP": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 5,
+          "total": 5,
+          "missing": 0,
+          "status": "complete"
+        },
+        "SUPPR": {
+          "mean": 5,
+          "score": 100,
+          "displayScore": 100,
+          "answered": 5,
+          "total": 5,
+          "missing": 0,
+          "status": "complete"
+        },
+        "CLAR_D": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "ACC_D": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "IMP_D": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "GOAL_D": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        }
+      },
+      "elements": {
+        "status": "available",
+        "primary": "CR",
+        "top3": [
+          "CR",
+          "HY",
+          "GE"
+        ],
+        "rankings": [
+          {
+            "id": "CR",
+            "label": "氷",
+            "score": 80,
+            "rank": 1,
+            "displayScore": 80
+          },
+          {
+            "id": "HY",
+            "label": "水",
+            "score": 65.43066366352917,
+            "rank": 2,
+            "displayScore": 65
+          },
+          {
+            "id": "GE",
+            "label": "岩",
+            "score": 58.540625581345935,
+            "rank": 3,
+            "displayScore": 59
+          },
+          {
+            "id": "DE",
+            "label": "草",
+            "score": 50,
+            "rank": 4,
+            "displayScore": 50
+          },
+          {
+            "id": "PY",
+            "label": "炎",
+            "score": 42.08291159539571,
+            "rank": 5,
+            "displayScore": 42
+          },
+          {
+            "id": "EL",
+            "label": "雷",
+            "score": 37.5,
+            "rank": 6,
+            "displayScore": 38
+          },
+          {
+            "id": "AN",
+            "label": "風",
+            "score": 35,
+            "rank": 7,
+            "displayScore": 35
+          }
+        ],
+        "ties": [
+          "CR"
+        ],
+        "close": [
+          "CR"
+        ],
+        "differentiation": "distinct"
+      },
+      "types": {
+        "status": "available",
+        "primary": "CONTAIN",
+        "rankings": [
+          {
+            "id": "CONTAIN",
+            "label": "封蔵型",
+            "score": 100,
+            "rank": 1,
+            "displayScore": 100
+          },
+          {
+            "id": "STALL",
+            "label": "停滞型",
+            "score": 50,
+            "rank": 2,
+            "displayScore": 50
+          },
+          {
+            "id": "REFRAME",
+            "label": "転化型",
+            "score": 50,
+            "rank": 2,
+            "displayScore": 50
+          },
+          {
+            "id": "RESIST",
+            "label": "抗心型",
+            "score": 50,
+            "rank": 2,
+            "displayScore": 50
+          },
+          {
+            "id": "SURGE",
+            "label": "奔流型",
+            "score": 50,
+            "rank": 2,
+            "displayScore": 50
+          },
+          {
+            "id": "CONFUSE",
+            "label": "混迷型",
+            "score": 50,
+            "rank": 2,
+            "displayScore": 50
+          }
+        ],
+        "close": [
+          "CONTAIN"
+        ],
+        "differentiation": "distinct",
+        "label": "封蔵型"
+      },
+      "characters": {
+        "status": "available",
+        "modelType": "authored_story_association",
+        "primary": "pierro",
+        "rankings": [
+          {
+            "id": "pierro",
+            "label": "ピエロ",
+            "score": 84.00713504031228,
+            "rank": 1,
+            "displayScore": 84
+          },
+          {
+            "id": "pantalone",
+            "label": "パンタローネ",
+            "score": 82.72541148836918,
+            "rank": 2,
+            "displayScore": 83
+          },
+          {
+            "id": "arlecchino",
+            "label": "アルレッキーノ",
+            "score": 81.48304533751481,
+            "rank": 3,
+            "displayScore": 81
+          },
+          {
+            "id": "signora",
+            "label": "シニョーラ",
+            "score": 81.4029837346828,
+            "rank": 4,
+            "displayScore": 81
+          },
+          {
+            "id": "pulcinella",
+            "label": "プルチネッラ",
+            "score": 78.45258556972404,
+            "rank": 5,
+            "displayScore": 78
+          },
+          {
+            "id": "capitano",
+            "label": "カピターノ",
+            "score": 73.75964437133145,
+            "rank": 6,
+            "displayScore": 74
+          },
+          {
+            "id": "scaramouche",
+            "label": "スカラマシュ",
+            "score": 73.65626864676547,
+            "rank": 7,
+            "displayScore": 74
+          },
+          {
+            "id": "dottore",
+            "label": "ドットーレ",
+            "score": 72.62638263864771,
+            "rank": 8,
+            "displayScore": 73
+          },
+          {
+            "id": "sandrone",
+            "label": "サンドローネ",
+            "score": 66.05071776549237,
+            "rank": 9,
+            "displayScore": 66
+          },
+          {
+            "id": "columbina",
+            "label": "コロンビーナ",
+            "score": 63.55411802171545,
+            "rank": 10,
+            "displayScore": 64
+          },
+          {
+            "id": "tartaglia",
+            "label": "タルタリヤ",
+            "score": 62.94561121658079,
+            "rank": 11,
+            "displayScore": 63
+          }
+        ],
+        "ties": [
+          "pierro"
+        ],
+        "closeCandidates": [
+          "pierro",
+          "pantalone",
+          "arlecchino",
+          "signora"
+        ],
+        "gapToSecond": 1.2817235519431023,
+        "notice": "公式描写を参考に設計した独自の回答参照パターンとの近さです。人物本人の心理得点や科学的な一致確率ではありません。"
+      },
+      "quality": {
+        "answered": 50,
+        "missing": 0,
+        "uniformAnswers": false
+      },
+      "sales": {
+        "open": false,
+        "price": 1000,
+        "currency": "JPY"
+      }
+    },
+    "explanation": {
+      "status": "available",
+      "characterId": "pierro",
+      "caution": "比較先は作品解釈から作った回答参照パターンです。",
+      "aligned": [
+        {
+          "axis": "COM_F",
+          "userScore": 50,
+          "referenceScore": 47.27871235747045,
+          "difference": 2.7212876425295534
+        },
+        {
+          "axis": "REAPP",
+          "userScore": 50,
+          "referenceScore": 55.78548092675602,
+          "difference": 5.785480926756023
+        },
+        {
+          "axis": "REL_S",
+          "userScore": 50,
+          "referenceScore": 43.08900299450603,
+          "difference": 6.910997005493968
+        }
+      ],
+      "different": [
+        {
+          "axis": "SUPPR",
+          "userScore": 100,
+          "referenceScore": 75.34760850800065,
+          "difference": 24.652391491999353
+        },
+        {
+          "axis": "GOAL_D",
+          "userScore": 50,
+          "referenceScore": 26.439510963602103,
+          "difference": 23.560489036397897
+        }
+      ],
+      "thresholdMeaning": "15点・20点は説明を作るための設計値で、心理学上の基準ではありません。"
+    },
+    "publicSummary": {
+      "kind": "jagan-public-summary-1",
+      "element": {
+        "id": "CR",
+        "label": "氷",
+        "hasExactTie": false
+      },
+      "type": {
+        "id": "CONTAIN",
+        "label": "封蔵型",
+        "hasExactTie": false
+      },
+      "character": {
+        "id": "pierro",
+        "label": "ピエロ",
+        "matchPercent": 84,
+        "hasExactTie": false
+      },
+      "interpretationVersion": "jagan-interpretation-1.0.0-rc1",
+      "characterModelVersion": "jagan-story-reference-1.0.0-rc1"
+    },
+    "shareText": "邪眼診断をやってみました。\n私の結果は、【氷×封蔵型】\n\n最も近しいファトゥス：ピエロ（84%一致）\n\nhttps://example.invalid/jagan/s/fictional_case_04\n#邪眼診断 #原神"
+  },
+  {
+    "name": "捉え直しが多い仮例",
+    "purpose": "捉え直しの5問だけを5。対処が必ず成功すると解釈しない。",
+    "fictional": true,
+    "input": {
+      "answers": {
+        "JG001": 3,
+        "JG002": 3,
+        "JG003": 3,
+        "JG004": 3,
+        "JG005": 3,
+        "JG006": 3,
+        "JG007": 3,
+        "JG008": 3,
+        "JG009": 3,
+        "JG010": 3,
+        "JG011": 3,
+        "JG012": 3,
+        "JG013": 3,
+        "JG014": 3,
+        "JG015": 3,
+        "JG016": 3,
+        "JG017": 3,
+        "JG018": 3,
+        "JG019": 3,
+        "JG020": 3,
+        "JG021": 3,
+        "JG022": 3,
+        "JG023": 3,
+        "JG024": 3,
+        "JG025": 5,
+        "JG026": 5,
+        "JG027": 5,
+        "JG028": 5,
+        "JG029": 5,
+        "JG030": 3,
+        "JG031": 3,
+        "JG032": 3,
+        "JG033": 3,
+        "JG034": 3,
+        "JG035": 3,
+        "JG036": 3,
+        "JG037": 3,
+        "JG038": 3,
+        "JG039": 3,
+        "JG040": 3,
+        "JG041": 3,
+        "JG042": 3,
+        "JG043": 3,
+        "JG044": 3,
+        "JG045": 3,
+        "JG046": 3,
+        "JG047": 3,
+        "JG048": 3,
+        "JG049": 3,
+        "JG050": 3
+      },
+      "resultId": "fictional-case-5",
+      "itemSetVersion": "jagan-items-1.0.0-rc1"
+    },
+    "result": {
+      "schemaVersion": "jagan-result-1",
+      "diagnosisKey": "jagan",
+      "stage": "implementation_candidate",
+      "publicReleaseVerified": false,
+      "resultId": "fictional-case-5",
+      "versions": {
+        "engine": "jagan-engine-1.0.0-rc1",
+        "itemSet": "jagan-items-1.0.0-rc1",
+        "scoring": "jagan-scores-1.0.0-rc1",
+        "interpretation": "jagan-interpretation-1.0.0-rc1",
+        "characterModel": "jagan-story-reference-1.0.0-rc1",
+        "calibration": "story-reference-synthetic-0.5.0"
+      },
+      "answers": {
+        "JG001": 3,
+        "JG002": 3,
+        "JG003": 3,
+        "JG004": 3,
+        "JG005": 3,
+        "JG006": 3,
+        "JG007": 3,
+        "JG008": 3,
+        "JG009": 3,
+        "JG010": 3,
+        "JG011": 3,
+        "JG012": 3,
+        "JG013": 3,
+        "JG014": 3,
+        "JG015": 3,
+        "JG016": 3,
+        "JG017": 3,
+        "JG018": 3,
+        "JG019": 3,
+        "JG020": 3,
+        "JG021": 3,
+        "JG022": 3,
+        "JG023": 3,
+        "JG024": 3,
+        "JG025": 5,
+        "JG026": 5,
+        "JG027": 5,
+        "JG028": 5,
+        "JG029": 5,
+        "JG030": 3,
+        "JG031": 3,
+        "JG032": 3,
+        "JG033": 3,
+        "JG034": 3,
+        "JG035": 3,
+        "JG036": 3,
+        "JG037": 3,
+        "JG038": 3,
+        "JG039": 3,
+        "JG040": 3,
+        "JG041": 3,
+        "JG042": 3,
+        "JG043": 3,
+        "JG044": 3,
+        "JG045": 3,
+        "JG046": 3,
+        "JG047": 3,
+        "JG048": 3,
+        "JG049": 3,
+        "JG050": 3
+      },
+      "domains": {
+        "AUT_S": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "AUT_F": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "COM_S": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "COM_F": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REL_S": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REL_F": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REAPP": {
+          "mean": 5,
+          "score": 100,
+          "displayScore": 100,
+          "answered": 5,
+          "total": 5,
+          "missing": 0,
+          "status": "complete"
+        },
+        "SUPPR": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 5,
+          "total": 5,
+          "missing": 0,
+          "status": "complete"
+        },
+        "CLAR_D": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "ACC_D": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "IMP_D": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "GOAL_D": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        }
+      },
+      "elements": {
+        "status": "available",
+        "primary": "DE",
+        "top3": [
+          "DE",
+          "AN",
+          "GE"
+        ],
+        "rankings": [
+          {
+            "id": "DE",
+            "label": "草",
+            "score": 67.56552968992118,
+            "rank": 1,
+            "displayScore": 68
+          },
+          {
+            "id": "AN",
+            "label": "風",
+            "score": 53.791313429449275,
+            "rank": 2,
+            "displayScore": 54
+          },
+          {
+            "id": "GE",
+            "label": "岩",
+            "score": 50,
+            "rank": 3,
+            "displayScore": 50
+          },
+          {
+            "id": "EL",
+            "label": "雷",
+            "score": 50,
+            "rank": 3,
+            "displayScore": 50
+          },
+          {
+            "id": "PY",
+            "label": "炎",
+            "score": 50,
+            "rank": 3,
+            "displayScore": 50
+          },
+          {
+            "id": "HY",
+            "label": "水",
+            "score": 50.00000000000001,
+            "rank": 3,
+            "displayScore": 50
+          },
+          {
+            "id": "CR",
+            "label": "氷",
+            "score": 50,
+            "rank": 3,
+            "displayScore": 50
+          }
+        ],
+        "ties": [
+          "DE"
+        ],
+        "close": [
+          "DE"
+        ],
+        "differentiation": "distinct"
+      },
+      "types": {
+        "status": "available",
+        "primary": "REFRAME",
+        "rankings": [
+          {
+            "id": "REFRAME",
+            "label": "転化型",
+            "score": 100,
+            "rank": 1,
+            "displayScore": 100
+          },
+          {
+            "id": "SURGE",
+            "label": "奔流型",
+            "score": 50,
+            "rank": 2,
+            "displayScore": 50
+          },
+          {
+            "id": "CONFUSE",
+            "label": "混迷型",
+            "score": 50,
+            "rank": 2,
+            "displayScore": 50
+          },
+          {
+            "id": "CONTAIN",
+            "label": "封蔵型",
+            "score": 50,
+            "rank": 2,
+            "displayScore": 50
+          },
+          {
+            "id": "RESIST",
+            "label": "抗心型",
+            "score": 50,
+            "rank": 2,
+            "displayScore": 50
+          },
+          {
+            "id": "STALL",
+            "label": "停滞型",
+            "score": 50,
+            "rank": 2,
+            "displayScore": 50
+          }
+        ],
+        "close": [
+          "REFRAME"
+        ],
+        "differentiation": "distinct",
+        "label": "転化型"
+      },
+      "characters": {
+        "status": "available",
+        "modelType": "authored_story_association",
+        "primary": "dottore",
+        "rankings": [
+          {
+            "id": "dottore",
+            "label": "ドットーレ",
+            "score": 79.38141229078617,
+            "rank": 1,
+            "displayScore": 79
+          },
+          {
+            "id": "pulcinella",
+            "label": "プルチネッラ",
+            "score": 77.19384145022438,
+            "rank": 2,
+            "displayScore": 77
+          },
+          {
+            "id": "capitano",
+            "label": "カピターノ",
+            "score": 75.91747582423397,
+            "rank": 3,
+            "displayScore": 76
+          },
+          {
+            "id": "pierro",
+            "label": "ピエロ",
+            "score": 75.87932029759075,
+            "rank": 4,
+            "displayScore": 76
+          },
+          {
+            "id": "arlecchino",
+            "label": "アルレッキーノ",
+            "score": 74.93411589258191,
+            "rank": 5,
+            "displayScore": 75
+          },
+          {
+            "id": "pantalone",
+            "label": "パンタローネ",
+            "score": 73.84408019094728,
+            "rank": 6,
+            "displayScore": 74
+          },
+          {
+            "id": "tartaglia",
+            "label": "タルタリヤ",
+            "score": 69.97194674569806,
+            "rank": 7,
+            "displayScore": 70
+          },
+          {
+            "id": "sandrone",
+            "label": "サンドローネ",
+            "score": 69.0806750691566,
+            "rank": 8,
+            "displayScore": 69
+          },
+          {
+            "id": "signora",
+            "label": "シニョーラ",
+            "score": 68.14917293556422,
+            "rank": 9,
+            "displayScore": 68
+          },
+          {
+            "id": "columbina",
+            "label": "コロンビーナ",
+            "score": 67.59758813883184,
+            "rank": 10,
+            "displayScore": 68
+          },
+          {
+            "id": "scaramouche",
+            "label": "スカラマシュ",
+            "score": 62.55072793578902,
+            "rank": 11,
+            "displayScore": 63
+          }
+        ],
+        "ties": [
+          "dottore"
+        ],
+        "closeCandidates": [
+          "dottore",
+          "pulcinella"
+        ],
+        "gapToSecond": 2.18757084056179,
+        "notice": "公式描写を参考に設計した独自の回答参照パターンとの近さです。人物本人の心理得点や科学的な一致確率ではありません。"
+      },
+      "quality": {
+        "answered": 50,
+        "missing": 0,
+        "uniformAnswers": false
+      },
+      "sales": {
+        "open": false,
+        "price": 1000,
+        "currency": "JPY"
+      }
+    },
+    "explanation": {
+      "status": "available",
+      "characterId": "dottore",
+      "caution": "比較先は作品解釈から作った回答参照パターンです。",
+      "aligned": [
+        {
+          "axis": "AUT_F",
+          "userScore": 50,
+          "referenceScore": 49.80205232851686,
+          "difference": 0.19794767148314207
+        },
+        {
+          "axis": "SUPPR",
+          "userScore": 50,
+          "referenceScore": 46.27401875117146,
+          "difference": 3.725981248828539
+        },
+        {
+          "axis": "REL_F",
+          "userScore": 50,
+          "referenceScore": 55.57853569303818,
+          "difference": 5.578535693038177
+        }
+      ],
+      "different": [
+        {
+          "axis": "REAPP",
+          "userScore": 100,
+          "referenceScore": 65.72534485056251,
+          "difference": 34.27465514943749
+        },
+        {
+          "axis": "COM_S",
+          "userScore": 50,
+          "referenceScore": 74.67385929247986,
+          "difference": 24.67385929247986
+        },
+        {
+          "axis": "GOAL_D",
+          "userScore": 50,
+          "referenceScore": 28.10070694772743,
+          "difference": 21.89929305227257
+        }
+      ],
+      "thresholdMeaning": "15点・20点は説明を作るための設計値で、心理学上の基準ではありません。"
+    },
+    "publicSummary": {
+      "kind": "jagan-public-summary-1",
+      "element": {
+        "id": "DE",
+        "label": "草",
+        "hasExactTie": false
+      },
+      "type": {
+        "id": "REFRAME",
+        "label": "転化型",
+        "hasExactTie": false
+      },
+      "character": {
+        "id": "dottore",
+        "label": "ドットーレ",
+        "matchPercent": 79,
+        "hasExactTie": false
+      },
+      "interpretationVersion": "jagan-interpretation-1.0.0-rc1",
+      "characterModelVersion": "jagan-story-reference-1.0.0-rc1"
+    },
+    "shareText": "邪眼診断をやってみました。\n私の結果は、【草×転化型】\n\n最も近しいファトゥス：ドットーレ（79%一致）\n\nhttps://example.invalid/jagan/s/fictional_case_05\n#邪眼診断 #原神"
+  },
+  {
+    "name": "衝動調整が難しい仮例",
+    "purpose": "衝動調整の4問だけを5。危険性・善悪を判定しない。",
+    "fictional": true,
+    "input": {
+      "answers": {
+        "JG001": 3,
+        "JG002": 3,
+        "JG003": 3,
+        "JG004": 3,
+        "JG005": 3,
+        "JG006": 3,
+        "JG007": 3,
+        "JG008": 3,
+        "JG009": 3,
+        "JG010": 3,
+        "JG011": 3,
+        "JG012": 3,
+        "JG013": 3,
+        "JG014": 3,
+        "JG015": 3,
+        "JG016": 3,
+        "JG017": 3,
+        "JG018": 3,
+        "JG019": 3,
+        "JG020": 3,
+        "JG021": 3,
+        "JG022": 3,
+        "JG023": 3,
+        "JG024": 3,
+        "JG025": 3,
+        "JG026": 3,
+        "JG027": 3,
+        "JG028": 3,
+        "JG029": 3,
+        "JG030": 3,
+        "JG031": 3,
+        "JG032": 3,
+        "JG033": 3,
+        "JG034": 3,
+        "JG035": 3,
+        "JG036": 3,
+        "JG037": 3,
+        "JG038": 3,
+        "JG039": 3,
+        "JG040": 3,
+        "JG041": 3,
+        "JG042": 3,
+        "JG043": 5,
+        "JG044": 5,
+        "JG045": 5,
+        "JG046": 5,
+        "JG047": 3,
+        "JG048": 3,
+        "JG049": 3,
+        "JG050": 3
+      },
+      "resultId": "fictional-case-6",
+      "itemSetVersion": "jagan-items-1.0.0-rc1"
+    },
+    "result": {
+      "schemaVersion": "jagan-result-1",
+      "diagnosisKey": "jagan",
+      "stage": "implementation_candidate",
+      "publicReleaseVerified": false,
+      "resultId": "fictional-case-6",
+      "versions": {
+        "engine": "jagan-engine-1.0.0-rc1",
+        "itemSet": "jagan-items-1.0.0-rc1",
+        "scoring": "jagan-scores-1.0.0-rc1",
+        "interpretation": "jagan-interpretation-1.0.0-rc1",
+        "characterModel": "jagan-story-reference-1.0.0-rc1",
+        "calibration": "story-reference-synthetic-0.5.0"
+      },
+      "answers": {
+        "JG001": 3,
+        "JG002": 3,
+        "JG003": 3,
+        "JG004": 3,
+        "JG005": 3,
+        "JG006": 3,
+        "JG007": 3,
+        "JG008": 3,
+        "JG009": 3,
+        "JG010": 3,
+        "JG011": 3,
+        "JG012": 3,
+        "JG013": 3,
+        "JG014": 3,
+        "JG015": 3,
+        "JG016": 3,
+        "JG017": 3,
+        "JG018": 3,
+        "JG019": 3,
+        "JG020": 3,
+        "JG021": 3,
+        "JG022": 3,
+        "JG023": 3,
+        "JG024": 3,
+        "JG025": 3,
+        "JG026": 3,
+        "JG027": 3,
+        "JG028": 3,
+        "JG029": 3,
+        "JG030": 3,
+        "JG031": 3,
+        "JG032": 3,
+        "JG033": 3,
+        "JG034": 3,
+        "JG035": 3,
+        "JG036": 3,
+        "JG037": 3,
+        "JG038": 3,
+        "JG039": 3,
+        "JG040": 3,
+        "JG041": 3,
+        "JG042": 3,
+        "JG043": 5,
+        "JG044": 5,
+        "JG045": 5,
+        "JG046": 5,
+        "JG047": 3,
+        "JG048": 3,
+        "JG049": 3,
+        "JG050": 3
+      },
+      "domains": {
+        "AUT_S": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "AUT_F": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "COM_S": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "COM_F": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REL_S": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REL_F": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REAPP": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 5,
+          "total": 5,
+          "missing": 0,
+          "status": "complete"
+        },
+        "SUPPR": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 5,
+          "total": 5,
+          "missing": 0,
+          "status": "complete"
+        },
+        "CLAR_D": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "ACC_D": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "IMP_D": {
+          "mean": 5,
+          "score": 100,
+          "displayScore": 100,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "GOAL_D": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        }
+      },
+      "elements": {
+        "status": "available",
+        "primary": "EL",
+        "top3": [
+          "EL",
+          "PY",
+          "AN"
+        ],
+        "rankings": [
+          {
+            "id": "EL",
+            "label": "雷",
+            "score": 80,
+            "rank": 1,
+            "displayScore": 80
+          },
+          {
+            "id": "PY",
+            "label": "炎",
+            "score": 62.0829115953957,
+            "rank": 2,
+            "displayScore": 62
+          },
+          {
+            "id": "AN",
+            "label": "風",
+            "score": 50,
+            "rank": 3,
+            "displayScore": 50
+          },
+          {
+            "id": "HY",
+            "label": "水",
+            "score": 50.00000000000001,
+            "rank": 3,
+            "displayScore": 50
+          },
+          {
+            "id": "DE",
+            "label": "草",
+            "score": 50,
+            "rank": 3,
+            "displayScore": 50
+          },
+          {
+            "id": "GE",
+            "label": "岩",
+            "score": 50,
+            "rank": 3,
+            "displayScore": 50
+          },
+          {
+            "id": "CR",
+            "label": "氷",
+            "score": 37.5,
+            "rank": 7,
+            "displayScore": 38
+          }
+        ],
+        "ties": [
+          "EL"
+        ],
+        "close": [
+          "EL"
+        ],
+        "differentiation": "distinct"
+      },
+      "types": {
+        "status": "available",
+        "primary": "SURGE",
+        "rankings": [
+          {
+            "id": "SURGE",
+            "label": "奔流型",
+            "score": 100,
+            "rank": 1,
+            "displayScore": 100
+          },
+          {
+            "id": "CONTAIN",
+            "label": "封蔵型",
+            "score": 50,
+            "rank": 2,
+            "displayScore": 50
+          },
+          {
+            "id": "RESIST",
+            "label": "抗心型",
+            "score": 50,
+            "rank": 2,
+            "displayScore": 50
+          },
+          {
+            "id": "REFRAME",
+            "label": "転化型",
+            "score": 50,
+            "rank": 2,
+            "displayScore": 50
+          },
+          {
+            "id": "CONFUSE",
+            "label": "混迷型",
+            "score": 50,
+            "rank": 2,
+            "displayScore": 50
+          },
+          {
+            "id": "STALL",
+            "label": "停滞型",
+            "score": 50,
+            "rank": 2,
+            "displayScore": 50
+          }
+        ],
+        "close": [
+          "SURGE"
+        ],
+        "differentiation": "distinct",
+        "label": "奔流型"
+      },
+      "characters": {
+        "status": "available",
+        "modelType": "authored_story_association",
+        "primary": "sandrone",
+        "rankings": [
+          {
+            "id": "sandrone",
+            "label": "サンドローネ",
+            "score": 76.78006363684041,
+            "rank": 1,
+            "displayScore": 77
+          },
+          {
+            "id": "pantalone",
+            "label": "パンタローネ",
+            "score": 76.74767198509353,
+            "rank": 2,
+            "displayScore": 77
+          },
+          {
+            "id": "pulcinella",
+            "label": "プルチネッラ",
+            "score": 75.546777498892,
+            "rank": 3,
+            "displayScore": 76
+          },
+          {
+            "id": "dottore",
+            "label": "ドットーレ",
+            "score": 74.91113396298447,
+            "rank": 4,
+            "displayScore": 75
+          },
+          {
+            "id": "signora",
+            "label": "シニョーラ",
+            "score": 74.8835955041362,
+            "rank": 5,
+            "displayScore": 75
+          },
+          {
+            "id": "pierro",
+            "label": "ピエロ",
+            "score": 74.81045302403042,
+            "rank": 6,
+            "displayScore": 75
+          },
+          {
+            "id": "arlecchino",
+            "label": "アルレッキーノ",
+            "score": 74.15431611362317,
+            "rank": 7,
+            "displayScore": 74
+          },
+          {
+            "id": "capitano",
+            "label": "カピターノ",
+            "score": 73.85797600632763,
+            "rank": 8,
+            "displayScore": 74
+          },
+          {
+            "id": "scaramouche",
+            "label": "スカラマシュ",
+            "score": 73.13955679706866,
+            "rank": 9,
+            "displayScore": 73
+          },
+          {
+            "id": "tartaglia",
+            "label": "タルタリヤ",
+            "score": 72.25110742732294,
+            "rank": 10,
+            "displayScore": 72
+          },
+          {
+            "id": "columbina",
+            "label": "コロンビーナ",
+            "score": 70.72480246292157,
+            "rank": 11,
+            "displayScore": 71
+          }
+        ],
+        "ties": [
+          "sandrone"
+        ],
+        "closeCandidates": [
+          "sandrone",
+          "pantalone",
+          "pulcinella",
+          "dottore",
+          "signora",
+          "pierro",
+          "arlecchino",
+          "capitano"
+        ],
+        "gapToSecond": 0.032391651746877415,
+        "notice": "公式描写を参考に設計した独自の回答参照パターンとの近さです。人物本人の心理得点や科学的な一致確率ではありません。"
+      },
+      "quality": {
+        "answered": 50,
+        "missing": 0,
+        "uniformAnswers": false
+      },
+      "sales": {
+        "open": false,
+        "price": 1000,
+        "currency": "JPY"
+      }
+    },
+    "explanation": {
+      "status": "available",
+      "characterId": "sandrone",
+      "caution": "比較先は作品解釈から作った回答参照パターンです。",
+      "aligned": [
+        {
+          "axis": "AUT_F",
+          "userScore": 50,
+          "referenceScore": 46.46106674498636,
+          "difference": 3.5389332550136388
+        },
+        {
+          "axis": "ACC_D",
+          "userScore": 50,
+          "referenceScore": 45.533745449607125,
+          "difference": 4.4662545503928754
+        },
+        {
+          "axis": "COM_F",
+          "userScore": 50,
+          "referenceScore": 44.950597524897624,
+          "difference": 5.049402475102376
+        }
+      ],
+      "different": [
+        {
+          "axis": "IMP_D",
+          "userScore": 100,
+          "referenceScore": 50.265209826459845,
+          "difference": 49.734790173540155
+        },
+        {
+          "axis": "GOAL_D",
+          "userScore": 50,
+          "referenceScore": 15.801748947935431,
+          "difference": 34.19825105206457
+        },
+        {
+          "axis": "COM_S",
+          "userScore": 50,
+          "referenceScore": 74.68179803612131,
+          "difference": 24.681798036121307
+        }
+      ],
+      "thresholdMeaning": "15点・20点は説明を作るための設計値で、心理学上の基準ではありません。"
+    },
+    "publicSummary": {
+      "kind": "jagan-public-summary-1",
+      "element": {
+        "id": "EL",
+        "label": "雷",
+        "hasExactTie": false
+      },
+      "type": {
+        "id": "SURGE",
+        "label": "奔流型",
+        "hasExactTie": false
+      },
+      "character": {
+        "id": "sandrone",
+        "label": "サンドローネ",
+        "matchPercent": 77,
+        "hasExactTie": false
+      },
+      "interpretationVersion": "jagan-interpretation-1.0.0-rc1",
+      "characterModelVersion": "jagan-story-reference-1.0.0-rc1"
+    },
+    "shareText": "邪眼診断をやってみました。\n私の結果は、【雷×奔流型】\n\n最も近しいファトゥス：サンドローネ（77%一致）\n\nhttps://example.invalid/jagan/s/fictional_case_06\n#邪眼診断 #原神"
+  },
+  {
+    "name": "関係の阻害感がある仮例",
+    "purpose": "関係性阻害4問を5、関係性充足4問を2。愛着タイプや原因を推定しない。",
+    "fictional": true,
+    "input": {
+      "answers": {
+        "JG001": 3,
+        "JG002": 3,
+        "JG003": 3,
+        "JG004": 3,
+        "JG005": 3,
+        "JG006": 3,
+        "JG007": 3,
+        "JG008": 3,
+        "JG009": 3,
+        "JG010": 3,
+        "JG011": 3,
+        "JG012": 3,
+        "JG013": 3,
+        "JG014": 3,
+        "JG015": 3,
+        "JG016": 3,
+        "JG017": 2,
+        "JG018": 2,
+        "JG019": 2,
+        "JG020": 2,
+        "JG021": 5,
+        "JG022": 5,
+        "JG023": 5,
+        "JG024": 5,
+        "JG025": 3,
+        "JG026": 3,
+        "JG027": 3,
+        "JG028": 3,
+        "JG029": 3,
+        "JG030": 3,
+        "JG031": 3,
+        "JG032": 3,
+        "JG033": 3,
+        "JG034": 3,
+        "JG035": 3,
+        "JG036": 3,
+        "JG037": 3,
+        "JG038": 3,
+        "JG039": 3,
+        "JG040": 3,
+        "JG041": 3,
+        "JG042": 3,
+        "JG043": 3,
+        "JG044": 3,
+        "JG045": 3,
+        "JG046": 3,
+        "JG047": 3,
+        "JG048": 3,
+        "JG049": 3,
+        "JG050": 3
+      },
+      "resultId": "fictional-case-7",
+      "itemSetVersion": "jagan-items-1.0.0-rc1"
+    },
+    "result": {
+      "schemaVersion": "jagan-result-1",
+      "diagnosisKey": "jagan",
+      "stage": "implementation_candidate",
+      "publicReleaseVerified": false,
+      "resultId": "fictional-case-7",
+      "versions": {
+        "engine": "jagan-engine-1.0.0-rc1",
+        "itemSet": "jagan-items-1.0.0-rc1",
+        "scoring": "jagan-scores-1.0.0-rc1",
+        "interpretation": "jagan-interpretation-1.0.0-rc1",
+        "characterModel": "jagan-story-reference-1.0.0-rc1",
+        "calibration": "story-reference-synthetic-0.5.0"
+      },
+      "answers": {
+        "JG001": 3,
+        "JG002": 3,
+        "JG003": 3,
+        "JG004": 3,
+        "JG005": 3,
+        "JG006": 3,
+        "JG007": 3,
+        "JG008": 3,
+        "JG009": 3,
+        "JG010": 3,
+        "JG011": 3,
+        "JG012": 3,
+        "JG013": 3,
+        "JG014": 3,
+        "JG015": 3,
+        "JG016": 3,
+        "JG017": 2,
+        "JG018": 2,
+        "JG019": 2,
+        "JG020": 2,
+        "JG021": 5,
+        "JG022": 5,
+        "JG023": 5,
+        "JG024": 5,
+        "JG025": 3,
+        "JG026": 3,
+        "JG027": 3,
+        "JG028": 3,
+        "JG029": 3,
+        "JG030": 3,
+        "JG031": 3,
+        "JG032": 3,
+        "JG033": 3,
+        "JG034": 3,
+        "JG035": 3,
+        "JG036": 3,
+        "JG037": 3,
+        "JG038": 3,
+        "JG039": 3,
+        "JG040": 3,
+        "JG041": 3,
+        "JG042": 3,
+        "JG043": 3,
+        "JG044": 3,
+        "JG045": 3,
+        "JG046": 3,
+        "JG047": 3,
+        "JG048": 3,
+        "JG049": 3,
+        "JG050": 3
+      },
+      "domains": {
+        "AUT_S": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "AUT_F": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "COM_S": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "COM_F": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REL_S": {
+          "mean": 2,
+          "score": 25,
+          "displayScore": 25,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REL_F": {
+          "mean": 5,
+          "score": 100,
+          "displayScore": 100,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "REAPP": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 5,
+          "total": 5,
+          "missing": 0,
+          "status": "complete"
+        },
+        "SUPPR": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 5,
+          "total": 5,
+          "missing": 0,
+          "status": "complete"
+        },
+        "CLAR_D": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "ACC_D": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "IMP_D": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        },
+        "GOAL_D": {
+          "mean": 3,
+          "score": 50,
+          "displayScore": 50,
+          "answered": 4,
+          "total": 4,
+          "missing": 0,
+          "status": "complete"
+        }
+      },
+      "elements": {
+        "status": "available",
+        "primary": "HY",
+        "top3": [
+          "HY",
+          "CR",
+          "GE"
+        ],
+        "rankings": [
+          {
+            "id": "HY",
+            "label": "水",
+            "score": 74.37799605397669,
+            "rank": 1,
+            "displayScore": 74
+          },
+          {
+            "id": "CR",
+            "label": "氷",
+            "score": 52.5,
+            "rank": 2,
+            "displayScore": 53
+          },
+          {
+            "id": "GE",
+            "label": "岩",
+            "score": 50,
+            "rank": 3,
+            "displayScore": 50
+          },
+          {
+            "id": "DE",
+            "label": "草",
+            "score": 50,
+            "rank": 3,
+            "displayScore": 50
+          },
+          {
+            "id": "AN",
+            "label": "風",
+            "score": 50,
+            "rank": 3,
+            "displayScore": 50
+          },
+          {
+            "id": "PY",
+            "label": "炎",
+            "score": 50,
+            "rank": 3,
+            "displayScore": 50
+          },
+          {
+            "id": "EL",
+            "label": "雷",
+            "score": 50,
+            "rank": 3,
+            "displayScore": 50
+          }
+        ],
+        "ties": [
+          "HY"
+        ],
+        "close": [
+          "HY"
+        ],
+        "differentiation": "distinct"
+      },
+      "types": {
+        "status": "no_marked_pattern",
+        "primary": null,
+        "rankings": [
+          {
+            "id": "CONFUSE",
+            "label": "混迷型",
+            "score": 50,
+            "rank": 1,
+            "displayScore": 50
+          },
+          {
+            "id": "SURGE",
+            "label": "奔流型",
+            "score": 50,
+            "rank": 1,
+            "displayScore": 50
+          },
+          {
+            "id": "CONTAIN",
+            "label": "封蔵型",
+            "score": 50,
+            "rank": 1,
+            "displayScore": 50
+          },
+          {
+            "id": "STALL",
+            "label": "停滞型",
+            "score": 50,
+            "rank": 1,
+            "displayScore": 50
+          },
+          {
+            "id": "REFRAME",
+            "label": "転化型",
+            "score": 50,
+            "rank": 1,
+            "displayScore": 50
+          },
+          {
+            "id": "RESIST",
+            "label": "抗心型",
+            "score": 50,
+            "rank": 1,
+            "displayScore": 50
+          }
+        ],
+        "close": [],
+        "differentiation": "none",
+        "label": "明確な偏りなし"
+      },
+      "characters": {
+        "status": "available",
+        "modelType": "authored_story_association",
+        "primary": "signora",
+        "rankings": [
+          {
+            "id": "signora",
+            "label": "シニョーラ",
+            "score": 82.94747101348894,
+            "rank": 1,
+            "displayScore": 83
+          },
+          {
+            "id": "pierro",
+            "label": "ピエロ",
+            "score": 81.91198263875788,
+            "rank": 2,
+            "displayScore": 82
+          },
+          {
+            "id": "pantalone",
+            "label": "パンタローネ",
+            "score": 81.90757094037984,
+            "rank": 3,
+            "displayScore": 82
+          },
+          {
+            "id": "columbina",
+            "label": "コロンビーナ",
+            "score": 81.07058244199882,
+            "rank": 4,
+            "displayScore": 81
+          },
+          {
+            "id": "dottore",
+            "label": "ドットーレ",
+            "score": 80.91753129041625,
+            "rank": 5,
+            "displayScore": 81
+          },
+          {
+            "id": "scaramouche",
+            "label": "スカラマシュ",
+            "score": 80.25191668191839,
+            "rank": 6,
+            "displayScore": 80
+          },
+          {
+            "id": "sandrone",
+            "label": "サンドローネ",
+            "score": 79.82252774531815,
+            "rank": 7,
+            "displayScore": 80
+          },
+          {
+            "id": "pulcinella",
+            "label": "プルチネッラ",
+            "score": 79.27383770020641,
+            "rank": 8,
+            "displayScore": 79
+          },
+          {
+            "id": "capitano",
+            "label": "カピターノ",
+            "score": 76.61757846038046,
+            "rank": 9,
+            "displayScore": 77
+          },
+          {
+            "id": "arlecchino",
+            "label": "アルレッキーノ",
+            "score": 75.80692657164992,
+            "rank": 10,
+            "displayScore": 76
+          },
+          {
+            "id": "tartaglia",
+            "label": "タルタリヤ",
+            "score": 70.05037634247599,
+            "rank": 11,
+            "displayScore": 70
+          }
+        ],
+        "ties": [
+          "signora"
+        ],
+        "closeCandidates": [
+          "signora",
+          "pierro",
+          "pantalone",
+          "columbina",
+          "dottore",
+          "scaramouche"
+        ],
+        "gapToSecond": 1.0354883747310595,
+        "notice": "公式描写を参考に設計した独自の回答参照パターンとの近さです。人物本人の心理得点や科学的な一致確率ではありません。"
+      },
+      "quality": {
+        "answered": 50,
+        "missing": 0,
+        "uniformAnswers": false
+      },
+      "sales": {
+        "open": false,
+        "price": 1000,
+        "currency": "JPY"
+      }
+    },
+    "explanation": {
+      "status": "available",
+      "characterId": "signora",
+      "caution": "比較先は作品解釈から作った回答参照パターンです。",
+      "aligned": [
+        {
+          "axis": "REL_S",
+          "userScore": 25,
+          "referenceScore": 22.12431863463202,
+          "difference": 2.8756813653679814
+        },
+        {
+          "axis": "COM_F",
+          "userScore": 50,
+          "referenceScore": 45.966999112050864,
+          "difference": 4.033000887949136
+        },
+        {
+          "axis": "AUT_S",
+          "userScore": 50,
+          "referenceScore": 54.07232227108172,
+          "difference": 4.072322271081717
+        }
+      ],
+      "different": [
+        {
+          "axis": "SUPPR",
+          "userScore": 50,
+          "referenceScore": 75.26196110906008,
+          "difference": 25.26196110906008
+        },
+        {
+          "axis": "REL_F",
+          "userScore": 100,
+          "referenceScore": 78.00889108909728,
+          "difference": 21.991108910902724
+        },
+        {
+          "axis": "GOAL_D",
+          "userScore": 50,
+          "referenceScore": 29.393161514334267,
+          "difference": 20.606838485665733
+        }
+      ],
+      "thresholdMeaning": "15点・20点は説明を作るための設計値で、心理学上の基準ではありません。"
+    },
+    "publicSummary": {
+      "kind": "jagan-public-summary-1",
+      "element": {
+        "id": "HY",
+        "label": "水",
+        "hasExactTie": false
+      },
+      "type": {
+        "id": null,
+        "label": "型の偏りなし",
+        "hasExactTie": false
+      },
+      "character": {
+        "id": "signora",
+        "label": "シニョーラ",
+        "matchPercent": 83,
+        "hasExactTie": false
+      },
+      "interpretationVersion": "jagan-interpretation-1.0.0-rc1",
+      "characterModelVersion": "jagan-story-reference-1.0.0-rc1"
+    },
+    "shareText": "邪眼診断をやってみました。\n私の結果は、【水×型の偏りなし】\n\n最も近しいファトゥス：シニョーラ（83%一致）\n\nhttps://example.invalid/jagan/s/fictional_case_07\n#邪眼診断 #原神"
+  },
+  {
+    "name": "回答不足",
+    "purpose": "回答しないを選んだ場面のUI用。",
+    "fictional": true,
+    "input": {
+      "answers": {},
+      "resultId": "fictional-case-8",
+      "itemSetVersion": "jagan-items-1.0.0-rc1"
+    },
+    "result": {
+      "schemaVersion": "jagan-result-1",
+      "diagnosisKey": "jagan",
+      "stage": "implementation_candidate",
+      "publicReleaseVerified": false,
+      "resultId": "fictional-case-8",
+      "versions": {
+        "engine": "jagan-engine-1.0.0-rc1",
+        "itemSet": "jagan-items-1.0.0-rc1",
+        "scoring": "jagan-scores-1.0.0-rc1",
+        "interpretation": "jagan-interpretation-1.0.0-rc1",
+        "characterModel": "jagan-story-reference-1.0.0-rc1",
+        "calibration": "story-reference-synthetic-0.5.0"
+      },
+      "answers": {
+        "JG001": null,
+        "JG002": null,
+        "JG003": null,
+        "JG004": null,
+        "JG005": null,
+        "JG006": null,
+        "JG007": null,
+        "JG008": null,
+        "JG009": null,
+        "JG010": null,
+        "JG011": null,
+        "JG012": null,
+        "JG013": null,
+        "JG014": null,
+        "JG015": null,
+        "JG016": null,
+        "JG017": null,
+        "JG018": null,
+        "JG019": null,
+        "JG020": null,
+        "JG021": null,
+        "JG022": null,
+        "JG023": null,
+        "JG024": null,
+        "JG025": null,
+        "JG026": null,
+        "JG027": null,
+        "JG028": null,
+        "JG029": null,
+        "JG030": null,
+        "JG031": null,
+        "JG032": null,
+        "JG033": null,
+        "JG034": null,
+        "JG035": null,
+        "JG036": null,
+        "JG037": null,
+        "JG038": null,
+        "JG039": null,
+        "JG040": null,
+        "JG041": null,
+        "JG042": null,
+        "JG043": null,
+        "JG044": null,
+        "JG045": null,
+        "JG046": null,
+        "JG047": null,
+        "JG048": null,
+        "JG049": null,
+        "JG050": null
+      },
+      "domains": {
+        "AUT_S": {
+          "mean": null,
+          "score": null,
+          "displayScore": null,
+          "answered": 0,
+          "total": 4,
+          "missing": 4,
+          "status": "insufficient"
+        },
+        "AUT_F": {
+          "mean": null,
+          "score": null,
+          "displayScore": null,
+          "answered": 0,
+          "total": 4,
+          "missing": 4,
+          "status": "insufficient"
+        },
+        "COM_S": {
+          "mean": null,
+          "score": null,
+          "displayScore": null,
+          "answered": 0,
+          "total": 4,
+          "missing": 4,
+          "status": "insufficient"
+        },
+        "COM_F": {
+          "mean": null,
+          "score": null,
+          "displayScore": null,
+          "answered": 0,
+          "total": 4,
+          "missing": 4,
+          "status": "insufficient"
+        },
+        "REL_S": {
+          "mean": null,
+          "score": null,
+          "displayScore": null,
+          "answered": 0,
+          "total": 4,
+          "missing": 4,
+          "status": "insufficient"
+        },
+        "REL_F": {
+          "mean": null,
+          "score": null,
+          "displayScore": null,
+          "answered": 0,
+          "total": 4,
+          "missing": 4,
+          "status": "insufficient"
+        },
+        "REAPP": {
+          "mean": null,
+          "score": null,
+          "displayScore": null,
+          "answered": 0,
+          "total": 5,
+          "missing": 5,
+          "status": "insufficient"
+        },
+        "SUPPR": {
+          "mean": null,
+          "score": null,
+          "displayScore": null,
+          "answered": 0,
+          "total": 5,
+          "missing": 5,
+          "status": "insufficient"
+        },
+        "CLAR_D": {
+          "mean": null,
+          "score": null,
+          "displayScore": null,
+          "answered": 0,
+          "total": 4,
+          "missing": 4,
+          "status": "insufficient"
+        },
+        "ACC_D": {
+          "mean": null,
+          "score": null,
+          "displayScore": null,
+          "answered": 0,
+          "total": 4,
+          "missing": 4,
+          "status": "insufficient"
+        },
+        "IMP_D": {
+          "mean": null,
+          "score": null,
+          "displayScore": null,
+          "answered": 0,
+          "total": 4,
+          "missing": 4,
+          "status": "insufficient"
+        },
+        "GOAL_D": {
+          "mean": null,
+          "score": null,
+          "displayScore": null,
+          "answered": 0,
+          "total": 4,
+          "missing": 4,
+          "status": "insufficient"
+        }
+      },
+      "elements": {
+        "status": "insufficient",
+        "missingAxes": [
+          "ACC_D",
+          "IMP_D",
+          "COM_F",
+          "SUPPR",
+          "REL_F",
+          "REL_S",
+          "GOAL_D",
+          "AUT_F",
+          "AUT_S",
+          "REAPP",
+          "COM_S",
+          "CLAR_D"
+        ],
+        "rankings": [],
+        "primary": null,
+        "top3": []
+      },
+      "types": {
+        "status": "insufficient",
+        "missingAxes": [
+          "REAPP",
+          "SUPPR",
+          "IMP_D",
+          "GOAL_D",
+          "CLAR_D",
+          "ACC_D"
+        ],
+        "primary": null,
+        "rankings": []
+      },
+      "characters": {
+        "status": "insufficient",
+        "primary": null,
+        "rankings": [],
+        "missingAxes": [
+          "AUT_S",
+          "AUT_F",
+          "COM_S",
+          "COM_F",
+          "REL_S",
+          "REL_F",
+          "REAPP",
+          "SUPPR",
+          "CLAR_D",
+          "ACC_D",
+          "IMP_D",
+          "GOAL_D"
+        ],
+        "modelType": "authored_story_association"
+      },
+      "quality": {
+        "answered": 0,
+        "missing": 50,
+        "uniformAnswers": false
+      },
+      "sales": {
+        "open": false,
+        "price": 1000,
+        "currency": "JPY"
+      }
+    },
+    "explanation": {
+      "status": "unavailable",
+      "aligned": [],
+      "different": []
+    },
+    "publicSummary": null,
+    "shareText": null
+  }
+]

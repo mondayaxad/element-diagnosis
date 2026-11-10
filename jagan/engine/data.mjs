@@ -1,0 +1,1946 @@
+// 生成物：scripts/jagan-data.mjs が docs/jagan/spec_v0_3_balanced/*.json から作る。手で編集しない。
+export const BUNDLE = Object.freeze({
+ "items": {
+  "diagnosis_key": "jagan",
+  "item_set_version": "jagan-shadow-items-0.4.0-semantic-review",
+  "status": "semantic_revision_candidate_not_validated",
+  "launch_ready": false,
+  "page_size": 5,
+  "page_count": 10,
+  "question_count": 50,
+  "intro_screen": false,
+  "allow_skip": false,
+  "auxiliary_options": [],
+  "required_answers": 50,
+  "default_answer": null,
+  "options": [
+   {
+    "value": 1,
+    "label": "まったく当てはまらない"
+   },
+   {
+    "value": 2,
+    "label": "あまり当てはまらない"
+   },
+   {
+    "value": 3,
+    "label": "どちらともいえない"
+   },
+   {
+    "value": 4,
+    "label": "やや当てはまる"
+   },
+   {
+    "value": 5,
+    "label": "とても当てはまる"
+   }
+  ],
+  "traits": [
+   {
+    "id": "ANX",
+    "label": "不安",
+    "item_count": 4
+   },
+   {
+    "id": "SEP",
+    "label": "依存",
+    "item_count": 5
+   },
+   {
+    "id": "SUS",
+    "label": "猜疑",
+    "item_count": 4
+   },
+   {
+    "id": "WDR",
+    "label": "撤退",
+    "item_count": 4
+   },
+   {
+    "id": "IMP",
+    "label": "衝動",
+    "item_count": 5
+   },
+   {
+    "id": "PSV",
+    "label": "固執",
+    "item_count": 4
+   },
+   {
+    "id": "PRF",
+    "label": "完璧",
+    "item_count": 4
+   },
+   {
+    "id": "HOS",
+    "label": "敵意",
+    "item_count": 4
+   },
+   {
+    "id": "ATT",
+    "label": "顕示",
+    "item_count": 4
+   },
+   {
+    "id": "MAN",
+    "label": "操作",
+    "item_count": 4
+   },
+   {
+    "id": "RSK",
+    "label": "危険志向",
+    "item_count": 4
+   },
+   {
+    "id": "CAL",
+    "label": "冷淡",
+    "item_count": 4
+   }
+  ],
+  "display_order": [
+   "ANX01",
+   "PRF01",
+   "SEP01",
+   "IMP01",
+   "WDR02",
+   "ATT01",
+   "SUS01",
+   "PSV01",
+   "HOS01",
+   "MAN01",
+   "RSK01",
+   "CAL01",
+   "ANX02",
+   "PRF02",
+   "SEP02",
+   "IMP02",
+   "WDR03",
+   "ATT02",
+   "SUS02",
+   "PSV02",
+   "HOS03",
+   "MAN02",
+   "RSK02",
+   "CAL02",
+   "ANX03",
+   "PRF04",
+   "SEP03",
+   "IMP03",
+   "WDR04",
+   "ATT03",
+   "SUS03",
+   "PSV04",
+   "HOS04",
+   "MAN03",
+   "RSK03",
+   "CAL03",
+   "ANX05",
+   "PRF05",
+   "SEP04",
+   "IMP04",
+   "WDR05",
+   "ATT05",
+   "SUS05",
+   "PSV05",
+   "HOS05",
+   "MAN04",
+   "RSK04",
+   "CAL04",
+   "SEP05",
+   "IMP05"
+  ],
+  "items": [
+   {
+    "id": "ANX01",
+    "trait": "ANX",
+    "text": "まだ決まっていないことについて、悪い展開を思い浮かべる。",
+    "direction": 1,
+    "intended_content": "先行きへの心配",
+    "review_note": "現実的な危険への妥当な心配も含み得る"
+   },
+   {
+    "id": "ANX02",
+    "trait": "ANX",
+    "text": "これからする用事について考えると、緊張して落ち着かなくなる。",
+    "direction": 1,
+    "intended_content": "緊張",
+    "review_note": "特性定義への対応を再点検した独自表現。読解・妥当性は未検証。"
+   },
+   {
+    "id": "ANX03",
+    "trait": "ANX",
+    "text": "特に問題が起きていないときも、何か悪いことが起こりそうで落ち着かない。",
+    "direction": 1,
+    "intended_content": "予期する恐れ",
+    "review_note": "現在の生活環境の影響を受ける"
+   },
+   {
+    "id": "ANX05",
+    "trait": "ANX",
+    "text": "一つの心配が落ち着くと、別の気がかりが頭に浮かぶ。",
+    "direction": 1,
+    "intended_content": "心配の持続",
+    "review_note": "固執と区別できるか確認"
+   },
+   {
+    "id": "SEP01",
+    "trait": "SEP",
+    "text": "親しい相手からの返事が遅いと、自分から離れていくのではないかと不安になる。",
+    "direction": 1,
+    "intended_content": "関係喪失への不安",
+    "review_note": "連絡習慣・実際の関係悪化の影響"
+   },
+   {
+    "id": "SEP02",
+    "trait": "SEP",
+    "text": "親しい相手との間で意見が食い違うと、距離を置かれることが心配になる。",
+    "direction": 1,
+    "intended_content": "拒絶される恐れ",
+    "review_note": "一般的な不安との区別"
+   },
+   {
+    "id": "SEP03",
+    "trait": "SEP",
+    "text": "親しい相手と離れて過ごすと、関係が続くか不安になる。",
+    "direction": 1,
+    "intended_content": "離別への不安",
+    "review_note": "相手との関係や生活上の事情の影響"
+   },
+   {
+    "id": "SEP04",
+    "trait": "SEP",
+    "text": "親しい相手が自分以外の人と過ごしていると、自分の居場所がなくなる気がする。",
+    "direction": 1,
+    "intended_content": "関係内の居場所を失う恐れ",
+    "review_note": "嫉妬との重なり"
+   },
+   {
+    "id": "SEP05",
+    "trait": "SEP",
+    "text": "頼りにしている相手がいなくなることを考えると、自分一人ではやっていけない気がする。",
+    "direction": 1,
+    "intended_content": "相手を失った後の自己支援への不安",
+    "review_note": "実際に援助が必要な事情の影響"
+   },
+   {
+    "id": "SUS01",
+    "trait": "SUS",
+    "text": "人から親切にされると、相手に何か狙いがあるのか考える。",
+    "direction": 1,
+    "intended_content": "他者の意図への疑い",
+    "review_note": "正常な警戒も拾う"
+   },
+   {
+    "id": "SUS02",
+    "trait": "SUS",
+    "text": "その場にいない間に、自分についてよくない話をされている気がする。",
+    "direction": 1,
+    "intended_content": "陰での悪意を疑う",
+    "review_note": "実際の排斥経験が影響"
+   },
+   {
+    "id": "SUS03",
+    "trait": "SUS",
+    "text": "相手の説明を聞いた後も、隠していることがあるのではと思う。",
+    "direction": 1,
+    "intended_content": "説明への疑い",
+    "review_note": "説明そのものが不十分な場合との区別"
+   },
+   {
+    "id": "SUS05",
+    "trait": "SUS",
+    "text": "相手と約束をしても、自分を裏切るのではないかという疑いが残る。",
+    "direction": 1,
+    "intended_content": "信頼・忠実さへの疑い",
+    "review_note": "関係ごとの違いがある"
+   },
+   {
+    "id": "WDR02",
+    "trait": "WDR",
+    "text": "誰かと話せる場でも、自分から会話に入らずに過ごす。",
+    "direction": 1,
+    "intended_content": "会話への関与の少なさ",
+    "review_note": "内向性との重なり"
+   },
+   {
+    "id": "WDR03",
+    "trait": "WDR",
+    "text": "人と知り合っても、その後に自分から連絡するのを控える。",
+    "direction": 1,
+    "intended_content": "関係の開始・継続への関与の少なさ",
+    "review_note": "連絡方法や相手側の事情が影響"
+   },
+   {
+    "id": "WDR04",
+    "trait": "WDR",
+    "text": "誰かと一緒に過ごせるときも、一人でいる方を選ぶ。",
+    "direction": 1,
+    "intended_content": "一人でいる選択",
+    "review_note": "望ましい一人時間も含む"
+   },
+   {
+    "id": "WDR05",
+    "trait": "WDR",
+    "text": "関わりが増えそうになると、人との距離を広げる。",
+    "direction": 1,
+    "intended_content": "対人距離の拡大",
+    "review_note": "親密さの回避との重なり"
+   },
+   {
+    "id": "IMP01",
+    "trait": "IMP",
+    "text": "思いついたことを、その後どうなるか考える前に始める。",
+    "direction": 1,
+    "intended_content": "結果を検討する前の着手",
+    "review_note": "行動力との区別"
+   },
+   {
+    "id": "IMP02",
+    "trait": "IMP",
+    "text": "気持ちが高ぶったとき、言葉を選ぶ前に口に出す。",
+    "direction": 1,
+    "intended_content": "検討する前の発言",
+    "review_note": "感情が強い場面への限定"
+   },
+   {
+    "id": "IMP03",
+    "trait": "IMP",
+    "text": "目の前のことにすぐ反応し、その後どうなるかを考えるのが後になる。",
+    "direction": 1,
+    "intended_content": "検討する前の承諾",
+    "review_note": "特性定義への対応を再点検した独自表現。読解・妥当性は未検証。"
+   },
+   {
+    "id": "IMP04",
+    "trait": "IMP",
+    "text": "その場でしたいことがあると、後の予定への影響を考えずに行動する。",
+    "direction": 1,
+    "intended_content": "後の影響を考えない行動",
+    "review_note": "単なる予定変更から内容を絞った"
+   },
+   {
+    "id": "IMP05",
+    "trait": "IMP",
+    "text": "一度立ち止まって考えようと思っても、その前に行動に移してしまう。",
+    "direction": 1,
+    "intended_content": "行動に先立つ停止の難しさ",
+    "review_note": "自覚している人だけが答えやすい可能性"
+   },
+   {
+    "id": "PSV01",
+    "trait": "PSV",
+    "text": "別のやり方が必要だと分かっても、同じ方法を続ける。",
+    "direction": 1,
+    "intended_content": "変更が必要でも同じ方法を続ける",
+    "review_note": "変更が実行できない事情が影響"
+   },
+   {
+    "id": "PSV02",
+    "trait": "PSV",
+    "text": "成果につながらなくなった取り組みでも、やめる判断ができずに続ける。",
+    "direction": 1,
+    "intended_content": "有効でない取り組みの継続",
+    "review_note": "責任から継続が必要な状況と区別"
+   },
+   {
+    "id": "PSV04",
+    "trait": "PSV",
+    "text": "考え続けても解決に近づかないことを、同じように考え続ける。",
+    "direction": 1,
+    "intended_content": "解決につながらない思考の反復",
+    "review_note": "不安・反芻との重なり"
+   },
+   {
+    "id": "PSV05",
+    "trait": "PSV",
+    "text": "周囲の状況が変わった後も、最初に決めた方針から切り替えにくい。",
+    "direction": 1,
+    "intended_content": "状況変化への切り替えの難しさ",
+    "review_note": "一貫性や約束を守ることとの区別"
+   },
+   {
+    "id": "PRF01",
+    "trait": "PRF",
+    "text": "用件は満たせていても、細かな部分を直し続ける。",
+    "direction": 1,
+    "intended_content": "十分な状態でも修正を続ける",
+    "review_note": "職業上必要な品質管理との区別"
+   },
+   {
+    "id": "PRF02",
+    "trait": "PRF",
+    "text": "作業の仕上がりを確かめるうちに、予定していた時間を超える。",
+    "direction": 1,
+    "intended_content": "確認に時間をかける",
+    "review_note": "不安からの確認との重なり"
+   },
+   {
+    "id": "PRF04",
+    "trait": "PRF",
+    "text": "少しでも不十分なところがあると、そのまま人に見せるのをためらう。",
+    "direction": 1,
+    "intended_content": "不完全な状態を出しにくい",
+    "review_note": "評価への不安との重なり"
+   },
+   {
+    "id": "PRF05",
+    "trait": "PRF",
+    "text": "急ぐ必要があるときも、細部まで整えることを優先する。",
+    "direction": 1,
+    "intended_content": "状況より細部を優先",
+    "review_note": "実際の品質要件が影響"
+   },
+   {
+    "id": "HOS01",
+    "trait": "HOS",
+    "text": "相手のちょっとした言い方に、腹が立つ。",
+    "direction": 1,
+    "intended_content": "小さなきっかけでの怒り",
+    "review_note": "実際の侮辱・疲労の影響"
+   },
+   {
+    "id": "HOS03",
+    "trait": "HOS",
+    "text": "相手への不満が、声の強さや言葉のきつさに出る。",
+    "direction": 1,
+    "intended_content": "敵対的な感情表出",
+    "review_note": "本人の判断基準が影響"
+   },
+   {
+    "id": "HOS04",
+    "trait": "HOS",
+    "text": "相手に腹を立てると、相手が困るように振る舞いたくなる。",
+    "direction": 1,
+    "intended_content": "相手に不利益を与えたい反応",
+    "review_note": "実際の行動ではなく気持ちを問う"
+   },
+   {
+    "id": "HOS05",
+    "trait": "HOS",
+    "text": "意見がぶつかったとき、相手を責める言い方になる。",
+    "direction": 1,
+    "intended_content": "相手を責める反応",
+    "review_note": "意見の主張そのものとは分ける"
+   },
+   {
+    "id": "ATT01",
+    "trait": "ATT",
+    "text": "人が集まる場で、自分に注目が集まるように話題を選ぶ。",
+    "direction": 1,
+    "intended_content": "話題選びによる注目獲得",
+    "review_note": "司会などの役割が影響"
+   },
+   {
+    "id": "ATT02",
+    "trait": "ATT",
+    "text": "他の人に注目が集まると、自分にも話を向けたくなる。",
+    "direction": 1,
+    "intended_content": "自分に注目を戻す",
+    "review_note": "自然な会話参加との区別"
+   },
+   {
+    "id": "ATT03",
+    "trait": "ATT",
+    "text": "注目を集めるために、話し方や振る舞いを大げさにする。",
+    "direction": 1,
+    "intended_content": "大げさな表現で注目を得る",
+    "review_note": "表現力一般へ薄めないため改訂"
+   },
+   {
+    "id": "ATT05",
+    "trait": "ATT",
+    "text": "自分の話に反応が少ないと、さらに注意を引く話を足す。",
+    "direction": 1,
+    "intended_content": "注意を得るための話の追加",
+    "review_note": "会話を続ける配慮との区別"
+   },
+   {
+    "id": "MAN01",
+    "trait": "MAN",
+    "text": "頼みを通したいとき、相手への好意を実際よりも強く示す。",
+    "direction": 1,
+    "intended_content": "目的のための好意の演出",
+    "review_note": "一般的な愛想との区別"
+   },
+   {
+    "id": "MAN02",
+    "trait": "MAN",
+    "text": "自分に有利な選択をしてもらうため、相手に知らせる情報を絞る。",
+    "direction": 1,
+    "intended_content": "選択的な情報提示による誘導",
+    "review_note": "要点整理・守秘との区別"
+   },
+   {
+    "id": "MAN03",
+    "trait": "MAN",
+    "text": "相手をその気にさせるため、自分が本当に思っている以上に褒める。",
+    "direction": 1,
+    "intended_content": "目的のためのお世辞",
+    "review_note": "礼儀や応援との区別"
+   },
+   {
+    "id": "MAN04",
+    "trait": "MAN",
+    "text": "自分の狙いに気づかれないようにして、相手を望む行動へ導く。",
+    "direction": 1,
+    "intended_content": "狙いを隠した誘導",
+    "review_note": "欺瞞との重なり"
+   },
+   {
+    "id": "RSK01",
+    "trait": "RSK",
+    "text": "危険があると分かっていても、面白そうなら試してみたくなる。",
+    "direction": 1,
+    "intended_content": "危険を伴う行動への接近",
+    "review_note": "適切な挑戦や訓練された危険管理と区別する"
+   },
+   {
+    "id": "RSK02",
+    "trait": "RSK",
+    "text": "危険を避けられる場面でも、刺激を求めて危ない方を選ぶ。",
+    "direction": 1,
+    "intended_content": "必須ではない危険の選択",
+    "review_note": "自己申告した危険の認識に依存する"
+   },
+   {
+    "id": "RSK03",
+    "trait": "RSK",
+    "text": "退屈を感じると、危険を伴うことにも手を出したくなる。",
+    "direction": 1,
+    "intended_content": "退屈を埋めるための危険への接近",
+    "review_note": "衝動との重なりを点検する"
+   },
+   {
+    "id": "RSK04",
+    "trait": "RSK",
+    "text": "危険を指摘されても、自分なら大丈夫だと考えて進める。",
+    "direction": 1,
+    "intended_content": "自分への危険の過小評価",
+    "review_note": "実際の能力や経験との区別が必要"
+   },
+   {
+    "id": "CAL01",
+    "trait": "CAL",
+    "text": "相手がつらそうでも、その人の気持ちにはあまり関心が向かない。",
+    "direction": 1,
+    "intended_content": "他者の苦痛への関心の薄さ",
+    "review_note": "他者の状態に気づく力や感情表現の乏しさとは区別する"
+   },
+   {
+    "id": "CAL02",
+    "trait": "CAL",
+    "text": "自分の行動で相手を傷つけたと分かっても、申し訳なさはあまり感じない。",
+    "direction": 1,
+    "intended_content": "自分が与えた負担への後悔の乏しさ",
+    "review_note": "適切な境界設定と、不必要に傷つけることを区別する"
+   },
+   {
+    "id": "CAL03",
+    "trait": "CAL",
+    "text": "自分の目的が果たせるなら、相手が困ることは気にならない。",
+    "direction": 1,
+    "intended_content": "目的達成時の他者の不利益への無関心",
+    "review_note": "利害対立に伴う正当な選択との区別が必要"
+   },
+   {
+    "id": "CAL04",
+    "trait": "CAL",
+    "text": "相手が困っていると理解しても、力になりたいという気持ちはあまり起きない。",
+    "direction": 1,
+    "intended_content": "他者の困難への配慮の薄さ",
+    "review_note": "支援できる余力がないことと、気持ちが起きないことの区別を確認"
+   }
+  ],
+  "result_engine_status": "twelve_trait_core_and_balanced_character_candidate_v0_3",
+  "changes_from_v03": {
+   "removed_ids": [
+    "ANX04",
+    "ATT04",
+    "HOS02",
+    "MAN05",
+    "PRF03",
+    "PSV03",
+    "SUS04",
+    "WDR01"
+   ],
+   "reworded_ids": [
+    "ANX02",
+    "IMP03"
+   ],
+   "added_ids": [
+    "RSK01",
+    "RSK02",
+    "RSK03",
+    "RSK04",
+    "CAL01",
+    "CAL02",
+    "CAL03",
+    "CAL04"
+   ]
+  },
+  "scoring_note": "各特性の回答平均を換算。項目数が異なるため合計値で比較しない。得点は当てはまりの指標であり、異なる特性の臨床的な強さが等しいとは保証しない。"
+ },
+ "core": {
+  "version": "jagan-twelve-trait-core-0.2.0-candidate",
+  "status": "design_candidate_not_empirically_validated",
+  "launch_ready": false,
+  "trait_score": "25*(mean-1)",
+  "isou_minimum_candidate": 60,
+  "near_gap_candidate": 5,
+  "elements": [
+   {
+    "id": "PY",
+    "label": "炎",
+    "weights": {
+     "HOS": 0.45,
+     "IMP": 0.25,
+     "RSK": 0.3
+    }
+   },
+   {
+    "id": "HY",
+    "label": "水",
+    "weights": {
+     "SEP": 0.5,
+     "ANX": 0.3,
+     "SUS": 0.2
+    }
+   },
+   {
+    "id": "CR",
+    "label": "氷",
+    "weights": {
+     "WDR": 0.45,
+     "SUS": 0.3,
+     "CAL": 0.25
+    }
+   },
+   {
+    "id": "EL",
+    "label": "雷",
+    "weights": {
+     "IMP": 0.4,
+     "RSK": 0.4,
+     "ATT": 0.2
+    }
+   },
+   {
+    "id": "AN",
+    "label": "風",
+    "weights": {
+     "WDR": 0.35,
+     "ANX": 0.4,
+     "RSK": 0.25
+    }
+   },
+   {
+    "id": "GE",
+    "label": "岩",
+    "weights": {
+     "PRF": 0.45,
+     "MAN": 0.35,
+     "PSV": 0.2
+    }
+   },
+   {
+    "id": "DE",
+    "label": "草",
+    "weights": {
+     "PSV": 0.45,
+     "SUS": 0.3,
+     "PRF": 0.25
+    }
+   }
+  ],
+  "character_status": "partial_story_reference_fixed_balance_candidate_v0_3",
+  "reference_note": "元素係数・閾値は独自の演出設計。学術的な標準値ではない。"
+ },
+ "characters": {
+  "version": "jagan-character-balance-0.8.0-candidate",
+  "status": "synthetic_calibration_candidate",
+  "launch_ready": false,
+  "axes": [
+   "ANX",
+   "SEP",
+   "SUS",
+   "WDR",
+   "IMP",
+   "PSV",
+   "PRF",
+   "HOS",
+   "ATT",
+   "MAN",
+   "RSK",
+   "CAL"
+  ],
+  "mapped_axes": [
+   "CAL",
+   "HOS",
+   "IMP",
+   "MAN",
+   "PSV",
+   "RSK",
+   "SUS",
+   "WDR"
+  ],
+  "anchor_agreement_weight": 0.75,
+  "salience_coverage_weight": 0.25,
+  "salience_start": 50,
+  "minimum_mapped_spread": 10,
+  "similarity_display": "adjusted_score_including_balance_offset_clamped_0_100",
+  "selection": "raw_association_score_plus_fixed_balance_offset_ranked_and_displayed",
+  "unknown_handling": "excluded_not_imputed",
+  "characters": [
+   {
+    "id": "pierro",
+    "name": "ピエロ",
+    "title": "道化",
+    "tags": [
+     "喪失",
+     "反逆"
+    ],
+    "anchors": {
+     "HOS": 65,
+     "PSV": 85
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "SUS",
+     "WDR",
+     "IMP",
+     "PRF",
+     "ATT",
+     "MAN",
+     "RSK",
+     "CAL"
+    ],
+    "rationale": "「嗤笑の面」：祖国の災厄を阻止できなかった苦痛と、天理を書き換える対抗の意志が長く続く。長期の対抗を手放さないことを固執（強く高め）、不条理への怒りを敵意（やや高め）に置く。天理への不信を対人の猜疑には変換しない。",
+    "region_label": "カーンルイア",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/嗤笑の面"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": 0.64777871
+   },
+   {
+    "id": "capitano",
+    "name": "カピターノ",
+    "title": "隊長",
+    "tags": [
+     "責務",
+     "献身"
+    ],
+    "anchors": {
+     "HOS": 25,
+     "CAL": 25,
+     "IMP": 25
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "SUS",
+     "WDR",
+     "PSV",
+     "PRF",
+     "ATT",
+     "MAN",
+     "RSK"
+    ],
+    "rationale": "任務「燃ゆる運命の虹光」：対立した相手とも、帰る場所のない魂とナタの希望のために協力を選ぶ。対立後に敵対を続けないことを敵意（低め）、他者の苦しみに向けた行動を冷淡（低め）、状況を見て協力を選ぶ判断を衝動（低め）に置く。献身や共感能力は推定しない。",
+    "region_label": "カーンルイア",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/「隊長」"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": -5.84482846
+   },
+   {
+    "id": "dottore",
+    "name": "ドットーレ",
+    "title": "博士",
+    "tags": [
+     "探究",
+     "操作"
+    ],
+    "anchors": {
+     "MAN": 85,
+     "CAL": 85
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "SUS",
+     "WDR",
+     "IMP",
+     "PSV",
+     "PRF",
+     "HOS",
+     "ATT",
+     "RSK"
+    ],
+    "rationale": "「夜を飛ぶ鳥は三段へと落ちる」：真相を隠した説明で散兵の認識を誘導し、丹羽の殺害や心臓の利用など他者を実験の手段として扱う。「良医の羽」も人間を改造可能な機械として捉える。操作・冷淡とも強く高めに置く。探究心とは混同しない。",
+    "region_label": "スメール",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/「博士」"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": 1.12047244
+   },
+   {
+    "id": "columbina",
+    "name": "コロンビーナ",
+    "title": "少女",
+    "tags": [
+     "孤独",
+     "帰属"
+    ],
+    "anchors": {
+     "HOS": 25,
+     "CAL": 35
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "SUS",
+     "WDR",
+     "IMP",
+     "PSV",
+     "PRF",
+     "ATT",
+     "MAN",
+     "RSK"
+    ],
+    "rationale": "キャラクターストーリー2：対等な同僚関係を新鮮に受け止め、期待される役割と自分自身のずれに悲しみを覚える。周囲へ敵意を向けないことを敵意（低め）、関係を大切に受け止めることを冷淡（やや低め）に置く。孤独を撤退、関係への希望を依存とはしない。",
+    "region_label": "ナドクライ",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/コロンビーナ/プロフィール"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": -6.21722196
+   },
+   {
+    "id": "arlecchino",
+    "name": "アルレッキーノ",
+    "title": "召使",
+    "tags": [
+     "庇護",
+     "統制"
+    ],
+    "anchors": {
+     "MAN": 75,
+     "IMP": 25,
+     "CAL": 35
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "SUS",
+     "WDR",
+     "PSV",
+     "PRF",
+     "HOS",
+     "ATT",
+     "RSK"
+    ],
+    "rationale": "プロフィール・ボイス：壁炉の家を統率し、子供たちに敬慕と恐怖の両方を向けられる。博士による子供の実験利用は強く拒む。家の規律で人を動かすことを操作（高め）、感情を認識して扱う姿勢を衝動（低め）、身内を守る姿勢を冷淡（やや低め。身内に限る）に置く。",
+    "region_label": "フォンテーヌ",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/アルレッキーノ/プロフィール"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": 2.90173506
+   },
+   {
+    "id": "pulcinella",
+    "name": "プルチネッラ",
+    "title": "雄鶏",
+    "tags": [
+     "庇護",
+     "交渉"
+    ],
+    "anchors": {
+     "MAN": 75
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "SUS",
+     "WDR",
+     "IMP",
+     "PSV",
+     "PRF",
+     "HOS",
+     "ATT",
+     "RSK",
+     "CAL"
+    ],
+    "rationale": "アルレッキーノの評価：少ない代価で利益を得る手腕と、壁炉の家を交渉の材料にする姿勢。タルタリヤは家族への世話を好意的に、放浪者は支配の手段と受け止める。相手を望む方向へ導くことを操作（高め）に置く。評価はいずれも他の人物によるもの。",
+    "region_label": "スネージナヤ",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/「雄鶏」"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": -0.01438552
+   },
+   {
+    "id": "scaramouche",
+    "name": "スカラマシュ",
+    "title": "散兵",
+    "tags": [
+     "拒絶",
+     "反逆"
+    ],
+    "anchors": {
+     "HOS": 85,
+     "SUS": 85
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "WDR",
+     "IMP",
+     "PSV",
+     "PRF",
+     "ATT",
+     "MAN",
+     "RSK",
+     "CAL"
+    ],
+    "rationale": "「夜を飛ぶ鳥は三段へと落ちる」（執行官期）：丹羽の裏切りだと理解した出来事への怒りと復讐、人や神への不信。後にその理解は博士の工作によるものと判明する。敵意・猜疑とも強く高めに置く（本人の受け止めとして）。放浪者期とは分ける。",
+    "region_label": "稲妻",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/「散兵」"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": 0.96414555
+   },
+   {
+    "id": "sandrone",
+    "name": "サンドローネ",
+    "title": "傀儡",
+    "tags": [
+     "没頭",
+     "執着"
+    ],
+    "anchors": {
+     "WDR": 65,
+     "HOS": 65
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "SUS",
+     "IMP",
+     "PSV",
+     "PRF",
+     "ATT",
+     "MAN",
+     "RSK",
+     "CAL"
+    ],
+    "rationale": "アルレッキーノの評価・公開プロフィール：研究に没頭し、公の場に姿を現さない一方、友人との関わりもある。苛立ちを示す描写がある。人前から退くことを撤退（やや高め）、苛立ちを敵意（やや高め）に置く。没頭そのものは撤退としない。",
+    "region_label": "フォンテーヌ",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/「傀儡」"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": 0.52381462
+   },
+   {
+    "id": "signora",
+    "name": "シニョーラ",
+    "title": "淑女",
+    "tags": [
+     "喪失",
+     "憤怒"
+    ],
+    "anchors": {
+     "HOS": 85,
+     "PSV": 65
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "SUS",
+     "WDR",
+     "IMP",
+     "PRF",
+     "ATT",
+     "MAN",
+     "RSK",
+     "CAL"
+    ],
+    "rationale": "「無垢の花」・モンドの任務：過去を氷で封じても消えない炎と、世界の歪みを生むものを排除する目的。旅人たちを待ち伏せし神の心を奪う。怒りを行動に移すことを敵意（強く高め）、消えない炎を抱え続けることを固執（やや高め）に置く。外交の能力や悲嘆からは操作・冷淡を推定しない。",
+    "region_label": "モンド",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/シニョーラ"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": 2.05331984
+   },
+   {
+    "id": "pantalone",
+    "name": "パンタローネ",
+    "title": "富者",
+    "tags": [
+     "掌握",
+     "野心"
+    ],
+    "anchors": {
+     "MAN": 75,
+     "HOS": 65
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "SUS",
+     "WDR",
+     "IMP",
+     "PSV",
+     "PRF",
+     "ATT",
+     "RSK",
+     "CAL"
+    ],
+    "rationale": "「停頓の時」・アルレッキーノの評価：金銭の流れを掌握し、自分の意志で止められる立場を求める。アルレッキーノは計画の背後に憎しみと嫌悪があると評する。物事を自分の計画へ動かすことを操作（高め）、評される憎しみを敵意（やや高め）に置く。経済の掌握と対人の操作の違いに注意する。",
+    "region_label": "璃月",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/「富者」"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": 2.46036698
+   },
+   {
+    "id": "tartaglia",
+    "name": "タルタリヤ",
+    "title": "公子",
+    "tags": [
+     "闘争",
+     "挑戦"
+    ],
+    "anchors": {
+     "RSK": 85,
+     "IMP": 35
+    },
+    "unknown_axes": [
+     "ANX",
+     "SEP",
+     "SUS",
+     "WDR",
+     "PSV",
+     "PRF",
+     "HOS",
+     "ATT",
+     "MAN",
+     "CAL"
+    ],
+    "rationale": "キャラクターストーリー1・4：危険な秘境や強敵への挑戦、少年期からの闘争への傾き。一方で、責任への覚悟と慎重さ、約束を果たす姿勢も描かれる。危険への接近を危険志向（強く高め）、慎重さを衝動（やや低め）に置く。",
+    "region_label": "スネージナヤ",
+    "source_urls": [
+     "https://genshin-impact.fandom.com/ja/wiki/タルタリヤ/プロフィール"
+    ],
+    "reference_origin": "authored_story_association_not_measured_character_trait",
+    "confidence": "interpretive_not_validated",
+    "selection_offset": 1.40480273
+   }
+  ],
+  "calibration": {
+   "seed": 20261103,
+   "baseline": "four_equal_synthetic_cohorts",
+   "train_n": 33000,
+   "eligible_train_n": 32997,
+   "temperature": 0.12,
+   "optimizer_success": true,
+   "not_live_user_distribution": true,
+   "target_share": 0.09090909090909091,
+   "offset_mean": -8.074349270001139e-17,
+   "anchor_sha256": "5ccfbd3a96235748ae96dc90c1232a4e3da0dbdbb95e87f46bd51ccd7aa05524"
+  },
+  "coverage_prior": 0.5,
+  "coverage_prior_strength": 20,
+  "coverage_note": "目立つ特性（50点超）の割合は、事前値0.5へ強さ20で寄せたなだらかな値。目立つ特性がない回答と、照合外の特性がわずかに50を超える回答の境界で一致度が急変しないようにする（0.7.0）。",
+  "anchor_scale": "編集上の段階：強く高め85／高め75／やや高め65／やや低め35／低め25（2026-11-10、描写のある特性だけに置く）"
+ },
+ "product": {
+  "status": "implementation_candidate",
+  "product_key": "jagan_report_v1",
+  "currency": "JPY",
+  "price": 1000,
+  "price_status": "confirmed",
+  "sales_open": true,
+  "scope": "one_result_report",
+  "free_result_enabled": true,
+  "external_data_analysis": false,
+  "fulfillment": "authenticated_web_report_proposal",
+  "existing_eti_entitlement_grants_access": false,
+  "billing": "one_time",
+  "product_count": 1
+ },
+ "dti": {
+  "version": "dti-naming-v1-20261104",
+  "system": "DTI",
+  "english": "Delusion Type Indicator",
+  "japanese": "邪眼タイプ指標",
+  "elements": [
+   {
+    "id": "PY",
+    "label": "炎"
+   },
+   {
+    "id": "HY",
+    "label": "水"
+   },
+   {
+    "id": "CR",
+    "label": "氷"
+   },
+   {
+    "id": "EL",
+    "label": "雷"
+   },
+   {
+    "id": "AN",
+    "label": "風"
+   },
+   {
+    "id": "GE",
+    "label": "岩"
+   },
+   {
+    "id": "DE",
+    "label": "草"
+   }
+  ],
+  "aspects": [
+   {
+    "trait_id": "ANX",
+    "code": "AX",
+    "label": "不安"
+   },
+   {
+    "trait_id": "SEP",
+    "code": "DP",
+    "label": "依存"
+   },
+   {
+    "trait_id": "SUS",
+    "code": "SU",
+    "label": "猜疑"
+   },
+   {
+    "trait_id": "WDR",
+    "code": "WD",
+    "label": "撤退"
+   },
+   {
+    "trait_id": "IMP",
+    "code": "IM",
+    "label": "衝動"
+   },
+   {
+    "trait_id": "PSV",
+    "code": "PE",
+    "label": "固執"
+   },
+   {
+    "trait_id": "PRF",
+    "code": "PF",
+    "label": "完璧"
+   },
+   {
+    "trait_id": "HOS",
+    "code": "HO",
+    "label": "敵意"
+   },
+   {
+    "trait_id": "ATT",
+    "code": "AT",
+    "label": "顕示"
+   },
+   {
+    "trait_id": "MAN",
+    "code": "MN",
+    "label": "操作"
+   },
+   {
+    "trait_id": "RSK",
+    "code": "RK",
+    "label": "危険志向"
+   },
+   {
+    "trait_id": "CAL",
+    "code": "CL",
+    "label": "冷淡"
+   }
+  ],
+  "patterns": [
+   {
+    "code": "PYAX",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "ANX",
+    "aspect_code": "AX",
+    "aspect": "不安",
+    "name": "焦燥者"
+   },
+   {
+    "code": "HYAX",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "ANX",
+    "aspect_code": "AX",
+    "aspect": "不安",
+    "name": "憂溺者"
+   },
+   {
+    "code": "CRAX",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "ANX",
+    "aspect_code": "AX",
+    "aspect": "不安",
+    "name": "凍心者"
+   },
+   {
+    "code": "ELAX",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "ANX",
+    "aspect_code": "AX",
+    "aspect": "不安",
+    "name": "震慄者"
+   },
+   {
+    "code": "ANAX",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "ANX",
+    "aspect_code": "AX",
+    "aspect": "不安",
+    "name": "迷走者"
+   },
+   {
+    "code": "GEAX",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "ANX",
+    "aspect_code": "AX",
+    "aspect": "不安",
+    "name": "憂塞者"
+   },
+   {
+    "code": "DEAX",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "ANX",
+    "aspect_code": "AX",
+    "aspect": "不安",
+    "name": "憂根者"
+   },
+   {
+    "code": "PYDP",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "SEP",
+    "aspect_code": "DP",
+    "aspect": "依存",
+    "name": "焦恋者"
+   },
+   {
+    "code": "HYDP",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "SEP",
+    "aspect_code": "DP",
+    "aspect": "依存",
+    "name": "縋望者"
+   },
+   {
+    "code": "CRDP",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "SEP",
+    "aspect_code": "DP",
+    "aspect": "依存",
+    "name": "凍縁者"
+   },
+   {
+    "code": "ELDP",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "SEP",
+    "aspect_code": "DP",
+    "aspect": "依存",
+    "name": "繋雷者"
+   },
+   {
+    "code": "ANDP",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "SEP",
+    "aspect_code": "DP",
+    "aspect": "依存",
+    "name": "逐影者"
+   },
+   {
+    "code": "GEDP",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "SEP",
+    "aspect_code": "DP",
+    "aspect": "依存",
+    "name": "縛縁者"
+   },
+   {
+    "code": "DEDP",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "SEP",
+    "aspect_code": "DP",
+    "aspect": "依存",
+    "name": "絡根者"
+   },
+   {
+    "code": "PYSU",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "SUS",
+    "aspect_code": "SU",
+    "aspect": "猜疑",
+    "name": "疑焔者"
+   },
+   {
+    "code": "HYSU",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "SUS",
+    "aspect_code": "SU",
+    "aspect": "猜疑",
+    "name": "疑潮者"
+   },
+   {
+    "code": "CRSU",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "SUS",
+    "aspect_code": "SU",
+    "aspect": "猜疑",
+    "name": "疑氷者"
+   },
+   {
+    "code": "ELSU",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "SUS",
+    "aspect_code": "SU",
+    "aspect": "猜疑",
+    "name": "疑雷者"
+   },
+   {
+    "code": "ANSU",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "SUS",
+    "aspect_code": "SU",
+    "aspect": "猜疑",
+    "name": "疑風者"
+   },
+   {
+    "code": "GESU",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "SUS",
+    "aspect_code": "SU",
+    "aspect": "猜疑",
+    "name": "疑壁者"
+   },
+   {
+    "code": "DESU",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "SUS",
+    "aspect_code": "SU",
+    "aspect": "猜疑",
+    "name": "疑蔓者"
+   },
+   {
+    "code": "PYWD",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "WDR",
+    "aspect_code": "WD",
+    "aspect": "撤退",
+    "name": "灰隠者"
+   },
+   {
+    "code": "HYWD",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "WDR",
+    "aspect_code": "WD",
+    "aspect": "撤退",
+    "name": "潜淵者"
+   },
+   {
+    "code": "CRWD",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "WDR",
+    "aspect_code": "WD",
+    "aspect": "撤退",
+    "name": "閉氷者"
+   },
+   {
+    "code": "ELWD",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "WDR",
+    "aspect_code": "WD",
+    "aspect": "撤退",
+    "name": "雷隠者"
+   },
+   {
+    "code": "ANWD",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "WDR",
+    "aspect_code": "WD",
+    "aspect": "撤退",
+    "name": "逸風者"
+   },
+   {
+    "code": "GEWD",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "WDR",
+    "aspect_code": "WD",
+    "aspect": "撤退",
+    "name": "閉塞者"
+   },
+   {
+    "code": "DEWD",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "WDR",
+    "aspect_code": "WD",
+    "aspect": "撤退",
+    "name": "隠葉者"
+   },
+   {
+    "code": "PYIM",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "IMP",
+    "aspect_code": "IM",
+    "aspect": "衝動",
+    "name": "逸火者"
+   },
+   {
+    "code": "HYIM",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "IMP",
+    "aspect_code": "IM",
+    "aspect": "衝動",
+    "name": "奔流者"
+   },
+   {
+    "code": "CRIM",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "IMP",
+    "aspect_code": "IM",
+    "aspect": "衝動",
+    "name": "裂氷者"
+   },
+   {
+    "code": "ELIM",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "IMP",
+    "aspect_code": "IM",
+    "aspect": "衝動",
+    "name": "迸雷者"
+   },
+   {
+    "code": "ANIM",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "IMP",
+    "aspect_code": "IM",
+    "aspect": "衝動",
+    "name": "狂風者"
+   },
+   {
+    "code": "GEIM",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "IMP",
+    "aspect_code": "IM",
+    "aspect": "衝動",
+    "name": "砕岩者"
+   },
+   {
+    "code": "DEIM",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "IMP",
+    "aspect_code": "IM",
+    "aspect": "衝動",
+    "name": "乱芽者"
+   },
+   {
+    "code": "PYPE",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "PSV",
+    "aspect_code": "PE",
+    "aspect": "固執",
+    "name": "残火者"
+   },
+   {
+    "code": "HYPE",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "PSV",
+    "aspect_code": "PE",
+    "aspect": "固執",
+    "name": "滞潮者"
+   },
+   {
+    "code": "CRPE",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "PSV",
+    "aspect_code": "PE",
+    "aspect": "固執",
+    "name": "執氷者"
+   },
+   {
+    "code": "ELPE",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "PSV",
+    "aspect_code": "PE",
+    "aspect": "固執",
+    "name": "残雷者"
+   },
+   {
+    "code": "ANPE",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "PSV",
+    "aspect_code": "PE",
+    "aspect": "固執",
+    "name": "留風者"
+   },
+   {
+    "code": "GEPE",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "PSV",
+    "aspect_code": "PE",
+    "aspect": "固執",
+    "name": "執岩者"
+   },
+   {
+    "code": "DEPE",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "PSV",
+    "aspect_code": "PE",
+    "aspect": "固執",
+    "name": "執根者"
+   },
+   {
+    "code": "PYPF",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "PRF",
+    "aspect_code": "PF",
+    "aspect": "完璧",
+    "name": "鍛炎者"
+   },
+   {
+    "code": "HYPF",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "PRF",
+    "aspect_code": "PF",
+    "aspect": "完璧",
+    "name": "澄鏡者"
+   },
+   {
+    "code": "CRPF",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "PRF",
+    "aspect_code": "PF",
+    "aspect": "完璧",
+    "name": "凝晶者"
+   },
+   {
+    "code": "ELPF",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "PRF",
+    "aspect_code": "PF",
+    "aspect": "完璧",
+    "name": "律雷者"
+   },
+   {
+    "code": "ANPF",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "PRF",
+    "aspect_code": "PF",
+    "aspect": "完璧",
+    "name": "整風者"
+   },
+   {
+    "code": "GEPF",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "PRF",
+    "aspect_code": "PF",
+    "aspect": "完璧",
+    "name": "築城者"
+   },
+   {
+    "code": "DEPF",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "PRF",
+    "aspect_code": "PF",
+    "aspect": "完璧",
+    "name": "剪枝者"
+   },
+   {
+    "code": "PYHO",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "HOS",
+    "aspect_code": "HO",
+    "aspect": "敵意",
+    "name": "焚怒者"
+   },
+   {
+    "code": "HYHO",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "HOS",
+    "aspect_code": "HO",
+    "aspect": "敵意",
+    "name": "怒涛者"
+   },
+   {
+    "code": "CRHO",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "HOS",
+    "aspect_code": "HO",
+    "aspect": "敵意",
+    "name": "冷刃者"
+   },
+   {
+    "code": "ELHO",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "HOS",
+    "aspect_code": "HO",
+    "aspect": "敵意",
+    "name": "憤雷者"
+   },
+   {
+    "code": "ANHO",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "HOS",
+    "aspect_code": "HO",
+    "aspect": "敵意",
+    "name": "裂風者"
+   },
+   {
+    "code": "GEHO",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "HOS",
+    "aspect_code": "HO",
+    "aspect": "敵意",
+    "name": "破砦者"
+   },
+   {
+    "code": "DEHO",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "HOS",
+    "aspect_code": "HO",
+    "aspect": "敵意",
+    "name": "毒棘者"
+   },
+   {
+    "code": "PYAT",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "ATT",
+    "aspect_code": "AT",
+    "aspect": "顕示",
+    "name": "煌炎者"
+   },
+   {
+    "code": "HYAT",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "ATT",
+    "aspect_code": "AT",
+    "aspect": "顕示",
+    "name": "幻潮者"
+   },
+   {
+    "code": "CRAT",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "ATT",
+    "aspect_code": "AT",
+    "aspect": "顕示",
+    "name": "氷飾者"
+   },
+   {
+    "code": "ELAT",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "ATT",
+    "aspect_code": "AT",
+    "aspect": "顕示",
+    "name": "閃耀者"
+   },
+   {
+    "code": "ANAT",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "ATT",
+    "aspect_code": "AT",
+    "aspect": "顕示",
+    "name": "舞風者"
+   },
+   {
+    "code": "GEAT",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "ATT",
+    "aspect_code": "AT",
+    "aspect": "顕示",
+    "name": "誇塔者"
+   },
+   {
+    "code": "DEAT",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "ATT",
+    "aspect_code": "AT",
+    "aspect": "顕示",
+    "name": "華飾者"
+   },
+   {
+    "code": "PYMN",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "MAN",
+    "aspect_code": "MN",
+    "aspect": "操作",
+    "name": "繰炎者"
+   },
+   {
+    "code": "HYMN",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "MAN",
+    "aspect_code": "MN",
+    "aspect": "操作",
+    "name": "操潮者"
+   },
+   {
+    "code": "CRMN",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "MAN",
+    "aspect_code": "MN",
+    "aspect": "操作",
+    "name": "氷策者"
+   },
+   {
+    "code": "ELMN",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "MAN",
+    "aspect_code": "MN",
+    "aspect": "操作",
+    "name": "雷策者"
+   },
+   {
+    "code": "ANMN",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "MAN",
+    "aspect_code": "MN",
+    "aspect": "操作",
+    "name": "操風者"
+   },
+   {
+    "code": "GEMN",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "MAN",
+    "aspect_code": "MN",
+    "aspect": "操作",
+    "name": "掌握者"
+   },
+   {
+    "code": "DEMN",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "MAN",
+    "aspect_code": "MN",
+    "aspect": "操作",
+    "name": "操蔓者"
+   },
+   {
+    "code": "PYRK",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "RSK",
+    "aspect_code": "RK",
+    "aspect": "危険志向",
+    "name": "烈進者"
+   },
+   {
+    "code": "HYRK",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "RSK",
+    "aspect_code": "RK",
+    "aspect": "危険志向",
+    "name": "越瀬者"
+   },
+   {
+    "code": "CRRK",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "RSK",
+    "aspect_code": "RK",
+    "aspect": "危険志向",
+    "name": "薄氷者"
+   },
+   {
+    "code": "ELRK",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "RSK",
+    "aspect_code": "RK",
+    "aspect": "危険志向",
+    "name": "踏雷者"
+   },
+   {
+    "code": "ANRK",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "RSK",
+    "aspect_code": "RK",
+    "aspect": "危険志向",
+    "name": "越境者"
+   },
+   {
+    "code": "GERK",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "RSK",
+    "aspect_code": "RK",
+    "aspect": "危険志向",
+    "name": "崖行者"
+   },
+   {
+    "code": "DERK",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "RSK",
+    "aspect_code": "RK",
+    "aspect": "危険志向",
+    "name": "踏棘者"
+   },
+   {
+    "code": "PYCL",
+    "element_id": "PY",
+    "element": "炎",
+    "trait_id": "CAL",
+    "aspect_code": "CL",
+    "aspect": "冷淡",
+    "name": "灰心者"
+   },
+   {
+    "code": "HYCL",
+    "element_id": "HY",
+    "element": "水",
+    "trait_id": "CAL",
+    "aspect_code": "CL",
+    "aspect": "冷淡",
+    "name": "沈黙者"
+   },
+   {
+    "code": "CRCL",
+    "element_id": "CR",
+    "element": "氷",
+    "trait_id": "CAL",
+    "aspect_code": "CL",
+    "aspect": "冷淡",
+    "name": "凍情者"
+   },
+   {
+    "code": "ELCL",
+    "element_id": "EL",
+    "element": "雷",
+    "trait_id": "CAL",
+    "aspect_code": "CL",
+    "aspect": "冷淡",
+    "name": "断雷者"
+   },
+   {
+    "code": "ANCL",
+    "element_id": "AN",
+    "element": "風",
+    "trait_id": "CAL",
+    "aspect_code": "CL",
+    "aspect": "冷淡",
+    "name": "空心者"
+   },
+   {
+    "code": "GECL",
+    "element_id": "GE",
+    "element": "岩",
+    "trait_id": "CAL",
+    "aspect_code": "CL",
+    "aspect": "冷淡",
+    "name": "石心者"
+   },
+   {
+    "code": "DECL",
+    "element_id": "DE",
+    "element": "草",
+    "trait_id": "CAL",
+    "aspect_code": "CL",
+    "aspect": "冷淡",
+    "name": "枯心者"
+   }
+  ]
+ }
+});
