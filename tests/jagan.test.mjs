@@ -54,9 +54,7 @@ test('the site engine returns exactly the spec runtime result for 2,000 varied a
   const fixtures = JSON.parse(fs.readFileSync(path.join(SPEC, 'parity-fixtures.json'), 'utf8'));
   for (const f of fixtures) {
     const got = characterRanking(f.scores, BUNDLE.characters);
-    // 0.5.0：補正は最も近い人物から selection_max_gap 点以内の人物にだけ使う
-    const mx = Math.max(...got.map((c) => c.score));
-    assert.equal(got.find((c) => c.score >= mx - BUNDLE.characters.selection_max_gap - 1e-9).id, f.winner);
+    assert.equal(got[0].id, f.winner);
     for (const c of got) assert.ok(Math.abs(c.score - f.raw[c.id]) < 1e-8);
   }
 });
@@ -370,7 +368,7 @@ test('the report renders all twelve traits, three groups, the character section 
   const rep = renderReport(sampleResult(), BUNDLE);
   for (const t of BUNDLE.items.traits) assert.ok(rep.includes(TRAIT_COPY[t.id].meaning), t.id);
   for (const g of GROUPS) assert.ok(rep.includes(g.en), g.id);
-  assert.ok(rep.includes('順位と一致度の大小が一致しないことがあります'));
+  assert.ok(rep.includes('順位は一致度の高い順です'));
   assert.ok(rep.includes('未対応の特性は、中立値で補わず'));
   const flat = renderReport(run(all(3)), BUNDLE);
   assert.ok(flat.includes('人物の判定を保留'));
@@ -927,10 +925,10 @@ test('完全解析 DIPPER：06＝比較の要点（近さに寄与した特性�
     for (const k of ['あなたの回答に出ている特徴', 'その人物と重なる反応', '読み方を支える原作の場面', 'その人物と異なるところ', '自分の日常で確かめる問い', '照合に使う特性']) assert.ok(p16.includes(k), k);
     assert.ok(!/あなた\d|参照\s?\d|dp-mvals/.test(p16), '16 は数値ではなく文章で');
     // 一覧は表示する一致度の順（丸め前の値で降順）、あなたのファトゥスは最も近い人物から 5 ポイント以内
-    // 順位は 11名が偏りなく現れるよう補正した順。1位＝あなたのファトゥス、どの順位も残りの最上位の一致度から {gap} 以内
+    // 順位と一致度は同じ値（0.6.0）。1位＝あなたのファトゥス
     const fl = buildComplete(result, BUNDLE).fatui;
     if (result.character.status === 'available') { assert.ok(fl[0].selected); assert.equal(fl[0].id, result.character.id); }
-    for (let i = 0; i < fl.length; i++) assert.ok(fl[i].raw >= Math.max(...fl.slice(i).map((f) => f.raw)) - BUNDLE.characters.selection_max_gap - 1e-9);
+    for (let i = 1; i < fl.length; i++) { assert.ok(fl[i - 1].adj >= fl[i].adj - 1e-9); assert.ok(fl[i - 1].match >= fl[i].match, '順位が上の人物ほど一致度が高い（同じ値を含む）'); }
     assert.ok(!/寄与 \d|[>（]重み ?\d|計算上の重み/.test(html));
     const m = buildComplete(result, BUNDLE);
     const qs = m.mirror.people.map((p) => p.question);
@@ -960,7 +958,7 @@ test('完全解析 DIPPER：回答パターン（全体に低い・高い・中�
     }
     for (const e of m.elements) for (const mm of text.matchAll(new RegExp(`(?<![一-龯])${e.label}(\\d{1,3})(?![\\d%％])`, 'g'))) assert.equal(+mm[1], e.score, `${name}: ${e.label}${mm[1]}`);
     assert.ok(!/圧倒的|非常に強い|相乗効果|増幅/.test(text), name);
-    const fl = m.fatui; for (let i = 0; i < fl.length; i++) assert.ok(fl[i].raw >= Math.max(...fl.slice(i).map((f) => f.raw)) - BUNDLE.characters.selection_max_gap - 1e-9, name);
+    const fl = m.fatui; for (let i = 1; i < fl.length; i++) assert.ok(fl[i - 1].match >= fl[i].match, name);
   }
   // 同じ邪眼×異相でも、他の特性の配置が違えば「あなたの場合」の文が変わる
   const a = buildComplete(computeDiagnosis({ answers: pats.水依存A, resultId: 'a', itemSetVersion: BUNDLE.items.item_set_version }, BUNDLE), BUNDLE);

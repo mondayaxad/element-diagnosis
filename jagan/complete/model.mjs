@@ -2,7 +2,7 @@
 //   画面（view.mjs）はこの中身だけを使う。数値・順位はすべて結果と同じ版の計算から取る（新しい採点はしない）。
 //   ・邪眼元素の全体順位：result.element.ranking（1位の選定と同じ規則）
 //   ・異相の全体順位：orderIsou（1位は必ず result.isou と同じ）
-//   ・ファトゥスの順位：result.characterOrder（50問の回答から、11名が偏りなく現れるよう補正した順位。1位＝あなたのファトゥス）
+//   ・ファトゥスの順位と一致度：result.characterOrder（50問の回答から、11名が偏りなく現れるよう補正した値の高い順。表示する一致度も同じ値。1位＝あなたのファトゥス）
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
@@ -35,7 +35,7 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
     const meta = bundle.characters.characters.find((x) => x.id === c.id);
     return {
       id: c.id, name: c.name, rank: i + 1, title: meta.title, tags: meta.tags, region: meta.region_label,
-      match: Math.round(c.rawSimilarity), raw: c.rawSimilarity,
+      match: c.displayScore, raw: c.rawSimilarity, adj: c.adjustedScore,
       // 人物名の色：オーナー指定の組み合わせ（マイページと同じ）。黒で終わる人物は、文字が読める暗さまで
       // 人物名の文字色だけは、オーナー指定の組み合わせ（マイページと同じ）を使う。元素の札や、邪眼との結びつけはレポートで扱わない（2026-11-08 オーナー指定）
       elements: (FATUI_TONE[c.id] || []).map((k) => (ELEMENT_COLOR[k] ? ELEMENT_COLOR[k].main : FATUI_TONE_EXTRA[k] === FATUI_TONE_EXTRA.BLACK ? '#7a2a2a' : FATUI_TONE_EXTRA[k])),

@@ -67,12 +67,13 @@
         "反逆"
       ],
       "region": "カーンルイア",
-      "match": 100,
+      "match": 99,
       "rawSimilarity": 100,
+      "adjustedScore": 99.06890134,
       "usedAxes": [
         "HOS"
       ],
-      "selectionMethod": "fixed_balance_offset_within_gap",
+      "selectionMethod": "fixed_balance_offset_displayed",
       "rawGap": 0
     },
     "semanticCheck": true
@@ -147,14 +148,15 @@
         "献身"
       ],
       "region": "カーンルイア",
-      "match": 94,
+      "match": 90,
       "rawSimilarity": 93.50480947161671,
+      "adjustedScore": 89.5251919516167,
       "usedAxes": [
         "IMP",
         "CAL",
         "HOS"
       ],
-      "selectionMethod": "fixed_balance_offset_within_gap",
+      "selectionMethod": "fixed_balance_offset_displayed",
       "rawGap": 0
     },
     "semanticCheck": true
@@ -228,13 +230,14 @@
         "操作"
       ],
       "region": "スメール",
-      "match": 93,
+      "match": 97,
       "rawSimilarity": 92.5,
+      "adjustedScore": 96.6500107,
       "usedAxes": [
         "MAN",
         "CAL"
       ],
-      "selectionMethod": "fixed_balance_offset_within_gap",
+      "selectionMethod": "fixed_balance_offset_displayed",
       "rawGap": 0
     },
     "semanticCheck": true
@@ -309,13 +312,14 @@
         "帰属"
       ],
       "region": "ナドクライ",
-      "match": 85,
+      "match": 80,
       "rawSimilarity": 85,
+      "adjustedScore": 80.25725772,
       "usedAxes": [
         "HOS",
         "CAL"
       ],
-      "selectionMethod": "fixed_balance_offset_within_gap",
+      "selectionMethod": "fixed_balance_offset_displayed",
       "rawGap": 0
     },
     "semanticCheck": true
@@ -391,14 +395,15 @@
         "統制"
       ],
       "region": "フォンテーヌ",
-      "match": 91,
+      "match": 93,
       "rawSimilarity": 90.81441346456307,
+      "adjustedScore": 92.63721736456307,
       "usedAxes": [
         "MAN",
         "IMP",
         "CAL"
       ],
-      "selectionMethod": "fixed_balance_offset_within_gap",
+      "selectionMethod": "fixed_balance_offset_displayed",
       "rawGap": 0
     },
     "semanticCheck": true
@@ -473,10 +478,11 @@
       "region": "スネージナヤ",
       "match": 100,
       "rawSimilarity": 100,
+      "adjustedScore": 100.86379029,
       "usedAxes": [
         "MAN"
       ],
-      "selectionMethod": "fixed_balance_offset_within_gap",
+      "selectionMethod": "fixed_balance_offset_displayed",
       "rawGap": 0
     },
     "semanticCheck": true
@@ -550,13 +556,14 @@
         "反逆"
       ],
       "region": "稲妻",
-      "match": 90,
+      "match": 93,
       "rawSimilarity": 90.43933841201353,
+      "adjustedScore": 92.96443899201353,
       "usedAxes": [
         "HOS",
         "SUS"
       ],
-      "selectionMethod": "fixed_balance_offset_within_gap",
+      "selectionMethod": "fixed_balance_offset_displayed",
       "rawGap": 0
     },
     "semanticCheck": true
@@ -630,13 +637,14 @@
         "執着"
       ],
       "region": "フォンテーヌ",
-      "match": 86,
+      "match": 84,
       "rawSimilarity": 85.72042542650517,
+      "adjustedScore": 84.47912707650518,
       "usedAxes": [
         "WDR",
         "HOS"
       ],
-      "selectionMethod": "fixed_balance_offset_within_gap",
+      "selectionMethod": "fixed_balance_offset_displayed",
       "rawGap": 0
     },
     "semanticCheck": true
@@ -711,14 +719,15 @@
         "憤怒"
       ],
       "region": "モンド",
-      "match": 92,
+      "match": 95,
       "rawSimilarity": 91.89907412699017,
+      "adjustedScore": 94.72479408699017,
       "usedAxes": [
         "HOS",
         "MAN",
         "CAL"
       ],
-      "selectionMethod": "fixed_balance_offset_within_gap",
+      "selectionMethod": "fixed_balance_offset_displayed",
       "rawGap": 0
     },
     "semanticCheck": true
@@ -791,12 +800,13 @@
         "野心"
       ],
       "region": "璃月",
-      "match": 89,
+      "match": 91,
       "rawSimilarity": 88.75,
+      "adjustedScore": 91.02024484,
       "usedAxes": [
         "MAN"
       ],
-      "selectionMethod": "fixed_balance_offset_within_gap",
+      "selectionMethod": "fixed_balance_offset_displayed",
       "rawGap": 0
     },
     "semanticCheck": true
@@ -869,12 +879,13 @@
         "挑戦"
       ],
       "region": "スネージナヤ",
-      "match": 89,
+      "match": 85,
       "rawSimilarity": 88.75,
+      "adjustedScore": 85.18708652,
       "usedAxes": [
         "RSK"
       ],
-      "selectionMethod": "fixed_balance_offset_within_gap",
+      "selectionMethod": "fixed_balance_offset_displayed",
       "rawGap": 0
     },
     "semanticCheck": true

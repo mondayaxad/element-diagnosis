@@ -255,7 +255,7 @@ function whyCard(result, bundle) {
       ${constellation('#E2C08C', 'CONSTELLATION OF SHADOWS')}
       <p class="rx-text">${text}</p>
       ${bars.map(([label, v, c]) => `<div class="rx-sim" style="--sc:${c}"><p><span>${label}</span><b>${Math.round(v)}<small>%</small></b></p><span class="rx-sim-bar"><i style="width:${Math.max(0, Math.min(100, v)).toFixed(1)}%"></i></span></div>`).join('')}
-      <p class="jg-note">一致度は、この二つを合わせた近さです（補正を足す前の値）。比較に使えるのは、作品の描写から対応を置けた特性だけです。</p>
+      <p class="jg-note">一致度は、この二つを合わせた近さに、11名が偏りなく現れるよう人物ごとの小さな調整（±5ポイント以内）を加えた値です。比較に使えるのは、作品の描写から対応を置けた特性だけです。</p>
       <hr class="rx-hr">
       <p class="rx-h4">あなたの影の特性</p>
       ${locks(tendencyWords(result, bundle, null, 4))}
@@ -424,7 +424,7 @@ export function renderReport(result, bundle) {
         </div>`;
       }).join('')}
       <p class="rp-note">${esc(CHARACTER_GLOBAL_NOTICE)}15点・20点は説明のための設計値で、心理学上の基準ではありません。</p>
-      <p class="rp-note">順位は、人物ごとの出現の偏りを抑える固定の補正を含む選定の順です。一致度は補正を足す前の近さのため、順位と一致度の大小が一致しないことがあります。</p>
+      <p class="rp-note">順位は一致度の高い順です。一致度には、11名が偏りなく現れるよう人物ごとの小さな調整（±5ポイント以内）を含みます。</p>
     </section>`;
   }
 

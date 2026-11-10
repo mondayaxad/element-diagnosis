@@ -1,7 +1,7 @@
 // jagan/engine/runtime.mjs — 画面・API・保存が使う結果の形（DTI：邪眼元素×異相＝4文字コードと漢字三文字の呼び名）。
 //   ・12特性の得点・人物の選定（固定の均等補正・保留条件）は judge.mjs（基礎 v0.3 の runtime と同じ計算）。
 //   ・異相・邪眼元素は dti.mjs の規則で必ず一つずつ選ぶ（基礎 v0.3 の「未顕・複合・未分化」は使わない。2026-11-04 指示書）。
-//   ・人物の「一致度」は補正を足す前の近さ（match）。順位（characterOrder）は11名が偏りなく現れるよう補正した順。DTI のコード・呼び名は人物判定に使わない。
+//   ・人物の「一致度」と順位は、11名が偏りなく現れるよう補正した同じ値（0.6.0）。DTI のコード・呼び名は人物判定に使わない。
 //   ・同じ50回答は、結果ID・時刻・人数・キー順によらず同じ結果になる。
 import { judge, rankTraits, ENGINE_VERSION as JUDGE_VERSION } from './judge.mjs';
 import { selectIsou, orderElements, dtiPattern } from './dti.mjs';
@@ -51,20 +51,12 @@ export function computeDiagnosis(input, bundle) {
   const p = dtiPattern(bundle.dti, element.id, isou.id);
   const dti = { code: p.code, name: p.name, elementCode: p.element_id, aspectCode: p.aspect_code, namingVersion: bundle.dti.version };
 
-  // 人物の順位（0.5.0）：50問の回答から算出し、11名が偏りなく現れるよう補正した順位。
-  //   1位は「あなたのファトゥス」（judge の選定と同じ）。2位以降も同じ規則で、残りの人物のうち一致度が最も高い人物から
-  //   selection_max_gap 以内の人物の中で、補正後の値が最も高い人物を順に選ぶ。そのため、どの順位も一致度の最上位から5ポイント以内に収まる。
-  //   表示する一致度（％）は補正前の近さ（丸め前で並べ替えはしない）。
-  const base = j.privateDiagnostics.characterRanking.map((c) => ({ id: c.id, name: c.name, rawSimilarity: c.score, displayScore: Math.round(c.score), agreement: c.agreement, coverage: c.coverage, usedAxes: c.usedAxes, sel: c.selectionScore }));
-  const gap = bundle.characters.selection_max_gap ?? Infinity;
-  const rest = [...base], characterOrder = [];
-  if (j.character) { const k = rest.findIndex((c) => c.id === j.character.id); characterOrder.push(rest.splice(k, 1)[0]); }
-  while (rest.length) {
-    const mx = Math.max(...rest.map((c) => c.rawSimilarity));
-    const pool = rest.filter((c) => c.rawSimilarity >= mx - gap - 1e-9).sort((a, b) => b.sel - a.sel || a.id.localeCompare(b.id));
-    characterOrder.push(rest.splice(rest.indexOf(pool[0]), 1)[0]);
-  }
-  characterOrder.forEach((c, i) => { c.rank = i + 1; c.selected = i === 0 && !!j.character; delete c.sel; });
+  // 人物の順位（0.6.0）：50問の回答から算出し、11名が偏りなく現れるよう補正した順位。1位は「あなたのファトゥス」。
+  //   表示する一致度（displayScore）は、順位に使う値（近さ＋±5ポイント以内の補正）そのもの。だから順位と一致度は前後しない。
+  //   rawSimilarity（補正前の近さ）は本文の判定には使わず、記録としてだけ残す。
+  const characterOrder = j.privateDiagnostics.characterRanking.map((c, i) => ({ id: c.id, name: c.name, rank: i + 1, rawSimilarity: c.score, adjustedScore: c.selectionScore, displayScore: Math.max(0, Math.min(100, Math.round(c.selectionScore))), agreement: c.agreement, coverage: c.coverage, usedAxes: c.usedAxes, selected: !!(j.character && j.character.id === c.id) }));
+  // 同点の人物を回答から決まる順で選んだ場合も、1位を選ばれた人物にそろえる
+  if (j.character && characterOrder[0].id !== j.character.id) { const k = characterOrder.findIndex((c) => c.id === j.character.id); characterOrder.unshift(characterOrder.splice(k, 1)[0]); characterOrder.forEach((c, i) => { c.rank = i + 1; }); }
   const winner = j.character && characterOrder.find((c) => c.id === j.character.id);
   const character = j.character
     ? { status: 'available', id: j.character.id, name: j.character.name, title: j.character.title, tags: j.character.tags, region: j.character.region, match: j.character.match, rawSimilarity: j.character.rawSimilarity, usedAxes: j.character.usedAxes, rawGap: j.character.rawGap, agreement: winner.agreement, coverage: winner.coverage }
