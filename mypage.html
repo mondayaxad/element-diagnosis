@@ -1000,6 +1000,21 @@
   .is-complete.state-insight { box-shadow: 0 0 14px color-mix(in srgb, var(--lc, var(--badge-c, #7ab8e8)) 18%, transparent), inset 0 0 18px color-mix(in srgb, var(--lc, var(--badge-c, #7ab8e8)) 8%, transparent); }
   .is-complete .mp-orn { border-color: color-mix(in srgb, var(--oc) 46%, transparent); }
   .is-complete .mp-orn .k { opacity: 1; box-shadow: 0 0 5px color-mix(in srgb, var(--oc) 60%, transparent); }
+  /* 邪眼の購入済みの枠：元素診断の明るい枠と見分けられるよう、元素の色を黒に寄せた深い色で縁取る */
+  .mp-rec[data-kind="jagan"].state-insight, .mp-latest[data-kind="jagan"].state-insight {
+    --jd: color-mix(in srgb, var(--lc, #c8405c) 52%, #000);
+    border-color: color-mix(in srgb, var(--jd) 80%, #1a1220);
+    background:
+      radial-gradient(ellipse 55% 140% at 0% 0%, color-mix(in srgb, var(--jd) 22%, transparent), transparent 70%),
+      radial-gradient(ellipse 45% 120% at 100% 100%, color-mix(in srgb, var(--jd) 14%, transparent), transparent 70%),
+      linear-gradient(165deg, color-mix(in srgb, var(--jd) 12%, #07060c), #07060c 65%);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--jd) 30%, transparent), inset 0 0 22px rgba(0,0,0,.45);
+  }
+  .mp-rec[data-kind="jagan"].state-insight[open] { background:
+      radial-gradient(ellipse 60% 220px at 0% 0%, color-mix(in srgb, var(--jd) 22%, transparent), transparent 75%),
+      linear-gradient(180deg, color-mix(in srgb, var(--jd) 10%, #07060c), #07060c 260px); }
+  [data-kind="jagan"].state-insight .mp-orn { --oc: color-mix(in srgb, var(--lc, #c8405c) 62%, #000) !important; --oc2: color-mix(in srgb, var(--lc2, #c8405c) 70%, #120a10) !important; }
+  [data-kind="jagan"].is-complete.state-insight { box-shadow: 0 0 14px color-mix(in srgb, var(--jd) 42%, transparent), inset 0 0 24px rgba(0,0,0,.5); }
   .is-complete .mp-emblem img { filter: drop-shadow(0 0 9px color-mix(in srgb, var(--c, #7ab8e8) 40%, transparent)); }
   .ca-rec-complete { margin-top: 12px; padding: 12px 14px 14px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--lc, #7ab8e8) 34%, var(--ca-line)); background: rgba(10, 12, 24, .5); }
   .ca-rec-complete .ca-body { margin-top: 6px; }
@@ -1677,7 +1692,10 @@ function mpComboHtml(r) {
   if (r && r.kind === 'jagan') {
     if (!r.el && !r.isou) return '—';
     const a = `<span class="mp-gt" style="color:${mpElText(r.el)};--gc:${mpElText(r.el)}">${r.el || '—'}</span>`;
-    return a + `<span class="mp-cw"><span class="mp-x">×</span><span class="mp-gt" style="color:${MP_JG_ISOU};--gc:${MP_JG_ISOU}">${r.isou || '—'}</span></span>`;
+    // 邪眼 × 異相 × ファトゥス（元素診断の「元素 × 武器 × 国」と同じ並べ方）
+    const fc = (r.fatui && r.fatui.tone && r.fatui.tone.text[0]) || MP_NEUTRAL;
+    const f = r.fatui ? `<span class="mp-cw"><span class="mp-x">×</span><span class="mp-gt" style="color:${fc};--gc:${fc}">${r.fatui.name}</span></span>` : '';
+    return a + `<span class="mp-cw"><span class="mp-x">×</span><span class="mp-gt" style="color:${MP_JG_ISOU};--gc:${MP_JG_ISOU}">${r.isou || '—'}</span></span>` + f;
   }
   const parts = [];
   if (r.el) parts.push(`<span class="mp-gt" style="color:${mpElText(r.el)};--gc:${mpElText(r.el)}">${r.el}</span>`);

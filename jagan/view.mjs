@@ -88,9 +88,10 @@ function radar(result, bundle, ids, color) {
   const pt = (i, r) => { const a = -Math.PI / 2 + (2 * Math.PI * i) / n; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; };
   const ring = (f) => ids.map((_, i) => pt(i, R * f).map((v) => v.toFixed(1)).join(',')).join(' ');
   const poly = ids.map((id, i) => pt(i, R * Math.max(0.04, result.traits[id].score / 100)).map((v) => v.toFixed(1)).join(',')).join(' ');
-  return `<svg class="rp-radar" viewBox="0 0 200 200">${[1, 0.66, 0.33].map((f) => `<polygon points="${ring(f)}" fill="none" stroke="rgba(255,255,255,.08)"/>`).join('')}
+  // 4文字の特性名（危険志向など）が枠外で見切れないよう、左右の名前は外向きに揃え、描画範囲も左右に広げる
+  return `<svg class="rp-radar" viewBox="-36 -4 272 208">${[1, 0.66, 0.33].map((f) => `<polygon points="${ring(f)}" fill="none" stroke="rgba(255,255,255,.08)"/>`).join('')}
     <polygon points="${poly}" fill="${color}" fill-opacity=".28" stroke="${color}"/>
-    ${ids.map((id, i) => { const [x, y] = pt(i, R + 18); return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle">${esc(traitLabel(bundle, id))}</text>`; }).join('')}</svg>`;
+    ${ids.map((id, i) => { const [x, y] = pt(i, R + 12); const anchor = x > cx + 4 ? 'start' : x < cx - 4 ? 'end' : 'middle'; return `<text x="${x.toFixed(1)}" y="${(y + (Math.abs(x - cx) < 4 ? (y < cy ? -4 : 4) : 0)).toFixed(1)}" text-anchor="${anchor}">${esc(traitLabel(bundle, id))}</text>`; }).join('')}</svg>`;
 }
 function groupPreview(_result, bundle, g) {
   const p = previewResult(bundle);
