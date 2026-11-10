@@ -1781,14 +1781,6 @@ function mpJaganInsightData(x) {
     fatui: x.fatui.map((f) => ({ name: mpEsc(f.name), match: mpNum(f.match), tone: mpTone(f.tone) })).filter((f) => f.match !== null),
   };
 }
-function mpJaganCompleteData(x) {
-  if (!x || !Array.isArray(x.elements) || !Array.isArray(x.domains)) return null;
-  const g = (t) => ({ label: mpEsc(t.label), score: mpNum(t.score), color: mpHex(t.color) || '#c99aa7' });
-  return {
-    elements: x.elements.map(g).filter((t) => t.score !== null),
-    domains: x.domains.map((d) => ({ label: mpEsc(d.label), color: mpHex(d.color) || '#c99aa7', traits: (d.traits || []).map(g).filter((t) => t.score !== null) })),
-  };
-}
 function mpTone(t) {
   const ok = t && mpHex(t.base) && Array.isArray(t.ring) && Array.isArray(t.text) && t.ring.concat(t.text).every(mpHex);
   return ok ? { base: t.base, ring: t.ring.slice(0, 2), text: t.text.slice(0, 2) } : null;
@@ -1909,7 +1901,6 @@ const MP_KINDS = {
         top3: Array.isArray(s.top3) ? s.top3.map((t) => ({ label: mpEsc(t.label), score: mpNum(t.score), color: mpHex(t.color) })).filter((t) => t.score !== null) : [],
         fatui: s.character && mpNum(s.character.match) !== null ? { name: mpEsc(s.character.name), match: mpNum(s.character.match), tone: mpTone(s.character.tone) } : null,
         insight: mpJaganInsightData(s.insight),
-        complete: mpJaganCompleteData(s.complete),
       };
     },
     freeListHtml(r) {
@@ -2777,16 +2768,15 @@ function mpJaganRowB(r, cls, source) {
   if (r.completeOwned) return `<a class="${cls}" href="/jagan/dipper?r=${encodeURIComponent(r.jg.id)}" onclick="trackEvent('jagan_complete_read',{source:'${source}'})">完全解析「DIPPER」を読む</a>`;
   return mpJaganBuyButton(r, 'complete', cls, source);
 }
-// 完全解析の予告（元素診断の BEYOND THE REPORT と同じ）。未購入の中身は、輪郭だけのゲージで見せる（実値は出さない）
-const MP_JG_DIPPER_LOCKED = [
-  ['邪眼×異相の重なり', 'あなたの影が表れる場面を、5段の流れで', 'jg-traits'],
-  ['上位3名のファトゥスとの交わり', 'あなたと重なる反応と、人物の姿', 'jg-fatui'],
-  ['四つの反応領域', '12特性を四つの領域で捉え直す', 'jg-ground'],
-  ['次の一手と読み直しの問い', '7日間の記録と、再読のための問い', 'jg-basis'],
+// 完全解析の三つの視点（元素診断の caLensBlockHtml と同じ並び・同じ部品。色線つきの3行と、統合の一文）
+const MP_JG_LENSES = [
+  ['SHADOW', '#f0a3b6', '邪眼×異相──あなたの影はどう表れるか'],
+  ['FATUI', '#c9a8f0', '上位3名のファトゥスとの交わり'],
+  ['NEXT', '#e2c08c', '四つの反応領域と、次の一手'],
 ];
-function mpJaganDipperLockedHtml() {
-  return `<div class="mp-locked-title">完全解析で読み解くもの</div>
-      ${MP_JG_DIPPER_LOCKED.map(([t, cap, d]) => `<div class="mp-locked-row" data-domain="${d}"><span class="txt"><span class="t">${t}</span><span class="cap">${cap}</span><span class="ghost" aria-hidden="true"></span></span></div>`).join('')}`;
+function mpJaganLensBlockHtml() {
+  return `<ul class="ca-lens-list" aria-label="完全解析の三つの視点">${MP_JG_LENSES.map(([en, c, d]) => `<li class="ca-lens" style="--lens-c:${c}"><span class="ca-lens-head"><span class="ca-lens-en">${en}</span></span><span class="ca-lens-desc">${d}</span></li>`).join('')}</ul>
+    <p class="ca-body ca-integration">三つの視点を、ひとつの記録へ結びます。解析レポートとは別の商品（全23ページ）です。</p>`;
 }
 const MP_JG_BEYOND_HTML = `<div class="mp-beyond" data-rec-beyond>
       <div class="mp-beyond-eyebrow">BEYOND THE REPORT｜この先にあるもの</div>
@@ -2801,7 +2791,7 @@ function mpJaganRevealHtml(id, inner) {
       <p class="mp-beyond-body"><b>三つの視点</b>から、この記録の影を最後まで読む。<b class="g">全23ページ</b>の完全解析「DIPPER」。</p>
       <button type="button" class="mp-reveal-toggle" aria-expanded="false" aria-controls="${safeId}" data-mp-reveal>その先を見る<span class="mp-reveal-chev" aria-hidden="true">⌄</span></button>
       <div class="mp-reveal-body" id="${safeId}" hidden>
-        <div class="mp-lockbox mp-jg-dipper-lock">${mpJaganDipperLockedHtml()}</div>
+        <div class="mp-reveal-lens">${mpJaganLensBlockHtml()}</div>
         ${inner}
       </div>
     </div>`;
@@ -2864,23 +2854,16 @@ function mpJaganReportCards(r) {
   }
   return cards;
 }
-// 完全解析を購入済み：邪眼の上位3つと、四つの反応領域（全特性の数値）
-function mpJaganCompleteCards(r) {
-  const x = r.complete;
-  if (!x) return [];
-  const cards = [];
-  if (x.elements.length) cards.push(`<div class="mp-insight-card mp-jg-card" style="--d1:${x.elements[0].color};--d2:#e2c08c"><div class="t">JAGAN｜邪眼の上位3つ</div>${x.elements.map(mpJaganGauge).join('')}<div class="n">七つの邪眼のうち、あなたの回答に強く表れた三つ</div></div>`);
-  x.domains.forEach((d) => cards.push(`<div class="mp-insight-card mp-jg-card" style="--d1:${d.color};--d2:${d.color}"><div class="t">${d.label}</div>${d.traits.map(mpJaganGauge).join('')}<div class="n">四つの反応領域のひとつ</div></div>`));
-  return cards;
-}
+// 完全解析を購入済み：元素診断と同じく、保存されていることだけを示す（中身のグラフは出さない。読むのは「完全解析を読む」から）
+const MP_JG_COMPLETE_SAVED = `<div class="ca-rec-complete is-ready"><div class="ca-rec-head"><span class="ca-eyebrow">COMPLETE｜完全解析</span><span class="ca-pages"><span class="ca-pages-ja">全23ページ</span><span class="ca-pages-en">DIPPER</span></span></div>
+      <p class="ca-body">この記録の完全解析が保存されています。</p></div>`;
 function mpJaganInsightHtml(r, where) {
   const src = where === 'latest' ? 'mypage_latest' : 'mypage_history';
   const a = r.purchased ? mpJaganReportCards(r) : [];
-  const b = r.completeOwned ? mpJaganCompleteCards(r) : [];
   return `
     <div class="mp-jg-insight">
       ${r.purchased ? `<div class="mp-insight-head">深く読み解いた記録</div>${a.length ? `<div class="mp-insight-grid">${a.join('')}</div>` : '<p class="mp-jg-insight-t">12特性のスコアと読み解き・三つの土台・判定根拠・近しいファトゥス3名を、いつでも読み返せます。</p>'}` : ''}
-      ${r.completeOwned ? `<div class="mp-insight-head mp-jg-complete-head">完全解析「DIPPER」の記録</div>${b.length ? `<div class="mp-insight-grid">${b.join('')}</div>` : '<p class="mp-jg-insight-t">全23ページの完全解析を、いつでも読み返せます。</p>'}` : ''}
+      ${r.completeOwned ? MP_JG_COMPLETE_SAVED : ''}
       ${r.purchased ? mpJaganActionsHtml(r, src) : mpJaganLockedHtml(r, where)}
     </div>`;
 }
@@ -2952,7 +2935,7 @@ function mpJaganSheetHtml(r) {
         ${known && !ownsA ? '<div class="ca-price-row"><span class="ca-meta">この記録の邪眼解析レポート</span><span class="ca-price">¥1,000</span></div>' : ''}
         <div class="mp-rec-row" data-rec-product="analysis">${known ? mpJaganRowA(r, ownsA ? 'mp-btn' : 'mp-btn primary mp-jg-cta', via) : mpJaganActionsHtml(r, via)}</div>
       </section>`;
-  const bInner = `<div class="mp-lockbox mp-jg-dipper-lock">${mpJaganDipperLockedHtml()}</div>
+  const bInner = `${mpJaganLensBlockHtml()}
         ${known && !ownsB ? '<div class="ca-price-row"><span class="ca-meta">この記録の完全解析（解析レポートとは別の商品）</span><span class="ca-price">¥3,000</span></div>' : ''}
         <div class="mp-rec-row" data-rec-product="complete">${known ? mpJaganRowB(r, ownsA && !ownsB ? 'mp-btn primary mp-jg-cta mp-cta-rich' : 'mp-btn', via) : ''}</div>`;
   const bDetail = known && !ownsA && !ownsB

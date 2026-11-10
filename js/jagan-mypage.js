@@ -75,22 +75,6 @@
     });
     return { groups: groups, fatui: fatui };
   }
-  // 完全解析を購入済みの記録だけ：マイページで開示する内容（邪眼の上位3つの得点・四つの反応領域の全特性）。未購入には作らない
-  var DOMAINS = [
-    { id: 'anx', label: '不安と対人警戒', color: '#A493C9', traits: ['ANX', 'SEP', 'SUS', 'WDR'] },
-    { id: 'imp', label: '衝動と刺激', color: '#D0704A', traits: ['IMP', 'RSK'] },
-    { id: 'per', label: '固執と基準', color: '#C2A35E', traits: ['PSV', 'PRF'] },
-    { id: 'rel', label: '他者への働きかけ', color: '#C8405C', traits: ['HOS', 'ATT', 'MAN', 'CAL'] },
-  ];
-  function completeOf(snap) {
-    var traits = snap.traits || {};
-    var rk = snap.element && Array.isArray(snap.element.ranking) ? snap.element.ranking : [];
-    var elements = rk.slice(0, 3).map(function (e) { return { id: e.id, label: e.label, score: Math.max(0, Math.min(100, Math.round(e.score))), color: ELEMENT_MAIN[e.id] || '#C99AA7' }; });
-    var domains = DOMAINS.map(function (d) {
-      return { id: d.id, label: d.label, color: d.color, traits: d.traits.map(function (id) { var t = traits[id]; return t && typeof t.score === 'number' ? { id: id, label: t.label, score: Math.max(0, Math.min(100, Math.round(t.score))), color: ISOU_COLOR[id] } : null; }).filter(Boolean) };
-    });
-    return { elements: elements, domains: domains };
-  }
   var notes = [];
   var inFlight = null;
 
@@ -189,7 +173,6 @@
       entKnown: ent.ok, purchased: ent.ok && !!(ent.set[row.result_id] && ent.set[row.result_id].report),
       completeOwned: ent.ok && !!(ent.set[row.result_id] && ent.set[row.result_id].complete),
       insight: dtiOk && ent.ok && ent.set[row.result_id] && ent.set[row.result_id].report ? insightOf(snap) : null,
-      complete: dtiOk && ent.ok && ent.set[row.result_id] && ent.set[row.result_id].complete ? completeOf(snap) : null,
     };
   }
 
