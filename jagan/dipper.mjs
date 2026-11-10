@@ -44,7 +44,10 @@ function render(report) {
   $('dpBook').innerHTML = note + html;
   fit(); addEventListener('resize', fit);
   const fill = () => fitPages($('dpBook'));
-  fill(); if (document.fonts) document.fonts.ready.then(fill);
+  fill();
+  // 字形（Web フォント）が後から届くと行の折り返しが変わり、合わせた倍率のままでは見切れる。フォントが届くたび・読み込み完了・少し後にも合わせ直す
+  if (document.fonts) { document.fonts.ready.then(fill); document.fonts.addEventListener('loadingdone', fill); }
+  addEventListener('load', fill); setTimeout(fill, 1500); setTimeout(fill, 4000);
   $('dpKeep').hidden = false;
   document.title = `邪眼完全解析「DIPPER」 ${result.dti.code}｜邪眼診断`;
   return true;
@@ -73,7 +76,7 @@ async function fromLink(token) {
 }
 
 function wireLinkKeep(token) {
-  $('dpKeepLead').textContent = 'このページのリンク（URL）を知っている人は、この完全解析を開けます。マイページに登録すると、マイページの記録から、いつでも開けます（別のアカウントにも登録できます）。';
+  $('dpKeepLead').textContent = 'このページのリンク（URL）を知っている人は、この完全解析を開けます。マイページに登録すると、マイページの記録から、いつでも開けます。';
   const reg = $('registerBtn');
   const copy = $('copyBtn');
   reg.hidden = false; copy.hidden = false;
