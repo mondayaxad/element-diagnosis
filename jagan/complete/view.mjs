@@ -205,7 +205,6 @@ export function renderComplete(m) {
         ${youBlock(d, c)}
         <div class="dp-dbasis"><div class="dp-dck">${E(L.basisI)}　<small>前後の順位</small></div>
           ${d.near.map((t) => `<div class="dp-row${t.self ? ' self' : ''}"><span style="color:${t.color}">${E(t.label)}</span>${bar(t.score, t.color)}<b>${t.score}</b></div>`).join('')}</div>
-        <p class="dp-note">${E(x.copy.limit)}</p>
       </div>${side(d, c)}</div>`);
   }
 

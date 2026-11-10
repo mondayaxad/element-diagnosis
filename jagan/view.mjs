@@ -5,7 +5,7 @@
 import { explainCharacter, shareTextFromSummary } from './engine/runtime.mjs';
 import {
   ELEMENT_COLOR, NEUTRAL_COLOR, ELEMENT_NAME, ISOU_COLOR, ELEMENT_TEXT, ISOU_TEXT, ISOU_SHORT, ELEMENT_STORY, TRAIT_COPY, GROUPS, GROUP_OF,
-  CHARACTER_ELEMENTS, CHARACTER_COPY, METHOD, METHOD_KEYS, BALANCE_NOTE, CHARACTER_GLOBAL_NOTICE, CHARACTER_NO_ALIGNED, CHARACTER_NO_DIFFERENT,
+  CHARACTER_ELEMENTS, CHARACTER_COPY, METHOD, METHOD_KEYS, BALANCE_NOTE, CHARACTER_GLOBAL_NOTICE, CHARACTER_NO_ALIGNED, CHARACTER_NO_DIFFERENT, traitBandText,
 } from './site-copy.mjs';
 
 export { shareTextFromSummary };
@@ -26,6 +26,13 @@ export function characterGradient(id) {
   const stops = els.length >= 2 ? [ELEMENT_COLOR[els[0]].main, ELEMENT_COLOR[els[1]].main]
     : els.length === 1 ? [ELEMENT_COLOR[els[0]].main, '#F4E6EA'] : ['#E2C08C', '#C8405C'];
   return `linear-gradient(100deg, ${stops[0]} 0%, ${stops[1]} 100%)`;
+}
+// 人物名のグラデーション。印刷（PDF）では背景の切り抜きに細い枠が出るため、文字ごとに色を補間した版に差し替える（完全解析と同じ）
+export function gradNameHtml(id, name) {
+  const m = characterGradient(id).match(/#[0-9A-Fa-f]{6}/g) || ['#E2C08C', '#C8405C'];
+  const ch = [...String(name)], n = Math.max(1, ch.length - 1);
+  const pr = ch.map((c, i) => `<span style="color:color-mix(in srgb, ${m[0]} ${Math.round(100 - (100 * i) / n)}%, ${m[1] || m[0]})">${esc(c)}</span>`).join('');
+  return `<b class="rx-grad" style="background-image:${characterGradient(id)}">${esc(name)}</b><b class="rx-grad-p" aria-hidden="true">${pr}</b>`;
 }
 // 弧を描く曲線の四芒星（菱形の辺を内側へ反らせた形）。中心(x,y)・半径 r
 export function sparklePath(x, y, r) {
@@ -255,7 +262,7 @@ function whyCard(result, bundle) {
       ${constellation('#E2C08C', 'CONSTELLATION OF SHADOWS')}
       <p class="rx-text">${text}</p>
       ${bars.map(([label, v, c]) => `<div class="rx-sim" style="--sc:${c}"><p><span>${label}</span><b>${Math.round(v)}<small>%</small></b></p><span class="rx-sim-bar"><i style="width:${Math.max(0, Math.min(100, v)).toFixed(1)}%"></i></span></div>`).join('')}
-      <p class="jg-note">一致度は、この二つを合わせた近さです。比較に使えるのは、作品の描写から対応を置けた特性だけです。</p>
+      <p class="jg-note">一致度は、この二つを3対1の割合で合わせた近さに、11名が偏りなく現れるよう人物ごとの小さな調整を加えた値です。比較に使えるのは、作品の描写から対応を置けた特性だけです。</p>
       <hr class="rx-hr">
       <p class="rx-h4">あなたの影の特性</p>
       ${locks(tendencyWords(result, bundle, null, 4))}
@@ -361,7 +368,7 @@ export function dipperFoldHtml({ where = 'result' } = {}) {
 
 function unlockAll() {
   const items = [
-    ['12特性のスコアと読み解き', '三つの土台の全特性を、数値と意味・読み方の限界とともに解説'],
+    ['12特性のスコアと読み解き', '三つの土台の全特性を、数値と、今回の得点に応じた傾向・振り返りの問いとともに解説'],
     ...GROUPS.map((g) => [g.short, `${g.traits.length}つの特性が、どんな場面で表れ、どんな負担につながるか`]),
     ['邪眼元素と異相の判定根拠', 'なぜその組み合わせに至ったか、形づくる特性から解説'],
     ['近しいファトゥス3名', '参照した特性との共通点・相違点と、物語からの振り返りの問い'],
@@ -403,15 +410,15 @@ function traitBar(result, id, color) {
   return `<div class="rp-bar" style="--bc:${color}">
       <p class="rp-bar-h"><span>${esc(t.label)}<small>${esc(id)}</small></span><b>${t.displayScore}</b></p>
       <span class="rp-track"><i style="width:${Math.max(2, t.score).toFixed(1)}%"></i></span>
-      <p class="rp-bar-t">${esc(c.meaning)}。<em class="lv-${level(t.score)}">${level(t.score)}</em> — ${esc(c.limit)}</p>
-      <p class="rp-bar-q">${esc(c.reflection)}</p>
+      <p class="rp-bar-t"><em class="lv-${level(t.score)}">${level(t.score)}</em> — ${esc(traitBandText(id, t.score).text)}</p>
+      <p class="rp-bar-q">${esc(traitBandText(id, t.score).question)}</p>
     </div>`;
 }
 function listItems(result, ids, mark, note) {
   return ids.map((id) => {
     const c = TRAIT_COPY[id], t = result.traits[id];
     return `<div class="rp-li"><span class="rp-mark rp-mark-${mark}">${mark === 'up' ? '✓' : '!'}</span><div><b>${esc(t.label)}（${t.displayScore}点）</b>
-      <p>${esc(c.meaning)}${note}</p><small>${esc(c.limit)}</small></div></div>`;
+      <p>${esc(c.meaning)}${note}</p><small>${esc(traitBandText(id, t.score).text)}</small></div></div>`;
   }).join('');
 }
 
@@ -491,7 +498,7 @@ export function renderReport(result, bundle) {
         const ex = explainCharacter(result, bundle, c.id);
         const row = (x) => `${esc(traitLabel(bundle, x.axis))}（あなた ${Math.round(x.userScore)}／参照 ${Math.round(x.referenceScore)}）`;
         return `<div class="rp-match">
-          <p class="rp-match-h"><span class="rp-match-no">${i + 1}</span><b class="rx-grad" style="background-image:${characterGradient(c.id)}">${esc(c.name)}</b><em>${c.displayScore}%</em></p>
+          <p class="rp-match-h"><span class="rp-match-no">${i + 1}</span>${gradNameHtml(c.id, c.name)}<em>${c.displayScore}%</em></p>
           <div class="rx-tags"><span class="rx-tag">「${esc(meta.title)}」</span>${meta.tags.map((t) => `<span class="rx-tag rx-tag-type">${esc(t)}</span>`).join('')}<span class="rx-tag">${esc(meta.region_label)}</span></div>
           <p class="rp-text sm">${esc(copy.story_context)}</p>
           <p class="rp-text sm"><b class="near">近い特性：</b>${ex.aligned.length ? ex.aligned.map(row).join('、') : esc(CHARACTER_NO_ALIGNED)}</p>

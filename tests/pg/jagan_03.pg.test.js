@@ -96,3 +96,31 @@ test('ブラウザのロールは新しい注文の関数を実行できない',
     assert.throws(() => pg.sql(db, `begin; set local role anon; select public.jagan_refresh_entitlement('${A}', '${R1}'); rollback;`), /permission denied/);
   } finally { dropDb(db); }
 });
+
+test('支払い後の確定仕様：期限切れ・キャンセル・失敗は権利なし。決済通知の再処理で注文・権利が増えない。両方で2つの権利（COMPLETE）', { skip: SKIP }, () => {
+  const db = ready();
+  try {
+    run(db, J3);
+    // 期限切れ（決済画面を閉じた）・キャンセル・決済の失敗：権利は作らない
+    const e = order(db, A, K(8), H(8), 'jagan_complete_v1'); open(db, e, 8);
+    assert.equal(svc(db, `select public.jagan_close_order('${e}', 'expired', 'checkout_expired')`), 'closed');
+    const c = order(db, A, K(9), H(9), 'jagan_report_v1'); open(db, c, 9);
+    assert.equal(svc(db, `select public.jagan_close_order('${c}', 'canceled', 'rate_limited')`), 'closed');
+    const f = order(db, A, 'jo_' + 'a'.repeat(40), 'a'.repeat(64), 'jagan_report_v1'); open(db, f, 'a');
+    assert.equal(svc(db, `select public.jagan_apply_payment('${f}', 'cs_test_${'a'.repeat(20)}', 'pi_${'x'.repeat(10)}', 1000, 'jpy', 'unpaid', false)`), 'ignored:payment_not_paid');
+    assert.equal(ents(db, A, R1), '-', '期限切れ・キャンセル・未払いでは権利なし');
+    // 1,000円を支払い → 決済通知を3回再処理しても、注文・権利は1つ
+    const r = order(db, A, K(6), H(6), 'jagan_report_v1'); open(db, r, 6);
+    assert.equal(pay(db, r, 6, 1000), 'applied');
+    assert.equal(pay(db, r, 6, 1000), 'noop'); assert.equal(pay(db, r, 6, 1000), 'noop');
+    assert.equal(ents(db, A, R1), 'jagan_report_v1=active');
+    assert.equal(one(db, `select count(*) from public.jagan_entitlements where user_id='${A}'`), '1');
+    assert.equal(one(db, `select count(*) from public.jagan_order_registrations where user_id='${A}'`), '1');
+    // 3,000円も支払い → 2つの権利（両方＝COMPLETE）。再処理しても増えない
+    const cp = order(db, A, K(7), H(7), 'jagan_complete_v1'); open(db, cp, 7);
+    assert.equal(pay(db, cp, 7, 3000), 'applied'); assert.equal(pay(db, cp, 7, 3000), 'noop');
+    assert.equal(ents(db, A, R1), 'jagan_complete_v1=active,jagan_report_v1=active');
+    assert.equal(one(db, `select count(*) from public.jagan_entitlements where user_id='${A}'`), '2');
+    assert.equal(one(db, `select count(*) from public.jagan_orders where status='paid'`), '2');
+  } finally { dropDb(db); }
+});

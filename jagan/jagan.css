@@ -632,3 +632,12 @@ body { background: #09070B; background-image: none; }
 @media print { .dp-fold { display: none !important; } }
 .rp-dipper .dp-fold { margin-top: 0; border-top: 0; padding-top: 0; }
 .rp-dipper[hidden] { display: none; }
+/* 解析レポートの PDF（印刷）：見出しと本文を分けない・項目の途中で改ページしない（2026-11-10） */
+@media print {
+  .rp-h2, .rp-no, .rp-sub-h, .rp-cta-h, .rx-sec-h { break-after: avoid; page-break-after: avoid; }
+  .rp-bar, .rp-li, .rp-match, .rp-quote, .rp-rings, .rp-ring, .rp-final, .rp-radar, svg { break-inside: avoid; page-break-inside: avoid; }
+  .rp-card { break-inside: auto; }
+  .rp-dipper, .rp-keep, .rp-end { display: none !important; }
+}
+.rx-grad-p { display: none; }
+@media print { .rx-grad { display: none !important; } .rx-grad-p { display: inline; } }

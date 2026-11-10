@@ -12,7 +12,7 @@ import { BUNDLE } from '../jagan/engine/data.mjs';
 import { judge as specJudge } from '../docs/jagan/spec_v0_3_balanced/runtime.mjs';
 import { recompute, headlineOf, ogParams, renderSharePage, createSaveHandler, createShareHandler, createReportHandler, createSharePageHandler, jaganEnabled } from '../lib/jagan-api.mjs';
 import { renderResultPage, renderReport, renderMethod, PREVIEW_SCORES, PREVIEW_MATCH } from '../jagan/view.mjs';
-import { GROUPS, ISOU_TEXT, ISOU_SHORT, ELEMENT_TEXT, ELEMENT_STORY, TRAIT_COPY, CHARACTER_COPY } from '../jagan/site-copy.mjs';
+import { GROUPS, ISOU_TEXT, ISOU_SHORT, ELEMENT_TEXT, ELEMENT_STORY, TRAIT_COPY, CHARACTER_COPY, traitBandText, TRAIT_BAND, bandOf } from '../jagan/site-copy.mjs';
 import { fnv1a32, normalizedAnswers, selectIsou } from '../jagan/engine/dti.mjs';
 import { buildCardTree } from '../lib/jagan-og-card.mjs';
 import * as ETI from '../api/_og-data.mjs';
@@ -365,8 +365,11 @@ test('result page: deferred parts are not filled, no names leak, and the twelve 
 });
 
 test('the report renders all twelve traits, three groups, the character section and the balance caveat; the sample is fictional', () => {
-  const rep = renderReport(sampleResult(), BUNDLE);
-  for (const t of BUNDLE.items.traits) assert.ok(rep.includes(TRAIT_COPY[t.id].meaning), t.id);
+  const result = sampleResult();
+  const rep = renderReport(result, BUNDLE);
+  // 12特性：今回の得点の区分に応じた説明と問い（2026-11-10）。各項目の病名・「判定するものではありません」は出さない
+  for (const t of BUNDLE.items.traits) { const bt = traitBandText(t.id, result.traits[t.id].score); assert.ok(rep.includes(bt.text) && rep.includes(bt.question), t.id); }
+  for (const t of BUNDLE.items.traits) assert.ok(!rep.includes(TRAIT_COPY[t.id].limit), `${t.id} の注意書きが残っています`);
   for (const g of GROUPS) assert.ok(rep.includes(g.en), g.id);
   assert.ok(rep.includes('順位は一致度の高い順です'));
   assert.ok(rep.includes('未対応の特性は、中立値で補わず'));
@@ -984,5 +987,15 @@ test('読者向け表示（DIPPER・結果ページ・解析レポート）に�
     const { result, html } = sampleComplete(s);
     const texts = [html, renderResultPage(result, BUNDLE, {}), renderReport(result, BUNDLE)].map((h) => h.replace(/<[^>]+>/g, ' '));
     for (const t of texts) assert.ok(!/重み|寄与|算出の重み|補正値|±\d|計算上の関係|の計算に/.test(t), `seed ${s}: ${(t.match(/.{20}(重み|寄与|算出の重み|補正値|±\d|計算上の関係|の計算に).{20}/) || [''])[0]}`);
+  }
+});
+
+test('12特性の説明：高め・中程度・控えめで別の文。低い得点に高い傾向の文が出ない（区分は60以上・40以下）', () => {
+  for (const id of Object.keys(TRAIT_BAND)) {
+    const [hi, mid, lo] = [75, 50, 20].map((v) => traitBandText(id, v));
+    assert.notEqual(hi.text, mid.text); assert.notEqual(mid.text, lo.text); assert.notEqual(hi.question, lo.question);
+    assert.match(hi.text, /傾向が出ています/); assert.match(mid.text, /ある程度当てはまる/); assert.match(lo.text, /当てはまりが少ない/);
+    assert.equal(bandOf(60), 'hi'); assert.equal(bandOf(59), 'mid'); assert.equal(bandOf(41), 'mid'); assert.equal(bandOf(40), 'lo');
+    assert.doesNotMatch(hi.text + mid.text + lo.text, /判定するもの|否定するもの|障害|ADHD|サイコパス|強み|才能|冷静|優しい|自立/);
   }
 });
