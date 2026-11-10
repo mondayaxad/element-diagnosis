@@ -762,7 +762,7 @@ test('完全解析 DIPPER 12–17：上位3つの邪眼・異相の個別ペー�
   assert.equal(m.topE[0].detail.you[0], '今回の水を形づくっているのは、主に依存と不安です。大切な相手と離れることへの不安と、悪い展開を予想する心配が、近い得点で表れています。');
   assert.equal(m.topE[0].detail.you[1], '一方、猜疑の得点は二つより低く、今回の水を「相手を強く疑う傾向」だけで説明することはできません。');
   assert.match(m.topE[1].detail.you[0], /構成特性の中で完璧の得点が比較的高く出ています.*「まだ十分ではない」という感覚が、確認を続ける一因になっていないか/);
-  assert.match(m.topI[2].detail.you[0], /草と岩を形づくる特性でもあります。複数の結果に同じ特性が現れていますが、それぞれ独立した証拠ではありません。/);
+  assert.match(m.topI[2].detail.you[0], /草と岩を形づくる特性でもあります。複数の結果に同じ特性が現れています。/);
   for (let s = 0; s < 200; s++) {
     const r = sampleComplete(s); const mm = buildComplete(r.result, BUNDLE);
     const pages = renderComplete(mm).split('<section').slice(1);
@@ -783,14 +783,14 @@ test('完全解析 DIPPER 18：邪眼×異相――計算上の関係（異相�
   const m = buildComplete(sampleComplete(0).result, BUNDLE);
   assert.equal(m.combo.inc, true); assert.equal(m.combo.tag, '構成特性の重なり');
   assert.match(m.combo.you[0], /^今回の水は、依存70・不安69・猜疑44からなります。その中で依存は、12特性の中でも最も高く出ています。/);
-  assert.match(m.combo.you[2], /さらに深い性格が証明されたという意味ではありません/);
+  assert.match(m.combo.you[2], /親しい相手との距離が気になった場面で重なりえます/);
   let seen = { inc: 0, sep: 0 };
   for (let s = 0; s < 300; s++) {
     const r = sampleComplete(s), c = buildComplete(r.result, BUNDLE).combo;
     const inParts = BUNDLE.core.elements.find((e) => e.id === r.result.element.id).weights[r.result.isou.id] != null;
     assert.equal(c.inc, inParts);
     seen[c.inc ? 'inc' : 'sep']++;
-    if (!c.inc) { assert.match(c.you[1], /原因と結果で結ぶことはできません/); assert.match(c.q, /それとも、別々の場面で起きているか。$/); }
+    if (!c.inc) { assert.match(c.you[1], /同じ場面で重なることも、別々の場面で表れることもあります/); assert.match(c.q, /それとも、別々の場面で起きているか。$/); }
     assert.ok(r.html.includes('邪眼×異相――あなたの影はどう表れるか'));
   }
   assert.ok(seen.inc > 0 && seen.sep > 0);
@@ -805,8 +805,8 @@ test('完全解析 DIPPER 19：上位3名のファトゥスとの交わり（重
   const m = buildComplete(sampleComplete(0).result, BUNDLE);
   const cap = m.mirror.people[0];
   assert.equal(cap.f.name, 'カピターノ');
-  assert.match(cap.aligned, /^衝動はあなた20／参照25、敵意はあなた19／参照25、冷淡はあなた6／参照15です。今回の近さは、この三特性がいずれも低めの値で近づいている/);
-  assert.match(cap.different, /^比較している三特性に、大きな数値差はありません。/);
+  assert.match(cap.aligned, /^衝動はあなた20／参照25、敵意はあなた19／参照25です。今回の近さは、これらがいずれも低めの値で近づいている/);
+  assert.match(cap.different, /^比較している三特性に、20点以上離れているものはありません。ただし、冷淡は差が19点あり/);
   assert.match(cap.main, /カピターノとの比較には依存・不安・猜疑を使用していません/);
   for (let s = 0; s < 300; s++) {
     const r = sampleComplete(s), mm = buildComplete(r.result, BUNDLE);
@@ -859,7 +859,7 @@ test('完全解析 DIPPER：再読 — あなたの影を読み直す（結果�
   const { result, html } = sampleComplete(0);
   const r = buildComplete(result, BUNDLE).reread;
   assert.equal(r.r1, '水は、依存70・不安69・猜疑44を組み合わせた結果です。今回は、相手を疑うことよりも、離れることへの不安や先行きへの心配への当てはまりが目立ちました。');
-  assert.match(r.r2, /水と依存は、別々の証拠が一致した結果ではありません。依存は、水を形づくる特性の一つです。/);
+  assert.match(r.r2, /依存は、水を形づくる特性の一つです。/);
   assert.equal(r.more.label, '完璧'); assert.equal(r.more.score, 56);
   assert.match(r.lowText, /測っていない長所を示すものではありません/);
   const p = html.split(`id="dp${String(PAGE_TITLES.indexOf('再読 — あなたの影を読み直す') + 1).padStart(2, '0')}"`)[1].split('<section')[0];
@@ -922,7 +922,7 @@ test('完全解析 DIPPER：06＝比較の要点（近さに寄与した特性�
     assert.ok(!/あなた\d|参照\d|class="dp-chips"><i style/.test(p6), '06 は文章で、人物の元素の札を出さない');
     assert.ok(!p6.includes('あなたの結果との関係') && !p6.includes('重なる反応を拾う'));
     const p16 = html.split(`id="dp${String(n16).padStart(2, '0')}"`)[1].split('<section')[0];
-    for (const k of ['あなたの回答に出ている特徴', 'その人物と重なる反応', '読み方を支える原作の場面', 'その人物と異なるところ', '自分の日常で確かめる問い', '照合に使う特性']) assert.ok(p16.includes(k), k);
+    for (const k of ['あなたの回答に出ている特徴', 'この人物の定義（原作の描写）', 'その人物と重なる反応', 'その人物と異なるところ', '自分の日常で確かめる問い']) assert.ok(p16.includes(k), k);
     assert.ok(!/あなた\d|参照\s?\d|dp-mvals/.test(p16), '16 は数値ではなく文章で');
     // 一覧は表示する一致度の順（丸め前の値で降順）、あなたのファトゥスは最も近い人物から 5 ポイント以内
     // 順位と一致度は同じ値（0.6.0）。1位＝あなたのファトゥス
@@ -972,7 +972,7 @@ test('人物の一致度は、照合外の特性の小さな変化で急変し�
   const a = characterRanking(traitsOf({ IMP: 40 }), BUNDLE.characters), b = characterRanking(traitsOf({ IMP: 40, ANX: 55 }), BUNDLE.characters);
   for (const x of a) { const y = b.find((c) => c.id === x.id); assert.ok(Math.abs(x.score - y.score) <= 3, `${x.id}: ${x.score.toFixed(1)} → ${y.score.toFixed(1)}`); }
   // 照合外の特性を 50→51 にしても、どの人物も 1 ポイント未満の変化
-  for (const id of ['ANX', 'SEP', 'PSV', 'PRF', 'ATT']) {
+  for (const id of ['ANX', 'SEP', 'PRF', 'ATT']) {
     const p = characterRanking(traitsOf({ IMP: 40 }), BUNDLE.characters), q = characterRanking(traitsOf({ IMP: 40, [id]: 51 }), BUNDLE.characters);
     for (const x of p) assert.ok(Math.abs(x.score - q.find((c) => c.id === x.id).score) < 1, id);
   }

@@ -406,7 +406,7 @@ export function renderReport(result, bundle) {
     s05 = `<section class="rp-card">
       <p class="rp-no">05</p>
       <h2 class="rp-h2">近しいファトゥス — <span class="rp-h2-en">Character Match</span></h2>
-      <p class="rp-text">11名の参照との照合結果です。比較先は、作品の描写を参考に作者が設計した部分的な参照（人物ごとに2〜3の特性）で、人物本人の心理得点ではありません。未対応の特性は、中立値で補わず、比較に含めていません。</p>
+      <p class="rp-text">11名の参照との照合結果です。比較先は、作品の描写を参考に作者が設計した部分的な参照（人物ごとに1〜3の特性）で、人物本人の心理得点ではありません。未対応の特性は、中立値で補わず、比較に含めていません。</p>
       ${constellation('#E2C08C', 'CONSTELLATION OF SHADOWS')}
       ${picks.map((c, i) => {
         const meta = bundle.characters.characters.find((x) => x.id === c.id);

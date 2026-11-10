@@ -17,7 +17,7 @@ export function scoreAnswers(answers, items) {
   }));
 }
 
-// 0.6.0：表示する一致度は、近さに均等化の補正（±5ポイント以内）を加えた値。順位と同じ値なので、順位と一致度が前後しない
+// 0.6.0：表示する一致度は、近さに均等化の補正（±7ポイント以内）を加えた値。順位と同じ値なので、順位と一致度が前後しない
 export const displayMatch = (v) => Math.max(0, Math.min(100, Math.round(v)));
 export function characterRanking(scores, characters) {
   for (const k of characters.axes) if (!Number.isFinite(scores[k]) || scores[k] < 0 || scores[k] > 100) throw Error('invalid_trait_score');

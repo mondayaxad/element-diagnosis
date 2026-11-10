@@ -65,7 +65,7 @@ export function renderComplete(m) {
       <div class="dp-lrow"><span class="dp-lname">${name}</span>${score !== null ? `<b class="dp-lscore">${score}</b>` : ''}</div><div class="dp-lsub">${sub}</div></div>`;
   const miniRow = (t) => `<div class="dp-mrow"><span class="dp-mcode" style="color:${t.color}">${E(t.label)}</span><span class="dp-bar"><i style="width:${Math.max(3, t.score)}%;--c:${t.color}"></i></span><b>${t.score}</b></div>`;
   page('dp-wide', 'YOUR SHADOW', `あなたの影 — ${m.dti.name}`, `
-    <p class="dp-p dp-lead">${E(m.panel.portraitLead)}</p>
+    ${m.panel.portraitLead ? `<p class="dp-p dp-lead">${E(m.panel.portraitLead)}</p>` : ''}
     <div class="dp-split">
       <div class="dp-side">
         ${labelCard('邪眼', 'JAGAN', E(el1.label), el1.score, `2位 ${E(m.gapE.b.label)} ${m.gapE.b.score} ／ 差 ${m.gapE.d}`, elc)}
@@ -157,11 +157,9 @@ export function renderComplete(m) {
       ${rows.map(([key, name]) => `<div class="dp-mx-row${key === 'accept' || key === 'live' ? ' em' : ''}">${E(name)}</div>${cols.map((c) => `<div class="dp-mx-cell${key === 'accept' ? ' accept' : ''}" style="--c:${c.c}">${E(get(c, key))}</div>`).join('')}`).join('')}
     </div>`;
   page('dp-wide', 'TOP THEMES · JAGAN', '上位の邪眼との付き合い方', `<p class="dp-p dp-lead">${E(m.live.intro)}</p>
-    ${matrix(m.topE.map((e) => ({ rank: e.rank, label: e.label, sub: e.name, score: e.score, c: e.color.main, src: e.live })), m.live.rows, (c, k) => c.src[k])}
-    <p class="dp-note">水・草・岩などの邪眼を「才能」として説明するのではなく、自分の中で起きていることに気づくための見取り図として使います。ここに書いた反応が、いつもあなたに起きているという意味ではありません。</p>`, { sub: 'Top themes' });
+    ${matrix(m.topE.map((e) => ({ rank: e.rank, label: e.label, sub: e.name, score: e.score, c: e.color.main, src: e.live })), m.live.rows, (c, k) => c.src[k])}`, { sub: 'Top themes' });
   page('dp-wide', 'TOP THEMES · ISOU', '上位の異相を読み解く', `<p class="dp-p dp-lead">${E(m.read.intro)}</p>
-    ${matrix(m.topI.map((x) => ({ rank: x.rank, label: x.label, sub: x.text.axis, score: x.score, c: x.color, src: x.read })), m.read.rows, (c, k) => c.src[k])}
-    <p class="dp-note">主結果としての異相は一つ（${E(is1.label)}）のままです。このページでは、上位の三つを読み比べて、自分の経験を説明する言葉を探します。</p>`, { sub: 'Top themes' });
+    ${matrix(m.topI.map((x) => ({ rank: x.rank, label: x.label, sub: x.text.axis, score: x.score, c: x.color, src: x.read })), m.read.rows, (c, k) => c.src[k])}`, { sub: 'Top themes' });
 
   // P12–P17 上位3つの邪眼・異相の個別ページ（オーナー案・2026-11-08。元素診断の個別ページと同じ組み立て）
   //   見出し（紋章・名称・一行・順位と得点・次点との差）→ 根拠の札 → 左：あなたの場合・一文・ある日の場面・根拠の棒 → 右：場面・伝わり方・負担のサイン・付き合い方
@@ -244,8 +242,8 @@ export function renderComplete(m) {
         <p class="dp-mline">${E(f.line)}</p>
         <dl class="dp-mdl">
           <dt>1. ${E(ML.split.mirrorItems[0])}</dt><dd>${E(p.feature)}</dd>
-          <dt>2. ${E(ML.split.mirrorItems[1])}</dt><dd>${E(p.proseOverlap)}</dd>
-          <dt>3. ${E(ML.split.mirrorItems[2])}</dt><dd>${E(p.scene)}</dd>
+          <dt>2. ${E(ML.split.mirrorItems[1])}</dt><dd class="dp-mdef">${p.defs.map((d) => `<span><b>${E(d.label)}<i>${E(d.dir)}</i></b>${E(d.text)}</span>`).join('')}</dd>
+          <dt>3. ${E(ML.split.mirrorItems[2])}</dt><dd>${E(p.proseOverlap)}</dd>
           <dt>4. ${E(ML.split.mirrorItems[3])}</dt><dd>${E(p.differ)}</dd>
           <dt class="gold">5. ${E(ML.split.mirrorItems[4])}</dt><dd>「${E(p.question)}」</dd></dl>
       </article>`; }).join('')}

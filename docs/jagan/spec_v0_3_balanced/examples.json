@@ -1,7 +1,8 @@
 [
   {
-    "name": "敵意が高め",
+    "name": "長く続く対抗と怒り",
     "profile": {
+      "PSV": 5,
       "HOS": 4
     },
     "expected": "pierro",
@@ -28,10 +29,10 @@
       "IMP03": 2,
       "IMP04": 2,
       "IMP05": 2,
-      "PSV01": 2,
-      "PSV02": 2,
-      "PSV04": 2,
-      "PSV05": 2,
+      "PSV01": 5,
+      "PSV02": 5,
+      "PSV04": 5,
+      "PSV05": 5,
       "PRF01": 2,
       "PRF02": 2,
       "PRF04": 2,
@@ -57,7 +58,7 @@
       "CAL03": 2,
       "CAL04": 2
     },
-    "headline": "炎 × 敵意",
+    "headline": "草 × 固執",
     "character": {
       "id": "pierro",
       "name": "ピエロ",
@@ -67,11 +68,12 @@
         "反逆"
       ],
       "region": "カーンルイア",
-      "match": 94,
-      "rawSimilarity": 94.44444444444444,
-      "adjustedScore": 93.59167752444445,
+      "match": 88,
+      "rawSimilarity": 87.8077594646451,
+      "adjustedScore": 88.4555381746451,
       "usedAxes": [
-        "HOS"
+        "HOS",
+        "PSV"
       ],
       "selectionMethod": "fixed_balance_offset_displayed",
       "rawGap": 0
@@ -79,11 +81,12 @@
     "semanticCheck": true
   },
   {
-    "name": "衝動・敵意が低め、冷淡はさらに低め",
+    "name": "怒り・冷たさ・勢いがいずれも低め",
     "profile": {
+      "HOS": 2,
+      "CAL": 2,
       "IMP": 2,
-      "CAL": 1,
-      "HOS": 2
+      "WDR": 3
     },
     "expected": "capitano",
     "answers": {
@@ -100,10 +103,10 @@
       "SUS02": 2,
       "SUS03": 2,
       "SUS05": 2,
-      "WDR02": 2,
-      "WDR03": 2,
-      "WDR04": 2,
-      "WDR05": 2,
+      "WDR02": 3,
+      "WDR03": 3,
+      "WDR04": 3,
+      "WDR05": 3,
       "IMP01": 2,
       "IMP02": 2,
       "IMP03": 2,
@@ -133,12 +136,12 @@
       "RSK02": 2,
       "RSK03": 2,
       "RSK04": 2,
-      "CAL01": 1,
-      "CAL02": 1,
-      "CAL03": 1,
-      "CAL04": 1
+      "CAL01": 2,
+      "CAL02": 2,
+      "CAL03": 2,
+      "CAL04": 2
     },
-    "headline": "未分化 × 未顕",
+    "headline": "氷 × 未顕",
     "character": {
       "id": "capitano",
       "name": "カピターノ",
@@ -148,13 +151,13 @@
         "献身"
       ],
       "region": "カーンルイア",
-      "match": 76,
-      "rawSimilarity": 81.00480947161671,
-      "adjustedScore": 75.6299851816167,
+      "match": 82,
+      "rawSimilarity": 87.5,
+      "adjustedScore": 81.65517154,
       "usedAxes": [
-        "IMP",
+        "HOS",
         "CAL",
-        "HOS"
+        "IMP"
       ],
       "selectionMethod": "fixed_balance_offset_displayed",
       "rawGap": 0
@@ -162,7 +165,7 @@
     "semanticCheck": true
   },
   {
-    "name": "操作と冷淡",
+    "name": "操作と冷淡が強い",
     "profile": {
       "MAN": 5,
       "CAL": 5
@@ -230,9 +233,9 @@
         "操作"
       ],
       "region": "スメール",
-      "match": 95,
-      "rawSimilarity": 90.41666666666666,
-      "adjustedScore": 94.98450108666665,
+      "match": 88,
+      "rawSimilarity": 86.66666666666666,
+      "adjustedScore": 87.78713910666666,
       "usedAxes": [
         "MAN",
         "CAL"
@@ -243,11 +246,10 @@
     "semanticCheck": true
   },
   {
-    "name": "敵意・冷淡が低く、衝動は中程度",
+    "name": "敵意が低く、冷淡はやや低め",
     "profile": {
-      "HOS": 1,
-      "CAL": 1,
-      "IMP": 3
+      "HOS": 2,
+      "CAL": 3
     },
     "expected": "columbina",
     "answers": {
@@ -268,11 +270,11 @@
       "WDR03": 2,
       "WDR04": 2,
       "WDR05": 2,
-      "IMP01": 3,
-      "IMP02": 3,
-      "IMP03": 3,
-      "IMP04": 3,
-      "IMP05": 3,
+      "IMP01": 2,
+      "IMP02": 2,
+      "IMP03": 2,
+      "IMP04": 2,
+      "IMP05": 2,
       "PSV01": 2,
       "PSV02": 2,
       "PSV04": 2,
@@ -281,10 +283,10 @@
       "PRF02": 2,
       "PRF04": 2,
       "PRF05": 2,
-      "HOS01": 1,
-      "HOS03": 1,
-      "HOS04": 1,
-      "HOS05": 1,
+      "HOS01": 2,
+      "HOS03": 2,
+      "HOS04": 2,
+      "HOS05": 2,
       "ATT01": 2,
       "ATT02": 2,
       "ATT03": 2,
@@ -297,12 +299,12 @@
       "RSK02": 2,
       "RSK03": 2,
       "RSK04": 2,
-      "CAL01": 1,
-      "CAL02": 1,
-      "CAL03": 1,
-      "CAL04": 1
+      "CAL01": 3,
+      "CAL02": 3,
+      "CAL03": 3,
+      "CAL04": 3
     },
-    "headline": "雷 × 未顕",
+    "headline": "氷 × 未顕",
     "character": {
       "id": "columbina",
       "name": "コロンビーナ",
@@ -312,9 +314,9 @@
         "帰属"
       ],
       "region": "ナドクライ",
-      "match": 66,
-      "rawSimilarity": 72.5,
-      "adjustedScore": 65.9249406,
+      "match": 73,
+      "rawSimilarity": 79.54504871165133,
+      "adjustedScore": 73.32782675165133,
       "usedAxes": [
         "HOS",
         "CAL"
@@ -325,12 +327,12 @@
     "semanticCheck": true
   },
   {
-    "name": "誘導が中程度、敵意は低い",
+    "name": "強い誘導と、低い勢い・怒り",
     "profile": {
-      "MAN": 3,
-      "HOS": 1,
-      "WDR": 1,
-      "RSK": 1
+      "MAN": 5,
+      "IMP": 2,
+      "CAL": 2,
+      "HOS": 1
     },
     "expected": "arlecchino",
     "answers": {
@@ -347,10 +349,10 @@
       "SUS02": 2,
       "SUS03": 2,
       "SUS05": 2,
-      "WDR02": 1,
-      "WDR03": 1,
-      "WDR04": 1,
-      "WDR05": 1,
+      "WDR02": 2,
+      "WDR03": 2,
+      "WDR04": 2,
+      "WDR05": 2,
       "IMP01": 2,
       "IMP02": 2,
       "IMP03": 2,
@@ -372,20 +374,20 @@
       "ATT02": 2,
       "ATT03": 2,
       "ATT05": 2,
-      "MAN01": 3,
-      "MAN02": 3,
-      "MAN03": 3,
-      "MAN04": 3,
-      "RSK01": 1,
-      "RSK02": 1,
-      "RSK03": 1,
-      "RSK04": 1,
+      "MAN01": 5,
+      "MAN02": 5,
+      "MAN03": 5,
+      "MAN04": 5,
+      "RSK01": 2,
+      "RSK02": 2,
+      "RSK03": 2,
+      "RSK04": 2,
       "CAL01": 2,
       "CAL02": 2,
       "CAL03": 2,
       "CAL04": 2
     },
-    "headline": "岩 × 未顕",
+    "headline": "岩 × 操作",
     "character": {
       "id": "arlecchino",
       "name": "アルレッキーノ",
@@ -395,9 +397,9 @@
         "統制"
       ],
       "region": "フォンテーヌ",
-      "match": 79,
-      "rawSimilarity": 78.31441346456307,
-      "adjustedScore": 79.35894333456308,
+      "match": 88,
+      "rawSimilarity": 84.76934761221041,
+      "adjustedScore": 87.67108267221042,
       "usedAxes": [
         "MAN",
         "IMP",
@@ -476,9 +478,9 @@
         "交渉"
       ],
       "region": "スネージナヤ",
-      "match": 95,
+      "match": 94,
       "rawSimilarity": 94.44444444444444,
-      "adjustedScore": 95.24786349444445,
+      "adjustedScore": 94.43005892444444,
       "usedAxes": [
         "MAN"
       ],
@@ -556,9 +558,9 @@
         "反逆"
       ],
       "region": "稲妻",
-      "match": 92,
-      "rawSimilarity": 88.3560050786802,
-      "adjustedScore": 91.8780893886802,
+      "match": 88,
+      "rawSimilarity": 86.66666666666666,
+      "adjustedScore": 87.63081221666665,
       "usedAxes": [
         "HOS",
         "SUS"
@@ -569,7 +571,7 @@
     "semanticCheck": true
   },
   {
-    "name": "対人距離と敵意",
+    "name": "対人距離と苛立ち",
     "profile": {
       "WDR": 4,
       "HOS": 4
@@ -637,9 +639,9 @@
         "執着"
       ],
       "region": "フォンテーヌ",
-      "match": 91,
-      "rawSimilarity": 91.12527056967232,
-      "adjustedScore": 90.60999841967232,
+      "match": 89,
+      "rawSimilarity": 88.92857142857143,
+      "adjustedScore": 89.45238604857143,
       "usedAxes": [
         "WDR",
         "HOS"
@@ -650,11 +652,10 @@
     "semanticCheck": true
   },
   {
-    "name": "敵意・誘導・冷淡",
+    "name": "強い敵意と消えない思い",
     "profile": {
       "HOS": 5,
-      "MAN": 4,
-      "CAL": 4
+      "PSV": 4
     },
     "expected": "signora",
     "answers": {
@@ -680,10 +681,10 @@
       "IMP03": 2,
       "IMP04": 2,
       "IMP05": 2,
-      "PSV01": 2,
-      "PSV02": 2,
-      "PSV04": 2,
-      "PSV05": 2,
+      "PSV01": 4,
+      "PSV02": 4,
+      "PSV04": 4,
+      "PSV05": 4,
       "PRF01": 2,
       "PRF02": 2,
       "PRF04": 2,
@@ -696,18 +697,18 @@
       "ATT02": 2,
       "ATT03": 2,
       "ATT05": 2,
-      "MAN01": 4,
-      "MAN02": 4,
-      "MAN03": 4,
-      "MAN04": 4,
+      "MAN01": 2,
+      "MAN02": 2,
+      "MAN03": 2,
+      "MAN04": 2,
       "RSK01": 2,
       "RSK02": 2,
       "RSK03": 2,
       "RSK04": 2,
-      "CAL01": 4,
-      "CAL02": 4,
-      "CAL03": 4,
-      "CAL04": 4
+      "CAL01": 2,
+      "CAL02": 2,
+      "CAL03": 2,
+      "CAL04": 2
     },
     "headline": "炎 × 敵意",
     "character": {
@@ -719,13 +720,12 @@
         "憤怒"
       ],
       "region": "モンド",
-      "match": 93,
-      "rawSimilarity": 89.81574079365683,
-      "adjustedScore": 93.30469088365683,
+      "match": 90,
+      "rawSimilarity": 87.8077594646451,
+      "adjustedScore": 89.8610793046451,
       "usedAxes": [
         "HOS",
-        "MAN",
-        "CAL"
+        "PSV"
       ],
       "selectionMethod": "fixed_balance_offset_displayed",
       "rawGap": 0
@@ -733,9 +733,10 @@
     "semanticCheck": true
   },
   {
-    "name": "誘導がさらに強い",
+    "name": "誘導と敵意",
     "profile": {
-      "MAN": 5
+      "MAN": 4,
+      "HOS": 4
     },
     "expected": "pantalone",
     "answers": {
@@ -769,18 +770,18 @@
       "PRF02": 2,
       "PRF04": 2,
       "PRF05": 2,
-      "HOS01": 2,
-      "HOS03": 2,
-      "HOS04": 2,
-      "HOS05": 2,
+      "HOS01": 4,
+      "HOS03": 4,
+      "HOS04": 4,
+      "HOS05": 4,
       "ATT01": 2,
       "ATT02": 2,
       "ATT03": 2,
       "ATT05": 2,
-      "MAN01": 5,
-      "MAN02": 5,
-      "MAN03": 5,
-      "MAN04": 5,
+      "MAN01": 4,
+      "MAN02": 4,
+      "MAN03": 4,
+      "MAN04": 4,
       "RSK01": 2,
       "RSK02": 2,
       "RSK03": 2,
@@ -790,7 +791,7 @@
       "CAL03": 2,
       "CAL04": 2
     },
-    "headline": "岩 × 操作",
+    "headline": "炎 × 複合",
     "character": {
       "id": "pantalone",
       "name": "パンタローネ",
@@ -800,11 +801,12 @@
         "野心"
       ],
       "region": "璃月",
-      "match": 88,
-      "rawSimilarity": 85.17857142857143,
-      "adjustedScore": 87.84870960857143,
+      "match": 94,
+      "rawSimilarity": 91.12527056967232,
+      "adjustedScore": 93.58563754967233,
       "usedAxes": [
-        "MAN"
+        "MAN",
+        "HOS"
       ],
       "selectionMethod": "fixed_balance_offset_displayed",
       "rawGap": 0
@@ -812,9 +814,10 @@
     "semanticCheck": true
   },
   {
-    "name": "危険への接近",
+    "name": "危険への接近と、やや低い衝動",
     "profile": {
-      "RSK": 5
+      "RSK": 5,
+      "IMP": 2
     },
     "expected": "tartaglia",
     "answers": {
@@ -879,11 +882,12 @@
         "挑戦"
       ],
       "region": "スネージナヤ",
-      "match": 82,
-      "rawSimilarity": 85.17857142857143,
-      "adjustedScore": 82.39953826857143,
+      "match": 88,
+      "rawSimilarity": 86.86790984058496,
+      "adjustedScore": 88.27271257058496,
       "usedAxes": [
-        "RSK"
+        "RSK",
+        "IMP"
       ],
       "selectionMethod": "fixed_balance_offset_displayed",
       "rawGap": 0

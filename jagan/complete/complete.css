@@ -379,3 +379,8 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 @media print { .dp-fname { background: none !important; color: color-mix(in srgb, var(--a) 85%, #fff) !important; -webkit-text-fill-color: currentColor; } }
 @media print { .dp-page *, .dp-page { box-shadow: none !important; } .dp-cover-emblem img, .dp-demb img { filter: none !important; } }
 .dp-cflow { margin: 18px 0 22px; } .dp-cflow .dp-note { margin-top: 8px; }
+.dp-mdef span { display: block; margin: 2px 0; } .dp-mdef b { font-weight: 700; margin-right: 10px; } .dp-mdef i { font-style: normal; font-size: 11px; color: var(--gold); margin-left: 6px; padding: 0 6px; border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent); border-radius: 4px; }
+/* 15 の流れは縦5段（2026-11-10） */
+.dp-cflow ol { grid-template-columns: 1fr; gap: 6px; }
+.dp-cflow li { display: grid; grid-template-columns: 2.2em 13em 1fr; align-items: baseline; border-top: 0; border-left: 3px solid color-mix(in srgb, var(--rose) 70%, transparent); border-radius: 0 8px 8px 0; padding: 10px 16px; }
+.dp-cflow li p { margin: 0; font-size: 14.5px; color: var(--fg); } .dp-cflow li b { font-size: 14px; color: var(--gold); }

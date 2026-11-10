@@ -52,7 +52,7 @@ export function computeDiagnosis(input, bundle) {
   const dti = { code: p.code, name: p.name, elementCode: p.element_id, aspectCode: p.aspect_code, namingVersion: bundle.dti.version };
 
   // 人物の順位（0.6.0）：50問の回答から算出し、11名が偏りなく現れるよう補正した順位。1位は「あなたのファトゥス」。
-  //   表示する一致度（displayScore）は、順位に使う値（近さ＋±5ポイント以内の補正）そのもの。だから順位と一致度は前後しない。
+  //   表示する一致度（displayScore）は、順位に使う値（近さ＋±7ポイント以内の補正）そのもの。だから順位と一致度は前後しない。
   //   rawSimilarity（補正前の近さ）は本文の判定には使わず、記録としてだけ残す。
   const characterOrder = j.privateDiagnostics.characterRanking.map((c, i) => ({ id: c.id, name: c.name, rank: i + 1, rawSimilarity: c.score, adjustedScore: c.selectionScore, displayScore: Math.max(0, Math.min(100, Math.round(c.selectionScore))), agreement: c.agreement, coverage: c.coverage, usedAxes: c.usedAxes, selected: !!(j.character && j.character.id === c.id) }));
   // 同点の人物を回答から決まる順で選んだ場合も、1位を選ばれた人物にそろえる

@@ -1,5 +1,5 @@
 {
-  "version": "jagan-character-balance-0.7.0-candidate",
+  "version": "jagan-character-balance-0.8.0-candidate",
   "status": "synthetic_calibration_candidate",
   "launch_ready": false,
   "axes": [
@@ -21,6 +21,7 @@
     "HOS",
     "IMP",
     "MAN",
+    "PSV",
     "RSK",
     "SUS",
     "WDR"
@@ -42,29 +43,29 @@
         "反逆"
       ],
       "anchors": {
-        "HOS": 75
+        "HOS": 65,
+        "PSV": 85
       },
       "unknown_axes": [
         "ANX",
         "SEP",
+        "SUS",
         "WDR",
         "IMP",
-        "PSV",
         "PRF",
         "ATT",
         "MAN",
         "RSK",
-        "CAL",
-        "SUS"
+        "CAL"
       ],
-      "rationale": "「嗤笑の面」の、災厄を阻止できなかった経緯・怒り・天理への反逆から、敵意を物語上の参照にする（値は編集上の設定）。世界への反逆を広い対人不信と結びつけず、猜疑は未対応とする。固執・依存も推定しない。",
+      "rationale": "「嗤笑の面」：祖国の災厄を阻止できなかった苦痛と、天理を書き換える対抗の意志が長く続く。長期の対抗を手放さないことを固執（強く高め）、不条理への怒りを敵意（やや高め）に置く。天理への不信を対人の猜疑には変換しない。",
       "region_label": "カーンルイア",
       "source_urls": [
         "https://genshin-impact.fandom.com/ja/wiki/嗤笑の面"
       ],
       "reference_origin": "authored_story_association_not_measured_character_trait",
       "confidence": "interpretive_not_validated",
-      "selection_offset": -0.85276692
+      "selection_offset": 0.64777871
     },
     {
       "id": "capitano",
@@ -75,9 +76,9 @@
         "献身"
       ],
       "anchors": {
-        "IMP": 25,
-        "CAL": 15,
-        "HOS": 25
+        "HOS": 25,
+        "CAL": 25,
+        "IMP": 25
       },
       "unknown_axes": [
         "ANX",
@@ -90,14 +91,14 @@
         "MAN",
         "RSK"
       ],
-      "rationale": "目的に沿う行動、協働や救命との連想として低めの参照を置く。低い悪癖が献身を測るという意味ではない。",
+      "rationale": "任務「燃ゆる運命の虹光」：対立した相手とも、帰る場所のない魂とナタの希望のために協力を選ぶ。対立後に敵対を続けないことを敵意（低め）、他者の苦しみに向けた行動を冷淡（低め）、状況を見て協力を選ぶ判断を衝動（低め）に置く。献身や共感能力は推定しない。",
       "region_label": "カーンルイア",
       "source_urls": [
         "https://genshin-impact.fandom.com/ja/wiki/「隊長」"
       ],
       "reference_origin": "authored_story_association_not_measured_character_trait",
       "confidence": "interpretive_not_validated",
-      "selection_offset": -5.37482429
+      "selection_offset": -5.84482846
     },
     {
       "id": "dottore",
@@ -108,8 +109,8 @@
         "操作"
       ],
       "anchors": {
-        "MAN": 90,
-        "CAL": 90
+        "MAN": 85,
+        "CAL": 85
       },
       "unknown_axes": [
         "ANX",
@@ -123,14 +124,14 @@
         "ATT",
         "RSK"
       ],
-      "rationale": "他者を手段にする行動と不利益の扱いを比較。研究好きから固執や完璧を推定しない。",
+      "rationale": "「夜を飛ぶ鳥は三段へと落ちる」：真相を隠した説明で散兵の認識を誘導し、丹羽の殺害や心臓の利用など他者を実験の手段として扱う。「良医の羽」も人間を改造可能な機械として捉える。操作・冷淡とも強く高めに置く。探究心とは混同しない。",
       "region_label": "スメール",
       "source_urls": [
         "https://genshin-impact.fandom.com/ja/wiki/「博士」"
       ],
       "reference_origin": "authored_story_association_not_measured_character_trait",
       "confidence": "interpretive_not_validated",
-      "selection_offset": 4.56783442
+      "selection_offset": 1.12047244
     },
     {
       "id": "columbina",
@@ -141,29 +142,29 @@
         "帰属"
       ],
       "anchors": {
-        "HOS": 20,
-        "CAL": 20
+        "HOS": 25,
+        "CAL": 35
       },
       "unknown_axes": [
         "ANX",
         "SEP",
         "SUS",
+        "WDR",
         "IMP",
         "PSV",
         "PRF",
         "ATT",
         "MAN",
-        "RSK",
-        "WDR"
+        "RSK"
       ],
-      "rationale": "敵意・冷淡の低さを参照にする（値は編集上の設定。個別の描写での確認が残る）。組織を離れたことを撤退特性とせず、撤退は未対応とする。所属期と後年の描写を混ぜない。帰属から依存を推定しない。",
+      "rationale": "キャラクターストーリー2：対等な同僚関係を新鮮に受け止め、期待される役割と自分自身のずれに悲しみを覚える。周囲へ敵意を向けないことを敵意（低め）、関係を大切に受け止めることを冷淡（やや低め）に置く。孤独を撤退、関係への希望を依存とはしない。",
       "region_label": "ナドクライ",
       "source_urls": [
         "https://genshin-impact.fandom.com/ja/wiki/コロンビーナ/プロフィール"
       ],
       "reference_origin": "authored_story_association_not_measured_character_trait",
       "confidence": "interpretive_not_validated",
-      "selection_offset": -6.5750594
+      "selection_offset": -6.21722196
     },
     {
       "id": "arlecchino",
@@ -174,9 +175,9 @@
         "統制"
       ],
       "anchors": {
-        "MAN": 70,
-        "IMP": 20,
-        "CAL": 30
+        "MAN": 75,
+        "IMP": 25,
+        "CAL": 35
       },
       "unknown_axes": [
         "ANX",
@@ -189,14 +190,14 @@
         "ATT",
         "RSK"
       ],
-      "rationale": "対人場面の演出と目的に沿う行動、子どもへの配慮への連想。無表情から冷淡を推定しない。",
+      "rationale": "プロフィール・ボイス：壁炉の家を統率し、子供たちに敬慕と恐怖の両方を向けられる。博士による子供の実験利用は強く拒む。家の規律で人を動かすことを操作（高め）、感情を認識して扱う姿勢を衝動（低め）、身内を守る姿勢を冷淡（やや低め。身内に限る）に置く。",
       "region_label": "フォンテーヌ",
       "source_urls": [
         "https://genshin-impact.fandom.com/ja/wiki/アルレッキーノ/プロフィール"
       ],
       "reference_origin": "authored_story_association_not_measured_character_trait",
       "confidence": "interpretive_not_validated",
-      "selection_offset": 1.04452987
+      "selection_offset": 2.90173506
     },
     {
       "id": "pulcinella",
@@ -214,22 +215,22 @@
         "SEP",
         "SUS",
         "WDR",
+        "IMP",
         "PSV",
         "PRF",
         "HOS",
         "ATT",
         "RSK",
-        "CAL",
-        "IMP"
+        "CAL"
       ],
-      "rationale": "アルレッキーノによる評価（市長としての手腕と、壁炉の家を代価とする扱いへの批判）から、操作を連想の参照にする（値は編集上の設定）。他者の評価を内面と確定しない。衝動・冷淡は根拠がないため未対応とする。",
+      "rationale": "アルレッキーノの評価：少ない代価で利益を得る手腕と、壁炉の家を交渉の材料にする姿勢。タルタリヤは家族への世話を好意的に、放浪者は支配の手段と受け止める。相手を望む方向へ導くことを操作（高め）に置く。評価はいずれも他の人物によるもの。",
       "region_label": "スネージナヤ",
       "source_urls": [
         "https://genshin-impact.fandom.com/ja/wiki/「雄鶏」"
       ],
       "reference_origin": "authored_story_association_not_measured_character_trait",
       "confidence": "interpretive_not_validated",
-      "selection_offset": 0.80341905
+      "selection_offset": -0.01438552
     },
     {
       "id": "scaramouche",
@@ -240,7 +241,7 @@
         "反逆"
       ],
       "anchors": {
-        "HOS": 90,
+        "HOS": 85,
         "SUS": 85
       },
       "unknown_axes": [
@@ -255,14 +256,14 @@
         "RSK",
         "CAL"
       ],
-      "rationale": "執行官期の敵意と不信の描写を参照。現在の放浪者と混ぜず、拒絶経験だけで依存を設定しない。",
+      "rationale": "「夜を飛ぶ鳥は三段へと落ちる」（執行官期）：丹羽の裏切りだと理解した出来事への怒りと復讐、人や神への不信。後にその理解は博士の工作によるものと判明する。敵意・猜疑とも強く高めに置く（本人の受け止めとして）。放浪者期とは分ける。",
       "region_label": "稲妻",
       "source_urls": [
         "https://genshin-impact.fandom.com/ja/wiki/「散兵」"
       ],
       "reference_origin": "authored_story_association_not_measured_character_trait",
       "confidence": "interpretive_not_validated",
-      "selection_offset": 3.52208431
+      "selection_offset": 0.96414555
     },
     {
       "id": "sandrone",
@@ -273,7 +274,7 @@
         "執着"
       ],
       "anchors": {
-        "WDR": 75,
+        "WDR": 65,
         "HOS": 65
       },
       "unknown_axes": [
@@ -288,14 +289,14 @@
         "RSK",
         "CAL"
       ],
-      "rationale": "対人場面から退く描写と、いら立ちの描写を比較する。研究への集中から固執・完璧・冷淡を推定しない。",
+      "rationale": "アルレッキーノの評価・公開プロフィール：研究に没頭し、公の場に姿を現さない一方、友人との関わりもある。苛立ちを示す描写がある。人前から退くことを撤退（やや高め）、苛立ちを敵意（やや高め）に置く。没頭そのものは撤退としない。",
       "region_label": "フォンテーヌ",
       "source_urls": [
         "https://genshin-impact.fandom.com/ja/wiki/「傀儡」"
       ],
       "reference_origin": "authored_story_association_not_measured_character_trait",
       "confidence": "interpretive_not_validated",
-      "selection_offset": -0.51527215
+      "selection_offset": 0.52381462
     },
     {
       "id": "signora",
@@ -307,8 +308,7 @@
       ],
       "anchors": {
         "HOS": 85,
-        "MAN": 70,
-        "CAL": 65
+        "PSV": 65
       },
       "unknown_axes": [
         "ANX",
@@ -316,19 +316,20 @@
         "SUS",
         "WDR",
         "IMP",
-        "PSV",
         "PRF",
         "ATT",
-        "RSK"
+        "MAN",
+        "RSK",
+        "CAL"
       ],
-      "rationale": "敵対的な行動、外交上の演出、他者への不利益の扱いを参照。悲嘆から依存を推定しない。",
+      "rationale": "「無垢の花」・モンドの任務：過去を氷で封じても消えない炎と、世界の歪みを生むものを排除する目的。旅人たちを待ち伏せし神の心を奪う。怒りを行動に移すことを敵意（強く高め）、消えない炎を抱え続けることを固執（やや高め）に置く。外交の能力や悲嘆からは操作・冷淡を推定しない。",
       "region_label": "モンド",
       "source_urls": [
         "https://genshin-impact.fandom.com/ja/wiki/シニョーラ"
       ],
       "reference_origin": "authored_story_association_not_measured_character_trait",
       "confidence": "interpretive_not_validated",
-      "selection_offset": 3.48895009
+      "selection_offset": 2.05331984
     },
     {
       "id": "pantalone",
@@ -339,7 +340,8 @@
         "野心"
       ],
       "anchors": {
-        "MAN": 85
+        "MAN": 75,
+        "HOS": 65
       },
       "unknown_axes": [
         "ANX",
@@ -349,19 +351,18 @@
         "IMP",
         "PSV",
         "PRF",
-        "HOS",
         "ATT",
         "RSK",
         "CAL"
       ],
-      "rationale": "経済と対人上の誘導への連想として、操作を参照にする（値は編集上の設定。経済面の手腕と対人場面の操作は区別して再確認が必要）。冷淡は根拠がないため未対応とし、中間値で埋めない。富・貧困・計画性から完璧や不安を設定しない。",
+      "rationale": "「停頓の時」・アルレッキーノの評価：金銭の流れを掌握し、自分の意志で止められる立場を求める。アルレッキーノは計画の背後に憎しみと嫌悪があると評する。物事を自分の計画へ動かすことを操作（高め）、評される憎しみを敵意（やや高め）に置く。経済の掌握と対人の操作の違いに注意する。",
       "region_label": "璃月",
       "source_urls": [
         "https://genshin-impact.fandom.com/ja/wiki/「富者」"
       ],
       "reference_origin": "authored_story_association_not_measured_character_trait",
       "confidence": "interpretive_not_validated",
-      "selection_offset": 2.67013818
+      "selection_offset": 2.46036698
     },
     {
       "id": "tartaglia",
@@ -372,7 +373,8 @@
         "挑戦"
       ],
       "anchors": {
-        "RSK": 85
+        "RSK": 85,
+        "IMP": 35
       },
       "unknown_axes": [
         "ANX",
@@ -384,32 +386,32 @@
         "HOS",
         "ATT",
         "MAN",
-        "CAL",
-        "IMP"
+        "CAL"
       ],
-      "rationale": "プロフィールの、危険な戦いを追い求める描写から、危険志向を参照にする（値は編集上の設定）。衝動の程度は未確定のため未対応とする。家族への思いを比較していない特性の一致に使わない。",
+      "rationale": "キャラクターストーリー1・4：危険な秘境や強敵への挑戦、少年期からの闘争への傾き。一方で、責任への覚悟と慎重さ、約束を果たす姿勢も描かれる。危険への接近を危険志向（強く高め）、慎重さを衝動（やや低め）に置く。",
       "region_label": "スネージナヤ",
       "source_urls": [
         "https://genshin-impact.fandom.com/ja/wiki/タルタリヤ/プロフィール"
       ],
       "reference_origin": "authored_story_association_not_measured_character_trait",
       "confidence": "interpretive_not_validated",
-      "selection_offset": -2.77903316
+      "selection_offset": 1.40480273
     }
   ],
   "calibration": {
     "seed": 20261103,
     "baseline": "four_equal_synthetic_cohorts",
     "train_n": 33000,
-    "eligible_train_n": 32987,
+    "eligible_train_n": 32997,
     "temperature": 0.12,
     "optimizer_success": true,
     "not_live_user_distribution": true,
     "target_share": 0.09090909090909091,
-    "offset_mean": 1.6148698540002277e-16,
-    "anchor_sha256": "a2c29f9666845b54209bd4139f9bf14961453a703374ccf21b00ea83b58dd018"
+    "offset_mean": -8.074349270001139e-17,
+    "anchor_sha256": "5ccfbd3a96235748ae96dc90c1232a4e3da0dbdbb95e87f46bd51ccd7aa05524"
   },
   "coverage_prior": 0.5,
   "coverage_prior_strength": 20,
-  "coverage_note": "目立つ特性（50点超）の割合は、事前値0.5へ強さ20で寄せたなだらかな値。目立つ特性がない回答と、照合外の特性がわずかに50を超える回答の境界で一致度が急変しないようにする（0.7.0）。"
+  "coverage_note": "目立つ特性（50点超）の割合は、事前値0.5へ強さ20で寄せたなだらかな値。目立つ特性がない回答と、照合外の特性がわずかに50を超える回答の境界で一致度が急変しないようにする（0.7.0）。",
+  "anchor_scale": "編集上の段階：強く高め85／高め75／やや高め65／やや低め35／低め25（2026-11-10、描写のある特性だけに置く）"
 }

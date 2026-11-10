@@ -6,7 +6,7 @@
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
-import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, DICT_PAGE, ELEMENT_MISREAD, TRAIT_DICT_HL, OVERVIEW_COPY, FATUI_SPLIT, TRAIT_SCENE, LOW_QUESTION, FATUI_SCENE, GUIDE_PAGE, ELEMENT_LINE, TRAIT_LINE, FATUI_LINE, COMBO_FLOW, TRAIT_RECEIVE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
+import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, DICT_PAGE, ELEMENT_MISREAD, TRAIT_DICT_HL, OVERVIEW_COPY, FATUI_SPLIT, TRAIT_SCENE, LOW_QUESTION, FATUI_DEF, GUIDE_PAGE, ELEMENT_LINE, TRAIT_LINE, FATUI_LINE, COMBO_FLOW, TRAIT_RECEIVE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
 
 const r1 = (x) => Math.round(x * 10) / 10;
 
@@ -141,7 +141,7 @@ export function isouYou(x, isous, topE) {
   else out.push(`今回の回答で${x.label}は${r}位です。${close ? `${r - 1}位の${nb.label}と近い得点です。` : `${r - 1}位の${nb.label}とは${gap}点の差があります。`}`);
   if (close) out.push(`${N(x.id)}と、${N(nb.id)}が重なって表れていないかを確かめます。`);
   const inc = topE.filter((e) => e.parts.some((p) => p.id === x.id));
-  if (inc.length) out.push(`${x.label}は、上位の邪眼のうち${inc.map((e) => e.label).join('と')}を形づくる特性でもあります。${inc.length >= 2 ? '複数の結果に同じ特性が現れていますが、それぞれ独立した証拠ではありません。' : ''}`);
+  if (inc.length) out.push(`${x.label}は、上位の邪眼のうち${inc.map((e) => e.label).join('と')}を形づくる特性でもあります。${inc.length >= 2 ? '複数の結果に同じ特性が現れています。' : ''}`);
   return { lines: out, inc: inc.map((e) => ({ label: e.label, color: e.color.main })) };
 }
 function isouDetail(x, isous, topE, overall) {
@@ -164,8 +164,10 @@ export function comboOf(e, x) {
     you.push(`今回の${L}は、${list}からなります。その中で${X}は、12特性の中でも最も高く出ています。`);
     const others = parts.filter((p) => p.id !== x.id).sort((a, b) => a.score - b.score);
     const nb = others.find((p) => Math.abs(p.score - x.score) <= CLOSE);
-    you.push(`そのため、今回の${L}を理解する入口は、${N(others[0].id)}だけでなく、${N(x.id)}にあります。${nb ? `${nb.label}の得点も近いため、${N(nb.id)}にも目を向けられます。` : ''}`);
-    you.push(`${L}と${X}は、同じ回答の一部を共有しています。二つの結果がそろったことから、さらに深い性格が証明されたという意味ではありません。全体のまとまりを、${X}という特性から具体的に読み直す関係です。`);
+    you.push(`今回の${L}では、${N(others[0].id)}より、${N(x.id)}${nb ? `と${N(nb.id)}` : ''}のほうが目立っています。${nb ? `${x.label}${x.score}と${nb.label}${nb.score}は近い得点で、どちらかが際立っているわけではありません。` : ''}`);
+    // 本人の場面で、異相と邪眼の中のもう一つの特性がどう重なるか（設計の説明はしない）
+    const pair = nb || others[others.length - 1];
+    you.push(`${N(x.id)}と、${N(pair.id)}は、${TRAIT_SCENE[x.id].hi}で重なりえます。${SH(x.id).short}を感じ始めると、${SH(pair.id).verb}方向へ考えが進む、という形です。`);
     day = [{ text: td.day }, { text: `この場面が自分に重なるなら、次の問いで振り返れます。「${_EL_LIVE[e.id].ask}」`, note: true }];
     heavy = td.signs;
     q = ec.q;
@@ -175,8 +177,7 @@ export function comboOf(e, x) {
     relation = `異相の${X}は、${L}の計算に使われる三つの特性（${parts.map((p) => p.label).join('・')}）には含まれていません。別の特性が最上位にありながら、合成した得点では${L}が上位になっています。`;
     headline = `${ec.about}に関する反応と、${N(x.id)}が、どちらも表れた組み合わせです。`;
     you.push(`${L}は${list}からなりますが、個別の特性では${X}（${x.score}）が最も高く出ています。${L}を形づくる特性の中で最も高いのは${top.label}（${top.score}）です。`);
-    you.push(`したがって、「${L}の反応があるから${X}が表れる」と、二つを原因と結果で結ぶことはできません。`);
-    you.push(`同じ場面で重なることもあれば、別々の場面でそれぞれに表れている可能性もあります。「日常の例」にある二つの場面を見比べ、同じときに起きているかを確かめてください。`);
+    you.push(`${SH(x.id).short}と、${ec.about}は、同じ場面で重なることも、別々の場面で表れることもあります。「日常の例」の二つの場面を見比べ、同じときに起きているかを確かめてください。`);
     day = [{ head: `${L}の場面`, text: ed.day }, { head: `${X}の場面`, text: td.day }];
     heavy = `${ed.signs}${td.signs}`;
     q = `${ec.when}ときほど、${tc.want}か。それとも、別々の場面で起きているか。`;
@@ -185,10 +186,8 @@ export function comboOf(e, x) {
   // 今回の得点から読む流れ。受け止め方の冒頭は、邪眼の構成特性のうち低いものと異相を比べる（今回の回答での強弱）
   const lowPart = [...parts].filter((p) => p.id !== x.id).sort((a, b) => a.score - b.score)[0];
   const closeP = parts.find((p) => p.id !== x.id && Math.abs(p.score - x.score) <= CLOSE);
-  const receive = (inc && lowPart && x.score - lowPart.score >= 10 ? `${N(lowPart.id)}より、${N(x.id)}のほうが、回答に強く表れています。` : '')
-    + (closeP ? `${x.label}${x.score}と${closeP.label}${closeP.score}は近い得点で、どちらかが際立っているわけではありません。` : '')
-    + TRAIT_RECEIVE[x.id];
-  const flow = { ...COMBO_FLOW, items: [td.scenes, receive, TRAIT_READ[x.id].daily, td.signs, `「${_EL_LIVE[e.id].ask}」${td.coexist}`] };
+  const receive = TRAIT_RECEIVE[x.id];
+  const flow = { ...COMBO_FLOW, items: [td.scenes, receive, TRAIT_READ[x.id].daily, td.signs, `${td.coexist.split('。')[0]}。`] };
   return {
     flow,
     labels: COMBO_LABELS, inc, tag: inc ? COMBO_LABELS.incTag : COMBO_LABELS.sepTag, relation, headline, you, day, rows, heavy, q,
@@ -228,8 +227,8 @@ export function mirrorOf(topF, e, isous) {
       const r = [...rows].sort((a, b) => b.diff - a.diff)[0];
       const n = `${'一二三四五'[rows.length - 1]}特性`;
       different = r.diff > 15
-        ? `比較している${n}に、20点以上離れているものはありません。ただし、${r.label}は差が${r.diff}点あり（あなた${r.you}／参照${r.ref}）、${r.you > r.ref ? 'あなた' : `${f.name}の参照値`}の方が高く出ています。この差だけで、人物との人柄の違いまでは判断できません。`
-        : `比較している${n}に、大きな数値差はありません。` + (r.diff >= 8 ? `${r.label}は${r.you < r.ref ? 'あなたの方が低い' : 'あなたの方が高い'}ものの、この差だけで、人物との人柄の違いまでは判断できません。` : '');
+        ? `比較している${n}に、20点以上離れているものはありません。ただし、${r.label}は差が${r.diff}点あり（あなた${r.you}／参照${r.ref}）、${r.you > r.ref ? 'あなた' : `${f.name}の参照値`}の方が高く出ています。`
+        : `比較している${n}に、大きな数値差はありません。` + (r.diff >= 8 ? `${r.label}は${r.you < r.ref ? 'あなたの方が低め' : 'あなたの方が高め'}です。` : '');
     }
     // 邪眼・異相との関係
     const ov = rows.filter((r) => mainIds.includes(r.id));
@@ -247,17 +246,25 @@ export function mirrorOf(topF, e, isous) {
     const lows = al.filter((r) => level(r.you) === 'low' && !mainIds.includes(r.id)), highs = al.filter((r) => level(r.you) === 'high');
     let you;
     if (lows.length && !ov.some((r) => r.diff <= 15)) you = `今回の回答には、${top2}が上位にある一方、${lows.map((r) => r.label).join('・')}は低いという配置があります。上位の特性として内側で感じている反応と、外へ表れにくい反応を分けて振り返ることが、自分を理解する手がかりになります。`;
-    else if (highs.length) you = `${highs.map((r) => r.label).join('・')}が高く、人物の参照値とも近い配置です。${highs.some((r) => mainIds.includes(r.id)) ? `${highs.filter((r) => mainIds.includes(r.id)).map((r) => r.label).join('・')}は主結果（${e.label}×${x.label}）を形づくる特性でもあり、今回の結果の中心にある反応が、この人物との比較にも表れています。` : '主結果とは別に、この特性もあなたの回答で目立っています。'}ただし、人物と同じ動機や経験を持つという意味ではありません。`;
+    else if (highs.length) you = `${highs.map((r) => r.label).join('・')}が高く、人物の参照値とも近い配置です。${highs.some((r) => mainIds.includes(r.id)) ? `${highs.filter((r) => mainIds.includes(r.id)).map((r) => r.label).join('・')}は主結果（${e.label}×${x.label}）を形づくる特性でもあり、今回の結果の中心にある反応が、この人物との比較にも表れています。` : '主結果とは別に、この特性もあなたの回答で目立っています。'}`;
     else you = `${f.name}との比較では、${al.length ? `${al.map((r) => r.label).join('・')}が近く` : '近い特性が限られ'}${df.length ? `、${df.map((r) => r.label).join('・')}が離れています` : 'ています'}。同じ人物に近いと出ても、どの特性で近いかによって、自分の読み方は変わります。`;
     // 文章（数値を出さない）版：06 の下部と 16 で使う
     const sideW = (r) => ({ low: '控えめ', high: 'はっきり', mid: '中ほど' }[level(r.you)]);
     const lvs = [...new Set(al.flatMap((r) => [level(r.you), level(r.ref)]))];
-    const proseAl = al.length ? `${f.name}と重なるのは、${al.map((r) => N(r.id)).join('、')}についての回答です。${lvs.length === 1 ? `${al.length >= 2 ? 'いずれも' : ''}${LEVEL_WORD[lvs[0]]}の側で近づいています。` : 'それぞれの高さが近い配置です。'}`
+    const dirW = (v) => (v >= 80 ? '強く高め' : v >= 70 ? '高め' : v >= 60 ? 'やや高め' : v <= 30 ? '低め' : 'やや低め');
+    const youW = (r) => ({ low: '低め', high: '高め', mid: '中ほど' }[level(r.you)]);
+    const same = (r) => level(r.you) === level(r.ref);
+    // 重なり：人物の定義で置いた方向と、本人の回答の高さを並べる（数値は出さない）
+    const proseAl = al.length ? `${al.map((r) => `${r.label}は、${f.name}の定義で${dirW(r.ref)}、あなたの回答${same(r) ? 'でも' : 'では'}${youW(r)}です`).join('。')}。`
       : `${f.name}とは、比較した特性の中にはっきり近いものはありません。${rows.filter((r) => r.diff <= 25).length ? `${rows.filter((r) => r.diff <= 25).map((r) => r.label).join('・')}がやや近い配置です。` : `最も近い${rows[0].label}でも、配置には差があります。`}`;
     const mild = [...rows].sort((a, b) => b.diff - a.diff)[0];
-    const proseDf = df.length ? `一方で、${df.map((r) => r.label).join('と')}は${df.every((r) => r.ref > r.you) ? `${f.name}の参照の方がはっきりしており` : df.every((r) => r.ref < r.you) ? 'あなたの方がはっきりしており' : 'あなたと参照で向きが分かれており'}、この点での反応の表れ方は異なると読めます。`
-      : mild && mild.diff >= 8 ? `比較している特性に大きな違いはありません。${mild.label}はあなたの方が${mild.you < mild.ref ? '控えめ' : 'はっきりしています'}${mild.you < mild.ref ? 'ですが' : 'が'}、この差だけで人柄の違いまでは判断できません。` : '比較している特性に、目立った違いはありません。';
-    const proseOverlap = `${proseAl}${al.length ? `振り返る候補として、${al.map((r) => `「${TRAIT_SCENE[r.id][level(r.you) === 'high' ? 'hi' : 'lo']}」`).join('や')}が挙げられます。` : ''}`;
+    const dq = (r) => FATUI_DEF[f.id][r.id].split('。')[0];
+    const dfText = (r) => (r.ref > 50
+      ? (r.you < r.ref ? `${r.label}は、${f.name}の定義では${dirW(r.ref)}ですが、あなたの回答では${youW(r)}です。定義にある「${dq(r)}」のような反応は、あなたには表れにくいと読めます。` : `${r.label}は、あなたの回答が、${f.name}の定義（${dirW(r.ref)}）よりもさらに高く出ています。`)
+      : (r.you > r.ref ? `${r.label}は、${f.name}の定義では${dirW(r.ref)}ですが、あなたの回答では${youW(r)}です。定義にある「${dq(r)}」とは異なり、${N(r.id)}が、あなたの方に出やすいと読めます。` : `${r.label}は、${f.name}の定義でも${dirW(r.ref)}ですが、あなたの回答はさらに低めです。`));
+    const proseDf = df.length ? df.map(dfText).join('')
+      : mild && mild.diff >= 8 ? `定義と大きく離れた特性はありません。${mild.label}は、あなたの方がやや${mild.you < mild.ref ? '控えめ' : 'はっきりしています'}${mild.you < mild.ref ? 'です' : ''}。` : '定義と大きく離れた特性はありません。';
+    const proseOverlap = `${proseAl}${al.length ? `定義の描写と照らすと、${al.map((r) => `「${TRAIT_SCENE[r.id][level(r.you) === 'high' ? 'hi' : 'lo']}」`).join('や')}が、この人物と重なりうる場面です。` : ''}`;
     void sideW;
     // 06 用（要点）：近さに寄与した特性・主な違い
     const lvAll = [...new Set(al.flatMap((r) => [level(r.you), level(r.ref)]))];
@@ -282,13 +289,15 @@ export function mirrorOf(topF, e, isous) {
     const feature = `${topUser[0].score <= 35 ? `全体に低めの回答の中では、${topUser.map((t) => t.label).join('と')}が相対的に高く出ています。` : `あなたの回答では、${topUser.map((t) => t.label).join('と')}が目立っています。`}${main}`;
     const notCompared = isous.slice(0, 3).filter((t) => !rows.some((r) => r.id === t.id)).map((t) => t.label);
     const differ = `${proseDf}${notCompared.length ? `なお、${notCompared.join('・')}は、${f.name}との照合では扱っていません。` : ''}`;
-    const sc0 = FATUI_SCENE[f.id];
-    const scene = `${sc0.text}${sc0.background ? 'この場面は照合の値を直接裏づけるものではなく、人物の背景です。' : ''}（照合に使う特性：${rows.map((r) => r.label).join('・')}）`;
+    // この人物の定義：照合に使う特性ごとに、置いた方向と、その根拠の描写
+    const dirOf = (v) => (v >= 80 ? '強く高め' : v >= 70 ? '高め' : v >= 60 ? 'やや高め' : v <= 30 ? '低め' : 'やや低め');
+    const defs = rows.map((r) => ({ label: r.label, dir: dirOf(r.ref), text: FATUI_DEF[f.id][r.id] }));
+    const scene = defs.map((d) => `${d.label}（${d.dir}）：${d.text}`).join('\n');
     // 06 の要点：差15以内＝近い、16〜25＝やや近い、それ以上＝離れている（本文の判定と同じ閾値）
     const midR = rows.filter((r) => r.diff > 15 && r.diff <= 25), farR = rows.filter((r) => r.diff > 25);
     const seg = [al.length ? `${al.map((r) => r.label).join('・')}が近${rows.length === 1 ? 'い' : 'く'}` : '', midR.length ? `${midR.map((r) => r.label).join('・')}がやや近${rows.length === 1 ? 'い' : 'く'}` : ''].filter(Boolean);
     const proseShort = `${seg.length ? seg.join('、') : '照合に使う特性はいずれも離れており'}${farR.length && seg.length ? `、${farR.map((r) => r.label).join('・')}は離れています。` : seg.length ? (rows.length === 1 ? '配置です（照合に使う特性はこの一つだけです）。' : al.length === rows.length ? '、照合に使う特性のすべてで配置が重なります。' : '、ほかの特性も大きくは離れていません。') : '、一致度は相対的な近さにとどまります。'}`;
-    return { f, rows, aligned, different, main, you, shortAl, shortDf, proseAl, proseDf, proseOverlap, feature, differ, scene, proseShort, story: { fact: f.copy.story_context, dti: meta.rationale }, overlap, question };
+    return { f, rows, aligned, different, main, you, shortAl, shortDf, proseAl, proseDf, proseOverlap, feature, differ, scene, defs, proseShort, story: { fact: f.copy.story_context, dti: meta.rationale }, overlap, question };
   });
   // まとめ：繰り返し近さの根拠になる特性と、人物ごとの一致理由
   const cnt = {};
@@ -296,7 +305,7 @@ export function mirrorOf(topF, e, isous) {
   const rep = Object.values(cnt).filter((v) => v.names.length >= 2);
   const reasons = people.map((p) => { const al = p.rows.filter((r) => r.diff <= 15); return `${p.f.name}：${al.length ? al.map((r) => r.label).join('・') : `最も近い${p.rows[0].label}`}`; }).join('／');
   const sum = [];
-  if (rep.length) sum.push(`${rep.map((v) => `${v.label}は${v.names.join('・')}との比較`).join('、')}で、近さの根拠になっています。同じ特性を繰り返し参照しているため、それぞれを独立した証拠として数えることはできません。`);
+  if (rep.length) sum.push(`${rep.map((v) => `${v.label}は${v.names.join('・')}との比較`).join('、')}で、共通して近さの根拠になっています。三人と重なる中心は、${rep.map((v) => v.label).join('と')}です。`);
   else sum.push('三人との近さは、それぞれ異なる特性で表れています。');
   const anyMain = people.some((p) => p.rows.some((r) => r.diff <= 15 && mainIds.includes(r.id)));
   sum.push(anyMain ? `主結果（${e.label}×${x.label}）を形づくる特性が近さに含まれる人物と、別の特性で近い人物を分けて読むと、どの反応が人物との比較に表れているかが見えます。`
@@ -357,7 +366,7 @@ export function rereadOf(e, isous, byScore) {
   if (gap >= 10) r1.push(`今回は、${s.slice(cut).map((t) => `${SH(t.id).verb}こと`).join('や')}よりも、${s.slice(0, cut).map((t) => SH(t.id).short).join('や')}への当てはまりが目立ちました。`);
   else r1.push('三つの特性が近い得点で重なっています。');
   const inc = parts.some((p) => p.id === x.id);
-  const r2 = inc ? `${L}と${X}は、別々の証拠が一致した結果ではありません。${X}は、${L}を形づくる特性の一つです。「${ELEMENT_COMBO[e.id].when}場面」を振り返るための、二つの見方として読んでください。`
+  const r2 = inc ? `${X}は、${L}を形づくる特性の一つです。「${ELEMENT_COMBO[e.id].when}場面」を、${L}と${X}の二つの見方から振り返れます。`
     : `${X}は、${L}を形づくる特性には含まれていません。二つを一つの理由にまとめず、それぞれが表れる場面を別々に振り返ってください。`;
   const other = isous.slice(1, 3).find((t) => !parts.some((p) => p.id === t.id));
   const more = other ? { label: other.label, score: other.score, color: other.color,
@@ -403,7 +412,7 @@ export function overviewOf(elements, isous, byScore, peaks, valleys) {
     + (shared.some((v) => v.sh.length) ? `${shared.filter((v) => v.sh.length).map((v) => `${v.z.label}は${v.sh.join('・')}を${a.label}と共有しています`).join('。')}。` : '')
     + O.eNextFixed;
   const d = a.score - b.score;
-  const eGap = `${a.label}${a.score}と${b.label}${b.score}の差は${d}です。今回は${a.label}が上回っていますが、この差だけで性格の確かさや、生活への影響の大きさは判断できません。`;
+  const eGap = `${a.label}${a.score}と${b.label}${b.score}の差は${d}です。${d >= 10 ? `今回は${a.label}がはっきり上回っています。` : `差は小さく、${b.label}の特性も同じように読む価値があります。`}`;
   const lowE = elements.slice(-2), lowI = isous.slice(-3);
   const eLow = `${lowE.map((z) => z.label).join('と')}が下位です。これは、${[...new Set(lowE.flatMap((z) => z.parts.map((q) => q.label)))].join('・')}など、その邪眼を構成する反応への当てはまりが相対的に少なかったことを示します。反対の性質があるという意味ではありません。`;
   const iLow = `${lowI.map((z) => z.label).join('・')}が下位です。これらの反応への当てはまりが、今回の回答では相対的に少なかったことを示します。反対の長所があるという意味ではありません。`;
