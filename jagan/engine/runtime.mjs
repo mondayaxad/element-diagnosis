@@ -1,7 +1,7 @@
 // jagan/engine/runtime.mjs — 画面・API・保存が使う結果の形（DTI：邪眼元素×異相＝4文字コードと漢字三文字の呼び名）。
 //   ・12特性の得点・人物の選定（固定の均等補正・保留条件）は judge.mjs（基礎 v0.3 の runtime と同じ計算）。
 //   ・異相・邪眼元素は dti.mjs の規則で必ず一つずつ選ぶ（基礎 v0.3 の「未顕・複合・未分化」は使わない。2026-11-04 指示書）。
-//   ・人物の「一致度」は補正を足す前の近さ（match）。一覧（characterOrder）も一致度の順。DTI のコード・呼び名は人物判定に使わない。
+//   ・人物の「一致度」は補正を足す前の近さ（match）。順位（characterOrder）は11名が偏りなく現れるよう補正した順。DTI のコード・呼び名は人物判定に使わない。
 //   ・同じ50回答は、結果ID・時刻・人数・キー順によらず同じ結果になる。
 import { judge, rankTraits, ENGINE_VERSION as JUDGE_VERSION } from './judge.mjs';
 import { selectIsou, orderElements, dtiPattern } from './dti.mjs';
@@ -51,11 +51,20 @@ export function computeDiagnosis(input, bundle) {
   const p = dtiPattern(bundle.dti, element.id, isou.id);
   const dti = { code: p.code, name: p.name, elementCode: p.element_id, aspectCode: p.aspect_code, namingVersion: bundle.dti.version };
 
-  // 表示用の人物の並び（0.5.0）：表示する一致度（補正前の近さ）の高い順。丸め前の値で並べ、同点は ID 順。
-  //   均等化の補正は「あなたのファトゥス」1名の選定にだけ使い、この並びには混ぜない（selected で示す）。
-  const characterOrder = j.privateDiagnostics.characterRanking
-    .map((c) => ({ id: c.id, name: c.name, rawSimilarity: c.score, displayScore: Math.round(c.score), agreement: c.agreement, coverage: c.coverage, usedAxes: c.usedAxes, selected: !!(j.character && j.character.id === c.id) }))
-    .sort((a, b) => b.rawSimilarity - a.rawSimilarity || a.id.localeCompare(b.id));
+  // 人物の順位（0.5.0）：50問の回答から算出し、11名が偏りなく現れるよう補正した順位。
+  //   1位は「あなたのファトゥス」（judge の選定と同じ）。2位以降も同じ規則で、残りの人物のうち一致度が最も高い人物から
+  //   selection_max_gap 以内の人物の中で、補正後の値が最も高い人物を順に選ぶ。そのため、どの順位も一致度の最上位から5ポイント以内に収まる。
+  //   表示する一致度（％）は補正前の近さ（丸め前で並べ替えはしない）。
+  const base = j.privateDiagnostics.characterRanking.map((c) => ({ id: c.id, name: c.name, rawSimilarity: c.score, displayScore: Math.round(c.score), agreement: c.agreement, coverage: c.coverage, usedAxes: c.usedAxes, sel: c.selectionScore }));
+  const gap = bundle.characters.selection_max_gap ?? Infinity;
+  const rest = [...base], characterOrder = [];
+  if (j.character) { const k = rest.findIndex((c) => c.id === j.character.id); characterOrder.push(rest.splice(k, 1)[0]); }
+  while (rest.length) {
+    const mx = Math.max(...rest.map((c) => c.rawSimilarity));
+    const pool = rest.filter((c) => c.rawSimilarity >= mx - gap - 1e-9).sort((a, b) => b.sel - a.sel || a.id.localeCompare(b.id));
+    characterOrder.push(rest.splice(rest.indexOf(pool[0]), 1)[0]);
+  }
+  characterOrder.forEach((c, i) => { c.rank = i + 1; c.selected = i === 0 && !!j.character; delete c.sel; });
   const winner = j.character && characterOrder.find((c) => c.id === j.character.id);
   const character = j.character
     ? { status: 'available', id: j.character.id, name: j.character.name, title: j.character.title, tags: j.character.tags, region: j.character.region, match: j.character.match, rawSimilarity: j.character.rawSimilarity, usedAxes: j.character.usedAxes, rawGap: j.character.rawGap, agreement: winner.agreement, coverage: winner.coverage }
@@ -102,7 +111,7 @@ export function publicSummary(result) {
 //   /jagan/share?e=<邪眼元素ID>&t=<異相の特性ID>&c=<人物ID>&m=<一致度>&v=<呼び名の版>.<デザインの版>
 //   回答・12特性の得点・結果ID は載せない。人物を保留した結果は c・m を付けない。
 export const SHARE_PATH = '/jagan/share';
-export const OG_DESIGN_VERSION = 'dti-og-2';
+export const OG_DESIGN_VERSION = 'dti-og-3';
 export function shareQuery(s) {
   const p = new URLSearchParams();
   p.set('e', s.element.id);
@@ -116,7 +125,7 @@ export function shareUrl(origin, s) { return `${origin}${SHARE_PATH}?${shareQuer
 // X の共有文（元素診断の共有文と同じ形）。人物を保留した結果は人物の行と人物のハッシュタグを省く
 export function shareTextFromSummary(s, url) {
   const head = `私の結果は【${s.element.label} × ${s.isou.label}】`;
-  const fat = s.character ? `\n最も近しいファトゥス：${s.character.label}（${s.character.matchPercent}%一致）` : '';
+  const fat = s.character ? `\nあなたのファトゥス：${s.character.label}（${s.character.matchPercent}%一致）` : '';
   const tags = ['#邪眼診断', `#${s.dti.code}`, ...(s.character ? [`#${s.character.label}`] : [])].join(' ');
   return `邪眼診断をやってみました。\n\n${head}${fat}\n\n${url}\n\n${tags}`;
 }

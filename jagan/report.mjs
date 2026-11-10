@@ -27,7 +27,7 @@ function render(report) {
   const saved = report.headline && report.headline.character;
   const now = result.character.status === 'available' ? result.character.name : null;
   const note = saved && saved !== now
-    ? `<p class="rp-vnote">保存時の「最も近しいファトゥス」は${esc(saved)}（${esc(report.headline.matchPercent)}%）でした。人物の判定の版を更新したため、この表示は新しい版で計算しています。邪眼・異相の結果は変わりません。</p>` : '';
+    ? `<p class="rp-vnote">保存時の「あなたのファトゥス」は${esc(saved)}（${esc(report.headline.matchPercent)}%）でした。人物の判定の版を更新したため、この表示は新しい版で計算しています。邪眼・異相の結果は変わりません。</p>` : '';
   $('rpBody').innerHTML = note + renderReport(result, BUNDLE);
   $('rpEnd').hidden = false;
   $('rpKeep').hidden = false;

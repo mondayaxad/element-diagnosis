@@ -164,11 +164,11 @@ function mainCard(result, bundle) {
 function fatuiCard(result) {
   const ch = result.character;
   if (ch.status !== 'available') {
-    return `<section class="rx-card rx-fatui"><p class="rx-kicker">最も近しいファトゥス</p>
+    return `<section class="rx-card rx-fatui"><p class="rx-kicker">あなたのファトゥス</p>
       <p class="jg-pending-block">今回の回答では、人物の比較に使える特性の差が小さく、特定の人物を示せませんでした。無理に誰かへ当てはめることはしません。</p></section>`;
   }
   return `<section class="rx-card rx-fatui">
-      <p class="rx-kicker">最も近しいファトゥス</p>
+      <p class="rx-kicker">あなたのファトゥス</p>
       <div class="rx-fatui-row">
         <div>
           <p class="rx-fatui-name${ch.name.length >= 6 ? ' is-long' : ''}" style="background-image:${characterGradient(ch.id)}">${esc(ch.name)}</p>
@@ -231,7 +231,7 @@ function actions() {
 }
 
 function seeingCard() {
-  const open = ['邪眼元素と異相（DTIコード・呼び名）', '最も近しいファトゥス1名', '欲求が導くあなたの影'];
+  const open = ['邪眼元素と異相（DTIコード・呼び名）', 'あなたのファトゥス1名', '欲求が導くあなたの影'];
   const locked = ['12特性のスコアと、それぞれの読み解き', ...GROUPS.map((g) => `${g.short}（4特性）の詳細`), '近しいファトゥス3名との共通点・相違点', '判定根拠（なぜその組み合わせになったか）'];
   return `<section class="rx-card rx-seeing">
       <p class="rx-seeing-k">今、あなたが見ているもの</p>
@@ -259,7 +259,7 @@ function whyCard(result, bundle) {
       <hr class="rx-hr">
       <p class="rx-h4">あなたの影の特性</p>
       ${locks(tendencyWords(result, bundle, null, 4))}
-      ${unlockCard('最も近しいファトゥスとあなたの、重なる特性と離れている特性を、物語とあわせて読み解きます。', `${ch.name}との共通点と相違点`, characterPreview(result, bundle), '#E2C08C')}
+      ${unlockCard('あなたのファトゥスとあなたの、重なる特性と離れている特性を、物語とあわせて読み解きます。', `${ch.name}との共通点と相違点`, characterPreview(result, bundle), '#E2C08C')}
     </section>`;
 }
 
@@ -303,7 +303,7 @@ function unlockAll() {
 }
 
 export function renderResultPage(result, bundle) {
-  // 指示書 5章の順：1〜2 あなたの深淵 → 3 最も近しいファトゥス → 4 欲求が導くあなたの影 → 5 渇望する邪眼 → 6 保存・画像・X →
+  // 指示書 5章の順：1〜2 あなたの深淵 → 3 あなたのファトゥス → 4 欲求が導くあなたの影 → 5 渇望する邪眼 → 6 保存・画像・X →
   //   7 見えているのは一部分（土台ごとのロックと解除の案内）→ 8 内容と価値、最後に金額
   return [mainCard(result, bundle), fatuiCard(result), desireCard(result, bundle), cravingCard(result), actions(), seeingCard(), whyCard(result, bundle),
     ...GROUPS.map((g) => foundationCard(result, bundle, g)), unlockAll()].join('\n');
@@ -437,7 +437,7 @@ export function renderReport(result, bundle) {
       <h2 class="rp-h2">総括 — 不安と距離・行動のくせ・他者との向き合い</h2>
       <p class="rp-en gold">DISTANCE × ACTION × RELATING</p>
       ${GROUPS.map((g, i) => `<div class="rp-sum" style="--bc:${g.color}"><p class="k">${['DISTANCE', 'ACTION', 'RELATING'][i]}<span>${esc(g.short)}</span></p><p>${esc(g.short)}の領域では、${sentence(g)}</p></div>`).join('')}
-      <div class="rp-final">この3つの層が重なって、<b style="color:${ec.main}">【${esc(el.label)}×${esc(isou.label)}】</b>という深淵の輪郭が描かれています。${ch.status === 'available' ? `最も近しい参照は<b>${esc(ch.name)}</b>（${ch.match}%）です。` : ''}${isou.id ? esc(TRAIT_COPY[isou.id].reflection) : '無理に一つの傾向に当てはめず、場面ごとの表れ方に目を向けてみてください。'}</div>
+      <div class="rp-final">この3つの層が重なって、<b style="color:${ec.main}">【${esc(el.label)}×${esc(isou.label)}】</b>という深淵の輪郭が描かれています。${ch.status === 'available' ? `あなたのファトゥスは<b>${esc(ch.name)}</b>（${ch.match}%）です。` : ''}${isou.id ? esc(TRAIT_COPY[isou.id].reflection) : '無理に一つの傾向に当てはめず、場面ごとの表れ方に目を向けてみてください。'}</div>
       <p class="rp-note">${esc(METHOD.short_notice)}${esc(METHOD.development_notice)}</p>
     </section>`;
 

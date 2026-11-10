@@ -243,7 +243,7 @@ test('a flat answer set can be saved and shared; the character is omitted (no nu
   assert.equal(sh.body.summary.character, null);
   const page = await call(createSharePageHandler({ env: fakeEnv(), fetchImpl }), { method: 'GET', url: `/api/jagan-share-page?id=${sh.body.publicId}` });
   assert.equal(page.status, 200);
-  assert.ok(!page.body.includes('最も近しいファトゥス') && !page.body.includes('null') && !page.body.includes('undefined'));
+  assert.ok(!page.body.includes('あなたのファトゥス') && !page.body.includes('null') && !page.body.includes('undefined'));
   assert.ok(!page.body.includes('&amp;c=') && page.body.includes(sh.body.summary.dti.name));
 });
 
@@ -354,7 +354,7 @@ test('result page: deferred parts are not filled, no names leak, and the twelve 
   assert.ok(html.includes('¥1,000') && html.includes('全てのロックを解除する'));
   assert.ok(html.includes('一致度と人物の選び方について'));
   // 指示書 5章の順：深淵（コード・呼び名）→ファトゥス→欲求が導くあなたの影→渇望する邪眼→保存・画像・X→一部分→最後に金額
-  const order = ['あなたの深淵', `${r.dti.code}</b>`, '最も近しいファトゥス', '欲求が導くあなたの影', 'あなたの欲求特性', 'あなたの渇望する邪眼', 'saveBtn', 'imageBtn', 'shareBtn', 'あなたの一部分に過ぎません', 'UNLOCK EVERYTHING', 'rx-all-price'];
+  const order = ['あなたの深淵', `${r.dti.code}</b>`, 'あなたのファトゥス', '欲求が導くあなたの影', 'あなたの欲求特性', 'あなたの渇望する邪眼', 'saveBtn', 'imageBtn', 'shareBtn', 'あなたの一部分に過ぎません', 'UNLOCK EVERYTHING', 'rx-all-price'];
   const pos = order.map((k) => html.indexOf(k));
   assert.ok(pos.every((p) => p >= 0), JSON.stringify(order.filter((k, i) => pos[i] < 0)));
   assert.deepEqual([...pos].sort((a, b) => a - b), pos);
@@ -388,7 +388,7 @@ test('share text equals the template; OG params round-trip through the image par
     assert.ok(!url.includes('ANX01') && !url.includes('score'));
     assert.equal(shareTextFromSummary(s, url), makeShareText(r, url, 'https://example.invalid'));
     const text = makeShareText(r, url, 'https://example.invalid');
-    assert.equal(text, `邪眼診断をやってみました。\n\n私の結果は【${s.element.label} × ${s.isou.label}】\n最も近しいファトゥス：${s.character.label}（${s.character.matchPercent}%一致）\n\n${url}\n\n#邪眼診断 #${s.dti.code} #${s.character.label}`);
+    assert.equal(text, `邪眼診断をやってみました。\n\n私の結果は【${s.element.label} × ${s.isou.label}】\nあなたのファトゥス：${s.character.label}（${s.character.matchPercent}%一致）\n\n${url}\n\n#邪眼診断 #${s.dti.code} #${s.character.label}`);
     // 共有文の URL は、その結果と一致するものだけ（他人の値・他のサイト・余計な値は拒否）
     assert.throws(() => makeShareText(r, url.replace(/m=\d+/, 'm=100'), 'https://example.invalid'), /invalid_share_url/);
     assert.throws(() => makeShareText(r, `${url}&answers=1`, 'https://example.invalid'), /invalid_share_url/);
@@ -398,7 +398,7 @@ test('share text equals the template; OG params round-trip through the image par
     assert.equal(parsed.code, s.dti.code); assert.equal(parsed.name, s.dti.name);
     assert.equal(parsed.character.name, s.character.label);
     assert.equal(parsed.character.match, s.character.matchPercent);
-    assert.match(ogParams(s), /&v=dti-naming-v1-20261104\.dti-og-2$/);
+    assert.match(ogParams(s), /&v=dti-naming-v1-20261104\.dti-og-3$/);
   }
   // 人物を保留した結果は人物の行を省く
   const flat = run(all(3));
@@ -532,7 +532,7 @@ test('OG card: names come only from whitelisted ids, the character frame is omit
   const text = (node) => (node == null ? '' : typeof node === 'string' ? node : Array.isArray(node) ? node.map(text).join('') : text(node.props && node.props.children));
   const v = parseOg(new URLSearchParams('e=EL&t=RSK&c=arlecchino&m=86'));
   const t1 = text(buildCardTree(v));
-  for (const k of ['邪眼診断 — MY RESULT', 'DTI', '雷', '危険志向', 'ELRK', '踏雷者', '最も近しいファトゥス', 'アルレッキーノ', '86', '%一致']) assert.ok(t1.includes(k), k);
+  for (const k of ['邪眼診断 — MY RESULT', 'DTI', '雷', '危険志向', 'ELRK', '踏雷者', 'あなたのファトゥス', 'アルレッキーノ', '86', '%一致']) assert.ok(t1.includes(k), k);
   const t2 = text(buildCardTree(parseOg(new URLSearchParams('e=CR&t=WDR'))));
   assert.ok(t2.includes('CRWD') && !t2.includes('ファトゥス') && !t2.includes('null'));
   assert.ok(text(buildCardTree(null)).includes('Delusion Type Indicator'));
@@ -572,7 +572,7 @@ test('stateless share page (/jagan/share?…) needs no DB: summary from whitelis
   // 人物を保留した結果の共有は、人物の行を出さない
   const flat = await call(page, { method: 'GET', url: `/api/jagan-share-page?${ogParams(publicSummary(run(all(3))))}` });
   assert.equal(flat.status, 200);
-  assert.ok(!flat.body.includes('最も近しいファトゥス'));
+  assert.ok(!flat.body.includes('あなたのファトゥス'));
 });
 
 test('unlock mosaics show fixed sample values, not the user\'s real scores', () => {
@@ -927,8 +927,10 @@ test('完全解析 DIPPER：06＝比較の要点（近さに寄与した特性�
     for (const k of ['あなたの回答に出ている特徴', 'その人物と重なる反応', '読み方を支える原作の場面', 'その人物と異なるところ', '自分の日常で確かめる問い', '照合に使う特性']) assert.ok(p16.includes(k), k);
     assert.ok(!/あなた\d|参照\s?\d|dp-mvals/.test(p16), '16 は数値ではなく文章で');
     // 一覧は表示する一致度の順（丸め前の値で降順）、あなたのファトゥスは最も近い人物から 5 ポイント以内
-    const fl = buildComplete(result, BUNDLE).fatui; for (let i = 1; i < fl.length; i++) assert.ok(fl[i - 1].raw >= fl[i].raw);
-    const sel = fl.find((f) => f.selected); if (sel) assert.ok(fl[0].raw - sel.raw <= BUNDLE.characters.selection_max_gap + 1e-9);
+    // 順位は 11名が偏りなく現れるよう補正した順。1位＝あなたのファトゥス、どの順位も残りの最上位の一致度から {gap} 以内
+    const fl = buildComplete(result, BUNDLE).fatui;
+    if (result.character.status === 'available') { assert.ok(fl[0].selected); assert.equal(fl[0].id, result.character.id); }
+    for (let i = 0; i < fl.length; i++) assert.ok(fl[i].raw >= Math.max(...fl.slice(i).map((f) => f.raw)) - BUNDLE.characters.selection_max_gap - 1e-9);
     assert.ok(!/寄与 \d|[>（]重み ?\d|計算上の重み/.test(html));
     const m = buildComplete(result, BUNDLE);
     const qs = m.mirror.people.map((p) => p.question);
@@ -958,7 +960,7 @@ test('完全解析 DIPPER：回答パターン（全体に低い・高い・中�
     }
     for (const e of m.elements) for (const mm of text.matchAll(new RegExp(`(?<![一-龯])${e.label}(\\d{1,3})(?![\\d%％])`, 'g'))) assert.equal(+mm[1], e.score, `${name}: ${e.label}${mm[1]}`);
     assert.ok(!/圧倒的|非常に強い|相乗効果|増幅/.test(text), name);
-    const fl = m.fatui; for (let i = 1; i < fl.length; i++) assert.ok(fl[i - 1].raw >= fl[i].raw, name);
+    const fl = m.fatui; for (let i = 0; i < fl.length; i++) assert.ok(fl[i].raw >= Math.max(...fl.slice(i).map((f) => f.raw)) - BUNDLE.characters.selection_max_gap - 1e-9, name);
   }
   // 同じ邪眼×異相でも、他の特性の配置が違えば「あなたの場合」の文が変わる
   const a = buildComplete(computeDiagnosis({ answers: pats.水依存A, resultId: 'a', itemSetVersion: BUNDLE.items.item_set_version }, BUNDLE), BUNDLE);

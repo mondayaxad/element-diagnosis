@@ -2,7 +2,7 @@
 //   画面（view.mjs）はこの中身だけを使う。数値・順位はすべて結果と同じ版の計算から取る（新しい採点はしない）。
 //   ・邪眼元素の全体順位：result.element.ranking（1位の選定と同じ規則）
 //   ・異相の全体順位：orderIsou（1位は必ず result.isou と同じ）
-//   ・ファトゥスの並び：result.characterOrder（表示する一致度の高い順）。「あなたのファトゥス」（selected）は、近い人物の中から出やすさの偏りを抑えて選んだ1名
+//   ・ファトゥスの順位：result.characterOrder（50問の回答から、11名が偏りなく現れるよう補正した順位。1位＝あなたのファトゥス）
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
@@ -59,9 +59,9 @@ export function buildComplete(result, bundle, { diagnosedAt = null } = {}) {
 
   const topI = isous.slice(0, 3), lowI = isous.slice(-3).reverse();
   const topE = elements.slice(0, 3), lowE = elements.slice(-2).reverse();
-  // 上位3名：あなたのファトゥスと、それ以外で一致度の高い2名（一覧の順とは別に、選ばれた人物を必ず含める）
+  // 上位3名：順位の1〜3位（1位＝あなたのファトゥス）
   const selF = fatui.find((f) => f.selected);
-  const topF = selF ? [selF, ...fatui.filter((f) => !f.selected).slice(0, 2)] : fatui.slice(0, 3);
+  const topF = fatui.slice(0, 3);
   // 各邪眼元素に連なるファトゥス（色の組み合わせにその元素を含む人物。順位の高い順）
   // 7日間の観察：上位の異相から順に（足りなければ次の順位へ）
   const days = isous.slice(0, 7).map((x, i) => ({ day: i + 1, label: x.label, color: x.color, q: x.deep.exp }));
@@ -254,7 +254,7 @@ export function mirrorOf(topF, e, isous) {
     const sideW = (r) => ({ low: '控えめ', high: 'はっきり', mid: '中ほど' }[level(r.you)]);
     const lvs = [...new Set(al.flatMap((r) => [level(r.you), level(r.ref)]))];
     const proseAl = al.length ? `${f.name}と重なるのは、${al.map((r) => N(r.id)).join('、')}についての回答です。${lvs.length === 1 ? `${al.length >= 2 ? 'いずれも' : ''}${LEVEL_WORD[lvs[0]]}の側で近づいています。` : 'それぞれの高さが近い配置です。'}`
-      : `${f.name}とは、比較した特性の中にはっきり近いものは少なく、${rows[0].label}の配置が最も近い程度です。`;
+      : `${f.name}とは、比較した特性の中にはっきり近いものはありません。${rows.filter((r) => r.diff <= 25).length ? `${rows.filter((r) => r.diff <= 25).map((r) => r.label).join('・')}がやや近い配置です。` : `最も近い${rows[0].label}でも、配置には差があります。`}`;
     const mild = [...rows].sort((a, b) => b.diff - a.diff)[0];
     const proseDf = df.length ? `一方で、${df.map((r) => r.label).join('と')}は${df.every((r) => r.ref > r.you) ? `${f.name}の参照の方がはっきりしており` : df.every((r) => r.ref < r.you) ? 'あなたの方がはっきりしており' : 'あなたと参照で向きが分かれており'}、この点での反応の表れ方は異なると読めます。`
       : mild && mild.diff >= 8 ? `比較している特性に大きな違いはありません。${mild.label}はあなたの方が${mild.you < mild.ref ? '控えめ' : 'はっきりしています'}${mild.you < mild.ref ? 'ですが' : 'が'}、この差だけで人柄の違いまでは判断できません。` : '比較している特性に、目立った違いはありません。';
@@ -282,7 +282,10 @@ export function mirrorOf(topF, e, isous) {
     const notCompared = isous.slice(0, 3).filter((t) => !rows.some((r) => r.id === t.id)).map((t) => t.label);
     const differ = `${proseDf}${notCompared.length ? `なお、${notCompared.join('・')}は、${f.name}との照合では扱っていません。` : ''}`;
     const scene = `${f.copy.story_context}（照合に使う特性：${rows.map((r) => r.label).join('・')}）`;
-    const proseShort = `${al.length ? `${al.map((r) => r.label).join('・')}で近い配置です。` : 'はっきり近い特性は少ない配置です。'}${df.length ? `${df.map((r) => r.label).join('・')}は離れています。` : ''}`;
+    // 06 の要点：差15以内＝近い、16〜25＝やや近い、それ以上＝離れている（本文の判定と同じ閾値）
+    const midR = rows.filter((r) => r.diff > 15 && r.diff <= 25), farR = rows.filter((r) => r.diff > 25);
+    const seg = [al.length ? `${al.map((r) => r.label).join('・')}が近${rows.length === 1 ? 'い' : 'く'}` : '', midR.length ? `${midR.map((r) => r.label).join('・')}がやや近${rows.length === 1 ? 'い' : 'く'}` : ''].filter(Boolean);
+    const proseShort = `${seg.length ? seg.join('、') : '照合に使う特性はいずれも離れており'}${farR.length && seg.length ? `、${farR.map((r) => r.label).join('・')}は離れています。` : seg.length ? (rows.length === 1 ? '配置です（照合に使う特性はこの一つだけです）。' : al.length === rows.length ? '、照合に使う特性のすべてで配置が重なります。' : '、ほかの特性も大きくは離れていません。') : '、一致度は相対的な近さにとどまります。'}`;
     return { f, rows, aligned, different, main, you, shortAl, shortDf, proseAl, proseDf, proseOverlap, feature, differ, scene, proseShort, story: { fact: f.copy.story_context, dti: meta.rationale }, overlap, question };
   });
   // まとめ：繰り返し近さの根拠になる特性と、人物ごとの一致理由

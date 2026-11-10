@@ -18,7 +18,7 @@
   var SCHEMA = 'jagan-result-3';
   // 共有の URL（jagan/engine/runtime.mjs の shareQuery と同じ。テストで一致を確かめる）
   var SHARE_PATH = '/jagan/share';
-  var OG_DESIGN_VERSION = 'dti-og-2';
+  var OG_DESIGN_VERSION = 'dti-og-3';
   // 色（jagan/site-copy.mjs の ISOU_COLOR・ELEMENT_COLOR・CHARACTER_ELEMENTS と同じ値。テストで一致を確かめる）
   var ISOU_COLOR = { ANX: '#B59AD8', SEP: '#7FA7D8', SUS: '#9FB0C8', WDR: '#8FC0D0', IMP: '#E0A050', PSV: '#B8A27A', PRF: '#D8C27A',
     HOS: '#E0694F', ATT: '#E08AA8', MAN: '#C88AD8', RSK: '#E07A5A', CAL: '#9AA7B5' };
@@ -221,7 +221,7 @@
   function shareTextOf(s, url) {
     var h = s.headline || {};
     var head = '私の結果は【' + h.element + ' × ' + h.type + '】';
-    var fat = s.character ? '\n最も近しいファトゥス：' + s.character.name + '（' + s.character.match + '%一致）' : '';
+    var fat = s.character ? '\nあなたのファトゥス：' + s.character.name + '（' + s.character.match + '%一致）' : '';
     var tags = ['#邪眼診断', '#' + h.code].concat(s.character ? ['#' + s.character.name] : []).join(' ');
     return '邪眼診断をやってみました。\n\n' + head + fat + '\n\n' + url + '\n\n' + tags;
   }

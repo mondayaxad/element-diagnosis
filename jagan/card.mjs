@@ -1,5 +1,5 @@
 // jagan/card.mjs — 「画像を保存」の結果画像（元素診断と同じ 1080×1080 の構成。押したときにブラウザで描く）。
-//   暗い地に邪眼元素の色の光、「邪眼元素 × 異相」をそれぞれの色で、最も近しいファトゥスと一致度を大きく出す。
+//   暗い地に邪眼元素の色の光、「邪眼元素 × 異相」をそれぞれの色で、あなたのファトゥスと一致度を大きく出す。
 //   公開要約（publicSummary）の値だけを使う。背景・人物の画像は使わない。
 import { ELEMENT_COLOR, NEUTRAL_COLOR, ISOU_COLOR } from './site-copy.mjs';
 
@@ -63,7 +63,7 @@ export function drawCard(canvas, s) {
 
   if (s.character) {
     ctx.fillStyle = '#B0909B'; ctx.font = `26px ${SERIF}`;
-    ctx.fillText('最も近しいファトゥス', W / 2, 540);
+    ctx.fillText('あなたのファトゥス', W / 2, 540);
     ctx.fillStyle = c.el; ctx.font = `bold ${s.character.label.length >= 6 ? 76 : 88}px ${SERIF}`;
     ctx.fillText(s.character.label, W / 2, 640);
     ctx.fillStyle = c.isou; ctx.font = `bold 140px ${SERIF}`;

@@ -2737,7 +2737,7 @@ function mpJaganVizHtml(r) {
     const tone = r.fatui.tone || { base: mpElText(r.el), ring: [mpElText(r.el), mpElText(r.el)], text: [mpElText(r.el), mpElText(r.el)] };
     const nameStyle = awake ? `background-image:linear-gradient(100deg, ${tone.text[0]}, ${tone.text[1]});-webkit-background-clip:text;background-clip:text;color:transparent` : `color:${tone.base}`;
     ring = `
-      <div class="mp-ring" style="--rc:${tone.base}" role="img" aria-label="最も近しいファトゥス ${r.fatui.name} 一致度${r.fatui.match}%">
+      <div class="mp-ring" style="--rc:${tone.base}" role="img" aria-label="あなたのファトゥス ${r.fatui.name} 一致度${r.fatui.match}%">
         ${mpRingSvg(r.fatui.match, tone.base, tone.ring)}
         <span class="lbl">FATUI</span>
         <span class="who" style="${nameStyle}">${r.fatui.name}</span>
@@ -2769,7 +2769,7 @@ function mpJaganLockedHtml(r, where) {
     <div class="mp-lockbox">
       <div class="mp-seen">
         <div class="mp-seen-title">すでに見えているもの</div>
-        <ul class="mp-seen-list"><li>邪眼元素・異相・DTI</li><li>最も近しいファトゥス1名</li></ul>
+        <ul class="mp-seen-list"><li>邪眼元素・異相・DTI</li><li>あなたのファトゥス1名</li></ul>
       </div>
       <div class="mp-locked-title">まだ読み解いていないもの</div>
       ${MP_JG_LOCKED.map(([t, cap, d]) => `<div class="mp-locked-row" data-domain="${d}"><span class="txt"><span class="t">${t}</span><span class="cap">${cap}</span><span class="ghost" aria-hidden="true"></span></span></div>`).join('')}
