@@ -535,7 +535,7 @@ body { background: #09070B; background-image: none; }
   border: 0; border-radius: 999px; padding: 13px 28px; font-family: inherit; font-size: 15px; font-weight: 700; letter-spacing: .08em; color: #fff; cursor: not-allowed;
   background: var(--pc, #C8405C); box-shadow: 0 0 22px color-mix(in srgb, var(--pc, #C8405C) 45%, transparent); }
 .rx-preview-btn svg { width: 16px; height: 16px; }
-.rp-radar { display: block; width: 72%; max-width: 260px; margin: 6px auto 10px; }
+.rp-radar { display: block; width: 84%; max-width: 320px; overflow: visible; margin: 6px auto 10px; }
 .rp-radar text { font-size: 10px; fill: #A58994; font-family: var(--font-jp); dominant-baseline: middle; }
 .rx-mosaic { filter: blur(3.5px) saturate(.95); opacity: 1; }
 .rx-mosaic .rp-radar { width: 80%; }
