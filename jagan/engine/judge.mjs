@@ -27,7 +27,8 @@ export function characterRanking(scores, characters) {
     const keys = Object.keys(c.anchors);
     const rmse = Math.sqrt(keys.reduce((s, k) => s + ((scores[k] - c.anchors[k]) / 100) ** 2, 0) / keys.length);
     const agreement = 100 * (1 - rmse);
-    const coverage = total > 0 ? keys.reduce((s, k) => s + salient[k], 0) / total : 1;
+    // 0.7.0：目立つ特性の割合は、事前値（coverage_prior）へ寄せたなだらかな値。目立つ特性がない／照合外の特性が少し50を超える、の境界で急変しない
+    const coverage = (keys.reduce((s, k) => s + salient[k], 0) + characters.coverage_prior_strength * characters.coverage_prior) / (total + characters.coverage_prior_strength);
     const similarity = characters.anchor_agreement_weight * agreement + characters.salience_coverage_weight * 100 * coverage;
     return { id: c.id, name: c.name, score: similarity, selectionScore: similarity + c.selection_offset, agreement, coverage, usedAxes: keys, selectionOffset: c.selection_offset };
   }).sort((a, b) => b.selectionScore - a.selectionScore || a.id.localeCompare(b.id));

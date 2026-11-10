@@ -112,8 +112,8 @@ export function renderComplete(m) {
       ])}
     </div>
     <div class="dp-etop" style="--c:${elc}"><div class="dp-pk">${E(m.ov.eTopTitle)}</div>
-      <table class="dp-ctab"><thead><tr><th>特性</th><th>得点</th><th></th><th>算出の重み</th></tr></thead><tbody>
-      ${el1.parts.map((x) => `<tr><td>${E(x.label)}</td><td>${x.score}</td><td class="bar">${bar(x.score, elc)}</td><td>${x.weight}％</td></tr>`).join('')}</tbody></table>
+      <table class="dp-ctab"><thead><tr><th>特性</th><th>得点</th><th></th></tr></thead><tbody>
+      ${el1.parts.map((x) => `<tr><td>${E(x.label)}</td><td>${x.score}</td><td class="bar">${bar(x.score, elc)}</td></tr>`).join('')}</tbody></table>
       ${m.ov.eRead.map((t) => `<p>${E(t)}</p>`).join('')}</div>
     <div class="dp-ac2"><div class="dp-acb"><div class="dp-pk">${E(m.ov.eNextTitle)}</div><p>${E(m.ov.eNext)}</p></div><div class="dp-acb"><div class="dp-pk">${E(m.ov.eGapTitle)}</div><p>${E(m.ov.eGap)}</p></div></div>`, { sub: 'Overview' });
 
@@ -186,11 +186,11 @@ export function renderComplete(m) {
     page('dp-wide dp-detail', 'JAGAN', nameOf(`邪眼を読む（${e.rank}）`), `
       ${dHead({ c, rank: e.rank, score: e.score, next: d.next, label: e.label, head: d.head, tagline: d.tagline, kick: `JAGAN · ${e.name}`,
         emblem: `<img src="/assets/emblems/jagan/record/${{ PY: 'pyro', HY: 'hydro', CR: 'cryo', EL: 'electro', AN: 'anemo', GE: 'geo', DE: 'dendro' }[e.id]}.png" alt="${E(e.label)}の邪眼の証" width="120" height="120">` })}
-      <div class="dp-dchips"><span class="dp-dchk">${E(L.basisE)}</span>${e.parts.map((x) => `<span class="dp-dchip${x.id === d.core ? ' core' : ''}" style="--c:${c}">${E(x.label)} ${x.score}<i>算出の重み ${x.weight}%</i>${x.id === d.core ? '<em>核</em>' : ''}</span>`).join('')}</div>
+      <div class="dp-dchips"><span class="dp-dchk">${E(L.basisE)}</span>${e.parts.map((x) => `<span class="dp-dchip${x.id === d.core ? ' core' : ''}" style="--c:${c}">${E(x.label)} ${x.score}</span>`).join('')}</div>
       <div class="dp-dsplit"><div>
         ${youBlock(d, c)}
-        <div class="dp-dbasis"><div class="dp-dck">${E(L.basisE)}　<small>算出の重み：${e.parts.map((x) => `${E(x.label)}${x.weight}%`).join('・')}</small></div>
-          ${e.parts.map((x) => `<div class="dp-row"><span>${E(x.label)}<small>算出の重み ${x.weight}%</small></span>${bar(x.score, c)}<b>${x.score}</b></div>`).join('')}</div>
+        <div class="dp-dbasis"><div class="dp-dck">${E(L.basisE)}</div>
+          ${e.parts.map((x) => `<div class="dp-row"><span>${E(x.label)}</span>${bar(x.score, c)}<b>${x.score}</b></div>`).join('')}</div>
       </div>${side(d, c)}</div>`);
   }
   for (const x of m.topI) {
@@ -198,7 +198,7 @@ export function renderComplete(m) {
     page('dp-wide dp-detail', 'ISOU', nameOf(`異相を読む（${x.rank}）`), `
       ${dHead({ c, rank: x.rank, score: x.score, next: d.next, label: x.label, head: x.text.axis, tagline: d.tagline, kick: `ISOU · ${x.aspect.code}`,
         emblem: `<span class="dp-dcode">${E(x.aspect.code)}</span>` })}
-      <div class="dp-dchips"><span class="dp-dchk">${E(L.basisI)}</span><span class="dp-dchip" style="--c:${c}">得点 ${x.score}</span><span class="dp-dchip" style="--c:#85707a">12特性の平均 ${d.overall}</span>${d.inc.map((e) => `<span class="dp-dchip" style="--c:${e.color}">${E(e.label)}の計算に含まれる</span>`).join('')}</div>
+      <div class="dp-dchips"><span class="dp-dchk">${E(L.basisI)}</span><span class="dp-dchip" style="--c:${c}">得点 ${x.score}</span><span class="dp-dchip" style="--c:#85707a">12特性の平均 ${d.overall}</span>${d.inc.map((e) => `<span class="dp-dchip" style="--c:${e.color}">${E(e.label)}を形づくる特性</span>`).join('')}</div>
       <div class="dp-dsplit"><div>
         <div class="dp-dmeans" style="--c:${c}"><div class="dp-dck">${E(L.means)}</div><p>${E(d.means)}</p></div>
         ${youBlock(d, c)}
@@ -216,8 +216,11 @@ export function renderComplete(m) {
         <div class="dp-clink" style="--a:${c.e.color};--b:${c.x.color}"><i></i><span class="${c.inc ? 'inc' : 'sep'}">${E(c.tag)}</span></div>
         <div class="dp-ccard" style="--c:${c.x.color}"><div class="dp-lk">異相<span>· 1位</span></div><b>${E(c.x.label)}</b><p>${E(c.x.sub)}</p></div>
       </div>
-      <p class="dp-crel"><span>計算上の関係</span>${E(c.relation)}</p>
       <div class="dp-chead">${E(c.headline)}</div>
+      <div class="dp-cflow"><div class="dp-dsec" style="--c:${c.x.color}">${E(c.flow.title)}</div>
+        <ol>${c.flow.items.map((t, i) => `<li><span>${pad(i + 1)}</span><b>${E(c.flow.steps[i])}</b><p>${E(t)}</p></li>`).join('')}</ol>
+        <p class="dp-note">${E(c.flow.note)}</p>
+      </div>
       <div class="dp-dsplit"><div>
         <div class="dp-dsec" style="--c:${c.x.color}">${E(CL.you)}</div>${c.you.map((t) => `<p class="dp-p">${E(t)}</p>`).join('')}
       </div><div class="dp-panel">
@@ -228,10 +231,7 @@ export function renderComplete(m) {
         ${c.rows.map((r) => `<tr class="${r.self ? 'self' : ''}${r.sep ? ' sep' : ''}"><td style="color:${r.color}">${E(r.label)}${r.sep ? '<small>異相</small>' : ''}</td><td>${r.score}</td><td>${E(r.see)}</td></tr>`).join('')}
         </tbody></table>
       </div></div>
-      <div class="dp-cflow"><div class="dp-dsec" style="--c:${c.x.color}">${E(c.flow.title)}</div>
-        <ol>${c.flow.items.map((t, i) => `<li><span>${pad(i + 1)}</span><b>${E(c.flow.steps[i])}</b><p>${E(t)}</p></li>`).join('')}</ol>
-        <p class="dp-note">${E(c.flow.note)}</p>
-      </div>`, { sub: 'Two layers' });
+`, { sub: 'Two layers' });
   }
 
   // P19 上位3名のファトゥスとの交わり（オーナー案・2026-11-08。元素診断「MIRROR 上位3名との交わり」と同じ組み立て）
@@ -315,7 +315,7 @@ export function renderComplete(m) {
         ${bar(e.score, e.color.main)}
         <p class="dp-edess">${E(e.text.essence)}</p>
         <div class="dp-edcols"><div><span>${E(DL.scenes)}</span><p>${E(e.detail2.scenes)}</p></div>
-          <div><span>${E(DL.parts)}</span><p>${e.parts.map((x) => `${E(x.label)}<b>${x.score}</b><i>算出の重み${x.weight}%</i>`).join('　')}</p></div></div>
+          <div><span>${E(DL.parts)}</span><p>${e.parts.map((x) => `${E(x.label)}<b>${x.score}</b>`).join('　')}</p></div></div>
         <div class="dp-edmis"><span>${E(DL.misread)}</span><p>${E(e.misread)}</p></div></div>`).join('')}</div>`, { sub: D.sub });
     D.groups.forEach((g, gi) => page('dp-wide dp-dictw', D.iKickers[gi], D.iTitles[gi], `<p class="dp-p dp-lead">${E(D.iIntro)}</p>
       ${g.map((d) => `<div class="dp-idgrp" style="--d:${d.color}"><div class="dp-idgh">${E(d.en)}　<b>${E(d.label)}</b></div>

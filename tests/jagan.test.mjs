@@ -109,10 +109,10 @@ test('every answer set gets exactly one element and one isou with a code and nam
   assert.equal(run(profile({ MAN: 5, CAL: 5 })).character.id, 'dottore');
 });
 
-test('displayed match is the raw similarity (no balance offset added) and rounds the same number', () => {
+test('displayed match is the ranking value (similarity + fixed balance offset, 0.6.0〜) so rank and match never disagree', () => {
   const r = run(profile({ MAN: 4, IMP: 3 }));
   const c = characterRanking(r.traits ? Object.fromEntries(Object.entries(r.traits).map(([k, v]) => [k, v.score])) : {}, BUNDLE.characters).find((x) => x.id === r.character.id);
-  assert.equal(r.character.match, Math.round(c.score));
+  assert.equal(r.character.match, Math.max(0, Math.min(100, Math.round(c.selectionScore))));
   assert.equal(c.selectionScore, c.score + c.selectionOffset);
   assert.deepEqual(Object.fromEntries(Object.entries(r.traits).map(([k, v]) => [k, v.score])), scoreAnswers(profile({ MAN: 4, IMP: 3 }), BUNDLE.items));
 });
@@ -762,7 +762,7 @@ test('完全解析 DIPPER 12–17：上位3つの邪眼・異相の個別ペー�
   assert.equal(m.topE[0].detail.you[0], '今回の水を形づくっているのは、主に依存と不安です。大切な相手と離れることへの不安と、悪い展開を予想する心配が、近い得点で表れています。');
   assert.equal(m.topE[0].detail.you[1], '一方、猜疑の得点は二つより低く、今回の水を「相手を強く疑う傾向」だけで説明することはできません。');
   assert.match(m.topE[1].detail.you[0], /構成特性の中で完璧の得点が比較的高く出ています.*「まだ十分ではない」という感覚が、確認を続ける一因になっていないか/);
-  assert.match(m.topI[2].detail.you[0], /草と岩の計算にも含まれています。複数の結果に同じ特性が現れていますが、それぞれ独立した証拠ではありません。/);
+  assert.match(m.topI[2].detail.you[0], /草と岩を形づくる特性でもあります。複数の結果に同じ特性が現れていますが、それぞれ独立した証拠ではありません。/);
   for (let s = 0; s < 200; s++) {
     const r = sampleComplete(s); const mm = buildComplete(r.result, BUNDLE);
     const pages = renderComplete(mm).split('<section').slice(1);
@@ -782,7 +782,7 @@ test('完全解析 DIPPER 18：邪眼×異相――計算上の関係（異相�
   assert.deepEqual(Object.keys(C.TRAIT_COMBO).sort(), BUNDLE.items.traits.map((t) => t.id).sort());
   const m = buildComplete(sampleComplete(0).result, BUNDLE);
   assert.equal(m.combo.inc, true); assert.equal(m.combo.tag, '構成特性の重なり');
-  assert.match(m.combo.you[0], /^今回の水は、依存70・不安69・猜疑44から計算されています。その中で、依存は水の計算に最も大きな算出の重み（50%）を持ち/);
+  assert.match(m.combo.you[0], /^今回の水は、依存70・不安69・猜疑44からなります。その中で依存は、12特性の中でも最も高く出ています。/);
   assert.match(m.combo.you[2], /さらに深い性格が証明されたという意味ではありません/);
   let seen = { inc: 0, sep: 0 };
   for (let s = 0; s < 300; s++) {
@@ -859,7 +859,7 @@ test('完全解析 DIPPER：再読 — あなたの影を読み直す（結果�
   const { result, html } = sampleComplete(0);
   const r = buildComplete(result, BUNDLE).reread;
   assert.equal(r.r1, '水は、依存70・不安69・猜疑44を組み合わせた結果です。今回は、相手を疑うことよりも、離れることへの不安や先行きへの心配への当てはまりが目立ちました。');
-  assert.match(r.r2, /水と依存は、別々の証拠が一致した結果ではありません。依存は、水の算出にも使われている特性です。/);
+  assert.match(r.r2, /水と依存は、別々の証拠が一致した結果ではありません。依存は、水を形づくる特性の一つです。/);
   assert.equal(r.more.label, '完璧'); assert.equal(r.more.score, 56);
   assert.match(r.lowText, /測っていない長所を示すものではありません/);
   const p = html.split(`id="dp${String(PAGE_TITLES.indexOf('再読 — あなたの影を読み直す') + 1).padStart(2, '0')}"`)[1].split('<section')[0];
@@ -895,9 +895,9 @@ test('完全解析 DIPPER：03・04・06 の下部（根拠 → 意味 → 経�
   assert.ok(!PAGE_TITLES.some((t) => /あなたの深層|ファトゥスはなぜ|影の正体|人物から得るもの/.test(t)));
   const { result, html } = sampleComplete(0);
   const m = buildComplete(result, BUNDLE);
-  assert.deepEqual(m.ov.three, ['依存70・不安69が、12特性の中で目立っています。', '水64は、その二特性に猜疑44を加えて算出しています。', '危険志向6・冷淡6への当てはまりは少なく、すべての特性が同じ強さで表れている配置ではありません。']);
+  assert.deepEqual(m.ov.three, ['依存70・不安69が、12特性の中で目立っています。', '水64は、その二特性に猜疑44が組み合わさった結果です。', '危険志向6・冷淡6への当てはまりは少なく、すべての特性が同じ強さで表れている配置ではありません。']);
   assert.match(m.ov.check, /一方、完璧56が表す「「まだ不十分」という感覚」は、別の場面に現れる可能性もあります。/);
-  assert.match(m.ov.eRead[0], /^水64は、依存・不安・猜疑の得点を、それぞれの算出の重みに従って組み合わせた結果です。/);
+  assert.match(m.ov.eRead[0], /^水64は、依存・不安・猜疑の組み合わせです。/);
   assert.match(m.ov.eGap, /^水64と草47の差は17です。/);
   const p2 = html.split('id="dp02"')[1].split('<section')[0];
   assert.ok(p2.includes('邪眼を読む — 水（関係の揺れ）') && !p2.includes('邪眼 1位'));
@@ -964,4 +964,25 @@ test('完全解析 DIPPER：回答パターン（全体に低い・高い・中�
   const a = buildComplete(computeDiagnosis({ answers: pats.水依存A, resultId: 'a', itemSetVersion: BUNDLE.items.item_set_version }, BUNDLE), BUNDLE);
   const b = buildComplete(computeDiagnosis({ answers: pats.水依存B, resultId: 'b', itemSetVersion: BUNDLE.items.item_set_version }, BUNDLE), BUNDLE);
   if (a.dti.code === b.dti.code) assert.notEqual(a.combo.you.join(''), b.combo.you.join(''));
+});
+
+test('人物の一致度は、照合外の特性の小さな変化で急変しない（0.7.0：目立つ特性の割合をなだらかに）', () => {
+  const traitsOf = (o) => Object.fromEntries(BUNDLE.items.traits.map((t) => [t.id, o[t.id] ?? 50]));
+  // GPT の再現例：全特性50（衝動だけ40）から、照合に使われない不安だけを55へ
+  const a = characterRanking(traitsOf({ IMP: 40 }), BUNDLE.characters), b = characterRanking(traitsOf({ IMP: 40, ANX: 55 }), BUNDLE.characters);
+  for (const x of a) { const y = b.find((c) => c.id === x.id); assert.ok(Math.abs(x.score - y.score) <= 3, `${x.id}: ${x.score.toFixed(1)} → ${y.score.toFixed(1)}`); }
+  // 照合外の特性を 50→51 にしても、どの人物も 1 ポイント未満の変化
+  for (const id of ['ANX', 'SEP', 'PSV', 'PRF', 'ATT']) {
+    const p = characterRanking(traitsOf({ IMP: 40 }), BUNDLE.characters), q = characterRanking(traitsOf({ IMP: 40, [id]: 51 }), BUNDLE.characters);
+    for (const x of p) assert.ok(Math.abs(x.score - q.find((c) => c.id === x.id).score) < 1, id);
+  }
+});
+
+test('読者向け表示（DIPPER・結果ページ・解析レポート）に、重み・寄与・算出の重み・補正値などの計算説明を出さない', async () => {
+  const { sampleComplete } = await import('../jagan/complete-sample.mjs');
+  for (let s = 0; s < 60; s++) {
+    const { result, html } = sampleComplete(s);
+    const texts = [html, renderResultPage(result, BUNDLE, {}), renderReport(result, BUNDLE)].map((h) => h.replace(/<[^>]+>/g, ' '));
+    for (const t of texts) assert.ok(!/重み|寄与|算出の重み|補正値|±\d|計算上の関係|の計算に/.test(t), `seed ${s}: ${(t.match(/.{20}(重み|寄与|算出の重み|補正値|±\d|計算上の関係|の計算に).{20}/) || [''])[0]}`);
+  }
 });

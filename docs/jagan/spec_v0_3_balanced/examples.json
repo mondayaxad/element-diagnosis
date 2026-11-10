@@ -67,9 +67,9 @@
         "反逆"
       ],
       "region": "カーンルイア",
-      "match": 99,
-      "rawSimilarity": 100,
-      "adjustedScore": 99.06890134,
+      "match": 94,
+      "rawSimilarity": 94.44444444444444,
+      "adjustedScore": 93.59167752444445,
       "usedAxes": [
         "HOS"
       ],
@@ -148,9 +148,9 @@
         "献身"
       ],
       "region": "カーンルイア",
-      "match": 90,
-      "rawSimilarity": 93.50480947161671,
-      "adjustedScore": 89.5251919516167,
+      "match": 76,
+      "rawSimilarity": 81.00480947161671,
+      "adjustedScore": 75.6299851816167,
       "usedAxes": [
         "IMP",
         "CAL",
@@ -230,9 +230,9 @@
         "操作"
       ],
       "region": "スメール",
-      "match": 97,
-      "rawSimilarity": 92.5,
-      "adjustedScore": 96.6500107,
+      "match": 95,
+      "rawSimilarity": 90.41666666666666,
+      "adjustedScore": 94.98450108666665,
       "usedAxes": [
         "MAN",
         "CAL"
@@ -312,9 +312,9 @@
         "帰属"
       ],
       "region": "ナドクライ",
-      "match": 80,
-      "rawSimilarity": 85,
-      "adjustedScore": 80.25725772,
+      "match": 66,
+      "rawSimilarity": 72.5,
+      "adjustedScore": 65.9249406,
       "usedAxes": [
         "HOS",
         "CAL"
@@ -395,9 +395,9 @@
         "統制"
       ],
       "region": "フォンテーヌ",
-      "match": 93,
-      "rawSimilarity": 90.81441346456307,
-      "adjustedScore": 92.63721736456307,
+      "match": 79,
+      "rawSimilarity": 78.31441346456307,
+      "adjustedScore": 79.35894333456308,
       "usedAxes": [
         "MAN",
         "IMP",
@@ -476,9 +476,9 @@
         "交渉"
       ],
       "region": "スネージナヤ",
-      "match": 100,
-      "rawSimilarity": 100,
-      "adjustedScore": 100.86379029,
+      "match": 95,
+      "rawSimilarity": 94.44444444444444,
+      "adjustedScore": 95.24786349444445,
       "usedAxes": [
         "MAN"
       ],
@@ -556,9 +556,9 @@
         "反逆"
       ],
       "region": "稲妻",
-      "match": 93,
-      "rawSimilarity": 90.43933841201353,
-      "adjustedScore": 92.96443899201353,
+      "match": 92,
+      "rawSimilarity": 88.3560050786802,
+      "adjustedScore": 91.8780893886802,
       "usedAxes": [
         "HOS",
         "SUS"
@@ -571,7 +571,7 @@
   {
     "name": "対人距離と敵意",
     "profile": {
-      "WDR": 5,
+      "WDR": 4,
       "HOS": 4
     },
     "expected": "sandrone",
@@ -589,10 +589,10 @@
       "SUS02": 2,
       "SUS03": 2,
       "SUS05": 2,
-      "WDR02": 5,
-      "WDR03": 5,
-      "WDR04": 5,
-      "WDR05": 5,
+      "WDR02": 4,
+      "WDR03": 4,
+      "WDR04": 4,
+      "WDR05": 4,
       "IMP01": 2,
       "IMP02": 2,
       "IMP03": 2,
@@ -627,7 +627,7 @@
       "CAL03": 2,
       "CAL04": 2
     },
-    "headline": "氷 × 撤退",
+    "headline": "未分化 × 複合",
     "character": {
       "id": "sandrone",
       "name": "サンドローネ",
@@ -637,9 +637,9 @@
         "執着"
       ],
       "region": "フォンテーヌ",
-      "match": 84,
-      "rawSimilarity": 85.72042542650517,
-      "adjustedScore": 84.47912707650518,
+      "match": 91,
+      "rawSimilarity": 91.12527056967232,
+      "adjustedScore": 90.60999841967232,
       "usedAxes": [
         "WDR",
         "HOS"
@@ -719,9 +719,9 @@
         "憤怒"
       ],
       "region": "モンド",
-      "match": 95,
-      "rawSimilarity": 91.89907412699017,
-      "adjustedScore": 94.72479408699017,
+      "match": 93,
+      "rawSimilarity": 89.81574079365683,
+      "adjustedScore": 93.30469088365683,
       "usedAxes": [
         "HOS",
         "MAN",
@@ -800,9 +800,9 @@
         "野心"
       ],
       "region": "璃月",
-      "match": 91,
-      "rawSimilarity": 88.75,
-      "adjustedScore": 91.02024484,
+      "match": 88,
+      "rawSimilarity": 85.17857142857143,
+      "adjustedScore": 87.84870960857143,
       "usedAxes": [
         "MAN"
       ],
@@ -879,9 +879,9 @@
         "挑戦"
       ],
       "region": "スネージナヤ",
-      "match": 85,
-      "rawSimilarity": 88.75,
-      "adjustedScore": 85.18708652,
+      "match": 82,
+      "rawSimilarity": 85.17857142857143,
+      "adjustedScore": 82.39953826857143,
       "usedAxes": [
         "RSK"
       ],

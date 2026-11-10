@@ -255,7 +255,7 @@ function whyCard(result, bundle) {
       ${constellation('#E2C08C', 'CONSTELLATION OF SHADOWS')}
       <p class="rx-text">${text}</p>
       ${bars.map(([label, v, c]) => `<div class="rx-sim" style="--sc:${c}"><p><span>${label}</span><b>${Math.round(v)}<small>%</small></b></p><span class="rx-sim-bar"><i style="width:${Math.max(0, Math.min(100, v)).toFixed(1)}%"></i></span></div>`).join('')}
-      <p class="jg-note">一致度は、この二つを合わせた近さに、11名が偏りなく現れるよう人物ごとの小さな調整（±5ポイント以内）を加えた値です。比較に使えるのは、作品の描写から対応を置けた特性だけです。</p>
+      <p class="jg-note">一致度は、この二つを合わせた近さです。比較に使えるのは、作品の描写から対応を置けた特性だけです。</p>
       <hr class="rx-hr">
       <p class="rx-h4">あなたの影の特性</p>
       ${locks(tendencyWords(result, bundle, null, 4))}
@@ -287,7 +287,7 @@ function unlockAll() {
   const items = [
     ['12特性のスコアと読み解き', '三つの土台の全特性を、数値と意味・読み方の限界とともに解説'],
     ...GROUPS.map((g) => [g.short, `${g.traits.length}つの特性が、どんな場面で表れ、どんな負担につながるか`]),
-    ['邪眼元素と異相の判定根拠', 'なぜその組み合わせに至ったか、寄与した特性から解説'],
+    ['邪眼元素と異相の判定根拠', 'なぜその組み合わせに至ったか、形づくる特性から解説'],
     ['近しいファトゥス3名', '参照した特性との共通点・相違点と、物語からの振り返りの問い'],
   ];
   return `<section class="rx-card rx-all">
@@ -375,8 +375,8 @@ export function renderReport(result, bundle) {
     <section class="rp-card">
       <p class="rp-en">CONNECTING FACTORS</p>
       <h3 class="rp-h3">${el.id ? `あなたの邪眼（${esc(el.label)}）を形作る特性` : '相対的に高い特性・控えめな特性'}</h3>
-      ${el.id ? `<div class="rp-rings">${contrib.map(([axis, w]) => ring(result.traits[axis].score, ec.main, `${traitLabel(bundle, axis)}（重み${Math.round(w * 100)}%）`)).join('')}</div>
-      <p class="rp-note">邪眼（${esc(el.label)}）の得点は、これらの特性の得点を重みに従って合わせた値です（重みは作者の設計値）。</p>` : ''}
+      ${el.id ? `<div class="rp-rings">${contrib.map(([axis, w]) => ring(result.traits[axis].score, ec.main, traitLabel(bundle, axis))).join('')}</div>
+      <p class="rp-note">邪眼（${esc(el.label)}）は、これらの特性の組み合わせです。</p>` : ''}
       ${topBottom}
     </section>`;
 
@@ -424,7 +424,7 @@ export function renderReport(result, bundle) {
         </div>`;
       }).join('')}
       <p class="rp-note">${esc(CHARACTER_GLOBAL_NOTICE)}15点・20点は説明のための設計値で、心理学上の基準ではありません。</p>
-      <p class="rp-note">順位は一致度の高い順です。一致度には、11名が偏りなく現れるよう人物ごとの小さな調整（±5ポイント以内）を含みます。</p>
+      <p class="rp-note">順位は一致度の高い順です。</p>
     </section>`;
   }
 

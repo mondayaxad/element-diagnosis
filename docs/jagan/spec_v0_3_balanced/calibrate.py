@@ -27,7 +27,7 @@ def raw_scores(x):
  for c in chars:
   ids=[aix[k] for k in c['anchors']];ref=np.array(list(c['anchors'].values()))
   agree=100*(1-np.sqrt((((x[:,ids]-ref)/100)**2).mean(1)))
-  covered=np.divide(sal[:,ids].sum(1),total,out=np.ones(len(x)),where=total>0)
+  covered=(sal[:,ids].sum(1)+model['coverage_prior_strength']*model['coverage_prior'])/(total+model['coverage_prior_strength'])
   out.append(model['anchor_agreement_weight']*agree+model['salience_coverage_weight']*100*covered)
  return np.stack(out,1)
 def eligible(x):

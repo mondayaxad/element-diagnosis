@@ -119,7 +119,7 @@ export function elementYou(e, d) {
     out.push(`一方、${s[2].label}の得点は二つより低く、今回の${L}を「${ONLY(s[2].id)}」だけで説明することはできません。`);
   } else if (s[0].id !== core.id && s[0].score > core.score) {
     const others = parts.filter((p) => p.id !== s[0].id).map((p) => N(p.id));
-    out.push(`今回の${L}では、構成特性の中で${s[0].label}の得点が比較的高く出ています（算出の重みが最も大きいのは${core.label}）。${others.join('や、')}に加え、${N(s[0].id)}が、${d.loop}一因になっていないかを検討できます。`);
+    out.push(`今回の${L}では、構成特性の中で${s[0].label}の得点が比較的高く出ています。${others.join('や、')}に加え、${N(s[0].id)}が、${d.loop}一因になっていないかを検討できます。`);
   } else if (s[0].score - s[2].score >= 10) {
     out.push(`今回の${L}は、構成特性の中では${s[0].label}が高く、${s[2].label}が低い配置です。そのため、「${ONLY(s[2].id)}」だけでなく、${N(s[0].id)}から来る反応に目を向けます。`);
   } else {
@@ -141,7 +141,7 @@ export function isouYou(x, isous, topE) {
   else out.push(`今回の回答で${x.label}は${r}位です。${close ? `${r - 1}位の${nb.label}と近い得点です。` : `${r - 1}位の${nb.label}とは${gap}点の差があります。`}`);
   if (close) out.push(`${N(x.id)}と、${N(nb.id)}が重なって表れていないかを確かめます。`);
   const inc = topE.filter((e) => e.parts.some((p) => p.id === x.id));
-  if (inc.length) out.push(`${x.label}は、上位の邪眼のうち${inc.map((e) => e.label).join('と')}の計算にも含まれています。${inc.length >= 2 ? '複数の結果に同じ特性が現れていますが、それぞれ独立した証拠ではありません。' : ''}`);
+  if (inc.length) out.push(`${x.label}は、上位の邪眼のうち${inc.map((e) => e.label).join('と')}を形づくる特性でもあります。${inc.length >= 2 ? '複数の結果に同じ特性が現れていますが、それぞれ独立した証拠ではありません。' : ''}`);
   return { lines: out, inc: inc.map((e) => ({ label: e.label, color: e.color.main })) };
 }
 function isouDetail(x, isous, topE, overall) {
@@ -159,10 +159,9 @@ export function comboOf(e, x) {
   const you = [];
   let relation, headline, day, heavy, q, rows;
   if (inc) {
-    const w = parts[0].id === x.id ? `最も大きな算出の重み（${part.weight}%）を持ち` : `${part.weight}%の算出の重みを持ち`;
     relation = `異相の${X}は、${L}の計算に使われる三つの特性の一つです（算出の重み${part.weight}%）。同じ特性が、邪眼の得点にも直接使われています。`;
     headline = `${ec.ctx}、${N(x.id)}が目立つ組み合わせです。`;
-    you.push(`今回の${L}は、${list}から計算されています。その中で、${X}は${L}の計算に${w}、12特性の中でも最上位に選ばれています。`);
+    you.push(`今回の${L}は、${list}からなります。その中で${X}は、12特性の中でも最も高く出ています。`);
     const others = parts.filter((p) => p.id !== x.id).sort((a, b) => a.score - b.score);
     const nb = others.find((p) => Math.abs(p.score - x.score) <= CLOSE);
     you.push(`そのため、今回の${L}を理解する入口は、${N(others[0].id)}だけでなく、${N(x.id)}にあります。${nb ? `${nb.label}の得点も近いため、${N(nb.id)}にも目を向けられます。` : ''}`);
@@ -175,7 +174,7 @@ export function comboOf(e, x) {
     const top = [...parts].sort((a, b) => b.score - a.score)[0];
     relation = `異相の${X}は、${L}の計算に使われる三つの特性（${parts.map((p) => p.label).join('・')}）には含まれていません。別の特性が最上位にありながら、合成した得点では${L}が上位になっています。`;
     headline = `${ec.about}に関する反応と、${N(x.id)}が、どちらも表れた組み合わせです。`;
-    you.push(`${L}は${list}から計算されていますが、個別の特性では${X}（${x.score}）が最上位になっています。${L}の構成特性の中で最も高いのは${top.label}（${top.score}）です。`);
+    you.push(`${L}は${list}からなりますが、個別の特性では${X}（${x.score}）が最も高く出ています。${L}を形づくる特性の中で最も高いのは${top.label}（${top.score}）です。`);
     you.push(`したがって、「${L}の反応があるから${X}が表れる」と、二つを原因と結果で結ぶことはできません。`);
     you.push(`同じ場面で重なることもあれば、別々の場面でそれぞれに表れている可能性もあります。「日常の例」にある二つの場面を見比べ、同じときに起きているかを確かめてください。`);
     day = [{ head: `${L}の場面`, text: ed.day }, { head: `${X}の場面`, text: td.day }];
@@ -355,8 +354,8 @@ export function rereadOf(e, isous, byScore) {
   if (gap >= 10) r1.push(`今回は、${s.slice(cut).map((t) => `${SH(t.id).verb}こと`).join('や')}よりも、${s.slice(0, cut).map((t) => SH(t.id).short).join('や')}への当てはまりが目立ちました。`);
   else r1.push('三つの特性が近い得点で重なっています。');
   const inc = parts.some((p) => p.id === x.id);
-  const r2 = inc ? `${L}と${X}は、別々の証拠が一致した結果ではありません。${X}は、${L}の算出にも使われている特性です。「${ELEMENT_COMBO[e.id].when}場面」を振り返るための、二つの見方として読んでください。`
-    : `${X}は、${L}の算出には含まれていない特性です。二つを一つの理由にまとめず、それぞれが表れる場面を別々に振り返ってください。`;
+  const r2 = inc ? `${L}と${X}は、別々の証拠が一致した結果ではありません。${X}は、${L}を形づくる特性の一つです。「${ELEMENT_COMBO[e.id].when}場面」を振り返るための、二つの見方として読んでください。`
+    : `${X}は、${L}を形づくる特性には含まれていません。二つを一つの理由にまとめず、それぞれが表れる場面を別々に振り返ってください。`;
   const other = isous.slice(1, 3).find((t) => !parts.some((p) => p.id === t.id));
   const more = other ? { label: other.label, score: other.score, color: other.color,
     text: `${X}や${L}とは別に、${SH(other.id).verb}場面も、振り返る候補です。同じ場面で重なるか、別の場面に現れるかは、実際の経験から確かめます。` } : null;
@@ -385,7 +384,7 @@ export function overviewOf(elements, isous, byScore, peaks, valleys) {
   const pin = peaks.filter((p) => e.parts.some((q) => q.id === p.id)), rest = e.parts.filter((q) => !peaks.some((p) => p.id === q.id));
   const three = [
     peaks[0].score <= 35 ? `全体に低めの回答の中では、${peaks.map((p) => `${p.label}${p.score}`).join('・')}が相対的に高く出ています。強い傾向という意味ではありません。` : `${peaks.map((p) => `${p.label}${p.score}`).join('・')}が、12特性の中で目立っています。`,
-    pin.length === peaks.length ? `${e.label}${e.score}は、その${'一二三'[pin.length - 1]}特性に${rest.map((q) => `${q.label}${q.score}`).join('・')}を加えて算出しています。` : `${e.label}${e.score}は、${e.parts.map((q) => `${q.label}${q.score}`).join('・')}を組み合わせて算出しています。`,
+    pin.length === peaks.length ? `${e.label}${e.score}は、その${'一二三'[pin.length - 1]}特性に${rest.map((q) => `${q.label}${q.score}`).join('・')}が組み合わさった結果です。` : `${e.label}${e.score}は、${e.parts.map((q) => `${q.label}${q.score}`).join('・')}の組み合わせです。`,
     `${valleys.map((v) => `${v.label}${v.score}`).join('・')}への当てはまりは少なく、すべての特性が同じ強さで表れている配置ではありません。`,
   ];
   const other = isous.slice(1, 3).find((t) => !e.parts.some((p) => p.id === t.id) && !peaks.some((p) => p.id === t.id));
@@ -394,14 +393,14 @@ export function overviewOf(elements, isous, byScore, peaks, valleys) {
     + '得点だけで一つの原因にまとめず、経験と照らして読みます。';
   // 04：1位の邪眼の算出と、次点との関係
   const [a, b, c] = elements;
-  const eRead = [`${a.label}${a.score}は、${a.parts.map((q) => q.label).join('・')}の得点を、それぞれの算出の重みに従って組み合わせた結果です。${contrastOf(a)}`,
+  const eRead = [`${a.label}${a.score}は、${a.parts.map((q) => q.label).join('・')}の組み合わせです。${contrastOf(a)}`,
     `${a.parts.map((q) => `「${SH(q.id).verb}こと」`).join('、')}は、同じ反応ではありません。${a.label}という名前だけでまとめず、どの反応が自分の経験に重なるかを確認してください。`];
   const shared = [b, c].map((z) => ({ z, sh: z.parts.filter((q) => a.parts.some((p) => p.id === q.id)).map((q) => q.label) }));
   const eNext = `2位の${b.label}${b.score}、3位の${c.label}${c.score}は、${[...new Set([b, c].flatMap((z) => z.parts.map((q) => q.label)))].join('・')}を含む、別の特性の組み合わせです。`
     + (shared.some((v) => v.sh.length) ? `${shared.filter((v) => v.sh.length).map((v) => `${v.z.label}は${v.sh.join('・')}を${a.label}と共有しています`).join('。')}。` : '')
     + O.eNextFixed;
   const d = a.score - b.score;
-  const eGap = `${a.label}${a.score}と${b.label}${b.score}の差は${d}です。今回の算出では${a.label}が上回っていますが、この差だけで性格の確かさや、生活への影響の大きさは判断できません。`;
+  const eGap = `${a.label}${a.score}と${b.label}${b.score}の差は${d}です。今回は${a.label}が上回っていますが、この差だけで性格の確かさや、生活への影響の大きさは判断できません。`;
   const lowE = elements.slice(-2), lowI = isous.slice(-3);
   const eLow = `${lowE.map((z) => z.label).join('と')}が下位です。これは、${[...new Set(lowE.flatMap((z) => z.parts.map((q) => q.label)))].join('・')}など、その邪眼を構成する反応への当てはまりが相対的に少なかったことを示します。反対の性質があるという意味ではありません。`;
   const iLow = `${lowI.map((z) => z.label).join('・')}が下位です。これらの反応への当てはまりが、今回の回答では相対的に少なかったことを示します。反対の長所があるという意味ではありません。`;

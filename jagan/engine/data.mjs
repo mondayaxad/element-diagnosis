@@ -656,7 +656,7 @@ export const BUNDLE = Object.freeze({
   "reference_note": "元素係数・閾値は独自の演出設計。学術的な標準値ではない。"
  },
  "characters": {
-  "version": "jagan-character-balance-0.6.0-candidate",
+  "version": "jagan-character-balance-0.7.0-candidate",
   "status": "synthetic_calibration_candidate",
   "launch_ready": false,
   "axes": [
@@ -721,7 +721,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": -0.93109866
+    "selection_offset": -0.85276692
    },
    {
     "id": "capitano",
@@ -754,7 +754,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": -3.97961752
+    "selection_offset": -5.37482429
    },
    {
     "id": "dottore",
@@ -787,7 +787,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": 4.1500107
+    "selection_offset": 4.56783442
    },
    {
     "id": "columbina",
@@ -820,7 +820,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": -4.74274228
+    "selection_offset": -6.5750594
    },
    {
     "id": "arlecchino",
@@ -853,7 +853,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": 1.8228039
+    "selection_offset": 1.04452987
    },
    {
     "id": "pulcinella",
@@ -886,7 +886,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": 0.86379029
+    "selection_offset": 0.80341905
    },
    {
     "id": "scaramouche",
@@ -919,7 +919,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": 2.52510058
+    "selection_offset": 3.52208431
    },
    {
     "id": "sandrone",
@@ -952,7 +952,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": -1.24129835
+    "selection_offset": -0.51527215
    },
    {
     "id": "signora",
@@ -985,7 +985,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": 2.82571996
+    "selection_offset": 3.48895009
    },
    {
     "id": "pantalone",
@@ -1018,7 +1018,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": 2.27024484
+    "selection_offset": 2.67013818
    },
    {
     "id": "tartaglia",
@@ -1051,7 +1051,7 @@ export const BUNDLE = Object.freeze({
     ],
     "reference_origin": "authored_story_association_not_measured_character_trait",
     "confidence": "interpretive_not_validated",
-    "selection_offset": -3.56291348
+    "selection_offset": -2.77903316
    }
   ],
   "calibration": {
@@ -1063,9 +1063,12 @@ export const BUNDLE = Object.freeze({
    "optimizer_success": true,
    "not_live_user_distribution": true,
    "target_share": 0.09090909090909091,
-   "offset_mean": 4.0371746350005693e-17,
+   "offset_mean": 1.6148698540002277e-16,
    "anchor_sha256": "a2c29f9666845b54209bd4139f9bf14961453a703374ccf21b00ea83b58dd018"
-  }
+  },
+  "coverage_prior": 0.5,
+  "coverage_prior_strength": 20,
+  "coverage_note": "目立つ特性（50点超）の割合は、事前値0.5へ強さ20で寄せたなだらかな値。目立つ特性がない回答と、照合外の特性がわずかに50を超える回答の境界で一致度が急変しないようにする（0.7.0）。"
  },
  "product": {
   "status": "implementation_candidate",
