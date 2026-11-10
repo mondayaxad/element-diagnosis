@@ -28,22 +28,26 @@ function fakeDb() {
   const t = { jagan_results: [], jagan_orders: [], jagan_order_registrations: [], jagan_entitlements: [], profiles: [
     { id: U.a, onboarding_status: 'completed' }, { id: U.b, onboarding_status: 'completed' }, { id: U.c, onboarding_status: 'required' }] };
   const refresh = (user, rid) => {
-    const ok = t.jagan_order_registrations.filter((r) => r.user_id === user && r.result_id === rid)
-      .map((r) => t.jagan_orders.find((o) => o.id === r.order_id)).find((o) => o.status === 'paid' && o.link_status === 'active');
-    const e = t.jagan_entitlements.find((x) => x.user_id === user && x.result_id === rid);
-    if (ok) { if (e) Object.assign(e, { status: 'active', order_id: ok.id }); else t.jagan_entitlements.push({ id: uuid(), user_id: user, result_id: rid, product_key: 'jagan_report_v1', status: 'active', order_id: ok.id }); }
-    else if (e) e.status = 'refunded';
+    for (const pk of ['jagan_report_v1', 'jagan_complete_v1']) {
+      const ok = t.jagan_order_registrations.filter((r) => r.user_id === user && r.result_id === rid)
+        .map((r) => t.jagan_orders.find((o) => o.id === r.order_id)).find((o) => o.product_key === pk && o.status === 'paid' && o.link_status === 'active');
+      const e = t.jagan_entitlements.find((x) => x.user_id === user && x.result_id === rid && x.product_key === pk);
+      if (ok) { if (e) Object.assign(e, { status: 'active', order_id: ok.id }); else t.jagan_entitlements.push({ id: uuid(), user_id: user, result_id: rid, product_key: pk, status: 'active', order_id: ok.id }); }
+      else if (e) e.status = 'refunded';
+    }
   };
   const rpc = {
     jagan_create_order(a) {
       const v = t.jagan_orders.find((o) => o.idempotency_key === a.p_idempotency_key);
       if (v) {
-        if (v.result_id !== a.p_result_id || v.buyer_user_id !== a.p_buyer_user_id) throw { message: 'jagan_idempotency_conflict' };
+        if (v.result_id !== a.p_result_id || v.buyer_user_id !== a.p_buyer_user_id || v.product_key !== a.p_product_key) throw { message: 'jagan_idempotency_conflict' };
         return [{ order_id: v.id, order_status: v.status, created: false, checkout_session_id: v.stripe_checkout_session_id }];
       }
-      const o = { id: uuid(), result_id: a.p_result_id, item_set_version: a.p_item_set_version, answers: a.p_answers, dti_code: a.p_dti_code, headline: a.p_headline,
+      const amount = { jagan_report_v1: 1000, jagan_complete_v1: 3000 }[a.p_product_key];
+      if (!amount) throw { message: 'jagan_invalid_request' };
+      const o = { id: uuid(), product_key: a.p_product_key, result_id: a.p_result_id, item_set_version: a.p_item_set_version, answers: a.p_answers, dti_code: a.p_dti_code, headline: a.p_headline,
         buyer_user_id: a.p_buyer_user_id, status: 'created', idempotency_key: a.p_idempotency_key, link_token_hash: a.p_link_token_hash, link_status: 'active',
-        stripe_checkout_session_id: null, stripe_payment_intent_id: null, stripe_mode: a.p_stripe_mode, amount: 1000, currency: 'jpy', created_at: new Date().toISOString(), paid_at: null };
+        stripe_checkout_session_id: null, stripe_payment_intent_id: null, stripe_mode: a.p_stripe_mode, amount, currency: 'jpy', created_at: new Date().toISOString(), paid_at: null };
       t.jagan_orders.push(o);
       return [{ order_id: o.id, order_status: 'created', created: true, checkout_session_id: null }];
     },
@@ -265,4 +269,41 @@ test('マイページからの購入：回答を送らず本人の保存した�
   stripe.pay(o.stripe_checkout_session_id);
   assert.equal((await call('link-open', { token: secretOf(stripe) })).body.state, 'paid');
   assert.deepEqual(db.t.jagan_entitlements.map((e) => [e.user_id, e.result_id, e.status]), [[U.a, rid, 'active']]);
+});
+
+test('完全解析（¥3,000）：商品を選んで購入し、戻り先は完全解析の固有リンク。支払い後は product=complete で回答を返し、権利は商品ごと', async () => {
+  const { db, stripe, call } = setup();
+  const body = buyBody({ product: 'complete' });
+  const r1 = await call('buy', body);
+  assert.equal(r1.status, 200);
+  assert.equal(r1.body.amount, 3000);
+  const p = stripe.st.lastCreate.params;
+  assert.deepEqual(p.line_items, [{ price_data: { currency: 'jpy', unit_amount: 3000, product_data: { name: '邪眼完全解析レポート「DIPPER」' } }, quantity: 1 }]);
+  assert.match(p.success_url, new RegExp(`^${ORIGIN}/jagan/complete#t=[A-Za-z0-9_-]{43}$`));
+  assert.match(p.custom_text.submit.message, /3,000円・税込/);
+  const o = db.t.jagan_orders[0];
+  assert.equal(o.product_key, 'jagan_complete_v1');
+  assert.equal(o.amount, 3000);
+  // 同じ購入操作（attempt）で商品だけ変えても、別の注文になる（キーが別）
+  const r2 = await call('buy', { ...body, product: 'report' });
+  assert.equal(r2.body.amount, 1000);
+  assert.equal(db.t.jagan_orders.length, 2);
+  // 知らない商品は断る
+  assert.equal((await call('buy', buyBody({ product: 'gold' }))).status, 400);
+  // 支払い → 固有リンクは完全解析として、買った回答を返す
+  const token = new URL(p.success_url).hash.replace('#t=', '');
+  stripe.pay(o.stripe_checkout_session_id);
+  const lo = await call('link-open', { token });
+  assert.equal(lo.body.state, 'paid');
+  assert.equal(lo.body.report.product, 'complete');
+  assert.deepEqual(lo.body.report.answers, body.answers);
+  // マイページに登録すると、完全解析の権利だけが active（解析レポートの権利は無い）
+  const reg = await call('link-register', { token }, { token: 'tok-a' });
+  assert.equal(reg.status, 200);
+  const ents = db.t.jagan_entitlements.filter((e) => e.user_id === U.a);
+  assert.deepEqual(ents.map((e) => [e.product_key, e.status]), [['jagan_complete_v1', 'active']]);
+  const rid = reg.body.resultId;
+  assert.equal((await call('open', { resultId: rid, product: 'complete' }, { token: 'tok-a' })).body.report.product, 'complete');
+  assert.equal((await call('open', { resultId: rid }, { token: 'tok-a' })).status, 403, '解析レポート（¥1,000）は未購入');
+  assert.equal((await call('open', { resultId: rid, product: 'x' }, { token: 'tok-a' })).status, 400);
 });
