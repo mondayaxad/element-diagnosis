@@ -6,7 +6,7 @@
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
-import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, DICT_PAGE, ELEMENT_MISREAD, TRAIT_DICT_HL, OVERVIEW_COPY, FATUI_SPLIT, TRAIT_SCENE, LOW_QUESTION, FATUI_DEF, GUIDE_PAGE, ELEMENT_LINE, TRAIT_LINE, FATUI_LINE, FATUI_LIKE, FATUI_SCENE_NAME, MIRROR_ACT, MIRROR_TOUCH, MIRROR_FIGURE, MIRROR_RECALL, COMBO_FLOW, TRAIT_RECEIVE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
+import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, DICT_PAGE, ELEMENT_MISREAD, TRAIT_DICT_HL, OVERVIEW_COPY, FATUI_SPLIT, TRAIT_SCENE, LOW_QUESTION, FATUI_DEF, GUIDE_PAGE, ELEMENT_LINE, TRAIT_LINE, FATUI_LINE, FATUI_LIKE, FATUI_SCENE_NAME, MIRROR_ACT, MIRROR_TOUCH, MIRROR_FIGURE, MIRROR_RECALL, MIRROR_COMMON, COMBO_FLOW, TRAIT_RECEIVE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
 
 const r1 = (x) => Math.round(x * 10) / 10;
 
@@ -315,7 +315,7 @@ export function mirrorOf(topF, e, isous) {
     const figure = `${[...new Set(Object.keys(MIRROR_FIGURE[f.id]).filter((k) => mRows.some((r) => r.id === k)).map((k) => MIRROR_FIGURE[f.id][k]))].map((t, i) => (i ? t.replace(new RegExp(`^${f.name}には、`), 'また、').replace(new RegExp(`^${f.name}(は、|は|が)`), '') : t)).join('')}この姿が、あなたの回答に見られる反応と${partial ? '部分的に' : ''}重なります。`;
     const rc = mRows.find((r) => !usedRecall.has(r.id)) || mRows[0];
     usedRecall.add(rc.id);
-    const recall = `${MIRROR_RECALL[f.id][rc.id]}そこに、この人物と重ねて読めるあなた自身の場面があります。`;
+    const recall = MIRROR_RECALL[f.id][rc.id];
     // 06 の要点：差15以内＝近い、16〜25＝やや近い、それ以上＝離れている（本文の判定と同じ閾値）
     const midR = rows.filter((r) => r.diff > 15 && r.diff <= 25), farR = rows.filter((r) => r.diff > 25);
     const seg = [al.length ? `${al.map((r) => r.label).join('・')}が近${rows.length === 1 ? 'い' : 'く'}` : '', midR.length ? `${midR.map((r) => r.label).join('・')}がやや近${rows.length === 1 ? 'い' : 'く'}` : ''].filter(Boolean);
@@ -323,19 +323,17 @@ export function mirrorOf(topF, e, isous) {
     return { f, rows, aligned, different, main, you, shortAl, shortDf, proseAl, proseDf, proseOverlap, feature, differ, scene, defs, proseShort, base, likes, projection, meet, figure, recall, mRows, story: { fact: f.copy.story_context, dti: meta.rationale }, overlap, question };
   });
   // まとめ：三人全員に共通する点と、人物ごとに重なる点を分けて書く
-  const LV = { low: '少なく', high: '多く', mid: '中ほどに' };
   const per = people.map((p) => ({ name: p.f.name, rows: p.mRows }));
-  const all3 = per[0] ? per[0].rows.filter((r) => per.every((q) => q.rows.some((z) => z.id === r.id))) : [];
   const sum = [];
-  const grp = (rows) => ['low', 'high', 'mid'].map((lv) => { const g = rows.filter((r) => level(r.you) === lv); return g.length ? `${g.map((r) => r.label).join('と')}（${g.length > 1 ? 'いずれも' : ''}当てはまりが${{ low: '少ない', high: '多い', mid: '中ほど' }[lv]}）` : ''; }).filter(Boolean).join('・');
-  sum.push(`人物ごとの重なりは、${per.map((q) => `${q.name}とは${grp(q.rows)}`).join('、')}です。`);
-  if (per.length >= 3 && all3.length) sum.push(`このうち${all3.map((r) => r.label).join('と')}は、三人すべてと重なっています。${all3.map((r) => MIRROR_ACT[r.id]).join('や、')}への当てはまりが${LV[level(all3[0].you)]}出ていることが、三人に共通する接点です。`);
-  else {
-    const cnt = {};
-    per.forEach((q) => q.rows.forEach((r) => { (cnt[r.id] = cnt[r.id] || { r, names: [] }).names.push(q.name); }));
-    const rep = Object.values(cnt).filter((v) => v.names.length >= 2);
-    sum.push(rep.length ? `${rep.map((v) => `${v.r.label}は${v.names.join('・')}`).join('、')}と重なっています。三人すべてに共通する重なりではなく、人物ごとに異なる面で、あなたの回答と重なっています。` : '三人とは、それぞれ異なる面で、あなたの回答と重なっています。');
-  }
+  // 一段落：特性ごとに、重なる人物と接点を書き、最後に読み方を一文添える（同じ説明を繰り返さない）
+  const groups = {};
+  per.forEach((q) => q.rows.forEach((r) => { (groups[r.id] = groups[r.id] || { r, names: [] }).names.push(q.name); }));
+  const side = (r) => (level(r.you) === 'mid' ? (r.ref > 50 ? 'hi' : 'lo') : level(r.you) === 'high' ? 'hi' : 'lo');
+  const byNames = {};
+  Object.values(groups).forEach((g) => { const k = g.names.join('|'); (byNames[k] = byNames[k] || { names: g.names, rs: [] }).rs.push(g.r); });
+  const lines = Object.values(byNames).sort((g1, g2) => g2.names.length - g1.names.length)
+    .map((g) => `${g.names.length >= 3 ? '三人' : g.names.join('と')}には、${g.rs.map((r) => MIRROR_COMMON[r.id][side(r)]).join('点や、')}点が${g.rs.every((r) => level(r.you) === 'mid') ? 'ある程度' : ''}重なります。`);
+  sum.push(`${lines.join('')}人物ごとに異なる接点をたどることで、あなた自身の反応を、具体的な場面として捉え直せます。`);
   return { labels: M, people, sum };
 }
 
