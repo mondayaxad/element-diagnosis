@@ -150,21 +150,35 @@ export function heroGemsHtml() {
 //   今見えているもの→なぜ似ているか→土台ごとの解説と鍵→全てのロックを解除）
 // =====================================================================
 function mainCard(result, bundle) {
+  // 元素診断の「あなたの土台」と同じ並び：見出し（DTI）→ コードと名前 → 邪眼×異相 → 一行の要約 → 「もっと詳しく見る」（コードの意味・邪眼・異相の説明）
   const el = result.element, isou = result.isou, d = result.dti;
   const color = ISOU_COLOR[isou.id];
-  const summary = `つまり<b style="color:var(--ec)">${esc(d.name)}（${esc(d.code)}）</b>は、「${esc(ELEMENT_TEXT[el.id].essence)}」邪眼の力が、「${esc(ISOU_TEXT[isou.id].essence)}」かたちで表に現れている姿です。今回の回答に表れた姿であり、固定的な性格ではありません。`;
+  const et = ELEMENT_TEXT[el.id], it = ISOU_TEXT[isou.id];
+  const elCode = String(d.code).slice(0, 2), isCode = String(d.code).slice(2);
+  const summary = `つまり<b style="color:var(--ec)">${esc(d.name)}（${esc(d.code)}）</b>は、「${esc(et.essence)}」邪眼の力が、「${esc(it.essence)}」かたちで表に現れている姿です。今回の回答に表れた姿であり、固定的な性格ではありません。`;
   return `<section class="rx-card rx-main" style="${elementStyle(el.id)}">
-      <div class="rx-main-head"><span class="rx-kicker">邪眼診断 — DTI</span></div>
       <div class="rx-eye">${gemSvg(ELEMENT_COLOR[el.id].main, 'main', 20)}</div>
-      <p class="rx-abyss">あなたの深淵</p>
+      <div class="rx-main-head"><span class="rx-abyss">あなたの深淵</span><span class="rx-badge">DTI</span></div>
+      <p class="rx-dti"><b>${esc(d.code)}</b><span class="rx-dti-name">${esc(d.name)}</span></p>
       <h2 class="rx-title"><span class="rx-el">${esc(el.label)}</span><span class="rx-x">×</span><span class="rx-type" style="--tc:${color}">${esc(isou.label)}</span></h2>
-      <p class="rx-dti"><b>${esc(d.code)}</b><span class="rx-dti-sep">｜</span><span class="rx-dti-name">${esc(d.name)}</span></p>
-      <p class="rx-sub">邪眼：${esc(el.label)} ／ 異相：${esc(isou.label)}</p>
-      <div class="rx-pair">
-        <p><b style="color:var(--ec)">邪眼（${esc(el.label)}）</b>${esc(ELEMENT_NAME[el.id])}——${esc(ELEMENT_TEXT[el.id].essence)}邪眼。</p>
-        <p><b style="color:${color}">異相（${esc(isou.label)}）</b>${esc(ISOU_SHORT[isou.id])}</p>
-      </div>
-      <blockquote class="rx-summary">${summary}</blockquote>
+      <p class="rx-sub">${esc(ELEMENT_NAME[el.id])} ／ ${esc(it.axis)}</p>
+      <details class="rx-more-main">
+        <summary>もっと詳しく見る ▾</summary>
+        <div class="rx-more-body">
+          <p class="rx-more-h">${esc(d.code)}（${esc(d.name)}）とは</p>
+          <p class="rx-more-lead">このタイプコードは、あなたの邪眼（いくつかの特性が組み合わさった反応のまとまり）と、異相（最も目立った一つの特性）をもとに組み立てられています。二つが重なることで、あなたの深淵の輪郭が立ち上がります。</p>
+          <div class="rx-codes">
+            <div class="rx-code" style="--cc:var(--ec)"><b>${esc(elCode)}</b><span>${esc(el.label)}——邪眼の軸</span></div>
+            <div class="rx-code" style="--cc:${color}"><b>${esc(isCode)}</b><span>${esc(isou.label)}——異相の軸</span></div>
+          </div>
+          <p class="rx-more-k" style="color:var(--ec)">邪眼｜${esc(el.label)}（${esc(ELEMENT_NAME[el.id])}）</p>
+          <p class="rx-more-t">${esc(et.body)}</p>
+          <p class="rx-more-k" style="color:${color}">異相｜${esc(isou.label)}</p>
+          <p class="rx-more-t">${esc(ISOU_SHORT[isou.id])}${esc(it.body)}</p>
+          <p class="rx-more-t rx-more-join">この二つが重なる時、「<b style="color:var(--ec)">${esc(d.name)}</b>」という深淵の輪郭が立ち上がります。</p>
+          <blockquote class="rx-summary">${summary}</blockquote>
+        </div>
+      </details>
     </section>`;
 }
 

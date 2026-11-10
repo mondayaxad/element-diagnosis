@@ -641,3 +641,25 @@ body { background: #09070B; background-image: none; }
 }
 .rx-grad-p { display: none; }
 @media print { .rx-grad { display: none !important; } .rx-grad-p { display: inline; } }
+/* 完了ページの「あなたの深淵」：元素診断の「あなたの土台」と同じ並び（説明は「もっと詳しく見る」の中・2026-11-10） */
+.rx-main .rx-main-head { margin-bottom: 12px; }
+.rx-main .rx-abyss { margin: 0; font-size: 11px; letter-spacing: .3em; color: #C99AA7; }
+.rx-badge { font-family: var(--font-en); font-size: 9.5px; letter-spacing: .1em; color: #8A6E78; border: 1px solid #4A223260; border-radius: 4px; padding: 2px 6px; }
+.rx-main .rx-dti { gap: 12px; margin: 0 0 8px; }
+.rx-main .rx-dti b { font-size: 22px; }
+.rx-main .rx-dti-name { font-size: 17px; letter-spacing: .08em; }
+.rx-main .rx-sub { font-size: 14px; color: #CDB5BD; letter-spacing: .02em; margin: 0; }
+.rx-more-main { margin-top: 14px; padding-top: 14px; border-top: 1px solid color-mix(in srgb, var(--ec, #A52A43) 25%, transparent); }
+.rx-more-main > summary { list-style: none; cursor: pointer; font-size: 12px; letter-spacing: .08em; color: #E3A3B4; }
+.rx-more-main > summary::-webkit-details-marker { display: none; }
+.rx-more-main[open] > summary { color: #C99AA7; }
+.rx-more-body { margin-top: 12px; }
+.rx-more-h { margin: 0 0 6px; font-size: 14px; font-weight: 700; color: #F4E6EA; }
+.rx-more-lead { margin: 0 0 12px; font-size: 12.5px; line-height: 1.85; color: #A58994; }
+.rx-codes { display: flex; gap: 8px; margin: 0 0 14px; }
+.rx-code { flex: 1; padding: 9px 11px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--cc) 40%, transparent); background: color-mix(in srgb, var(--cc) 10%, transparent); }
+.rx-code b { display: block; font-family: var(--font-en); font-size: 20px; letter-spacing: .06em; color: var(--cc); }
+.rx-code span { display: block; margin-top: 2px; font-size: 10.5px; color: #A58994; }
+.rx-more-k { margin: 14px 0 3px; font-size: 11px; letter-spacing: .12em; }
+.rx-more-t { margin: 0; font-size: 13px; line-height: 1.9; color: #D9C3CA; }
+.rx-more-join { margin-top: 12px; color: #EFE1E6; }
