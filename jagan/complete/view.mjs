@@ -244,11 +244,9 @@ export function renderComplete(m) {
           <span class="dp-mmeta"><b>一致度 ${f.match}%</b><i>${E(f.title)}</i><i>${E(f.region || '—')}</i>${f.tags.map((t) => `<i class="tag">${E(t)}</i>`).join('')}</span></header>
         <p class="dp-mline">${E(f.line)}</p>
         <dl class="dp-mdl">
-          <dt>1. ${E(ML.split.mirrorItems[0])}</dt><dd>${E(p.base)}</dd>
-          <dt>2. ${E(ML.split.mirrorItems[1])}</dt><dd class="dp-mdef">${p.defs.map((d) => `<span><b>${E(d.label)}<i>${E(d.dir)}</i></b>${E(d.text)}</span>`).join('')}</dd>
-          <dt class="rose">3. ${E(ML.split.mirrorItems[2])}</dt><dd class="dp-mlike">${p.likes.map((t) => `<span>${E(t)}</span>`).join('')}</dd>
-          <dt>4. ${E(ML.split.mirrorItems[3])}</dt><dd>${E(p.projection)}</dd>
-          <dt class="gold">5. ${E(ML.split.mirrorItems[4])}</dt><dd>「${E(p.question)}」</dd></dl>
+          <dt>1. ${E(ML.split.mirrorItems[0])}</dt><dd>${E(p.meet)}</dd>
+          <dt>2. ${E(ML.split.mirrorItems[1])}</dt><dd>${E(p.figure)}</dd>
+          <dt class="gold">3. ${E(ML.split.mirrorItems[2])}</dt><dd>${E(p.recall)}</dd></dl>
       </article>`; }).join('')}
       <div class="dp-msum"><div class="dp-pk">${E(ML.sumTitle)}</div>${M.sum.map((t) => `<p>${E(t)}</p>`).join('')}</div>
       <p class="dp-note">${E(ML.refNote)}</p>`, { sub: ML.sub });
