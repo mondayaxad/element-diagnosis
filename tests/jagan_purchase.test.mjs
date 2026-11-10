@@ -307,3 +307,28 @@ test('完全解析（¥3,000）：商品を選んで購入し、戻り先は完�
   assert.equal((await call('open', { resultId: rid }, { token: 'tok-a' })).status, 403, '解析レポート（¥1,000）は未購入');
   assert.equal((await call('open', { resultId: rid, product: 'x' }, { token: 'tok-a' })).status, 400);
 });
+
+test('決済画面は元素診断と同じ：Price（Stripe）を照合し、支払い方法はカードと PayPay。PayPay を拒まれたらカードだけで作り直す', async () => {
+  const P1 = 'price_jaganreport000001', P2 = 'price_jagancomplete0001';
+  const env = { ...ENV, JAGAN_PRICE_ID: P1, JAGAN_COMPLETE_PRICE_ID: P2 };
+  const db = fakeDb();
+  const stripe = fakeStripe({ prices: { [P1]: { id: P1, active: true, livemode: false, currency: 'jpy', unit_amount: 1000, type: 'one_time' }, [P2]: { id: P2, active: true, livemode: false, currency: 'jpy', unit_amount: 3000, type: 'one_time' } } });
+  const h = createPurchaseHandler({ env, fetchImpl: db.fetchImpl, stripeFactory: stripe.factory, logger: { error() {} } });
+  const call = async (op, body, opts) => { const r = res(); await h(req(op, body, opts), r, op); return { status: r.statusCode, body: r.body }; };
+  const r1 = await call('buy', buyBody({ product: 'complete' }));
+  assert.equal(r1.status, 200);
+  assert.deepEqual(stripe.st.lastCreate.params.line_items, [{ price: P2, quantity: 1 }]);
+  assert.deepEqual(stripe.st.lastCreate.params.payment_method_types, ['card', 'paypay']);
+  // PayPay 付きの作成を Stripe が拒んだ：カードだけで作り直す（別の Idempotency-Key）
+  stripe.fail('checkout.sessions.create', Object.assign(new Error('paypay not enabled'), { type: 'StripeInvalidRequestError', statusCode: 400 }));
+  const r2 = await call('buy', buyBody());
+  assert.equal(r2.status, 200);
+  assert.deepEqual(stripe.st.lastCreate.params.payment_method_types, ['card']);
+  assert.match(stripe.st.lastCreate.opts.idempotencyKey, /_c$/);
+  assert.deepEqual(stripe.st.lastCreate.params.line_items, [{ price: P1, quantity: 1 }]);
+  // Price の金額が違えば売らない
+  stripe.st.prices[P1].unit_amount = 900;
+  const h2 = createPurchaseHandler({ env, fetchImpl: db.fetchImpl, stripeFactory: stripe.factory, logger: { error() {} } });
+  const r3 = res(); await h2(req('buy', buyBody()), r3, 'buy');
+  assert.equal(r3.statusCode, 503);
+});
