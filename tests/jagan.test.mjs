@@ -351,8 +351,9 @@ test('result page: deferred parts are not filled, no names leak, and the twelve 
   assert.ok(!html.includes('邪眼解析レポート'));
   assert.ok(html.includes('¥1,000') && html.includes('全てのロックを解除する'));
   assert.ok(html.includes('一致度と人物の選び方について'));
-  // 指示書 5章の順：深淵（コード・呼び名）→ファトゥス→欲求が導くあなたの影→渇望する邪眼→保存・画像・X→一部分→最後に金額
-  const order = ['あなたの深淵', `${r.dti.code}</b>`, 'あなたのファトゥス', '欲求が導くあなたの影', 'あなたの欲求特性', 'あなたの渇望する邪眼', 'saveBtn', 'imageBtn', 'shareBtn', 'あなたの一部分に過ぎません', 'UNLOCK EVERYTHING', 'rx-all-price'];
+  // 元素診断の完了ページと同じ順（2026-11-10）：深淵（コード・呼び名）→ファトゥス→渇望する邪眼→画像・X→人物像→欲求が導くあなたの影→
+  //   一部分→全てを解放（金額）→診断記録への保存
+  const order = ['あなたの深淵', `${r.dti.code}</b>`, 'あなたのファトゥス', 'あなたの渇望する邪眼', 'imageBtn', 'shareBtn', 'なぜあなたは似ているか', '欲求が導くあなたの影', 'あなたの欲求特性', 'あなたの一部分に過ぎません', 'UNLOCK EVERYTHING', 'rx-all-price', 'saveBtn'];
   const pos = order.map((k) => html.indexOf(k));
   assert.ok(pos.every((p) => p >= 0), JSON.stringify(order.filter((k, i) => pos[i] < 0)));
   assert.deepEqual([...pos].sort((a, b) => a - b), pos);

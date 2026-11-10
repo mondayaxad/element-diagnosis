@@ -236,19 +236,21 @@ function cravingCard(result) {
     </section>`;
 }
 
-function actions() {
+// 元素診断と同じく、画像の保存・X シェアは人物と邪眼の順位の直後、診断記録への保存はページの最後
+function shareRow() {
+  return `<div class="rx-share-row">
+      <button type="button" class="rx-share rx-share-img" id="imageBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>画像を保存</button>
+      <button type="button" class="rx-share rx-share-x" id="shareBtn"><b>𝕏</b>でシェア</button>
+    </div>`;
+}
+function saveCard() {
   return `<section class="rx-card rx-save">
       <p class="rx-save-k">診断記録</p>
       <p class="rx-save-text">この結果を、今のあなたの深淵として残しませんか。<br>マイページに保存すると、いつでも見返せます。</p>
       <button type="button" class="rx-save-btn" id="saveBtn">マイページに保存する</button>
       <p class="jg-status rx-status" id="actionStatus" role="status" aria-live="polite"></p>
       <p class="jg-small jg-center" id="pendingFix" hidden><button type="button" class="jg-linkbtn" id="fixAnswersBtn">回答を見直す</button></p>
-    </section>
-    <p class="rx-free-line">— ここまでが無料診断の結果です —</p>
-    <div class="rx-share-row">
-      <button type="button" class="rx-share rx-share-img" id="imageBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0l-4-4m4 4l4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>画像を保存</button>
-      <button type="button" class="rx-share rx-share-x" id="shareBtn"><b>𝕏</b>でシェア</button>
-    </div>`;
+    </section>`;
 }
 
 function seeingCard() {
@@ -401,10 +403,10 @@ function unlockAll() {
 }
 
 export function renderResultPage(result, bundle) {
-  // 指示書 5章の順：1〜2 あなたの深淵 → 3 あなたのファトゥス → 4 欲求が導くあなたの影 → 5 渇望する邪眼 → 6 保存・画像・X →
-  //   7 見えているのは一部分（土台ごとのロックと解除の案内）→ 8 内容と価値、最後に金額
-  return [mainCard(result, bundle), fatuiCard(result), desireCard(result, bundle), cravingCard(result), actions(), seeingCard(), whyCard(result, bundle),
-    ...GROUPS.map((g) => foundationCard(result, bundle, g)), unlockAll()].join('\n');
+  // 元素診断の完了ページと同じ並び：あなたの深淵（土台）→ あなたのファトゥス（最も近しいキャラクター）→ 渇望する邪眼（あなたに響く元素）→
+  //   画像を保存・X シェア → ロックの欄（人物像 → 邪眼 → 三つの土台）→ 今あなたが見ているもの → 全てを解放（¥1,000・その先 ¥3,000）→ 診断記録への保存
+  return [mainCard(result, bundle), fatuiCard(result), cravingCard(result), shareRow(), whyCard(result, bundle), desireCard(result, bundle),
+    ...GROUPS.map((g) => foundationCard(result, bundle, g)), seeingCard(), unlockAll(), saveCard()].join('\n');
 }
 
 // =====================================================================
