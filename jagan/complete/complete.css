@@ -378,3 +378,4 @@ body.dp { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Noto
 .dp-mirror .dp-mdl { grid-template-columns: 13.5em 1fr; }
 @media print { .dp-fname { background: none !important; color: color-mix(in srgb, var(--a) 85%, #fff) !important; -webkit-text-fill-color: currentColor; } }
 @media print { .dp-page *, .dp-page { box-shadow: none !important; } .dp-cover-emblem img, .dp-demb img { filter: none !important; } }
+.dp-cflow { margin: 18px 0 22px; } .dp-cflow .dp-note { margin-top: 8px; }

@@ -6,7 +6,7 @@
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
-import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, DICT_PAGE, ELEMENT_MISREAD, TRAIT_DICT_HL, OVERVIEW_COPY, FATUI_SPLIT, TRAIT_SCENE, GUIDE_PAGE, ELEMENT_LINE, TRAIT_LINE, FATUI_LINE, COMBO_FLOW, TRAIT_RECEIVE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
+import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, DICT_PAGE, ELEMENT_MISREAD, TRAIT_DICT_HL, OVERVIEW_COPY, FATUI_SPLIT, TRAIT_SCENE, LOW_QUESTION, FATUI_SCENE, GUIDE_PAGE, ELEMENT_LINE, TRAIT_LINE, FATUI_LINE, COMBO_FLOW, TRAIT_RECEIVE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
 
 const r1 = (x) => Math.round(x * 10) / 10;
 
@@ -272,15 +272,18 @@ export function mirrorOf(topF, e, isous) {
     const sc = (r) => TRAIT_SCENE[r.id][level(r.you) === 'high' ? 'hi' : 'lo'];
     const qT = al.find((r) => !usedQ.has(r.id)), qD = df.find((r) => !usedQ.has(r.id));
     let question;
-    if (qT) { usedQ.add(qT.id); question = `${sc(qT)}を、最近の出来事から一つ思い出せますか。そのとき、相手や状況はどうでしたか。`; }
-    else if (qD) { usedQ.add(qD.id); question = `${f.name}との比較で差があった${qD.label}について、${sc(qD)}を思い出せますか。人物の参照とは違う、あなた自身の場面として説明してみてください。`; }
+    // 高い側は場面を思い出す問い、低い側は望ましい行動を前提にしない中立の問い
+    const ask = (r) => (level(r.you) === 'high' ? `${sc(r)}を、最近の出来事から一つ思い出せますか。そのとき、相手や状況はどうでしたか。` : LOW_QUESTION[r.id]);
+    if (qT) { usedQ.add(qT.id); question = ask(qT); }
+    else if (qD) { usedQ.add(qD.id); question = `${f.name}との比較で差があった${qD.label}について。${ask(qD)}`; }
     else question = f.copy.reflection;
     // 16 の各項目（主語は回答者。比較していない特性は「扱っていない」とする）
     const topUser = isous.slice(0, 2);
     const feature = `${topUser[0].score <= 35 ? `全体に低めの回答の中では、${topUser.map((t) => t.label).join('と')}が相対的に高く出ています。` : `あなたの回答では、${topUser.map((t) => t.label).join('と')}が目立っています。`}${main}`;
     const notCompared = isous.slice(0, 3).filter((t) => !rows.some((r) => r.id === t.id)).map((t) => t.label);
     const differ = `${proseDf}${notCompared.length ? `なお、${notCompared.join('・')}は、${f.name}との照合では扱っていません。` : ''}`;
-    const scene = `${f.copy.story_context}（照合に使う特性：${rows.map((r) => r.label).join('・')}）`;
+    const sc0 = FATUI_SCENE[f.id];
+    const scene = `${sc0.text}${sc0.background ? 'この場面は照合の値を直接裏づけるものではなく、人物の背景です。' : ''}（照合に使う特性：${rows.map((r) => r.label).join('・')}）`;
     // 06 の要点：差15以内＝近い、16〜25＝やや近い、それ以上＝離れている（本文の判定と同じ閾値）
     const midR = rows.filter((r) => r.diff > 15 && r.diff <= 25), farR = rows.filter((r) => r.diff > 25);
     const seg = [al.length ? `${al.map((r) => r.label).join('・')}が近${rows.length === 1 ? 'い' : 'く'}` : '', midR.length ? `${midR.map((r) => r.label).join('・')}がやや近${rows.length === 1 ? 'い' : 'く'}` : ''].filter(Boolean);
