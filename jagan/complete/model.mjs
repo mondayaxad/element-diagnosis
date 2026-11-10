@@ -6,7 +6,7 @@
 import { orderIsou } from '../engine/dti.mjs';
 import { explainCharacter } from '../engine/runtime.mjs';
 import { ELEMENT_TEXT, ELEMENT_NAME, ELEMENT_STORY, ELEMENT_COLOR, ISOU_TEXT, ISOU_SHORT, ISOU_COLOR, TRAIT_COPY, GROUPS, CHARACTER_COPY, FATUI_TONE, FATUI_TONE_EXTRA } from '../site-copy.mjs';
-import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, DICT_PAGE, ELEMENT_MISREAD, TRAIT_DICT_HL, OVERVIEW_COPY, FATUI_SPLIT, TRAIT_SCENE, LOW_QUESTION, FATUI_DEF, GUIDE_PAGE, ELEMENT_LINE, TRAIT_LINE, FATUI_LINE, COMBO_FLOW, TRAIT_RECEIVE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
+import { PRODUCT, ELEMENT_DEEP, TRAIT_DEEP, FATUI_DEEP, DOMAIN_DEEP, FIXED, PANEL, typeOverview, ELEMENT_LIVE, TRAIT_READ, LIVE_INTRO, LIVE_ROWS, READ_INTRO, READ_ROWS, DETAIL_LABELS, TRAIT_PHRASE, ELEMENT_DETAIL, TRAIT_DETAIL, COMBO_LABELS, ELEMENT_COMBO, TRAIT_COMBO, MIRROR_LABELS, RESPONSE_DOMAINS, TRAIT_SHORT, NEXT_PAGE, NEXT_EXAMPLE, REREAD_PAGE, REREAD_EXAMPLE, DICT_PAGE, ELEMENT_MISREAD, TRAIT_DICT_HL, OVERVIEW_COPY, FATUI_SPLIT, TRAIT_SCENE, LOW_QUESTION, FATUI_DEF, GUIDE_PAGE, ELEMENT_LINE, TRAIT_LINE, FATUI_LINE, FATUI_LIKE, FATUI_SCENE_NAME, COMBO_FLOW, TRAIT_RECEIVE, ELEMENT_LIVE as _EL_LIVE } from './copy.mjs';
 
 const r1 = (x) => Math.round(x * 10) / 10;
 
@@ -293,23 +293,35 @@ export function mirrorOf(topF, e, isous) {
     const dirOf = (v) => (v >= 80 ? '強く高め' : v >= 70 ? '高め' : v >= 60 ? 'やや高め' : v <= 30 ? '低め' : 'やや低め');
     const defs = rows.map((r) => ({ label: r.label, dir: dirOf(r.ref), text: FATUI_DEF[f.id][r.id] }));
     const scene = defs.map((d) => `${d.label}（${d.dir}）：${d.text}`).join('\n');
+    // 16：あなたの結果を土台に、人物と似ているところだけを書く（違い・照合外の説明は置かない）
+    const byNear = [...rows].sort((p1, p2) => p1.diff - p2.diff);
+    const likeRows = al.length ? [...al].sort((p1, p2) => p1.diff - p2.diff) : byNear.filter((r) => r.diff <= 25).slice(0, 1);
+    const likeEnd = (r) => (!al.length ? '面が、部分的に重なります。' : level(r.you) === level(r.ref) ? '回答です。' : '面も、ある程度見られます。');
+    const likes = likeRows.map((r) => `${FATUI_LIKE[f.id][r.id][0]}${FATUI_LIKE[f.id][r.id][1]}${likeEnd(r)}`);
+    if (!likes.length) likes.push(`はっきり重なる特性は少なく、最も近いのは${byNear[0].label}です。`);
+    const ovAlIds = al.filter((r) => mainIds.includes(r.id));
+    const base = `あなたの結果は${e.label}×${x.label}で、${ELEMENT_COMBO[e.id].about}が中心にあります。`
+      + (ovAlIds.length ? `その中心にある${ovAlIds.map((r) => r.label).join('・')}が、${f.name}とも重なります。` : `その上で、${f.name}とは${(likeRows.length ? likeRows : byNear.slice(0, 1)).map((r) => r.label).join('・')}の面で重なります。`);
+    const pr = likeRows.length ? likeRows : byNear.slice(0, 1);
+    const projection = pr.slice(0, 2).map((r, i) => `${i ? 'また、' : ''}${f.name}の「${FATUI_SCENE_NAME[f.id][r.id]}」は、あなたにとっては「${TRAIT_SCENE[r.id][level(r.you) === 'high' ? 'hi' : 'lo']}」に重ねて読めます。`).join('');
     // 06 の要点：差15以内＝近い、16〜25＝やや近い、それ以上＝離れている（本文の判定と同じ閾値）
     const midR = rows.filter((r) => r.diff > 15 && r.diff <= 25), farR = rows.filter((r) => r.diff > 25);
     const seg = [al.length ? `${al.map((r) => r.label).join('・')}が近${rows.length === 1 ? 'い' : 'く'}` : '', midR.length ? `${midR.map((r) => r.label).join('・')}がやや近${rows.length === 1 ? 'い' : 'く'}` : ''].filter(Boolean);
     const proseShort = `${seg.length ? seg.join('、') : '照合に使う特性はいずれも離れており'}${farR.length && seg.length ? `、${farR.map((r) => r.label).join('・')}は離れています。` : seg.length ? (rows.length === 1 ? '配置です（照合に使う特性はこの一つだけです）。' : al.length === rows.length ? '、照合に使う特性のすべてで配置が重なります。' : '、ほかの特性も大きくは離れていません。') : '、一致度は相対的な近さにとどまります。'}`;
-    return { f, rows, aligned, different, main, you, shortAl, shortDf, proseAl, proseDf, proseOverlap, feature, differ, scene, defs, proseShort, story: { fact: f.copy.story_context, dti: meta.rationale }, overlap, question };
+    return { f, rows, aligned, different, main, you, shortAl, shortDf, proseAl, proseDf, proseOverlap, feature, differ, scene, defs, proseShort, base, likes, projection, story: { fact: f.copy.story_context, dti: meta.rationale }, overlap, question };
   });
   // まとめ：繰り返し近さの根拠になる特性と、人物ごとの一致理由
   const cnt = {};
-  people.forEach((p) => p.rows.filter((r) => r.diff <= 15).forEach((r) => { (cnt[r.id] = cnt[r.id] || { label: r.label, names: [] }).names.push(p.f.name); }));
+  people.forEach((p) => p.rows.filter((r) => r.diff <= 15).forEach((r) => { (cnt[r.id] = cnt[r.id] || { label: `${r.label}（${{ low: '低め', high: '高め', mid: '中ほど' }[level(r.you)]}）`, names: [] }).names.push(p.f.name); }));
   const rep = Object.values(cnt).filter((v) => v.names.length >= 2);
   const reasons = people.map((p) => { const al = p.rows.filter((r) => r.diff <= 15); return `${p.f.name}：${al.length ? al.map((r) => r.label).join('・') : `最も近い${p.rows[0].label}`}`; }).join('／');
   const sum = [];
-  if (rep.length) sum.push(`${rep.map((v) => `${v.label}は${v.names.join('・')}との比較`).join('、')}で、共通して近さの根拠になっています。三人と重なる中心は、${rep.map((v) => v.label).join('と')}です。`);
-  else sum.push('三人との近さは、それぞれ異なる特性で表れています。');
+  if (rep.length) sum.push(`${rep.map((v) => `${v.label}は${v.names.join('・')}`).join('と、')}と重なります。三人に共通するあなたの面は、${rep.map((v) => v.label).join('と')}です。`);
+  else sum.push(`三人とは、${people.map((p) => `${p.f.name}は${(p.rows.filter((r) => r.diff <= 15).map((r) => r.label).join('・')) || p.rows[0].label}`).join('、')}と、それぞれ異なる面で重なります。`);
   const anyMain = people.some((p) => p.rows.some((r) => r.diff <= 15 && mainIds.includes(r.id)));
-  sum.push(anyMain ? `主結果（${e.label}×${x.label}）を形づくる特性が近さに含まれる人物と、別の特性で近い人物を分けて読むと、どの反応が人物との比較に表れているかが見えます。`
-    : `三人とも、主結果（${e.label}×${x.label}）を形づくる特性とは別の側面で近づいています。主結果で見た反応とは別に、どんな特性が人物との比較に表れているかを確かめてください。`);
+  const allAl = [...new Set(people.flatMap((p) => p.rows.filter((r) => r.diff <= 15).map((r) => r.label)))];
+  sum.push(anyMain ? `あなたの結果の中心（${e.label}×${x.label}）にある特性が、人物との重なりにも表れています。人物の場面を借りて、その反応を自分の経験に重ねて読めます。`
+    : `あなたの結果の中心（${e.label}×${x.label}）に加えて、三人を通すと、${allAl.length ? allAl.join('・') : 'ほかの特性'}に表れるもう一つの面が見えてきます。`);
   return { labels: M, people, sum };
 }
 

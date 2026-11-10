@@ -32,7 +32,10 @@ export function renderComplete(m) {
   const bar = (v, c) => `<span class="dp-bar"><i style="width:${Math.max(2, Math.min(100, v))}%;--c:${c}"></i></span>`;
   const fatuiName = (f) => {
     const [a, b] = f.elements.length >= 2 ? f.elements : f.elements.length === 1 ? [f.elements[0], '#ECE8F2'] : ['#E2C08C', '#C8405C'];
-    return `<span class="dp-fname" style="--a:${a};--b:${b}">${E(f.name)}</span>`;
+    // 印刷（PDF）では背景の切り抜きに細い枠が出るため、文字ごとに色を補間した版に差し替える
+    const ch = [...f.name], n = Math.max(1, ch.length - 1);
+    const pr = ch.map((c, i) => `<span style="color:color-mix(in srgb, ${a} ${Math.round(100 - (100 * i) / n)}%, ${b})">${E(c)}</span>`).join('');
+    return `<span class="dp-fname" style="--a:${a};--b:${b}">${E(f.name)}</span><span class="dp-fname-p" aria-hidden="true">${pr}</span>`;
   };
   const el1 = m.element, is1 = m.isou, ch = m.character;
   const elc = el1.color.main;
@@ -241,10 +244,10 @@ export function renderComplete(m) {
           <span class="dp-mmeta"><b>一致度 ${f.match}%</b><i>${E(f.title)}</i><i>${E(f.region || '—')}</i>${f.tags.map((t) => `<i class="tag">${E(t)}</i>`).join('')}</span></header>
         <p class="dp-mline">${E(f.line)}</p>
         <dl class="dp-mdl">
-          <dt>1. ${E(ML.split.mirrorItems[0])}</dt><dd>${E(p.feature)}</dd>
+          <dt>1. ${E(ML.split.mirrorItems[0])}</dt><dd>${E(p.base)}</dd>
           <dt>2. ${E(ML.split.mirrorItems[1])}</dt><dd class="dp-mdef">${p.defs.map((d) => `<span><b>${E(d.label)}<i>${E(d.dir)}</i></b>${E(d.text)}</span>`).join('')}</dd>
-          <dt>3. ${E(ML.split.mirrorItems[2])}</dt><dd>${E(p.proseOverlap)}</dd>
-          <dt>4. ${E(ML.split.mirrorItems[3])}</dt><dd>${E(p.differ)}</dd>
+          <dt class="rose">3. ${E(ML.split.mirrorItems[2])}</dt><dd class="dp-mlike">${p.likes.map((t) => `<span>${E(t)}</span>`).join('')}</dd>
+          <dt>4. ${E(ML.split.mirrorItems[3])}</dt><dd>${E(p.projection)}</dd>
           <dt class="gold">5. ${E(ML.split.mirrorItems[4])}</dt><dd>「${E(p.question)}」</dd></dl>
       </article>`; }).join('')}
       <div class="dp-msum"><div class="dp-pk">${E(ML.sumTitle)}</div>${M.sum.map((t) => `<p>${E(t)}</p>`).join('')}</div>
