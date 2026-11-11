@@ -82,10 +82,12 @@
 
 ## 7. リリース当日の手順（案・オーナーの承認ごとに実行）
 
-1. **Stripe（Live）**：Price を2つ作る（邪眼解析レポート ¥1,000・邪眼完全解析「DIPPER」¥3,000、JPY・一回払い）。
-   本番の Webhook に `checkout.session.async_payment_succeeded` が入っていることを確かめる（元素診断の PayPay で追加済みのはず）。
+1. **Stripe（Live）**：✅ 2026-11-11 オーナーが作成済み（JPY・一回払い）。
+   - 邪眼解析レポート ¥1,000：`price_1UabZ40IX2Svp0V3xTFn7YZF`
+   - 邪眼完全解析レポート「DIPPER」¥3,000：`price_1UabbX0IX2Svp0V3QjmrD2A9`
+   - 本番の Webhook の6イベント（completed・async_payment_succeeded・expired・refunded・dispute.created・dispute.closed）：✅ オーナーが確認済み。
 2. **本番 DB**：`prod_80` を控える → `prod_06_jagan.sql` → `prod_86` と `prod_80` を確認（RUNBOOK §9）。
-3. **Vercel Production の環境変数**：`JAGAN_PRICE_ID`（¥1,000 の Price）・`JAGAN_COMPLETE_PRICE_ID`（¥3,000 の Price）。
+3. **Vercel Production の環境変数**：`JAGAN_PRICE_ID=price_1UabZ40IX2Svp0V3xTFn7YZF`・`JAGAN_COMPLETE_PRICE_ID=price_1UabbX0IX2Svp0V3QjmrD2A9`（未設定。設定しても `JAGAN_PRODUCTION_ENABLED` が無い間は邪眼は本番で動かない）。
 4. **コード**：`jagan-release` を `main` へ（プルリクエスト → マージ → Production の deploy）。
 5. **開ける**：`JAGAN_PRODUCTION_ENABLED=true`・`JAGAN_SALES_OPEN=true` を設定して再 deploy（同時に開く）。
 6. **確認**：本番で診断 → 完了ページ → ¥1,000／¥3,000 の決済画面が開くこと（実際の支払いはオーナーの判断）。マイページに記録が残ること。
@@ -96,4 +98,4 @@
 
 - 利用規約の改定日（現在 2026年10月27日のまま。邪眼の追記を公開する日に合わせて改める。法務ページの検査が日付を固定しているため、検査もあわせて更新する）。
 - Preview でのテスト決済の支払い後（§5）。
-- `jagan-release` の全体の検査：638 件合格、不合格は以前からの1件（Google・X の認証から戻ったマイページの検査）。
+- `jagan-release` の全体の検査（2026-11-11）：640 件合格、不合格は以前からの1件（Google・X の認証から戻ったマイページの検査）。
