@@ -87,7 +87,7 @@
    - 邪眼完全解析レポート「DIPPER」¥3,000：`price_1UabbX0IX2Svp0V3QjmrD2A9`
    - 本番の Webhook の6イベント（completed・async_payment_succeeded・expired・refunded・dispute.created・dispute.closed）：✅ オーナーが確認済み。
 2. **本番 DB**：`prod_80` を控える → `prod_06_jagan.sql` → `prod_86` と `prod_80` を確認（RUNBOOK §9）。
-3. **Vercel Production の環境変数**：`JAGAN_PRICE_ID=price_1UabZ40IX2Svp0V3xTFn7YZF`・`JAGAN_COMPLETE_PRICE_ID=price_1UabbX0IX2Svp0V3QjmrD2A9`（未設定。設定しても `JAGAN_PRODUCTION_ENABLED` が無い間は邪眼は本番で動かない）。
+3. **Vercel Production の環境変数**：`JAGAN_PRICE_ID=price_1UabZ40IX2Svp0V3xTFn7YZF`・`JAGAN_COMPLETE_PRICE_ID=price_1UabbX0IX2Svp0V3QjmrD2A9`✅ 2026-11-11 設定済み（Production のみ・再 deploy はしていない）。今の本番のコード（main）には邪眼の購入の処理が無く、`JAGAN_PRODUCTION_ENABLED` も未設定のため、利用者への影響は無い。
 4. **コード**：`jagan-release` を `main` へ（プルリクエスト → マージ → Production の deploy）。
 5. **開ける**：`JAGAN_PRODUCTION_ENABLED=true`・`JAGAN_SALES_OPEN=true` を設定して再 deploy（同時に開く）。
 6. **確認**：本番で診断 → 完了ページ → ¥1,000／¥3,000 の決済画面が開くこと（実際の支払いはオーナーの判断）。マイページに記録が残ること。
