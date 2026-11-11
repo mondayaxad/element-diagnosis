@@ -2775,7 +2775,7 @@ function mpJaganBuyButton(r, product, cls, source) {
     return `<button type="button" class="${cls} is-pending" disabled aria-disabled="true" style="opacity:0.6;cursor:not-allowed">${name} ${price}（準備中）</button>`;
   }
   return `<button type="button" class="${cls}" data-jagan-buy="${mpEsc(r.jg.id)}" data-product="${isC ? 'complete' : 'report'}" data-source="${source}">${name}　${price}</button>`
-    + `<a class="mp-rec-sample" href="${isC ? '/jagan/complete-sample' : '/jagan/sample'}">${isC ? '完全解析' : '邪眼解析レポート'}のサンプルを見る</a>`;
+    + `<a class="mp-rec-sample" href="${isC ? '/jagan/complete-sample' : '/jagan/sample'}#r=${encodeURIComponent(r.jg.id)}&amp;from=mypage">${isC ? '完全解析' : '邪眼解析レポート'}のサンプルを見る</a>`;
 }
 // 解析レポート（A ¥1,000）の行・完全解析（B ¥3,000）の行（元素診断の mpAnalysisRowHtml・mpCompleteRowHtml と同じ考え方）
 function mpJaganRowA(r, cls, source) {

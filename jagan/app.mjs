@@ -7,6 +7,7 @@
 import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, shareUrl, RESULT_SCHEMA_VERSION } from './engine/runtime.mjs';
 import { BUNDLE } from './engine/data.mjs';
 import { renderResultPage, esc, heroGemsHtml } from './view.mjs';
+import { wireSampleLinks } from './sample-buy.mjs';
 import { cardDataUrl } from './card.mjs';
 import { supabaseClient, accessToken, salesOpen, buy, buyErrorText } from './client.mjs';
 
@@ -247,23 +248,19 @@ async function saveImage() {
   } finally { imaging = false; }
 }
 
-// X共有：本人の操作で共有ページを作り、内容を確認してから X の投稿画面を開く（自動投稿しない）
-let currentShare = null;
-async function share() {
+// X共有：元素診断と同じく、押したらすぐに X の投稿画面を開く（確認の画面は挟まない。投稿は X の画面で本人が確定する）
+function share() {
   if (!current) return;
   const r = current.result;
   track('jagan_share_click', {});
-  // 元素診断と同じく、公開してよい結果だけを載せた共有 URL を作る（サーバーへの登録なし。この URL から OGP が出る）
+  // 公開してよい結果だけを載せた共有 URL（サーバーへの登録なし。この URL から各結果の OGP が出る）
   let s;
   try { s = publicSummary(r); } catch { setStatus('この結果は共有できません。', true); return; }
   const url = shareUrl(location.origin, s);
   let text;
   try { text = makeShareText(r, url, `${location.origin}/`); } catch { text = shareTextFromSummary(s, url); }
-  currentShare = { url };
-  $('shareText').textContent = text;
-  $('shareOpenX').href = `https://x.com/intent/post?text=${encodeURIComponent(text)}`;
-  $('shareStatus').textContent = '';
-  $('shareDialog').showModal();
+  track('jagan_share_open_x', {});
+  window.open(`https://x.com/intent/post?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
 }
 
 // ---- 保存した結果の再表示（/jagan/?saved=<結果ID>。本人の行だけ RLS で読める） ----
@@ -291,6 +288,8 @@ function bindResult() {
   $('imageBtn').addEventListener('click', saveImage);
   $('shareBtn').addEventListener('click', share);
   setupBuy();
+  // サンプルへ：この結果をこのタブに置いてから開く（サンプル下部から、この結果で申し込める）
+  wireSampleLinks($('resultBody'), () => current && current.result, 'result');
   $('fixAnswersBtn').addEventListener('click', () => {
     if (!current || current.mode !== 'fresh') return;
     const answers = {};
@@ -302,53 +301,29 @@ function bindResult() {
   document.querySelectorAll('#resultBody .rx-more').forEach((d) => d.addEventListener('toggle', () => { if (d.open) track('jagan_detail_open', {}); }));
 }
 
-// ---- 邪眼解析レポートの申込（販売中だけ。金額・商品はサーバーが決める）。ログイン中で購入済みの記録は「レポートを読む」 ----
-async function ownedResult(resultId) {
-  // ログイン中の本人の権利（商品ごと）。確かめられない時は、どちらも未購入として扱う（購入はサーバーが改めて確かめる）
-  const out = { report: false, complete: false };
-  const c = supabaseClient();
-  if (!c || !(await accessToken())) return out;
-  try {
-    const { data, error } = await c.from('jagan_entitlements').select('product_key').eq('result_id', resultId).eq('status', 'active');
-    if (!error && Array.isArray(data)) data.forEach((e) => { if (e.product_key === 'jagan_complete_v1') out.complete = true; else out.report = true; });
-  } catch { /* 未購入として扱う */ }
-  return out;
-}
+// ---- 邪眼解析レポート（¥1,000）・完全解析（¥3,000）の申込（販売中だけ。金額・商品はサーバーが決める） ----
+//   元素診断と同じく、完了ページの導線はログイン・購入済みかどうかで変えない（常に ¥1,000・¥3,000。再購入も受け付ける）。
+//   購入済みのレポートは、マイページ・固有リンクから読む。
 const productOfBtn = (b) => (b.getAttribute('data-buy') === 'complete' ? 'complete' : 'report');
-async function setupBuy() {
+function setupBuy() {
   const btns = Array.from(document.querySelectorAll('#resultBody [data-buy]'));
   if (!salesOpen() || !current) {
     btns.forEach((b) => b.addEventListener('click', () => track(productOfBtn(b) === 'complete' ? 'jagan_complete_cta' : 'jagan_report_cta', { state: 'closed' })));
     return;
   }
-  const shown = current;
-  const owned = await ownedResult(shown.result.resultId);
-  if (current !== shown) return; // 待っている間に別の結果を表示した
   document.querySelectorAll('#resultBody .rx-sales-note').forEach((n) => { n.hidden = true; });
   btns.forEach((b) => {
     const product = productOfBtn(b);
-    const own = owned[product];
     b.disabled = false;
     b.removeAttribute('aria-disabled');
-    if (product === 'complete') {
-      if (own) { b.classList.add('is-read'); b.innerHTML = '<span class="dp-buy-main">完全解析を読む</span><span class="dp-buy-sub">購入済み・全23ページ</span>'; }
-    } else {
-      const small = b.querySelector('small');
-      if (small) small.remove();
-      if (own && b.classList.contains('rx-buy')) b.textContent = 'レポートを読む';
-    }
-    b.addEventListener('click', () => onBuy(b, product, own));
+    if (product !== 'complete') { const small = b.querySelector('small'); if (small) small.remove(); }
+    b.addEventListener('click', () => onBuy(b, product));
   });
 }
-async function onBuy(btn, product, owned) {
+async function onBuy(btn, product) {
   if (!current) return;
   const r = current.result;
   const isC = product === 'complete';
-  if (owned) {
-    track(isC ? 'jagan_complete_read' : 'jagan_report_read', { source: 'result' });
-    location.assign(`${isC ? '/jagan/dipper' : '/jagan/report'}?r=${encodeURIComponent(r.resultId)}`);
-    return;
-  }
   track(isC ? 'jagan_complete_cta' : 'jagan_report_cta', { state: 'open' });
   const box = isC ? btn.closest('.dp-fold') : null;
   const msg = box ? box.querySelector('[data-dipper-msg]') : null;
@@ -391,12 +366,6 @@ function wire() {
     else if (e.target.id === 'qResult') finish();
     else if (e.target.id === 'qJump') { const id = firstUnanswered(); if (id) { const i = ORDER.indexOf(id); gotoPage(i - (i % PAGE)); state.focus = id; renderQuiz(); } }
   });
-  $('shareCopy').addEventListener('click', async () => {
-    if (!currentShare) return;
-    try { await navigator.clipboard.writeText(currentShare.url); $('shareStatus').textContent = 'URLをコピーしました。'; } catch { $('shareStatus').textContent = currentShare.url; }
-  });
-  $('shareClose').addEventListener('click', () => $('shareDialog').close());
-  $('shareOpenX').addEventListener('click', () => track('jagan_share_open_x', {}));
   $('retryBtn').addEventListener('click', () => { store.del(K.progress); history.replaceState(null, '', '/jagan/'); startQuiz(null); });
   document.addEventListener('keydown', (e) => {
     if ($('view-quiz').hidden || !state || e.target.closest('input,textarea')) return;

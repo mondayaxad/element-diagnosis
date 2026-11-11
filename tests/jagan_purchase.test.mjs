@@ -266,6 +266,7 @@ test('マイページからの購入：回答を送らず本人の保存した�
   assert.equal((await call('buy', { resultId: rid, attempt: attempt() }, { token: 'tok-b' })).status, 404, '他の人の記録からは買えない');
   const r = await call('buy', { resultId: rid, attempt: attempt(), source: 'mypage_latest' }, { token: 'tok-a' });
   assert.equal(r.status, 200);
+  assert.equal(stripe.st.lastCreate.params.cancel_url, `${ORIGIN}/mypage#jagan`, 'マイページの記録から：中止したらマイページへ戻る');
   const o = db.t.jagan_orders.find((x) => x.buyer_user_id === U.a);
   stripe.pay(o.stripe_checkout_session_id);
   assert.equal((await call('link-open', { token: secretOf(stripe) })).body.state, 'paid');
