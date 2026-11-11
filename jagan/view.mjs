@@ -282,43 +282,38 @@ function seeingCard() {
 // 「なぜあなたは似ているか」：一致度の計算の説明ではなく、あなたの回答と人物の描写が、どの特性で、どちら向きに重なるかを具体的に言う。
 //   得点（数値）は解析レポートで読む内容のため、ここでは「高め・中ほど・控えめ」の言葉で示す
 const BAND_WORD = { hi: '高め', mid: '中ほど', lo: '控えめ' };
-const yoursLine = (id, band) => ({
-  hi: `「${TRAIT_COPY[id].meaning}」に当てはまる回答が多く出ています。`,
-  mid: `「${TRAIT_COPY[id].meaning}」には、場面によって当てはまる回答です。`,
-  lo: `「${TRAIT_COPY[id].meaning}」に当てはまる回答は少なめです。`,
-}[band]);
-const theirsLine = (name, band) => ({
-  hi: `${name}も、この傾向がはっきり表れる人物として描かれています。`,
-  mid: `${name}の描写でも、この傾向は中ほどに置かれています。`,
-  lo: `${name}も、この傾向が表に出にくい人物として描かれています。`,
-}[band]);
 function whyText(result, bundle, ch, ex) {
+  // 本人のパーソナリティを軸に、人物の物語を重ねる。人物の特性の高低を言い切らない・「重ならない」などの否定は書かない
   const name = esc(ch.name);
   const nameHtml = `<b class="rx-grad" style="background-image:${characterGradient(ch.id)}">${name}</b>`;
-  const close = ex.aligned.slice(0, 3);
-  const far = ex.different.slice(0, 1);
+  const tb = (id) => `<b style="color:${traitShade(id)}">「${esc(traitLabel(bundle, id))}」</b>`;
+  const pick = (ex.aligned.length ? ex.aligned : ex.rows.slice().sort((a, b) => a.difference - b.difference)).slice(0, 3);
+  // 本人の回答で目立つ順（高い特性を先に）
+  const rows = pick.slice().sort((a, b) => b.userScore - a.userScore);
+  const strong = rows.filter((x) => bandOf(x.userScore) !== 'lo');
   const story = CHARACTER_COPY[ch.id] && CHARACTER_COPY[ch.id].story_context;
-  const head = close.length
-    ? `あなたと${nameHtml}の一致度は<b>${esc(ch.match)}%</b>。重なっているのは、${close.map((x) => `「${esc(traitLabel(bundle, x.axis))}」`).join('')}です。`
-    : `あなたと${nameHtml}の一致度は<b>${esc(ch.match)}%</b>。はっきり重なる特性は限られますが、11名の中では、あなたの回答の向きに最も近い人物です。`;
-  const rows = (close.length ? close : ex.rows.slice().sort((a, b) => a.difference - b.difference).slice(0, 2)).map((x) => {
-    const yb = bandOf(x.userScore), rb = bandOf(x.referenceScore);
-    return `<li><b>${esc(traitLabel(bundle, x.axis))}<small>あなた：${BAND_WORD[yb]}</small></b><span>${esc(yoursLine(x.axis, yb))}${esc(theirsLine(ch.name, rb))}</span></li>`;
+  const head = strong.length
+    ? `あなたと${nameHtml}の一致度は<b>${esc(ch.match)}%</b>。あなたの回答に表れた${strong.map((x) => tb(x.axis)).join('')}が、${name}の姿と響き合っています。`
+    : `あなたと${nameHtml}の一致度は<b>${esc(ch.match)}%</b>。あなたの回答の落ち着いた向きが、${name}の姿と響き合っています。`;
+  const items = rows.map((x) => {
+    const band = bandOf(x.userScore), c = traitShade(x.axis);
+    const word = TRAIT_COPY[x.axis][band === 'lo' ? 'lo' : 'hi'];
+    const body = band === 'hi' ? `${TRAIT_COPY[x.axis].meaning}に当てはまる回答が多く、<b style="color:${c}">${esc(word)}</b>がはっきり表れています。`
+      : band === 'mid' ? `${TRAIT_COPY[x.axis].meaning}が、場面によって表に出る回答です。必要なときに<b style="color:${c}">${esc(word)}</b>が働きます。`
+        : `${TRAIT_COPY[x.axis].meaning}に引きずられにくく、<b style="color:${c}">${esc(word)}</b>があなたの持ち味として表れています。`;
+    return `<li style="--wc:${c}"><b style="color:${c}">${esc(traitLabel(bundle, x.axis))}<small>あなた：${BAND_WORD[band]}</small></b><span>${body}</span></li>`;
   }).join('');
-  const diff = far.length
-    ? `<p class="rx-text">一方で「${esc(traitLabel(bundle, far[0].axis))}」は、あなたが${BAND_WORD[bandOf(far[0].userScore)]}なのに対し、${name}の描写は${BAND_WORD[bandOf(far[0].referenceScore)]}で、ここは重なりません。似ているのは、人物の全体ではなく、上の特性が同じ向きを指している部分です。</p>`
-    : '';
+  const tail = story ? `<p class="rx-text">${esc(story)}${strong.length ? `あなたの${strong.slice(0, 2).map((x) => tb(x.axis)).join('と')}は、この物語のどこと重なるのか。` : 'あなたの回答の向きは、この物語のどこと重なるのか。'}レポートでは、あなたの回答と${name}の物語を照らし合わせて読み解きます。</p>` : '';
   return `<p class="rx-text">${head}</p>
-      <ul class="rx-why-list">${rows}</ul>
-      ${story ? `<p class="rx-text">${esc(story)}あなたの回答に表れた反応が、この姿のどこと重なるかを、レポートで詳しく読み解きます。</p>` : ''}
-      ${diff}`;
+      <ul class="rx-why-list">${items}</ul>
+      ${tail}`;
 }
 
 // 各領域の解説：特性の一般的な説明ではなく、あなたの回答で突出している特性と、控えめな特性を、具体的な場面とともに言う
 function foundationText(result, bundle, g) {
   const ts = g.traits.map((id) => ({ id, s: result.traits[id].score })).sort((a, b) => b.s - a.s || a.id.localeCompare(b.id));
   const top = ts[0], second = ts[1], low = ts[ts.length - 1];
-  const lab = (id) => `<b>「${esc(traitLabel(bundle, id))}」</b>`;
+  const lab = (id) => `<b style="color:${traitShade(id)}">「${esc(traitLabel(bundle, id))}」</b>`;
   const band = (x) => TRAIT_BAND[x.id][bandOf(x.s)];
   const out = [];
   if (bandOf(top.s) === 'lo') {
