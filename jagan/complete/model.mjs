@@ -288,7 +288,8 @@ export function mirrorOf(topF, e, isous) {
     const topUser = isous.slice(0, 2);
     const feature = `${topUser[0].score <= 35 ? `全体に低めの回答の中では、${topUser.map((t) => t.label).join('と')}が相対的に高く出ています。` : `あなたの回答では、${topUser.map((t) => t.label).join('と')}が目立っています。`}${main}`;
     const notCompared = isous.slice(0, 3).filter((t) => !rows.some((r) => r.id === t.id)).map((t) => t.label);
-    const differ = `${proseDf}${notCompared.length ? `なお、${notCompared.join('・')}は、${f.name}との照合では扱っていません。` : ''}`;
+    const differ = proseDf;
+    void notCompared;
     // この人物の定義：照合に使う特性ごとに、置いた方向と、その根拠の描写
     const dirOf = (v) => (v >= 80 ? '強く高め' : v >= 70 ? '高め' : v >= 60 ? 'やや高め' : v <= 30 ? '低め' : 'やや低め');
     const defs = rows.map((r) => ({ label: r.label, dir: dirOf(r.ref), text: FATUI_DEF[f.id][r.id] }));
