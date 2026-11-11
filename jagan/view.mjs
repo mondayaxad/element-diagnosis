@@ -72,7 +72,35 @@ export function traitShade(id) {
 }
 
 function locks(words) {
-  return `<div class="rx-locks">${words.map((w) => `<div class="rx-lock" style="--lc:${w.color}"><span class="rx-lock-ring">${lockSvg}</span><span class="rx-lock-word">${esc(w.word)}</span></div>`).join('')}</div>`;
+  return `<div class="rx-locks">${words.map((w) => `<div class="rx-lock${w.related ? ' is-related' : ''}" style="--lc:${w.color}"><span class="rx-lock-ring">${lockSvg}</span><span class="rx-lock-word">${esc(w.word)}</span></div>`).join('')}</div>`;
+}
+// 各領域の鍵：領域の4特性を全員同じに並べるのではなく、あなたの回答で目立つ特性だけを並べる。
+//   目立つ＝高め（60以上）。高めが無い時は中ほど（41〜59）の上位、それも無い時は最も高い1つ。
+//   4つに満たない時は、目立つ特性に近い言葉（類似語）を、強い特性から順に足して4つにする（類似語は特性と同じ色・控えめな見た目）
+const RELATED_WORDS = {
+  ANX: ['心配', '緊張', '先読み'], SEP: ['寂しさ', 'つながり', '確かめたさ'], SUS: ['警戒', '疑念', '裏読み'], WDR: ['孤独', '距離', '静寂'],
+  IMP: ['即断', '勢い', '突発'], RSK: ['挑戦', '刺激', '冒険'], PSV: ['執着', 'こだわり', '粘り'], PRF: ['理想', '精密', '基準'],
+  HOS: ['苛立ち', '反発', '怒り'], ATT: ['注目', '演出', '存在感'], MAN: ['誘導', '策略', '駆け引き'], CAL: ['冷静', '無関心', '割り切り'],
+};
+export function prominentTraits(result, g) {
+  const ts = g.traits.map((id) => ({ id, s: result.traits[id].score })).sort((a, b) => b.s - a.s || a.id.localeCompare(b.id));
+  const hi = ts.filter((x) => x.s >= 60);
+  if (hi.length) return hi;
+  const mid = ts.filter((x) => x.s > 40);
+  return mid.length ? mid.slice(0, 2) : ts.slice(0, 1);
+}
+export function groupLockWords(result, bundle, g, n = 4) {
+  const top = prominentTraits(result, g).slice(0, n);
+  // 領域の4つがすべて控えめ：控えめな側の言葉（穏やかな見通し など）を、控えめな順に並べる
+  if (top.length === 1 && top[0].s <= 40) {
+    return g.traits.map((id) => ({ id, s: result.traits[id].score })).sort((a, b) => a.s - b.s || a.id.localeCompare(b.id)).slice(0, n)
+      .map((x) => ({ word: TRAIT_COPY[x.id].lo, color: traitShade(x.id) }));
+  }
+  const words = top.map((x) => ({ word: traitLabel(bundle, x.id), color: traitShade(x.id) }));
+  for (let i = 0; words.length < n && i < 3; i++) {
+    for (const x of top) { if (words.length < n) words.push({ word: RELATED_WORDS[x.id][i], color: traitShade(x.id), related: true }); }
+  }
+  return words;
 }
 // ロック解除の案内。背景には、その人の実際のレポートの該当部分をモザイク（ぼかし）で敷く（元素診断と同じ見せ方）。
 //   ぼかした部分は読み上げ・操作の対象から外す（aria-hidden・inert）。2位以下の人物名は伏せる。
@@ -346,7 +374,8 @@ function whyCard(result, bundle) {
 }
 
 function foundationCard(result, bundle, g) {
-  const tags = tendencyWords(result, bundle, g.id, 3).map((w) => `<span class="rx-tag">${esc(w.word)}</span>`).join('');
+  // 札：目立つ特性の言葉（高めなら強みの言葉、控えめなら穏やかな側の言葉）
+  const tags = prominentTraits(result, g).slice(0, 3).map((x) => `<span class="rx-tag" style="color:${traitShade(x.id)}">${esc(TRAIT_COPY[x.id][x.s > 40 ? 'hi' : 'lo'])}</span>`).join('');
   return `<section class="rx-card rx-found">
       <p class="rx-sec-h" style="--dot:${g.color}"><i></i>${esc(g.title)}</p>
       ${constellation(g.color, g.en)}
@@ -354,7 +383,7 @@ function foundationCard(result, bundle, g) {
       <div class="rx-tags">${tags}</div>
       <hr class="rx-hr">
       <p class="rx-h4">${esc(g.lockTitle)}</p>
-      ${locks(tendencyWords(result, bundle, g.id, 4))}
+      ${locks(groupLockWords(result, bundle, g))}
       ${unlockCard(g.unlock, g.preview, groupPreview(result, bundle, g), g.color)}
     </section>`;
 }

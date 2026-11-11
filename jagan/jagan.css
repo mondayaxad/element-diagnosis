@@ -722,3 +722,6 @@ body { background: #09070B; background-image: none; }
 .jg-about-cores b small { font-size: 11px; font-weight: 400; color: #C99AA7; }
 .jg-about-cores span { display: block; margin-top: 2px; font-size: 13.5px; font-weight: 700; color: #F4E6EA; }
 .jg-about-cores em { display: block; margin-top: 2px; font-style: normal; font-size: 12px; line-height: 1.8; color: #A58994; }
+/* 類似語の鍵：目立つ特性に近い言葉。特性と同じ色で、輪を細く・やや淡く */
+.rx-lock.is-related .rx-lock-ring { border-style: dashed; opacity: .78; box-shadow: none; }
+.rx-lock.is-related .rx-lock-word { font-weight: 400; opacity: .9; }
