@@ -15,7 +15,7 @@
 <body>
 <div class="night" aria-hidden="true"><div class="photo"></div><div class="tint"></div></div>
 <main class="jg-wrap" id="app">
-  <p class="jg-center"><a href="/jagan/">‹ 邪眼診断のトップへ</a></p>
+  <p class="jg-center"><a href="/jagan/" data-back-result>‹ 邪眼診断のトップへ</a></p>
   <section class="jg-card jg-about">
     <h1 class="jg-h3">邪眼診断の理論</h1>
     <h2 class="jg-about-h">基にした理論</h2>
@@ -35,6 +35,7 @@
     <p>回答は、診断中と結果の再表示のために、この端末（ブラウザ）に一時的に残ります。マイページ保存は、ログインしたあなたが押したときだけ行い、回答と、保存時の版での結果を保存します。</p>
     <p>X共有・共有ページには、邪眼元素・異相・DTIコードと呼び名・あなたのファトゥスと一致度だけを載せます（人物の判定を保留した結果は人物を載せません）。回答と12特性のスコアは載せません。共有のURLには結果の表示に必要な値だけが入っているため、URLを知っている人は誰でも同じ共有ページを開けます（取り消しはできません）。</p>
   </section>
+  <div class="jg-btn-row jg-center"><a class="jg-btn jg-btn-primary" href="/jagan/" data-back-result>邪眼診断のトップへ</a></div>
 </main>
 <footer class="jf">
   <p class="jf-copy">邪眼診断 — An original self-understanding framework inspired by Genshin Impact. Not a medical diagnosis. For entertainment purposes. © マンデーアクスト / @mondayaxad</p>
@@ -45,6 +46,17 @@
   import { renderElementCores } from '/jagan/view.mjs';
   import { BUNDLE } from '/jagan/engine/data.mjs';
   document.getElementById('elementCores').innerHTML = renderElementCores(BUNDLE);
+  // 診断結果（完了ページ）から来た時は、その結果へ戻る（この端末に残っている直近の結果）
+  let hasResult = false;
+  try { const l = JSON.parse(localStorage.getItem('jagan_last_v1') || 'null'); hasResult = !!(l && l.resultId); } catch { hasResult = false; }
+  let fromResult = false;
+  const ref = String(document.referrer || '').split('#')[0].split('?')[0];
+  fromResult = ref === location.origin + '/jagan/' || ref === location.origin + '/jagan';
+  if (hasResult || fromResult) document.querySelectorAll('[data-back-result]').forEach((a) => {
+    a.textContent = a.classList.contains('jg-btn') ? '診断結果に戻る' : '‹ 診断結果に戻る';
+    a.addEventListener('click', (e) => { if (fromResult && history.length > 1) { e.preventDefault(); history.back(); } else a.href = '/jagan/#result'; });
+    a.href = '/jagan/#result';
+  });
 </script>
 </body>
 </html>

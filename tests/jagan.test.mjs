@@ -367,9 +367,28 @@ test('result page: deferred parts are not filled, no names leak, and the twelve 
   assert.ok(html.includes(`<span class="rx-dti-name">${r.dti.name}</span>`));
   // 近い候補・次点の行は出さない
   assert.ok(!html.includes('近い候補') && !html.includes('次に近しい') && !html.includes('2位'));
-  // 鍵マークの言葉は単語一語（特性名）
+  // 鍵マークの言葉は単語一語（特性名、または各領域で足す類似語・控えめな側の言葉）
   const words = [...html.matchAll(/class="rx-lock-word">([^<]+)</g)].map((m) => m[1]);
-  assert.ok(words.length > 0 && words.every((w) => BUNDLE.items.traits.some((t) => t.label === w)), words.join(','));
+  assert.ok(words.length > 0 && words.every((w) => w.length <= 8 && !/[、。]/.test(w)), words.join(','));
+});
+
+test('各領域の鍵：全員同じ4特性ではなく、回答で目立つ特性だけ。足りない分は類似語で4つに', async () => {
+  const { groupLockWords, prominentTraits } = await import('../jagan/view.mjs');
+  const inner = GROUPS.find((g) => g.id === 'inner');
+  // 撤退と依存だけが高い回答：撤退・依存の2つ＋類似語2つ（不安・猜疑は出さない）
+  const r = run(profile({ WDR: 5, SEP: 5, ANX: 2, SUS: 2 }));
+  const w = groupLockWords(r, BUNDLE, inner);
+  assert.equal(w.length, 4);
+  assert.deepEqual(w.filter((x) => !x.related).map((x) => x.word).sort(), ['依存', '撤退'].sort());
+  assert.ok(!w.some((x) => x.word === '不安' || x.word === '猜疑'));
+  assert.equal(w.filter((x) => x.related).length, 2);
+  // 回答が違えば並びも違う（全員が同じにならない）
+  const r2 = run(profile({ ANX: 5, SUS: 5, WDR: 1, SEP: 1 }));
+  assert.notDeepEqual(groupLockWords(r2, BUNDLE, inner).map((x) => x.word), w.map((x) => x.word));
+  // 4つとも控えめ：控えめな側の言葉
+  const r3 = run(profile({ ANX: 1, SUS: 1, WDR: 1, SEP: 1 }));
+  assert.equal(prominentTraits(r3, inner).length, 1);
+  assert.ok(groupLockWords(r3, BUNDLE, inner).every((x) => Object.values(TRAIT_COPY).some((c) => c.lo === x.word)));
 });
 
 test('the report renders all twelve traits, three groups, the character section and the balance caveat; the sample is fictional', () => {
