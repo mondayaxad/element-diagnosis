@@ -353,6 +353,8 @@ test('result page: deferred parts are not filled, no names leak, and the twelve 
   // 一致度・人物の選び方の説明（内部の計算・調整）は出さない。似ている理由は、あなたの回答と人物の描写で言う（2026-11-11）
   assert.ok(!html.includes('一致度と人物の選び方について') && !html.includes('3対1') && !html.includes('小さな調整'));
   assert.ok(html.includes('rx-why-list') && html.includes(`あなたと<b class="rx-grad"`));
+  // 人物の特性の高低を言い切らない・「重ならない」などの否定は書かない
+  assert.ok(!html.includes('重なりません') && !html.includes('人物として描かれています') && !html.includes('描写は'));
   // 各領域は一般論ではなく、あなたの回答で最も強く出ている特性から
   assert.ok(!html.includes('心理学では') && !html.includes('高いほど悪い'));
   assert.equal((html.match(/あなたの回答で、この4つのうち最も強く出ているのは|あなたの回答では、[^<]*4つはいずれも控えめ/g) || []).length, 3);

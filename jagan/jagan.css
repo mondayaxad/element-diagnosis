@@ -709,9 +709,9 @@ body { background: #09070B; background-image: none; }
 @media print { #sampleBuy, .dp-sample-buy { display: none !important; } }
 /* なぜあなたは似ているか：重なる特性ごとに、あなたの回答と人物の描写を並べる */
 .rx-why-list { list-style: none; margin: 4px 0 12px; padding: 0; display: grid; gap: 8px; }
-.rx-why-list li { border-left: 2px solid #E2C08C66; padding: 6px 0 6px 12px; background: linear-gradient(90deg, rgba(226,192,140,.06), transparent); border-radius: 0 6px 6px 0; }
-.rx-why-list b { display: flex; align-items: baseline; gap: 8px; font-size: 13px; color: #F4E6EA; }
-.rx-why-list b small { font-size: 10.5px; font-weight: 400; color: #E2C08C; letter-spacing: .05em; }
+.rx-why-list li { border-left: 2px solid color-mix(in srgb, var(--wc, #E2C08C) 60%, transparent); padding: 6px 0 6px 12px; background: linear-gradient(90deg, rgba(226,192,140,.06), transparent); border-radius: 0 6px 6px 0; }
+.rx-why-list li > b { display: flex; align-items: baseline; gap: 8px; font-size: 13px; color: #F4E6EA; }
+.rx-why-list li > b small { font-size: 10.5px; font-weight: 400; color: #C99AA7; letter-spacing: .05em; }
 .rx-why-list span { display: block; margin-top: 2px; font-size: 12px; line-height: 1.85; color: #D9C3CA; }
 /* 理論のページ（/jagan/about） */
 .jg-about p { font-size: 14px; line-height: 2; color: #D9C3CA; }
