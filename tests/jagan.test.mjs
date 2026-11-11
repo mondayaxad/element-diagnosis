@@ -372,6 +372,7 @@ test('result page: deferred parts are not filled, no names leak, and the twelve 
   assert.ok(words.length > 0 && words.every((w) => w.length <= 8 && !/[、。]/.test(w)), words.join(','));
 });
 
+const result4 = () => ({ ANX: 50, SEP: 50, SUS: 50, WDR: 50 });
 test('各領域の鍵：全員同じ4特性ではなく、回答で目立つ特性だけ。足りない分は類似語で4つに', async () => {
   const { groupLockWords, prominentTraits } = await import('../jagan/view.mjs');
   const inner = GROUPS.find((g) => g.id === 'inner');
@@ -385,6 +386,15 @@ test('各領域の鍵：全員同じ4特性ではなく、回答で目立つ特�
   // 回答が違えば並びも違う（全員が同じにならない）
   const r2 = run(profile({ ANX: 5, SUS: 5, WDR: 1, SEP: 1 }));
   assert.notDeepEqual(groupLockWords(r2, BUNDLE, inner).map((x) => x.word), w.map((x) => x.word));
+  // 上位2つが同じくらい（1位だけ高め・2位はわずかに下）：2つ＋それぞれの言葉を1つずつ
+  const near = { ...result4(), WDR: 64, SEP: 57, ANX: 30, SUS: 25 };
+  const pn = prominentTraits({ traits: Object.fromEntries(Object.entries(near).map(([k, v]) => [k, { score: v }])) }, inner).map((x) => x.id);
+  assert.deepEqual(pn, ['WDR', 'SEP']);
+  const wn = groupLockWords({ traits: Object.fromEntries(Object.entries(near).map(([k, v]) => [k, { score: v }])) }, BUNDLE, inner);
+  assert.deepEqual(wn.map((x) => x.word), ['撤退', '依存', '孤高', '愛着']);
+  // 差が大きい時は1つ＋その言葉
+  const far = { ...near, SEP: 45 };
+  assert.deepEqual(prominentTraits({ traits: Object.fromEntries(Object.entries(far).map(([k, v]) => [k, { score: v }])) }, inner).map((x) => x.id), ['WDR']);
   // 4つとも控えめ：控えめな側の言葉
   const r3 = run(profile({ ANX: 1, SUS: 1, WDR: 1, SEP: 1 }));
   assert.equal(prominentTraits(r3, inner).length, 1);

@@ -75,7 +75,7 @@ function locks(words) {
   return `<div class="rx-locks">${words.map((w) => `<div class="rx-lock" style="--lc:${w.color}"><span class="rx-lock-ring">${lockSvg}</span><span class="rx-lock-word">${esc(w.word)}</span></div>`).join('')}</div>`;
 }
 // 各領域の鍵：領域の4特性を全員同じに並べるのではなく、あなたの回答で目立つ特性だけを並べる。
-//   目立つ＝高め（60以上）。高めが無い時は中ほど（41〜59）の上位、それも無い時は最も高い1つ。
+//   目立つ＝高め（60以上）。上位2つが同じくらいなら2位も含める。高めが無い時は中ほど（41〜59）の上位2つ、それも無い時は最も高い1つ。
 //   4つに満たない時は、目立つ特性に連なる漢字2〜3字の言葉を、強い特性から順に足して4つにする（特性と同じ色・同じ見た目）
 const RELATED_WORDS = {
   ANX: ['憂慮', '予兆', '緊張'], SEP: ['愛着', '渇望', '寂寥'], SUS: ['警戒', '洞察', '防壁'], WDR: ['孤高', '内省', '静寂'],
@@ -87,6 +87,8 @@ const CALM_WORDS = { ANX: '平静', SEP: '自立', SUS: '信頼', WDR: '社交',
 export function prominentTraits(result, g) {
   const ts = g.traits.map((id) => ({ id, s: result.traits[id].score })).sort((a, b) => b.s - a.s || a.id.localeCompare(b.id));
   const hi = ts.filter((x) => x.s >= 60);
+  // 上位2つが同じくらい（差が10以内・2位も中ほど以上）の時は、2位も目立つ特性に含める（2つ＋それぞれに1語ずつ）
+  if (hi.length === 1 && ts[1].s > 40 && ts[0].s - ts[1].s <= 10) return ts.slice(0, 2);
   if (hi.length) return hi;
   const mid = ts.filter((x) => x.s > 40);
   return mid.length ? mid.slice(0, 2) : ts.slice(0, 1);
