@@ -14,6 +14,10 @@
     {
       "source": "/jagan/share",
       "destination": "/api/jagan-share-page"
+    },
+    {
+      "source": "/j/:k([0-9A-Za-z]{4,8})",
+      "destination": "/api/jagan-share-page?k=:k"
     }
   ],
   "headers": [
@@ -162,6 +166,15 @@
     },
     {
       "source": "/jagan/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/j/:k",
       "headers": [
         {
           "key": "X-Robots-Tag",
