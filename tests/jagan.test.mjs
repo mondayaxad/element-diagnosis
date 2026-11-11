@@ -552,6 +552,10 @@ test('share HTML (no JS) carries absolute og:image, og:title, og:description, og
   assert.ok(meta('og:description').length > 0);
   assert.equal(meta('og:url'), `https://element-diagnosis-git-jagan-preview.vercel.app/jagan/s/${share.body.publicId}`);
   assert.equal(meta('twitter:card'), 'summary_large_image');
+  // 元素診断と同じく X 用の title・description・image も明示（og と同じ値）
+  assert.equal(meta('twitter:image'), meta('og:image'));
+  assert.equal(meta('twitter:title'), meta('og:title'));
+  assert.equal(meta('twitter:description'), meta('og:description'));
   assert.equal(page.headers['content-type'], 'text/html; charset=utf-8');
 });
 
