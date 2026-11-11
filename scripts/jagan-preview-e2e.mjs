@@ -35,7 +35,7 @@ out.unlockButtonCount = await page.evaluate(() => document.querySelectorAll('[da
 const [pop] = await Promise.all([ctx.waitForEvent('page'), page.click('#shareBtn')]);
 const intent = new URL(pop.url());
 out.shareText = intent.searchParams.get('text') || '';
-out.shareHasOrigin = out.shareText.includes(BASE + '/jagan/share?');
+out.shareHasOrigin = /\/j\/[0-9A-Za-z]{4}(\s|$)/.test(out.shareText) && out.shareText.includes(BASE + '/j/');
 await pop.close();
 
 // 保存（未ログイン）：登録・ログインを促す表示になるか

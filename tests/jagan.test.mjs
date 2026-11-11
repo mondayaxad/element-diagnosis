@@ -6,11 +6,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, shareUrl, explainCharacter, SHARE_CHAR_CODES, parseShareKey } from '../jagan/engine/runtime.mjs';
+import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, shareUrl, explainCharacter, SHARE_CHAR_CODES, SHARE_VERSIONS, shareKey, parseShareKey } from '../jagan/engine/runtime.mjs';
 import { judge, characterRanking, scoreAnswers } from '../jagan/engine/judge.mjs';
 import { BUNDLE } from '../jagan/engine/data.mjs';
 import { judge as specJudge } from '../docs/jagan/spec_v0_3_balanced/runtime.mjs';
-import { recompute, headlineOf, ogParams, sharePageQuery, renderSharePage, createSaveHandler, createShareHandler, createReportHandler, createSharePageHandler, jaganEnabled } from '../lib/jagan-api.mjs';
+import { recompute, headlineOf, ogParams, sharePagePath, renderSharePage, createSaveHandler, createShareHandler, createReportHandler, createSharePageHandler, jaganEnabled } from '../lib/jagan-api.mjs';
 import { renderResultPage, renderReport, renderMethod, PREVIEW_SCORES, PREVIEW_MATCH } from '../jagan/view.mjs';
 import { GROUPS, ISOU_TEXT, ISOU_SHORT, ELEMENT_TEXT, ELEMENT_STORY, TRAIT_COPY, CHARACTER_COPY, traitBandText, TRAIT_BAND, bandOf } from '../jagan/site-copy.mjs';
 import { fnv1a32, normalizedAnswers, selectIsou } from '../jagan/engine/dti.mjs';
@@ -391,22 +391,34 @@ test('share text equals the template; OG params round-trip through the image par
     const s = publicSummary(r);
     // 元素診断と同じ形の共有文。URL は公開の値だけを載せた /jagan/share?…（OGP が出る）
     const url = shareUrl('https://example.invalid', s);
-    // 投稿に載る URL は短い形（DTIコード・人物1字・一致度・版）。内部の版名（dti-naming…・og-3）は出さない
-    assert.match(url, /^https:\/\/example\.invalid\/jagan\/share\?k=[A-Z]{4}[a-k][0-9a-z]{2}[1-9]$/);
+    // 投稿に載る URL は最短の形 /j/<4文字>（番号3文字＋版1文字）。内部の版名（dti-naming…・og-3）は出さない
+    assert.match(url, /^https:\/\/example\.invalid\/j\/[0-9A-Za-z]{3}[1-9]$/);
     assert.ok(!url.includes('naming') && !url.includes('og-'));
     // 全員に、重ならない1字がある（以前の投稿の URL を読み替えないよう、字は変えない）
     assert.deepEqual(Object.keys(SHARE_CHAR_CODES).sort(), BUNDLE.characters.characters.map((c) => c.id).sort());
     assert.equal(new Set(Object.values(SHARE_CHAR_CODES)).size, Object.keys(SHARE_CHAR_CODES).length);
-    assert.equal(parseShareKey('PYHOg2s1').character.match, 100);
+    assert.equal(parseShareKey('PYHOg2s1').character.match, 100, '旧い8文字の形も読める');
+    // 全84通り×（11名＋保留）×一致度0〜100 が、4文字で往復できる（重なりなし）
+    const seen = new Set();
+    for (const code of SHARE_VERSIONS[1].codes) for (const ch of [...SHARE_VERSIONS[1].chars, null]) for (const m of ch ? [0, 1, 57, 99, 100] : [0]) {
+      const k = shareKey({ dti: { code }, character: ch ? { id: ch, matchPercent: m } : null, namingVersion: SHARE_VERSIONS[1].naming });
+      assert.match(k, /^[0-9A-Za-z]{3}1$/); assert.ok(!seen.has(k)); seen.add(k);
+      const back = parseShareKey(k);
+      assert.deepEqual([back.code, back.character && back.character.id, back.character && back.character.match], [code, ch, ch ? m : null]);
+    }
+    // 版1の表は凍結：組み合わせ・人物の並びは、今のデータと同じ集合（並べ替え・追加は新しい版で）
+    assert.deepEqual([...SHARE_VERSIONS[1].codes].sort(), BUNDLE.dti.patterns.map((p) => p.code).sort());
+    assert.deepEqual([...SHARE_VERSIONS[1].chars].sort(), BUNDLE.characters.characters.map((c) => c.id).sort());
+    for (const bad of ['zzz1', '0001x', '00a0', 'ZZZ9']) assert.equal(parseShareKey(bad), null, bad);
     // 短い形も、画像の形も、同じ結果に読める
-    const viaKey = parseOg(new URL(url).searchParams);
+    const viaKey = parseOg(new URLSearchParams({ k: url.split('/').pop() }));
     assert.deepEqual([viaKey.code, viaKey.character.id, viaKey.character.match], [s.dti.code, s.character.id, s.character.matchPercent]);
     assert.ok(!url.includes('ANX01') && !url.includes('score'));
     assert.equal(shareTextFromSummary(s, url), makeShareText(r, url, 'https://example.invalid'));
     const text = makeShareText(r, url, 'https://example.invalid');
     assert.equal(text, `邪眼診断をやってみました。\n\n私の結果は【${s.element.label} × ${s.isou.label}】\nあなたのファトゥス：${s.character.label}（${s.character.matchPercent}%一致）\n\n${url}\n\n#邪眼診断 #${s.dti.code} #${s.character.label}`);
     // 共有文の URL は、その結果と一致するものだけ（他人の値・他のサイト・余計な値は拒否）
-    assert.throws(() => makeShareText(r, url.replace(/[0-9a-z]{2}(\d)$/, '2s$1'), 'https://example.invalid'), /invalid_share_url/);
+    assert.throws(() => makeShareText(r, url.replace(/.(\d)$/, (x, v) => (x[0] === '0' ? '1' : '0') + v), 'https://example.invalid'), /invalid_share_url/);
     assert.throws(() => makeShareText(r, `${url}&answers=1`, 'https://example.invalid'), /invalid_share_url/);
     const parsed = parseOg(new URLSearchParams(ogParams(s)));
     assert.equal(parsed.element, s.element.label);
@@ -580,12 +592,16 @@ test('stateless share page (/jagan/share?…) needs no DB: summary from whitelis
   // 以前に投稿された従来の形（e・t・c・m・v）も開ける。正規の URL（og:url）は短い形
   const legacy = await call(page, { method: 'GET', url: `/api/jagan-share-page?${q}` });
   assert.equal(legacy.status, 200);
-  const ok = await call(page, { method: 'GET', url: `/api/jagan-share-page?${sharePageQuery(s)}` });
+  const key = sharePagePath(s).split('/').pop();
+  const ok = await call(page, { method: 'GET', url: `/api/jagan-share-page?k=${key}` });
   assert.equal(ok.status, 200);
   const meta = (k) => (ok.body.match(new RegExp(`<meta (?:property|name)="${k}" content="([^"]*)"`)) || [])[1];
   assert.equal(meta('og:image'), `https://element-diagnosis-git-jagan-preview.vercel.app/api/jagan-og?${q.replace(/&/g, '&amp;')}`.replace(/&amp;/g, '&amp;'));
-  assert.equal(meta('og:url'), `https://element-diagnosis-git-jagan-preview.vercel.app/jagan/share?${sharePageQuery(s)}`);
-  assert.match(sharePageQuery(s), /^k=[A-Z]{4}[a-k][0-9a-z]{2}1$/);
+  assert.equal(meta('og:url'), `https://element-diagnosis-git-jagan-preview.vercel.app/j/${key}`);
+  assert.match(key, /^[0-9A-Za-z]{3}1$/);
+  // 以前の8文字の形（Preview で作られた ?k=）も開ける
+  const old = await call(page, { method: 'GET', url: `/api/jagan-share-page?k=${s.dti.code}${SHARE_CHAR_CODES[s.character.id]}${s.character.matchPercent.toString(36).padStart(2, '0')}1` });
+  assert.equal(old.status, 200);
   assert.equal(meta('twitter:card'), 'summary_large_image');
   assert.ok(ok.body.includes(s.dti.code) && ok.body.includes(s.dti.name) && ok.body.includes(s.character.label));
   for (const bad of ['e=XX&t=ANX', 'e=PY&t=ANX&c=pierro&m=500', 'e=PY&t=ANX&c=%3Cscript%3E&m=50', '', 'k=ZZZZ1', 'k=PYHOz2c1', 'k=PYHOg2t1', 'k=PYHOg2c9', 'k=PYHO%3Cs%3E1']) {

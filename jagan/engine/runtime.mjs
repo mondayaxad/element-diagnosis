@@ -100,15 +100,22 @@ export function publicSummary(result) {
 }
 
 // 共有の URL（元素診断の共有と同じく、公開してよい結果だけを URL に載せる。DB に頼らずに OGP が出る）
-//   投稿に載る URL は短い形：/jagan/share?k=<DTIコード4字><人物1字><一致度2字（36進）><版1字>（人物を保留した結果は DTIコード＋版）
-//     例：PYDP（炎×依存）・j（パンタローネ）・2b（83%）・1（版）→ ?k=PYDPj2b1
-//   版（呼び名・カードのデザイン）は内部の表で持つ。過去の版は消さない（以前に投稿した URL も、同じカードで開ける）。
-//   画像（/api/jagan-og）の URL は従来の形（e・t・c・m・v）のまま。投稿文には出ない。
-//   回答・12特性の得点・結果ID は載せない。
-export const SHARE_PATH = '/jagan/share';
+//   投稿に載る URL は最短の形：/j/<4文字>（例：/j/Ab3x1 ではなく /j/b3x1 の4文字）
+//     先頭3文字（62進）＝ DTIの組み合わせ（84通り）× 人物（11名＋保留）× 一致度（0〜100）を一つの番号にしたもの
+//     末尾1文字＝版。版ごとに「組み合わせ・人物の並び」と「呼び名・カードのデザイン」の表を凍結して持つ（過去の版は消さない）。
+//     データや並びが変わっても、以前に投稿した URL は当時の版の表で読むため、同じ結果・同じカードで開ける（履歴に残る）。
+//   従来の形（/jagan/share?e=…&t=…&c=…&m=…&v=… と /jagan/share?k=<8文字>）も、そのまま開ける。
+//   画像（/api/jagan-og）の URL は従来の形（e・t・c・m・v）。投稿文には出ない。回答・12特性の得点・結果ID は載せない。
+export const SHARE_PATH = '/j';
+export const LEGACY_SHARE_PATH = '/jagan/share';
 export const OG_DESIGN_VERSION = 'dti-og-3';
-export const SHARE_VERSIONS = Object.freeze({ 1: { naming: 'dti-naming-v1-20261104', og: 'dti-og-3' } });
-// 人物の1字（並び替え・追加で既存の字を変えない。新しい人物は未使用の字を足す）
+const B62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+export const SHARE_VERSIONS = Object.freeze({
+  1: Object.freeze({ naming: 'dti-naming-v1-20261104', og: 'dti-og-3',
+    codes: Object.freeze(["PYAX","HYAX","CRAX","ELAX","ANAX","GEAX","DEAX","PYDP","HYDP","CRDP","ELDP","ANDP","GEDP","DEDP","PYSU","HYSU","CRSU","ELSU","ANSU","GESU","DESU","PYWD","HYWD","CRWD","ELWD","ANWD","GEWD","DEWD","PYIM","HYIM","CRIM","ELIM","ANIM","GEIM","DEIM","PYPE","HYPE","CRPE","ELPE","ANPE","GEPE","DEPE","PYPF","HYPF","CRPF","ELPF","ANPF","GEPF","DEPF","PYHO","HYHO","CRHO","ELHO","ANHO","GEHO","DEHO","PYAT","HYAT","CRAT","ELAT","ANAT","GEAT","DEAT","PYMN","HYMN","CRMN","ELMN","ANMN","GEMN","DEMN","PYRK","HYRK","CRRK","ELRK","ANRK","GERK","DERK","PYCL","HYCL","CRCL","ELCL","ANCL","GECL","DECL"]),
+    chars: Object.freeze(['pierro', 'capitano', 'dottore', 'columbina', 'arlecchino', 'pulcinella', 'scaramouche', 'sandrone', 'signora', 'pantalone', 'tartaglia']) }),
+});
+// 旧い8文字の形（?k=PYSPj2b1）の人物の1字
 export const SHARE_CHAR_CODES = Object.freeze({ pierro: 'a', capitano: 'b', dottore: 'c', columbina: 'd', arlecchino: 'e', pulcinella: 'f',
   scaramouche: 'g', sandrone: 'h', signora: 'i', pantalone: 'j', tartaglia: 'k' });
 function shareVersionKey(naming) {
@@ -116,14 +123,29 @@ function shareVersionKey(naming) {
   return keys.find((k) => SHARE_VERSIONS[k].naming === naming && SHARE_VERSIONS[k].og === OG_DESIGN_VERSION) || keys[keys.length - 1];
 }
 export function shareKey(s) {
-  const ch = s.character && SHARE_CHAR_CODES[s.character.id];
-  const m = s.character ? Number(s.character.matchPercent) : null;
-  const mid = ch && Number.isInteger(m) && m >= 0 && m <= 100 ? ch + m.toString(36).padStart(2, '0') : '';
-  return `${s.dti.code}${mid}${shareVersionKey(s.namingVersion)}`;
+  const v = shareVersionKey(s.namingVersion), t = SHARE_VERSIONS[v];
+  const pi = t.codes.indexOf(s.dti.code);
+  if (pi < 0) throw new Error('result_not_shareable');
+  const m = s.character ? Number(s.character.matchPercent) : 0;
+  const ci = s.character ? t.chars.indexOf(s.character.id) : t.chars.length;
+  if (ci < 0 || !Number.isInteger(m) || m < 0 || m > 100) throw new Error('result_not_shareable');
+  let n = (pi * (t.chars.length + 1) + ci) * 101 + m, out = '';
+  for (let i = 0; i < 3; i++) { out = B62[n % 62] + out; n = Math.floor(n / 62); }
+  return out + v;
 }
-// 短い形を読む。読めない時は null（値は許可された表からだけ解決する）
+// 共有の値を読む。読めない時は null（値は版の表からだけ解決する）。4文字の形と、旧い8文字の形
 export function parseShareKey(k) {
-  const m = /^([A-Z]{4})(?:([a-z])([0-9a-z]{2}))?([1-9])$/.exec(String(k || ''));
+  const str = String(k || '');
+  let m = /^([0-9a-zA-Z]{3})([1-9])$/.exec(str);
+  if (m && SHARE_VERSIONS[m[2]]) {
+    const t = SHARE_VERSIONS[m[2]];
+    const n = [...m[1]].reduce((a, c) => a * 62 + B62.indexOf(c), 0);
+    const match = n % 101, rest = Math.floor(n / 101), ci = rest % (t.chars.length + 1), pi = Math.floor(rest / (t.chars.length + 1));
+    if (pi >= t.codes.length) return null;
+    if (ci === t.chars.length && match !== 0) return null;
+    return { code: t.codes[pi], character: ci < t.chars.length ? { id: t.chars[ci], match } : null, version: t };
+  }
+  m = /^([A-Z]{4})(?:([a-z])([0-9a-z]{2}))?([1-9])$/.exec(str);
   if (!m || !SHARE_VERSIONS[m[4]]) return null;
   let character = null;
   if (m[2]) {
@@ -134,7 +156,7 @@ export function parseShareKey(k) {
   }
   return { code: m[1], character, version: SHARE_VERSIONS[m[4]] };
 }
-export function shareQuery(s) { return `k=${shareKey(s)}`; }
+export function sharePath(s) { return `${SHARE_PATH}/${shareKey(s)}`; }
 // 画像の URL（従来の形・キャッシュの鍵に版を含む）
 export function ogQuery(s) {
   const p = new URLSearchParams();
@@ -144,7 +166,7 @@ export function ogQuery(s) {
   p.set('v', `${s.namingVersion}.${OG_DESIGN_VERSION}`);
   return p.toString();
 }
-export function shareUrl(origin, s) { return `${origin}${SHARE_PATH}?${shareQuery(s)}`; }
+export function shareUrl(origin, s) { return `${origin}${sharePath(s)}`; }
 
 // X の共有文（元素診断の共有文と同じ形）。人物を保留した結果は人物の行と人物のハッシュタグを省く
 export function shareTextFromSummary(s, url) {
@@ -159,7 +181,7 @@ export function makeShareText(result, summaryUrl, siteOrigin) {
   const s = publicSummary(result);
   if (origin.protocol !== 'https:' || origin.username || origin.password || origin.pathname !== '/' || origin.search || origin.hash ||
     url.origin !== origin.origin || url.username || url.password || url.hash) throw new Error('invalid_share_url');
-  const stateless = url.pathname === SHARE_PATH && url.search === `?${shareQuery(s)}`;
+  const stateless = url.pathname === sharePath(s) && !url.search;
   const stored = /^\/jagan\/s\/[A-Za-z0-9_-]{16,128}$/.test(url.pathname) && !url.search;
   if (!stateless && !stored) throw new Error('invalid_share_url');
   return shareTextFromSummary(s, url.href);

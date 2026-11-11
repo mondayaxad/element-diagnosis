@@ -16,13 +16,14 @@
   var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
   var TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;
   var SCHEMA = 'jagan-result-3';
-  // 共有の URL（jagan/engine/runtime.mjs の shareQuery と同じ。テストで一致を確かめる）
-  var SHARE_PATH = '/jagan/share';
+  // 共有の URL（jagan/engine/runtime.mjs の shareUrl と同じ。テストで一致を確かめる）
+  var SHARE_PATH = '/j';
   var OG_DESIGN_VERSION = 'dti-og-3';
-  // 投稿に載る短い形（?k=）の版と人物の1字（runtime.mjs の SHARE_VERSIONS・SHARE_CHAR_CODES と同じ。テストで一致を確かめる）
-  var SHARE_VERSIONS = { 1: { naming: 'dti-naming-v1-20261104', og: 'dti-og-3' } };
-  var SHARE_CHAR_CODES = { pierro: 'a', capitano: 'b', dottore: 'c', columbina: 'd', arlecchino: 'e', pulcinella: 'f',
-    scaramouche: 'g', sandrone: 'h', signora: 'i', pantalone: 'j', tartaglia: 'k' };
+  // 投稿に載る最短の形（/j/<4文字>）の版ごとの表（runtime.mjs の SHARE_VERSIONS と同じ。テストで一致を確かめる）
+  var B62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  var SHARE_VERSIONS = { 1: { naming: 'dti-naming-v1-20261104', og: 'dti-og-3',
+    codes: ["PYAX","HYAX","CRAX","ELAX","ANAX","GEAX","DEAX","PYDP","HYDP","CRDP","ELDP","ANDP","GEDP","DEDP","PYSU","HYSU","CRSU","ELSU","ANSU","GESU","DESU","PYWD","HYWD","CRWD","ELWD","ANWD","GEWD","DEWD","PYIM","HYIM","CRIM","ELIM","ANIM","GEIM","DEIM","PYPE","HYPE","CRPE","ELPE","ANPE","GEPE","DEPE","PYPF","HYPF","CRPF","ELPF","ANPF","GEPF","DEPF","PYHO","HYHO","CRHO","ELHO","ANHO","GEHO","DEHO","PYAT","HYAT","CRAT","ELAT","ANAT","GEAT","DEAT","PYMN","HYMN","CRMN","ELMN","ANMN","GEMN","DEMN","PYRK","HYRK","CRRK","ELRK","ANRK","GERK","DERK","PYCL","HYCL","CRCL","ELCL","ANCL","GECL","DECL"],
+    chars: ['pierro', 'capitano', 'dottore', 'columbina', 'arlecchino', 'pulcinella', 'scaramouche', 'sandrone', 'signora', 'pantalone', 'tartaglia'] } };
   // 色（jagan/site-copy.mjs の ISOU_COLOR・ELEMENT_COLOR・CHARACTER_ELEMENTS と同じ値。テストで一致を確かめる）
   var ISOU_COLOR = { ANX: '#B59AD8', SEP: '#7FA7D8', SUS: '#9FB0C8', WDR: '#8FC0D0', IMP: '#E0A050', PSV: '#B8A27A', PRF: '#D8C27A',
     HOS: '#E0694F', ATT: '#E08AA8', MAN: '#C88AD8', RSK: '#E07A5A', CAL: '#9AA7B5' };
@@ -221,13 +222,17 @@
   // 共有（結果ページの共有と同じ文・同じ URL。公開してよい値だけ）
   function shareUrlOf(s) {
     var code = s && s.headline && s.headline.code;
-    if (!s || !s.isDti || !s.elementId || !s.isouId || !s.namingVersion || !/^[A-Z]{4}$/.test(String(code || ''))) return null;
+    if (!s || !s.isDti || !s.elementId || !s.isouId || !s.namingVersion) return null;
     var keys = Object.keys(SHARE_VERSIONS);
     var v = keys.filter(function (k) { return SHARE_VERSIONS[k].naming === s.namingVersion && SHARE_VERSIONS[k].og === OG_DESIGN_VERSION; })[0] || keys[keys.length - 1];
-    var m = s.character ? Number(s.character.match) : null;
-    var ch = s.character && SHARE_CHAR_CODES[s.character.id];
-    var mid = ch && m === Math.floor(m) && m >= 0 && m <= 100 ? ch + ('0' + m.toString(36)).slice(-2) : '';
-    return location.origin + SHARE_PATH + '?k=' + code + mid + v;
+    var t = SHARE_VERSIONS[v];
+    var pi = t.codes.indexOf(code);
+    var m = s.character ? Number(s.character.match) : 0;
+    var ci = s.character ? t.chars.indexOf(s.character.id) : t.chars.length;
+    if (pi < 0 || ci < 0 || m !== Math.floor(m) || m < 0 || m > 100) return null;
+    var n = (pi * (t.chars.length + 1) + ci) * 101 + m, out = '';
+    for (var i = 0; i < 3; i++) { out = B62.charAt(n % 62) + out; n = Math.floor(n / 62); }
+    return location.origin + SHARE_PATH + '/' + out + v;
   }
   function shareTextOf(s, url) {
     var h = s.headline || {};
