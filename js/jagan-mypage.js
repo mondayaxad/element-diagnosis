@@ -191,6 +191,8 @@
     await savePending(t);
     await registerPending(t);
     var rows;
+    // 記録と権利は同時に読む（待ち時間を重ねない）。権利は記録がある時だけ使う
+    var entP = Promise.resolve(supabaseClient.from('jagan_entitlements').select('result_id,status,product_key').eq('status', 'active')).catch(function (err) { return { error: err }; });
     try {
       var r = await supabaseClient.from('jagan_results').select('result_id,headline,created_at,snapshot').order('created_at', { ascending: false });
       if (r.error) throw r.error;
@@ -201,7 +203,7 @@
     var ent = { ok: false, set: {} };
     if (rows.length) {
       try {
-        var e = await supabaseClient.from('jagan_entitlements').select('result_id,status,product_key').eq('status', 'active');
+        var e = await entP;
         if (!e.error && Array.isArray(e.data)) {
           ent.ok = true;
           e.data.forEach(function (x) {

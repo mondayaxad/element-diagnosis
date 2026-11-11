@@ -4408,9 +4408,11 @@ async function initOnce() {
   // 購入時メール・Cookie による自動の引き継ぎは行わない（complete_13）。購入したレポートは、レポートの固有リンクから明示的に登録する
   const claimOutcome = null;
   const registerOutcome = await mpRegisterOutcomeForRender();
+  // 元素診断と邪眼診断の記録は、同時に読み始める（待ち時間を重ねない）。
+  //   邪眼は保存待ち・購入したレポートの登録を片付けてから読む。読めなくても元素診断の表示は止めない
+  const jaganLoad = window.JaganMypage ? window.JaganMypage.load().catch(() => null) : Promise.resolve(null);
   const result = await loadDiagnosisHistory(DIAGNOSIS_TYPE);
-  // 邪眼診断の記録（保存待ち・購入したレポートの登録を片付けてから読む。読めなくても元素診断の表示は止めない）
-  const jagan = window.JaganMypage ? await window.JaganMypage.load().catch(() => null) : null;
+  const jagan = await jaganLoad;
   const jaganSessions = (jagan && jagan.sessions) || [];
   if (result.ok) await mpMergeReports(result.sessions);
   if (!result.ok) {
