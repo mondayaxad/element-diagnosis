@@ -72,16 +72,18 @@ export function traitShade(id) {
 }
 
 function locks(words) {
-  return `<div class="rx-locks">${words.map((w) => `<div class="rx-lock${w.related ? ' is-related' : ''}" style="--lc:${w.color}"><span class="rx-lock-ring">${lockSvg}</span><span class="rx-lock-word">${esc(w.word)}</span></div>`).join('')}</div>`;
+  return `<div class="rx-locks">${words.map((w) => `<div class="rx-lock" style="--lc:${w.color}"><span class="rx-lock-ring">${lockSvg}</span><span class="rx-lock-word">${esc(w.word)}</span></div>`).join('')}</div>`;
 }
 // 各領域の鍵：領域の4特性を全員同じに並べるのではなく、あなたの回答で目立つ特性だけを並べる。
 //   目立つ＝高め（60以上）。高めが無い時は中ほど（41〜59）の上位、それも無い時は最も高い1つ。
-//   4つに満たない時は、目立つ特性に近い言葉（類似語）を、強い特性から順に足して4つにする（類似語は特性と同じ色・控えめな見た目）
+//   4つに満たない時は、目立つ特性に連なる漢字2〜3字の言葉を、強い特性から順に足して4つにする（特性と同じ色・同じ見た目）
 const RELATED_WORDS = {
-  ANX: ['心配', '緊張', '先読み'], SEP: ['寂しさ', 'つながり', '確かめたさ'], SUS: ['警戒', '疑念', '裏読み'], WDR: ['孤独', '距離', '静寂'],
-  IMP: ['即断', '勢い', '突発'], RSK: ['挑戦', '刺激', '冒険'], PSV: ['執着', 'こだわり', '粘り'], PRF: ['理想', '精密', '基準'],
-  HOS: ['苛立ち', '反発', '怒り'], ATT: ['注目', '演出', '存在感'], MAN: ['誘導', '策略', '駆け引き'], CAL: ['冷静', '無関心', '割り切り'],
+  ANX: ['憂慮', '予兆', '緊張'], SEP: ['愛着', '渇望', '寂寥'], SUS: ['警戒', '洞察', '防壁'], WDR: ['孤高', '内省', '静寂'],
+  IMP: ['即断', '瞬発', '奔流'], RSK: ['挑戦', '冒険', '昂揚'], PSV: ['執念', '信念', '継続'], PRF: ['美学', '精緻', '規律'],
+  HOS: ['反骨', '闘志', '憤怒'], ATT: ['光彩', '主張', '演出'], MAN: ['策略', '掌握', '誘導'], CAL: ['冷静', '合理', '達観'],
 };
+// 4つとも控えめな領域：控えめな側を表す漢字の言葉
+const CALM_WORDS = { ANX: '平静', SEP: '自立', SUS: '信頼', WDR: '社交', IMP: '熟慮', RSK: '慎重', PSV: '柔軟', PRF: '寛容', HOS: '温和', ATT: '謙虚', MAN: '率直', CAL: '共感' };
 export function prominentTraits(result, g) {
   const ts = g.traits.map((id) => ({ id, s: result.traits[id].score })).sort((a, b) => b.s - a.s || a.id.localeCompare(b.id));
   const hi = ts.filter((x) => x.s >= 60);
@@ -94,11 +96,13 @@ export function groupLockWords(result, bundle, g, n = 4) {
   // 領域の4つがすべて控えめ：控えめな側の言葉（穏やかな見通し など）を、控えめな順に並べる
   if (top.length === 1 && top[0].s <= 40) {
     return g.traits.map((id) => ({ id, s: result.traits[id].score })).sort((a, b) => a.s - b.s || a.id.localeCompare(b.id)).slice(0, n)
-      .map((x) => ({ word: TRAIT_COPY[x.id].lo, color: traitShade(x.id) }));
+      .map((x) => ({ word: CALM_WORDS[x.id], color: traitShade(x.id) }));
   }
   const words = top.map((x) => ({ word: traitLabel(bundle, x.id), color: traitShade(x.id) }));
+  // 足す言葉の色：同じ領域でまだ使っていない特性の色（同系色で、4つが同じ色にならないように）
+  const spare = g.traits.filter((id) => !top.some((x) => x.id === id)).map(traitShade);
   for (let i = 0; words.length < n && i < 3; i++) {
-    for (const x of top) { if (words.length < n) words.push({ word: RELATED_WORDS[x.id][i], color: traitShade(x.id), related: true }); }
+    for (const x of top) { if (words.length < n) words.push({ word: RELATED_WORDS[x.id][i], color: spare.shift() || traitShade(x.id), related: true }); }
   }
   return words;
 }

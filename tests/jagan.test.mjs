@@ -388,7 +388,9 @@ test('各領域の鍵：全員同じ4特性ではなく、回答で目立つ特�
   // 4つとも控えめ：控えめな側の言葉
   const r3 = run(profile({ ANX: 1, SUS: 1, WDR: 1, SEP: 1 }));
   assert.equal(prominentTraits(r3, inner).length, 1);
-  assert.ok(groupLockWords(r3, BUNDLE, inner).every((x) => Object.values(TRAIT_COPY).some((c) => c.lo === x.word)));
+  assert.ok(groupLockWords(r3, BUNDLE, inner).every((x) => /^[\u4e00-\u9fff]{2,3}$/.test(x.word)), '控えめな側も漢字2〜3字');
+  // 足す言葉は漢字2〜3字（言い換えの長い言葉にしない）
+  assert.ok(w.filter((x) => x.related).every((x) => /^[\u4e00-\u9fff]{2,3}$/.test(x.word)));
 });
 
 test('the report renders all twelve traits, three groups, the character section and the balance caveat; the sample is fictional', () => {
