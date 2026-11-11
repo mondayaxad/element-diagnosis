@@ -49,6 +49,7 @@ const PUBLIC_FILES = [
   'js/ga.js',
   'complete-sample.html',                                     // 完全解析サンプル（結果ページの完全解析の欄からだけリンク・noindex）
   'assets/ogp/ogp-top-20261009.jpg',                          // TOP・完全解析サンプルの OGP（1200×630）
+  'assets/ogp/jagan-top-20261112.jpg',                        // 邪眼診断の各ページの OGP（1200×630。X 共有の結果カードとは別）
   'robots.txt',
   'sitemap.xml',
   'js/ETI_v2_QUESTIONS_100.js',

@@ -7,7 +7,7 @@ import { computeDiagnosis } from './engine/runtime.mjs';
 import { BUNDLE } from './engine/data.mjs';
 import { renderReport, dipperFoldHtml } from './view.mjs';
 import { wireSampleLinks } from './sample-buy.mjs';
-import { TOKEN_RE, UUID_RE, linkOpen, openOwn, register, accessToken, supabaseClient, setRegisterIntent, freshPurchase, reportUrlOf, buy, buyErrorText, salesOpen } from './client.mjs';
+import { TOKEN_RE, UUID_RE, linkOpen, openOwn, register, accessToken, supabaseClient, setRegisterIntent, freshPurchase, reportUrlOf, trackPurchase, buy, buyErrorText, salesOpen } from './client.mjs';
 
 const $ = (id) => document.getElementById(id);
 function track(name, params) { try { if (typeof window.gtag === 'function') window.gtag('event', name, params || {}); } catch { /* 計測だけ */ } }
@@ -90,6 +90,7 @@ async function fromLink(token) {
       if (r.body.report && r.body.report.product === 'complete') { location.replace(`/jagan/dipper#t=${token}`); return; }
       if (!render(r.body.report)) return;
       track('jagan_report_open', { source: fresh ? 'checkout' : 'link' });
+      if (fresh) trackPurchase(token, 'report');
       wireLinkKeep(token);
       return;
     }

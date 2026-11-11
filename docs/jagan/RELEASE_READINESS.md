@@ -111,3 +111,19 @@
 | main の履歴 | マージ前の main：`eba2768` | マージのプルリクエストを Revert（Instant Rollback で足りない時） | 数分 |
 
 注意：Instant Rollback で旧コードに戻した間は、邪眼の購入済みレポートも開けない（データは DB に残り、直したコードを出し直すと再び開ける）。
+
+## 10. Google アナリティクス（GA4・測定 ID G-FDN7NYZW9D）
+
+- 計測：邪眼の全ページ（トップ・結果・理論・サンプル2種・解析レポート・完全解析）とマイページで `js/ga.js` を読む。本番ドメインでだけ送信（Preview は送らない）。
+- 購入：決済から戻って初めてレポートが開いた時に `purchase`（`value` 1000／3000・`currency` JPY・`items[].item_id` `jagan_report_v1`／`jagan_complete_v1`・`item_category` 邪眼診断・`diagnosis_type` jagan）。`transaction_id` は固有リンクから作る元に戻せない20桁で、同じ購入は二重に数えない。
+- **GA4 の管理画面で手動の設定が必要なもの**（集計の画面に出すため。イベント自体は設定しなくても届く）：
+  - カスタム ディメンション（範囲：イベント）：`diagnosis_type`・`source`・`state`・`result`・`product`・`share_mode`・`reason`（元素診断で登録済みのものは不要）。
+  - キーイベント：`purchase`（登録済みなら不要）。必要に応じて `jagan_start`（診断開始）・`jagan_complete`（診断完了）・`jagan_report_cta`／`jagan_complete_cta`（申込ボタン）・`jagan_save_success`（マイページ保存）。
+- 邪眼の主なイベント：`jagan_start`・`jagan_complete`・`jagan_detail_open`・`jagan_image_save`・`jagan_share_click`／`jagan_share_open_x`・`jagan_save_click`／`jagan_save_success`・`jagan_report_cta`／`jagan_complete_cta`（state・source）・`jagan_report_open`／`jagan_complete_open`（source）・`jagan_report_register_*`／`jagan_complete_register_*`・`purchase`。
+
+## 11. 会員データ（マイページ）への影響（2026-11-11 確認）
+
+- 段階 6（`prod_06_jagan.sql`）が既存の表に書くのは、段階の台帳の1行（`element_release.migration_ledger`）だけ。元素診断の6表（profiles・diagnosis_sessions・diagnosis_answers・diagnosis_results・report_snapshots・purchase_entitlements）の列・行・関数は変更・削除しない（適用前の確認で定義の一致を照合し、違えば何も変えずに止まる）。
+- 邪眼のサーバーが書き込むのは邪眼の表（jagan_results・jagan_shares・jagan_orders・jagan_order_registrations・jagan_entitlements）だけ。profiles は読むだけ（登録完了の確認）。
+- Stripe の Webhook は、元素診断の注文の処理を変えず、元素診断の注文でない時だけ邪眼の処理へ回す。
+- マイページの変更は表示と読み込みだけ（元素診断の記録への書き込みの追加・変更なし）。
