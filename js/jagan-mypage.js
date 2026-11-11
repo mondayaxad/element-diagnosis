@@ -19,6 +19,10 @@
   // 共有の URL（jagan/engine/runtime.mjs の shareQuery と同じ。テストで一致を確かめる）
   var SHARE_PATH = '/jagan/share';
   var OG_DESIGN_VERSION = 'dti-og-3';
+  // 投稿に載る短い形（?k=）の版と人物の1字（runtime.mjs の SHARE_VERSIONS・SHARE_CHAR_CODES と同じ。テストで一致を確かめる）
+  var SHARE_VERSIONS = { 1: { naming: 'dti-naming-v1-20261104', og: 'dti-og-3' } };
+  var SHARE_CHAR_CODES = { pierro: 'a', capitano: 'b', dottore: 'c', columbina: 'd', arlecchino: 'e', pulcinella: 'f',
+    scaramouche: 'g', sandrone: 'h', signora: 'i', pantalone: 'j', tartaglia: 'k' };
   // 色（jagan/site-copy.mjs の ISOU_COLOR・ELEMENT_COLOR・CHARACTER_ELEMENTS と同じ値。テストで一致を確かめる）
   var ISOU_COLOR = { ANX: '#B59AD8', SEP: '#7FA7D8', SUS: '#9FB0C8', WDR: '#8FC0D0', IMP: '#E0A050', PSV: '#B8A27A', PRF: '#D8C27A',
     HOS: '#E0694F', ATT: '#E08AA8', MAN: '#C88AD8', RSK: '#E07A5A', CAL: '#9AA7B5' };
@@ -216,13 +220,14 @@
 
   // 共有（結果ページの共有と同じ文・同じ URL。公開してよい値だけ）
   function shareUrlOf(s) {
-    if (!s || !s.isDti || !s.elementId || !s.isouId || !s.namingVersion) return null;
-    var q = new URLSearchParams();
-    q.set('e', s.elementId);
-    q.set('t', s.isouId);
-    if (s.character) { q.set('c', s.character.id); q.set('m', String(s.character.match)); }
-    q.set('v', s.namingVersion + '.' + OG_DESIGN_VERSION);
-    return location.origin + SHARE_PATH + '?' + q.toString();
+    var code = s && s.headline && s.headline.code;
+    if (!s || !s.isDti || !s.elementId || !s.isouId || !s.namingVersion || !/^[A-Z]{4}$/.test(String(code || ''))) return null;
+    var keys = Object.keys(SHARE_VERSIONS);
+    var v = keys.filter(function (k) { return SHARE_VERSIONS[k].naming === s.namingVersion && SHARE_VERSIONS[k].og === OG_DESIGN_VERSION; })[0] || keys[keys.length - 1];
+    var m = s.character ? Number(s.character.match) : null;
+    var ch = s.character && SHARE_CHAR_CODES[s.character.id];
+    var mid = ch && m === Math.floor(m) && m >= 0 && m <= 100 ? ch + ('0' + m.toString(36)).slice(-2) : '';
+    return location.origin + SHARE_PATH + '?k=' + code + mid + v;
   }
   function shareTextOf(s, url) {
     var h = s.headline || {};

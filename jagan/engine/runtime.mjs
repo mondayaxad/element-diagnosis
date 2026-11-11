@@ -100,11 +100,43 @@ export function publicSummary(result) {
 }
 
 // 共有の URL（元素診断の共有と同じく、公開してよい結果だけを URL に載せる。DB に頼らずに OGP が出る）
-//   /jagan/share?e=<邪眼元素ID>&t=<異相の特性ID>&c=<人物ID>&m=<一致度>&v=<呼び名の版>.<デザインの版>
-//   回答・12特性の得点・結果ID は載せない。人物を保留した結果は c・m を付けない。
+//   投稿に載る URL は短い形：/jagan/share?k=<DTIコード4字><人物1字><一致度2字（36進）><版1字>（人物を保留した結果は DTIコード＋版）
+//     例：PYDP（炎×依存）・j（パンタローネ）・2b（83%）・1（版）→ ?k=PYDPj2b1
+//   版（呼び名・カードのデザイン）は内部の表で持つ。過去の版は消さない（以前に投稿した URL も、同じカードで開ける）。
+//   画像（/api/jagan-og）の URL は従来の形（e・t・c・m・v）のまま。投稿文には出ない。
+//   回答・12特性の得点・結果ID は載せない。
 export const SHARE_PATH = '/jagan/share';
 export const OG_DESIGN_VERSION = 'dti-og-3';
-export function shareQuery(s) {
+export const SHARE_VERSIONS = Object.freeze({ 1: { naming: 'dti-naming-v1-20261104', og: 'dti-og-3' } });
+// 人物の1字（並び替え・追加で既存の字を変えない。新しい人物は未使用の字を足す）
+export const SHARE_CHAR_CODES = Object.freeze({ pierro: 'a', capitano: 'b', dottore: 'c', columbina: 'd', arlecchino: 'e', pulcinella: 'f',
+  scaramouche: 'g', sandrone: 'h', signora: 'i', pantalone: 'j', tartaglia: 'k' });
+function shareVersionKey(naming) {
+  const keys = Object.keys(SHARE_VERSIONS);
+  return keys.find((k) => SHARE_VERSIONS[k].naming === naming && SHARE_VERSIONS[k].og === OG_DESIGN_VERSION) || keys[keys.length - 1];
+}
+export function shareKey(s) {
+  const ch = s.character && SHARE_CHAR_CODES[s.character.id];
+  const m = s.character ? Number(s.character.matchPercent) : null;
+  const mid = ch && Number.isInteger(m) && m >= 0 && m <= 100 ? ch + m.toString(36).padStart(2, '0') : '';
+  return `${s.dti.code}${mid}${shareVersionKey(s.namingVersion)}`;
+}
+// 短い形を読む。読めない時は null（値は許可された表からだけ解決する）
+export function parseShareKey(k) {
+  const m = /^([A-Z]{4})(?:([a-z])([0-9a-z]{2}))?([1-9])$/.exec(String(k || ''));
+  if (!m || !SHARE_VERSIONS[m[4]]) return null;
+  let character = null;
+  if (m[2]) {
+    const id = Object.keys(SHARE_CHAR_CODES).find((x) => SHARE_CHAR_CODES[x] === m[2]);
+    const match = parseInt(m[3], 36);
+    if (!id || !(match >= 0 && match <= 100)) return null;
+    character = { id, match };
+  }
+  return { code: m[1], character, version: SHARE_VERSIONS[m[4]] };
+}
+export function shareQuery(s) { return `k=${shareKey(s)}`; }
+// 画像の URL（従来の形・キャッシュの鍵に版を含む）
+export function ogQuery(s) {
   const p = new URLSearchParams();
   p.set('e', s.element.id);
   p.set('t', s.isou.id);

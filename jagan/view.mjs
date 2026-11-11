@@ -5,7 +5,7 @@
 import { explainCharacter, shareTextFromSummary } from './engine/runtime.mjs';
 import {
   ELEMENT_COLOR, NEUTRAL_COLOR, ELEMENT_NAME, ISOU_COLOR, ELEMENT_TEXT, ISOU_TEXT, ISOU_SHORT, ELEMENT_STORY, TRAIT_COPY, GROUPS, GROUP_OF,
-  CHARACTER_ELEMENTS, CHARACTER_COPY, METHOD, METHOD_KEYS, BALANCE_NOTE, CHARACTER_GLOBAL_NOTICE, CHARACTER_NO_ALIGNED, CHARACTER_NO_DIFFERENT, traitBandText,
+  CHARACTER_ELEMENTS, CHARACTER_COPY, METHOD, METHOD_KEYS, BALANCE_NOTE, CHARACTER_GLOBAL_NOTICE, CHARACTER_NO_ALIGNED, CHARACTER_NO_DIFFERENT, traitBandText, TRAIT_BAND, bandOf,
 } from './site-copy.mjs';
 
 export { shareTextFromSummary };
@@ -53,7 +53,22 @@ export function tendencyWords(result, bundle, groupId, n) {
   return ids.map((id) => ({ id, s: result.traits[id].score }))
     .sort((a, b) => Math.abs(b.s - 50) - Math.abs(a.s - 50) || a.id.localeCompare(b.id))
     .slice(0, n)
-    .map((x) => ({ word: traitLabel(bundle, x.id), color: GROUPS.find((g) => g.id === GROUP_OF[x.id]).color }));
+    .map((x) => ({ word: traitLabel(bundle, x.id), color: traitShade(x.id) }));
+}
+// 鍵マークの色：領域の色を基に、4つの特性で色相と明るさを少しずつずらした同系色（同じ領域の4つが同じ色にならないように）
+const SHADE_STEPS = [[-16, 4], [-5, 12], [6, -4], [17, 8]]; // [色相のずれ（度）, 明るさのずれ（%）]
+function hexToHsl(hex) {
+  const n = parseInt(hex.slice(1), 16); const r = (n >> 16) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2, d = max - min;
+  if (!d) return [0, 0, l * 100];
+  const s = d / (1 - Math.abs(2 * l - 1));
+  const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [(h * 60 + 360) % 360, s * 100, l * 100];
+}
+export function traitShade(id) {
+  const g = GROUPS.find((x) => x.id === GROUP_OF[id]);
+  const [h, s, l] = hexToHsl(g.color); const [dh, dl] = SHADE_STEPS[g.traits.indexOf(id)] || [0, 0];
+  return `hsl(${Math.round((h + dh + 360) % 360)} ${Math.round(Math.min(90, s + 6))}% ${Math.round(Math.max(38, Math.min(76, l + dl)))}%)`;
 }
 
 function locks(words) {
@@ -198,7 +213,6 @@ function fatuiCard(result) {
         </div>
         <div class="rx-pct"><b>${esc(ch.match)}<small>%</small></b><span>一致度</span></div>
       </div>
-      <p class="rx-fatui-link"><a href="/jagan/about">一致度と人物の選び方について ›</a></p>
     </section>`;
 }
 
@@ -264,22 +278,71 @@ function seeingCard() {
     </section>`;
 }
 
+
+// 「なぜあなたは似ているか」：一致度の計算の説明ではなく、あなたの回答と人物の描写が、どの特性で、どちら向きに重なるかを具体的に言う。
+//   得点（数値）は解析レポートで読む内容のため、ここでは「高め・中ほど・控えめ」の言葉で示す
+const BAND_WORD = { hi: '高め', mid: '中ほど', lo: '控えめ' };
+const yoursLine = (id, band) => ({
+  hi: `「${TRAIT_COPY[id].meaning}」に当てはまる回答が多く出ています。`,
+  mid: `「${TRAIT_COPY[id].meaning}」には、場面によって当てはまる回答です。`,
+  lo: `「${TRAIT_COPY[id].meaning}」に当てはまる回答は少なめです。`,
+}[band]);
+const theirsLine = (name, band) => ({
+  hi: `${name}も、この傾向がはっきり表れる人物として描かれています。`,
+  mid: `${name}の描写でも、この傾向は中ほどに置かれています。`,
+  lo: `${name}も、この傾向が表に出にくい人物として描かれています。`,
+}[band]);
+function whyText(result, bundle, ch, ex) {
+  const name = esc(ch.name);
+  const nameHtml = `<b class="rx-grad" style="background-image:${characterGradient(ch.id)}">${name}</b>`;
+  const close = ex.aligned.slice(0, 3);
+  const far = ex.different.slice(0, 1);
+  const story = CHARACTER_COPY[ch.id] && CHARACTER_COPY[ch.id].story_context;
+  const head = close.length
+    ? `あなたと${nameHtml}の一致度は<b>${esc(ch.match)}%</b>。重なっているのは、${close.map((x) => `「${esc(traitLabel(bundle, x.axis))}」`).join('')}です。`
+    : `あなたと${nameHtml}の一致度は<b>${esc(ch.match)}%</b>。はっきり重なる特性は限られますが、11名の中では、あなたの回答の向きに最も近い人物です。`;
+  const rows = (close.length ? close : ex.rows.slice().sort((a, b) => a.difference - b.difference).slice(0, 2)).map((x) => {
+    const yb = bandOf(x.userScore), rb = bandOf(x.referenceScore);
+    return `<li><b>${esc(traitLabel(bundle, x.axis))}<small>あなた：${BAND_WORD[yb]}</small></b><span>${esc(yoursLine(x.axis, yb))}${esc(theirsLine(ch.name, rb))}</span></li>`;
+  }).join('');
+  const diff = far.length
+    ? `<p class="rx-text">一方で「${esc(traitLabel(bundle, far[0].axis))}」は、あなたが${BAND_WORD[bandOf(far[0].userScore)]}なのに対し、${name}の描写は${BAND_WORD[bandOf(far[0].referenceScore)]}で、ここは重なりません。似ているのは、人物の全体ではなく、上の特性が同じ向きを指している部分です。</p>`
+    : '';
+  return `<p class="rx-text">${head}</p>
+      <ul class="rx-why-list">${rows}</ul>
+      ${story ? `<p class="rx-text">${esc(story)}あなたの回答に表れた反応が、この姿のどこと重なるかを、レポートで詳しく読み解きます。</p>` : ''}
+      ${diff}`;
+}
+
+// 各領域の解説：特性の一般的な説明ではなく、あなたの回答で突出している特性と、控えめな特性を、具体的な場面とともに言う
+function foundationText(result, bundle, g) {
+  const ts = g.traits.map((id) => ({ id, s: result.traits[id].score })).sort((a, b) => b.s - a.s || a.id.localeCompare(b.id));
+  const top = ts[0], second = ts[1], low = ts[ts.length - 1];
+  const lab = (id) => `<b>「${esc(traitLabel(bundle, id))}」</b>`;
+  const band = (x) => TRAIT_BAND[x.id][bandOf(x.s)];
+  const out = [];
+  if (bandOf(top.s) === 'lo') {
+    out.push(`あなたの回答では、${esc(g.traits.map((id) => traitLabel(bundle, id)).join('・'))}の4つはいずれも控えめです。中でも比較的高い${lab(top.id)}も、${esc(band(top)[0])}${esc(band(top)[1])}`);
+    out.push('この領域で心が大きく揺れる場面は、今回の回答には多く見られません。');
+  } else {
+    out.push(`あなたの回答で、この4つのうち最も強く出ているのは${lab(top.id)}です。${esc(band(top)[0])}${esc(band(top)[1])}`);
+    if (bandOf(second.s) !== 'lo' && second.s >= top.s - 15) out.push(`次いで${lab(second.id)}も${BAND_WORD[bandOf(second.s)]}で、${esc(band(second)[0])}二つが同じ場面で重なると、反応がより表に出やすくなります。`);
+    if (bandOf(low.s) === 'lo' && low.id !== top.id) out.push(`反対に${lab(low.id)}は控えめで、${esc(TRAIT_BAND[low.id].lo[1])}`);
+  }
+  return out.map((t) => `<p class="rx-text">${t}</p>`).join('');
+}
+
 function whyCard(result, bundle) {
   const ch = result.character;
   if (ch.status !== 'available') return '';
   const ex = explainCharacter(result, bundle, ch.id);
-  const aligned = ex.aligned.map((x) => `「${traitLabel(bundle, x.axis)}」`);
-  const nameStyle = `background-image:${characterGradient(ch.id)}`;
-  const text = aligned.length
-    ? `<b class="rx-grad" style="${nameStyle}">${esc(ch.name)}</b>との一致度は<b>${esc(ch.match)}%</b>。特に${esc(aligned.join(''))}が、${esc(ch.name)}の参照とあなたとで近い値を示しています。`
-    : `<b class="rx-grad" style="${nameStyle}">${esc(ch.name)}</b>との一致度は<b>${esc(ch.match)}%</b>。参照した特性の中に際立って近い項目は限られますが、比較できる特性の中では最も近い参照です。`;
+  const text = whyText(result, bundle, ch, ex);
   const bars = [['参照した特性との近さ', ch.agreement, '#C98A5A'], ['あなたの目立つ特性との重なり', ch.coverage * 100, '#8E7CD0']];
   return `<section class="rx-card rx-why">
       <p class="rx-sec-h"><i></i>なぜあなたは似ているか</p>
       ${constellation('#E2C08C', 'CONSTELLATION OF SHADOWS')}
-      <p class="rx-text">${text}</p>
+      ${text}
       ${bars.map(([label, v, c]) => `<div class="rx-sim" style="--sc:${c}"><p><span>${label}</span><b>${Math.round(v)}<small>%</small></b></p><span class="rx-sim-bar"><i style="width:${Math.max(0, Math.min(100, v)).toFixed(1)}%"></i></span></div>`).join('')}
-      <p class="jg-note">一致度は、この二つを3対1の割合で合わせた近さに、11名が偏りなく現れるよう人物ごとの小さな調整を加えた値です。比較に使えるのは、作品の描写から対応を置けた特性だけです。</p>
       <hr class="rx-hr">
       <p class="rx-h4">あなたの影の特性</p>
       ${locks(tendencyWords(result, bundle, null, 4))}
@@ -288,17 +351,11 @@ function whyCard(result, bundle) {
 }
 
 function foundationCard(result, bundle, g) {
-  const ts = g.traits.map((id) => ({ id, s: result.traits[id].score }));
-  const stand = ts.slice().sort((a, b) => b.s - a.s || a.id.localeCompare(b.id))[0];
-  const standText = stand.s >= 60 ? `今回のあなたの回答では、この土台のうち<b>「${esc(traitLabel(bundle, stand.id))}」</b>が比較的はっきり表れています。`
-    : stand.s > 40 ? `今回のあなたの回答では、この土台の特性は、<b>「${esc(traitLabel(bundle, stand.id))}」</b>を含めて中程度に収まっています。`
-      : '今回のあなたの回答では、この土台の特性は全体として控えめに表れています。';
   const tags = tendencyWords(result, bundle, g.id, 3).map((w) => `<span class="rx-tag">${esc(w.word)}</span>`).join('');
   return `<section class="rx-card rx-found">
       <p class="rx-sec-h" style="--dot:${g.color}"><i></i>${esc(g.title)}</p>
       ${constellation(g.color, g.en)}
-      <p class="rx-text">${esc(g.intro)}</p>
-      <p class="rx-text">${standText}</p>
+      ${foundationText(result, bundle, g)}
       <div class="rx-tags">${tags}</div>
       <hr class="rx-hr">
       <p class="rx-h4">${esc(g.lockTitle)}</p>
@@ -545,6 +602,13 @@ export function renderReport(result, bundle) {
   return cover + s01 + groups + s05 + s06;
 }
 
+// 理論のページ：各邪眼の中核となる特性（重みの大きい順に名前だけ。重みの値は出さない）
+export function renderElementCores(bundle) {
+  return bundle.core.elements.map((e) => {
+    const ids = Object.entries(e.weights).sort((a, b) => b[1] - a[1]).map(([id]) => id);
+    return `<li style="--ec:${ELEMENT_COLOR[e.id].main}"><b>${esc(e.label)}<small>${esc(ELEMENT_NAME[e.id])}</small></b><span>${esc(ids.map((id) => traitLabel(bundle, id)).join('・'))}</span><em>${esc(ELEMENT_TEXT[e.id].essence)}</em></li>`;
+  }).join('');
+}
 export function renderMethod() {
   return METHOD_KEYS.map((k) => `<p>${esc(METHOD[k])}</p>`).join('') + `<p class="jg-small">${esc(METHOD.reference)}</p>`;
 }

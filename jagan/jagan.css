@@ -707,3 +707,18 @@ body { background: #09070B; background-image: none; }
 .dp-sample-buy .rp-text { font-size: 13px; line-height: 1.9; color: #c4b2b9; }
 .dp-sample-buy .dp-buy { width: 100%; }
 @media print { #sampleBuy, .dp-sample-buy { display: none !important; } }
+/* なぜあなたは似ているか：重なる特性ごとに、あなたの回答と人物の描写を並べる */
+.rx-why-list { list-style: none; margin: 4px 0 12px; padding: 0; display: grid; gap: 8px; }
+.rx-why-list li { border-left: 2px solid #E2C08C66; padding: 6px 0 6px 12px; background: linear-gradient(90deg, rgba(226,192,140,.06), transparent); border-radius: 0 6px 6px 0; }
+.rx-why-list b { display: flex; align-items: baseline; gap: 8px; font-size: 13px; color: #F4E6EA; }
+.rx-why-list b small { font-size: 10.5px; font-weight: 400; color: #E2C08C; letter-spacing: .05em; }
+.rx-why-list span { display: block; margin-top: 2px; font-size: 12px; line-height: 1.85; color: #D9C3CA; }
+/* 理論のページ（/jagan/about） */
+.jg-about p { font-size: 14px; line-height: 2; color: #D9C3CA; }
+.jg-about-h { font-size: 16px; font-weight: 700; color: #F4E6EA; margin: 26px 0 8px; padding-left: 10px; border-left: 2px solid #C8405C; }
+.jg-about-cores { list-style: none; padding: 0; margin: 10px 0 4px; display: grid; gap: 8px; }
+.jg-about-cores li { border: 1px solid color-mix(in srgb, var(--ec) 35%, transparent); background: color-mix(in srgb, var(--ec) 8%, transparent); border-radius: 8px; padding: 10px 12px; }
+.jg-about-cores b { display: flex; align-items: baseline; gap: 8px; font-size: 16px; color: var(--ec); }
+.jg-about-cores b small { font-size: 11px; font-weight: 400; color: #C99AA7; }
+.jg-about-cores span { display: block; margin-top: 2px; font-size: 13.5px; font-weight: 700; color: #F4E6EA; }
+.jg-about-cores em { display: block; margin-top: 2px; font-style: normal; font-size: 12px; line-height: 1.8; color: #A58994; }
