@@ -2887,7 +2887,8 @@ function mpJaganInsightHtml(r, where) {
 }
 function mpJaganChips(r, isNew, kindText) {
   const tag = !r.entKnown ? '' : r.purchased && r.completeOwned ? '<span class="mp-chip complete">COMPLETE</span>' : mpJaganAwake(r) ? '<span class="mp-chip insight">INSIGHT</span>' : '';
-  return `${isNew ? '<span class="mp-chip new">NEW</span>' : ''}${tag}<span class="mp-chip jagan">${kindText || '邪眼診断'}</span>${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
+  // 並びは元素診断と同じ：NEW → 種類（元素／邪眼）→ INSIGHT／COMPLETE → 旧版
+  return `${isNew ? '<span class="mp-chip new">NEW</span>' : ''}<span class="mp-chip jagan">${kindText || '邪眼診断'}</span>${tag}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
 }
 function mpJaganLatestHtml(r) {
   const awake = mpJaganAwake(r);

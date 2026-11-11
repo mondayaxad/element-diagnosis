@@ -39,7 +39,7 @@ test('邪眼の記録：RECORDS・INSIGHTS に数え、最新・記録章・こ�
 
 test('最新が購入済み：INSIGHT・覚醒の証・「邪眼解析レポートを読む」。販売前は申込のボタンを押せない（準備中）', { timeout: 180000 }, () => {
   const i = run({ ENT: '0', SALES: '0' });
-  assert.deepEqual(i.chips, ['2026.11.07', 'NEW', 'INSIGHT', '邪眼診断']);
+  assert.deepEqual(i.chips, ['2026.11.07', 'NEW', '邪眼診断', 'INSIGHT']);
   assert.ok(i.imgs[0].startsWith('awakened/'));
   assert.equal(i.buy, 0, '販売前は申込を出さない');
   assert.ok(i.pending >= 2, '準備中のボタン');
@@ -48,7 +48,9 @@ test('最新が購入済み：INSIGHT・覚醒の証・「邪眼解析レポー�
 
 test('完全解析：両方購入＝COMPLETE、片方だけ＝INSIGHT。完全解析だけ購入の記録は「完全解析を読む」と ¥1,000 の申込', { timeout: 180000 }, () => {
   const i = run({ ENT: '0', CENT: '0,1', SALES: '1' });
-  assert.deepEqual(i.chips, ['2026.11.07', 'NEW', 'COMPLETE', '邪眼診断']);
+  assert.deepEqual(i.chips, ['2026.11.07', 'NEW', '邪眼診断', 'COMPLETE']);
+  // 記録の札の並び：NEW → 種類 → INSIGHT/COMPLETE（元素診断と同じ）
+  assert.ok(i.recChips.every((c) => !/(COMPLETE|INSIGHT)邪眼/.test(c)), JSON.stringify(i.recChips));
   assert.ok(i.completeChip >= 2, '最新とこれまでの COMPLETE');
   assert.equal(i.readComplete, 3, '最新・これまで（2件）の「完全解析を読む」');
   assert.deepEqual(i.stats, ['RECORDS 03 残してきた自分', 'INSIGHTS 02 深く読み解いた自分']);
