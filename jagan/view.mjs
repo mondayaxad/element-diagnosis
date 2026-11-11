@@ -5,7 +5,7 @@
 import { explainCharacter, shareTextFromSummary } from './engine/runtime.mjs';
 import {
   ELEMENT_COLOR, NEUTRAL_COLOR, ELEMENT_NAME, ISOU_COLOR, ELEMENT_TEXT, ISOU_TEXT, ISOU_SHORT, ELEMENT_STORY, TRAIT_COPY, GROUPS, GROUP_OF,
-  CHARACTER_ELEMENTS, CHARACTER_COPY, METHOD, METHOD_KEYS, BALANCE_NOTE, CHARACTER_GLOBAL_NOTICE, CHARACTER_NO_ALIGNED, CHARACTER_NO_DIFFERENT, traitBandText, TRAIT_BAND, bandOf,
+  CHARACTER_ELEMENTS, CHARACTER_COPY, METHOD, METHOD_KEYS, BALANCE_NOTE, CHARACTER_GLOBAL_NOTICE, CHARACTER_NO_ALIGNED, CHARACTER_NO_DIFFERENT, traitBandText, TRAIT_BAND, bandOf, FATUI_PORTRAIT,
 } from './site-copy.mjs';
 
 export { shareTextFromSummary };
@@ -142,22 +142,33 @@ function radar(result, bundle, ids, color) {
     <polygon points="${poly}" fill="${color}" fill-opacity=".28" stroke="${color}"/>
     ${ids.map((id, i) => { const [x, y] = pt(i, R + 12); const anchor = x > cx + 4 ? 'start' : x < cx - 4 ? 'end' : 'middle'; return `<text x="${x.toFixed(1)}" y="${(y + (Math.abs(x - cx) < 4 ? (y < cy ? -4 : 4) : 0)).toFixed(1)}" text-anchor="${anchor}">${esc(traitLabel(bundle, id))}</text>`; }).join('')}</svg>`;
 }
+
+// 解析レポートの「近しいファトゥス」：あなたの回答を軸に、人物の物語の姿を重ねる（自分を重ねて読めるように。守りの注記は書かない）
+function fatuiOverlapHtml(result, bundle, id, name) {
+  const ex = explainCharacter(result, bundle, id);
+  const portrait = FATUI_PORTRAIT[id] || {};
+  const lab = (x) => `<b style="color:${traitShade(x.axis)}">「${esc(traitLabel(bundle, x.axis))}」</b>（${Math.round(x.userScore)}）`;
+  const near = ex.aligned.length ? ex.aligned : ex.rows.slice().sort((a, b) => a.difference - b.difference).slice(0, 1);
+  const rest = ex.rows.filter((x) => !near.includes(x));
+  const lines = near.map((x) => `あなたの${lab(x)}は、${esc(name)}が${esc(portrait[x.axis] || '')}姿と、同じ向きに表れています。`);
+  for (const x of rest) {
+    const word = TRAIT_COPY[x.axis][x.userScore > 40 ? 'hi' : 'lo'];
+    lines.push(`${lab(x)}には、あなたらしい<b style="color:${traitShade(x.axis)}">${esc(word)}</b>が出ています。${esc(name)}が${esc(portrait[x.axis] || '')}姿を、あなた自身の${esc(word)}と重ねて読んでみてください。`);
+  }
+  return lines.map((t) => `<p class="rp-text sm">${t}</p>`).join('');
+}
 function groupPreview(_result, bundle, g) {
   const p = previewResult(bundle);
   return radar(p, bundle, g.traits, g.color) + g.traits.map((id) => traitBar(p, id, g.color)).join('');
 }
 function characterPreview(result, bundle) {
   const ch = { id: result.character.id, name: result.character.name, match: PREVIEW_MATCH };
-  const ex = explainCharacter(previewResult(bundle), bundle, ch.id);
   const copy = CHARACTER_COPY[ch.id];
-  const row = (x) => `${esc(traitLabel(bundle, x.axis))}（あなた ${Math.round(x.userScore)}／参照 ${Math.round(x.referenceScore)}）`;
   return `<div class="rp-match"><p class="rp-match-h"><b>${esc(ch.name)}</b><em>${ch.match}%</em></p>
       <p class="rp-text sm">${esc(copy.story_context)}</p>
-      <p class="rp-text sm"><b class="near">近い特性：</b>${ex.aligned.length ? ex.aligned.map(row).join('、') : esc(CHARACTER_NO_ALIGNED)}</p>
-      <p class="rp-text sm"><b class="far">差のある特性：</b>${ex.different.length ? ex.different.map(row).join('、') : esc(CHARACTER_NO_DIFFERENT)}</p>
-      <p class="rp-text sm">${esc(copy.limit)}</p><p class="rp-q">${esc(copy.reflection)}</p></div>`;
+      ${fatuiOverlapHtml(previewResult(bundle), bundle, ch.id, ch.name)}
+      <p class="rp-q">${esc(copy.reflection)}</p></div>`;
 }
-
 function constellation(color, label) {
   const pts = [[100, 22], [168, 62], [160, 140], [100, 176], [40, 140], [32, 62]];
   return `<div class="rx-figure" aria-hidden="true"><svg viewBox="0 0 200 200">
@@ -594,24 +605,19 @@ export function renderReport(result, bundle) {
     s05 = `<section class="rp-card">
       <p class="rp-no">05</p>
       <h2 class="rp-h2">近しいファトゥス — <span class="rp-h2-en">Character Match</span></h2>
-      <p class="rp-text">11名の参照との照合結果です。比較先は、作品の描写を参考に作者が設計した部分的な参照（人物ごとに1〜3の特性）で、人物本人の心理得点ではありません。未対応の特性は、中立値で補わず、比較に含めていません。</p>
+      <p class="rp-text">あなたの回答と重なる、上位3名のファトゥスです。物語の中で彼らが見せる姿に、あなた自身の反応を重ねて読んでみてください。</p>
       ${constellation('#E2C08C', 'CONSTELLATION OF SHADOWS')}
       ${picks.map((c, i) => {
         const meta = bundle.characters.characters.find((x) => x.id === c.id);
         const copy = CHARACTER_COPY[c.id];
-        const ex = explainCharacter(result, bundle, c.id);
-        const row = (x) => `${esc(traitLabel(bundle, x.axis))}（あなた ${Math.round(x.userScore)}／参照 ${Math.round(x.referenceScore)}）`;
         return `<div class="rp-match">
           <p class="rp-match-h"><span class="rp-match-no">${i + 1}</span>${gradNameHtml(c.id, c.name)}<em>${c.displayScore}%</em></p>
           <div class="rx-tags"><span class="rx-tag">「${esc(meta.title)}」</span>${meta.tags.map((t) => `<span class="rx-tag rx-tag-type">${esc(t)}</span>`).join('')}<span class="rx-tag">${esc(meta.region_label)}</span></div>
           <p class="rp-text sm">${esc(copy.story_context)}</p>
-          <p class="rp-text sm"><b class="near">近い特性：</b>${ex.aligned.length ? ex.aligned.map(row).join('、') : esc(CHARACTER_NO_ALIGNED)}</p>
-          <p class="rp-text sm"><b class="far">差のある特性：</b>${ex.different.length ? ex.different.map(row).join('、') : esc(CHARACTER_NO_DIFFERENT)}</p>
-          <p class="rp-text sm">${esc(copy.limit)}</p>
+          ${fatuiOverlapHtml(result, bundle, c.id, c.name)}
           <p class="rp-q">${esc(copy.reflection)}</p>
         </div>`;
       }).join('')}
-      <p class="rp-note">${esc(CHARACTER_GLOBAL_NOTICE)}15点・20点は説明のための設計値で、心理学上の基準ではありません。</p>
       <p class="rp-note">順位は一致度の高い順です。</p>
     </section>`;
   }

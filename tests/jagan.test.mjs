@@ -411,7 +411,11 @@ test('the report renders all twelve traits, three groups, the character section 
   for (const t of BUNDLE.items.traits) assert.ok(!rep.includes(TRAIT_COPY[t.id].limit), `${t.id} の注意書きが残っています`);
   for (const g of GROUPS) assert.ok(rep.includes(g.en), g.id);
   assert.ok(rep.includes('順位は一致度の高い順です'));
-  assert.ok(rep.includes('未対応の特性は、中立値で補わず'));
+  // 近しいファトゥス：あなたの回答を軸に物語の姿を重ねる。守りの注記（測っていない・同一視しない・参照の説明）は書かない（2026-11-11）
+  assert.ok(rep.includes('物語の中で彼らが見せる姿に、あなた自身の反応を重ねて'));
+  for (const w of ['未対応の特性は、中立値で補わず', '差のある特性', '測っていません', '同一視しません', '15点・20点は説明のための設計値']) assert.ok(!rep.includes(w), w);
+  for (const c of Object.values(CHARACTER_COPY)) assert.ok(!rep.includes(c.limit));
+  assert.ok(rep.includes('姿と、同じ向きに表れています'));
   const flat = renderReport(run(all(3)), BUNDLE);
   assert.ok(flat.includes('人物の判定を保留'));
   assert.ok(rep.includes(sampleResult().dti.code) && rep.includes(sampleResult().dti.name));
@@ -1081,4 +1085,9 @@ test('理論のページ（/jagan/about）：基にした理論・邪眼とは�
   const cores = renderElementCores(BUNDLE);
   assert.equal((cores.match(/<li /g) || []).length, 7);
   assert.ok(!/0\.\d/.test(cores), '重みの値は出さない');
+});
+
+test('近しいファトゥス：11名の比較する特性すべてに、物語の姿の一文がある', async () => {
+  const { FATUI_PORTRAIT } = await import('../jagan/site-copy.mjs');
+  for (const c of BUNDLE.characters.characters) for (const axis of Object.keys(c.anchors)) assert.ok(FATUI_PORTRAIT[c.id] && FATUI_PORTRAIT[c.id][axis], `${c.id}.${axis}`);
 });
