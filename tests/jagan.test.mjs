@@ -6,11 +6,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, shareUrl, explainCharacter } from '../jagan/engine/runtime.mjs';
+import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, shareUrl, explainCharacter, SHARE_CHAR_CODES, parseShareKey } from '../jagan/engine/runtime.mjs';
 import { judge, characterRanking, scoreAnswers } from '../jagan/engine/judge.mjs';
 import { BUNDLE } from '../jagan/engine/data.mjs';
 import { judge as specJudge } from '../docs/jagan/spec_v0_3_balanced/runtime.mjs';
-import { recompute, headlineOf, ogParams, renderSharePage, createSaveHandler, createShareHandler, createReportHandler, createSharePageHandler, jaganEnabled } from '../lib/jagan-api.mjs';
+import { recompute, headlineOf, ogParams, sharePageQuery, renderSharePage, createSaveHandler, createShareHandler, createReportHandler, createSharePageHandler, jaganEnabled } from '../lib/jagan-api.mjs';
 import { renderResultPage, renderReport, renderMethod, PREVIEW_SCORES, PREVIEW_MATCH } from '../jagan/view.mjs';
 import { GROUPS, ISOU_TEXT, ISOU_SHORT, ELEMENT_TEXT, ELEMENT_STORY, TRAIT_COPY, CHARACTER_COPY, traitBandText, TRAIT_BAND, bandOf } from '../jagan/site-copy.mjs';
 import { fnv1a32, normalizedAnswers, selectIsou } from '../jagan/engine/dti.mjs';
@@ -350,7 +350,12 @@ test('result page: deferred parts are not filled, no names leak, and the twelve 
   assert.ok((html.match(/data-buy disabled/g) || []).length >= 9);
   assert.ok(!html.includes('邪眼解析レポート'));
   assert.ok(html.includes('¥1,000') && html.includes('全てのロックを解除する'));
-  assert.ok(html.includes('一致度と人物の選び方について'));
+  // 一致度・人物の選び方の説明（内部の計算・調整）は出さない。似ている理由は、あなたの回答と人物の描写で言う（2026-11-11）
+  assert.ok(!html.includes('一致度と人物の選び方について') && !html.includes('3対1') && !html.includes('小さな調整'));
+  assert.ok(html.includes('rx-why-list') && html.includes(`あなたと<b class="rx-grad"`));
+  // 各領域は一般論ではなく、あなたの回答で最も強く出ている特性から
+  assert.ok(!html.includes('心理学では') && !html.includes('高いほど悪い'));
+  assert.equal((html.match(/あなたの回答で、この4つのうち最も強く出ているのは|あなたの回答では、[^<]*4つはいずれも控えめ/g) || []).length, 3);
   // 元素診断の完了ページと同じ順（2026-11-10）：深淵（コード・呼び名）→ファトゥス→渇望する邪眼→画像・X→人物像→欲求が導くあなたの影→
   //   一部分→全てを解放（金額）→診断記録への保存
   const order = ['あなたの深淵', `${r.dti.code}</b>`, 'あなたのファトゥス', 'あなたの渇望する邪眼', 'imageBtn', 'shareBtn', 'なぜあなたは似ているか', '欲求が導くあなたの影', 'あなたの欲求特性', 'あなたの一部分に過ぎません', 'UNLOCK EVERYTHING', 'rx-all-price', 'saveBtn'];
@@ -386,13 +391,22 @@ test('share text equals the template; OG params round-trip through the image par
     const s = publicSummary(r);
     // 元素診断と同じ形の共有文。URL は公開の値だけを載せた /jagan/share?…（OGP が出る）
     const url = shareUrl('https://example.invalid', s);
-    assert.match(url, /^https:\/\/example\.invalid\/jagan\/share\?e=[A-Z]{2}&t=[A-Z]{3}&c=[a-z]+&m=\d{1,3}&v=/);
+    // 投稿に載る URL は短い形（DTIコード・人物1字・一致度・版）。内部の版名（dti-naming…・og-3）は出さない
+    assert.match(url, /^https:\/\/example\.invalid\/jagan\/share\?k=[A-Z]{4}[a-k][0-9a-z]{2}[1-9]$/);
+    assert.ok(!url.includes('naming') && !url.includes('og-'));
+    // 全員に、重ならない1字がある（以前の投稿の URL を読み替えないよう、字は変えない）
+    assert.deepEqual(Object.keys(SHARE_CHAR_CODES).sort(), BUNDLE.characters.characters.map((c) => c.id).sort());
+    assert.equal(new Set(Object.values(SHARE_CHAR_CODES)).size, Object.keys(SHARE_CHAR_CODES).length);
+    assert.equal(parseShareKey('PYHOg2s1').character.match, 100);
+    // 短い形も、画像の形も、同じ結果に読める
+    const viaKey = parseOg(new URL(url).searchParams);
+    assert.deepEqual([viaKey.code, viaKey.character.id, viaKey.character.match], [s.dti.code, s.character.id, s.character.matchPercent]);
     assert.ok(!url.includes('ANX01') && !url.includes('score'));
     assert.equal(shareTextFromSummary(s, url), makeShareText(r, url, 'https://example.invalid'));
     const text = makeShareText(r, url, 'https://example.invalid');
     assert.equal(text, `邪眼診断をやってみました。\n\n私の結果は【${s.element.label} × ${s.isou.label}】\nあなたのファトゥス：${s.character.label}（${s.character.matchPercent}%一致）\n\n${url}\n\n#邪眼診断 #${s.dti.code} #${s.character.label}`);
     // 共有文の URL は、その結果と一致するものだけ（他人の値・他のサイト・余計な値は拒否）
-    assert.throws(() => makeShareText(r, url.replace(/m=\d+/, 'm=100'), 'https://example.invalid'), /invalid_share_url/);
+    assert.throws(() => makeShareText(r, url.replace(/[0-9a-z]{2}(\d)$/, '2s$1'), 'https://example.invalid'), /invalid_share_url/);
     assert.throws(() => makeShareText(r, `${url}&answers=1`, 'https://example.invalid'), /invalid_share_url/);
     const parsed = parseOg(new URLSearchParams(ogParams(s)));
     assert.equal(parsed.element, s.element.label);
@@ -563,14 +577,18 @@ test('stateless share page (/jagan/share?…) needs no DB: summary from whitelis
   const page = createSharePageHandler({ env: {}, fetchImpl: async () => { throw new Error('no db'); } });
   const s = publicSummary(run(VARIED()));
   const q = ogParams(s);
-  const ok = await call(page, { method: 'GET', url: `/api/jagan-share-page?${q}` });
+  // 以前に投稿された従来の形（e・t・c・m・v）も開ける。正規の URL（og:url）は短い形
+  const legacy = await call(page, { method: 'GET', url: `/api/jagan-share-page?${q}` });
+  assert.equal(legacy.status, 200);
+  const ok = await call(page, { method: 'GET', url: `/api/jagan-share-page?${sharePageQuery(s)}` });
   assert.equal(ok.status, 200);
   const meta = (k) => (ok.body.match(new RegExp(`<meta (?:property|name)="${k}" content="([^"]*)"`)) || [])[1];
   assert.equal(meta('og:image'), `https://element-diagnosis-git-jagan-preview.vercel.app/api/jagan-og?${q.replace(/&/g, '&amp;')}`.replace(/&amp;/g, '&amp;'));
-  assert.equal(meta('og:url').replace(/&amp;/g, '&'), `https://element-diagnosis-git-jagan-preview.vercel.app/jagan/share?${q}`);
+  assert.equal(meta('og:url'), `https://element-diagnosis-git-jagan-preview.vercel.app/jagan/share?${sharePageQuery(s)}`);
+  assert.match(sharePageQuery(s), /^k=[A-Z]{4}[a-k][0-9a-z]{2}1$/);
   assert.equal(meta('twitter:card'), 'summary_large_image');
   assert.ok(ok.body.includes(s.dti.code) && ok.body.includes(s.dti.name) && ok.body.includes(s.character.label));
-  for (const bad of ['e=XX&t=ANX', 'e=PY&t=ANX&c=pierro&m=500', 'e=PY&t=ANX&c=%3Cscript%3E&m=50', '']) {
+  for (const bad of ['e=XX&t=ANX', 'e=PY&t=ANX&c=pierro&m=500', 'e=PY&t=ANX&c=%3Cscript%3E&m=50', '', 'k=ZZZZ1', 'k=PYHOz2c1', 'k=PYHOg2t1', 'k=PYHOg2c9', 'k=PYHO%3Cs%3E1']) {
     const r = await call(page, { method: 'GET', url: `/api/jagan-share-page?${bad}` });
     assert.equal(r.status, 404, bad);
     assert.ok(!r.body.includes('<script>'));
@@ -1003,4 +1021,15 @@ test('12特性の説明：高め・中程度・控えめで別の文。低い得
     assert.equal(bandOf(60), 'hi'); assert.equal(bandOf(59), 'mid'); assert.equal(bandOf(41), 'mid'); assert.equal(bandOf(40), 'lo');
     assert.doesNotMatch(hi.text + mid.text + lo.text, /判定するもの|否定するもの|障害|ADHD|サイコパス|強み|才能|冷静|優しい|自立/);
   }
+});
+
+test('理論のページ（/jagan/about）：基にした理論・邪眼とは・異相とは・各邪眼の中核だけ。判定の内部（重み・補正・同点の処理）は書かない', async () => {
+  const fs = await import('node:fs');
+  const html = fs.readFileSync(new URL('../jagan/about.html', import.meta.url), 'utf8');
+  for (const h of ['基にした理論', '邪眼とは', '異相とは', 'elementCores']) assert.ok(html.includes(h), h);
+  for (const w of ['補正', '小さな調整', '重みで', '固定の値', '中間の値', 'renderMethod']) assert.ok(!html.includes(w), w);
+  const { renderElementCores } = await import('../jagan/view.mjs');
+  const cores = renderElementCores(BUNDLE);
+  assert.equal((cores.match(/<li /g) || []).length, 7);
+  assert.ok(!/0\.\d/.test(cores), '重みの値は出さない');
 });
