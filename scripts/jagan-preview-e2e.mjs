@@ -31,12 +31,12 @@ out.resultHead = (await page.textContent('#resultBody')).replace(/\s+/g, ' ').sl
 out.unlockButtonsDisabled = await page.evaluate(() => [...document.querySelectorAll('[data-buy]')].every((b) => b.disabled));
 out.unlockButtonCount = await page.evaluate(() => document.querySelectorAll('[data-buy]').length);
 
-// 共有
-await page.click('#shareBtn');
-await page.waitForSelector('#shareDialog[open]');
-out.shareText = await page.textContent('#shareText');
+// 共有：押すとすぐに X の投稿画面が開く（確認の画面なし）
+const [pop] = await Promise.all([ctx.waitForEvent('page'), page.click('#shareBtn')]);
+const intent = new URL(pop.url());
+out.shareText = intent.searchParams.get('text') || '';
 out.shareHasOrigin = out.shareText.includes(BASE + '/jagan/share?');
-await page.click('#shareClose');
+await pop.close();
 
 // 保存（未ログイン）：登録・ログインを促す表示になるか
 const saveBtn = await page.$('#saveBtn');

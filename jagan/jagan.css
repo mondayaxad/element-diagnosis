@@ -663,3 +663,47 @@ body { background: #09070B; background-image: none; }
 .rx-more-k { margin: 14px 0 3px; font-size: 11px; letter-spacing: .12em; }
 .rx-more-t { margin: 0; font-size: 13px; line-height: 1.9; color: #D9C3CA; }
 .rx-more-join { margin-top: 12px; color: #EFE1E6; }
+/* 完了ページの文字の大きさ・行間を元素診断の完了ページ（index.html の結果）と同じ段階にそろえる（2026-11-11）
+   見出し 15px／小見出し 14px／本文 12px・行間 1.95／補足 11〜11.5px／大きな数字 38px／人物名 30px */
+.rx-main .rx-dti-name { font-size: 16px; }
+.rx-more-main > summary { font-size: 11px; letter-spacing: 1px; }
+.rx-more-h { font-size: 13.5px; font-weight: 600; }
+.rx-more-lead { font-size: 12px; line-height: 1.8; }
+.rx-code span { font-size: 10px; }
+.rx-more-k { font-size: 10.5px; }
+.rx-more-t { font-size: 13px; line-height: 1.85; }
+.rx-more-join { font-size: 13.5px; font-weight: 500; line-height: 1.9; }
+.rx-sec-h { font-size: 15px; margin-bottom: 12px; }
+.rx-h4 { font-size: 14px; margin-bottom: 6px; }
+.rx-text { font-size: 12px; line-height: 1.95; }
+.rx-summary { font-size: 13.5px; font-weight: 500; line-height: 1.9; }
+.rx-sec-label { font-size: 10.5px; letter-spacing: 1px; }
+.rx-fatui-name { font-size: 30px; }
+.rx-tag { font-size: 11px; padding: 2px 8px; }
+.rx-pct b { font-size: 38px; }
+.rx-pct span { font-size: 11px; }
+.rx-h3 { font-size: 12px; letter-spacing: 2px; }
+.rx-lead { font-size: 11px; }
+.rx-crave-mark { font-size: 12px; }
+.rx-crave-name b { font-size: 14px; }
+.rx-crave-name span { font-size: 10px; }
+.rx-sim p { font-size: 12px; }
+.rx-sim b { font-size: 15px; }
+.rx-tile b { font-size: 15px; }
+.rx-tile span { font-size: 10.5px; }
+.rx-tile em { font-size: 11.5px; }
+.rx-unlock-title { font-size: 15px; margin-bottom: 10px; }
+.rx-unlock-text { font-size: 11.5px; line-height: 1.8; margin-bottom: 16px; }
+.rx-all-h { font-size: 17px; letter-spacing: 1px; margin-bottom: 10px; }
+.rx-all-k { font-size: 11px; letter-spacing: 2px; }
+.rx-all-list b { font-size: 13px; }
+.rx-all-list span { font-size: 11px; }
+.rx-save-text { font-size: 13px; line-height: 1.95; }
+.rx-seeing li { font-size: 12.5px; }
+.rx-link { font-size: 11.5px; }
+@media (max-width: 380px) { .rx-fatui-name { font-size: 26px; } .rx-pct b { font-size: 34px; } }
+/* サンプル下部の申込（jagan/sample-buy.mjs） */
+.dp-sample-buy .rp-cta-h { margin: 0 0 14px; font-size: 16px; font-weight: 700; color: #F4E6EA; }
+.dp-sample-buy .rp-text { font-size: 13px; line-height: 1.9; color: #c4b2b9; }
+.dp-sample-buy .dp-buy { width: 100%; }
+@media print { #sampleBuy, .dp-sample-buy { display: none !important; } }

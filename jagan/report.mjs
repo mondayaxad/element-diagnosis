@@ -6,6 +6,7 @@
 import { computeDiagnosis } from './engine/runtime.mjs';
 import { BUNDLE } from './engine/data.mjs';
 import { renderReport, dipperFoldHtml } from './view.mjs';
+import { wireSampleLinks } from './sample-buy.mjs';
 import { TOKEN_RE, UUID_RE, linkOpen, openOwn, register, accessToken, supabaseClient, setRegisterIntent, freshPurchase, reportUrlOf, buy, buyErrorText, salesOpen } from './client.mjs';
 
 const $ = (id) => document.getElementById(id);
@@ -50,6 +51,7 @@ async function showDipper(report, result) {
   const box = $('rpDipper');
   box.innerHTML = dipperFoldHtml({ where: 'report' });
   box.hidden = false;
+  wireSampleLinks(box, () => result, 'report');
   const btn = box.querySelector('[data-buy="complete"]');
   const msg = box.querySelector('[data-dipper-msg]');
   const fromMypage = !!new URLSearchParams(location.search).get('r');

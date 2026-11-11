@@ -4,6 +4,7 @@ import { BUNDLE } from './engine/data.mjs';
 import { SAMPLE_ANSWERS } from './sample.mjs';
 import { buildComplete } from './complete/model.mjs';
 import { renderComplete, fitPages } from './complete/view.mjs';
+import { mountSampleBuy } from './sample-buy.mjs';
 
 export function answersForSeed(seed) {
   if (!seed) return { ...SAMPLE_ANSWERS };
@@ -31,4 +32,5 @@ if (typeof document !== 'undefined' && document.getElementById('dpBook')) {
   document.getElementById('dpInfo').textContent = `邪眼完全解析「DIPPER」のサンプル（架空の回答・${result.dti.code}｜${result.dti.name}。人が受検した結果ではありません）`;
   document.getElementById('dpNext').addEventListener('click', () => { location.search = `?seed=${seed + 1}`; });
   document.getElementById('dpPrint').addEventListener('click', () => window.print());
+  mountSampleBuy(document.getElementById('sampleBuy'), { page: 'complete' });
 }
