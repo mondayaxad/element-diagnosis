@@ -101,3 +101,19 @@ export const PRODUCT_INFO = Object.freeze({
   report: { price: '¥1,000', name: '邪眼解析レポート', path: '/jagan/report' },
   complete: { price: '¥3,000', name: '完全解析「DIPPER」', path: '/jagan/dipper', pages: 23 },
 });
+
+// GA4 の購入（元素診断の report-link.html と同じ形）：決済から戻って初めてレポートが開いた時に1回だけ送る。
+//   transaction_id は固有リンクの秘密値から作る元に戻せない20桁（秘密値・注文 ID・Stripe の ID は送らない）。同じ購入を二重に数えない
+const GA_ITEMS = { report: { id: 'jagan_report_v1', name: '邪眼解析レポート', value: 1000 }, complete: { id: 'jagan_complete_v1', name: '邪眼完全解析レポート「DIPPER」', value: 3000 } };
+export async function trackPurchase(token, product) {
+  try {
+    const it = GA_ITEMS[product];
+    if (!it || typeof window.gtag !== 'function' || !TOKEN_RE.test(String(token || '')) || !crypto.subtle) return;
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`jagan-ga4|${token}`));
+    const txid = [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 20);
+    const key = `jagan_ga4_purchase_${txid}`;
+    try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch { /* 保存できなくても1回は送る */ }
+    window.gtag('event', 'purchase', { transaction_id: txid, value: it.value, currency: 'JPY', diagnosis_type: 'jagan',
+      items: [{ item_id: it.id, item_name: it.name, item_category: '邪眼診断', price: it.value, quantity: 1 }] });
+  } catch { /* 計測だけ */ }
+}
