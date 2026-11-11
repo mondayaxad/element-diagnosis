@@ -39,9 +39,10 @@ test('法務ページ：運営者の正式情報・問い合わせ先・版は�
   assert.equal((privacy.match(/mailto:/g) || []).length, 1);
   assert.equal((terms.match(/mailto:/g) || []).length, 1);
   assert.equal((toku.match(/mailto:/g) || []).length, 2);
-  assert.ok(terms.includes('制定日：2026年7月1日 / 改定日：2026年10月27日'));
+  // 邪眼の商品の追記（2026-11-12 公開）で、利用規約と特定商取引法の表記を改定。プライバシーポリシーは変更なし
+  assert.ok(terms.includes('制定日：2026年7月1日 / 改定日：2026年11月12日'));
   assert.ok(privacy.includes('制定日：2026年7月1日 / 改定日：2026年10月27日'));
-  assert.ok(toku.includes('制定日：2026年10月27日'));
+  assert.ok(toku.includes('制定日：2026年10月27日 / 改定日：2026年11月12日'));
   for (const t of [privacy, terms, toku]) assert.doesNotMatch(t, /【[^】]{1,20}】/);
   assert.ok(!/お知らせメールへの同意は任意|受け取るを選んだ場合のみ|保存時に選択|専用チェックボックス/.test(privacy + terms));
 });

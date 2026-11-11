@@ -65,7 +65,7 @@ test('法務ページは公開ファイルに入り、Production ではビルド
   // 仮置き（【…】）が残っていれば、Production のビルドは止まる（ガードそのものは残す）
   const d = fs.mkdtempSync(path.join(os.tmpdir(), 'ed-legal-'));
   try {
-    for (const f of B.LEGAL_PAGES) fs.writeFileSync(path.join(d, f), read(f).replace('2026年10月27日', '【公開日】'));
+    for (const f of B.LEGAL_PAGES) fs.writeFileSync(path.join(d, f), read(f).replace(/改定日：2026年11月12日|制定日：2026年10月27日|改定日：2026年10月27日/, '【公開日】'));
     assert.equal(B.legalPlaceholderProblems(d, { VERCEL_ENV: 'production' }).length, 3);
     assert.deepEqual(B.legalPlaceholderProblems(d, { VERCEL_ENV: 'preview' }), []);
   } finally { fs.rmSync(d, { recursive: true, force: true }); }
