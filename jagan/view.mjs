@@ -415,7 +415,7 @@ export function dipperFoldHtml({ where = 'result' } = {}) {
         <span class="dp-fold-lens">SHADOW・FATUI・NEXT</span>
         <span class="dp-fold-price">完全解析「DIPPER」｜全23ページ｜¥3,000</span>
         <a class="dp-sample-link" href="/jagan/complete-sample" data-dipper-sample>
-          <span class="dp-sample-icon" aria-hidden="true"></span><span class="dp-sample-text"><b>完全解析のサンプルを読む</b><small>架空の回答で作った、全23ページをそのまま読めます</small></span><span class="dp-sample-go" aria-hidden="true">→</span></a>
+          <span class="dp-sample-icon" aria-hidden="true"></span><span class="dp-sample-text"><b>完全解析のサンプルを読む</b><small>実際の23ページから、6ページをそのまま抜き出しています</small></span><span class="dp-sample-go" aria-hidden="true">→</span></a>
       </div>
       <details class="dp-reveal" data-dipper-reveal>
         <summary><span class="dp-reveal-more">その先を見る</span></summary>

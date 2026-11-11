@@ -20,6 +20,4 @@ if (typeof document !== 'undefined' && document.getElementById('sampleBody')) {
   // 下部の申込（結果ページ・マイページから開いた時だけ、その記録で）。完全解析の欄のボタンも同じ記録で申し込む
   mountSampleBuy(document.getElementById('sampleBuy'), { page: 'report',
     extra: dp ? [{ button: dp.querySelector('[data-buy="complete"]'), product: 'complete', msg: dp.querySelector('[data-dipper-msg]') }] : [] });
-  const pdf = document.getElementById('printBtn');
-  if (pdf) pdf.addEventListener('click', () => window.print());
 }
