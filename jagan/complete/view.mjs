@@ -146,7 +146,6 @@ export function renderComplete(m) {
       ${panel([
         ['この順位の読み方', `<p>${E(m.panel.fatuiReading)}</p>`],
         ['上位に反復するテーマ', `<p>${m.themes.length ? `上位5名には「${m.themes.map(E).join('」「')}」の物語を持つ人物が多く並びます。` : '上位5名の物語のテーマは、それぞれに異なります。'}</p>`],
-        ['同じではない', `<p>${E(m.panel.fatuiNotSame)}</p>`, 'warn'],
       ])}
     </div>
     <div class="dp-top3">${m.mirror.people.map((p) => `<div class="dp-t3" style="--c:${p.f.elements[0] || '#C8405C'}"><div class="dp-t3h">${pad(p.f.rank)}　${fatuiName(p.f)}　<small>${p.f.match}%</small></div>
