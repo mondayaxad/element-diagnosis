@@ -7,7 +7,7 @@ import { computeDiagnosis } from './engine/runtime.mjs';
 import { BUNDLE } from './engine/data.mjs';
 import { renderReport, dipperFoldHtml } from './view.mjs';
 import { wireSampleLinks } from './sample-buy.mjs';
-import { TOKEN_RE, UUID_RE, linkOpen, openOwn, register, accessToken, supabaseClient, setRegisterIntent, freshPurchase, reportUrlOf, trackPurchase, buy, buyErrorText, salesOpen } from './client.mjs';
+import { TOKEN_RE, UUID_RE, linkOpen, openOwn, register, accessToken, supabaseClient, setRegisterIntent, freshPurchase, recentlyPaid, reportUrlOf, trackPurchase, buy, buyErrorText, salesOpen } from './client.mjs';
 
 const $ = (id) => document.getElementById(id);
 // 邪眼の全イベントに diagnosis_type: 'jagan' を付ける（元素診断と並べて比べられるように）
@@ -91,7 +91,8 @@ async function fromLink(token) {
       if (r.body.report && r.body.report.product === 'complete') { location.replace(`/jagan/dipper#t=${token}`); return; }
       if (!render(r.body.report)) return;
       track('jagan_report_open', { source: fresh ? 'checkout' : 'link' });
-      if (fresh) trackPurchase(token, 'report', fresh.source);
+      // purchase：決済から戻った直後（このタブの印）か、支払いから3時間以内に固有リンクで開いた時。重複はこのブラウザで1回＋GA4 の transaction_id で防ぐ
+      if (fresh || recentlyPaid(r.body.report)) trackPurchase(token, 'report', fresh && fresh.source);
       wireLinkKeep(token);
       return;
     }

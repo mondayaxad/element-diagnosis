@@ -120,6 +120,12 @@ export const PRODUCT_INFO = Object.freeze({
 // GA4 の購入（元素診断の report-link.html と同じ形）：決済から戻って初めてレポートが開いた時に1回だけ送る。
 //   transaction_id は固有リンクの秘密値から作る元に戻せない20桁（秘密値・注文 ID・Stripe の ID は送らない）。同じ購入を二重に数えない
 const GA_ITEMS = { report: { id: 'jagan_report_v1', name: '邪眼解析レポート', value: 1000 }, complete: { id: 'jagan_complete_v1', name: '邪眼完全解析レポート「DIPPER」', value: 3000 } };
+// 支払いから3時間以内か（元素診断の固有リンクと同じ条件）。決済から戻ったタブが別のタブ・別のブラウザ（PayPay のアプリから戻った等）でも purchase を送れるように
+export const RECENT_PAID_MS = 3 * 60 * 60 * 1000;
+export function recentlyPaid(report, nowMs = Date.now()) {
+  const t = Date.parse(report && report.paidAt);
+  return Number.isFinite(t) && nowMs - t >= -5 * 60 * 1000 && nowMs - t < RECENT_PAID_MS;
+}
 export async function trackPurchase(token, product, source) {
   try {
     const it = GA_ITEMS[product];

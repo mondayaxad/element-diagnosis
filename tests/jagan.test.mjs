@@ -1164,3 +1164,16 @@ test('GA4：完了ページの「もっと詳しく見る」（jagan_detail_open
   assert.match(app, /'jagan_report_cta', \{ state: 'open', source: ctaSource\(\) \}/);
   assert.match(app, /state: 'closed', source: ctaSource\(\) \}/);
 });
+
+test('GA4 purchase：支払いから3時間以内なら、決済から戻ったタブでなくても送る（元素診断と同じ条件）', async () => {
+  const { recentlyPaid, RECENT_PAID_MS } = await import('../jagan/client.mjs');
+  const now = Date.parse('2026-11-12T09:30:00Z');
+  assert.equal(RECENT_PAID_MS, 3 * 3600 * 1000);
+  assert.equal(recentlyPaid({ paidAt: '2026-11-12T09:21:34Z' }, now), true);
+  assert.equal(recentlyPaid({ paidAt: '2026-11-12T06:29:59Z' }, now), false);
+  assert.equal(recentlyPaid({ paidAt: null }, now), false);
+  assert.equal(recentlyPaid(null, now), false);
+  const src = (f) => fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '..', f), 'utf8');
+  assert.match(src('jagan/report.mjs'), /if \(fresh \|\| recentlyPaid\(r\.body\.report\)\) trackPurchase\(token, 'report'/);
+  assert.match(src('jagan/dipper.mjs'), /if \(fresh \|\| recentlyPaid\(r\.body\.report\)\) trackPurchase\(token, 'complete'/);
+});
