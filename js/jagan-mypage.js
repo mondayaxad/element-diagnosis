@@ -88,7 +88,8 @@
   }
   function enabled() {
     var cfg = window.__ED_PUBLIC_CONFIG__;
-    return !!(cfg && cfg.appEnv !== 'production' && typeof supabaseClient !== 'undefined' && !supabaseClient.unavailable);
+    // 本番では、邪眼を有効にした時だけ（公開設定の jaganEnabled）。Preview・開発環境はこれまでどおり動く
+    return !!(cfg && (cfg.appEnv !== 'production' || cfg.jaganEnabled === true) && typeof supabaseClient !== 'undefined' && !supabaseClient.unavailable);
   }
   function salesOpen() { var c = window.__ED_PUBLIC_CONFIG__; return !!(c && c.jaganSalesOpen === true); }
   function store(kind, fn) { try { return fn(kind === 'local' ? window.localStorage : window.sessionStorage); } catch (e) { return null; } }
