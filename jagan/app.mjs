@@ -8,6 +8,7 @@ import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, s
 import { BUNDLE } from './engine/data.mjs';
 import { renderResultPage, esc, heroGemsHtml } from './view.mjs';
 import { wireSampleLinks } from './sample-buy.mjs';
+import { profileParams, PROFILE_EVENT } from './analytics.mjs';
 import { cardDataUrl } from './card.mjs';
 import { supabaseClient, accessToken, salesOpen, buy, buyErrorText } from './client.mjs';
 
@@ -142,6 +143,8 @@ function finish() {
   store.del(K.progress);
   track('jagan_complete', {});
   showResult(last, { mode: 'fresh' });
+  // 診断の傾向（邪眼・異相・DTI・ファトゥス・12特性の10点刻み）。新しく終えた結果だけ
+  try { const prof = profileParams(current && current.result); if (prof) track(PROFILE_EVENT, prof); } catch { /* 計測だけ */ }
   try { history.replaceState(null, '', '/jagan/#result'); } catch { /* noop */ }
 }
 

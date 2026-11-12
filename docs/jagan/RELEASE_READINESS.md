@@ -9,7 +9,7 @@
 - 購入 API（2商品・金額はサーバーが決める）・Preview DB の jagan_01〜03（2026-11-10 に jagan_03 を適用済み）。
 - 検査：全体 714 件合格（不合格は以前からの #727 の1件）。同じ回答での無料・¥1,000・¥3,000 の表示一致（300件）。実PG の jagan_01〜03（16件：期限切れ・未払いで権利なし、決済通知の再処理で増えない、両方で2つの権利）。
 - Preview の実画面：完了ページから ¥1,000・¥3,000 の決済画面（Stripe Test）が作られ、注文に同じ50問が入ることを確認。
-- **未確認**：Preview でのテスト決済の支払い後（この作業環境から Stripe に接続できないため）。手順は §5。
+- Preview でのテスト決済の支払い後：✅ 2026-11-11 確認済み（§8）。
 
 ## 2. 本番の現状（読み取りのみ・2026-11-10）
 
@@ -97,7 +97,7 @@
 ## 8. 残っている確認・判断
 
 - 利用規約の改定日：✅ リリース日 2026年11月12日に決定。利用規約・特定商取引法の表記の改定日を 2026年11月12日に（プライバシーポリシーは変更なしのため据え置き）。検査も更新済み。
-- Preview でのテスト決済の支払い後（§5）。
+- Preview でのテスト決済の支払い後（§5）：✅ 2026-11-11 確認済み。¥1,000・¥3,000 を Stripe Test で支払い、解析レポート・完全解析（23ページ）が開く、中止した注文に権利が付かない、DB に金額どおり記録（Claude が実施）。マイページへの登録と INSIGHT／COMPLETE の表示（オーナーが実施）。
 - `jagan-release` の全体の検査（2026-11-11）：640 件合格、不合格は以前からの1件（Google・X の認証から戻ったマイページの検査）。
 
 ## 9. 戻すための備え（2026-11-11 記録）
@@ -116,9 +116,12 @@
 
 - 計測：邪眼の全ページ（トップ・結果・理論・サンプル2種・解析レポート・完全解析）とマイページで `js/ga.js` を読む。本番ドメインでだけ送信（Preview は送らない）。
 - 購入：決済から戻って初めてレポートが開いた時に `purchase`（`value` 1000／3000・`currency` JPY・`items[].item_id` `jagan_report_v1`／`jagan_complete_v1`・`item_category` 邪眼診断・`diagnosis_type` jagan）。`transaction_id` は固有リンクから作る元に戻せない20桁で、同じ購入は二重に数えない。
-- **GA4 の管理画面で手動の設定が必要なもの**（集計の画面に出すため。イベント自体は設定しなくても届く）：
-  - カスタム ディメンション（範囲：イベント）：`diagnosis_type`・`source`・`state`・`result`・`product`・`share_mode`・`reason`（元素診断で登録済みのものは不要）。
-  - キーイベント：`purchase`（登録済みなら不要）。必要に応じて `jagan_start`（診断開始）・`jagan_complete`（診断完了）・`jagan_report_cta`／`jagan_complete_cta`（申込ボタン）・`jagan_save_success`（マイページ保存）。
+- GA4 の管理画面の設定：✅ 2026-11-12 Admin API で登録済み（プロパティ `properties/543435932`「element-diagnosis」・測定 ID 一致を確認）。
+  - カスタム ディメンション（イベント）：診断の種類 `diagnosis_type`・操作元の画面 `source`・販売状態 `state`・登録処理の結果 `result`・申込商品 `product`・共有方法 `share_mode`・申込失敗の理由 `reason`。
+  - キーイベント：`purchase`（既存）・`jagan_complete`・`jagan_save_success`（追加）。申込ボタン（`jagan_report_cta`／`jagan_complete_cta`）はキーイベントにせず、`state = open` に絞って購入検討として別に集計する。
+  - 探索レポート（ファネル・表）は API で作れないため、GA4 の画面で作る。
+- `purchase` は「決済から戻ってレポートが開き、GA4 へ送れた購入」。売上・件数の正は Stripe と注文 DB、GA4 は流入から購入までの行動分析に使う。`purchase` には申込元の画面 `source` を引き継ぐ（どの申込ボタンから購入に至ったか）。`transaction_id` は注文ごとに固定（固有リンクの再発行は無い）。
+- 診断の傾向：診断を終えた時（新しい結果だけ）に `jagan_profile` を送る。邪眼 `jagan_element`・異相 `jagan_isou`・DTI `jagan_dti`・ファトゥス `jagan_fatui`（保留は「保留」）・一致度 `fatui_match`（10点刻み・保留は -1）・12特性 `jt_ANX`〜`jt_CAL`（0〜100・10点刻み）。回答・結果 ID は送らない。いずれもカスタム ディメンション登録済み（2026-11-12）。
 - 邪眼の主なイベント：`jagan_start`・`jagan_complete`・`jagan_detail_open`・`jagan_image_save`・`jagan_share_click`／`jagan_share_open_x`・`jagan_save_click`／`jagan_save_success`・`jagan_report_cta`／`jagan_complete_cta`（state・source）・`jagan_report_open`／`jagan_complete_open`（source）・`jagan_report_register_*`／`jagan_complete_register_*`・`purchase`。
 
 ## 11. 会員データ（マイページ）への影響（2026-11-11 確認）

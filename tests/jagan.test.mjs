@@ -1091,3 +1091,17 @@ test('近しいファトゥス：11名の比較する特性すべてに、物語
   const { FATUI_PORTRAIT } = await import('../jagan/site-copy.mjs');
   for (const c of BUNDLE.characters.characters) for (const axis of Object.keys(c.anchors)) assert.ok(FATUI_PORTRAIT[c.id] && FATUI_PORTRAIT[c.id][axis], `${c.id}.${axis}`);
 });
+
+test('GA4 の診断の傾向（jagan_profile）：邪眼・異相・DTI・ファトゥスと、12特性を10点刻みで。回答・結果 ID は送らない', async () => {
+  const { profileParams } = await import('../jagan/analytics.mjs');
+  const r = run(VARIED());
+  const p = profileParams(r);
+  assert.equal(p.jagan_element, r.element.label);
+  assert.equal(p.jagan_isou, r.isou.label);
+  assert.equal(p.jagan_dti, r.dti.code);
+  for (const t of BUNDLE.items.traits) { assert.ok(p[`jt_${t.id}`] % 10 === 0 && p[`jt_${t.id}`] >= 0 && p[`jt_${t.id}`] <= 100, t.id); }
+  assert.ok(Object.keys(p).length <= 25, 'GA4 のパラメータの上限（25）以内');
+  const s = JSON.stringify(p);
+  assert.ok(!s.includes(r.resultId) && !/ANX01|answers/.test(s));
+  assert.equal(profileParams(run(all(3))).jagan_fatui, '保留');
+});
