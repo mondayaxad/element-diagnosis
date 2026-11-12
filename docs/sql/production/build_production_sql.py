@@ -98,7 +98,7 @@ def arr(xs):
     return 'array[' + ', '.join(f"'{x}'" for x in xs) + ']'
 
 
-STAGE_NAMES = {1: 'prod_01', 2: 'prod_02', 3: 'prod_03', 4: 'prod_04a', 5: 'prod_04b'}
+STAGE_NAMES = {1: 'prod_01', 2: 'prod_02', 3: 'prod_03', 4: 'prod_04a', 5: 'prod_04b', 6: 'prod_06'}
 
 
 def guard(stage, prev_required, phase):
@@ -906,6 +906,183 @@ OUT = {
     'prod_94_rollback_04a_DRAFT_DO_NOT_RUN.sql': rollback4a,
     'prod_95_rollback_04b_DRAFT_DO_NOT_RUN.sql': rollback4b,
 }
+
+
+# ============================================================
+# 段階 6：邪眼診断（DTI）の保存・共有・解析レポート（¥1,000）・完全解析（¥3,000）（2026-11-10 追加）
+#   Preview の jagan_01〜03（docs/sql/20261102〜20261110_jagan_*.sql。Preview で適用・検証済み）を、同じ順で1つの段階にまとめる。
+#   置き換え：Preview 判定と migration 履歴の行を除く・注文は Stripe Live だけ（stripe_mode='live'）。それ以外は Preview と同じ。
+#   既存の表・関数・権限（ETI の complete_*・purchase_entitlements・既存6表）には触れない。邪眼の表・関数だけを足す。
+# ============================================================
+JAGAN = [
+    ('j1', '20261102120000_jagan_01_results_shares.sql', 'jagan_01_results_shares'),
+    ('j2', '20261107120000_jagan_02_orders_links_registrations.sql', 'jagan_02_orders_links_registrations'),
+    ('j3', '20261110120000_jagan_03_complete_product.sql', 'jagan_03_complete_product'),
+]
+JAGAN_TABLES = ['jagan_results', 'jagan_shares', 'jagan_entitlements', 'jagan_orders', 'jagan_order_registrations']
+JAGAN_FUNCTIONS = ['jagan_refresh_entitlement', 'jagan_create_order', 'jagan_mark_checkout_open', 'jagan_apply_payment',
+                   'jagan_close_order', 'jagan_apply_reversal', 'jagan_register_order']
+
+
+def jbody(name, version, mig):
+    t = (SQL / name).read_text(encoding='utf-8')
+    if t.count('\nbegin;\n') != 1 or t.count('\ncommit;') != 1:
+        sys.exit(f'{name}: begin/commit must appear exactly once')
+    inner = t.split('\nbegin;\n', 1)[1].rsplit('\ncommit;', 1)[0]
+    m = re.match(r'\s*(--[^\n]*\n\s*)*do \$\$\n.*?\nend\n\$\$;\n', inner, re.S)
+    if not m or 'not a preview database' not in m.group(0):
+        sys.exit(f'{name}: preview guard block not found at the start of the transaction')
+    inner = inner[m.end():]
+    inner = rep(inner, f"insert into supabase_migrations.schema_migrations (version, name)\nvalues ('{version}', '{mig}');\n", '', 1, f'{name}:history')
+    for bad in ('not a preview database', 'supabase_migrations', "deployment_environment()"):
+        if bad in inner:
+            sys.exit(f'{name}: {bad} remains after removing the guard and history')
+    return f'-- ------------------------------------------------------------\n-- 由来：docs/sql/{name}（Preview 判定・履歴行を除いたもの）\n-- ------------------------------------------------------------\n' + inner.strip('\n') + '\n'
+
+
+def stage6():
+    parts = [jbody(n, n.split('_')[0], mig) for _, n, mig in JAGAN]
+    return HEADER.format(
+        title='prod_06：邪眼診断（DTI）の保存・共有・解析レポート（¥1,000）・完全解析「DIPPER」（¥3,000）',
+        prereq='prod_04b まで適用済み（element_release.migration_ledger に stage 1〜5）。邪眼の新コードを Production に出す直前に適用する',
+        rollback='docs/sql/production/prod_96_rollback_06_DRAFT_DO_NOT_RUN.sql',
+        notes="""--
+-- 内容（Preview の jagan_01〜03 と同じ。Preview で適用・検証済み）
+--   ・jagan_results（本人の保存結果）・jagan_shares（共有）・jagan_entitlements（閲覧権。商品ごと）
+--   ・jagan_orders（注文。商品は jagan_report_v1 ¥1,000／jagan_complete_v1 ¥3,000）・jagan_order_registrations（固有リンクからのマイページ登録）
+--   ・関数 jagan_*（注文の作成・決済画面・支払いの反映・返金／異議申し立て・登録・権利の作り直し）。service_role だけが実行できる
+--   ・すべて RLS 有効。ブラウザのロールは、本人の行の jagan_results（SELECT・DELETE）と jagan_entitlements（SELECT）だけ（マイページ）
+-- 本番だけの置き換え
+--   ・Preview 判定と migration 履歴（supabase_migrations）の行は除き、台帳 element_release.migration_ledger に stage 6 を記録
+--   ・注文は Stripe Live だけ（jagan_orders.stripe_mode = 'live' の制約を足す）
+-- 既存の表・関数・権限（既存6表・purchase_entitlements・complete_* など）には触れない
+""") + guard(6, 'array[1, 2, 3, 4, 5]', 'before') + """
+do $pre6$
+begin
+  if exists (select 1 from pg_class where relnamespace = 'public'::regnamespace and relname like 'jagan\\_%')
+     or exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname like 'jagan\\_%') then
+    raise exception 'jagan objects already exist before prod_06 (partial or foreign state)';
+  end if;
+  if not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'profiles' and column_name = 'onboarding_status') then
+    raise exception 'profiles.onboarding_status is missing (prod_01 required)';
+  end if;
+end
+$pre6$;
+
+""" + '\n'.join(parts) + """
+-- 本番だけ：注文は Stripe Live だけ
+alter table public.jagan_orders add constraint jagan_orders_live_only check (stripe_mode = 'live');
+
+do $post6$
+begin
+  if (select count(*) from pg_class where relnamespace = 'public'::regnamespace and relkind = 'r' and relname = any(""" + arr(JAGAN_TABLES) + """)) <> """ + str(len(JAGAN_TABLES)) + """ then
+    raise exception 'jagan tables are not all present';
+  end if;
+  if exists (select 1 from pg_class where relnamespace = 'public'::regnamespace and relkind = 'r' and relname like 'jagan\\_%' and not relrowsecurity) then
+    raise exception 'row level security is off on a jagan table';
+  end if;
+  if exists (select 1 from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname like 'jagan\\_%'
+              and (has_function_privilege('anon', p.oid, 'EXECUTE') or has_function_privilege('authenticated', p.oid, 'EXECUTE'))) then
+    raise exception 'browser roles can execute a jagan function';
+  end if;
+  if exists (select 1 from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind = 'r' and c.relname like 'jagan\\_%'
+              and (has_table_privilege('anon', c.oid, 'SELECT') or has_table_privilege('anon', c.oid, 'INSERT') or has_table_privilege('anon', c.oid, 'UPDATE') or has_table_privilege('anon', c.oid, 'DELETE'))) then
+    raise exception 'anon can access a jagan table';
+  end if;
+  if exists (select 1 from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind = 'r' and c.relname like 'jagan\\_%' and c.relname not in ('jagan_results', 'jagan_entitlements')
+              and has_table_privilege('authenticated', c.oid, 'SELECT')) then
+    raise exception 'authenticated can read a jagan table other than jagan_results / jagan_entitlements (own rows by RLS)';
+  end if;
+end
+$post6$;
+
+-- 台帳：段階 6 を記録できるようにする（prod_01 で作った台帳の段階の範囲は 1〜5）
+alter table element_release.migration_ledger drop constraint migration_ledger_stage_check;
+alter table element_release.migration_ledger add constraint migration_ledger_stage_check check (stage between 1 and 6);
+comment on schema element_release is '元素診断 本番 migration の台帳（1=prod_01・2=prod_02・3=prod_03・4=prod_04a・5=prod_04b・6=prod_06 邪眼診断）。アプリ・API からは使わない';
+""" + guard(6, 'array[1, 2, 3, 4, 5]', 'after') + LEDGER_INSERT.format(stage=6, name='prod_06_jagan') + """
+notify pgrst, 'reload schema';
+
+commit;
+"""
+
+
+def rollback6():
+    drops_f = ''.join(f"  for r in select p.oid::regprocedure as f from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname = '{f}' loop execute 'drop function ' || r.f; end loop;\n" for f in JAGAN_FUNCTIONS)
+    return RB_HEADER.format(title='prod_96：prod_06（邪眼診断）の戻し草案',
+                            cond='prod_06 が最新。邪眼の表が全て空（保存・共有・注文・登録・権利が 0 件）。データがある時は戻さず、前へ直す') + guard(6, None, 'after') + rb_ledger(6) + """
+do $nodata6$
+declare
+  t text; n bigint;
+begin
+  foreach t in array """ + arr(JAGAN_TABLES) + """ loop
+    execute format('select count(*) from public.%I', t) into n;
+    if n <> 0 then
+      raise exception 'jagan data exists in % (% rows): do not roll back; handle it as a forward fix', t, n;
+    end if;
+  end loop;
+end
+$nodata6$;
+
+do $drop6$
+declare
+  r record;
+begin
+""" + drops_f + """end
+$drop6$;
+drop table public.jagan_order_registrations;
+drop table public.jagan_entitlements;
+drop table public.jagan_orders;
+drop table public.jagan_shares;
+drop table public.jagan_results;
+delete from element_release.migration_ledger where stage = 6;
+alter table element_release.migration_ledger drop constraint migration_ledger_stage_check;
+alter table element_release.migration_ledger add constraint migration_ledger_stage_check check (stage between 1 and 5);
+comment on schema element_release is '元素診断 本番 migration の台帳（1=prod_01・2=prod_02・3=prod_03・4=prod_04a・5=prod_04b）。アプリ・API からは使わない';
+do $chk6$
+begin
+  if exists (select 1 from pg_class where relnamespace = 'public'::regnamespace and relname like 'jagan\\_%')
+     or exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname like 'jagan\\_%') then
+    raise exception 'jagan objects remain after rollback';
+  end if;
+end
+$chk6$;
+""" + guard(5, None, 'after') + """
+notify pgrst, 'reload schema';
+
+commit;
+"""
+
+
+def readonly_postcheck6():
+    return """-- ============================================================
+-- prod_86：prod_06（邪眼診断）の状態の確認【読み取りのみ】
+-- 本番の SQL Editor で、このファイル全体を実行する（最後は rollback。何も変更しない）。
+-- 生成元：docs/sql/production/build_production_sql.py（手で編集しない）
+-- ============================================================
+begin;
+set transaction read only;
+
+select k, v from (values
+  ('ledger.stages', (select coalesce(string_agg(stage::text || ':' || name, ', ' order by stage), '(なし)') from element_release.migration_ledger)),
+  ('jagan.tables', (select coalesce(string_agg(relname || (case when relrowsecurity then '(RLS)' else '(RLS無し)' end), ', ' order by relname), '(なし)') from pg_class where relnamespace = 'public'::regnamespace and relkind = 'r' and relname like 'jagan\\_%')),
+  ('jagan.functions', (select count(*)::text from pg_proc where pronamespace = 'public'::regnamespace and proname like 'jagan\\_%') || ' (7 であること)'),
+  ('jagan.browser_exec', (select count(*)::text from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname like 'jagan\\_%'
+       and (has_function_privilege('anon', p.oid, 'EXECUTE') or has_function_privilege('authenticated', p.oid, 'EXECUTE'))) || ' (0 であること)'),
+  ('jagan.orders_live_only', (select count(*)::text from pg_constraint where conname = 'jagan_orders_live_only') || ' (1 であること)'),
+  ('jagan.product_amounts', coalesce((select pg_get_constraintdef(oid) from pg_constraint where conname = 'jagan_orders_product_amount_check'), '(なし)')),
+  ('jagan.rows', (select coalesce(string_agg(t || '=' || case when to_regclass('public.' || t) is null then '(なし)'
+       else (xpath('/row/c/text()', query_to_xml(format('select count(*) as c from public.%I', t), false, true, '')))[1]::text end, ',' order by t), '')
+       from unnest(""" + arr(JAGAN_TABLES) + """) t))
+) v(k, v) order by k;
+
+rollback;
+"""
+
+
+OUT['prod_06_jagan.sql'] = stage6
+OUT['prod_86_postcheck_06_READONLY.sql'] = readonly_postcheck6
+OUT['prod_96_rollback_06_DRAFT_DO_NOT_RUN.sql'] = rollback6
 
 if __name__ == '__main__':
     check = '--check' in sys.argv

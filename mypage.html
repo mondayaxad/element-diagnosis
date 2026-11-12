@@ -28,6 +28,7 @@
      （onAuthStateChangeリスナー）を成立させるために読み込む。 -->
 <script src="js/eti_v2_save.js"></script>
 <script src="js/auth-providers.js"></script>
+<script src="js/jagan-mypage.js"></script>
 <!-- Xシェア（/api/share）のキャラクター番号を正本の並び順から取得するため読み込む（計算には使用しない） -->
 <script src="js/characters118_v2.js"></script>
 <!-- MIRROR上位4名を report.html と同じ正本（現行のキャラクター座標・ETIv2.computeMirrorV2）で表示するため読み込む。
@@ -462,6 +463,32 @@
   }
 
   /* ---- LATEST RESULT ---- */
+  /* 邪眼診断の記録（kind: jagan）。元素診断と同じ部品に、種類の印・お知らせだけを足す */
+  .mp-chip.jagan { color: #f0b9c6; border-color: rgba(200,64,92,.55); background: rgba(200,64,92,.12); }
+  .mp-jg-note { margin: 0 0 12px; padding: 10px 12px; border-radius: 8px; font-size: 12.5px; border: 1px solid rgba(200,64,92,.4); background: rgba(40,14,24,.6); }
+  .mp-jg-note.is-error { border-color: rgba(240,140,160,.6); }
+  .mp-jg-insight { margin-top: 12px; }
+  .mp-jg-insight-t { font-size: 12.5px; color: var(--fg-dim); margin: 4px 0 10px; line-height: 1.8; }
+  .mp-jg-buy-error { font-size: 12px; color: #f2a7b5; margin: 8px 0 0; }
+  .mp-chip.eti { color: #a9c9ec; border-color: rgba(122,184,232,.45); background: rgba(122,184,232,.10); }
+  .mp-jg-fill { position: relative; height: 100%; border-radius: 3px; }
+  .mp-jg-card .mp-gauge.mp-mirror-row { grid-template-columns: 7.4em 1fr 2.8em; }
+  /* まだ読み解いていないもの（邪眼）：項目ごとの色 */
+  .mp-lockbox .mp-locked-row[data-domain="jg-traits"] { --dc1: #e88aa6; --dc2: #f4bccb; }
+  .mp-lockbox .mp-locked-row[data-domain="jg-ground"] { --dc1: #b59ad8; --dc2: #d6c4ee; }
+  .mp-lockbox .mp-locked-row[data-domain="jg-basis"] { --dc1: #e0a050; --dc2: #f0cc90; }
+  .mp-lockbox .mp-locked-row[data-domain="jg-fatui"] { --dc1: #e2c08c; --dc2: #f4e0b8; }
+  .mp-lockbox .mp-locked-row[data-domain^="jg-"] .ghost { animation: mpJgShimmer 3.2s ease-in-out infinite; }
+  @keyframes mpJgShimmer { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .mp-lockbox .mp-locked-row[data-domain^="jg-"] .ghost { animation: none; } }
+  /* 邪眼解析レポートの申込・閲覧：赤黒（邪眼診断の配色。元素の青にしない） */
+  /* 元素の青の申込ボタン（.mp-lockbox … a.mp-btn.primary 等）より優先する */
+  #root .mp-btn.primary.mp-jg-cta, .ca-sheet .mp-btn.primary.mp-jg-cta {
+    min-height: 50px; font-size: 13.5px; letter-spacing: .04em; color: #fff4f6 !important; border: 1px solid rgba(232,110,140,.65) !important;
+    background: linear-gradient(135deg, #1c060c 0%, #4a0f1f 45%, #8a1c34 80%, #b8324f 100%) !important;
+    box-shadow: 0 0 14px rgba(200,64,92,.32), inset 0 1px 0 rgba(255,200,215,.18) !important; text-shadow: 0 1px 2px rgba(0,0,0,.5);
+  }
+  #root .mp-btn.primary.mp-jg-cta:hover:not([disabled]), .ca-sheet .mp-btn.primary.mp-jg-cta:hover:not([disabled]) { filter: brightness(1.12); }
   .mp-latest { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 16px; }
 
   /* ---- 購入状態の見た目（LATEST RESULT／YOUR COLLECTION／THE RECORDSで共通の考え方） ----
@@ -973,6 +1000,21 @@
   .is-complete.state-insight { box-shadow: 0 0 14px color-mix(in srgb, var(--lc, var(--badge-c, #7ab8e8)) 18%, transparent), inset 0 0 18px color-mix(in srgb, var(--lc, var(--badge-c, #7ab8e8)) 8%, transparent); }
   .is-complete .mp-orn { border-color: color-mix(in srgb, var(--oc) 46%, transparent); }
   .is-complete .mp-orn .k { opacity: 1; box-shadow: 0 0 5px color-mix(in srgb, var(--oc) 60%, transparent); }
+  /* 邪眼の購入済みの枠：元素診断の明るい枠と見分けられるよう、元素の色を黒に寄せた深い色で縁取る */
+  .mp-rec[data-kind="jagan"].state-insight, .mp-latest[data-kind="jagan"].state-insight {
+    --jd: color-mix(in srgb, var(--lc, #c8405c) 52%, #000);
+    border-color: color-mix(in srgb, var(--jd) 80%, #1a1220);
+    background:
+      radial-gradient(ellipse 55% 140% at 0% 0%, color-mix(in srgb, var(--jd) 22%, transparent), transparent 70%),
+      radial-gradient(ellipse 45% 120% at 100% 100%, color-mix(in srgb, var(--jd) 14%, transparent), transparent 70%),
+      linear-gradient(165deg, color-mix(in srgb, var(--jd) 12%, #07060c), #07060c 65%);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--jd) 30%, transparent), inset 0 0 22px rgba(0,0,0,.45);
+  }
+  .mp-rec[data-kind="jagan"].state-insight[open] { background:
+      radial-gradient(ellipse 60% 220px at 0% 0%, color-mix(in srgb, var(--jd) 22%, transparent), transparent 75%),
+      linear-gradient(180deg, color-mix(in srgb, var(--jd) 10%, #07060c), #07060c 260px); }
+  [data-kind="jagan"].state-insight .mp-orn { --oc: color-mix(in srgb, var(--lc, #c8405c) 62%, #000) !important; --oc2: color-mix(in srgb, var(--lc2, #c8405c) 70%, #120a10) !important; }
+  [data-kind="jagan"].is-complete.state-insight { box-shadow: 0 0 14px color-mix(in srgb, var(--jd) 42%, transparent), inset 0 0 24px rgba(0,0,0,.5); }
   .is-complete .mp-emblem img { filter: drop-shadow(0 0 9px color-mix(in srgb, var(--c, #7ab8e8) 40%, transparent)); }
   .ca-rec-complete { margin-top: 12px; padding: 12px 14px 14px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--lc, #7ab8e8) 34%, var(--ca-line)); background: rgba(10, 12, 24, .5); }
   .ca-rec-complete .ca-body { margin-top: 6px; }
@@ -1647,6 +1689,14 @@ function mpNatText(n) { return mpTint(MP_NATION_COLOR[n], 0.22) || MP_NEUTRAL; }
 // MIRRORはキャラクターの元素が保存データ（mirror_snapshot／character_matchesのel）で確定できる場合だけ色を付ける
 function mpMirrorText(mirror) { return (mirror && MP_EL_COLOR[mirror.el]) ? mpElText(mirror.el) : MP_NEUTRAL; }
 function mpComboHtml(r) {
+  if (r && r.kind === 'jagan') {
+    if (!r.el && !r.isou) return '—';
+    const a = `<span class="mp-gt" style="color:${mpElText(r.el)};--gc:${mpElText(r.el)}">${r.el || '—'}</span>`;
+    // 邪眼 × 異相 × ファトゥス（元素診断の「元素 × 武器 × 国」と同じ並べ方）
+    const fc = (r.fatui && r.fatui.tone && r.fatui.tone.text[0]) || MP_NEUTRAL;
+    const f = r.fatui ? `<span class="mp-cw"><span class="mp-x">×</span><span class="mp-gt" style="color:${fc};--gc:${fc}">${r.fatui.name}</span></span>` : '';
+    return a + `<span class="mp-cw"><span class="mp-x">×</span><span class="mp-gt" style="color:${MP_JG_ISOU};--gc:${MP_JG_ISOU}">${r.isou || '—'}</span></span>` + f;
+  }
   const parts = [];
   if (r.el) parts.push(`<span class="mp-gt" style="color:${mpElText(r.el)};--gc:${mpElText(r.el)}">${r.el}</span>`);
   if (r.w) parts.push(`<span class="mp-gt" style="color:${mpWText(r.w)};--gc:${mpWText(r.w)}">${r.w}</span>`);
@@ -1735,7 +1785,29 @@ function mpEmblemSeasonKey(record) {
   return picked;
 }
 
+// 邪眼診断の証：覚醒前（record）・覚醒後（awakened。邪眼解析レポートを購入済み）。元素ごと
+const MP_JAGAN_EMBLEM = { '炎': 'pyro', '水': 'hydro', '風': 'anemo', '雷': 'electro', '草': 'dendro', '氷': 'cryo', '岩': 'geo' };
+const MP_JG_ISOU = '#e3a3b4';
+// 色の値は #RRGGBB だけを使う（style に入れる前に確かめる）
+function mpHex(v) { return /^#[0-9a-fA-F]{6}$/.test(String(v || '')) ? v : null; }
+// 購入済みの記録の開示（三つの土台・ファトゥス上位4名）。表示の前に値を確かめる
+function mpJaganInsightData(x) {
+  if (!x || !Array.isArray(x.groups) || !Array.isArray(x.fatui)) return null;
+  return {
+    groups: x.groups.map((g) => ({ short: mpEsc(g.short), note: mpEsc(g.note), color: mpHex(g.color) || '#c99aa7',
+      top: (g.top || []).map((t) => ({ label: mpEsc(t.label), score: mpNum(t.score), color: mpHex(t.color) || '#c99aa7' })).filter((t) => t.score !== null) })),
+    fatui: x.fatui.map((f) => ({ name: mpEsc(f.name), match: mpNum(f.match), tone: mpTone(f.tone) })).filter((f) => f.match !== null),
+  };
+}
+function mpTone(t) {
+  const ok = t && mpHex(t.base) && Array.isArray(t.ring) && Array.isArray(t.text) && t.ring.concat(t.text).every(mpHex);
+  return ok ? { base: t.base, ring: t.ring.slice(0, 2), text: t.text.slice(0, 2) } : null;
+}
 function mpEmblemSrc(record) {
+  if (record && record.kind === 'jagan') {
+    const f = MP_JAGAN_EMBLEM[record.el];
+    return f ? `assets/emblems/jagan/${mpAwake(record) && record.entKnown ? 'awakened' : 'record'}/${f}.png` : '';
+  }
   const seasonKey = mpEmblemSeasonKey(record);
   const season = MP_EMBLEM_SEASONS[seasonKey] || MP_EMBLEM_SEASONS[MP_EMBLEM_BASE_SEASON];
   const state = mpAwake(record) ? 'awakened' : 'record';
@@ -1831,6 +1903,35 @@ const MP_KINDS = {
       };
     },
   },
+  // 邪眼診断（js/jagan-mypage.js が読む本人の記録・権利）。元素診断と同じ欄に、同じ見た目の考え方で並べる
+  jagan: {
+    label: '邪眼診断',
+    normalize(s) {
+      const h = s.headline || {};
+      const el = MP_EL_COLOR[h.element] ? h.element : '';
+      const code = s.isDti && /^[A-Z]{4}$/.test(String(h.code || '')) ? h.code : '';
+      return {
+        kind: 'jagan', session: { id: s.id }, jg: s, isLegacy: !s.isDti,
+        date: s.completedAt, el, isou: mpEsc(h.type || ''), name: el || '—', color: MP_EL_COLOR[el] || '#c8405c',
+        code, typeName: code ? mpEsc(h.name || '') : '',
+        purchased: s.purchased === true, completeOwned: s.completeOwned === true, entKnown: s.entKnown === true,
+        resultUrl: '/jagan/?saved=' + encodeURIComponent(s.id),
+        top3: Array.isArray(s.top3) ? s.top3.map((t) => ({ label: mpEsc(t.label), score: mpNum(t.score), color: mpHex(t.color) })).filter((t) => t.score !== null) : [],
+        fatui: s.character && mpNum(s.character.match) !== null ? { name: mpEsc(s.character.name), match: mpNum(s.character.match), tone: mpTone(s.character.tone) } : null,
+        insight: mpJaganInsightData(s.insight),
+      };
+    },
+    freeListHtml(r) {
+      const c = mpElText(r.el);
+      return `
+    <div class="mp-free-list">
+      <div>タイプ：<b class="mp-typecode mp-gt" style="color:${r.code ? c : MP_NEUTRAL};--gc:${r.code ? c : MP_NEUTRAL}">${r.code || '—'}</b>${r.typeName ? `　<b class="mp-gt" style="color:${c};--gc:${c}">${r.typeName}</b>` : ''}</div>
+      <div>邪眼：<b class="mp-gt" style="color:${c};--gc:${c}">${r.el || '—'}</b></div>
+      <div>異相：<b class="mp-gt" style="color:${MP_JG_ISOU};--gc:${MP_JG_ISOU}">${r.isou || '—'}</b></div>
+      <div>ファトゥス：<b class="mp-gt" style="color:${c};--gc:${c}">${r.fatui ? `${r.fatui.name}（${r.fatui.match}%）` : '—'}</b></div>
+    </div>`;
+    },
+  },
 };
 // マイページから開く結果のリンク：記録 ID をフラグメントで渡す（結果ページで、この記録を購入の対象にする。共有の URL には付けない）
 function mpResultHref(r) {
@@ -1854,6 +1955,7 @@ function mpFreeListHtml(r) {
     </div>`;
 }
 function mpComboText(r) {
+  if (r && r.kind === 'jagan') return [r.el, r.isou].filter(Boolean).join(' × ') || '—';
   return [r.el, r.w, r.nation].filter(Boolean).join(' × ') || '—';
 }
 // 「このときのあなた」：既存辞書（元素の軸・武器の原理・国家の意味）の語をそのまま表示する。
@@ -2299,6 +2401,7 @@ function mpLegacyCompleteView(r) {
 }
 // 完全解析を持っている（作成中・作成済み・以前の仕組み）。記録章・紋章の表示に使う（解析レポートの中身は開かない）
 function mpOwnsComplete(r) {
+  if (r && r.kind === 'jagan') return r.entKnown === true && r.completeOwned === true;
   if (mpCompleteLive(r)) return true;
   const sv = caServerOf(r);
   return !!(sv.lookup === 'ok' && sv.complete && sv.complete.completeEntitlement === 'active');
@@ -2545,6 +2648,7 @@ function mpShareUrl(r) {
 function mpShare(idx) {
   const r = (window.__mpRecords || [])[idx];
   if (!r) return;
+  if (r.kind === 'jagan') { if (window.JaganMypage) window.JaganMypage.share(r.jg); return; }
   const apiUrl = mpShareUrl(r);
   const url = apiUrl || (r.resultUrl ? location.origin + r.resultUrl : location.origin + '/');
   trackEvent('mypage_share_click', { diagnosis_type: r.kind, share_mode: apiUrl ? 'api_share' : 'result_url_fallback' });
@@ -2584,6 +2688,7 @@ function mpArchiveHtml(records) {
 // 購入済み＝解析レポートを読む > 結果を見る > Xシェア（控えめ）。再診断は下のRE-DIAGNOSIS。
 // 「結果を見る」と「Xシェア」は、カードの上部には置かず、開いた中の最下部に横並び（左＝結果を見る〔主〕・右＝Xシェア）
 function mpLatestHtml(r) {
+  if (r && r.kind === 'jagan') return mpJaganLatestHtml(r);
   const viewBtn = r.resultUrl
     ? `<a href="${mpEsc(mpResultHref(r))}" class="mp-btn mp-op-main" onclick="trackEvent('mypage_view_result_click',{source:'latest'})">結果を見る ›</a>`
     : `<span class="mp-btn mp-op-main" aria-disabled="true">結果を見る ›</span>`;
@@ -2621,6 +2726,253 @@ function mpLatestHtml(r) {
         </details>
       </div>
     </section>`;
+}
+
+/* ---- 邪眼診断（kind: 'jagan'）の LATEST RESULT・THE RECORDS・右上のレポート ----
+   元素診断と同じ並び：紋章（証）・日付・NEW・INSIGHT・DTI のコードと名前・「風 × 撤退」 → あなたの異相（上位3つ）とファトゥスの円グラフ
+   → 開いた中に、未購入はまだ読み解いていないものと申込、購入済みは「邪眼解析レポートを読む」 → 結果を見る・Xシェア。
+   異相のグラフは長さだけ（数値は出さない。元素診断の「あなたに響く元素」と同じ）。 */
+function mpJaganVizHtml(r) {
+  // 異相：特性ごとの色。購入済み（INSIGHT）はその色のグラデーションと光、未購入は単色
+  // ファトゥス：購入済みは円グラフ・名前を、結果ページの人物名と同じグラデーション（人物の元素の色）にする
+  const awake = mpJaganAwake(r);
+  const bars = r.top3.length ? `
+      <div>
+        <div class="mp-viz-title">あなたの異相</div>
+        ${r.top3.map((t, i) => {
+          const c = t.color || MP_JG_ISOU;
+          const fill = awake ? `background:linear-gradient(90deg, color-mix(in srgb, ${c} 30%, #0b0306) 0%, color-mix(in srgb, ${c} 70%, #0b0306) 55%, ${c} 100%);box-shadow:0 0 5px color-mix(in srgb, ${c} 32%, transparent);opacity:1`
+            : `background:${c};opacity:${i === 0 ? '.9' : '.6'}`;
+          return `
+          <div class="mp-eltop mp-jg-trait">
+            <div class="mp-eltop-label"><span class="el${i === 0 ? ' r1' : ''}" style="color:${c}">${i === 0 ? '◆' : i === 1 ? '②' : '③'} ${t.label}</span></div>
+            <div class="mp-eltop-track"><div class="mp-jg-fill" style="width:${Math.max(4, Math.min(100, t.score))}%;${fill}"></div></div>
+          </div>`;
+        }).join('')}
+      </div>` : '<div></div>';
+  let ring = '';
+  if (r.fatui) {
+    // 課金前は1つ目の色の単色、課金後は黒寄りのグラデーション（js/jagan-mypage.js の fatuiTone）
+    const tone = r.fatui.tone || { base: mpElText(r.el), ring: [mpElText(r.el), mpElText(r.el)], text: [mpElText(r.el), mpElText(r.el)] };
+    const nameStyle = awake ? `background-image:linear-gradient(100deg, ${tone.text[0]}, ${tone.text[1]});-webkit-background-clip:text;background-clip:text;color:transparent` : `color:${tone.base}`;
+    ring = `
+      <div class="mp-ring" style="--rc:${tone.base}" role="img" aria-label="あなたのファトゥス ${r.fatui.name} 一致度${r.fatui.match}%">
+        ${mpRingSvg(r.fatui.match, tone.base, tone.ring)}
+        <span class="lbl">FATUI</span>
+        <span class="who" style="${nameStyle}">${r.fatui.name}</span>
+      </div>`;
+  }
+  if (!r.top3.length && !ring) return '';
+  return `<div class="mp-viz">${bars}${ring}</div>`;
+}
+// 邪眼の記録：どちらかを購入済み＝目覚めた記録（INSIGHT）、両方＝COMPLETE（元素診断と同じ規則）
+function mpJaganAwake(r) { return !!(r && r.entKnown && (r.purchased || r.completeOwned)); }
+function mpJaganBuyButton(r, product, cls, source) {
+  const isC = product === 'complete';
+  const name = isC ? '完全解析「DIPPER」' : '邪眼解析レポート';
+  const price = isC ? '¥3,000' : '¥1,000';
+  if (!(window.JaganMypage && window.JaganMypage.salesOpen())) {
+    return `<button type="button" class="${cls} is-pending" disabled aria-disabled="true" style="opacity:0.6;cursor:not-allowed">${name} ${price}（準備中）</button>`;
+  }
+  return `<button type="button" class="${cls}" data-jagan-buy="${mpEsc(r.jg.id)}" data-product="${isC ? 'complete' : 'report'}" data-source="${source}">${name}　${price}</button>`
+    + `<a class="mp-rec-sample" href="${isC ? '/jagan/complete-sample' : '/jagan/sample'}#r=${encodeURIComponent(r.jg.id)}&amp;from=mypage">${isC ? '完全解析' : '邪眼解析レポート'}のサンプルを見る</a>`;
+}
+// 解析レポート（A ¥1,000）の行・完全解析（B ¥3,000）の行（元素診断の mpAnalysisRowHtml・mpCompleteRowHtml と同じ考え方）
+function mpJaganRowA(r, cls, source) {
+  if (r.purchased) return `<a class="${cls}" href="/jagan/report?r=${encodeURIComponent(r.jg.id)}" onclick="trackEvent('jagan_report_read',{source:'${source}'})">邪眼解析レポートを読む</a>`;
+  return mpJaganBuyButton(r, 'report', cls, source);
+}
+function mpJaganRowB(r, cls, source) {
+  if (r.completeOwned) return `<a class="${cls}" href="/jagan/dipper?r=${encodeURIComponent(r.jg.id)}" onclick="trackEvent('jagan_complete_read',{source:'${source}'})">完全解析「DIPPER」を読む</a>`;
+  return mpJaganBuyButton(r, 'complete', cls, source);
+}
+// 完全解析の三つの視点（元素診断の caLensBlockHtml と同じ並び・同じ部品。色線つきの3行と、統合の一文）
+const MP_JG_LENSES = [
+  ['SHADOW', '#f0a3b6', '邪眼×異相──あなたの影はどう表れるか'],
+  ['FATUI', '#c9a8f0', '上位3名のファトゥスとの交わり'],
+  ['NEXT', '#e2c08c', '四つの反応領域と、次の一手'],
+];
+function mpJaganLensBlockHtml() {
+  return `<ul class="ca-lens-list" aria-label="完全解析の三つの視点">${MP_JG_LENSES.map(([en, c, d]) => `<li class="ca-lens" style="--lens-c:${c}"><span class="ca-lens-head"><span class="ca-lens-en">${en}</span></span><span class="ca-lens-desc">${d}</span></li>`).join('')}</ul>
+    <p class="ca-body ca-integration">三つの視点を、ひとつの記録へ結びます。解析レポートとは別の商品（全23ページ）です。</p>`;
+}
+const MP_JG_BEYOND_HTML = `<div class="mp-beyond" data-rec-beyond>
+      <div class="mp-beyond-eyebrow">BEYOND THE REPORT｜この先にあるもの</div>
+      <p class="mp-beyond-title">まだ、ここには現れていない深淵があります</p>
+      <p class="mp-beyond-body"><b>三つの視点</b>から、この記録の影を最後まで読む。<b class="g">全23ページ</b>の完全解析「DIPPER」。</p>
+    </div>`;
+function mpJaganRevealHtml(id, inner) {
+  const safeId = String(id).replace(/[^A-Za-z0-9_-]/g, '');
+  return `<div class="mp-beyond mp-reveal" data-rec-beyond>
+      <div class="mp-beyond-eyebrow">BEYOND THE REPORT｜この先にあるもの</div>
+      <p class="mp-beyond-title">まだ、ここには現れていない深淵があります</p>
+      <p class="mp-beyond-body"><b>三つの視点</b>から、この記録の影を最後まで読む。<b class="g">全23ページ</b>の完全解析「DIPPER」。</p>
+      <button type="button" class="mp-reveal-toggle" aria-expanded="false" aria-controls="${safeId}" data-mp-reveal>その先を見る<span class="mp-reveal-chev" aria-hidden="true">⌄</span></button>
+      <div class="mp-reveal-body" id="${safeId}" hidden>
+        <div class="mp-reveal-lens">${mpJaganLensBlockHtml()}</div>
+        ${inner}
+      </div>
+    </div>`;
+}
+function mpJaganActionsHtml(r, source) {
+  if (!r.entKnown) return '<p class="mp-rec-mentor" role="status">購入の状態を確認できませんでした。時間をおいて、ページを読み込み直してください。</p>';
+  if (!r.code) return '<p class="mp-legacy-retired" role="note">この記録は以前の版の判定のため、邪眼解析レポート・完全解析の対象外です。新しく診断すると、お申し込みいただけます。</p>';
+  const ownsA = r.purchased === true, ownsB = r.completeOwned === true;
+  const rowA = `<div class="mp-rec-row" data-rec-product="analysis">${mpJaganRowA(r, ownsA ? 'mp-btn' : 'mp-btn primary mp-jg-cta', source)}</div>`;
+  let rowB;
+  if (!ownsA && !ownsB) {
+    // どちらも未購入：主役は解析レポート。完全解析は「その先を見る」を開いた時だけ、内容・申込・サンプルを出す
+    rowB = mpJaganRevealHtml(`mp-jg-reveal-${source}-${r.jg.id}`, `<div class="mp-rec-row" data-rec-product="complete">${mpJaganRowB(r, 'mp-btn', source)}</div>`);
+  } else if (ownsA && !ownsB) {
+    // 解析レポートを購入済み：完全解析が次の選択肢なので主役（金の縁取りの少しリッチなボタン）
+    rowB = `${MP_JG_BEYOND_HTML}<div class="mp-rec-row" data-rec-product="complete">${mpJaganRowB(r, 'mp-btn primary mp-jg-cta mp-cta-rich', source)}</div>`;
+  } else {
+    rowB = `<div class="mp-rec-row" data-rec-product="complete">${mpJaganRowB(r, ownsA ? 'mp-btn' : 'mp-btn primary mp-jg-cta', source)}</div>`;
+  }
+  return `<div class="mp-rec-actions">${ownsA && !ownsB ? rowB + rowA : rowA + rowB}</div>`;
+}
+// 項目ごとの色（12特性＝薔薇、三つの土台＝紫、判定根拠＝琥珀、ファトゥス＝金）
+const MP_JG_LOCKED = [
+  ['12特性のスコアと読み解き', 'あなたの深淵を形づくる12の特性を、数値と意味で', 'jg-traits'],
+  ['三つの土台', '不安と距離・行動のくせ・他者との向き合い', 'jg-ground'],
+  ['邪眼元素と異相の判定根拠', 'なぜその邪眼と異相に至ったのか', 'jg-basis'],
+  ['近しいファトゥス3名', '重なる特性と、離れている特性', 'jg-fatui'],
+];
+function mpJaganLockedHtml(r, where) {
+  return `
+    <div class="mp-lockbox">
+      <div class="mp-seen">
+        <div class="mp-seen-title">すでに見えているもの</div>
+        <ul class="mp-seen-list"><li>邪眼元素・異相・DTI</li><li>あなたのファトゥス1名</li></ul>
+      </div>
+      <div class="mp-locked-title">まだ読み解いていないもの</div>
+      ${MP_JG_LOCKED.map(([t, cap, d]) => `<div class="mp-locked-row" data-domain="${d}"><span class="txt"><span class="t">${t}</span><span class="cap">${cap}</span><span class="ghost" aria-hidden="true"></span></span></div>`).join('')}
+      <p class="mp-rec-cta-note">${r.completeOwned ? '邪眼解析レポートを購入すると、上の4つがひらきます。' : 'この記録には、まだ知らない自分の影があります。'}</p>
+      ${mpJaganActionsHtml(r, where === 'latest' ? 'mypage_latest' : 'mypage_history')}
+    </div>`;
+}
+function mpJaganGauge(t) {
+  return `
+      <div class="mp-gauge"><span class="nm">${t.label}</span><span class="track"><span class="fill" style="display:block;width:${Math.max(0, Math.min(100, t.score))}%;--g1:color-mix(in srgb, ${t.color} 45%, #0b0306);--g2:${t.color}"></span></span><span class="val">${t.score}</span></div>`;
+}
+// 解析レポートを購入済み：三つの土台（上位2特性と数値）とファトゥス上位4名
+function mpJaganReportCards(r) {
+  const x = r.insight;
+  const cards = x ? x.groups.map((g) => {
+    const c2 = g.top[1] ? g.top[1].color : g.color;
+    const title = g.top.length ? `<div class="tag"><span class="a1" style="color:${g.top[0].color}">${g.top[0].label}</span>${g.top[1] ? `<span class="mp-x"> × </span><span class="a2" style="color:${g.top[1].color}">${g.top[1].label}</span>` : ''}</div>` : '';
+    return `<div class="mp-insight-card mp-jg-card" style="--d1:${g.color};--d2:${c2}"><div class="t">${g.short}</div>${title}${g.top.map(mpJaganGauge).join('')}<div class="n">${g.note}</div></div>`;
+  }) : [];
+  if (x && x.fatui.length) {
+    const rows = x.fatui.map((f) => {
+      const tone = f.tone || { text: ['#c99aa7', '#c99aa7'], ring: ['#4a2232', '#c99aa7'] };
+      return `<div class="mp-gauge mp-mirror-row"><span class="nm" style="background-image:linear-gradient(100deg, ${tone.text[0]}, ${tone.text[1]});-webkit-background-clip:text;background-clip:text;color:transparent">${f.name}</span><span class="track"><span class="fill" style="display:block;width:${Math.max(0, Math.min(100, f.match))}%;--g1:${tone.ring[0]};--g2:${tone.ring[1]}"></span></span><span class="val">${f.match}%</span></div>`;
+    }).join('');
+    cards.push(`<div class="mp-insight-card mp-jg-card" style="--d1:#e2c08c;--d2:#c8405c"><div class="t">FATUI</div>${rows}<div class="n">11人の執行官のうち、あなたの影に近い4人</div></div>`);
+  }
+  return cards;
+}
+// 完全解析を購入済み：元素診断と同じく、保存されていることだけを示す（中身のグラフは出さない。読むのは「完全解析を読む」から）
+const MP_JG_COMPLETE_SAVED = `<div class="ca-rec-complete is-ready"><div class="ca-rec-head"><span class="ca-eyebrow">COMPLETE｜完全解析</span><span class="ca-pages"><span class="ca-pages-ja">全23ページ</span><span class="ca-pages-en">DIPPER</span></span></div>
+      <p class="ca-body">この記録の完全解析が保存されています。</p></div>`;
+function mpJaganInsightHtml(r, where) {
+  const src = where === 'latest' ? 'mypage_latest' : 'mypage_history';
+  const a = r.purchased ? mpJaganReportCards(r) : [];
+  return `
+    <div class="mp-jg-insight">
+      ${r.purchased ? `<div class="mp-insight-head">深く読み解いた記録</div>${a.length ? `<div class="mp-insight-grid">${a.join('')}</div>` : '<p class="mp-jg-insight-t">12特性のスコアと読み解き・三つの土台・判定根拠・近しいファトゥス3名を、いつでも読み返せます。</p>'}` : ''}
+      ${r.completeOwned ? MP_JG_COMPLETE_SAVED : ''}
+      ${r.purchased ? mpJaganActionsHtml(r, src) : mpJaganLockedHtml(r, where)}
+    </div>`;
+}
+function mpJaganChips(r, isNew, kindText) {
+  const tag = !r.entKnown ? '' : r.purchased && r.completeOwned ? '<span class="mp-chip complete">COMPLETE</span>' : mpJaganAwake(r) ? '<span class="mp-chip insight">INSIGHT</span>' : '';
+  // 並びは元素診断と同じ：NEW → 種類（元素／邪眼）→ INSIGHT／COMPLETE → 旧版
+  return `${isNew ? '<span class="mp-chip new">NEW</span>' : ''}<span class="mp-chip jagan">${kindText || '邪眼診断'}</span>${tag}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
+}
+function mpJaganLatestHtml(r) {
+  const awake = mpJaganAwake(r);
+  const g2 = MP_EL_GLOW_END[r.el] || r.color;
+  const viewBtn = `<a href="${mpEsc(r.resultUrl)}" class="mp-btn mp-op-main" onclick="trackEvent('mypage_view_result_click',{source:'latest'})">結果を見る ›</a>`;
+  const shareBtn = `<button type="button" class="mp-btn mp-op-sub" onclick="mpShare(0)"${r.code ? '' : ' disabled aria-disabled="true"'}><span aria-hidden="true">𝕏</span> Xシェア</button>`;
+  const state = !r.entKnown ? mpJaganActionsHtml(r, 'mypage_latest') : awake ? mpJaganInsightHtml(r, 'latest') : mpJaganLockedHtml(r, 'latest');
+  return `
+    <section class="mp-sec" aria-labelledby="mp-latest-h">
+      <div class="mp-sec-head" id="mp-latest-h"><span class="mp-sec-en">LATEST RESULT</span><span class="mp-sec-ja">最新のあなた</span></div>
+      <div class="mp-latest state-${awake ? 'insight' : 'record'}${r.purchased && r.completeOwned ? ' is-complete' : ''}" data-kind="jagan" style="--lc:${r.color};--lc2:${g2}">${awake ? mpOrnHtml(r, r.color, g2) : ''}
+        <div class="mp-latest-main">
+          ${mpEmblemHtml(r, 'lg')}
+          <div class="mp-latest-info">
+            <div class="mp-chip-row"><span class="mp-chip">${mpDate(r.date)}</span>${mpJaganChips(r, true)}</div>
+            ${r.code ? `<div class="mp-latest-code"><b class="mp-typecode mp-gt" style="color:${mpElText(r.el)};--gc:${mpElText(r.el)}">${r.code}</b><span class="mp-gt" style="color:${mpElText(r.el)};--gc:${mpElText(r.el)};opacity:.85">${r.typeName}</span></div>` : ''}
+            <div class="mp-latest-combo">${mpComboHtml(r)}</div>
+          </div>
+        </div>
+        ${mpJaganVizHtml(r)}
+        <details class="mp-latest-fold">
+          <summary>${awake ? '深く読み解いた内容を見る' : r.entKnown ? 'まだ読み解いていない部分を見る' : 'この記録の詳細を見る'}</summary>
+          <div class="mp-latest-fold-body">
+            ${state}
+            <div class="mp-btn-row mp-latest-ops">
+              ${viewBtn}${shareBtn}
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>`;
+}
+function mpJaganRecordHtml(r, i) {
+  const awake = mpJaganAwake(r);
+  const g2 = MP_EL_GLOW_END[r.el] || r.color;
+  const body = mpJaganVizHtml(r) + (!r.entKnown ? mpJaganActionsHtml(r, 'mypage_history') : awake ? mpJaganInsightHtml(r, 'records') : mpJaganLockedHtml(r, 'records'));
+  return `
+    <details class="mp-rec state-${awake ? 'insight' : 'record'}${r.purchased && r.completeOwned ? ' is-complete' : ''}" data-kind="jagan" style="--lc:${r.color};--lc2:${g2}" id="mp-rec-${i}" ontoggle="if(this.dataset.restored){delete this.dataset.restored}else if(this.open){trackEvent('diagnosis_history_open',{diagnosis_type:'jagan'})}">
+      <summary>${awake ? mpOrnHtml(r, r.color, g2) : ''}
+        <span class="d">${mpDate(r.date)}</span>
+        <span class="c">${mpComboHtml(r)}</span>
+        <span class="mp-chip-row">${mpJaganChips(r, i === 0, '邪眼')}</span>
+      </summary>
+      <div class="mp-rec-body">
+        <div class="mp-free">
+          ${mpEmblemHtml(r)}
+          <div>${MP_KINDS.jagan.freeListHtml(r)}</div>
+        </div>
+        ${body}
+        <a href="${mpEsc(r.resultUrl)}" class="mp-detail-link" onclick="trackEvent('mypage_view_result_click',{source:'records'})">当時の診断結果を見る →</a>
+      </div>
+    </details>`;
+}
+// 右上「アップグレード」から選んだ邪眼の記録：解析レポートと完全解析の2枚（元素診断の「この記録のレポート」と同じ並び。購入済みの方は下へ）
+function mpJaganSheetHtml(r) {
+  const via = 'mypage_sheet';
+  const ownsA = r.purchased === true, ownsB = r.completeOwned === true;
+  const known = r.entKnown && !!r.code;
+  const aCard = `<section class="ca-card ca-card--primary" aria-label="邪眼解析レポート">
+        <div class="ca-eyebrow">DELUSION REPORT</div>
+        <h3 class="ca-title">邪眼解析レポート</h3>
+        <p class="ca-body">12特性のスコアと読み解き、三つの土台、邪眼元素と異相の判定根拠、近しいファトゥス3名を解き明かします。</p>
+        ${known && !ownsA ? '<div class="ca-price-row"><span class="ca-meta">この記録の邪眼解析レポート</span><span class="ca-price">¥1,000</span></div>' : ''}
+        <div class="mp-rec-row" data-rec-product="analysis">${known ? mpJaganRowA(r, ownsA ? 'mp-btn' : 'mp-btn primary mp-jg-cta', via) : mpJaganActionsHtml(r, via)}</div>
+      </section>`;
+  const bInner = `${mpJaganLensBlockHtml()}
+        ${known && !ownsB ? '<div class="ca-price-row"><span class="ca-meta">この記録の完全解析（解析レポートとは別の商品）</span><span class="ca-price">¥3,000</span></div>' : ''}
+        <div class="mp-rec-row" data-rec-product="complete">${known ? mpJaganRowB(r, ownsA && !ownsB ? 'mp-btn primary mp-jg-cta mp-cta-rich' : 'mp-btn', via) : ''}</div>`;
+  const bDetail = known && !ownsA && !ownsB
+    ? `<button type="button" class="mp-reveal-toggle" aria-expanded="false" aria-controls="jg-sheet-reveal" data-mp-reveal>その先を見る<span class="mp-reveal-chev" aria-hidden="true">⌄</span></button>
+        <div class="mp-reveal-body" id="jg-sheet-reveal" hidden>${bInner}</div>`
+    : ownsB ? `<div class="mp-rec-row" data-rec-product="complete">${mpJaganRowB(r, 'mp-btn', via)}</div>` : bInner;
+  const bCard = `<section class="ca-card ca-card--secondary" aria-label="完全解析「DIPPER」">
+        <div class="ca-card-head"><span class="ca-eyebrow">COMPLETE ANALYSIS</span><span class="ca-pages"><span class="ca-pages-ja">全23ページ</span><span class="ca-pages-en">DIPPER</span></span></div>
+        <h3 class="ca-title">完全解析「DIPPER」</h3>
+        <p class="ca-body">邪眼×異相の重なり・ファトゥスとの交わり・四つの反応領域と次の一手を、三つの視点からひとつの記録へ結びます。</p>
+        ${bDetail}
+      </section>`;
+  return `<div class="ca-state-head">
+      <div class="ca-eyebrow">DELUSION REPORT</div>
+      <h2 class="ca-lead" id="latest-upgrade-title">この記録のレポート</h2>
+      <p class="ca-body">${mpDate(r.date)}の邪眼診断の記録（${mpComboHtml(r)}${r.code ? `・${r.code}` : ''}）です。</p>
+    </div>
+    ${ownsA && !ownsB ? bCard + aCard : aCard + bCard}`;
 }
 
 // 記録章：存在する記録だけを新しい順に左から並べる（最新が最初に目に入る）。
@@ -2670,10 +3022,11 @@ function mpOpenRecord(i) {
 //   購入済：無料情報 → INSIGHT要点 → 視覚要約 → 解析レポート本文への導線
 //   確認不可：無料情報 → 視覚要約 → 中立表示（購入導線なし）
 function mpRecordHtml(r, i) {
+  if (r && r.kind === 'jagan') return mpJaganRecordHtml(r, i);
   const detailLink = r.resultUrl
     ? `<a href="${mpEsc(mpResultHref(r))}" class="mp-detail-link" onclick="trackEvent('mypage_view_result_click',{source:'records'})">当時の診断結果を見る →</a>`
     : '';
-  const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${!mpEntitlementOk ? '' : mpIsComplete(r) ? '<span class="mp-chip complete">COMPLETE</span>' : mpAwake(r) ? '<span class="mp-chip insight">INSIGHT</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
+  const chips = `${i === 0 ? '<span class="mp-chip new">NEW</span>' : ''}${mpHasJagan ? '<span class="mp-chip eti">元素</span>' : ''}${!mpEntitlementOk ? '' : mpIsComplete(r) ? '<span class="mp-chip complete">COMPLETE</span>' : mpAwake(r) ? '<span class="mp-chip insight">INSIGHT</span>' : ''}${r.isLegacy ? '<span class="mp-chip legacy">旧版</span>' : ''}`;
   let body;
   // 開閉（<details>）は購入状態APIと無関係。確認できなかった記録も開けて、中に再確認を出す
   if (!mpEntitlementOk) body = mpVizHtml(r) + mpRecordActionsHtml(r, 'records');
@@ -2828,7 +3181,11 @@ const caStates = new Map(); // diagnosis_session_id → 表示用状態
 const caImpressions = new Set();
 function caAvailable() { return typeof CompleteAnalysis !== 'undefined' && CompleteAnalysis; }
 function caStateOf(r) { return (r && r.session && caStates.get(String(r.session.id || ''))) || null; }
-function caKey(r) { return caAvailable() ? CompleteAnalysis.stateKey(caStateOf(r)) : 'unknown'; }
+function caKey(r) {
+  // 邪眼診断の記録：邪眼解析レポートの購入状態（元素診断の完全解析の状態とは別）
+  if (r && r.kind === 'jagan') return !r.entKnown ? 'unknown' : r.purchased && r.completeOwned ? 'complete_ready' : r.purchased || r.completeOwned ? 'analysis' : 'free';
+  return caAvailable() ? CompleteAnalysis.stateKey(caStateOf(r)) : 'unknown';
+}
 function caIsReady(r) { return caKey(r) === 'complete_ready'; }
 
 // 完全解析の適格性：保存された診断版・設問版と、回答が ETI v2 の100問として検証できるかで判定する（表示文字では判定しない）。
@@ -2901,8 +3258,12 @@ function caTriggerKey(records) {
 }
 // 右上の名称：まだ持っていないレポート（最新版の記録の解析レポート・完全解析）が1つでもあれば「アップグレード」、すべて持っていれば「レポート」
 function mpHasUpgrade(records) {
-  if (!mpEntitlementOk || !mpReportsOk) return false;
-  return records.some((r) => {
+  // 邪眼診断：購入状態を確かめられた DTI の記録で、邪眼解析レポートが未購入
+  // 邪眼診断：購入状態を確かめられた DTI の記録で、邪眼解析レポート・完全解析「DIPPER」のどちらかが未購入
+  const jg = records.some((r) => r.kind === 'jagan' && r.entKnown && !!r.code && (!r.purchased || !r.completeOwned));
+  if (!mpEntitlementOk || !mpReportsOk) return jg;
+  return jg || records.some((r) => {
+    if (r.kind === 'jagan') return false;
     if (!(r.session && r.session.isV2)) return false; // 以前の版は申し込めない
     const a = mpAnalysisDelivery(r);
     const ownsA = (a && a.state === 'active') || r.purchased === true;
@@ -3048,6 +3409,13 @@ function caSheetBodyHtml(r) {
 // 記録が複数のとき、対象の記録を選ぶ画面（選ぶまで購入・閲覧の導線は出さない）
 // 記録の選択：A・B それぞれの状態（表14と同じ根拠）
 function mpPickState(r) {
+  if (r && r.kind === 'jagan') {
+    const ln = (on, name, text) => `<span class="ca-pick-line${on ? ' is-on' : ''}"><span class="ca-pick-mark" aria-hidden="true">${on ? '✓' : '○'}</span><span class="ca-pick-name">${name}</span><span class="ca-pick-text">${text}</span></span>`;
+    if (!r.entKnown) return ln(false, '邪眼解析レポート', '購入の状態を確かめられませんでした');
+    if (!r.code) return ln(false, '邪眼解析レポート', '以前の版のため対象外です');
+    return ln(r.purchased, '邪眼解析レポート', r.purchased ? '読み解いた記録があります' : 'まだ読み解いていません')
+      + ln(r.completeOwned, '完全解析「DIPPER」', r.completeOwned ? '全23ページが保存されています' : 'まだ開いていません');
+  }
   if (!mpEntitlementOk || !mpReportsOk) return '<span class="ca-pick-line">購入の状態を確かめられませんでした</span>';
   const a = mpAnalysisDelivery(r);
   const b = mpCompleteDelivery(r);
@@ -3076,7 +3444,7 @@ function caPickerHtml(records) {
       <p class="ca-body">レポートは診断記録ごとです。対象の記録を選んでください。</p>
     </div>
     <ul class="ca-pick-list">${records.map((r, i) => `<li><button type="button" class="ca-pick" data-pick-index="${i}">
-      <span class="ca-pick-date">${mpDate(r.date)}${i === 0 ? '<span class="ca-pick-new">最新</span>' : ''}${mpEntitlementOk ? (mpIsComplete(r) ? '<span class="mp-chip complete">COMPLETE</span>' : mpAwake(r) ? '<span class="mp-chip insight">INSIGHT</span>' : '') : ''}</span>
+      <span class="ca-pick-date">${mpDate(r.date)}${i === 0 ? '<span class="ca-pick-new">最新</span>' : ''}${r.kind === 'jagan' ? '<span class="mp-chip jagan">邪眼</span>' : mpHasJagan ? '<span class="mp-chip eti">元素</span>' : ''}${mpEntitlementOk ? (mpIsComplete(r) ? '<span class="mp-chip complete">COMPLETE</span>' : mpAwake(r) ? '<span class="mp-chip insight">INSIGHT</span>' : '') : ''}</span>
       <span class="ca-pick-combo">${mpComboHtml(r)}</span>
       <span class="ca-pick-state">${mpPickState(r)}</span></button></li>`).join('')}</ul>`;
 }
@@ -3673,6 +4041,10 @@ function caRenderSheet() {
   if (recs.length === 1) caSelected = recs[0];
   if (!caSelected) { body.innerHTML = caPickerHtml(recs); return; }
   if (sheet) { sheet.style.setProperty('--ca-el', mpElText(caSelected.el)); sheet.style.setProperty('--ca-el-line', caSelected.color); }
+  if (caSelected.kind === 'jagan') {
+    body.innerHTML = (recs.length > 1 ? '<button type="button" class="ca-btn ca-quiet-action ca-repick" data-repick="1">← 対象の記録を選び直す</button>' : '') + mpJaganSheetHtml(caSelected);
+    return;
+  }
   const inMentorStep = caStep !== 'overview' && caMentorMode(caSelected);
   body.innerHTML = (recs.length > 1 && !inMentorStep ? '<button type="button" class="ca-btn ca-quiet-action ca-repick" data-repick="1">← 対象の記録を選び直す</button>' : '')
     + caSheetBodyHtml(caSelected);
@@ -3741,6 +4113,22 @@ function caTabStops(root) {
   });
   return out;
 }
+// トップの「以前の結果からレポートを購入する」から来た（/mypage.html#buy）：最新の記録の購入シートを開く。
+//   ログインの往復（OAuth・メールのリンク）で # が消えても開けるよう、このタブに30分だけ控える
+const MP_BUY_INTENT_KEY = 'ed_mp_buy_intent_v1';
+(function () {
+  if (location.hash !== '#buy') return;
+  try { sessionStorage.setItem(MP_BUY_INTENT_KEY, String(Date.now())); } catch (e) { /* 控えられなくても、このページの表示では開く */ }
+  window.__mpBuyIntent = true;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* そのまま */ }
+})();
+function mpTakeBuyIntent() {
+  let at = 0;
+  try { at = Number(sessionStorage.getItem(MP_BUY_INTENT_KEY)) || 0; sessionStorage.removeItem(MP_BUY_INTENT_KEY); } catch (e) { at = 0; }
+  const fresh = window.__mpBuyIntent || (at && Date.now() - at < 30 * 60 * 1000);
+  window.__mpBuyIntent = false;
+  return !!fresh;
+}
 function caWireSheet(records) {
   const trigger = document.getElementById('mpUpgradeTrigger');
   const overlay = document.getElementById('mpUpgradeOverlay');
@@ -3752,6 +4140,10 @@ function caWireSheet(records) {
   if (records[0] && !caImpressions.has(impKey)) { caImpressions.add(impKey); CompleteAnalysis.track('mypage_upgrade_impression', caTrackParams(records[0])); }
   trigger.addEventListener('click', () => caOpenSheet());
   document.getElementById('mpUpgradeClose').addEventListener('click', () => caCloseSheet());
+  if (records[0] && mpTakeBuyIntent()) {
+    trackEvent('returning_route_open', { route: 'mypage_sheet' });
+    setTimeout(() => caOpenSheet(), 0);
+  }
   // オーバーレイ（外側）押下で閉じる。シート内部の押下では閉じない
   overlay.addEventListener('click', (e) => { if (e.target === overlay) caCloseSheet(); });
   overlay.addEventListener('keydown', (e) => {
@@ -3865,17 +4257,25 @@ function mpWithoutSameResultDuplicates(sessions) {
   const ids = new Set(sessions.map((s) => s && s.id));
   return sessions.filter((s) => !(s && s.complete && s.complete.duplicateOf && ids.has(s.complete.duplicateOf)));
 }
-function renderMypage(root, sessions, userOrUid) {
-  const records = mpWithoutSameResultDuplicates(sessions)
+// 邪眼診断の記録がある時だけ、これまでのあなた・右上の選択で「元素」「邪眼」の印を付ける
+let mpHasJagan = false;
+function renderMypage(root, sessions, userOrUid, jaganSessions, jagan) {
+  const eti = mpWithoutSameResultDuplicates(sessions)
     .slice()
     .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
     .map(mpNormalize);
-  caApplyStates(records);
+  // 元素診断の購入状態（完全解析の状態・閲覧）は元素診断の記録だけで決める
+  caApplyStates(eti);
   caViewStates.clear();
   caViewPolls.clear();
+  // 表示（RECORDS・INSIGHTS の数・最新・記録章・これまで・右上のレポート）は、邪眼診断の記録も合わせて新しい順に
+  const records = eti.concat((jaganSessions || []).map(mpNormalize))
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
   window.__mpRecords = records;
+  mpHasJagan = records.some((r) => r.kind === 'jagan');
 
   root.innerHTML = `
+    ${jagan && window.JaganMypage ? window.JaganMypage.notesHtml(jagan.notes) : ''}
     ${mpArchiveHtml(records)}
     ${mpLatestHtml(records[0])}
     ${mpCollectionHtml(records)}
@@ -3886,7 +4286,7 @@ function renderMypage(root, sessions, userOrUid) {
   `;
   caWireSheet(records);
   caViewWire();
-  caViewReturnCheck(records);
+  caViewReturnCheck(eti);
 
   const mpCol = document.getElementById('mp-collection');
   if (mpCol) { mpCol.addEventListener('scroll', mpCollectionUpdateHint, { passive: true }); mpCollectionUpdateHint(); }
@@ -3963,6 +4363,7 @@ async function initOnce() {
     const returnError = typeof takeAuthReturnError === 'function' ? takeAuthReturnError() : null;
     if (returnError) intentNote = authSignInErrorMessage(returnError) + (intentNote ? ` ${intentNote}` : '');
     if (intentNote) { const g = document.getElementById('gateMsg'); if (g) g.textContent = intentNote; }
+    if (window.JaganMypage) window.JaganMypage.gateNote();
     return;
   }
 
@@ -4007,7 +4408,12 @@ async function initOnce() {
   // 購入時メール・Cookie による自動の引き継ぎは行わない（complete_13）。購入したレポートは、レポートの固有リンクから明示的に登録する
   const claimOutcome = null;
   const registerOutcome = await mpRegisterOutcomeForRender();
+  // 元素診断と邪眼診断の記録は、同時に読み始める（待ち時間を重ねない）。
+  //   邪眼は保存待ち・購入したレポートの登録を片付けてから読む。読めなくても元素診断の表示は止めない
+  const jaganLoad = window.JaganMypage ? window.JaganMypage.load().catch(() => null) : Promise.resolve(null);
   const result = await loadDiagnosisHistory(DIAGNOSIS_TYPE);
+  const jagan = await jaganLoad;
+  const jaganSessions = (jagan && jagan.sessions) || [];
   if (result.ok) await mpMergeReports(result.sessions);
   if (!result.ok) {
     renderError(root);
@@ -4015,13 +4421,19 @@ async function initOnce() {
     return;
   }
   if (result.sessions.length === 0) {
+    // トップの「以前の結果からレポートを購入する」から来たが、保存した記録が無い：以前の結果（元素・武器・国家）を選ぶ画面へ
+    if (mpTakeBuyIntent()) { trackEvent('returning_route_open', { route: 'select_no_record' }); location.replace('/type-preview.html'); return; }
+  }
+  if (result.sessions.length === 0 && !jaganSessions.length) {
     renderEmpty(root, user);
+    if (jagan && jagan.notes && jagan.notes.length) root.insertAdjacentHTML('afterbegin', window.JaganMypage.notesHtml(jagan.notes));
     mpRenderedUserId = user.id;
     mpShowRegisterOutcome(root, registerOutcome, user);
     return;
   }
-  mpEntitlementOk = mpEntitlementCheckedOk(result.sessions);
-  renderMypage(root, result.sessions, user);
+  // 元素診断の記録が無い（邪眼診断の記録だけ）：元素診断の購入状態は確かめる対象がない
+  mpEntitlementOk = result.sessions.length ? mpEntitlementCheckedOk(result.sessions) : true;
+  renderMypage(root, result.sessions, user, jaganSessions, jagan);
   mpRenderedUserId = user.id;
   if (keepScrollY !== null && renderedBefore === user.id) {
     openFolds.forEach((key) => {

@@ -49,6 +49,10 @@ function buildPublicConfig(env, { host } = {}) {
       completeSalesOpen: env.COMPLETE_SALES_OPEN === 'true',
       // 記録単位の権利 API（/api/my-entitlements の records）がある
       completeApiReady: true,
+      // 邪眼解析レポート（¥1,000）・完全解析（¥3,000）の販売。購入 API（lib/jagan-purchase.mjs の salesOpen・jaganEnabled）と同じ条件：
+      //   Preview は JAGAN_SALES_OPEN=true、本番は JAGAN_PRODUCTION_ENABLED=true かつ JAGAN_SALES_OPEN=true のときだけ（開ける操作は環境変数で行う）
+      jaganSalesOpen: env.JAGAN_SALES_OPEN === 'true'
+        && (sb.appEnv === 'preview' || (sb.appEnv === 'production' && env.JAGAN_PRODUCTION_ENABLED === 'true')),
     },
   };
 }

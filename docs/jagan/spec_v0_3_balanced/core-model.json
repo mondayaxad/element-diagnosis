@@ -1,0 +1,75 @@
+{
+  "version": "jagan-twelve-trait-core-0.2.0-candidate",
+  "status": "design_candidate_not_empirically_validated",
+  "launch_ready": false,
+  "trait_score": "25*(mean-1)",
+  "isou_minimum_candidate": 60,
+  "near_gap_candidate": 5,
+  "elements": [
+    {
+      "id": "PY",
+      "label": "炎",
+      "weights": {
+        "HOS": 0.45,
+        "IMP": 0.25,
+        "RSK": 0.3
+      }
+    },
+    {
+      "id": "HY",
+      "label": "水",
+      "weights": {
+        "SEP": 0.5,
+        "ANX": 0.3,
+        "SUS": 0.2
+      }
+    },
+    {
+      "id": "CR",
+      "label": "氷",
+      "weights": {
+        "WDR": 0.45,
+        "SUS": 0.3,
+        "CAL": 0.25
+      }
+    },
+    {
+      "id": "EL",
+      "label": "雷",
+      "weights": {
+        "IMP": 0.4,
+        "RSK": 0.4,
+        "ATT": 0.2
+      }
+    },
+    {
+      "id": "AN",
+      "label": "風",
+      "weights": {
+        "WDR": 0.35,
+        "ANX": 0.4,
+        "RSK": 0.25
+      }
+    },
+    {
+      "id": "GE",
+      "label": "岩",
+      "weights": {
+        "PRF": 0.45,
+        "MAN": 0.35,
+        "PSV": 0.2
+      }
+    },
+    {
+      "id": "DE",
+      "label": "草",
+      "weights": {
+        "PSV": 0.45,
+        "SUS": 0.3,
+        "PRF": 0.25
+      }
+    }
+  ],
+  "character_status": "partial_story_reference_fixed_balance_candidate_v0_3",
+  "reference_note": "元素係数・閾値は独自の演出設計。学術的な標準値ではない。"
+}

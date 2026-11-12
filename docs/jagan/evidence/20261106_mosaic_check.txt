@@ -1,0 +1,7 @@
+{
+  results: 200,
+  withCharacter: 200,
+  distinctGroupMosaics: 1,
+  distinctCharMosaicsPerCharacter: 11,
+  paidPartsOutsideMosaicOrVarying: 0
+}

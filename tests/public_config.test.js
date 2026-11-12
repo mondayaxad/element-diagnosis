@@ -11,7 +11,7 @@ const SRC_PATH = path.join(__dirname, '..', 'api', 'public-config.js');
 const { createHandler } = require(SRC_PATH);
 const { PROD_REF, PREVIEW_REF, PROD_ENV, PREVIEW_ENV, fakeJwt } = require('./fixtures/server_env');
 
-const ALLOWED_KEYS = ['appEnv', 'completeApiReady', 'completeSalesOpen', 'projectRef', 'supabaseAnonKey', 'supabaseUrl'];
+const ALLOWED_KEYS = ['appEnv', 'completeApiReady', 'completeSalesOpen', 'jaganSalesOpen', 'projectRef', 'supabaseAnonKey', 'supabaseUrl'];
 
 function call(env, { url = '/api/public-config', method = 'GET', host = 'element-diagnosis.example.test', query } = {}) {
   const res = {
@@ -45,8 +45,13 @@ test('Production：本番の URL・公開キー・環境名・Ref の4項目だ�
   assert.deepEqual(body, {
     appEnv: 'production', supabaseUrl: `https://${PROD_REF}.supabase.co`,
     supabaseAnonKey: PROD_ENV.SUPABASE_ANON_KEY, projectRef: PROD_REF,
-    completeSalesOpen: false, completeApiReady: true,
+    completeSalesOpen: false, completeApiReady: true, jaganSalesOpen: false,
   });
+  // 邪眼の販売：本番は JAGAN_PRODUCTION_ENABLED=true かつ JAGAN_SALES_OPEN=true のときだけ（どちらか一方では開かない）
+  assert.equal(JSON.parse(call({ ...PROD_ENV, JAGAN_SALES_OPEN: 'true' }).body).jaganSalesOpen, false);
+  assert.equal(JSON.parse(call({ ...PROD_ENV, JAGAN_PRODUCTION_ENABLED: 'true' }).body).jaganSalesOpen, false);
+  assert.equal(JSON.parse(call({ ...PROD_ENV, JAGAN_PRODUCTION_ENABLED: 'true', JAGAN_SALES_OPEN: 'true' }).body).jaganSalesOpen, true);
+  assert.equal(JSON.parse(call({ ...PROD_ENV, JAGAN_PRODUCTION_ENABLED: 'true', JAGAN_SALES_OPEN: 'TRUE' }).body).jaganSalesOpen, false);
   // 販売フラグは COMPLETE_SALES_OPEN が文字列 'true' の時だけ true（秘密値ではない）
   assert.equal(JSON.parse(call({ ...PROD_ENV, COMPLETE_SALES_OPEN: 'true' }).body).completeSalesOpen, true);
   assert.equal(JSON.parse(call({ ...PROD_ENV, COMPLETE_SALES_OPEN: 'TRUE' }).body).completeSalesOpen, false);

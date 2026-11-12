@@ -1,0 +1,129 @@
+{
+  "status": "implementation_candidate",
+  "coefficient_origin": "designer_hypothesis_calibrated_on_synthetic_answers_not_validated_scale",
+  "version": "jagan-interpretation-1.0.0-rc1",
+  "elements": [
+    {
+      "id": "PY",
+      "label": "炎",
+      "theme": "内側で高まる感情",
+      "weights": {
+        "ACC_D": 0.55,
+        "IMP_D": 0.24165823190791402,
+        "COM_F": 0.05000000000000002,
+        "SUPPR": -0.1583417680920859
+      }
+    },
+    {
+      "id": "HY",
+      "label": "水",
+      "theme": "つながりの中の揺れ",
+      "weights": {
+        "REL_F": 0.40470606398507475,
+        "REL_S": -0.16570771418891775,
+        "SUPPR": 0.3086132732705834,
+        "ACC_D": 0.12097294855542415
+      }
+    },
+    {
+      "id": "CR",
+      "label": "氷",
+      "theme": "内側に留める感情",
+      "weights": {
+        "SUPPR": 0.6,
+        "ACC_D": 0.1,
+        "REL_F": 0.05,
+        "IMP_D": -0.25
+      }
+    },
+    {
+      "id": "EL",
+      "label": "雷",
+      "theme": "感情と行動の緊張",
+      "weights": {
+        "IMP_D": 0.6,
+        "GOAL_D": 0.1,
+        "AUT_F": 0.05000000000000002,
+        "SUPPR": -0.25
+      }
+    },
+    {
+      "id": "AN",
+      "label": "風",
+      "theme": "自分の意思と制約との葛藤",
+      "weights": {
+        "AUT_F": 0.5741737314110146,
+        "AUT_S": -0.05000000000000002,
+        "REAPP": 0.07582626858898549,
+        "SUPPR": -0.3
+      }
+    },
+    {
+      "id": "GE",
+      "label": "岩",
+      "theme": "揺れの中で行動を保つ",
+      "weights": {
+        "GOAL_D": -0.25,
+        "SUPPR": 0.17081251162691874,
+        "COM_S": 0.35,
+        "AUT_S": 0.2291874883730813
+      }
+    },
+    {
+      "id": "DE",
+      "label": "草",
+      "theme": "感情理解と意味の組み替え",
+      "weights": {
+        "REAPP": 0.3513105937984236,
+        "CLAR_D": -0.2268325972464074,
+        "ACC_D": -0.121856808955169,
+        "COM_S": 0.3
+      }
+    }
+  ],
+  "types": [
+    {
+      "id": "REFRAME",
+      "label": "転化型",
+      "domain": "REAPP",
+      "summary": "出来事の見方を変えて感情を扱おうとする。"
+    },
+    {
+      "id": "CONTAIN",
+      "label": "封蔵型",
+      "domain": "SUPPR",
+      "summary": "感情を外に出さず、内側で扱う。"
+    },
+    {
+      "id": "SURGE",
+      "label": "奔流型",
+      "domain": "IMP_D",
+      "summary": "強い感情の下では、意図したように行動を止めにくい。"
+    },
+    {
+      "id": "STALL",
+      "label": "停滞型",
+      "domain": "GOAL_D",
+      "summary": "強い感情の下では、必要な行動を続けにくい。"
+    },
+    {
+      "id": "CONFUSE",
+      "label": "混迷型",
+      "domain": "CLAR_D",
+      "summary": "自分の感情をつかみ、整理することに難しさがある。"
+    },
+    {
+      "id": "RESIST",
+      "label": "抗心型",
+      "domain": "ACC_D",
+      "summary": "生じた感情を、そのまま認めにくい。"
+    }
+  ],
+  "type_minimum_score": 60,
+  "close_gap_points": 3,
+  "tie_epsilon": 1e-09,
+  "element_rule": "sum(abs(w)*score if w>=0 else abs(w)*(100-score)); missing required domains => defer all element rankings",
+  "type_rule": "rank six separate domains; label only if top score>=60; gap<=3 => co_dominant; these thresholds are design hypotheses",
+  "cross_domain_warning": "同じ数値が同じ心理的強さを意味するとは限らない。元素と型は創作的解釈。",
+  "calibration_version": "elements-synthetic-0.5.0"
+}

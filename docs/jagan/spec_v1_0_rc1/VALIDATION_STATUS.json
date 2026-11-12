@@ -1,0 +1,22 @@
+{
+  "package_version": "1.0.0-rc1",
+  "purpose": "implementation_specification_candidate",
+  "runtime_tests": {
+    "passed": 15,
+    "failed": 0
+  },
+  "fictional_examples": 8,
+  "human_participants": 0,
+  "story_model": "authored_story_association",
+  "roster_count": 11,
+  "production_site_modified": false,
+  "database_modified": false,
+  "stripe_modified": false,
+  "sales_open": false,
+  "price": 1000,
+  "public_release_verified": false,
+  "stage": "user_review_before_claude_handoff",
+  "price_status": "confirmed",
+  "billing": "one_time",
+  "product_count": 1
+}
