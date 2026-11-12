@@ -18,12 +18,13 @@
   var SCHEMA = 'jagan-result-3';
   // 共有の URL（jagan/engine/runtime.mjs の shareUrl と同じ。テストで一致を確かめる）
   var SHARE_PATH = '/j';
-  var OG_DESIGN_VERSION = 'dti-og-3';
+  var OG_DESIGN_VERSION = 'dti-og-4';
   // 投稿に載る最短の形（/j/<4文字>）の版ごとの表（runtime.mjs の SHARE_VERSIONS と同じ。テストで一致を確かめる）
   var B62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  var SHARE_VERSIONS = { 1: { naming: 'dti-naming-v1-20261104', og: 'dti-og-3',
+  var SHARE_V1 = { naming: 'dti-naming-v1-20261104', og: 'dti-og-3',
     codes: ["PYAX","HYAX","CRAX","ELAX","ANAX","GEAX","DEAX","PYDP","HYDP","CRDP","ELDP","ANDP","GEDP","DEDP","PYSU","HYSU","CRSU","ELSU","ANSU","GESU","DESU","PYWD","HYWD","CRWD","ELWD","ANWD","GEWD","DEWD","PYIM","HYIM","CRIM","ELIM","ANIM","GEIM","DEIM","PYPE","HYPE","CRPE","ELPE","ANPE","GEPE","DEPE","PYPF","HYPF","CRPF","ELPF","ANPF","GEPF","DEPF","PYHO","HYHO","CRHO","ELHO","ANHO","GEHO","DEHO","PYAT","HYAT","CRAT","ELAT","ANAT","GEAT","DEAT","PYMN","HYMN","CRMN","ELMN","ANMN","GEMN","DEMN","PYRK","HYRK","CRRK","ELRK","ANRK","GERK","DERK","PYCL","HYCL","CRCL","ELCL","ANCL","GECL","DECL"],
-    chars: ['pierro', 'capitano', 'dottore', 'columbina', 'arlecchino', 'pulcinella', 'scaramouche', 'sandrone', 'signora', 'pantalone', 'tartaglia'] } };
+    chars: ['pierro', 'capitano', 'dottore', 'columbina', 'arlecchino', 'pulcinella', 'scaramouche', 'sandrone', 'signora', 'pantalone', 'tartaglia'] };
+  var SHARE_VERSIONS = { 1: SHARE_V1, 2: { naming: SHARE_V1.naming, og: 'dti-og-4', codes: SHARE_V1.codes, chars: SHARE_V1.chars } };
   // 色（jagan/site-copy.mjs の ISOU_COLOR・ELEMENT_COLOR・CHARACTER_ELEMENTS と同じ値。テストで一致を確かめる）
   var ISOU_COLOR = { ANX: '#B59AD8', SEP: '#7FA7D8', SUS: '#9FB0C8', WDR: '#8FC0D0', IMP: '#E0A050', PSV: '#B8A27A', PRF: '#D8C27A',
     HOS: '#E0694F', ATT: '#E08AA8', MAN: '#C88AD8', RSK: '#E07A5A', CAL: '#9AA7B5' };

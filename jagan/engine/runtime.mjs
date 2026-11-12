@@ -108,12 +108,16 @@ export function publicSummary(result) {
 //   画像（/api/jagan-og）の URL は従来の形（e・t・c・m・v）。投稿文には出ない。回答・12特性の得点・結果ID は載せない。
 export const SHARE_PATH = '/j';
 export const LEGACY_SHARE_PATH = '/jagan/share';
-export const OG_DESIGN_VERSION = 'dti-og-3';
+export const OG_DESIGN_VERSION = 'dti-og-4';
 const B62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-export const SHARE_VERSIONS = Object.freeze({
-  1: Object.freeze({ naming: 'dti-naming-v1-20261104', og: 'dti-og-3',
+const SHARE_V1 = Object.freeze({ naming: 'dti-naming-v1-20261104', og: 'dti-og-3',
     codes: Object.freeze(["PYAX","HYAX","CRAX","ELAX","ANAX","GEAX","DEAX","PYDP","HYDP","CRDP","ELDP","ANDP","GEDP","DEDP","PYSU","HYSU","CRSU","ELSU","ANSU","GESU","DESU","PYWD","HYWD","CRWD","ELWD","ANWD","GEWD","DEWD","PYIM","HYIM","CRIM","ELIM","ANIM","GEIM","DEIM","PYPE","HYPE","CRPE","ELPE","ANPE","GEPE","DEPE","PYPF","HYPF","CRPF","ELPF","ANPF","GEPF","DEPF","PYHO","HYHO","CRHO","ELHO","ANHO","GEHO","DEHO","PYAT","HYAT","CRAT","ELAT","ANAT","GEAT","DEAT","PYMN","HYMN","CRMN","ELMN","ANMN","GEMN","DEMN","PYRK","HYRK","CRRK","ELRK","ANRK","GERK","DERK","PYCL","HYCL","CRCL","ELCL","ANCL","GECL","DECL"]),
-    chars: Object.freeze(['pierro', 'capitano', 'dottore', 'columbina', 'arlecchino', 'pulcinella', 'scaramouche', 'sandrone', 'signora', 'pantalone', 'tartaglia']) }),
+    chars: Object.freeze(['pierro', 'capitano', 'dottore', 'columbina', 'arlecchino', 'pulcinella', 'scaramouche', 'sandrone', 'signora', 'pantalone', 'tartaglia']) });
+// 版2：カードのデザインだけを変えた（dti-og-4：ファトゥスの名前のグラデーション・中央の目をファトゥスの色に）。
+//   並びは版1と同じ。X はカードを URL ごとに覚えるため、新しい投稿は新しい URL（末尾2）にして、新しいカードを読ませる。
+export const SHARE_VERSIONS = Object.freeze({
+  1: SHARE_V1,
+  2: Object.freeze({ naming: SHARE_V1.naming, og: 'dti-og-4', codes: SHARE_V1.codes, chars: SHARE_V1.chars }),
 });
 // 旧い8文字の形（?k=PYSPj2b1）の人物の1字
 export const SHARE_CHAR_CODES = Object.freeze({ pierro: 'a', capitano: 'b', dottore: 'c', columbina: 'd', arlecchino: 'e', pulcinella: 'f',

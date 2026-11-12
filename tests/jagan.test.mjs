@@ -437,9 +437,9 @@ test('share text equals the template; OG params round-trip through the image par
     assert.equal(parseShareKey('PYHOg2s1').character.match, 100, '旧い8文字の形も読める');
     // 全84通り×（11名＋保留）×一致度0〜100 が、4文字で往復できる（重なりなし）
     const seen = new Set();
-    for (const code of SHARE_VERSIONS[1].codes) for (const ch of [...SHARE_VERSIONS[1].chars, null]) for (const m of ch ? [0, 1, 57, 99, 100] : [0]) {
+    for (const code of SHARE_VERSIONS[2].codes) for (const ch of [...SHARE_VERSIONS[2].chars, null]) for (const m of ch ? [0, 1, 57, 99, 100] : [0]) {
       const k = shareKey({ dti: { code }, character: ch ? { id: ch, matchPercent: m } : null, namingVersion: SHARE_VERSIONS[1].naming });
-      assert.match(k, /^[0-9A-Za-z]{3}1$/); assert.ok(!seen.has(k)); seen.add(k);
+      assert.match(k, /^[0-9A-Za-z]{3}2$/); assert.ok(!seen.has(k)); seen.add(k);
       const back = parseShareKey(k);
       assert.deepEqual([back.code, back.character && back.character.id, back.character && back.character.match], [code, ch, ch ? m : null]);
     }
@@ -463,7 +463,7 @@ test('share text equals the template; OG params round-trip through the image par
     assert.equal(parsed.code, s.dti.code); assert.equal(parsed.name, s.dti.name);
     assert.equal(parsed.character.name, s.character.label);
     assert.equal(parsed.character.match, s.character.matchPercent);
-    assert.match(ogParams(s), /&v=dti-naming-v1-20261104\.dti-og-3$/);
+    assert.match(ogParams(s), /&v=dti-naming-v1-20261104\.dti-og-4$/);
   }
   // 人物を保留した結果は人物の行を省く
   const flat = run(all(3));
@@ -635,7 +635,7 @@ test('stateless share page (/jagan/share?…) needs no DB: summary from whitelis
   const meta = (k) => (ok.body.match(new RegExp(`<meta (?:property|name)="${k}" content="([^"]*)"`)) || [])[1];
   assert.equal(meta('og:image'), `https://element-diagnosis-git-jagan-preview.vercel.app/api/jagan-og?${q.replace(/&/g, '&amp;')}`.replace(/&amp;/g, '&amp;'));
   assert.equal(meta('og:url'), `https://element-diagnosis-git-jagan-preview.vercel.app/j/${key}`);
-  assert.match(key, /^[0-9A-Za-z]{3}1$/);
+  assert.match(key, /^[0-9A-Za-z]{3}2$/);
   // 以前の8文字の形（Preview で作られた ?k=）も開ける
   const old = await call(page, { method: 'GET', url: `/api/jagan-share-page?k=${s.dti.code}${SHARE_CHAR_CODES[s.character.id]}${s.character.matchPercent.toString(36).padStart(2, '0')}1` });
   assert.equal(old.status, 200);
