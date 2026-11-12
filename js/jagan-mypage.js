@@ -120,7 +120,8 @@
       return { ok: res.ok, status: res.status, body: out || {} };
     } catch (e) { return { ok: false, status: 0, body: { error: 'network' } }; }
   }
-  function track(name, params) { try { if (typeof trackEvent === 'function') trackEvent(name, params || {}); } catch (e) { /* 計測だけ */ } }
+  // 邪眼の記録まわりのイベントには diagnosis_type: 'jagan' を付ける（元素診断と並べて比べられるように）
+  function track(name, params) { try { if (typeof trackEvent === 'function') trackEvent(name, Object.assign({ diagnosis_type: 'jagan' }, params || {})); } catch (e) { /* 計測だけ */ } }
 
   // 保存待ちの保存（登録完了の後だけ呼ばれる。失敗しても保存待ちは残す＝次に開いたときに再試行）
   async function savePending(t) {
@@ -286,6 +287,7 @@
     var r = t ? await api('/api/jagan-report?op=buy', body, t) : { ok: false, body: { error: 'not_authenticated' } };
     if (r.ok && typeof r.body.checkoutUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(r.body.checkoutUrl)) {
       store('session', function (s) { s.setItem(FRESH_KEY, JSON.stringify({ at: Date.now(), source: body.source })); });
+      track('begin_checkout', { currency: 'JPY', value: value, source: body.source, items: [{ item_id: isC ? 'jagan_complete_v1' : 'jagan_report_v1', item_name: isC ? '邪眼完全解析レポート「DIPPER」' : '邪眼解析レポート', item_category: '邪眼診断', price: value, quantity: 1 }] });
       track('checkout_redirect', { product: prod, value: value, currency: 'JPY', source: source });
       location.assign(r.body.checkoutUrl);
       return;

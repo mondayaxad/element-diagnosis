@@ -33,7 +33,11 @@ export function rememberForSample(result, from) {
 export function wireSampleLinks(root, getResult, from) {
   if (!root) return;
   root.querySelectorAll('a[href="/jagan/sample"], a[href="/jagan/complete-sample"]').forEach((a) => {
-    a.addEventListener('click', () => rememberForSample(getResult(), from));
+    a.addEventListener('click', () => {
+      rememberForSample(getResult(), from);
+      // 元素診断の result_sample_click と同じ位置づけ（サンプルを開いた＝購入検討）
+      track('jagan_sample_click', { product: a.getAttribute('href') === '/jagan/complete-sample' ? 'jagan_complete' : 'jagan_report', source: from });
+    });
   });
 }
 
@@ -52,7 +56,8 @@ function readContext() {
 }
 
 function backHref(from) { return from === 'mypage' ? '/mypage#jagan' : '/jagan/#result'; }
-function track(name, params) { try { if (typeof window.gtag === 'function') window.gtag('event', name, params || {}); } catch { /* 計測だけ */ } }
+// 邪眼の全イベントに diagnosis_type: 'jagan' を付ける（元素診断と並べて比べられるように）
+function track(name, params) { try { if (typeof window.gtag === 'function') window.gtag('event', name, { diagnosis_type: 'jagan', ...(params || {}) }); } catch { /* 計測だけ */ } }
 
 // page：'report'（解析レポートのサンプル）／'complete'（完全解析のサンプル）。extra：同じ記録で申し込める、ほかのボタン（解析レポートのサンプル内の完全解析の欄）
 export function mountSampleBuy(box, { page, extra = [] }) {
