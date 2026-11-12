@@ -168,7 +168,7 @@ test('ブラウザ：public-config を同期スクリプトとして読み込み
   assert.match(headers['content-type'], /^application\/javascript/);
   assert.match(headers['cache-control'], /no-store/);
   assert.equal(headers['x-content-type-options'], 'nosniff');
-  assert.deepEqual(Object.keys(state.config).sort(), ['appEnv', 'completeApiReady', 'completeSalesOpen', 'jaganSalesOpen', 'projectRef', 'supabaseAnonKey', 'supabaseUrl']);
+  assert.deepEqual(Object.keys(state.config).sort(), ['appEnv', 'completeApiReady', 'completeSalesOpen', 'jaganEnabled', 'jaganSalesOpen', 'projectRef', 'supabaseAnonKey', 'supabaseUrl']);
   assert.deepEqual(state.created, [{ url: PREVIEW_ENV.SUPABASE_URL, key: PREVIEW_ENV.SUPABASE_ANON_KEY }]);
   assert.equal(state.unavailable, false);
 });
