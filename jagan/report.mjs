@@ -10,7 +10,8 @@ import { wireSampleLinks } from './sample-buy.mjs';
 import { TOKEN_RE, UUID_RE, linkOpen, openOwn, register, accessToken, supabaseClient, setRegisterIntent, freshPurchase, reportUrlOf, trackPurchase, buy, buyErrorText, salesOpen } from './client.mjs';
 
 const $ = (id) => document.getElementById(id);
-function track(name, params) { try { if (typeof window.gtag === 'function') window.gtag('event', name, params || {}); } catch { /* 計測だけ */ } }
+// 邪眼の全イベントに diagnosis_type: 'jagan' を付ける（元素診断と並べて比べられるように）
+function track(name, params) { try { if (typeof window.gtag === 'function') window.gtag('event', name, { diagnosis_type: 'jagan', ...(params || {}) }); } catch { /* 計測だけ */ } }
 const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 function status(html) { $('rpStatus').hidden = false; $('rpStatus').innerHTML = html; }
 const fail = (text, extra = '') => status(`<p>${text}</p>${extra}<p class="jg-small"><a href="/jagan/">邪眼診断のトップへ</a>　<a href="/mypage#jagan">マイページ</a></p>`);

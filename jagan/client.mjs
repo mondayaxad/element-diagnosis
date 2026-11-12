@@ -66,6 +66,7 @@ async function buyOnce({ resultId, itemSetVersion, answers, source, product }) {
   if (r.ok && typeof r.body.checkoutUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(r.body.checkoutUrl)) {
     // 決済へ進んだ印に、押した画面（source）も残す（戻った時の purchase に引き継ぎ、どの申込元で売れたかを GA4 で読めるように）
     session((s) => s.setItem(FRESH_KEY, JSON.stringify({ at: Date.now(), source: body.source || null })));
+    beginCheckout(product === 'complete' ? 'complete' : 'report', body.source);
     location.assign(r.body.checkoutUrl);
     return { ok: true };
   }
@@ -91,6 +92,16 @@ export async function register(token) { return call('link-register', { token }, 
 export function setRegisterIntent(token) {
   if (!TOKEN_RE.test(String(token || ''))) return false;
   return !!session((s) => { s.setItem(REGISTER_KEY, JSON.stringify({ t: token, at: Date.now() })); return true; });
+}
+// GA4 の begin_checkout（決済画面へ移る直前。元素診断と同じ形・GA4 の推奨イベント）
+export function beginCheckout(product, source) {
+  try {
+    const it = GA_ITEMS[product];
+    if (!it || typeof window.gtag !== 'function') return;
+    window.gtag('event', 'begin_checkout', { currency: 'JPY', value: it.value, diagnosis_type: 'jagan',
+      ...(/^[a-z_]{1,32}$/.test(String(source || '')) ? { source } : {}),
+      items: [{ item_id: it.id, item_name: it.name, item_category: '邪眼診断', price: it.value, quantity: 1 }] });
+  } catch { /* 計測だけ */ }
 }
 // 決済から戻った直後か（2時間以内・このタブ）。戻り値：null か { source }（申込元の画面。読めなければ null）
 export function freshPurchase() {

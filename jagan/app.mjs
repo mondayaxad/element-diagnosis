@@ -26,7 +26,8 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } },
   del(k) { try { localStorage.removeItem(k); } catch { /* noop */ } },
 };
-function track(name, params) { try { if (typeof window.gtag === 'function') window.gtag('event', name, params || {}); } catch { /* 計測だけ */ } }
+// 邪眼の全イベントに diagnosis_type: 'jagan' を付ける（元素診断と並べて比べられるように）
+function track(name, params) { try { if (typeof window.gtag === 'function') window.gtag('event', name, { diagnosis_type: 'jagan', ...(params || {}) }); } catch { /* 計測だけ */ } }
 const newResultId = () => (crypto.randomUUID ? crypto.randomUUID()
   : '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) => (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)));
 
