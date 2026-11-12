@@ -94,7 +94,7 @@ test('vercel.json：build で dist を作り、dist だけを配信する（clea
   // 邪眼診断の共有ページ（/jagan/s/<公開ID>）：公開要約だけを返すサーバーのページへ
   assert.deepEqual(v.rewrites, [{ source: '/result', destination: '/' }, { source: '/jagan/s/:id', destination: '/api/jagan-share-page?id=:id' }, { source: '/jagan/share', destination: '/api/jagan-share-page' },
     // 邪眼診断の共有 URL の最短の形（/j/<4文字>。旧い8文字の形も同じ経路）
-    { source: '/j/:k([0-9A-Za-z]{4,8})', destination: '/api/jagan-share-page?k=:k' }]);
+    { source: '/j/:k([0-9A-Za-z]{4,21})', destination: '/api/jagan-share-page?k=:k' }]);
   assert.deepEqual(byPathEarly(v, '/j/:k'), { 'X-Robots-Tag': 'noindex, nofollow' });
   const byPath = (src) => v.headers.filter((h) => h.source === src).flatMap((h) => h.headers).reduce((o, h) => Object.assign(o, { [h.key]: h.value }), {});
   // 全ページ（API を除く）：MIME の推測をさせない・他サイトに枠で埋め込ませない・Referer は origin まで
