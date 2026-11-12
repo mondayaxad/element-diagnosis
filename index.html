@@ -4,6 +4,7 @@
 <!-- GA4：js/ga.js が本番ドメインでだけ読み込む（Preview・ローカルでは送信しない）。
      送る page_location は origin＋path だけ。イベントの値から記録 ID・メール・Stripe ID・トークンを落とす。 -->
 <script src="/js/ga.js"></script>
+<script src="/js/return-to.js"></script>
 <script>
   // 本番ドメイン以外（Preview・ローカル）では true。Stripe の旧 Payment Link（v1）をテスト用に切り替える。
   var IS_PREVIEW_BUILD = location.hostname !== 'element-diagnosis-five.vercel.app';
