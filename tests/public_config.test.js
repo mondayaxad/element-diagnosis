@@ -11,7 +11,7 @@ const SRC_PATH = path.join(__dirname, '..', 'api', 'public-config.js');
 const { createHandler } = require(SRC_PATH);
 const { PROD_REF, PREVIEW_REF, PROD_ENV, PREVIEW_ENV, fakeJwt } = require('./fixtures/server_env');
 
-const ALLOWED_KEYS = ['appEnv', 'completeApiReady', 'completeSalesOpen', 'jaganSalesOpen', 'projectRef', 'supabaseAnonKey', 'supabaseUrl'];
+const ALLOWED_KEYS = ['appEnv', 'completeApiReady', 'completeSalesOpen', 'jaganEnabled', 'jaganSalesOpen', 'projectRef', 'supabaseAnonKey', 'supabaseUrl'];
 
 function call(env, { url = '/api/public-config', method = 'GET', host = 'element-diagnosis.example.test', query } = {}) {
   const res = {
@@ -45,8 +45,10 @@ test('Production：本番の URL・公開キー・環境名・Ref の4項目だ�
   assert.deepEqual(body, {
     appEnv: 'production', supabaseUrl: `https://${PROD_REF}.supabase.co`,
     supabaseAnonKey: PROD_ENV.SUPABASE_ANON_KEY, projectRef: PROD_REF,
-    completeSalesOpen: false, completeApiReady: true, jaganSalesOpen: false,
+    completeSalesOpen: false, completeApiReady: true, jaganEnabled: false, jaganSalesOpen: false,
   });
+  // 邪眼が動く環境か（マイページの邪眼の記録・登録はこれを見る）：本番は JAGAN_PRODUCTION_ENABLED=true の時だけ
+  assert.equal(JSON.parse(call({ ...PROD_ENV, JAGAN_PRODUCTION_ENABLED: 'true' }).body).jaganEnabled, true);
   // 邪眼の販売：本番は JAGAN_PRODUCTION_ENABLED=true かつ JAGAN_SALES_OPEN=true のときだけ（どちらか一方では開かない）
   assert.equal(JSON.parse(call({ ...PROD_ENV, JAGAN_SALES_OPEN: 'true' }).body).jaganSalesOpen, false);
   assert.equal(JSON.parse(call({ ...PROD_ENV, JAGAN_PRODUCTION_ENABLED: 'true' }).body).jaganSalesOpen, false);

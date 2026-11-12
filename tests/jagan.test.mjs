@@ -685,9 +685,9 @@ test('mypage emblems (pre-awakening / awakened): every element has both images, 
 });
 
 // js/jagan-mypage.js を、模擬の Supabase で読み込む
-function loadJaganMypage({ rows, ent, token = 'tok' }) {
+function loadJaganMypage({ rows, ent, token = 'tok', config = { appEnv: 'preview', jaganSalesOpen: true } }) {
   const js = fs.readFileSync(path.join(ROOT, 'js/jagan-mypage.js'), 'utf8');
-  const win = { __ED_PUBLIC_CONFIG__: { appEnv: 'preview', jaganSalesOpen: true }, localStorage: { getItem: () => null, removeItem() {}, setItem() {} }, sessionStorage: { getItem: () => null, removeItem() {}, setItem() {} } };
+  const win = { __ED_PUBLIC_CONFIG__: config, localStorage: { getItem: () => null, removeItem() {}, setItem() {} }, sessionStorage: { getItem: () => null, removeItem() {}, setItem() {} } };
   const supa = { auth: { getSession: async () => ({ data: { session: token ? { access_token: token } : null } }) },
     from: (t) => (t === 'jagan_results' ? { select: () => ({ order: async () => ({ data: rows, error: null }) }) } : { select: () => ({ eq: async () => ent }) }) };
   const doc = { addEventListener() {}, getElementById: () => null };
@@ -1104,4 +1104,14 @@ test('GA4 の診断の傾向（jagan_profile）：邪眼・異相・DTI・ファ
   const s = JSON.stringify(p);
   assert.ok(!s.includes(r.resultId) && !/ANX01|answers/.test(s));
   assert.equal(profileParams(run(all(3))).jagan_fatui, '保留');
+});
+
+test('mypage（本番）：邪眼を有効にした本番（公開設定の jaganEnabled）では、邪眼の記録・権利を読む。無効なら読まない（2026-11-12 の不具合の再発防止）', async () => {
+  const r1 = run(VARIED());
+  const rows = [{ result_id: '00000000-0000-4000-8000-000000000000', created_at: '2026-11-12', headline: headlineOf(r1), snapshot: r1 }];
+  const ent = { data: [{ result_id: rows[0].result_id, status: 'active', product_key: 'jagan_report_v1' }], error: null };
+  let out = await loadJaganMypage({ rows, ent, config: { appEnv: 'production', jaganEnabled: true, jaganSalesOpen: true } }).load();
+  assert.deepEqual(out.sessions.map((s) => [s.purchased, s.entKnown]), [[true, true]], '本番で邪眼が有効なら、購入済みの記録が出る');
+  out = await loadJaganMypage({ rows, ent, config: { appEnv: 'production', jaganSalesOpen: false } }).load();
+  assert.equal(out.sessions.length, 0, '本番で邪眼が無効なら読まない');
 });
