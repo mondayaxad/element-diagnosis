@@ -285,7 +285,7 @@
     if (isC) body.product = 'complete';
     var r = t ? await api('/api/jagan-report?op=buy', body, t) : { ok: false, body: { error: 'not_authenticated' } };
     if (r.ok && typeof r.body.checkoutUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(r.body.checkoutUrl)) {
-      store('session', function (s) { s.setItem(FRESH_KEY, String(Date.now())); });
+      store('session', function (s) { s.setItem(FRESH_KEY, JSON.stringify({ at: Date.now(), source: body.source })); });
       track('checkout_redirect', { product: prod, value: value, currency: 'JPY', source: source });
       location.assign(r.body.checkoutUrl);
       return;

@@ -90,7 +90,7 @@ async function fromLink(token) {
       if (r.body.report && r.body.report.product === 'complete') { location.replace(`/jagan/dipper#t=${token}`); return; }
       if (!render(r.body.report)) return;
       track('jagan_report_open', { source: fresh ? 'checkout' : 'link' });
-      if (fresh) trackPurchase(token, 'report');
+      if (fresh) trackPurchase(token, 'report', fresh.source);
       wireLinkKeep(token);
       return;
     }
