@@ -198,7 +198,7 @@ function showShared() {
       <a class="rx-save-btn" href="/jagan/" data-shared-start style="display:inline-block;text-decoration:none">邪眼診断をはじめる</a>
     </section>`);
   body.querySelector('[data-shared-start]').addEventListener('click', () => track('jagan_shared_start', {}));
-  document.querySelectorAll('#resultBody .rx-more').forEach((d) => d.addEventListener('toggle', () => { if (d.open) track('jagan_detail_open', { source: 'shared' }); }));
+  document.querySelectorAll('#resultBody details.rx-more-main').forEach((d) => d.addEventListener('toggle', () => { if (d.open) track('jagan_detail_open', { source: 'shared' }); }));
   $('retryBtn').textContent = '自分も診断する';
   track('jagan_shared_open', {});
   show('result');
@@ -330,17 +330,19 @@ function bindResult() {
     const id = firstUnanswered(); if (id) { const i = ORDER.indexOf(id); state.page = i - (i % PAGE); }
     saveProgress(); show('quiz'); renderQuiz();
   });
-  document.querySelectorAll('#resultBody .rx-more').forEach((d) => d.addEventListener('toggle', () => { if (d.open) track('jagan_detail_open', {}); }));
+  document.querySelectorAll('#resultBody details.rx-more-main').forEach((d) => d.addEventListener('toggle', () => { if (d.open) track('jagan_detail_open', {}); }));
 }
 
 // ---- 邪眼解析レポート（¥1,000）・完全解析（¥3,000）の申込（販売中だけ。金額・商品はサーバーが決める） ----
 //   元素診断と同じく、完了ページの導線はログイン・購入済みかどうかで変えない（常に ¥1,000・¥3,000。再購入も受け付ける）。
 //   購入済みのレポートは、マイページ・固有リンクから読む。
+// 申込ボタンの場所（GA4 の source。購入 API へ送る source と同じ値）
+const ctaSource = () => (current && current.mode === 'saved' ? 'saved_result' : 'result');
 const productOfBtn = (b) => (b.getAttribute('data-buy') === 'complete' ? 'complete' : 'report');
 function setupBuy() {
   const btns = Array.from(document.querySelectorAll('#resultBody [data-buy]'));
   if (!salesOpen() || !current) {
-    btns.forEach((b) => b.addEventListener('click', () => track(productOfBtn(b) === 'complete' ? 'jagan_complete_cta' : 'jagan_report_cta', { state: 'closed' })));
+    btns.forEach((b) => b.addEventListener('click', () => track(productOfBtn(b) === 'complete' ? 'jagan_complete_cta' : 'jagan_report_cta', { state: 'closed', source: ctaSource() })));
     return;
   }
   document.querySelectorAll('#resultBody .rx-sales-note').forEach((n) => { n.hidden = true; });
@@ -356,7 +358,7 @@ async function onBuy(btn, product) {
   if (!current) return;
   const r = current.result;
   const isC = product === 'complete';
-  track(isC ? 'jagan_complete_cta' : 'jagan_report_cta', { state: 'open' });
+  track(isC ? 'jagan_complete_cta' : 'jagan_report_cta', { state: 'open', source: ctaSource() });
   const box = isC ? btn.closest('.dp-fold') : null;
   const msg = box ? box.querySelector('[data-dipper-msg]') : null;
   const old = !isC && btn.parentElement && btn.parentElement.querySelector('.rx-buy-error');
