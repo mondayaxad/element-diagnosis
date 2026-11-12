@@ -4,6 +4,7 @@
 <!-- GA4：js/ga.js が本番ドメインでだけ読み込む（Preview・ローカルでは送信しない）。
      送る page_location は origin＋path だけ。イベントの値から記録 ID・メール・Stripe ID・トークンを落とす。 -->
 <script src="/js/ga.js"></script>
+<script src="/js/return-to.js"></script>
 <script>
   // 本番ドメイン以外（Preview・ローカル）では true。Stripe の旧 Payment Link（v1）をテスト用に切り替える。
   var IS_PREVIEW_BUILD = location.hostname !== 'element-diagnosis-five.vercel.app';
@@ -142,6 +143,27 @@
     @media (prefers-reduced-motion: reduce) { .tp .hero-mypage { transition: none; } }
     .tp .hero-record-link { margin-top: 18px; color: #7896b3; font-size: 12px; letter-spacing: .08em; text-decoration: none; opacity: .9; transition: color .2s ease; }
     .tp .hero-record-link:hover { color: #a8c7e3; }
+    /* 邪眼診断のリリースバナー（元素診断の青に対して、邪眼の赤黒と金） */
+    .tp .jagan-banner { display: flex; align-items: stretch; gap: 0; width: min(560px, 100%); margin: 64px auto 0; text-align: left; text-decoration: none;
+      border: 1px solid rgba(214,170,98,.45); border-radius: 12px; overflow: hidden;
+      background: linear-gradient(135deg, rgba(40,8,18,.92), rgba(18,6,12,.94)); box-shadow: 0 0 22px rgba(200,64,92,.18), inset 0 0 0 1px rgba(255,255,255,.03);
+      transition: transform .2s ease, box-shadow .2s ease; }
+    .tp .jagan-banner:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(200,64,92,.32), inset 0 0 0 1px rgba(255,255,255,.05); }
+    .tp .jagan-banner .jb-img { flex: 0 0 42%; position: relative; background: #0d0509; }
+    .tp .jagan-banner .jb-img { display: flex; align-items: center; }
+    .tp .jagan-banner .jb-img img { display: block; width: 100%; height: auto; }
+    .tp .jagan-banner .jb-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 14px 16px; }
+    .tp .jagan-banner .jb-new { font-family: var(--font-en); font-size: 10px; letter-spacing: .28em; color: #e2c08c; }
+    .tp .jagan-banner .jb-title { font-size: 16px; font-weight: 700; letter-spacing: .06em; color: #f4e6ea; }
+    .tp .jagan-banner .jb-sub { font-size: 11.5px; line-height: 1.75; color: #c9a8b2; }
+    .tp .jagan-banner .jb-go { margin-top: 2px; font-size: 12px; letter-spacing: .1em; color: #f0a3b6; }
+    .tp .jagan-banner:hover .jb-go .arw { transform: translateX(3px); }
+    .tp .jagan-banner .jb-go .arw { display: inline-block; transition: transform .2s ease; }
+    @media (max-width: 520px) {
+      .tp .jagan-banner { flex-direction: column; margin-top: 48px; }
+      .tp .jagan-banner .jb-img { flex-basis: auto; aspect-ratio: 1200 / 630; }
+      .tp .jagan-banner .jb-body { padding: 12px 14px 14px; text-align: center; align-items: center; }
+    }
     .tp .hero-record-link .arw { display: inline-block; transition: transform .2s ease; }
     .tp .hero-record-link:hover .arw { transform: translateX(3px); }
     .tp .hero-record-link:focus-visible { outline: 1px solid var(--t-link); outline-offset: 4px; }
@@ -509,6 +531,16 @@
         <a href="javascript:void(0)" class="cta" onclick="startNewDiagnosisV2()">診断をはじめる <span class="en">— Start</span></a>
         <a href="/mypage.html" class="hero-record-link" onclick="trackEvent('mypage_entry_click',{entry_point:'top'})">診断記録を見る <span class="arw">→</span></a>
       </div>
+      <!-- 邪眼診断のリリース告知（2026-11-12）。流入元が分かるよう UTM を付ける（GA4：utm_source=eti） -->
+      <a class="jagan-banner" href="/jagan/?utm_source=eti&amp;utm_medium=banner&amp;utm_campaign=jagan_launch" onclick="trackEvent('jagan_banner_click',{entry_point:'top'})">
+        <span class="jb-img"><img src="/assets/ogp/jagan-top-20261112.jpg" alt="" width="1200" height="630" loading="lazy" decoding="async"></span>
+        <span class="jb-body">
+          <span class="jb-new">NEW RELEASE</span>
+          <span class="jb-title">邪眼診断、リリース開始</span>
+          <span class="jb-sub">あなたの願いは、どんな深淵を映すのか。<br>50の問いが映す、あなたの邪眼とファトゥス。</span>
+          <span class="jb-go">邪眼診断をはじめる <span class="arw">→</span></span>
+        </span>
+      </a>
     </div>
     <span class="hero-scroll" aria-hidden="true"></span>
   </section>

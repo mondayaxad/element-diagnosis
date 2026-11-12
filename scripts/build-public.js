@@ -47,6 +47,7 @@ const PUBLIC_FILES = [
   'js/nav-busy.js',
   'js/sample-return.js',                                       // 完全解析サンプルの「申し込みに戻る」
   'js/ga.js',
+  'js/return-to.js',                                          // 邪眼診断から来た人を、マイページ・規約などから邪眼診断へ戻す
   'complete-sample.html',                                     // 完全解析サンプル（結果ページの完全解析の欄からだけリンク・noindex）
   'assets/ogp/ogp-top-20261009.jpg',                          // TOP・完全解析サンプルの OGP（1200×630）
   'assets/ogp/jagan-top-20261112.jpg',                        // 邪眼診断の各ページの OGP（1200×630。X 共有の結果カードとは別）
