@@ -1144,7 +1144,8 @@ test('回答を載せた共有（/j/<20文字>3）：回答を往復でき、共
   const meta = (n) => (res.body.match(new RegExp(`<meta (?:property|name)="${n}" content="([^"]*)"`)) || [])[1];
   assert.equal(meta('og:image'), `https://element-diagnosis-git-jagan-preview.vercel.app/api/jagan-og?${ogParams(s).replace(/&/g, '&amp;')}`);
   assert.equal(meta('og:url'), `https://element-diagnosis-git-jagan-preview.vercel.app/j/${k}`);
-  assert.ok(res.body.includes(`<meta http-equiv="refresh" content="0;url=https://element-diagnosis-git-jagan-preview.vercel.app/jagan/?s=${k}">`));
+  // X などのクローラーは JS を実行しないため、カードはこのページの OGP。meta refresh は使わない（クローラーが移動先へ進んでしまう）
+  assert.ok(!res.body.includes('http-equiv="refresh"'));
   assert.ok(res.body.includes(`location.replace("https://element-diagnosis-git-jagan-preview.vercel.app/jagan/?s=${k}")`));
   // 結果だけの形（以前の投稿）は、移さずにその場で表示する
   const short = await call(page, { method: 'GET', url: `/api/jagan-share-page?k=${sharePagePath(s).split('/').pop()}` });
