@@ -1153,3 +1153,14 @@ test('回答を載せた共有（/j/<20文字>3）：回答を往復でき、共
   // 結果ページの共有は回答の形
   assert.equal(answerShareUrl('https://x.test', r.answers, r.versions.itemSet), `https://x.test/j/${k}`);
 });
+
+test('GA4：完了ページの「もっと詳しく見る」（jagan_detail_open）の対象が実際の要素と一致し、申込ボタンに source を付ける', () => {
+  const html = renderResultPage(run(VARIED()), BUNDLE);
+  const app = fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../jagan/app.mjs'), 'utf8');
+  assert.ok(html.includes('<details class="rx-more-main">'));
+  const sels = [...app.matchAll(/querySelectorAll\('#resultBody (details\.[\w-]+)'\)[^\n]*jagan_detail_open/g)].map((m) => m[1]);
+  assert.deepEqual(sels, ['details.rx-more-main', 'details.rx-more-main']);
+  assert.ok(!/'#resultBody \.rx-more'/.test(app));
+  assert.match(app, /'jagan_report_cta', \{ state: 'open', source: ctaSource\(\) \}/);
+  assert.match(app, /state: 'closed', source: ctaSource\(\) \}/);
+});
