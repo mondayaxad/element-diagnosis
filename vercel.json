@@ -16,7 +16,7 @@
       "destination": "/api/jagan-share-page"
     },
     {
-      "source": "/j/:k([0-9A-Za-z]{4,8})",
+      "source": "/j/:k([0-9A-Za-z]{4,21})",
       "destination": "/api/jagan-share-page?k=:k"
     }
   ],

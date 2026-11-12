@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, shareUrl, explainCharacter, SHARE_CHAR_CODES, SHARE_VERSIONS, shareKey, parseShareKey } from '../jagan/engine/runtime.mjs';
+import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, shareUrl, explainCharacter, SHARE_CHAR_CODES, SHARE_VERSIONS, shareKey, parseShareKey, answerShareKey, answerShareUrl, parseAnswerShareKey, ANSWER_SHARE_VERSIONS } from '../jagan/engine/runtime.mjs';
 import { judge, characterRanking, scoreAnswers } from '../jagan/engine/judge.mjs';
 import { BUNDLE } from '../jagan/engine/data.mjs';
 import { judge as specJudge } from '../docs/jagan/spec_v0_3_balanced/runtime.mjs';
@@ -705,7 +705,10 @@ test('mypage (js/jagan-mypage.js)：権利が active の記録だけ購入済み
   assert.deepEqual(out.sessions[0].top3.map((t) => t.id), r1.traitRanking.slice(0, 3).map((t) => t.id));
   // 共有：結果ページ（runtime の shareUrl）と同じ URL・同じ文
   const s0 = out.sessions[0];
-  assert.equal(jm.shareUrlOf(s0), shareUrl('https://example.test', publicSummary(r1)));
+  assert.equal(jm.shareUrlOf(s0), answerShareUrl('https://example.test', r1.answers, r1.versions.itemSet));
+  assert.match(jm.shareUrlOf(s0), /\/j\/[0-9A-Za-z]{20}3$/);
+  // 回答の無い記録は、結果だけの形（従来どおり）
+  assert.equal(jm.shareUrlOf({ ...s0, answers: null }), shareUrl('https://example.test', publicSummary(r1)));
   assert.equal(jm.shareTextOf(s0, 'U'), shareTextFromSummary(publicSummary(r1), 'U'));
   jm = loadJaganMypage({ rows, ent: { data: null, error: { message: 'x' } } });
   out = await jm.load();
@@ -1114,4 +1117,38 @@ test('mypage（本番）：邪眼を有効にした本番（公開設定の jaga
   assert.deepEqual(out.sessions.map((s) => [s.purchased, s.entKnown]), [[true, true]], '本番で邪眼が有効なら、購入済みの記録が出る');
   out = await loadJaganMypage({ rows, ent, config: { appEnv: 'production', jaganSalesOpen: false } }).load();
   assert.equal(out.sessions.length, 0, '本番で邪眼が無効なら読まない');
+});
+
+test('回答を載せた共有（/j/<20文字>3）：回答を往復でき、共有ページは同じ結果の OGP を出し、人はその完了ページ（/jagan/?s=）へ移る', async () => {
+  // 版3の並びは凍結：今の回答の版・表示の並びと同じ
+  assert.equal(ANSWER_SHARE_VERSIONS[3].itemSet, BUNDLE.items.item_set_version);
+  assert.deepEqual([...ANSWER_SHARE_VERSIONS[3].order], BUNDLE.items.display_order);
+  for (const r of [run(VARIED()), run(all(1)), run(all(5)), run(all(3))]) {
+    const k = answerShareKey(r.answers, r.versions.itemSet);
+    assert.match(k, /^[0-9A-Za-z]{20}3$/);
+    const back = parseAnswerShareKey(k);
+    assert.deepEqual(back.answers, r.answers);
+    // 回答だけから、同じ結果（邪眼・異相・人物・一致度）になる
+    const again = computeDiagnosis({ answers: back.answers, itemSetVersion: back.itemSetVersion, resultId: null }, BUNDLE);
+    assert.deepEqual(publicSummary(again), publicSummary(r));
+  }
+  assert.equal(answerShareKey({ ...run(VARIED()).answers, ANX01: 6 }, BUNDLE.items.item_set_version), null);
+  assert.equal(answerShareKey(run(VARIED()).answers, 'other-version'), null);
+  for (const bad of ['zzzzzzzzzzzzzzzzzzzz3', '00000000000000000000', '0000000000000000000013', '00000000000000000000x']) assert.equal(parseAnswerShareKey(bad), null, bad);
+
+  const page = createSharePageHandler({ env: {}, fetchImpl: async () => { throw new Error('no db'); } });
+  const r = run(VARIED()), s = publicSummary(r);
+  const k = answerShareKey(r.answers, r.versions.itemSet);
+  const res = await call(page, { method: 'GET', url: `/api/jagan-share-page?k=${k}` });
+  assert.equal(res.status, 200);
+  const meta = (n) => (res.body.match(new RegExp(`<meta (?:property|name)="${n}" content="([^"]*)"`)) || [])[1];
+  assert.equal(meta('og:image'), `https://element-diagnosis-git-jagan-preview.vercel.app/api/jagan-og?${ogParams(s).replace(/&/g, '&amp;')}`);
+  assert.equal(meta('og:url'), `https://element-diagnosis-git-jagan-preview.vercel.app/j/${k}`);
+  assert.ok(res.body.includes(`<meta http-equiv="refresh" content="0;url=https://element-diagnosis-git-jagan-preview.vercel.app/jagan/?s=${k}">`));
+  assert.ok(res.body.includes(`location.replace("https://element-diagnosis-git-jagan-preview.vercel.app/jagan/?s=${k}")`));
+  // 結果だけの形（以前の投稿）は、移さずにその場で表示する
+  const short = await call(page, { method: 'GET', url: `/api/jagan-share-page?k=${sharePagePath(s).split('/').pop()}` });
+  assert.ok(!short.body.includes('http-equiv="refresh"'));
+  // 結果ページの共有は回答の形
+  assert.equal(answerShareUrl('https://x.test', r.answers, r.versions.itemSet), `https://x.test/j/${k}`);
 });

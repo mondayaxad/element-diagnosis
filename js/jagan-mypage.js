@@ -175,6 +175,9 @@
       elementId: dtiOk && snap.element ? snap.element.id : null,
       isouId: dtiOk && snap.isou ? snap.isou.id : null,
       namingVersion: dtiOk && snap.versions ? snap.versions.naming : null,
+      // 共有のリンクに載せる回答（結果ページの共有と同じ形。開くと完了ページを再現する）
+      answers: dtiOk && snap.answers && typeof snap.answers === 'object' ? snap.answers : null,
+      itemSet: dtiOk && snap.versions ? snap.versions.itemSet : null,
       top3: dtiOk ? top3(snap) : [],
       character: ch ? { id: ch.id, name: ch.name, match: ch.match, tone: fatuiTone(ch.id) } : null,
       // 商品ごとの権利：解析レポート（¥1,000）＝purchased、完全解析「DIPPER」（¥3,000）＝completeOwned。片方だけ INSIGHT、両方 COMPLETE
@@ -225,7 +228,26 @@
   }
 
   // 共有（結果ページの共有と同じ文・同じ URL。公開してよい値だけ）
+  // 回答を載せた形（runtime.mjs の answerShareKey と同じ。テストで一致を確かめる）
+  var ANSWER_SHARE_VERSIONS = { 3: { itemSet: 'jagan-shadow-items-0.4.0-semantic-review',
+    order: ["ANX01","PRF01","SEP01","IMP01","WDR02","ATT01","SUS01","PSV01","HOS01","MAN01","RSK01","CAL01","ANX02","PRF02","SEP02","IMP02","WDR03","ATT02","SUS02","PSV02","HOS03","MAN02","RSK02","CAL02","ANX03","PRF04","SEP03","IMP03","WDR04","ATT03","SUS03","PSV04","HOS04","MAN03","RSK03","CAL03","ANX05","PRF05","SEP04","IMP04","WDR05","ATT05","SUS05","PSV05","HOS05","MAN04","RSK04","CAL04","SEP05","IMP05"] } };
+  function answerKeyOf(answers, itemSet) {
+    if (!answers || typeof BigInt !== 'function') return null;
+    var v = Object.keys(ANSWER_SHARE_VERSIONS).filter(function (k) { return ANSWER_SHARE_VERSIONS[k].itemSet === itemSet; })[0];
+    if (!v) return null;
+    var order = ANSWER_SHARE_VERSIONS[v].order, n = BigInt(0), five = BigInt(5), b = BigInt(62);
+    for (var i = 0; i < order.length; i++) {
+      var a = answers[order[i]];
+      if (a !== Math.floor(a) || a < 1 || a > 5) return null;
+      n = n * five + BigInt(a - 1);
+    }
+    var out = '';
+    for (var j = 0; j < 20; j++) { out = B62.charAt(Number(n % b)) + out; n = n / b; }
+    return out + v;
+  }
   function shareUrlOf(s) {
+    var ak = s && answerKeyOf(s.answers, s.itemSet);
+    if (ak) return location.origin + SHARE_PATH + '/' + ak;
     var code = s && s.headline && s.headline.code;
     if (!s || !s.isDti || !s.elementId || !s.isouId || !s.namingVersion) return null;
     var keys = Object.keys(SHARE_VERSIONS);

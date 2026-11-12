@@ -4,7 +4,7 @@
 //   ・この端末に残すもの（localStorage）：途中の回答、最後の結果（再表示用）、ログイン前の保存待ち、共有の取消用の値。
 //     ETI の pending（pendingDiagnosis_v1・v2）とは別のキーにする。
 //   ・GA4 へは操作の種類だけを送る（回答・12スコア・結果 ID・公開 ID は送らない）。
-import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, shareUrl, RESULT_SCHEMA_VERSION } from './engine/runtime.mjs';
+import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, shareUrl, answerShareUrl, parseAnswerShareKey, RESULT_SCHEMA_VERSION } from './engine/runtime.mjs';
 import { BUNDLE } from './engine/data.mjs';
 import { renderResultPage, esc, heroGemsHtml } from './view.mjs';
 import { wireSampleLinks } from './sample-buy.mjs';
@@ -160,6 +160,7 @@ function showResult(record, { mode, savedAt } = {}) {
   }
   current = { result, answers: mode === 'saved' ? result.answers : record.answers, mode };
   $('resultBody').innerHTML = renderResultPage(result, BUNDLE);
+  if (mode === 'shared') { showShared(); return; }
   bindResult();
   const banner = $('savedBanner');
   banner.hidden = mode !== 'saved';
@@ -176,6 +177,32 @@ function showResult(record, { mode, savedAt } = {}) {
   show('result');
 }
 function summaryOf(result) { try { return publicSummary(result); } catch { return null; } }
+
+// ---- 共有された結果（/jagan/?s=<回答の共有キー>。X の共有リンクから） ----
+//   元素診断と同じく、共有した人の完了ページをそのまま表示する。見る人の端末の記録（最後の結果）は書き換えない。
+//   保存・購入・共有・画像保存は、共有した本人の記録に対する操作なので出さない（見る人には「自分も診断する」）。
+function openShared(k) {
+  const p = parseAnswerShareKey(k);
+  if (!p || p.itemSetVersion !== VERSION) { message('この共有リンクの結果は、現在の邪眼診断では表示できません。'); return; }
+  showResult({ answers: p.answers, resultId: null }, { mode: 'shared' });
+}
+function showShared() {
+  const body = $('resultBody');
+  body.querySelectorAll('.rx-share-row, .rx-seeing, .rx-all, .rx-save, .rx-preview-btn, [data-buy]').forEach((el) => el.remove());
+  const banner = $('savedBanner');
+  banner.hidden = false;
+  banner.textContent = '共有された邪眼診断の結果です。';
+  body.insertAdjacentHTML('beforeend', `<section class="rx-card rx-save">
+      <p class="rx-save-k">あなたの深淵は</p>
+      <p class="rx-save-text">50問に答えると、あなたの邪眼・異相・ファトゥスがわかります。</p>
+      <a class="rx-save-btn" href="/jagan/" data-shared-start style="display:inline-block;text-decoration:none">邪眼診断をはじめる</a>
+    </section>`);
+  body.querySelector('[data-shared-start]').addEventListener('click', () => track('jagan_shared_start', {}));
+  document.querySelectorAll('#resultBody .rx-more').forEach((d) => d.addEventListener('toggle', () => { if (d.open) track('jagan_detail_open', { source: 'shared' }); }));
+  $('retryBtn').textContent = '自分も診断する';
+  track('jagan_shared_open', {});
+  show('result');
+}
 function setStatus(text, isError) { const s = $('actionStatus'); s.textContent = text || ''; s.classList.toggle('is-error', !!isError); }
 
 // 保存：ログイン中ならサーバーへ（サーバーが再計算して保存）。未ログインなら保存待ちを残してマイページでログイン
@@ -260,7 +287,8 @@ function share() {
   // 公開してよい結果だけを載せた共有 URL（サーバーへの登録なし。この URL から各結果の OGP が出る）
   let s;
   try { s = publicSummary(r); } catch { setStatus('この結果は共有できません。', true); return; }
-  const url = shareUrl(location.origin, s);
+  // 元素診断と同じく、回答を載せた URL（開くと、この完了ページをそのまま再現する）。載せられない時は結果だけの形
+  const url = answerShareUrl(location.origin, current.answers, r.versions.itemSet) || shareUrl(location.origin, s);
   let text;
   try { text = makeShareText(r, url, `${location.origin}/`); } catch { text = shareTextFromSummary(s, url); }
   track('jagan_share_open_x', {});
@@ -385,6 +413,7 @@ function boot() {
   const params = new URLSearchParams(location.search);
   const saved = params.get('saved');
   if (saved && UUID_RE.test(saved)) { openSaved(saved); return; }
+  if (params.has('s')) { openShared(params.get('s')); return; }
   const last = store.get(K.last);
   const validLast = last && last.v === VERSION && UUID_RE.test(last.resultId || '') ? last : null;
   if (location.hash === '#result' && validLast) { showResult(validLast, { mode: 'fresh' }); return; }

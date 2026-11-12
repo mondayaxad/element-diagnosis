@@ -161,6 +161,45 @@ export function parseShareKey(k) {
   return { code: m[1], character, version: SHARE_VERSIONS[m[4]] };
 }
 export function sharePath(s) { return `${SHARE_PATH}/${shareKey(s)}`; }
+
+// ---- 回答を載せた共有（元素診断と同じ：リンクを開くと、共有した人の完了ページをそのまま再現する） ----
+//   /j/<回答20文字><版1文字>。50問の回答（1〜5）を、版ごとに凍結した並びで5進数→62進数20文字に詰める。
+//   版の数字は 3 から（1・2 は結果だけの4文字の形）。回答の版（item_set）が変わったら、新しい数字で並びを凍結して足す。
+//   結果ID・ユーザー・購入の情報は載せない。結果は回答だけから決まる（同点の処理も回答のハッシュ）。
+export const ANSWER_SHARE_VERSIONS = Object.freeze({
+  3: Object.freeze({ itemSet: 'jagan-shadow-items-0.4.0-semantic-review',
+    order: Object.freeze(["ANX01","PRF01","SEP01","IMP01","WDR02","ATT01","SUS01","PSV01","HOS01","MAN01","RSK01","CAL01","ANX02","PRF02","SEP02","IMP02","WDR03","ATT02","SUS02","PSV02","HOS03","MAN02","RSK02","CAL02","ANX03","PRF04","SEP03","IMP03","WDR04","ATT03","SUS03","PSV04","HOS04","MAN03","RSK03","CAL03","ANX05","PRF05","SEP04","IMP04","WDR05","ATT05","SUS05","PSV05","HOS05","MAN04","RSK04","CAL04","SEP05","IMP05"]) }),
+});
+const ANSWER_KEY_LEN = 20;
+export function answerShareKey(answers, itemSetVersion) {
+  const v = Object.keys(ANSWER_SHARE_VERSIONS).find((k) => ANSWER_SHARE_VERSIONS[k].itemSet === itemSetVersion);
+  if (!v || !answers || typeof answers !== 'object') return null;
+  let n = 0n;
+  for (const id of ANSWER_SHARE_VERSIONS[v].order) {
+    const a = answers[id];
+    if (!Number.isInteger(a) || a < 1 || a > 5) return null;
+    n = n * 5n + BigInt(a - 1);
+  }
+  let out = '';
+  for (let i = 0; i < ANSWER_KEY_LEN; i++) { out = B62[Number(n % 62n)] + out; n /= 62n; }
+  return out + v;
+}
+// 読めない時は null。{ answers, itemSetVersion }
+export function parseAnswerShareKey(k) {
+  const m = /^([0-9a-zA-Z]{20})([3-9])$/.exec(String(k || ''));
+  const t = m && ANSWER_SHARE_VERSIONS[m[2]];
+  if (!t) return null;
+  let n = 0n;
+  for (const c of m[1]) n = n * 62n + BigInt(B62.indexOf(c));
+  if (n >= 5n ** BigInt(t.order.length)) return null;
+  const answers = {};
+  for (let i = t.order.length - 1; i >= 0; i--) { answers[t.order[i]] = Number(n % 5n) + 1; n /= 5n; }
+  return { answers, itemSetVersion: t.itemSet };
+}
+export function answerShareUrl(origin, answers, itemSetVersion) {
+  const k = answerShareKey(answers, itemSetVersion);
+  return k ? `${origin}${SHARE_PATH}/${k}` : null;
+}
 // 画像の URL（従来の形・キャッシュの鍵に版を含む）
 export function ogQuery(s) {
   const p = new URLSearchParams();
