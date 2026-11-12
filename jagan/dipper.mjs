@@ -65,7 +65,7 @@ async function fromLink(token) {
       if (r.body.report && r.body.report.product !== 'complete') { location.replace(`/jagan/report#t=${token}`); return; }
       if (!render(r.body.report)) return;
       track('jagan_complete_open', { source: fresh ? 'checkout' : 'link' });
-      if (fresh) trackPurchase(token, 'complete');
+      if (fresh) trackPurchase(token, 'complete', fresh.source);
       wireLinkKeep(token);
       return;
     }

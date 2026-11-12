@@ -64,7 +64,8 @@ async function buyOnce({ resultId, itemSetVersion, answers, source, product }) {
   let r = await call('buy', body, { token });
   if (!r.ok && r.status === 0) r = await call('buy', body, { token }); // 通信の失敗は同じ購入操作のまま1回だけ再送（二重の注文にならない）
   if (r.ok && typeof r.body.checkoutUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(r.body.checkoutUrl)) {
-    session((s) => s.setItem(FRESH_KEY, String(Date.now())));
+    // 決済へ進んだ印に、押した画面（source）も残す（戻った時の purchase に引き継ぎ、どの申込元で売れたかを GA4 で読めるように）
+    session((s) => s.setItem(FRESH_KEY, JSON.stringify({ at: Date.now(), source: body.source || null })));
     location.assign(r.body.checkoutUrl);
     return { ok: true };
   }
@@ -91,9 +92,12 @@ export function setRegisterIntent(token) {
   if (!TOKEN_RE.test(String(token || ''))) return false;
   return !!session((s) => { s.setItem(REGISTER_KEY, JSON.stringify({ t: token, at: Date.now() })); return true; });
 }
+// 決済から戻った直後か（2時間以内・このタブ）。戻り値：null か { source }（申込元の画面。読めなければ null）
 export function freshPurchase() {
-  const at = Number(session((s) => { const v = s.getItem(FRESH_KEY); s.removeItem(FRESH_KEY); return v; }));
-  return Number.isFinite(at) && Date.now() - at < 2 * 60 * 60 * 1000;
+  const raw = session((s) => { const v = s.getItem(FRESH_KEY); s.removeItem(FRESH_KEY); return v; });
+  let at = Number(raw), source = null;
+  if (!Number.isFinite(at)) { try { const o = JSON.parse(raw); at = Number(o.at); source = /^[a-z_]{1,32}$/.test(String(o.source || '')) ? o.source : null; } catch { at = NaN; } }
+  return Number.isFinite(at) && Date.now() - at < 2 * 60 * 60 * 1000 ? { source } : null;
 }
 export function reportUrlOf(token, product) { return `${location.origin}/jagan/${product === 'complete' ? 'dipper' : 'report'}#t=${token}`; }
 // 商品ごとの価格・名前（表示用。金額はサーバーが決める）
@@ -105,7 +109,7 @@ export const PRODUCT_INFO = Object.freeze({
 // GA4 の購入（元素診断の report-link.html と同じ形）：決済から戻って初めてレポートが開いた時に1回だけ送る。
 //   transaction_id は固有リンクの秘密値から作る元に戻せない20桁（秘密値・注文 ID・Stripe の ID は送らない）。同じ購入を二重に数えない
 const GA_ITEMS = { report: { id: 'jagan_report_v1', name: '邪眼解析レポート', value: 1000 }, complete: { id: 'jagan_complete_v1', name: '邪眼完全解析レポート「DIPPER」', value: 3000 } };
-export async function trackPurchase(token, product) {
+export async function trackPurchase(token, product, source) {
   try {
     const it = GA_ITEMS[product];
     if (!it || typeof window.gtag !== 'function' || !TOKEN_RE.test(String(token || '')) || !crypto.subtle) return;
@@ -114,6 +118,7 @@ export async function trackPurchase(token, product) {
     const key = `jagan_ga4_purchase_${txid}`;
     try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch { /* 保存できなくても1回は送る */ }
     window.gtag('event', 'purchase', { transaction_id: txid, value: it.value, currency: 'JPY', diagnosis_type: 'jagan',
+      ...(/^[a-z_]{1,32}$/.test(String(source || '')) ? { source } : {}),
       items: [{ item_id: it.id, item_name: it.name, item_category: '邪眼診断', price: it.value, quantity: 1 }] });
   } catch { /* 計測だけ */ }
 }
