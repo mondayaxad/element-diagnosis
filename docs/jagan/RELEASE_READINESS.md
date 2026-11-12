@@ -116,9 +116,11 @@
 
 - 計測：邪眼の全ページ（トップ・結果・理論・サンプル2種・解析レポート・完全解析）とマイページで `js/ga.js` を読む。本番ドメインでだけ送信（Preview は送らない）。
 - 購入：決済から戻って初めてレポートが開いた時に `purchase`（`value` 1000／3000・`currency` JPY・`items[].item_id` `jagan_report_v1`／`jagan_complete_v1`・`item_category` 邪眼診断・`diagnosis_type` jagan）。`transaction_id` は固有リンクから作る元に戻せない20桁で、同じ購入は二重に数えない。
-- **GA4 の管理画面で手動の設定が必要なもの**（集計の画面に出すため。イベント自体は設定しなくても届く）：
-  - カスタム ディメンション（範囲：イベント）：`diagnosis_type`・`source`・`state`・`result`・`product`・`share_mode`・`reason`（元素診断で登録済みのものは不要）。
-  - キーイベント：`purchase`（登録済みなら不要）。必要に応じて `jagan_start`（診断開始）・`jagan_complete`（診断完了）・`jagan_report_cta`／`jagan_complete_cta`（申込ボタン）・`jagan_save_success`（マイページ保存）。
+- GA4 の管理画面の設定：✅ 2026-11-12 Admin API で登録済み（プロパティ `properties/543435932`「element-diagnosis」・測定 ID 一致を確認）。
+  - カスタム ディメンション（イベント）：診断の種類 `diagnosis_type`・操作元の画面 `source`・販売状態 `state`・登録処理の結果 `result`・申込商品 `product`・共有方法 `share_mode`・申込失敗の理由 `reason`。
+  - キーイベント：`purchase`（既存）・`jagan_complete`・`jagan_save_success`（追加）。申込ボタン（`jagan_report_cta`／`jagan_complete_cta`）はキーイベントにせず、`state = open` に絞って購入検討として別に集計する。
+  - 探索レポート（ファネル・表）は API で作れないため、GA4 の画面で作る。
+- `purchase` は「決済から戻ってレポートが開き、GA4 へ送れた購入」。売上・件数の正は Stripe と注文 DB、GA4 は流入から購入までの行動分析に使う。`purchase` には申込元の画面 `source` を引き継ぐ（どの申込ボタンから購入に至ったか）。`transaction_id` は注文ごとに固定（固有リンクの再発行は無い）。
 - 邪眼の主なイベント：`jagan_start`・`jagan_complete`・`jagan_detail_open`・`jagan_image_save`・`jagan_share_click`／`jagan_share_open_x`・`jagan_save_click`／`jagan_save_success`・`jagan_report_cta`／`jagan_complete_cta`（state・source）・`jagan_report_open`／`jagan_complete_open`（source）・`jagan_report_register_*`／`jagan_complete_register_*`・`purchase`。
 
 ## 11. 会員データ（マイページ）への影響（2026-11-11 確認）
