@@ -141,8 +141,8 @@
     if (!c || !/^[0-9a-f]{20}$/.test(String(c.transactionId || '')) || typeof window.gtag !== 'function') return;
     var key = 'ed_conv_' + c.transactionId;
     try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch (e) { /* 保存できない時も1回送る */ }
-    var item = { item_id: b.product, item_name: NAMES[b.product] || b.product, price: c.value, quantity: 1 };
-    window.gtag('event', 'purchase', { transaction_id: c.transactionId, value: c.value, currency: 'JPY', product: b.product, items: [item] });
+    var item = { item_id: b.product, item_name: NAMES[b.product] || b.product, item_category: '元素診断', price: c.value, quantity: 1 };
+    window.gtag('event', 'purchase', { transaction_id: c.transactionId, value: c.value, currency: 'JPY', diagnosis_type: 'eti', product_id: 'eti_' + b.product + '_v1', product: b.product, items: [item] });
   }
   function render(b, openFailed) {
     trackPurchase(b);

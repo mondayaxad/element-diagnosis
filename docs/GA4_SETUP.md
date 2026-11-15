@@ -9,7 +9,9 @@
 | ディメンション名（例） | イベント パラメータ | 中身 |
 |---|---|---|
 | 入口 | `source` | 申込・ログイン・レポートを開いた場所（`result`・`mypage`・`mypage_record`・`mypage_header`・`analysis_report`・`sample`・`report_link`・`purchase_complete` など） |
-| 商品 | `product` | `analysis`（解析レポート ¥1,000）／`complete`（完全解析 ¥3,000） |
+| 診断の種類 | `diagnosis_type` | 元素診断 `eti`／邪眼診断 `jagan`。既存の `jagan` は変更しない |
+| 統一商品ID | `product_id` | 下表の4商品と旧商品。新規登録が必要（既存の `product` は残す） |
+| 商品（従来値） | `product` | ETI は `analysis`／`complete`、DTI は `jagan_report`／`jagan_complete`。既存の集計との互換用 |
 | 失敗の理由 | `reason` | 申込・ログインの失敗の理由コード（`sales_closed`・`context_expired` など） |
 | 状態 | `state` | 購入・レポートの状態 |
 | 結果 | `result` | 操作の結果 |
@@ -31,6 +33,19 @@
 - 投稿・記事の URL の例：`https://element-diagnosis-five.vercel.app/?utm_source=x&utm_medium=social&utm_campaign=<名前>`。note は、`utm_source=note&utm_medium=referral`。
 - 流入元は、セッションの最初のヒットで決まる。UTM の反映は、GA4 の DebugView・リアルタイムで、確認する。
 - 診断の結果の共有リンク（`?dv=…&code=…`）に UTM を付ける場合は、X のカードのキャッシュが、URL ごとである点に、注意する（`?v=` と同じ扱い）。
+
+### 両診断の商品対応（2026-11-15 修正案・本番反映後から有効）
+
+| 診断 | 商品 | `product_id` | 従来の `items.item_id` |
+|---|---|---|---|
+| 元素診断 | 解析レポート ¥1,000 | `eti_analysis_v1` | `analysis` |
+| 元素診断 | 完全解析 ¥3,000 | `eti_complete_v1` | `complete` |
+| 邪眼診断 | 解析レポート ¥1,000 | `jagan_report_v1` | `jagan_report_v1` |
+| 邪眼診断 | 完全解析 ¥3,000 | `jagan_complete_v1` | `jagan_complete_v1` |
+
+旧商品 `core1` は `eti_core1_legacy` として別扱い。金額のみから商品を推測しない。従来の item_id と transaction_id は変更しない。
+
+`product_id` はイベント単位の商品比較用。標準のeコマース購入レポートでは、従来どおり商品ID・商品名・商品カテゴリを使う。登録・デプロイ前のイベントには遡及しない。
 
 ## 2. キーイベント（管理 → データの表示 → イベント → 「キーイベントとしてマーク」）
 
@@ -59,7 +74,7 @@
 | 結果の保存・共有 | `result_save_click`・`result_url_copy`・`result_tweet_click`・`result_image_save_click` |
 | ログイン・登録 | `login_start` → `login_success`／`login_failed` → `registration_onboarding_view` → `registration_onboarding_complete`／`_decline` |
 | マイページ | `mypage_entry_click`・`mypage_view`・`mypage_view_result_click`・`mypage_report_open` など |
-| 申込 | `checkout_start`＋`begin_checkout` → `checkout_redirect`（Stripe へ）／`checkout_failed` → `checkout_return`（中止して戻った） |
+| 申込 | `checkout_start`＋`begin_checkout` → `checkout_session_created`（画面作成成功）→ `checkout_redirect`（Stripe へ移動を要求）／`checkout_failed` → `checkout_return`（中止して戻った） |
 | 購入 | `purchase`（支払いから3時間以内に固有リンクを開いた時・このブラウザで1回） |
 | 返金 | `refund`（サーバーから。§3 の設定の後） |
 | レポート | `analysis_report_open`・`complete_report_open`・`report_link_copy` |
@@ -70,3 +85,36 @@
 - `purchase` はブラウザから送る。支払いの後に固有リンクを開かなかった購入は数えない（実数は Stripe で確かめる）。
 - 返金は §3 の設定の後の返金だけ。
 - 送る値は `js/ga.js` で消毒する（記録 ID・user ID・メール・トークン・URL・Stripe の ID・診断コードを落とす）。
+
+
+## 5. ETI・DTI比較の運用（2026-11-15 修正案）
+
+本節は `fix/ga4-diagnosis-funnel` のコード修正に対応する。本番反映・GA4設定完了を意味しない。
+
+- 修正後、両診断の現行導線は `begin_checkout` を申込APIの呼び出し前に送る。ETIの完全解析は目標選択完了後。キャンセルした選択は申込に数えない。
+- 修正前のDTIは成功応答後に `begin_checkout` を送っていた。前後を同じ定義の指標として比較しない。リリース時刻を記録する。
+- `checkout_session_created` はAPIが有効なStripe URLを返した時。Stripe側の新規Session件数ではなく、再試行で既存Sessionが返る場合も含む。
+- `checkout_redirect` は移動要求まで。Stripe画面の表示や支払い成功を保証しない。
+- 同じ申込内の通信再送では開始イベントを増やさない。別の再申込は別イベントとして数える。
+- `source` は操作した画面。広告や検索などの流入元は標準のセッション参照元・メディアを使う。
+
+### 日次の比較
+
+1. 診断開始・完了：ETIは `quiz_start`／`quiz_complete`、DTIは `jagan_start`／`jagan_complete` をそれぞれ集計する。
+2. 結果の傾向：ETIは `diagnosis_profile`、DTIは `jagan_profile`。診断完了イベントから特性値を取得しない。
+3. 申込：`checkout_start`／`begin_checkout`／`checkout_session_created`／`checkout_redirect`／`checkout_failed` を `diagnosis_type` と `product_id`、必要に応じて `source` 別に集計する。
+4. 購入：`purchase` を診断・商品別に集計。実売上の正はStripeと注文DB。GA4の購入欠落を「売上ゼロ」と扱わない。
+5. 完了率はユーザー基準かイベント回数基準かを明記する。購入・申込は別日に発生し得るため、単純な日次イベント比率を厳密なファネル到達率と呼ばない。
+
+### 本修正で解消しない点
+
+- 申込元の注文DBへの永続保存は未実装。ETIのpurchaseはsourceを返さず、DTIも同じタブの一時保存に依存する。申込元別の売上を完全に照合できるとは説明しない。
+- DTIのtransaction_idは従来の固有リンク由来のまま。DBから照合できる注文参照への移行は未実装。過去購入を再送しない。
+- サーバー側purchase・送信状態管理・DTIのWebhook監査ログ追加・注文統合ビューは未実装。
+- GA4管理画面の `product_id` 登録と、本番デプロイ後の受信確認は別途必要。
+
+### 検証
+
+`node --test tests/ga4_commerce_contract.test.js tests/ga4_measurement.test.js tests/ga4_privacy.test.js tests/jagan_purchase.test.mjs tests/jagan.test.mjs`
+
+共通イベント分類、商品ID互換、DTIの結果・サンプル・レポート下部・マイページ、API失敗、通信再送、二重押し、計測例外、既存の個人情報除去を検証する。実ブラウザ試験と実DB試験は、対応環境で別途実行する。

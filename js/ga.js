@@ -36,6 +36,34 @@
     });
     return out;
   }
+  // 商品名・金額から推測しない。既存 ID は保持し、共通 product_id を追加する。
+  var PRODUCTS = {
+    analysis: ['eti', 'eti_analysis_v1'], complete: ['eti', 'eti_complete_v1'],
+    analysis_1000: ['eti', 'eti_analysis_v1'], direct_complete: ['eti', 'eti_complete_v1'],
+    core1: ['eti', 'eti_core1_legacy'],
+    jagan_report: ['jagan', 'jagan_report_v1'], jagan_complete: ['jagan', 'jagan_complete_v1'],
+    jagan_report_v1: ['jagan', 'jagan_report_v1'], jagan_complete_v1: ['jagan', 'jagan_complete_v1'],
+  };
+  var CTA_PRODUCTS = {
+    unlock_all_click: 'analysis', lock_cta_click: 'analysis', analysis_checkout_click: 'analysis',
+    complete_offer_click: 'complete', jagan_report_cta: 'jagan_report', jagan_complete_cta: 'jagan_complete',
+  };
+  var COMMERCE_EVENT = /^(purchase|refund|begin_checkout|checkout_start|checkout_session_created|checkout_redirect|checkout_failed|checkout_return|purchase_confirmed|purchase_cta_view)$/;
+  function commerceParams(name, params) {
+    var p = clean(params);
+    if (!COMMERCE_EVENT.test(name) && !CTA_PRODUCTS[name]) return p;
+    var id = p.product_id || p.product || p.offer || (p.items && p.items.length === 1 && p.items[0].item_id) || CTA_PRODUCTS[name];
+    var info = PRODUCTS[id];
+    if (!info && /^eti_(analysis|complete)_v1$|^eti_core1_legacy$/.test(id || '')) info = ['eti', id];
+    if (info) {
+      p.diagnosis_type = info[0];
+      p.product_id = info[1];
+      if (p.items) p.items.forEach(function (item) {
+        if (!item.item_category) item.item_category = info[0] === 'eti' ? '元素診断' : '邪眼診断';
+      });
+    }
+    return p;
+  }
   // 流入元の UTM だけを GA4 へ渡す。2通りで渡す：
   //   ①page_location に、許可した utm_* だけを残す（GA4 は UTM を page_location の URL から読む）
   //   ②config の campaign_source・campaign_medium・campaign_name・campaign_content・campaign_term に、同じ値を入れる
@@ -81,7 +109,7 @@
   }
   var push = function () { window.dataLayer.push(arguments); };
   window.gtag = function (kind, name, params) {
-    if (kind === 'event') return push('event', name, clean(params));
+    if (kind === 'event') return push('event', name, commerceParams(name, params));
     return push.apply(null, arguments);
   };
   var m = /^(https?:\/\/[^/?#]+)/.exec(document.referrer || '');

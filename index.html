@@ -3443,7 +3443,7 @@ function initReportPurchase(root, code, refs) {
       prefetchOn(btn);
       btn.onclick = function (e) {
         e.preventDefault();
-        if (typeof gtag === 'function') gtag('event', btn === refs.lockUnlockAllBtn ? 'unlock_all_click' : 'lock_cta_click', { event_category: 'conversion' });
+        if (typeof gtag === 'function') gtag('event', btn === refs.lockUnlockAllBtn ? 'unlock_all_click' : 'lock_cta_click', { event_category: 'conversion', diagnosis_type: 'eti', product_id: 'eti_analysis_v1', state: 'open', source: btn === refs.lockUnlockAllBtn ? 'result' : 'result_lock' });
         buy('analysis', btn, lockMsg, btn === refs.lockUnlockAllBtn ? 'result' : 'result_lock');
       };
     });
@@ -3451,7 +3451,10 @@ function initReportPurchase(root, code, refs) {
   var cb = root.querySelector('[data-buy-complete]');
   if (cb) {
     if (!open) { cb.disabled = true; cb.classList.add('is-pending'); cb.setAttribute('aria-disabled', 'true'); cb.innerHTML = '<span class="ca-buy-main">まだ見えていない輪郭を読む</span><span class="ca-buy-sub">¥3,000（準備中）</span>'; }
-    else { prefetchOn(cb); cb.onclick = function () { buy('complete', cb, root.querySelector('[data-buy-msg]'), 'result'); }; }
+    else { prefetchOn(cb); cb.onclick = function () {
+      B.track('complete_offer_click', { product: 'complete', state: 'open', source: 'result' });
+      buy('complete', cb, root.querySelector('[data-buy-msg]'), 'result');
+    }; }
   }
   root.querySelectorAll('[data-buy-sample]').forEach(function (a) {
     a.addEventListener('click', function (e) {

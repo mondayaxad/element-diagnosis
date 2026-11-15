@@ -34,12 +34,13 @@
   function session(fn) { try { return fn(global.sessionStorage); } catch (e) { return null; } }
 
   // GA4（送ってよい項目だけ。秘密値・記録 ID・コードは送らない）
-  var SAFE_PARAMS = ['product', 'value', 'currency', 'source', 'state', 'result', 'reason'];
+  var SAFE_PARAMS = ['diagnosis_type', 'product_id', 'product', 'value', 'currency', 'source', 'state', 'result', 'reason'];
   function track(name, params) {
     if (typeof global.gtag !== 'function') return;
-    var out = {};
+    var out = { diagnosis_type: 'eti' };
     var p = params || {};
     SAFE_PARAMS.forEach(function (k) { if (p[k] !== undefined && p[k] !== null) out[k] = p[k]; });
+    if (p.product === 'analysis' || p.product === 'complete') out.product_id = 'eti_' + p.product + '_v1';
     try { global.gtag('event', name, out); } catch (e) { /* 計測の失敗は画面に影響させない */ }
   }
 
@@ -216,7 +217,7 @@
     track('checkout_start', { product: o.product, value: info.price, currency: 'JPY', source: o.source });
     // GA4 標準の購入ファネル（begin_checkout → purchase）。独自の checkout_start と同時に送る
     try {
-      if (typeof global.gtag === 'function') global.gtag('event', 'begin_checkout', { currency: 'JPY', value: info.price, source: o.source, items: [{ item_id: o.product, item_name: info.label, price: info.price, quantity: 1 }] });
+      if (typeof global.gtag === 'function') global.gtag('event', 'begin_checkout', { diagnosis_type: 'eti', product_id: 'eti_' + o.product + '_v1', currency: 'JPY', value: info.price, source: o.source, items: [{ item_id: o.product, item_name: info.label, item_category: '元素診断', price: info.price, quantity: 1 }] });
     } catch (e) { /* 計測の失敗は画面に影響させない */ }
     var attempt = randomToken(18);
     if (!attempt) return { ok: false, error: 'unknown' };
@@ -231,6 +232,7 @@
       r = await call('buy', body);
     }
     if (r.ok && r.body && typeof r.body.checkoutUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(r.body.checkoutUrl)) {
+      track('checkout_session_created', { product: o.product, value: info.price, currency: 'JPY', source: o.source });
       track('checkout_redirect', { product: o.product, value: info.price, currency: 'JPY', source: o.source });
       session(function (s) { s.setItem(RETURN_KEY, global.location.pathname + global.location.search + global.location.hash); });
       // マイページから申し込んだ時だけ、決済画面へ移る直前に印を付ける（ほかの入口・失敗した申込には残さない）
