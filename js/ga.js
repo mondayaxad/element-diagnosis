@@ -251,6 +251,19 @@
     });
     container.appendChild(box);
   };
+  // 申込の時点の GA4 の参照（lib/ga-ref.js と同じ形）。Cookie が無ければ null（その時はサーバーの合成の利用者で送る）
+  EdAnalytics.checkoutRef = function (source) {
+    try {
+      var ck = String(document.cookie || '');
+      var ga = /(?:^|;\s*)_ga=GA\d\.\d\.(\d{1,20})\.(\d{1,20})(?:;|$)/.exec(ck);
+      if (!ga) return null;
+      var sm = new RegExp('(?:^|;\\s*)_ga_' + MEASUREMENT_ID.replace(/^G-/, '') + '=([^;]+)').exec(ck);
+      var sid = '';
+      if (sm) { var v = sm[1]; var a = /^GS1\.\d\.(\d{1,20})\./.exec(v) || /^GS2\.\d\.s(\d{1,20})/.exec(v); if (a) sid = a[1]; }
+      var src = /^[a-z_]{1,32}$/.test(String(source || '')) ? source : '';
+      return 'ga1-' + ga[1] + '-' + ga[2] + '-' + sid + '-' + (flag('ed_internal') === '1' ? '1' : '0') + '-' + src;
+    } catch (e) { return null; }
+  };
   window.EdAnalytics = EdAnalytics;
   // ユーザー単位の属性（この端末に印を残し、毎回のページで送る）。個人を特定する情報は含まない
   function flag(k, v) { return store('localStorage', function (s) { if (v !== undefined) s.setItem(k, v); return s.getItem(k); }); }
@@ -289,10 +302,14 @@
     return push.apply(null, arguments);
   };
   var m = /^(https?:\/\/[^/?#]+)/.exec(document.referrer || '');
+  var IGNORE_REFERRER = /^https:\/\/(checkout\.stripe\.com|([a-z0-9-]+\.)*paypay\.ne\.jp|[a-z0-9]+\.supabase\.co|accounts\.google\.com|api\.(x|twitter)\.com)$/;
+  var ignoreRef = !!(m && IGNORE_REFERRER.test(m[1]));
+  if (ignoreRef) m = null;
   push('js', new Date());
   var utm = utmValues(location.search);
   var config = { page_location: location.origin + location.pathname + campaignQuery(utm), page_referrer: m ? m[1] + '/' : '', content_group: contentGroup(location.pathname) };
   if (internal) config.traffic_type = 'internal';
+  if (ignoreRef) config.ignore_referrer = 'true';
   var up = userProps();
   if (Object.keys(up).length) push('set', 'user_properties', up);
   var campaign = campaignParams(utm);

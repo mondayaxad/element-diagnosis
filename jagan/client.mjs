@@ -58,6 +58,9 @@ async function buyOnce({ resultId, itemSetVersion, answers, source, product }) {
   if (!salesOpen()) return { ok: false, error: 'sales_closed' };
   const token = await accessToken();
   const body = { resultId, attempt: randomAttempt() };
+  // GA4 の参照（購入を、申込の時点の利用者・流入元に結ぶ。lib/ga-ref.js）
+  const gaRef = window.EdAnalytics && window.EdAnalytics.checkoutRef ? window.EdAnalytics.checkoutRef(source) : null;
+  if (gaRef) body.ga = gaRef;
   if (product === 'complete') body.product = 'complete';
   if (answers) { body.itemSetVersion = itemSetVersion; body.answers = answers; }
   if (/^[a-z_]{1,32}$/.test(String(source || ''))) body.source = source;

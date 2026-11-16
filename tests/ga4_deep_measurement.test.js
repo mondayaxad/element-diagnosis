@@ -112,3 +112,42 @@ test('回答の並びの資料（docs/ga4_answer_order.json）が、送る並び
   assert.deepEqual(doc.jagan.items.map((i) => i.id), BUNDLE.items.display_order);
   assert.equal(doc.jagan.answer_set, BUNDLE.items.item_set_version);
 });
+
+
+test('checkoutRef：_ga と セッションの Cookie から参照を作る（GS1・GS2 の両方）。Cookie が無ければ null', () => {
+  const local = memStore();
+  const mk = (cookie, search = '') => {
+    const window = { sessionStorage: memStore(), localStorage: local };
+    const ctx = { window, location: { hostname: 'element-diagnosis-five.vercel.app', origin: 'https://element-diagnosis-five.vercel.app', pathname: '/', search },
+      document: { referrer: '', cookie, head: { appendChild() {} }, createElement() { return {}; } }, URLSearchParams };
+    vm.createContext(ctx); vm.runInContext(read('js/ga.js'), ctx);
+    return window;
+  };
+  assert.equal(mk('_ga=GA1.1.987654321.1700000000; _ga_FDN7NYZW9D=GS1.1.1731700000.3.1.1731700100.0.0.0').EdAnalytics.checkoutRef('result'), 'ga1-987654321-1700000000-1731700000-0-result');
+  assert.equal(mk('_ga=GA1.1.1.2; _ga_FDN7NYZW9D=GS2.1.s1731700222$o4$g1').EdAnalytics.checkoutRef('mypage_latest'), 'ga1-1-2-1731700222-0-mypage_latest');
+  assert.equal(mk('_ga=GA1.1.1.2').EdAnalytics.checkoutRef('Bad Source!'), 'ga1-1-2--0-');
+  assert.equal(mk('').EdAnalytics.checkoutRef('result'), null);
+  // 内部の印
+  mk('', '?ed_internal=1');
+  assert.equal(mk('_ga=GA1.1.1.2').EdAnalytics.checkoutRef('result'), 'ga1-1-2--1-result');
+  const GR = require('../lib/ga-ref');
+  assert.ok(GR.valid(mk('_ga=GA1.1.987654321.1700000000; _ga_FDN7NYZW9D=GS1.1.1731700000.3.1').EdAnalytics.checkoutRef('result')), 'サーバーの検査と同じ形');
+});
+
+test('決済・ログインから戻った時の参照元は流入元にしない（ignore_referrer）。ほかの参照元はそのまま', () => {
+  const mk = (referrer) => {
+    const window = { sessionStorage: memStore(), localStorage: memStore() };
+    const ctx = { window, location: { hostname: 'element-diagnosis-five.vercel.app', origin: 'https://element-diagnosis-five.vercel.app', pathname: '/jagan/report', search: '' },
+      document: { referrer, cookie: '', head: { appendChild() {} }, createElement() { return {}; } }, URLSearchParams };
+    vm.createContext(ctx); vm.runInContext(read('js/ga.js'), ctx);
+    return plain(window.dataLayer.find((a) => a[0] === 'config')[2]);
+  };
+  for (const r of ['https://checkout.stripe.com/c/pay/cs_live_x', 'https://www.paypay.ne.jp/x', 'https://akivoobkqcnqvdumxtmg.supabase.co/auth/v1/callback', 'https://accounts.google.com/o/oauth2', 'https://api.x.com/oauth']) {
+    const c = mk(r);
+    assert.equal(c.ignore_referrer, 'true', r); assert.equal(c.page_referrer, '', r);
+  }
+  for (const r of ['https://t.co/abc', 'https://x.com/someone', 'https://www.google.com/']) {
+    const c = mk(r);
+    assert.equal(c.ignore_referrer, undefined, r); assert.ok(c.page_referrer.startsWith('https://'), r);
+  }
+});

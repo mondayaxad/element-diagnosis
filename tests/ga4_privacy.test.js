@@ -45,7 +45,9 @@ test('page_location は origin＋path だけ・page_referrer は origin だけ�
   const p = run(PROD, { referrer: 'https://checkout.stripe.com/c/pay/cs_test_a1b2c3d4e5f6#frag', search: '?token=secret' });
   const config = p.win.dataLayer.find((a) => a[0] === 'config');
   assert.equal(config[2].page_location, `https://${PROD}/report.html`);
-  assert.equal(config[2].page_referrer, 'https://checkout.stripe.com/');
+  // 決済画面から戻った時は、参照元を流入元にしない（ignore_referrer。セッション・流入元を保つ）
+  assert.equal(config[2].page_referrer, '');
+  assert.equal(config[2].ignore_referrer, 'true');
   assert.ok(!JSON.stringify(Array.from(p.win.dataLayer, (a) => Array.from(a))).includes('cs_test_'));
 });
 

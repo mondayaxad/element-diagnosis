@@ -222,6 +222,9 @@
     var attempt = randomToken(18);
     if (!attempt) return { ok: false, error: 'unknown' };
     var body = { context: o.context, product: o.product, attempt: attempt };
+    // GA4 の参照（購入を、申込の時点の利用者・流入元に結ぶ。lib/ga-ref.js）
+    var gaRef = global.EdAnalytics && global.EdAnalytics.checkoutRef ? global.EdAnalytics.checkoutRef(o.source) : null;
+    if (gaRef) body.ga = gaRef;
     if (goal) body.goal = goal;
     if (/^[a-z_]{1,32}$/.test(String(o.source || ''))) body.source = o.source;
     var r = await call('buy', body);

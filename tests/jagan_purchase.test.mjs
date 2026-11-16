@@ -379,3 +379,14 @@ test('GA4（サーバー送信）：Webhook の支払い・返金で onApplied �
   assert.equal(o3.status, 'paid');
   assert.ok(!hosts.some((h) => /google-analytics/.test(h)), 'Preview（Stripe Test）では GA4 へ送らない');
 });
+
+test('GA4 の参照（ga）：正しい形なら Stripe の client_reference_id に入れ、違う形は無視して申込は続ける', async () => {
+  const { stripe, call } = setup();
+  const ref = 'ga1-123-456-1731700000-0-result';
+  assert.equal((await call('buy', buyBody({ ga: ref, source: 'result' }))).status, 200);
+  assert.equal(stripe.st.lastCreate.params.client_reference_id, ref);
+  assert.deepEqual(Object.keys(stripe.st.lastCreate.params.metadata).sort(), ['app', 'env', 'order_id'], 'metadata は従来の3項目のまま（Webhook の照合）');
+  const { stripe: st2, call: call2 } = setup();
+  assert.equal((await call2('buy', buyBody({ ga: 'ga1-x-<script>' }))).status, 200);
+  assert.equal(st2.st.lastCreate.params.client_reference_id, undefined);
+});
