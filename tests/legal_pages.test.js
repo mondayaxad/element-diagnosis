@@ -28,30 +28,33 @@ test('特商法：開示請求の方式・価格・返金・提供方法が規�
   const t = text('tokushoho.html');
   assert.match(t, /請求があった場合、遅滞なく開示します/);
   assert.doesNotMatch(t, /24時間以内|1営業日|30日以内/, '開示の内部目標を公開文面に書かない');
-  for (const s of ['1,000円（税込）', '3,000円（税込）', '有効期間は、作成から約24時間', 'PDF 等で保存', '二重決済', '契約内容との不一致', '法令上必要な場合']) assert.ok(t.includes(s), s);
+  // 2026-11-16：必要な事項だけに簡素化（法定の項目：事業者・連絡先・価格・必要料金・支払方法と時期・提供時期・申込期間・返品・動作環境）
+  for (const s of ['販売事業者', '運営責任者', '所在地', '電話番号', '1,000円（税込）', '3,000円（税込）', '商品代金以外の必要料金', '支払方法', '支払時期', '申込みの期間', '提供時期', '返品・キャンセル', '動作環境', '二重決済', '法令上必要な場合']) assert.ok(t.includes(s), s);
   assert.match(t, /完全解析には、解析レポートの本文は含まれません/);
-  assert.match(t, /通常の有効期限は設けていません/);
+  assert.match(t, /本サービスの提供期間中、リンクから閲覧できます/);
+  assert.doesNotMatch(t, /通常、数分|全46ページ|全23ページ|通常の有効期限/, '運営者を縛る細かい約束・変わりうる数字を書かない');
   assert.doesNotMatch(t, /永久|永続|無期限|ずっと/, '期限なし＝サービスの永続の保証、と読める語を使わない');
 });
 
 test('規約：A と B は別商品・サービス終了は固定日数なし・リンク紛失で再発行を約束しない・責任の上限に法令の除外', () => {
   const t = text('terms.html');
-  assert.match(t, /それぞれ別の商品で、一方を購入しても、もう一方の内容は含まれません/);
-  assert.match(t, /合理的な予告期間/);
-  assert.doesNotMatch(t, /30日前|[0-9]+日前までに/);
-  assert.match(t, /リンクを紛失された場合は、お問い合わせください/);
+  assert.match(t, /それぞれ別の商品で、一方を購入しても、ほかの商品の内容は含まれません/);
+  assert.match(t, /本サイト上で事前にお知らせします/);
+  assert.doesNotMatch(t, /30日前|[0-9]+日前までに|合理的な予告期間/);
   assert.doesNotMatch(t, /請求書/);
   assert.match(t, /故意または重大な過失がある場合を除き/);
   assert.match(t, /消費者契約法その他の法令により/);
-  assert.match(t, /通常の有効期限を設けていません/);
-  assert.match(t, /PDF をメールでお送りするサービスはありません/);
+  assert.match(t, /本サービスの提供期間中、リンクから読むことができます/);
+  assert.match(t, /PDF 等で保存してください/);
+  for (const s of ['知的財産権', '禁止事項', '利用を停止することがあります', '専属的合意管轄', '効力発生日']) assert.ok(t.includes(s), s);
 });
 
 test('プライバシー：IP は照合値のみ・Supabase の地域を書かない・外部サービス一覧', () => {
   const t = text('privacy.html');
-  assert.match(t, /IP アドレスそのものは、本サイトのデータベースに保存しません/);
   assert.doesNotMatch(t, /東京|シンガポール|ap-northeast|us-east|eu-west|Tokyo|Singapore/, 'リージョンは確認できるまで書かない');
-  for (const s of ['Supabase', 'Stripe', 'Vercel', 'Kit']) assert.ok(t.includes(s), s);
+  // 外部送信・委託先の一覧（必要）。内部の仕組み（ハッシュ・保存の期間の数字・Cookie の一覧）は書かない
+  for (const s of ['Supabase', 'Stripe', 'Vercel', 'Kit', 'Google Analytics', '利用目的', '第三者への提供', '安全管理', '開示・訂正', '日本国外']) assert.ok(t.includes(s), s);
+  assert.doesNotMatch(t, /ハッシュ|180日|7年間|24時間|最長365日|HttpOnly|手数料は、原則として無料/);
 });
 
 test('法務ページは公開ファイルに入り、Production ではビルドが【…】の残りを止める。Preview は通す', () => {
