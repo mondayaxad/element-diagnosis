@@ -184,14 +184,14 @@ test('campaign_*：URL の UTM と、config の値が対応する（utm_source�
   // 一部だけ：あるものだけを反映する
   assert.deepEqual(campaignOf(runGa('?utm_source=x&utm_medium=social').cfg), { campaign_source: 'x', campaign_medium: 'social' });
   assert.deepEqual(campaignOf(runGa('?utm_campaign=only').cfg), { campaign_name: 'only' });
-  // config の項目は、page_location・page_referrer と campaign_* だけ
-  assert.deepEqual(Object.keys(r.cfg).sort(), ['campaign_content', 'campaign_medium', 'campaign_name', 'campaign_source', 'campaign_term', 'page_location', 'page_referrer']);
+  // config の項目は、page_location・page_referrer・content_group（診断の区分）と campaign_* だけ
+  assert.deepEqual(Object.keys(r.cfg).sort(), ['campaign_content', 'campaign_medium', 'campaign_name', 'campaign_source', 'campaign_term', 'content_group', 'page_location', 'page_referrer']);
 });
 
 test('campaign_*：UTM が無ければ設定しない（config は従来どおり）', () => {
   for (const q of ['', '?foo=1', '?dv=ETI-2.0&code=abc&mv=2.1.0', '?utm_source=', '?utm_id=1&utm_source_platform=x']) {
     const r = runGa(q);
-    assert.deepEqual(Object.keys(r.cfg).sort(), ['page_location', 'page_referrer'], q);
+    assert.deepEqual(Object.keys(r.cfg).sort(), ['content_group', 'page_location', 'page_referrer'], q);
     assert.equal(r.loc, `https://${PROD}/`, q);
   }
 });
@@ -399,6 +399,7 @@ test('本番のドメイン：config（UTM・campaign_*）が、最初のイベ�
   assert.deepEqual(dl[1][2], {
     page_location: `${HOST}/?utm_source=ga4check&utm_medium=test&utm_campaign=prerelease`,
     page_referrer: 'https://t.co/',
+    content_group: 'eti',
     campaign_source: 'ga4check', campaign_medium: 'test', campaign_name: 'prerelease',
   });
   const firstEvent = dl.findIndex((a) => a[0] === 'event');
@@ -415,6 +416,6 @@ test('本番のドメイン：UTM が無い時は、config に campaign_* を入
   await p.goto(`${HOST}/`);
   await p.waitForFunction(() => (window.dataLayer || []).some((a) => a[0] === 'config'));
   const dl = await dlOf(p);
-  assert.deepEqual(dl[1][2], { page_location: `${HOST}/`, page_referrer: '' });
+  assert.deepEqual(dl[1][2], { page_location: `${HOST}/`, page_referrer: '', content_group: 'eti' });
   await ctx.close();
 });

@@ -36,6 +36,54 @@
     });
     return out;
   }
+  // 商品名・金額から推測しない。既存 ID は保持し、共通 product_id を追加する。
+  var PRODUCTS = {
+    analysis: ['eti', 'eti_analysis_v1'], complete: ['eti', 'eti_complete_v1'],
+    analysis_1000: ['eti', 'eti_analysis_v1'], direct_complete: ['eti', 'eti_complete_v1'],
+    core1: ['eti', 'eti_core1_legacy'],
+    jagan_report: ['jagan', 'jagan_report_v1'], jagan_complete: ['jagan', 'jagan_complete_v1'],
+    jagan_report_v1: ['jagan', 'jagan_report_v1'], jagan_complete_v1: ['jagan', 'jagan_complete_v1'],
+  };
+  var CTA_PRODUCTS = {
+    unlock_all_click: 'analysis', lock_cta_click: 'analysis', analysis_checkout_click: 'analysis',
+    complete_offer_click: 'complete', jagan_report_cta: 'jagan_report', jagan_complete_cta: 'jagan_complete',
+  };
+  var COMMERCE_EVENT = /^(purchase|refund|begin_checkout|checkout_start|checkout_session_created|checkout_redirect|checkout_failed|checkout_return|purchase_confirmed|purchase_cta_view)$/;
+  var CATEGORY = { eti: '元素診断', jagan: '邪眼診断' };
+  // 表の自身の項目だけを引く（constructor・toString など、継承された名前を商品として扱わない）
+  function own(table, key) { return typeof key === 'string' && Object.prototype.hasOwnProperty.call(table, key) ? table[key] : undefined; }
+  function productInfo(id) {
+    var info = own(PRODUCTS, id);
+    if (info) return info;
+    return /^(eti_(analysis|complete)_v1|eti_core1_legacy)$/.test(typeof id === 'string' ? id : '') ? ['eti', id] : undefined;
+  }
+  function commerceParams(name, params) {
+    var p = clean(params);
+    var cta = own(CTA_PRODUCTS, name);
+    if (!COMMERCE_EVENT.test(name) && !cta) return p;
+    // 旧版診断（legacy-v1）の購入ボタンは旧商品 core1（現行の解析レポートと分けて数える）
+    if (cta && p.diagnosis_version === 'legacy-v1') cta = 'core1';
+    var items = Array.isArray(p.items) ? p.items : [];
+    // 各商品のカテゴリは、その商品自身の ID からだけ決める（ほかの商品・イベント全体の値で一括に付けない）
+    var itemInfos = items.map(function (item) { return productInfo(item && item.item_id); });
+    items.forEach(function (item, k) {
+      if (item && itemInfos[k] && !item.item_category) item.item_category = CATEGORY[itemInfos[k][0]];
+    });
+    // イベント全体の商品：明示の値（product_id・product・offer）、無ければ1件だけの items、無ければ CTA の名前。
+    //   明示の値どうし・items・diagnosis_type が食い違う時、未知の ID が混ざる時は、全体の分類を補わない（推測しない）
+    var candidates = [];
+    ['product_id', 'product', 'offer'].forEach(function (k) { if (p[k] !== undefined) candidates.push(productInfo(p[k])); });
+    if (!candidates.length && items.length === 1) candidates.push(itemInfos[0]);
+    if (!candidates.length && !items.length && cta) candidates.push(productInfo(cta));
+    if (!candidates.length || candidates.some(function (c) { return !c; })) return p;
+    var info = candidates[0];
+    var agree = function (c) { return c && c[0] === info[0] && c[1] === info[1]; };
+    if (!candidates.every(agree) || !itemInfos.every(agree)) return p;
+    if (p.diagnosis_type !== undefined && p.diagnosis_type !== info[0]) return p;
+    p.diagnosis_type = info[0];
+    p.product_id = info[1];
+    return p;
+  }
   // 流入元の UTM だけを GA4 へ渡す。2通りで渡す：
   //   ①page_location に、許可した utm_* だけを残す（GA4 は UTM を page_location の URL から読む）
   //   ②config の campaign_source・campaign_medium・campaign_name・campaign_content・campaign_term に、同じ値を入れる
@@ -73,6 +121,15 @@
     UTM_KEYS.forEach(function (k) { if (utm[k] !== undefined) out[UTM_TO_CAMPAIGN[k]] = utm[k]; });
     return out;
   }
+  // コンテンツ グループ（GA4 の標準レポートで、元素診断・邪眼診断・共通ページを切り替えて見る）。
+  //   jagan：邪眼のページ（/jagan・/jagan/…）と共有リンク（/j/…）／shared：マイページと規約類（両方の利用者が使う）／eti：それ以外（元素診断）
+  function contentGroup(path) {
+    var p = String(path || '/');
+    if (/^\/jagan(\/|\.html$|$)/.test(p) || /^\/j\//.test(p)) return 'jagan';
+    if (/^\/(mypage|privacy|terms|tokushoho)(\.html)?\/?$/.test(p)) return 'shared';
+    return 'eti';
+  }
+  window.__edContentGroup = contentGroup;
   window.__edGaClean = clean;
   window.dataLayer = window.dataLayer || [];
   if (location.hostname !== PRODUCTION_HOST) {
@@ -81,13 +138,13 @@
   }
   var push = function () { window.dataLayer.push(arguments); };
   window.gtag = function (kind, name, params) {
-    if (kind === 'event') return push('event', name, clean(params));
+    if (kind === 'event') return push('event', name, commerceParams(name, params));
     return push.apply(null, arguments);
   };
   var m = /^(https?:\/\/[^/?#]+)/.exec(document.referrer || '');
   push('js', new Date());
   var utm = utmValues(location.search);
-  var config = { page_location: location.origin + location.pathname + campaignQuery(utm), page_referrer: m ? m[1] + '/' : '' };
+  var config = { page_location: location.origin + location.pathname + campaignQuery(utm), page_referrer: m ? m[1] + '/' : '', content_group: contentGroup(location.pathname) };
   var campaign = campaignParams(utm);
   Object.keys(campaign).forEach(function (k) { config[k] = campaign[k]; });
   push('config', MEASUREMENT_ID, config);
