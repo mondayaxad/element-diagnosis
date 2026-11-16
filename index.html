@@ -2821,7 +2821,7 @@ function renderResult(root) {
     && typeof EdGuestPurchase !== 'undefined' && EdGuestPurchase.salesOpen()
     && /^[0-9a-z]{20,80}$/.test(String(shortCode || ''));
   function legacyBuy(btn, source) {
-    if (typeof gtag === 'function') gtag('event', btn === lockUnlockAllBtn ? 'unlock_all_click' : 'lock_cta_click', { event_category: 'conversion', diagnosis_version: 'legacy-v1' });
+    if (typeof gtag === 'function') gtag('event', btn === lockUnlockAllBtn ? 'unlock_all_click' : 'lock_cta_click', { event_category: 'conversion', diagnosis_version: 'legacy-v1', diagnosis_type: 'eti', product_id: 'eti_core1_legacy' });
     location.href = LEGACY_BUY_URL + '?client_reference_id=' + encodeURIComponent(shortCode);
   }
   var guestFlow = !legacyResult && typeof EdGuestPurchase !== 'undefined';

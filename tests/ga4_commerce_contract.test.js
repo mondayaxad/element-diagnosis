@@ -126,3 +126,58 @@ test('ETIの通信失敗は同じ申込を再送し、計測が例外を出し�
   ctx.fetch = async () => ({ ok: true, status: 200, json: async () => ({ checkoutUrl: 'https://checkout.stripe.com/c/pay/mock' }) });
   assert.equal((await w.EdBuy.start({ context: 'x'.repeat(80), product: 'analysis', source: 'result' })).ok, true);
 });
+
+test('旧版診断（legacy-v1）の購入ボタンは旧商品 core1。現行版と同じイベント名でも商品IDが分かれる', () => {
+  const w = ga();
+  for (const name of ['lock_cta_click', 'unlock_all_click']) {
+    w.gtag('event', name, { event_category: 'conversion', diagnosis_version: 'legacy-v1' });
+    const legacy = plain(w.dataLayer.at(-1)[2]);
+    assert.equal(legacy.product_id, 'eti_core1_legacy', name);
+    assert.equal(legacy.diagnosis_type, 'eti');
+    w.gtag('event', name, { event_category: 'conversion' });
+    assert.equal(w.dataLayer.at(-1)[2].product_id, 'eti_analysis_v1', name + '（現行版）');
+  }
+  // 旧版の呼び出し元も旧商品を明示している
+  const html = read('index.html');
+  assert.match(html, /diagnosis_version: 'legacy-v1', diagnosis_type: 'eti', product_id: 'eti_core1_legacy' \}/);
+});
+
+test('複数商品・矛盾する入力：各商品のカテゴリはその商品のIDから決め、イベント全体の分類は補わない', () => {
+  const w = ga();
+  w.gtag('event', 'purchase', { product: 'analysis', items: [{ item_id: 'analysis' }, { item_id: 'jagan_report_v1' }] });
+  let p = plain(w.dataLayer.at(-1)[2]);
+  assert.equal(p.items[0].item_category, '元素診断');
+  assert.equal(p.items[1].item_category, '邪眼診断', 'DTI の商品を元素診断にしない');
+  assert.equal(p.diagnosis_type, undefined); assert.equal(p.product_id, undefined);
+  // 明示の値どうしが食い違う
+  w.gtag('event', 'checkout_start', { product: 'analysis', product_id: 'jagan_report_v1' });
+  p = plain(w.dataLayer.at(-1)[2]);
+  assert.equal(p.diagnosis_type, undefined); assert.equal(p.product_id, 'jagan_report_v1', '呼び出し元の値は変えない');
+  // diagnosis_type と商品が食い違う
+  w.gtag('event', 'purchase', { diagnosis_type: 'jagan', items: [{ item_id: 'analysis' }] });
+  p = plain(w.dataLayer.at(-1)[2]);
+  assert.equal(p.diagnosis_type, 'jagan'); assert.equal(p.product_id, undefined);
+  // 明示の値と items が食い違う
+  w.gtag('event', 'begin_checkout', { product: 'complete', items: [{ item_id: 'analysis' }] });
+  assert.equal(w.dataLayer.at(-1)[2].product_id, undefined);
+  // 一致していれば補う（既存の DTI マイページ：product と items が同じ商品）
+  w.gtag('event', 'begin_checkout', { diagnosis_type: 'jagan', product: 'jagan_report', items: [{ item_id: 'jagan_report_v1' }] });
+  p = plain(w.dataLayer.at(-1)[2]);
+  assert.equal(p.diagnosis_type, 'jagan'); assert.equal(p.product_id, 'jagan_report_v1');
+});
+
+test('未知の商品ID：継承された名前（constructor など）を商品として扱わない', () => {
+  const w = ga();
+  for (const id of ['constructor', 'toString', '__proto__', 'hasOwnProperty', 'valueOf', 'unknown_product']) {
+    w.gtag('event', 'purchase', { items: [{ item_id: id }] });
+    let p = plain(w.dataLayer.at(-1)[2]);
+    assert.equal(p.diagnosis_type, undefined, id); assert.equal(p.product_id, undefined, id);
+    assert.equal(p.items[0].item_category, undefined, id);
+    w.gtag('event', 'checkout_start', { product: id });
+    p = plain(w.dataLayer.at(-1)[2]);
+    assert.equal(p.diagnosis_type, undefined, id);
+  }
+  // CTA 以外の名前が継承プロパティでも、購入系として扱わない
+  w.gtag('event', 'constructor', { source: 'x' });
+  assert.deepEqual(plain(w.dataLayer.at(-1)[2]), { source: 'x' });
+});

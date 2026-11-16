@@ -49,19 +49,39 @@
     complete_offer_click: 'complete', jagan_report_cta: 'jagan_report', jagan_complete_cta: 'jagan_complete',
   };
   var COMMERCE_EVENT = /^(purchase|refund|begin_checkout|checkout_start|checkout_session_created|checkout_redirect|checkout_failed|checkout_return|purchase_confirmed|purchase_cta_view)$/;
+  var CATEGORY = { eti: '元素診断', jagan: '邪眼診断' };
+  // 表の自身の項目だけを引く（constructor・toString など、継承された名前を商品として扱わない）
+  function own(table, key) { return typeof key === 'string' && Object.prototype.hasOwnProperty.call(table, key) ? table[key] : undefined; }
+  function productInfo(id) {
+    var info = own(PRODUCTS, id);
+    if (info) return info;
+    return /^(eti_(analysis|complete)_v1|eti_core1_legacy)$/.test(typeof id === 'string' ? id : '') ? ['eti', id] : undefined;
+  }
   function commerceParams(name, params) {
     var p = clean(params);
-    if (!COMMERCE_EVENT.test(name) && !CTA_PRODUCTS[name]) return p;
-    var id = p.product_id || p.product || p.offer || (p.items && p.items.length === 1 && p.items[0].item_id) || CTA_PRODUCTS[name];
-    var info = PRODUCTS[id];
-    if (!info && /^eti_(analysis|complete)_v1$|^eti_core1_legacy$/.test(id || '')) info = ['eti', id];
-    if (info) {
-      p.diagnosis_type = info[0];
-      p.product_id = info[1];
-      if (p.items) p.items.forEach(function (item) {
-        if (!item.item_category) item.item_category = info[0] === 'eti' ? '元素診断' : '邪眼診断';
-      });
-    }
+    var cta = own(CTA_PRODUCTS, name);
+    if (!COMMERCE_EVENT.test(name) && !cta) return p;
+    // 旧版診断（legacy-v1）の購入ボタンは旧商品 core1（現行の解析レポートと分けて数える）
+    if (cta && p.diagnosis_version === 'legacy-v1') cta = 'core1';
+    var items = Array.isArray(p.items) ? p.items : [];
+    // 各商品のカテゴリは、その商品自身の ID からだけ決める（ほかの商品・イベント全体の値で一括に付けない）
+    var itemInfos = items.map(function (item) { return productInfo(item && item.item_id); });
+    items.forEach(function (item, k) {
+      if (item && itemInfos[k] && !item.item_category) item.item_category = CATEGORY[itemInfos[k][0]];
+    });
+    // イベント全体の商品：明示の値（product_id・product・offer）、無ければ1件だけの items、無ければ CTA の名前。
+    //   明示の値どうし・items・diagnosis_type が食い違う時、未知の ID が混ざる時は、全体の分類を補わない（推測しない）
+    var candidates = [];
+    ['product_id', 'product', 'offer'].forEach(function (k) { if (p[k] !== undefined) candidates.push(productInfo(p[k])); });
+    if (!candidates.length && items.length === 1) candidates.push(itemInfos[0]);
+    if (!candidates.length && !items.length && cta) candidates.push(productInfo(cta));
+    if (!candidates.length || candidates.some(function (c) { return !c; })) return p;
+    var info = candidates[0];
+    var agree = function (c) { return c && c[0] === info[0] && c[1] === info[1]; };
+    if (!candidates.every(agree) || !itemInfos.every(agree)) return p;
+    if (p.diagnosis_type !== undefined && p.diagnosis_type !== info[0]) return p;
+    p.diagnosis_type = info[0];
+    p.product_id = info[1];
     return p;
   }
   // 流入元の UTM だけを GA4 へ渡す。2通りで渡す：
