@@ -150,3 +150,10 @@
 - ユーザー単位の属性（user_properties）：`diagnoses_done`（eti・jagan・both）・`is_member`（yes）・`is_purchaser`（yes）。端末の印から毎回送る。
 - 内部トラフィック：運営者の端末で一度 `?ed_internal=1` を付けて開くと、その端末の通信に `traffic_type=internal` が付く（`?ed_internal=0` で外す）。GA4：管理 → データ設定 → データフィルタ →「Internal Traffic」を「有効」にする。
 - 元素診断の完全解析（サーバーで作る閲覧ページ）は GA4 を読み込まないため、章の閲覧は送らない。
+
+## 7. 購入と流入元の結び付け（2026-11-16 追加）
+
+- 申込の時、ブラウザが GA4 の参照（`ga1-<client_id>-<session_id>-<内部>-<申込元>`。lib/ga-ref.js）を作り、サーバーが形を確かめて Stripe Checkout の `client_reference_id` に入れる（metadata は従来の order_id・app・env のまま）。
+- 支払いの確定（Webhook）でサーバーから送る `purchase` は、この参照の client_id・session_id・申込元（source）・内部の印（traffic_type）で送る。参照が無い時は取引ごとの合成の利用者。
+- 決済（Stripe・PayPay）・ログイン（Supabase・Google・X）から戻った時の参照元は、流入元にしない（`ignore_referrer`。GA4 の「除外する参照」と同じ効果を js/ga.js で行う）。
+- 拡張計測の「ブラウザの履歴イベントに基づくページの変更」はオフ（2026-11-16。邪眼の完了時に page_view が二重になるため）。

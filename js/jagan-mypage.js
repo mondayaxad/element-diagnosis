@@ -314,6 +314,8 @@
     track('checkout_start', { product: prod, value: value, currency: 'JPY', source: source });
     var t = await token();
     var body = { resultId: id, attempt: randomAttempt(), source: /^[a-z_]{1,32}$/.test(source) ? source : 'mypage' };
+    var gaRef = window.EdAnalytics && window.EdAnalytics.checkoutRef ? window.EdAnalytics.checkoutRef(body.source) : null;
+    if (gaRef) body.ga = gaRef;
     if (isC) body.product = 'complete';
     track('begin_checkout', { currency: 'JPY', value: value, source: body.source, items: [{ item_id: isC ? 'jagan_complete_v1' : 'jagan_report_v1', item_name: isC ? '邪眼完全解析レポート「DIPPER」' : '邪眼解析レポート', item_category: '邪眼診断', price: value, quantity: 1 }] });
 

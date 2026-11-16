@@ -86,7 +86,7 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
   //   本番（Live）で GA4_API_SECRET がある時だけ。応答の後で送り、失敗しても決済の処理に影響させない。
   //   同じ注文は同じ transaction_id・同じ合成 client_id（再送は GA4 が重複を除く）。すでに反映済み（購入完了ページの問い合わせが先）でも、支払い済みなら送る
   const ETI_PRODUCT = { analysis: 'eti_analysis_v1', direct_complete: 'eti_complete_v1', analysis_upgrade: 'eti_complete_v1' };
-  async function etiPurchaseGa4(conn, orderId) {
+  async function etiPurchaseGa4(conn, orderId, gaRef = null) {
     if (!GA.enabled(env, CP.livemodeOf(conn)) || !CE.isUuid(orderId)) return;
     try {
       const rows = await CP.selectRows(fetchImpl, conn, `complete_orders?id=eq.${encodeURIComponent(orderId)}&select=offer,amount,status,paid_at`);
@@ -94,17 +94,17 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
       const productId = o && Object.prototype.hasOwnProperty.call(ETI_PRODUCT, o.offer) ? ETI_PRODUCT[o.offer] : null;
       if (!o || o.status !== 'paid' || !productId) return;
       GA.schedulePurchase(waitUntil, { env, fetchImpl, livemode: CP.livemodeOf(conn), transactionId: GP.refOf(env, orderId),
-        value: Number(o.amount), productId, paidAtMs: Date.parse(o.paid_at), logger });
+        value: Number(o.amount), productId, paidAtMs: Date.parse(o.paid_at), gaRef, logger });
     } catch { /* 計測だけ */ }
   }
-  async function jaganGa4(conn, JP, { kind, orderId }) {
+  async function jaganGa4(conn, JP, { kind, orderId, gaRef = null }) {
     if (!GA.enabled(env, CP.livemodeOf(conn)) || !CE.isUuid(orderId)) return;
     const rows = await CP.selectRows(fetchImpl, conn, `jagan_orders?id=eq.${encodeURIComponent(orderId)}&select=product_key,amount,status,paid_at,idempotency_key`);
     const o = rows[0];
     const transactionId = o ? JP.ga4TransactionId(env, o.idempotency_key) : null;
     if (!o || !transactionId || !Object.prototype.hasOwnProperty.call(GA.PRODUCTS, o.product_key)) return;
     const args = { env, fetchImpl, livemode: CP.livemodeOf(conn), transactionId, value: Number(o.amount), productId: o.product_key, logger };
-    if (kind === 'paid' && o.status === 'paid') GA.schedulePurchase(waitUntil, { ...args, paidAtMs: Date.parse(o.paid_at) });
+    if (kind === 'paid' && o.status === 'paid') GA.schedulePurchase(waitUntil, { ...args, paidAtMs: Date.parse(o.paid_at), gaRef });
     if (kind === 'refunded') GA.scheduleRefund(waitUntil, args);
   }
 
@@ -119,7 +119,7 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
     const result = await CA.applyPaidSession({
       env, fetchImpl, conn, session: found.session, orderId: found.orderId, eventId: ev.id, eventCreatedIso: ev.createdAt,
     });
-    if (result === 'applied' || result === 'noop' || result === 'duplicate') await etiPurchaseGa4(conn, found.orderId);
+    if (result === 'applied' || result === 'noop' || result === 'duplicate') await etiPurchaseGa4(conn, found.orderId, found.session.client_reference_id);
     return result;
   }
 

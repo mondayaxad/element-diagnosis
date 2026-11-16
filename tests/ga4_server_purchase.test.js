@@ -18,7 +18,7 @@ test('purchase の本文：商品ごとの診断・product_id・既存の item_i
     assert.equal(b.timestamp_micros, (now - 60000) * 1000);
     const e = b.events[0];
     assert.equal(e.name, 'purchase');
-    assert.deepEqual({ ...e.params, items: undefined }, { transaction_id: REF, currency: 'JPY', value, diagnosis_type: diag, product_id: pid, source: 'server_webhook', items: undefined });
+    assert.deepEqual({ ...e.params, items: undefined }, { transaction_id: REF, currency: 'JPY', value, diagnosis_type: diag, product_id: pid, source: 'server_webhook', sent_by: 'server', items: undefined });
     assert.deepEqual(e.params.items.map((i) => [i.item_id, i.price, i.quantity]), [[itemId, value, 1]]);
   }
   // 同じ取引は同じ client_id（再送は GA4 が重複を除く）
@@ -48,7 +48,7 @@ test('sendPurchase：本番（Live）で秘密値がある時だけ。失敗し�
 
 test('Webhook：元素診断は支払い済みの注文だけ（applied・noop・duplicate）を、purchase と同じ参照で送る。邪眼は onApplied から送る', () => {
   const src = read('api/stripe-webhook.js');
-  assert.match(src, /if \(result === 'applied' \|\| result === 'noop' \|\| result === 'duplicate'\) await etiPurchaseGa4\(conn, found\.orderId\);/);
+  assert.match(src, /if \(result === 'applied' \|\| result === 'noop' \|\| result === 'duplicate'\) await etiPurchaseGa4\(conn, found\.orderId, found\.session\.client_reference_id\);/);
   assert.match(src, /o\.status !== 'paid'/);
   assert.match(src, /transactionId: GP\.refOf\(env, orderId\)/, '元素診断の purchase（固有リンクの conversion）と同じ参照');
   assert.match(src, /onApplied: \(a\) => jaganGa4\(conn, JP, a\)/);
@@ -144,4 +144,66 @@ test('振る舞い（邪眼）：支払いの反映で purchase を1回、ブラ
   assert.deepEqual([p.diagnosis_type, p.product_id, p.value, p.items[0].item_id], ['jagan', 'jagan_report_v1', 1000, 'jagan_report_v1']);
   // 反映されなかった（ignored）支払いは送らない
   assert.equal((await runWebhook({ app: JP.APP, rows, rpcResult: 'ignored:amount_mismatch' })).mp.length, 0);
+});
+
+
+// ---- 申込の時点の GA4 の参照（client_reference_id）：購入を、同じ利用者・セッション・申込元に結ぶ ----
+const GR = require('../lib/ga-ref');
+test('GA4 の参照：形を確かめ、client_id・session_id・内部の印・申込元に分ける。違う形は使わない', () => {
+  assert.deepEqual(GR.parse('ga1-123456789-1700000000-1731700000-0-result'), { clientId: '123456789.1700000000', sessionId: 1731700000, internal: false, source: 'result' });
+  assert.deepEqual(GR.parse('ga1-1-2--1-'), { clientId: '1.2', sessionId: null, internal: true, source: null });
+  for (const bad of ['', 'ga1-a-2-3-0-x', 'ga2-1-2-3-0-x', 'ga1-1-2-3-2-x', 'ga1-1-2-3-0-Result', 'ga1-1-2-3-0-x;drop', 'cs_live_123', null, 5]) assert.equal(GR.valid(bad), false, String(bad));
+});
+test('purchase の本文：参照があれば、その利用者・セッション・申込元・内部の印で送る', () => {
+  const now = Date.parse('2026-11-16T12:00:00Z');
+  const b = GA.purchasePayload({ transactionId: REF, value: 1000, productId: 'jagan_report_v1', paidAtMs: now - 1000, nowMs: now, gaRef: 'ga1-111-222-1731700000-1-mypage_latest' });
+  assert.equal(b.client_id, '111.222');
+  const p = b.events[0].params;
+  assert.equal(p.session_id, 1731700000); assert.equal(p.engagement_time_msec, 1);
+  assert.equal(p.source, 'mypage_latest'); assert.equal(p.traffic_type, 'internal'); assert.equal(p.sent_by, 'server');
+  // 参照が無い・壊れている時は合成の利用者
+  assert.equal(GA.purchasePayload({ transactionId: REF, value: 1000, productId: 'jagan_report_v1', gaRef: 'x' }).client_id, GA.serverClientId(REF));
+});
+test('振る舞い：Webhook は Stripe の client_reference_id から参照を読み、その利用者で purchase を送る（元素診断・邪眼）', async () => {
+  const orig = CA.applyPaidSession;
+  try {
+    CA.applyPaidSession = async () => 'applied';
+    const ref = 'ga1-555-666-1731700001-0-result';
+    // runWebhook は create の metadata だけを渡すため、ここでは client_reference_id 付きで直接作る
+    const run = async (app, rows, rpcResult) => {
+      const stripe = fakeStripe({ livemode: true });
+      const orderId = crypto.randomUUID();
+      const s = await stripe.client.checkout.sessions.create({ mode: 'payment', line_items: [{ price_data: { currency: 'jpy', unit_amount: rows[0].amount }, quantity: 1 }], metadata: { order_id: orderId, app, env: 'production' } });
+      stripe.st.sessions[s.id].client_reference_id = ref;
+      stripe.pay(s.id);
+      const mp = [];
+      const fetchImpl = async (url, init = {}) => {
+        const u = new URL(url);
+        if (u.host === 'www.google-analytics.com') { mp.push(JSON.parse(init.body)); return { ok: true, status: 204, json: async () => ({}) }; }
+        const json = (b2) => ({ ok: true, status: 200, json: async () => b2, text: async () => JSON.stringify(b2) });
+        if (/\/rest\/v1\/rpc\//.test(u.pathname)) return json(rpcResult);
+        if (/\/rest\/v1\/(complete_orders|jagan_orders)$/.test(u.pathname)) return json(rows.map((r) => ({ ...r, id: orderId })));
+        return json([]);
+      };
+      const pending = [];
+      const wh = require('../api/stripe-webhook.js').createHandler({ env: LIVE_ENV, fetchImpl, stripeFactory: stripe.factory, logger: { error() {} }, waitUntil: (p) => pending.push(p) });
+      const { req } = eventRequest({ type: 'checkout.session.completed', objectId: s.id, secret: WH, livemode: true });
+      req.headers.host = PROD_HOST;
+      const out = { code: 0, status(c) { this.code = c; return this; }, json() { return this; }, setHeader() {} };
+      await wh(req, out); await Promise.all(pending);
+      return mp;
+    };
+    const eti = await run('element-diagnosis-complete', [{ offer: 'analysis', amount: 1000, status: 'paid', paid_at: new Date(Date.now() - 1000).toISOString() }]);
+    assert.equal(eti.length, 1); assert.equal(eti[0].client_id, '555.666'); assert.equal(eti[0].events[0].params.session_id, 1731700001);
+    const JP = await import('../lib/jagan-purchase.mjs');
+    const dti = await run(JP.APP, [{ product_key: 'jagan_complete_v1', amount: 3000, status: 'paid', paid_at: new Date(Date.now() - 1000).toISOString(), idempotency_key: 'idem-x' }], 'applied');
+    assert.equal(dti.length, 1); assert.equal(dti[0].client_id, '555.666'); assert.equal(dti[0].events[0].params.source, 'result');
+  } finally { CA.applyPaidSession = orig; }
+});
+test('ブラウザ：申込の本文に GA4 の参照を付ける（元素診断・邪眼・マイページ）。決済・ログインの戻りは流入元にしない', () => {
+  assert.match(read('js/report-purchase.js'), /checkoutRef\(o\.source\)[\s\S]{0,40}if \(gaRef\) body\.ga = gaRef;/);
+  assert.match(read('jagan/client.mjs'), /checkoutRef\(source\)[\s\S]{0,40}if \(gaRef\) body\.ga = gaRef;/);
+  assert.match(read('js/jagan-mypage.js'), /checkoutRef\(body\.source\)[\s\S]{0,40}if \(gaRef\) body\.ga = gaRef;/);
+  assert.match(read('lib/link-purchase.js'), /\.\.\.\(gaRef \? \{ client_reference_id: gaRef \} : \{\}\)/);
+  assert.match(read('lib/jagan-purchase.mjs'), /\.\.\.\(gaRef \? \{ client_reference_id: gaRef \} : \{\}\)/);
 });
