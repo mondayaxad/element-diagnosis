@@ -56,6 +56,9 @@ function buildPublicConfig(env, { host } = {}) {
       jaganEnabled: sb.appEnv === 'preview' || (sb.appEnv === 'production' && env.JAGAN_PRODUCTION_ENABLED === 'true'),
       jaganSalesOpen: env.JAGAN_SALES_OPEN === 'true'
         && (sb.appEnv === 'preview' || (sb.appEnv === 'production' && env.JAGAN_PRODUCTION_ENABLED === 'true')),
+      // GA4 の purchase をサーバー（Stripe の Webhook）から送っているか（lib/ga4-mp.js の enabled と同じ条件：本番で GA4_API_SECRET がある）。
+      //   true の間、ブラウザは purchase を送らず、照合用の purchase_client を送る（同じ購入を二重に数えない）
+      ga4ServerPurchase: sb.appEnv === 'production' && typeof env.GA4_API_SECRET === 'string' && /^[A-Za-z0-9_-]{8,100}$/.test(env.GA4_API_SECRET),
     },
   };
 }

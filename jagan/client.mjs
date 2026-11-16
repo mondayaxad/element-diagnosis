@@ -148,6 +148,13 @@ export async function trackPurchase(token, product, source) {
     const txid = [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 20);
     const key = `jagan_ga4_purchase_${txid}`;
     try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch { /* 保存できなくても1回は送る */ }
+    // purchase は Stripe の Webhook からサーバーが送る（ga4ServerPurchase）。その間、ブラウザは照合用の purchase_client だけを送る（二重に数えない）
+    const serverSends = !!(window.__ED_PUBLIC_CONFIG__ && window.__ED_PUBLIC_CONFIG__.ga4ServerPurchase === true);
+    if (serverSends) {
+      window.gtag('event', 'purchase_client', { transaction_id: txid, value: it.value, currency: 'JPY', diagnosis_type: 'jagan', product_id: it.id,
+        ...(/^[a-z_]{1,32}$/.test(String(source || '')) ? { source } : {}) });
+      return;
+    }
     window.gtag('event', 'purchase', { transaction_id: txid, value: it.value, currency: 'JPY', diagnosis_type: 'jagan', product_id: it.id,
       ...(/^[a-z_]{1,32}$/.test(String(source || '')) ? { source } : {}),
       items: [{ item_id: it.id, item_name: it.name, item_category: '邪眼診断', price: it.value, quantity: 1 }] });
