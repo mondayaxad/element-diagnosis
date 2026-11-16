@@ -56,7 +56,20 @@
 | `begin_checkout` | 申込の開始（Stripe の決済画面へ進む前） |
 | `quiz_complete` | 診断の完了 |
 
-## 3. 返金の計測（Measurement Protocol の API シークレット）
+## 3. 購入・返金のサーバー送信（Measurement Protocol の API シークレット）
+
+購入（`purchase`）は、Stripe の Webhook で支払いが確定した時に、サーバーから送る（`api/stripe-webhook.js`・`lib/ga4-mp.js`。元素診断・邪眼診断とも）。
+レポートを開かなかった購入も数える。秘密値が無い間は、従来どおりブラウザが `purchase` を送る。
+
+- `transaction_id`：ブラウザの `purchase` と同じ値（元素診断＝注文 ID から作る20桁、邪眼＝固有リンクの秘密値から作る20桁）。注文 ID・Stripe の ID・メールは送らない。
+- `client_id`：取引ごとに固定の合成値（`srv.…`）。同じ取引の再送（Webhook の再配送・購入完了ページが先に反映した場合）は、同じ利用者・同じ transaction_id として GA4 が重複を除く。
+- 送る内容：`value`・`currency=JPY`・`diagnosis_type`・`product_id`・`items`（既存の item_id）・`source=server_webhook`。支払いから72時間より古い注文は送らない（過去分は補完しない）。
+- 秘密値がある間（`public-config` の `ga4ServerPurchase=true`）、ブラウザは `purchase` を送らず、照合用の `purchase_client`（同じ transaction_id・source 付き）を送る。同じ購入を二重に数えない。
+- 流入元（参照元・キャンペーン）は、サーバー送信の `purchase` には付かない。流入元別の分析は `purchase_client`・`checkout_start`・`begin_checkout` で行う。売上・件数の正は注文 DB・Stripe。
+- 止め方：Vercel の `GA4_API_SECRET` を消して再デプロイすると、従来のブラウザ送信に戻る。
+
+### 3-1. 返金
+
 
 返金は Stripe の Webhook（`charge.refunded`）の処理の後に、サーバーから `refund` を送る（`lib/ga4-mp.js`）。秘密値が無い間は何も送らない。
 

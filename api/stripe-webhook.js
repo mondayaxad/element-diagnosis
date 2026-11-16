@@ -79,7 +79,33 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
   //   邪眼の注文でもなければ null（ETI と同じく 'ignored:not_complete'）
   async function jagan(conn, stripe, ev, obj) {
     const JP = await import('../lib/jagan-purchase.mjs');
-    return JP.handleWebhook({ fetchImpl, conn, stripe, type: ev.type, obj });
+    return JP.handleWebhook({ fetchImpl, conn, stripe, type: ev.type, obj, onApplied: (a) => jaganGa4(conn, JP, a) });
+  }
+
+  // ---- GA4 の purchase・refund（Measurement Protocol）。支払いの正は Stripe の Webhook（lib/ga4-mp.js）。
+  //   本番（Live）で GA4_API_SECRET がある時だけ。応答の後で送り、失敗しても決済の処理に影響させない。
+  //   同じ注文は同じ transaction_id・同じ合成 client_id（再送は GA4 が重複を除く）。すでに反映済み（購入完了ページの問い合わせが先）でも、支払い済みなら送る
+  const ETI_PRODUCT = { analysis: 'eti_analysis_v1', direct_complete: 'eti_complete_v1', analysis_upgrade: 'eti_complete_v1' };
+  async function etiPurchaseGa4(conn, orderId) {
+    if (!GA.enabled(env, CP.livemodeOf(conn)) || !CE.isUuid(orderId)) return;
+    try {
+      const rows = await CP.selectRows(fetchImpl, conn, `complete_orders?id=eq.${encodeURIComponent(orderId)}&select=offer,amount,status,paid_at`);
+      const o = rows[0];
+      const productId = o && Object.prototype.hasOwnProperty.call(ETI_PRODUCT, o.offer) ? ETI_PRODUCT[o.offer] : null;
+      if (!o || o.status !== 'paid' || !productId) return;
+      GA.schedulePurchase(waitUntil, { env, fetchImpl, livemode: CP.livemodeOf(conn), transactionId: GP.refOf(env, orderId),
+        value: Number(o.amount), productId, paidAtMs: Date.parse(o.paid_at), logger });
+    } catch { /* 計測だけ */ }
+  }
+  async function jaganGa4(conn, JP, { kind, orderId }) {
+    if (!GA.enabled(env, CP.livemodeOf(conn)) || !CE.isUuid(orderId)) return;
+    const rows = await CP.selectRows(fetchImpl, conn, `jagan_orders?id=eq.${encodeURIComponent(orderId)}&select=product_key,amount,status,paid_at,idempotency_key`);
+    const o = rows[0];
+    const transactionId = o ? JP.ga4TransactionId(env, o.idempotency_key) : null;
+    if (!o || !transactionId || !Object.prototype.hasOwnProperty.call(GA.PRODUCTS, o.product_key)) return;
+    const args = { env, fetchImpl, livemode: CP.livemodeOf(conn), transactionId, value: Number(o.amount), productId: o.product_key, logger };
+    if (kind === 'paid' && o.status === 'paid') GA.schedulePurchase(waitUntil, { ...args, paidAtMs: Date.parse(o.paid_at) });
+    if (kind === 'refunded') GA.scheduleRefund(waitUntil, args);
   }
 
   async function onCheckoutCompleted(conn, stripe, ev, obj) {
@@ -90,9 +116,11 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
     //   確定した時の checkout.session.async_payment_succeeded、または購入完了ページの問い合わせ（Stripe の最新の状態）で反映する。期限が来れば expired で閉じる
     if (found.session.payment_status !== 'paid') { await finish(conn, ev, 'ignored', 'awaiting_payment', found.orderId); return 'ignored:awaiting_payment'; }
     // 解析レポート（¥1,000）・完全解析（¥3,000／¥2,000）の適用は、購入完了ページの問い合わせと同じ共通処理（lib/complete-apply.js）
-    return CA.applyPaidSession({
+    const result = await CA.applyPaidSession({
       env, fetchImpl, conn, session: found.session, orderId: found.orderId, eventId: ev.id, eventCreatedIso: ev.createdAt,
     });
+    if (result === 'applied' || result === 'noop' || result === 'duplicate') await etiPurchaseGa4(conn, found.orderId);
+    return result;
   }
 
   async function onCheckoutExpired(conn, stripe, ev, obj) {

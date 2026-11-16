@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
-import { createPurchaseHandler, handleWebhook, sha256hex, salesOpen, APP } from '../lib/jagan-purchase.mjs';
+import { createPurchaseHandler, handleWebhook, sha256hex, salesOpen, APP, ga4TransactionId } from '../lib/jagan-purchase.mjs';
 import { BUNDLE } from '../jagan/engine/data.mjs';
 import { SAMPLE_ANSWERS } from '../jagan/sample.mjs';
 
@@ -333,4 +333,49 @@ test('決済画面は元素診断と同じ：Price（Stripe）を照合し、支
   const h2 = createPurchaseHandler({ env, fetchImpl: db.fetchImpl, stripeFactory: stripe.factory, logger: { error() {} } });
   const r3 = res(); await h2(req('buy', buyBody()), r3, 'buy');
   assert.equal(r3.statusCode, 503);
+});
+
+test('GA4（サーバー送信）：Webhook の支払い・返金で onApplied が呼ばれ、transaction_id はブラウザ（固有リンクの秘密値から作る値）と一致する。Preview（Test）は GA4 へ送らない', async () => {
+  const { db, stripe, call } = setup();
+  await call('buy', buyBody());
+  const o = db.t.jagan_orders[0];
+  const token = secretOf(stripe);
+  // ブラウザ（jagan/client.mjs の trackPurchase）と同じ作り方
+  const browserTxid = crypto.createHash('sha256').update(`jagan-ga4|${token}`).digest('hex').slice(0, 20);
+  assert.equal(ga4TransactionId(ENV, o.idempotency_key), browserTxid);
+  assert.equal(ga4TransactionId({}, o.idempotency_key), null, '鍵が無ければ作らない');
+  const { chargeId } = stripe.pay(o.stripe_checkout_session_id);
+  const conn = { appEnv: 'preview', stripeMode: 'test', supabaseUrl: ENV.SUPABASE_URL, adminHeaders: () => ({}) };
+  const seen = [];
+  const onApplied = async (a) => { seen.push(a); };
+  assert.equal(await handleWebhook({ fetchImpl: db.fetchImpl, conn, stripe: stripe.client, type: 'checkout.session.completed', obj: { id: o.stripe_checkout_session_id }, onApplied }), 'applied');
+  // 再送（すでに支払い済み）でも呼ぶ（購入完了の問い合わせが先に反映した場合も送れるように。重複は GA4 が transaction_id で除く）
+  assert.equal(await handleWebhook({ fetchImpl: db.fetchImpl, conn, stripe: stripe.client, type: 'checkout.session.completed', obj: { id: o.stripe_checkout_session_id }, onApplied }), 'noop');
+  stripe.refund(chargeId, 1000);
+  await handleWebhook({ fetchImpl: db.fetchImpl, conn, stripe: stripe.client, type: 'charge.refunded', obj: { id: chargeId }, onApplied });
+  assert.deepEqual(seen.map((a) => [a.kind, a.orderId, a.result]), [['paid', o.id, 'applied'], ['paid', o.id, 'noop'], ['refunded', o.id, 'applied']]);
+  // onApplied が失敗しても、決済の処理は続く
+  const { db: db2, stripe: st2, call: call2 } = setup();
+  await call2('buy', buyBody());
+  const o2 = db2.t.jagan_orders[0];
+  st2.pay(o2.stripe_checkout_session_id);
+  assert.equal(await handleWebhook({ fetchImpl: db2.fetchImpl, conn, stripe: st2.client, type: 'checkout.session.completed', obj: { id: o2.stripe_checkout_session_id }, onApplied: async () => { throw new Error('ga down'); } }), 'applied');
+  assert.equal(o2.status, 'paid');
+  // Webhook 全体：Preview では GA4_API_SECRET があっても Measurement Protocol へ送らない
+  const { db: db3, stripe: st3, call: call3 } = setup();
+  await call3('buy', buyBody());
+  const o3 = db3.t.jagan_orders[0];
+  st3.pay(o3.stripe_checkout_session_id);
+  const hosts = [];
+  const wfetch = async (url, init) => { hosts.push(new URL(url).host); return db3.fetchImpl(url, init); };
+  const pending = [];
+  const wh = Webhook.createHandler({ env: { ...ENV, GA4_API_SECRET: 'testsecret_12345' }, fetchImpl: wfetch, stripeFactory: st3.factory, logger: { error() {} }, waitUntil: (p) => pending.push(p) });
+  const { req: rq } = eventRequest({ type: 'checkout.session.completed', objectId: o3.stripe_checkout_session_id, secret: WH });
+  rq.headers.host = HOST;
+  const out = { code: 0, body: null, status(c) { this.code = c; return this; }, json(b) { this.body = b; return this; }, setHeader() {} };
+  await wh(rq, out);
+  await Promise.all(pending);
+  assert.equal(out.code, 200);
+  assert.equal(o3.status, 'paid');
+  assert.ok(!hosts.some((h) => /google-analytics/.test(h)), 'Preview（Stripe Test）では GA4 へ送らない');
 });
