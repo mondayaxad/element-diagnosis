@@ -51,6 +51,8 @@ function render(report) {
   addEventListener('load', fill); setTimeout(fill, 1500); setTimeout(fill, 4000);
   $('dpKeep').hidden = false;
   document.title = `邪眼完全解析「DIPPER」 ${result.dti.code}｜邪眼診断`;
+  // どのページまで読まれたか（各ページが画面に入った時に1回）
+  if (window.EdAnalytics) window.EdAnalytics.sections($('dpBook').querySelectorAll('.dp-page'), { diagnosis_type: 'jagan', product_id: 'jagan_complete_v1' });
   return true;
 }
 

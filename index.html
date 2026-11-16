@@ -1742,6 +1742,7 @@ function startNewDiagnosisV2() {
   window.__diagnosisVersion = 'ETI-2.0';
   window.__mirrorVersion = null; // 新規診断は最新のMIRROR版で計算する
   if (typeof gtag === 'function') gtag('event','quiz_start',{event_category:'diagnosis',diagnosis_version:'ETI-2.0'});
+  if (window.EdAnalytics) EdAnalytics.start('eti');
   setPhase('quiz');
 }
 function setPhase(p) {
@@ -2230,6 +2231,7 @@ function selectAnswerV2ForUI(itemId, v) {
   var wasFocused = (itemId === quizFocusIdxV2);
   var result = selectAnswerV2(itemId, v);
   quizFocusIdxV2 = itemId;
+  if (window.EdAnalytics && result.action === 'selected') EdAnalytics.progress('eti', order.filter(function (id) { return answersV2[id] !== undefined; }).length, order.length);
 
   if (result.action === 'deselected') {
     renderQuizV2(root);
@@ -2277,7 +2279,10 @@ function prevQV2() {
 function showResultV2() {
   var order = getV2CanonicalOrder();
   if (isCompleteV2(order)) {
-    if (typeof gtag === 'function') gtag('event','quiz_complete',{event_category:'diagnosis',value:getAnsweredCountV2(),diagnosis_version:'ETI-2.0'});
+    var edDur = window.EdAnalytics ? EdAnalytics.durationParams('eti') : {};
+    if (typeof gtag === 'function') gtag('event','quiz_complete',Object.assign({event_category:'diagnosis',value:getAnsweredCountV2(),diagnosis_version:'ETI-2.0',diagnosis_type:'eti'}, edDur));
+    // 全設問の回答（並びは採点の正規順。回答 -2〜+2 を 1〜5 に）
+    if (window.EdAnalytics) EdAnalytics.answers('eti', (typeof ETI_V2_META !== 'undefined' && ETI_V2_META.itemSetVersion) || 'ETI-ITEM-2.0.0', order, answersV2, function (v) { return Number(v) + 3; });
     // 診断を完了した直後の結果：表示の後に固有リンク（/result#r=）を作る（診断ごとに別のリンク）
     window.__resultNonce = (window.__resultNonce || 0) + 1;
     window.__freshResultNonce = window.__resultNonce; // GA4：この結果は、いま診断を完了したもの（result_origin=fresh）
@@ -2349,7 +2354,7 @@ function renderResult(root) {
       top_character_match: top1.match
     });
     // 傾向分析用：新診断（ETI-2.0）を、いま完了した結果だけ、20軸の点を10点刻みにして1イベントで送る。
-    //   個々の100問の回答・診断コード・記録 ID は送らない（10点刻みで元の回答へは戻せない）。開き直した結果は数えない（二重計上を避ける）
+    //   診断コード・記録 ID は送らない（設問ごとの回答は、完了時に quiz_answers で別に送る。js/ga.js の EdAnalytics.answers）。開き直した結果は数えない（二重計上を避ける）
     if (diagnosisVersion === 'ETI-2.0' && resultIsFresh) {
       var band = function (v) { return Math.max(0, Math.min(100, Math.round(Number(v) / 10) * 10)); };
       var prof = { event_category: 'diagnosis', diagnosis_version: diagnosisVersion, element: topEl, weapon: topW, nation: topNat };
@@ -2474,6 +2479,9 @@ function renderResult(root) {
         </button>
       </div>
 
+
+      <!-- 結果の納得度（いま診断を完了した結果だけに出す） -->
+      <div id="edFitBox"></div>
 
       <!-- 詳細レポート誘導（ロックパターン版） -->
       <div style="margin-bottom:18px">
@@ -3389,6 +3397,8 @@ function edResultContext(root, code) {
   });
 }
 function initReportPurchase(root, code, refs) {
+  // 結果の納得度：いま診断を完了した結果だけ（共有リンク・保存した結果を開き直した時は出さない）
+  if (window.EdAnalytics && window.__freshResultNonce && window.__freshResultNonce === window.__resultNonce) EdAnalytics.mountFeedback(root.querySelector('#edFitBox'), 'eti');
   if (typeof EdBuy === 'undefined') return;
   var B = EdBuy;
   var open = B.salesOpen();
@@ -3439,6 +3449,11 @@ function initReportPurchase(root, code, refs) {
   var lockMsg = document.getElementById('guestAnalysisMsg');
   var aBtns = [refs.lockUnlockAllBtn].concat(Array.prototype.slice.call(refs.lockCtaBtns || [])).filter(Boolean);
   if (open) {
+    if (window.EdAnalytics) {
+      EdAnalytics.ctaView(aBtns, { diagnosis_type: 'eti', product_id: 'eti_analysis_v1', state: 'open', source: 'result' });
+      var cbv = root.querySelector('[data-buy-complete]');
+      if (cbv) EdAnalytics.ctaView([cbv], { diagnosis_type: 'eti', product_id: 'eti_complete_v1', state: 'open', source: 'result' });
+    }
     aBtns.forEach(function (btn) {
       prefetchOn(btn);
       btn.onclick = function (e) {

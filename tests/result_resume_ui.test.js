@@ -124,7 +124,12 @@ async function complete(p, k = 7) {
 }
 const resultText = (p) => p.evaluate(() => {
   const r = document.getElementById('diagnosis-root');
-  return r ? (r.querySelector('h1, h2') || r).innerText.slice(0, 200) : '';
+  if (!r) return '';
+  // 結果の納得度の欄（いま完了した結果だけに出る任意の質問）は、結果の中身ではないので比べない
+  const c = (r.querySelector('h1, h2') || r).cloneNode(true);
+  c.querySelectorAll('.ed-fit, #edFitBox').forEach((x) => x.remove());
+  document.body.appendChild(c); const t = c.innerText.slice(0, 200); c.remove();
+  return t;
 });
 async function assertNoSecret(p, w, token) {
   const html = await p.content();

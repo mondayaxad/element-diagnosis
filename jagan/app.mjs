@@ -113,6 +113,7 @@ function choose(id, v) {
   if (state.answers[id] === v) { delete state.answers[id]; state.focus = id; saveProgress(); renderQuiz(); return; } // 選択を外す
   state.answers[id] = v;
   popId = id;
+  if (window.EdAnalytics) window.EdAnalytics.progress('jagan', answeredCount(state.answers), ORDER.length);
   state.focus = id;
   const ids = ORDER.slice(state.page, state.page + PAGE);
   if (wasFocused) {
@@ -132,7 +133,7 @@ function startQuiz(resume) {
   state = resume || { resultId: newResultId(), answers: {}, page: 0, focus: null };
   prevFocus = null;
   saveProgress();
-  if (!resume) track('jagan_start', {});
+  if (!resume) { track('jagan_start', {}); if (window.EdAnalytics) window.EdAnalytics.start('jagan'); }
   show('quiz'); renderQuiz();
 }
 function finish() {
@@ -142,7 +143,9 @@ function finish() {
   const last = { v: VERSION, resultId: state.resultId, answers, completedAt: new Date().toISOString() };
   store.set(K.last, last);
   store.del(K.progress);
-  track('jagan_complete', {});
+  track('jagan_complete', window.EdAnalytics ? window.EdAnalytics.durationParams('jagan') : {});
+  // 全設問の回答（並びは設問の表示順。回答 1〜5）
+  if (window.EdAnalytics) window.EdAnalytics.answers('jagan', VERSION, ORDER, answers, (x) => Number(x));
   showResult(last, { mode: 'fresh' });
   // 診断の傾向（邪眼・異相・DTI・ファトゥス・12特性の10点刻み）。新しく終えた結果だけ
   try { const prof = profileParams(current && current.result); if (prof) track(PROFILE_EVENT, prof); } catch { /* 計測だけ */ }
@@ -162,6 +165,11 @@ function showResult(record, { mode, savedAt } = {}) {
   $('resultBody').innerHTML = renderResultPage(result, BUNDLE);
   if (mode === 'shared') { showShared(); return; }
   bindResult();
+  // 結果の納得度：いま診断を終えた結果だけ（保存した結果・共有リンクでは出さない）
+  if (mode === 'fresh' && window.EdAnalytics) {
+    const row = document.querySelector('#resultBody .rx-share-row');
+    if (row) { const box = document.createElement('div'); row.insertAdjacentElement('afterend', box); window.EdAnalytics.mountFeedback(box, 'jagan'); }
+  }
   const banner = $('savedBanner');
   banner.hidden = mode !== 'saved';
   if (mode === 'saved') banner.textContent = `マイページに保存した結果です（${new Date(savedAt).toLocaleString('ja-JP')}・保存時の版 ${result.versions.interpretation}）。`;
@@ -346,6 +354,11 @@ function setupBuy() {
     return;
   }
   document.querySelectorAll('#resultBody .rx-sales-note').forEach((n) => { n.hidden = true; });
+  if (window.EdAnalytics) {
+    const src = ctaSource();
+    window.EdAnalytics.ctaView(btns.filter((b) => productOfBtn(b) !== 'complete'), { diagnosis_type: 'jagan', product_id: 'jagan_report_v1', state: 'open', source: src });
+    window.EdAnalytics.ctaView(btns.filter((b) => productOfBtn(b) === 'complete'), { diagnosis_type: 'jagan', product_id: 'jagan_complete_v1', state: 'open', source: src });
+  }
   btns.forEach((b) => {
     const product = productOfBtn(b);
     b.disabled = false;

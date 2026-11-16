@@ -35,6 +35,8 @@ function render(report) {
   $('rpKeep').hidden = false;
   showDipper(report, result);
   document.title = `邪眼解析レポート ${result.dti.code}｜邪眼診断`;
+  // どの章まで読まれたか（各章が画面に入った時に1回）
+  if (window.EdAnalytics) window.EdAnalytics.sections($('rpBody').querySelectorAll('.rp-cover, .rp-card'), { diagnosis_type: 'jagan', product_id: 'jagan_report_v1' });
   return true;
 }
 
