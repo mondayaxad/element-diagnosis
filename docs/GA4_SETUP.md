@@ -131,3 +131,22 @@
 `node --test tests/ga4_commerce_contract.test.js tests/ga4_measurement.test.js tests/ga4_privacy.test.js tests/jagan_purchase.test.mjs tests/jagan.test.mjs`
 
 共通イベント分類、商品ID互換、DTIの結果・サンプル・レポート下部・マイページ、API失敗、通信再送、二重押し、計測例外、既存の個人情報除去を検証する。実ブラウザ試験と実DB試験は、対応環境で別途実行する。
+
+
+## 6. 分析用の計測（2026-11-16 追加・js/ga.js の EdAnalytics）
+
+| イベント | 送る時 | 主なパラメータ |
+|---|---|---|
+| `quiz_progress` | 回答が10%ごとの区切りを初めて越えた時 | `diagnosis_type`・`progress_pct`（10〜90） |
+| `quiz_complete`／`jagan_complete` | 完了（既存）に所要時間を追加 | `duration_min`・`duration_band`（under5・5to10・10to20・over20） |
+| `quiz_answers` | 完了時に全設問の回答（2026-11-17 0:00 JST 以降） | `diagnosis_type`・`answer_set`（設問の版）・`answer_count`・`ans_001_050`・`ans_051_100`（各桁＝その位置の設問の回答 1〜5、0＝未回答） |
+| `purchase_cta_view` | 申込ボタンが画面に入った時（1ページ1回） | `diagnosis_type`・`product_id`・`state`・`source` |
+| `report_section_view` | 有料レポートの章（邪眼の完全解析はページ）が画面に入った時 | `diagnosis_type`・`product_id`・`section_index`・`section_total` |
+| `result_feedback` | 結果の納得度（任意・いま完了した結果だけ） | `diagnosis_type`・`fit`（1〜5） |
+
+- 回答の位置と設問の対応：`docs/ga4_answer_order.json`（元素診断は採点の正規順、邪眼は表示順。元素診断の回答 -2〜+2 は +3 して 1〜5）。版（`answer_set`）が変わったら資料も更新する（テストで一致を確かめる）。
+- 回答は GA4 の画面では集計しない（設問ごとのディメンションは登録しない）。BigQuery の書き出し（毎日）で `event_params` から読む。例：`SUBSTR((SELECT value.string_value FROM UNNEST(event_params) WHERE key='ans_001_050'), 7, 1)` が 7 問目。
+- 同じ利用者の回答と購入は、BigQuery の `user_pseudo_id` で結べる（`purchase_client`・`checkout_start`・`begin_checkout`。サーバー送信の `purchase` は合成の client_id のため結べない）。
+- ユーザー単位の属性（user_properties）：`diagnoses_done`（eti・jagan・both）・`is_member`（yes）・`is_purchaser`（yes）。端末の印から毎回送る。
+- 内部トラフィック：運営者の端末で一度 `?ed_internal=1` を付けて開くと、その端末の通信に `traffic_type=internal` が付く（`?ed_internal=0` で外す）。GA4：管理 → データ設定 → データフィルタ →「Internal Traffic」を「有効」にする。
+- 元素診断の完全解析（サーバーで作る閲覧ページ）は GA4 を読み込まないため、章の閲覧は送らない。

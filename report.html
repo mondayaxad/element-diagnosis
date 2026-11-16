@@ -2339,6 +2339,7 @@ async function savePdf() {
       renderFullReport(root, resultsV2, code);
       initReportComplete(code, data.viewer, data.complete || null);
       if (typeof gtag === 'function') gtag('event', 'analysis_report_view', { diagnosis_version: 'ETI-2.0' });
+      if (window.EdAnalytics) EdAnalytics.sections(root.querySelectorAll('.sec'), { diagnosis_type: 'eti', product_id: 'eti_analysis_v1' });
       return;
     }
 
