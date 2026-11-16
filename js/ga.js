@@ -121,6 +121,15 @@
     UTM_KEYS.forEach(function (k) { if (utm[k] !== undefined) out[UTM_TO_CAMPAIGN[k]] = utm[k]; });
     return out;
   }
+  // コンテンツ グループ（GA4 の標準レポートで、元素診断・邪眼診断・共通ページを切り替えて見る）。
+  //   jagan：邪眼のページ（/jagan・/jagan/…）と共有リンク（/j/…）／shared：マイページと規約類（両方の利用者が使う）／eti：それ以外（元素診断）
+  function contentGroup(path) {
+    var p = String(path || '/');
+    if (/^\/jagan(\/|\.html$|$)/.test(p) || /^\/j\//.test(p)) return 'jagan';
+    if (/^\/(mypage|privacy|terms|tokushoho)(\.html)?\/?$/.test(p)) return 'shared';
+    return 'eti';
+  }
+  window.__edContentGroup = contentGroup;
   window.__edGaClean = clean;
   window.dataLayer = window.dataLayer || [];
   if (location.hostname !== PRODUCTION_HOST) {
@@ -135,7 +144,7 @@
   var m = /^(https?:\/\/[^/?#]+)/.exec(document.referrer || '');
   push('js', new Date());
   var utm = utmValues(location.search);
-  var config = { page_location: location.origin + location.pathname + campaignQuery(utm), page_referrer: m ? m[1] + '/' : '' };
+  var config = { page_location: location.origin + location.pathname + campaignQuery(utm), page_referrer: m ? m[1] + '/' : '', content_group: contentGroup(location.pathname) };
   var campaign = campaignParams(utm);
   Object.keys(campaign).forEach(function (k) { config[k] = campaign[k]; });
   push('config', MEASUREMENT_ID, config);

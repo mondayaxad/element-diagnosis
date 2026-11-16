@@ -181,3 +181,17 @@ test('未知の商品ID：継承された名前（constructor など）を商品
   w.gtag('event', 'constructor', { source: 'x' });
   assert.deepEqual(plain(w.dataLayer.at(-1)[2]), { source: 'x' });
 });
+
+test('コンテンツ グループ：邪眼（/jagan・/j/）・共通（マイページ・規約）・元素診断（それ以外）に分け、config に付ける', () => {
+  const w = ga();
+  const g = w.__edContentGroup;
+  for (const [path, group] of [
+    ['/jagan', 'jagan'], ['/jagan/', 'jagan'], ['/jagan/report', 'jagan'], ['/jagan/dipper', 'jagan'], ['/jagan/about', 'jagan'], ['/j/2ut2', 'jagan'], ['/jagan.html', 'jagan'],
+    ['/mypage', 'shared'], ['/mypage.html', 'shared'], ['/privacy.html', 'shared'], ['/terms', 'shared'], ['/tokushoho', 'shared'],
+    ['/', 'eti'], ['/result', 'eti'], ['/report.html', 'eti'], ['/report-link', 'eti'], ['/purchase-complete', 'eti'], ['/complete-sample', 'eti'],
+    ['/jaganx', 'eti'], ['/mypage-old', 'eti'], ['/j', 'eti'],
+  ]) assert.equal(g(path), group, path);
+  // 読み込み時の config に入っている（テストの location は /mypage）
+  const cfg = [...w.dataLayer].find((a) => a[0] === 'config');
+  assert.equal(cfg[2].content_group, 'shared');
+});
