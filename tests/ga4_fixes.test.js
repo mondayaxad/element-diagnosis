@@ -358,7 +358,9 @@ test('diagnosis_profile：いま完了した新診断だけ、20軸を10点刻�
   keys.forEach((k) => {
     assert.ok(Number.isInteger(prof[0][k]) && prof[0][k] >= 0 && prof[0][k] <= 100 && prof[0][k] % 10 === 0, k + ' は10点刻み');
   });
-  assert.ok(Object.keys(prof[0]).length <= 25, 'GA4 のイベントのパラメータは25個まで');
+  // GA4 は1イベント25個まで。全イベントに付く content_group・traffic_type（内部）・ignore_referrer の3個を空けて22個以内
+  assert.ok(Object.keys(prof[0]).length <= 22, 'GA4 のイベントのパラメータは、ページ単位の値を含めて25個まで');
+  assert.equal(prof[0].diagnosis_type, 'eti');
   assert.ok(!JSON.stringify(prof).includes(code), '診断コードを送らない');
   // 同じ結果を開き直した（restored）ときは送らない
   const p2 = await open(ctx, '/?dv=ETI-2.0&code=' + encodeURIComponent(code));
