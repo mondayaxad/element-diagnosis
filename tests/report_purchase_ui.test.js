@@ -1089,3 +1089,90 @@ test('マイページ：購入対象の取得が失敗・例外でも、押せ�
     await p.__ctx.close();
   }
 });
+
+// ================= 診断済みの方への購入導線（トップ：FOR RETURNING TRAVELERS）
+const MYPAGE_API = {
+  'my-reports': [200, { reports: [], records: [] }],
+  'buy-context': [200, { context: CTX, summary: SUMMARY, eligible: { analysis: true, complete: true } }],
+  'guest-goals': [200, GOALS],
+  buy: BUY_OK,
+};
+const rtEvents = (p) => p.evaluate(() => window.__ev.filter((e) => e[0] === 'event' && /^returning_/.test(e[1])).map((e) => [e[1], e[2]]));
+
+test('トップ：「すでに診断を終えたアナタへ」は「診断をはじめる」の下に控えめに置く（新規診断の CTA を圧迫しない）', { skip: skip() }, async () => {
+  for (const width of [320, 390, 1280]) {
+    const p = await open('/', { width, api: RESULT_API() });
+    await p.waitForSelector('#returning');
+    const t = await p.locator('#returning').innerText();
+    for (const s of ['FOR RETURNING TRAVELERS', 'すでに診断を終えたアナタへ', 'もう一度、100の問いに答える必要はありません。', '以前の結果からレポートを購入する']) assert.ok(t.toUpperCase().includes(s.toUpperCase()), s);
+    const pos = await p.evaluate(() => ({ start: document.querySelector('.hero .cta').getBoundingClientRect().top + scrollY, ret: document.getElementById('returning').getBoundingClientRect().top + scrollY,
+      about: document.getElementById('about-intro').getBoundingClientRect().top + scrollY,
+      startH: document.querySelector('.hero .cta').getBoundingClientRect().height, retH: document.getElementById('returningCta').getBoundingClientRect().height }));
+    assert.ok(pos.start < pos.ret && pos.ret < pos.about, `${width}: 診断をはじめる → 導線 → 紹介`);
+    assert.ok(pos.retH >= 44, `${width}: 押しやすい高さ`);
+    assert.doesNotMatch(t, /¥/, '価格を出さない');
+    assert.equal(await noScroll(p), true, `${width}: 横にはみ出さない`);
+    assert.deepEqual(p.__errors, []);
+    await p.__ctx.close();
+  }
+});
+
+test('未ログイン・この端末に前回の結果なし：ログインして保存した結果から購入する／もう一度診断する、を案内', { skip: skip() }, async () => {
+  const p = await open('/', { api: RESULT_API() });
+  await p.click('#returningCta');
+  await p.waitForSelector('#returningPanel [data-rt-route="login"]');
+  assert.equal(await p.locator('#returningPanel [data-rt-route="login"]').getAttribute('href'), '/mypage.html#buy');
+  assert.match(await p.locator('#returningPanel').innerText(), /もう一度診断してください/);
+  const ev = await rtEvents(p);
+  assert.deepEqual(ev.find((e) => e[0] === 'returning_cta_click')[1].state, 'none');
+  await p.locator('#returningPanel [data-rt-route="new_diagnosis"]').click();
+  await p.waitForFunction(() => window.__phase === 'quiz');
+  assert.deepEqual(p.__errors, []);
+  await p.__ctx.close();
+});
+
+test('未ログイン・この端末に前回の結果（固有リンク）あり：概要を示し、その結果の購入の位置へ。秘密値を計測に出さない', { skip: skip() }, async () => {
+  const p = await open('/', { api: RESULT_API(), init: () => { try { localStorage.setItem('ed_last_result_v1', 'Rz0kEnSecretValueForResumeLink_ABCDEFGHIJKL'); } catch (e) { /* noop */ } } });
+  await p.click('#returningCta');
+  await p.waitForSelector('#returningPanel .rt-go');
+  const panel = await p.locator('#returningPanel').innerText();
+  assert.match(panel, /前回の診断結果があります/);
+  assert.match(panel, /.+ × .+ × .+/, '元素 × 武器 × 国家');
+  assert.match(panel, /近しいキャラクター：.+（\d+%）/);
+  assert.equal(await p.locator('#returningPanel .rt-go').getAttribute('href'), '/result#r=' + RESUME + '&buy=1');
+  await p.click('#returningPanel .rt-go');
+  await p.waitForSelector('#lockUnlockAllBtn', { state: 'visible' });
+  await p.waitForFunction(() => location.hash === '#r=Rz0kEnSecretValueForResumeLink_ABCDEFGHIJKL', null, { timeout: 5000 });
+  await p.waitForFunction(() => { const r = document.getElementById('lockUnlockAllBtn').getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }, null, { timeout: 5000 });
+  // ここから通常どおり ¥1,000 の購入へ進める
+  await p.waitForFunction(() => !document.querySelector('#lockUnlockAllBtn').disabled);
+  await p.click('#lockUnlockAllBtn');
+  await p.waitForURL(/checkout\.stripe\.com/);
+  const ev = JSON.stringify(await p.evaluate(() => window.__ev));
+  assert.ok(!ev.includes(RESUME), '秘密値を計測に出さない');
+  assert.deepEqual(p.__errors, []);
+  await p.__ctx.close();
+});
+
+test('ログイン中：マイページの最新の記録の購入シートを開く（# は消す）。そこから ¥1,000 を購入できる', { skip: skip() }, async () => {
+  const p = await open('/', { signedIn: true, rows: [REC_ROW], api: Object.assign({}, RESULT_API(), MYPAGE_API) });
+  await p.click('#returningCta');
+  await p.waitForURL(/\/mypage\.html/);
+  await p.waitForSelector('#mpUpgradeBody [data-analysis-checkout]', { state: 'visible' });
+  assert.equal(await p.evaluate(() => location.hash), '');
+  await p.locator('#mpUpgradeBody [data-analysis-checkout]').click();
+  await p.waitForURL(/checkout\.stripe\.com/);
+  const buy = p.__calls.filter((c) => c.op === 'buy');
+  assert.deepEqual([buy.length, buy[0].body.product, buy[0].body.context], [1, 'analysis', CTX]);
+  await p.__ctx.close();
+});
+
+test('マイページ：#buy の印は1回だけ（再読み込み・別のタブでは開かない）', { skip: skip() }, async () => {
+  const p = await open('/mypage.html#buy', { signedIn: true, rows: [REC_ROW], api: MYPAGE_API });
+  await p.waitForSelector('#mpUpgradeBody [data-analysis-checkout]', { state: 'visible' });
+  await p.reload();
+  await p.waitForSelector('#mpUpgradeTrigger', { state: 'attached' });
+  await p.waitForTimeout(400);
+  assert.equal(await p.locator('#mpUpgradeOverlay').isVisible(), false, '再読み込みでは開かない');
+  await p.__ctx.close();
+});
