@@ -17,6 +17,8 @@
   var CTX_TTL_MS = 12 * 3600 * 1000; // トークンの有効期限（24時間）より十分短く（受け取った時刻から数える）
   var context = B.readFragment('c');
   var fromRaw = B.readFragment('from');
+  // 結果ページ・マイページから、購入の対象（#c=）を持って開いた：読み込み後、申込欄の位置から表示する（完全解析のサンプルだけ）
+  var jumpToBuy = B.contextOk(context) && box.getAttribute('data-sample-buy') === 'complete';
   var savedAt = Date.now();
   if (!B.contextOk(context)) {
     context = null;
@@ -50,7 +52,7 @@
     var href = B.sampleHref('complete', c, from);
     return '<a class="beyond-sample" href="' + B.esc(href) + '" data-sample-complete-link>'
       + '<span class="beyond-sample-icon" aria-hidden="true"></span><span class="beyond-sample-text"><b>完全解析のサンプルを読む</b>'
-      + '<small>実際の46ページから、8ページをそのまま抜き出しています</small></span><span aria-hidden="true">→</span></a>';
+      + '<small>実際のレポートから、42ページをそのまま掲載しています</small></span><span aria-hidden="true">→</span></a>';
   }
 
   // 解析レポートのサンプル：申込欄を「この先にあるもの」の直前へ。本文に三つの人物像の図を入れる
@@ -85,7 +87,7 @@
     box.innerHTML = '<h2>あなた自身の診断結果で読む</h2>'
       + '<p>お申し込みには、あなたの診断結果が必要です。まず元素診断を受けてください。診断が終わると、結果のページからこのサンプルへ進み、その診断結果でお申し込みいただけます。</p>'
       + '<a class="sample-return" href="/">まず元素診断を受ける</a>'
-      + '<p class="sample-mypage">マイページに保存した記録から申し込む方：<a href="/mypage.html">マイページで記録を選ぶ</a></p>';
+      + (page === 'complete' ? '' : '<p class="sample-mypage">マイページに保存した記録から申し込む方：<a href="/mypage.html">マイページで記録を選ぶ</a></p>');
   }
 
   box.innerHTML = '<p>' + subject + 'を確かめています…</p>';
@@ -104,6 +106,17 @@
   }
   if (!context) noContext();
   else { fillSlot(context); check(); }
+  // 申込欄の位置へ（画像・レイアウトが確定してから。読者が自分でスクロールし始めたら、それを優先して動かさない）
+  if (jumpToBuy) {
+    try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) { /* そのまま */ }
+    var moved = false;
+    var markMoved = function () { moved = true; };
+    ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach(function (t) { window.addEventListener(t, markMoved, { once: true, passive: true }); });
+    var jump = function () { if (!moved) box.scrollIntoView({ block: 'center' }); };
+    window.requestAnimationFrame(jump);
+    if (document.readyState === 'complete') setTimeout(jump, 0); else window.addEventListener('load', function () { setTimeout(jump, 0); }, { once: true });
+    setTimeout(jump, 1200); // 申込欄の描き直し（購入の対象の確認の後）で高さが変わる分
+  }
 
   function render(r, canRetry) {
     if (!r.ok) {

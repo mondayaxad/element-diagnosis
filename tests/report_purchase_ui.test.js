@@ -1089,3 +1089,52 @@ test('マイページ：購入対象の取得が失敗・例外でも、押せ�
     await p.__ctx.close();
   }
 });
+
+// ================= 完全解析サンプル（42ページ）：目次・風元素の色・申込欄から表示
+test('完全解析サンプル：42ページ・目次（P39〜P42は省略の案内）・目次と申込のボタンは風元素の色・マイページ登録の案内はない', { skip: skip() }, async () => {
+  const p = await open('/complete-sample#c=' + CTX + '&from=result', { api: RESULT_API() });
+  await p.waitForSelector('[data-sample-buy] [data-buy]');
+  assert.equal(await p.locator('section.page').count(), 42);
+  assert.equal(await p.locator('.sample-intro details li a').count(), 42);
+  assert.match(await p.locator('.sample-intro details li.skip').innerText(), /P39〜P42/);
+  // 目次の番号・申込のボタンは、風の緑（レポートの本文の元素の色と同じ）
+  const colors = await p.evaluate(() => {
+    const rgb = (s) => s.match(/\d+/g).slice(0, 3).map(Number);
+    const num = getComputedStyle(document.querySelector('.sample-intro a span')).color;
+    const btn = getComputedStyle(document.querySelector('[data-sample-buy] [data-buy]')).backgroundImage;
+    return { num: rgb(num), btn, el: getComputedStyle(document.documentElement).getPropertyValue('--el').trim() };
+  });
+  assert.equal(colors.el, '#2f8a5c');
+  assert.ok(colors.num[1] > colors.num[0] && colors.num[1] > colors.num[2], '目次の番号は緑');
+  assert.match(colors.btn, /rgb\(31, 106, 70\)|rgb\(47, 138, 92\)/, '申込のボタンは風の緑');
+  assert.doesNotMatch(await p.locator('body').innerText(), /マイページに登録|マイページに保存した記録から申し込む/);
+  assert.deepEqual(p.__errors, []);
+  await p.__ctx.close();
+});
+
+test('完全解析サンプル：結果ページ・マイページの記録を持って開くと、読み込み後に申込欄の位置から表示し、そこから購入へ進める', { skip: skip() }, async () => {
+  for (const from of ['result', 'mypage']) {
+    const p = await open('/complete-sample#c=' + CTX + '&from=' + from, { width: 390, api: RESULT_API() });
+    await p.waitForSelector('[data-sample-buy] [data-buy]');
+    await p.waitForFunction(() => { const r = document.querySelector('[data-sample-buy]').getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }, null, { timeout: 8000 });
+    assert.ok((await p.evaluate(() => scrollY)) > 5000, 'ページの下部（サンプルの末尾）にいる');
+    assert.match(await p.locator('[data-sample-buy]').innerText(), /¥3,000/);
+    // 申込：目標の選択 → op=buy（完全解析）
+    await p.waitForFunction(() => !document.querySelector('[data-sample-buy] [data-buy]').getAttribute('aria-disabled'));
+    await p.click('[data-sample-buy] [data-buy]');
+    await p.locator('.edb-dialog input[name="edb-goal"]').first().check();
+    await p.click('[data-edb-go]');
+    await p.waitForURL(/checkout\.stripe\.com/);
+    const buy = p.__calls.filter((c) => c.op === 'buy');
+    assert.deepEqual([buy.length, buy[0].body.product, buy[0].body.context], [1, 'complete', CTX]);
+    await p.__ctx.close();
+  }
+});
+
+test('完全解析サンプル：購入の対象が無い（直接開いた）時は、先頭から表示する（申込欄へ動かさない）', { skip: skip() }, async () => {
+  const p = await open('/complete-sample', { width: 390, api: RESULT_API() });
+  await p.waitForSelector('[data-sample-buy]');
+  await p.waitForTimeout(1500);
+  assert.ok((await p.evaluate(() => scrollY)) < 50);
+  await p.__ctx.close();
+});
