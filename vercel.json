@@ -165,7 +165,25 @@
       ]
     },
     {
-      "source": "/jagan/(.*)",
+      "source": "/jagan/sample",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/jagan/complete-sample",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/jagan/dipper",
       "headers": [
         {
           "key": "X-Robots-Tag",
