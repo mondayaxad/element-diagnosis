@@ -531,8 +531,9 @@
         <a href="javascript:void(0)" class="cta" onclick="startNewDiagnosisV2()">診断をはじめる <span class="en">— Start</span></a>
         <a href="/mypage.html" class="hero-record-link" onclick="trackEvent('mypage_entry_click',{entry_point:'top'})">診断記録を見る <span class="arw">→</span></a>
       </div>
-      <!-- 邪眼診断のリリース告知（2026-11-12）。流入元が分かるよう UTM を付ける（GA4：utm_source=eti） -->
-      <a class="jagan-banner" href="/jagan/?utm_source=eti&amp;utm_medium=banner&amp;utm_campaign=jagan_launch" onclick="trackEvent('jagan_banner_click',{entry_point:'top'})">
+      <!-- 邪眼診断のリリース告知（2026-11-12）。内部リンクには UTM を付けない（付けると検索などの本来の流入元が「eti / banner」に上書きされる）。
+           バナーからの移動は jagan_banner_click（entry_point:'top'）で数える -->
+      <a class="jagan-banner" href="/jagan/" onclick="trackEvent('jagan_banner_click',{entry_point:'top'})">
         <span class="jb-img"><img src="/assets/ogp/jagan-top-20261112.jpg" alt="" width="1200" height="630" loading="lazy" decoding="async"></span>
         <span class="jb-body">
           <span class="jb-new">NEW RELEASE</span>

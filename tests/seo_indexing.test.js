@@ -124,3 +124,27 @@ test('元素診断の公開ページ：エニアグラムを理論の土台と�
   assert.doesNotMatch(visible, /エニアグラム|Enneagram/);
   assert.match(head, /Big Five・対人スタイル・シュワルツの価値観理論/);
 });
+
+// 自サイト内のリンクに UTM を付けない（付けると検索などの本来の流入元が上書きされ、自然検索の効果を測れない）
+test('内部リンク：公開ページの自サイトへのリンクに utm_* を付けない', () => {
+  const pages = B.walk(DIST).filter((f) => /\.(html|js|mjs)$/.test(f));
+  assert.ok(pages.length > 40);
+  const bad = [];
+  for (const f of pages) {
+    const src = fs.readFileSync(path.join(DIST, f), 'utf8');
+    for (const m of src.matchAll(/href=["'`]([^"'`]*)["'`]/g)) {
+      const href = m[1].replace(/&amp;/g, '&');
+      const internal = href.startsWith('/') && !href.startsWith('//') || href.startsWith(`${ORIGIN}/`) || href.startsWith('./') || /^[\w-]+(\.html)?([?#]|$)/.test(href);
+      if (internal && /[?&]utm_[a-z]+=/i.test(href)) bad.push(`${f}: ${href}`);
+    }
+  }
+  assert.deepEqual(bad, []);
+});
+
+test('邪眼バナー：/jagan/ へ UTM 無しでリンクし、クリックの計測（jagan_banner_click・entry_point:top）は保つ', () => {
+  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  const a = /<a class="jagan-banner"[^>]*>/.exec(html);
+  assert.ok(a, '邪眼バナーがありません');
+  assert.match(a[0], /href="\/jagan\/"/);
+  assert.match(a[0], /onclick="trackEvent\('jagan_banner_click',\{entry_point:'top'\}\)"/);
+});

@@ -421,3 +421,20 @@ test('本番のドメイン：UTM が無い時は、config に campaign_* を入
   assert.deepEqual(dl[1][2], { page_location: `${HOST}/`, page_referrer: '', content_group: 'eti' });
   await ctx.close();
 });
+
+test('UTM：邪眼診断のトップに外部から UTM 付きで来た時は、これまでどおり page_location と campaign_* に残す（内部リンクから UTM を外しても外部流入は取れる）', () => {
+  const r = runGa('?utm_source=x&utm_medium=social&utm_campaign=jagan_post', PROD, '/jagan/');
+  assert.equal(r.loc, `https://${PROD}/jagan/?utm_source=x&utm_medium=social&utm_campaign=jagan_post`);
+  assert.equal(r.cfg.campaign_source, 'x');
+  assert.equal(r.cfg.campaign_medium, 'social');
+  assert.equal(r.cfg.campaign_name, 'jagan_post');
+  assert.equal(r.cfg.content_group, 'jagan');
+});
+
+test('UTM：元素診断の TOP のバナーから邪眼診断へ移った時（UTM 無し）は、campaign_* を送らず流入元を上書きしない', () => {
+  const r = runGa('', PROD, '/jagan/');
+  assert.equal(r.loc, `https://${PROD}/jagan/`);
+  for (const k of ['campaign_source', 'campaign_medium', 'campaign_name', 'campaign_content', 'campaign_term']) {
+    assert.equal(r.cfg[k], undefined, `${k} を送っています`);
+  }
+});
