@@ -5,6 +5,14 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://element-diagnosis-five.vercel.app/jagan/</loc>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://element-diagnosis-five.vercel.app/jagan/about</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://element-diagnosis-five.vercel.app/type/pysw</loc>
     <priority>0.6</priority>
   </url>
