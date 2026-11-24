@@ -2,7 +2,7 @@
 # 全テストを、スキップ0件の条件で1回ずつ実行する（品質保証の CI と手元で同じ手順）。docs/TESTING_FULL.md
 #   1) 使い捨ての PostgreSQL 17 を起動（CI ではサービスコンテナ：E2E_PG_EXTERNAL=1・E2E_PG_HOST・E2E_PG_PORT）し、版が 17 であることを確かめる
 #   2) npm test と同じ対象（tests/*.test.js）を、DB の試験も実 PG17（Preview 相当・Stripe Test）で動く設定で実行する
-#   3) PG だけの試験（tests/pg/*.pg.test.js）と、DB の試験の本番相当（Live・prod_01〜04b・prod_06）を実行する
+#   3) PG だけの試験（tests/pg/*.pg.test.js）と、DB の試験6ファイルの本番相当（Live・prod_01〜04b・prod_06）を実行する
 #      （2 と 3 は対象が重ならない：2 は Test 構成、3 は Live 構成と PG 専用の試験。tests/pg/run_all.sh の Test 構成・同意の組は 2 に含まれる）
 #   各段の TAP を tests-out/*.tap に残し、失敗・スキップ・キャンセル・todo が1件でもあれば終了コード 1。
 #   必要：Node 22、Playwright（Chromium）、PDF_LIBS_DIR（tests/support/pdf_libs.sh）、npm ci 済みの node_modules（@vercel/og）
@@ -14,10 +14,18 @@ mkdir -p "$OUT"
 for k in SUPABASE_URL SUPABASE_SECRET_KEY SUPABASE_SERVICE_ROLE_KEY STRIPE_SECRET_KEY REPORT_TOKEN_SECRET; do
   if [ -n "${!k:-}" ]; then echo "$k is set: run the tests in a clean environment (no app secrets)" >&2; exit 1; fi
 done
+# 接続先の検証（tests/pg/pg_env.js の assertSafeTarget）：unix ソケットか localhost だけ・本番の秘密や psql の接続先を変える環境変数が無いこと。
+#   バージョンの確認を含む、最初の DB 接続より前に必ず行う（拒否された時は psql を一度も起動しない）
+pg_guard() { node -e "require('./tests/pg/pg_env').assertSafeTarget()"; }
 if [ -z "${E2E_PG_EXTERNAL:-}" ]; then
   tests/pg/local_pg.sh start
   trap 'tests/pg/local_pg.sh stop >/dev/null' EXIT
-  eval "$(tests/pg/local_pg.sh env)"
+  eval "$(tests/pg/local_pg.sh env)"   # 接続設定の読み込み（ローカルの unix ソケット）
+  pg_guard
+else
+  # 外部の PG（CI のサービスコンテナなど）：渡された接続先が確定した直後に検証する
+  : "${E2E_PG_HOST:?E2E_PG_HOST is required with E2E_PG_EXTERNAL=1 (localhost or a unix socket dir)}"
+  pg_guard
 fi
 export E2E_PG=1
 PSQL=${E2E_PG_PSQL:-psql}
@@ -50,6 +58,6 @@ check "2-pg" "$OUT/2-pg.tap"
 echo "== 3/3 DB の試験を本番相当（Live）で"
 COMPLETE_DB_STRIPE_MODE=live node --test --test-reporter=tap --test-concurrency=1 \
   tests/link_purchase_api.test.js tests/complete_guest_api.test.js tests/complete_report_job.test.js \
-  tests/no_upgrade_price_env.test.js tests/purchase_integrity_api.test.js > "$OUT/3-live.tap" || true
+  tests/no_upgrade_price_env.test.js tests/purchase_integrity_api.test.js tests/complete_payment_api.test.js > "$OUT/3-live.tap" || true
 check "3-live" "$OUT/3-live.tap"
 exit $status

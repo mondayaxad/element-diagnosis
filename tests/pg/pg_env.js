@@ -25,6 +25,10 @@ function assertSafeTarget() {
   for (const k of ['SUPABASE_URL', 'SUPABASE_SECRET_KEY', 'SUPABASE_SERVICE_ROLE_KEY', 'STRIPE_SECRET_KEY', 'REPORT_TOKEN_SECRET']) {
     if (process.env[k]) throw new Error(`${k} is set in the environment: run the PG tests in a clean environment (no app secrets)`);
   }
+  // psql（libpq）は -h より優先される／接続先を差し替える環境変数を持つ。指定されていれば拒否する（-h の検査をすり抜けさせない）
+  for (const k of ['PGHOSTADDR', 'PGSERVICE', 'PGSERVICEFILE', 'PGDATABASE']) {
+    if (process.env[k]) throw new Error(`${k} is set in the environment: it can redirect psql; unset it for the PG tests`);
+  }
   return c;
 }
 function assertTestDb(name) {
