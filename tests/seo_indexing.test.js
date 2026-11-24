@@ -13,9 +13,8 @@ const os = require('os');
 const path = require('path');
 const B = require('../scripts/build-public.js');
 
-const ROOT = path.join(__dirname, '..');
+const { ROOT, robotsHeaders, metaRobots, canonical, sitemapLocs } = require('./seo_helpers.js');
 const ORIGIN = 'https://element-diagnosis-five.vercel.app';
-const VERCEL = JSON.parse(fs.readFileSync(path.join(ROOT, 'vercel.json'), 'utf8'));
 
 let DIST;
 test.before(() => {
@@ -25,36 +24,12 @@ test.before(() => {
 });
 test.after(() => { if (DIST) fs.rmSync(path.dirname(DIST), { recursive: true, force: true }); });
 
-// vercel.json の source（path-to-regexp の一部：:name・:name(正規表現)・(.*)）を正規表現にする
-function sourceToRegExp(src) {
-  let re = '';
-  for (let i = 0; i < src.length;) {
-    const rest = src.slice(i);
-    let m;
-    if ((m = /^:([A-Za-z_]\w*)\(([^)]*\)?[^)]*)\)/.exec(rest))) { re += `(${m[2]})`; i += m[0].length; continue; }
-    if ((m = /^:([A-Za-z_]\w*)/.exec(rest))) { re += '([^/]+)'; i += m[0].length; continue; }
-    if ((m = /^\(([^)]*)\)/.exec(rest))) { re += `(${m[1]})`; i += m[0].length; continue; }
-    re += src[i].replace(/[.*+?^${}|[\]\\/]/g, '\\$&');
-    i += 1;
-  }
-  return new RegExp(`^${re}$`);
-}
-// その URL のパスに付く X-Robots-Tag（当たる全ルール）
-function robotsHeaders(urlPath) {
-  return (VERCEL.headers || [])
-    .filter((h) => sourceToRegExp(h.source).test(urlPath))
-    .flatMap((h) => h.headers.filter((x) => x.key.toLowerCase() === 'x-robots-tag').map((x) => x.value));
-}
 // cleanUrls の配信先：/ → index.html、/a/ → a/index.html、/a → a.html（無ければ a/index.html）
 function fileFor(urlPath) {
   if (urlPath.endsWith('/')) return path.join(DIST, urlPath, 'index.html');
   const f = path.join(DIST, `${urlPath}.html`);
   return fs.existsSync(f) ? f : path.join(DIST, urlPath, 'index.html');
 }
-const metaRobots = (html) => (/<meta\s+name="robots"\s+content="([^"]*)"/i.exec(html) || [])[1] || '';
-const canonical = (html) => (/<link\s+rel="canonical"\s+href="([^"]*)"/i.exec(html) || [])[1] || '';
-const sitemapLocs = () => [...fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8').matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-
 test('robots.txt：全体を許可し、sitemap.xml の場所を示す', () => {
   const t = fs.readFileSync(path.join(ROOT, 'robots.txt'), 'utf8');
   assert.match(t, /^User-agent: \*$/m);
