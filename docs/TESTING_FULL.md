@@ -10,8 +10,7 @@
 `npm run test:full`（`tests/support/run_full.sh`）の3段は、対象が重ならない（二重に数えない）：
 1. **全試験**：`npm test` と同じ対象（`tests/*.test.js`）。DB の試験は実 PG17 の Preview 相当（Stripe Test）で動き、同意の組（complete_16）もここに含まれる。
 2. **PG 専用の試験**：`tests/pg/*.pg.test.js`（旧版購入権の引き継ぎ・本番相当の構造・邪眼）。
-3. **本番相当（Live）**：DB の試験5ファイル（`link_purchase_api`・`complete_guest_api`・`complete_report_job`・`no_upgrade_price_env`・`purchase_integrity_api`）を、本番の migration（prod_01〜04b・prod_06）を当てた DB で実行する。
-   - `complete_payment_api` は Test 構成専用のファイルなので、1段目だけで実行される。
+3. **本番相当（Live）**：DB の試験6ファイル（`link_purchase_api`・`complete_guest_api`・`complete_report_job`・`no_upgrade_price_env`・`purchase_integrity_api`・`complete_payment_api`）を、本番の migration（prod_01〜04b・prod_06）を当てた DB で実行する。
 
 件数について（2026-11-24 時点）：
 - `npm test` で「同意の組」は1件として数えられる（DB が無くてスキップ）。DB がある時は、その中の10件の小テストとして数えられる。
@@ -52,6 +51,8 @@
    - psql は 16 でも動く。サーバーが 17 であることは、スクリプトが `server_version_num` で確かめる。
 
 ## 安全装置（`tests/pg/pg_env.js`・`tests/support/run_full.sh`）
+- **最初の DB 接続（psql によるバージョン確認を含む）より前に**、接続先を検証する（`assertSafeTarget`）。ローカル起動では接続設定の読み込みの直後、外部 PG（`E2E_PG_EXTERNAL=1`）では渡された `E2E_PG_HOST` の確定の直後（未指定なら止まる）。拒否された時は psql を一度も起動しない（`tests/run_full_guard.test.js` が偽の psql で確かめる。`tests/pg/run_all.sh` も同じ）。
+- psql の接続先を差し替える環境変数（`PGHOSTADDR`・`PGSERVICE`・`PGSERVICEFILE`・`PGDATABASE`）があれば拒否する。
 - 接続先は unix ソケットか localhost だけ。Supabase・プール・クラウドのホストは拒否する。
 - `SUPABASE_URL`・`SUPABASE_SECRET_KEY`・`SUPABASE_SERVICE_ROLE_KEY`・`STRIPE_SECRET_KEY`・`REPORT_TOKEN_SECRET` が環境にあれば、起動しない。
 - 作るデータベースは `e2e_` で始まる名前だけ。入れるのは合成データだけ。

@@ -20,21 +20,35 @@ const { computeMaterials } = require('../scripts/complete-materials');
 const createBackend = process.env.COMPLETE_DB_BACKEND ? require(process.env.COMPLETE_DB_BACKEND).createBackend : createMemoryBackend;
 
 const SECRET = 'whsec_test_fake_secret_for_unit_tests';
-const ORIGIN = 'https://element-diagnosis-git-release-c-preview-nmkw0322-4497s-projects.vercel.app';
+// COMPLETE_DB_STRIPE_MODE=live：本番の構成（Production・Stripe Live・本番専用 migration の DB）で同じ試験を流す（すべて偽物。
+//   tests/purchase_integrity_api.test.js と同じ切り替え）。既定（未指定）は従来どおり Preview・Stripe Test
+const LIVE = process.env.COMPLETE_DB_STRIPE_MODE === 'live';
+const MODE = LIVE ? 'live' : 'test';
+const APP_ENV = LIVE ? 'production' : 'preview';
+const PID = (name) => `price_${MODE}_${name}`;
+const PREVIEW_ORIGIN = 'https://element-diagnosis-git-release-c-preview-nmkw0322-4497s-projects.vercel.app';
+const ORIGIN = LIVE ? 'https://element-diagnosis-five.vercel.app' : PREVIEW_ORIGIN;
 const SALES_ENV = {
-  ...PREVIEW_ENV,
+  ...(LIVE ? PROD_ENV : PREVIEW_ENV),
   COMPLETE_SALES_OPEN: 'true',
   COMPLETE_CHECKOUT_ORIGIN: ORIGIN,
-  STRIPE_COMPLETE_PRICE_DIRECT: 'price_test_direct3000',
-  STRIPE_COMPLETE_PRICE_UPGRADE: 'price_test_upgrade2000',
-  STRIPE_PRICE_ANALYSIS: 'price_test_analysis1000',
+  STRIPE_COMPLETE_PRICE_DIRECT: PID('direct3000'),
+  STRIPE_COMPLETE_PRICE_UPGRADE: PID('upgrade2000'),
+  STRIPE_PRICE_ANALYSIS: PID('analysis1000'),
   STRIPE_COMPLETE_WEBHOOK_SECRET: SECRET,
   COMPLETE_VIEW_TOKEN_SECRET: 'x'.repeat(43),
 };
-const PRICES = {
+// 照合関数（CP.priceProblem）の単体の確認は、既定の Test の値で行う（構成によらない）
+const TEST_PRICES = {
   price_test_direct3000: { id: 'price_test_direct3000', active: true, livemode: false, currency: 'jpy', unit_amount: 3000, type: 'one_time' },
   price_test_upgrade2000: { id: 'price_test_upgrade2000', active: true, livemode: false, currency: 'jpy', unit_amount: 2000, type: 'one_time' },
   price_test_analysis1000: { id: 'price_test_analysis1000', active: true, livemode: false, currency: 'jpy', unit_amount: 1000, type: 'one_time' },
+};
+// API の試験で使う Price（構成の Stripe のモードに合わせる）
+const PRICES = {
+  [PID('direct3000')]: { id: PID('direct3000'), active: true, livemode: LIVE, currency: 'jpy', unit_amount: 3000, type: 'one_time' },
+  [PID('upgrade2000')]: { id: PID('upgrade2000'), active: true, livemode: LIVE, currency: 'jpy', unit_amount: 2000, type: 'one_time' },
+  [PID('analysis1000')]: { id: PID('analysis1000'), active: true, livemode: LIVE, currency: 'jpy', unit_amount: 1000, type: 'one_time' },
 };
 
 function makeRes() {
@@ -53,7 +67,7 @@ function makeLogger() {
 
 async function setup({ env = {}, prices = PRICES } = {}) {
   const db = await createBackend();
-  const stripe = fakeStripe({ prices: JSON.parse(JSON.stringify(prices)) });
+  const stripe = fakeStripe({ prices: JSON.parse(JSON.stringify(prices)), livemode: LIVE });
   const logger = makeLogger();
   const fullEnv = { ...SALES_ENV, ...env };
   // 生成・保存・閲覧は tests/complete_report_job.test.js で試す。ここでは後段の生成を起動しない（試験の後まで走り続けないように）
@@ -74,7 +88,7 @@ async function setup({ env = {}, prices = PRICES } = {}) {
       return res;
     },
     async webhook(opts) {
-      const { req, event } = eventRequest({ secret: SECRET, ...opts });
+      const { req, event } = eventRequest({ secret: SECRET, livemode: LIVE, ...opts });
       const res = makeRes();
       await webhookH(req, res);
       res.event = event;
@@ -118,7 +132,7 @@ async function openAndPay(ctx, p) {
   return { csId, ...paid };
 }
 
-const FORBIDDEN = (ctx, extra = []) => [/@/, /cs_test_/, /pi_[A-Za-z0-9]/, /ch_[A-Za-z0-9]/, /du_[A-Za-z0-9]/, /evt_/, /whsec_/, /sk_test_/, /CODE_/, /price_test_/,
+const FORBIDDEN = (ctx, extra = []) => [/@/, /cs_test_/, /cs_live_/, /pi_[A-Za-z0-9]/, /ch_[A-Za-z0-9]/, /du_[A-Za-z0-9]/, /evt_/, /whsec_/, /sk_test_/, /sk_live_/, /CODE_/, /price_test_/, /price_live_/,
   /stripe-signature/i, /t=\d+,v1=/, ...extra];
 
 function assertNoForbidden(text, patterns, label) {
@@ -157,9 +171,9 @@ test('署名：正しい本文だけ通る（1バイト変更・署名なし・�
 });
 
 test('Price の照合：有効・JPY・金額・Test・一回払い', () => {
-  const ok = PRICES.price_test_direct3000;
+  const ok = TEST_PRICES.price_test_direct3000;
   assert.equal(CP.priceProblem(ok, 'direct_complete'), null);
-  assert.equal(CP.priceProblem(PRICES.price_test_upgrade2000, 'analysis_upgrade'), null);
+  assert.equal(CP.priceProblem(TEST_PRICES.price_test_upgrade2000, 'analysis_upgrade'), null);
   assert.equal(CP.priceProblem({ ...ok, active: false }, 'direct_complete'), 'price_inactive');
   assert.equal(CP.priceProblem({ ...ok, livemode: true }, 'direct_complete'), 'price_livemode');
   assert.equal(CP.priceProblem({ ...ok, currency: 'usd' }, 'direct_complete'), 'price_currency');
@@ -170,6 +184,8 @@ test('Price の照合：有効・JPY・金額・Test・一回払い', () => {
 });
 
 test('戻り先 URL：https の origin だけ・Preview で許可した固定 origin と一致しなければ閉じる・販売の開始は文字列 true だけ', () => {
+  // 関数の単体の確認（Preview の許可リスト）。構成（Test／Live）によらず、Preview の固定 origin で確かめる
+  const ORIGIN = PREVIEW_ORIGIN;
   assert.deepEqual(CP.PREVIEW_CHECKOUT_ORIGINS, [ORIGIN]);
   assert.deepEqual(CP.checkoutReturnUrls({ COMPLETE_CHECKOUT_ORIGIN: ORIGIN }), {
     successUrl: `${ORIGIN}/mypage.html?complete=returned`, cancelUrl: `${ORIGIN}/mypage.html?complete=canceled`,
@@ -300,7 +316,8 @@ test('販売を閉じている（未設定・false・TRUE）と Checkout は 503
 
 test('設定不足（戻り先・Price）は 503（fail-closed）', async () => {
   for (const env of [{ COMPLETE_CHECKOUT_ORIGIN: undefined }, { COMPLETE_CHECKOUT_ORIGIN: 'http://x.example' }, { STRIPE_COMPLETE_PRICE_DIRECT: undefined },
-    { STRIPE_COMPLETE_PRICE_UPGRADE: 'not-a-price' }, { STRIPE_MODE: 'live' }, { STRIPE_SECRET_KEY: 'sk_live_fake' }]) {
+    // Stripe のモード・キーの取り違え（構成と逆：Test の構成に live・Live の構成に test）
+    { STRIPE_COMPLETE_PRICE_UPGRADE: 'not-a-price' }, { STRIPE_MODE: LIVE ? 'test' : 'live' }, { STRIPE_SECRET_KEY: LIVE ? 'sk_test_fake' : 'sk_live_fake' }]) {
     const ctx = await setup({ env });
     const p = await person(ctx);
     const r = await ctx.checkout(p.token, { diagnosisSessionId: p.sessionId });
@@ -362,11 +379,11 @@ test('Checkout direct ¥3,000：カードだけ・customer_email なし・metada
   const { params, opts } = ctx.stripe.st.lastCreate;
   assert.deepEqual(params.payment_method_types, ['card']);
   assert.equal(params.mode, 'payment');
-  assert.deepEqual(params.line_items, [{ price: 'price_test_direct3000', quantity: 1 }]);
+  assert.deepEqual(params.line_items, [{ price: PID('direct3000'), quantity: 1 }]);
   assert.equal('customer_email' in params, false);
   assert.equal('customer' in params, false);
   assert.equal('client_reference_id' in params, false);
-  assert.deepEqual(params.metadata, { order_id: order.id, app: CP.APP, env: 'preview' });
+  assert.deepEqual(params.metadata, { order_id: order.id, app: CP.APP, env: APP_ENV });
   assert.equal(params.success_url, `${ORIGIN}/mypage.html?complete=returned`);
   assert.equal(params.cancel_url, `${ORIGIN}/mypage.html?complete=canceled`);
   assert.doesNotMatch(JSON.stringify(params), /attacker|evil|@|CODE_|GOAL_|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?!")/);
@@ -425,8 +442,8 @@ test('Checkout：Session 作成後に DB の checkout_open 記録が失敗 → �
 });
 
 test('Checkout：Price の無効・金額違い・通貨違い・Live は注文を閉じて 503（Session を作らない）', async () => {
-  for (const [name, change] of [['inactive', { active: false }], ['amount', { unit_amount: 2500 }], ['currency', { currency: 'usd' }], ['livemode', { livemode: true }]]) {
-    const ctx = await setup({ prices: { ...PRICES, price_test_direct3000: { ...PRICES.price_test_direct3000, ...change } } });
+  for (const [name, change] of [['inactive', { active: false }], ['amount', { unit_amount: 2500 }], ['currency', { currency: 'usd' }], ['livemode', { livemode: !LIVE }]]) {
+    const ctx = await setup({ prices: { ...PRICES, [PID('direct3000')]: { ...PRICES[PID('direct3000')], ...change } } });
     const p = await person(ctx);
     const r = await ctx.checkout(p.token, { diagnosisSessionId: p.sessionId });
     assert.equal(r.code, 503, name);
@@ -516,9 +533,10 @@ test('Webhook：署名なし・1バイト変更・古い timestamp・別の secr
   await ctx.db.close();
 });
 
-test('Webhook：Live のイベント・対象外のイベント・完全解析でない Session は DB に書かずに 200', async () => {
+// 構成と違うモードのイベント（Test の構成に Live・Live の構成に Test）は無視する
+test(`Webhook：${LIVE ? 'Test' : 'Live'} のイベント・対象外のイベント・完全解析でない Session は DB に書かずに 200`, async () => {
   const ctx = await setup();
-  let r = await ctx.webhook({ type: 'checkout.session.completed', objectId: 'cs_test_abcdefghijkl', livemode: true });
+  let r = await ctx.webhook({ type: 'checkout.session.completed', objectId: `cs_${LIVE ? 'test' : 'live'}_abcdefghijkl`, livemode: !LIVE });
   assert.deepEqual([r.code, r.body], [200, { received: true, result: 'ignored' }]);
   r = await ctx.webhook({ type: 'customer.created', objectId: 'cus_abcdefghijkl' });
   assert.deepEqual([r.code, r.body], [200, { received: true, result: 'ignored' }]);
@@ -665,15 +683,15 @@ test('C8：Checkout の後に環境変数の Price ID を変えても、その�
   const p = await person(ctx);
   const paid = await openAndPay(ctx, p);
   // 決済の途中で運営者が Price ID を差し替えた（新しい Price は同じ金額でも別 ID）
-  ctx.env.STRIPE_COMPLETE_PRICE_DIRECT = 'price_test_direct3000_v2';
-  ctx.stripe.st.prices.price_test_direct3000_v2 = { ...ctx.stripe.st.prices.price_test_direct3000, id: 'price_test_direct3000_v2' };
+  ctx.env.STRIPE_COMPLETE_PRICE_DIRECT = PID('direct3000_v2');
+  ctx.stripe.st.prices[PID('direct3000_v2')] = { ...ctx.stripe.st.prices[PID('direct3000')], id: PID('direct3000_v2') };
   const r = await ctx.webhook({ type: 'checkout.session.completed', objectId: paid.csId });
   assert.deepEqual([r.code, r.body], [200, { received: true, result: 'processed' }]);
   assert.match(await ctx.state(p.sessionId), /^paid\|lock=true\|ent=analysis:active,complete:active\|rep=queued$/);
   // 新しい Checkout は新しい Price ID で作る
   const q = await person(ctx, { email: 'q@example.test' });
   assert.equal((await ctx.checkout(q.token, { diagnosisSessionId: q.sessionId })).code, 200);
-  assert.deepEqual(ctx.stripe.st.lastCreate.params.line_items, [{ price: 'price_test_direct3000_v2', quantity: 1 }]);
+  assert.deepEqual(ctx.stripe.st.lastCreate.params.line_items, [{ price: PID('direct3000_v2'), quantity: 1 }]);
   await ctx.db.close();
 });
 
@@ -706,8 +724,8 @@ test('Webhook：恒久的な不一致（金額・Price・metadata）は ignored�
     assert.equal((await ctx.db.rows('stripe_webhook_events'))[0].error_code, 'amount_mismatch', name);
     await ctx.db.close();
   }
-  // metadata 違い（env が production・項目の追加）
-  for (const meta of [{ env: 'production' }, { extra: 'x' }, { order_id: 'not-a-uuid' }]) {
+  // metadata 違い（env が構成と違う〔Test の構成に production・Live の構成に preview〕・項目の追加）
+  for (const meta of [{ env: LIVE ? 'preview' : 'production' }, { extra: 'x' }, { order_id: 'not-a-uuid' }]) {
     ctx = await setup();
     p = await person(ctx);
     paid = await openAndPay(ctx, p);
@@ -725,7 +743,7 @@ test('Webhook：販売を閉じていても返金・dispute を処理する', as
   const { csId, chargeId } = await openAndPay(ctx, p);
   // 販売を閉じた後の Webhook（同じ DB・Stripe）
   const closed = Webhook.createHandler({ env: { ...SALES_ENV, COMPLETE_SALES_OPEN: 'false' }, fetchImpl: ctx.db.fetchImpl, stripeFactory: ctx.stripe.factory, logger: ctx.logger, waitUntil: null });
-  const send = async (o) => { const res = makeRes(); await closed(eventRequest({ secret: SECRET, ...o }).req, res); return res; };
+  const send = async (o) => { const res = makeRes(); await closed(eventRequest({ secret: SECRET, livemode: LIVE, ...o }).req, res); return res; };
   assert.equal((await send({ type: 'checkout.session.completed', objectId: csId })).code, 200);
   ctx.stripe.refund(chargeId, 3000);
   assert.equal((await send({ type: 'charge.refunded', objectId: chargeId })).code, 200);

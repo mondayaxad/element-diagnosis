@@ -96,7 +96,7 @@ test('カードの組み立て：all（従来の1枚描き）は人ごとの情�
 // @vercel/og がある環境（scripts/build-ogp-bases.mjs を動かせる環境）だけ：従来の1枚描きと画素で比べる
 let og = null;
 try { require.resolve('@vercel/og', { paths: [ROOT] }); og = true; } catch (e) { og = null; }
-test('画素比較：下地＋overlay と従来の1枚描きがほぼ同じ（PSNR 40dB 以上）・CPU が 1/2 以下', { skip: !og && '@vercel/og が無いため skip' }, async () => {
+test('画素比較：下地＋overlay と従来の1枚描きがほぼ同じ（PSNR 40dB 以上）・CPU が 1/2 以下', { skip: !og && '@vercel/og が無いため skip' }, async (t) => {
   const { ImageResponse } = await import('@vercel/og');
   const C = await imp('js/ogp-card.mjs');
   const T = await imp('js/ogp-theme.mjs');
@@ -136,6 +136,9 @@ test('画素比較：下地＋overlay と従来の1枚描きがほぼ同じ（PS
   let se = 0, n = 0;
   for (let i = 0; i < A.out.length / A.bpp; i++) for (let c = 0; c < 3; c++) { const e = A.out[i * A.bpp + c] - O.out[i * O.bpp + c]; se += e * e; n++; }
   const psnr = 10 * Math.log10(255 * 255 / (se / n));
+  // 結果を TAP に残す（画素一致と CPU 時間比は別々の指標。基準：PSNR 40dB 以上・CPU 1/2 以下）
+  t.diagnostic(`OGP 画素一致：PSNR ${psnr.toFixed(2)}dB（基準 40dB 以上）`);
+  t.diagnostic(`OGP CPU：重ね描き ${runs.o.map((x) => x.ms.toFixed(0)).join('/')}ms・1枚描き ${runs.a.map((x) => x.ms.toFixed(0)).join('/')}ms → 最小値の比 ${(o.ms / a.ms).toFixed(3)}（基準 0.5 以下）`);
   assert.ok(psnr >= 40, 'PSNR ' + psnr.toFixed(1));
   assert.ok(o.ms <= a.ms / 2, `CPU ${o.ms.toFixed(0)}ms（従来 ${a.ms.toFixed(0)}ms）`);
 });

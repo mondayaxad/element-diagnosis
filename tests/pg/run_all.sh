@@ -8,7 +8,11 @@ if [ -z "${E2E_PG_EXTERNAL:-}" ]; then
   tests/pg/local_pg.sh start
   trap 'tests/pg/local_pg.sh stop >/dev/null' EXIT
   eval "$(tests/pg/local_pg.sh env)"
+else
+  : "${E2E_PG_HOST:?E2E_PG_HOST is required with E2E_PG_EXTERNAL=1 (localhost or a unix socket dir)}"
 fi
+# 最初の DB 接続より前に、接続先を検証する（tests/pg/pg_env.js）
+node -e "require('./tests/pg/pg_env').assertSafeTarget()"
 export E2E_PG=1
 PSQL=${E2E_PG_PSQL:-psql}
 echo "== 実PG17：旧版購入権の引き継ぎ・構造の確認"
@@ -18,7 +22,7 @@ for mode in test live; do
   if [ "$mode" = live ]; then export COMPLETE_DB_STRIPE_MODE=live; else unset COMPLETE_DB_STRIPE_MODE; fi
   COMPLETE_DB_BACKEND="$PWD/tests/pg/backend.js" node --test --test-concurrency=1 \
     tests/link_purchase_api.test.js tests/complete_guest_api.test.js tests/complete_report_job.test.js \
-    tests/no_upgrade_price_env.test.js tests/purchase_integrity_api.test.js
+    tests/no_upgrade_price_env.test.js tests/purchase_integrity_api.test.js tests/complete_payment_api.test.js
 done
 unset COMPLETE_DB_STRIPE_MODE
 echo "== 既存のDB依存試験のうち、PGの psql で動くもの（complete_16 の同意の組）"
