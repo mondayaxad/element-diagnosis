@@ -43,7 +43,7 @@
       ]
     },
     {
-      "source": "/result",
+      "source": "/result{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -56,7 +56,7 @@
       ]
     },
     {
-      "source": "/report-link",
+      "source": "/report-link{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -73,7 +73,7 @@
       ]
     },
     {
-      "source": "/report",
+      "source": "/report{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -90,7 +90,7 @@
       ]
     },
     {
-      "source": "/purchase-complete",
+      "source": "/purchase-complete{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -99,7 +99,7 @@
       ]
     },
     {
-      "source": "/mypage",
+      "source": "/mypage{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -108,7 +108,7 @@
       ]
     },
     {
-      "source": "/complete-sample",
+      "source": "/complete-sample{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -117,7 +117,7 @@
       ]
     },
     {
-      "source": "/report_sample",
+      "source": "/report_sample{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -126,7 +126,7 @@
       ]
     },
     {
-      "source": "/purchase-complete",
+      "source": "/purchase-complete{/}?",
       "headers": [
         {
           "key": "Referrer-Policy",
@@ -139,7 +139,7 @@
       ]
     },
     {
-      "source": "/jagan/s/:id",
+      "source": "/jagan/s/:id{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -148,7 +148,7 @@
       ]
     },
     {
-      "source": "/jagan/report",
+      "source": "/jagan/report{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -165,7 +165,7 @@
       ]
     },
     {
-      "source": "/jagan/sample",
+      "source": "/jagan/sample{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -174,7 +174,7 @@
       ]
     },
     {
-      "source": "/jagan/complete-sample",
+      "source": "/jagan/complete-sample{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -183,7 +183,7 @@
       ]
     },
     {
-      "source": "/jagan/dipper",
+      "source": "/jagan/dipper{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -192,7 +192,7 @@
       ]
     },
     {
-      "source": "/j/:k",
+      "source": "/j/:k{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -201,7 +201,7 @@
       ]
     },
     {
-      "source": "/jagan/share",
+      "source": "/jagan/share{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",
