@@ -14,7 +14,13 @@ const box = (style, ...children) => h('div', { style: { display: 'flex', ...styl
 const abs = (style, ...children) => box({ position: 'absolute', ...style }, ...children);
 
 export const TYPE_CARD_HEADER = '元素診断 — TYPE PROFILE';
-export const TYPE_CARD_BAND = '原神 元素診断　｜　35タイプの性格・特徴';
+// 下帯：「原神 元素診断 ｜ 35タイプの性格・特徴」。全角スペースは同梱フォントに無いため、区切りの左右は余白（margin）で空ける
+export const TYPE_CARD_BAND = ['原神 元素診断', '｜', '35タイプの性格・特徴'];
+
+// カードに描く文字（フォントの収録確認に使う。buildTypeCardTree と同じ文字列）
+export function typeCardTexts(d) {
+  return [TYPE_CARD_HEADER, d.code, d.typeName, d.element, d.weapon, d.axis || '', ...TYPE_CARD_BAND];
+}
 
 /**
  * @param {object} d  { code, typeName, element, weapon, axis }
@@ -43,6 +49,7 @@ export function buildTypeCardTree(d, o = {}) {
     ),
     d.axis ? abs({ top: L.mirror.top + 18, left: L.padLeft, fontSize: 26, letterSpacing: 4, color: t.textTint }, d.axis) : null,
     abs({ left: 0, bottom: 0, width: L.width, height: L.band.height, alignItems: 'center', justifyContent: 'center',
-      background: OGP_COLORS.bandBg, borderTop: '1px solid rgba(150,180,235,.14)', fontSize: 21, letterSpacing: 3, color: OGP_COLORS.bandText }, TYPE_CARD_BAND),
+      background: OGP_COLORS.bandBg, borderTop: '1px solid rgba(150,180,235,.14)', fontSize: 21, letterSpacing: 3, color: OGP_COLORS.bandText },
+      box({}, TYPE_CARD_BAND[0]), box({ margin: '0 26px' }, TYPE_CARD_BAND[1]), box({}, TYPE_CARD_BAND[2])),
   );
 }

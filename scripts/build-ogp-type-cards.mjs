@@ -14,7 +14,8 @@ import os from 'os';
 import { execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { ImageResponse } from '@vercel/og';
-import { buildTypeCardTree } from '../js/ogp-type-card.mjs';
+import { createRequire } from 'module';
+import { buildTypeCardTree, typeCardTexts } from '../js/ogp-type-card.mjs';
 import { ELEMENT_KEY } from '../js/ogp-theme.mjs';
 import { ELEMENT_CODE, WEAPON_CODE, TYPE_NAME, PACK_ELEMENTS, PACK_WEAPONS } from '../api/_og-data.mjs';
 
@@ -28,6 +29,9 @@ const QUALITY = Number(arg('--quality') || 88);
 //   読みに行き、結果が環境で変わるため、タイプ名・軸・見出しを変えた時は Google Fonts の text= 指定で取り直す。
 const font = fs.readFileSync(path.join(ROOT, 'assets/ogp/fonts/noto-serif-jp-700-type.woff'));
 const fonts = [{ name: 'Noto Serif JP', data: font, weight: 700, style: 'normal' }];
+const { missingChars } = createRequire(import.meta.url)('./woff-cmap.js');
+// 外部への通信を禁止する（文字が欠けた時に @vercel/og が代替フォントを取りに行くと、結果が環境で変わるため。欠けていれば下で止める）
+globalThis.fetch = async (u) => { throw new Error(`外部への通信は禁止（${u}）。フォントに無い文字がある可能性`); };
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ogp-types-'));
 fs.mkdirSync(OUT, { recursive: true });
 
@@ -39,7 +43,10 @@ for (const el of PACK_ELEMENTS) {
     if (ONLY && !ONLY.has(code)) continue;
     const html = fs.readFileSync(path.join(ROOT, `type/${code.toLowerCase()}.html`), 'utf8');
     const axis = (/<div class="axis">([^<]+)<\/div>/.exec(html) || [])[1] || '';
-    const tree = buildTypeCardTree({ code, typeName: TYPE_NAME[el][w], element: el, weapon: w, axis }, { backgroundUrl, fontSerif: 'Noto Serif JP' });
+    const d = { code, typeName: TYPE_NAME[el][w], element: el, weapon: w, axis };
+    const miss = missingChars(font, typeCardTexts(d).join(''));
+    if (miss.length) throw new Error(`${code}: 同梱フォントに無い文字 ${miss.join('')}（Google Fonts の text= 指定でフォントを取り直す。docs/seo/OGP_TYPE_CARDS.md）`);
+    const tree = buildTypeCardTree(d, { backgroundUrl, fontSerif: 'Noto Serif JP' });
     const png = Buffer.from(await new ImageResponse(tree, { width: 1200, height: 630, fonts }).arrayBuffer());
     const pngPath = path.join(tmp, code + '.png');
     fs.writeFileSync(pngPath, png);
