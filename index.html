@@ -2943,14 +2943,27 @@ function renderResult(root) {
       window.__edReturnToMypageGo = true;
       var card = document.getElementById('recordCard');
       var start = Date.now();
+      // 「✓ 診断記録に保存しました」の見出しが画面に収まっているか（見出しが無ければカード）。一部だけ見えている状態では数え始めない
       var seen = function () {
         if (!card || !card.isConnected) return true;
-        var r = card.getBoundingClientRect();
+        var el = (card.querySelector && card.querySelector('.rs-done-head')) || card;
+        var r = el.getBoundingClientRect();
         var vh = window.innerHeight || document.documentElement.clientHeight;
-        return r.bottom > 0 && r.top < vh;
+        return r.top >= 0 && r.bottom <= vh && r.bottom > r.top;
+      };
+      // 画面に収まったのを確かめたら、その状態が描画されてから（次の描画の後）ms を数える。
+      //   rAF が動かない時（背景のタブなど）も止まらないよう、500ms で数え始める
+      var afterPaint = function (fn) {
+        var done = false;
+        var once = function () { if (!done) { done = true; fn(); } };
+        if (typeof window.requestAnimationFrame === 'function') window.requestAnimationFrame(function () { window.requestAnimationFrame(once); });
+        setTimeout(once, 500);
       };
       var wait = function () {
-        if (seen() || Date.now() - start >= 3000) { setTimeout(function () { window.location.assign('/mypage.html'); }, ms); return; }
+        if (seen() || Date.now() - start >= 3000) {
+          afterPaint(function () { setTimeout(function () { window.location.assign('/mypage.html'); }, ms); });
+          return;
+        }
         setTimeout(wait, 50);
       };
       wait();
