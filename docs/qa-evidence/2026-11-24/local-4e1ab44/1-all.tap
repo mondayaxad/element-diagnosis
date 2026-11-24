@@ -1,0 +1,5011 @@
+TAP version 13
+# Subtest: verify：Preview で本番 Ref → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 1 - verify：Preview で本番 Ref → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 4.932103
+  type: 'test'
+  ...
+# Subtest: verify：Preview で本番 Ref（期待 Ref も本番） → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 2 - verify：Preview で本番 Ref（期待 Ref も本番） → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.390907
+  type: 'test'
+  ...
+# Subtest: verify：Production で Preview Ref → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 3 - verify：Production で Preview Ref → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.523362
+  type: 'test'
+  ...
+# Subtest: verify：Production で Preview Ref（期待 Ref も Preview） → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 4 - verify：Production で Preview Ref（期待 Ref も Preview） → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.37097
+  type: 'test'
+  ...
+# Subtest: verify：環境不明 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 5 - verify：環境不明 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.362247
+  type: 'test'
+  ...
+# Subtest: verify：期待 Ref 未設定 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 6 - verify：期待 Ref 未設定 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.184375
+  type: 'test'
+  ...
+# Subtest: verify：URL と Ref の不一致 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 7 - verify：URL と Ref の不一致 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.182776
+  type: 'test'
+  ...
+# Subtest: verify：サーバー用キーに公開キー → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 8 - verify：サーバー用キーに公開キー → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.125219
+  type: 'test'
+  ...
+# Subtest: verify：サーバー用キーが不明な形式 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 9 - verify：サーバー用キーが不明な形式 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.536551
+  type: 'test'
+  ...
+# Subtest: verify：旧変数のサーバー用キーが不明な形式 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 10 - verify：旧変数のサーバー用キーが不明な形式 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.669352
+  type: 'test'
+  ...
+# Subtest: verify：旧変数のサーバー用キーが別プロジェクトの JWT → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 11 - verify：旧変数のサーバー用キーが別プロジェクトの JWT → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.37128
+  type: 'test'
+  ...
+# Subtest: verify：サーバー用キーが未設定 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 12 - verify：サーバー用キーが未設定 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.134209
+  type: 'test'
+  ...
+# Subtest: report-data：Preview で本番 Ref → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 13 - report-data：Preview で本番 Ref → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.519657
+  type: 'test'
+  ...
+# Subtest: report-data：Preview で本番 Ref（期待 Ref も本番） → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 14 - report-data：Preview で本番 Ref（期待 Ref も本番） → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.120394
+  type: 'test'
+  ...
+# Subtest: report-data：Production で Preview Ref → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 15 - report-data：Production で Preview Ref → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.121594
+  type: 'test'
+  ...
+# Subtest: report-data：Production で Preview Ref（期待 Ref も Preview） → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 16 - report-data：Production で Preview Ref（期待 Ref も Preview） → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.15853
+  type: 'test'
+  ...
+# Subtest: report-data：環境不明 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 17 - report-data：環境不明 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.084768
+  type: 'test'
+  ...
+# Subtest: report-data：期待 Ref 未設定 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 18 - report-data：期待 Ref 未設定 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.123718
+  type: 'test'
+  ...
+# Subtest: report-data：URL と Ref の不一致 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 19 - report-data：URL と Ref の不一致 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.117293
+  type: 'test'
+  ...
+# Subtest: report-data：サーバー用キーに公開キー → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 20 - report-data：サーバー用キーに公開キー → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.102961
+  type: 'test'
+  ...
+# Subtest: report-data：サーバー用キーが不明な形式 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 21 - report-data：サーバー用キーが不明な形式 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.089905
+  type: 'test'
+  ...
+# Subtest: report-data：旧変数のサーバー用キーが不明な形式 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 22 - report-data：旧変数のサーバー用キーが不明な形式 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.104361
+  type: 'test'
+  ...
+# Subtest: report-data：旧変数のサーバー用キーが別プロジェクトの JWT → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 23 - report-data：旧変数のサーバー用キーが別プロジェクトの JWT → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.122162
+  type: 'test'
+  ...
+# Subtest: report-data：サーバー用キーが未設定 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 24 - report-data：サーバー用キーが未設定 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.083772
+  type: 'test'
+  ...
+# Subtest: my-entitlements：Preview で本番 Ref → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 25 - my-entitlements：Preview で本番 Ref → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.424716
+  type: 'test'
+  ...
+# Subtest: my-entitlements：Preview で本番 Ref（期待 Ref も本番） → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 26 - my-entitlements：Preview で本番 Ref（期待 Ref も本番） → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.106451
+  type: 'test'
+  ...
+# Subtest: my-entitlements：Production で Preview Ref → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 27 - my-entitlements：Production で Preview Ref → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.118536
+  type: 'test'
+  ...
+# Subtest: my-entitlements：Production で Preview Ref（期待 Ref も Preview） → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 28 - my-entitlements：Production で Preview Ref（期待 Ref も Preview） → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.091156
+  type: 'test'
+  ...
+# Subtest: my-entitlements：環境不明 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 29 - my-entitlements：環境不明 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 1.466024
+  type: 'test'
+  ...
+# Subtest: my-entitlements：期待 Ref 未設定 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 30 - my-entitlements：期待 Ref 未設定 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.228591
+  type: 'test'
+  ...
+# Subtest: my-entitlements：URL と Ref の不一致 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 31 - my-entitlements：URL と Ref の不一致 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.104288
+  type: 'test'
+  ...
+# Subtest: my-entitlements：サーバー用キーに公開キー → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 32 - my-entitlements：サーバー用キーに公開キー → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.093855
+  type: 'test'
+  ...
+# Subtest: my-entitlements：サーバー用キーが不明な形式 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 33 - my-entitlements：サーバー用キーが不明な形式 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.083035
+  type: 'test'
+  ...
+# Subtest: my-entitlements：旧変数のサーバー用キーが不明な形式 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 34 - my-entitlements：旧変数のサーバー用キーが不明な形式 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.087935
+  type: 'test'
+  ...
+# Subtest: my-entitlements：旧変数のサーバー用キーが別プロジェクトの JWT → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 35 - my-entitlements：旧変数のサーバー用キーが別プロジェクトの JWT → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.309382
+  type: 'test'
+  ...
+# Subtest: my-entitlements：サーバー用キーが未設定 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 36 - my-entitlements：サーバー用キーが未設定 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.163152
+  type: 'test'
+  ...
+# Subtest: my-report-link：Preview で本番 Ref → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 37 - my-report-link：Preview で本番 Ref → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.505183
+  type: 'test'
+  ...
+# Subtest: my-report-link：Preview で本番 Ref（期待 Ref も本番） → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 38 - my-report-link：Preview で本番 Ref（期待 Ref も本番） → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.226758
+  type: 'test'
+  ...
+# Subtest: my-report-link：Production で Preview Ref → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 39 - my-report-link：Production で Preview Ref → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.135935
+  type: 'test'
+  ...
+# Subtest: my-report-link：Production で Preview Ref（期待 Ref も Preview） → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 40 - my-report-link：Production で Preview Ref（期待 Ref も Preview） → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.102622
+  type: 'test'
+  ...
+# Subtest: my-report-link：環境不明 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 41 - my-report-link：環境不明 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.095939
+  type: 'test'
+  ...
+# Subtest: my-report-link：期待 Ref 未設定 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 42 - my-report-link：期待 Ref 未設定 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.100007
+  type: 'test'
+  ...
+# Subtest: my-report-link：URL と Ref の不一致 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 43 - my-report-link：URL と Ref の不一致 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.088666
+  type: 'test'
+  ...
+# Subtest: my-report-link：サーバー用キーに公開キー → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 44 - my-report-link：サーバー用キーに公開キー → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.183981
+  type: 'test'
+  ...
+# Subtest: my-report-link：サーバー用キーが不明な形式 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 45 - my-report-link：サーバー用キーが不明な形式 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.196471
+  type: 'test'
+  ...
+# Subtest: my-report-link：旧変数のサーバー用キーが不明な形式 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 46 - my-report-link：旧変数のサーバー用キーが不明な形式 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.091079
+  type: 'test'
+  ...
+# Subtest: my-report-link：旧変数のサーバー用キーが別プロジェクトの JWT → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 47 - my-report-link：旧変数のサーバー用キーが別プロジェクトの JWT → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.095676
+  type: 'test'
+  ...
+# Subtest: my-report-link：サーバー用キーが未設定 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 48 - my-report-link：サーバー用キーが未設定 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.093904
+  type: 'test'
+  ...
+# Subtest: subscribe：Preview で本番 Ref → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 49 - subscribe：Preview で本番 Ref → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.384259
+  type: 'test'
+  ...
+# Subtest: subscribe：Preview で本番 Ref（期待 Ref も本番） → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 50 - subscribe：Preview で本番 Ref（期待 Ref も本番） → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.152924
+  type: 'test'
+  ...
+# Subtest: subscribe：Production で Preview Ref → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 51 - subscribe：Production で Preview Ref → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 1.648164
+  type: 'test'
+  ...
+# Subtest: subscribe：Production で Preview Ref（期待 Ref も Preview） → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 52 - subscribe：Production で Preview Ref（期待 Ref も Preview） → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.300492
+  type: 'test'
+  ...
+# Subtest: subscribe：環境不明 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 53 - subscribe：環境不明 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.115275
+  type: 'test'
+  ...
+# Subtest: subscribe：期待 Ref 未設定 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 54 - subscribe：期待 Ref 未設定 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.077758
+  type: 'test'
+  ...
+# Subtest: subscribe：URL と Ref の不一致 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 55 - subscribe：URL と Ref の不一致 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.069063
+  type: 'test'
+  ...
+# Subtest: subscribe：サーバー用キーに公開キー → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 56 - subscribe：サーバー用キーに公開キー → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.073313
+  type: 'test'
+  ...
+# Subtest: subscribe：サーバー用キーが不明な形式 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 57 - subscribe：サーバー用キーが不明な形式 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.072583
+  type: 'test'
+  ...
+# Subtest: subscribe：旧変数のサーバー用キーが不明な形式 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 58 - subscribe：旧変数のサーバー用キーが不明な形式 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.08299
+  type: 'test'
+  ...
+# Subtest: subscribe：旧変数のサーバー用キーが別プロジェクトの JWT → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 59 - subscribe：旧変数のサーバー用キーが別プロジェクトの JWT → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.086868
+  type: 'test'
+  ...
+# Subtest: subscribe：サーバー用キーが未設定 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+ok 60 - subscribe：サーバー用キーが未設定 → 503。Supabase・Stripe・Kit へ接続しない。ログに秘密値を出さない
+  ---
+  duration_ms: 0.157066
+  type: 'test'
+  ...
+# Subtest: verify Preview：記録済みの購入だけ、Preview の Supabase を読んでトークン（env=preview）を出し直す。新しい行は作らない
+ok 61 - verify Preview：記録済みの購入だけ、Preview の Supabase を読んでトークン（env=preview）を出し直す。新しい行は作らない
+  ---
+  duration_ms: 4.978847
+  type: 'test'
+  ...
+# Subtest: verify：記録の無い支払い（旧 Payment Link の販売終了後）は 410 でお問い合わせへ。購入権を作らず、閲覧リンクも出さない
+ok 62 - verify：記録の無い支払い（旧 Payment Link の販売終了後）は 410 でお問い合わせへ。購入権を作らず、閲覧リンクも出さない
+  ---
+  duration_ms: 0.734242
+  type: 'test'
+  ...
+# Subtest: verify Preview：Live の Session ID（cs_live_）は Stripe・Supabase へ問い合わせずに拒否
+ok 63 - verify Preview：Live の Session ID（cs_live_）は Stripe・Supabase へ問い合わせずに拒否
+  ---
+  duration_ms: 0.341896
+  type: 'test'
+  ...
+# Subtest: verify Production：Test の Session ID（cs_test_）は拒否
+ok 64 - verify Production：Test の Session ID（cs_test_）は拒否
+  ---
+  duration_ms: 0.19801
+  type: 'test'
+  ...
+# Subtest: verify：Preview に Live のキー（rk_live_） → 503（Stripe・Supabase へ接続しない）
+ok 65 - verify：Preview に Live のキー（rk_live_） → 503（Stripe・Supabase へ接続しない）
+  ---
+  duration_ms: 0.212005
+  type: 'test'
+  ...
+# Subtest: verify：Preview に Live のキー（sk_live_） → 503（Stripe・Supabase へ接続しない）
+ok 66 - verify：Preview に Live のキー（sk_live_） → 503（Stripe・Supabase へ接続しない）
+  ---
+  duration_ms: 0.123517
+  type: 'test'
+  ...
+# Subtest: verify：Preview に STRIPE_MODE=live → 503（Stripe・Supabase へ接続しない）
+ok 67 - verify：Preview に STRIPE_MODE=live → 503（Stripe・Supabase へ接続しない）
+  ---
+  duration_ms: 0.15236
+  type: 'test'
+  ...
+# Subtest: verify：Production に Test のキー → 503（Stripe・Supabase へ接続しない）
+ok 68 - verify：Production に Test のキー → 503（Stripe・Supabase へ接続しない）
+  ---
+  duration_ms: 0.119176
+  type: 'test'
+  ...
+# Subtest: verify：Production に STRIPE_MODE=test → 503（Stripe・Supabase へ接続しない）
+ok 69 - verify：Production に STRIPE_MODE=test → 503（Stripe・Supabase へ接続しない）
+  ---
+  duration_ms: 0.084722
+  type: 'test'
+  ...
+# Subtest: verify：STRIPE_MODE 未設定 → 503（Stripe・Supabase へ接続しない）
+ok 70 - verify：STRIPE_MODE 未設定 → 503（Stripe・Supabase へ接続しない）
+  ---
+  duration_ms: 0.094083
+  type: 'test'
+  ...
+# Subtest: verify：REPORT_TOKEN_SECRET 未設定 → 503（Stripe・Supabase へ接続しない）
+ok 71 - verify：REPORT_TOKEN_SECRET 未設定 → 503（Stripe・Supabase へ接続しない）
+  ---
+  duration_ms: 0.070718
+  type: 'test'
+  ...
+# Subtest: verify Production：制限付きキー rk_live_ を Live と判定し、Live の Price 表で処理する（以前は Test と誤判定）
+ok 72 - verify Production：制限付きキー rk_live_ を Live と判定し、Live の Price 表で処理する（以前は Test と誤判定）
+  ---
+  duration_ms: 0.977642
+  type: 'test'
+  ...
+# Subtest: verify：Stripe の livemode が環境と食い違えば 503（Supabase へ書かない）
+ok 73 - verify：Stripe の livemode が環境と食い違えば 503（Supabase へ書かない）
+  ---
+  duration_ms: 0.238352
+  type: 'test'
+  ...
+# Subtest: report-data：Preview で発行したトークンは Preview で開ける。Preview の Supabase だけを読む
+ok 74 - report-data：Preview で発行したトークンは Preview で開ける。Preview の Supabase だけを読む
+  ---
+  duration_ms: 4.53041
+  type: 'test'
+  ...
+# Subtest: report-data：別環境のトークンは開けない（鍵が別なら署名で、同じ鍵でも env で拒否）
+ok 75 - report-data：別環境のトークンは開けない（鍵が別なら署名で、同じ鍵でも env で拒否）
+  ---
+  duration_ms: 0.923998
+  type: 'test'
+  ...
+# Subtest: my-report-link Preview：Preview の Supabase だけを使い、env=preview のトークンを発行する
+ok 76 - my-report-link Preview：Preview の Supabase だけを使い、env=preview のトークンを発行する
+  ---
+  duration_ms: 3.700026
+  type: 'test'
+  ...
+# Subtest: my-entitlements Production：本番の Supabase だけを使う
+ok 77 - my-entitlements Production：本番の Supabase だけを使う
+  ---
+  duration_ms: 1.925487
+  type: 'test'
+  ...
+# Subtest: my-entitlements・my-report-link：診断コードのハッシュが一致するだけの旧購入（同じ回答の別人の購入）は、本人の購入にしない
+ok 78 - my-entitlements・my-report-link：診断コードのハッシュが一致するだけの旧購入（同じ回答の別人の購入）は、本人の購入にしない
+  ---
+  duration_ms: 1.246665
+  type: 'test'
+  ...
+# Subtest: subscribe Preview：Preview の Supabase だけを読む（Kit は許可リストのメールだけ）
+ok 79 - subscribe Preview：Preview の Supabase だけを読む（Kit は許可リストのメールだけ）
+  ---
+  duration_ms: 1.202065
+  type: 'test'
+  ...
+# Subtest: verify Preview（sb_secret_）：管理者アクセスは apikey だけ・Authorization なし。本人確認は公開キー＋ユーザーJWT
+ok 80 - verify Preview（sb_secret_）：管理者アクセスは apikey だけ・Authorization なし。本人確認は公開キー＋ユーザーJWT
+  ---
+  duration_ms: 0.959394
+  type: 'test'
+  ...
+# Subtest: verify Production（旧 service_role JWT）：従来どおり apikey と Authorization の両方。本人確認は公開キー＋ユーザーJWT
+ok 81 - verify Production（旧 service_role JWT）：従来どおり apikey と Authorization の両方。本人確認は公開キー＋ユーザーJWT
+  ---
+  duration_ms: 1.089464
+  type: 'test'
+  ...
+# Subtest: report-data Preview（sb_secret_）：管理者アクセスは apikey だけ・Authorization なし。本人確認は公開キー＋ユーザーJWT
+ok 82 - report-data Preview（sb_secret_）：管理者アクセスは apikey だけ・Authorization なし。本人確認は公開キー＋ユーザーJWT
+  ---
+  duration_ms: 0.649438
+  type: 'test'
+  ...
+# Subtest: report-data Production（旧 service_role JWT）：従来どおり apikey と Authorization の両方。本人確認は公開キー＋ユーザーJWT
+ok 83 - report-data Production（旧 service_role JWT）：従来どおり apikey と Authorization の両方。本人確認は公開キー＋ユーザーJWT
+  ---
+  duration_ms: 0.666772
+  type: 'test'
+  ...
+# Subtest: my-entitlements Preview（sb_secret_）：管理者アクセスは apikey だけ・Authorization なし。本人確認は公開キー＋ユーザーJWT
+ok 84 - my-entitlements Preview（sb_secret_）：管理者アクセスは apikey だけ・Authorization なし。本人確認は公開キー＋ユーザーJWT
+  ---
+  duration_ms: 0.628997
+  type: 'test'
+  ...
+# Subtest: my-entitlements Production（旧 service_role JWT）：従来どおり apikey と Authorization の両方。本人確認は公開キー＋ユーザーJWT
+ok 85 - my-entitlements Production（旧 service_role JWT）：従来どおり apikey と Authorization の両方。本人確認は公開キー＋ユーザーJWT
+  ---
+  duration_ms: 4.274109
+  type: 'test'
+  ...
+# Subtest: my-report-link Preview（sb_secret_）：管理者アクセスは apikey だけ・Authorization なし。本人確認は公開キー＋ユーザーJWT
+ok 86 - my-report-link Preview（sb_secret_）：管理者アクセスは apikey だけ・Authorization なし。本人確認は公開キー＋ユーザーJWT
+  ---
+  duration_ms: 1.253405
+  type: 'test'
+  ...
+# Subtest: my-report-link Production（旧 service_role JWT）：従来どおり apikey と Authorization の両方。本人確認は公開キー＋ユーザーJWT
+ok 87 - my-report-link Production（旧 service_role JWT）：従来どおり apikey と Authorization の両方。本人確認は公開キー＋ユーザーJWT
+  ---
+  duration_ms: 1.023417
+  type: 'test'
+  ...
+# Subtest: subscribe Preview（sb_secret_）：管理者アクセスは apikey だけ・Authorization なし。本人確認は公開キー＋ユーザーJWT
+ok 88 - subscribe Preview（sb_secret_）：管理者アクセスは apikey だけ・Authorization なし。本人確認は公開キー＋ユーザーJWT
+  ---
+  duration_ms: 0.509962
+  type: 'test'
+  ...
+# Subtest: subscribe Production（旧 service_role JWT）：従来どおり apikey と Authorization の両方。本人確認は公開キー＋ユーザーJWT
+ok 89 - subscribe Production（旧 service_role JWT）：従来どおり apikey と Authorization の両方。本人確認は公開キー＋ユーザーJWT
+  ---
+  duration_ms: 1.161148
+  type: 'test'
+  ...
+# Subtest: 両方のサーバー用キーが設定されていれば SUPABASE_SECRET_KEY を使い、どちらの値もログ・応答に出さない
+ok 90 - 両方のサーバー用キーが設定されていれば SUPABASE_SECRET_KEY を使い、どちらの値もログ・応答に出さない
+  ---
+  duration_ms: 1.225848
+  type: 'test'
+  ...
+# Subtest: X のボタンの下に、メールアドレスが必要な旨の案内がある（X が有効な時だけ出るボタンと同じ箇所）
+ok 91 - X のボタンの下に、メールアドレスが必要な旨の案内がある（X が有効な時だけ出るボタンと同じ箇所）
+  ---
+  duration_ms: 0.785521
+  type: 'test'
+  ...
+# Subtest: X からメールが取れずに戻った時：理由と代わりの方法を案内する
+ok 92 - X からメールが取れずに戻った時：理由と代わりの方法を案内する
+  ---
+  duration_ms: 0.180153
+  type: 'test'
+  ...
+# Subtest: メール以外のエラー・中止は従来どおりの文面
+ok 93 - メール以外のエラー・中止は従来どおりの文面
+  ---
+  duration_ms: 0.114114
+  type: 'test'
+  ...
+# Subtest: 派生規則：complete 権があれば同じ記録の analysis 権も成立する
+ok 94 - 派生規則：complete 権があれば同じ記録の analysis 権も成立する
+  ---
+  duration_ms: 2.579742
+  type: 'test'
+  ...
+# Subtest: Preview 5状態：表示状態と購入導線
+ok 95 - Preview 5状態：表示状態と購入導線
+  ---
+  duration_ms: 2.033515
+  type: 'test'
+  ...
+# Subtest: free は analysis/complete とも閲覧不可、analysis は解析レポートのみ
+ok 96 - free は analysis/complete とも閲覧不可、analysis は解析レポートのみ
+  ---
+  duration_ms: 0.742264
+  type: 'test'
+  ...
+# Subtest: 実データ：解析レポートの購入状態を確認できたときだけ free／analysis。確認できなければ unknown
+ok 97 - 実データ：解析レポートの購入状態を確認できたときだけ free／analysis。確認できなければ unknown
+  ---
+  duration_ms: 1.636666
+  type: 'test'
+  ...
+# Subtest: ?preview_entitlement は Preview でのみ有効
+ok 98 - ?preview_entitlement は Preview でのみ有効
+  ---
+  duration_ms: 3.495605
+  type: 'test'
+  ...
+# Subtest: preview_past は preview_entitlement と組で、Previewでのみ有効
+ok 99 - preview_past は preview_entitlement と組で、Previewでのみ有効
+  ---
+  duration_ms: 2.581601
+  type: 'test'
+  ...
+# Subtest: 決済未接続：完全解析の購入先は常に無し。ダミーの Payment Link も持たない
+ok 100 - 決済未接続：完全解析の購入先は常に無し。ダミーの Payment Link も持たない
+  ---
+  duration_ms: 1.157208
+  type: 'test'
+  ...
+# Subtest: 準備中ボタン：押せない button。href・onclick・商品IDを持たない。価格と「準備中」を表示
+ok 101 - 準備中ボタン：押せない button。href・onclick・商品IDを持たない。価格と「準備中」を表示
+  ---
+  duration_ms: 0.79805
+  type: 'test'
+  ...
+# Subtest: GA4 へは文字列・数値・真偽値だけを送る
+ok 102 - GA4 へは文字列・数値・真偽値だけを送る
+  ---
+  duration_ms: 1.000257
+  type: 'test'
+  ...
+# Subtest: 右上入口：Preview 指定の有無に関係なく出す（未購入者にも出す。2026-10-07）
+ok 103 - 右上入口：Preview 指定の有無に関係なく出す（未購入者にも出す。2026-10-07）
+  ---
+  duration_ms: 1.988713
+  type: 'test'
+  ...
+# Subtest: mypage：右上入口は LATEST RESULT より上・追従しない・間にバナーを足さない・既存集計は維持
+ok 104 - mypage：右上入口は LATEST RESULT より上・追従しない・間にバナーを足さない・既存集計は維持
+  ---
+  duration_ms: 573.866545
+  type: 'test'
+  ...
+# Subtest: mypage free：解析¥1,000が主（塗り）、完全¥3,000は「その先を見る」の中で副（枠線・準備中で押せない）
+ok 105 - mypage free：解析¥1,000が主（塗り）、完全¥3,000は「その先を見る」の中で副（枠線・準備中で押せない）
+  ---
+  duration_ms: 490.565009
+  type: 'test'
+  ...
+# Subtest: mypage：フォーカストラップ・Escape・外側押下で閉じ、トリガーへ戻る
+ok 106 - mypage：フォーカストラップ・Escape・外側押下で閉じ、トリガーへ戻る
+  ---
+  duration_ms: 533.65896
+  type: 'test'
+  ...
+# Subtest: mypage unknown：購入CTAを出さない（シート・ページとも）
+ok 107 - mypage unknown：購入CTAを出さない（シート・ページとも）
+  ---
+  duration_ms: 296.580952
+  type: 'test'
+  ...
+# Subtest: mypage 実データ（Preview指定なし）：未購入者にも右上入口を出す。完全解析は準備中で押せない
+ok 108 - mypage 実データ（Preview指定なし）：未購入者にも右上入口を出す。完全解析は準備中で押せない
+  ---
+  duration_ms: 689.784158
+  type: 'test'
+  ...
+# Subtest: mypage Preview 指定あり：free はアップグレード、unknown は状態確認画面を確認できる
+ok 109 - mypage Preview 指定あり：free はアップグレード、unknown は状態確認画面を確認できる
+  ---
+  duration_ms: 605.403174
+  type: 'test'
+  ...
+# Subtest: 販売開始後（CA_COMPLETE_SALES_OPEN = true）に権利APIが無ければ、状態不明として「状態を確認」
+ok 110 - 販売開始後（CA_COMPLETE_SALES_OPEN = true）に権利APIが無ければ、状態不明として「状態を確認」
+  ---
+  duration_ms: 301.045734
+  type: 'test'
+  ...
+# Subtest: mypage：記録なしは右上入口から診断を始める案内へ。未ログイン・読込エラー時は入口を出さない
+ok 111 - mypage：記録なしは右上入口から診断を始める案内へ。未ログイン・読込エラー時は入口を出さない
+  ---
+  duration_ms: 1495.483821
+  type: 'test'
+  ...
+# Subtest: mypage：390px／320px ではみ出さない・改行しない・reduced motion
+ok 112 - mypage：390px／320px ではみ出さない・改行しない・reduced motion
+  ---
+  duration_ms: 648.430161
+  type: 'test'
+  ...
+# Subtest: index：¥1,000主導線のあとに折りたたみ。閉じても¥1,000は使え、開くと説明と準備中ボタン（押せない）
+ok 113 - index：¥1,000主導線のあとに折りたたみ。閉じても¥1,000は使え、開くと説明と準備中ボタン（押せない）
+  ---
+  duration_ms: 3338.533276
+  type: 'test'
+  ...
+# Subtest: index：購入状態を確かめられない時も申込の導線は出す（ログインなしの購入は買えることを優先）・旧 Payment Link は無い／JS無しでも details で到達できる
+ok 114 - index：購入状態を確かめられない時も申込の導線は出す（ログインなしの購入は買えることを優先）・旧 Payment Link は無い／JS無しでも details で到達できる
+  ---
+  duration_ms: 3101.714569
+  type: 'test'
+  ...
+# Subtest: index：結果画面にメール案内専用のチェックボックスを出さない（配信内容は登録完了モーダルで明示）
+ok 115 - index：結果画面にメール案内専用のチェックボックスを出さない（配信内容は登録完了モーダルで明示）
+  ---
+  duration_ms: 531.399628
+  type: 'test'
+  ...
+# Subtest: report：generating／ready／unknown
+ok 116 - report：generating／ready／unknown
+  ---
+  duration_ms: 1555.823064
+  type: 'test'
+  ...
+# Subtest: report：complete 権だけでも解析レポートを閲覧できる（core_complete_access が analysis を内包）
+ok 117 - report：complete 権だけでも解析レポートを閲覧できる（core_complete_access が analysis を内包）
+  ---
+  duration_ms: 720.115579
+  type: 'test'
+  ...
+# Subtest: 視覚：シートの文字色が役割で分かれ、三つの人物像が色と説明の両方で区別できる
+ok 118 - 視覚：シートの文字色が役割で分かれ、三つの人物像が色と説明の両方で区別できる
+  ---
+  duration_ms: 426.962465
+  type: 'test'
+  ...
+# Subtest: 視覚：シートをスクロールしても閉じるボタンは本文と重ならない
+ok 119 - 視覚：シートをスクロールしても閉じるボタンは本文と重ならない
+  ---
+  duration_ms: 466.923252
+  type: 'test'
+  ...
+# Subtest: 視覚：全状態・index・report が 390px／320px で横スクロールしない
+ok 120 - 視覚：全状態・index・report が 390px／320px で横スクロールしない
+  ---
+  duration_ms: 3713.931488
+  type: 'test'
+  ...
+# Subtest: 旧版記録：完全解析の購入ボタン（¥3,000・追加¥2,000）とセクションを出さない／解析レポートだけ
+ok 121 - 旧版記録：完全解析の購入ボタン（¥3,000・追加¥2,000）とセクションを出さない／解析レポートだけ
+  ---
+  duration_ms: 1679.603454
+  type: 'test'
+  ...
+# Subtest: 旧版記録：完全解析用の関数を直接呼んでも購入先・閲覧先へ進めない
+ok 122 - 旧版記録：完全解析用の関数を直接呼んでも購入先・閲覧先へ進めない
+  ---
+  duration_ms: 263.55838
+  type: 'test'
+  ...
+# Subtest: 旧版記録：unknown は従来どおり購入ボタンを出さない
+ok 123 - 旧版記録：unknown は従来どおり購入ボタンを出さない
+  ---
+  duration_ms: 308.712419
+  type: 'test'
+  ...
+# Subtest: 旧版の結果：index と report に完全解析の購入導線を出さない
+ok 124 - 旧版の結果：index と report に完全解析の購入導線を出さない
+  ---
+  duration_ms: 815.771472
+  type: 'test'
+  ...
+# Subtest: 適格性は表示文字ではなく保存データで判定する（版・設問版・回答の検証）
+ok 125 - 適格性は表示文字ではなく保存データで判定する（版・設問版・回答の検証）
+  ---
+  duration_ms: 804.150498
+  type: 'test'
+  ...
+# Subtest: RC1 の6つの版は complete_01 の complete_rc1_required_versions() と同じ
+ok 126 - RC1 の6つの版は complete_01 の complete_rc1_required_versions() と同じ
+  ---
+  duration_ms: 1.629878
+  type: 'test'
+  ...
+# Subtest: MENTOR 目標カタログ：版・5つの ID が complete_01 の CHECK と一致し、文言は JSON の正本のまま
+ok 127 - MENTOR 目標カタログ：版・5つの ID が complete_01 の CHECK と一致し、文言は JSON の正本のまま
+  ---
+  duration_ms: 0.374427
+  type: 'test'
+  ...
+# Subtest: 注文状態の一覧は complete_03（MENTOR 変更禁止）・complete_04（再購入禁止）と一致
+ok 128 - 注文状態の一覧は complete_03（MENTOR 変更禁止）・complete_04（再購入禁止）と一致
+  ---
+  duration_ms: 0.166673
+  type: 'test'
+  ...
+# Subtest: 販売対象の判定：最新版・結果あり・6つの版が完全一致だけ
+ok 129 - 販売対象の判定：最新版・結果あり・6つの版が完全一致だけ
+  ---
+  duration_ms: 0.308286
+  type: 'test'
+  ...
+# Subtest: 旧 ¥1,000 購入権の参照値は verify.js・my-entitlements と同じ規則（v2 は v2_ 付き）
+ok 130 - 旧 ¥1,000 購入権の参照値は verify.js・my-entitlements と同じ規則（v2 は v2_ 付き）
+  ---
+  duration_ms: 0.935439
+  type: 'test'
+  ...
+# Subtest: 販売停止・入力の検査：sales_closed／余分な項目・不正なコード・目標の不足は拒否（DB・Stripe に触れない）
+ok 131 - 販売停止・入力の検査：sales_closed／余分な項目・不正なコード・目標の不足は拒否（DB・Stripe に触れない）
+  ---
+  duration_ms: 2327.629829
+  type: 'test'
+  ...
+# Subtest: ゲスト ¥1,000：サーバーが記録を作り、Checkout は metadata 3つ・client_reference_id／メールなし・Cookie は HttpOnly／Secure／SameSite=Lax
+ok 132 - ゲスト ¥1,000：サーバーが記録を作り、Checkout は metadata 3つ・client_reference_id／メールなし・Cookie は HttpOnly／Secure／SameSite=Lax
+  ---
+  duration_ms: 1590.414608
+  type: 'test'
+  ...
+# Subtest: 購入完了ページ：Webhook より先でも Stripe に問い合わせて付与・解析レポートをすぐ読める・Webhook の再送で増えない
+ok 133 - 購入完了ページ：Webhook より先でも Stripe に問い合わせて付与・解析レポートをすぐ読める・Webhook の再送で増えない
+  ---
+  duration_ms: 1975.92367
+  type: 'test'
+  ...
+# Subtest: 旧ゲスト経路の追加 ¥2,000 は廃止（complete_13）：DB が注文を作らない。既存の ¥1,000 の購入はそのまま読める・別の結果の ¥3,000 は別の記録
+ok 134 - 旧ゲスト経路の追加 ¥2,000 は廃止（complete_13）：DB が注文を作らない。既存の ¥1,000 の購入はそのまま読める・別の結果の ¥3,000 は別の記録
+  ---
+  duration_ms: 2603.541451
+  type: 'test'
+  ...
+# Subtest: ゲストの ¥2,000 は、この端末で解析レポートの購入を確かめられる時だけ。別の offer に切り替えると前の Stripe 画面を閉じる
+ok 135 - ゲストの ¥2,000 は、この端末で解析レポートの購入を確かめられる時だけ。別の offer に切り替えると前の Stripe 画面を閉じる
+  ---
+  duration_ms: 2195.676908
+  type: 'test'
+  ...
+# Subtest: 引き継ぎ：ログイン必須・購入時メールと同じ確認済みメールだけ・支払済みだけ・1回限り（同じ人は冪等・別の人は 409）・改ざん／期限切れは拒否
+ok 136 - 引き継ぎ：ログイン必須・購入時メールと同じ確認済みメールだけ・支払済みだけ・1回限り（同じ人は冪等・別の人は 409）・改ざん／期限切れは拒否
+  ---
+  duration_ms: 3960.301381
+  type: 'test'
+  ...
+# Subtest: Cookie を失った時の復旧：ログイン中の確認済みメール（6桁コード・Google 等。時間が経っても）＋購入時メールの一致で引き継ぐ。未確認のメール・メールなし・別のメールでは移さない
+ok 137 - Cookie を失った時の復旧：ログイン中の確認済みメール（6桁コード・Google 等。時間が経っても）＋購入時メールの一致で引き継ぐ。未確認のメール・メールなし・別のメールでは移さない
+  ---
+  duration_ms: 2516.579923
+  type: 'test'
+  ...
+# Subtest: 引き継ぎ（Cookie の秘密値・購入時メールの照合で所有者を移す）は廃止（complete_13）：公開の処理は 410 transfer_retired・記録の所有者は変わらない
+ok 138 - 引き継ぎ（Cookie の秘密値・購入時メールの照合で所有者を移す）は廃止（complete_13）：公開の処理は 410 transfer_retired・記録の所有者は変わらない
+  ---
+  duration_ms: 1848.039996
+  type: 'test'
+  ...
+# Subtest: 支払い後の一時的な失敗：DB の失敗は付与せず、次の確認（再処理）で回復する
+ok 139 - 支払い後の一時的な失敗：DB の失敗は付与せず、次の確認（再処理）で回復する
+  ---
+  duration_ms: 1723.52018
+  type: 'test'
+  ...
+# Subtest: 応答・ログに秘密値・注文 ID・Session ID・メール・診断コードを出さない
+ok 140 - 応答・ログに秘密値・注文 ID・Session ID・メール・診断コードを出さない
+  ---
+  duration_ms: 1816.815021
+  type: 'test'
+  ...
+# Subtest: Cookie の解析：形式外の値・重複を捨て、最大件数を超えたら古いものから外す
+ok 141 - Cookie の解析：形式外の値・重複を捨て、最大件数を超えたら古いものから外す
+  ---
+  duration_ms: 1.775454
+  type: 'test'
+  ...
+# Subtest: 出所記録：20点すべての SHA-256・バイト数が実際のファイル（生成器の素材と試作版の写し）と一致する
+ok 142 - 出所記録：20点すべての SHA-256・バイト数が実際のファイル（生成器の素材と試作版の写し）と一致する
+  ---
+  duration_ms: 10.358262
+  type: 'test'
+  ...
+# Subtest: 出所記録：生成器が使う画像はすべて記録にあり、記録外の画像は無い
+ok 143 - 出所記録：生成器が使う画像はすべて記録にあり、記録外の画像は無い
+  ---
+  duration_ms: 1.880646
+  type: 'test'
+  ...
+# Subtest: 出所記録：本人の申告（作成者・作成方法・入力素材）が記録されている
+ok 144 - 出所記録：本人の申告（作成者・作成方法・入力素材）が記録されている
+  ---
+  duration_ms: 0.268297
+  type: 'test'
+  ...
+# Subtest: Webhook：処理するイベントは6つだけで、一覧（CP.HANDLED_EVENTS）とハンドラーの名前が完全に一致する
+ok 145 - Webhook：処理するイベントは6つだけで、一覧（CP.HANDLED_EVENTS）とハンドラーの名前が完全に一致する
+  ---
+  duration_ms: 1.94756
+  type: 'test'
+  ...
+# Subtest: 署名：正しい本文だけ通る（1バイト変更・署名なし・形式違反・古い／未来の時刻・別の secret を拒否）
+ok 146 - 署名：正しい本文だけ通る（1バイト変更・署名なし・形式違反・古い／未来の時刻・別の secret を拒否）
+  ---
+  duration_ms: 1.27913
+  type: 'test'
+  ...
+# Subtest: Price の照合：有効・JPY・金額・Test・一回払い
+ok 147 - Price の照合：有効・JPY・金額・Test・一回払い
+  ---
+  duration_ms: 0.178017
+  type: 'test'
+  ...
+# Subtest: 戻り先 URL：https の origin だけ・Preview で許可した固定 origin と一致しなければ閉じる・販売の開始は文字列 true だけ
+ok 148 - 戻り先 URL：https の origin だけ・Preview で許可した固定 origin と一致しなければ閉じる・販売の開始は文字列 true だけ
+  ---
+  duration_ms: 0.580957
+  type: 'test'
+  ...
+# Subtest: Stripe の決済画面の URL：https・checkout.stripe.com・userinfo／port なしだけ
+ok 149 - Stripe の決済画面の URL：https・checkout.stripe.com・userinfo／port なしだけ
+  ---
+  duration_ms: 0.243224
+  type: 'test'
+  ...
+# Subtest: metadata は order_id・app・env の3つだけを完全解析の注文として認める
+ok 150 - metadata は order_id・app・env の3つだけを完全解析の注文として認める
+  ---
+  duration_ms: 0.310052
+  type: 'test'
+  ...
+# Subtest: 生成素材のハッシュは素材ファイルと一致（lib/complete-materials.json が最新）・入力ハッシュは保存済みの値から決まる
+ok 151 - 生成素材のハッシュは素材ファイルと一致（lib/complete-materials.json が最新）・入力ハッシュは保存済みの値から決まる
+  ---
+  duration_ms: 4.478481
+  type: 'test'
+  ...
+# Subtest: Stripe の例外の分類：通信・5xx・429・処理中の冪等キーは一時的
+ok 152 - Stripe の例外の分類：通信・5xx・429・処理中の冪等キーは一時的
+  ---
+  duration_ms: 0.259269
+  type: 'test'
+  ...
+# Subtest: Production（販売停止中）は Checkout が 503 sales_closed・ゲストの Checkout も 503（外部へ接続しない）
+ok 153 - Production（販売停止中）は Checkout が 503 sales_closed・ゲストの Checkout も 503（外部へ接続しない）
+  ---
+  duration_ms: 3.076415
+  type: 'test'
+  ...
+# Subtest: Production の Ref・Stripe モードの取り違えと環境不明では Checkout・Webhook・状態確認は 404（外部へ接続しない）
+ok 154 - Production の Ref・Stripe モードの取り違えと環境不明では Checkout・Webhook・状態確認は 404（外部へ接続しない）
+  ---
+  duration_ms: 2.307922
+  type: 'test'
+  ...
+# Subtest: 販売を閉じている（未設定・false・TRUE）と Checkout は 503 sales_closed（認証・Stripe・DB に接続しない）
+ok 155 - 販売を閉じている（未設定・false・TRUE）と Checkout は 503 sales_closed（認証・Stripe・DB に接続しない）
+  ---
+  duration_ms: 5446.711492
+  type: 'test'
+  ...
+# Subtest: 設定不足（戻り先・Price）は 503（fail-closed）
+ok 156 - 設定不足（戻り先・Price）は 503（fail-closed）
+  ---
+  duration_ms: 8553.234489
+  type: 'test'
+  ...
+# Subtest: Checkout：認証を入力の検査より先に行い、本文は diagnosisSessionId だけを受け付ける
+ok 157 - Checkout：認証を入力の検査より先に行い、本文は diagnosisSessionId だけを受け付ける
+  ---
+  duration_ms: 1610.306543
+  type: 'test'
+  ...
+# Subtest: Checkout：本人の記録・登録完了・RC1・MENTOR 選択を確かめる
+ok 158 - Checkout：本人の記録・登録完了・RC1・MENTOR 選択を確かめる
+  ---
+  duration_ms: 2995.709987
+  type: 'test'
+  ...
+# Subtest: Checkout direct ¥3,000：カードだけ・customer_email なし・metadata 3つ・戻り先は設定から・Idempotency-Key は注文 ID から
+ok 159 - Checkout direct ¥3,000：カードだけ・customer_email なし・metadata 3つ・戻り先は設定から・Idempotency-Key は注文 ID から
+  ---
+  duration_ms: 1703.385914
+  type: 'test'
+  ...
+# Subtest: Checkout：二重クリックは同じ注文・同じ Session（Stripe の作成は1回）
+ok 160 - Checkout：二重クリックは同じ注文・同じ Session（Stripe の作成は1回）
+  ---
+  duration_ms: 2023.851429
+  type: 'test'
+  ...
+# Subtest: Checkout：並行注文でも注文は1件・Session は1つ（同じ Idempotency-Key）
+ok 161 - Checkout：並行注文でも注文は1件・Session は1つ（同じ Idempotency-Key）
+  ---
+  duration_ms: 2087.629809
+  type: 'test'
+  ...
+# Subtest: Checkout：Session 作成後に DB の checkout_open 記録が失敗 → 次の要求で同じ Session を回収
+ok 162 - Checkout：Session 作成後に DB の checkout_open 記録が失敗 → 次の要求で同じ Session を回収
+  ---
+  duration_ms: 2146.103719
+  type: 'test'
+  ...
+# Subtest: Checkout：Price の無効・金額違い・通貨違い・Live は注文を閉じて 503（Session を作らない）
+ok 163 - Checkout：Price の無効・金額違い・通貨違い・Live は注文を閉じて 503（Session を作らない）
+  ---
+  duration_ms: 7356.566936
+  type: 'test'
+  ...
+# Subtest: Checkout：Stripe の一時的な失敗は注文を残して 503（次の要求で同じ注文から作る）・恒久的な失敗は注文を failed
+ok 164 - Checkout：Stripe の一時的な失敗は注文を残して 503（次の要求で同じ注文から作る）・恒久的な失敗は注文を failed
+  ---
+  duration_ms: 3706.47468
+  type: 'test'
+  ...
+# Subtest: Checkout：支払い済み・返金済みの記録は再購入できない
+ok 165 - Checkout：支払い済み・返金済みの記録は再購入できない
+  ---
+  duration_ms: 1946.568908
+  type: 'test'
+  ...
+# Subtest: Webhook：署名なし・1バイト変更・古い timestamp・別の secret・不正な形式は 400（DB・Stripe に接続しない）
+ok 166 - Webhook：署名なし・1バイト変更・古い timestamp・別の secret・不正な形式は 400（DB・Stripe に接続しない）
+  ---
+  duration_ms: 1084.265901
+  type: 'test'
+  ...
+# Subtest: Webhook：Live のイベント・対象外のイベント・完全解析でない Session は DB に書かずに 200
+ok 167 - Webhook：Live のイベント・対象外のイベント・完全解析でない Session は DB に書かずに 200
+  ---
+  duration_ms: 1202.171078
+  type: 'test'
+  ...
+# Subtest: Webhook 支払い確定：注文 paid・MENTOR ロック・権利・complete_reports queued を同時に作る（素材・入力のハッシュ付き）。重複・再配送は状態を変えない
+ok 168 - Webhook 支払い確定：注文 paid・MENTOR ロック・権利・complete_reports queued を同時に作る（素材・入力のハッシュ付き）。重複・再配送は状態を変えない
+  ---
+  duration_ms: 2330.288935
+  type: 'test'
+  ...
+# Subtest: Webhook：期限切れは注文 expired（支払い前）・Stripe の最新状態が expired でなければ 500 で再送
+ok 169 - Webhook：期限切れは注文 expired（支払い前）・Stripe の最新状態が expired でなければ 500 で再送
+  ---
+  duration_ms: 2075.956555
+  type: 'test'
+  ...
+# Subtest: Webhook 返金：一部は記録だけ・全額で refunded（権利・生成物 revoked）。返金が支払い確定より先でも refunded を優先
+ok 170 - Webhook 返金：一部は記録だけ・全額で refunded（権利・生成物 revoked）。返金が支払い確定より先でも refunded を優先
+  ---
+  duration_ms: 3172.328674
+  type: 'test'
+  ...
+# Subtest: Webhook dispute：開始で suspended・勝訴で active・敗訴で revoked。支払い確定前の dispute は complete_retry_later → 500 → 再送で処理
+ok 171 - Webhook dispute：開始で suspended・勝訴で active・敗訴で revoked。支払い確定前の dispute は complete_retry_later → 500 → 再送で処理
+  ---
+  duration_ms: 3197.206225
+  type: 'test'
+  ...
+# Subtest: Webhook：Stripe・DB の一時的な失敗は failed を記録して 500 → 再送で処理
+ok 172 - Webhook：Stripe・DB の一時的な失敗は failed を記録して 500 → 再送で処理
+  ---
+  duration_ms: 2488.123446
+  type: 'test'
+  ...
+# Subtest: C8：Checkout の後に環境変数の Price ID を変えても、その時点の価格で正しく支払われた注文は paid になる（注文の行が正本）
+ok 173 - C8：Checkout の後に環境変数の Price ID を変えても、その時点の価格で正しく支払われた注文は paid になる（注文の行が正本）
+  ---
+  duration_ms: 2873.184855
+  type: 'test'
+  ...
+# Subtest: Webhook：恒久的な不一致（金額・Price・metadata）は ignored・200（権利なし）
+ok 174 - Webhook：恒久的な不一致（金額・Price・metadata）は ignored・200（権利なし）
+  ---
+  duration_ms: 20930.342091
+  type: 'test'
+  ...
+# Subtest: Webhook：販売を閉じていても返金・dispute を処理する
+ok 175 - Webhook：販売を閉じていても返金・dispute を処理する
+  ---
+  duration_ms: 2163.955318
+  type: 'test'
+  ...
+# Subtest: 状態確認：認証が先・本人の記録だけ・Stripe ID・保存パス・メール・診断コードを返さない
+ok 176 - 状態確認：認証が先・本人の記録だけ・Stripe ID・保存パス・メール・診断コードを返さない
+  ---
+  duration_ms: 2394.104968
+  type: 'test'
+  ...
+# Subtest: 応答・ログ・metadata に禁止情報が無い（一連の決済・返金の後）
+ok 177 - 応答・ログ・metadata に禁止情報が無い（一連の決済・返金の後）
+  ---
+  duration_ms: 2050.186372
+  type: 'test'
+  ...
+# Subtest: 同じ診断結果の旧 Payment Link の購入（本人に結び付けていない＝同じ回答の別人の購入かもしれない）：本人の購入にせず、¥1,000・¥3,000 を売る。旧購入の確認は廃止（410）
+ok 178 - 同じ診断結果の旧 Payment Link の購入（本人に結び付けていない＝同じ回答の別人の購入かもしれない）：本人の購入にせず、¥1,000・¥3,000 を売る。旧購入の確認は廃止（410）
+  ---
+  duration_ms: 1873.689847
+  type: 'test'
+  ...
+# Subtest: 旧 Payment Link の購入が無い新診断の記録は、新しい Checkout の ¥3,000（direct）。別の診断結果の旧購入は関係しない
+ok 179 - 旧 Payment Link の購入が無い新診断の記録は、新しい Checkout の ¥3,000（direct）。別の診断結果の旧購入は関係しない
+  ---
+  duration_ms: 1872.672571
+  type: 'test'
+  ...
+# {"event":"env_guard_denied","api":"my-entitlements","env":"unknown","ref_tail":null,"reasons":["env_unknown","supabase_url_missing","expected_ref_missing","production_ref_missing","preview_ref_missing","server_key_missing","anon_key_missing"],"incident_id":"32234725"}
+# Subtest: my-entitlements：成功・失敗とも Cache-Control: private, no-store
+ok 180 - my-entitlements：成功・失敗とも Cache-Control: private, no-store
+  ---
+  duration_ms: 1459.847502
+  type: 'test'
+  ...
+# Subtest: Stripe で戻った（?complete=canceled）：未払いの決済画面を閉じる（user-reconcile cancel）・URL から印を消す（C3）
+ok 181 - Stripe で戻った（?complete=canceled）：未払いの決済画面を閉じる（user-reconcile cancel）・URL から印を消す（C3）
+  ---
+  duration_ms: 535.813281
+  type: 'test'
+  ...
+# Subtest: 支払いから戻った（?complete=returned）：Stripe に問い合わせるだけ（決済画面は閉じない）
+ok 182 - 支払いから戻った（?complete=returned）：Stripe に問い合わせるだけ（決済画面は閉じない）
+  ---
+  duration_ms: 299.8439
+  type: 'test'
+  ...
+# Subtest: 決済画面から支払わずに戻った（戻り先を通らない「戻る」・再読み込み）：中止と同じく未払いの決済を閉じる。支払いの戻り先では閉じない
+ok 183 - 決済画面から支払わずに戻った（戻り先を通らない「戻る」・再読み込み）：中止と同じく未払いの決済を閉じる。支払いの戻り先では閉じない
+  ---
+  duration_ms: 1331.205148
+  type: 'test'
+  ...
+# Subtest: C7：別の利用者の SIGNED_IN では描き直す。SIGNED_IN が描画中に重なっても描画は重ならない
+ok 184 - C7：別の利用者の SIGNED_IN では描き直す。SIGNED_IN が描画中に重なっても描画は重ならない
+  ---
+  duration_ms: 1720.287788
+  type: 'test'
+  ...
+# Subtest: D4：旧版（legacy-v1）の未購入の記録には購入導線を出さず「対象外・最新の診断へ」の案内。ETI v2 の記録はサーバーの Checkout・320／1280px
+ok 185 - D4：旧版（legacy-v1）の未購入の記録には購入導線を出さず「対象外・最新の診断へ」の案内。ETI v2 の記録はサーバーの Checkout・320／1280px
+  ---
+  duration_ms: 906.401054
+  type: 'test'
+  ...
+# Subtest: 素材ハッシュ（lib/complete-materials.json）がサーバー生成器の実ファイルと一致する
+ok 186 - 素材ハッシュ（lib/complete-materials.json）がサーバー生成器の実ファイルと一致する
+  ---
+  duration_ms: 11.223353
+  type: 'test'
+  ...
+# Subtest: rc1 は prototypes の複製：Web 版で変えたファイル（追加1・変更3・削除3）と判定規則4種の承認（変更7）以外はバイト単位で同一（本文素材・算出・画像・正本エンジン）
+ok 187 - rc1 は prototypes の複製：Web 版で変えたファイル（追加1・変更3・削除3）と判定規則4種の承認（変更7）以外はバイト単位で同一（本文素材・算出・画像・正本エンジン）
+  ---
+  duration_ms: 26.940242
+  type: 'test'
+  ...
+# Subtest: 全12 fixture：Web 版の46ページは prototypes の紙面と同一（違いは P39 の ID・生成日・版の欄、画像の埋め込み方、判定規則4種の承認で変えた表記・同点順、1.0.1 の表紙・版の削除だけ）
+ok 188 - 全12 fixture：Web 版の46ページは prototypes の紙面と同一（違いは P39 の ID・生成日・版の欄、画像の埋め込み方、判定規則4種の承認で変えた表記・同点順、1.0.1 の表紙・版の削除だけ）
+  ---
+  duration_ms: 1151.90728
+  type: 'test'
+  ...
+# Subtest: 46ページ・順序・全ページの見出しが固定（目次とページ番号が一致）
+ok 189 - 46ページ・順序・全ページの見出しが固定（目次とページ番号が一致）
+  ---
+  duration_ms: 4.946849
+  type: 'test'
+  ...
+# Subtest: RC1 の6つの版が完全一致しなければ生成しない（1つでも違えば version_mismatch）
+ok 190 - RC1 の6つの版が完全一致しなければ生成しない（1つでも違えば version_mismatch）
+  ---
+  duration_ms: 1.856289
+  type: 'test'
+  ...
+# Subtest: 5つの MENTOR 目標それぞれで生成でき、目標の文言はサーバーのカタログから入る（結果は目標ごとに違う）
+ok 191 - 5つの MENTOR 目標それぞれで生成でき、目標の文言はサーバーのカタログから入る（結果は目標ごとに違う）
+  ---
+  duration_ms: 116.304827
+  type: 'test'
+  ...
+# Subtest: 同じ入力からは常にバイト単位で同じ HTML・SHA-256（golden hash）。時刻・乱数に依存しない
+ok 192 - 同じ入力からは常にバイト単位で同じ HTML・SHA-256（golden hash）。時刻・乱数に依存しない
+  ---
+  duration_ms: 48.021244
+  type: 'test'
+  ...
+# Subtest: 入力を1つ変えると input hash と出力が変わる（回答1問・目標・診断日）。同じ日の別時刻は同じ
+ok 193 - 入力を1つ変えると input hash と出力が変わる（回答1問・目標・診断日）。同じ日の別時刻は同じ
+  ---
+  duration_ms: 172.458291
+  type: 'test'
+  ...
+# Subtest: 保存済みの結果と正本の再計算が一致しなければ生成しない（スコア・順位・MIRROR・診断コード）
+ok 194 - 保存済みの結果と正本の再計算が一致しなければ生成しない（スコア・順位・MIRROR・診断コード）
+  ---
+  duration_ms: 4.613013
+  type: 'test'
+  ...
+# Subtest: 入力は決められた8項目だけ（メール・表示名・本文・ハッシュ・ID などの項目があれば生成しない）
+ok 195 - 入力は決められた8項目だけ（メール・表示名・本文・ハッシュ・ID などの項目があれば生成しない）
+  ---
+  duration_ms: 1.425529
+  type: 'test'
+  ...
+# Subtest: 出力：script・イベント属性・外部 URL・iframe・form・外部フォントなし。画像は data: だけ。CSP がある
+ok 196 - 出力：script・イベント属性・外部 URL・iframe・form・外部フォントなし。画像は data: だけ。CSP がある
+  ---
+  duration_ms: 6.103617
+  type: 'test'
+  ...
+# Subtest: 出力：メール・UUID・Stripe ID・診断コード・本名・ID・生成日・未置換の記号が無い。呼称は「あなた」
+ok 197 - 出力：メール・UUID・Stripe ID・診断コード・本名・ID・生成日・未置換の記号が無い。呼称は「あなた」
+  ---
+  duration_ms: 7.56949
+  type: 'test'
+  ...
+# Subtest: HTML エスケープ：カタログの目標文言に記号があってもエスケープされる
+ok 198 - HTML エスケープ：カタログの目標文言に記号があってもエスケープされる
+  ---
+  duration_ms: 38.240743
+  type: 'test'
+  ...
+# Subtest: 出力の検査は違反を見つけると生成を止める（script・イベント・外部 URL・記号・識別子・ページ数・順序・CSP・最大サイズ）
+ok 199 - 出力の検査は違反を見つけると生成を止める（script・イベント・外部 URL・記号・識別子・ページ数・順序・CSP・最大サイズ）
+  ---
+  duration_ms: 184.151866
+  type: 'test'
+  ...
+# Subtest: 全12 fixture で生成でき、大きさは上限の範囲内（最大・最小を記録）
+ok 200 - 全12 fixture で生成でき、大きさは上限の範囲内（最大・最小を記録）
+  ---
+  duration_ms: 275.653428
+  type: 'test'
+  ...
+# Subtest: 生成器・本文素材・画像は静的公開されない（dist に出ない。API からはサーバー内で読み込むだけ）
+ok 201 - 生成器・本文素材・画像は静的公開されない（dist に出ない。API からはサーバー内で読み込むだけ）
+  ---
+  duration_ms: 94.339404
+  type: 'test'
+  ...
+# Subtest: 状態は RC1 candidate / sales closed（販売承認済みの本文として扱わない）
+ok 202 - 状態は RC1 candidate / sales closed（販売承認済みの本文として扱わない）
+  ---
+  duration_ms: 0.153685
+  type: 'test'
+  ...
+# Subtest: はみ出し：サーバー版の全12 fixture・46ページで、中身が本文枠に24px以上の余裕で収まり、切り取りなし（A4 の高さは不変）
+ok 203 - はみ出し：サーバー版の全12 fixture・46ページで、中身が本文枠に24px以上の余裕で収まり、切り取りなし（A4 の高さは不変）
+  ---
+  duration_ms: 4824.050922
+  type: 'test'
+  ...
+# Subtest: 回帰：F05 の P08（HIDDEN SHAPE TOP10）の下端の図が本文枠に24px以上の余裕で収まる（以前は16px はみ出し）
+ok 204 - 回帰：F05 の P08（HIDDEN SHAPE TOP10）の下端の図が本文枠に24px以上の余裕で収まる（以前は16px はみ出し）
+  ---
+  duration_ms: 695.295855
+  type: 'test'
+  ...
+# Subtest: フッターの安全領域：全12 fixture × 46ページ × 320・390・1280px で、本文の最下端がフッターの上端より 1.5mm 以上 上にある（座標）
+ok 205 - フッターの安全領域：全12 fixture × 46ページ × 320・390・1280px で、本文の最下端がフッターの上端より 1.5mm 以上 上にある（座標）
+  ---
+  duration_ms: 11275.69455
+  type: 'test'
+  ...
+# Subtest: フッターの安全領域：overflow で隠さない（Web 版の CSS は、本文枠・フッター・紙面に overflow を足していない）
+ok 206 - フッターの安全領域：overflow で隠さない（Web 版の CSS は、本文枠・フッター・紙面に overflow を足していない）
+  ---
+  duration_ms: 0.564334
+  type: 'test'
+  ...
+# Subtest: 回帰：F05 の P03 は 320・390・1280px で本文とフッターが重ならない（文字の幅・行間を広げても重ならない）
+ok 207 - 回帰：F05 の P03 は 320・390・1280px で本文とフッターが重ならない（文字の幅・行間を広げても重ならない）
+  ---
+  duration_ms: 3283.450744
+  type: 'test'
+  ...
+# Subtest: 回帰：F05 の P08 は 320・390・1280px で本文とフッターが重ならない（文字の幅・行間を広げても重ならない）
+ok 208 - 回帰：F05 の P08 は 320・390・1280px で本文とフッターが重ならない（文字の幅・行間を広げても重ならない）
+  ---
+  duration_ms: 3588.956998
+  type: 'test'
+  ...
+# Subtest: 表示：320・390px はページ全体を画面幅に縮小（横スクロールなし・比率と順序を維持）、1280px は原寸。目次で移動でき、拡大を禁止しない
+ok 209 - 表示：320・390px はページ全体を画面幅に縮小（横スクロールなし・比率と順序を維持）、1280px は原寸。目次で移動でき、拡大を禁止しない
+  ---
+  duration_ms: 2506.986825
+  type: 'test'
+  ...
+# Subtest: Web 版の CSS：fit-to-width は CSS の zoom だけ（JS なし）。840px 未満の全段で紙面が画面幅に収まる倍率
+ok 210 - Web 版の CSS：fit-to-width は CSS の zoom だけ（JS なし）。840px 未満の全段で紙面が画面幅に収まる倍率
+  ---
+  duration_ms: 1.400203
+  type: 'test'
+  ...
+# Subtest: 画像：20点とも EXIF・XMP・IPTC・コメント（撮影情報・氏名・位置情報）を含まず、同じ画像ファイルの重複もない
+ok 211 - 画像：20点とも EXIF・XMP・IPTC・コメント（撮影情報・氏名・位置情報）を含まず、同じ画像ファイルの重複もない
+  ---
+  duration_ms: 2.228851
+  type: 'test'
+  ...
+# Subtest: 素材ハッシュのスクリプト：通常実行は照合だけ（不一致なら exit 1・書き換えない）。テストは --write を呼ばない
+ok 212 - 素材ハッシュのスクリプト：通常実行は照合だけ（不一致なら exit 1・書き換えない）。テストは --write を呼ばない
+  ---
+  duration_ms: 382.541299
+  type: 'test'
+  ...
+# Subtest: Webhook は生成の完了を待たずに応答し、応答の後で生成する（queued → ready・非公開 Storage に1つだけ保存）
+ok 213 - Webhook は生成の完了を待たずに応答し、応答の後で生成する（queued → ready・非公開 Storage に1つだけ保存）
+  ---
+  duration_ms: 2823.082303
+  type: 'test'
+  ...
+# Subtest: 同時生成：同じ生成物を2つ同時に処理しても生成は1回だけ（lease）。ready の後の再実行は何もしない
+ok 214 - 同時生成：同じ生成物を2つ同時に処理しても生成は1回だけ（lease）。ready の後の再実行は何もしない
+  ---
+  duration_ms: 2143.697026
+  type: 'test'
+  ...
+# Subtest: 途中失敗：保存の失敗は failed（再試行時刻あり）で中途半端な物を残さない。時刻が来れば再実行で ready
+ok 215 - 途中失敗：保存の失敗は failed（再試行時刻あり）で中途半端な物を残さない。時刻が来れば再実行で ready
+  ---
+  duration_ms: 2547.616322
+  type: 'test'
+  ...
+# Subtest: 中断した試行の残り（lease の切れた generating・保存物あり）は、次の取得で消してから作り直す
+ok 216 - 中断した試行の残り（lease の切れた generating・保存物あり）は、次の取得で消してから作り直す
+  ---
+  duration_ms: 2438.812555
+  type: 'test'
+  ...
+# Subtest: 生成中に lease が切れて別の処理が完了した：遅れた側は ready にせず、自分の保存物を消す
+ok 217 - 生成中に lease が切れて別の処理が完了した：遅れた側は ready にせず、自分の保存物を消す
+  ---
+  duration_ms: 2349.928216
+  type: 'test'
+  ...
+# Subtest: 生成中に返金で失効：ready にせず保存物を消す（revoked のまま）
+ok 218 - 生成中に返金で失効：ready にせず保存物を消す（revoked のまま）
+  ---
+  duration_ms: 2276.833254
+  type: 'test'
+  ...
+# Subtest: 再試行しない失敗：素材・入力のハッシュが凍結値と違えば stopped（attempts を上限にして止める）
+ok 219 - 再試行しない失敗：素材・入力のハッシュが凍結値と違えば stopped（attempts を上限にして止める）
+  ---
+  duration_ms: 2846.075924
+  type: 'test'
+  ...
+# Subtest: 一時的な失敗を max_attempts 回くり返すと止まる（それ以上取得しない）
+ok 220 - 一時的な失敗を max_attempts 回くり返すと止まる（それ以上取得しない）
+  ---
+  duration_ms: 2898.368226
+  type: 'test'
+  ...
+# Subtest: 状態確認（GET）で取り残し（queued）を見つけたら、応答の後で生成する。ready なら何もしない
+ok 221 - 状態確認（GET）で取り残し（queued）を見つけたら、応答の後で生成する。ready なら何もしない
+  ---
+  duration_ms: 5760.460441
+  type: 'test'
+  ...
+# Subtest: 閲覧 URL：本人確認の後に発行（300秒）。応答に保存先・注文 ID・user ID・report ID を出さない。開くと保存物そのものを返す
+ok 222 - 閲覧 URL：本人確認の後に発行（300秒）。応答に保存先・注文 ID・user ID・report ID を出さない。開くと保存物そのものを返す
+  ---
+  duration_ms: 2773.141628
+  type: 'test'
+  ...
+# Subtest: 期限切れ（300秒後）・改ざん・形式違反のトークンは開けない（DB・Storage へ接続しない）
+ok 223 - 期限切れ（300秒後）・改ざん・形式違反のトークンは開けない（DB・Storage へ接続しない）
+  ---
+  duration_ms: 2397.146836
+  type: 'test'
+  ...
+# Subtest: 別ユーザー：他人の記録の URL は発行できず、自分のトークンで他人の生成物は開けない
+ok 224 - 別ユーザー：他人の記録の URL は発行できず、自分のトークンで他人の生成物は開けない
+  ---
+  duration_ms: 3464.53245
+  type: 'test'
+  ...
+# Subtest: 権利失効の直後：発行済みの URL でも、返金・dispute 中・敗訴では開けない（勝訴で戻れば開ける）。発行もしない
+ok 225 - 権利失効の直後：発行済みの URL でも、返金・dispute 中・敗訴では開けない（勝訴で戻れば開ける）。発行もしない
+  ---
+  duration_ms: 4971.053733
+  type: 'test'
+  ...
+# Subtest: 保存物が記録の SHA-256 と違う（改ざん・取り違え）なら出さない。Storage の一時的な失敗は 503
+ok 226 - 保存物が記録の SHA-256 と違う（改ざん・取り違え）なら出さない。Storage の一時的な失敗は 503
+  ---
+  duration_ms: 2338.865753
+  type: 'test'
+  ...
+# Subtest: 設定不足・環境不明：閲覧の秘密値が無ければ 503、環境不明では発行も閲覧も 404
+ok 227 - 設定不足・環境不明：閲覧の秘密値が無ければ 503、環境不明では発行も閲覧も 404
+  ---
+  duration_ms: 4907.333026
+  type: 'test'
+  ...
+# Subtest: ログ・応答：保存先・注文 ID・user ID・report ID・記録 ID・トークンを出さない（生成・失敗・閲覧の一連の後）
+ok 228 - ログ・応答：保存先・注文 ID・user ID・report ID・記録 ID・トークンを出さない（生成・失敗・閲覧の一連の後）
+  ---
+  duration_ms: 3859.357602
+  type: 'test'
+  ...
+# Subtest: 閲覧トークン：期限は300秒・中身は暗号化・改ざんは拒否・秘密値ごとに別
+ok 229 - 閲覧トークン：期限は300秒・中身は暗号化・改ざんは拒否・秘密値ごとに別
+  ---
+  duration_ms: 2.168746
+  type: 'test'
+  ...
+# Subtest: Webhook の応答は生成を待たない：後段起動が失敗しても 200 で、状態確認で回収できる
+ok 230 - Webhook の応答は生成を待たない：後段起動が失敗しても 200 で、状態確認で回収できる
+  ---
+  duration_ms: 2517.421126
+  type: 'test'
+  ...
+# Subtest: C6：自動の再試行を使い切った失敗は「作成できませんでした」＋作り直し。同じ注文・目標で1つだけ再生成し、新しい注文・権利・請求は作らない
+ok 231 - C6：自動の再試行を使い切った失敗は「作成できませんでした」＋作り直し。同じ注文・目標で1つだけ再生成し、新しい注文・権利・請求は作らない
+  ---
+  duration_ms: 3884.586631
+  type: 'test'
+  ...
+# Subtest: C6：作り直しは2回まで。その後と、作り直しても直らない失敗（入力の不一致）はお問い合わせ（409）。運営者は原因を直してから作り直せる
+ok 232 - C6：作り直しは2回まで。その後と、作り直しても直らない失敗（入力の不一致）はお問い合わせ（409）。運営者は原因を直してから作り直せる
+  ---
+  duration_ms: 7112.719065
+  type: 'test'
+  ...
+# Subtest: C6：作り直しは本人だけ・権利がある間だけ。他人の記録は 404、返金後は 403。生成中・再試行待ちは何もしない（202 のまま1つ）
+ok 233 - C6：作り直しは本人だけ・権利がある間だけ。他人の記録は 404、返金後は 403。生成中・再試行待ちは何もしない（202 のまま1つ）
+  ---
+  duration_ms: 3539.861411
+  type: 'test'
+  ...
+# Subtest: C9：生成と引き継ぎが重なり、記録と生成物の本人が一時的に食い違っても、止めずに再試行して ready になる
+ok 234 - C9：生成と引き継ぎが重なり、記録と生成物の本人が一時的に食い違っても、止めずに再試行して ready になる
+  ---
+  duration_ms: 3075.52148
+  type: 'test'
+  ...
+# Subtest: 版：4規則は 1.0.0（CANDIDATE・0.1.0 を残さない）
+ok 235 - 版：4規則は 1.0.0（CANDIDATE・0.1.0 を残さない）
+  ---
+  duration_ms: 6.90916
+  type: 'test'
+  ...
+# Subtest: TEXT-BANDS の定義は axes.json の text_bands の1か所だけ（閾値の数値は 65／35／±8 のまま）
+ok 236 - TEXT-BANDS の定義は axes.json の text_bands の1か所だけ（閾値の数値は 65／35／±8 のまま）
+  ---
+  duration_ms: 2.420225
+  type: 'test'
+  ...
+# Subtest: TEXT-BANDS の境界：64・65・66／34・35・36、VALUES centered 7.9・8・8.1（judgments と polarity が一致）
+ok 237 - TEXT-BANDS の境界：64・65・66／34・35・36、VALUES centered 7.9・8・8.1（judgments と polarity が一致）
+  ---
+  duration_ms: 0.632659
+  type: 'test'
+  ...
+# Subtest: GAP-LABELS の境界：差1・2＝近接、3・7＝中間、8・9＝開き（区切りは 2／8 のまま）
+ok 238 - GAP-LABELS の境界：差1・2＝近接、3・7＝中間、8・9＝開き（区切りは 2／8 のまま）
+  ---
+  duration_ms: 0.28582
+  type: 'test'
+  ...
+# Subtest: 12 fixture：GAP・PAIR・DOMAIN の結果と、規則が付く文のページ（承認時の集計どおり）
+ok 239 - 12 fixture：GAP・PAIR・DOMAIN の結果と、規則が付く文のページ（承認時の集計どおり）
+  ---
+  duration_ms: 1.538222
+  type: 'test'
+  ...
+# Subtest: DOMAIN：同じ平均なら DOMAIN_MODEL.domains の定義順（英字順ではない）。F04 は 実行・持続 > 理解・戦略 > 関係・統合 > 発信・拡張
+ok 240 - DOMAIN：同じ平均なら DOMAIN_MODEL.domains の定義順（英字順ではない）。F04 は 実行・持続 > 理解・戦略 > 関係・統合 > 発信・拡張
+  ---
+  duration_ms: 0.239864
+  type: 'test'
+  ...
+# Subtest: 購入者向けの本文：ドメインに「検証が必要」の表現を出さず、P33 と同じ恒久的な注意書き。版は紙面に出さない（TEMPLATE-46P-WEB-1.0.1）
+ok 241 - 購入者向けの本文：ドメインに「検証が必要」の表現を出さず、P33 と同じ恒久的な注意書き。版は紙面に出さない（TEMPLATE-46P-WEB-1.0.1）
+  ---
+  duration_ms: 72.041717
+  type: 'test'
+  ...
+# Subtest: 同じ入力から常に同じ結果（12 fixture）
+ok 242 - 同じ入力から常に同じ結果（12 fixture）
+  ---
+  duration_ms: 232.906002
+  type: 'test'
+  ...
+# Subtest: サンプル：8ページ・noindex,nofollow,noarchive・同じサイトの script だけ（戻る・販売中の設定・共通の申込・申込欄）・form／iframe なし
+ok 243 - サンプル：8ページ・noindex,nofollow,noarchive・同じサイトの script だけ（戻る・販売中の設定・共通の申込・申込欄）・form／iframe なし
+  ---
+  duration_ms: 3.57759
+  type: 'test'
+  ...
+# Subtest: サンプル（complete_13）：上部は「元の画面に戻る」、末尾は申込欄（購入対象トークンがある時だけ申込・直接開いた時は「まず元素診断を受ける」）。Stripe へ直接は送らない
+ok 244 - サンプル（complete_13）：上部は「元の画面に戻る」、末尾は申込欄（購入対象トークンがある時だけ申込・直接開いた時は「まず元素診断を受ける」）。Stripe へ直接は送らない
+  ---
+  duration_ms: 1.679253
+  type: 'test'
+  ...
+# Subtest: サンプル：OGP は新しい画像の絶対 URL・summary_large_image
+ok 245 - サンプル：OGP は新しい画像の絶対 URL・summary_large_image
+  ---
+  duration_ms: 0.246342
+  type: 'test'
+  ...
+# Subtest: サンプルへのリンクは、診断結果の欄・解析レポートの最下部・共通の申込（EdBuy.sampleHref）だけ（ナビ・sitemap・タイプページからはリンクしない）
+ok 246 - サンプルへのリンクは、診断結果の欄・解析レポートの最下部・共通の申込（EdBuy.sampleHref）だけ（ナビ・sitemap・タイプページからはリンクしない）
+  ---
+  duration_ms: 6.308504
+  type: 'test'
+  ...
+# Subtest: TOP の OGP：1200×630 の JPEG・新しいファイル名・絶対 URL
+ok 247 - TOP の OGP：1200×630 の JPEG・新しいファイル名・絶対 URL
+  ---
+  duration_ms: 1.712986
+  type: 'test'
+  ...
+# Subtest: 新しい OGP は TOP とサンプルだけ（type・privacy・terms・report は変えない）
+ok 248 - 新しい OGP は TOP とサンプルだけ（type・privacy・terms・report は変えない）
+  ---
+  duration_ms: 4.615959
+  type: 'test'
+  ...
+# Subtest: 最下部（</body> の直前）に1回だけ「マイページを作成する（この購入を引き継ぎます）」を足す。同じタブのリンクだけ（スクリプト・別タブなし）
+ok 249 - 最下部（</body> の直前）に1回だけ「マイページを作成する（この購入を引き継ぎます）」を足す。同じタブのリンクだけ（スクリプト・別タブなし）
+  ---
+  duration_ms: 1.665533
+  type: 'test'
+  ...
+# Subtest: 閲覧の処理：固有リンクから開いた時だけ登録の欄を足す（照合〔SHA-256〕の後）。以前のゲスト購入の「引き継ぎ」の案内は足さない（廃止）
+ok 250 - 閲覧の処理：固有リンクから開いた時だけ登録の欄を足す（照合〔SHA-256〕の後）。以前のゲスト購入の「引き継ぎ」の案内は足さない（廃止）
+  ---
+  duration_ms: 0.500609
+  type: 'test'
+  ...
+# Subtest: 状態の対応：queued・generating は準備中、ready＋active は見る、failed・取得失敗は再確認、suspended・revoked は案内、権利なしは従来
+ok 251 - 状態の対応：queued・generating は準備中、ready＋active は見る、failed・取得失敗は再確認、suspended・revoked は案内、権利なしは従来
+  ---
+  duration_ms: 3.18588
+  type: 'test'
+  ...
+# Subtest: my-entitlements の記録・complete-status の応答から同じ規則で決める
+ok 252 - my-entitlements の記録・complete-status の応答から同じ規則で決める
+  ---
+  duration_ms: 1.228858
+  type: 'test'
+  ...
+# Subtest: 戻りの確認は 2秒→3秒→5秒… で合計60秒以内（無限に確認しない）
+ok 253 - 戻りの確認は 2秒→3秒→5秒… で合計60秒以内（無限に確認しない）
+  ---
+  duration_ms: 2.405398
+  type: 'test'
+  ...
+# Subtest: 機能フラグ：appEnv が preview・production の時だけ有効（設定なし・その他は無効）
+ok 254 - 機能フラグ：appEnv が preview・production の時だけ有効（設定なし・その他は無効）
+  ---
+  duration_ms: 6.000519
+  type: 'test'
+  ...
+# Subtest: ready＋active：LATEST と THE RECORDS の両方に「完全解析を見る」。押した時だけ POST し、同じタブで閲覧 URL へ移動する
+ok 255 - ready＋active：LATEST と THE RECORDS の両方に「完全解析を見る」。押した時だけ POST し、同じタブで閲覧 URL へ移動する
+  ---
+  duration_ms: 773.993458
+  type: 'test'
+  ...
+# Subtest: 閲覧 URL・トークンを DOM・属性・localStorage・sessionStorage・GA4・console に残さない。連打しても発行は1回
+ok 256 - 閲覧 URL・トークンを DOM・属性・localStorage・sessionStorage・GA4・console に残さない。連打しても発行は1回
+  ---
+  duration_ms: 1046.773169
+  type: 'test'
+  ...
+# Subtest: queued／generating：「完全解析を準備しています」。¥1,000・¥3,000 の購入導線を出さない
+ok 257 - queued／generating：「完全解析を準備しています」。¥1,000・¥3,000 の購入導線を出さない
+  ---
+  duration_ms: 852.721955
+  type: 'test'
+  ...
+# Subtest: 決済からの戻り（complete_return=1）：2秒→3秒→5秒の間隔で確認し、生成中→ready で「完全解析を見る」。URL から戻りの印を消す
+ok 258 - 決済からの戻り（complete_return=1）：2秒→3秒→5秒の間隔で確認し、生成中→ready で「完全解析を見る」。URL から戻りの印を消す
+  ---
+  duration_ms: 1842.084549
+  type: 'test'
+  ...
+# Subtest: failed／状態取得失敗：「もう一度確認する」。押すと確認し、ready なら「完全解析を見る」へ（フォーカスも移る）
+ok 259 - failed／状態取得失敗：「もう一度確認する」。押すと確認し、ready なら「完全解析を見る」へ（フォーカスも移る）
+  ---
+  duration_ms: 902.016962
+  type: 'test'
+  ...
+# Subtest: suspended：「現在、完全解析を閲覧できません」（閲覧ボタン・購入導線なし）／revoked：終了の案内と、もう一度の申込（complete_13：再購入できる）
+ok 260 - suspended：「現在、完全解析を閲覧できません」（閲覧ボタン・購入導線なし）／revoked：終了の案内と、もう一度の申込（complete_13：再購入できる）
+  ---
+  duration_ms: 690.272366
+  type: 'test'
+  ...
+# Subtest: ¥2,000 の根拠の解析レポートが返金された（basis_inactive）：閲覧ボタンを出さず、解析レポート（¥1,000）の申込で読める案内。押した後の 403 basis_inactive も同じ
+ok 261 - ¥2,000 の根拠の解析レポートが返金された（basis_inactive）：閲覧ボタンを出さず、解析レポート（¥1,000）の申込で読める案内。押した後の 403 basis_inactive も同じ
+  ---
+  duration_ms: 880.215408
+  type: 'test'
+  ...
+# Subtest: C6：生成の最終の失敗は「完全解析を作成できませんでした」。「もう一度作成する」は1回だけ POST し、準備中→ready。上限後はお問い合わせ
+ok 262 - C6：生成の最終の失敗は「完全解析を作成できませんでした」。「もう一度作成する」は1回だけ POST し、準備中→ready。上限後はお問い合わせ
+  ---
+  duration_ms: 3690.940975
+  type: 'test'
+  ...
+# Subtest: 押した後の応答：403 は権利の状態を確かめ直して案内、409 は準備中、401 はログイン案内、500／503 は再確認
+ok 263 - 押した後の応答：403 は権利の状態を確かめ直して案内、409 は準備中、401 はログイン案内、500／503 は再確認
+  ---
+  duration_ms: 3404.78204
+  type: 'test'
+  ...
+# Subtest: 別ユーザー・別の記録：各ボタンは自分の記録の ID だけを送る。サーバーが 404 を返せば移動しない
+ok 264 - 別ユーザー・別の記録：各ボタンは自分の記録の ID だけを送る。サーバーが 404 を返せば移動しない
+  ---
+  duration_ms: 1433.709006
+  type: 'test'
+  ...
+# Subtest: キーボード：Tab で「完全解析を見る」に到達し、フォーカスが見える。Enter で開く
+ok 265 - キーボード：Tab で「完全解析を見る」に到達し、フォーカスが見える。Enter で開く
+  ---
+  duration_ms: 554.8873
+  type: 'test'
+  ...
+# Subtest: 320・390・1280px：全状態で横スクロールなし、操作は 44px 以上
+ok 266 - 320・390・1280px：全状態で横スクロールなし、操作は 44px 以上
+  ---
+  duration_ms: 5014.600771
+  type: 'test'
+  ...
+# Subtest: 戻りの確認：対象が5件あっても同時に確認するのは最大3件。終わった記録の後に残りを確認する
+ok 267 - 戻りの確認：対象が5件あっても同時に確認するのは最大3件。終わった記録の後に残りを確認する
+  ---
+  duration_ms: 1932.16
+  type: 'test'
+  ...
+# Subtest: 以前の仕組みで完全解析を購入済みの記録：右上の入口は「レポート」、シートでも閲覧の表示（未購入のように見せない）。押すと閲覧へ進む
+ok 268 - 以前の仕組みで完全解析を購入済みの記録：右上の入口は「レポート」、シートでも閲覧の表示（未購入のように見せない）。押すと閲覧へ進む
+  ---
+  duration_ms: 739.795215
+  type: 'test'
+  ...
+# Subtest: 記録一覧：診断結果（長い国家名・武器名を含む）と NEW・COMPLETE 等の札が重ならない・切れない・横にはみ出さない（320／390／1280px）
+ok 269 - 記録一覧：診断結果（長い国家名・武器名を含む）と NEW・COMPLETE 等の札が重ならない・切れない・横にはみ出さない（320／390／1280px）
+  ---
+  duration_ms: 1305.994137
+  type: 'test'
+  ...
+# Subtest: complete_16 の同意の組
+    # Subtest: 1 新規約＋新プライバシー：成功
+    ok 1 - 1 新規約＋新プライバシー：成功
+      ---
+      duration_ms: 43.344336
+      type: 'test'
+      ...
+    # Subtest: 2 旧規約＋旧プライバシー：拒否
+    ok 2 - 2 旧規約＋旧プライバシー：拒否
+      ---
+      duration_ms: 28.030584
+      type: 'test'
+      ...
+    # Subtest: 3 新旧の混在：拒否
+    ok 3 - 3 新旧の混在：拒否
+      ---
+      duration_ms: 77.758665
+      type: 'test'
+      ...
+    # Subtest: 4 未定義の版：拒否
+    ok 4 - 4 未定義の版：拒否
+      ---
+      duration_ms: 89.209014
+      type: 'test'
+      ...
+    # Subtest: 5 空・NULL：拒否
+    ok 5 - 5 空・NULL：拒否
+      ---
+      duration_ms: 179.463894
+      type: 'test'
+      ...
+    # Subtest: 6 お知らせメールの未定義版：拒否（正規の組でも）
+    ok 6 - 6 お知らせメールの未定義版：拒否（正規の組でも）
+      ---
+      duration_ms: 73.493833
+      type: 'test'
+      ...
+    # Subtest: 7 拒否のときは同意を記録しない（未登録のまま）
+    ok 7 - 7 拒否のときは同意を記録しない（未登録のまま）
+      ---
+      duration_ms: 57.916533
+      type: 'test'
+      ...
+    # Subtest: 8 登録完了済みの利用者の同意記録は、どの組で呼んでも書き換わらない（過去の旧版の記録は履歴として残る）
+    ok 8 - 8 登録完了済みの利用者の同意記録は、どの組で呼んでも書き換わらない（過去の旧版の記録は履歴として残る）
+      ---
+      duration_ms: 203.892267
+      type: 'test'
+      ...
+    # Subtest: 権限と定義：anon 不可・authenticated 可・security definer・search_path 空
+    ok 9 - 権限と定義：anon 不可・authenticated 可・security definer・search_path 空
+      ---
+      duration_ms: 23.564768
+      type: 'test'
+      ...
+    1..9
+ok 270 - complete_16 の同意の組
+  ---
+  duration_ms: 953.423578
+  type: 'test'
+  ...
+# Subtest: 同じ測定条件・同じコードなら一致
+ok 271 - 同じ測定条件・同じコードなら一致
+  ---
+  duration_ms: 0.987388
+  type: 'test'
+  ...
+# Subtest: コードが1文字でも違えば不一致（回答が違う＝別診断）
+ok 272 - コードが1文字でも違えば不一致（回答が違う＝別診断）
+  ---
+  duration_ms: 0.266133
+  type: 'test'
+  ...
+# Subtest: scoring_version が違えば不一致（採点版が違う＝別記録）
+ok 273 - scoring_version が違えば不一致（採点版が違う＝別記録）
+  ---
+  duration_ms: 0.095982
+  type: 'test'
+  ...
+# Subtest: item_set_version が違えば不一致
+ok 274 - item_set_version が違えば不一致
+  ---
+  duration_ms: 0.086364
+  type: 'test'
+  ...
+# Subtest: v1 と v2 は同じコード文字列でも混同しない
+ok 275 - v1 と v2 は同じコード文字列でも混同しない
+  ---
+  duration_ms: 0.096823
+  type: 'test'
+  ...
+# Subtest: legacy：diagnosis_version が空の行も legacy として一致する
+ok 276 - legacy：diagnosis_version が空の行も legacy として一致する
+  ---
+  duration_ms: 0.448727
+  type: 'test'
+  ...
+# Subtest: scoring_version が空の行は一致させない（安全側＝未保存として扱う）
+ok 277 - scoring_version が空の行は一致させない（安全側＝未保存として扱う）
+  ---
+  duration_ms: 0.250629
+  type: 'test'
+  ...
+# Subtest: 結果行が無ければ一致しない
+ok 278 - 結果行が無ければ一致しない
+  ---
+  duration_ms: 1.313217
+  type: 'test'
+  ...
+# Subtest: 直書きの Supabase URL・公開キーが無い（本番・旧プロジェクトの Ref を含む）
+ok 279 - 直書きの Supabase URL・公開キーが無い（本番・旧プロジェクトの Ref を含む）
+  ---
+  duration_ms: 1.038769
+  type: 'test'
+  ...
+# Subtest: index.html・mypage.html：public-config を supabase-js の後、diagnosis-save.js の前に同期で読む
+ok 280 - index.html・mypage.html：public-config を supabase-js の後、diagnosis-save.js の前に同期で読む
+  ---
+  duration_ms: 2.74947
+  type: 'test'
+  ...
+# Subtest: Preview の設定：Preview の URL・公開キーで接続する
+ok 281 - Preview の設定：Preview の URL・公開キーで接続する
+  ---
+  duration_ms: 2.749768
+  type: 'test'
+  ...
+# Subtest: 本番ホストでは production の設定だけで接続する
+ok 282 - 本番ホストでは production の設定だけで接続する
+  ---
+  duration_ms: 0.799477
+  type: 'test'
+  ...
+# Subtest: 接続しない：設定なし（public-config の取得失敗）
+ok 283 - 接続しない：設定なし（public-config の取得失敗）
+  ---
+  duration_ms: 0.883556
+  type: 'test'
+  ...
+# Subtest: 接続しない：設定が null（public-config が 503）
+ok 284 - 接続しない：設定が null（public-config が 503）
+  ---
+  duration_ms: 0.687609
+  type: 'test'
+  ...
+# Subtest: 接続しない：環境名が想定外
+ok 285 - 接続しない：環境名が想定外
+  ---
+  duration_ms: 0.935408
+  type: 'test'
+  ...
+# Subtest: 接続しない：URL と Ref の不一致
+ok 286 - 接続しない：URL と Ref の不一致
+  ---
+  duration_ms: 0.655316
+  type: 'test'
+  ...
+# Subtest: 接続しない：URL の形式不正
+ok 287 - 接続しない：URL の形式不正
+  ---
+  duration_ms: 0.90667
+  type: 'test'
+  ...
+# Subtest: 接続しない：公開キーに秘密キー
+ok 288 - 接続しない：公開キーに秘密キー
+  ---
+  duration_ms: 10.036563
+  type: 'test'
+  ...
+# Subtest: 接続しない：本番以外のホストで production の設定
+ok 289 - 接続しない：本番以外のホストで production の設定
+  ---
+  duration_ms: 0.696924
+  type: 'test'
+  ...
+# Subtest: 本番ホストで preview の設定なら接続しない
+ok 290 - 本番ホストで preview の設定なら接続しない
+  ---
+  duration_ms: 0.533942
+  type: 'test'
+  ...
+# Subtest: 代用クライアント：ログイン・保存・読み取りは config_unavailable で失敗し、例外を投げない
+ok 291 - 代用クライアント：ログイン・保存・読み取りは config_unavailable で失敗し、例外を投げない
+  ---
+  duration_ms: 0.761683
+  type: 'test'
+  ...
+# Subtest: ブラウザ：public-config を同期スクリプトとして読み込み、Preview の接続先で createClient する
+ok 292 - ブラウザ：public-config を同期スクリプトとして読み込み、Preview の接続先で createClient する
+  ---
+  duration_ms: 265.811494
+  type: 'test'
+  ...
+# Subtest: ブラウザ：Preview で本番 Ref の設定なら public-config は 503、Supabase へ接続しない（fail-closed）
+ok 293 - ブラウザ：Preview で本番 Ref の設定なら public-config は 503、Supabase へ接続しない（fail-closed）
+  ---
+  duration_ms: 193.01673
+  type: 'test'
+  ...
+# Subtest: ブラウザ：本番以外のホストで production の設定が返っても Supabase へ接続しない
+ok 294 - ブラウザ：本番以外のホストで production の設定が返っても Supabase へ接続しない
+  ---
+  duration_ms: 178.077412
+  type: 'test'
+  ...
+# Subtest: 購入状態の照合キーは世代付き（element-v1:／ETI-2.0:）で、旧版と v2 を混同しない
+ok 295 - 購入状態の照合キーは世代付き（element-v1:／ETI-2.0:）で、旧版と v2 を混同しない
+  ---
+  duration_ms: 71.817287
+  type: 'test'
+  ...
+# Subtest: 購入済みの旧版・v2記録の双方から、認証済みの再閲覧処理へ diagnosis_session_id 付きで到達できる
+ok 296 - 購入済みの旧版・v2記録の双方から、認証済みの再閲覧処理へ diagnosis_session_id 付きで到達できる
+  ---
+  duration_ms: 909.602222
+  type: 'test'
+  ...
+# Subtest: 世代を取り違えた権利キーでは購入済みにならない（旧版コードの ETI-2.0 キー／v2コードの element-v1 キー）
+ok 297 - 世代を取り違えた権利キーでは購入済みにならない（旧版コードの ETI-2.0 キー／v2コードの element-v1 キー）
+  ---
+  duration_ms: 303.578101
+  type: 'test'
+  ...
+# Subtest: 版定数：診断・設問・採点・翻訳は維持、キャラ座標とMIRRORは2.1.0
+ok 298 - 版定数：診断・設問・採点・翻訳は維持、キャラ座標とMIRRORは2.1.0
+  ---
+  duration_ms: 0.926824
+  type: 'test'
+  ...
+# Subtest: ETI-CHAR-2.1.0：118名・JSON/CSVと20軸一致・事実メタデータと並び順は2.0.1と同一
+ok 299 - ETI-CHAR-2.1.0：118名・JSON/CSVと20軸一致・事実メタデータと並び順は2.0.1と同一
+  ---
+  duration_ms: 6.295455
+  type: 'test'
+  ...
+# Subtest: 203件のfixture：20軸・選出人物・上位4名と生スコア（誤差1e-10pt）が一致
+ok 300 - 203件のfixture：20軸・選出人物・上位4名と生スコア（誤差1e-10pt）が一致
+  ---
+  duration_ms: 109.615723
+  type: 'test'
+  ...
+# Subtest: 118名の本人プロフィールを入力すると本人が選ばれる
+ok 301 - 118名の本人プロフィールを入力すると本人が選ばれる
+  ---
+  duration_ms: 23.044536
+  type: 'test'
+  ...
+# Subtest: 同率選択：元素→国家→武器→番号、εは最大値アンカー、表示整数が同じでも生スコア優先
+ok 302 - 同率選択：元素→国家→武器→番号、εは最大値アンカー、表示整数が同じでも生スコア優先
+  ---
+  duration_ms: 0.788701
+  type: 'test'
+  ...
+# Subtest: 同率で選ばれたMIRRORが一致率1位と違っても、snapshotとランキングは役割どおり
+ok 303 - 同率で選ばれたMIRRORが一致率1位と違っても、snapshotとランキングは役割どおり
+  ---
+  duration_ms: 0.222175
+  type: 'test'
+  ...
+# Subtest: 旧版の保持：ETI-MIRROR-2.0.2 の座標と計算は残っており、ETI-CHAR-2.0.1 の生スコア1位を返す
+ok 304 - 旧版の保持：ETI-MIRROR-2.0.2 の座標と計算は残っており、ETI-CHAR-2.0.1 の生スコア1位を返す
+  ---
+  duration_ms: 29.485773
+  type: 'test'
+  ...
+# Subtest: URLと保存記録の版：Previewのデータは最新版で表示、mv付きはその版、往復で一致
+ok 305 - URLと保存記録の版：Previewのデータは最新版で表示、mv付きはその版、往復で一致
+  ---
+  duration_ms: 0.258784
+  type: 'test'
+  ...
+# Subtest: 決定的：同じ入力は常に同じ結果（抽選・実行時補正なし）
+ok 306 - 決定的：同じ入力は常に同じ結果（抽選・実行時補正なし）
+  ---
+  duration_ms: 2.210033
+  type: 'test'
+  ...
+# Subtest: 保存：版を渡すとpendingに2.1.0、省略時は従来の固定値
+ok 307 - 保存：版を渡すとpendingに2.1.0、省略時は従来の固定値
+  ---
+  duration_ms: 1.350524
+  type: 'test'
+  ...
+# Subtest: 表示の国家：事実データで region が null の3名（ニコ・スカーク・アーロイ）は国家を出さない（以前の誤った国家で埋めない）
+ok 308 - 表示の国家：事実データで region が null の3名（ニコ・スカーク・アーロイ）は国家を出さない（以前の誤った国家で埋めない）
+  ---
+  duration_ms: 1.270061
+  type: 'test'
+  ...
+# Subtest: 設問は100問・回答は5段階（前提の固定）
+ok 309 - 設問は100問・回答は5段階（前提の固定）
+  ---
+  duration_ms: 0.639946
+  type: 'test'
+  ...
+# Subtest: encode → decode で100問すべてが完全一致する
+ok 310 - encode → decode で100問すべてが完全一致する
+  ---
+  duration_ms: 89.937748
+  type: 'test'
+  ...
+# Subtest: 同じ回答なら、キーの並び順に関係なく同じコードになる（決定論的）
+ok 311 - 同じ回答なら、キーの並び順に関係なく同じコードになる（決定論的）
+  ---
+  duration_ms: 0.535807
+  type: 'test'
+  ...
+# Subtest: 100問のどの1問を変えても、必ず別のコードになる
+ok 312 - 100問のどの1問を変えても、必ず別のコードになる
+  ---
+  duration_ms: 29.622594
+  type: 'test'
+  ...
+# Subtest: 境界値（全問-2 / 全問+2）も往復で一致する
+ok 313 - 境界値（全問-2 / 全問+2）も往復で一致する
+  ---
+  duration_ms: 0.641417
+  type: 'test'
+  ...
+# Subtest: ランダム2万件で衝突しない
+ok 314 - ランダム2万件で衝突しない
+  ---
+  duration_ms: 1436.074328
+  type: 'test'
+  ...
+# Subtest: 未回答・範囲外の値は符号化を拒否する（欠損を0扱いにしない）
+ok 315 - 未回答・範囲外の値は符号化を拒否する（欠損を0扱いにしない）
+  ---
+  duration_ms: 0.734839
+  type: 'test'
+  ...
+# Subtest: 共通購入イベントは明示の商品IDで分類する。金額だけ・混在した商品は推測しない
+ok 316 - 共通購入イベントは明示の商品IDで分類する。金額だけ・混在した商品は推測しない
+  ---
+  duration_ms: 4.227005
+  type: 'test'
+  ...
+# Subtest: 既存CTA名を維持し、商品と診断を追加する。非購入イベントは変更しない
+ok 317 - 既存CTA名を維持し、商品と診断を追加する。非購入イベントは変更しない
+  ---
+  duration_ms: 2.2233
+  type: 'test'
+  ...
+# Subtest: DTIの結果・サンプル・レポート下部の共通購入処理：開始→作成→遷移、失敗と再送・二重押し
+ok 318 - DTIの結果・サンプル・レポート下部の共通購入処理：開始→作成→遷移、失敗と再送・二重押し
+  ---
+  duration_ms: 14.055264
+  type: 'test'
+  ...
+# Subtest: ETIの申込は商品・診断種別付きで、決済画面作成と遷移を区別する
+ok 319 - ETIの申込は商品・診断種別付きで、決済画面作成と遷移を区別する
+  ---
+  duration_ms: 2.231319
+  type: 'test'
+  ...
+# Subtest: DTIマイページでも同じ順序。失敗時は画面作成・遷移を数えず、ボタンを戻す
+ok 320 - DTIマイページでも同じ順序。失敗時は画面作成・遷移を数えず、ボタンを戻す
+  ---
+  duration_ms: 6.354765
+  type: 'test'
+  ...
+# Subtest: ETIの通信失敗は同じ申込を再送し、計測が例外を出しても購入を妨げない
+ok 321 - ETIの通信失敗は同じ申込を再送し、計測が例外を出しても購入を妨げない
+  ---
+  duration_ms: 1.515753
+  type: 'test'
+  ...
+# Subtest: 旧版診断（legacy-v1）の購入ボタンは旧商品 core1。現行版と同じイベント名でも商品IDが分かれる
+ok 322 - 旧版診断（legacy-v1）の購入ボタンは旧商品 core1。現行版と同じイベント名でも商品IDが分かれる
+  ---
+  duration_ms: 2.776387
+  type: 'test'
+  ...
+# Subtest: 複数商品・矛盾する入力：各商品のカテゴリはその商品のIDから決め、イベント全体の分類は補わない
+ok 323 - 複数商品・矛盾する入力：各商品のカテゴリはその商品のIDから決め、イベント全体の分類は補わない
+  ---
+  duration_ms: 1.323254
+  type: 'test'
+  ...
+# Subtest: 未知の商品ID：継承された名前（constructor など）を商品として扱わない
+ok 324 - 未知の商品ID：継承された名前（constructor など）を商品として扱わない
+  ---
+  duration_ms: 2.337705
+  type: 'test'
+  ...
+# Subtest: コンテンツ グループ：邪眼（/jagan・/j/）・共通（マイページ・規約）・元素診断（それ以外）に分け、config に付ける
+ok 325 - コンテンツ グループ：邪眼（/jagan・/j/）・共通（マイページ・規約）・元素診断（それ以外）に分け、config に付ける
+  ---
+  duration_ms: 1.191561
+  type: 'test'
+  ...
+# Subtest: quiz_answers：全設問の回答を50問ずつの数字の列で送る（個人を特定しない）。消毒の規則で消えない
+ok 326 - quiz_answers：全設問の回答を50問ずつの数字の列で送る（個人を特定しない）。消毒の規則で消えない
+  ---
+  duration_ms: 4.526246
+  type: 'test'
+  ...
+# Subtest: quiz_answers は施行日（2026-11-17 0:00 JST）より前は送らない
+ok 327 - quiz_answers は施行日（2026-11-17 0:00 JST）より前は送らない
+  ---
+  duration_ms: 0.837458
+  type: 'test'
+  ...
+# Subtest: quiz_progress：10%の区切りを初めて越えた時だけ（戻って答え直しても重ねない）。完了時に所要時間
+ok 328 - quiz_progress：10%の区切りを初めて越えた時だけ（戻って答え直しても重ねない）。完了時に所要時間
+  ---
+  duration_ms: 2.307146
+  type: 'test'
+  ...
+# Subtest: 納得度・ユーザー属性・内部トラフィックの印
+ok 329 - 納得度・ユーザー属性・内部トラフィックの印
+  ---
+  duration_ms: 6.256735
+  type: 'test'
+  ...
+# Subtest: 呼び出し元：元素診断（開始・進み具合・完了・回答・申込ボタン・納得度・解析レポートの章）と邪眼（同じ＋完全解析のページ）
+ok 330 - 呼び出し元：元素診断（開始・進み具合・完了・回答・申込ボタン・納得度・解析レポートの章）と邪眼（同じ＋完全解析のページ）
+  ---
+  duration_ms: 2.734956
+  type: 'test'
+  ...
+# Subtest: プライバシーポリシー：回答を収集すること・個人を特定する情報と結び付けないこと・施行日を明記（「回答は送りません」の記述は残さない）
+ok 331 - プライバシーポリシー：回答を収集すること・個人を特定する情報と結び付けないこと・施行日を明記（「回答は送りません」の記述は残さない）
+  ---
+  duration_ms: 0.219359
+  type: 'test'
+  ...
+# Subtest: 回答の並びの資料（docs/ga4_answer_order.json）が、送る並び（元素診断＝採点の正規順、邪眼＝表示順）と一致する
+ok 332 - 回答の並びの資料（docs/ga4_answer_order.json）が、送る並び（元素診断＝採点の正規順、邪眼＝表示順）と一致する
+  ---
+  duration_ms: 7.133238
+  type: 'test'
+  ...
+# Subtest: checkoutRef：_ga と セッションの Cookie から参照を作る（GS1・GS2 の両方）。Cookie が無ければ null
+ok 333 - checkoutRef：_ga と セッションの Cookie から参照を作る（GS1・GS2 の両方）。Cookie が無ければ null
+  ---
+  duration_ms: 5.688298
+  type: 'test'
+  ...
+# Subtest: 決済・ログインから戻った時の参照元は流入元にしない（ignore_referrer）。ほかの参照元はそのまま
+ok 334 - 決済・ログインから戻った時の参照元は流入元にしない（ignore_referrer）。ほかの参照元はそのまま
+  ---
+  duration_ms: 4.919124
+  type: 'test'
+  ...
+# Subtest: UTM：許可した utm_* だけを page_location に残す（流入元を GA4 へ渡す）
+ok 335 - UTM：許可した utm_* だけを page_location に残す（流入元を GA4 へ渡す）
+  ---
+  duration_ms: 93.626537
+  type: 'test'
+  ...
+# Subtest: UTM：診断コード・トークン・その他の問い合わせ文字列・\# は、UTM と一緒でも送らない
+ok 336 - UTM：診断コード・トークン・その他の問い合わせ文字列・\# は、UTM と一緒でも送らない
+  ---
+  duration_ms: 2.715983
+  type: 'test'
+  ...
+# Subtest: UTM：値が不正・個人情報や識別子に見えるものは捨てる（名前の無関係な utm_ も捨てる）
+ok 337 - UTM：値が不正・個人情報や識別子に見えるものは捨てる（名前の無関係な utm_ も捨てる）
+  ---
+  duration_ms: 6.408053
+  type: 'test'
+  ...
+# Subtest: campaign_*：URL の UTM と、config の値が対応する（utm_source→campaign_source など）。page_location の UTM と同じ値
+ok 338 - campaign_*：URL の UTM と、config の値が対応する（utm_source→campaign_source など）。page_location の UTM と同じ値
+  ---
+  duration_ms: 2.960351
+  type: 'test'
+  ...
+# Subtest: campaign_*：UTM が無ければ設定しない（config は従来どおり）
+ok 339 - campaign_*：UTM が無ければ設定しない（config は従来どおり）
+  ---
+  duration_ms: 2.652075
+  type: 'test'
+  ...
+# Subtest: campaign_*：不正な値・個人情報や識別子に見える値は、page_location にも campaign_* にも入れない。ほかの問い合わせ文字列は混ざらない
+ok 340 - campaign_*：不正な値・個人情報や識別子に見える値は、page_location にも campaign_* にも入れない。ほかの問い合わせ文字列は混ざらない
+  ---
+  duration_ms: 9.517802
+  type: 'test'
+  ...
+# Subtest: campaign_*：本番以外では何も送らない・既存の gtag を上書きしない
+ok 341 - campaign_*：本番以外では何も送らない・既存の gtag を上書きしない
+  ---
+  duration_ms: 0.958194
+  type: 'test'
+  ...
+# Subtest: UTM：本番以外では何も送らない（既存どおり）
+ok 342 - UTM：本番以外では何も送らない（既存どおり）
+  ---
+  duration_ms: 0.940606
+  type: 'test'
+  ...
+# Subtest: 初回の表示は result_origin=fresh で1回だけ。再描画では増えない
+ok 343 - 初回の表示は result_origin=fresh で1回だけ。再描画では増えない
+  ---
+  duration_ms: 405.398216
+  type: 'test'
+  ...
+# Subtest: 同じページで続けて診断し直しても、完了のたびに fresh が1回ずつ出る（以前は2回目が欠落）
+ok 344 - 同じページで続けて診断し直しても、完了のたびに fresh が1回ずつ出る（以前は2回目が欠落）
+  ---
+  duration_ms: 440.192018
+  type: 'test'
+  ...
+# Subtest: 共有リンク（?dv=ETI-2.0&code=）・固有リンク（/result\#r=）・再読み込みは result_origin=restored で、ページごとに1回
+ok 345 - 共有リンク（?dv=ETI-2.0&code=）・固有リンク（/result\#r=）・再読み込みは result_origin=restored で、ページごとに1回
+  ---
+  duration_ms: 1414.777287
+  type: 'test'
+  ...
+# Subtest: 開き直した結果のあとで、同じページで診断し直すと、その結果は fresh（restored → fresh）
+ok 346 - 開き直した結果のあとで、同じページで診断し直すと、その結果は fresh（restored → fresh）
+  ---
+  duration_ms: 655.404216
+  type: 'test'
+  ...
+# Subtest: diagnosis_result に、診断コード・回答・トークンを含めない（result_origin は fresh／restored だけ）
+ok 347 - diagnosis_result に、診断コード・回答・トークンを含めない（result_origin は fresh／restored だけ）
+  ---
+  duration_ms: 376.140487
+  type: 'test'
+  ...
+# Subtest: diagnosis_profile：いま完了した新診断だけ、20軸を10点刻みで1回送る。回答・診断コードは含めない。開き直しでは送らない
+ok 348 - diagnosis_profile：いま完了した新診断だけ、20軸を10点刻みで1回送る。回答・診断コードは含めない。開き直しでは送らない
+  ---
+  duration_ms: 742.091144
+  type: 'test'
+  ...
+# Subtest: 本番のドメイン：config（UTM・campaign_*）が、最初のイベントより前に積まれる。診断コードは含まれない
+ok 349 - 本番のドメイン：config（UTM・campaign_*）が、最初のイベントより前に積まれる。診断コードは含まれない
+  ---
+  duration_ms: 272.151205
+  type: 'test'
+  ...
+# Subtest: 本番のドメイン：UTM が無い時は、config に campaign_* を入れない
+ok 350 - 本番のドメイン：UTM が無い時は、config に campaign_* を入れない
+  ---
+  duration_ms: 209.469351
+  type: 'test'
+  ...
+# Subtest: UTM：邪眼診断のトップに外部から UTM 付きで来た時は、これまでどおり page_location と campaign_* に残す（内部リンクから UTM を外しても外部流入は取れる）
+ok 351 - UTM：邪眼診断のトップに外部から UTM 付きで来た時は、これまでどおり page_location と campaign_* に残す（内部リンクから UTM を外しても外部流入は取れる）
+  ---
+  duration_ms: 0.980845
+  type: 'test'
+  ...
+# Subtest: UTM：元素診断の TOP のバナーから邪眼診断へ移った時（UTM 無し）は、campaign_* を送らず流入元を上書きしない
+ok 352 - UTM：元素診断の TOP のバナーから邪眼診断へ移った時（UTM 無し）は、campaign_* を送らず流入元を上書きしない
+  ---
+  duration_ms: 0.796801
+  type: 'test'
+  ...
+# Subtest: 返金の送信は Stripe Live で、秘密値がある時だけ
+ok 353 - 返金の送信は Stripe Live で、秘密値がある時だけ
+  ---
+  duration_ms: 0.746261
+  type: 'test'
+  ...
+# Subtest: 返金の本文：refund・JPY・purchase と同じ参照だけ（注文 ID・Stripe の ID・メールを含めない）
+ok 354 - 返金の本文：refund・JPY・purchase と同じ参照だけ（注文 ID・Stripe の ID・メールを含めない）
+  ---
+  duration_ms: 1.410908
+  type: 'test'
+  ...
+# Subtest: 返金の送信：成功・拒否・通信の失敗のどれでも例外を出さない（決済の処理を止めない）
+ok 355 - 返金の送信：成功・拒否・通信の失敗のどれでも例外を出さない（決済の処理を止めない）
+  ---
+  duration_ms: 0.78267
+  type: 'test'
+  ...
+# Subtest: 返金の送信は応答の後（waitUntil）で、秘密値が無い時は予約もしない
+ok 356 - 返金の送信は応答の後（waitUntil）で、秘密値が無い時は予約もしない
+  ---
+  duration_ms: 0.205138
+  type: 'test'
+  ...
+# Subtest: Webhook：返金を初めて反映した時（applied）だけ GA4 へ送る。参照は purchase と同じ refOf
+ok 357 - Webhook：返金を初めて反映した時（applied）だけ GA4 へ送る。参照は purchase と同じ refOf
+  ---
+  duration_ms: 0.590737
+  type: 'test'
+  ...
+# Subtest: purchase に items（商品 ID・商品名・価格・数量）
+ok 358 - purchase に items（商品 ID・商品名・価格・数量）
+  ---
+  duration_ms: 1.00022
+  type: 'test'
+  ...
+# Subtest: 申込：checkout_start と同時に GA4 標準の begin_checkout（金額・JPY・入口・items）
+ok 359 - 申込：checkout_start と同時に GA4 標準の begin_checkout（金額・JPY・入口・items）
+  ---
+  duration_ms: 3.346641
+  type: 'test'
+  ...
+# Subtest: GA4 の読み込み：完全解析のサンプルと、タイプ別ページ35件にも js/ga.js
+ok 360 - GA4 の読み込み：完全解析のサンプルと、タイプ別ページ35件にも js/ga.js
+  ---
+  duration_ms: 2.715649
+  type: 'test'
+  ...
+# Subtest: ga.js の消毒：items（商品 ID・商品名・価格・数量）は残し、記録 ID や URL は落とす
+ok 361 - ga.js の消毒：items（商品 ID・商品名・価格・数量）は残し、記録 ID や URL は落とす
+  ---
+  duration_ms: 2.224316
+  type: 'test'
+  ...
+# Subtest: 本番ドメインでだけ GA4 を読み込む。Preview・ローカルでは何も送らない（既存の gtag は上書きしない）
+ok 362 - 本番ドメインでだけ GA4 を読み込む。Preview・ローカルでは何も送らない（既存の gtag は上書きしない）
+  ---
+  duration_ms: 6.334184
+  type: 'test'
+  ...
+# Subtest: page_location は origin＋path だけ・page_referrer は origin だけ（Stripe の Session ID を送らない）
+ok 363 - page_location は origin＋path だけ・page_referrer は origin だけ（Stripe の Session ID を送らない）
+  ---
+  duration_ms: 1.056075
+  type: 'test'
+  ...
+# Subtest: イベントの値を消毒：記録 ID・メール・Stripe ID・URL・トークン・Storage のパス・診断コードを送らない
+ok 364 - イベントの値を消毒：記録 ID・メール・Stripe ID・URL・トークン・Storage のパス・診断コードを送らない
+  ---
+  duration_ms: 2.520757
+  type: 'test'
+  ...
+# Subtest: ページの計測呼び出しに記録 ID・user ID・メール・トークン・診断コードを渡していない（静的な確認）
+ok 365 - ページの計測呼び出しに記録 ID・user ID・メール・トークン・診断コードを渡していない（静的な確認）
+  ---
+  duration_ms: 9.225967
+  type: 'test'
+  ...
+# Subtest: ゲストの完全解析の閲覧は、マイページと同じ complete_report_open（入口は source）。閲覧 URL・ref は送らない
+ok 366 - ゲストの完全解析の閲覧は、マイページと同じ complete_report_open（入口は source）。閲覧 URL・ref は送らない
+  ---
+  duration_ms: 1.581854
+  type: 'test'
+  ...
+# Subtest: マイページの解析レポートの案内（シート）：導線はボタン（サーバーの Checkout）でも analysis_checkout_click を数える
+ok 367 - マイページの解析レポートの案内（シート）：導線はボタン（サーバーの Checkout）でも analysis_checkout_click を数える
+  ---
+  duration_ms: 1.654883
+  type: 'test'
+  ...
+# Subtest: purchase の本文：商品ごとの診断・product_id・既存の item_id。注文 ID・Stripe の ID・メールは含めない
+ok 368 - purchase の本文：商品ごとの診断・product_id・既存の item_id。注文 ID・Stripe の ID・メールは含めない
+  ---
+  duration_ms: 2.149258
+  type: 'test'
+  ...
+# Subtest: sendPurchase：本番（Live）で秘密値がある時だけ。失敗しても投げない
+ok 369 - sendPurchase：本番（Live）で秘密値がある時だけ。失敗しても投げない
+  ---
+  duration_ms: 2.356087
+  type: 'test'
+  ...
+# Subtest: Webhook：元素診断は支払い済みの注文だけ（applied・noop・duplicate）を、purchase と同じ参照で送る。邪眼は onApplied から送る
+ok 370 - Webhook：元素診断は支払い済みの注文だけ（applied・noop・duplicate）を、purchase と同じ参照で送る。邪眼は onApplied から送る
+  ---
+  duration_ms: 1.002888
+  type: 'test'
+  ...
+# Subtest: ブラウザ：サーバー送信中（ga4ServerPurchase）は purchase を送らず purchase_client だけ（同じ購入を二重に数えない）
+ok 371 - ブラウザ：サーバー送信中（ga4ServerPurchase）は purchase を送らず purchase_client だけ（同じ購入を二重に数えない）
+  ---
+  duration_ms: 0.355957
+  type: 'test'
+  ...
+# Subtest: public-config：ga4ServerPurchase は本番で GA4_API_SECRET が正しい形の時だけ true（値そのものは返さない）
+ok 372 - public-config：ga4ServerPurchase は本番で GA4_API_SECRET が正しい形の時だけ true（値そのものは返さない）
+  ---
+  duration_ms: 0.166945
+  type: 'test'
+  ...
+# Subtest: 振る舞い（元素診断）：支払いの反映（applied・noop）で purchase を1回、固有リンクの conversion と同じ transaction_id で送る。返金済み・未払いは送らない
+ok 373 - 振る舞い（元素診断）：支払いの反映（applied・noop）で purchase を1回、固有リンクの conversion と同じ transaction_id で送る。返金済み・未払いは送らない
+  ---
+  duration_ms: 18.579314
+  type: 'test'
+  ...
+# Subtest: 振る舞い（邪眼）：支払いの反映で purchase を1回、ブラウザと同じ transaction_id（固有リンクの秘密値から）で送る
+ok 374 - 振る舞い（邪眼）：支払いの反映で purchase を1回、ブラウザと同じ transaction_id（固有リンクの秘密値から）で送る
+  ---
+  duration_ms: 30.456824
+  type: 'test'
+  ...
+# Subtest: GA4 の参照：形を確かめ、client_id・session_id・内部の印・申込元に分ける。違う形は使わない
+ok 375 - GA4 の参照：形を確かめ、client_id・session_id・内部の印・申込元に分ける。違う形は使わない
+  ---
+  duration_ms: 0.335931
+  type: 'test'
+  ...
+# Subtest: purchase の本文：参照があれば、その利用者・セッション・申込元・内部の印で送る
+ok 376 - purchase の本文：参照があれば、その利用者・セッション・申込元・内部の印で送る
+  ---
+  duration_ms: 0.291226
+  type: 'test'
+  ...
+# Subtest: 振る舞い：Webhook は Stripe の client_reference_id から参照を読み、その利用者で purchase を送る（元素診断・邪眼）
+ok 377 - 振る舞い：Webhook は Stripe の client_reference_id から参照を読み、その利用者で purchase を送る（元素診断・邪眼）
+  ---
+  duration_ms: 4.998665
+  type: 'test'
+  ...
+# Subtest: ブラウザ：申込の本文に GA4 の参照を付ける（元素診断・邪眼・マイページ）。決済・ログインの戻りは流入元にしない
+ok 378 - ブラウザ：申込の本文に GA4 の参照を付ける（元素診断・邪眼・マイページ）。決済・ログインの戻りは流入元にしない
+  ---
+  duration_ms: 0.74718
+  type: 'test'
+  ...
+# Subtest: 上・末尾・関連の導線を cta_position と destination で区別して送る（ページの値は body から）
+ok 379 - 上・末尾・関連の導線を cta_position と destination で区別して送る（ページの値は body から）
+  ---
+  duration_ms: 2.455512
+  type: 'test'
+  ...
+# Subtest: 二重発火しない：スクリプトを2回読み込んでもリスナーは1つ。同じ導線の1秒以内の再クリックは送らない（1秒後は送る）
+ok 380 - 二重発火しない：スクリプトを2回読み込んでもリスナーは1つ。同じ導線の1秒以内の再クリックは送らない（1秒後は送る）
+  ---
+  duration_ms: 0.695927
+  type: 'test'
+  ...
+# Subtest: 導線以外のクリック・値が不正なページでは送らない
+ok 381 - 導線以外のクリック・値が不正なページでは送らない
+  ---
+  duration_ms: 1.820352
+  type: 'test'
+  ...
+# Subtest: js/ga.js の消毒を通しても、type_diagnosis_cta_click の値は落ちない（本番ドメイン）
+ok 382 - js/ga.js の消毒を通しても、type_diagnosis_cta_click の値は落ちない（本番ドメイン）
+  ---
+  duration_ms: 2.174902
+  type: 'test'
+  ...
+# Subtest: 旧版（legacy-v1）の結果：本番以外のドメインでは実際の決済に進ませず「準備中」。完全解析の導線は出さない
+ok 383 - 旧版（legacy-v1）の結果：本番以外のドメインでは実際の決済に進ませず「準備中」。完全解析の導線は出さない
+  ---
+  duration_ms: 1849.700065
+  type: 'test'
+  ...
+# Subtest: サンプルからマイページ：sample_to_mypage を1回だけ（入口だけ・ID なし）記録し、URL から from=sample を消す
+ok 384 - サンプルからマイページ：sample_to_mypage を1回だけ（入口だけ・ID なし）記録し、URL から from=sample を消す
+  ---
+  duration_ms: 283.47986
+  type: 'test'
+  ...
+# Subtest: BEYOND THE RESULT：¥1,000 の主導線の下。閉じた状態でも価格（¥3,000）・全46ページ・サンプルが見える。展開で申込（¥3,000）（complete_13 の共通の申込）。320／390／1280px で重なり・はみ出しなし
+ok 385 - BEYOND THE RESULT：¥1,000 の主導線の下。閉じた状態でも価格（¥3,000）・全46ページ・サンプルが見える。展開で申込（¥3,000）（complete_13 の共通の申込）。320／390／1280px で重なり・はみ出しなし
+  ---
+  duration_ms: 10475.535437
+  type: 'test'
+  ...
+# Subtest: BEYOND THE RESULT：展開時だけ光点と線が現れ、prefers-reduced-motion では動きを止める
+ok 386 - BEYOND THE RESULT：展開時だけ光点と線が現れ、prefers-reduced-motion では動きを止める
+  ---
+  duration_ms: 6512.018952
+  type: 'test'
+  ...
+# Subtest: legacy_floor：DB が正常で旧購入の行が無い → 表示（従来どおり）
+ok 387 - legacy_floor：DB が正常で旧購入の行が無い → 表示（従来どおり）
+  ---
+  duration_ms: 3.051063
+  type: 'test'
+  ...
+# Subtest: S0 legacy_floor：DB へ接続できない（全体が down） → CORE1 だけ表示（DB 由来の権限は付けない）。ログに秘密値を出さない
+ok 388 - S0 legacy_floor：DB へ接続できない（全体が down） → CORE1 だけ表示（DB 由来の権限は付けない）。ログに秘密値を出さない
+  ---
+  duration_ms: 1.589189
+  type: 'test'
+  ...
+# Subtest: S0 legacy_floor：DB が 503 を返す → CORE1 だけ表示（DB 由来の権限は付けない）。ログに秘密値を出さない
+ok 389 - S0 legacy_floor：DB が 503 を返す → CORE1 だけ表示（DB 由来の権限は付けない）。ログに秘密値を出さない
+  ---
+  duration_ms: 0.429154
+  type: 'test'
+  ...
+# Subtest: S0 legacy_floor：旧購入の照合だけ失敗（停止の照合は「停止なし」） → CORE1 だけ表示（DB 由来の権限は付けない）。ログに秘密値を出さない
+ok 390 - S0 legacy_floor：旧購入の照合だけ失敗（停止の照合は「停止なし」） → CORE1 だけ表示（DB 由来の権限は付けない）。ログに秘密値を出さない
+  ---
+  duration_ms: 0.270899
+  type: 'test'
+  ...
+# Subtest: S0 legacy_floor：停止の照合だけ失敗（旧購入の行は無い） → CORE1 だけ表示（DB 由来の権限は付けない）。ログに秘密値を出さない
+ok 391 - S0 legacy_floor：停止の照合だけ失敗（旧購入の行は無い） → CORE1 だけ表示（DB 由来の権限は付けない）。ログに秘密値を出さない
+  ---
+  duration_ms: 0.675831
+  type: 'test'
+  ...
+# Subtest: S0 legacy_floor：停止の照合だけ失敗（有効な旧購入あり） → CORE1 だけ表示（DB 由来の権限は付けない）。ログに秘密値を出さない
+ok 392 - S0 legacy_floor：停止の照合だけ失敗（有効な旧購入あり） → CORE1 だけ表示（DB 由来の権限は付けない）。ログに秘密値を出さない
+  ---
+  duration_ms: 0.327895
+  type: 'test'
+  ...
+# Subtest: S0 legacy_floor：DB に届いて運営者の停止を確認（旧購入の照合は失敗） → 表示しない（403）
+ok 393 - S0 legacy_floor：DB に届いて運営者の停止を確認（旧購入の照合は失敗） → 表示しない（403）
+  ---
+  duration_ms: 0.348224
+  type: 'test'
+  ...
+# Subtest: S0 legacy_floor：DB に届いて運営者の停止を確認（旧購入の照合も成功） → 表示しない（403）
+ok 394 - S0 legacy_floor：DB に届いて運営者の停止を確認（旧購入の照合も成功） → 表示しない（403）
+  ---
+  duration_ms: 0.204037
+  type: 'test'
+  ...
+# Subtest: S0 legacy_floor：DB に届いて返金済み（有効な行が無い）を確認（停止の照合は失敗） → 表示しない（403）
+ok 395 - S0 legacy_floor：DB に届いて返金済み（有効な行が無い）を確認（停止の照合は失敗） → 表示しない（403）
+  ---
+  duration_ms: 0.525077
+  type: 'test'
+  ...
+# Subtest: legacy_floor：DB が正常なら DB 由来の権限（journey）も従来どおり付く
+ok 396 - legacy_floor：DB が正常なら DB 由来の権限（journey）も従来どおり付く
+  ---
+  duration_ms: 0.65015
+  type: 'test'
+  ...
+# Subtest: verify（新形式の旧購入）：DB に有効な行があれば表示・無ければ 403・DB 障害時は 503（S0 の例外を使わない）
+ok 397 - verify（新形式の旧購入）：DB に有効な行があれば表示・無ければ 403・DB 障害時は 503（S0 の例外を使わない）
+  ---
+  duration_ms: 2.56028
+  type: 'test'
+  ...
+# Subtest: マイページ・ゲストの再発行、固有リンク（delivery）：DB 障害時は 503（DB の権利を必要とする購入）
+ok 398 - マイページ・ゲストの再発行、固有リンク（delivery）：DB 障害時は 503（DB の権利を必要とする購入）
+  ---
+  duration_ms: 2.441656
+  type: 'test'
+  ...
+# Subtest: 署名・期限・復号・環境の不一致は、DB の状態に関係なく表示しない（DB へ問い合わせない）
+ok 399 - 署名・期限・復号・環境の不一致は、DB の状態に関係なく表示しない（DB へ問い合わせない）
+  ---
+  duration_ms: 0.759714
+  type: 'test'
+  ...
+# Subtest: 2026-07-25〜08-08 の24時間トークン（期限切れ）は従来どおり開けない／08-09 以降の100年トークンは開ける
+ok 400 - 2026-07-25〜08-08 の24時間トークン（期限切れ）は従来どおり開けない／08-09 以降の100年トークンは開ける
+  ---
+  duration_ms: 0.241291
+  type: 'test'
+  ...
+# Subtest: 引き継ぎ：購入時のリンク＋ログイン中の本人の同じ診断コードの記録 → link_possession で結び付ける
+ok 401 - 引き継ぎ：購入時のリンク＋ログイン中の本人の同じ診断コードの記録 → link_possession で結び付ける
+  ---
+  duration_ms: 6.187762
+  type: 'test'
+  ...
+# Subtest: 旧版の記録の diagnosis_version が空（NULL）でも引き継げる
+ok 402 - 旧版の記録の diagnosis_version が空（NULL）でも引き継げる
+  ---
+  duration_ms: 2.401424
+  type: 'test'
+  ...
+# Subtest: 旧形式（legacy_floor）のリンクでも引き継げる
+ok 403 - 旧形式（legacy_floor）のリンクでも引き継げる
+  ---
+  duration_ms: 0.502897
+  type: 'test'
+  ...
+# Subtest: すでに本人のこの記録に結び付いていれば、そのまま成功（何度押しても同じ）
+ok 404 - すでに本人のこの記録に結び付いていれば、そのまま成功（何度押しても同じ）
+  ---
+  duration_ms: 0.625869
+  type: 'test'
+  ...
+# Subtest: 先に別の人が引き継いでいれば 409（先着の1人）。結び付けを呼ばない
+ok 405 - 先に別の人が引き継いでいれば 409（先着の1人）。結び付けを呼ばない
+  ---
+  duration_ms: 1.416209
+  type: 'test'
+  ...
+# Subtest: DB 側が already_bound で拒否した競合も 409
+ok 406 - DB 側が already_bound で拒否した競合も 409
+  ---
+  duration_ms: 1.034311
+  type: 'test'
+  ...
+# Subtest: 記録が未保存なら 409 record_not_saved。他の人の記録・現在の診断（v2）の同じ文字列の記録は使わない
+ok 407 - 記録が未保存なら 409 record_not_saved。他の人の記録・現在の診断（v2）の同じ文字列の記録は使わない
+  ---
+  duration_ms: 1.538566
+  type: 'test'
+  ...
+# Subtest: 有効な購入が無い・運営者が停止した購入は 403
+ok 408 - 有効な購入が無い・運営者が停止した購入は 403
+  ---
+  duration_ms: 1.260248
+  type: 'test'
+  ...
+# Subtest: 署名の不正・期限切れ・別環境・現在の診断（v2）・マイページの再発行トークンは受け付けない
+ok 409 - 署名の不正・期限切れ・別環境・現在の診断（v2）・マイページの再発行トークンは受け付けない
+  ---
+  duration_ms: 3.324282
+  type: 'test'
+  ...
+# Subtest: ログインしていない・不正なログインは 401。結び付けを呼ばない
+ok 410 - ログインしていない・不正なログインは 401。結び付けを呼ばない
+  ---
+  duration_ms: 0.905376
+  type: 'test'
+  ...
+# Subtest: 別の本人（U2）が同じリンクで押しても、U2 の記録が無ければ結び付かない（U1 の記録へ付けない）
+ok 411 - 別の本人（U2）が同じリンクで押しても、U2 の記録が無ければ結び付かない（U1 の記録へ付けない）
+  ---
+  duration_ms: 0.823987
+  type: 'test'
+  ...
+# Subtest: 従来のレポート再発行（diagnosis_session_id）は op なしのまま動く（401／400 の入口が変わらない）
+ok 412 - 従来のレポート再発行（diagnosis_session_id）は op なしのまま動く（401／400 の入口が変わらない）
+  ---
+  duration_ms: 0.458393
+  type: 'test'
+  ...
+# Subtest: 旧版の支払い済み Session：購入権を1行記録し、レポートへ移動する（診断コードは平文でURLに出さない）
+ok 413 - 旧版の支払い済み Session：購入権を1行記録し、レポートへ移動する（診断コードは平文でURLに出さない）
+  ---
+  duration_ms: 3.411045
+  type: 'test'
+  ...
+# Subtest: 同じ Session を再度開いても、行は増えない（冪等）。別の人が同じ URL を開いても、同じ結果
+ok 414 - 同じ Session を再度開いても、行は増えない（冪等）。別の人が同じ URL を開いても、同じ結果
+  ---
+  duration_ms: 1.005732
+  type: 'test'
+  ...
+# Subtest: 現在の診断（v2_）の支払いは、ここでは記録しない（410）
+ok 415 - 現在の診断（v2_）の支払いは、ここでは記録しない（410）
+  ---
+  duration_ms: 1.321751
+  type: 'test'
+  ...
+# Subtest: 診断コードの形が不正（記号・短すぎ・大文字）なら、記録せず 400
+ok 416 - 診断コードの形が不正（記号・短すぎ・大文字）なら、記録せず 400
+  ---
+  duration_ms: 0.554744
+  type: 'test'
+  ...
+# Subtest: 記録に失敗したら 503（お支払いは完了している旨）。閲覧リンクは出さない
+ok 417 - 記録に失敗したら 503（お支払いは完了している旨）。閲覧リンクは出さない
+  ---
+  duration_ms: 0.322692
+  type: 'test'
+  ...
+# Subtest: 復旧：記録に失敗（503）したあと、同じ Session をもう一度開けば、1行だけ記録して閲覧リンクを出す
+ok 418 - 復旧：記録に失敗（503）したあと、同じ Session をもう一度開けば、1行だけ記録して閲覧リンクを出す
+  ---
+  duration_ms: 0.914581
+  type: 'test'
+  ...
+# Subtest: 復旧：Stripe への問い合わせが切れた（通信遮断）あとも、開き直せば記録される。切れている間は何も記録しない
+ok 419 - 復旧：Stripe への問い合わせが切れた（通信遮断）あとも、開き直せば記録される。切れている間は何も記録しない
+  ---
+  duration_ms: 0.629927
+  type: 'test'
+  ...
+# Subtest: 本番のドメインで販売中：旧版の結果から旧 Payment Link へ（client_reference_id＝診断コード）。完全解析は出さない
+ok 420 - 本番のドメインで販売中：旧版の結果から旧 Payment Link へ（client_reference_id＝診断コード）。完全解析は出さない
+  ---
+  duration_ms: 3242.860178
+  type: 'test'
+  ...
+# Subtest: 販売停止中は旧版も押せない（準備中）。Payment Link へ進まない
+ok 421 - 販売停止中は旧版も押せない（準備中）。Payment Link へ進まない
+  ---
+  duration_ms: 502.649173
+  type: 'test'
+  ...
+# Subtest: 現在の診断（ETI v2）のボタンは Payment Link に進まない（旧版だけが旧リンク）
+ok 422 - 現在の診断（ETI v2）のボタンは Payment Link に進まない（旧版だけが旧リンク）
+  ---
+  duration_ms: 510.631297
+  type: 'test'
+  ...
+# Subtest: 旧版のレポート下部：「マイページに引き継ぐ」が、診断結果の保存カードへ進む
+ok 423 - 旧版のレポート下部：「マイページに引き継ぐ」が、診断結果の保存カードへ進む
+  ---
+  duration_ms: 849.063993
+  type: 'test'
+  ...
+# Subtest: ETI v2 のレポートには「マイページに引き継ぐ」を出さない
+ok 424 - ETI v2 のレポートには「マイページに引き継ぐ」を出さない
+  ---
+  duration_ms: 1.94451
+  type: 'test'
+  ...
+# Subtest: 引き継ぎ：保存済みの記録でレポートから来た → 購入時のリンクを本人として送り、成功を表示。控えを消す
+ok 425 - 引き継ぎ：保存済みの記録でレポートから来た → 購入時のリンクを本人として送り、成功を表示。控えを消す
+  ---
+  duration_ms: 650.747021
+  type: 'test'
+  ...
+# Subtest: 引き継ぎ：ほかの人が先に引き継ぎ済み（409）／購入を確認できない（403）は、案内を出して控えを消す
+ok 426 - 引き継ぎ：ほかの人が先に引き継ぎ済み（409）／購入を確認できない（403）は、案内を出して控えを消す
+  ---
+  duration_ms: 1234.026201
+  type: 'test'
+  ...
+# Subtest: 引き継ぎ：通信の失敗は控えを残して「もう一度試す」。押すと再び送る
+ok 427 - 引き継ぎ：通信の失敗は控えを残して「もう一度試す」。押すと再び送る
+  ---
+  duration_ms: 3172.787533
+  type: 'test'
+  ...
+# Subtest: 引き継ぎ：控えが無い・別の診断コード・1時間を過ぎた控えでは、何も送らない
+ok 428 - 引き継ぎ：控えが無い・別の診断コード・1時間を過ぎた控えでは、何も送らない
+  ---
+  duration_ms: 3240.456518
+  type: 'test'
+  ...
+# Subtest: 引き継ぎ：現在の診断（ETI v2）の結果ページでは、控えがあっても送らない
+ok 429 - 引き継ぎ：現在の診断（ETI v2）の結果ページでは、控えがあっても送らない
+  ---
+  duration_ms: 984.993899
+  type: 'test'
+  ...
+# Subtest: レポートの「マイページに引き継ぐ」：購入時のリンクを控えてから、保存カードへ進む
+ok 430 - レポートの「マイページに引き継ぐ」：購入時のリンクを控えてから、保存カードへ進む
+  ---
+  duration_ms: 809.676794
+  type: 'test'
+  ...
+# Subtest: P2：認証復帰＋遅い通信：通信が終わるまでマイページへ移動せず、成功の表示のあとで移動する
+ok 431 - P2：認証復帰＋遅い通信：通信が終わるまでマイページへ移動せず、成功の表示のあとで移動する
+  ---
+  duration_ms: 4681.283419
+  type: 'test'
+  ...
+# Subtest: P2：通信失敗（500）：移動せずに留まり、再試行できる。再試行は同じ内容を送り、成功したら移動する
+ok 432 - P2：通信失敗（500）：移動せずに留まり、再試行できる。再試行は同じ内容を送り、成功したら移動する
+  ---
+  duration_ms: 4662.495762
+  type: 'test'
+  ...
+# Subtest: P2：時間切れ（応答なし）：15 秒で打ち切り、「時間内に完了しませんでした」と再試行。無限に待たず、移動もしない
+ok 433 - P2：時間切れ（応答なし）：15 秒で打ち切り、「時間内に完了しませんでした」と再試行。無限に待たず、移動もしない
+  ---
+  duration_ms: 717.694497
+  type: 'test'
+  ...
+# Subtest: P2：決着（別アカウントが引き継ぎ済み 409／購入を確認できない 403）：案内を出して留まる。控えは消える
+ok 434 - P2：決着（別アカウントが引き継ぎ済み 409／購入を確認できない 403）：案内を出して留まる。控えは消える
+  ---
+  duration_ms: 6194.79123
+  type: 'test'
+  ...
+# Subtest: P2：引き継ぎが無い通常のログイン復帰は、従来どおり約 0.8 秒後にマイページへ移動する（控えなし／別の診断コードの控え）
+ok 435 - P2：引き継ぎが無い通常のログイン復帰は、従来どおり約 0.8 秒後にマイページへ移動する（控えなし／別の診断コードの控え）
+  ---
+  duration_ms: 2723.793507
+  type: 'test'
+  ...
+# Subtest: P2：メールOTP等で \#recordCard なし（認証復帰ではない）：従来どおり移動せず、引き継ぎだけ行う
+ok 436 - P2：メールOTP等で \#recordCard なし（認証復帰ではない）：従来どおり移動せず、引き継ぎだけ行う
+  ---
+  duration_ms: 3200.785117
+  type: 'test'
+  ...
+# Subtest: P2：引き継ぎ中にカードが描き直されても、表示（進行中・結果）は消えず、通信は二重に送られない
+ok 437 - P2：引き継ぎ中にカードが描き直されても、表示（進行中・結果）は消えず、通信は二重に送られない
+  ---
+  duration_ms: 2279.44857
+  type: 'test'
+  ...
+# Subtest: 3つの法務ページ：問い合わせ窓口・相互リンク・版の表記・非公開の値を含まない
+ok 438 - 3つの法務ページ：問い合わせ窓口・相互リンク・版の表記・非公開の値を含まない
+  ---
+  duration_ms: 2.675499
+  type: 'test'
+  ...
+# Subtest: 特商法：開示請求の方式・価格・返金・提供方法が規約・決済画面と同じ趣旨
+ok 439 - 特商法：開示請求の方式・価格・返金・提供方法が規約・決済画面と同じ趣旨
+  ---
+  duration_ms: 0.436857
+  type: 'test'
+  ...
+# Subtest: 規約：A と B は別商品・サービス終了は固定日数なし・リンク紛失で再発行を約束しない・責任の上限に法令の除外
+ok 440 - 規約：A と B は別商品・サービス終了は固定日数なし・リンク紛失で再発行を約束しない・責任の上限に法令の除外
+  ---
+  duration_ms: 0.319394
+  type: 'test'
+  ...
+# Subtest: プライバシー：IP は照合値のみ・Supabase の地域を書かない・外部サービス一覧
+ok 441 - プライバシー：IP は照合値のみ・Supabase の地域を書かない・外部サービス一覧
+  ---
+  duration_ms: 0.265247
+  type: 'test'
+  ...
+# Subtest: 法務ページは公開ファイルに入り、Production ではビルドが【…】の残りを止める。Preview は通す
+ok 442 - 法務ページは公開ファイルに入り、Production ではビルドが【…】の残りを止める。Preview は通す
+  ---
+  duration_ms: 3.699782
+  type: 'test'
+  ...
+# Subtest: 同意版：クライアントの定数と DB の関数が一致。公開日（制定日・改定日）とは別
+ok 443 - 同意版：クライアントの定数と DB の関数が一致。公開日（制定日・改定日）とは別
+  ---
+  duration_ms: 0.977673
+  type: 'test'
+  ...
+# Subtest: 法務リンク：特商法・規約・プライバシーは各ページ最下部の共通フッターだけ。購入ボタン・アコーディオンの周辺には出さない（同意モーダルは残す）
+ok 444 - 法務リンク：特商法・規約・プライバシーは各ページ最下部の共通フッターだけ。購入ボタン・アコーディオンの周辺には出さない（同意モーダルは残す）
+  ---
+  duration_ms: 12.077923
+  type: 'test'
+  ...
+# Subtest: 連絡先：購入・マイページ・レポートの案内はメールが先。X の DM だけの案内を残さない
+ok 445 - 連絡先：購入・マイページ・レポートの案内はメールが先。X の DM だけの案内を残さない
+  ---
+  duration_ms: 4.032716
+  type: 'test'
+  ...
+# Subtest: 決済画面の文面：提供方法・保存の案内・返金・特商法と規約のリンク
+ok 446 - 決済画面の文面：提供方法・保存の案内・返金・特商法と規約のリンク
+  ---
+  duration_ms: 9.426482
+  type: 'test'
+  ...
+# Subtest: report_sample は noindex（meta と X-Robots-Tag）
+ok 447 - report_sample は noindex（meta と X-Robots-Tag）
+  ---
+  duration_ms: 1.403896
+  type: 'test'
+  ...
+# Subtest: complete_16：新規の登録完了は新しい組だけ。旧版は履歴として残し、書き換えない。専用の案内文。GA4 に同意版を送らない
+ok 448 - complete_16：新規の登録完了は新しい組だけ。旧版は履歴として残し、書き換えない。専用の案内文。GA4 に同意版を送らない
+  ---
+  duration_ms: 0.902481
+  type: 'test'
+  ...
+# Subtest: A ¥1,000：診断結果の記録で購入→支払い→購入完了ページで固有リンク→開くと解析レポートだけ（完全解析は開けない）。秘密値は DB にハッシュだけ
+ok 449 - A ¥1,000：診断結果の記録で購入→支払い→購入完了ページで固有リンク→開くと解析レポートだけ（完全解析は開けない）。秘密値は DB にハッシュだけ
+  ---
+  duration_ms: 2557.038367
+  type: 'test'
+  ...
+# Subtest: 購入完了ページへ戻った時（cs=今の決済）：今の購入だけ current とリンク（支払いの確認の前でも）。途中でやめた決済にはリンクを出さない
+ok 450 - 購入完了ページへ戻った時（cs=今の決済）：今の購入だけ current とリンク（支払いの確認の前でも）。途中でやめた決済にはリンクを出さない
+  ---
+  duration_ms: 2445.909425
+  type: 'test'
+  ...
+# Subtest: 決済画面の作りすぎを防ぐ：同じ診断記録で1時間に20件まで。21件目は 429（Stripe を呼ばない）
+ok 451 - 決済画面の作りすぎを防ぐ：同じ診断記録で1時間に20件まで。21件目は 429（Stripe を呼ばない）
+  ---
+  duration_ms: 3845.036835
+  type: 'test'
+  ...
+# Subtest: 他のサイトからの送信（フォームの POST・別の Origin・cross-site）は断り、この端末の購入の控え（Cookie）を書き換えない
+ok 452 - 他のサイトからの送信（フォームの POST・別の Origin・cross-site）は断り、この端末の購入の控え（Cookie）を書き換えない
+  ---
+  duration_ms: 1639.657529
+  type: 'test'
+  ...
+# Subtest: B ¥3,000：MENTOR 目標が必須・注文に固定。支払い→生成→固有リンクで完全解析だけ（解析レポートは開けない）
+ok 453 - B ¥3,000：MENTOR 目標が必須・注文に固定。支払い→生成→固有リンクで完全解析だけ（解析レポートは開けない）
+  ---
+  duration_ms: 2083.469241
+  type: 'test'
+  ...
+# Subtest: ¥2,000 は UI・API・DB で新しく作れない（既存の行は残す）
+ok 454 - ¥2,000 は UI・API・DB で新しく作れない（既存の行は残す）
+  ---
+  duration_ms: 1068.746673
+  type: 'test'
+  ...
+# Subtest: 再購入：同じ記録・同じ商品でも新しい購入操作なら別の注文・別の固有リンク。A と B は別々に買える
+ok 455 - 再購入：同じ記録・同じ商品でも新しい購入操作なら別の注文・別の固有リンク。A と B は別々に買える
+  ---
+  duration_ms: 2125.473378
+  type: 'test'
+  ...
+# Subtest: Checkout の技術的な二重処理：同じ購入操作の再送・連打は1件。古い決済画面は新しい購入を妨げず、後から払っても別の注文として納品
+ok 456 - Checkout の技術的な二重処理：同じ購入操作の再送・連打は1件。古い決済画面は新しい購入を妨げず、後から払っても別の注文として納品
+  ---
+  duration_ms: 3118.772537
+  type: 'test'
+  ...
+# Subtest: キャンセル（期限切れ）の直後に買い直せる
+ok 457 - キャンセル（期限切れ）の直後に買い直せる
+  ---
+  duration_ms: 1824.436331
+  type: 'test'
+  ...
+# Subtest: 決済画面の期限：注文の作成から約24時間（Stripe の上限 24 時間の内側）。同じ注文の再送は同じ画面
+ok 458 - 決済画面の期限：注文の作成から約24時間（Stripe の上限 24 時間の内側）。同じ注文の再送は同じ画面
+  ---
+  duration_ms: 1756.783808
+  type: 'test'
+  ...
+# Subtest: 24時間の間の遅い支払い：期限内なら（作成から20時間後でも）支払いが反映され、固有リンクが有効になる
+ok 459 - 24時間の間の遅い支払い：期限内なら（作成から20時間後でも）支払いが反映され、固有リンクが有効になる
+  ---
+  duration_ms: 1868.543028
+  type: 'test'
+  ...
+# Subtest: ケースA 途中でキャンセル→再購入：新しい注文・新しい決済画面へ進める。古い未払いの画面は閉じる（24時間の間に二重に払われない）
+ok 460 - ケースA 途中でキャンセル→再購入：新しい注文・新しい決済画面へ進める。古い未払いの画面は閉じる（24時間の間に二重に払われない）
+  ---
+  duration_ms: 1672.273856
+  type: 'test'
+  ...
+# Subtest: 遅延：古い画面を閉じる処理は応答を待たせない（応答の時点では未完了・応答の後に閉じる）
+ok 461 - 遅延：古い画面を閉じる処理は応答を待たせない（応答の時点では未完了・応答の後に閉じる）
+  ---
+  duration_ms: 1423.098414
+  type: 'test'
+  ...
+# Subtest: ケースA 補足：別の商品・支払い済みの画面は閉じない。閉じる処理が失敗しても購入は進む
+ok 462 - ケースA 補足：別の商品・支払い済みの画面は閉じない。閉じる処理が失敗しても購入は進む
+  ---
+  duration_ms: 1852.655621
+  type: 'test'
+  ...
+# Subtest: ケースC 完全解析：キャンセル後の再購入で MENTOR の目標が混ざらない（各注文が自分の目標を持つ）。期限切れの後も買い直せる
+ok 463 - ケースC 完全解析：キャンセル後の再購入で MENTOR の目標が混ざらない（各注文が自分の目標を持つ）。期限切れの後も買い直せる
+  ---
+  duration_ms: 1783.636974
+  type: 'test'
+  ...
+# Subtest: PayPay：決済画面の支払い方法はカードと PayPay。金額・商品・期限・metadata は従来どおり。支払うと反映される
+ok 464 - PayPay：決済画面の支払い方法はカードと PayPay。金額・商品・期限・metadata は従来どおり。支払うと反映される
+  ---
+  duration_ms: 1508.401891
+  type: 'test'
+  ...
+# Subtest: PayPay：Stripe が PayPay 付きの作成を拒んだ時は、カードだけで作り直す（購入できなくならない）。注文は失敗にならない
+ok 465 - PayPay：Stripe が PayPay 付きの作成を拒んだ時は、カードだけで作り直す（購入できなくならない）。注文は失敗にならない
+  ---
+  duration_ms: 1548.370353
+  type: 'test'
+  ...
+# Subtest: PayPay：一時的な Stripe の失敗では、カードだけに切り替えない（注文は残り、次の要求で同じ決済画面）
+ok 466 - PayPay：一時的な Stripe の失敗では、カードだけに切り替えない（注文は残り、次の要求で同じ決済画面）
+  ---
+  duration_ms: 1371.462859
+  type: 'test'
+  ...
+# Subtest: PayPay：支払いの確定が後から届く場合（checkout.session.async_payment_succeeded）も、同じ処理で支払い済みになる
+ok 467 - PayPay：支払いの確定が後から届く場合（checkout.session.async_payment_succeeded）も、同じ処理で支払い済みになる
+  ---
+  duration_ms: 1814.19703
+  type: 'test'
+  ...
+# Subtest: 固有リンク：未払いでは開けない（支払い待ち）。返金・異議申し立て・運営者の停止で開けない。再発行すると古いリンクは無効
+ok 468 - 固有リンク：未払いでは開けない（支払い待ち）。返金・異議申し立て・運営者の停止で開けない。再発行すると古いリンクは無効
+  ---
+  duration_ms: 2784.279318
+  type: 'test'
+  ...
+# Subtest: マイページへの登録：ログイン必須・同じアカウントは1件・別のアカウントにも登録できる・元の登録は消えない・記録の持ち主は変わらない
+ok 469 - マイページへの登録：ログイン必須・同じアカウントは1件・別のアカウントにも登録できる・元の登録は消えない・記録の持ち主は変わらない
+  ---
+  duration_ms: 3947.271508
+  type: 'test'
+  ...
+# Subtest: 同じ 100 問の回答の別人（別の記録）：記録 A の購入は記録 B に伝わらない。購入対象トークンは記録ごと
+ok 470 - 同じ 100 問の回答の別人（別の記録）：記録 A の購入は記録 B に伝わらない。購入対象トークンは記録ごと
+  ---
+  duration_ms: 1962.31544
+  type: 'test'
+  ...
+# Subtest: 購入対象トークン：改ざん・期限切れは使えない。マイページの記録は本人の記録（または登録した記録）だけ
+ok 471 - 購入対象トークン：改ざん・期限切れは使えない。マイページの記録は本人の記録（または登録した記録）だけ
+  ---
+  duration_ms: 2302.57677
+  type: 'test'
+  ...
+# Subtest: 応答・ログ：固有リンクの秘密値は購入完了ページ（Cookie の持ち主）の応答だけ。注文 ID・Stripe ID・メール・診断コードを出さない
+ok 472 - 応答・ログ：固有リンクの秘密値は購入完了ページ（Cookie の持ち主）の応答だけ。注文 ID・Stripe ID・メール・診断コードを出さない
+  ---
+  duration_ms: 2174.893525
+  type: 'test'
+  ...
+# Subtest: 価格の確認：確認できた価格は覚える（2 回目の購入で Stripe の prices を呼ばない）。商品が違えば別に確認する
+ok 473 - 価格の確認：確認できた価格は覚える（2 回目の購入で Stripe の prices を呼ばない）。商品が違えば別に確認する
+  ---
+  duration_ms: 1783.159257
+  type: 'test'
+  ...
+# Subtest: 価格の確認：問題のある価格（金額違い）は覚えず、毎回止める。決済画面は作らず、注文は閉じる
+ok 474 - 価格の確認：問題のある価格（金額違い）は覚えず、毎回止める。決済画面は作らず、注文は閉じる
+  ---
+  duration_ms: 1517.033704
+  type: 'test'
+  ...
+# Subtest: Production：本番の Supabase だけを使う（Preview の Supabase へ接続しない）
+ok 475 - Production：本番の Supabase だけを使う（Preview の Supabase へ接続しない）
+  ---
+  duration_ms: 3.910861
+  type: 'test'
+  ...
+# Subtest: 環境不明（VERCEL_ENV なし）も 404・Preview の設定不足は 503
+ok 476 - 環境不明（VERCEL_ENV なし）も 404・Preview の設定不足は 503
+  ---
+  duration_ms: 0.480612
+  type: 'test'
+  ...
+# Subtest: 応答ヘッダー：no-store・nosniff。GET・POST 以外は 405
+ok 477 - 応答ヘッダー：no-store・nosniff。GET・POST 以外は 405
+  ---
+  duration_ms: 0.694596
+  type: 'test'
+  ...
+# Subtest: 認証なし・無効なトークンは 401、記録 ID の形式違いは 400
+ok 478 - 認証なし・無効なトークンは 401、記録 ID の形式違いは 400
+  ---
+  duration_ms: 0.573643
+  type: 'test'
+  ...
+# Subtest: 他人の記録と存在しない記録は同じ 404 record_not_found
+ok 479 - 他人の記録と存在しない記録は同じ 404 record_not_found
+  ---
+  duration_ms: 1.959168
+  type: 'test'
+  ...
+# Subtest: GET（新規）：5目標のカタログ（keep_phrase をそのまま）・未選択・RC1 対象・登録完了
+ok 480 - GET（新規）：5目標のカタログ（keep_phrase をそのまま）・未選択・RC1 対象・登録完了
+  ---
+  duration_ms: 1.223217
+  type: 'test'
+  ...
+# Subtest: GET（保存済み・ロック・決済中・旧購入権）
+ok 481 - GET（保存済み・ロック・決済中・旧購入権）
+  ---
+  duration_ms: 3.275213
+  type: 'test'
+  ...
+# Subtest: POST（新規）：本人の user_id・サーバーが決めるカタログ版で upsert。同じ目標の再送は書かない（冪等）
+ok 482 - POST（新規）：本人の user_id・サーバーが決めるカタログ版で upsert。同じ目標の再送は書かない（冪等）
+  ---
+  duration_ms: 1.27455
+  type: 'test'
+  ...
+# Subtest: POST：登録未完了は 403、legacy_exempt は可
+ok 483 - POST：登録未完了は 403、legacy_exempt は可
+  ---
+  duration_ms: 0.772077
+  type: 'test'
+  ...
+# Subtest: POST：旧版・結果なし・版違いは 422 not_eligible（理由つき）、カタログ外は 422 unknown_goal
+ok 484 - POST：旧版・結果なし・版違いは 422 not_eligible（理由つき）、カタログ外は 422 unknown_goal
+  ---
+  duration_ms: 2.301195
+  type: 'test'
+  ...
+# Subtest: POST：支払後ロック・paid・disputed は 409 mentor_goal_locked、決済中の画面（created・checkout_open）は 409 checkout_in_progress（画面を閉じてから送り直す）
+ok 485 - POST：支払後ロック・paid・disputed は 409 mentor_goal_locked、決済中の画面（created・checkout_open）は 409 checkout_in_progress（画面を閉じてから送り直す）
+  ---
+  duration_ms: 3.111437
+  type: 'test'
+  ...
+# Subtest: POST：DB トリガーの拒否（最終防御）を応答へ対応させる
+ok 486 - POST：DB トリガーの拒否（最終防御）を応答へ対応させる
+  ---
+  duration_ms: 0.668651
+  type: 'test'
+  ...
+# Subtest: ログ：失敗時は理由コードと照合 ID だけ（記録 ID・目標・メールを出さない）
+ok 487 - ログ：失敗時は理由コードと照合 ID だけ（記録 ID・目標・メールを出さない）
+  ---
+  duration_ms: 0.683801
+  type: 'test'
+  ...
+# Subtest: my-entitlements v2（Preview）：記録ごとの完全解析の状態
+ok 488 - my-entitlements v2（Preview）：記録ごとの完全解析の状態
+  ---
+  duration_ms: 2.263001
+  type: 'test'
+  ...
+# Subtest: my-entitlements v2：記録単位の解析権（¥1,000・¥3,000・引き継いだゲスト購入）だけでも「解析レポート購入済み」
+ok 489 - my-entitlements v2：記録単位の解析権（¥1,000・¥3,000・引き継いだゲスト購入）だけでも「解析レポート購入済み」
+  ---
+  duration_ms: 0.372024
+  type: 'test'
+  ...
+# Subtest: my-entitlements v2：権利の読み取りに失敗した時は completeLookup: failed（購入済みを推測しない。購入の可否はサーバーが決済の時に確かめる）
+ok 490 - my-entitlements v2：権利の読み取りに失敗した時は completeLookup: failed（購入済みを推測しない。購入の可否はサーバーが決済の時に確かめる）
+  ---
+  duration_ms: 0.29849
+  type: 'test'
+  ...
+# Subtest: my-entitlements v2：Production も記録ごとの状態を返す（購入済みは本人の記録の権利・本番の Supabase だけ）
+ok 491 - my-entitlements v2：Production も記録ごとの状態を返す（購入済みは本人の記録の権利・本番の Supabase だけ）
+  ---
+  duration_ms: 0.513631
+  type: 'test'
+  ...
+# Subtest: MENTOR の選択は公開設定の appEnv が preview・production のときだけ（ホスト名では判断しない）
+ok 492 - MENTOR の選択は公開設定の appEnv が preview・production のときだけ（ホスト名では判断しない）
+  ---
+  duration_ms: 6.304047
+  type: 'test'
+  ...
+# Subtest: 完全解析の導線：サーバーの状態から決める（診断コードのハッシュ一致だけでは ¥2,000 にしない）
+ok 493 - 完全解析の導線：サーバーの状態から決める（診断コードのハッシュ一致だけでは ¥2,000 にしない）
+  ---
+  duration_ms: 2.216194
+  type: 'test'
+  ...
+# Subtest: mypage：MENTOR の段階の計測は目標選択の1件だけ（目標・記録 ID を送らない）・history を使わない・停止中の決済ボタンは押せない
+ok 494 - mypage：MENTOR の段階の計測は目標選択の1件だけ（目標・記録 ID を送らない）・history を使わない・停止中の決済ボタンは押せない
+  ---
+  duration_ms: 0.846878
+  type: 'test'
+  ...
+# Subtest: 登録画面：確定文面。案内文がボタン名（「同意して登録を完了する」）と結び付く。送信元は「元素診断」で運営者名は出さない
+ok 495 - 登録画面：確定文面。案内文がボタン名（「同意して登録を完了する」）と結び付く。送信元は「元素診断」で運営者名は出さない
+  ---
+  duration_ms: 1.126495
+  type: 'test'
+  ...
+# Subtest: privacy・terms：登録画面と同じ意味（ボタンでお知らせメールの受信にも同意／送信元は「元素診断」／内容／停止方法）
+ok 496 - privacy・terms：登録画面と同じ意味（ボタンでお知らせメールの受信にも同意／送信元は「元素診断」／内容／停止方法）
+  ---
+  duration_ms: 0.348438
+  type: 'test'
+  ...
+# Subtest: 法務ページ：運営者の正式情報・問い合わせ先・版は変わっていない。公開日は 2026年10月27日 に確定（【…】は残っていない）
+ok 497 - 法務ページ：運営者の正式情報・問い合わせ先・版は変わっていない。公開日は 2026年10月27日 に確定（【…】は残っていない）
+  ---
+  duration_ms: 1.049142
+  type: 'test'
+  ...
+# Subtest: 同意版：お知らせメールは 2026-10-07-v1 のまま（クライアント・API・RPC が同じ版）、規約・プライバシーは 2026-10-21
+ok 498 - 同意版：お知らせメールは 2026-10-07-v1 のまま（クライアント・API・RPC が同じ版）、規約・プライバシーは 2026-10-21
+  ---
+  duration_ms: 5.872455
+  type: 'test'
+  ...
+# Subtest: クライアント：/api/subscribe の fetch は keepalive。診断の保存の後に呼び、失敗しても保存・登録を失敗扱いにしない
+ok 499 - クライアント：/api/subscribe の fetch は keepalive。診断の保存の後に呼び、失敗しても保存・登録を失敗扱いにしない
+  ---
+  duration_ms: 0.440974
+  type: 'test'
+  ...
+# Subtest: KIT_API_KEY はサーバー（api/subscribe.js）だけが参照し、ブラウザ用ファイル・公開設定に出ない
+ok 500 - KIT_API_KEY はサーバー（api/subscribe.js）だけが参照し、ブラウザ用ファイル・公開設定に出ない
+  ---
+  duration_ms: 3.384112
+  type: 'test'
+  ...
+# Subtest: 前提：この試験の設定には STRIPE_COMPLETE_PRICE_UPGRADE が無く、Stripe にも ¥2,000 の Price が無い
+ok 501 - 前提：この試験の設定には STRIPE_COMPLETE_PRICE_UPGRADE が無く、Stripe にも ¥2,000 の Price が無い
+  ---
+  duration_ms: 1.07304
+  type: 'test'
+  ...
+# Subtest: UPGRADE なし：解析レポート ¥1,000 の Checkout が作れる（¥1,000 の Price・解析レポートだけ）
+ok 502 - UPGRADE なし：解析レポート ¥1,000 の Checkout が作れる（¥1,000 の Price・解析レポートだけ）
+  ---
+  duration_ms: 1604.931944
+  type: 'test'
+  ...
+# Subtest: UPGRADE なし：完全解析 ¥3,000 の Checkout が作れる（¥3,000 の Price・目標が必須）
+ok 503 - UPGRADE なし：完全解析 ¥3,000 の Checkout が作れる（¥3,000 の Price・目標が必須）
+  ---
+  duration_ms: 1188.07917
+  type: 'test'
+  ...
+# Subtest: UPGRADE なし：upgrade・analysis_upgrade は従来どおり offer_retired（400）で、決済画面も注文も作らない
+ok 504 - UPGRADE なし：upgrade・analysis_upgrade は従来どおり offer_retired（400）で、決済画面も注文も作らない
+  ---
+  duration_ms: 1116.785501
+  type: 'test'
+  ...
+# Subtest: UPGRADE なし：旧ゲスト経路・旧引き継ぎ・マイページの旧 Checkout は 410 のまま（設定不足の 503 にならない）
+ok 505 - UPGRADE なし：旧ゲスト経路・旧引き継ぎ・マイページの旧 Checkout は 410 のまま（設定不足の 503 にならない）
+  ---
+  duration_ms: 1528.038908
+  type: 'test'
+  ...
+# Subtest: p の正規形：同じ見た目になる p は同じ文字列。範囲外は従来の既定（風・法器・モンド・キャラクターなし）に読み替える
+ok 506 - p の正規形：同じ見た目になる p は同じ文字列。範囲外は従来の既定（風・法器・モンド・キャラクターなし）に読み替える
+  ---
+  duration_ms: 6.065827
+  type: 'test'
+  ...
+# Subtest: og-image：Google Fonts を実行時に取得しない・同梱フォント・長期 CDN キャッシュ・正規形でなければ 308
+ok 507 - og-image：Google Fonts を実行時に取得しない・同梱フォント・長期 CDN キャッシュ・正規形でなければ 308
+  ---
+  duration_ms: 0.937759
+  type: 'test'
+  ...
+# Subtest: 下地35枚（元素7×武器5）・MIRROR 欄の札7枚・フォントがあり、公開ビルドの対象
+ok 508 - 下地35枚（元素7×武器5）・MIRROR 欄の札7枚・フォントがあり、公開ビルドの対象
+  ---
+  duration_ms: 34.932182
+  type: 'test'
+  ...
+# Subtest: カードの組み立て：all（従来の1枚描き）は人ごとの情報もすべて含み、overlay は下地の上に人ごとの情報だけ
+ok 509 - カードの組み立て：all（従来の1枚描き）は人ごとの情報もすべて含み、overlay は下地の上に人ごとの情報だけ
+  ---
+  duration_ms: 2.771575
+  type: 'test'
+  ...
+# Subtest: 画素比較：下地＋overlay と従来の1枚描きがほぼ同じ（PSNR 40dB 以上）・CPU が 1/2 以下
+ok 510 - 画素比較：下地＋overlay と従来の1枚描きがほぼ同じ（PSNR 40dB 以上）・CPU が 1/2 以下
+  ---
+  duration_ms: 10177.549567
+  type: 'test'
+  ...
+# OGP 画素一致：PSNR 48.17dB（基準 40dB 以上）
+# OGP CPU：重ね描き 487/503/528ms・1枚描き 1761/1634/2072ms → 最小値の比 0.298（基準 0.5 以下）
+# Subtest: 接続先：unix ソケットと localhost だけ許す
+ok 511 - 接続先：unix ソケットと localhost だけ許す
+  ---
+  duration_ms: 2.003134
+  type: 'test'
+  ...
+# Subtest: 接続先：リモート・Supabase・ホスト型DBは拒否
+ok 512 - 接続先：リモート・Supabase・ホスト型DBは拒否
+  ---
+  duration_ms: 0.502333
+  type: 'test'
+  ...
+# Subtest: アプリの秘密情報（Supabase・Stripe・署名鍵）が環境にあれば拒否（取り違え防止）
+ok 513 - アプリの秘密情報（Supabase・Stripe・署名鍵）が環境にあれば拒否（取り違え防止）
+  ---
+  duration_ms: 0.492093
+  type: 'test'
+  ...
+# Subtest: データベース名：e2e_ で始まるものだけ。本番らしい名前・SQL注入に見える名前は拒否
+ok 514 - データベース名：e2e_ で始まるものだけ。本番らしい名前・SQL注入に見える名前は拒否
+  ---
+  duration_ms: 0.323651
+  type: 'test'
+  ...
+# Subtest: E2E_PG=1 でなければ無効（既定では PG に触れない）
+ok 515 - E2E_PG=1 でなければ無効（既定では PG に触れない）
+  ---
+  duration_ms: 0.357008
+  type: 'test'
+  ...
+# Subtest: リポジトリの tests/pg に、接続文字列・鍵・パスワードの実値を置いていない
+ok 516 - リポジトリの tests/pg に、接続文字列・鍵・パスワードの実値を置いていない
+  ---
+  duration_ms: 1.216716
+  type: 'test'
+  ...
+# Subtest: 許可リストどおりに dist を作り、問題が無い
+ok 517 - 許可リストどおりに dist を作り、問題が無い
+  ---
+  duration_ms: 124.514404
+  type: 'test'
+  ...
+# Subtest: 公開禁止のものは dist に無い（docs・tests・prototypes・lib・scripts・api・SQL・設定・テスト用ページ）
+ok 518 - 公開禁止のものは dist に無い（docs・tests・prototypes・lib・scripts・api・SQL・設定・テスト用ページ）
+  ---
+  duration_ms: 139.512103
+  type: 'test'
+  ...
+# Subtest: 許可リストはディレクトリを丸ごと・再帰でコピーしない
+ok 519 - 許可リストはディレクトリを丸ごと・再帰でコピーしない
+  ---
+  duration_ms: 1.110533
+  type: 'test'
+  ...
+# Subtest: API の import は解決でき、lib/server-env.js などサーバー専用ファイルは dist に出ない
+ok 520 - API の import は解決でき、lib/server-env.js などサーバー専用ファイルは dist に出ない
+  ---
+  duration_ms: 93.348116
+  type: 'test'
+  ...
+# Subtest: vercel.json：build で dist を作り、dist だけを配信する（cleanUrls は維持）
+ok 521 - vercel.json：build で dist を作り、dist だけを配信する（cleanUrls は維持）
+  ---
+  duration_ms: 0.761841
+  type: 'test'
+  ...
+# Subtest: 本番ドメインの絶対 URL は、すべて dist に実体がある（既知の欠損 thumbs は解消済み。例外なし）
+ok 522 - 本番ドメインの絶対 URL は、すべて dist に実体がある（既知の欠損 thumbs は解消済み。例外なし）
+  ---
+  duration_ms: 123.737849
+  type: 'test'
+  ...
+# Subtest: 検出：必要な JS をコピーし忘れる
+ok 523 - 検出：必要な JS をコピーし忘れる
+  ---
+  duration_ms: 120.240106
+  type: 'test'
+  ...
+# Subtest: 検出：画像ディレクトリを外して画像が欠ける
+ok 524 - 検出：画像ディレクトリを外して画像が欠ける
+  ---
+  duration_ms: 118.994366
+  type: 'test'
+  ...
+# Subtest: 検出：docs を誤って dist へコピーする
+ok 525 - 検出：docs を誤って dist へコピーする
+  ---
+  duration_ms: 120.541841
+  type: 'test'
+  ...
+# Subtest: 検出：lib/server-env.js を静的公開する
+ok 526 - 検出：lib/server-env.js を静的公開する
+  ---
+  duration_ms: 50.512829
+  type: 'test'
+  ...
+# Subtest: 検出：API の import が解決できない・未宣言のパッケージ
+ok 527 - 検出：API の import が解決できない・未宣言のパッケージ
+  ---
+  duration_ms: 0.816536
+  type: 'test'
+  ...
+# Subtest: 検出：許可リストのファイルが無い
+ok 528 - 検出：許可リストのファイルが無い
+  ---
+  duration_ms: 44.297142
+  type: 'test'
+  ...
+# Subtest: 公開物に旧 Payment Link（buy.stripe.com）が0件。テスト・SQL・手順書・資料を含まない
+ok 529 - 公開物に旧 Payment Link（buy.stripe.com）が0件。テスト・SQL・手順書・資料を含まない
+  ---
+  duration_ms: 52.564009
+  type: 'test'
+  ...
+# Subtest: 公開画面に旧文言（以前の決済リンク）・「返金いたします」「返金できます」が0件。新しい文言は公開物にある
+ok 530 - 公開画面に旧文言（以前の決済リンク）・「返金いたします」「返金できます」が0件。新しい文言は公開物にある
+  ---
+  duration_ms: 63.624571
+  type: 'test'
+  ...
+# {"event":"env_guard_denied","api":"public-config","env":"unknown","ref_tail":"0000","reasons":["env_unknown"],"incident_id":"6a873a40"}
+# {"event":"env_guard_denied","api":"public-config","env":"unknown","ref_tail":"0000","reasons":["env_unknown"],"incident_id":"852a8980"}
+# Subtest: ソースにサーバー専用キーの変数名が無い（読まない）
+ok 531 - ソースにサーバー専用キーの変数名が無い（読まない）
+  ---
+  duration_ms: 0.950107
+  type: 'test'
+  ...
+# Subtest: Production：本番の URL・公開キー・環境名・Ref の4項目だけを返す
+ok 532 - Production：本番の URL・公開キー・環境名・Ref の4項目だけを返す
+  ---
+  duration_ms: 2.20469
+  type: 'test'
+  ...
+# Subtest: Preview：Preview の4項目。環境変数にある秘密値はどれも応答に含めない
+ok 533 - Preview：Preview の4項目。環境変数にある秘密値はどれも応答に含めない
+  ---
+  duration_ms: 0.2818
+  type: 'test'
+  ...
+# Subtest: format=js：window.__ED_PUBLIC_CONFIG__ を凍結したオブジェクトで設定する
+ok 534 - format=js：window.__ED_PUBLIC_CONFIG__ を凍結したオブジェクトで設定する
+  ---
+  duration_ms: 1.50624
+  type: 'test'
+  ...
+# Subtest: ヘッダー：Cache-Control: no-store と X-Content-Type-Options: nosniff（成功・失敗とも）
+ok 535 - ヘッダー：Cache-Control: no-store と X-Content-Type-Options: nosniff（成功・失敗とも）
+  ---
+  duration_ms: 1.905297
+  type: 'test'
+  ...
+# Subtest: 503 で止める：Preview で本番 Ref
+ok 536 - 503 で止める：Preview で本番 Ref
+  ---
+  duration_ms: 1.008506
+  type: 'test'
+  ...
+# Subtest: 503 で止める：Preview で本番 Ref（期待 Ref も本番）
+ok 537 - 503 で止める：Preview で本番 Ref（期待 Ref も本番）
+  ---
+  duration_ms: 0.788868
+  type: 'test'
+  ...
+# Subtest: 503 で止める：Production で Preview Ref
+ok 538 - 503 で止める：Production で Preview Ref
+  ---
+  duration_ms: 0.563668
+  type: 'test'
+  ...
+# Subtest: 503 で止める：Production で Preview Ref（期待 Ref も Preview）
+ok 539 - 503 で止める：Production で Preview Ref（期待 Ref も Preview）
+  ---
+  duration_ms: 0.817355
+  type: 'test'
+  ...
+# Subtest: 503 で止める：環境不明
+ok 540 - 503 で止める：環境不明
+  ---
+  duration_ms: 0.839656
+  type: 'test'
+  ...
+# Subtest: 503 で止める：development（ローカル許可なし）
+ok 541 - 503 で止める：development（ローカル許可なし）
+  ---
+  duration_ms: 0.74442
+  type: 'test'
+  ...
+# Subtest: 503 で止める：期待 Ref 未設定
+ok 542 - 503 で止める：期待 Ref 未設定
+  ---
+  duration_ms: 0.553203
+  type: 'test'
+  ...
+# Subtest: 503 で止める：Production で Preview Ref の変数が未設定
+ok 543 - 503 で止める：Production で Preview Ref の変数が未設定
+  ---
+  duration_ms: 0.531198
+  type: 'test'
+  ...
+# Subtest: 503 で止める：URL と Ref の不一致
+ok 544 - 503 で止める：URL と Ref の不一致
+  ---
+  duration_ms: 0.487951
+  type: 'test'
+  ...
+# Subtest: 503 で止める：URL の形式不正
+ok 545 - 503 で止める：URL の形式不正
+  ---
+  duration_ms: 0.485721
+  type: 'test'
+  ...
+# Subtest: 503 で止める：公開キーが未設定
+ok 546 - 503 で止める：公開キーが未設定
+  ---
+  duration_ms: 0.458872
+  type: 'test'
+  ...
+# Subtest: 503 で止める：公開キーに秘密キー（sb_secret_）
+ok 547 - 503 で止める：公開キーに秘密キー（sb_secret_）
+  ---
+  duration_ms: 0.47321
+  type: 'test'
+  ...
+# Subtest: 503 で止める：公開キーに service_role の JWT
+ok 548 - 503 で止める：公開キーに service_role の JWT
+  ---
+  duration_ms: 0.675286
+  type: 'test'
+  ...
+# Subtest: 503 で止める：公開キーが別プロジェクトの anon JWT
+ok 549 - 503 で止める：公開キーが別プロジェクトの anon JWT
+  ---
+  duration_ms: 0.552142
+  type: 'test'
+  ...
+# Subtest: localhost は ALLOW_LOCAL_DEVELOPMENT=1 かつ Host が localhost のときだけ（Preview と同じ接続先の規則）
+ok 550 - localhost は ALLOW_LOCAL_DEVELOPMENT=1 かつ Host が localhost のときだけ（Preview と同じ接続先の規則）
+  ---
+  duration_ms: 0.323282
+  type: 'test'
+  ...
+# Subtest: GET・HEAD 以外は 405
+ok 551 - GET・HEAD 以外は 405
+  ---
+  duration_ms: 0.084814
+  type: 'test'
+  ...
+# Subtest: ログイン状態の ¥1,000：Checkout ¥1,000 → 支払い確定で解析権。マイページは ¥2,000 の案内・解析レポートを読める
+ok 552 - ログイン状態の ¥1,000：Checkout ¥1,000 → 支払い確定で解析権。マイページは ¥2,000 の案内・解析レポートを読める
+  ---
+  duration_ms: 2235.293186
+  type: 'test'
+  ...
+# Subtest: 解析権が一時停止中（dispute 中）は ¥3,000・¥2,000 を作らない
+ok 553 - 解析権が一時停止中（dispute 中）は ¥3,000・¥2,000 を作らない
+  ---
+  duration_ms: 2131.494862
+  type: 'test'
+  ...
+# Subtest: 同じ診断コードでも別の本人には権利を共有しない（¥1,000 を別に買える・解析レポートは読めない）
+ok 554 - 同じ診断コードでも別の本人には権利を共有しない（¥1,000 を別に買える・解析レポートは読めない）
+  ---
+  duration_ms: 2418.963414
+  type: 'test'
+  ...
+# Subtest: C3（ゲスト）：Stripe で戻った・閉じた決済はすぐ買い直せる。支払いと重なった時は二重に請求しない
+ok 555 - C3（ゲスト）：Stripe で戻った・閉じた決済はすぐ買い直せる。支払いと重なった時は二重に請求しない
+  ---
+  duration_ms: 2448.172905
+  type: 'test'
+  ...
+# Subtest: C3（ログイン）：マイページへ戻った（中止）・「決済をやり直す」で決済待ちを片付け、すぐ買い直せる
+ok 556 - C3（ログイン）：マイページへ戻った（中止）・「決済をやり直す」で決済待ちを片付け、すぐ買い直せる
+  ---
+  duration_ms: 3191.190052
+  type: 'test'
+  ...
+# Subtest: C5：戻って MENTOR 目標を変えたら古い画面を使わず、新しい目標で決済。支払い後に固定される目標は支払った注文の目標
+ok 557 - C5：戻って MENTOR 目標を変えたら古い画面を使わず、新しい目標で決済。支払い後に固定される目標は支払った注文の目標
+  ---
+  duration_ms: 1829.91391
+  type: 'test'
+  ...
+# Subtest: D2・D3：Google 等でも同じ確認済みメールなら引き継げる。共有端末で別のメールの人へは移らない。Cookie 消失は OTP で復旧（決済待ちがあっても）
+ok 558 - D2・D3：Google 等でも同じ確認済みメールなら引き継げる。共有端末で別のメールの人へは移らない。Cookie 消失は OTP で復旧（決済待ちがあっても）
+  ---
+  duration_ms: 2337.11584
+  type: 'test'
+  ...
+# Subtest: ¥1,000 の返金：解析権は revoked。発行済みの閲覧リンク（期限内）も、新しいリンクも開けない。応答は private, no-store
+ok 559 - ¥1,000 の返金：解析権は revoked。発行済みの閲覧リンク（期限内）も、新しいリンクも開けない。応答は private, no-store
+  ---
+  duration_ms: 2414.636134
+  type: 'test'
+  ...
+# Subtest: ¥3,000 の返金：解析・完全解析とも revoked。両方の閲覧が、発行済みのリンクでも不可
+ok 560 - ¥3,000 の返金：解析・完全解析とも revoked。両方の閲覧が、発行済みのリンクでも不可
+  ---
+  duration_ms: 3259.031653
+  type: 'test'
+  ...
+# Subtest: ゲストの返金：Cookie の端末の閲覧リンク（発行済み）も開けない。引き継ぎ後はゲストのリンクを使えない
+ok 561 - ゲストの返金：Cookie の端末の閲覧リンク（発行済み）も開けない。引き継ぎ後はゲストのリンクを使えない
+  ---
+  duration_ms: 3023.388846
+  type: 'test'
+  ...
+# Subtest: 未払いの Webhook（checkout.session.completed・payment_status=unpaid）：権利・生成物を作らない
+ok 562 - 未払いの Webhook（checkout.session.completed・payment_status=unpaid）：権利・生成物を作らない
+  ---
+  duration_ms: 1968.787138
+  type: 'test'
+  ...
+# Subtest: 閲覧リンクの流用：別の本人・別の記録・別の診断結果・不明な種類・sid の無い再発行トークンは開けない
+ok 563 - 閲覧リンクの流用：別の本人・別の記録・別の診断結果・不明な種類・sid の無い再発行トークンは開けない
+  ---
+  duration_ms: 2515.529103
+  type: 'test'
+  ...
+# Subtest: 旧 ¥1,000：運営者が停止すると旧形式リンク・マイページ（本人に結び付け済み）とも閲覧不可、復帰で戻る。取消は最終。API のロールは操作できない
+ok 564 - 旧 ¥1,000：運営者が停止すると旧形式リンク・マイページ（本人に結び付け済み）とも閲覧不可、復帰で戻る。取消は最終。API のロールは操作できない
+  ---
+  duration_ms: 2746.534009
+  type: 'test'
+  ...
+# Subtest: C6（ゲスト）：最終の失敗は「作成できませんでした」。この端末（Cookie）からだけ同じ注文で作り直せる。引き継ぎ後はマイページで
+ok 565 - C6（ゲスト）：最終の失敗は「作成できませんでした」。この端末（Cookie）からだけ同じ注文で作り直せる。引き継ぎ後はマイページで
+  ---
+  duration_ms: 2594.731633
+  type: 'test'
+  ...
+# Subtest: ロックの順：支払いの確定は 結果グループ → 記録 → 注文の行 の順に取る（注文の作成・引き継ぎと同じ順）
+ok 566 - ロックの順：支払いの確定は 結果グループ → 記録 → 注文の行 の順に取る（注文の作成・引き継ぎと同じ順）
+  ---
+  duration_ms: 1.027597
+  type: 'test'
+  ...
+# Subtest: 並行：引き継ぎと支払いの確定（Webhook の再送）が重なっても、デッドロックせず1つの状態に揃う
+ok 567 - 並行：引き継ぎと支払いの確定（Webhook の再送）が重なっても、デッドロックせず1つの状態に揃う
+  ---
+  duration_ms: 5258.704082
+  type: 'test'
+  ...
+# Subtest: 並行：同じ診断結果の2つの記録で、支払いの確定と別の記録の注文の作成が重なっても、デッドロックせず二重に買えない
+ok 568 - 並行：同じ診断結果の2つの記録で、支払いの確定と別の記録の注文の作成が重なっても、デッドロックせず二重に買えない
+  ---
+  duration_ms: 6202.716954
+  type: 'test'
+  ...
+# Subtest: 並行（決定的）：記録のロックを持つ処理（引き継ぎ・注文の作成）が注文の行を取る時、支払いの確定は記録のロックを先に待つ（デッドロックしない）
+ok 569 - 並行（決定的）：記録のロックを持つ処理（引き継ぎ・注文の作成）が注文の行を取る時、支払いの確定は記録のロックを先に待つ（デッドロックしない）
+  ---
+  duration_ms: 2519.04716
+  type: 'test'
+  ...
+# Subtest: 固有リンク：診断完了で発行（256bit・DB はハッシュだけ）→ 同じ診断結果を復元。不正・失効・削除済みは 404（情報を出さない）
+ok 570 - 固有リンク：診断完了で発行（256bit・DB はハッシュだけ）→ 同じ診断結果を復元。不正・失効・削除済みは 404（情報を出さない）
+  ---
+  duration_ms: 1822.257648
+  type: 'test'
+  ...
+# Subtest: 固有リンク：引き継いだ後も同じ記録（重複しない）・無料結果は開ける・ゲストとしての購入は断る。返金後は有料部分を開けない
+ok 571 - 固有リンク：引き継いだ後も同じ記録（重複しない）・無料結果は開ける・ゲストとしての購入は断る。返金後は有料部分を開けない
+  ---
+  duration_ms: 2835.273669
+  type: 'test'
+  ...
+# Subtest: 固有リンクの整理（運営者）：期限切れのリンクと、購入の無い古いゲストの記録だけを消す。購入のある記録は残す。API のロールは実行できない
+ok 572 - 固有リンクの整理（運営者）：期限切れのリンクと、購入の無い古いゲストの記録だけを消す。購入のある記録は残す。API のロールは実行できない
+  ---
+  duration_ms: 2131.390333
+  type: 'test'
+  ...
+# Subtest: 固有リンクの大量作成の防止：同じ秘密値は冪等（連打・再送で記録もリンクも増えない）・入力の制限・接続元ごとに 10 分 10 件で 429・IP は保存もログもしない
+ok 573 - 固有リンクの大量作成の防止：同じ秘密値は冪等（連打・再送で記録もリンクも増えない）・入力の制限・接続元ごとに 10 分 10 件で 429・IP は保存もログもしない
+  ---
+  duration_ms: 2360.742403
+  type: 'test'
+  ...
+# Subtest: ログインなしの購入は買えることを優先：別のブラウザで購入済みの診断結果も新しい記録で買える・別のタブで放置された決済は閉じて作り直す
+ok 574 - ログインなしの購入は買えることを優先：別のブラウザで購入済みの診断結果も新しい記録で買える・別のタブで放置された決済は閉じて作り直す
+  ---
+  duration_ms: 2594.123311
+  type: 'test'
+  ...
+# Subtest: 違う診断結果なら買える：ログイン中（マイページ）は前の結果の購入に関係なく ¥1,000・¥3,000 を作れる。同じ診断結果は重ねて売らない
+ok 575 - 違う診断結果なら買える：ログイン中（マイページ）は前の結果の購入に関係なく ¥1,000・¥3,000 を作れる。同じ診断結果は重ねて売らない
+  ---
+  duration_ms: 3256.610339
+  type: 'test'
+  ...
+# Subtest: 同じ診断結果のログイン中の別ユーザー A・B：A の ¥3,000 は B に付かない。B は ¥1,000・¥3,000 を買える。A は重ねて買えない
+ok 576 - 同じ診断結果のログイン中の別ユーザー A・B：A の ¥3,000 は B に付かない。B は ¥1,000・¥3,000 を買える。A は重ねて買えない
+  ---
+  duration_ms: 3493.902348
+  type: 'test'
+  ...
+# Subtest: 同じ診断結果の別の人が同時に決済を始める（ログイン中 A・B、ゲスト C・D）：互いに止めず、別の注文・別の記録
+ok 577 - 同じ診断結果の別の人が同時に決済を始める（ログイン中 A・B、ゲスト C・D）：互いに止めず、別の注文・別の記録
+  ---
+  duration_ms: 2577.377297
+  type: 'test'
+  ...
+# Subtest: 総当たり：ログイン中に結果ページから買う（ゲストの決済）：決済画面のメールはアカウントの確認済みメール → マイページで引き継げる。ログインを確かめられなくても売る
+ok 578 - 総当たり：ログイン中に結果ページから買う（ゲストの決済）：決済画面のメールはアカウントの確認済みメール → マイページで引き継げる。ログインを確かめられなくても売る
+  ---
+  duration_ms: 2527.384391
+  type: 'test'
+  ...
+# Subtest: 監査：共有された結果リンクで、別の人が決済を放置・支払っても、持ち主の購入を見せない・使わせない
+ok 579 - 監査：共有された結果リンクで、別の人が決済を放置・支払っても、持ち主の購入を見せない・使わせない
+  ---
+  duration_ms: 2149.738965
+  type: 'test'
+  ...
+# Subtest: 監査：ログイン中に結果ページから買う：アカウントで同じ結果を購入済み・決済中なら、ゲストとして重ねて売らない（マイページへ）
+ok 580 - 監査：ログイン中に結果ページから買う：アカウントで同じ結果を購入済み・決済中なら、ゲストとして重ねて売らない（マイページへ）
+  ---
+  duration_ms: 2056.5398
+  type: 'test'
+  ...
+# Subtest: 監査：Cookie の上限を超えても、支払い済みの購入をこの端末から失わない
+ok 581 - 監査：Cookie の上限を超えても、支払い済みの購入をこの端末から失わない
+  ---
+  duration_ms: 5562.513191
+  type: 'test'
+  ...
+# Subtest: 監査：この端末で引き継いだ結果を、ログアウトした状態で開いた：ゲストとして売り直さない（マイページで開く）
+ok 582 - 監査：この端末で引き継いだ結果を、ログアウトした状態で開いた：ゲストとして売り直さない（マイページで開く）
+  ---
+  duration_ms: 2216.255709
+  type: 'test'
+  ...
+# Subtest: 監査：反映しなかった注文（中止後の遅れた支払い）への異議申し立ては、記録だけ残して Webhook を失敗させない
+ok 583 - 監査：反映しなかった注文（中止後の遅れた支払い）への異議申し立ては、記録だけ残して Webhook を失敗させない
+  ---
+  duration_ms: 1711.268835
+  type: 'test'
+  ...
+# Subtest: 再監査：ログイン中の返金の後、目標を選び直して ¥3,000・¥2,000 を買い直せる
+ok 584 - 再監査：ログイン中の返金の後、目標を選び直して ¥3,000・¥2,000 を買い直せる
+  ---
+  duration_ms: 3132.559528
+  type: 'test'
+  ...
+# Subtest: 再監査：持ち主でない端末（他人の記録に未払いの注文だけを持つ）は、完全解析を開けない・作り直せない
+ok 585 - 再監査：持ち主でない端末（他人の記録に未払いの注文だけを持つ）は、完全解析を開けない・作り直せない
+  ---
+  duration_ms: 1991.96463
+  type: 'test'
+  ...
+# Subtest: 再監査：解析レポートの支払いで異議申し立てに負けた記録では、¥3,000 も売らない
+ok 586 - 再監査：解析レポートの支払いで異議申し立てに負けた記録では、¥3,000 も売らない
+  ---
+  duration_ms: 1712.370309
+  type: 'test'
+  ...
+# Subtest: 再々監査：申込の切り替え（¥1,000 → ¥3,000 → ¥1,000）の後に支払い・返金しても、同じ記録でもう一度買える（前の注文の鍵と重ならない）
+ok 587 - 再々監査：申込の切り替え（¥1,000 → ¥3,000 → ¥1,000）の後に支払い・返金しても、同じ記録でもう一度買える（前の注文の鍵と重ならない）
+  ---
+  duration_ms: 4388.926157
+  type: 'test'
+  ...
+# Subtest: 再々監査：Cookie の上限を超えた時、決済中の注文の印より先に、閉じた未払いの注文の印を外す
+ok 588 - 再々監査：Cookie の上限を超えた時、決済中の注文の印より先に、閉じた未払いの注文の印を外す
+  ---
+  duration_ms: 5863.589104
+  type: 'test'
+  ...
+# Subtest: 1つだけ：ゲストで ¥1,000 の画面を開いたまま ¥3,000 を選ぶ → ¥1,000 の画面は Stripe で閉じ、¥3,000 を買える。逆も同じ
+ok 589 - 1つだけ：ゲストで ¥1,000 の画面を開いたまま ¥3,000 を選ぶ → ¥1,000 の画面は Stripe で閉じ、¥3,000 を買える。逆も同じ
+  ---
+  duration_ms: 1995.124813
+  type: 'test'
+  ...
+# Subtest: 1つだけ：ログイン中（マイページ）の ¥3,000 の画面を開いたまま、結果ページで ¥1,000 を選ぶ → マイページの画面を閉じて ¥1,000 を買える
+ok 590 - 1つだけ：ログイン中（マイページ）の ¥3,000 の画面を開いたまま、結果ページで ¥1,000 を選ぶ → マイページの画面を閉じて ¥1,000 を買える
+  ---
+  duration_ms: 2071.757281
+  type: 'test'
+  ...
+# Subtest: 決済画面の期限：注文の作成から約24時間（Stripe の上限 24 時間から5分の余裕）。同じ注文の再試行は同じ画面を受け取る
+ok 591 - 決済画面の期限：注文の作成から約24時間（Stripe の上限 24 時間から5分の余裕）。同じ注文の再試行は同じ画面を受け取る
+  ---
+  duration_ms: 1875.408475
+  type: 'test'
+  ...
+# Subtest: ログイン中：作ったまま 4 分を過ぎた注文（画面を渡せなかった）は片付けて、新しい注文で決済画面を作る
+ok 592 - ログイン中：作ったまま 4 分を過ぎた注文（画面を渡せなかった）は片付けて、新しい注文で決済画面を作る
+  ---
+  duration_ms: 2100.808838
+  type: 'test'
+  ...
+# Subtest: 引き継ぎの間に別のタブでマイページの決済画面を開いた：引き継いだ後にその画面を閉じる（持っている物を払わせない）
+ok 593 - 引き継ぎの間に別のタブでマイページの決済画面を開いた：引き継いだ後にその画面を閉じる（持っている物を払わせない）
+  ---
+  duration_ms: 2552.478504
+  type: 'test'
+  ...
+# Subtest: ログイン中：別の端末・消えた Cookie でも、このアカウントのメールで払った未引き継ぎの購入がある結果は重ねて売らない
+ok 594 - ログイン中：別の端末・消えた Cookie でも、このアカウントのメールで払った未引き継ぎの購入がある結果は重ねて売らない
+  ---
+  duration_ms: 2974.437342
+  type: 'test'
+  ...
+# Subtest: ログイン中：異議申し立てで負けた ¥1,000 の記録は ¥3,000 を出さない（押しても進めないボタンを出さない）
+ok 595 - ログイン中：異議申し立てで負けた ¥1,000 の記録は ¥3,000 を出さない（押しても進めないボタンを出さない）
+  ---
+  duration_ms: 2704.013114
+  type: 'test'
+  ...
+# Subtest: Cookie の上限：引き継ぎ済みの記録の印は、決済中の注文の印より後まで残す（ログアウト中に引き継ぎ済みの結果を売り直さない）
+ok 596 - Cookie の上限：引き継ぎ済みの記録の印は、決済中の注文の印より後まで残す（ログアウト中に引き継ぎ済みの結果を売り直さない）
+  ---
+  duration_ms: 5884.55506
+  type: 'test'
+  ...
+# Subtest: 表示：見出し・必須の2項目・一括チェック・説明文（ボタン直前）・ボタン2つ。メール専用チェックは無い
+ok 597 - 表示：見出し・必須の2項目・一括チェック・説明文（ボタン直前）・ボタン2つ。メール専用チェックは無い
+  ---
+  duration_ms: 303.778709
+  type: 'test'
+  ...
+# Subtest: 説明文は読める大きさ（13px以上）とコントラスト（4.5:1以上）
+ok 598 - 説明文は読める大きさ（13px以上）とコントラスト（4.5:1以上）
+  ---
+  duration_ms: 144.877835
+  type: 'test'
+  ...
+# Subtest: 必須2項目がそろうまで同意ボタンは押せない。一括チェックは2項目を切り替え、片方だけなら中間表示
+ok 599 - 必須2項目がそろうまで同意ボタンは押せない。一括チェックは2項目を切り替え、片方だけなら中間表示
+  ---
+  duration_ms: 319.415992
+  type: 'test'
+  ...
+# Subtest: キーボード：初期フォーカスは一括チェック、Space で選べる、Tab／Shift+Tab はモーダル内で循環、Esc では閉じない
+ok 600 - キーボード：初期フォーカスは一括チェック、Space で選べる、Tab／Shift+Tab はモーダル内で循環、Esc では閉じない
+  ---
+  duration_ms: 169.066336
+  type: 'test'
+  ...
+# Subtest: 390px：横にはみ出さない・ボタンは44px以上・320pxでも収まる
+ok 601 - 390px：横にはみ出さない・ボタンは44px以上・320pxでも収まる
+  ---
+  duration_ms: 220.018655
+  type: 'test'
+  ...
+# Subtest: 規約リンクを開いて戻っても選択を維持（新しいタブ・再読込のどちらでも）
+ok 602 - 規約リンクを開いて戻っても選択を維持（新しいタブ・再読込のどちらでも）
+  ---
+  duration_ms: 1372.266786
+  type: 'test'
+  ...
+# Subtest: 二重クリックでも記録は1回。完了したら閉じて accepted、一時保持は消える
+ok 603 - 二重クリックでも記録は1回。完了したら閉じて accepted、一時保持は消える
+  ---
+  duration_ms: 366.728134
+  type: 'test'
+  ...
+# Subtest: 記録に失敗したらモーダル内にエラーを出し、閉じずに再試行できる
+ok 604 - 記録に失敗したらモーダル内にエラーを出し、閉じずに再試行できる
+  ---
+  duration_ms: 532.195622
+  type: 'test'
+  ...
+# Subtest: いいえ：declined で閉じる
+ok 605 - いいえ：declined で閉じる
+  ---
+  duration_ms: 128.51584
+  type: 'test'
+  ...
+# Subtest: マイページ：新規ユーザーは登録完了モーダル → いいえでサインアウト・ログイン画面・pending は残る
+ok 606 - マイページ：新規ユーザーは登録完了モーダル → いいえでサインアウト・ログイン画面・pending は残る
+  ---
+  duration_ms: 255.561357
+  type: 'test'
+  ...
+# Subtest: マイページ：同意 → 記録 → 保存 → Kit 同期（Kit 障害でも記録は表示まで進む）
+ok 607 - マイページ：同意 → 記録 → 保存 → Kit 同期（Kit 障害でも記録は表示まで進む）
+  ---
+  duration_ms: 352.120664
+  type: 'test'
+  ...
+# Subtest: マイページ：既存ユーザー（completed／legacy_exempt）にはモーダルを出さない
+ok 608 - マイページ：既存ユーザー（completed／legacy_exempt）にはモーダルを出さない
+  ---
+  duration_ms: 438.312163
+  type: 'test'
+  ...
+# Subtest: 古い画面：unsupported_consent_version は専用の案内と再読み込みボタン。同意済みとは扱わず、一般のエラー文にしない
+ok 609 - 古い画面：unsupported_consent_version は専用の案内と再読み込みボタン。同意済みとは扱わず、一般のエラー文にしない
+  ---
+  duration_ms: 301.726388
+  type: 'test'
+  ...
+# Subtest: 古い画面の案内：320px で横にはみ出さず、ボタンは44px以上
+ok 610 - 古い画面の案内：320px で横にはみ出さず、ボタンは44px以上
+  ---
+  duration_ms: 206.580298
+  type: 'test'
+  ...
+# Subtest: 古い画面の案内：390px で横にはみ出さず、ボタンは44px以上
+ok 611 - 古い画面の案内：390px で横にはみ出さず、ボタンは44px以上
+  ---
+  duration_ms: 189.422033
+  type: 'test'
+  ...
+# Subtest: マイページ：DB が旧い同意版を断ったら専用の案内。保存・Kit 同期はしない。GA4・console に同意版や個人情報を出さない
+ok 612 - マイページ：DB が旧い同意版を断ったら専用の案内。保存・Kit 同期はしない。GA4・console に同意版や個人情報を出さない
+  ---
+  duration_ms: 301.917843
+  type: 'test'
+  ...
+# Subtest: マイページ：通常の新版の登録は従来どおり成功（規約・プライバシーとも 2026-10-21 を送る）。GA4・console に同意版を出さない
+ok 613 - マイページ：通常の新版の登録は従来どおり成功（規約・プライバシーとも 2026-10-21 を送る）。GA4・console に同意版を出さない
+  ---
+  duration_ms: 273.89894
+  type: 'test'
+  ...
+# Subtest: 新規（google）：認証 → モーダル → 同意記録 → v1・v2 保存 → /api/subscribe の順
+ok 614 - 新規（google）：認証 → モーダル → 同意記録 → v1・v2 保存 → /api/subscribe の順
+  ---
+  duration_ms: 52.871652
+  type: 'test'
+  ...
+# Subtest: 既存（google）再ログイン：モーダルを出さず、同意を記録せず、保存だけ行う
+ok 615 - 既存（google）再ログイン：モーダルを出さず、同意を記録せず、保存だけ行う
+  ---
+  duration_ms: 101.285002
+  type: 'test'
+  ...
+# Subtest: 新規（x）：認証 → モーダル → 同意記録 → v1・v2 保存 → /api/subscribe の順
+ok 616 - 新規（x）：認証 → モーダル → 同意記録 → v1・v2 保存 → /api/subscribe の順
+  ---
+  duration_ms: 46.264405
+  type: 'test'
+  ...
+# Subtest: 既存（x）再ログイン：モーダルを出さず、同意を記録せず、保存だけ行う
+ok 617 - 既存（x）再ログイン：モーダルを出さず、同意を記録せず、保存だけ行う
+  ---
+  duration_ms: 98.265875
+  type: 'test'
+  ...
+# Subtest: 新規（email）：認証 → モーダル → 同意記録 → v1・v2 保存 → /api/subscribe の順
+ok 618 - 新規（email）：認証 → モーダル → 同意記録 → v1・v2 保存 → /api/subscribe の順
+  ---
+  duration_ms: 47.80314
+  type: 'test'
+  ...
+# Subtest: 既存（email）再ログイン：モーダルを出さず、同意を記録せず、保存だけ行う
+ok 619 - 既存（email）再ログイン：モーダルを出さず、同意を記録せず、保存だけ行う
+  ---
+  duration_ms: 92.946552
+  type: 'test'
+  ...
+# Subtest: メールOTP（ページ遷移なし）：保存ボタンからの保存も登録完了を待ち、モーダルは1回だけ
+ok 620 - メールOTP（ページ遷移なし）：保存ボタンからの保存も登録完了を待ち、モーダルは1回だけ
+  ---
+  duration_ms: 93.155167
+  type: 'test'
+  ...
+# Subtest: いいえ：サインアウト・保存しない・pending は残す・Kit を呼ばない／次回ログインで再びモーダル
+ok 621 - いいえ：サインアウト・保存しない・pending は残す・Kit を呼ばない／次回ログインで再びモーダル
+  ---
+  duration_ms: 92.872814
+  type: 'test'
+  ...
+# Subtest: 同意後は二度と表示されない（同じページの再通知・再読込後の INITIAL_SESSION）
+ok 622 - 同意後は二度と表示されない（同じページの再通知・再読込後の INITIAL_SESSION）
+  ---
+  duration_ms: 186.94457
+  type: 'test'
+  ...
+# Subtest: 二重：SIGNED_IN と INITIAL_SESSION が同時でも、モーダル・同意記録・Kit 同期は1回
+ok 623 - 二重：SIGNED_IN と INITIAL_SESSION が同時でも、モーダル・同意記録・Kit 同期は1回
+  ---
+  duration_ms: 58.505916
+  type: 'test'
+  ...
+# Subtest: Kit 障害：登録と診断保存は成功のまま（pending は消える・例外にしない）
+ok 624 - Kit 障害：登録と診断保存は成功のまま（pending は消える・例外にしない）
+  ---
+  duration_ms: 141.09601
+  type: 'test'
+  ...
+# Subtest: Kit 再送：失敗から24時間未満の再ログインでは呼ばない／24時間以上・3回未満なら呼ぶ
+ok 625 - Kit 再送：失敗から24時間未満の再ログインでは呼ばない／24時間以上・3回未満なら呼ぶ
+  ---
+  duration_ms: 146.888553
+  type: 'test'
+  ...
+# Subtest: fail-closed：profiles を読めない・行が無い・値が想定外・モーダルが無いなら、登録済み扱いにせず保存しない
+ok 626 - fail-closed：profiles を読めない・行が無い・値が想定外・モーダルが無いなら、登録済み扱いにせず保存しない
+  ---
+  duration_ms: 211.798339
+  type: 'test'
+  ...
+# Subtest: 同意の記録に失敗したら登録済み扱いにしない（保存しない・pending は残す）
+ok 627 - 同意の記録に失敗したら登録済み扱いにしない（保存しない・pending は残す）
+  ---
+  duration_ms: 57.92535
+  type: 'test'
+  ...
+# Subtest: v2 の保存ボタン：登録完了前に「いいえ」なら保存せず registration=declined を返す
+ok 628 - v2 の保存ボタン：登録完了前に「いいえ」なら保存せず registration=declined を返す
+  ---
+  duration_ms: 1.388681
+  type: 'test'
+  ...
+# Subtest: DB 側でも登録完了前の保存は拒否される（onboarding_required を分類する）
+ok 629 - DB 側でも登録完了前の保存は拒否される（onboarding_required を分類する）
+  ---
+  duration_ms: 1.497114
+  type: 'test'
+  ...
+# Subtest: newsletterSyncDue：判定表（legacy_exempt・required は対象外）
+ok 630 - newsletterSyncDue：判定表（legacy_exempt・required は対象外）
+  ---
+  duration_ms: 1.140429
+  type: 'test'
+  ...
+# Subtest: 旧仕様の一時保持（pendingNewsletterConsent_v1）は読み込み時に消える
+ok 631 - 旧仕様の一時保持（pendingNewsletterConsent_v1）は読み込み時に消える
+  ---
+  duration_ms: 0.738096
+  type: 'test'
+  ...
+# Subtest: 画面：index・mypage は登録完了モーダルを diagnosis-save.js の後に読み込む。結果画面にメール案内のチェックボックスは無い
+ok 632 - 画面：index・mypage は登録完了モーダルを diagnosis-save.js の後に読み込む。結果画面にメール案内のチェックボックスは無い
+  ---
+  duration_ms: 4.066775
+  type: 'test'
+  ...
+# Subtest: プライバシーポリシー：任意チェックの旧説明が無く、配信内容・Kit・停止方法・版を明記
+ok 633 - プライバシーポリシー：任意チェックの旧説明が無く、配信内容・Kit・停止方法・版を明記
+  ---
+  duration_ms: 0.331263
+  type: 'test'
+  ...
+# Subtest: 診断結果：A ¥1,000・B ¥3,000 を常に出し、A は購入対象トークンと商品だけで op=buy。同じタブで Stripe へ（コード・記録 ID を送らない）
+ok 634 - 診断結果：A ¥1,000・B ¥3,000 を常に出し、A は購入対象トークンと商品だけで op=buy。同じタブで Stripe へ（コード・記録 ID を送らない）
+  ---
+  duration_ms: 6067.893374
+  type: 'test'
+  ...
+# Subtest: 診断結果：B は共通の MENTOR 目標の選択を通ってから op=buy（目標は注文に固定）。購入前に「別商品・本文は含まれない」を示す。やめると決済しない
+ok 635 - 診断結果：B は共通の MENTOR 目標の選択を通ってから op=buy（目標は注文に固定）。購入前に「別商品・本文は含まれない」を示す。やめると決済しない
+  ---
+  duration_ms: 3315.150126
+  type: 'test'
+  ...
+# Subtest: 診断結果：サンプルへは同じタブ・購入対象トークンはフラグメント（クエリ・UUID・コードなし）。販売停止中は押せない「準備中」
+ok 636 - 診断結果：サンプルへは同じタブ・購入対象トークンはフラグメント（クエリ・UUID・コードなし）。販売停止中は押せない「準備中」
+  ---
+  duration_ms: 9978.666032
+  type: 'test'
+  ...
+# Subtest: サンプル：直接開くと「まず元素診断を受ける」だけ（申込なし）。購入対象トークン付きは記録の概要と、そのサンプルの商品の申込（解析レポートのサンプルは完全解析を折りたたみの中に）。トークンは URL から消す
+ok 637 - サンプル：直接開くと「まず元素診断を受ける」だけ（申込なし）。購入対象トークン付きは記録の概要と、そのサンプルの商品の申込（解析レポートのサンプルは完全解析を折りたたみの中に）。トークンは URL から消す
+  ---
+  duration_ms: 1506.829099
+  type: 'test'
+  ...
+# Subtest: サンプル：URL からトークンを消した後も、同じタブの再読み込み・決済画面からの「戻る」で同じ診断結果の申込のまま（「まず元素診断を受ける」に戻らない）
+ok 638 - サンプル：URL からトークンを消した後も、同じタブの再読み込み・決済画面からの「戻る」で同じ診断結果の申込のまま（「まず元素診断を受ける」に戻らない）
+  ---
+  duration_ms: 807.853689
+  type: 'test'
+  ...
+# Subtest: サンプル：URL にもタブにも購入の対象が無い時は、端末に残った別の診断結果（localStorage）を使わない（共有の端末で別の人の記録を買わせない）
+ok 639 - サンプル：URL にもタブにも購入の対象が無い時は、端末に残った別の診断結果（localStorage）を使わない（共有の端末で別の人の記録を買わせない）
+  ---
+  duration_ms: 538.882435
+  type: 'test'
+  ...
+# Subtest: 戻る（bfcache）で押せる状態へ戻した完全解析のボタンは、2段の文言（span）のまま
+ok 640 - 戻る（bfcache）で押せる状態へ戻した完全解析のボタンは、2段の文言（span）のまま
+  ---
+  duration_ms: 378.57961
+  type: 'test'
+  ...
+# Subtest: 購入完了：受け取り専用（状態・開く・リンクのコピー・登録。注釈なし）。ほかの商品の申込は出さない
+ok 641 - 購入完了：受け取り専用（状態・開く・リンクのコピー・登録。注釈なし）。ほかの商品の申込は出さない
+  ---
+  duration_ms: 325.219548
+  type: 'test'
+  ...
+# Subtest: 購入完了：決済から戻った時（?cs=）は、今の購入のレポートのリンクへそのまま進む。途中でやめた決済（支払い待ち）は一覧に出さない
+ok 642 - 購入完了：決済から戻った時（?cs=）は、今の購入のレポートのリンクへそのまま進む。途中でやめた決済（支払い待ち）は一覧に出さない
+  ---
+  duration_ms: 297.302879
+  type: 'test'
+  ...
+# Subtest: 固有リンク：開くたびに状態を確かめ、読める時は中継の画面を出さずにそのままレポートへ（アドレスは固有リンクのまま）。返金後は読めない。無効なリンクは無効と示す
+ok 643 - 固有リンク：開くたびに状態を確かめ、読める時は中継の画面を出さずにそのままレポートへ（アドレスは固有リンクのまま）。返金後は読めない。無効なリンクは無効と示す
+  ---
+  duration_ms: 1161.270839
+  type: 'test'
+  ...
+# Subtest: マイページ（表14）：登録なし／A のみ／B のみ／A・B の4つの状態。A は B を開けず、B は A を開けない
+ok 644 - マイページ（表14）：登録なし／A のみ／B のみ／A・B の4つの状態。A は B を開けず、B は A を開けない
+  ---
+  duration_ms: 1250.584124
+  type: 'test'
+  ...
+# Subtest: マイページ：返金した納品はその納品だけ止める（もう一方は読める・買い直せる）。B の作成中・失敗の表示
+ok 645 - マイページ：返金した納品はその納品だけ止める（もう一方は読める・買い直せる）。B の作成中・失敗の表示
+  ---
+  duration_ms: 725.669653
+  type: 'test'
+  ...
+# Subtest: マイページ：右上は「レポート」・シートの見出しは「この記録のレポート」。購入は共通の op=buy（記録の購入対象トークン）
+ok 646 - マイページ：右上は「レポート」・シートの見出しは「この記録のレポート」。購入は共通の op=buy（記録の購入対象トークン）
+  ---
+  duration_ms: 578.13853
+  type: 'test'
+  ...
+# Subtest: マイページ：登録した読むボタンは my-report-open（納品 ID だけ）で開く。購入時メール・Cookie の引き継ぎを呼ばない
+ok 647 - マイページ：登録した読むボタンは my-report-open（納品 ID だけ）で開く。購入時メール・Cookie の引き継ぎを呼ばない
+  ---
+  duration_ms: 430.384303
+  type: 'test'
+  ...
+# Subtest: C7：同じ利用者の SIGNED_IN 再通知（タブ復帰）では描き直さない（開いたシートを保つ・登録したレポートを取り直さない）
+ok 648 - C7：同じ利用者の SIGNED_IN 再通知（タブ復帰）では描き直さない（開いたシートを保つ・登録したレポートを取り直さない）
+  ---
+  duration_ms: 698.380127
+  type: 'test'
+  ...
+# Subtest: C7（iOS Safari 相当）：「決済画面へ移動しています…」のまま止めない（タブ復帰・戻る〔bfcache の pageshow〕で押せる状態へ戻す）
+ok 649 - C7（iOS Safari 相当）：「決済画面へ移動しています…」のまま止めない（タブ復帰・戻る〔bfcache の pageshow〕で押せる状態へ戻す）
+  ---
+  duration_ms: 1083.840047
+  type: 'test'
+  ...
+# Subtest: 完全解析の目標の選択（共通の画面）：Escape でやめる・320／390／1280px で横にはみ出さない・選択肢は 44px 以上
+ok 650 - 完全解析の目標の選択（共通の画面）：Escape でやめる・320／390／1280px で横にはみ出さない・選択肢は 44px 以上
+  ---
+  duration_ms: 9269.923492
+  type: 'test'
+  ...
+# Subtest: 登録：リンクの秘密値（このタブの sessionStorage）でログイン後に登録。「登録しました」／2回目は「登録済みです」。秘密値は URL・GA4 に出さない
+ok 651 - 登録：リンクの秘密値（このタブの sessionStorage）でログイン後に登録。「登録しました」／2回目は「登録済みです」。秘密値は URL・GA4 に出さない
+  ---
+  duration_ms: 1302.697136
+  type: 'test'
+  ...
+# Subtest: マイページの記録から申し込んで支払いから戻った：レポートの入口からマイページへ移り、確かめずにこのアカウントへ登録する（買っていない表示のまま残さない）
+ok 652 - マイページの記録から申し込んで支払いから戻った：レポートの入口からマイページへ移り、確かめずにこのアカウントへ登録する（買っていない表示のまま残さない）
+  ---
+  duration_ms: 222.815274
+  type: 'test'
+  ...
+# Subtest: マイページから申し込んだ印が残っていても、違う固有リンク（人から受け取ったリンクなど）は登録せず、そのまま開く
+ok 653 - マイページから申し込んだ印が残っていても、違う固有リンク（人から受け取ったリンクなど）は登録せず、そのまま開く
+  ---
+  duration_ms: 157.626982
+  type: 'test'
+  ...
+# Subtest: 解析レポート（固有リンク）の最下部：完全解析の欄はサンプルと「この診断結果で完全解析を作成する ¥3,000」だけ。「マイページに登録する」は PDF の保存の隣。注釈なし。¥2,000 なし
+ok 654 - 解析レポート（固有リンク）の最下部：完全解析の欄はサンプルと「この診断結果で完全解析を作成する ¥3,000」だけ。「マイページに登録する」は PDF の保存の隣。注釈なし。¥2,000 なし
+  ---
+  duration_ms: 451.711767
+  type: 'test'
+  ...
+# Subtest: 解析レポート：PDF を保存できる（申込・登録の欄があっても失敗しない）。警告ダイアログを出さない
+ok 655 - 解析レポート：PDF を保存できる（申込・登録の欄があっても失敗しない）。警告ダイアログを出さない
+  ---
+  duration_ms: 1601.668821
+  type: 'test'
+  ...
+# Subtest: 解析レポートのサンプル：PDF を保存できる（申込の欄・完全解析のボタンがあっても失敗しない）
+ok 656 - 解析レポートのサンプル：PDF を保存できる（申込の欄・完全解析のボタンがあっても失敗しない）
+  ---
+  duration_ms: 1623.080549
+  type: 'test'
+  ...
+# Subtest: OTP：誤ったコードの後もコードの画面のまま・同じ入力では自動で送り直さない・「あとN秒で再送できます」・最新のメールのコードへ案内
+ok 657 - OTP：誤ったコードの後もコードの画面のまま・同じ入力では自動で送り直さない・「あとN秒で再送できます」・最新のメールのコードへ案内
+  ---
+  duration_ms: 698.950875
+  type: 'test'
+  ...
+# Subtest: OTP：送信の上限（429）はコードの画面へ（短い間の上限と1時間の上限を分けて案内）。再送の 429 でもコードの画面のまま
+ok 658 - OTP：送信の上限（429）はコードの画面へ（短い間の上限と1時間の上限を分けて案内）。再送の 429 でもコードの画面のまま
+  ---
+  duration_ms: 750.148446
+  type: 'test'
+  ...
+# Subtest: 320・390・1280px：診断結果・サンプル・購入完了・固有リンク・マイページで横スクロールなし
+ok 659 - 320・390・1280px：診断結果・サンプル・購入完了・固有リンク・マイページで横スクロールなし
+  ---
+  duration_ms: 8747.293588
+  type: 'test'
+  ...
+# Subtest: マイページ：ボタンの高さ（390px）・未購入は完全解析を「その先を見る」の中に・A 購入済みは完全解析が上（元素の色＋金）・登録した A／B が INSIGHT・COMPLETE に反映
+ok 660 - マイページ：ボタンの高さ（390px）・未購入は完全解析を「その先を見る」の中に・A 購入済みは完全解析が上（元素の色＋金）・登録した A／B が INSIGHT・COMPLETE に反映
+  ---
+  duration_ms: 939.359451
+  type: 'test'
+  ...
+# Subtest: マイページ：同じ結果のゲスト記録で買ったレポートは自分の記録に寄せる（¥1,000 の記録と2枚にならない）・シートは購入済みに価格を出さない
+ok 661 - マイページ：同じ結果のゲスト記録で買ったレポートは自分の記録に寄せる（¥1,000 の記録と2枚にならない）・シートは購入済みに価格を出さない
+  ---
+  duration_ms: 351.05046
+  type: 'test'
+  ...
+# Subtest: マイページ：完全解析だけ購入（作成中）でも記録章が目覚め、作成が終わると自動で「完全解析を読む」に変わる
+ok 662 - マイページ：完全解析だけ購入（作成中）でも記録章が目覚め、作成が終わると自動で「完全解析を読む」に変わる
+  ---
+  duration_ms: 15339.722811
+  type: 'test'
+  ...
+# Subtest: マイページ：解析レポートと完全解析の両方で COMPLETE・片方だけは INSIGHT
+ok 663 - マイページ：解析レポートと完全解析の両方で COMPLETE・片方だけは INSIGHT
+  ---
+  duration_ms: 866.063435
+  type: 'test'
+  ...
+# Subtest: 結果ページ：マイページの記録（\#rec=）から開いた時は、保存の欄を「マイページに登録済み」にする
+ok 664 - 結果ページ：マイページの記録（\#rec=）から開いた時は、保存の欄を「マイページに登録済み」にする
+  ---
+  duration_ms: 623.962697
+  type: 'test'
+  ...
+# Subtest: 完全解析：開いた時のアドレスに期限のない固有リンク（\#t=）が付く・期限切れで戻っても固有リンクで開き直せる
+ok 665 - 完全解析：開いた時のアドレスに期限のない固有リンク（\#t=）が付く・期限切れで戻っても固有リンクで開き直せる
+  ---
+  duration_ms: 713.036705
+  type: 'test'
+  ...
+# Subtest: マイページ：完全解析を申し込める記録だけ、購入ボタンの上に「この先にあるもの」の案内を出す
+ok 666 - マイページ：完全解析を申し込める記録だけ、購入ボタンの上に「この先にあるもの」の案内を出す
+  ---
+  duration_ms: 941.751118
+  type: 'test'
+  ...
+# Subtest: マイページ：完全解析だけ購入の記録は「解析レポートを購入すると、上の4つの深層がひらきます。」
+ok 667 - マイページ：完全解析だけ購入の記録は「解析レポートを購入すると、上の4つの深層がひらきます。」
+  ---
+  duration_ms: 490.668206
+  type: 'test'
+  ...
+# Subtest: マイページ：右上は未購入が1つでもあれば「アップグレード」・すべて購入済みなら「レポート」。記録の選択はわかる言葉で
+ok 668 - マイページ：右上は未購入が1つでもあれば「アップグレード」・すべて購入済みなら「レポート」。記録の選択はわかる言葉で
+  ---
+  duration_ms: 1368.008365
+  type: 'test'
+  ...
+# Subtest: A案：結果ページの表示順序（TOP3 → 共有 → 4ブロック → 比較表 → ¥1,000 → 完全解析 → 保存カード）。無料結果の区切り文言なし
+ok 669 - A案：結果ページの表示順序（TOP3 → 共有 → 4ブロック → 比較表 → ¥1,000 → 完全解析 → 保存カード）。無料結果の区切り文言なし
+  ---
+  duration_ms: 1442.265975
+  type: 'test'
+  ...
+# Subtest: A案：各ブロックの「ロックを解除」は ¥1,000 の解析レポートの購入へ直接進む（選択モーダルを出さない）
+ok 670 - A案：各ブロックの「ロックを解除」は ¥1,000 の解析レポートの購入へ直接進む（選択モーダルを出さない）
+  ---
+  duration_ms: 2475.742726
+  type: 'test'
+  ...
+# Subtest: A案：完全解析は閉じた状態でも、¥3,000・全46ページ・MIRROR/HIDDEN SHAPE/MENTOR・サンプルへの入口が見える。サンプルは details の外で、開閉と干渉しない
+ok 671 - A案：完全解析は閉じた状態でも、¥3,000・全46ページ・MIRROR/HIDDEN SHAPE/MENTOR・サンプルへの入口が見える。サンプルは details の外で、開閉と干渉しない
+  ---
+  duration_ms: 3083.092595
+  type: 'test'
+  ...
+# Subtest: 購入ボタン（正常）：1回押すと op=buy が1回、同じタブで Stripe の決済画面へ。エラーの案内は出さない
+ok 672 - 購入ボタン（正常）：1回押すと op=buy が1回、同じタブで Stripe の決済画面へ。エラーの案内は出さない
+  ---
+  duration_ms: 3062.856581
+  type: 'test'
+  ...
+# Subtest: 購入ボタン（通信失敗）：buy の通信が切れても待機表示を解除し、案内を出して、もう一度押せる（再送は同じ購入操作で1回だけ）
+ok 673 - 購入ボタン（通信失敗）：buy の通信が切れても待機表示を解除し、案内を出して、もう一度押せる（再送は同じ購入操作で1回だけ）
+  ---
+  duration_ms: 3031.564461
+  type: 'test'
+  ...
+# Subtest: 購入ボタン（例外）：購入対象の取得が例外で拒否されても、待機表示を解除し、案内を出して、もう一度押せる
+ok 674 - 購入ボタン（例外）：購入対象の取得が例外で拒否されても、待機表示を解除し、案内を出して、もう一度押せる
+  ---
+  duration_ms: 3112.249341
+  type: 'test'
+  ...
+# Subtest: 購入ボタン：決済画面へ移動を始めた後は、例外の後処理で押せる状態へ戻さない（移動中のボタンに触れない）
+ok 675 - 購入ボタン：決済画面へ移動を始めた後は、例外の後処理で押せる状態へ戻さない（移動中のボタンに触れない）
+  ---
+  duration_ms: 336.033332
+  type: 'test'
+  ...
+# Subtest: 計測：section_reached_about は、紹介セクションに届いた時だけ1回。最初の少しのスクロールでは発火しない（非表示の運営者情報モーダルの id=about は使わない）
+ok 676 - 計測：section_reached_about は、紹介セクションに届いた時だけ1回。最初の少しのスクロールでは発火しない（非表示の運営者情報モーダルの id=about は使わない）
+  ---
+  duration_ms: 792.248143
+  type: 'test'
+  ...
+# Subtest: 遅延：指が触れた時点で購入対象の取得を始め、押した後は待たずに op=buy へ（取得は1回だけ）
+ok 677 - 遅延：指が触れた時点で購入対象の取得を始め、押した後は待たずに op=buy へ（取得は1回だけ）
+  ---
+  duration_ms: 3180.644712
+  type: 'test'
+  ...
+# Subtest: マイページ：ポインターが乗った時点で記録の購入対象を取得し、押した後は op=buy だけ（取得は1回）
+ok 678 - マイページ：ポインターが乗った時点で記録の購入対象を取得し、押した後は op=buy だけ（取得は1回）
+  ---
+  duration_ms: 600.956128
+  type: 'test'
+  ...
+# Subtest: マイページ：購入対象の取得が失敗・例外でも、押せない表示のまま止まらず、もう一度押せる
+ok 679 - マイページ：購入対象の取得が失敗・例外でも、押せない表示のまま止まらず、もう一度押せる
+  ---
+  duration_ms: 565.523928
+  type: 'test'
+  ...
+# Subtest: report_sample.html は report.html から作った最新のもの（最新版 ETI v2 の解析レポート・エニアグラムの欄なし）
+ok 680 - report_sample.html は report.html から作った最新のもの（最新版 ETI v2 の解析レポート・エニアグラムの欄なし）
+  ---
+  duration_ms: 8.367246
+  type: 'test'
+  ...
+# Subtest: 診断完了 → 固有リンク（/result\#r=）→ 再読み込み・新しいタブで同じ診断結果。案内は控えめに表示。秘密値を HTML・GA4・console に出さない
+ok 681 - 診断完了 → 固有リンク（/result\#r=）→ 再読み込み・新しいタブで同じ診断結果。案内は控えめに表示。秘密値を HTML・GA4・console に出さない
+  ---
+  duration_ms: 3768.360266
+  type: 'test'
+  ...
+# Subtest: 再診断はそれぞれ別の固有リンク。旧形式の ?code= から開いた結果には作らない。作成に失敗しても結果は使える（申込は購入の対象を作れるまで進めない）
+ok 682 - 再診断はそれぞれ別の固有リンク。旧形式の ?code= から開いた結果には作らない。作成に失敗しても結果は使える（申込は購入の対象を作れるまで進めない）
+  ---
+  duration_ms: 13302.153599
+  type: 'test'
+  ...
+# Subtest: 不正・失効・存在しない秘密値は「この診断結果は開けません」と TOP への導線だけ（情報を出さない）。一時的な失敗は再試行の案内
+ok 683 - 不正・失効・存在しない秘密値は「この診断結果は開けません」と TOP への導線だけ（情報を出さない）。一時的な失敗は再試行の案内
+  ---
+  duration_ms: 1228.253418
+  type: 'test'
+  ...
+# Subtest: Stripe でキャンセルして戻っても、購入完了ページから同じ固有リンクの結果へ戻り、すぐ買い直せる・戻る/進む・pageshow で結果を保つ
+ok 684 - Stripe でキャンセルして戻っても、購入完了ページから同じ固有リンクの結果へ戻り、すぐ買い直せる・戻る/進む・pageshow で結果を保つ
+  ---
+  duration_ms: 3515.92758
+  type: 'test'
+  ...
+# Subtest: 320・390・1280px：固有リンクの案内・開けない時の表示に横はみ出しがない
+ok 685 - 320・390・1280px：固有リンクの案内・開けない時の表示に横はみ出しがない
+  ---
+  duration_ms: 2454.357689
+  type: 'test'
+  ...
+# Subtest: 同じ診断結果を別の人・別の端末が購入済みでも、この端末に記録が無ければ未購入として ¥1,000・¥3,000 を売る（別の人の購入を表示しない）
+ok 686 - 同じ診断結果を別の人・別の端末が購入済みでも、この端末に記録が無ければ未購入として ¥1,000・¥3,000 を売る（別の人の購入を表示しない）
+  ---
+  duration_ms: 3064.638467
+  type: 'test'
+  ...
+# Subtest: tests/support/run_full.sh：拒否する接続先・環境（Supabase のホスト）では psql を一度も起動せずに止まる
+ok 687 - tests/support/run_full.sh：拒否する接続先・環境（Supabase のホスト）では psql を一度も起動せずに止まる
+  ---
+  duration_ms: 41.21455
+  type: 'test'
+  ...
+# Subtest: tests/support/run_full.sh：拒否する接続先・環境（プール（pooler））では psql を一度も起動せずに止まる
+ok 688 - tests/support/run_full.sh：拒否する接続先・環境（プール（pooler））では psql を一度も起動せずに止まる
+  ---
+  duration_ms: 40.059944
+  type: 'test'
+  ...
+# Subtest: tests/support/run_full.sh：拒否する接続先・環境（リモートの IP）では psql を一度も起動せずに止まる
+ok 689 - tests/support/run_full.sh：拒否する接続先・環境（リモートの IP）では psql を一度も起動せずに止まる
+  ---
+  duration_ms: 37.821363
+  type: 'test'
+  ...
+# Subtest: tests/support/run_full.sh：拒否する接続先・環境（任意のリモートのホスト）では psql を一度も起動せずに止まる
+ok 690 - tests/support/run_full.sh：拒否する接続先・環境（任意のリモートのホスト）では psql を一度も起動せずに止まる
+  ---
+  duration_ms: 40.007482
+  type: 'test'
+  ...
+# Subtest: tests/support/run_full.sh：拒否する接続先・環境（接続先の指定なし）では psql を一度も起動せずに止まる
+ok 691 - tests/support/run_full.sh：拒否する接続先・環境（接続先の指定なし）では psql を一度も起動せずに止まる
+  ---
+  duration_ms: 5.293954
+  type: 'test'
+  ...
+# Subtest: tests/support/run_full.sh：拒否する接続先・環境（localhost でも PGHOSTADDR がリモート）では psql を一度も起動せずに止まる
+ok 692 - tests/support/run_full.sh：拒否する接続先・環境（localhost でも PGHOSTADDR がリモート）では psql を一度も起動せずに止まる
+  ---
+  duration_ms: 34.216703
+  type: 'test'
+  ...
+# Subtest: tests/support/run_full.sh：拒否する接続先・環境（localhost でも PGSERVICE がある）では psql を一度も起動せずに止まる
+ok 693 - tests/support/run_full.sh：拒否する接続先・環境（localhost でも PGSERVICE がある）では psql を一度も起動せずに止まる
+  ---
+  duration_ms: 33.070076
+  type: 'test'
+  ...
+# Subtest: tests/support/run_full.sh：拒否する接続先・環境（本番の秘密（SUPABASE_URL）がある）では psql を一度も起動せずに止まる
+ok 694 - tests/support/run_full.sh：拒否する接続先・環境（本番の秘密（SUPABASE_URL）がある）では psql を一度も起動せずに止まる
+  ---
+  duration_ms: 5.652232
+  type: 'test'
+  ...
+# Subtest: tests/support/run_full.sh：拒否する接続先・環境（本番の秘密（STRIPE_SECRET_KEY）がある）では psql を一度も起動せずに止まる
+ok 695 - tests/support/run_full.sh：拒否する接続先・環境（本番の秘密（STRIPE_SECRET_KEY）がある）では psql を一度も起動せずに止まる
+  ---
+  duration_ms: 5.769815
+  type: 'test'
+  ...
+# Subtest: tests/support/run_full.sh：対照（localhost）では検証を通り、偽の psql が実際に呼ばれる（呼び出しを検出できる）
+ok 696 - tests/support/run_full.sh：対照（localhost）では検証を通り、偽の psql が実際に呼ばれる（呼び出しを検出できる）
+  ---
+  duration_ms: 46.404504
+  type: 'test'
+  ...
+# Subtest: tests/pg/run_all.sh：拒否する接続先・環境（Supabase のホスト）では psql を一度も起動せずに止まる
+ok 697 - tests/pg/run_all.sh：拒否する接続先・環境（Supabase のホスト）では psql を一度も起動せずに止まる
+  ---
+  duration_ms: 36.947233
+  type: 'test'
+  ...
+# Subtest: tests/pg/run_all.sh：拒否する接続先・環境（プール（pooler））では psql を一度も起動せずに止まる
+ok 698 - tests/pg/run_all.sh：拒否する接続先・環境（プール（pooler））では psql を一度も起動せずに止まる
+  ---
+  duration_ms: 30.742946
+  type: 'test'
+  ...
+# Subtest: tests/pg/run_all.sh：拒否する接続先・環境（リモートの IP）では psql を一度も起動せずに止まる
+ok 699 - tests/pg/run_all.sh：拒否する接続先・環境（リモートの IP）では psql を一度も起動せずに止まる
+  ---
+  duration_ms: 29.549968
+  type: 'test'
+  ...
+# Subtest: tests/pg/run_all.sh：拒否する接続先・環境（任意のリモートのホスト）では psql を一度も起動せずに止まる
+ok 700 - tests/pg/run_all.sh：拒否する接続先・環境（任意のリモートのホスト）では psql を一度も起動せずに止まる
+  ---
+  duration_ms: 31.749351
+  type: 'test'
+  ...
+# Subtest: tests/pg/run_all.sh：拒否する接続先・環境（接続先の指定なし）では psql を一度も起動せずに止まる
+ok 701 - tests/pg/run_all.sh：拒否する接続先・環境（接続先の指定なし）では psql を一度も起動せずに止まる
+  ---
+  duration_ms: 5.82357
+  type: 'test'
+  ...
+# Subtest: tests/pg/run_all.sh：拒否する接続先・環境（localhost でも PGHOSTADDR がリモート）では psql を一度も起動せずに止まる
+ok 702 - tests/pg/run_all.sh：拒否する接続先・環境（localhost でも PGHOSTADDR がリモート）では psql を一度も起動せずに止まる
+  ---
+  duration_ms: 34.023899
+  type: 'test'
+  ...
+# Subtest: tests/pg/run_all.sh：拒否する接続先・環境（localhost でも PGSERVICE がある）では psql を一度も起動せずに止まる
+ok 703 - tests/pg/run_all.sh：拒否する接続先・環境（localhost でも PGSERVICE がある）では psql を一度も起動せずに止まる
+  ---
+  duration_ms: 39.735612
+  type: 'test'
+  ...
+# Subtest: tests/pg/run_all.sh：拒否する接続先・環境（本番の秘密（SUPABASE_URL）がある）では psql を一度も起動せずに止まる
+ok 704 - tests/pg/run_all.sh：拒否する接続先・環境（本番の秘密（SUPABASE_URL）がある）では psql を一度も起動せずに止まる
+  ---
+  duration_ms: 29.938331
+  type: 'test'
+  ...
+# Subtest: tests/pg/run_all.sh：拒否する接続先・環境（本番の秘密（STRIPE_SECRET_KEY）がある）では psql を一度も起動せずに止まる
+ok 705 - tests/pg/run_all.sh：拒否する接続先・環境（本番の秘密（STRIPE_SECRET_KEY）がある）では psql を一度も起動せずに止まる
+  ---
+  duration_ms: 28.474756
+  type: 'test'
+  ...
+# Subtest: tests/pg/run_all.sh：対照（localhost）では検証を通り、偽の psql が実際に呼ばれる（呼び出しを検出できる）
+ok 706 - tests/pg/run_all.sh：対照（localhost）では検証を通り、偽の psql が実際に呼ばれる（呼び出しを検出できる）
+  ---
+  duration_ms: 493.97305
+  type: 'test'
+  ...
+# Subtest: 直接開いた（閉じられない）：入口に合わせて移動する。秘密値はフラグメントだけ
+ok 707 - 直接開いた（閉じられない）：入口に合わせて移動する。秘密値はフラグメントだけ
+  ---
+  duration_ms: 1487.059909
+  type: 'test'
+  ...
+# Subtest: 320・390・1280px：「元の画面に戻る」・末尾の申込欄が横にはみ出さない・押せる大きさ（44px 以上）・動きを減らす設定でも動く
+ok 708 - 320・390・1280px：「元の画面に戻る」・末尾の申込欄が横にはみ出さない・押せる大きさ（44px 以上）・動きを減らす設定でも動く
+  ---
+  duration_ms: 1163.408041
+  type: 'test'
+  ...
+# Subtest: ログイン中・completed／legacy_exempt：「この結果を診断記録に保存する」。モーダルなしで保存し、同じページで「保存しました」
+ok 709 - ログイン中・completed／legacy_exempt：「この結果を診断記録に保存する」。モーダルなしで保存し、同じページで「保存しました」
+  ---
+  duration_ms: 6180.823329
+  type: 'test'
+  ...
+# Subtest: ログイン中・required：開いただけではモーダルなし。「登録を完了して診断記録に保存する」を押したときだけモーダル → 同意 → 保存
+ok 710 - ログイン中・required：開いただけではモーダルなし。「登録を完了して診断記録に保存する」を押したときだけモーダル → 同意 → 保存
+  ---
+  duration_ms: 3296.552878
+  type: 'test'
+  ...
+# Subtest: required がモーダルで「いいえ」→ 保存しない・サインアウトし、未登録の表示に戻る
+ok 711 - required がモーダルで「いいえ」→ 保存しない・サインアウトし、未登録の表示に戻る
+  ---
+  duration_ms: 3014.548558
+  type: 'test'
+  ...
+# Subtest: ログアウト中・端末ヒントなし：上部に「無料登録して診断記録に保存する」と補足。押すまでログイン・保存しない
+ok 712 - ログアウト中・端末ヒントなし：上部に「無料登録して診断記録に保存する」と補足。押すまでログイン・保存しない
+  ---
+  duration_ms: 2908.71182
+  type: 'test'
+  ...
+# Subtest: ログアウト中・端末ヒントあり：「ログインして診断記録に保存する」。ヒントは文言だけで、保存・同意しない
+ok 713 - ログアウト中・端末ヒントあり：「ログインして診断記録に保存する」。ヒントは文言だけで、保存・同意しない
+  ---
+  duration_ms: 3140.495861
+  type: 'test'
+  ...
+# Subtest: メールOTP：ログイン後に DB が required（ヒントの偽陽性）でも必ずモーダル → 保存後も同じページ
+ok 714 - メールOTP：ログイン後に DB が required（ヒントの偽陽性）でも必ずモーダル → 保存後も同じページ
+  ---
+  duration_ms: 3042.201053
+  type: 'test'
+  ...
+# Subtest: メールOTP：ログイン後に DB が completed ならモーダルなしで保存し、同じページで「保存しました」
+ok 715 - メールOTP：ログイン後に DB が completed ならモーダルなしで保存し、同じページで「保存しました」
+  ---
+  duration_ms: 3008.529436
+  type: 'test'
+  ...
+# Subtest: Google：認証へ進む前に戻り先（この結果ページ）を残す
+ok 716 - Google：認証へ進む前に戻り先（この結果ページ）を残す
+  ---
+  duration_ms: 2931.508045
+  type: 'test'
+  ...
+# Subtest: Google・X の認証から戻ったマイページ：結果ページの保存カードで登録・保存して「保存しました」の後、マイページへ移る（TOP・結果ページに留めない）
+ok 717 - Google・X の認証から戻ったマイページ：結果ページの保存カードで登録・保存して「保存しました」の後、マイページへ移る（TOP・結果ページに留めない）
+  ---
+  duration_ms: 2765.691925
+  type: 'test'
+  ...
+# Subtest: 認証から戻った後のマイページへの移動：「保存しました」の文言が画面に収まって描画されてから 800ms 以上見せ、移動は1回だけ（iPhone SE・iPhone 13 相当）
+ok 718 - 認証から戻った後のマイページへの移動：「保存しました」の文言が画面に収まって描画されてから 800ms 以上見せ、移動は1回だけ（iPhone SE・iPhone 13 相当）
+  ---
+  duration_ms: 5602.256419
+  type: 'test'
+  ...
+# 375x667：文言の位置 top=295 bottom=310（画面の高さ 667）・見えてから移動の開始まで 809ms・マイページへの移動 1 回
+# 390x844：文言の位置 top=384 bottom=399（画面の高さ 844）・見えてから移動の開始まで 807ms・マイページへの移動 1 回
+# Subtest: マイページへの移動の待ち方（index.html の goMypageWhenSeen）：見出しが画面に収まり描画された後に数える。カードが無くても・画面に入らなくても・描画が止まっていても止まらず移る。何度呼ばれても移動は1回
+ok 719 - マイページへの移動の待ち方（index.html の goMypageWhenSeen）：見出しが画面に収まり描画された後に数える。カードが無くても・画面に入らなくても・描画が止まっていても止まらず移る。何度呼ばれても移動は1回
+  ---
+  duration_ms: 8.646666
+  type: 'test'
+  ...
+# Subtest: トップ右上の「マイページ」：ログインの有無に関わらず表示。未ログインは作成・ログイン（登録）の画面、ログイン中はマイページ
+ok 720 - トップ右上の「マイページ」：ログインの有無に関わらず表示。未ログインは作成・ログイン（登録）の画面、ログイン中はマイページ
+  ---
+  duration_ms: 1106.508421
+  type: 'test'
+  ...
+# Subtest: 戻り先の印があっても、認証から戻ったのでなければマイページは通常どおり表示する
+ok 721 - 戻り先の印があっても、認証から戻ったのでなければマイページは通常どおり表示する
+  ---
+  duration_ms: 493.445404
+  type: 'test'
+  ...
+# Subtest: OAuth をキャンセル・失敗して戻っても pending は残り、結果ページで再試行できる
+ok 722 - OAuth をキャンセル・失敗して戻っても pending は残り、結果ページで再試行できる
+  ---
+  duration_ms: 513.705065
+  type: 'test'
+  ...
+# Subtest: 戻り先の印：印の無い通常のマイページログインは移動しない・60分を過ぎた印は無効
+ok 723 - 戻り先の印：印の無い通常のマイページログインは移動しない・60分を過ぎた印は無効
+  ---
+  duration_ms: 451.109749
+  type: 'test'
+  ...
+# Subtest: 保存に失敗したら pending を残し、「もう一度試す」で再試行できる（成功時だけ pending を削除・二重保存なし）
+ok 724 - 保存に失敗したら pending を残し、「もう一度試す」で再試行できる（成功時だけ pending を削除・二重保存なし）
+  ---
+  duration_ms: 2950.630802
+  type: 'test'
+  ...
+# Subtest: DB の登録状態を確認できない：「登録状態を確認できませんでした」と「もう一度確認する」。保存ボタンなし
+ok 725 - DB の登録状態を確認できない：「登録状態を確認できませんでした」と「もう一度確認する」。保存ボタンなし
+  ---
+  duration_ms: 651.487634
+  type: 'test'
+  ...
+# Subtest: 認証状態の確認中は中立の表示だけ（誤った保存・ログイン導線を一瞬も出さない）
+ok 726 - 認証状態の確認中は中立の表示だけ（誤った保存・ログイン導線を一瞬も出さない）
+  ---
+  duration_ms: 9371.853121
+  type: 'test'
+  ...
+# Subtest: ログアウトしても端末ヒントは残る（ほかの保存データは入れない）
+ok 727 - ログアウトしても端末ヒントは残る（ほかの保存データは入れない）
+  ---
+  duration_ms: 367.788749
+  type: 'test'
+  ...
+# Subtest: 認証復帰時に pending があれば、従来どおり保存を再開する（required ならモーダル）
+ok 728 - 認証復帰時に pending があれば、従来どおり保存を再開する（required ならモーダル）
+  ---
+  duration_ms: 652.737396
+  type: 'test'
+  ...
+# Subtest: トップ（結果以外）を開いただけでは、required でもモーダルを出さない
+ok 729 - トップ（結果以外）を開いただけでは、required でもモーダルを出さない
+  ---
+  duration_ms: 1049.373053
+  type: 'test'
+  ...
+# Subtest: 診断完了ページ：320／390／1280px で横スクロールしない（全状態）
+ok 730 - 診断完了ページ：320／390／1280px で横スクロールしない（全状態）
+  ---
+  duration_ms: 4671.696931
+  type: 'test'
+  ...
+# Subtest: マイページ：購入状態APIが失敗してもアコーディオンは開閉でき、記録内に「もう一度確認する」
+ok 731 - マイページ：購入状態APIが失敗してもアコーディオンは開閉でき、記録内に「もう一度確認する」
+  ---
+  duration_ms: 632.318687
+  type: 'test'
+  ...
+# Subtest: マイページ：記録内CTA（無料のみ／解析購入済み）と準備中ボタン。準備中は押しても遷移・計測しない
+ok 732 - マイページ：記録内CTA（無料のみ／解析購入済み）と準備中ボタン。準備中は押しても遷移・計測しない
+  ---
+  duration_ms: 1226.423779
+  type: 'test'
+  ...
+# Subtest: マイページ：記録1件はその記録が選択済み。右上の文言は状態で変わる
+ok 733 - マイページ：記録1件はその記録が選択済み。右上の文言は状態で変わる
+  ---
+  duration_ms: 579.097399
+  type: 'test'
+  ...
+# Subtest: マイページ：記録が複数なら、対象を選ぶまで購入導線を確定しない（日付・結果を表示）
+ok 734 - マイページ：記録が複数なら、対象を選ぶまで購入導線を確定しない（日付・結果を表示）
+  ---
+  duration_ms: 382.609837
+  type: 'test'
+  ...
+# Subtest: マイページ：320／390／1280px で横スクロールしない（記録を開いた状態・シート）
+ok 735 - マイページ：320／390／1280px で横スクロールしない（記録を開いた状態・シート）
+  ---
+  duration_ms: 1348.953633
+  type: 'test'
+  ...
+# Subtest: LATEST RESULT：4状態で THE RECORDS の同じ記録と同じ購入・閲覧導線を出す
+ok 736 - LATEST RESULT：4状態で THE RECORDS の同じ記録と同じ購入・閲覧導線を出す
+  ---
+  duration_ms: 724.365733
+  type: 'test'
+  ...
+# Subtest: LATEST RESULT：購入状態APIが失敗しても開閉でき、購入・閲覧ボタンを隠して「もう一度確認する」
+ok 737 - LATEST RESULT：購入状態APIが失敗しても開閉でき、購入・閲覧ボタンを隠して「もう一度確認する」
+  ---
+  duration_ms: 357.003271
+  type: 'test'
+  ...
+# Subtest: LATEST RESULT：¥1,000 は最新記録の session に紐づき、入口（source=latest／records）を送る。販売中だけ押せる
+ok 738 - LATEST RESULT：¥1,000 は最新記録の session に紐づき、入口（source=latest／records）を送る。販売中だけ押せる
+  ---
+  duration_ms: 429.636085
+  type: 'test'
+  ...
+# Subtest: LATEST RESULT：320／390／1280px で横スクロールしない（最新の詳細を開いた状態）
+ok 739 - LATEST RESULT：320／390／1280px で横スクロールしない（最新の詳細を開いた状態）
+  ---
+  duration_ms: 1670.664059
+  type: 'test'
+  ...
+# Subtest: ログイン方法：マイページのログイン画面・結果の保存のログイン選択で、有効な方法だけを出す（取得の失敗はメールだけ）
+ok 740 - ログイン方法：マイページのログイン画面・結果の保存のログイン選択で、有効な方法だけを出す（取得の失敗はメールだけ）
+  ---
+  duration_ms: 15678.433178
+  type: 'test'
+  ...
+# Subtest: ログイン方法：マイページの「ログイン方法」欄は、有効な方法だけ「連携する」を出す（取得の失敗は連携ボタンなし）
+ok 741 - ログイン方法：マイページの「ログイン方法」欄は、有効な方法だけ「連携する」を出す（取得の失敗は連携ボタンなし）
+  ---
+  duration_ms: 2687.518145
+  type: 'test'
+  ...
+# Subtest: ログイン方法：無効な方法は、ボタン以外の入口（旧版の保存・v2 の保存・X・連携）から呼ばれても Supabase へ進めない
+ok 742 - ログイン方法：無効な方法は、ボタン以外の入口（旧版の保存・v2 の保存・X・連携）から呼ばれても Supabase へ進めない
+  ---
+  duration_ms: 877.878332
+  type: 'test'
+  ...
+# Subtest: ログイン方法：公開設定に x の項目が無い Supabase では、ログイン開始の応答で X を判定する（302＝出す／400・失敗＝出さない）
+ok 743 - ログイン方法：公開設定に x の項目が無い Supabase では、ログイン開始の応答で X を判定する（302＝出す／400・失敗＝出さない）
+  ---
+  duration_ms: 2618.35041
+  type: 'test'
+  ...
+# Subtest: ログイン方法：メールOTPのログインは、Google・X が無効でもそのまま使える
+ok 744 - ログイン方法：メールOTPのログインは、Google・X が無効でもそのまま使える
+  ---
+  duration_ms: 261.968102
+  type: 'test'
+  ...
+# Subtest: 方針の未定義を検出：dist の HTML はすべて scripts/seo-policy.js に載っている（載っていない HTML があれば失敗）
+ok 745 - 方針の未定義を検出：dist の HTML はすべて scripts/seo-policy.js に載っている（載っていない HTML があれば失敗）
+  ---
+  duration_ms: 2.216353
+  type: 'test'
+  ...
+# Subtest: 方針の未定義を検出：vercel.json の rewrite・HTML を返す API はすべて方針一覧に載っている
+ok 746 - 方針の未定義を検出：vercel.json の rewrite・HTML を返す API はすべて方針一覧に載っている
+  ---
+  duration_ms: 1.548622
+  type: 'test'
+  ...
+# Subtest: index：38件（TOP・邪眼トップ・理論・タイプ35）は、拡張子なし・末尾スラッシュの両方で noindex が当たらず、canonical は正規 URL
+ok 747 - index：38件（TOP・邪眼トップ・理論・タイプ35）は、拡張子なし・末尾スラッシュの両方で noindex が当たらず、canonical は正規 URL
+  ---
+  duration_ms: 10.302646
+  type: 'test'
+  ...
+# Subtest: sitemap.xml は index の38件と完全に一致する（多くも少なくもない）
+ok 748 - sitemap.xml は index の38件と完全に一致する（多くも少なくもない）
+  ---
+  duration_ms: 0.452645
+  type: 'test'
+  ...
+# Subtest: allow（法務・所有権確認）：noindex は当てず、sitemap にも載せない
+ok 749 - allow（法務・所有権確認）：noindex は当てず、sitemap にも載せない
+  ---
+  duration_ms: 1.037909
+  type: 'test'
+  ...
+# Subtest: noindex：公開 HTML は、拡張子なし・末尾スラッシュの両方に vercel.json の X-Robots-Tag が当たり、ページ内の meta robots も noindex
+ok 750 - noindex：公開 HTML は、拡張子なし・末尾スラッシュの両方に vercel.json の X-Robots-Tag が当たり、ページ内の meta robots も noindex
+  ---
+  duration_ms: 5.777832
+  type: 'test'
+  ...
+# Subtest: noindex：rewrite のルート（結果・邪眼の共有）は、末尾スラッシュも含めてヘッダーで noindex
+ok 751 - noindex：rewrite のルート（結果・邪眼の共有）は、末尾スラッシュも含めてヘッダーで noindex
+  ---
+  duration_ms: 1.174703
+  type: 'test'
+  ...
+# Subtest: ヘッダーとページ内 robots の整合：index のページに noindex のヘッダーを当てる広い指定（/(.*) など）が無い
+ok 752 - ヘッダーとページ内 robots の整合：index のページに noindex のヘッダーを当てる広い指定（/(.*) など）が無い
+  ---
+  duration_ms: 0.904957
+  type: 'test'
+  ...
+# Subtest: 末尾スラッシュの解釈：vercel.json の {/}? は、拡張子なし・末尾スラッシュの両方だけに当たり、似た別のパスには当たらない
+ok 753 - 末尾スラッシュの解釈：vercel.json の {/}? は、拡張子なし・末尾スラッシュの両方だけに当たり、似た別のパスには当たらない
+  ---
+  duration_ms: 0.335178
+  type: 'test'
+  ...
+# Subtest: robots.txt：noindex のページ・共有をクロール拒否しない（拒否すると noindex が読まれない）
+ok 754 - robots.txt：noindex のページ・共有をクロール拒否しない（拒否すると noindex が読まれない）
+  ---
+  duration_ms: 0.544075
+  type: 'test'
+  ...
+# Subtest: 旧ページ・テスト用ページ：公開されない（404 のまま）
+ok 755 - 旧ページ・テスト用ページ：公開されない（404 のまま）
+  ---
+  duration_ms: 0.155011
+  type: 'test'
+  ...
+# Subtest: クエリ付き URL：index のページの canonical はクエリを含まない絶対 URL（?code=・?utm_* などは正規 URL に集約される）
+ok 756 - クエリ付き URL：index のページの canonical はクエリを含まない絶対 URL（?code=・?utm_* などは正規 URL に集約される）
+  ---
+  duration_ms: 2.336184
+  type: 'test'
+  ...
+# Subtest: タイプ解説35件：title・description は重複せず、og:url・canonical は自分自身
+ok 757 - タイプ解説35件：title・description は重複せず、og:url・canonical は自分自身
+  ---
+  duration_ms: 1.79665
+  type: 'test'
+  ...
+# Subtest: /api/share：p 形式・dv/mv 付き・旧 el/w/nat 形式・値の欠け・壊れた値のすべてで X-Robots-Tag: noindex（nofollow は付けない）。OGP・転送は従来どおり
+ok 758 - /api/share：p 形式・dv/mv 付き・旧 el/w/nat 形式・値の欠け・壊れた値のすべてで X-Robots-Tag: noindex（nofollow は付けない）。OGP・転送は従来どおり
+  ---
+  duration_ms: 1.444096
+  type: 'test'
+  ...
+# Subtest: 邪眼の共有ページ（/api/jagan-share-page）：見つからない時も、URL に値を載せた形でも X-Robots-Tag と meta robots の noindex
+ok 759 - 邪眼の共有ページ（/api/jagan-share-page）：見つからない時も、URL に値を載せた形でも X-Robots-Tag と meta robots の noindex
+  ---
+  duration_ms: 17.387003
+  type: 'test'
+  ...
+# Subtest: robots.txt：全体を許可し、sitemap.xml の場所を示す
+ok 760 - robots.txt：全体を許可し、sitemap.xml の場所を示す
+  ---
+  duration_ms: 0.935451
+  type: 'test'
+  ...
+# Subtest: sitemap.xml：元素診断の TOP・タイプ解説35件と、邪眼診断のトップ・理論ページを載せる（重複なし）
+ok 761 - sitemap.xml：元素診断の TOP・タイプ解説35件と、邪眼診断のトップ・理論ページを載せる（重複なし）
+  ---
+  duration_ms: 0.407372
+  type: 'test'
+  ...
+# Subtest: sitemap.xml の URL：公開ファイルがあり、noindex が無く（meta・ヘッダー）、canonical が一致する
+ok 762 - sitemap.xml の URL：公開ファイルがあり、noindex が無く（meta・ヘッダー）、canonical が一致する
+  ---
+  duration_ms: 10.758721
+  type: 'test'
+  ...
+# Subtest: 邪眼診断のトップ：/jagan（スラッシュ無し）も noindex ヘッダーが当たらず、canonical は /jagan/ を指す
+ok 763 - 邪眼診断のトップ：/jagan（スラッシュ無し）も noindex ヘッダーが当たらず、canonical は /jagan/ を指す
+  ---
+  duration_ms: 0.30425
+  type: 'test'
+  ...
+# Subtest: 検索に出さない URL：vercel.json のヘッダーで noindex が付く
+ok 764 - 検索に出さない URL：vercel.json のヘッダーで noindex が付く
+  ---
+  duration_ms: 2.703834
+  type: 'test'
+  ...
+# Subtest: 検索に出さない URL：sitemap.xml に載せない。邪眼のサンプル・DIPPER・レポートはページ内の noindex も保つ
+ok 765 - 検索に出さない URL：sitemap.xml に載せない。邪眼のサンプル・DIPPER・レポートはページ内の noindex も保つ
+  ---
+  duration_ms: 0.343345
+  type: 'test'
+  ...
+# Subtest: 元素診断の公開ページ：エニアグラムを理論の土台として示さない（v2 は Big Five・対人スタイル・価値観理論）
+ok 766 - 元素診断の公開ページ：エニアグラムを理論の土台として示さない（v2 は Big Five・対人スタイル・価値観理論）
+  ---
+  duration_ms: 1.904425
+  type: 'test'
+  ...
+# Subtest: 内部リンク：公開ページの自サイトへのリンクに utm_* を付けない
+ok 767 - 内部リンク：公開ページの自サイトへのリンクに utm_* を付けない
+  ---
+  duration_ms: 13.568006
+  type: 'test'
+  ...
+# Subtest: 邪眼バナー：/jagan/ へ UTM 無しでリンクし、クリックの計測（jagan_banner_click・entry_point:top）は保つ
+ok 768 - 邪眼バナー：/jagan/ へ UTM 無しでリンクし、クリックの計測（jagan_banner_click・entry_point:top）は保つ
+  ---
+  duration_ms: 2.200973
+  type: 'test'
+  ...
+# Subtest: 公開ページ（index・noindex 以外）の JSON-LD は、すべて JSON として解析できる
+ok 769 - 公開ページ（index・noindex 以外）の JSON-LD は、すべて JSON として解析できる
+  ---
+  duration_ms: 5.014661
+  type: 'test'
+  ...
+# Subtest: /jagan/：WebApplication。無料の診断（50問・0円）だけを Offer に載せ、description・url はページと一致する
+ok 770 - /jagan/：WebApplication。無料の診断（50問・0円）だけを Offer に載せ、description・url はページと一致する
+  ---
+  duration_ms: 1.291576
+  type: 'test'
+  ...
+# Subtest: /jagan/about：WebPage と BreadcrumbList。description・url はページと一致し、パンくずは 邪眼診断 → 理論
+ok 771 - /jagan/about：WebPage と BreadcrumbList。description・url はページと一致し、パンくずは 邪眼診断 → 理論
+  ---
+  duration_ms: 0.386616
+  type: 'test'
+  ...
+# Subtest: 邪眼のページに、FAQ・評価・レビュー・医療系の型を使わない
+ok 772 - 邪眼のページに、FAQ・評価・レビュー・医療系の型を使わない
+  ---
+  duration_ms: 1.357724
+  type: 'test'
+  ...
+# Subtest: 35件：元素・武器種・タイプ名・タイプコードが既存の定義（api/_og-data.mjs）と一致する
+ok 773 - 35件：元素・武器種・タイプ名・タイプコードが既存の定義（api/_og-data.mjs）と一致する
+  ---
+  duration_ms: 3.109556
+  type: 'test'
+  ...
+# Subtest: 35件：title・description は決めた形で、og:title・og:description・JSON-LD の description と一致し、35件すべて異なる
+ok 774 - 35件：title・description は決めた形で、og:title・og:description・JSON-LD の description と一致し、35件すべて異なる
+  ---
+  duration_ms: 1.858431
+  type: 'test'
+  ...
+# Subtest: 35件：og:image・twitter:image は assets/ogp/types/<CODE>.jpg。dist に 1200×630 の JPEG（300KB 以下）がある
+ok 775 - 35件：og:image・twitter:image は assets/ogp/types/<CODE>.jpg。dist に 1200×630 の JPEG（300KB 以下）がある
+  ---
+  duration_ms: 4.424868
+  type: 'test'
+  ...
+# Subtest: OGP 画像に描く文字（見出し・タイプ名・元素・武器種・軸・下帯）は、すべて同梱フォントにある
+ok 776 - OGP 画像に描く文字（見出し・タイプ名・元素・武器種・軸・下帯）は、すべて同梱フォントにある
+  ---
+  duration_ms: 32.300759
+  type: 'test'
+  ...
+# Subtest: 35件：上の導線（タイプコードの直下・1つ）、末尾の既存ボタン、関連（邪眼）に計測の属性。body にページの値。js/type-page.js を1回読み込む
+ok 777 - 35件：上の導線（タイプコードの直下・1つ）、末尾の既存ボタン、関連（邪眼）に計測の属性。body にページの値。js/type-page.js を1回読み込む
+  ---
+  duration_ms: 2.105304
+  type: 'test'
+  ...
+# Subtest: stripeModeFromKey：sk_／rk_ の live・test を判定する（rk_live_ を test と誤判定しない）
+ok 778 - stripeModeFromKey：sk_／rk_ の live・test を判定する（rk_live_ を test と誤判定しない）
+  ---
+  duration_ms: 1.194949
+  type: 'test'
+  ...
+# Subtest: parseSupabaseUrl：https://<20文字>.supabase.co だけを認める
+ok 779 - parseSupabaseUrl：https://<20文字>.supabase.co だけを認める
+  ---
+  duration_ms: 1.455863
+  type: 'test'
+  ...
+# Subtest: 正しい設定：Production は本番 Ref、Preview は Preview Ref で通る
+ok 780 - 正しい設定：Production は本番 Ref、Preview は Preview Ref で通る
+  ---
+  duration_ms: 0.518982
+  type: 'test'
+  ...
+# Subtest: VERCEL_ENV=preview で本番 Ref へ接続しようとしたら止める（期待 Ref も本番に誤設定した場合を含む）
+ok 781 - VERCEL_ENV=preview で本番 Ref へ接続しようとしたら止める（期待 Ref も本番に誤設定した場合を含む）
+  ---
+  duration_ms: 0.386012
+  type: 'test'
+  ...
+# Subtest: VERCEL_ENV=production で Preview Ref へ接続しようとしたら止める
+ok 782 - VERCEL_ENV=production で Preview Ref へ接続しようとしたら止める
+  ---
+  duration_ms: 0.266425
+  type: 'test'
+  ...
+# Subtest: 環境不明（未設定・想定外の値・development の許可なし）は止める
+ok 783 - 環境不明（未設定・想定外の値・development の許可なし）は止める
+  ---
+  duration_ms: 0.340406
+  type: 'test'
+  ...
+# Subtest: 期待 Ref・本番 Ref・Preview Ref・URL の未設定や形式不正は止める
+ok 784 - 期待 Ref・本番 Ref・Preview Ref・URL の未設定や形式不正は止める
+  ---
+  duration_ms: 0.472407
+  type: 'test'
+  ...
+# Subtest: URL の Ref と期待 Ref の不一致・本番 Ref と Preview Ref が同じ値は止める
+ok 785 - URL の Ref と期待 Ref の不一致・本番 Ref と Preview Ref が同じ値は止める
+  ---
+  duration_ms: 0.160066
+  type: 'test'
+  ...
+# Subtest: Stripe：Preview＝Test、Production＝Live を STRIPE_MODE とキーの両方で確かめる
+ok 786 - Stripe：Preview＝Test、Production＝Live を STRIPE_MODE とキーの両方で確かめる
+  ---
+  duration_ms: 1.911959
+  type: 'test'
+  ...
+# Subtest: 公開キー：sb_publishable_ と role=anon の JWT だけ。秘密キー・service_role は拒否
+ok 787 - 公開キー：sb_publishable_ と role=anon の JWT だけ。秘密キー・service_role は拒否
+  ---
+  duration_ms: 0.817874
+  type: 'test'
+  ...
+# Subtest: サーバー用キーの選択：SUPABASE_SECRET_KEY → SUPABASE_SERVICE_ROLE_KEY の順
+ok 788 - サーバー用キーの選択：SUPABASE_SECRET_KEY → SUPABASE_SERVICE_ROLE_KEY の順
+  ---
+  duration_ms: 0.323209
+  type: 'test'
+  ...
+# Subtest: サーバー用キー：不明な形式・公開キー・anon・別プロジェクトの JWT・未設定は拒否
+ok 789 - サーバー用キー：不明な形式・公開キー・anon・別プロジェクトの JWT・未設定は拒否
+  ---
+  duration_ms: 0.17124
+  type: 'test'
+  ...
+# Subtest: 管理者ヘッダー：sb_secret_ は apikey だけ（Authorization なし）、旧 service_role JWT は両方
+ok 790 - 管理者ヘッダー：sb_secret_ は apikey だけ（Authorization なし）、旧 service_role JWT は両方
+  ---
+  duration_ms: 0.263965
+  type: 'test'
+  ...
+# Subtest: ログインユーザーのヘッダー：公開キー＋ユーザーの access token
+ok 791 - ログインユーザーのヘッダー：公開キー＋ユーザーの access token
+  ---
+  duration_ms: 0.075356
+  type: 'test'
+  ...
+# Subtest: requireServerEnv：Preview（新キー）・Production（旧キー）のヘッダーを返す。不合格ならヘッダー関数を返さない
+ok 792 - requireServerEnv：Preview（新キー）・Production（旧キー）のヘッダーを返す。不合格ならヘッダー関数を返さない
+  ---
+  duration_ms: 0.362995
+  type: 'test'
+  ...
+# Subtest: requireServerEnv：必要な検査をまとめ、REPORT_TOKEN_SECRET の未設定も止める
+ok 793 - requireServerEnv：必要な検査をまとめ、REPORT_TOKEN_SECRET の未設定も止める
+  ---
+  duration_ms: 0.198178
+  type: 'test'
+  ...
+# Subtest: 拒否ログ：理由コード・環境名・Ref 末尾4文字・照合IDだけ（URL・キー・Ref 全文を出さない）
+ok 794 - 拒否ログ：理由コード・環境名・Ref 末尾4文字・照合IDだけ（URL・キー・Ref 全文を出さない）
+  ---
+  duration_ms: 0.503977
+  type: 'test'
+  ...
+# Subtest: 共有リンクで開いた結果で、購入ボタンを押すと、決済画面へ進む（診断コードを op=buy に送らない）
+ok 795 - 共有リンクで開いた結果で、購入ボタンを押すと、決済画面へ進む（診断コードを op=buy に送らない）
+  ---
+  duration_ms: 2972.803967
+  type: 'test'
+  ...
+# Subtest: 固有リンクの作成に一度失敗しても、もう一度押せば進める（同じ診断の秘密値で作り直す）
+ok 796 - 固有リンクの作成に一度失敗しても、もう一度押せば進める（同じ診断の秘密値で作り直す）
+  ---
+  duration_ms: 11115.698306
+  type: 'test'
+  ...
+# Subtest: 共有リンクで開いた結果から、完全解析（目標の選択 → 決済画面）へも進める
+ok 797 - 共有リンクで開いた結果から、完全解析（目標の選択 → 決済画面）へも進める
+  ---
+  duration_ms: 3258.81604
+  type: 'test'
+  ...
+# Subtest: 開き直した結果のあとで診断し直して購入する時は、その診断の固有リンクで進む（共有リンクのリンクとは別）
+ok 798 - 開き直した結果のあとで診断し直して購入する時は、その診断の固有リンクで進む（共有リンクのリンクとは別）
+  ---
+  duration_ms: 2970.520001
+  type: 'test'
+  ...
+# Subtest: 旧形式（dv の無い ?code=）の結果では、購入ボタンを出さない（従来どおり）
+ok 799 - 旧形式（dv の無い ?code=）の結果では、購入ボタンを出さない（従来どおり）
+  ---
+  duration_ms: 1794.99881
+  type: 'test'
+  ...
+# Subtest: 未認証は 401、Kit を呼ばない
+ok 800 - 未認証は 401、Kit を呼ばない
+  ---
+  duration_ms: 4.50698
+  type: 'test'
+  ...
+# Subtest: body に他人のメールを入れても、登録先は認証済み本人のメールだけ
+ok 801 - body に他人のメールを入れても、登録先は認証済み本人のメールだけ
+  ---
+  duration_ms: 1.774472
+  type: 'test'
+  ...
+# Subtest: 登録完了の同意（completed・true・版・取得経路）がそろわなければ 403、Kit を呼ばず同期状態も変えない
+ok 802 - 登録完了の同意（completed・true・版・取得経路）がそろわなければ 403、Kit を呼ばず同期状態も変えない
+  ---
+  duration_ms: 6.923053
+  type: 'test'
+  ...
+# Subtest: 同意列を読めない（列が無い等）場合は fail-closed（403・Kit を呼ばない）
+ok 803 - 同意列を読めない（列が無い等）場合は fail-closed（403・Kit を呼ばない）
+  ---
+  duration_ms: 0.429138
+  type: 'test'
+  ...
+# Subtest: 同意版が無い・旧い版・壊れた request は 400
+ok 804 - 同意版が無い・旧い版・壊れた request は 400
+  ---
+  duration_ms: 0.415717
+  type: 'test'
+  ...
+# Subtest: 新規登録の同意・Kit 未登録なら、作成を1回だけ呼び synced を記録（API key はヘッダーだけ）
+ok 805 - 新規登録の同意・Kit 未登録なら、作成を1回だけ呼び synced を記録（API key はヘッダーだけ）
+  ---
+  duration_ms: 0.548176
+  type: 'test'
+  ...
+# Subtest: synced なら Kit を呼ばない（再ログインのたびに再送しない）
+ok 806 - synced なら Kit を呼ばない（再ログインのたびに再送しない）
+  ---
+  duration_ms: 0.494377
+  type: 'test'
+  ...
+# Subtest: 再送条件：失敗後は前回から24時間以上・3回未満のときだけ
+ok 807 - 再送条件：失敗後は前回から24時間以上・3回未満のときだけ
+  ---
+  duration_ms: 1.002846
+  type: 'test'
+  ...
+# Subtest: syncDue：判定表
+ok 808 - syncDue：判定表
+  ---
+  duration_ms: 0.485057
+  type: 'test'
+  ...
+# Subtest: 同時に2回呼ばれても Kit 作成は1回（試行の権利を条件付き更新で取る）
+ok 809 - 同時に2回呼ばれても Kit 作成は1回（試行の権利を条件付き更新で取る）
+  ---
+  duration_ms: 1.015165
+  type: 'test'
+  ...
+# Subtest: 試行の権利を記録できなければ Kit を呼ばない（500）
+ok 810 - 試行の権利を記録できなければ Kit を呼ばない（500）
+  ---
+  duration_ms: 0.559294
+  type: 'test'
+  ...
+# Subtest: KIT_API_KEY 未設定なら Kit を呼ばず failed を記録し、秘密を漏らさない
+ok 811 - KIT_API_KEY 未設定なら Kit を呼ばず failed を記録し、秘密を漏らさない
+  ---
+  duration_ms: 0.381858
+  type: 'test'
+  ...
+# Subtest: Kit 4xx/5xx は 502・failed を記録。レスポンス・ログにメール・秘密・Kit本文を出さない
+ok 812 - Kit 4xx/5xx は 502・failed を記録。レスポンス・ログにメール・秘密・Kit本文を出さない
+  ---
+  duration_ms: 0.899074
+  type: 'test'
+  ...
+# Subtest: 配信停止済み（active 以外）は再登録せず skipped
+ok 813 - 配信停止済み（active 以外）は再登録せず skipped
+  ---
+  duration_ms: 2.992287
+  type: 'test'
+  ...
+# Subtest: 既に active なら作り直さず synced。2回目は Kit も呼ばない
+ok 814 - 既に active なら作り直さず synced。2回目は Kit も呼ばない
+  ---
+  duration_ms: 0.597331
+  type: 'test'
+  ...
+# Subtest: メールアドレスを取得できない（X など）なら Kit を呼ばず skipped
+ok 815 - メールアドレスを取得できない（X など）なら Kit を呼ばず skipped
+  ---
+  duration_ms: 0.45492
+  type: 'test'
+  ...
+# Subtest: Preview ガード：許可リストに無いメールは Kit を呼ばず skipped／許可したテスト用メールだけ送る
+ok 816 - Preview ガード：許可リストに無いメールは Kit を呼ばず skipped／許可したテスト用メールだけ送る
+  ---
+  duration_ms: 1.01427
+  type: 'test'
+  ...
+# Subtest: POST 以外は 405
+ok 817 - POST 以外は 405
+  ---
+  duration_ms: 0.213791
+  type: 'test'
+  ...
+# Subtest: Kit のタイムアウトの既定は8秒（Kit への GET・POST・本文の読み取りを合わせた上限）
+ok 818 - Kit のタイムアウトの既定は8秒（Kit への GET・POST・本文の読み取りを合わせた上限）
+  ---
+  duration_ms: 0.527454
+  type: 'test'
+  ...
+# Subtest: Kit が応答しない（lookup）：期限で failed を記録して 502。メール・秘密をログ／応答に出さない。診断の保存とは無関係
+ok 819 - Kit が応答しない（lookup）：期限で failed を記録して 502。メール・秘密をログ／応答に出さない。診断の保存とは無関係
+  ---
+  duration_ms: 120.90044
+  type: 'test'
+  ...
+# Subtest: Kit が応答しない（create）：期限で failed を記録して 502。メール・秘密をログ／応答に出さない。診断の保存とは無関係
+ok 820 - Kit が応答しない（create）：期限で failed を記録して 502。メール・秘密をログ／応答に出さない。診断の保存とは無関係
+  ---
+  duration_ms: 121.375558
+  type: 'test'
+  ...
+# Subtest: Kit が応答しない（body）：期限で failed を記録して 502。メール・秘密をログ／応答に出さない。診断の保存とは無関係
+ok 821 - Kit が応答しない（body）：期限で failed を記録して 502。メール・秘密をログ／応答に出さない。診断の保存とは無関係
+  ---
+  duration_ms: 120.685178
+  type: 'test'
+  ...
+# subscribe error: Kit request failed TimeoutError
+# Subtest: Kit への fetch には中断用の signal が付く。タイムアウト後の再送は24時間後から（試行の権利は消費済み）
+ok 822 - Kit への fetch には中断用の signal が付く。タイムアウト後の再送は24時間後から（試行の権利は消費済み）
+  ---
+  duration_ms: 62.320242
+  type: 'test'
+  ...
+# Subtest: トップ右上：読み込み時から「マイページ」。/mypage.html・既存の mypage_entry_click（1回だけ）・44px 以上・診断をはじめるより控えめ・横スクロールなし
+ok 823 - トップ右上：読み込み時から「マイページ」。/mypage.html・既存の mypage_entry_click（1回だけ）・44px 以上・診断をはじめるより控えめ・横スクロールなし
+  ---
+  duration_ms: 1247.353111
+  type: 'test'
+  ...
+1..823
+# tests 832
+# suites 0
+# pass 832
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 273639.030141

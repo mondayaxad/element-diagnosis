@@ -1,0 +1,881 @@
+TAP version 13
+# Subtest: 販売停止・入力の検査：sales_closed／余分な項目・不正なコード・目標の不足は拒否（DB・Stripe に触れない）
+ok 1 - 販売停止・入力の検査：sales_closed／余分な項目・不正なコード・目標の不足は拒否（DB・Stripe に触れない）
+  ---
+  duration_ms: 2368.287394
+  type: 'test'
+  ...
+# Subtest: ゲスト ¥1,000：サーバーが記録を作り、Checkout は metadata 3つ・client_reference_id／メールなし・Cookie は HttpOnly／Secure／SameSite=Lax
+ok 2 - ゲスト ¥1,000：サーバーが記録を作り、Checkout は metadata 3つ・client_reference_id／メールなし・Cookie は HttpOnly／Secure／SameSite=Lax
+  ---
+  duration_ms: 1394.509296
+  type: 'test'
+  ...
+# Subtest: 購入完了ページ：Webhook より先でも Stripe に問い合わせて付与・解析レポートをすぐ読める・Webhook の再送で増えない
+ok 3 - 購入完了ページ：Webhook より先でも Stripe に問い合わせて付与・解析レポートをすぐ読める・Webhook の再送で増えない
+  ---
+  duration_ms: 1913.074363
+  type: 'test'
+  ...
+# Subtest: 旧ゲスト経路の追加 ¥2,000 は廃止（complete_13）：DB が注文を作らない。既存の ¥1,000 の購入はそのまま読める・別の結果の ¥3,000 は別の記録
+ok 4 - 旧ゲスト経路の追加 ¥2,000 は廃止（complete_13）：DB が注文を作らない。既存の ¥1,000 の購入はそのまま読める・別の結果の ¥3,000 は別の記録
+  ---
+  duration_ms: 2404.483134
+  type: 'test'
+  ...
+# Subtest: ゲストの ¥2,000 は、この端末で解析レポートの購入を確かめられる時だけ。別の offer に切り替えると前の Stripe 画面を閉じる
+ok 5 - ゲストの ¥2,000 は、この端末で解析レポートの購入を確かめられる時だけ。別の offer に切り替えると前の Stripe 画面を閉じる
+  ---
+  duration_ms: 1821.628631
+  type: 'test'
+  ...
+# Subtest: 引き継ぎ：ログイン必須・購入時メールと同じ確認済みメールだけ・支払済みだけ・1回限り（同じ人は冪等・別の人は 409）・改ざん／期限切れは拒否
+ok 6 - 引き継ぎ：ログイン必須・購入時メールと同じ確認済みメールだけ・支払済みだけ・1回限り（同じ人は冪等・別の人は 409）・改ざん／期限切れは拒否
+  ---
+  duration_ms: 3190.696159
+  type: 'test'
+  ...
+# Subtest: Cookie を失った時の復旧：ログイン中の確認済みメール（6桁コード・Google 等。時間が経っても）＋購入時メールの一致で引き継ぐ。未確認のメール・メールなし・別のメールでは移さない
+ok 7 - Cookie を失った時の復旧：ログイン中の確認済みメール（6桁コード・Google 等。時間が経っても）＋購入時メールの一致で引き継ぐ。未確認のメール・メールなし・別のメールでは移さない
+  ---
+  duration_ms: 2093.2241
+  type: 'test'
+  ...
+# Subtest: 引き継ぎ（Cookie の秘密値・購入時メールの照合で所有者を移す）は廃止（complete_13）：公開の処理は 410 transfer_retired・記録の所有者は変わらない
+ok 8 - 引き継ぎ（Cookie の秘密値・購入時メールの照合で所有者を移す）は廃止（complete_13）：公開の処理は 410 transfer_retired・記録の所有者は変わらない
+  ---
+  duration_ms: 1859.188072
+  type: 'test'
+  ...
+# Subtest: 支払い後の一時的な失敗：DB の失敗は付与せず、次の確認（再処理）で回復する
+ok 9 - 支払い後の一時的な失敗：DB の失敗は付与せず、次の確認（再処理）で回復する
+  ---
+  duration_ms: 1944.379057
+  type: 'test'
+  ...
+# Subtest: 応答・ログに秘密値・注文 ID・Session ID・メール・診断コードを出さない
+ok 10 - 応答・ログに秘密値・注文 ID・Session ID・メール・診断コードを出さない
+  ---
+  duration_ms: 1813.161812
+  type: 'test'
+  ...
+# Subtest: Cookie の解析：形式外の値・重複を捨て、最大件数を超えたら古いものから外す
+ok 11 - Cookie の解析：形式外の値・重複を捨て、最大件数を超えたら古いものから外す
+  ---
+  duration_ms: 1.722549
+  type: 'test'
+  ...
+# Subtest: Webhook：処理するイベントは6つだけで、一覧（CP.HANDLED_EVENTS）とハンドラーの名前が完全に一致する
+ok 12 - Webhook：処理するイベントは6つだけで、一覧（CP.HANDLED_EVENTS）とハンドラーの名前が完全に一致する
+  ---
+  duration_ms: 1.925596
+  type: 'test'
+  ...
+# Subtest: 署名：正しい本文だけ通る（1バイト変更・署名なし・形式違反・古い／未来の時刻・別の secret を拒否）
+ok 13 - 署名：正しい本文だけ通る（1バイト変更・署名なし・形式違反・古い／未来の時刻・別の secret を拒否）
+  ---
+  duration_ms: 1.097028
+  type: 'test'
+  ...
+# Subtest: Price の照合：有効・JPY・金額・Test・一回払い
+ok 14 - Price の照合：有効・JPY・金額・Test・一回払い
+  ---
+  duration_ms: 0.13813
+  type: 'test'
+  ...
+# Subtest: 戻り先 URL：https の origin だけ・Preview で許可した固定 origin と一致しなければ閉じる・販売の開始は文字列 true だけ
+ok 15 - 戻り先 URL：https の origin だけ・Preview で許可した固定 origin と一致しなければ閉じる・販売の開始は文字列 true だけ
+  ---
+  duration_ms: 0.526199
+  type: 'test'
+  ...
+# Subtest: Stripe の決済画面の URL：https・checkout.stripe.com・userinfo／port なしだけ
+ok 16 - Stripe の決済画面の URL：https・checkout.stripe.com・userinfo／port なしだけ
+  ---
+  duration_ms: 0.222535
+  type: 'test'
+  ...
+# Subtest: metadata は order_id・app・env の3つだけを完全解析の注文として認める
+ok 17 - metadata は order_id・app・env の3つだけを完全解析の注文として認める
+  ---
+  duration_ms: 0.304547
+  type: 'test'
+  ...
+# Subtest: 生成素材のハッシュは素材ファイルと一致（lib/complete-materials.json が最新）・入力ハッシュは保存済みの値から決まる
+ok 18 - 生成素材のハッシュは素材ファイルと一致（lib/complete-materials.json が最新）・入力ハッシュは保存済みの値から決まる
+  ---
+  duration_ms: 4.07362
+  type: 'test'
+  ...
+# Subtest: Stripe の例外の分類：通信・5xx・429・処理中の冪等キーは一時的
+ok 19 - Stripe の例外の分類：通信・5xx・429・処理中の冪等キーは一時的
+  ---
+  duration_ms: 0.16319
+  type: 'test'
+  ...
+# Subtest: Production（販売停止中）は Checkout が 503 sales_closed・ゲストの Checkout も 503（外部へ接続しない）
+ok 20 - Production（販売停止中）は Checkout が 503 sales_closed・ゲストの Checkout も 503（外部へ接続しない）
+  ---
+  duration_ms: 2.367061
+  type: 'test'
+  ...
+# Subtest: Production の Ref・Stripe モードの取り違えと環境不明では Checkout・Webhook・状態確認は 404（外部へ接続しない）
+ok 21 - Production の Ref・Stripe モードの取り違えと環境不明では Checkout・Webhook・状態確認は 404（外部へ接続しない）
+  ---
+  duration_ms: 2.092077
+  type: 'test'
+  ...
+# Subtest: 販売を閉じている（未設定・false・TRUE）と Checkout は 503 sales_closed（認証・Stripe・DB に接続しない）
+ok 22 - 販売を閉じている（未設定・false・TRUE）と Checkout は 503 sales_closed（認証・Stripe・DB に接続しない）
+  ---
+  duration_ms: 6549.901404
+  type: 'test'
+  ...
+# Subtest: 設定不足（戻り先・Price）は 503（fail-closed）
+ok 23 - 設定不足（戻り先・Price）は 503（fail-closed）
+  ---
+  duration_ms: 8388.509593
+  type: 'test'
+  ...
+# Subtest: Checkout：認証を入力の検査より先に行い、本文は diagnosisSessionId だけを受け付ける
+ok 24 - Checkout：認証を入力の検査より先に行い、本文は diagnosisSessionId だけを受け付ける
+  ---
+  duration_ms: 1293.630307
+  type: 'test'
+  ...
+# Subtest: Checkout：本人の記録・登録完了・RC1・MENTOR 選択を確かめる
+ok 25 - Checkout：本人の記録・登録完了・RC1・MENTOR 選択を確かめる
+  ---
+  duration_ms: 2336.657309
+  type: 'test'
+  ...
+# Subtest: Checkout direct ¥3,000：カードだけ・customer_email なし・metadata 3つ・戻り先は設定から・Idempotency-Key は注文 ID から
+ok 26 - Checkout direct ¥3,000：カードだけ・customer_email なし・metadata 3つ・戻り先は設定から・Idempotency-Key は注文 ID から
+  ---
+  duration_ms: 1598.674634
+  type: 'test'
+  ...
+# Subtest: Checkout：二重クリックは同じ注文・同じ Session（Stripe の作成は1回）
+ok 27 - Checkout：二重クリックは同じ注文・同じ Session（Stripe の作成は1回）
+  ---
+  duration_ms: 1843.901267
+  type: 'test'
+  ...
+# Subtest: Checkout：並行注文でも注文は1件・Session は1つ（同じ Idempotency-Key）
+ok 28 - Checkout：並行注文でも注文は1件・Session は1つ（同じ Idempotency-Key）
+  ---
+  duration_ms: 1657.324511
+  type: 'test'
+  ...
+# Subtest: Checkout：Session 作成後に DB の checkout_open 記録が失敗 → 次の要求で同じ Session を回収
+ok 29 - Checkout：Session 作成後に DB の checkout_open 記録が失敗 → 次の要求で同じ Session を回収
+  ---
+  duration_ms: 1991.737659
+  type: 'test'
+  ...
+# Subtest: Checkout：Price の無効・金額違い・通貨違い・Live は注文を閉じて 503（Session を作らない）
+ok 30 - Checkout：Price の無効・金額違い・通貨違い・Live は注文を閉じて 503（Session を作らない）
+  ---
+  duration_ms: 7135.479411
+  type: 'test'
+  ...
+# Subtest: Checkout：Stripe の一時的な失敗は注文を残して 503（次の要求で同じ注文から作る）・恒久的な失敗は注文を failed
+ok 31 - Checkout：Stripe の一時的な失敗は注文を残して 503（次の要求で同じ注文から作る）・恒久的な失敗は注文を failed
+  ---
+  duration_ms: 3372.905677
+  type: 'test'
+  ...
+# Subtest: Checkout：支払い済み・返金済みの記録は再購入できない
+ok 32 - Checkout：支払い済み・返金済みの記録は再購入できない
+  ---
+  duration_ms: 1863.456472
+  type: 'test'
+  ...
+# Subtest: Webhook：署名なし・1バイト変更・古い timestamp・別の secret・不正な形式は 400（DB・Stripe に接続しない）
+ok 33 - Webhook：署名なし・1バイト変更・古い timestamp・別の secret・不正な形式は 400（DB・Stripe に接続しない）
+  ---
+  duration_ms: 1208.089687
+  type: 'test'
+  ...
+# Subtest: Webhook：Test のイベント・対象外のイベント・完全解析でない Session は DB に書かずに 200
+ok 34 - Webhook：Test のイベント・対象外のイベント・完全解析でない Session は DB に書かずに 200
+  ---
+  duration_ms: 1347.932023
+  type: 'test'
+  ...
+# Subtest: Webhook 支払い確定：注文 paid・MENTOR ロック・権利・complete_reports queued を同時に作る（素材・入力のハッシュ付き）。重複・再配送は状態を変えない
+ok 35 - Webhook 支払い確定：注文 paid・MENTOR ロック・権利・complete_reports queued を同時に作る（素材・入力のハッシュ付き）。重複・再配送は状態を変えない
+  ---
+  duration_ms: 2521.667573
+  type: 'test'
+  ...
+# Subtest: Webhook：期限切れは注文 expired（支払い前）・Stripe の最新状態が expired でなければ 500 で再送
+ok 36 - Webhook：期限切れは注文 expired（支払い前）・Stripe の最新状態が expired でなければ 500 で再送
+  ---
+  duration_ms: 2113.967481
+  type: 'test'
+  ...
+# Subtest: Webhook 返金：一部は記録だけ・全額で refunded（権利・生成物 revoked）。返金が支払い確定より先でも refunded を優先
+ok 37 - Webhook 返金：一部は記録だけ・全額で refunded（権利・生成物 revoked）。返金が支払い確定より先でも refunded を優先
+  ---
+  duration_ms: 3637.996023
+  type: 'test'
+  ...
+# Subtest: Webhook dispute：開始で suspended・勝訴で active・敗訴で revoked。支払い確定前の dispute は complete_retry_later → 500 → 再送で処理
+ok 38 - Webhook dispute：開始で suspended・勝訴で active・敗訴で revoked。支払い確定前の dispute は complete_retry_later → 500 → 再送で処理
+  ---
+  duration_ms: 3418.87653
+  type: 'test'
+  ...
+# Subtest: Webhook：Stripe・DB の一時的な失敗は failed を記録して 500 → 再送で処理
+ok 39 - Webhook：Stripe・DB の一時的な失敗は failed を記録して 500 → 再送で処理
+  ---
+  duration_ms: 2256.857708
+  type: 'test'
+  ...
+# Subtest: C8：Checkout の後に環境変数の Price ID を変えても、その時点の価格で正しく支払われた注文は paid になる（注文の行が正本）
+ok 40 - C8：Checkout の後に環境変数の Price ID を変えても、その時点の価格で正しく支払われた注文は paid になる（注文の行が正本）
+  ---
+  duration_ms: 2228.068049
+  type: 'test'
+  ...
+# Subtest: Webhook：恒久的な不一致（金額・Price・metadata）は ignored・200（権利なし）
+ok 41 - Webhook：恒久的な不一致（金額・Price・metadata）は ignored・200（権利なし）
+  ---
+  duration_ms: 17914.063955
+  type: 'test'
+  ...
+# Subtest: Webhook：販売を閉じていても返金・dispute を処理する
+ok 42 - Webhook：販売を閉じていても返金・dispute を処理する
+  ---
+  duration_ms: 2242.12195
+  type: 'test'
+  ...
+# Subtest: 状態確認：認証が先・本人の記録だけ・Stripe ID・保存パス・メール・診断コードを返さない
+ok 43 - 状態確認：認証が先・本人の記録だけ・Stripe ID・保存パス・メール・診断コードを返さない
+  ---
+  duration_ms: 2428.769429
+  type: 'test'
+  ...
+# Subtest: 応答・ログ・metadata に禁止情報が無い（一連の決済・返金の後）
+ok 44 - 応答・ログ・metadata に禁止情報が無い（一連の決済・返金の後）
+  ---
+  duration_ms: 2585.474562
+  type: 'test'
+  ...
+# Subtest: 同じ診断結果の旧 Payment Link の購入（本人に結び付けていない＝同じ回答の別人の購入かもしれない）：本人の購入にせず、¥1,000・¥3,000 を売る。旧購入の確認は廃止（410）
+ok 45 - 同じ診断結果の旧 Payment Link の購入（本人に結び付けていない＝同じ回答の別人の購入かもしれない）：本人の購入にせず、¥1,000・¥3,000 を売る。旧購入の確認は廃止（410）
+  ---
+  duration_ms: 2075.035696
+  type: 'test'
+  ...
+# Subtest: 旧 Payment Link の購入が無い新診断の記録は、新しい Checkout の ¥3,000（direct）。別の診断結果の旧購入は関係しない
+ok 46 - 旧 Payment Link の購入が無い新診断の記録は、新しい Checkout の ¥3,000（direct）。別の診断結果の旧購入は関係しない
+  ---
+  duration_ms: 1729.24018
+  type: 'test'
+  ...
+# {"event":"env_guard_denied","api":"my-entitlements","env":"unknown","ref_tail":null,"reasons":["env_unknown","supabase_url_missing","expected_ref_missing","production_ref_missing","preview_ref_missing","server_key_missing","anon_key_missing"],"incident_id":"d9417e80"}
+# Subtest: my-entitlements：成功・失敗とも Cache-Control: private, no-store
+ok 47 - my-entitlements：成功・失敗とも Cache-Control: private, no-store
+  ---
+  duration_ms: 1792.931027
+  type: 'test'
+  ...
+# Subtest: Webhook は生成の完了を待たずに応答し、応答の後で生成する（queued → ready・非公開 Storage に1つだけ保存）
+ok 48 - Webhook は生成の完了を待たずに応答し、応答の後で生成する（queued → ready・非公開 Storage に1つだけ保存）
+  ---
+  duration_ms: 2419.28309
+  type: 'test'
+  ...
+# Subtest: 同時生成：同じ生成物を2つ同時に処理しても生成は1回だけ（lease）。ready の後の再実行は何もしない
+ok 49 - 同時生成：同じ生成物を2つ同時に処理しても生成は1回だけ（lease）。ready の後の再実行は何もしない
+  ---
+  duration_ms: 2027.51607
+  type: 'test'
+  ...
+# Subtest: 途中失敗：保存の失敗は failed（再試行時刻あり）で中途半端な物を残さない。時刻が来れば再実行で ready
+ok 50 - 途中失敗：保存の失敗は failed（再試行時刻あり）で中途半端な物を残さない。時刻が来れば再実行で ready
+  ---
+  duration_ms: 2742.194859
+  type: 'test'
+  ...
+# Subtest: 中断した試行の残り（lease の切れた generating・保存物あり）は、次の取得で消してから作り直す
+ok 51 - 中断した試行の残り（lease の切れた generating・保存物あり）は、次の取得で消してから作り直す
+  ---
+  duration_ms: 2517.023808
+  type: 'test'
+  ...
+# Subtest: 生成中に lease が切れて別の処理が完了した：遅れた側は ready にせず、自分の保存物を消す
+ok 52 - 生成中に lease が切れて別の処理が完了した：遅れた側は ready にせず、自分の保存物を消す
+  ---
+  duration_ms: 2168.094714
+  type: 'test'
+  ...
+# Subtest: 生成中に返金で失効：ready にせず保存物を消す（revoked のまま）
+ok 53 - 生成中に返金で失効：ready にせず保存物を消す（revoked のまま）
+  ---
+  duration_ms: 2221.369878
+  type: 'test'
+  ...
+# Subtest: 再試行しない失敗：素材・入力のハッシュが凍結値と違えば stopped（attempts を上限にして止める）
+ok 54 - 再試行しない失敗：素材・入力のハッシュが凍結値と違えば stopped（attempts を上限にして止める）
+  ---
+  duration_ms: 2744.761802
+  type: 'test'
+  ...
+# Subtest: 一時的な失敗を max_attempts 回くり返すと止まる（それ以上取得しない）
+ok 55 - 一時的な失敗を max_attempts 回くり返すと止まる（それ以上取得しない）
+  ---
+  duration_ms: 2631.114452
+  type: 'test'
+  ...
+# Subtest: 状態確認（GET）で取り残し（queued）を見つけたら、応答の後で生成する。ready なら何もしない
+ok 56 - 状態確認（GET）で取り残し（queued）を見つけたら、応答の後で生成する。ready なら何もしない
+  ---
+  duration_ms: 4732.272339
+  type: 'test'
+  ...
+# Subtest: 閲覧 URL：本人確認の後に発行（300秒）。応答に保存先・注文 ID・user ID・report ID を出さない。開くと保存物そのものを返す
+ok 57 - 閲覧 URL：本人確認の後に発行（300秒）。応答に保存先・注文 ID・user ID・report ID を出さない。開くと保存物そのものを返す
+  ---
+  duration_ms: 2057.911718
+  type: 'test'
+  ...
+# Subtest: 期限切れ（300秒後）・改ざん・形式違反のトークンは開けない（DB・Storage へ接続しない）
+ok 58 - 期限切れ（300秒後）・改ざん・形式違反のトークンは開けない（DB・Storage へ接続しない）
+  ---
+  duration_ms: 1855.883775
+  type: 'test'
+  ...
+# Subtest: 別ユーザー：他人の記録の URL は発行できず、自分のトークンで他人の生成物は開けない
+ok 59 - 別ユーザー：他人の記録の URL は発行できず、自分のトークンで他人の生成物は開けない
+  ---
+  duration_ms: 2902.747547
+  type: 'test'
+  ...
+# Subtest: 権利失効の直後：発行済みの URL でも、返金・dispute 中・敗訴では開けない（勝訴で戻れば開ける）。発行もしない
+ok 60 - 権利失効の直後：発行済みの URL でも、返金・dispute 中・敗訴では開けない（勝訴で戻れば開ける）。発行もしない
+  ---
+  duration_ms: 4005.464798
+  type: 'test'
+  ...
+# Subtest: 保存物が記録の SHA-256 と違う（改ざん・取り違え）なら出さない。Storage の一時的な失敗は 503
+ok 61 - 保存物が記録の SHA-256 と違う（改ざん・取り違え）なら出さない。Storage の一時的な失敗は 503
+  ---
+  duration_ms: 2135.013724
+  type: 'test'
+  ...
+# Subtest: 設定不足・環境不明：閲覧の秘密値が無ければ 503、環境不明では発行も閲覧も 404
+ok 62 - 設定不足・環境不明：閲覧の秘密値が無ければ 503、環境不明では発行も閲覧も 404
+  ---
+  duration_ms: 4128.99796
+  type: 'test'
+  ...
+# Subtest: ログ・応答：保存先・注文 ID・user ID・report ID・記録 ID・トークンを出さない（生成・失敗・閲覧の一連の後）
+ok 63 - ログ・応答：保存先・注文 ID・user ID・report ID・記録 ID・トークンを出さない（生成・失敗・閲覧の一連の後）
+  ---
+  duration_ms: 2796.806434
+  type: 'test'
+  ...
+# Subtest: 閲覧トークン：期限は300秒・中身は暗号化・改ざんは拒否・秘密値ごとに別
+ok 64 - 閲覧トークン：期限は300秒・中身は暗号化・改ざんは拒否・秘密値ごとに別
+  ---
+  duration_ms: 2.196779
+  type: 'test'
+  ...
+# Subtest: Webhook の応答は生成を待たない：後段起動が失敗しても 200 で、状態確認で回収できる
+ok 65 - Webhook の応答は生成を待たない：後段起動が失敗しても 200 で、状態確認で回収できる
+  ---
+  duration_ms: 2122.445966
+  type: 'test'
+  ...
+# Subtest: C6：自動の再試行を使い切った失敗は「作成できませんでした」＋作り直し。同じ注文・目標で1つだけ再生成し、新しい注文・権利・請求は作らない
+ok 66 - C6：自動の再試行を使い切った失敗は「作成できませんでした」＋作り直し。同じ注文・目標で1つだけ再生成し、新しい注文・権利・請求は作らない
+  ---
+  duration_ms: 3535.061503
+  type: 'test'
+  ...
+# Subtest: C6：作り直しは2回まで。その後と、作り直しても直らない失敗（入力の不一致）はお問い合わせ（409）。運営者は原因を直してから作り直せる
+ok 67 - C6：作り直しは2回まで。その後と、作り直しても直らない失敗（入力の不一致）はお問い合わせ（409）。運営者は原因を直してから作り直せる
+  ---
+  duration_ms: 6016.916448
+  type: 'test'
+  ...
+# Subtest: C6：作り直しは本人だけ・権利がある間だけ。他人の記録は 404、返金後は 403。生成中・再試行待ちは何もしない（202 のまま1つ）
+ok 68 - C6：作り直しは本人だけ・権利がある間だけ。他人の記録は 404、返金後は 403。生成中・再試行待ちは何もしない（202 のまま1つ）
+  ---
+  duration_ms: 3452.746662
+  type: 'test'
+  ...
+# Subtest: C9：生成と引き継ぎが重なり、記録と生成物の本人が一時的に食い違っても、止めずに再試行して ready になる
+ok 69 - C9：生成と引き継ぎが重なり、記録と生成物の本人が一時的に食い違っても、止めずに再試行して ready になる
+  ---
+  duration_ms: 2258.061763
+  type: 'test'
+  ...
+# Subtest: A ¥1,000：診断結果の記録で購入→支払い→購入完了ページで固有リンク→開くと解析レポートだけ（完全解析は開けない）。秘密値は DB にハッシュだけ
+ok 70 - A ¥1,000：診断結果の記録で購入→支払い→購入完了ページで固有リンク→開くと解析レポートだけ（完全解析は開けない）。秘密値は DB にハッシュだけ
+  ---
+  duration_ms: 1935.303344
+  type: 'test'
+  ...
+# Subtest: 購入完了ページへ戻った時（cs=今の決済）：今の購入だけ current とリンク（支払いの確認の前でも）。途中でやめた決済にはリンクを出さない
+ok 71 - 購入完了ページへ戻った時（cs=今の決済）：今の購入だけ current とリンク（支払いの確認の前でも）。途中でやめた決済にはリンクを出さない
+  ---
+  duration_ms: 1958.332029
+  type: 'test'
+  ...
+# Subtest: 決済画面の作りすぎを防ぐ：同じ診断記録で1時間に20件まで。21件目は 429（Stripe を呼ばない）
+ok 72 - 決済画面の作りすぎを防ぐ：同じ診断記録で1時間に20件まで。21件目は 429（Stripe を呼ばない）
+  ---
+  duration_ms: 3505.409109
+  type: 'test'
+  ...
+# Subtest: 他のサイトからの送信（フォームの POST・別の Origin・cross-site）は断り、この端末の購入の控え（Cookie）を書き換えない
+ok 73 - 他のサイトからの送信（フォームの POST・別の Origin・cross-site）は断り、この端末の購入の控え（Cookie）を書き換えない
+  ---
+  duration_ms: 1316.929404
+  type: 'test'
+  ...
+# Subtest: B ¥3,000：MENTOR 目標が必須・注文に固定。支払い→生成→固有リンクで完全解析だけ（解析レポートは開けない）
+ok 74 - B ¥3,000：MENTOR 目標が必須・注文に固定。支払い→生成→固有リンクで完全解析だけ（解析レポートは開けない）
+  ---
+  duration_ms: 2042.047107
+  type: 'test'
+  ...
+# Subtest: ¥2,000 は UI・API・DB で新しく作れない（既存の行は残す）
+ok 75 - ¥2,000 は UI・API・DB で新しく作れない（既存の行は残す）
+  ---
+  duration_ms: 1323.600582
+  type: 'test'
+  ...
+# Subtest: 再購入：同じ記録・同じ商品でも新しい購入操作なら別の注文・別の固有リンク。A と B は別々に買える
+ok 76 - 再購入：同じ記録・同じ商品でも新しい購入操作なら別の注文・別の固有リンク。A と B は別々に買える
+  ---
+  duration_ms: 2296.388139
+  type: 'test'
+  ...
+# Subtest: Checkout の技術的な二重処理：同じ購入操作の再送・連打は1件。古い決済画面は新しい購入を妨げず、後から払っても別の注文として納品
+ok 77 - Checkout の技術的な二重処理：同じ購入操作の再送・連打は1件。古い決済画面は新しい購入を妨げず、後から払っても別の注文として納品
+  ---
+  duration_ms: 2086.091228
+  type: 'test'
+  ...
+# Subtest: キャンセル（期限切れ）の直後に買い直せる
+ok 78 - キャンセル（期限切れ）の直後に買い直せる
+  ---
+  duration_ms: 1856.907769
+  type: 'test'
+  ...
+# Subtest: 決済画面の期限：注文の作成から約24時間（Stripe の上限 24 時間の内側）。同じ注文の再送は同じ画面
+ok 79 - 決済画面の期限：注文の作成から約24時間（Stripe の上限 24 時間の内側）。同じ注文の再送は同じ画面
+  ---
+  duration_ms: 1680.932187
+  type: 'test'
+  ...
+# Subtest: 24時間の間の遅い支払い：期限内なら（作成から20時間後でも）支払いが反映され、固有リンクが有効になる
+ok 80 - 24時間の間の遅い支払い：期限内なら（作成から20時間後でも）支払いが反映され、固有リンクが有効になる
+  ---
+  duration_ms: 1794.008566
+  type: 'test'
+  ...
+# Subtest: ケースA 途中でキャンセル→再購入：新しい注文・新しい決済画面へ進める。古い未払いの画面は閉じる（24時間の間に二重に払われない）
+ok 81 - ケースA 途中でキャンセル→再購入：新しい注文・新しい決済画面へ進める。古い未払いの画面は閉じる（24時間の間に二重に払われない）
+  ---
+  duration_ms: 1729.794734
+  type: 'test'
+  ...
+# Subtest: 遅延：古い画面を閉じる処理は応答を待たせない（応答の時点では未完了・応答の後に閉じる）
+ok 82 - 遅延：古い画面を閉じる処理は応答を待たせない（応答の時点では未完了・応答の後に閉じる）
+  ---
+  duration_ms: 1502.001458
+  type: 'test'
+  ...
+# Subtest: ケースA 補足：別の商品・支払い済みの画面は閉じない。閉じる処理が失敗しても購入は進む
+ok 83 - ケースA 補足：別の商品・支払い済みの画面は閉じない。閉じる処理が失敗しても購入は進む
+  ---
+  duration_ms: 1777.825958
+  type: 'test'
+  ...
+# Subtest: ケースC 完全解析：キャンセル後の再購入で MENTOR の目標が混ざらない（各注文が自分の目標を持つ）。期限切れの後も買い直せる
+ok 84 - ケースC 完全解析：キャンセル後の再購入で MENTOR の目標が混ざらない（各注文が自分の目標を持つ）。期限切れの後も買い直せる
+  ---
+  duration_ms: 1917.984316
+  type: 'test'
+  ...
+# Subtest: PayPay：決済画面の支払い方法はカードと PayPay。金額・商品・期限・metadata は従来どおり。支払うと反映される
+ok 85 - PayPay：決済画面の支払い方法はカードと PayPay。金額・商品・期限・metadata は従来どおり。支払うと反映される
+  ---
+  duration_ms: 1504.007519
+  type: 'test'
+  ...
+# Subtest: PayPay：Stripe が PayPay 付きの作成を拒んだ時は、カードだけで作り直す（購入できなくならない）。注文は失敗にならない
+ok 86 - PayPay：Stripe が PayPay 付きの作成を拒んだ時は、カードだけで作り直す（購入できなくならない）。注文は失敗にならない
+  ---
+  duration_ms: 1585.896938
+  type: 'test'
+  ...
+# Subtest: PayPay：一時的な Stripe の失敗では、カードだけに切り替えない（注文は残り、次の要求で同じ決済画面）
+ok 87 - PayPay：一時的な Stripe の失敗では、カードだけに切り替えない（注文は残り、次の要求で同じ決済画面）
+  ---
+  duration_ms: 1416.262181
+  type: 'test'
+  ...
+# Subtest: PayPay：支払いの確定が後から届く場合（checkout.session.async_payment_succeeded）も、同じ処理で支払い済みになる
+ok 88 - PayPay：支払いの確定が後から届く場合（checkout.session.async_payment_succeeded）も、同じ処理で支払い済みになる
+  ---
+  duration_ms: 1832.529866
+  type: 'test'
+  ...
+# Subtest: 固有リンク：未払いでは開けない（支払い待ち）。返金・異議申し立て・運営者の停止で開けない。再発行すると古いリンクは無効
+ok 89 - 固有リンク：未払いでは開けない（支払い待ち）。返金・異議申し立て・運営者の停止で開けない。再発行すると古いリンクは無効
+  ---
+  duration_ms: 2715.368207
+  type: 'test'
+  ...
+# Subtest: マイページへの登録：ログイン必須・同じアカウントは1件・別のアカウントにも登録できる・元の登録は消えない・記録の持ち主は変わらない
+ok 90 - マイページへの登録：ログイン必須・同じアカウントは1件・別のアカウントにも登録できる・元の登録は消えない・記録の持ち主は変わらない
+  ---
+  duration_ms: 4027.685915
+  type: 'test'
+  ...
+# Subtest: 同じ 100 問の回答の別人（別の記録）：記録 A の購入は記録 B に伝わらない。購入対象トークンは記録ごと
+ok 91 - 同じ 100 問の回答の別人（別の記録）：記録 A の購入は記録 B に伝わらない。購入対象トークンは記録ごと
+  ---
+  duration_ms: 1849.449644
+  type: 'test'
+  ...
+# Subtest: 購入対象トークン：改ざん・期限切れは使えない。マイページの記録は本人の記録（または登録した記録）だけ
+ok 92 - 購入対象トークン：改ざん・期限切れは使えない。マイページの記録は本人の記録（または登録した記録）だけ
+  ---
+  duration_ms: 1812.620511
+  type: 'test'
+  ...
+# Subtest: 応答・ログ：固有リンクの秘密値は購入完了ページ（Cookie の持ち主）の応答だけ。注文 ID・Stripe ID・メール・診断コードを出さない
+ok 93 - 応答・ログ：固有リンクの秘密値は購入完了ページ（Cookie の持ち主）の応答だけ。注文 ID・Stripe ID・メール・診断コードを出さない
+  ---
+  duration_ms: 1579.982263
+  type: 'test'
+  ...
+# Subtest: 価格の確認：確認できた価格は覚える（2 回目の購入で Stripe の prices を呼ばない）。商品が違えば別に確認する
+ok 94 - 価格の確認：確認できた価格は覚える（2 回目の購入で Stripe の prices を呼ばない）。商品が違えば別に確認する
+  ---
+  duration_ms: 1588.753799
+  type: 'test'
+  ...
+# Subtest: 価格の確認：問題のある価格（金額違い）は覚えず、毎回止める。決済画面は作らず、注文は閉じる
+ok 95 - 価格の確認：問題のある価格（金額違い）は覚えず、毎回止める。決済画面は作らず、注文は閉じる
+  ---
+  duration_ms: 1512.327084
+  type: 'test'
+  ...
+# Subtest: 前提：この試験の設定には STRIPE_COMPLETE_PRICE_UPGRADE が無く、Stripe にも ¥2,000 の Price が無い
+ok 96 - 前提：この試験の設定には STRIPE_COMPLETE_PRICE_UPGRADE が無く、Stripe にも ¥2,000 の Price が無い
+  ---
+  duration_ms: 0.968877
+  type: 'test'
+  ...
+# Subtest: UPGRADE なし：解析レポート ¥1,000 の Checkout が作れる（¥1,000 の Price・解析レポートだけ）
+ok 97 - UPGRADE なし：解析レポート ¥1,000 の Checkout が作れる（¥1,000 の Price・解析レポートだけ）
+  ---
+  duration_ms: 1633.375134
+  type: 'test'
+  ...
+# Subtest: UPGRADE なし：完全解析 ¥3,000 の Checkout が作れる（¥3,000 の Price・目標が必須）
+ok 98 - UPGRADE なし：完全解析 ¥3,000 の Checkout が作れる（¥3,000 の Price・目標が必須）
+  ---
+  duration_ms: 1407.6383
+  type: 'test'
+  ...
+# Subtest: UPGRADE なし：upgrade・analysis_upgrade は従来どおり offer_retired（400）で、決済画面も注文も作らない
+ok 99 - UPGRADE なし：upgrade・analysis_upgrade は従来どおり offer_retired（400）で、決済画面も注文も作らない
+  ---
+  duration_ms: 1491.050281
+  type: 'test'
+  ...
+# Subtest: UPGRADE なし：旧ゲスト経路・旧引き継ぎ・マイページの旧 Checkout は 410 のまま（設定不足の 503 にならない）
+ok 100 - UPGRADE なし：旧ゲスト経路・旧引き継ぎ・マイページの旧 Checkout は 410 のまま（設定不足の 503 にならない）
+  ---
+  duration_ms: 1494.431453
+  type: 'test'
+  ...
+# Subtest: ログイン状態の ¥1,000：Checkout ¥1,000 → 支払い確定で解析権。マイページは ¥2,000 の案内・解析レポートを読める
+ok 101 - ログイン状態の ¥1,000：Checkout ¥1,000 → 支払い確定で解析権。マイページは ¥2,000 の案内・解析レポートを読める
+  ---
+  duration_ms: 2226.516909
+  type: 'test'
+  ...
+# Subtest: 解析権が一時停止中（dispute 中）は ¥3,000・¥2,000 を作らない
+ok 102 - 解析権が一時停止中（dispute 中）は ¥3,000・¥2,000 を作らない
+  ---
+  duration_ms: 2032.572558
+  type: 'test'
+  ...
+# Subtest: 同じ診断コードでも別の本人には権利を共有しない（¥1,000 を別に買える・解析レポートは読めない）
+ok 103 - 同じ診断コードでも別の本人には権利を共有しない（¥1,000 を別に買える・解析レポートは読めない）
+  ---
+  duration_ms: 2182.911466
+  type: 'test'
+  ...
+# Subtest: C3（ゲスト）：Stripe で戻った・閉じた決済はすぐ買い直せる。支払いと重なった時は二重に請求しない
+ok 104 - C3（ゲスト）：Stripe で戻った・閉じた決済はすぐ買い直せる。支払いと重なった時は二重に請求しない
+  ---
+  duration_ms: 2159.481376
+  type: 'test'
+  ...
+# Subtest: C3（ログイン）：マイページへ戻った（中止）・「決済をやり直す」で決済待ちを片付け、すぐ買い直せる
+ok 105 - C3（ログイン）：マイページへ戻った（中止）・「決済をやり直す」で決済待ちを片付け、すぐ買い直せる
+  ---
+  duration_ms: 2825.859785
+  type: 'test'
+  ...
+# Subtest: C5：戻って MENTOR 目標を変えたら古い画面を使わず、新しい目標で決済。支払い後に固定される目標は支払った注文の目標
+ok 106 - C5：戻って MENTOR 目標を変えたら古い画面を使わず、新しい目標で決済。支払い後に固定される目標は支払った注文の目標
+  ---
+  duration_ms: 1980.372392
+  type: 'test'
+  ...
+# Subtest: D2・D3：Google 等でも同じ確認済みメールなら引き継げる。共有端末で別のメールの人へは移らない。Cookie 消失は OTP で復旧（決済待ちがあっても）
+ok 107 - D2・D3：Google 等でも同じ確認済みメールなら引き継げる。共有端末で別のメールの人へは移らない。Cookie 消失は OTP で復旧（決済待ちがあっても）
+  ---
+  duration_ms: 2383.619414
+  type: 'test'
+  ...
+# Subtest: ¥1,000 の返金：解析権は revoked。発行済みの閲覧リンク（期限内）も、新しいリンクも開けない。応答は private, no-store
+ok 108 - ¥1,000 の返金：解析権は revoked。発行済みの閲覧リンク（期限内）も、新しいリンクも開けない。応答は private, no-store
+  ---
+  duration_ms: 2577.287863
+  type: 'test'
+  ...
+# Subtest: ¥3,000 の返金：解析・完全解析とも revoked。両方の閲覧が、発行済みのリンクでも不可
+ok 109 - ¥3,000 の返金：解析・完全解析とも revoked。両方の閲覧が、発行済みのリンクでも不可
+  ---
+  duration_ms: 2839.503394
+  type: 'test'
+  ...
+# Subtest: ゲストの返金：Cookie の端末の閲覧リンク（発行済み）も開けない。引き継ぎ後はゲストのリンクを使えない
+ok 110 - ゲストの返金：Cookie の端末の閲覧リンク（発行済み）も開けない。引き継ぎ後はゲストのリンクを使えない
+  ---
+  duration_ms: 2938.759532
+  type: 'test'
+  ...
+# Subtest: 未払いの Webhook（checkout.session.completed・payment_status=unpaid）：権利・生成物を作らない
+ok 111 - 未払いの Webhook（checkout.session.completed・payment_status=unpaid）：権利・生成物を作らない
+  ---
+  duration_ms: 1742.24954
+  type: 'test'
+  ...
+# Subtest: 閲覧リンクの流用：別の本人・別の記録・別の診断結果・不明な種類・sid の無い再発行トークンは開けない
+ok 112 - 閲覧リンクの流用：別の本人・別の記録・別の診断結果・不明な種類・sid の無い再発行トークンは開けない
+  ---
+  duration_ms: 2415.621127
+  type: 'test'
+  ...
+# Subtest: 旧 ¥1,000：運営者が停止すると旧形式リンク・マイページ（本人に結び付け済み）とも閲覧不可、復帰で戻る。取消は最終。API のロールは操作できない
+ok 113 - 旧 ¥1,000：運営者が停止すると旧形式リンク・マイページ（本人に結び付け済み）とも閲覧不可、復帰で戻る。取消は最終。API のロールは操作できない
+  ---
+  duration_ms: 2470.893531
+  type: 'test'
+  ...
+# Subtest: C6（ゲスト）：最終の失敗は「作成できませんでした」。この端末（Cookie）からだけ同じ注文で作り直せる。引き継ぎ後はマイページで
+ok 114 - C6（ゲスト）：最終の失敗は「作成できませんでした」。この端末（Cookie）からだけ同じ注文で作り直せる。引き継ぎ後はマイページで
+  ---
+  duration_ms: 2280.062097
+  type: 'test'
+  ...
+# Subtest: ロックの順：支払いの確定は 結果グループ → 記録 → 注文の行 の順に取る（注文の作成・引き継ぎと同じ順）
+ok 115 - ロックの順：支払いの確定は 結果グループ → 記録 → 注文の行 の順に取る（注文の作成・引き継ぎと同じ順）
+  ---
+  duration_ms: 0.836141
+  type: 'test'
+  ...
+# Subtest: 並行：引き継ぎと支払いの確定（Webhook の再送）が重なっても、デッドロックせず1つの状態に揃う
+ok 116 - 並行：引き継ぎと支払いの確定（Webhook の再送）が重なっても、デッドロックせず1つの状態に揃う
+  ---
+  duration_ms: 5410.3877
+  type: 'test'
+  ...
+# Subtest: 並行：同じ診断結果の2つの記録で、支払いの確定と別の記録の注文の作成が重なっても、デッドロックせず二重に買えない
+ok 117 - 並行：同じ診断結果の2つの記録で、支払いの確定と別の記録の注文の作成が重なっても、デッドロックせず二重に買えない
+  ---
+  duration_ms: 6837.904427
+  type: 'test'
+  ...
+# Subtest: 並行（決定的）：記録のロックを持つ処理（引き継ぎ・注文の作成）が注文の行を取る時、支払いの確定は記録のロックを先に待つ（デッドロックしない）
+ok 118 - 並行（決定的）：記録のロックを持つ処理（引き継ぎ・注文の作成）が注文の行を取る時、支払いの確定は記録のロックを先に待つ（デッドロックしない）
+  ---
+  duration_ms: 2212.431353
+  type: 'test'
+  ...
+# Subtest: 固有リンク：診断完了で発行（256bit・DB はハッシュだけ）→ 同じ診断結果を復元。不正・失効・削除済みは 404（情報を出さない）
+ok 119 - 固有リンク：診断完了で発行（256bit・DB はハッシュだけ）→ 同じ診断結果を復元。不正・失効・削除済みは 404（情報を出さない）
+  ---
+  duration_ms: 1486.416517
+  type: 'test'
+  ...
+# Subtest: 固有リンク：引き継いだ後も同じ記録（重複しない）・無料結果は開ける・ゲストとしての購入は断る。返金後は有料部分を開けない
+ok 120 - 固有リンク：引き継いだ後も同じ記録（重複しない）・無料結果は開ける・ゲストとしての購入は断る。返金後は有料部分を開けない
+  ---
+  duration_ms: 2520.319671
+  type: 'test'
+  ...
+# Subtest: 固有リンクの整理（運営者）：期限切れのリンクと、購入の無い古いゲストの記録だけを消す。購入のある記録は残す。API のロールは実行できない
+ok 121 - 固有リンクの整理（運営者）：期限切れのリンクと、購入の無い古いゲストの記録だけを消す。購入のある記録は残す。API のロールは実行できない
+  ---
+  duration_ms: 2290.443368
+  type: 'test'
+  ...
+# Subtest: 固有リンクの大量作成の防止：同じ秘密値は冪等（連打・再送で記録もリンクも増えない）・入力の制限・接続元ごとに 10 分 10 件で 429・IP は保存もログもしない
+ok 122 - 固有リンクの大量作成の防止：同じ秘密値は冪等（連打・再送で記録もリンクも増えない）・入力の制限・接続元ごとに 10 分 10 件で 429・IP は保存もログもしない
+  ---
+  duration_ms: 2484.158475
+  type: 'test'
+  ...
+# Subtest: ログインなしの購入は買えることを優先：別のブラウザで購入済みの診断結果も新しい記録で買える・別のタブで放置された決済は閉じて作り直す
+ok 123 - ログインなしの購入は買えることを優先：別のブラウザで購入済みの診断結果も新しい記録で買える・別のタブで放置された決済は閉じて作り直す
+  ---
+  duration_ms: 2925.886236
+  type: 'test'
+  ...
+# Subtest: 違う診断結果なら買える：ログイン中（マイページ）は前の結果の購入に関係なく ¥1,000・¥3,000 を作れる。同じ診断結果は重ねて売らない
+ok 124 - 違う診断結果なら買える：ログイン中（マイページ）は前の結果の購入に関係なく ¥1,000・¥3,000 を作れる。同じ診断結果は重ねて売らない
+  ---
+  duration_ms: 2709.122659
+  type: 'test'
+  ...
+# Subtest: 同じ診断結果のログイン中の別ユーザー A・B：A の ¥3,000 は B に付かない。B は ¥1,000・¥3,000 を買える。A は重ねて買えない
+ok 125 - 同じ診断結果のログイン中の別ユーザー A・B：A の ¥3,000 は B に付かない。B は ¥1,000・¥3,000 を買える。A は重ねて買えない
+  ---
+  duration_ms: 3572.503552
+  type: 'test'
+  ...
+# Subtest: 同じ診断結果の別の人が同時に決済を始める（ログイン中 A・B、ゲスト C・D）：互いに止めず、別の注文・別の記録
+ok 126 - 同じ診断結果の別の人が同時に決済を始める（ログイン中 A・B、ゲスト C・D）：互いに止めず、別の注文・別の記録
+  ---
+  duration_ms: 2643.642748
+  type: 'test'
+  ...
+# Subtest: 総当たり：ログイン中に結果ページから買う（ゲストの決済）：決済画面のメールはアカウントの確認済みメール → マイページで引き継げる。ログインを確かめられなくても売る
+ok 127 - 総当たり：ログイン中に結果ページから買う（ゲストの決済）：決済画面のメールはアカウントの確認済みメール → マイページで引き継げる。ログインを確かめられなくても売る
+  ---
+  duration_ms: 3073.743544
+  type: 'test'
+  ...
+# Subtest: 監査：共有された結果リンクで、別の人が決済を放置・支払っても、持ち主の購入を見せない・使わせない
+ok 128 - 監査：共有された結果リンクで、別の人が決済を放置・支払っても、持ち主の購入を見せない・使わせない
+  ---
+  duration_ms: 2981.086748
+  type: 'test'
+  ...
+# Subtest: 監査：ログイン中に結果ページから買う：アカウントで同じ結果を購入済み・決済中なら、ゲストとして重ねて売らない（マイページへ）
+ok 129 - 監査：ログイン中に結果ページから買う：アカウントで同じ結果を購入済み・決済中なら、ゲストとして重ねて売らない（マイページへ）
+  ---
+  duration_ms: 2806.911523
+  type: 'test'
+  ...
+# Subtest: 監査：Cookie の上限を超えても、支払い済みの購入をこの端末から失わない
+ok 130 - 監査：Cookie の上限を超えても、支払い済みの購入をこの端末から失わない
+  ---
+  duration_ms: 5796.303743
+  type: 'test'
+  ...
+# Subtest: 監査：この端末で引き継いだ結果を、ログアウトした状態で開いた：ゲストとして売り直さない（マイページで開く）
+ok 131 - 監査：この端末で引き継いだ結果を、ログアウトした状態で開いた：ゲストとして売り直さない（マイページで開く）
+  ---
+  duration_ms: 2543.13326
+  type: 'test'
+  ...
+# Subtest: 監査：反映しなかった注文（中止後の遅れた支払い）への異議申し立ては、記録だけ残して Webhook を失敗させない
+ok 132 - 監査：反映しなかった注文（中止後の遅れた支払い）への異議申し立ては、記録だけ残して Webhook を失敗させない
+  ---
+  duration_ms: 2055.31059
+  type: 'test'
+  ...
+# Subtest: 再監査：ログイン中の返金の後、目標を選び直して ¥3,000・¥2,000 を買い直せる
+ok 133 - 再監査：ログイン中の返金の後、目標を選び直して ¥3,000・¥2,000 を買い直せる
+  ---
+  duration_ms: 3509.446952
+  type: 'test'
+  ...
+# Subtest: 再監査：持ち主でない端末（他人の記録に未払いの注文だけを持つ）は、完全解析を開けない・作り直せない
+ok 134 - 再監査：持ち主でない端末（他人の記録に未払いの注文だけを持つ）は、完全解析を開けない・作り直せない
+  ---
+  duration_ms: 2336.383281
+  type: 'test'
+  ...
+# Subtest: 再監査：解析レポートの支払いで異議申し立てに負けた記録では、¥3,000 も売らない
+ok 135 - 再監査：解析レポートの支払いで異議申し立てに負けた記録では、¥3,000 も売らない
+  ---
+  duration_ms: 1974.961887
+  type: 'test'
+  ...
+# Subtest: 再々監査：申込の切り替え（¥1,000 → ¥3,000 → ¥1,000）の後に支払い・返金しても、同じ記録でもう一度買える（前の注文の鍵と重ならない）
+ok 136 - 再々監査：申込の切り替え（¥1,000 → ¥3,000 → ¥1,000）の後に支払い・返金しても、同じ記録でもう一度買える（前の注文の鍵と重ならない）
+  ---
+  duration_ms: 4332.312771
+  type: 'test'
+  ...
+# Subtest: 再々監査：Cookie の上限を超えた時、決済中の注文の印より先に、閉じた未払いの注文の印を外す
+ok 137 - 再々監査：Cookie の上限を超えた時、決済中の注文の印より先に、閉じた未払いの注文の印を外す
+  ---
+  duration_ms: 5922.269596
+  type: 'test'
+  ...
+# Subtest: 1つだけ：ゲストで ¥1,000 の画面を開いたまま ¥3,000 を選ぶ → ¥1,000 の画面は Stripe で閉じ、¥3,000 を買える。逆も同じ
+ok 138 - 1つだけ：ゲストで ¥1,000 の画面を開いたまま ¥3,000 を選ぶ → ¥1,000 の画面は Stripe で閉じ、¥3,000 を買える。逆も同じ
+  ---
+  duration_ms: 2262.973056
+  type: 'test'
+  ...
+# Subtest: 1つだけ：ログイン中（マイページ）の ¥3,000 の画面を開いたまま、結果ページで ¥1,000 を選ぶ → マイページの画面を閉じて ¥1,000 を買える
+ok 139 - 1つだけ：ログイン中（マイページ）の ¥3,000 の画面を開いたまま、結果ページで ¥1,000 を選ぶ → マイページの画面を閉じて ¥1,000 を買える
+  ---
+  duration_ms: 2247.381368
+  type: 'test'
+  ...
+# Subtest: 決済画面の期限：注文の作成から約24時間（Stripe の上限 24 時間から5分の余裕）。同じ注文の再試行は同じ画面を受け取る
+ok 140 - 決済画面の期限：注文の作成から約24時間（Stripe の上限 24 時間から5分の余裕）。同じ注文の再試行は同じ画面を受け取る
+  ---
+  duration_ms: 1598.460148
+  type: 'test'
+  ...
+# Subtest: ログイン中：作ったまま 4 分を過ぎた注文（画面を渡せなかった）は片付けて、新しい注文で決済画面を作る
+ok 141 - ログイン中：作ったまま 4 分を過ぎた注文（画面を渡せなかった）は片付けて、新しい注文で決済画面を作る
+  ---
+  duration_ms: 1919.127542
+  type: 'test'
+  ...
+# Subtest: 引き継ぎの間に別のタブでマイページの決済画面を開いた：引き継いだ後にその画面を閉じる（持っている物を払わせない）
+ok 142 - 引き継ぎの間に別のタブでマイページの決済画面を開いた：引き継いだ後にその画面を閉じる（持っている物を払わせない）
+  ---
+  duration_ms: 2078.041584
+  type: 'test'
+  ...
+# Subtest: ログイン中：別の端末・消えた Cookie でも、このアカウントのメールで払った未引き継ぎの購入がある結果は重ねて売らない
+ok 143 - ログイン中：別の端末・消えた Cookie でも、このアカウントのメールで払った未引き継ぎの購入がある結果は重ねて売らない
+  ---
+  duration_ms: 2336.158376
+  type: 'test'
+  ...
+# Subtest: ログイン中：異議申し立てで負けた ¥1,000 の記録は ¥3,000 を出さない（押しても進めないボタンを出さない）
+ok 144 - ログイン中：異議申し立てで負けた ¥1,000 の記録は ¥3,000 を出さない（押しても進めないボタンを出さない）
+  ---
+  duration_ms: 2098.251502
+  type: 'test'
+  ...
+# Subtest: Cookie の上限：引き継ぎ済みの記録の印は、決済中の注文の印より後まで残す（ログアウト中に引き継ぎ済みの結果を売り直さない）
+ok 145 - Cookie の上限：引き継ぎ済みの記録の印は、決済中の注文の印より後まで残す（ログアウト中に引き継ぎ済みの結果を売り直さない）
+  ---
+  duration_ms: 5282.549638
+  type: 'test'
+  ...
+1..145
+# tests 145
+# suites 0
+# pass 145
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 351945.632636

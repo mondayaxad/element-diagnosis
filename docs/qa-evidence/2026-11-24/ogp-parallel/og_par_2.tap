@@ -1,0 +1,42 @@
+TAP version 13
+# Subtest: p の正規形：同じ見た目になる p は同じ文字列。範囲外は従来の既定（風・法器・モンド・キャラクターなし）に読み替える
+ok 1 - p の正規形：同じ見た目になる p は同じ文字列。範囲外は従来の既定（風・法器・モンド・キャラクターなし）に読み替える
+  ---
+  duration_ms: 7.049978
+  type: 'test'
+  ...
+# Subtest: og-image：Google Fonts を実行時に取得しない・同梱フォント・長期 CDN キャッシュ・正規形でなければ 308
+ok 2 - og-image：Google Fonts を実行時に取得しない・同梱フォント・長期 CDN キャッシュ・正規形でなければ 308
+  ---
+  duration_ms: 0.372569
+  type: 'test'
+  ...
+# Subtest: 下地35枚（元素7×武器5）・MIRROR 欄の札7枚・フォントがあり、公開ビルドの対象
+ok 3 - 下地35枚（元素7×武器5）・MIRROR 欄の札7枚・フォントがあり、公開ビルドの対象
+  ---
+  duration_ms: 18.036701
+  type: 'test'
+  ...
+# Subtest: カードの組み立て：all（従来の1枚描き）は人ごとの情報もすべて含み、overlay は下地の上に人ごとの情報だけ
+ok 4 - カードの組み立て：all（従来の1枚描き）は人ごとの情報もすべて含み、overlay は下地の上に人ごとの情報だけ
+  ---
+  duration_ms: 6.929354
+  type: 'test'
+  ...
+# Subtest: 画素比較：下地＋overlay と従来の1枚描きがほぼ同じ（PSNR 40dB 以上）・CPU が 1/2 以下
+ok 5 - 画素比較：下地＋overlay と従来の1枚描きがほぼ同じ（PSNR 40dB 以上）・CPU が 1/2 以下
+  ---
+  duration_ms: 14980.828503
+  type: 'test'
+  ...
+# OGP 画素一致：PSNR 48.17dB（基準 40dB 以上）
+# OGP CPU：重ね描き 496/457/491ms・1枚描き 1661/1765/1892ms → 最小値の比 0.275（基準 0.5 以下）
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 15128.45724
