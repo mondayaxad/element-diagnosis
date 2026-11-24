@@ -1,0 +1,41 @@
+# SEO の回帰テスト（インデックス方針・sitemap・canonical・noindex・タイプ解説のメタと OGP 画像・構造化データ・GA4 の消毒）。
+#   ・main への PR と、main への push で実行する。失敗が1件でもあれば赤（除外・continue-on-error・リトライは使わない）。
+#   ・依存パッケージは不要（npm install しない）。秘密情報は使わない。権限はリポジトリの読み取りだけ。
+#   ・Vercel のデプロイとは無関係（デプロイ設定は変えない）。
+#   ・マージ前にこのチェックが緑であることを必須とする運用は docs/seo/CI_SEO.md。
+name: SEO regression tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seo-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  seo:
+    name: SEO tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run SEO regression tests
+        run: >-
+          node --test
+          tests/seo_indexing.test.js
+          tests/seo_index_guard.test.js
+          tests/public_build.test.js
+          tests/ga4_fixes.test.js
+          tests/seo_type_meta.test.js
+          tests/seo_jsonld.test.js
