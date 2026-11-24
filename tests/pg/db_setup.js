@@ -33,7 +33,16 @@ function swapFingerprint(text) {
   return out;
 }
 
-function createProdLikeDb({ withComplete17 = true } = {}) {
+// 本番に適用する migration の段階（docs/sql/production/README.md）。既定は従来どおり 01〜03（旧版購入権の試験が前提にする構造）
+const PROD_STAGES_BASE = ['01_registration_compat', '02_orders_reports_links', '03_reissue_and_constraints'];
+// 本番の現状（prod_01〜04b と、邪眼の prod_06）。アプリの DB 試験を Live（本番相当）で流す時に使う
+const PROD_STAGES_ALL = [...PROD_STAGES_BASE, '04a_onboarding_required_state', '04b_onboarding_enforcement', '06_jagan'];
+// 合成データ（synthetic_data.sql）が入れる行。clearData で空にする（README：「prod_01〜04b を当てた DB をテンプレートにし、合成の既存データは空にする」）
+const SYNTHETIC_TABLES = ['public.purchase_entitlements', 'public.diagnosis_answers', 'public.diagnosis_results', 'public.diagnosis_sessions', 'auth.identities', 'auth.users'];
+
+// synthetic：合成の既存データを入れる（本番 migration の冒頭の確認が「既存の旧購入9行」などを前提にするため、本番の段階を当てる時は必須）
+// stages：当てる本番の段階（既定は 01〜03）。clearData：段階を当てた後に、合成の既存データを空にする（アプリ試験を空の本番相当の DB で始める）
+function createProdLikeDb({ withComplete17 = true, synthetic = true, stages = PROD_STAGES_BASE, clearData = false } = {}) {
   pg.assertSafeTarget();
   const db = pg.newDbName();
   pg.sql('postgres', `create database ${db}`);
@@ -49,12 +58,20 @@ function createProdLikeDb({ withComplete17 = true } = {}) {
     create table storage.objects(id uuid primary key default gen_random_uuid(), bucket_id text references storage.buckets(id), name text);`);
   for (const f of fs.readdirSync(BASE).filter((x) => /^000[1-7].*\.sql$/.test(x)).sort()) run(path.join(BASE, f));
   pg.sqlText(db, DEFAULT_PRIVS);
-  run(path.join(PROD, 'local_check', 'synthetic_data.sql'));
-  pg.sqlText(db, "insert into auth.identities(user_id, provider) select id, 'email' from auth.users;");
-  for (const stage of ['01_registration_compat', '02_orders_reports_links', '03_reissue_and_constraints']) {
-    pg.sqlText(db, swapFingerprint(fs.readFileSync(path.join(PROD, `prod_${stage}.sql`), 'utf8')));
+  if (synthetic) {
+    run(path.join(PROD, 'local_check', 'synthetic_data.sql'));
+    pg.sqlText(db, "insert into auth.identities(user_id, provider) select id, 'email' from auth.users;");
   }
-  if (withComplete17) run(path.join(ROOT, 'docs', 'sql', '20261029120000_complete_17_legacy_link_binding.sql'));
+  if (clearData && !synthetic) throw new Error('clearData requires synthetic data (the production stages check the existing rows first)');
+  const applyStage = (stage) => pg.sqlText(db, swapFingerprint(fs.readFileSync(path.join(PROD, `prod_${stage}.sql`), 'utf8')));
+  try {
+    for (const stage of stages.filter((x) => PROD_STAGES_BASE.includes(x))) applyStage(stage);
+    if (withComplete17) run(path.join(ROOT, 'docs', 'sql', '20261029120000_complete_17_legacy_link_binding.sql'));
+    for (const stage of stages.filter((x) => !PROD_STAGES_BASE.includes(x))) applyStage(stage);
+    // 監査の表（legacy_access_events など）は本番で TRUNCATE・削除を禁止するトリガーを持つ。使い捨ての DB を試験の初期状態に
+    //   するこの1回だけ、トリガーを止めて（session_replication_role = replica・この接続だけ）合成データとその派生行を空にする
+    if (clearData) pg.sqlText(db, `set session_replication_role = replica; truncate ${SYNTHETIC_TABLES.join(', ')} cascade; reset session_replication_role;`);
+  } catch (e) { dropDb(db); throw e; } // 失敗しても使い捨てDBを残さない
   return db;
 }
 // Preview（Test モード）相当：baseline 0001〜0008（0008 は Preview 専用の設定）＋ docs/sql/2026*.sql を番号順に適用する。
@@ -90,4 +107,4 @@ function dropDb(db) {
   pg.assertTestDb(db);
   pg.sql('postgres', `drop database if exists ${db} with (force)`);
 }
-module.exports = { createProdLikeDb, createPreviewLikeDb, dropDb };
+module.exports = { createProdLikeDb, createPreviewLikeDb, dropDb, PROD_STAGES_BASE, PROD_STAGES_ALL };
