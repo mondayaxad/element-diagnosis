@@ -2936,10 +2936,29 @@ function renderResult(root) {
     //   結び付けは先に引き継いだ1人だけ。済んだら、控えを消す。通信の失敗だけ、控えを残して「もう一度」を出す
     var LEGACY_HANDOFF_KEY = 'ed_legacy_handoff_v1';
     // 認証から戻った流れ（保存カードへ戻った）の時だけ、少し見せてからマイページへ移る（通常のログインでは使わない）
+    //   「保存しました」を実際に見せるため、保存カードが画面に入ってから ms 待って移る（入る前に数え始めない）。
+    //   カードが無い・画面に入らない（利用者が自分で動かした等）時も止まらないよう、3 秒で待つのをやめて移る。移動は1回だけ
+    var goMypageWhenSeen = function (ms) {
+      if (window.__edReturnToMypageGo) return;
+      window.__edReturnToMypageGo = true;
+      var card = document.getElementById('recordCard');
+      var start = Date.now();
+      var seen = function () {
+        if (!card || !card.isConnected) return true;
+        var r = card.getBoundingClientRect();
+        var vh = window.innerHeight || document.documentElement.clientHeight;
+        return r.bottom > 0 && r.top < vh;
+      };
+      var wait = function () {
+        if (seen() || Date.now() - start >= 3000) { setTimeout(function () { window.location.assign('/mypage.html'); }, ms); return; }
+        setTimeout(wait, 50);
+      };
+      wait();
+    };
     var goMypageSoon = function (ms) {
       if (!window.__edReturnToRecordCard) return;
       window.__edReturnToMypageStarted = true;
-      setTimeout(function () { window.location.assign('/mypage.html'); }, ms);
+      goMypageWhenSeen(ms);
     };
     var readLegacyHandoff = function () {
       try {
@@ -3208,7 +3227,8 @@ function renderResult(root) {
     if (window.__edReturnToRecordCard) ['wheel', 'touchstart', 'keydown'].forEach(function (t) {
       window.addEventListener(t, function () { returnUserMoved = true; }, { once: true, passive: true });
     });
-    var scrollToRecordCard = function () { if (!returnUserMoved) recordCard.scrollIntoView({ block: 'center' }); };
+    // 瞬時に合わせる（html の scroll-behavior: smooth のままだと、下の方にあるカードまで動く途中でマイページへ移ってしまう）
+    var scrollToRecordCard = function () { if (!returnUserMoved) recordCard.scrollIntoView({ block: 'center', behavior: 'instant' }); };
     var showReturnedCard = function () {
       if (!window.__edReturnToRecordCard) return;
       scrollToRecordCard();
@@ -3234,7 +3254,7 @@ function renderResult(root) {
         return;
       }
       window.__edReturnToMypageStarted = true;
-      setTimeout(function () { window.location.assign('/mypage.html'); }, 800);
+      goMypageWhenSeen(800);
     };
     window.onSignedInFlowDone = function (r) {
       decideRecordState(r || {}).then(showReturnedCard).then(function () { goMypageAfterReturn(r); })
@@ -3827,7 +3847,7 @@ function revealRestoredResult() {
     if (userMoved || window.__phase !== 'result') return;
     // 認証から戻った直後は、結果の先頭ではなく保存カードの位置を表示する
     var card = window.__edReturnToRecordCard ? document.getElementById('recordCard') : null;
-    if (card) { card.scrollIntoView({ block: 'center' }); return; }
+    if (card) { card.scrollIntoView({ block: 'center', behavior: 'instant' }); return; }
     var root = document.getElementById('diagnosis-root');
     if (root) root.scrollIntoView({ block: 'start' });
   };
