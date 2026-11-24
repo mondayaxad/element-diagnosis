@@ -13,6 +13,7 @@ const { createMemoryBackend } = require('./fixtures/fake_supabase');
 const { createFakeStorage } = require('./fixtures/fake_storage');
 const { variantAnswers, SAMPLE_ANSWERS } = require('./fixtures/report_data');
 const RJ = require('../lib/complete-report-job');
+const { requireServerEnv } = require('../lib/server-env');
 const CP = require('../lib/complete-payment');
 const G = require('../api/_complete/generate-report');
 const Checkout = require(path.join(__dirname, '..', 'api', 'complete-checkout.js'));
@@ -23,20 +24,24 @@ const createBackend = process.env.COMPLETE_DB_BACKEND ? require(process.env.COMP
 const SECRET = 'whsec_test_fake_secret_for_unit_tests';
 // 試験ごとに作る乱数（32バイト・base64url）。値は出力しない
 const VIEW_SECRET = crypto.randomBytes(32).toString('base64url');
+// COMPLETE_DB_STRIPE_MODE=live：本番の構成（Production・Stripe Live・本番専用 migration の DB）で同じ試験を流す（すべて偽物。
+//   tests/purchase_integrity_api.test.js と同じ切り替え）。既定（未指定）は従来どおり Preview・Stripe Test
+const LIVE = process.env.COMPLETE_DB_STRIPE_MODE === 'live';
+const MODE = LIVE ? 'live' : 'test';
 const ENV = {
-  ...PREVIEW_ENV,
+  ...(LIVE ? PROD_ENV : PREVIEW_ENV),
   COMPLETE_SALES_OPEN: 'true',
-  COMPLETE_CHECKOUT_ORIGIN: 'https://element-diagnosis-git-release-c-preview-nmkw0322-4497s-projects.vercel.app',
-  STRIPE_COMPLETE_PRICE_DIRECT: 'price_test_direct3000',
-  STRIPE_COMPLETE_PRICE_UPGRADE: 'price_test_upgrade2000',
-  STRIPE_PRICE_ANALYSIS: 'price_test_analysis1000',
+  COMPLETE_CHECKOUT_ORIGIN: LIVE ? 'https://element-diagnosis-five.vercel.app' : 'https://element-diagnosis-git-release-c-preview-nmkw0322-4497s-projects.vercel.app',
+  STRIPE_COMPLETE_PRICE_DIRECT: `price_${MODE}_direct3000`,
+  STRIPE_COMPLETE_PRICE_UPGRADE: `price_${MODE}_upgrade2000`,
+  STRIPE_PRICE_ANALYSIS: `price_${MODE}_analysis1000`,
   STRIPE_COMPLETE_WEBHOOK_SECRET: SECRET,
   COMPLETE_VIEW_TOKEN_SECRET: VIEW_SECRET,
 };
 const PRICES = {
-  price_test_direct3000: { id: 'price_test_direct3000', active: true, livemode: false, currency: 'jpy', unit_amount: 3000, type: 'one_time' },
-  price_test_upgrade2000: { id: 'price_test_upgrade2000', active: true, livemode: false, currency: 'jpy', unit_amount: 2000, type: 'one_time' },
-  price_test_analysis1000: { id: 'price_test_analysis1000', active: true, livemode: false, currency: 'jpy', unit_amount: 1000, type: 'one_time' },
+  [`price_${MODE}_direct3000`]: { id: `price_${MODE}_direct3000`, active: true, livemode: LIVE, currency: 'jpy', unit_amount: 3000, type: 'one_time' },
+  [`price_${MODE}_upgrade2000`]: { id: `price_${MODE}_upgrade2000`, active: true, livemode: LIVE, currency: 'jpy', unit_amount: 2000, type: 'one_time' },
+  [`price_${MODE}_analysis1000`]: { id: `price_${MODE}_analysis1000`, active: true, livemode: LIVE, currency: 'jpy', unit_amount: 1000, type: 'one_time' },
 };
 const sha = (b) => crypto.createHash('sha256').update(b).digest('hex');
 
@@ -66,7 +71,7 @@ async function setup({ env = {} } = {}) {
     if (gate && String(url).includes('/rest/v1/rpc/complete_claim_report')) await gate.promise;
     return baseFetch(url, opts);
   };
-  const stripe = fakeStripe({ prices: JSON.parse(JSON.stringify(PRICES)) });
+  const stripe = fakeStripe({ prices: JSON.parse(JSON.stringify(PRICES)), livemode: LIVE });
   const logger = makeLogger();
   const pending = [];
   const waitUntil = (p) => { pending.push(p); };
@@ -86,7 +91,11 @@ async function setup({ env = {} } = {}) {
     while (pending.length) await pending.shift();
     await closeDb();
   };
-  const conn = { supabaseUrl: fullEnv.SUPABASE_URL, adminHeaders: () => ({ apikey: fullEnv.SUPABASE_SECRET_KEY }) };
+  // 生成処理を直接呼ぶ時の接続情報は、本番のコード（api/stripe-webhook.js など）と同じ requireServerEnv で作る
+  //   （キーの形式で認証ヘッダーが変わる：Preview は新形式の sb_secret_、本番相当〔COMPLETE_DB_STRIPE_MODE=live〕は旧形式の service_role JWT）
+  const guard = requireServerEnv(fullEnv, { admin: true, host: new URL(fullEnv.COMPLETE_CHECKOUT_ORIGIN).host });
+  assert.ok(guard.ok, JSON.stringify(guard.reasons));
+  const conn = { supabaseUrl: guard.supabaseUrl, adminHeaders: guard.adminHeaders };
   const ctx = {
     db, storage, stripe, logger, pending, env: fullEnv, conn, fetchImpl,
     setClock(ms) { clock = ms; },
@@ -105,7 +114,7 @@ async function setup({ env = {} } = {}) {
       return res;
     },
     async webhook(opts, { background = true } = {}) {
-      const { req, event } = eventRequest({ secret: SECRET, ...opts });
+      const { req, event } = eventRequest({ secret: SECRET, livemode: LIVE, ...opts });
       const res = makeRes();
       await (background ? webhookH : webhookNoBg)(req, res);
       res.event = event;

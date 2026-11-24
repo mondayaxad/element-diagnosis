@@ -1,0 +1,79 @@
+# 全体の品質保証：全テストを、失敗・スキップ・キャンセル・todo が0件であることを条件に実行する（docs/TESTING_FULL.md）。
+#   ・DB の試験は PostgreSQL 17 のサービスコンテナ（使い捨て・この実行の中だけ・合成データだけ）。本番・Preview の DB には接続しない
+#     （tests/pg/pg_env.js が localhost 以外・本番の秘密の環境変数を拒否する）。パスワードは使い捨てのダミー値で、秘密ではない
+#   ・本番の秘密・シークレットは使わない。権限はリポジトリの読み取りだけ
+#   ・npm ci（package-lock.json の版のまま）、Playwright 1.63.0（リポジトリの外に入れて NODE_PATH で読む）、
+#     PDF の試験用の html2canvas・jsPDF（report.html の SRI と一致を確かめてから置く）
+#   ・各段の TAP（tests-out/*.tap）を成果物として残す（失敗した時に、どの機能で何が起きたかを確かめられる）
+#   ・SEO の試験（.github/workflows/seo.yml）とは別のワークフロー（両方を維持する）
+#   ・費用：公開リポジトリの標準ランナーなので無料
+name: Quality (all tests)
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  all-tests:
+    name: All tests (PostgreSQL 17)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: e2e_throwaway_not_a_secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      E2E_PG_EXTERNAL: '1'
+      E2E_PG_HOST: localhost
+      E2E_PG_PORT: '5432'
+      E2E_PG_USER: postgres
+      PGPASSWORD: e2e_throwaway_not_a_secret
+      TESTS_OUT: tests-out
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies (package-lock.json)
+        run: npm ci --no-audit --no-fund
+      - name: Install Playwright (Chromium)
+        run: |
+          npm i --prefix "$RUNNER_TEMP/pw" --no-save --no-package-lock --no-audit --no-fund playwright@1.63.0
+          "$RUNNER_TEMP/pw/node_modules/.bin/playwright" install --with-deps chromium
+      - name: PostgreSQL client and server version
+        run: |
+          psql --version
+          psql -h localhost -U postgres -At -c 'select version()'
+      - name: PDF libraries (verified against report.html SRI)
+        run: tests/support/pdf_libs.sh "$RUNNER_TEMP/pdflibs"
+      - name: Run all tests (no failures, skips, cancels or todos allowed)
+        env:
+          NODE_PATH: ${{ runner.temp }}/pw/node_modules
+          PDF_LIBS_DIR: ${{ runner.temp }}/pdflibs
+        run: tests/support/run_full.sh
+      - name: Upload test reports (TAP)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: tests-out/
+          retention-days: 14
