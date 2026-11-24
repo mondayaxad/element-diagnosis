@@ -108,7 +108,12 @@ test('画素比較：下地＋overlay と従来の1枚描きがほぼ同じ（PS
   const allTree = C.buildOgpCardTree(d, { ...fo, backgroundUrl: uri('assets/ogp/backgrounds/pyro.jpg', 'image/jpeg'), showBackground: true });
   const overTree = C.buildOgpCardTree(d, { ...fo, part: 'overlay', baseUrl: uri('assets/ogp/bases/PYCM.jpg', 'image/jpeg'), mirrorPlateUrl: uri(`assets/ogp/bases/mirror-${T.ELEMENT_KEY['炎']}.png`, 'image/png') });
   await render(allTree); await render(overTree); // 初回（読み込み）を除く
-  const a = await render(allTree), o = await render(overTree);
+  // CPU 時間は、ほかの試験ファイルと並行して走る時に1回だけでは揺れる（同じ処理でも上下する）。
+  //   交互に3回ずつ描き、それぞれの最小値（その処理に本来かかる CPU）で比べる。基準（1/2 以下）は変えない
+  const runs = { a: [], o: [] };
+  for (let i = 0; i < 3; i++) { runs.a.push(await render(allTree)); runs.o.push(await render(overTree)); }
+  const best = (xs) => xs.reduce((m, x) => (x.ms < m.ms ? x : m));
+  const a = best(runs.a), o = best(runs.o);
   // PNG を画素へ（node:zlib で IDAT を展開。フィルタは各行先頭の1バイト）
   const pixels = (png) => {
     const zlib = require('zlib');
