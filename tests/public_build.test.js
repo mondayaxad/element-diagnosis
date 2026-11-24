@@ -113,9 +113,11 @@ test('vercel.json：build で dist を作り、dist だけを配信する（clea
   assert.match(fs.readFileSync(path.join(ROOT, '.gitignore'), 'utf8'), /^dist\/$/m);
 });
 
-test('本番ドメインの絶対 URL で実体が無いのは既知の thumbs だけ', () => {
+test('本番ドメインの絶対 URL は、すべて dist に実体がある（既知の欠損 thumbs は解消済み。例外なし）', () => {
   const r = buildTo();
-  assert.ok(r.absoluteMissing.every((p) => /^thumbs\/x_card_[A-Z]{4}\.png$/.test(p)), r.absoluteMissing.join(','));
+  assert.deepEqual(B.KNOWN_MISSING_ABSOLUTE, []);
+  assert.deepEqual(r.absoluteMissing, [], r.absoluteMissing.join(','));
+  assert.deepEqual(r.problems, []);
 });
 
 // ---- 意図的に壊したときに検出できること ----
