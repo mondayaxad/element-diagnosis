@@ -10,9 +10,10 @@
   - `tests/ga4_fixes.test.js`：GA4 の送信値の消毒・UTM
   - `tests/seo_type_meta.test.js`：タイプ解説35ページの title・description・OGP 画像（寸法・容量・参照先・フォントの収録文字）・導線
   - `tests/seo_jsonld.test.js`：構造化データの構文と、ページとの整合
-- 判定：1件でも失敗すれば赤。除外・`continue-on-error`・リトライは使わない（テストの基準は緩めない）。
-- 権限・秘密情報：`contents: read` だけで、シークレットは使わない。依存パッケージのインストールもしない。
-- 費用：リポジトリは公開（public）なので、GitHub Actions の標準ランナーは無料。1回1分未満。
+- 判定：1件でも失敗すれば赤。**スキップが1件でもあれば赤**（環境の不足で検査が抜けたまま緑にしない）。除外・`continue-on-error`・リトライは使わない（テストの基準は緩めない）。
+- ブラウザ：`ga4_fixes` の8件は Chromium で index.html を動かすため、Playwright 1.63.0 をリポジトリの外（`$RUNNER_TEMP/pw`）に入れて `NODE_PATH` で読み込む（`package.json`・lock は変えない）。
+- 権限・秘密情報：`contents: read` だけで、シークレットは使わない。
+- 費用：リポジトリは公開（public）なので、GitHub Actions の標準ランナーは無料。1回1〜2分（ブラウザのインストールを含む）。
 - Vercel のデプロイ設定は変更しない。CI の結果は Vercel のデプロイを止めない。
 
 ## マージ前の運用（必須）
