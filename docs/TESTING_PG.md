@@ -3,6 +3,8 @@
 サーバー側の処理（`api/*`・`lib/*`）を、**本物の PostgreSQL 17 に本番相当の構造を作って**通す試験の基盤です。
 合成データだけを使い、本番・Preview の Supabase には接続しません。
 
+> 2026-11-24 更新：既存の DB 依存試験（`COMPLETE_DB_BACKEND`）のバックエンド `tests/pg/backend.js` は整備済みです。全テストをスキップ0件で通す手順と CI（`.github/workflows/quality.yml`）は [`docs/TESTING_FULL.md`](TESTING_FULL.md) を参照してください（下の「未整備」「現在スキップ」の記述は当時の計画です）。
+
 ## 1. 試験の種類（混ぜない）
 
 | 種類 | 置き場所 | DB | 実行 | 目的 |
