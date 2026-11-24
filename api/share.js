@@ -46,7 +46,7 @@ module.exports = async function handler(req, res) {
   //   ・応答ヘッダーで付ける：X などのクローラーは noindex に関係なく OGP を読むため、カード表示は変わらない。
   //   ・robots.txt でクロールを拒否すると noindex が読まれなくなるので、ブロックはしない。
   //   ・すべての応答（p 形式・旧 el/w/nat 形式・dv/mv の有無・値の欠けた URL）で、最初に付ける。
-  res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  res.setHeader('X-Robots-Tag', 'noindex');
   const url = new URL(req.url, `https://${req.headers.host}`);
   const searchParams = url.searchParams;
   const origin = `https://${req.headers.host}`;

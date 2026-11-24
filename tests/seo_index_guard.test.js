@@ -155,7 +155,7 @@ function fakeRes() {
   r.end = (b) => { r.body = String(b || ''); return r; };
   return r;
 }
-test('/api/share：p 形式・dv/mv 付き・旧 el/w/nat 形式・値の欠け・壊れた値のすべてで X-Robots-Tag: noindex。OGP・転送は従来どおり', async () => {
+test('/api/share：p 形式・dv/mv 付き・旧 el/w/nat 形式・値の欠け・壊れた値のすべてで X-Robots-Tag: noindex（nofollow は付けない）。OGP・転送は従来どおり', async () => {
   const handler = require('../api/share.js');
   const cases = [
     '/api/share?code=AUDITDUMMY&p=6dfgg',
@@ -168,7 +168,7 @@ test('/api/share：p 形式・dv/mv 付き・旧 el/w/nat 形式・値の欠け�
   for (const u of cases) {
     const res = fakeRes();
     await handler({ url: u, headers: { host: 'element-diagnosis-five.vercel.app' } }, res);
-    assert.match(res.headers['x-robots-tag'] || '', /noindex/, `${u} に noindex がありません`);
+    assert.equal(res.headers['x-robots-tag'], 'noindex', `${u} の X-Robots-Tag は noindex（検索結果に出さない。リンクの追跡は止めない）`);
     assert.equal(res.code, 200, u);
     assert.match(res.body, /<meta property="og:image" content="https:\/\/element-diagnosis-five\.vercel\.app\/api\/og-image\?/, `${u} の og:image`);
     assert.match(res.body, /<meta name="twitter:card" content="summary_large_image">/, `${u} の X のカード`);
