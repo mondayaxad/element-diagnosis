@@ -456,6 +456,31 @@
     summary::marker { content: ""; }
 
     
+    /* ===== 全35タイプ一覧（トップ）：元素の紋章・名前・色で見分け、開くと5タイプ ===== */
+    .tl { margin-top:28px; padding-top:22px; border-top:1px solid #1c2232; }
+    .tl-eyebrow { display:flex; align-items:center; gap:10px; color:#e0b07a; font-size:12.5px; font-weight:700; letter-spacing:.1em; margin:0 0 6px; }
+    .tl-eyebrow::before { content:''; width:8px; height:8px; transform:rotate(45deg); background:#e0b07a; }
+    .tl-eyebrow::after { content:''; flex:1; height:1px; background:#262a38; }
+    .tl-h { font-family:var(--font-jp); font-weight:700; color:#f4efe6; font-size:26px; letter-spacing:.06em; margin:0 0 4px; }
+    .tl-sub { color:#a4acb8; font-size:13px; line-height:1.7; margin:0 0 14px; }
+    .tl-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); grid-auto-flow:row dense; gap:8px; }
+    .tl-el { border:1px solid #2a2a38; border-radius:12px; background:#12121a; min-width:0; scroll-margin-top:12px; }
+    .tl-el[open] { grid-column:1 / -1; border-color:color-mix(in srgb, var(--el) 75%, #000); background:radial-gradient(110% 120% at 0% 0%, color-mix(in srgb, var(--el) 14%, transparent), transparent 60%), #14121b; }
+    .tl-el summary { display:flex; align-items:center; gap:8px; min-height:48px; padding:6px 10px; cursor:pointer; list-style:none; }
+    .tl-el summary::-webkit-details-marker { display:none; }
+    .tl-el summary img { width:32px; height:32px; flex:none; object-fit:contain; }
+    .tl-el[open] summary img { width:40px; height:40px; }
+    .tl-name { font-family:var(--font-jp); font-weight:700; color:var(--el-l); font-size:17px; }
+    .tl-el[open] .tl-name { font-size:20px; }
+    .tl-count { display:none; margin-left:auto; color:#a4acb8; font-size:12.5px; }
+    .tl-el[open] .tl-count { display:inline; }
+    .tl-el ul { list-style:none; margin:0; padding:0 12px 10px; }
+    .tl-el li + li { border-top:1px solid #262433; }
+    .tl-el li a { display:grid; grid-template-columns:1.1em 5.2em 1fr auto; align-items:center; gap:6px; min-height:44px; text-decoration:none; color:#e6e8ee; font-size:14.5px; }
+    .tl-el li a::before { content:''; width:6px; height:6px; transform:rotate(45deg); background:var(--el-l); justify-self:center; }
+    .tl-n { font-family:var(--font-jp); font-weight:700; color:#f2ede4; }
+    .tl-w { color:#a4acb8; font-size:13.5px; }
+    .tl-c { color:var(--el-l); font-size:12px; letter-spacing:.06em; }
   </style>
   <script type="application/ld+json">
   {
@@ -1800,87 +1825,83 @@ function renderIntro(root) {
         </div>
       </div>
 
-      <!-- ===== 全35タイプ一覧（元素ごとに色分け・SEO用の静的リンク） ===== -->
-      <section style="margin-top:26px;padding-top:20px;border-top:1px solid #182838">
-        <h2 style="color:#90c8ec;font-size:13px;letter-spacing:1.5px;margin:0 0 4px">全35タイプ一覧</h2>
-        <p style="color:#5a80a0;font-size:11px;line-height:1.7;margin:0 0 14px">元素（7）× 武器種（5）＝ 全35タイプ。気になるタイプから見てみてください。</p>
-
-        <details style="margin-bottom:8px;border-left:3px solid #c84a20;background:#0c0a14;border-radius:0 6px 6px 0">
-          <summary style="cursor:pointer;padding:10px 12px;color:#e8a878;font-size:13px;font-weight:600;list-style:none">炎</summary>
-          <div style="padding:2px 12px 12px;display:flex;flex-direction:column;gap:6px">
-            <a href="https://element-diagnosis-five.vercel.app/type/pysw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">炎×片手剣「殉愛者」（PYSW）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/pycm" style="color:#d8dce8;font-size:12.5px;text-decoration:none">炎×両手剣「猛進者」（PYCM）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/pypl" style="color:#d8dce8;font-size:12.5px;text-decoration:none">炎×長柄「殉衛者」（PYPL）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/pyct" style="color:#d8dce8;font-size:12.5px;text-decoration:none">炎×法器「信奉者」（PYCT）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/pybw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">炎×弓「貫徹者」（PYBW）</a>
-          </div>
-        </details>
-
-        <details style="margin-bottom:8px;border-left:3px solid #2a7aaa;background:#0c0a14;border-radius:0 6px 6px 0">
-          <summary style="cursor:pointer;padding:10px 12px;color:#8fd0ec;font-size:13px;font-weight:600;list-style:none">水</summary>
-          <div style="padding:2px 12px 12px;display:flex;flex-direction:column;gap:6px">
-            <a href="https://element-diagnosis-five.vercel.app/type/hysw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">水×片手剣「同調者」（HYSW）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/hycm" style="color:#d8dce8;font-size:12.5px;text-decoration:none">水×両手剣「孤淵者」（HYCM）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/hypl" style="color:#d8dce8;font-size:12.5px;text-decoration:none">水×長柄「静衛者」（HYPL）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/hyct" style="color:#d8dce8;font-size:12.5px;text-decoration:none">水×法器「深識者」（HYCT）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/hybw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">水×弓「静観者」（HYBW）</a>
-          </div>
-        </details>
-
-        <details style="margin-bottom:8px;border-left:3px solid #4a80c0;background:#0c0a14;border-radius:0 6px 6px 0">
-          <summary style="cursor:pointer;padding:10px 12px;color:#a8c8ec;font-size:13px;font-weight:600;list-style:none">氷</summary>
-          <div style="padding:2px 12px 12px;display:flex;flex-direction:column;gap:6px">
-            <a href="https://element-diagnosis-five.vercel.app/type/crsw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">氷×片手剣「宿縁者」（CRSW）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/crcm" style="color:#d8dce8;font-size:12.5px;text-decoration:none">氷×両手剣「破氷者」（CRCM）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/crpl" style="color:#d8dce8;font-size:12.5px;text-decoration:none">氷×長柄「氷壁者」（CRPL）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/crct" style="color:#d8dce8;font-size:12.5px;text-decoration:none">氷×法器「透徹者」（CRCT）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/crbw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">氷×弓「凍眼者」（CRBW）</a>
-          </div>
-        </details>
-
-        <details style="margin-bottom:8px;border-left:3px solid #9040d0;background:#0c0a14;border-radius:0 6px 6px 0">
-          <summary style="cursor:pointer;padding:10px 12px;color:#d0a0f0;font-size:13px;font-weight:600;list-style:none">雷</summary>
-          <div style="padding:2px 12px 12px;display:flex;flex-direction:column;gap:6px">
-            <a href="https://element-diagnosis-five.vercel.app/type/elsw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">雷×片手剣「共鳴者」（ELSW）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/elcm" style="color:#d8dce8;font-size:12.5px;text-decoration:none">雷×両手剣「破天者」（ELCM）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/elpl" style="color:#d8dce8;font-size:12.5px;text-decoration:none">雷×長柄「雷衛者」（ELPL）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/elct" style="color:#d8dce8;font-size:12.5px;text-decoration:none">雷×法器「電導者」（ELCT）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/elbw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">雷×弓「疾光者」（ELBW）</a>
-          </div>
-        </details>
-
-        <details style="margin-bottom:8px;border-left:3px solid #3a8a60;background:#0c0a14;border-radius:0 6px 6px 0">
-          <summary style="cursor:pointer;padding:10px 12px;color:#8fd8b0;font-size:13px;font-weight:600;list-style:none">風</summary>
-          <div style="padding:2px 12px 12px;display:flex;flex-direction:column;gap:6px">
-            <a href="https://element-diagnosis-five.vercel.app/type/answ" style="color:#d8dce8;font-size:12.5px;text-decoration:none">風×片手剣「随風者」（ANSW）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/ancm" style="color:#d8dce8;font-size:12.5px;text-decoration:none">風×両手剣「疾風者」（ANCM）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/anpl" style="color:#d8dce8;font-size:12.5px;text-decoration:none">風×長柄「客衛者」（ANPL）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/anct" style="color:#d8dce8;font-size:12.5px;text-decoration:none">風×法器「漂識者」（ANCT）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/anbw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">風×弓「追風者」（ANBW）</a>
-          </div>
-        </details>
-
-        <details style="margin-bottom:8px;border-left:3px solid #a07830;background:#0c0a14;border-radius:0 6px 6px 0">
-          <summary style="cursor:pointer;padding:10px 12px;color:#e0c088;font-size:13px;font-weight:600;list-style:none">岩</summary>
-          <div style="padding:2px 12px 12px;display:flex;flex-direction:column;gap:6px">
-            <a href="https://element-diagnosis-five.vercel.app/type/gesw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">岩×片手剣「包容者」（GESW）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/gecm" style="color:#d8dce8;font-size:12.5px;text-decoration:none">岩×両手剣「破岩者」（GECM）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/gepl" style="color:#d8dce8;font-size:12.5px;text-decoration:none">岩×長柄「護衛者」（GEPL）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/gect" style="color:#d8dce8;font-size:12.5px;text-decoration:none">岩×法器「礎識者」（GECT）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/gebw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">岩×弓「遠護者」（GEBW）</a>
-          </div>
-        </details>
-
-        <details style="margin-bottom:0;border-left:3px solid #4a8020;background:#0c0a14;border-radius:0 6px 6px 0">
-          <summary style="cursor:pointer;padding:10px 12px;color:#9cd070;font-size:13px;font-weight:600;list-style:none">草</summary>
-          <div style="padding:2px 12px 12px;display:flex;flex-direction:column;gap:6px">
-            <a href="https://element-diagnosis-five.vercel.app/type/desw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">草×片手剣「縁結者」（DESW）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/decm" style="color:#d8dce8;font-size:12.5px;text-decoration:none">草×両手剣「芽吹者」（DECM）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/depl" style="color:#d8dce8;font-size:12.5px;text-decoration:none">草×長柄「育衛者」（DEPL）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/dect" style="color:#d8dce8;font-size:12.5px;text-decoration:none">草×法器「叡結者」（DECT）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/debw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">草×弓「見守者」（DEBW）</a>
-          </div>
-        </details>
+      <!-- ===== 全35タイプ一覧（元素の紋章・色で選ぶ。各タイプ解説への静的リンク。解説から戻った時は読んでいた元素を開く：initTypeList） ===== -->
+      <section class="tl" id="types" aria-labelledby="types-h">
+        <p class="tl-eyebrow">トップからタイプを選ぶ</p>
+        <h2 id="types-h" class="tl-h">全35タイプ一覧</h2>
+        <p class="tl-sub">7つの元素と5つの武器種から、気になるタイプを選ぶ。</p>
+        <div class="tl-grid">
+          <details class="tl-el" id="types-pyro" data-el="pyro" style="--el:#c84a20;--el-l:#e8a878">
+            <summary><img src="/assets/emblems/2026-autumn/record/pyro.png" width="40" height="40" alt="" loading="lazy"><span class="tl-name">炎</span><span class="tl-count">5タイプ</span></summary>
+            <ul>
+              <li><a href="/type/pysw"><span class="tl-n">殉愛者</span><span class="tl-w">片手剣</span><span class="tl-c">PYSW</span></a></li>
+              <li><a href="/type/pycm"><span class="tl-n">猛進者</span><span class="tl-w">両手剣</span><span class="tl-c">PYCM</span></a></li>
+              <li><a href="/type/pypl"><span class="tl-n">殉衛者</span><span class="tl-w">長柄</span><span class="tl-c">PYPL</span></a></li>
+              <li><a href="/type/pyct"><span class="tl-n">信奉者</span><span class="tl-w">法器</span><span class="tl-c">PYCT</span></a></li>
+              <li><a href="/type/pybw"><span class="tl-n">貫徹者</span><span class="tl-w">弓</span><span class="tl-c">PYBW</span></a></li>
+            </ul>
+          </details>
+          <details class="tl-el" id="types-hydro" data-el="hydro" style="--el:#2a7aaa;--el-l:#8fd0ec">
+            <summary><img src="/assets/emblems/2026-autumn/record/hydro.png" width="40" height="40" alt="" loading="lazy"><span class="tl-name">水</span><span class="tl-count">5タイプ</span></summary>
+            <ul>
+              <li><a href="/type/hysw"><span class="tl-n">同調者</span><span class="tl-w">片手剣</span><span class="tl-c">HYSW</span></a></li>
+              <li><a href="/type/hycm"><span class="tl-n">孤淵者</span><span class="tl-w">両手剣</span><span class="tl-c">HYCM</span></a></li>
+              <li><a href="/type/hypl"><span class="tl-n">静衛者</span><span class="tl-w">長柄</span><span class="tl-c">HYPL</span></a></li>
+              <li><a href="/type/hyct"><span class="tl-n">深識者</span><span class="tl-w">法器</span><span class="tl-c">HYCT</span></a></li>
+              <li><a href="/type/hybw"><span class="tl-n">静観者</span><span class="tl-w">弓</span><span class="tl-c">HYBW</span></a></li>
+            </ul>
+          </details>
+          <details class="tl-el" id="types-cryo" data-el="cryo" style="--el:#4a80c0;--el-l:#a8c8ec">
+            <summary><img src="/assets/emblems/2026-autumn/record/cryo.png" width="40" height="40" alt="" loading="lazy"><span class="tl-name">氷</span><span class="tl-count">5タイプ</span></summary>
+            <ul>
+              <li><a href="/type/crsw"><span class="tl-n">宿縁者</span><span class="tl-w">片手剣</span><span class="tl-c">CRSW</span></a></li>
+              <li><a href="/type/crcm"><span class="tl-n">破氷者</span><span class="tl-w">両手剣</span><span class="tl-c">CRCM</span></a></li>
+              <li><a href="/type/crpl"><span class="tl-n">氷壁者</span><span class="tl-w">長柄</span><span class="tl-c">CRPL</span></a></li>
+              <li><a href="/type/crct"><span class="tl-n">透徹者</span><span class="tl-w">法器</span><span class="tl-c">CRCT</span></a></li>
+              <li><a href="/type/crbw"><span class="tl-n">凍眼者</span><span class="tl-w">弓</span><span class="tl-c">CRBW</span></a></li>
+            </ul>
+          </details>
+          <details class="tl-el" id="types-electro" data-el="electro" style="--el:#9040d0;--el-l:#d0a0f0">
+            <summary><img src="/assets/emblems/2026-autumn/record/electro.png" width="40" height="40" alt="" loading="lazy"><span class="tl-name">雷</span><span class="tl-count">5タイプ</span></summary>
+            <ul>
+              <li><a href="/type/elsw"><span class="tl-n">共鳴者</span><span class="tl-w">片手剣</span><span class="tl-c">ELSW</span></a></li>
+              <li><a href="/type/elcm"><span class="tl-n">破天者</span><span class="tl-w">両手剣</span><span class="tl-c">ELCM</span></a></li>
+              <li><a href="/type/elpl"><span class="tl-n">雷衛者</span><span class="tl-w">長柄</span><span class="tl-c">ELPL</span></a></li>
+              <li><a href="/type/elct"><span class="tl-n">電導者</span><span class="tl-w">法器</span><span class="tl-c">ELCT</span></a></li>
+              <li><a href="/type/elbw"><span class="tl-n">疾光者</span><span class="tl-w">弓</span><span class="tl-c">ELBW</span></a></li>
+            </ul>
+          </details>
+          <details class="tl-el" id="types-anemo" data-el="anemo" style="--el:#3a8a60;--el-l:#8fd8b0">
+            <summary><img src="/assets/emblems/2026-autumn/record/anemo.png" width="40" height="40" alt="" loading="lazy"><span class="tl-name">風</span><span class="tl-count">5タイプ</span></summary>
+            <ul>
+              <li><a href="/type/answ"><span class="tl-n">随風者</span><span class="tl-w">片手剣</span><span class="tl-c">ANSW</span></a></li>
+              <li><a href="/type/ancm"><span class="tl-n">疾風者</span><span class="tl-w">両手剣</span><span class="tl-c">ANCM</span></a></li>
+              <li><a href="/type/anpl"><span class="tl-n">客衛者</span><span class="tl-w">長柄</span><span class="tl-c">ANPL</span></a></li>
+              <li><a href="/type/anct"><span class="tl-n">漂識者</span><span class="tl-w">法器</span><span class="tl-c">ANCT</span></a></li>
+              <li><a href="/type/anbw"><span class="tl-n">追風者</span><span class="tl-w">弓</span><span class="tl-c">ANBW</span></a></li>
+            </ul>
+          </details>
+          <details class="tl-el" id="types-geo" data-el="geo" style="--el:#a07830;--el-l:#e0c088">
+            <summary><img src="/assets/emblems/2026-autumn/record/geo.png" width="40" height="40" alt="" loading="lazy"><span class="tl-name">岩</span><span class="tl-count">5タイプ</span></summary>
+            <ul>
+              <li><a href="/type/gesw"><span class="tl-n">包容者</span><span class="tl-w">片手剣</span><span class="tl-c">GESW</span></a></li>
+              <li><a href="/type/gecm"><span class="tl-n">破岩者</span><span class="tl-w">両手剣</span><span class="tl-c">GECM</span></a></li>
+              <li><a href="/type/gepl"><span class="tl-n">護衛者</span><span class="tl-w">長柄</span><span class="tl-c">GEPL</span></a></li>
+              <li><a href="/type/gect"><span class="tl-n">礎識者</span><span class="tl-w">法器</span><span class="tl-c">GECT</span></a></li>
+              <li><a href="/type/gebw"><span class="tl-n">遠護者</span><span class="tl-w">弓</span><span class="tl-c">GEBW</span></a></li>
+            </ul>
+          </details>
+          <details class="tl-el" id="types-dendro" data-el="dendro" style="--el:#4a8020;--el-l:#9cd070">
+            <summary><img src="/assets/emblems/2026-autumn/record/dendro.png" width="40" height="40" alt="" loading="lazy"><span class="tl-name">草</span><span class="tl-count">5タイプ</span></summary>
+            <ul>
+              <li><a href="/type/desw"><span class="tl-n">縁結者</span><span class="tl-w">片手剣</span><span class="tl-c">DESW</span></a></li>
+              <li><a href="/type/decm"><span class="tl-n">芽吹者</span><span class="tl-w">両手剣</span><span class="tl-c">DECM</span></a></li>
+              <li><a href="/type/depl"><span class="tl-n">育衛者</span><span class="tl-w">長柄</span><span class="tl-c">DEPL</span></a></li>
+              <li><a href="/type/dect"><span class="tl-n">叡結者</span><span class="tl-w">法器</span><span class="tl-c">DECT</span></a></li>
+              <li><a href="/type/debw"><span class="tl-n">見守者</span><span class="tl-w">弓</span><span class="tl-c">DEBW</span></a></li>
+            </ul>
+          </details>
+        </div>
       </section>
 
       <p style="color:#5a80a0;font-size:10.5px;text-align:center;margin-top:12px;line-height:1.6">
@@ -1891,7 +1912,35 @@ function renderIntro(root) {
   if (startBtn) {
     startBtn.addEventListener('click', startNewDiagnosisV2);
   }
+  initTypeList(root);
+}
 
+// 全35タイプ一覧：一度に開く元素は1つ。タイプ解説から戻った時は、読んでいた元素を開く
+//   ・解説の「全35タイプ一覧に戻る」は /#types-<元素>（開いて、その位置へ移る）
+//   ・ブラウザの「戻る」は、解説ページが残した sessionStorage（ed_types_open_v1）の元素を開く（位置はブラウザに任せる）
+var TYPE_LIST_KEY = 'ed_types_open_v1';
+function initTypeList(root) {
+  var items = root.querySelectorAll('details.tl-el');
+  if (!items.length) return;
+  function byEl(el) { for (var i = 0; i < items.length; i++) if (items[i].getAttribute('data-el') === el) return items[i]; return null; }
+  Array.prototype.forEach.call(items, function (d) {
+    d.addEventListener('toggle', function () {
+      if (!d.open) return;
+      Array.prototype.forEach.call(items, function (o) { if (o !== d && o.open) o.open = false; });
+      try { sessionStorage.setItem(TYPE_LIST_KEY, d.getAttribute('data-el')); } catch (e) { /* 保存できなくても開閉はできる */ }
+      // 開いた元素を URL（#types-<元素>）にも残す：解説へ進んでブラウザの「戻る」で帰った時も、この元素が開く
+      if (!location.hash || /^#types-[a-z]+$/.test(location.hash)) {
+        try { history.replaceState(history.state, '', location.pathname + location.search + '#types-' + d.getAttribute('data-el')); } catch (e) { /* そのまま */ }
+      }
+    });
+  });
+  var m = /^#types-([a-z]+)$/.exec(location.hash || '');
+  var saved = null;
+  try { saved = sessionStorage.getItem(TYPE_LIST_KEY); } catch (e) { /* なし */ }
+  var target = byEl(m ? m[1] : saved);
+  if (!target) return;
+  target.open = true;
+  if (m) requestAnimationFrame(function () { target.scrollIntoView({ block: 'start' }); });
 }
 
 /* ===== QUIZ ===== */

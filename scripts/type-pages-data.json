@@ -1,0 +1,597 @@
+{
+ "ANBW": {
+  "head": "<title>風×弓「追風者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。風×弓タイプ「追風者」の性格傾向（自由さ・軽やかさ・精密な集中力）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/anbw\">\n<meta property=\"og:title\" content=\"風×弓「追風者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。風×弓タイプ「追風者」の性格傾向（自由さ・軽やかさ・精密な集中力）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/anbw\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/ANBW.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 風×弓タイプ「追風者」（ANBW）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/ANBW.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"風×弓「追風者」（ANBW型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。風×弓タイプ「追風者」の性格傾向（自由さ・軽やかさ・精密な集中力）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "風×弓タイプ「追風者」",
+  "lead": null,
+  "elementText": "風は、七元素の中でもっとも定まった形を持たない元素です。開放性の高さが、一つの場所に留まらない自由さと、こだわりのなさを同時に生みます。一つの答えに縛られず、常に新しい視点や可能性を探し続ける身軽さがある一方、深く根を張ることには、少し臆病なところもあります。",
+  "weaponText": "弓は、距離を取りながら精密に狙いを定める武器です。楽天家の性質——縛られず自由に、満たされた状態を追い求める動機が、一射に込められています。目の前のことに縛られるより、選択肢を広く持っておきたいという気持ちが強く、狙いを定める瞬間の集中力に、その本領が表れます。",
+  "combineText": "この二つが重なる時、「追風者」という人物像が立ち上がります。",
+  "tags": [
+   "自由さ",
+   "軽やかさ",
+   "身軽な視点",
+   "自由な選択肢",
+   "精密な集中力",
+   "縛られない身軽さ"
+  ],
+  "axis": "無色の漂泊 × 距離の弓"
+ },
+ "ANCM": {
+  "head": "<title>風×両手剣「疾風者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。風×両手剣タイプ「疾風者」の性格傾向（自由さ・軽やかさ・牽引力）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/ancm\">\n<meta property=\"og:title\" content=\"風×両手剣「疾風者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。風×両手剣タイプ「疾風者」の性格傾向（自由さ・軽やかさ・牽引力）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/ancm\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/ANCM.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 風×両手剣タイプ「疾風者」（ANCM）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/ANCM.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"風×両手剣「疾風者」（ANCM型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。風×両手剣タイプ「疾風者」の性格傾向（自由さ・軽やかさ・牽引力）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "風×両手剣タイプ「疾風者」",
+  "lead": null,
+  "elementText": "風は、七元素の中でもっとも定まった形を持たない元素です。開放性の高さが、一つの場所に留まらない自由さと、こだわりのなさを同時に生みます。一つの答えに縛られず、常に新しい視点や可能性を探し続ける身軽さがある一方、深く根を張ることには、少し臆病なところもあります。",
+  "weaponText": "両手剣は、独力で道を切り拓く武器です。統率者・達成者の性質——自分の力で状況を動かそうとする動機が、この武器の核にあります。誰かに頼るより、自分で結果を出すことに価値を置き、困難であるほど、かえって力が湧いてくるタイプです。周囲を牽引する場面で、真価を発揮します。",
+  "combineText": "この二つが重なる時、「疾風者」という人物像が立ち上がります。",
+  "tags": [
+   "自由さ",
+   "軽やかさ",
+   "身軽な視点",
+   "自力本願",
+   "牽引力",
+   "困難ほど燃える"
+  ],
+  "axis": "無色の漂泊 × 独力で断つ型"
+ },
+ "ANCT": {
+  "head": "<title>風×法器「漂識者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。風×法器タイプ「漂識者」の性格傾向（自由さ・軽やかさ・独自性）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/anct\">\n<meta property=\"og:title\" content=\"風×法器「漂識者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。風×法器タイプ「漂識者」の性格傾向（自由さ・軽やかさ・独自性）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/anct\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/ANCT.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 風×法器タイプ「漂識者」（ANCT）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/ANCT.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"風×法器「漂識者」（ANCT型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。風×法器タイプ「漂識者」の性格傾向（自由さ・軽やかさ・独自性）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "風×法器タイプ「漂識者」",
+  "lead": null,
+  "elementText": "風は、七元素の中でもっとも定まった形を持たない元素です。開放性の高さが、一つの場所に留まらない自由さと、こだわりのなさを同時に生みます。一つの答えに縛られず、常に新しい視点や可能性を探し続ける身軽さがある一方、深く根を張ることには、少し臆病なところもあります。",
+  "weaponText": "法器は、術式という抽象を介して世界と接続する武器です。観察者・個性派の性質——理解し、独自の視点を持とうとする動機が、その根にあります。直接ぶつかるより、一歩引いた場所から本質を見極めることを好み、他人には見えないところにある繋がりに、自然と気づくタイプです。",
+  "combineText": "この二つが重なる時、「漂識者」という人物像が立ち上がります。",
+  "tags": [
+   "自由さ",
+   "軽やかさ",
+   "身軽な視点",
+   "俯瞰する視点",
+   "独自性",
+   "見えない繋がりへの気づき"
+  ],
+  "axis": "無色の漂泊 × 媒介の杖"
+ },
+ "ANPL": {
+  "head": "<title>風×長柄「客衛者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。風×長柄タイプ「客衛者」の性格傾向（自由さ・軽やかさ・誠実な役目遂行）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/anpl\">\n<meta property=\"og:title\" content=\"風×長柄「客衛者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。風×長柄タイプ「客衛者」の性格傾向（自由さ・軽やかさ・誠実な役目遂行）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/anpl\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/ANPL.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 風×長柄タイプ「客衛者」（ANPL）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/ANPL.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"風×長柄「客衛者」（ANPL型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。風×長柄タイプ「客衛者」の性格傾向（自由さ・軽やかさ・誠実な役目遂行）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "風×長柄タイプ「客衛者」",
+  "lead": null,
+  "elementText": "風は、七元素の中でもっとも定まった形を持たない元素です。開放性の高さが、一つの場所に留まらない自由さと、こだわりのなさを同時に生みます。一つの答えに縛られず、常に新しい視点や可能性を探し続ける身軽さがある一方、深く根を張ることには、少し臆病なところもあります。",
+  "weaponText": "長柄は、間合いを保ちながら集団を守る武器です。改革者・調停者の性質——誠実に役目を果たし、場の調和を保とうとする動機が、扱い方を支えます。前に出て目立つより、全体が円滑に回ることを優先し、必要な時にはしっかりと境界線を引く、縁の下の力持ちとしての強さがあります。",
+  "combineText": "この二つが重なる時、「客衛者」という人物像が立ち上がります。",
+  "tags": [
+   "自由さ",
+   "軽やかさ",
+   "身軽な視点",
+   "縁の下の力持ち",
+   "誠実な役目遂行",
+   "境界線を引く強さ"
+  ],
+  "axis": "無色の漂泊 × 直進到達型"
+ },
+ "ANSW": {
+  "head": "<title>風×片手剣「随風者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。風×片手剣タイプ「随風者」の性格傾向（自由さ・軽やかさ・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/answ\">\n<meta property=\"og:title\" content=\"風×片手剣「随風者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。風×片手剣タイプ「随風者」の性格傾向（自由さ・軽やかさ・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/answ\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/ANSW.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 風×片手剣タイプ「随風者」（ANSW）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/ANSW.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"風×片手剣「随風者」（ANSW型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。風×片手剣タイプ「随風者」の性格傾向（自由さ・軽やかさ・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "風×片手剣タイプ「随風者」",
+  "lead": "アナタは、一つの場所に留まり続けるより、風のように身軽でいたい方が自分らしいと感じたことはありませんか。",
+  "elementText": "風は、七元素の中でもっとも定まった形を持たない元素です。開放性の高さが、一つの場所に留まらない自由さと、こだわりのなさを同時に生みます。一つの答えに縛られず、常に新しい視点や可能性を探し続ける身軽さがある一方、深く根を張ることには、少し臆病なところもあります。",
+  "weaponText": "片手剣は、他者との関わりの中で力を発揮する武器です。援助者・堅実家の性質——支え合い、信頼を築こうとする動機が、その扱い方の根にあります。相手が誰かによって、力の出し方そのものを変える柔軟さがあり、一人で完結するより、誰かのために動く時の方が、本来の力を発揮します。",
+  "combineText": "この二つが重なる時、「随風者」という人物像が立ち上がります。",
+  "tags": [
+   "自由さ",
+   "軽やかさ",
+   "身軽な視点",
+   "支え合い",
+   "相手に応じた柔軟さ",
+   "関係性の中の力"
+  ],
+  "axis": "無色の漂泊 × 関係に流れる刃"
+ },
+ "CRBW": {
+  "head": "<title>氷×弓「凍眼者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。氷×弓タイプ「凍眼者」の性格傾向（観察力・少数精鋭の繋がり・精密な集中力）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/crbw\">\n<meta property=\"og:title\" content=\"氷×弓「凍眼者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。氷×弓タイプ「凍眼者」の性格傾向（観察力・少数精鋭の繋がり・精密な集中力）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/crbw\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/CRBW.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 氷×弓タイプ「凍眼者」（CRBW）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/CRBW.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"氷×弓「凍眼者」（CRBW型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。氷×弓タイプ「凍眼者」の性格傾向（観察力・少数精鋭の繋がり・精密な集中力）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "氷×弓タイプ「凍眼者」",
+  "lead": null,
+  "elementText": "氷は、外への発信を抑え、内側の解像度を高める元素です。感受性の鋭さゆえに一歩引いて世界を観察し、独自の視点を育てていく性質があります。多くの人と広く関わるより、少数の相手と深く繋がることを好み、その分だけ、選んだ相手への忠誠は揺るぎません。静かでいて、内側は熱いタイプです。",
+  "weaponText": "弓は、距離を取りながら精密に狙いを定める武器です。楽天家の性質——縛られず自由に、満たされた状態を追い求める動機が、一射に込められています。目の前のことに縛られるより、選択肢を広く持っておきたいという気持ちが強く、狙いを定める瞬間の集中力に、その本領が表れます。",
+  "combineText": "この二つが重なる時、「凍眼者」という人物像が立ち上がります。",
+  "tags": [
+   "観察力",
+   "少数精鋭の繋がり",
+   "内なる情熱",
+   "自由な選択肢",
+   "精密な集中力",
+   "縛られない身軽さ"
+  ],
+  "axis": "凍結の宿命 × 距離の弓"
+ },
+ "CRCM": {
+  "head": "<title>氷×両手剣「破氷者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。氷×両手剣タイプ「破氷者」の性格傾向（観察力・少数精鋭の繋がり・牽引力）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/crcm\">\n<meta property=\"og:title\" content=\"氷×両手剣「破氷者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。氷×両手剣タイプ「破氷者」の性格傾向（観察力・少数精鋭の繋がり・牽引力）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/crcm\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/CRCM.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 氷×両手剣タイプ「破氷者」（CRCM）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/CRCM.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"氷×両手剣「破氷者」（CRCM型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。氷×両手剣タイプ「破氷者」の性格傾向（観察力・少数精鋭の繋がり・牽引力）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "氷×両手剣タイプ「破氷者」",
+  "lead": null,
+  "elementText": "氷は、外への発信を抑え、内側の解像度を高める元素です。感受性の鋭さゆえに一歩引いて世界を観察し、独自の視点を育てていく性質があります。多くの人と広く関わるより、少数の相手と深く繋がることを好み、その分だけ、選んだ相手への忠誠は揺るぎません。静かでいて、内側は熱いタイプです。",
+  "weaponText": "両手剣は、独力で道を切り拓く武器です。統率者・達成者の性質——自分の力で状況を動かそうとする動機が、この武器の核にあります。誰かに頼るより、自分で結果を出すことに価値を置き、困難であるほど、かえって力が湧いてくるタイプです。周囲を牽引する場面で、真価を発揮します。",
+  "combineText": "この二つが重なる時、「破氷者」という人物像が立ち上がります。",
+  "tags": [
+   "観察力",
+   "少数精鋭の繋がり",
+   "内なる情熱",
+   "自力本願",
+   "牽引力",
+   "困難ほど燃える"
+  ],
+  "axis": "凍結の宿命 × 独力で断つ型"
+ },
+ "CRCT": {
+  "head": "<title>氷×法器「透徹者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。氷×法器タイプ「透徹者」の性格傾向（観察力・少数精鋭の繋がり・独自性）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/crct\">\n<meta property=\"og:title\" content=\"氷×法器「透徹者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。氷×法器タイプ「透徹者」の性格傾向（観察力・少数精鋭の繋がり・独自性）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/crct\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/CRCT.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 氷×法器タイプ「透徹者」（CRCT）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/CRCT.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"氷×法器「透徹者」（CRCT型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。氷×法器タイプ「透徹者」の性格傾向（観察力・少数精鋭の繋がり・独自性）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "氷×法器タイプ「透徹者」",
+  "lead": null,
+  "elementText": "氷は、外への発信を抑え、内側の解像度を高める元素です。感受性の鋭さゆえに一歩引いて世界を観察し、独自の視点を育てていく性質があります。多くの人と広く関わるより、少数の相手と深く繋がることを好み、その分だけ、選んだ相手への忠誠は揺るぎません。静かでいて、内側は熱いタイプです。",
+  "weaponText": "法器は、術式という抽象を介して世界と接続する武器です。観察者・個性派の性質——理解し、独自の視点を持とうとする動機が、その根にあります。直接ぶつかるより、一歩引いた場所から本質を見極めることを好み、他人には見えないところにある繋がりに、自然と気づくタイプです。",
+  "combineText": "この二つが重なる時、「透徹者」という人物像が立ち上がります。",
+  "tags": [
+   "観察力",
+   "少数精鋭の繋がり",
+   "内なる情熱",
+   "俯瞰する視点",
+   "独自性",
+   "見えない繋がりへの気づき"
+  ],
+  "axis": "凍結の宿命 × 媒介の杖"
+ },
+ "CRPL": {
+  "head": "<title>氷×長柄「氷壁者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。氷×長柄タイプ「氷壁者」の性格傾向（観察力・少数精鋭の繋がり・誠実な役目遂行）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/crpl\">\n<meta property=\"og:title\" content=\"氷×長柄「氷壁者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。氷×長柄タイプ「氷壁者」の性格傾向（観察力・少数精鋭の繋がり・誠実な役目遂行）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/crpl\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/CRPL.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 氷×長柄タイプ「氷壁者」（CRPL）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/CRPL.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"氷×長柄「氷壁者」（CRPL型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。氷×長柄タイプ「氷壁者」の性格傾向（観察力・少数精鋭の繋がり・誠実な役目遂行）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "氷×長柄タイプ「氷壁者」",
+  "lead": null,
+  "elementText": "氷は、外への発信を抑え、内側の解像度を高める元素です。感受性の鋭さゆえに一歩引いて世界を観察し、独自の視点を育てていく性質があります。多くの人と広く関わるより、少数の相手と深く繋がることを好み、その分だけ、選んだ相手への忠誠は揺るぎません。静かでいて、内側は熱いタイプです。",
+  "weaponText": "長柄は、間合いを保ちながら集団を守る武器です。改革者・調停者の性質——誠実に役目を果たし、場の調和を保とうとする動機が、扱い方を支えます。前に出て目立つより、全体が円滑に回ることを優先し、必要な時にはしっかりと境界線を引く、縁の下の力持ちとしての強さがあります。",
+  "combineText": "この二つが重なる時、「氷壁者」という人物像が立ち上がります。",
+  "tags": [
+   "観察力",
+   "少数精鋭の繋がり",
+   "内なる情熱",
+   "縁の下の力持ち",
+   "誠実な役目遂行",
+   "境界線を引く強さ"
+  ],
+  "axis": "凍結の宿命 × 直進到達型"
+ },
+ "CRSW": {
+  "head": "<title>氷×片手剣「宿縁者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。氷×片手剣タイプ「宿縁者」の性格傾向（観察力・少数精鋭の繋がり・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/crsw\">\n<meta property=\"og:title\" content=\"氷×片手剣「宿縁者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。氷×片手剣タイプ「宿縁者」の性格傾向（観察力・少数精鋭の繋がり・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/crsw\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/CRSW.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 氷×片手剣タイプ「宿縁者」（CRSW）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/CRSW.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"氷×片手剣「宿縁者」（CRSW型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。氷×片手剣タイプ「宿縁者」の性格傾向（観察力・少数精鋭の繋がり・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "氷×片手剣タイプ「宿縁者」",
+  "lead": "大勢と広く付き合うより、限られた誰かと深く繋がる方が、ずっと自分らしいと感じたことはありませんか。",
+  "elementText": "氷は、外への発信を抑え、内側の解像度を高める元素です。感受性の鋭さゆえに一歩引いて世界を観察し、独自の視点を育てていく性質があります。多くの人と広く関わるより、少数の相手と深く繋がることを好み、その分だけ、選んだ相手への忠誠は揺るぎません。静かでいて、内側は熱いタイプです。",
+  "weaponText": "片手剣は、他者との関わりの中で力を発揮する武器です。援助者・堅実家の性質——支え合い、信頼を築こうとする動機が、その扱い方の根にあります。相手が誰かによって、力の出し方そのものを変える柔軟さがあり、一人で完結するより、誰かのために動く時の方が、本来の力を発揮します。",
+  "combineText": "この二つが重なる時、「宿縁者」という人物像が立ち上がります。",
+  "tags": [
+   "観察力",
+   "少数精鋭の繋がり",
+   "内なる情熱",
+   "支え合い",
+   "相手に応じた柔軟さ",
+   "関係性の中の力"
+  ],
+  "axis": "凍結の宿命 × 関係に流れる刃"
+ },
+ "DEBW": {
+  "head": "<title>草×弓「見守者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。草×弓タイプ「見守者」の性格傾向（探究心・共有意欲・精密な集中力）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/debw\">\n<meta property=\"og:title\" content=\"草×弓「見守者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。草×弓タイプ「見守者」の性格傾向（探究心・共有意欲・精密な集中力）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/debw\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/DEBW.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 草×弓タイプ「見守者」（DEBW）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/DEBW.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"草×弓「見守者」（DEBW型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。草×弓タイプ「見守者」の性格傾向（探究心・共有意欲・精密な集中力）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "草×弓タイプ「見守者」",
+  "lead": null,
+  "elementText": "草は、知性と共生が結びつく元素です。物事を観察し理解しようとする力と、他者と分かち合おうとする姿勢が、同じ根から伸びています。知ることそのものが喜びでありながら、それを独り占めせず、誰かの役に立てたいという気持ちが自然と湧いてくる、静かな探究者としての一面を持ちます。",
+  "weaponText": "弓は、距離を取りながら精密に狙いを定める武器です。楽天家の性質——縛られず自由に、満たされた状態を追い求める動機が、一射に込められています。目の前のことに縛られるより、選択肢を広く持っておきたいという気持ちが強く、狙いを定める瞬間の集中力に、その本領が表れます。",
+  "combineText": "この二つが重なる時、「見守者」という人物像が立ち上がります。",
+  "tags": [
+   "探究心",
+   "共有意欲",
+   "静かな知性",
+   "自由な選択肢",
+   "精密な集中力",
+   "縛られない身軽さ"
+  ],
+  "axis": "萌芽の宿命 × 距離の弓"
+ },
+ "DECM": {
+  "head": "<title>草×両手剣「芽吹者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。草×両手剣タイプ「芽吹者」の性格傾向（探究心・共有意欲・牽引力）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/decm\">\n<meta property=\"og:title\" content=\"草×両手剣「芽吹者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。草×両手剣タイプ「芽吹者」の性格傾向（探究心・共有意欲・牽引力）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/decm\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/DECM.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 草×両手剣タイプ「芽吹者」（DECM）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/DECM.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"草×両手剣「芽吹者」（DECM型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。草×両手剣タイプ「芽吹者」の性格傾向（探究心・共有意欲・牽引力）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "草×両手剣タイプ「芽吹者」",
+  "lead": null,
+  "elementText": "草は、知性と共生が結びつく元素です。物事を観察し理解しようとする力と、他者と分かち合おうとする姿勢が、同じ根から伸びています。知ることそのものが喜びでありながら、それを独り占めせず、誰かの役に立てたいという気持ちが自然と湧いてくる、静かな探究者としての一面を持ちます。",
+  "weaponText": "両手剣は、独力で道を切り拓く武器です。統率者・達成者の性質——自分の力で状況を動かそうとする動機が、この武器の核にあります。誰かに頼るより、自分で結果を出すことに価値を置き、困難であるほど、かえって力が湧いてくるタイプです。周囲を牽引する場面で、真価を発揮します。",
+  "combineText": "この二つが重なる時、「芽吹者」という人物像が立ち上がります。",
+  "tags": [
+   "探究心",
+   "共有意欲",
+   "静かな知性",
+   "自力本願",
+   "牽引力",
+   "困難ほど燃える"
+  ],
+  "axis": "萌芽の宿命 × 独力で断つ型"
+ },
+ "DECT": {
+  "head": "<title>草×法器「叡結者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。草×法器タイプ「叡結者」の性格傾向（探究心・共有意欲・独自性）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/dect\">\n<meta property=\"og:title\" content=\"草×法器「叡結者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。草×法器タイプ「叡結者」の性格傾向（探究心・共有意欲・独自性）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/dect\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/DECT.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 草×法器タイプ「叡結者」（DECT）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/DECT.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"草×法器「叡結者」（DECT型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。草×法器タイプ「叡結者」の性格傾向（探究心・共有意欲・独自性）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "草×法器タイプ「叡結者」",
+  "lead": null,
+  "elementText": "草は、知性と共生が結びつく元素です。物事を観察し理解しようとする力と、他者と分かち合おうとする姿勢が、同じ根から伸びています。知ることそのものが喜びでありながら、それを独り占めせず、誰かの役に立てたいという気持ちが自然と湧いてくる、静かな探究者としての一面を持ちます。",
+  "weaponText": "法器は、術式という抽象を介して世界と接続する武器です。観察者・個性派の性質——理解し、独自の視点を持とうとする動機が、その根にあります。直接ぶつかるより、一歩引いた場所から本質を見極めることを好み、他人には見えないところにある繋がりに、自然と気づくタイプです。",
+  "combineText": "この二つが重なる時、「叡結者」という人物像が立ち上がります。",
+  "tags": [
+   "探究心",
+   "共有意欲",
+   "静かな知性",
+   "俯瞰する視点",
+   "独自性",
+   "見えない繋がりへの気づき"
+  ],
+  "axis": "萌芽の宿命 × 媒介の杖"
+ },
+ "DEPL": {
+  "head": "<title>草×長柄「育衛者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。草×長柄タイプ「育衛者」の性格傾向（探究心・共有意欲・誠実な役目遂行）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/depl\">\n<meta property=\"og:title\" content=\"草×長柄「育衛者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。草×長柄タイプ「育衛者」の性格傾向（探究心・共有意欲・誠実な役目遂行）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/depl\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/DEPL.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 草×長柄タイプ「育衛者」（DEPL）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/DEPL.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"草×長柄「育衛者」（DEPL型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。草×長柄タイプ「育衛者」の性格傾向（探究心・共有意欲・誠実な役目遂行）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "草×長柄タイプ「育衛者」",
+  "lead": null,
+  "elementText": "草は、知性と共生が結びつく元素です。物事を観察し理解しようとする力と、他者と分かち合おうとする姿勢が、同じ根から伸びています。知ることそのものが喜びでありながら、それを独り占めせず、誰かの役に立てたいという気持ちが自然と湧いてくる、静かな探究者としての一面を持ちます。",
+  "weaponText": "長柄は、間合いを保ちながら集団を守る武器です。改革者・調停者の性質——誠実に役目を果たし、場の調和を保とうとする動機が、扱い方を支えます。前に出て目立つより、全体が円滑に回ることを優先し、必要な時にはしっかりと境界線を引く、縁の下の力持ちとしての強さがあります。",
+  "combineText": "この二つが重なる時、「育衛者」という人物像が立ち上がります。",
+  "tags": [
+   "探究心",
+   "共有意欲",
+   "静かな知性",
+   "縁の下の力持ち",
+   "誠実な役目遂行",
+   "境界線を引く強さ"
+  ],
+  "axis": "萌芽の宿命 × 直進到達型"
+ },
+ "DESW": {
+  "head": "<title>草×片手剣「縁結者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。草×片手剣タイプ「縁結者」の性格傾向（探究心・共有意欲・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/desw\">\n<meta property=\"og:title\" content=\"草×片手剣「縁結者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。草×片手剣タイプ「縁結者」の性格傾向（探究心・共有意欲・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/desw\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/DESW.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 草×片手剣タイプ「縁結者」（DESW）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/DESW.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"草×片手剣「縁結者」（DESW型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。草×片手剣タイプ「縁結者」の性格傾向（探究心・共有意欲・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "草×片手剣タイプ「縁結者」",
+  "lead": "アナタは、何かを知ったり理解したりすること自体が、純粋な喜びだと感じたことはありませんか。",
+  "elementText": "草は、知性と共生が結びつく元素です。物事を観察し理解しようとする力と、他者と分かち合おうとする姿勢が、同じ根から伸びています。知ることそのものが喜びでありながら、それを独り占めせず、誰かの役に立てたいという気持ちが自然と湧いてくる、静かな探究者としての一面を持ちます。",
+  "weaponText": "片手剣は、他者との関わりの中で力を発揮する武器です。援助者・堅実家の性質——支え合い、信頼を築こうとする動機が、その扱い方の根にあります。相手が誰かによって、力の出し方そのものを変える柔軟さがあり、一人で完結するより、誰かのために動く時の方が、本来の力を発揮します。",
+  "combineText": "この二つが重なる時、「縁結者」という人物像が立ち上がります。",
+  "tags": [
+   "探究心",
+   "共有意欲",
+   "静かな知性",
+   "支え合い",
+   "相手に応じた柔軟さ",
+   "関係性の中の力"
+  ],
+  "axis": "萌芽の宿命 × 関係に流れる刃"
+ },
+ "ELBW": {
+  "head": "<title>雷×弓「疾光者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。雷×弓タイプ「疾光者」の性格傾向（信念・型破り・精密な集中力）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/elbw\">\n<meta property=\"og:title\" content=\"雷×弓「疾光者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。雷×弓タイプ「疾光者」の性格傾向（信念・型破り・精密な集中力）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/elbw\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/ELBW.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 雷×弓タイプ「疾光者」（ELBW）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/ELBW.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"雷×弓「疾光者」（ELBW型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。雷×弓タイプ「疾光者」の性格傾向（信念・型破り・精密な集中力）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "雷×弓タイプ「疾光者」",
+  "lead": null,
+  "elementText": "雷は、信念を貫く強さと、型を破る衝動がせめぎ合う元素です。律することと逸脱すること、その二極の間で揺れ動きながら進む性質を映します。自分の中に確固たるルールを持ちながら、時にそれを自ら壊してでも前に進もうとする、矛盾を抱えた強さがあります。停滞を、誰よりも嫌うタイプです。",
+  "weaponText": "弓は、距離を取りながら精密に狙いを定める武器です。楽天家の性質——縛られず自由に、満たされた状態を追い求める動機が、一射に込められています。目の前のことに縛られるより、選択肢を広く持っておきたいという気持ちが強く、狙いを定める瞬間の集中力に、その本領が表れます。",
+  "combineText": "この二つが重なる時、「疾光者」という人物像が立ち上がります。",
+  "tags": [
+   "信念",
+   "型破り",
+   "停滞嫌い",
+   "自由な選択肢",
+   "精密な集中力",
+   "縛られない身軽さ"
+  ],
+  "axis": "一閃の宿命 × 距離の弓"
+ },
+ "ELCM": {
+  "head": "<title>雷×両手剣「破天者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。雷×両手剣タイプ「破天者」の性格傾向（信念・型破り・牽引力）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/elcm\">\n<meta property=\"og:title\" content=\"雷×両手剣「破天者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。雷×両手剣タイプ「破天者」の性格傾向（信念・型破り・牽引力）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/elcm\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/ELCM.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 雷×両手剣タイプ「破天者」（ELCM）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/ELCM.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"雷×両手剣「破天者」（ELCM型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。雷×両手剣タイプ「破天者」の性格傾向（信念・型破り・牽引力）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "雷×両手剣タイプ「破天者」",
+  "lead": null,
+  "elementText": "雷は、信念を貫く強さと、型を破る衝動がせめぎ合う元素です。律することと逸脱すること、その二極の間で揺れ動きながら進む性質を映します。自分の中に確固たるルールを持ちながら、時にそれを自ら壊してでも前に進もうとする、矛盾を抱えた強さがあります。停滞を、誰よりも嫌うタイプです。",
+  "weaponText": "両手剣は、独力で道を切り拓く武器です。統率者・達成者の性質——自分の力で状況を動かそうとする動機が、この武器の核にあります。誰かに頼るより、自分で結果を出すことに価値を置き、困難であるほど、かえって力が湧いてくるタイプです。周囲を牽引する場面で、真価を発揮します。",
+  "combineText": "この二つが重なる時、「破天者」という人物像が立ち上がります。",
+  "tags": [
+   "信念",
+   "型破り",
+   "停滞嫌い",
+   "自力本願",
+   "牽引力",
+   "困難ほど燃える"
+  ],
+  "axis": "一閃の宿命 × 独力で断つ型"
+ },
+ "ELCT": {
+  "head": "<title>雷×法器「電導者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。雷×法器タイプ「電導者」の性格傾向（信念・型破り・独自性）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/elct\">\n<meta property=\"og:title\" content=\"雷×法器「電導者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。雷×法器タイプ「電導者」の性格傾向（信念・型破り・独自性）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/elct\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/ELCT.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 雷×法器タイプ「電導者」（ELCT）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/ELCT.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"雷×法器「電導者」（ELCT型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。雷×法器タイプ「電導者」の性格傾向（信念・型破り・独自性）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "雷×法器タイプ「電導者」",
+  "lead": null,
+  "elementText": "雷は、信念を貫く強さと、型を破る衝動がせめぎ合う元素です。律することと逸脱すること、その二極の間で揺れ動きながら進む性質を映します。自分の中に確固たるルールを持ちながら、時にそれを自ら壊してでも前に進もうとする、矛盾を抱えた強さがあります。停滞を、誰よりも嫌うタイプです。",
+  "weaponText": "法器は、術式という抽象を介して世界と接続する武器です。観察者・個性派の性質——理解し、独自の視点を持とうとする動機が、その根にあります。直接ぶつかるより、一歩引いた場所から本質を見極めることを好み、他人には見えないところにある繋がりに、自然と気づくタイプです。",
+  "combineText": "この二つが重なる時、「電導者」という人物像が立ち上がります。",
+  "tags": [
+   "信念",
+   "型破り",
+   "停滞嫌い",
+   "俯瞰する視点",
+   "独自性",
+   "見えない繋がりへの気づき"
+  ],
+  "axis": "一閃の宿命 × 媒介の杖"
+ },
+ "ELPL": {
+  "head": "<title>雷×長柄「雷衛者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。雷×長柄タイプ「雷衛者」の性格傾向（信念・型破り・誠実な役目遂行）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/elpl\">\n<meta property=\"og:title\" content=\"雷×長柄「雷衛者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。雷×長柄タイプ「雷衛者」の性格傾向（信念・型破り・誠実な役目遂行）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/elpl\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/ELPL.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 雷×長柄タイプ「雷衛者」（ELPL）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/ELPL.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"雷×長柄「雷衛者」（ELPL型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。雷×長柄タイプ「雷衛者」の性格傾向（信念・型破り・誠実な役目遂行）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "雷×長柄タイプ「雷衛者」",
+  "lead": null,
+  "elementText": "雷は、信念を貫く強さと、型を破る衝動がせめぎ合う元素です。律することと逸脱すること、その二極の間で揺れ動きながら進む性質を映します。自分の中に確固たるルールを持ちながら、時にそれを自ら壊してでも前に進もうとする、矛盾を抱えた強さがあります。停滞を、誰よりも嫌うタイプです。",
+  "weaponText": "長柄は、間合いを保ちながら集団を守る武器です。改革者・調停者の性質——誠実に役目を果たし、場の調和を保とうとする動機が、扱い方を支えます。前に出て目立つより、全体が円滑に回ることを優先し、必要な時にはしっかりと境界線を引く、縁の下の力持ちとしての強さがあります。",
+  "combineText": "この二つが重なる時、「雷衛者」という人物像が立ち上がります。",
+  "tags": [
+   "信念",
+   "型破り",
+   "停滞嫌い",
+   "縁の下の力持ち",
+   "誠実な役目遂行",
+   "境界線を引く強さ"
+  ],
+  "axis": "一閃の宿命 × 直進到達型"
+ },
+ "ELSW": {
+  "head": "<title>雷×片手剣「共鳴者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。雷×片手剣タイプ「共鳴者」の性格傾向（信念・型破り・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/elsw\">\n<meta property=\"og:title\" content=\"雷×片手剣「共鳴者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。雷×片手剣タイプ「共鳴者」の性格傾向（信念・型破り・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/elsw\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/ELSW.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 雷×片手剣タイプ「共鳴者」（ELSW）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/ELSW.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"雷×片手剣「共鳴者」（ELSW型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。雷×片手剣タイプ「共鳴者」の性格傾向（信念・型破り・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "雷×片手剣タイプ「共鳴者」",
+  "lead": "ルールに従うだけでは物足りなくて、時々そのルールごと壊してでも前に進みたくなることはありませんか。",
+  "elementText": "雷は、信念を貫く強さと、型を破る衝動がせめぎ合う元素です。律することと逸脱すること、その二極の間で揺れ動きながら進む性質を映します。自分の中に確固たるルールを持ちながら、時にそれを自ら壊してでも前に進もうとする、矛盾を抱えた強さがあります。停滞を、誰よりも嫌うタイプです。",
+  "weaponText": "片手剣は、他者との関わりの中で力を発揮する武器です。援助者・堅実家の性質——支え合い、信頼を築こうとする動機が、その扱い方の根にあります。相手が誰かによって、力の出し方そのものを変える柔軟さがあり、一人で完結するより、誰かのために動く時の方が、本来の力を発揮します。",
+  "combineText": "この二つが重なる時、「共鳴者」という人物像が立ち上がります。",
+  "tags": [
+   "信念",
+   "型破り",
+   "停滞嫌い",
+   "支え合い",
+   "相手に応じた柔軟さ",
+   "関係性の中の力"
+  ],
+  "axis": "一閃の宿命 × 関係に流れる刃"
+ },
+ "GEBW": {
+  "head": "<title>岩×弓「遠護者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。岩×弓タイプ「遠護者」の性格傾向（誠実さ・安定志向・精密な集中力）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/gebw\">\n<meta property=\"og:title\" content=\"岩×弓「遠護者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。岩×弓タイプ「遠護者」の性格傾向（誠実さ・安定志向・精密な集中力）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/gebw\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/GEBW.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 岩×弓タイプ「遠護者」（GEBW）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/GEBW.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"岩×弓「遠護者」（GEBW型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。岩×弓タイプ「遠護者」の性格傾向（誠実さ・安定志向・精密な集中力）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "岩×弓タイプ「遠護者」",
+  "lead": null,
+  "elementText": "岩は、誠実さと協調性を土台に、守り支える性質を持つ元素です。安定を志向し、周囲を庇護する構えが、その気質の根にあります。派手さより、確実さを選ぶタイプで、一度引き受けたことは最後までやり遂げようとします。周りから見て、一番頼りにされる存在になりやすい元素です。",
+  "weaponText": "弓は、距離を取りながら精密に狙いを定める武器です。楽天家の性質——縛られず自由に、満たされた状態を追い求める動機が、一射に込められています。目の前のことに縛られるより、選択肢を広く持っておきたいという気持ちが強く、狙いを定める瞬間の集中力に、その本領が表れます。",
+  "combineText": "この二つが重なる時、「遠護者」という人物像が立ち上がります。",
+  "tags": [
+   "誠実さ",
+   "安定志向",
+   "頼られる存在",
+   "自由な選択肢",
+   "精密な集中力",
+   "縛られない身軽さ"
+  ],
+  "axis": "不動の宿命 × 距離の弓"
+ },
+ "GECM": {
+  "head": "<title>岩×両手剣「破岩者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。岩×両手剣タイプ「破岩者」の性格傾向（誠実さ・安定志向・牽引力）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/gecm\">\n<meta property=\"og:title\" content=\"岩×両手剣「破岩者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。岩×両手剣タイプ「破岩者」の性格傾向（誠実さ・安定志向・牽引力）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/gecm\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/GECM.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 岩×両手剣タイプ「破岩者」（GECM）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/GECM.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"岩×両手剣「破岩者」（GECM型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。岩×両手剣タイプ「破岩者」の性格傾向（誠実さ・安定志向・牽引力）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "岩×両手剣タイプ「破岩者」",
+  "lead": null,
+  "elementText": "岩は、誠実さと協調性を土台に、守り支える性質を持つ元素です。安定を志向し、周囲を庇護する構えが、その気質の根にあります。派手さより、確実さを選ぶタイプで、一度引き受けたことは最後までやり遂げようとします。周りから見て、一番頼りにされる存在になりやすい元素です。",
+  "weaponText": "両手剣は、独力で道を切り拓く武器です。統率者・達成者の性質——自分の力で状況を動かそうとする動機が、この武器の核にあります。誰かに頼るより、自分で結果を出すことに価値を置き、困難であるほど、かえって力が湧いてくるタイプです。周囲を牽引する場面で、真価を発揮します。",
+  "combineText": "この二つが重なる時、「破岩者」という人物像が立ち上がります。",
+  "tags": [
+   "誠実さ",
+   "安定志向",
+   "頼られる存在",
+   "自力本願",
+   "牽引力",
+   "困難ほど燃える"
+  ],
+  "axis": "不動の宿命 × 独力で断つ型"
+ },
+ "GECT": {
+  "head": "<title>岩×法器「礎識者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。岩×法器タイプ「礎識者」の性格傾向（誠実さ・安定志向・独自性）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/gect\">\n<meta property=\"og:title\" content=\"岩×法器「礎識者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。岩×法器タイプ「礎識者」の性格傾向（誠実さ・安定志向・独自性）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/gect\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/GECT.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 岩×法器タイプ「礎識者」（GECT）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/GECT.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"岩×法器「礎識者」（GECT型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。岩×法器タイプ「礎識者」の性格傾向（誠実さ・安定志向・独自性）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "岩×法器タイプ「礎識者」",
+  "lead": null,
+  "elementText": "岩は、誠実さと協調性を土台に、守り支える性質を持つ元素です。安定を志向し、周囲を庇護する構えが、その気質の根にあります。派手さより、確実さを選ぶタイプで、一度引き受けたことは最後までやり遂げようとします。周りから見て、一番頼りにされる存在になりやすい元素です。",
+  "weaponText": "法器は、術式という抽象を介して世界と接続する武器です。観察者・個性派の性質——理解し、独自の視点を持とうとする動機が、その根にあります。直接ぶつかるより、一歩引いた場所から本質を見極めることを好み、他人には見えないところにある繋がりに、自然と気づくタイプです。",
+  "combineText": "この二つが重なる時、「礎識者」という人物像が立ち上がります。",
+  "tags": [
+   "誠実さ",
+   "安定志向",
+   "頼られる存在",
+   "俯瞰する視点",
+   "独自性",
+   "見えない繋がりへの気づき"
+  ],
+  "axis": "不動の宿命 × 媒介の杖"
+ },
+ "GEPL": {
+  "head": "<title>岩×長柄「護衛者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。岩×長柄タイプ「護衛者」の性格傾向（誠実さ・安定志向・誠実な役目遂行）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/gepl\">\n<meta property=\"og:title\" content=\"岩×長柄「護衛者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。岩×長柄タイプ「護衛者」の性格傾向（誠実さ・安定志向・誠実な役目遂行）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/gepl\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/GEPL.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 岩×長柄タイプ「護衛者」（GEPL）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/GEPL.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"岩×長柄「護衛者」（GEPL型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。岩×長柄タイプ「護衛者」の性格傾向（誠実さ・安定志向・誠実な役目遂行）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "岩×長柄タイプ「護衛者」",
+  "lead": null,
+  "elementText": "岩は、誠実さと協調性を土台に、守り支える性質を持つ元素です。安定を志向し、周囲を庇護する構えが、その気質の根にあります。派手さより、確実さを選ぶタイプで、一度引き受けたことは最後までやり遂げようとします。周りから見て、一番頼りにされる存在になりやすい元素です。",
+  "weaponText": "長柄は、間合いを保ちながら集団を守る武器です。改革者・調停者の性質——誠実に役目を果たし、場の調和を保とうとする動機が、扱い方を支えます。前に出て目立つより、全体が円滑に回ることを優先し、必要な時にはしっかりと境界線を引く、縁の下の力持ちとしての強さがあります。",
+  "combineText": "この二つが重なる時、「護衛者」という人物像が立ち上がります。",
+  "tags": [
+   "誠実さ",
+   "安定志向",
+   "頼られる存在",
+   "縁の下の力持ち",
+   "誠実な役目遂行",
+   "境界線を引く強さ"
+  ],
+  "axis": "不動の宿命 × 直進到達型"
+ },
+ "GESW": {
+  "head": "<title>岩×片手剣「包容者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。岩×片手剣タイプ「包容者」の性格傾向（誠実さ・安定志向・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/gesw\">\n<meta property=\"og:title\" content=\"岩×片手剣「包容者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。岩×片手剣タイプ「包容者」の性格傾向（誠実さ・安定志向・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/gesw\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/GESW.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 岩×片手剣タイプ「包容者」（GESW）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/GESW.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"岩×片手剣「包容者」（GESW型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。岩×片手剣タイプ「包容者」の性格傾向（誠実さ・安定志向・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "岩×片手剣タイプ「包容者」",
+  "lead": "アナタは、誰かに頼られると、自然と「自分がなんとかしなきゃ」と思ってしまうことはありませんか。",
+  "elementText": "岩は、誠実さと協調性を土台に、守り支える性質を持つ元素です。安定を志向し、周囲を庇護する構えが、その気質の根にあります。派手さより、確実さを選ぶタイプで、一度引き受けたことは最後までやり遂げようとします。周りから見て、一番頼りにされる存在になりやすい元素です。",
+  "weaponText": "片手剣は、他者との関わりの中で力を発揮する武器です。援助者・堅実家の性質——支え合い、信頼を築こうとする動機が、その扱い方の根にあります。相手が誰かによって、力の出し方そのものを変える柔軟さがあり、一人で完結するより、誰かのために動く時の方が、本来の力を発揮します。",
+  "combineText": "この二つが重なる時、「包容者」という人物像が立ち上がります。",
+  "tags": [
+   "誠実さ",
+   "安定志向",
+   "頼られる存在",
+   "支え合い",
+   "相手に応じた柔軟さ",
+   "関係性の中の力"
+  ],
+  "axis": "不動の宿命 × 関係に流れる刃"
+ },
+ "HYBW": {
+  "head": "<title>水×弓「静観者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。水×弓タイプ「静観者」の性格傾向（柔軟さ・静かな緊張・精密な集中力）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/hybw\">\n<meta property=\"og:title\" content=\"水×弓「静観者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。水×弓タイプ「静観者」の性格傾向（柔軟さ・静かな緊張・精密な集中力）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/hybw\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/HYBW.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 水×弓タイプ「静観者」（HYBW）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/HYBW.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"水×弓「静観者」（HYBW型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。水×弓タイプ「静観者」の性格傾向（柔軟さ・静かな緊張・精密な集中力）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "水×弓タイプ「静観者」",
+  "lead": null,
+  "elementText": "水は、周囲との調和を保ちながら、内側に見せない部分を抱える元素です。場に合わせて姿を変える柔軟さの裏に、静かな緊張が流れています。誰といても浮かずにいられる器用さがある一方、本当の自分がどこにあるのか、ふと分からなくなることもあります。表と裏、両方を併せ持つ複雑さが魅力です。",
+  "weaponText": "弓は、距離を取りながら精密に狙いを定める武器です。楽天家の性質——縛られず自由に、満たされた状態を追い求める動機が、一射に込められています。目の前のことに縛られるより、選択肢を広く持っておきたいという気持ちが強く、狙いを定める瞬間の集中力に、その本領が表れます。",
+  "combineText": "この二つが重なる時、「静観者」という人物像が立ち上がります。",
+  "tags": [
+   "柔軟さ",
+   "静かな緊張",
+   "二面性",
+   "自由な選択肢",
+   "精密な集中力",
+   "縛られない身軽さ"
+  ],
+  "axis": "流転の宿命 × 距離の弓"
+ },
+ "HYCM": {
+  "head": "<title>水×両手剣「孤淵者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。水×両手剣タイプ「孤淵者」の性格傾向（柔軟さ・静かな緊張・牽引力）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/hycm\">\n<meta property=\"og:title\" content=\"水×両手剣「孤淵者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。水×両手剣タイプ「孤淵者」の性格傾向（柔軟さ・静かな緊張・牽引力）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/hycm\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/HYCM.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 水×両手剣タイプ「孤淵者」（HYCM）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/HYCM.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"水×両手剣「孤淵者」（HYCM型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。水×両手剣タイプ「孤淵者」の性格傾向（柔軟さ・静かな緊張・牽引力）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "水×両手剣タイプ「孤淵者」",
+  "lead": null,
+  "elementText": "水は、周囲との調和を保ちながら、内側に見せない部分を抱える元素です。場に合わせて姿を変える柔軟さの裏に、静かな緊張が流れています。誰といても浮かずにいられる器用さがある一方、本当の自分がどこにあるのか、ふと分からなくなることもあります。表と裏、両方を併せ持つ複雑さが魅力です。",
+  "weaponText": "両手剣は、独力で道を切り拓く武器です。統率者・達成者の性質——自分の力で状況を動かそうとする動機が、この武器の核にあります。誰かに頼るより、自分で結果を出すことに価値を置き、困難であるほど、かえって力が湧いてくるタイプです。周囲を牽引する場面で、真価を発揮します。",
+  "combineText": "この二つが重なる時、「孤淵者」という人物像が立ち上がります。",
+  "tags": [
+   "柔軟さ",
+   "静かな緊張",
+   "二面性",
+   "自力本願",
+   "牽引力",
+   "困難ほど燃える"
+  ],
+  "axis": "流転の宿命 × 独力で断つ型"
+ },
+ "HYCT": {
+  "head": "<title>水×法器「深識者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。水×法器タイプ「深識者」の性格傾向（柔軟さ・静かな緊張・独自性）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/hyct\">\n<meta property=\"og:title\" content=\"水×法器「深識者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。水×法器タイプ「深識者」の性格傾向（柔軟さ・静かな緊張・独自性）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/hyct\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/HYCT.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 水×法器タイプ「深識者」（HYCT）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/HYCT.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"水×法器「深識者」（HYCT型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。水×法器タイプ「深識者」の性格傾向（柔軟さ・静かな緊張・独自性）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "水×法器タイプ「深識者」",
+  "lead": null,
+  "elementText": "水は、周囲との調和を保ちながら、内側に見せない部分を抱える元素です。場に合わせて姿を変える柔軟さの裏に、静かな緊張が流れています。誰といても浮かずにいられる器用さがある一方、本当の自分がどこにあるのか、ふと分からなくなることもあります。表と裏、両方を併せ持つ複雑さが魅力です。",
+  "weaponText": "法器は、術式という抽象を介して世界と接続する武器です。観察者・個性派の性質——理解し、独自の視点を持とうとする動機が、その根にあります。直接ぶつかるより、一歩引いた場所から本質を見極めることを好み、他人には見えないところにある繋がりに、自然と気づくタイプです。",
+  "combineText": "この二つが重なる時、「深識者」という人物像が立ち上がります。",
+  "tags": [
+   "柔軟さ",
+   "静かな緊張",
+   "二面性",
+   "俯瞰する視点",
+   "独自性",
+   "見えない繋がりへの気づき"
+  ],
+  "axis": "流転の宿命 × 媒介の杖"
+ },
+ "HYPL": {
+  "head": "<title>水×長柄「静衛者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。水×長柄タイプ「静衛者」の性格傾向（柔軟さ・静かな緊張・誠実な役目遂行）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/hypl\">\n<meta property=\"og:title\" content=\"水×長柄「静衛者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。水×長柄タイプ「静衛者」の性格傾向（柔軟さ・静かな緊張・誠実な役目遂行）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/hypl\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/HYPL.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 水×長柄タイプ「静衛者」（HYPL）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/HYPL.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"水×長柄「静衛者」（HYPL型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。水×長柄タイプ「静衛者」の性格傾向（柔軟さ・静かな緊張・誠実な役目遂行）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "水×長柄タイプ「静衛者」",
+  "lead": null,
+  "elementText": "水は、周囲との調和を保ちながら、内側に見せない部分を抱える元素です。場に合わせて姿を変える柔軟さの裏に、静かな緊張が流れています。誰といても浮かずにいられる器用さがある一方、本当の自分がどこにあるのか、ふと分からなくなることもあります。表と裏、両方を併せ持つ複雑さが魅力です。",
+  "weaponText": "長柄は、間合いを保ちながら集団を守る武器です。改革者・調停者の性質——誠実に役目を果たし、場の調和を保とうとする動機が、扱い方を支えます。前に出て目立つより、全体が円滑に回ることを優先し、必要な時にはしっかりと境界線を引く、縁の下の力持ちとしての強さがあります。",
+  "combineText": "この二つが重なる時、「静衛者」という人物像が立ち上がります。",
+  "tags": [
+   "柔軟さ",
+   "静かな緊張",
+   "二面性",
+   "縁の下の力持ち",
+   "誠実な役目遂行",
+   "境界線を引く強さ"
+  ],
+  "axis": "流転の宿命 × 直進到達型"
+ },
+ "HYSW": {
+  "head": "<title>水×片手剣「同調者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。水×片手剣タイプ「同調者」の性格傾向（柔軟さ・静かな緊張・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/hysw\">\n<meta property=\"og:title\" content=\"水×片手剣「同調者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。水×片手剣タイプ「同調者」の性格傾向（柔軟さ・静かな緊張・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/hysw\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/HYSW.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 水×片手剣タイプ「同調者」（HYSW）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/HYSW.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"水×片手剣「同調者」（HYSW型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。水×片手剣タイプ「同調者」の性格傾向（柔軟さ・静かな緊張・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "水×片手剣タイプ「同調者」",
+  "lead": null,
+  "elementText": "水は、周囲との調和を保ちながら、内側に見せない部分を抱える元素です。場に合わせて姿を変える柔軟さの裏に、静かな緊張が流れています。誰といても浮かずにいられる器用さがある一方、本当の自分がどこにあるのか、ふと分からなくなることもあります。表と裏、両方を併せ持つ複雑さが魅力です。",
+  "weaponText": "片手剣は、他者との関わりの中で力を発揮する武器です。援助者・堅実家の性質——支え合い、信頼を築こうとする動機が、その扱い方の根にあります。相手が誰かによって、力の出し方そのものを変える柔軟さがあり、一人で完結するより、誰かのために動く時の方が、本来の力を発揮します。",
+  "combineText": "この二つが重なる時、「同調者」という人物像が立ち上がります。",
+  "tags": [
+   "柔軟さ",
+   "静かな緊張",
+   "二面性",
+   "支え合い",
+   "相手に応じた柔軟さ",
+   "関係性の中の力"
+  ],
+  "axis": "流転の宿命 × 関係に流れる刃"
+ },
+ "PYBW": {
+  "head": "<title>炎×弓「貫徹者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。炎×弓タイプ「貫徹者」の性格傾向（義務感・推進力・精密な集中力）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/pybw\">\n<meta property=\"og:title\" content=\"炎×弓「貫徹者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。炎×弓タイプ「貫徹者」の性格傾向（義務感・推進力・精密な集中力）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/pybw\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/PYBW.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 炎×弓タイプ「貫徹者」（PYBW）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/PYBW.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"炎×弓「貫徹者」（PYBW型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。炎×弓タイプ「貫徹者」の性格傾向（義務感・推進力・精密な集中力）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "炎×弓タイプ「貫徹者」",
+  "lead": null,
+  "elementText": "炎は、義務感と情熱がせめぎ合う元素です。正しさを貫こうとする意志と、力で押し進める推進力が同時に働き、迷いながらも動き続ける性質を映します。頭で結論を出すより先に、体が動いてしまうことが多く、その分だけ周囲を巻き込む力も強くなります。じっとしていることに、どこか落ち着かなさを感じるタイプです。",
+  "weaponText": "弓は、距離を取りながら精密に狙いを定める武器です。楽天家の性質——縛られず自由に、満たされた状態を追い求める動機が、一射に込められています。目の前のことに縛られるより、選択肢を広く持っておきたいという気持ちが強く、狙いを定める瞬間の集中力に、その本領が表れます。",
+  "combineText": "この二つが重なる時、「貫徹者」という人物像が立ち上がります。",
+  "tags": [
+   "義務感",
+   "推進力",
+   "巻き込む力",
+   "自由な選択肢",
+   "精密な集中力",
+   "縛られない身軽さ"
+  ],
+  "axis": "燃焼の宿命 × 距離の弓"
+ },
+ "PYCM": {
+  "head": "<title>炎×両手剣「猛進者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。炎×両手剣タイプ「猛進者」の性格傾向（義務感・推進力・牽引力）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/pycm\">\n<meta property=\"og:title\" content=\"炎×両手剣「猛進者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。炎×両手剣タイプ「猛進者」の性格傾向（義務感・推進力・牽引力）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/pycm\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/PYCM.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 炎×両手剣タイプ「猛進者」（PYCM）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/PYCM.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"炎×両手剣「猛進者」（PYCM型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。炎×両手剣タイプ「猛進者」の性格傾向（義務感・推進力・牽引力）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "炎×両手剣タイプ「猛進者」",
+  "lead": "誰かの後をついていくより、自分の力で道を切り拓いていく方が、ずっと性に合うと感じたことはありませんか。",
+  "elementText": "炎は、義務感と情熱がせめぎ合う元素です。正しさを貫こうとする意志と、力で押し進める推進力が同時に働き、迷いながらも動き続ける性質を映します。頭で結論を出すより先に、体が動いてしまうことが多く、その分だけ周囲を巻き込む力も強くなります。じっとしていることに、どこか落ち着かなさを感じるタイプです。",
+  "weaponText": "両手剣は、独力で道を切り拓く武器です。統率者・達成者の性質——自分の力で状況を動かそうとする動機が、この武器の核にあります。誰かに頼るより、自分で結果を出すことに価値を置き、困難であるほど、かえって力が湧いてくるタイプです。周囲を牽引する場面で、真価を発揮します。",
+  "combineText": "この二つが重なる時、「猛進者」という人物像が立ち上がります。",
+  "tags": [
+   "義務感",
+   "推進力",
+   "巻き込む力",
+   "自力本願",
+   "牽引力",
+   "困難ほど燃える"
+  ],
+  "axis": "燃焼の宿命 × 独力で断つ型"
+ },
+ "PYCT": {
+  "head": "<title>炎×法器「信奉者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。炎×法器タイプ「信奉者」の性格傾向（義務感・推進力・独自性）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/pyct\">\n<meta property=\"og:title\" content=\"炎×法器「信奉者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。炎×法器タイプ「信奉者」の性格傾向（義務感・推進力・独自性）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/pyct\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/PYCT.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 炎×法器タイプ「信奉者」（PYCT）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/PYCT.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"炎×法器「信奉者」（PYCT型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。炎×法器タイプ「信奉者」の性格傾向（義務感・推進力・独自性）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "炎×法器タイプ「信奉者」",
+  "lead": null,
+  "elementText": "炎は、義務感と情熱がせめぎ合う元素です。正しさを貫こうとする意志と、力で押し進める推進力が同時に働き、迷いながらも動き続ける性質を映します。頭で結論を出すより先に、体が動いてしまうことが多く、その分だけ周囲を巻き込む力も強くなります。じっとしていることに、どこか落ち着かなさを感じるタイプです。",
+  "weaponText": "法器は、術式という抽象を介して世界と接続する武器です。観察者・個性派の性質——理解し、独自の視点を持とうとする動機が、その根にあります。直接ぶつかるより、一歩引いた場所から本質を見極めることを好み、他人には見えないところにある繋がりに、自然と気づくタイプです。",
+  "combineText": "この二つが重なる時、「信奉者」という人物像が立ち上がります。",
+  "tags": [
+   "義務感",
+   "推進力",
+   "巻き込む力",
+   "俯瞰する視点",
+   "独自性",
+   "見えない繋がりへの気づき"
+  ],
+  "axis": "燃焼の宿命 × 媒介の杖"
+ },
+ "PYPL": {
+  "head": "<title>炎×長柄「殉衛者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。炎×長柄タイプ「殉衛者」の性格傾向（義務感・推進力・誠実な役目遂行）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/pypl\">\n<meta property=\"og:title\" content=\"炎×長柄「殉衛者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。炎×長柄タイプ「殉衛者」の性格傾向（義務感・推進力・誠実な役目遂行）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/pypl\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/PYPL.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 炎×長柄タイプ「殉衛者」（PYPL）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/PYPL.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"炎×長柄「殉衛者」（PYPL型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。炎×長柄タイプ「殉衛者」の性格傾向（義務感・推進力・誠実な役目遂行）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "炎×長柄タイプ「殉衛者」",
+  "lead": null,
+  "elementText": "炎は、義務感と情熱がせめぎ合う元素です。正しさを貫こうとする意志と、力で押し進める推進力が同時に働き、迷いながらも動き続ける性質を映します。頭で結論を出すより先に、体が動いてしまうことが多く、その分だけ周囲を巻き込む力も強くなります。じっとしていることに、どこか落ち着かなさを感じるタイプです。",
+  "weaponText": "長柄は、間合いを保ちながら集団を守る武器です。改革者・調停者の性質——誠実に役目を果たし、場の調和を保とうとする動機が、扱い方を支えます。前に出て目立つより、全体が円滑に回ることを優先し、必要な時にはしっかりと境界線を引く、縁の下の力持ちとしての強さがあります。",
+  "combineText": "この二つが重なる時、「殉衛者」という人物像が立ち上がります。",
+  "tags": [
+   "義務感",
+   "推進力",
+   "巻き込む力",
+   "縁の下の力持ち",
+   "誠実な役目遂行",
+   "境界線を引く強さ"
+  ],
+  "axis": "燃焼の宿命 × 直進到達型"
+ },
+ "PYSW": {
+  "head": "<title>炎×片手剣「殉愛者」の性格・特徴｜原神 元素診断</title>\n<meta name=\"description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。炎×片手剣タイプ「殉愛者」の性格傾向（義務感・推進力・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\">\n<link rel=\"canonical\" href=\"https://element-diagnosis-five.vercel.app/type/pysw\">\n<meta property=\"og:title\" content=\"炎×片手剣「殉愛者」の性格・特徴｜原神 元素診断\">\n<meta property=\"og:description\" content=\"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。炎×片手剣タイプ「殉愛者」の性格傾向（義務感・推進力・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\">\n<meta property=\"og:type\" content=\"article\">\n<meta property=\"og:url\" content=\"https://element-diagnosis-five.vercel.app/type/pysw\">\n<meta property=\"og:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/PYSW.jpg\">\n<meta property=\"og:image:width\" content=\"1200\">\n<meta property=\"og:image:height\" content=\"630\">\n<meta property=\"og:image:alt\" content=\"元素診断 炎×片手剣タイプ「殉愛者」（PYSW）\">\n<meta name=\"twitter:card\" content=\"summary_large_image\">\n<meta name=\"twitter:image\" content=\"https://element-diagnosis-five.vercel.app/assets/ogp/types/PYSW.jpg\">\n<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"DefinedTerm\",\n  \"name\": \"炎×片手剣「殉愛者」（PYSW型）\",\n  \"description\": \"原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。炎×片手剣タイプ「殉愛者」の性格傾向（義務感・推進力・相手に応じた柔軟さ）や強み、人との関わり方を解説します。\",\n  \"inDefinedTermSet\": {\n    \"@type\": \"DefinedTermSet\",\n    \"name\": \"元素診断 35タイプ\",\n    \"url\": \"https://element-diagnosis-five.vercel.app/\"\n  }\n}\n</script>",
+  "h1": "炎×片手剣タイプ「殉愛者」",
+  "lead": "自分のためだけに頑張ることに、物足りなさを感じたことはありませんか。一人で完結する強さより、大切な相手のために動いているときの方が、ずっと自分らしいと感じたことは。",
+  "elementText": "炎は、義務感と情熱がせめぎ合う元素です。正しさを貫こうとする意志と、力で押し進める推進力が同時に働き、迷いながらも動き続ける性質を映します。頭で結論を出すより先に、体が動いてしまうことが多く、その分だけ周囲を巻き込む力も強くなります。じっとしていることに、どこか落ち着かなさを感じるタイプです。",
+  "weaponText": "片手剣は、他者との関わりの中で力を発揮する武器です。援助者・堅実家の性質——支え合い、信頼を築こうとする動機が、その扱い方の根にあります。相手が誰かによって、力の出し方そのものを変える柔軟さがあり、一人で完結するより、誰かのために動く時の方が、本来の力を発揮します。",
+  "combineText": "この二つが重なる時、「殉愛者」という人物像が立ち上がります。",
+  "tags": [
+   "義務感",
+   "推進力",
+   "巻き込む力",
+   "支え合い",
+   "相手に応じた柔軟さ",
+   "関係性の中の力"
+  ],
+  "axis": "燃焼の宿命 × 関係に流れる刃"
+ }
+}

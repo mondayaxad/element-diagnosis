@@ -58,7 +58,9 @@ test('35件：元素・武器種・タイプ名・タイプコードが既存の
   const ts = types();
   assert.equal(ts.length, 35);
   for (const t of ts) {
-    assert.ok(t.html.includes(`<h1>${t.el}×${t.w}タイプ「${t.name}」</h1>`), `${t.code} の H1`);
+    // H1 は1つだけ。文字の内容（タグを除く）が「炎×片手剣タイプ「殉愛者」」（type-v2 は見た目のため span で分けている）
+    const h1s = [...t.html.matchAll(/<h1>([\s\S]*?)<\/h1>/g)].map((m) => m[1].replace(/<[^>]+>/g, ''));
+    assert.deepEqual(h1s, [`${t.el}×${t.w}タイプ「${t.name}」`], `${t.code} の H1`);
     assert.ok(t.html.includes(`<div class="code">タイプコード：${t.code}</div>`), `${t.code} のタイプコード`);
     assert.ok(t.html.includes(`"name": "${t.el}×${t.w}「${t.name}」（${t.code}型）"`), `${t.code} の JSON-LD の name`);
   }
