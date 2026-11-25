@@ -53,13 +53,14 @@ test('type-v2：SEO の head は元データのまま。本文は結果ページ
   }
 });
 
-test('type-v2：標準プロフィール・タイプ別レポートは Preview 専用（既定は hidden）。購入ボタンは計測の属性なし。「表示用の仮値」と明記', () => {
+test('type-v2：標準プロフィール・タイプ別レポートは Preview 専用（既定は hidden）。購入ボタンは計測の属性なし。注記（仮値・受検者の平均ではない）は置かない', () => {
   for (const c of V2) {
     const h = read(`type/${c.toLowerCase()}.html`);
     assert.match(h, /<section class="prof" data-preview-only hidden /, `${c} の欄は既定で隠す`);
     assert.match(h, /<div class="r-price">¥1,000<small>（税込）<\/small><\/div>/);
     assert.match(h, /<button type="button" class="r-btn" data-report-open>今すぐアクセス →<\/button>/);
-    assert.ok(h.includes('表示用の仮値'));
+    assert.doesNotMatch(h, /表示用の仮値|受検者の平均ではありません/);
+    assert.match(h, /<div class="report" id="report">/);
     assert.doesNotMatch(h, /buy\.stripe\.com|checkout\.stripe|\/api\/complete-checkout/, `${c} は決済に接続しない`);
     const btn = /<button[^>]*data-report-open[^>]*>/.exec(h)[0];
     assert.doesNotMatch(btn, /data-type-cta/);

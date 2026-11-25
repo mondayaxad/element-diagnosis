@@ -148,13 +148,14 @@ ${d.head}
   h1 { font-weight:700; line-height:1.3; margin:0 80px 2px 0; }
   h1 .h1-sub { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
   h1 .h1-n { display:block; font-size:34px; letter-spacing:3px; color:var(--rx-primary); }
-  .code { font-size:15px; font-weight:700; letter-spacing:4px; color:var(--el-t); margin-bottom:6px; }
+  .code { font-size:15px; font-weight:700; letter-spacing:4px; color:var(--el-t); }
   .hero-ax { color:var(--rx-secondary); font-size:12px; line-height:1.9; padding-bottom:14px; margin-bottom:16px; border-bottom:1px solid #1c2c40; }
-  /* 無料診断のボタン：トップの「診断をはじめる」と同じ表情 */
-  .cta, .pre-cta { display:flex; align-items:center; justify-content:center; gap:6px; min-height:44px; padding:13px 14px; border-radius:6px; text-decoration:none; font-family:inherit; font-size:13.5px; letter-spacing:.12em; line-height:1.6; text-align:center; color:#eef4ff; background:linear-gradient(135deg, #1b4c86 0%, #2556a0 52%, #3c4a9e 100%); border:1px solid rgba(150,180,240,.22); box-shadow:0 0 32px rgba(90,80,200,.2), 0 12px 26px rgba(0,0,0,.35), inset 0 1px 0 rgba(210,225,255,.16); word-break:keep-all; overflow-wrap:anywhere; }
-  .pre-cta .arw { display:inline-block; transition:transform .2s; }
-  .pre-cta:hover .arw, .pre-cta:focus-visible .arw { transform:translateX(3px); }
-  .cta { margin:26px 0 0; }
+  /* 購入への導線：結果ページの「全てのロックを解除する →」と同じ（元素色→武器色） */
+  .hero-buy { display:flex; align-items:center; justify-content:center; gap:8px; min-height:48px; margin-top:16px; padding:13px 14px; border-radius:8px; text-decoration:none; font-size:14px; font-weight:600; letter-spacing:2px; line-height:1.6; text-align:center; color:#fff; background:linear-gradient(90deg, ${elC}, ${wC}); word-break:keep-all; overflow-wrap:anywhere; }
+  .hero-buy .arw { display:inline-block; transition:transform .2s; }
+  .hero-buy:hover .arw, .hero-buy:focus-visible .arw { transform:translateX(3px); }
+  html { scroll-behavior:smooth; }
+  #report { scroll-margin-top:16px; }
   /* 冒頭：タイプの核（結果ページの「この先にあるもの」と同じ書き方） */
   .essence { margin:22px 6px 0; }
   .essence .k { font-size:11px; letter-spacing:3px; color:var(--rx-gold); margin-bottom:8px; }
@@ -171,7 +172,6 @@ ${d.head}
   .tags { display:flex; flex-wrap:wrap; gap:6px; }
   .tag { font-size:10.5px; color:var(--el-t); border:1px solid ${elC}66; background:${elC}1f; border-radius:12px; padding:4px 10px; letter-spacing:.3px; }
   [data-preview-only][hidden] { display:none !important; }
-  .pv-note { display:inline-block; font-size:10px; color:#1a1410; background:#e8d6a8; border-radius:4px; padding:0 7px; margin-left:8px; vertical-align:2px; letter-spacing:0; font-weight:700; }
   /* ゲージ（結果ページの similarityGauges と同じ） */
   .gs { display:flex; flex-direction:column; gap:12px; margin:6px 0 2px; }
   .g-h { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
@@ -182,7 +182,6 @@ ${d.head}
   .g-s { display:flex; justify-content:space-between; align-items:baseline; margin-top:3px; font-size:10px; color:var(--rx-muted); letter-spacing:.3px; }
   .g-s i { font-style:normal; color:var(--rx-tertiary); }
   .g-s .on { color:var(--rx-primary); font-weight:700; }
-  .src { font-size:11px; color:var(--rx-tertiary); line-height:1.7; margin-top:12px; }
   /* タイプ別レポート（結果ページの統一CTAと同じ構成：小見出し → 見出し → 説明 → ご利用いただける内容 → 価格 → ボタン） */
   .report { background:linear-gradient(135deg, ${elC}1c, #08101a); border:1px solid ${elC}45; border-radius:14px; padding:26px 22px; text-align:center; margin-top:14px; }
   .report .r-k { font-size:10px; color:#c0a860; letter-spacing:2px; margin-bottom:10px; }
@@ -237,7 +236,7 @@ ${d.head}
   <div class="el-w"><span class="e">${el.name}</span><span class="x">×</span><span class="w">${wp.name}</span></div>
   <h1><span class="h1-sub">${el.name}×${wp.name}タイプ「</span><span class="h1-n">${name}</span><span class="h1-sub">」</span></h1>
   <div class="code">タイプコード：${code}</div>
-  <a class="pre-cta" href="${ORIGIN}/" data-type-cta="top" data-destination="eti_top">元素診断（100問・無料）で、あなたのタイプを確かめる<span class="arw" aria-hidden="true">→</span></a>
+  <a class="hero-buy" href="#report" data-preview-only hidden>${name}のタイプ別レポートを読む<span class="arw" aria-hidden="true">→</span></a>
   </header>
 
   <section class="essence" aria-label="${name}の核">
@@ -273,7 +272,7 @@ ${d.head}
   <section class="prof" data-preview-only hidden aria-labelledby="prof-h">
     <div class="card">
       <div class="kicker">標準プロフィール</div>
-      <div class="card-h"><h2 id="prof-h">${name}の標準プロフィール<span class="pv-note">表示用の仮値</span></h2></div>
+      <div class="card-h"><h2 id="prof-h">${name}の標準プロフィール</h2></div>
       <h3>気質（Big Five・0〜100）— ${el.name}</h3>
       <div class="gs">
 ${big5}
@@ -284,9 +283,8 @@ ${big5}
 ${styleBars}
       </div>
       <p style="margin-top:12px"><strong style="color:var(--wp-t)">${STYLE_LABEL[topStyle]}</strong>が最も高い型です。${STYLE_BASE_DESC[topStyle]}</p>
-      <p class="src">いまの数値は、元素診断 v2 の設計で${el.name}元素（気質）と${wp.name}（関わり方）に置いた代表値を、仮に表示しています。受検者の平均ではありません。</p>
     </div>
-    <div class="report">
+    <div class="report" id="report">
       <div class="r-k">TYPE REPORT</div>
       <h3>タイプ別レポート<br>「${name}」の全編を解放</h3>
       <p class="r-desc">標準プロフィールをもとに、${name}の強みを活かせる場面、つまずきやすい場面、人との関わり方を読み解きます。</p>
@@ -310,7 +308,6 @@ ${check}
     </dialog>
   </section>
 
-  <a class="cta" href="${ORIGIN}/" data-type-cta="bottom" data-destination="eti_top">無料の元素診断で、あなたのタイプを確かめる</a>
   <nav class="more" aria-label="同じ元素のほかのタイプ">
     <h2 class="more-h">同じ元素のほかのタイプ</h2>
     <ul>
