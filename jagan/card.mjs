@@ -1,7 +1,22 @@
 // jagan/card.mjs — 「画像を保存」の結果画像（元素診断と同じ 1080×1080 の構成。押したときにブラウザで描く）。
 //   暗い地に邪眼元素の色の光、「邪眼元素 × 異相」をそれぞれの色で、あなたのファトゥスと一致度を大きく出す。
 //   公開要約（publicSummary）の値だけを使う。背景・人物の画像は使わない。
-import { ELEMENT_COLOR, NEUTRAL_COLOR, ISOU_COLOR } from './site-copy.mjs';
+import { ELEMENT_COLOR, NEUTRAL_COLOR, ISOU_COLOR, CHARACTER_ELEMENTS } from './site-copy.mjs';
+
+// ファトゥスの2色（完了ページの人物名・共有カードと同じ決め方）
+export function fatuiStops(id) {
+  const els = CHARACTER_ELEMENTS[id] || [];
+  if (els.length >= 2) return [ELEMENT_COLOR[els[0]].main, ELEMENT_COLOR[els[1]].main];
+  if (els.length === 1) return [ELEMENT_COLOR[els[0]].main, '#F4E6EA'];
+  return ['#E2C08C', '#C8405C'];
+}
+// 文字の幅に合わせた横向きのグラデーション（中央揃えの文字用）
+function textGradient(ctx, text, cx, stops) {
+  const w = ctx.measureText(text).width;
+  const g = ctx.createLinearGradient(cx - w / 2, 0, cx + w / 2, 0);
+  g.addColorStop(0, stops[0]); g.addColorStop(1, stops[1]);
+  return g;
+}
 
 const SERIF = '"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif';
 const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(',');
@@ -42,37 +57,31 @@ export function drawCard(canvas, s) {
   ctx.font = `bold ${isouSize}px ${SERIF}`; const isW = ctx.measureText(isouText).width;
   const startX = W / 2 - (elW + xW + isW) / 2;
   ctx.textAlign = 'left';
-  ctx.font = `bold 130px ${SERIF}`; ctx.fillStyle = c.el; ctx.fillText(elText, startX, 300);
-  ctx.font = `56px ${SERIF}`; ctx.fillStyle = '#4A2232'; ctx.fillText(' × ', startX + elW, 300);
-  ctx.font = `bold ${isouSize}px ${SERIF}`; ctx.fillStyle = c.isou; ctx.fillText(isouText, startX + elW + xW, 300);
-  ctx.textAlign = 'center';
-
-  // 4文字コード｜漢字三文字の呼び名（dti-types.json と同じ定義）
-  ctx.font = `bold 44px ${SERIF}`; const codeW = ctx.measureText(s.dti.code).width;
-  ctx.font = `30px ${SERIF}`; const sepW = ctx.measureText('｜').width;
-  ctx.font = `bold 52px ${SERIF}`; const nameW = ctx.measureText(s.dti.name).width;
-  let x = W / 2 - (codeW + sepW + nameW) / 2;
-  ctx.textAlign = 'left';
-  ctx.font = `bold 44px ${SERIF}`; ctx.fillStyle = '#C9A867'; ctx.fillText(s.dti.code, x, 405); x += codeW;
-  ctx.font = `30px ${SERIF}`; ctx.fillStyle = '#4A2232'; ctx.fillText('｜', x, 405); x += sepW;
-  ctx.font = `bold 52px ${SERIF}`; ctx.fillStyle = '#EFE1E6'; ctx.fillText(s.dti.name, x, 405);
+  ctx.font = `bold 130px ${SERIF}`; ctx.fillStyle = c.el; ctx.fillText(elText, startX, 320);
+  ctx.font = `56px ${SERIF}`; ctx.fillStyle = '#4A2232'; ctx.fillText(' × ', startX + elW, 320);
+  ctx.font = `bold ${isouSize}px ${SERIF}`; ctx.fillStyle = c.isou; ctx.fillText(isouText, startX + elW + xW, 320);
   ctx.textAlign = 'center';
 
   ctx.strokeStyle = c.el; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(W / 2 - 50, 478); ctx.lineTo(W / 2 + 50, 478); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W / 2 - 50, 445); ctx.lineTo(W / 2 + 50, 445); ctx.stroke();
 
   if (s.character) {
     ctx.fillStyle = '#B0909B'; ctx.font = `26px ${SERIF}`;
-    ctx.fillText('あなたのファトゥス', W / 2, 540);
-    ctx.fillStyle = c.el; ctx.font = `bold ${s.character.label.length >= 6 ? 76 : 88}px ${SERIF}`;
-    ctx.fillText(s.character.label, W / 2, 640);
-    ctx.fillStyle = c.isou; ctx.font = `bold 140px ${SERIF}`;
-    ctx.fillText(`${s.character.matchPercent}%`, W / 2, 785);
+    ctx.fillText('あなたのファトゥス', W / 2, 520);
+    // 名前と一致度は、そのファトゥスの色のグラデーション（完了ページと同じ）
+    const fs = fatuiStops(s.character.id);
+    ctx.font = `bold ${s.character.label.length >= 6 ? 80 : 92}px ${SERIF}`;
+    ctx.fillStyle = textGradient(ctx, s.character.label, W / 2, fs);
+    ctx.fillText(s.character.label, W / 2, 625);
+    const pct = `${s.character.matchPercent}%`;
+    ctx.font = `bold 150px ${SERIF}`;
+    ctx.fillStyle = textGradient(ctx, pct, W / 2, fs);
+    ctx.fillText(pct, W / 2, 780);
     ctx.fillStyle = '#6E3A4A'; ctx.font = `24px ${SERIF}`;
-    ctx.fillText('一 致', W / 2, 870);
+    ctx.fillText('一 致', W / 2, 880);
   } else {
     ctx.fillStyle = '#B0909B'; ctx.font = `28px ${SERIF}`;
-    ctx.fillText(`邪眼：${s.element.label} ／ 異相：${s.isou.label}`, W / 2, 560);
+    ctx.fillText(`邪眼：${s.element.label} ／ 異相：${s.isou.label}`, W / 2, 540);
     ctx.fillStyle = '#6E3A4A'; ctx.font = `24px ${SERIF}`;
     ctx.fillText('あなたの願いは、どんな深淵を映すのか。', W / 2, 640);
   }

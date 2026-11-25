@@ -51,8 +51,14 @@ function buildPublicConfig(env, { host } = {}) {
       completeApiReady: true,
       // 邪眼解析レポート（¥1,000）・完全解析（¥3,000）の販売。購入 API（lib/jagan-purchase.mjs の salesOpen・jaganEnabled）と同じ条件：
       //   Preview は JAGAN_SALES_OPEN=true、本番は JAGAN_PRODUCTION_ENABLED=true かつ JAGAN_SALES_OPEN=true のときだけ（開ける操作は環境変数で行う）
+      // 邪眼診断が動く環境か（lib/jagan-api.mjs の jaganEnabled と同じ条件：Preview は常に、本番は JAGAN_PRODUCTION_ENABLED=true のとき）。
+      //   マイページの邪眼の記録・購入したレポートの登録・保存待ちの保存は、これを見て動く
+      jaganEnabled: sb.appEnv === 'preview' || (sb.appEnv === 'production' && env.JAGAN_PRODUCTION_ENABLED === 'true'),
       jaganSalesOpen: env.JAGAN_SALES_OPEN === 'true'
         && (sb.appEnv === 'preview' || (sb.appEnv === 'production' && env.JAGAN_PRODUCTION_ENABLED === 'true')),
+      // GA4 の purchase をサーバー（Stripe の Webhook）から送っているか（lib/ga4-mp.js の enabled と同じ条件：本番で GA4_API_SECRET がある）。
+      //   true の間、ブラウザは purchase を送らず、照合用の purchase_client を送る（同じ購入を二重に数えない）
+      ga4ServerPurchase: sb.appEnv === 'production' && typeof env.GA4_API_SECRET === 'string' && /^[A-Za-z0-9_-]{8,100}$/.test(env.GA4_API_SECRET),
     },
   };
 }

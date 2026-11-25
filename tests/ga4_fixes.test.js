@@ -184,14 +184,14 @@ test('campaign_*：URL の UTM と、config の値が対応する（utm_source�
   // 一部だけ：あるものだけを反映する
   assert.deepEqual(campaignOf(runGa('?utm_source=x&utm_medium=social').cfg), { campaign_source: 'x', campaign_medium: 'social' });
   assert.deepEqual(campaignOf(runGa('?utm_campaign=only').cfg), { campaign_name: 'only' });
-  // config の項目は、page_location・page_referrer と campaign_* だけ
-  assert.deepEqual(Object.keys(r.cfg).sort(), ['campaign_content', 'campaign_medium', 'campaign_name', 'campaign_source', 'campaign_term', 'page_location', 'page_referrer']);
+  // config の項目は、page_location・page_referrer・content_group（診断の区分）と campaign_* だけ
+  assert.deepEqual(Object.keys(r.cfg).sort(), ['campaign_content', 'campaign_medium', 'campaign_name', 'campaign_source', 'campaign_term', 'content_group', 'page_location', 'page_referrer']);
 });
 
 test('campaign_*：UTM が無ければ設定しない（config は従来どおり）', () => {
   for (const q of ['', '?foo=1', '?dv=ETI-2.0&code=abc&mv=2.1.0', '?utm_source=', '?utm_id=1&utm_source_platform=x']) {
     const r = runGa(q);
-    assert.deepEqual(Object.keys(r.cfg).sort(), ['page_location', 'page_referrer'], q);
+    assert.deepEqual(Object.keys(r.cfg).sort(), ['content_group', 'page_location', 'page_referrer'], q);
     assert.equal(r.loc, `https://${PROD}/`, q);
   }
 });
@@ -358,7 +358,9 @@ test('diagnosis_profile：いま完了した新診断だけ、20軸を10点刻�
   keys.forEach((k) => {
     assert.ok(Number.isInteger(prof[0][k]) && prof[0][k] >= 0 && prof[0][k] <= 100 && prof[0][k] % 10 === 0, k + ' は10点刻み');
   });
-  assert.ok(Object.keys(prof[0]).length <= 25, 'GA4 のイベントのパラメータは25個まで');
+  // GA4 は1イベント25個まで。全イベントに付く content_group・traffic_type（内部）・ignore_referrer の3個を空けて22個以内
+  assert.ok(Object.keys(prof[0]).length <= 22, 'GA4 のイベントのパラメータは、ページ単位の値を含めて25個まで');
+  assert.equal(prof[0].diagnosis_type, 'eti');
   assert.ok(!JSON.stringify(prof).includes(code), '診断コードを送らない');
   // 同じ結果を開き直した（restored）ときは送らない
   const p2 = await open(ctx, '/?dv=ETI-2.0&code=' + encodeURIComponent(code));
@@ -399,6 +401,7 @@ test('本番のドメイン：config（UTM・campaign_*）が、最初のイベ�
   assert.deepEqual(dl[1][2], {
     page_location: `${HOST}/?utm_source=ga4check&utm_medium=test&utm_campaign=prerelease`,
     page_referrer: 'https://t.co/',
+    content_group: 'eti',
     campaign_source: 'ga4check', campaign_medium: 'test', campaign_name: 'prerelease',
   });
   const firstEvent = dl.findIndex((a) => a[0] === 'event');
@@ -415,6 +418,23 @@ test('本番のドメイン：UTM が無い時は、config に campaign_* を入
   await p.goto(`${HOST}/`);
   await p.waitForFunction(() => (window.dataLayer || []).some((a) => a[0] === 'config'));
   const dl = await dlOf(p);
-  assert.deepEqual(dl[1][2], { page_location: `${HOST}/`, page_referrer: '' });
+  assert.deepEqual(dl[1][2], { page_location: `${HOST}/`, page_referrer: '', content_group: 'eti' });
   await ctx.close();
+});
+
+test('UTM：邪眼診断のトップに外部から UTM 付きで来た時は、これまでどおり page_location と campaign_* に残す（内部リンクから UTM を外しても外部流入は取れる）', () => {
+  const r = runGa('?utm_source=x&utm_medium=social&utm_campaign=jagan_post', PROD, '/jagan/');
+  assert.equal(r.loc, `https://${PROD}/jagan/?utm_source=x&utm_medium=social&utm_campaign=jagan_post`);
+  assert.equal(r.cfg.campaign_source, 'x');
+  assert.equal(r.cfg.campaign_medium, 'social');
+  assert.equal(r.cfg.campaign_name, 'jagan_post');
+  assert.equal(r.cfg.content_group, 'jagan');
+});
+
+test('UTM：元素診断の TOP のバナーから邪眼診断へ移った時（UTM 無し）は、campaign_* を送らず流入元を上書きしない', () => {
+  const r = runGa('', PROD, '/jagan/');
+  assert.equal(r.loc, `https://${PROD}/jagan/`);
+  for (const k of ['campaign_source', 'campaign_medium', 'campaign_name', 'campaign_content', 'campaign_term']) {
+    assert.equal(r.cfg[k], undefined, `${k} を送っています`);
+  }
 });

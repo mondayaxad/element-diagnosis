@@ -7,7 +7,7 @@ import { computeDiagnosis } from './engine/runtime.mjs';
 import { BUNDLE } from './engine/data.mjs';
 import { buildComplete } from './complete/model.mjs';
 import { renderComplete, fitPages } from './complete/view.mjs';
-import { TOKEN_RE, UUID_RE, linkOpen, openOwn, register, accessToken, supabaseClient, setRegisterIntent, freshPurchase, reportUrlOf, trackPurchase } from './client.mjs';
+import { TOKEN_RE, UUID_RE, linkOpen, openOwn, register, accessToken, supabaseClient, setRegisterIntent, freshPurchase, recentlyPaid, reportUrlOf, trackPurchase } from './client.mjs';
 
 const $ = (id) => document.getElementById(id);
 // 邪眼の全イベントに diagnosis_type: 'jagan' を付ける（元素診断と並べて比べられるように）
@@ -51,6 +51,8 @@ function render(report) {
   addEventListener('load', fill); setTimeout(fill, 1500); setTimeout(fill, 4000);
   $('dpKeep').hidden = false;
   document.title = `邪眼完全解析「DIPPER」 ${result.dti.code}｜邪眼診断`;
+  // どのページまで読まれたか（各ページが画面に入った時に1回）
+  if (window.EdAnalytics) window.EdAnalytics.sections($('dpBook').querySelectorAll('.dp-page'), { diagnosis_type: 'jagan', product_id: 'jagan_complete_v1' });
   return true;
 }
 
@@ -66,7 +68,7 @@ async function fromLink(token) {
       if (r.body.report && r.body.report.product !== 'complete') { location.replace(`/jagan/report#t=${token}`); return; }
       if (!render(r.body.report)) return;
       track('jagan_complete_open', { source: fresh ? 'checkout' : 'link' });
-      if (fresh) trackPurchase(token, 'complete', fresh.source);
+      if (fresh || recentlyPaid(r.body.report)) trackPurchase(token, 'complete', fresh && fresh.source);
       wireLinkKeep(token);
       return;
     }

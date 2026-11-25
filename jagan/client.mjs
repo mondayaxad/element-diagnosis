@@ -58,19 +58,36 @@ async function buyOnce({ resultId, itemSetVersion, answers, source, product }) {
   if (!salesOpen()) return { ok: false, error: 'sales_closed' };
   const token = await accessToken();
   const body = { resultId, attempt: randomAttempt() };
+  // GA4 の参照（購入を、申込の時点の利用者・流入元に結ぶ。lib/ga-ref.js）
+  const gaRef = window.EdAnalytics && window.EdAnalytics.checkoutRef ? window.EdAnalytics.checkoutRef(source) : null;
+  if (gaRef) body.ga = gaRef;
   if (product === 'complete') body.product = 'complete';
   if (answers) { body.itemSetVersion = itemSetVersion; body.answers = answers; }
   if (/^[a-z_]{1,32}$/.test(String(source || ''))) body.source = source;
+  checkoutTrack('checkout_start', product, body.source);
+  beginCheckout(product === 'complete' ? 'complete' : 'report', body.source);
   let r = await call('buy', body, { token });
   if (!r.ok && r.status === 0) r = await call('buy', body, { token }); // 通信の失敗は同じ購入操作のまま1回だけ再送（二重の注文にならない）
   if (r.ok && typeof r.body.checkoutUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(r.body.checkoutUrl)) {
     // 決済へ進んだ印に、押した画面（source）も残す（戻った時の purchase に引き継ぎ、どの申込元で売れたかを GA4 で読めるように）
     session((s) => s.setItem(FRESH_KEY, JSON.stringify({ at: Date.now(), source: body.source || null })));
-    beginCheckout(product === 'complete' ? 'complete' : 'report', body.source);
+    checkoutTrack('checkout_session_created', product, body.source);
+    checkoutTrack('checkout_redirect', product, body.source);
     location.assign(r.body.checkoutUrl);
     return { ok: true };
   }
-  return { ok: false, error: (r.body && r.body.error) || 'unknown' };
+  const error = (r.body && r.body.error) || 'unknown';
+  checkoutTrack('checkout_failed', product, body.source, error);
+  return { ok: false, error };
+}
+function checkoutTrack(name, product, source, reason) {
+  try {
+    const it = GA_ITEMS[product === 'complete' ? 'complete' : 'report'];
+    if (typeof window.gtag !== 'function') return;
+    window.gtag('event', name, { diagnosis_type: 'jagan', product_id: it.id,
+      product: product === 'complete' ? 'jagan_complete' : 'jagan_report', value: it.value, currency: 'JPY',
+      ...(/^[a-z_]{1,32}$/.test(String(source || '')) ? { source } : {}), ...(reason ? { reason } : {}) });
+  } catch { /* 計測の失敗で申込を止めない */ }
 }
 export const BUY_ERRORS = {
   sales_closed: '現在、お申し込みを受け付けていません（準備中）。',
@@ -98,7 +115,7 @@ export function beginCheckout(product, source) {
   try {
     const it = GA_ITEMS[product];
     if (!it || typeof window.gtag !== 'function') return;
-    window.gtag('event', 'begin_checkout', { currency: 'JPY', value: it.value, diagnosis_type: 'jagan',
+    window.gtag('event', 'begin_checkout', { currency: 'JPY', value: it.value, diagnosis_type: 'jagan', product_id: it.id,
       ...(/^[a-z_]{1,32}$/.test(String(source || '')) ? { source } : {}),
       items: [{ item_id: it.id, item_name: it.name, item_category: '邪眼診断', price: it.value, quantity: 1 }] });
   } catch { /* 計測だけ */ }
@@ -120,6 +137,12 @@ export const PRODUCT_INFO = Object.freeze({
 // GA4 の購入（元素診断の report-link.html と同じ形）：決済から戻って初めてレポートが開いた時に1回だけ送る。
 //   transaction_id は固有リンクの秘密値から作る元に戻せない20桁（秘密値・注文 ID・Stripe の ID は送らない）。同じ購入を二重に数えない
 const GA_ITEMS = { report: { id: 'jagan_report_v1', name: '邪眼解析レポート', value: 1000 }, complete: { id: 'jagan_complete_v1', name: '邪眼完全解析レポート「DIPPER」', value: 3000 } };
+// 支払いから3時間以内か（元素診断の固有リンクと同じ条件）。決済から戻ったタブが別のタブ・別のブラウザ（PayPay のアプリから戻った等）でも purchase を送れるように
+export const RECENT_PAID_MS = 3 * 60 * 60 * 1000;
+export function recentlyPaid(report, nowMs = Date.now()) {
+  const t = Date.parse(report && report.paidAt);
+  return Number.isFinite(t) && nowMs - t >= -5 * 60 * 1000 && nowMs - t < RECENT_PAID_MS;
+}
 export async function trackPurchase(token, product, source) {
   try {
     const it = GA_ITEMS[product];
@@ -128,7 +151,14 @@ export async function trackPurchase(token, product, source) {
     const txid = [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 20);
     const key = `jagan_ga4_purchase_${txid}`;
     try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch { /* 保存できなくても1回は送る */ }
-    window.gtag('event', 'purchase', { transaction_id: txid, value: it.value, currency: 'JPY', diagnosis_type: 'jagan',
+    // purchase は Stripe の Webhook からサーバーが送る（ga4ServerPurchase）。その間、ブラウザは照合用の purchase_client だけを送る（二重に数えない）
+    const serverSends = !!(window.__ED_PUBLIC_CONFIG__ && window.__ED_PUBLIC_CONFIG__.ga4ServerPurchase === true);
+    if (serverSends) {
+      window.gtag('event', 'purchase_client', { transaction_id: txid, value: it.value, currency: 'JPY', diagnosis_type: 'jagan', product_id: it.id,
+        ...(/^[a-z_]{1,32}$/.test(String(source || '')) ? { source } : {}) });
+      return;
+    }
+    window.gtag('event', 'purchase', { transaction_id: txid, value: it.value, currency: 'JPY', diagnosis_type: 'jagan', product_id: it.id,
       ...(/^[a-z_]{1,32}$/.test(String(source || '')) ? { source } : {}),
       items: [{ item_id: it.id, item_name: it.name, item_category: '邪眼診断', price: it.value, quantity: 1 }] });
   } catch { /* 計測だけ */ }

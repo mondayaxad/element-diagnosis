@@ -83,7 +83,9 @@ test('API の import は解決でき、lib/server-env.js などサーバー専�
   assert.deepEqual(B.apiFilesExposed(r.outDir, api.files), []);
 });
 
-const byPathEarly = (v, src) => v.headers.filter((h) => h.source === src).flatMap((h) => h.headers).reduce((o, h) => Object.assign(o, { [h.key]: h.value }), {});
+// 末尾スラッシュも含める source（/path{/}?）は、/path と同じものとして扱う（tests/seo_index_guard.test.js が両方に当たることを確かめる）
+const sameSource = (h, src) => h.source === src || h.source === `${src}{/}?`;
+const byPathEarly = (v, src) => v.headers.filter((h) => sameSource(h, src)).flatMap((h) => h.headers).reduce((o, h) => Object.assign(o, { [h.key]: h.value }), {});
 test('vercel.json：build で dist を作り、dist だけを配信する（cleanUrls は維持）', () => {
   const v = JSON.parse(fs.readFileSync(path.join(ROOT, 'vercel.json'), 'utf8'));
   assert.equal(v.buildCommand, 'node scripts/build-public.js');
@@ -94,9 +96,9 @@ test('vercel.json：build で dist を作り、dist だけを配信する（clea
   // 邪眼診断の共有ページ（/jagan/s/<公開ID>）：公開要約だけを返すサーバーのページへ
   assert.deepEqual(v.rewrites, [{ source: '/result', destination: '/' }, { source: '/jagan/s/:id', destination: '/api/jagan-share-page?id=:id' }, { source: '/jagan/share', destination: '/api/jagan-share-page' },
     // 邪眼診断の共有 URL の最短の形（/j/<4文字>。旧い8文字の形も同じ経路）
-    { source: '/j/:k([0-9A-Za-z]{4,8})', destination: '/api/jagan-share-page?k=:k' }]);
+    { source: '/j/:k([0-9A-Za-z]{4,21})', destination: '/api/jagan-share-page?k=:k' }]);
   assert.deepEqual(byPathEarly(v, '/j/:k'), { 'X-Robots-Tag': 'noindex, nofollow' });
-  const byPath = (src) => v.headers.filter((h) => h.source === src).flatMap((h) => h.headers).reduce((o, h) => Object.assign(o, { [h.key]: h.value }), {});
+  const byPath = (src) => v.headers.filter((h) => sameSource(h, src)).flatMap((h) => h.headers).reduce((o, h) => Object.assign(o, { [h.key]: h.value }), {});
   // 全ページ（API を除く）：MIME の推測をさせない・他サイトに枠で埋め込ませない・Referer は origin まで
   assert.deepEqual(byPath('/((?!api/).*)'), { 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "frame-ancestors 'none'", 'X-Frame-Options': 'DENY', 'Referrer-Policy': 'strict-origin-when-cross-origin' });
   // 診断結果の固有リンク（/result#r=）：検索に載せない・Referer にパスより先を出さない
@@ -111,9 +113,11 @@ test('vercel.json：build で dist を作り、dist だけを配信する（clea
   assert.match(fs.readFileSync(path.join(ROOT, '.gitignore'), 'utf8'), /^dist\/$/m);
 });
 
-test('本番ドメインの絶対 URL で実体が無いのは既知の thumbs だけ', () => {
+test('本番ドメインの絶対 URL は、すべて dist に実体がある（既知の欠損 thumbs は解消済み。例外なし）', () => {
   const r = buildTo();
-  assert.ok(r.absoluteMissing.every((p) => /^thumbs\/x_card_[A-Z]{4}\.png$/.test(p)), r.absoluteMissing.join(','));
+  assert.deepEqual(B.KNOWN_MISSING_ABSOLUTE, []);
+  assert.deepEqual(r.absoluteMissing, [], r.absoluteMissing.join(','));
+  assert.deepEqual(r.problems, []);
 });
 
 // ---- 意図的に壊したときに検出できること ----

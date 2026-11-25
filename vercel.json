@@ -2,18 +2,6 @@
   "buildCommand": "node scripts/build-public.js",
   "outputDirectory": "dist",
   "cleanUrls": true,
-  "redirects": [
-    {
-      "source": "/mini",
-      "destination": "/resonance",
-      "permanent": true
-    },
-    {
-      "source": "/mini.html",
-      "destination": "/resonance",
-      "permanent": true
-    }
-  ],
   "rewrites": [
     {
       "source": "/result",
@@ -28,7 +16,7 @@
       "destination": "/api/jagan-share-page"
     },
     {
-      "source": "/j/:k([0-9A-Za-z]{4,8})",
+      "source": "/j/:k([0-9A-Za-z]{4,21})",
       "destination": "/api/jagan-share-page?k=:k"
     }
   ],
@@ -55,7 +43,7 @@
       ]
     },
     {
-      "source": "/result",
+      "source": "/result{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -68,7 +56,7 @@
       ]
     },
     {
-      "source": "/report-link",
+      "source": "/type-report{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -85,7 +73,7 @@
       ]
     },
     {
-      "source": "/report",
+      "source": "/report-link{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -102,65 +90,7 @@
       ]
     },
     {
-      "source": "/purchase-complete",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        }
-      ]
-    },
-    {
-      "source": "/mypage",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        }
-      ]
-    },
-    {
-      "source": "/complete-sample",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        }
-      ]
-    },
-    {
-      "source": "/report_sample",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        }
-      ]
-    },
-    {
-      "source": "/purchase-complete",
-      "headers": [
-        {
-          "key": "Referrer-Policy",
-          "value": "no-referrer"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "private, no-store"
-        }
-      ]
-    },
-    {
-      "source": "/jagan/s/:id",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        }
-      ]
-    },
-    {
-      "source": "/jagan/report",
+      "source": "/report{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -177,7 +107,7 @@
       ]
     },
     {
-      "source": "/jagan/(.*)",
+      "source": "/purchase-complete{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -186,7 +116,7 @@
       ]
     },
     {
-      "source": "/j/:k",
+      "source": "/mypage{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",
@@ -195,7 +125,100 @@
       ]
     },
     {
-      "source": "/jagan/share",
+      "source": "/complete-sample{/}?",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/report_sample{/}?",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/purchase-complete{/}?",
+      "headers": [
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
+        }
+      ]
+    },
+    {
+      "source": "/jagan/s/:id{/}?",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/jagan/report{/}?",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
+        }
+      ]
+    },
+    {
+      "source": "/jagan/sample{/}?",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/jagan/complete-sample{/}?",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/jagan/dipper{/}?",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/j/:k{/}?",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/jagan/share{/}?",
       "headers": [
         {
           "key": "X-Robots-Tag",

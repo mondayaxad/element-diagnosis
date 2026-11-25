@@ -39,9 +39,10 @@ test('法務ページ：運営者の正式情報・問い合わせ先・版は�
   assert.equal((privacy.match(/mailto:/g) || []).length, 1);
   assert.equal((terms.match(/mailto:/g) || []).length, 1);
   assert.equal((toku.match(/mailto:/g) || []).length, 2);
-  assert.ok(terms.includes('制定日：2026年7月1日 / 改定日：2026年10月27日'));
-  assert.ok(privacy.includes('制定日：2026年7月1日 / 改定日：2026年10月27日'));
-  assert.ok(toku.includes('制定日：2026年10月27日'));
+  // 2026-11-16：3つの法務ページを必要な事項だけに簡素化（施行・効力発生 11-17）
+  assert.ok(terms.includes('制定日：2026年7月1日 / 改定日：2026年11月16日（効力発生日：2026年11月17日）'));
+  assert.ok(privacy.includes('制定日：2026年7月1日 / 改定日：2026年11月16日（施行日：2026年11月17日）'));
+  assert.ok(toku.includes('制定日：2026年10月27日 / 改定日：2026年11月16日'));
   for (const t of [privacy, terms, toku]) assert.doesNotMatch(t, /【[^】]{1,20}】/);
   assert.ok(!/お知らせメールへの同意は任意|受け取るを選んだ場合のみ|保存時に選択|専用チェックボックス/.test(privacy + terms));
 });

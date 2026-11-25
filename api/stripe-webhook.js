@@ -75,21 +75,57 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
     return sessionFor(stripe, s.id, conn);
   }
 
-  // 邪眼解析レポートの注文（metadata.app が 'element-diagnosis-jagan'）。ETI の注文でないイベントだけをここで見る（lib/jagan-purchase.mjs）。
+  // 邪眼診断の注文（metadata.app が 'element-diagnosis-jagan'）。ETI の注文でないイベントだけをここで見る（lib/jagan-purchase.mjs）。
   //   邪眼の注文でもなければ null（ETI と同じく 'ignored:not_complete'）
   async function jagan(conn, stripe, ev, obj) {
     const JP = await import('../lib/jagan-purchase.mjs');
-    return JP.handleWebhook({ fetchImpl, conn, stripe, type: ev.type, obj });
+    const r = await JP.handleWebhook({ fetchImpl, conn, stripe, type: ev.type, obj, onApplied: (a) => jaganGa4(conn, JP, a) });
+    if (r !== null) return r;
+    // 元素診断のタイプ別レポートの注文（metadata.app が 'element-diagnosis-type'。lib/type-report-purchase.mjs）。
+    //   ETI・邪眼のどちらの注文でもないイベントだけをここで見る。タイプ別レポートの注文でもなければ null
+    const TP = await import('../lib/type-report-purchase.mjs');
+    return TP.handleWebhook({ fetchImpl, conn, stripe, type: ev.type, obj });
+  }
+
+  // ---- GA4 の purchase・refund（Measurement Protocol）。支払いの正は Stripe の Webhook（lib/ga4-mp.js）。
+  //   本番（Live）で GA4_API_SECRET がある時だけ。応答の後で送り、失敗しても決済の処理に影響させない。
+  //   同じ注文は同じ transaction_id・同じ合成 client_id（再送は GA4 が重複を除く）。すでに反映済み（購入完了ページの問い合わせが先）でも、支払い済みなら送る
+  const ETI_PRODUCT = { analysis: 'eti_analysis_v1', direct_complete: 'eti_complete_v1', analysis_upgrade: 'eti_complete_v1' };
+  async function etiPurchaseGa4(conn, orderId, gaRef = null) {
+    if (!GA.enabled(env, CP.livemodeOf(conn)) || !CE.isUuid(orderId)) return;
+    try {
+      const rows = await CP.selectRows(fetchImpl, conn, `complete_orders?id=eq.${encodeURIComponent(orderId)}&select=offer,amount,status,paid_at`);
+      const o = rows[0];
+      const productId = o && Object.prototype.hasOwnProperty.call(ETI_PRODUCT, o.offer) ? ETI_PRODUCT[o.offer] : null;
+      if (!o || o.status !== 'paid' || !productId) return;
+      GA.schedulePurchase(waitUntil, { env, fetchImpl, livemode: CP.livemodeOf(conn), transactionId: GP.refOf(env, orderId),
+        value: Number(o.amount), productId, paidAtMs: Date.parse(o.paid_at), gaRef, logger });
+    } catch { /* 計測だけ */ }
+  }
+  async function jaganGa4(conn, JP, { kind, orderId, gaRef = null }) {
+    if (!GA.enabled(env, CP.livemodeOf(conn)) || !CE.isUuid(orderId)) return;
+    const rows = await CP.selectRows(fetchImpl, conn, `jagan_orders?id=eq.${encodeURIComponent(orderId)}&select=product_key,amount,status,paid_at,idempotency_key`);
+    const o = rows[0];
+    const transactionId = o ? JP.ga4TransactionId(env, o.idempotency_key) : null;
+    if (!o || !transactionId || !Object.prototype.hasOwnProperty.call(GA.PRODUCTS, o.product_key)) return;
+    const args = { env, fetchImpl, livemode: CP.livemodeOf(conn), transactionId, value: Number(o.amount), productId: o.product_key, logger };
+    if (kind === 'paid' && o.status === 'paid') GA.schedulePurchase(waitUntil, { ...args, paidAtMs: Date.parse(o.paid_at), gaRef });
+    if (kind === 'refunded') GA.scheduleRefund(waitUntil, args);
   }
 
   async function onCheckoutCompleted(conn, stripe, ev, obj) {
     const found = await sessionFor(stripe, CP.idOf(obj), conn, ['line_items']);
     if (found.notOurs) return (await jagan(conn, stripe, ev, obj)) || 'ignored:not_complete';
     if (found.mismatch) { await finish(conn, ev, 'ignored', found.mismatch); return `ignored:${found.mismatch}`; }
+    // まだ支払いが確定していない完了（確定が後から届く支払い方法）：注文は触らない（DB は未払いの完了を「失敗」にしてしまうため）。
+    //   確定した時の checkout.session.async_payment_succeeded、または購入完了ページの問い合わせ（Stripe の最新の状態）で反映する。期限が来れば expired で閉じる
+    if (found.session.payment_status !== 'paid') { await finish(conn, ev, 'ignored', 'awaiting_payment', found.orderId); return 'ignored:awaiting_payment'; }
     // 解析レポート（¥1,000）・完全解析（¥3,000／¥2,000）の適用は、購入完了ページの問い合わせと同じ共通処理（lib/complete-apply.js）
-    return CA.applyPaidSession({
+    const result = await CA.applyPaidSession({
       env, fetchImpl, conn, session: found.session, orderId: found.orderId, eventId: ev.id, eventCreatedIso: ev.createdAt,
     });
+    if (result === 'applied' || result === 'noop' || result === 'duplicate') await etiPurchaseGa4(conn, found.orderId, found.session.client_reference_id);
+    return result;
   }
 
   async function onCheckoutExpired(conn, stripe, ev, obj) {
@@ -155,6 +191,8 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
 
   const HANDLERS = {
     'checkout.session.completed': onCheckoutCompleted,
+    // 支払いの確定が遅れる支払い方法（確定が後から届く場合）：確定した時に、同じ処理で反映する（Stripe の Webhook に、このイベントを追加する）
+    'checkout.session.async_payment_succeeded': onCheckoutCompleted,
     'checkout.session.expired': onCheckoutExpired,
     'charge.refunded': onRefund,
     'charge.dispute.created': onDispute,
@@ -219,7 +257,7 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
       const result = await handle(guard, stripe, ev, event.data.object);
       const kind = typeof result === 'string' && result.startsWith('ignored') ? 'ignored' : 'processed';
       // 支払い確定で生成物が queued になった：応答を待たせずに、応答の後で生成を始める（失敗しても状態確認の時に回収する）
-      if (ev.type === 'checkout.session.completed' && result === 'applied') {
+      if ((ev.type === 'checkout.session.completed' || ev.type === 'checkout.session.async_payment_succeeded') && result === 'applied') {
         RJ.scheduleReport(waitUntil, async () => {
           const rows = await CP.selectRows(fetchImpl, guard, `stripe_webhook_events?event_id=eq.${encodeURIComponent(ev.id)}&select=order_id`);
           const orderId = rows[0] && rows[0].order_id;

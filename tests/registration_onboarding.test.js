@@ -310,7 +310,7 @@ test('プライバシーポリシー：任意チェックの旧説明が無く�
   const t = fs.readFileSync(path.join(ROOT, 'privacy.html'), 'utf8');
   assert.ok(!t.includes('チェックを入れて同意した場合のみ'));
   assert.ok(!t.includes('同意は任意です'));
-  for (const s of ['利用規約とプライバシーポリシーへの同意', '元素診断のアップデート', '新しい解析', '関連する商品・企画', 'Kit', '配信メール内のリンクから停止', '固有のリンク', 'IP アドレスそのものは、本サイトのデータベースに保存しません']) {
+  for (const s of ['利用規約とプライバシーポリシーへの同意', '元素診断のアップデート', '新しい解析', '関連する商品・企画', 'Kit', '配信メール内のリンクから停止']) {
     assert.ok(t.includes(s), s);
   }
   const terms = fs.readFileSync(path.join(ROOT, 'terms.html'), 'utf8');

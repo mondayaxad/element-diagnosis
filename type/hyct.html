@@ -3,23 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- template: type-v2（scripts/build-type-pages.mjs で生成。手で編集しない） -->
 <!-- GA4：js/ga.js が本番ドメインでだけ読み込む（Preview・ローカルでは送信しない） -->
 <script src="/js/ga.js"></script>
-<title>水×法器タイプ「深識者」(HYCT) | 元素診断</title>
-<meta name="description" content="原神の元素診断で水×法器タイプと出た方へ。深識者（HYCT）の特徴を解説。柔軟さ・俯瞰する視点などの気質を持つタイプです。">
+<!-- 診断への導線のクリック（type_diagnosis_cta_click）を GA4 に送る -->
+<script src="/js/type-page.js" defer></script>
+<!-- 一覧へ戻った時に読んでいた元素を開く・Preview 専用の欄（標準プロフィール・タイプ別レポートの購入確認デモ） -->
+<script src="/js/type-detail.js" defer></script>
+<title>水×法器「深識者」の性格・特徴｜原神 元素診断</title>
+<meta name="description" content="原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。水×法器タイプ「深識者」の性格傾向（柔軟さ・静かな緊張・独自性）や強み、人との関わり方を解説します。">
 <link rel="canonical" href="https://element-diagnosis-five.vercel.app/type/hyct">
-<meta property="og:title" content="水×法器タイプ「深識者」(HYCT) | 元素診断">
-<meta property="og:description" content="原神の元素診断で水×法器タイプと出た方へ。深識者（HYCT）の特徴を解説。柔軟さ・俯瞰する視点などの気質を持つタイプです。">
+<meta property="og:title" content="水×法器「深識者」の性格・特徴｜原神 元素診断">
+<meta property="og:description" content="原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。水×法器タイプ「深識者」の性格傾向（柔軟さ・静かな緊張・独自性）や強み、人との関わり方を解説します。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://element-diagnosis-five.vercel.app/type/hyct">
-<meta property="og:image" content="https://element-diagnosis-five.vercel.app/thumbs/x_card_HYCT.png">
+<meta property="og:image" content="https://element-diagnosis-five.vercel.app/assets/ogp/types/HYCT.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="元素診断 水×法器タイプ「深識者」（HYCT）">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://element-diagnosis-five.vercel.app/assets/ogp/types/HYCT.jpg">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "DefinedTerm",
   "name": "水×法器「深識者」（HYCT型）",
-  "description": "原神の元素診断で水×法器タイプと出た方へ。深識者（HYCT）の特徴を解説。柔軟さ・俯瞰する視点などの気質を持つタイプです。",
+  "description": "原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。水×法器タイプ「深識者」の性格傾向（柔軟さ・静かな緊張・独自性）や強み、人との関わり方を解説します。",
   "inDefinedTermSet": {
     "@type": "DefinedTermSet",
     "name": "元素診断 35タイプ",
@@ -27,30 +36,262 @@
   }
 }
 </script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
+  /* 文字色・書体・大きさは結果ページ（index.html の --rx-*・similarityGauges・統一CTA）に合わせる */
+  :root { --el:#2a7aaa; --wp:#5878b0; --el-t:color-mix(in srgb, #2a7aaa 55%, #ffffff); --wp-t:color-mix(in srgb, #5878b0 55%, #ffffff); --rx-primary:#E8F1F8; --rx-secondary:#A9C2D3; --rx-tertiary:#718A9C; --rx-muted:#526776; --rx-gold:#C9A860; --card:#0c0a14; --card-line:#182838; }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:#07060c; color:#e0ecf4; font-family:'Hiragino Sans','Noto Sans JP',sans-serif; max-width:680px; margin:0 auto; padding:32px 20px 60px; line-height:1.9; }
-  .eyebrow { font-size:12px; letter-spacing:3px; color:#c9a860; margin-bottom:10px; }
-  h1 { font-size:26px; margin-bottom:6px; }
-  .code { font-size:14px; color:#8ea0b0; margin-bottom:24px; }
-  .lead { font-size:15px; color:#c8dce8; margin-bottom:20px; }
-  .desc { font-size:15px; margin-bottom:20px; }
-  .tags { margin:20px 0; }
-  .tag { display:inline-block; font-size:12px; background:#1a1628; border:1px solid #2a2440; border-radius:20px; padding:5px 12px; margin:0 6px 6px 0; color:#a8c4d4; }
-  .axis { font-size:14px; color:#8fd8b0; margin:24px 0; padding:14px 16px; border-left:3px solid #3a8a60; background:#0e0c18; }
-  .cta { display:block; text-align:center; background:linear-gradient(90deg,#2a6a45,#3a8a60); color:#fff; text-decoration:none; padding:16px; border-radius:10px; font-weight:700; margin-top:32px; }
-  .back { display:block; text-align:center; margin-top:16px; color:#5a6c7c; font-size:13px; }
+  body { background:#07070f; color:#e0dcf0; font-family:'Noto Serif JP','Hiragino Mincho ProN','Yu Mincho',serif; -webkit-font-smoothing:antialiased; max-width:680px; margin:0 auto; padding:16px 14px 64px; line-height:1.95; -webkit-text-size-adjust:100%;
+    background-image:radial-gradient(ellipse 90% 40% at 50% 0%, color-mix(in srgb, #2a7aaa 14%, transparent), transparent 70%), radial-gradient(ellipse 80% 50% at 50% 30%, rgba(100,60,180,.08), transparent 70%); background-repeat:no-repeat; }
+  a { color:inherit; }
+  strong { font-weight:700; }
+  .crumb { font-size:11px; color:var(--rx-tertiary); letter-spacing:.5px; margin:0 4px 10px; }
+  .crumb a { color:var(--rx-secondary); text-decoration:none; border-bottom:1px solid rgba(169,194,211,.3); }
+  .eyebrow { display:none; }
+  .card { background:var(--card); border:1px solid var(--card-line); border-radius:12px; padding:20px; margin-bottom:14px; }
+  .kicker { font-size:11px; color:var(--rx-gold); letter-spacing:2px; margin-bottom:6px; }
+  .card-h { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .card-h::before { content:''; width:8px; height:8px; border-radius:50%; background:var(--el); flex:none; }
+  .card-h h2 { color:color-mix(in srgb, var(--rx-primary) 85%, var(--el)); font-size:15px; font-weight:700; margin:0; line-height:1.6; }
+  .card p { color:var(--rx-secondary); font-size:12.5px; line-height:1.95; }
+  .card p + p { margin-top:10px; }
+  .card h3 { color:var(--rx-primary); font-size:13px; font-weight:700; margin:16px 0 4px; letter-spacing:.5px; }
+  .rule { height:1px; background:var(--card-line); margin:18px 0; }
+  /* ヒーロー（結果ページの「あなたの土台」と同じ並び：小見出し → コードと名前 → 元素 × 武器種 → 軸） */
+  .hero { position:relative; background:linear-gradient(135deg, color-mix(in srgb, #2a7aaa 14%, transparent), #0a0e1a 70%); border:1px solid color-mix(in srgb, #2a7aaa 30%, #1c2c40); border-radius:16px; padding:22px 20px 20px; margin-bottom:14px; }
+  .hero-em { position:absolute; top:14px; right:12px; width:76px; height:76px; object-fit:contain; filter:drop-shadow(0 0 12px #2a7aaa66); pointer-events:none; }
+  .hero-k { font-size:11px; letter-spacing:3px; color:#90c0e0; margin-right:80px; }
+  .el-w { font-weight:700; font-size:30px; line-height:1.35; margin:6px 80px 2px 0; letter-spacing:1px; }
+  .el-w .e { color:var(--el-t); } .el-w .w { color:var(--wp-t); } .el-w .x { color:var(--rx-tertiary); font-size:18px; margin:0 6px; font-weight:400; }
+  h1 { font-weight:700; line-height:1.3; margin:0 80px 2px 0; }
+  h1 .h1-sub { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  h1 .h1-n { display:block; font-size:34px; letter-spacing:3px; color:var(--rx-primary); }
+  .code { font-size:15px; font-weight:700; letter-spacing:4px; color:var(--el-t); }
+  .hero-ax { color:var(--rx-secondary); font-size:12px; line-height:1.9; padding-bottom:14px; margin-bottom:16px; border-bottom:1px solid #1c2c40; }
+  /* 購入への導線：結果ページの「全てのロックを解除する →」と同じ（元素色→武器色） */
+  .hero-buy { display:flex; align-items:center; justify-content:center; gap:8px; min-height:48px; margin-top:16px; padding:13px 14px; border-radius:8px; text-decoration:none; font-size:14px; font-weight:600; letter-spacing:2px; line-height:1.6; text-align:center; color:#fff; background:linear-gradient(90deg, #2a7aaa, #5878b0); word-break:keep-all; overflow-wrap:anywhere; }
+  .hero-buy .arw { display:inline-block; transition:transform .2s; }
+  .hero-buy:hover .arw, .hero-buy:focus-visible .arw { transform:translateX(3px); }
+  html { scroll-behavior:smooth; }
+  #report { scroll-margin-top:16px; }
+  /* 冒頭：タイプの核（結果ページの「この先にあるもの」と同じ書き方） */
+  .essence { margin:22px 6px 0; }
+  .essence .k { font-size:11px; letter-spacing:3px; color:var(--rx-gold); margin-bottom:8px; }
+  .essence .core { color:var(--rx-primary); font-size:16px; line-height:1.9; letter-spacing:.5px; }
+  .essence cite { display:block; margin-top:6px; font-style:normal; font-size:11px; color:var(--rx-tertiary); letter-spacing:1px; }
+  .lead, .intro { color:var(--rx-secondary); font-size:12.5px; line-height:1.95; margin:14px 0 0; }
+  .figure { position:relative; margin:22px auto 18px; width:180px; height:150px; display:grid; place-items:center; }
+  .figure::before, .figure::after { content:''; position:absolute; border-radius:50%; border:1px solid #2a7aaa55; }
+  .figure::before { width:146px; height:146px; } .figure::after { width:112px; height:112px; border-style:dashed; opacity:.5; }
+  .figure img { position:relative; width:104px; height:104px; object-fit:contain; filter:drop-shadow(0 0 18px #2a7aaa88); }
+  .pull { margin:14px 0; padding:12px 14px; border-left:3px solid var(--el); background:#2a7aaa14; border-radius:0 8px 8px 0; color:var(--rx-primary); font-size:13px; line-height:1.9; }
+  .pull.caution { border-left-color:var(--rx-gold); background:rgba(201,168,96,.07); }
+  .axis { color:var(--el-t); font-size:12.5px; font-weight:600; letter-spacing:1px; margin:16px 0 8px; }
+  .tags { display:flex; flex-wrap:wrap; gap:6px; }
+  .tag { font-size:10.5px; color:var(--el-t); border:1px solid #2a7aaa66; background:#2a7aaa1f; border-radius:12px; padding:4px 10px; letter-spacing:.3px; }
+  [data-preview-only][hidden] { display:none !important; }
+  /* ゲージ（結果ページの similarityGauges と同じ） */
+  .gs { display:flex; flex-direction:column; gap:12px; margin:6px 0 2px; }
+  .g-h { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
+  .g-l { font-size:11px; letter-spacing:.5px; color:var(--rx-secondary); }
+  .g-v { font-size:12px; font-weight:700; }
+  .g-t { height:7px; background:#14121f; border-radius:4px; overflow:hidden; box-shadow:inset 0 0 0 1px #ffffff0a; }
+  .g-f { height:100%; border-radius:4px; }
+  .g-s { display:flex; justify-content:space-between; align-items:baseline; margin-top:3px; font-size:10px; color:var(--rx-muted); letter-spacing:.3px; }
+  .g-s i { font-style:normal; color:var(--rx-tertiary); }
+  .g-s .on { color:var(--rx-primary); font-weight:700; }
+  /* タイプ別レポート（結果ページの統一CTAと同じ構成：小見出し → 見出し → 説明 → ご利用いただける内容 → 価格 → ボタン） */
+  .report { background:linear-gradient(135deg, #2a7aaa1c, #08101a); border:1px solid #2a7aaa45; border-radius:14px; padding:26px 22px; text-align:center; margin-top:14px; }
+  .report .r-k { font-size:10px; color:#c0a860; letter-spacing:2px; margin-bottom:10px; }
+  .report h3 { color:var(--rx-primary); font-size:17px; margin:0 0 10px; letter-spacing:1px; line-height:1.6; }
+  .report .r-desc { color:var(--rx-secondary); font-size:12px; line-height:1.85; margin:0 0 18px; }
+  .report .r-list { background:var(--card); border:1px solid #2a7aaa30; border-radius:10px; padding:18px; margin-bottom:20px; text-align:left; }
+  .report .r-lh { font-size:11px; color:var(--rx-gold); letter-spacing:2px; margin-bottom:14px; }
+  .ck { display:flex; gap:10px; margin-bottom:12px; align-items:flex-start; }
+  .ck:last-child { margin-bottom:0; }
+  .ck-m { color:var(--rx-gold); font-size:13px; flex-shrink:0; margin-top:1px; }
+  .ck-t { color:var(--rx-primary); font-size:13px; font-weight:600; margin-bottom:3px; }
+  .ck-s { color:var(--rx-tertiary); font-size:11px; line-height:1.6; }
+  .report .r-price { font-size:28px; font-weight:700; color:#eee0c0; margin-bottom:16px; line-height:1.3; }
+  .report .r-price small { font-size:12px; font-weight:400; margin-left:4px; color:var(--rx-secondary); }
+  .r-btn, .confirm button { font-family:inherit; }
+  .report .r-btn { width:100%; background:linear-gradient(90deg, #2a7aaa, #5878b0); border:none; color:#fff; border-radius:8px; padding:14px; min-height:48px; font-size:14px; cursor:pointer; letter-spacing:2px; font-weight:600; }
+  .report .r-diff { color:#c0a860; font-size:11px; margin-top:8px; font-weight:600; line-height:1.7; }
+  .report .r-diff2 { color:var(--rx-tertiary); font-size:11px; line-height:1.7; margin-top:4px; }
+  dialog.confirm { margin:auto; width:min(92vw, 420px); border:1px solid #2a7aaa45; border-radius:14px; background:#0c0a14; color:var(--rx-primary); padding:22px 20px 16px; }
+  dialog.confirm::backdrop { background:rgba(4,4,10,.76); }
+  .confirm .c-label { font-size:10px; font-weight:400; color:#c0a860; letter-spacing:2px; }
+  .confirm h3 { font-size:17px; line-height:1.6; margin:6px 0 12px; letter-spacing:1px; }
+  .confirm dl { display:grid; grid-template-columns:5.5em 1fr; gap:6px 10px; font-size:12.5px; margin-bottom:12px; }
+  .confirm dt { color:var(--rx-tertiary); } .confirm dd { color:var(--rx-primary); }
+  .confirm .c-sub { font-size:11px; color:var(--rx-gold); letter-spacing:2px; }
+  .confirm ul { margin:6px 0 12px 1.2em; font-size:12.5px; color:var(--rx-secondary); line-height:1.85; }
+  .confirm .c-note { font-size:11px; color:var(--rx-tertiary); line-height:1.7; margin-bottom:12px; }
+  .confirm .c-err { font-size:12px; color:#f0c8a0; background:#2a1a14; border-radius:8px; padding:8px 10px; line-height:1.7; margin-bottom:12px; }
+  .confirm .c-row { display:flex; gap:8px; }
+  .confirm button { flex:1; min-height:46px; border-radius:8px; font-size:13px; letter-spacing:1.5px; cursor:pointer; }
+  .confirm .c-close { background:transparent; color:var(--rx-primary); border:1px solid var(--card-line); }
+  .confirm .c-go { background:linear-gradient(90deg, #2a7aaa, #5878b0); color:#fff; border:0; }
+  .confirm .c-go[disabled] { opacity:.6; cursor:progress; }
+  .back { display:block; text-align:center; margin-top:14px; color:var(--rx-secondary); font-size:12.5px; min-height:44px; padding-top:10px; }
+  .more { margin-top:22px; }
+  .more .more-h { font-size:11px; color:var(--rx-gold); letter-spacing:2px; margin:0 4px 8px; font-weight:400; }
+  .more ul { list-style:none; background:var(--card); border:1px solid var(--card-line); border-radius:12px; overflow:hidden; }
+  .more li + li { border-top:1px solid var(--card-line); }
+  .more li a { display:grid; grid-template-columns:4.2em 1fr auto; align-items:center; gap:8px; min-height:48px; padding:8px 16px; text-decoration:none; font-size:13px; }
+  .sib-w { color:var(--rx-tertiary); font-size:11.5px; }
+  .sib-n { font-weight:700; color:var(--rx-primary); letter-spacing:1px; }
+  .sib-c { color:var(--el-t); font-size:11px; letter-spacing:2px; }
+  .more .jg { margin:16px 4px 0; font-size:12px; color:var(--rx-tertiary); }
+  .more .jg a { color:#d8b0e8; }
+  @media (max-width:360px) { .el-w { font-size:26px; } h1 .h1-n { font-size:30px; } .hero-em { width:64px; height:64px; } }
 </style>
 </head>
-<body>
+<body data-type-code="HYCT" data-element="hydro" data-weapon-type="catalyst">
+  <nav class="crumb" aria-label="現在地"><a href="/#types-hydro" data-types-back="hydro">全35タイプ一覧</a> ／ 水 × 法器</nav>
   <div class="eyebrow">元素診断タイプ解説</div>
-  <h1>水×法器タイプ「深識者」</h1>
+  <header class="hero">
+   <img class="hero-em" src="/assets/emblems/2026-autumn/record/hydro.png" width="76" height="76" alt="水の紋章">
+   <div class="hero-k">タ イ プ 解 説</div>
+  <div class="el-w"><span class="e">水</span><span class="x">×</span><span class="w">法器</span></div>
+  <h1><span class="h1-sub">水×法器タイプ「</span><span class="h1-n">深識者</span><span class="h1-sub">」</span></h1>
   <div class="code">タイプコード：HYCT</div>
-  
-  <div class="desc">水は、周囲との調和を保ちながら、内側に見せない部分を抱える元素です。場に合わせて姿を変える柔軟さの裏に、静かな緊張が流れています。誰といても浮かずにいられる器用さがある一方、本当の自分がどこにあるのか、ふと分からなくなることもあります。表と裏、両方を併せ持つ複雑さが魅力です。<br><br>法器は、術式という抽象を介して世界と接続する武器です。観察者・個性派の性質——理解し、独自の視点を持とうとする動機が、その根にあります。直接ぶつかるより、一歩引いた場所から本質を見極めることを好み、他人には見えないところにある繋がりに、自然と気づくタイプです。<br><br>この二つが重なる時、「深識者」という人物像が立ち上がります。</div>
-  <div class="tags"><span class="tag">柔軟さ</span><span class="tag">静かな緊張</span><span class="tag">二面性</span><span class="tag">俯瞰する視点</span><span class="tag">独自性</span><span class="tag">見えない繋がりへの気づき</span></div>
-  <div class="axis">流転の宿命 × 媒介の杖</div>
-  <a class="cta" href="https://element-diagnosis-five.vercel.app/">無料の元素診断で、あなたのタイプを確かめる</a>
-  <a class="back" href="https://element-diagnosis-five.vercel.app/">← 元素診断トップへ戻る</a>
+  <a class="hero-buy" href="#report" data-preview-only hidden>深識者のタイプ別レポートを読む<span class="arw" aria-hidden="true">→</span></a>
+  </header>
+
+  <section class="essence" aria-label="深識者の核">
+    <div class="k">深 識 者 と は</div>
+    <p class="core">表には出さない内面の深さを、言葉に変えて届ける人。</p>
+    <cite>— 水 × 法器「深識者」</cite>
+    <p class="intro"><strong style="color:var(--rx-primary)">深識者</strong>は、<strong style="color:var(--el-t)">水の気質（仮面の深海）</strong>と、<strong style="color:var(--wp-t)">法器の関わり方（媒介思考型）</strong>が重なって現れるタイプです。この二つが重なる時、「深識者」という人物像が立ち上がります。</p>
+  </section>
+
+  <div class="figure" aria-hidden="true"><img src="/assets/emblems/2026-autumn/record/hydro.png" width="104" height="104" alt="" loading="lazy"></div>
+
+  <section class="card" aria-labelledby="ch-el">
+    <div class="kicker">水の気質</div>
+    <div class="card-h"><h2 id="ch-el">仮面の深海</h2></div>
+      <p><strong style="color:color-mix(in srgb, #2a7aaa 55%, #ffffff)">水</strong>は、周囲との調和を保ちながら、内側に見せない部分を抱える元素です。場に合わせて姿を変える柔軟さの裏に、静かな緊張が流れています。</p>
+      <blockquote class="pull">誰といても浮かずにいられる器用さがある一方、本当の自分がどこにあるのか、ふと分からなくなることもあります。</blockquote>
+      <p>表と裏、両方を併せ持つ複雑さが魅力です。</p>
+  </section>
+
+  <section class="card" aria-labelledby="ch-wp" style="--el:#5878b0">
+    <div class="kicker">法器の関わり方</div>
+    <div class="card-h"><h2 id="ch-wp">術式を媒介に間接的に世界と繋がる</h2></div>
+      <p><strong style="color:color-mix(in srgb, #5878b0 55%, #ffffff)">法器</strong>は、術式という抽象を介して世界と接続する武器です。理解と独自の視点を求める傾向——物事を深く理解し、自分なりの見方を持とうとする動機が、その根にあります。</p>
+      <blockquote class="pull">直接ぶつかるより、一歩引いた場所から本質を見極めることを好み、他人には見えないところにある繋がりに、自然と気づくタイプです。</blockquote>
+  </section>
+
+  <section class="card" aria-labelledby="ch-type">
+    <div class="kicker">深識者として現れる特徴</div>
+    <div class="card-h"><h2 id="ch-type">強みと、つまずきやすいところ</h2></div>
+    <h3>力を発揮するとき</h3>
+    <p>静かな観察眼と、それを言語化する力を併せ持ちます。</p>
+    <h3>つまずきやすいところ</h3>
+    <blockquote class="pull caution">深く考えすぎるあまり、行動に移すまでに時間がかかることがあります。</blockquote>
+    <div class="axis">流転の宿命 × 媒介の杖</div>
+    <div class="tags"><span class="tag">柔軟さ</span><span class="tag">静かな緊張</span><span class="tag">二面性</span><span class="tag">俯瞰する視点</span><span class="tag">独自性</span><span class="tag">見えない繋がりへの気づき</span></div>
+  </section>
+
+  <section class="prof" data-preview-only hidden aria-labelledby="prof-h">
+    <div class="card">
+      <div class="kicker">標準プロフィール</div>
+      <div class="card-h"><h2 id="prof-h">深識者の標準プロフィール</h2></div>
+      <h3>気質（Big Five・0〜100）— 水</h3>
+      <div class="gs">
+        <div class="g">
+          <div class="g-h"><span class="g-l">開放性</span><span class="g-v" style="color:color-mix(in srgb, #2a7aaa 55%, #ffffff)">70</span></div>
+          <div class="g-t"><div class="g-f" style="width:70%;background:linear-gradient(90deg, color-mix(in srgb, #2a7aaa 45%, #0c0a14), #2a7aaa 70%, color-mix(in srgb, #2a7aaa 60%, #ffffff));box-shadow:0 0 8px #2a7aaa55"></div></div>
+          <div class="g-s"><span>堅実さ</span><i>探究心寄り</i><span class="on">探究心</span></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">誠実性</span><span class="g-v" style="color:color-mix(in srgb, #2a7aaa 55%, #ffffff)">70</span></div>
+          <div class="g-t"><div class="g-f" style="width:70%;background:linear-gradient(90deg, color-mix(in srgb, #2a7aaa 45%, #0c0a14), #2a7aaa 70%, color-mix(in srgb, #2a7aaa 60%, #ffffff));box-shadow:0 0 8px #2a7aaa55"></div></div>
+          <div class="g-s"><span>衝動性</span><i>計画性寄り</i><span class="on">計画性</span></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">外向性</span><span class="g-v" style="color:color-mix(in srgb, #2a7aaa 55%, #ffffff)">50</span></div>
+          <div class="g-t"><div class="g-f" style="width:50%;background:linear-gradient(90deg, color-mix(in srgb, #2a7aaa 45%, #0c0a14), #2a7aaa 70%, color-mix(in srgb, #2a7aaa 60%, #ffffff));box-shadow:0 0 8px #2a7aaa55"></div></div>
+          <div class="g-s"><span>内省力</span><i>中間</i><span>社交性</span></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">協調性</span><span class="g-v" style="color:color-mix(in srgb, #2a7aaa 55%, #ffffff)">70</span></div>
+          <div class="g-t"><div class="g-f" style="width:70%;background:linear-gradient(90deg, color-mix(in srgb, #2a7aaa 45%, #0c0a14), #2a7aaa 70%, color-mix(in srgb, #2a7aaa 60%, #ffffff));box-shadow:0 0 8px #2a7aaa55"></div></div>
+          <div class="g-s"><span>独立心</span><i>共感力寄り</i><span class="on">共感力</span></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">神経症傾向</span><span class="g-v" style="color:color-mix(in srgb, #2a7aaa 55%, #ffffff)">70</span></div>
+          <div class="g-t"><div class="g-f" style="width:70%;background:linear-gradient(90deg, color-mix(in srgb, #2a7aaa 45%, #0c0a14), #2a7aaa 70%, color-mix(in srgb, #2a7aaa 60%, #ffffff));box-shadow:0 0 8px #2a7aaa55"></div></div>
+          <div class="g-s"><span>安定性</span><i>感受性寄り</i><span class="on">感受性</span></div>
+        </div>
+      </div>
+      <div class="rule"></div>
+      <h3>関わり方（行動スタイル・0〜100）— 法器</h3>
+      <div class="gs">
+        <div class="g">
+          <div class="g-h"><span class="g-l">主導性</span><span class="g-v" style="color:color-mix(in srgb, #5878b0 55%, #ffffff)">30</span></div>
+          <div class="g-t"><div class="g-f" style="width:30%;background:linear-gradient(90deg, color-mix(in srgb, #5878b0 45%, #0c0a14), #5878b0 70%, color-mix(in srgb, #5878b0 60%, #ffffff));box-shadow:0 0 8px #5878b055"></div></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">関係調整</span><span class="g-v" style="color:color-mix(in srgb, #5878b0 55%, #ffffff)">45</span></div>
+          <div class="g-t"><div class="g-f" style="width:45%;background:linear-gradient(90deg, color-mix(in srgb, #5878b0 45%, #0c0a14), #5878b0 70%, color-mix(in srgb, #5878b0 60%, #ffffff));box-shadow:0 0 8px #5878b055"></div></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">役割持続</span><span class="g-v" style="color:color-mix(in srgb, #5878b0 55%, #ffffff)">55</span></div>
+          <div class="g-t"><div class="g-f" style="width:55%;background:linear-gradient(90deg, color-mix(in srgb, #5878b0 45%, #0c0a14), #5878b0 70%, color-mix(in srgb, #5878b0 60%, #ffffff));box-shadow:0 0 8px #5878b055"></div></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">媒介思考</span><span class="g-v" style="color:color-mix(in srgb, #5878b0 55%, #ffffff)">90</span></div>
+          <div class="g-t"><div class="g-f" style="width:90%;background:linear-gradient(90deg, color-mix(in srgb, #5878b0 45%, #0c0a14), #5878b0 70%, color-mix(in srgb, #5878b0 60%, #ffffff));box-shadow:0 0 8px #5878b055"></div></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">自律距離</span><span class="g-v" style="color:color-mix(in srgb, #5878b0 55%, #ffffff)">65</span></div>
+          <div class="g-t"><div class="g-f" style="width:65%;background:linear-gradient(90deg, color-mix(in srgb, #5878b0 45%, #0c0a14), #5878b0 70%, color-mix(in srgb, #5878b0 60%, #ffffff));box-shadow:0 0 8px #5878b055"></div></div>
+        </div>
+      </div>
+      <p style="margin-top:12px"><strong style="color:var(--wp-t)">媒介思考</strong>が最も高い型です。衝動のまま触れるのではなく、思索や言葉を介して世界へ近づきます。</p>
+    </div>
+    <div class="report" id="report">
+      <div class="r-k">TYPE REPORT</div>
+      <h3>タイプ別レポート<br>「深識者」の全編を解放</h3>
+      <p class="r-desc">標準プロフィールをもとに、深識者の強みを活かせる場面、つまずきやすい場面、人との関わり方を読み解きます。</p>
+      <div class="r-list">
+        <div class="r-lh">ご利用いただける内容</div>
+          <div class="ck"><span class="ck-m">✓</span><div><div class="ck-t">標準プロフィールの読み方</div><div class="ck-s">気質（Big Five）と関わり方（行動スタイル）の数値が、深識者の場合に何を意味するか</div></div></div>
+          <div class="ck"><span class="ck-m">✓</span><div><div class="ck-t">強みを活かせる場面</div><div class="ck-s">力が発揮されやすい状況と、その理由</div></div></div>
+          <div class="ck"><span class="ck-m">✓</span><div><div class="ck-t">つまずきやすい場面</div><div class="ck-s">負荷がかかりやすい状況と、立て直し方</div></div></div>
+          <div class="ck"><span class="ck-m">✓</span><div><div class="ck-t">人との関わり方</div><div class="ck-s">近しい相手・集団の中での振る舞いの傾向</div></div></div>
+      </div>
+      <div class="r-price">¥1,000<small>（税込）</small></div>
+      <button type="button" class="r-btn" data-report-open>今すぐアクセス →</button>
+      <p class="r-diff">✓ 深識者の方に共通の読み物です。</p>
+      <p class="r-diff2">あなた自身の回答から作る「解析レポート」とは別の商品です。</p>
+    </div>
+    <dialog class="confirm" id="reportConfirm" aria-labelledby="rc-h">
+      <div class="c-label">購入内容の確認</div>
+      <h3 id="rc-h">タイプ別レポート「深識者」</h3>
+      <dl><dt>対象タイプ</dt><dd>水 × 法器「深識者」（HYCT）</dd><dt>価格</dt><dd>¥1,000（税込）</dd><dt>種類</dt><dd>深識者の方に共通の読み物</dd></dl>
+      <div class="c-sub">読める内容</div>
+      <ul><li>標準プロフィールの読み方</li><li>強みを活かせる場面</li><li>つまずきやすい場面</li><li>人との関わり方</li></ul>
+      <p class="c-note">お支払いは Stripe の決済画面で行います（クレジットカード・PayPay）。お支払いの後に表示される固有のリンク（URL）から、いつでもお読みいただけます。あなた自身の回答から作る「解析レポート」とは別の商品です。<a href="/tokushoho" style="color:inherit">特定商取引法に基づく表記</a>・<a href="/terms.html" style="color:inherit">利用規約</a></p>
+      <p class="c-err" data-report-error role="alert" hidden></p>
+      <div class="c-row"><button type="button" class="c-close" data-report-close>閉じる</button><button type="button" class="c-go" data-report-buy>購入へ進む</button></div>
+    </dialog>
+  </section>
+
+  <nav class="more" aria-label="同じ元素のほかのタイプ">
+    <h2 class="more-h">同じ元素のほかのタイプ</h2>
+    <ul>
+      <li><a href="/type/hysw"><span class="sib-w">片手剣</span><span class="sib-n">同調者</span><span class="sib-c">HYSW</span></a></li>
+      <li><a href="/type/hycm"><span class="sib-w">両手剣</span><span class="sib-n">孤淵者</span><span class="sib-c">HYCM</span></a></li>
+      <li><a href="/type/hypl"><span class="sib-w">長柄</span><span class="sib-n">静衛者</span><span class="sib-c">HYPL</span></a></li>
+      <li><a href="/type/hybw"><span class="sib-w">弓</span><span class="sib-n">静観者</span><span class="sib-c">HYBW</span></a></li>
+    </ul>
+    <a class="back" href="/#types-hydro" data-types-back="hydro">← 全35タイプ一覧に戻る（水）</a>
+    <p class="jg">心の影の側面を知る、もう一つの診断：<a href="https://element-diagnosis-five.vercel.app/jagan/" data-type-cta="related" data-destination="jagan_top">邪眼診断（50問・無料）</a></p>
+  </nav>
 </body>
 </html>

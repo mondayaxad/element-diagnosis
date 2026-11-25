@@ -4,6 +4,7 @@
 <!-- GA4：js/ga.js が本番ドメインでだけ読み込む（Preview・ローカルでは送信しない）。
      送る page_location は origin＋path だけ。イベントの値から記録 ID・メール・Stripe ID・トークンを落とす。 -->
 <script src="/js/ga.js"></script>
+<script src="/js/return-to.js"></script>
 <script>
   // 本番ドメイン以外（Preview・ローカル）では true。Stripe の旧 Payment Link（v1）をテスト用に切り替える。
   var IS_PREVIEW_BUILD = location.hostname !== 'element-diagnosis-five.vercel.app';
@@ -12,8 +13,8 @@
 <link rel="preconnect" href="https://checkout.stripe.com">
 <link rel="dns-prefetch" href="https://checkout.stripe.com">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>元素診断 — 原神の元素で分かる性格診断 | あなたの気質と強み</title>
-  <meta name="description" content="100問の設問から、あなたの内なる気質「元素」・対人様式「武器」・価値観「国家」を映し出す心理傾向診断。Big Five × エニアグラム × 価値観理論を土台にした、原神ファンのための自己理解ツール。">
+  <title>元素診断｜原神の元素・武器種でわかる性格診断（100問・無料）</title>
+  <meta name="description" content="原神の元素・武器種・国家で性格を映す、無料の性格診断。100問から、あなたの気質「元素」・関わり方「武器」・価値観「国家」と35タイプを示します。Big Five・対人スタイル・シュワルツの価値観理論を参考にした、原神ファンのための自己理解ツール。">
   <meta property="og:title" content="元素診断 — あなたの気質と強みを知る">
   <meta property="og:description" content="100問の設問から、あなたの元素・武器・国家を映し出す心理傾向診断。">
   <meta property="og:type" content="website">
@@ -36,7 +37,7 @@
     "@type": "FAQPage",
     "mainEntity": [
       { "@type": "Question", "name": "元素診断とは何ですか？",
-        "acceptedAnswer": { "@type": "Answer", "text": "元素診断は、Big Five・エニアグラム・シュワルツの価値観理論という3つの心理学的枠組みを土台に、原神の「元素」「武器種」「国家」というモチーフで性格を可視化する診断ツールです。100問の設問に答えると、35タイプの中からあなたに近いタイプが分かります。" } },
+        "acceptedAnswer": { "@type": "Answer", "text": "元素診断は、Big Five（性格の5因子）・対人スタイル・シュワルツの価値観理論という3つの枠組みを参考に、原神の「元素」「武器種」「国家」というモチーフで性格の傾向を表す自己理解の診断です。100問の設問に答えると、35タイプの中からあなたに近いタイプが分かります。" } },
       { "@type": "Question", "name": "元素診断は無料ですか？",
         "acceptedAnswer": { "@type": "Answer", "text": "はい、100問の診断と基本的な結果表示は無料です。より詳しい解析レポート（¥1,000）は有償でご用意しています。" } },
       { "@type": "Question", "name": "何タイプありますか？",
@@ -142,6 +143,27 @@
     @media (prefers-reduced-motion: reduce) { .tp .hero-mypage { transition: none; } }
     .tp .hero-record-link { margin-top: 18px; color: #7896b3; font-size: 12px; letter-spacing: .08em; text-decoration: none; opacity: .9; transition: color .2s ease; }
     .tp .hero-record-link:hover { color: #a8c7e3; }
+    /* 邪眼診断のリリースバナー（元素診断の青に対して、邪眼の赤黒と金） */
+    .tp .jagan-banner { display: flex; align-items: stretch; gap: 0; width: min(560px, 100%); margin: 64px auto 0; text-align: left; text-decoration: none;
+      border: 1px solid rgba(214,170,98,.45); border-radius: 12px; overflow: hidden;
+      background: linear-gradient(135deg, rgba(40,8,18,.92), rgba(18,6,12,.94)); box-shadow: 0 0 22px rgba(200,64,92,.18), inset 0 0 0 1px rgba(255,255,255,.03);
+      transition: transform .2s ease, box-shadow .2s ease; }
+    .tp .jagan-banner:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(200,64,92,.32), inset 0 0 0 1px rgba(255,255,255,.05); }
+    .tp .jagan-banner .jb-img { flex: 0 0 42%; position: relative; background: #0d0509; }
+    .tp .jagan-banner .jb-img { display: flex; align-items: center; }
+    .tp .jagan-banner .jb-img img { display: block; width: 100%; height: auto; }
+    .tp .jagan-banner .jb-body { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 14px 16px; }
+    .tp .jagan-banner .jb-new { font-family: var(--font-en); font-size: 10px; letter-spacing: .28em; color: #e2c08c; }
+    .tp .jagan-banner .jb-title { font-size: 16px; font-weight: 700; letter-spacing: .06em; color: #f4e6ea; }
+    .tp .jagan-banner .jb-sub { font-size: 11.5px; line-height: 1.75; color: #c9a8b2; }
+    .tp .jagan-banner .jb-go { margin-top: 2px; font-size: 12px; letter-spacing: .1em; color: #f0a3b6; }
+    .tp .jagan-banner:hover .jb-go .arw { transform: translateX(3px); }
+    .tp .jagan-banner .jb-go .arw { display: inline-block; transition: transform .2s ease; }
+    @media (max-width: 520px) {
+      .tp .jagan-banner { flex-direction: column; margin-top: 48px; }
+      .tp .jagan-banner .jb-img { flex-basis: auto; aspect-ratio: 1200 / 630; }
+      .tp .jagan-banner .jb-body { padding: 12px 14px 14px; text-align: center; align-items: center; }
+    }
     .tp .hero-record-link .arw { display: inline-block; transition: transform .2s ease; }
     .tp .hero-record-link:hover .arw { transform: translateX(3px); }
     .tp .hero-record-link:focus-visible { outline: 1px solid var(--t-link); outline-offset: 4px; }
@@ -149,20 +171,6 @@
     .tp .hero-scroll { position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); width: 1px; height: 38px; background: linear-gradient(180deg, rgba(140,170,230,.5), transparent); }
     /* ABOUT（寸法は旧 .about と同じ） */
     .tp .about { padding-block: 80px; }
-    /* 診断済みの方への購入導線（新規診断の CTA より控えめ：枠線型・小さめ） */
-    .tp .returning { padding-block: 56px 8px; text-align: center; }
-    .tp .returning .h2 { margin-bottom: 12px; }
-    .tp .returning-body { color: #8ea6c4; font-size: 14px; line-height: 1.9; margin: 0 0 22px; }
-    .tp .returning-cta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 12px 22px; border: 1px solid rgba(143,180,220,.45); border-radius: 999px; background: rgba(12,16,32,.55); color: #cfe0f4; font: inherit; font-size: 14px; letter-spacing: .08em; cursor: pointer; transition: border-color .2s ease, background .2s ease; }
-    .tp .returning-cta:hover { border-color: rgba(168,199,227,.8); background: rgba(20,26,48,.7); }
-    .tp .returning-cta:focus-visible { outline: 2px solid #7ab8e8; outline-offset: 3px; }
-    .tp .returning-cta[disabled] { opacity: .6; cursor: default; }
-    .tp .returning-panel { max-width: 460px; margin: 20px auto 0; padding: 18px 18px 16px; border: 1px solid rgba(143,180,220,.22); border-radius: 12px; background: rgba(10,12,26,.6); text-align: left; color: #a9bdd6; font-size: 13px; line-height: 1.85; }
-    .tp .returning-panel[hidden] { display: none; }
-    .tp .returning-panel .rt-type { color: #e3ecf8; font-size: 15px; letter-spacing: .04em; margin: 4px 0 2px; }
-    .tp .returning-panel .rt-sub { color: #8197b3; font-size: 12px; }
-    .tp .returning-panel .rt-go { display: flex; width: 100%; align-items: center; justify-content: center; min-height: 46px; margin-top: 14px; border-radius: 8px; border: 1px solid rgba(143,180,220,.5); background: rgba(30,44,74,.55); color: #e3ecf8; font: inherit; font-size: 14px; letter-spacing: .06em; text-decoration: none; cursor: pointer; }
-    .tp .returning-panel .rt-alt { display: block; margin-top: 12px; color: #8fb4dc; font-size: 12.5px; text-align: center; }
     .tp .about-body { font-size: 14px; line-height: 2; color: var(--t-body); }
     .tp .about-body + .about-body { margin-top: 16px; }
     .tp .about-body .q { color: #c3cde6; }
@@ -448,6 +456,31 @@
     summary::marker { content: ""; }
 
     
+    /* ===== 全35タイプ一覧（トップ）：元素の紋章・名前・色で見分け、開くと5タイプ ===== */
+    .tl { margin-top:28px; padding-top:22px; border-top:1px solid #1c2232; }
+    .tl-eyebrow { display:flex; align-items:center; gap:10px; color:#e0b07a; font-size:12.5px; font-weight:700; letter-spacing:.1em; margin:0 0 6px; }
+    .tl-eyebrow::before { content:''; width:8px; height:8px; transform:rotate(45deg); background:#e0b07a; }
+    .tl-eyebrow::after { content:''; flex:1; height:1px; background:#262a38; }
+    .tl-h { font-family:var(--font-jp); font-weight:700; color:#f4efe6; font-size:26px; letter-spacing:.06em; margin:0 0 4px; }
+    .tl-sub { color:#a4acb8; font-size:13px; line-height:1.7; margin:0 0 14px; }
+    .tl-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); grid-auto-flow:row dense; gap:8px; }
+    .tl-el { border:1px solid #2a2a38; border-radius:12px; background:#12121a; min-width:0; scroll-margin-top:12px; }
+    .tl-el[open] { grid-column:1 / -1; border-color:color-mix(in srgb, var(--el) 75%, #000); background:radial-gradient(110% 120% at 0% 0%, color-mix(in srgb, var(--el) 14%, transparent), transparent 60%), #14121b; }
+    .tl-el summary { display:flex; align-items:center; gap:8px; min-height:48px; padding:6px 10px; cursor:pointer; list-style:none; }
+    .tl-el summary::-webkit-details-marker { display:none; }
+    .tl-el summary img { width:32px; height:32px; flex:none; object-fit:contain; }
+    .tl-el[open] summary img { width:40px; height:40px; }
+    .tl-name { font-family:var(--font-jp); font-weight:700; color:var(--el-l); font-size:17px; }
+    .tl-el[open] .tl-name { font-size:20px; }
+    .tl-count { display:none; margin-left:auto; color:#a4acb8; font-size:12.5px; }
+    .tl-el[open] .tl-count { display:inline; }
+    .tl-el ul { list-style:none; margin:0; padding:0 12px 10px; }
+    .tl-el li + li { border-top:1px solid #262433; }
+    .tl-el li a { display:grid; grid-template-columns:1.1em 5.2em 1fr auto; align-items:center; gap:6px; min-height:44px; text-decoration:none; color:#e6e8ee; font-size:14.5px; }
+    .tl-el li a::before { content:''; width:6px; height:6px; transform:rotate(45deg); background:var(--el-l); justify-self:center; }
+    .tl-n { font-family:var(--font-jp); font-weight:700; color:#f2ede4; }
+    .tl-w { color:#a4acb8; font-size:13.5px; }
+    .tl-c { color:var(--el-l); font-size:12px; letter-spacing:.06em; }
   </style>
   <script type="application/ld+json">
   {
@@ -456,7 +489,7 @@
     "name": "元素診断",
     "alternateName": "Element Diagnosis",
     "url": "https://element-diagnosis-five.vercel.app/",
-    "description": "100問の設問から、あなたの内なる気質「元素」・対人様式「武器」・価値観「国家」を映し出す心理傾向診断。Big Five × エニアグラム × 価値観理論を土台にした、原神ファンのための自己理解ツール。",
+    "description": "原神の元素・武器種・国家で性格を映す、無料の性格診断。100問から、あなたの気質「元素」・関わり方「武器」・価値観「国家」と35タイプを示します。Big Five・対人スタイル・シュワルツの価値観理論を参考にした、原神ファンのための自己理解ツール。",
     "applicationCategory": "LifestyleApplication",
     "operatingSystem": "Any",
     "offers": {
@@ -516,48 +549,50 @@
       <p class="hero-desc jp">
         人の内には、7つの気質が流れている。<br>
         100の問いに答えることで、あなたの<strong class="k-el">元素（内的な性質）</strong>と<strong class="k-wp">武器（強みと関わり方）</strong>と<strong class="k-na">国家（価値観）</strong>が映し出される。
-        <br><span class="theory-line">Big Five × エニアグラム × 価値観理論を土台にした、自己理解のための診断。</span>
-        <span class="en">Seven elements flow within. 100 questions to reveal your nature, strength, and values — a self-understanding diagnosis built on Big Five, Enneagram, and Values Theory.</span>
+        <br><span class="theory-line">Big Five × 対人スタイル × 価値観理論を参考にした、自己理解のための診断。</span>
+        <span class="en">Seven elements flow within. 100 questions to reveal your nature, strength, and values — a self-understanding diagnosis informed by the Big Five, interpersonal style, and Schwartz's Values Theory.</span>
       </p>
       <div class="cta-wrap">
         <a href="javascript:void(0)" class="cta" onclick="startNewDiagnosisV2()">診断をはじめる <span class="en">— Start</span></a>
         <a href="/mypage.html" class="hero-record-link" onclick="trackEvent('mypage_entry_click',{entry_point:'top'})">診断記録を見る <span class="arw">→</span></a>
       </div>
+      <!-- 邪眼診断のリリース告知（2026-11-12）。内部リンクには UTM を付けない（付けると検索などの本来の流入元が「eti / banner」に上書きされる）。
+           バナーからの移動は jagan_banner_click（entry_point:'top'）で数える -->
+      <a class="jagan-banner" href="/jagan/" onclick="trackEvent('jagan_banner_click',{entry_point:'top'})">
+        <span class="jb-img"><img src="/assets/ogp/jagan-top-20261112.jpg" alt="" width="1200" height="630" loading="lazy" decoding="async"></span>
+        <span class="jb-body">
+          <span class="jb-new">NEW RELEASE</span>
+          <span class="jb-title">邪眼診断、リリース開始</span>
+          <span class="jb-sub">あなたの願いは、どんな深淵を映すのか。<br>50の問いが映す、あなたの邪眼とファトゥス。</span>
+          <span class="jb-go">邪眼診断をはじめる <span class="arw">→</span></span>
+        </span>
+      </a>
     </div>
     <span class="hero-scroll" aria-hidden="true"></span>
   </section>
 
   <div class="deep">
-    <!-- 診断済みの方への購入導線：100問に答え直さず、以前の結果からレポートを購入する（js は下の EdReturning） -->
-    <section class="returning wrap" id="returning" aria-labelledby="returning-h">
-      <p class="eyebrow">For Returning Travelers</p>
-      <h2 class="h2" id="returning-h">すでに診断を終えたアナタへ</h2>
-      <p class="returning-body jp">もう一度、100の問いに答える必要はありません。</p>
-      <button type="button" class="returning-cta" id="returningCta">以前の結果からレポートを購入する <span class="arw" aria-hidden="true">→</span></button>
-      <div class="returning-panel" id="returningPanel" role="status" aria-live="polite" hidden></div>
-    </section>
-
     <!-- ABOUT -->
     <section class="about wrap" id="about-intro">
       <p class="eyebrow">About this Diagnosis</p>
       <h2 class="h2">なぜ、元素で性格を測るのか</h2>
       <p class="about-body jp">
-        ビッグファイブやエニアグラム、価値観理論といった心理尺度は、自分を知るための優れた地図だ。しかし数字や抽象的なラベルは、心に留まりにくい。そこでワタシは、原神というゲームの<span class="q">「元素」「国家」</span>体系に着目した。各キャラクターのパーソナリティに割り当てられた元素と、彼らが生きる国家を、心理傾向の軸として再解釈することで、結果が物語として記憶に残る診断を設計した。
+        ビッグファイブや価値観理論といった心理学の枠組みは、自分を知るための優れた地図だ。しかし数字や抽象的なラベルは、心に留まりにくい。そこでワタシは、原神というゲームの<span class="q">「元素」「国家」</span>体系に着目した。各キャラクターのパーソナリティに割り当てられた元素と、彼らが生きる国家を、心理傾向の軸として再解釈することで、結果が物語として記憶に残る診断を設計した。
       </p>
       <p class="about-body triad jp">
         <b class="k-el">元素</b>は内的な気質。<b class="k-wp">武器</b>は他者との関わり方。<b class="k-na">国家</b>は何を大切にするかという価値観。3つの掛け合わせが、あなたという人間の輪郭を描く。
       </p>
-      <p class="about-en">Big Five, Enneagram, and Values Theory provide reference frameworks for the diagnosis. The seven elements and seven nations provide the story that makes results memorable. Designed by a writer who spent years studying personality psychology and 118 characters across all seven elements and nations.</p>
+      <p class="about-en">The Big Five, interpersonal style, and Schwartz's Values Theory provide reference frameworks for the diagnosis. The seven elements and seven nations provide the story that makes results memorable. Designed by a writer who spent years studying personality psychology and 118 characters across all seven elements and nations.</p>
       <a class="link" href="https://note.com/mondayaxad/n/ne73b307f6273" target="_blank" rel="noopener">この診断が生まれた経緯を、noteで読む <span class="arw">→</span></a>
       <div class="theory">
-        <p class="theory-names">Big Five<i>/</i>Enneagram<i>/</i>Values Theory</p>
+        <p class="theory-names">Big Five<i>/</i>Interpersonal Style<i>/</i>Values Theory</p>
         <details>
           <summary class="link">診断設計と心理理論について <span class="arw">→</span></summary>
           <dl>
             <div class="item"><dt>略称</dt><dd>ETI（Element Type Indicator）<small>"What's your ETI?"</small></dd></div>
             <div class="item"><dt>診断形式</dt><dd>100問 / 5段階回答<small>100 questions · 5-point scale</small></dd></div>
             <div class="item"><dt>測定軸</dt><dd>7元素 × 5武器 × 7国家<small>7 elements × 5 weapons × 7 nations</small></dd></div>
-            <div class="item"><dt>土台となる尺度</dt><dd>Big Five / Enneagram / Values Theory<small>Academic psychology base</small></dd></div>
+            <div class="item"><dt>参考にした理論</dt><dd class="jp">Big Five（性格の5因子）／ 対人スタイル ／ シュワルツの価値観理論。設問は独自に作成したもので、標準化された心理検査ではありません<small>Informed by the Big Five, interpersonal style &amp; Schwartz's Values Theory</small></dd></div>
             <div class="item"><dt>料金</dt><dd class="jp">診断：無料 ／ 解析レポート：¥1,000<small>Diagnosis: Free / Analysis: ¥1,000</small></dd></div>
           </dl>
         </details>
@@ -1733,6 +1768,7 @@ function startNewDiagnosisV2() {
   window.__diagnosisVersion = 'ETI-2.0';
   window.__mirrorVersion = null; // 新規診断は最新のMIRROR版で計算する
   if (typeof gtag === 'function') gtag('event','quiz_start',{event_category:'diagnosis',diagnosis_version:'ETI-2.0'});
+  if (window.EdAnalytics) EdAnalytics.start('eti');
   setPhase('quiz');
 }
 function setPhase(p) {
@@ -1754,7 +1790,7 @@ function renderIntro(root) {
         <h2 style="color:#90c8ec;font-size:14px;margin:0 0 10px">この診断について</h2>
         <p style="color:#6a90a8;font-size:12.5px;line-height:1.75;margin:0">
           100問の設問から、あなたの中に眠る<strong style="color:#90c0e0">元素（内的な気質）</strong>・<strong style="color:#90c0e0">武器（強み・関わり方）</strong>・<strong style="color:#e0c890">国家（価値観）</strong>を導き出し、最も近しいキャラクターを映し出します。<br>
-          <span style="color:#6a95b8;font-size:10.5px">（土台には、Big Five・エニアグラム・価値観理論という、確立された心理学の理論を使用）</span>
+          <span style="color:#6a95b8;font-size:10.5px">（Big Five・対人スタイル・シュワルツの価値観理論を参考に設計した、自己理解のための診断です）</span>
         </p>
       </div>
 
@@ -1789,87 +1825,83 @@ function renderIntro(root) {
         </div>
       </div>
 
-      <!-- ===== 全35タイプ一覧（元素ごとに色分け・SEO用の静的リンク） ===== -->
-      <section style="margin-top:26px;padding-top:20px;border-top:1px solid #182838">
-        <h2 style="color:#90c8ec;font-size:13px;letter-spacing:1.5px;margin:0 0 4px">全35タイプ一覧</h2>
-        <p style="color:#5a80a0;font-size:11px;line-height:1.7;margin:0 0 14px">元素（7）× 武器種（5）＝ 全35タイプ。気になるタイプから見てみてください。</p>
-
-        <details style="margin-bottom:8px;border-left:3px solid #c84a20;background:#0c0a14;border-radius:0 6px 6px 0">
-          <summary style="cursor:pointer;padding:10px 12px;color:#e8a878;font-size:13px;font-weight:600;list-style:none">炎</summary>
-          <div style="padding:2px 12px 12px;display:flex;flex-direction:column;gap:6px">
-            <a href="https://element-diagnosis-five.vercel.app/type/pysw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">炎×片手剣「殉愛者」（PYSW）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/pycm" style="color:#d8dce8;font-size:12.5px;text-decoration:none">炎×両手剣「猛進者」（PYCM）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/pypl" style="color:#d8dce8;font-size:12.5px;text-decoration:none">炎×長柄「殉衛者」（PYPL）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/pyct" style="color:#d8dce8;font-size:12.5px;text-decoration:none">炎×法器「信奉者」（PYCT）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/pybw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">炎×弓「貫徹者」（PYBW）</a>
-          </div>
-        </details>
-
-        <details style="margin-bottom:8px;border-left:3px solid #2a7aaa;background:#0c0a14;border-radius:0 6px 6px 0">
-          <summary style="cursor:pointer;padding:10px 12px;color:#8fd0ec;font-size:13px;font-weight:600;list-style:none">水</summary>
-          <div style="padding:2px 12px 12px;display:flex;flex-direction:column;gap:6px">
-            <a href="https://element-diagnosis-five.vercel.app/type/hysw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">水×片手剣「同調者」（HYSW）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/hycm" style="color:#d8dce8;font-size:12.5px;text-decoration:none">水×両手剣「孤淵者」（HYCM）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/hypl" style="color:#d8dce8;font-size:12.5px;text-decoration:none">水×長柄「静衛者」（HYPL）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/hyct" style="color:#d8dce8;font-size:12.5px;text-decoration:none">水×法器「深識者」（HYCT）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/hybw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">水×弓「静観者」（HYBW）</a>
-          </div>
-        </details>
-
-        <details style="margin-bottom:8px;border-left:3px solid #4a80c0;background:#0c0a14;border-radius:0 6px 6px 0">
-          <summary style="cursor:pointer;padding:10px 12px;color:#a8c8ec;font-size:13px;font-weight:600;list-style:none">氷</summary>
-          <div style="padding:2px 12px 12px;display:flex;flex-direction:column;gap:6px">
-            <a href="https://element-diagnosis-five.vercel.app/type/crsw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">氷×片手剣「宿縁者」（CRSW）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/crcm" style="color:#d8dce8;font-size:12.5px;text-decoration:none">氷×両手剣「破氷者」（CRCM）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/crpl" style="color:#d8dce8;font-size:12.5px;text-decoration:none">氷×長柄「氷壁者」（CRPL）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/crct" style="color:#d8dce8;font-size:12.5px;text-decoration:none">氷×法器「透徹者」（CRCT）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/crbw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">氷×弓「凍眼者」（CRBW）</a>
-          </div>
-        </details>
-
-        <details style="margin-bottom:8px;border-left:3px solid #9040d0;background:#0c0a14;border-radius:0 6px 6px 0">
-          <summary style="cursor:pointer;padding:10px 12px;color:#d0a0f0;font-size:13px;font-weight:600;list-style:none">雷</summary>
-          <div style="padding:2px 12px 12px;display:flex;flex-direction:column;gap:6px">
-            <a href="https://element-diagnosis-five.vercel.app/type/elsw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">雷×片手剣「共鳴者」（ELSW）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/elcm" style="color:#d8dce8;font-size:12.5px;text-decoration:none">雷×両手剣「破天者」（ELCM）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/elpl" style="color:#d8dce8;font-size:12.5px;text-decoration:none">雷×長柄「雷衛者」（ELPL）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/elct" style="color:#d8dce8;font-size:12.5px;text-decoration:none">雷×法器「電導者」（ELCT）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/elbw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">雷×弓「疾光者」（ELBW）</a>
-          </div>
-        </details>
-
-        <details style="margin-bottom:8px;border-left:3px solid #3a8a60;background:#0c0a14;border-radius:0 6px 6px 0">
-          <summary style="cursor:pointer;padding:10px 12px;color:#8fd8b0;font-size:13px;font-weight:600;list-style:none">風</summary>
-          <div style="padding:2px 12px 12px;display:flex;flex-direction:column;gap:6px">
-            <a href="https://element-diagnosis-five.vercel.app/type/answ" style="color:#d8dce8;font-size:12.5px;text-decoration:none">風×片手剣「随風者」（ANSW）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/ancm" style="color:#d8dce8;font-size:12.5px;text-decoration:none">風×両手剣「疾風者」（ANCM）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/anpl" style="color:#d8dce8;font-size:12.5px;text-decoration:none">風×長柄「客衛者」（ANPL）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/anct" style="color:#d8dce8;font-size:12.5px;text-decoration:none">風×法器「漂識者」（ANCT）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/anbw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">風×弓「追風者」（ANBW）</a>
-          </div>
-        </details>
-
-        <details style="margin-bottom:8px;border-left:3px solid #a07830;background:#0c0a14;border-radius:0 6px 6px 0">
-          <summary style="cursor:pointer;padding:10px 12px;color:#e0c088;font-size:13px;font-weight:600;list-style:none">岩</summary>
-          <div style="padding:2px 12px 12px;display:flex;flex-direction:column;gap:6px">
-            <a href="https://element-diagnosis-five.vercel.app/type/gesw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">岩×片手剣「包容者」（GESW）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/gecm" style="color:#d8dce8;font-size:12.5px;text-decoration:none">岩×両手剣「破岩者」（GECM）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/gepl" style="color:#d8dce8;font-size:12.5px;text-decoration:none">岩×長柄「護衛者」（GEPL）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/gect" style="color:#d8dce8;font-size:12.5px;text-decoration:none">岩×法器「礎識者」（GECT）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/gebw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">岩×弓「遠護者」（GEBW）</a>
-          </div>
-        </details>
-
-        <details style="margin-bottom:0;border-left:3px solid #4a8020;background:#0c0a14;border-radius:0 6px 6px 0">
-          <summary style="cursor:pointer;padding:10px 12px;color:#9cd070;font-size:13px;font-weight:600;list-style:none">草</summary>
-          <div style="padding:2px 12px 12px;display:flex;flex-direction:column;gap:6px">
-            <a href="https://element-diagnosis-five.vercel.app/type/desw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">草×片手剣「縁結者」（DESW）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/decm" style="color:#d8dce8;font-size:12.5px;text-decoration:none">草×両手剣「芽吹者」（DECM）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/depl" style="color:#d8dce8;font-size:12.5px;text-decoration:none">草×長柄「育衛者」（DEPL）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/dect" style="color:#d8dce8;font-size:12.5px;text-decoration:none">草×法器「叡結者」（DECT）</a>
-            <a href="https://element-diagnosis-five.vercel.app/type/debw" style="color:#d8dce8;font-size:12.5px;text-decoration:none">草×弓「見守者」（DEBW）</a>
-          </div>
-        </details>
+      <!-- ===== 全35タイプ一覧（元素の紋章・色で選ぶ。各タイプ解説への静的リンク。解説から戻った時は読んでいた元素を開く：initTypeList） ===== -->
+      <section class="tl" id="types" aria-labelledby="types-h">
+        <p class="tl-eyebrow">トップからタイプを選ぶ</p>
+        <h2 id="types-h" class="tl-h">全35タイプ一覧</h2>
+        <p class="tl-sub">7つの元素と5つの武器種から、気になるタイプを選ぶ。</p>
+        <div class="tl-grid">
+          <details class="tl-el" id="types-pyro" data-el="pyro" style="--el:#c84a20;--el-l:#e8a878">
+            <summary><img src="/assets/emblems/2026-autumn/record/pyro.png" width="40" height="40" alt="" loading="lazy"><span class="tl-name">炎</span><span class="tl-count">5タイプ</span></summary>
+            <ul>
+              <li><a href="/type/pysw"><span class="tl-n">殉愛者</span><span class="tl-w">片手剣</span><span class="tl-c">PYSW</span></a></li>
+              <li><a href="/type/pycm"><span class="tl-n">猛進者</span><span class="tl-w">両手剣</span><span class="tl-c">PYCM</span></a></li>
+              <li><a href="/type/pypl"><span class="tl-n">殉衛者</span><span class="tl-w">長柄</span><span class="tl-c">PYPL</span></a></li>
+              <li><a href="/type/pyct"><span class="tl-n">信奉者</span><span class="tl-w">法器</span><span class="tl-c">PYCT</span></a></li>
+              <li><a href="/type/pybw"><span class="tl-n">貫徹者</span><span class="tl-w">弓</span><span class="tl-c">PYBW</span></a></li>
+            </ul>
+          </details>
+          <details class="tl-el" id="types-hydro" data-el="hydro" style="--el:#2a7aaa;--el-l:#8fd0ec">
+            <summary><img src="/assets/emblems/2026-autumn/record/hydro.png" width="40" height="40" alt="" loading="lazy"><span class="tl-name">水</span><span class="tl-count">5タイプ</span></summary>
+            <ul>
+              <li><a href="/type/hysw"><span class="tl-n">同調者</span><span class="tl-w">片手剣</span><span class="tl-c">HYSW</span></a></li>
+              <li><a href="/type/hycm"><span class="tl-n">孤淵者</span><span class="tl-w">両手剣</span><span class="tl-c">HYCM</span></a></li>
+              <li><a href="/type/hypl"><span class="tl-n">静衛者</span><span class="tl-w">長柄</span><span class="tl-c">HYPL</span></a></li>
+              <li><a href="/type/hyct"><span class="tl-n">深識者</span><span class="tl-w">法器</span><span class="tl-c">HYCT</span></a></li>
+              <li><a href="/type/hybw"><span class="tl-n">静観者</span><span class="tl-w">弓</span><span class="tl-c">HYBW</span></a></li>
+            </ul>
+          </details>
+          <details class="tl-el" id="types-cryo" data-el="cryo" style="--el:#4a80c0;--el-l:#a8c8ec">
+            <summary><img src="/assets/emblems/2026-autumn/record/cryo.png" width="40" height="40" alt="" loading="lazy"><span class="tl-name">氷</span><span class="tl-count">5タイプ</span></summary>
+            <ul>
+              <li><a href="/type/crsw"><span class="tl-n">宿縁者</span><span class="tl-w">片手剣</span><span class="tl-c">CRSW</span></a></li>
+              <li><a href="/type/crcm"><span class="tl-n">破氷者</span><span class="tl-w">両手剣</span><span class="tl-c">CRCM</span></a></li>
+              <li><a href="/type/crpl"><span class="tl-n">氷壁者</span><span class="tl-w">長柄</span><span class="tl-c">CRPL</span></a></li>
+              <li><a href="/type/crct"><span class="tl-n">透徹者</span><span class="tl-w">法器</span><span class="tl-c">CRCT</span></a></li>
+              <li><a href="/type/crbw"><span class="tl-n">凍眼者</span><span class="tl-w">弓</span><span class="tl-c">CRBW</span></a></li>
+            </ul>
+          </details>
+          <details class="tl-el" id="types-electro" data-el="electro" style="--el:#9040d0;--el-l:#d0a0f0">
+            <summary><img src="/assets/emblems/2026-autumn/record/electro.png" width="40" height="40" alt="" loading="lazy"><span class="tl-name">雷</span><span class="tl-count">5タイプ</span></summary>
+            <ul>
+              <li><a href="/type/elsw"><span class="tl-n">共鳴者</span><span class="tl-w">片手剣</span><span class="tl-c">ELSW</span></a></li>
+              <li><a href="/type/elcm"><span class="tl-n">破天者</span><span class="tl-w">両手剣</span><span class="tl-c">ELCM</span></a></li>
+              <li><a href="/type/elpl"><span class="tl-n">雷衛者</span><span class="tl-w">長柄</span><span class="tl-c">ELPL</span></a></li>
+              <li><a href="/type/elct"><span class="tl-n">電導者</span><span class="tl-w">法器</span><span class="tl-c">ELCT</span></a></li>
+              <li><a href="/type/elbw"><span class="tl-n">疾光者</span><span class="tl-w">弓</span><span class="tl-c">ELBW</span></a></li>
+            </ul>
+          </details>
+          <details class="tl-el" id="types-anemo" data-el="anemo" style="--el:#3a8a60;--el-l:#8fd8b0">
+            <summary><img src="/assets/emblems/2026-autumn/record/anemo.png" width="40" height="40" alt="" loading="lazy"><span class="tl-name">風</span><span class="tl-count">5タイプ</span></summary>
+            <ul>
+              <li><a href="/type/answ"><span class="tl-n">随風者</span><span class="tl-w">片手剣</span><span class="tl-c">ANSW</span></a></li>
+              <li><a href="/type/ancm"><span class="tl-n">疾風者</span><span class="tl-w">両手剣</span><span class="tl-c">ANCM</span></a></li>
+              <li><a href="/type/anpl"><span class="tl-n">客衛者</span><span class="tl-w">長柄</span><span class="tl-c">ANPL</span></a></li>
+              <li><a href="/type/anct"><span class="tl-n">漂識者</span><span class="tl-w">法器</span><span class="tl-c">ANCT</span></a></li>
+              <li><a href="/type/anbw"><span class="tl-n">追風者</span><span class="tl-w">弓</span><span class="tl-c">ANBW</span></a></li>
+            </ul>
+          </details>
+          <details class="tl-el" id="types-geo" data-el="geo" style="--el:#a07830;--el-l:#e0c088">
+            <summary><img src="/assets/emblems/2026-autumn/record/geo.png" width="40" height="40" alt="" loading="lazy"><span class="tl-name">岩</span><span class="tl-count">5タイプ</span></summary>
+            <ul>
+              <li><a href="/type/gesw"><span class="tl-n">包容者</span><span class="tl-w">片手剣</span><span class="tl-c">GESW</span></a></li>
+              <li><a href="/type/gecm"><span class="tl-n">破岩者</span><span class="tl-w">両手剣</span><span class="tl-c">GECM</span></a></li>
+              <li><a href="/type/gepl"><span class="tl-n">護衛者</span><span class="tl-w">長柄</span><span class="tl-c">GEPL</span></a></li>
+              <li><a href="/type/gect"><span class="tl-n">礎識者</span><span class="tl-w">法器</span><span class="tl-c">GECT</span></a></li>
+              <li><a href="/type/gebw"><span class="tl-n">遠護者</span><span class="tl-w">弓</span><span class="tl-c">GEBW</span></a></li>
+            </ul>
+          </details>
+          <details class="tl-el" id="types-dendro" data-el="dendro" style="--el:#4a8020;--el-l:#9cd070">
+            <summary><img src="/assets/emblems/2026-autumn/record/dendro.png" width="40" height="40" alt="" loading="lazy"><span class="tl-name">草</span><span class="tl-count">5タイプ</span></summary>
+            <ul>
+              <li><a href="/type/desw"><span class="tl-n">縁結者</span><span class="tl-w">片手剣</span><span class="tl-c">DESW</span></a></li>
+              <li><a href="/type/decm"><span class="tl-n">芽吹者</span><span class="tl-w">両手剣</span><span class="tl-c">DECM</span></a></li>
+              <li><a href="/type/depl"><span class="tl-n">育衛者</span><span class="tl-w">長柄</span><span class="tl-c">DEPL</span></a></li>
+              <li><a href="/type/dect"><span class="tl-n">叡結者</span><span class="tl-w">法器</span><span class="tl-c">DECT</span></a></li>
+              <li><a href="/type/debw"><span class="tl-n">見守者</span><span class="tl-w">弓</span><span class="tl-c">DEBW</span></a></li>
+            </ul>
+          </details>
+        </div>
       </section>
 
       <p style="color:#5a80a0;font-size:10.5px;text-align:center;margin-top:12px;line-height:1.6">
@@ -1880,7 +1912,35 @@ function renderIntro(root) {
   if (startBtn) {
     startBtn.addEventListener('click', startNewDiagnosisV2);
   }
+  initTypeList(root);
+}
 
+// 全35タイプ一覧：一度に開く元素は1つ。タイプ解説から戻った時は、読んでいた元素を開く
+//   ・解説の「全35タイプ一覧に戻る」は /#types-<元素>（開いて、その位置へ移る）
+//   ・ブラウザの「戻る」は、解説ページが残した sessionStorage（ed_types_open_v1）の元素を開く（位置はブラウザに任せる）
+var TYPE_LIST_KEY = 'ed_types_open_v1';
+function initTypeList(root) {
+  var items = root.querySelectorAll('details.tl-el');
+  if (!items.length) return;
+  function byEl(el) { for (var i = 0; i < items.length; i++) if (items[i].getAttribute('data-el') === el) return items[i]; return null; }
+  Array.prototype.forEach.call(items, function (d) {
+    d.addEventListener('toggle', function () {
+      if (!d.open) return;
+      Array.prototype.forEach.call(items, function (o) { if (o !== d && o.open) o.open = false; });
+      try { sessionStorage.setItem(TYPE_LIST_KEY, d.getAttribute('data-el')); } catch (e) { /* 保存できなくても開閉はできる */ }
+      // 開いた元素を URL（#types-<元素>）にも残す：解説へ進んでブラウザの「戻る」で帰った時も、この元素が開く
+      if (!location.hash || /^#types-[a-z]+$/.test(location.hash)) {
+        try { history.replaceState(history.state, '', location.pathname + location.search + '#types-' + d.getAttribute('data-el')); } catch (e) { /* そのまま */ }
+      }
+    });
+  });
+  var m = /^#types-([a-z]+)$/.exec(location.hash || '');
+  var saved = null;
+  try { saved = sessionStorage.getItem(TYPE_LIST_KEY); } catch (e) { /* なし */ }
+  var target = byEl(m ? m[1] : saved);
+  if (!target) return;
+  target.open = true;
+  if (m) requestAnimationFrame(function () { target.scrollIntoView({ block: 'start' }); });
 }
 
 /* ===== QUIZ ===== */
@@ -2221,6 +2281,7 @@ function selectAnswerV2ForUI(itemId, v) {
   var wasFocused = (itemId === quizFocusIdxV2);
   var result = selectAnswerV2(itemId, v);
   quizFocusIdxV2 = itemId;
+  if (window.EdAnalytics && result.action === 'selected') EdAnalytics.progress('eti', order.filter(function (id) { return answersV2[id] !== undefined; }).length, order.length);
 
   if (result.action === 'deselected') {
     renderQuizV2(root);
@@ -2268,7 +2329,10 @@ function prevQV2() {
 function showResultV2() {
   var order = getV2CanonicalOrder();
   if (isCompleteV2(order)) {
-    if (typeof gtag === 'function') gtag('event','quiz_complete',{event_category:'diagnosis',value:getAnsweredCountV2(),diagnosis_version:'ETI-2.0'});
+    var edDur = window.EdAnalytics ? EdAnalytics.durationParams('eti') : {};
+    if (typeof gtag === 'function') gtag('event','quiz_complete',Object.assign({event_category:'diagnosis',value:getAnsweredCountV2(),diagnosis_version:'ETI-2.0',diagnosis_type:'eti'}, edDur));
+    // 全設問の回答（並びは採点の正規順。回答 -2〜+2 を 1〜5 に）
+    if (window.EdAnalytics) EdAnalytics.answers('eti', (typeof ETI_V2_META !== 'undefined' && ETI_V2_META.itemSetVersion) || 'ETI-ITEM-2.0.0', order, answersV2, function (v) { return Number(v) + 3; });
     // 診断を完了した直後の結果：表示の後に固有リンク（/result#r=）を作る（診断ごとに別のリンク）
     window.__resultNonce = (window.__resultNonce || 0) + 1;
     window.__freshResultNonce = window.__resultNonce; // GA4：この結果は、いま診断を完了したもの（result_origin=fresh）
@@ -2340,10 +2404,12 @@ function renderResult(root) {
       top_character_match: top1.match
     });
     // 傾向分析用：新診断（ETI-2.0）を、いま完了した結果だけ、20軸の点を10点刻みにして1イベントで送る。
-    //   個々の100問の回答・診断コード・記録 ID は送らない（10点刻みで元の回答へは戻せない）。開き直した結果は数えない（二重計上を避ける）
+    //   診断コード・記録 ID は送らない（設問ごとの回答は、完了時に quiz_answers で別に送る。js/ga.js の EdAnalytics.answers）。開き直した結果は数えない（二重計上を避ける）
     if (diagnosisVersion === 'ETI-2.0' && resultIsFresh) {
       var band = function (v) { return Math.max(0, Math.min(100, Math.round(Number(v) / 10) * 10)); };
-      var prof = { event_category: 'diagnosis', diagnosis_version: diagnosisVersion, element: topEl, weapon: topW, nation: topNat };
+      // GA4 は1イベントのパラメータが25個まで。ページ単位で自動で付く content_group・traffic_type の分を空けて、22個に抑える
+      //   （武器・国家・版は、同じ結果の diagnosis_result に入っている。超えると GA4 がどれかを黙って落とす：2026-11-16 に外向性 p_E が欠けた）
+      var prof = { diagnosis_type: 'eti', element: topEl };
       ['O', 'C', 'E', 'A', 'N'].forEach(function (k) { prof['p_' + k] = band(results.personality[k]); });
       ['AGY', 'REL', 'ROL', 'REF', 'AUT'].forEach(function (k) { prof['s_' + k] = band(results.style[k]); });
       ['SD', 'ST', 'HE', 'AC', 'PO', 'SE', 'CO', 'TR', 'BE', 'UN'].forEach(function (k) { prof['v_' + k] = band(results.values[k]); });
@@ -2465,6 +2531,9 @@ function renderResult(root) {
         </button>
       </div>
 
+
+      <!-- 結果の納得度（いま診断を完了した結果だけに出す） -->
+      <div id="edFitBox"></div>
 
       <!-- 詳細レポート誘導（ロックパターン版） -->
       <div style="margin-bottom:18px">
@@ -2812,7 +2881,7 @@ function renderResult(root) {
     && typeof EdGuestPurchase !== 'undefined' && EdGuestPurchase.salesOpen()
     && /^[0-9a-z]{20,80}$/.test(String(shortCode || ''));
   function legacyBuy(btn, source) {
-    if (typeof gtag === 'function') gtag('event', btn === lockUnlockAllBtn ? 'unlock_all_click' : 'lock_cta_click', { event_category: 'conversion', diagnosis_version: 'legacy-v1' });
+    if (typeof gtag === 'function') gtag('event', btn === lockUnlockAllBtn ? 'unlock_all_click' : 'lock_cta_click', { event_category: 'conversion', diagnosis_version: 'legacy-v1', diagnosis_type: 'eti', product_id: 'eti_core1_legacy' });
     location.href = LEGACY_BUY_URL + '?client_reference_id=' + encodeURIComponent(shortCode);
   }
   var guestFlow = !legacyResult && typeof EdGuestPurchase !== 'undefined';
@@ -2916,10 +2985,42 @@ function renderResult(root) {
     //   結び付けは先に引き継いだ1人だけ。済んだら、控えを消す。通信の失敗だけ、控えを残して「もう一度」を出す
     var LEGACY_HANDOFF_KEY = 'ed_legacy_handoff_v1';
     // 認証から戻った流れ（保存カードへ戻った）の時だけ、少し見せてからマイページへ移る（通常のログインでは使わない）
+    //   「保存しました」を実際に見せるため、保存カードが画面に入ってから ms 待って移る（入る前に数え始めない）。
+    //   カードが無い・画面に入らない（利用者が自分で動かした等）時も止まらないよう、3 秒で待つのをやめて移る。移動は1回だけ
+    var goMypageWhenSeen = function (ms) {
+      if (window.__edReturnToMypageGo) return;
+      window.__edReturnToMypageGo = true;
+      var card = document.getElementById('recordCard');
+      var start = Date.now();
+      // 「✓ 診断記録に保存しました」の見出しが画面に収まっているか（見出しが無ければカード）。一部だけ見えている状態では数え始めない
+      var seen = function () {
+        if (!card || !card.isConnected) return true;
+        var el = (card.querySelector && card.querySelector('.rs-done-head')) || card;
+        var r = el.getBoundingClientRect();
+        var vh = window.innerHeight || document.documentElement.clientHeight;
+        return r.top >= 0 && r.bottom <= vh && r.bottom > r.top;
+      };
+      // 画面に収まったのを確かめたら、その状態が描画されてから（次の描画の後）ms を数える。
+      //   rAF が動かない時（背景のタブなど）も止まらないよう、500ms で数え始める
+      var afterPaint = function (fn) {
+        var done = false;
+        var once = function () { if (!done) { done = true; fn(); } };
+        if (typeof window.requestAnimationFrame === 'function') window.requestAnimationFrame(function () { window.requestAnimationFrame(once); });
+        setTimeout(once, 500);
+      };
+      var wait = function () {
+        if (seen() || Date.now() - start >= 3000) {
+          afterPaint(function () { setTimeout(function () { window.location.assign('/mypage.html'); }, ms); });
+          return;
+        }
+        setTimeout(wait, 50);
+      };
+      wait();
+    };
     var goMypageSoon = function (ms) {
       if (!window.__edReturnToRecordCard) return;
       window.__edReturnToMypageStarted = true;
-      setTimeout(function () { window.location.assign('/mypage.html'); }, ms);
+      goMypageWhenSeen(ms);
     };
     var readLegacyHandoff = function () {
       try {
@@ -3188,7 +3289,8 @@ function renderResult(root) {
     if (window.__edReturnToRecordCard) ['wheel', 'touchstart', 'keydown'].forEach(function (t) {
       window.addEventListener(t, function () { returnUserMoved = true; }, { once: true, passive: true });
     });
-    var scrollToRecordCard = function () { if (!returnUserMoved) recordCard.scrollIntoView({ block: 'center' }); };
+    // 瞬時に合わせる（html の scroll-behavior: smooth のままだと、下の方にあるカードまで動く途中でマイページへ移ってしまう）
+    var scrollToRecordCard = function () { if (!returnUserMoved) recordCard.scrollIntoView({ block: 'center', behavior: 'instant' }); };
     var showReturnedCard = function () {
       if (!window.__edReturnToRecordCard) return;
       scrollToRecordCard();
@@ -3214,7 +3316,7 @@ function renderResult(root) {
         return;
       }
       window.__edReturnToMypageStarted = true;
-      setTimeout(function () { window.location.assign('/mypage.html'); }, 800);
+      goMypageWhenSeen(800);
     };
     window.onSignedInFlowDone = function (r) {
       decideRecordState(r || {}).then(showReturnedCard).then(function () { goMypageAfterReturn(r); })
@@ -3380,6 +3482,8 @@ function edResultContext(root, code) {
   });
 }
 function initReportPurchase(root, code, refs) {
+  // 結果の納得度：いま診断を完了した結果だけ（共有リンク・保存した結果を開き直した時は出さない）
+  if (window.EdAnalytics && window.__freshResultNonce && window.__freshResultNonce === window.__resultNonce) EdAnalytics.mountFeedback(root.querySelector('#edFitBox'), 'eti');
   if (typeof EdBuy === 'undefined') return;
   var B = EdBuy;
   var open = B.salesOpen();
@@ -3430,11 +3534,16 @@ function initReportPurchase(root, code, refs) {
   var lockMsg = document.getElementById('guestAnalysisMsg');
   var aBtns = [refs.lockUnlockAllBtn].concat(Array.prototype.slice.call(refs.lockCtaBtns || [])).filter(Boolean);
   if (open) {
+    if (window.EdAnalytics) {
+      EdAnalytics.ctaView(aBtns, { diagnosis_type: 'eti', product_id: 'eti_analysis_v1', state: 'open', source: 'result' });
+      var cbv = root.querySelector('[data-buy-complete]');
+      if (cbv) EdAnalytics.ctaView([cbv], { diagnosis_type: 'eti', product_id: 'eti_complete_v1', state: 'open', source: 'result' });
+    }
     aBtns.forEach(function (btn) {
       prefetchOn(btn);
       btn.onclick = function (e) {
         e.preventDefault();
-        if (typeof gtag === 'function') gtag('event', btn === refs.lockUnlockAllBtn ? 'unlock_all_click' : 'lock_cta_click', { event_category: 'conversion' });
+        if (typeof gtag === 'function') gtag('event', btn === refs.lockUnlockAllBtn ? 'unlock_all_click' : 'lock_cta_click', { event_category: 'conversion', diagnosis_type: 'eti', product_id: 'eti_analysis_v1', state: 'open', source: btn === refs.lockUnlockAllBtn ? 'result' : 'result_lock' });
         buy('analysis', btn, lockMsg, btn === refs.lockUnlockAllBtn ? 'result' : 'result_lock');
       };
     });
@@ -3442,7 +3551,10 @@ function initReportPurchase(root, code, refs) {
   var cb = root.querySelector('[data-buy-complete]');
   if (cb) {
     if (!open) { cb.disabled = true; cb.classList.add('is-pending'); cb.setAttribute('aria-disabled', 'true'); cb.innerHTML = '<span class="ca-buy-main">まだ見えていない輪郭を読む</span><span class="ca-buy-sub">¥3,000（準備中）</span>'; }
-    else { prefetchOn(cb); cb.onclick = function () { buy('complete', cb, root.querySelector('[data-buy-msg]'), 'result'); }; }
+    else { prefetchOn(cb); cb.onclick = function () {
+      B.track('complete_offer_click', { product: 'complete', state: 'open', source: 'result' });
+      buy('complete', cb, root.querySelector('[data-buy-msg]'), 'result');
+    }; }
   }
   root.querySelectorAll('[data-buy-sample]').forEach(function (a) {
     a.addEventListener('click', function (e) {
@@ -3648,6 +3760,8 @@ function initGuestPurchase(root, code, refs, opts) {
 /* ===== BASIS ===== */
 function renderBasis(root) {
   const ACCENT = '#7ab8e8';
+  if (window.__diagnosisVersion === 'ETI-2.0') { renderBasisV2(root, ACCENT); return; }
+  // 以下は旧版（legacy-v1）の結果の理論。v1 は武器種をエニアグラムから導いていたため、当時の設計のまま示す
   root.innerHTML = `
     <section style="margin-top:32px">
       <h2 style="font-size:13px;letter-spacing:3px;color:${ACCENT};text-transform:uppercase;border-bottom:1px solid #182838;padding-bottom:8px;margin-bottom:24px">
@@ -3733,6 +3847,51 @@ function renderBasis(root) {
     </section>`;
 }
 
+// ETI v2 の結果の理論（表示だけ。採点・判定には触れない）
+//   元素＝Big Five（PERSONALITY 5軸）、武器種＝対人スタイル（STYLE 5軸）、国家＝シュワルツの価値観（VALUES 10軸）。
+function renderBasisV2(root, ACCENT) {
+  const box = 'background:#0a1420;border:1px solid #182838;border-radius:10px;padding:18px 20px;margin-bottom:16px';
+  const h3 = 'color:#a8d8f0;font-size:13px;margin:0 0 8px';
+  const p = 'color:#6a90a8;font-size:12.5px;line-height:1.85;margin:0';
+  root.innerHTML = `
+    <section style="margin-top:32px">
+      <h2 style="font-size:13px;letter-spacing:3px;color:${ACCENT};text-transform:uppercase;border-bottom:1px solid #182838;padding-bottom:8px;margin-bottom:24px">
+        理論的背景
+      </h2>
+      <div style="${box}">
+        <p style="${p}">
+          本診断は、<strong style="color:#a8d8f0">Big Five（性格の5因子）</strong>・<strong style="color:#a8d8f0">対人スタイル</strong>・<strong style="color:#e0c890">シュワルツの基本的価値観理論</strong>という3つの枠組みを参考に設計しています。
+          100問の回答を3つの領域に分けて読み取り、それぞれに最も近い元素・武器種・国家を示します。
+        </p>
+      </div>
+      <div style="${box}">
+        <h3 style="${h3}">① 元素 × Big Five</h3>
+        <p style="${p}">開放性・誠実性・外向性・協調性・神経症傾向の5つの傾向から、あなたの回答に最も近い気質の元素を示します。</p>
+      </div>
+      <div style="${box}">
+        <h3 style="${h3}">② 武器種 × 対人スタイル</h3>
+        <p style="${p}">主導性・関係調整・役割持続・媒介思考・自律距離の5つの軸（本診断で独自に定義した、人との関わり方の傾向）から、最も近い武器種を示します。</p>
+      </div>
+      <div style="${box}">
+        <h3 style="color:#e0c890;font-size:13px;margin:0 0 8px">③ 国家 × 価値観理論（シュワルツ）</h3>
+        <p style="${p}">10の基本的価値観のうち、あなたが相対的に何を重んじるかの配分から、最も近い国家を示します。</p>
+      </div>
+      <p style="color:#5a7a90;font-size:11.5px;line-height:1.8;margin:0 0 24px">
+        設問はすべて独自に作成したもので、標準化された心理検査ではありません。結果は自己理解のための目安であり、医療的・臨床的な診断ではありません。
+      </p>
+      <div style="display:flex;gap:10px">
+        <button onclick="setPhase('result')"
+          style="flex:1;background:linear-gradient(90deg,#1a3048,#1a4a78);border:none;color:#e0f4ff;border-radius:8px;padding:12px;font-size:13px;cursor:pointer;font-family:inherit">
+          ← 結果に戻る
+        </button>
+        <button onclick="setPhase('intro')"
+          style="flex:1;background:transparent;border:1px solid #1e3448;color:#6a90b0;border-radius:8px;padding:12px;font-size:13px;cursor:pointer;font-family:inherit">
+          トップに戻る
+        </button>
+      </div>
+    </section>`;
+}
+
 /* ===== 保存済み・共有URLからの復元時の表示位置（表示層のみ） =====
    復元に成功した場合だけ、巨大なHeroを飛ばして結果の先頭（#diagnosis-root）から見せる。
    decode・URL形式・legacy/v2の復元分岐・診断ロジックには一切触れない。
@@ -3750,10 +3909,7 @@ function revealRestoredResult() {
     if (userMoved || window.__phase !== 'result') return;
     // 認証から戻った直後は、結果の先頭ではなく保存カードの位置を表示する
     var card = window.__edReturnToRecordCard ? document.getElementById('recordCard') : null;
-    if (card) { card.scrollIntoView({ block: 'center' }); return; }
-    // トップの「以前の結果からレポートを購入する」から開いた：購入の案内（¥1,000）の位置を表示する
-    var buy = window.__edScrollToBuy ? document.getElementById('lockUnlockAllBtn') : null;
-    if (buy) { buy.scrollIntoView({ block: 'center' }); return; }
+    if (card) { card.scrollIntoView({ block: 'center', behavior: 'instant' }); return; }
     var root = document.getElementById('diagnosis-root');
     if (root) root.scrollIntoView({ block: 'start' });
   };
@@ -3805,94 +3961,6 @@ function setupResumeLink(root, code) {
     resumeShowNote(document.getElementById('diagnosis-root'));
   }).catch(function () { /* 一時的な失敗：何もしない */ });
 }
-/* 診断済みの方への購入導線（トップの「以前の結果からレポートを購入する」）。
-   ・ログイン中：マイページの最新の記録の購入シートへ（/mypage.html#buy。記録の切り替えはマイページの履歴から）
-   ・ログインしていないが、この端末に前回の結果の固有リンクがある：その結果を開き、購入の案内の位置へ（/result#r=…&buy=1）
-   ・どちらも無い：ログインして保存した結果から購入する／もう一度診断する、を案内する
-   ・計測：表示（returning_section_view）・押下（returning_cta_click）・行き先（returning_route）。記録 ID・秘密値・回答は送らない */
-var EdReturning = (function () {
-  var TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;
-  function track(name, params) { try { if (typeof gtag === 'function') gtag('event', name, Object.assign({ event_category: 'returning' }, params || {})); } catch (e) { /* 計測の失敗は画面に影響させない */ } }
-  function savedResume() {
-    try { var t = localStorage.getItem(RESUME_KEY); return TOKEN_RE.test(String(t || '')) ? t : null; } catch (e) { return null; }
-  }
-  function loggedIn() {
-    if (typeof getCurrentUser !== 'function') return Promise.resolve(false);
-    var timeout = new Promise(function (r) { setTimeout(function () { r(false); }, 4000); });
-    return Promise.race([Promise.resolve().then(getCurrentUser).then(function (u) { return !!u; }, function () { return false; }), timeout]);
-  }
-  function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-  // 前回の結果（固有リンク）の概要：元素×武器×国家と、近しいキャラクター（保存時の版で計算）
-  function resumeSummary(token) {
-    if (typeof EdGuestPurchase === 'undefined' || !EdGuestPurchase.resultOpen) return Promise.resolve(null);
-    return EdGuestPurchase.resultOpen(token).then(function (r) {
-      if (!r || !r.ok || !r.body || r.body.diagnosisVersion !== 'ETI-2.0') return null;
-      var v = r.body.versions || {};
-      if (v.itemSetVersion !== ETI_V2_META.itemSetVersion || v.scoringVersion !== ETI_V2_META.scoringVersion) return null;
-      try {
-        var answers = ETIv2.decodeAnswersV2(r.body.code, ETI_V2_QUESTIONS);
-        var res = computeResultsV2ForUI(answers, r.body.code, v.mirrorModelVersion);
-        var el = res.elementScores && res.elementScores[0] && res.elementScores[0].element;
-        var w = res.weaponScores && res.weaponScores[0] && res.weaponScores[0].weapon;
-        var n = res.nationScores && res.nationScores[0] && (res.nationScores[0].nation || res.nationScores[0].name);
-        var m = res.mirror || (res.charMatches && res.charMatches[0]);
-        return { type: [el, w, n].filter(Boolean).join(' × '), mirror: m ? m.name : '', match: m ? m.match : null };
-      } catch (e) { return { type: '', mirror: '', match: null }; }
-    }, function () { return null; });
-  }
-  function show(panel, html) { panel.innerHTML = html; panel.hidden = false; }
-  function init() {
-    var sec = document.getElementById('returning');
-    var btn = document.getElementById('returningCta');
-    var panel = document.getElementById('returningPanel');
-    if (!sec || !btn || !panel) return;
-    if ('IntersectionObserver' in window) {
-      var io = new IntersectionObserver(function (es) { if (es.some(function (e) { return e.isIntersecting; })) { track('returning_section_view'); io.disconnect(); } }, { threshold: 0.4 });
-      io.observe(sec);
-    }
-    btn.addEventListener('click', function () {
-      btn.disabled = true;
-      show(panel, '<p>以前の結果を確認しています…</p>');
-      loggedIn().then(function (signedIn) {
-        var token = savedResume();
-        track('returning_cta_click', { state: signedIn ? 'logged_in' : (token ? 'device_result' : 'none') });
-        if (signedIn) {
-          track('returning_route', { route: 'mypage' });
-          show(panel, '<p>マイページを開いています…</p>');
-          location.assign('/mypage.html#buy');
-          return;
-        }
-        if (!token) return null;
-        return resumeSummary(token).then(function (sum) {
-          if (!sum) return null;
-          show(panel, '<p class="rt-sub">この端末に、前回の診断結果があります</p>'
-            + (sum.type ? '<p class="rt-type">' + esc(sum.type) + '</p>' : '')
-            + (sum.mirror ? '<p class="rt-sub">近しいキャラクター：' + esc(sum.mirror) + (sum.match != null ? '（' + esc(sum.match) + '%）' : '') + '</p>' : '')
-            + '<a class="rt-go" href="/result#r=' + token + '&buy=1" data-rt-route="device_result">この結果からレポートを購入する</a>'
-            + '<a class="rt-alt" href="/type-preview.html" data-rt-route="select">別の結果（元素・武器・国家）を選んで購入する</a>');
-          return true;
-        });
-      }).then(function (handled) {
-        if (handled !== null) return;
-        // 未ログインで、この端末に前回の結果も無い：以前の結果（元素・武器・国家）を選ぶ画面へ進む
-        track('returning_route', { route: 'select' });
-        show(panel, '<p>以前の結果を選ぶ画面を開いています…</p>');
-        location.assign('/type-preview.html');
-      }).catch(function () {
-        show(panel, '<p>確認できませんでした。時間をおいて、もう一度お試しください。</p>');
-      }).then(function () { btn.disabled = false; });
-    });
-    panel.addEventListener('click', function (e) {
-      var a = e.target && e.target.closest && e.target.closest('[data-rt-route]');
-      if (!a) return;
-      var route = a.getAttribute('data-rt-route');
-      track('returning_route', { route: route });
-      if (route === 'new_diagnosis') { e.preventDefault(); startNewDiagnosisV2(); }
-    });
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-  return { savedResume: savedResume };
-})();
 function renderResumeError(kind) {
   var root = document.getElementById('diagnosis-root');
   if (!root) return;
@@ -3926,10 +3994,6 @@ function openResumeFromUrl() {
     window.__mirrorVersion = ETIv2MirrorResolver.versionFromUrlParam(ETIv2MirrorResolver.urlParamFor(v.mirrorModelVersion));
     window.__edResumeToken = token;
     window.__resumeFresh = false;
-    if (/(?:^#|&)buy=1(?:&|$)/.test(location.hash || '')) {
-      window.__edScrollToBuy = true;
-      try { history.replaceState(null, '', '/result#r=' + token); } catch (e) { /* そのまま */ }
-    }
     resumeRemember(token);
     window.__phase = 'result';
     render();
@@ -4197,7 +4261,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">X（旧Twitter）</p>
     <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">@mondayaxad</p>
     <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">本サイトについて</p>
-    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">Big Five・エニアグラムと元素・武器種を組み合わせた独自の心理傾向診断です。原神の公式コンテンツではありません。</p>
+    <p style="color:#6a9cc0;font-size:13px;line-height:1.9;margin-bottom:14px">Big Five・対人スタイル・シュワルツの価値観理論を参考に、元素・武器種・国家で性格の傾向を表す独自の自己理解診断です。医療的な診断ではありません。原神の公式コンテンツではありません。</p>
     <p style="color:#a0d0ec;font-size:13px;font-weight:700;margin-bottom:6px">お問い合わせ</p>
     <p style="color:#6a9cc0;font-size:13px;line-height:1.9">メール（yaduns0522@gmail.com）までご連絡ください。XのDM（@mondayaxad）でも受け付けます。</p>
   </div>

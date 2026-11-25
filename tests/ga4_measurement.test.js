@@ -69,8 +69,8 @@ test('Webhook：返金を初めて反映した時（applied）だけ GA4 へ送�
 
 test('purchase に items（商品 ID・商品名・価格・数量）', () => {
   const src = read('report-link.html');
-  assert.match(src, /var item = \{ item_id: b\.product, item_name: NAMES\[b\.product\] \|\| b\.product, price: c\.value, quantity: 1 \};/);
-  assert.match(src, /window\.gtag\('event', 'purchase', \{ transaction_id: c\.transactionId, value: c\.value, currency: 'JPY', product: b\.product, items: \[item\] \}\);/);
+  assert.match(src, /var item = \{ item_id: b\.product, item_name: NAMES\[b\.product\] \|\| b\.product, item_category: '元素診断', price: c\.value, quantity: 1 \};/);
+  assert.match(src, /window\.gtag\('event', 'purchase', \{ transaction_id: c\.transactionId, value: c\.value, currency: 'JPY', diagnosis_type: 'eti', product_id: 'eti_' \+ b\.product \+ '_v1', product: b\.product, items: \[item\] \}\);/);
 });
 
 test('申込：checkout_start と同時に GA4 標準の begin_checkout（金額・JPY・入口・items）', async () => {
@@ -95,7 +95,7 @@ test('申込：checkout_start と同時に GA4 標準の begin_checkout（金額
     const bc = sent.find((s) => s[0] === 'begin_checkout');
     assert.ok(bc, 'begin_checkout');
     assert.equal(bc[1].currency, 'JPY'); assert.equal(bc[1].value, 1000); assert.equal(bc[1].source, 'result');
-    assert.deepEqual(JSON.parse(JSON.stringify(bc[1].items)), [{ item_id: 'analysis', item_name: '解析レポート', price: 1000, quantity: 1 }]);
+    assert.deepEqual(JSON.parse(JSON.stringify(bc[1].items)), [{ item_id: 'analysis', item_name: '解析レポート', item_category: '元素診断', price: 1000, quantity: 1 }]);
   }
 });
 

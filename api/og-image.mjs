@@ -17,11 +17,11 @@
 //   ・下地が取れない時（Preview の保護など）は、従来どおり1枚をすべて描く。
 import { ImageResponse } from '@vercel/og';
 // 新デザイン（7元素の正式背景＋情報レイヤー）。Webプレビュー（ogp-card-demo.html）と同じ組み立てを使う。
-import { buildOgpCardTree, buildRevealCardTree } from '../js/ogp-card.mjs';
+import { buildOgpCardTree } from '../js/ogp-card.mjs';
 import { ELEMENT_KEY } from '../js/ogp-theme.mjs';
 import { CHAR_ELEMENT } from './_ogp-char-element.mjs';
 import { OG_FONT_WOFF_BASE64 } from './_og-font.mjs';
-import { ELEMENT_CODE, WEAPON_CODE, TYPE_NAME, ELEMENT_NAME, WEAPON_NAME, NATION_NAME, CHAR_NAMES, unpackShareParams, canonicalShareP, packShareParams, unpackMiniShare, unpackResonanceShare, unpackRevealShare } from './_og-data.mjs';
+import { ELEMENT_CODE, WEAPON_CODE, TYPE_NAME, ELEMENT_NAME, WEAPON_NAME, NATION_NAME, CHAR_NAMES, unpackShareParams, canonicalShareP, packShareParams } from './_og-data.mjs';
 
 export const config = { runtime: 'edge' };
 
@@ -58,15 +58,6 @@ export default async function handler(req) {
   const reqUrl = new URL(req.url);
   const { searchParams } = reqUrl;
   const origin = reqUrl.origin;
-  // 元素診断 Mini（m1）：同じ描き方（下地・札・同梱フォント・長期キャッシュ）で、一致率なし・見出しだけ Mini 用
-  const mini = searchParams.get('m1');
-  if (mini !== null) return miniImage(mini, searchParams, origin);
-  // 共鳴診断（m2）：同じ描き方で、MIRROR 欄に「SELF IMAGE（本人が選んだ人物）」と「MIRROR（回答に映る人物）」を並べる
-  // 共鳴診断 Character Reveal（m3）：人物名を大きく。下地は共鳴診断用（見出し「共鳴診断 — MY RESULT」）
-  const reveal = searchParams.get('m3');
-  if (reveal !== null) return revealImage(reveal, searchParams, origin);
-  const resonance = searchParams.get('m2');
-  if (resonance !== null) return resonanceImage(resonance, searchParams, origin);
   let el, w, nat, charIdx, match;
   const packed = searchParams.get('p');
   if (packed !== null) {
@@ -108,98 +99,12 @@ export default async function handler(req) {
     mirrorElement: CHAR_ELEMENT[charName] || el,
     match: matchText,
   };
-  return renderCard(data, origin);
-}
 
-// 元素診断 Mini のシェア画像。m1 は正規形だけ（js/eti_mini_share.js と同じ符号）。余分なパラメータは正規形の URL へ転送する
-async function miniImage(m1, searchParams, origin) {
-  const u = unpackMiniShare(m1);
-  if (!u || !CHAR_NAMES[u.charIdx]) return new Response('invalid', { status: 400, headers: { 'Cache-Control': 'public, max-age=86400, s-maxage=86400' } });
-  if ([...searchParams.keys()].some((k) => k !== 'm1')) {
-    return new Response(null, { status: 308, headers: { Location: `${origin}/api/og-image?m1=${m1}`, ...CACHE_HEADERS } });
-  }
-  const charName = CHAR_NAMES[u.charIdx];
-  const data = {
-    // 国家は画面と同じ「ナド・クライ」（「・」は js/ogp-card.mjs が小さな丸で描く）
-    code: ELEMENT_CODE[u.el] + WEAPON_CODE[u.w], typeName: TYPE_NAME[u.el][u.w], element: u.el, weapon: u.w, nation: u.nat === 'ナドクライ' ? 'ナド・クライ' : u.nat,
-    mirrorName: charName,
-    mirrorElement: CHAR_ELEMENT[charName] || u.el,
-    match: '', // Mini は一致率を出さない
-    // 同梱フォント（必要な文字だけ）にある文字で書く：本人が選んだキャラは「私のキャラクター」、自動は本家と同じ見出し
-    mirrorLabel: u.userPicked ? '私のキャラクター' : '最も近しいキャラクター',
-    brand: '元素診断 MINI',
-  };
-  return renderCard(data, origin);
-}
-
-// 共鳴診断のシェア画像。m2 は正規形だけ（js/eti_mini_share.js の packResonance と同じ符号）。
-// 見出しは同梱フォントにある英字（SELF IMAGE・MIRROR）。「最も近しいキャラクター」とは書かない
-async function resonanceImage(m2, searchParams, origin) {
-  const u = unpackResonanceShare(m2);
-  if (!u || !CHAR_NAMES[u.mirrorIdx] || (u.selfIdx !== null && !CHAR_NAMES[u.selfIdx])) {
-    return new Response('invalid', { status: 400, headers: { 'Cache-Control': 'public, max-age=86400, s-maxage=86400' } });
-  }
-  if ([...searchParams.keys()].some((k) => k !== 'm2')) {
-    return new Response(null, { status: 308, headers: { Location: `${origin}/api/og-image?m2=${m2}`, ...CACHE_HEADERS } });
-  }
-  const person = (idx, label) => ({ label, name: CHAR_NAMES[idx], element: CHAR_ELEMENT[CHAR_NAMES[idx]] || u.el });
-  const pair = u.selfIdx !== null ? [person(u.selfIdx, 'SELF IMAGE'), person(u.mirrorIdx, 'MIRROR')] : [person(u.mirrorIdx, 'MIRROR')];
-  const data = {
-    code: ELEMENT_CODE[u.el] + WEAPON_CODE[u.w], typeName: TYPE_NAME[u.el][u.w], element: u.el, weapon: u.w,
-    nation: u.nat === 'ナドクライ' ? 'ナド・クライ' : u.nat,
-    mirrorName: '', // 札（1人用の事前生成）は使わず、pair を描く
-    match: '',
-    pair,
-    brand: '共鳴診断 RESONANCE',
-    // 上部の見出しは「共鳴診断 — MY RESULT」。下地は共鳴診断用（assets/ogp/bases-resonance/。scripts/build-ogp-bases.mjs --resonance）
-    header: '共鳴診断 — MY RESULT',
-    baseDir: 'bases-resonance',
-  };
-  return renderCard(data, origin);
-}
-
-// 共鳴診断 Character Reveal の画像。m3 は正規形だけ（js/eti_mini_share.js の packReveal と同じ符号）。余分なパラメータは正規形へ
-async function revealImage(m3, searchParams, origin) {
-  const u = unpackRevealShare(m3);
-  if (!u || !CHAR_NAMES[u.charIdx]) return new Response('invalid', { status: 400, headers: { 'Cache-Control': 'public, max-age=86400, s-maxage=86400' } });
-  if ([...searchParams.keys()].some((k) => k !== 'm3')) {
-    return new Response(null, { status: 308, headers: { Location: `${origin}/api/og-image?m3=${m3}`, ...CACHE_HEADERS } });
-  }
-  const name = CHAR_NAMES[u.charIdx];
-  // 人物が主役のカード（js/ogp-card.mjs の buildRevealCardTree）。情報は本家と同じ（タイプコード4文字・タイプ名・元素／武器種／国家。下帯の文は描かない）。
-  // 背景（星座）と名前・飾りの色は人物の元素。下地は人物の元素ごとの7枚（assets/ogp/bases-reveal/。scripts/build-ogp-bases.mjs --reveal）
-  const charElement = CHAR_ELEMENT[name] || u.el;
-  const data = {
-    name, charElement, code: ELEMENT_CODE[u.el] + WEAPON_CODE[u.w], typeName: TYPE_NAME[u.el][u.w], element: u.el, weapon: u.w,
-    nation: u.nat === 'ナドクライ' ? 'ナド・クライ' : u.nat,
-    header: '共鳴診断 — MY RESULT',
-  };
-  return renderRevealCard(data, origin);
-}
-
-async function renderRevealCard(data, origin) {
-  const fonts = [{ name: 'Noto Serif JP', data: loadFont(), weight: 700, style: 'normal' }];
-  const key = ELEMENT_KEY[data.charElement] || 'anemo';
-  const baseUrl = await fetchImageDataUri(`${origin}/assets/ogp/bases-reveal/${key}.jpg`);
-  let tree, render;
-  if (baseUrl) {
-    tree = buildRevealCardTree(data, { part: 'overlay', baseUrl, fontSerif: 'Noto Serif JP' });
-    render = 'base';
-  } else {
-    const backgroundUrl = await fetchImageDataUri(`${origin}/assets/ogp/backgrounds/${key}.jpg`);
-    tree = buildRevealCardTree(data, { backgroundUrl, fontSerif: 'Noto Serif JP' });
-    render = backgroundUrl ? 'full' : 'plain';
-  }
-  return new ImageResponse(tree, { width: 1200, height: 630, fonts, headers: { ...CACHE_HEADERS, 'x-og-render': render } });
-}
-
-async function renderCard(data, origin) {
-  const el = data.element, code = data.code, charName = data.mirrorName;
   const fonts = [{ name: 'Noto Serif JP', data: loadFont(), weight: 700, style: 'normal' }];
   const fontOpts = { fontSerif: 'Noto Serif JP', fontSans: 'Noto Serif JP' };
 
   // 下地（タイプ別・事前生成）があれば、人ごとの情報だけを重ねる
-  const baseUrl = await fetchImageDataUri(`${origin}/assets/ogp/${data.baseDir || 'bases'}/${code}.jpg`);
+  const baseUrl = await fetchImageDataUri(`${origin}/assets/ogp/bases/${code}.jpg`);
   let tree, render;
   if (baseUrl) {
     // MIRROR 欄の地・枠・内側の光も事前生成の札（キャラクターの元素ごと）。取れなければその場で描く

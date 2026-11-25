@@ -18,12 +18,13 @@
   var SCHEMA = 'jagan-result-3';
   // 共有の URL（jagan/engine/runtime.mjs の shareUrl と同じ。テストで一致を確かめる）
   var SHARE_PATH = '/j';
-  var OG_DESIGN_VERSION = 'dti-og-3';
+  var OG_DESIGN_VERSION = 'dti-og-4';
   // 投稿に載る最短の形（/j/<4文字>）の版ごとの表（runtime.mjs の SHARE_VERSIONS と同じ。テストで一致を確かめる）
   var B62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  var SHARE_VERSIONS = { 1: { naming: 'dti-naming-v1-20261104', og: 'dti-og-3',
+  var SHARE_V1 = { naming: 'dti-naming-v1-20261104', og: 'dti-og-3',
     codes: ["PYAX","HYAX","CRAX","ELAX","ANAX","GEAX","DEAX","PYDP","HYDP","CRDP","ELDP","ANDP","GEDP","DEDP","PYSU","HYSU","CRSU","ELSU","ANSU","GESU","DESU","PYWD","HYWD","CRWD","ELWD","ANWD","GEWD","DEWD","PYIM","HYIM","CRIM","ELIM","ANIM","GEIM","DEIM","PYPE","HYPE","CRPE","ELPE","ANPE","GEPE","DEPE","PYPF","HYPF","CRPF","ELPF","ANPF","GEPF","DEPF","PYHO","HYHO","CRHO","ELHO","ANHO","GEHO","DEHO","PYAT","HYAT","CRAT","ELAT","ANAT","GEAT","DEAT","PYMN","HYMN","CRMN","ELMN","ANMN","GEMN","DEMN","PYRK","HYRK","CRRK","ELRK","ANRK","GERK","DERK","PYCL","HYCL","CRCL","ELCL","ANCL","GECL","DECL"],
-    chars: ['pierro', 'capitano', 'dottore', 'columbina', 'arlecchino', 'pulcinella', 'scaramouche', 'sandrone', 'signora', 'pantalone', 'tartaglia'] } };
+    chars: ['pierro', 'capitano', 'dottore', 'columbina', 'arlecchino', 'pulcinella', 'scaramouche', 'sandrone', 'signora', 'pantalone', 'tartaglia'] };
+  var SHARE_VERSIONS = { 1: SHARE_V1, 2: { naming: SHARE_V1.naming, og: 'dti-og-4', codes: SHARE_V1.codes, chars: SHARE_V1.chars } };
   // 色（jagan/site-copy.mjs の ISOU_COLOR・ELEMENT_COLOR・CHARACTER_ELEMENTS と同じ値。テストで一致を確かめる）
   var ISOU_COLOR = { ANX: '#B59AD8', SEP: '#7FA7D8', SUS: '#9FB0C8', WDR: '#8FC0D0', IMP: '#E0A050', PSV: '#B8A27A', PRF: '#D8C27A',
     HOS: '#E0694F', ATT: '#E08AA8', MAN: '#C88AD8', RSK: '#E07A5A', CAL: '#9AA7B5' };
@@ -88,7 +89,8 @@
   }
   function enabled() {
     var cfg = window.__ED_PUBLIC_CONFIG__;
-    return !!(cfg && cfg.appEnv !== 'production' && typeof supabaseClient !== 'undefined' && !supabaseClient.unavailable);
+    // 本番では、邪眼を有効にした時だけ（公開設定の jaganEnabled）。Preview・開発環境はこれまでどおり動く
+    return !!(cfg && (cfg.appEnv !== 'production' || cfg.jaganEnabled === true) && typeof supabaseClient !== 'undefined' && !supabaseClient.unavailable);
   }
   function salesOpen() { var c = window.__ED_PUBLIC_CONFIG__; return !!(c && c.jaganSalesOpen === true); }
   function store(kind, fn) { try { return fn(kind === 'local' ? window.localStorage : window.sessionStorage); } catch (e) { return null; } }
@@ -121,7 +123,14 @@
     } catch (e) { return { ok: false, status: 0, body: { error: 'network' } }; }
   }
   // 邪眼の記録まわりのイベントには diagnosis_type: 'jagan' を付ける（元素診断と並べて比べられるように）
-  function track(name, params) { try { if (typeof trackEvent === 'function') trackEvent(name, Object.assign({ diagnosis_type: 'jagan' }, params || {})); } catch (e) { /* 計測だけ */ } }
+  function track(name, params) {
+    try {
+      var p = Object.assign({ diagnosis_type: 'jagan' }, params || {});
+      if (p.product === 'jagan_report' || p.product === 'jagan_complete') p.product_id = p.product + '_v1';
+      if (p.items && p.items[0]) p.product_id = p.items[0].item_id;
+      if (typeof trackEvent === 'function') trackEvent(name, p);
+    } catch (e) { /* 計測だけ */ }
+  }
 
   // 保存待ちの保存（登録完了の後だけ呼ばれる。失敗しても保存待ちは残す＝次に開いたときに再試行）
   async function savePending(t) {
@@ -173,6 +182,9 @@
       elementId: dtiOk && snap.element ? snap.element.id : null,
       isouId: dtiOk && snap.isou ? snap.isou.id : null,
       namingVersion: dtiOk && snap.versions ? snap.versions.naming : null,
+      // 共有のリンクに載せる回答（結果ページの共有と同じ形。開くと完了ページを再現する）
+      answers: dtiOk && snap.answers && typeof snap.answers === 'object' ? snap.answers : null,
+      itemSet: dtiOk && snap.versions ? snap.versions.itemSet : null,
       top3: dtiOk ? top3(snap) : [],
       character: ch ? { id: ch.id, name: ch.name, match: ch.match, tone: fatuiTone(ch.id) } : null,
       // 商品ごとの権利：解析レポート（¥1,000）＝purchased、完全解析「DIPPER」（¥3,000）＝completeOwned。片方だけ INSIGHT、両方 COMPLETE
@@ -223,7 +235,26 @@
   }
 
   // 共有（結果ページの共有と同じ文・同じ URL。公開してよい値だけ）
+  // 回答を載せた形（runtime.mjs の answerShareKey と同じ。テストで一致を確かめる）
+  var ANSWER_SHARE_VERSIONS = { 3: { itemSet: 'jagan-shadow-items-0.4.0-semantic-review',
+    order: ["ANX01","PRF01","SEP01","IMP01","WDR02","ATT01","SUS01","PSV01","HOS01","MAN01","RSK01","CAL01","ANX02","PRF02","SEP02","IMP02","WDR03","ATT02","SUS02","PSV02","HOS03","MAN02","RSK02","CAL02","ANX03","PRF04","SEP03","IMP03","WDR04","ATT03","SUS03","PSV04","HOS04","MAN03","RSK03","CAL03","ANX05","PRF05","SEP04","IMP04","WDR05","ATT05","SUS05","PSV05","HOS05","MAN04","RSK04","CAL04","SEP05","IMP05"] } };
+  function answerKeyOf(answers, itemSet) {
+    if (!answers || typeof BigInt !== 'function') return null;
+    var v = Object.keys(ANSWER_SHARE_VERSIONS).filter(function (k) { return ANSWER_SHARE_VERSIONS[k].itemSet === itemSet; })[0];
+    if (!v) return null;
+    var order = ANSWER_SHARE_VERSIONS[v].order, n = BigInt(0), five = BigInt(5), b = BigInt(62);
+    for (var i = 0; i < order.length; i++) {
+      var a = answers[order[i]];
+      if (a !== Math.floor(a) || a < 1 || a > 5) return null;
+      n = n * five + BigInt(a - 1);
+    }
+    var out = '';
+    for (var j = 0; j < 20; j++) { out = B62.charAt(Number(n % b)) + out; n = n / b; }
+    return out + v;
+  }
   function shareUrlOf(s) {
+    var ak = s && answerKeyOf(s.answers, s.itemSet);
+    if (ak) return location.origin + SHARE_PATH + '/' + ak;
     var code = s && s.headline && s.headline.code;
     if (!s || !s.isDti || !s.elementId || !s.isouId || !s.namingVersion) return null;
     var keys = Object.keys(SHARE_VERSIONS);
@@ -283,11 +314,15 @@
     track('checkout_start', { product: prod, value: value, currency: 'JPY', source: source });
     var t = await token();
     var body = { resultId: id, attempt: randomAttempt(), source: /^[a-z_]{1,32}$/.test(source) ? source : 'mypage' };
+    var gaRef = window.EdAnalytics && window.EdAnalytics.checkoutRef ? window.EdAnalytics.checkoutRef(body.source) : null;
+    if (gaRef) body.ga = gaRef;
     if (isC) body.product = 'complete';
+    track('begin_checkout', { currency: 'JPY', value: value, source: body.source, items: [{ item_id: isC ? 'jagan_complete_v1' : 'jagan_report_v1', item_name: isC ? '邪眼完全解析レポート「DIPPER」' : '邪眼解析レポート', item_category: '邪眼診断', price: value, quantity: 1 }] });
+
     var r = t ? await api('/api/jagan-report?op=buy', body, t) : { ok: false, body: { error: 'not_authenticated' } };
     if (r.ok && typeof r.body.checkoutUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(r.body.checkoutUrl)) {
       store('session', function (s) { s.setItem(FRESH_KEY, JSON.stringify({ at: Date.now(), source: body.source })); });
-      track('begin_checkout', { currency: 'JPY', value: value, source: body.source, items: [{ item_id: isC ? 'jagan_complete_v1' : 'jagan_report_v1', item_name: isC ? '邪眼完全解析レポート「DIPPER」' : '邪眼解析レポート', item_category: '邪眼診断', price: value, quantity: 1 }] });
+      track('checkout_session_created', { product: prod, value: value, currency: 'JPY', source: source });
       track('checkout_redirect', { product: prod, value: value, currency: 'JPY', source: source });
       location.assign(r.body.checkoutUrl);
       return;

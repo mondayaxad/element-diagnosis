@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="robots" content="noindex,nofollow">
+<link rel="canonical" href="https://element-diagnosis-five.vercel.app/jagan/">
 <meta name="theme-color" content="#09070B">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="邪眼診断">
@@ -18,8 +18,33 @@
 <meta name="twitter:title" content="邪眼診断">
 <meta name="twitter:description" content="あなたの願いは、どんな深淵を映すのか。">
 <meta name="twitter:image" content="https://element-diagnosis-five.vercel.app/assets/ogp/jagan-top-20261112.jpg">
-<title>邪眼診断｜あなたの願いは、どんな深淵を映すのか。</title>
-<meta name="description" content="独自の50問から、あなたの深淵を映す邪眼元素と型、あなたのファトゥスを示す自己理解コンテンツ。医療診断ではありません。">
+<title>邪眼診断｜原神の邪眼とファトゥスで知る、もう一人の自分</title>
+<meta name="description" content="50の問いから、心の影を映す「邪眼元素」と「異相」、あなたに近いファトゥスを示す無料の自己理解診断。パーソナリティの特性研究（PID-5）を参考に、12の特性から読み解きます。医療診断ではありません。">
+<!-- 構造化データ：無料の診断（50問）だけを Offer に載せる（有料の解析レポート・DIPPER は載せない）。description は meta description と同じ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "邪眼診断",
+  "alternateName": "DTI（Delusion Type Indicator）",
+  "url": "https://element-diagnosis-five.vercel.app/jagan/",
+  "description": "50の問いから、心の影を映す「邪眼元素」と「異相」、あなたに近いファトゥスを示す無料の自己理解診断。パーソナリティの特性研究（PID-5）を参考に、12の特性から読み解きます。医療診断ではありません。",
+  "applicationCategory": "LifestyleApplication",
+  "operatingSystem": "Any",
+  "inLanguage": "ja",
+  "isAccessibleForFree": true,
+  "offers": {
+    "@type": "Offer",
+    "name": "邪眼診断（50問）",
+    "price": "0",
+    "priceCurrency": "JPY"
+  },
+  "author": {
+    "@type": "Person",
+    "name": "マンデーアクスト"
+  }
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
@@ -28,6 +53,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous"></script>
 <script src="/api/public-config?format=js"></script>
 <script type="module" src="/jagan/app.mjs"></script>
+<script src="/js/return-to.js"></script>
 </head>
 <body>
 <div class="night" aria-hidden="true"><div class="photo"></div><div class="tint"></div></div>
@@ -48,7 +74,7 @@
         <p class="jt-desc jp">
           心の奥には、ふだんは見せない影がある。<br>
           50の問いに答えることで、あなたの<strong class="k-el">邪眼元素（心の影の象徴）</strong>と<strong class="k-ty">異相（影の現れ方）</strong>、そして<strong class="k-fa">あなたのファトゥス</strong>が映し出される。
-          <br><span class="theory-line">パーソナリティの特性研究（DSM-5の代替モデル・PID-5）を参考にした、自己理解のための診断。</span>
+          <br><span class="theory-line">パーソナリティの特性研究（DSM-5の代替モデル・PID-5）を参考に、12の特性から読み解く、無料の自己理解診断。</span>
           <span class="en">Everyone carries a shadow. 50 questions to reveal your Delusion element, the shape your shadow takes, and the Fatui Harbinger closest to you — a self-understanding diagnosis informed by research on personality trait models (DSM-5 alternative model, PID-5). Not a clinical assessment.</span>
         </p>
         <div class="jt-cta-wrap">

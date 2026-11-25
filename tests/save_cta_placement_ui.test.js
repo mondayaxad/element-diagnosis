@@ -115,7 +115,7 @@ test.after(async () => { if (browser) await browser.close(); if (server) server.
 // authSettings：Supabase の公開 Auth 設定（/auth/v1/settings）の external。'fail' は取得の失敗（500）。既定は Google・X・メールとも有効
 // xAuthorize：公開設定に 'x' が無い時の、ログイン開始（/auth/v1/authorize?provider=x）の応答。'redirect'＝有効（302）／'disabled'＝400／'fail'＝通信の失敗
 const AUTH_ALL = { email: true, google: true, x: true };
-async function openPage(url, { supa = {}, hint = false, pendingV2 = false, seed = {}, width = 390, height = 844, entitlements, salesOpen = false, authSettings = AUTH_ALL, xAuthorize = 'disabled' } = {}) {
+async function openPage(url, { supa = {}, hint = false, pendingV2 = false, seed = {}, width = 390, height = 844, entitlements, salesOpen = false, authSettings = AUTH_ALL, xAuthorize = 'disabled', before } = {}) {
   const ctx = await browser.newContext({ viewport: { width, height } });
   const p = await ctx.newPage();
   p.setDefaultTimeout(8000);
@@ -153,6 +153,7 @@ async function openPage(url, { supa = {}, hint = false, pendingV2 = false, seed 
       answersV2: [1], encodedAnswers: typeof pendingV2 === 'string' ? pendingV2 : 'X', results: { personality: {}, style: {}, values: {}, valuesCentered: {}, elementRanking: [], weaponRanking: [], nationRanking: [] }, createdAt: Date.now() }));
     Object.keys(seed).forEach((k) => localStorage.setItem(k, typeof seed[k] === 'function' ? seed[k]() : seed[k]));
   }, { hint, pendingV2, seed, HINT });
+  if (before) await before(p);
   await p.goto(base + url);
   p.__ctx = ctx; p.__errors = errors; p.__popups = popups; p.__gtag = gtagEvents; p.__authorize = authorizeCalls;
   return p;
@@ -351,6 +352,101 @@ test('Google・X の認証から戻ったマイページ：結果ページの保
     assert.deepEqual(p.__errors, []);
     await p.__ctx.close();
   }
+});
+
+test('認証から戻った後のマイページへの移動：「保存しました」の文言が画面に収まって描画されてから 800ms 以上見せ、移動は1回だけ（iPhone SE・iPhone 13 相当）', { skip: skip() }, async (t) => {
+  // 計測はすべてページ内の時計（Date.now と、移った先のページの performance.timeOrigin＝遷移の開始時刻）で行う（テスト側との通信の遅れを含めない）。
+  //   この試験は描画のたび（requestAnimationFrame。描画の直前）に、文言がその描画で画面に収まっているかを見る。
+  //   アプリは「収まった状態が描画された後」から 800ms を数えるので、ここで測る間隔は必ず 800ms 以上になる（余裕は設けない）
+  const resultPath = `/?dv=ETI-2.0&code=${RB.code}`;
+  for (const [width, height] of [[375, 667], [390, 844]]) {
+    const p = await openPage('/mypage.html?code=auth-code', { supa: { status: 'completed' }, pendingV2: RB.code, width, height,
+      seed: { ed_save_return_v1: JSON.stringify({ url: base + resultPath, at: Date.now() }) },
+      before: async (pg) => {
+        await pg.addInitScript(() => {
+          if (location.pathname === '/') {
+            // 結果ページ：「保存しました」の文字そのもの（テキストの範囲）が画面に収まった最初の時刻を記録する
+            let seen = false;
+            const poll = () => {
+              const c = document.getElementById('recordCard');
+              if (!seen && c && c.getAttribute('data-state') === 'just_saved') {
+                const w = document.createTreeWalker(c, NodeFilter.SHOW_TEXT);
+                for (let n = w.nextNode(); n; n = w.nextNode()) {
+                  if (!n.nodeValue.includes('保存しました')) continue;
+                  const r = document.createRange(); r.selectNodeContents(n);
+                  const b = r.getBoundingClientRect();
+                  if (b.height > 0 && b.top >= 0 && b.bottom <= innerHeight && b.left >= 0 && b.right <= innerWidth) {
+                    seen = true;
+                    sessionStorage.setItem('__t_seen', String(Date.now()));
+                    sessionStorage.setItem('__t_rect', JSON.stringify({ top: Math.round(b.top), bottom: Math.round(b.bottom), vh: innerHeight, text: n.nodeValue.trim() }));
+                  }
+                  break;
+                }
+              }
+              if (!seen) requestAnimationFrame(poll);
+            };
+            requestAnimationFrame(poll);
+          }
+          if (location.pathname === '/mypage.html' && !location.search) {
+            // 移った先（認証の戻りの ?code= 付きは除く）：遷移の開始時刻と、ここに来た回数
+            sessionStorage.setItem('__t_nav', String(performance.timeOrigin));
+            sessionStorage.setItem('__t_loads', String(Number(sessionStorage.getItem('__t_loads') || 0) + 1));
+          }
+        });
+      } });
+    await p.waitForURL((u) => u.pathname === '/mypage.html' && !u.search, { timeout: 8000 });
+    await p.waitForTimeout(1500); // 二重の移動が起きないか少し待つ
+    const m = await p.evaluate(() => ({ seen: Number(sessionStorage.getItem('__t_seen')), nav: Number(sessionStorage.getItem('__t_nav')),
+      loads: Number(sessionStorage.getItem('__t_loads')), rect: JSON.parse(sessionStorage.getItem('__t_rect') || 'null') }));
+    assert.ok(m.seen > 0 && m.rect, `「保存しました」の文言が画面に収まっていない ${width}x${height}`);
+    assert.match(m.rect.text, /保存しました/);
+    const gap = m.nav - m.seen;
+    t.diagnostic(`${width}x${height}：文言の位置 top=${m.rect.top} bottom=${m.rect.bottom}（画面の高さ ${m.rect.vh}）・見えてから移動の開始まで ${gap.toFixed(0)}ms・マイページへの移動 ${m.loads} 回`);
+    assert.ok(gap >= 800, `文言が見えてから移るまで ${gap.toFixed(0)}ms（仕様 800ms） ${width}x${height}`);
+    assert.equal(m.loads, 1, `マイページへの移動は1回 ${width}x${height}`);
+    assert.deepEqual(p.__errors, []);
+    await p.__ctx.close();
+  }
+});
+
+test('マイページへの移動の待ち方（index.html の goMypageWhenSeen）：見出しが画面に収まり描画された後に数える。カードが無くても・画面に入らなくても・描画が止まっていても止まらず移る。何度呼ばれても移動は1回', () => {
+  const html = require('fs').readFileSync(require('path').join(__dirname, '..', 'index.html'), 'utf8');
+  const src = /    var goMypageWhenSeen = function \(ms\) \{[\s\S]*?\n    \};\n/.exec(html);
+  assert.ok(src, 'goMypageWhenSeen が見つからない');
+  const run = (card, { calls = 1, raf = true } = {}) => {
+    let now = 0; const timers = []; const assigns = [];
+    const ctx = {
+      Date: { now: () => now },
+      setTimeout: (fn, ms) => { timers.push({ at: now + ms, fn }); },
+      window: { innerHeight: 800, location: { assign: (u) => assigns.push([u, now]) },
+        // 描画は 16ms ごと（rAF を止めた環境は raf: false）
+        requestAnimationFrame: raf ? (fn) => { timers.push({ at: now + 16, fn }); } : undefined },
+      document: { getElementById: () => card, documentElement: { clientHeight: 800 } },
+    };
+    require('vm').createContext(ctx);
+    require('vm').runInContext(src[0] + '\nthis.go = goMypageWhenSeen;', ctx);
+    for (let i = 0; i < calls; i++) ctx.go(800);
+    while (timers.length) { timers.sort((a, b) => a.at - b.at); const t = timers.shift(); now = t.at; t.fn(); if (now > 10000) break; }
+    return assigns;
+  };
+  // 描画2回（32ms）の後に 800ms を数える
+  // カードが無い：1回
+  assert.deepEqual(run(null), [['/mypage.html', 832]]);
+  // カードが文書から外れている：1回
+  assert.deepEqual(run({ isConnected: false }), [['/mypage.html', 832]]);
+  // 「保存しました」の見出しが画面に収まっている：1回
+  const head = { getBoundingClientRect: () => ({ top: 300, bottom: 320 }) };
+  assert.deepEqual(run({ isConnected: true, querySelector: () => head, getBoundingClientRect: () => ({ top: 250, bottom: 480 }) }), [['/mypage.html', 832]]);
+  // カードの一部は見えていても、見出しが画面の外（上）なら数え始めない → 3 秒で待つのをやめる
+  const partial = run({ isConnected: true, querySelector: () => ({ getBoundingClientRect: () => ({ top: -40, bottom: -20 }) }), getBoundingClientRect: () => ({ top: -60, bottom: 120 }) });
+  assert.equal(partial.length, 1); assert.ok(partial[0][1] >= 3000 + 32 + 800 && partial[0][1] <= 3000 + 32 + 800 + 60, String(partial[0][1]));
+  // カードが画面に入らない（利用者が動かした等）：3 秒で待つのをやめ、その後に1回（止まらない）
+  const late = run({ isConnected: true, getBoundingClientRect: () => ({ top: 5000, bottom: 5180 }) });
+  assert.equal(late.length, 1); assert.ok(late[0][1] >= 3000 + 32 + 800 && late[0][1] <= 3000 + 32 + 800 + 60, String(late[0][1]));
+  // 描画が止まっている（rAF が無い・背景のタブ）：500ms で数え始める（止まらない）
+  assert.deepEqual(run(null, { raf: false }), [['/mypage.html', 1300]]);
+  // 何度呼ばれても移動は1回
+  assert.equal(run(null, { calls: 3 }).length, 1);
 });
 
 test('トップ右上の「マイページ」：ログインの有無に関わらず表示。未ログインは作成・ログイン（登録）の画面、ログイン中はマイページ', { skip: skip() }, async () => {

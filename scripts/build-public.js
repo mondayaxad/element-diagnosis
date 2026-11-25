@@ -16,9 +16,9 @@
 //   js/ogp-fixtures.mjs、直下の旧 JS 7本（ETI_v2_QUESTIONS_100.js、characters118_v2.js、eti_v2_answer_collection.js、
 //   eti_v2_engine.js、eti_v2_prototypes.js、eti_v2_quiz_ui.js、eti_v2_save.js）、index-test.html
 //
-// Production 移行前の残課題
-//   type/*.html（35件）の og:image が /thumbs/x_card_XXXX.png を指すが、リポジトリに thumbs/ が無い（既存の欠損）。
-//   画像を用意して許可リストに加えるか、og:image を差し替えるかを Production 移行前に決める。
+// 解決済み（2026-11-24）
+//   type/*.html（35件）の og:image が実体の無い /thumbs/x_card_XXXX.png を指していた件は、
+//   タイプ解説専用の OGP 画像 assets/ogp/types/<CODE>.jpg（scripts/build-ogp-type-cards.mjs）に差し替えて解消した。
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -40,6 +40,7 @@ const PUBLIC_FILES = [
   'ogp.jpeg',
   'purchase-complete.html',                                   // 購入完了ページ（Stripe の戻り先。noindex）
   'report-link.html',                                         // レポート固有リンクの入口（#t=。noindex・no-referrer）
+  'type-report.html',                                         // タイプ別レポートの固有リンクの入口（#t=。noindex・no-referrer）
   'js/report-purchase.js',                                    // 申込・固有リンク・マイページへの登録（全入口で共通）
   'js/lens-constellation.js',                                 // 完全解析の三つの人物像の図（宝石の惑星と星の軌道）
   'js/sample-buy.js',                                         // サンプルページの申込欄
@@ -47,10 +48,15 @@ const PUBLIC_FILES = [
   'js/nav-busy.js',
   'js/sample-return.js',                                       // 完全解析サンプルの「申し込みに戻る」
   'js/ga.js',
+  'js/type-page.js',                                          // タイプ解説ページの診断への導線の計測（type_diagnosis_cta_click）
+  'js/type-detail.js',                                        // タイプ解説ページ（type-v2）：一覧へ戻る時の元素・Preview 専用の欄
+  'js/type-report-texts.js',                                  // タイプ別レポート（report.html）：最新の解説文とタイプ名
+  'js/return-to.js',                                          // 邪眼診断から来た人を、マイページ・規約などから邪眼診断へ戻す
   'complete-sample.html',                                     // 完全解析サンプル（結果ページの完全解析の欄からだけリンク・noindex）
   'assets/ogp/ogp-top-20261009.jpg',                          // TOP・完全解析サンプルの OGP（1200×630）
   'assets/ogp/jagan-top-20261112.jpg',                        // 邪眼診断の各ページの OGP（1200×630。X 共有の結果カードとは別）
   'robots.txt',
+  'google4a667902d1176c3c.html',                               // Google Search Console の所有権確認（内容は1行だけ。削除すると確認が外れる）
   'sitemap.xml',
   'js/ETI_v2_QUESTIONS_100.js',
   'js/auth-providers.js',
@@ -64,23 +70,14 @@ const PUBLIC_FILES = [
   'js/eti_v2_mirror_resolver.js',
   'js/eti_v2_prototypes.js',
   'js/eti_v2_save.js',
-  'js/eti_type_reading.js',                                   // 以前の結果から読むタイプ別レポートの計算（代表プロファイル・類似度ランキング）
-  'js/type_reading_chars.js',                                 // 同・タイプごとに一致度1位になり得るキャラクターの表（scripts/build-type-reading-chars.js）
-  'js/type_reading_text.js',                                  // 同・固定の文章データ（見本の版）
-  'type-preview.html',                                        // 同・入力画面とレポートの見本（確認用。noindex・リンクなし）
   'js/registration-onboarding.js',
-  'js/jagan-mypage.js',                                       // マイページの「邪眼診断の記録」（Preview）
+  'js/jagan-mypage.js',                                       // マイページの「邪眼診断の記録」
   'assets/backgrounds/quiet-starry-lake.jpg',
-  'resonance.html',                                           // 共鳴診断（旧 元素診断 Mini。/mini は vercel.json で /resonance へ転送）。Preview の確認用・noindex。購入はまだ無い
-  'js/eti_mini_core.js',                                      // 同・結果を決める層（固定割当表を引く・手動選択の結合は未接続）
-  'js/eti_mini_auto_map_v1.js',                               // 同・未選択時の固定割当（scripts/build-eti-mini-data.js が正本 JSON から生成）
-  'js/eti_mini_choices_v1.js',                                // 同・3問20択の正式文言（scripts/build-eti-mini-data.js が正本 JSON から生成）
-  'js/eti_mini_manual_v1.js',                                 // 同・キャラクター手動選択時の再判定（ETI-MINI-MANUAL-1.0.0・50:50）
-  'js/eti_mini_share.js',                                     // 同・シェアの短い符号（m3：現行・/resonance?c=、m2：旧 2人表示・?r=、m1：旧 Mini・?s=。/api/share・/api/og-image と同じ計算）
 ];
 // ディレクトリ直下の指定拡張子だけ（再帰しない）
 const PUBLIC_DIRS = [
   { dir: 'type', ext: '.html' },                               // タイプ解説（sitemap・index からリンク）
+  { dir: 'assets/ogp/types', ext: '.jpg' },                    // タイプ解説ページの OGP 画像（35枚。scripts/build-ogp-type-cards.mjs）
   { dir: 'assets/result', ext: '.webp' },                      // 結果画面の図（index が名前で組み立てる）
   { dir: 'assets/complete', ext: '.webp' },                    // 完全解析の三つの人物像の図（js/lens-constellation.js）
   { dir: 'assets/emblems/2026-autumn/record', ext: '.png' },   // マイページの記録エンブレム
@@ -90,14 +87,12 @@ const PUBLIC_DIRS = [
   { dir: 'assets/ogp/backgrounds', ext: '.jpg' },              // api/og-image が自サイトから取得する背景（下地が無い時の描き方）
   { dir: 'assets/ogp/bases', ext: '.jpg' },                    // api/og-image の下地（タイプ別35枚。scripts/build-ogp-bases.mjs）
   { dir: 'assets/ogp/bases', ext: '.png' },                    // api/og-image の MIRROR 欄の札（元素別7枚）
-  { dir: 'assets/ogp/bases-resonance', ext: '.jpg' },          // 同・共鳴診断（m2）の下地（見出しだけ「共鳴診断 — MY RESULT」。build-ogp-bases.mjs --resonance）
-  { dir: 'assets/ogp/bases-reveal', ext: '.jpg' },             // 同・共鳴診断 Character Reveal（m3）の下地（人物の元素ごと7枚。build-ogp-bases.mjs --reveal）
-  { dir: 'jagan', ext: '.html' },                              // 邪眼診断（/jagan/・/jagan/about・/jagan/sample）
+  { dir: 'jagan', ext: '.html' },                              // 邪眼診断（/jagan/・/jagan/about・/jagan/sample・/jagan/report・/jagan/dipper・/jagan/complete-sample）
   { dir: 'jagan', ext: '.mjs' },
   { dir: 'jagan', ext: '.css' },
-  { dir: 'jagan/complete', ext: '.mjs' },                       // 邪眼完全解析 DIPPER（叩き台）の中身・紙面・文章
+  { dir: 'jagan/complete', ext: '.mjs' },                       // 邪眼完全解析「DIPPER」の中身・紙面・文章
   { dir: 'jagan/complete', ext: '.css' },
-  { dir: 'jagan/engine', ext: '.mjs' },                        // 邪眼診断の採点（仕様の runtime.mjs・math.mjs と生成した data.mjs。サーバーも同じものを使う）
+  { dir: 'jagan/engine', ext: '.mjs' },                        // 邪眼診断の採点（runtime.mjs・math.mjs と生成した data.mjs。サーバーも同じものを使う）
 ];
 
 // 公開禁止（dist/ に1つでもあれば失敗）。許可リストの誤りに対する二重の確認。
@@ -153,7 +148,7 @@ function forbiddenIn(relPaths) {
 // ---- 参照の確認 ----
 const SITE_ORIGIN = 'https://element-diagnosis-five.vercel.app';
 // 既知の欠損（本番ドメインの絶対 URL で、このリポジトリに実体が無いもの。上記「Production 移行前の残課題」）。新しい欠損は失敗にする。
-const KNOWN_MISSING_ABSOLUTE = [/^thumbs\/x_card_[A-Z]{4}\.png$/];
+const KNOWN_MISSING_ABSOLUTE = []; // 2026-11-24：タイプ解説の og:image を assets/ogp/types/ に差し替えて、既知の欠損（thumbs）は無くなった
 
 function stripQuery(p) { return p.replace(/[?#].*$/, ''); }
 

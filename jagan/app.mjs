@@ -4,7 +4,7 @@
 //   ・この端末に残すもの（localStorage）：途中の回答、最後の結果（再表示用）、ログイン前の保存待ち、共有の取消用の値。
 //     ETI の pending（pendingDiagnosis_v1・v2）とは別のキーにする。
 //   ・GA4 へは操作の種類だけを送る（回答・12スコア・結果 ID・公開 ID は送らない）。
-import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, shareUrl, RESULT_SCHEMA_VERSION } from './engine/runtime.mjs';
+import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, shareUrl, answerShareUrl, parseAnswerShareKey, RESULT_SCHEMA_VERSION } from './engine/runtime.mjs';
 import { BUNDLE } from './engine/data.mjs';
 import { renderResultPage, esc, heroGemsHtml } from './view.mjs';
 import { wireSampleLinks } from './sample-buy.mjs';
@@ -113,6 +113,7 @@ function choose(id, v) {
   if (state.answers[id] === v) { delete state.answers[id]; state.focus = id; saveProgress(); renderQuiz(); return; } // 選択を外す
   state.answers[id] = v;
   popId = id;
+  if (window.EdAnalytics) window.EdAnalytics.progress('jagan', answeredCount(state.answers), ORDER.length);
   state.focus = id;
   const ids = ORDER.slice(state.page, state.page + PAGE);
   if (wasFocused) {
@@ -132,7 +133,7 @@ function startQuiz(resume) {
   state = resume || { resultId: newResultId(), answers: {}, page: 0, focus: null };
   prevFocus = null;
   saveProgress();
-  if (!resume) track('jagan_start', {});
+  if (!resume) { track('jagan_start', {}); if (window.EdAnalytics) window.EdAnalytics.start('jagan'); }
   show('quiz'); renderQuiz();
 }
 function finish() {
@@ -142,7 +143,9 @@ function finish() {
   const last = { v: VERSION, resultId: state.resultId, answers, completedAt: new Date().toISOString() };
   store.set(K.last, last);
   store.del(K.progress);
-  track('jagan_complete', {});
+  track('jagan_complete', window.EdAnalytics ? window.EdAnalytics.durationParams('jagan') : {});
+  // 全設問の回答（並びは設問の表示順。回答 1〜5）
+  if (window.EdAnalytics) window.EdAnalytics.answers('jagan', VERSION, ORDER, answers, (x) => Number(x));
   showResult(last, { mode: 'fresh' });
   // 診断の傾向（邪眼・異相・DTI・ファトゥス・12特性の10点刻み）。新しく終えた結果だけ
   try { const prof = profileParams(current && current.result); if (prof) track(PROFILE_EVENT, prof); } catch { /* 計測だけ */ }
@@ -160,7 +163,13 @@ function showResult(record, { mode, savedAt } = {}) {
   }
   current = { result, answers: mode === 'saved' ? result.answers : record.answers, mode };
   $('resultBody').innerHTML = renderResultPage(result, BUNDLE);
+  if (mode === 'shared') { showShared(); return; }
   bindResult();
+  // 結果の納得度：いま診断を終えた結果だけ（保存した結果・共有リンクでは出さない）
+  if (mode === 'fresh' && window.EdAnalytics) {
+    const row = document.querySelector('#resultBody .rx-share-row');
+    if (row) { const box = document.createElement('div'); row.insertAdjacentElement('afterend', box); window.EdAnalytics.mountFeedback(box, 'jagan'); }
+  }
   const banner = $('savedBanner');
   banner.hidden = mode !== 'saved';
   if (mode === 'saved') banner.textContent = `マイページに保存した結果です（${new Date(savedAt).toLocaleString('ja-JP')}・保存時の版 ${result.versions.interpretation}）。`;
@@ -176,6 +185,32 @@ function showResult(record, { mode, savedAt } = {}) {
   show('result');
 }
 function summaryOf(result) { try { return publicSummary(result); } catch { return null; } }
+
+// ---- 共有された結果（/jagan/?s=<回答の共有キー>。X の共有リンクから） ----
+//   元素診断と同じく、共有した人の完了ページをそのまま表示する。見る人の端末の記録（最後の結果）は書き換えない。
+//   保存・購入・共有・画像保存は、共有した本人の記録に対する操作なので出さない（見る人には「自分も診断する」）。
+function openShared(k) {
+  const p = parseAnswerShareKey(k);
+  if (!p || p.itemSetVersion !== VERSION) { message('この共有リンクの結果は、現在の邪眼診断では表示できません。'); return; }
+  showResult({ answers: p.answers, resultId: null }, { mode: 'shared' });
+}
+function showShared() {
+  const body = $('resultBody');
+  body.querySelectorAll('.rx-share-row, .rx-seeing, .rx-all, .rx-save, .rx-preview-btn, [data-buy]').forEach((el) => el.remove());
+  const banner = $('savedBanner');
+  banner.hidden = false;
+  banner.textContent = '共有された邪眼診断の結果です。';
+  body.insertAdjacentHTML('beforeend', `<section class="rx-card rx-save">
+      <p class="rx-save-k">あなたの深淵は</p>
+      <p class="rx-save-text">50問に答えると、あなたの邪眼・異相・ファトゥスがわかります。</p>
+      <a class="rx-save-btn" href="/jagan/" data-shared-start style="display:inline-block;text-decoration:none">邪眼診断をはじめる</a>
+    </section>`);
+  body.querySelector('[data-shared-start]').addEventListener('click', () => track('jagan_shared_start', {}));
+  document.querySelectorAll('#resultBody details.rx-more-main').forEach((d) => d.addEventListener('toggle', () => { if (d.open) track('jagan_detail_open', { source: 'shared' }); }));
+  $('retryBtn').textContent = '自分も診断する';
+  track('jagan_shared_open', {});
+  show('result');
+}
 function setStatus(text, isError) { const s = $('actionStatus'); s.textContent = text || ''; s.classList.toggle('is-error', !!isError); }
 
 // 保存：ログイン中ならサーバーへ（サーバーが再計算して保存）。未ログインなら保存待ちを残してマイページでログイン
@@ -260,7 +295,8 @@ function share() {
   // 公開してよい結果だけを載せた共有 URL（サーバーへの登録なし。この URL から各結果の OGP が出る）
   let s;
   try { s = publicSummary(r); } catch { setStatus('この結果は共有できません。', true); return; }
-  const url = shareUrl(location.origin, s);
+  // 元素診断と同じく、回答を載せた URL（開くと、この完了ページをそのまま再現する）。載せられない時は結果だけの形
+  const url = answerShareUrl(location.origin, current.answers, r.versions.itemSet) || shareUrl(location.origin, s);
   let text;
   try { text = makeShareText(r, url, `${location.origin}/`); } catch { text = shareTextFromSummary(s, url); }
   track('jagan_share_open_x', {});
@@ -302,20 +338,27 @@ function bindResult() {
     const id = firstUnanswered(); if (id) { const i = ORDER.indexOf(id); state.page = i - (i % PAGE); }
     saveProgress(); show('quiz'); renderQuiz();
   });
-  document.querySelectorAll('#resultBody .rx-more').forEach((d) => d.addEventListener('toggle', () => { if (d.open) track('jagan_detail_open', {}); }));
+  document.querySelectorAll('#resultBody details.rx-more-main').forEach((d) => d.addEventListener('toggle', () => { if (d.open) track('jagan_detail_open', {}); }));
 }
 
 // ---- 邪眼解析レポート（¥1,000）・完全解析（¥3,000）の申込（販売中だけ。金額・商品はサーバーが決める） ----
 //   元素診断と同じく、完了ページの導線はログイン・購入済みかどうかで変えない（常に ¥1,000・¥3,000。再購入も受け付ける）。
 //   購入済みのレポートは、マイページ・固有リンクから読む。
+// 申込ボタンの場所（GA4 の source。購入 API へ送る source と同じ値）
+const ctaSource = () => (current && current.mode === 'saved' ? 'saved_result' : 'result');
 const productOfBtn = (b) => (b.getAttribute('data-buy') === 'complete' ? 'complete' : 'report');
 function setupBuy() {
   const btns = Array.from(document.querySelectorAll('#resultBody [data-buy]'));
   if (!salesOpen() || !current) {
-    btns.forEach((b) => b.addEventListener('click', () => track(productOfBtn(b) === 'complete' ? 'jagan_complete_cta' : 'jagan_report_cta', { state: 'closed' })));
+    btns.forEach((b) => b.addEventListener('click', () => track(productOfBtn(b) === 'complete' ? 'jagan_complete_cta' : 'jagan_report_cta', { state: 'closed', source: ctaSource() })));
     return;
   }
   document.querySelectorAll('#resultBody .rx-sales-note').forEach((n) => { n.hidden = true; });
+  if (window.EdAnalytics) {
+    const src = ctaSource();
+    window.EdAnalytics.ctaView(btns.filter((b) => productOfBtn(b) !== 'complete'), { diagnosis_type: 'jagan', product_id: 'jagan_report_v1', state: 'open', source: src });
+    window.EdAnalytics.ctaView(btns.filter((b) => productOfBtn(b) === 'complete'), { diagnosis_type: 'jagan', product_id: 'jagan_complete_v1', state: 'open', source: src });
+  }
   btns.forEach((b) => {
     const product = productOfBtn(b);
     b.disabled = false;
@@ -328,7 +371,7 @@ async function onBuy(btn, product) {
   if (!current) return;
   const r = current.result;
   const isC = product === 'complete';
-  track(isC ? 'jagan_complete_cta' : 'jagan_report_cta', { state: 'open' });
+  track(isC ? 'jagan_complete_cta' : 'jagan_report_cta', { state: 'open', source: ctaSource() });
   const box = isC ? btn.closest('.dp-fold') : null;
   const msg = box ? box.querySelector('[data-dipper-msg]') : null;
   const old = !isC && btn.parentElement && btn.parentElement.querySelector('.rx-buy-error');
@@ -385,6 +428,7 @@ function boot() {
   const params = new URLSearchParams(location.search);
   const saved = params.get('saved');
   if (saved && UUID_RE.test(saved)) { openSaved(saved); return; }
+  if (params.has('s')) { openShared(params.get('s')); return; }
   const last = store.get(K.last);
   const validLast = last && last.v === VERSION && UUID_RE.test(last.resultId || '') ? last : null;
   if (location.hash === '#result' && validLast) { showResult(validLast, { mode: 'fresh' }); return; }

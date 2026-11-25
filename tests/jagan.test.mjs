@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, shareUrl, explainCharacter, SHARE_CHAR_CODES, SHARE_VERSIONS, shareKey, parseShareKey } from '../jagan/engine/runtime.mjs';
+import { computeDiagnosis, publicSummary, makeShareText, shareTextFromSummary, shareUrl, explainCharacter, SHARE_CHAR_CODES, SHARE_VERSIONS, shareKey, parseShareKey, answerShareKey, answerShareUrl, parseAnswerShareKey, ANSWER_SHARE_VERSIONS } from '../jagan/engine/runtime.mjs';
 import { judge, characterRanking, scoreAnswers } from '../jagan/engine/judge.mjs';
 import { BUNDLE } from '../jagan/engine/data.mjs';
 import { judge as specJudge } from '../docs/jagan/spec_v0_3_balanced/runtime.mjs';
@@ -437,9 +437,9 @@ test('share text equals the template; OG params round-trip through the image par
     assert.equal(parseShareKey('PYHOg2s1').character.match, 100, '旧い8文字の形も読める');
     // 全84通り×（11名＋保留）×一致度0〜100 が、4文字で往復できる（重なりなし）
     const seen = new Set();
-    for (const code of SHARE_VERSIONS[1].codes) for (const ch of [...SHARE_VERSIONS[1].chars, null]) for (const m of ch ? [0, 1, 57, 99, 100] : [0]) {
+    for (const code of SHARE_VERSIONS[2].codes) for (const ch of [...SHARE_VERSIONS[2].chars, null]) for (const m of ch ? [0, 1, 57, 99, 100] : [0]) {
       const k = shareKey({ dti: { code }, character: ch ? { id: ch, matchPercent: m } : null, namingVersion: SHARE_VERSIONS[1].naming });
-      assert.match(k, /^[0-9A-Za-z]{3}1$/); assert.ok(!seen.has(k)); seen.add(k);
+      assert.match(k, /^[0-9A-Za-z]{3}2$/); assert.ok(!seen.has(k)); seen.add(k);
       const back = parseShareKey(k);
       assert.deepEqual([back.code, back.character && back.character.id, back.character && back.character.match], [code, ch, ch ? m : null]);
     }
@@ -463,7 +463,7 @@ test('share text equals the template; OG params round-trip through the image par
     assert.equal(parsed.code, s.dti.code); assert.equal(parsed.name, s.dti.name);
     assert.equal(parsed.character.name, s.character.label);
     assert.equal(parsed.character.match, s.character.matchPercent);
-    assert.match(ogParams(s), /&v=dti-naming-v1-20261104\.dti-og-3$/);
+    assert.match(ogParams(s), /&v=dti-naming-v1-20261104\.dti-og-4$/);
   }
   // 人物を保留した結果は人物の行を省く
   const flat = run(all(3));
@@ -635,7 +635,7 @@ test('stateless share page (/jagan/share?…) needs no DB: summary from whitelis
   const meta = (k) => (ok.body.match(new RegExp(`<meta (?:property|name)="${k}" content="([^"]*)"`)) || [])[1];
   assert.equal(meta('og:image'), `https://element-diagnosis-git-jagan-preview.vercel.app/api/jagan-og?${q.replace(/&/g, '&amp;')}`.replace(/&amp;/g, '&amp;'));
   assert.equal(meta('og:url'), `https://element-diagnosis-git-jagan-preview.vercel.app/j/${key}`);
-  assert.match(key, /^[0-9A-Za-z]{3}1$/);
+  assert.match(key, /^[0-9A-Za-z]{3}2$/);
   // 以前の8文字の形（Preview で作られた ?k=）も開ける
   const old = await call(page, { method: 'GET', url: `/api/jagan-share-page?k=${s.dti.code}${SHARE_CHAR_CODES[s.character.id]}${s.character.matchPercent.toString(36).padStart(2, '0')}1` });
   assert.equal(old.status, 200);
@@ -685,9 +685,9 @@ test('mypage emblems (pre-awakening / awakened): every element has both images, 
 });
 
 // js/jagan-mypage.js を、模擬の Supabase で読み込む
-function loadJaganMypage({ rows, ent, token = 'tok' }) {
+function loadJaganMypage({ rows, ent, token = 'tok', config = { appEnv: 'preview', jaganSalesOpen: true } }) {
   const js = fs.readFileSync(path.join(ROOT, 'js/jagan-mypage.js'), 'utf8');
-  const win = { __ED_PUBLIC_CONFIG__: { appEnv: 'preview', jaganSalesOpen: true }, localStorage: { getItem: () => null, removeItem() {}, setItem() {} }, sessionStorage: { getItem: () => null, removeItem() {}, setItem() {} } };
+  const win = { __ED_PUBLIC_CONFIG__: config, localStorage: { getItem: () => null, removeItem() {}, setItem() {} }, sessionStorage: { getItem: () => null, removeItem() {}, setItem() {} } };
   const supa = { auth: { getSession: async () => ({ data: { session: token ? { access_token: token } : null } }) },
     from: (t) => (t === 'jagan_results' ? { select: () => ({ order: async () => ({ data: rows, error: null }) }) } : { select: () => ({ eq: async () => ent }) }) };
   const doc = { addEventListener() {}, getElementById: () => null };
@@ -705,7 +705,10 @@ test('mypage (js/jagan-mypage.js)：権利が active の記録だけ購入済み
   assert.deepEqual(out.sessions[0].top3.map((t) => t.id), r1.traitRanking.slice(0, 3).map((t) => t.id));
   // 共有：結果ページ（runtime の shareUrl）と同じ URL・同じ文
   const s0 = out.sessions[0];
-  assert.equal(jm.shareUrlOf(s0), shareUrl('https://example.test', publicSummary(r1)));
+  assert.equal(jm.shareUrlOf(s0), answerShareUrl('https://example.test', r1.answers, r1.versions.itemSet));
+  assert.match(jm.shareUrlOf(s0), /\/j\/[0-9A-Za-z]{20}3$/);
+  // 回答の無い記録は、結果だけの形（従来どおり）
+  assert.equal(jm.shareUrlOf({ ...s0, answers: null }), shareUrl('https://example.test', publicSummary(r1)));
   assert.equal(jm.shareTextOf(s0, 'U'), shareTextFromSummary(publicSummary(r1), 'U'));
   jm = loadJaganMypage({ rows, ent: { data: null, error: { message: 'x' } } });
   out = await jm.load();
@@ -1104,4 +1107,73 @@ test('GA4 の診断の傾向（jagan_profile）：邪眼・異相・DTI・ファ
   const s = JSON.stringify(p);
   assert.ok(!s.includes(r.resultId) && !/ANX01|answers/.test(s));
   assert.equal(profileParams(run(all(3))).jagan_fatui, '保留');
+});
+
+test('mypage（本番）：邪眼を有効にした本番（公開設定の jaganEnabled）では、邪眼の記録・権利を読む。無効なら読まない（2026-11-12 の不具合の再発防止）', async () => {
+  const r1 = run(VARIED());
+  const rows = [{ result_id: '00000000-0000-4000-8000-000000000000', created_at: '2026-11-12', headline: headlineOf(r1), snapshot: r1 }];
+  const ent = { data: [{ result_id: rows[0].result_id, status: 'active', product_key: 'jagan_report_v1' }], error: null };
+  let out = await loadJaganMypage({ rows, ent, config: { appEnv: 'production', jaganEnabled: true, jaganSalesOpen: true } }).load();
+  assert.deepEqual(out.sessions.map((s) => [s.purchased, s.entKnown]), [[true, true]], '本番で邪眼が有効なら、購入済みの記録が出る');
+  out = await loadJaganMypage({ rows, ent, config: { appEnv: 'production', jaganSalesOpen: false } }).load();
+  assert.equal(out.sessions.length, 0, '本番で邪眼が無効なら読まない');
+});
+
+test('回答を載せた共有（/j/<20文字>3）：回答を往復でき、共有ページは同じ結果の OGP を出し、人はその完了ページ（/jagan/?s=）へ移る', async () => {
+  // 版3の並びは凍結：今の回答の版・表示の並びと同じ
+  assert.equal(ANSWER_SHARE_VERSIONS[3].itemSet, BUNDLE.items.item_set_version);
+  assert.deepEqual([...ANSWER_SHARE_VERSIONS[3].order], BUNDLE.items.display_order);
+  for (const r of [run(VARIED()), run(all(1)), run(all(5)), run(all(3))]) {
+    const k = answerShareKey(r.answers, r.versions.itemSet);
+    assert.match(k, /^[0-9A-Za-z]{20}3$/);
+    const back = parseAnswerShareKey(k);
+    assert.deepEqual(back.answers, r.answers);
+    // 回答だけから、同じ結果（邪眼・異相・人物・一致度）になる
+    const again = computeDiagnosis({ answers: back.answers, itemSetVersion: back.itemSetVersion, resultId: null }, BUNDLE);
+    assert.deepEqual(publicSummary(again), publicSummary(r));
+  }
+  assert.equal(answerShareKey({ ...run(VARIED()).answers, ANX01: 6 }, BUNDLE.items.item_set_version), null);
+  assert.equal(answerShareKey(run(VARIED()).answers, 'other-version'), null);
+  for (const bad of ['zzzzzzzzzzzzzzzzzzzz3', '00000000000000000000', '0000000000000000000013', '00000000000000000000x']) assert.equal(parseAnswerShareKey(bad), null, bad);
+
+  const page = createSharePageHandler({ env: {}, fetchImpl: async () => { throw new Error('no db'); } });
+  const r = run(VARIED()), s = publicSummary(r);
+  const k = answerShareKey(r.answers, r.versions.itemSet);
+  const res = await call(page, { method: 'GET', url: `/api/jagan-share-page?k=${k}` });
+  assert.equal(res.status, 200);
+  const meta = (n) => (res.body.match(new RegExp(`<meta (?:property|name)="${n}" content="([^"]*)"`)) || [])[1];
+  assert.equal(meta('og:image'), `https://element-diagnosis-git-jagan-preview.vercel.app/api/jagan-og?${ogParams(s).replace(/&/g, '&amp;')}`);
+  assert.equal(meta('og:url'), `https://element-diagnosis-git-jagan-preview.vercel.app/j/${k}`);
+  // X などのクローラーは JS を実行しないため、カードはこのページの OGP。meta refresh は使わない（クローラーが移動先へ進んでしまう）
+  assert.ok(!res.body.includes('http-equiv="refresh"'));
+  assert.ok(res.body.includes(`location.replace("https://element-diagnosis-git-jagan-preview.vercel.app/jagan/?s=${k}")`));
+  // 結果だけの形（以前の投稿）は、移さずにその場で表示する
+  const short = await call(page, { method: 'GET', url: `/api/jagan-share-page?k=${sharePagePath(s).split('/').pop()}` });
+  assert.ok(!short.body.includes('http-equiv="refresh"'));
+  // 結果ページの共有は回答の形
+  assert.equal(answerShareUrl('https://x.test', r.answers, r.versions.itemSet), `https://x.test/j/${k}`);
+});
+
+test('GA4：完了ページの「もっと詳しく見る」（jagan_detail_open）の対象が実際の要素と一致し、申込ボタンに source を付ける', () => {
+  const html = renderResultPage(run(VARIED()), BUNDLE);
+  const app = fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../jagan/app.mjs'), 'utf8');
+  assert.ok(html.includes('<details class="rx-more-main">'));
+  const sels = [...app.matchAll(/querySelectorAll\('#resultBody (details\.[\w-]+)'\)[^\n]*jagan_detail_open/g)].map((m) => m[1]);
+  assert.deepEqual(sels, ['details.rx-more-main', 'details.rx-more-main']);
+  assert.ok(!/'#resultBody \.rx-more'/.test(app));
+  assert.match(app, /'jagan_report_cta', \{ state: 'open', source: ctaSource\(\) \}/);
+  assert.match(app, /state: 'closed', source: ctaSource\(\) \}/);
+});
+
+test('GA4 purchase：支払いから3時間以内なら、決済から戻ったタブでなくても送る（元素診断と同じ条件）', async () => {
+  const { recentlyPaid, RECENT_PAID_MS } = await import('../jagan/client.mjs');
+  const now = Date.parse('2026-11-12T09:30:00Z');
+  assert.equal(RECENT_PAID_MS, 3 * 3600 * 1000);
+  assert.equal(recentlyPaid({ paidAt: '2026-11-12T09:21:34Z' }, now), true);
+  assert.equal(recentlyPaid({ paidAt: '2026-11-12T06:29:59Z' }, now), false);
+  assert.equal(recentlyPaid({ paidAt: null }, now), false);
+  assert.equal(recentlyPaid(null, now), false);
+  const src = (f) => fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '..', f), 'utf8');
+  assert.match(src('jagan/report.mjs'), /if \(fresh \|\| recentlyPaid\(r\.body\.report\)\) trackPurchase\(token, 'report'/);
+  assert.match(src('jagan/dipper.mjs'), /if \(fresh \|\| recentlyPaid\(r\.body\.report\)\) trackPurchase\(token, 'complete'/);
 });

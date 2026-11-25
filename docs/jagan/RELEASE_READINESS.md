@@ -122,6 +122,7 @@
   - 探索レポート（ファネル・表）は API で作れないため、GA4 の画面で作る。
 - `purchase` は「決済から戻ってレポートが開き、GA4 へ送れた購入」。売上・件数の正は Stripe と注文 DB、GA4 は流入から購入までの行動分析に使う。`purchase` には申込元の画面 `source` を引き継ぐ（どの申込ボタンから購入に至ったか）。`transaction_id` は注文ごとに固定（固有リンクの再発行は無い）。
 - 診断の傾向：診断を終えた時（新しい結果だけ）に `jagan_profile` を送る。邪眼 `jagan_element`・異相 `jagan_isou`・DTI `jagan_dti`・ファトゥス `jagan_fatui`（保留は「保留」）・一致度 `fatui_match`（10点刻み・保留は -1）・12特性 `jt_ANX`〜`jt_CAL`（0〜100・10点刻み）。回答・結果 ID は送らない。いずれもカスタム ディメンション登録済み（2026-11-12）。
+- 元素診断との比較用（2026-11-12 追加）：邪眼の全イベントに `diagnosis_type: jagan`。GA4 推奨の `begin_checkout`（決済画面へ移る直前・value・items・source）。サンプルを開いた `jagan_sample_click`（product・source。元素診断の `result_sample_click` に相当）。共有ページ（`/j/…`）にも計測を入れ、X シェアからの流入（ランディングページ `/j/`）を見られるようにした。
 - 邪眼の主なイベント：`jagan_start`・`jagan_complete`・`jagan_detail_open`・`jagan_image_save`・`jagan_share_click`／`jagan_share_open_x`・`jagan_save_click`／`jagan_save_success`・`jagan_report_cta`／`jagan_complete_cta`（state・source）・`jagan_report_open`／`jagan_complete_open`（source）・`jagan_report_register_*`／`jagan_complete_register_*`・`purchase`。
 
 ## 11. 会員データ（マイページ）への影響（2026-11-11 確認）

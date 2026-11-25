@@ -108,12 +108,16 @@ export function publicSummary(result) {
 //   画像（/api/jagan-og）の URL は従来の形（e・t・c・m・v）。投稿文には出ない。回答・12特性の得点・結果ID は載せない。
 export const SHARE_PATH = '/j';
 export const LEGACY_SHARE_PATH = '/jagan/share';
-export const OG_DESIGN_VERSION = 'dti-og-3';
+export const OG_DESIGN_VERSION = 'dti-og-4';
 const B62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-export const SHARE_VERSIONS = Object.freeze({
-  1: Object.freeze({ naming: 'dti-naming-v1-20261104', og: 'dti-og-3',
+const SHARE_V1 = Object.freeze({ naming: 'dti-naming-v1-20261104', og: 'dti-og-3',
     codes: Object.freeze(["PYAX","HYAX","CRAX","ELAX","ANAX","GEAX","DEAX","PYDP","HYDP","CRDP","ELDP","ANDP","GEDP","DEDP","PYSU","HYSU","CRSU","ELSU","ANSU","GESU","DESU","PYWD","HYWD","CRWD","ELWD","ANWD","GEWD","DEWD","PYIM","HYIM","CRIM","ELIM","ANIM","GEIM","DEIM","PYPE","HYPE","CRPE","ELPE","ANPE","GEPE","DEPE","PYPF","HYPF","CRPF","ELPF","ANPF","GEPF","DEPF","PYHO","HYHO","CRHO","ELHO","ANHO","GEHO","DEHO","PYAT","HYAT","CRAT","ELAT","ANAT","GEAT","DEAT","PYMN","HYMN","CRMN","ELMN","ANMN","GEMN","DEMN","PYRK","HYRK","CRRK","ELRK","ANRK","GERK","DERK","PYCL","HYCL","CRCL","ELCL","ANCL","GECL","DECL"]),
-    chars: Object.freeze(['pierro', 'capitano', 'dottore', 'columbina', 'arlecchino', 'pulcinella', 'scaramouche', 'sandrone', 'signora', 'pantalone', 'tartaglia']) }),
+    chars: Object.freeze(['pierro', 'capitano', 'dottore', 'columbina', 'arlecchino', 'pulcinella', 'scaramouche', 'sandrone', 'signora', 'pantalone', 'tartaglia']) });
+// 版2：カードのデザインだけを変えた（dti-og-4：ファトゥスの名前のグラデーション・中央の目をファトゥスの色に）。
+//   並びは版1と同じ。X はカードを URL ごとに覚えるため、新しい投稿は新しい URL（末尾2）にして、新しいカードを読ませる。
+export const SHARE_VERSIONS = Object.freeze({
+  1: SHARE_V1,
+  2: Object.freeze({ naming: SHARE_V1.naming, og: 'dti-og-4', codes: SHARE_V1.codes, chars: SHARE_V1.chars }),
 });
 // 旧い8文字の形（?k=PYSPj2b1）の人物の1字
 export const SHARE_CHAR_CODES = Object.freeze({ pierro: 'a', capitano: 'b', dottore: 'c', columbina: 'd', arlecchino: 'e', pulcinella: 'f',
@@ -157,6 +161,45 @@ export function parseShareKey(k) {
   return { code: m[1], character, version: SHARE_VERSIONS[m[4]] };
 }
 export function sharePath(s) { return `${SHARE_PATH}/${shareKey(s)}`; }
+
+// ---- 回答を載せた共有（元素診断と同じ：リンクを開くと、共有した人の完了ページをそのまま再現する） ----
+//   /j/<回答20文字><版1文字>。50問の回答（1〜5）を、版ごとに凍結した並びで5進数→62進数20文字に詰める。
+//   版の数字は 3 から（1・2 は結果だけの4文字の形）。回答の版（item_set）が変わったら、新しい数字で並びを凍結して足す。
+//   結果ID・ユーザー・購入の情報は載せない。結果は回答だけから決まる（同点の処理も回答のハッシュ）。
+export const ANSWER_SHARE_VERSIONS = Object.freeze({
+  3: Object.freeze({ itemSet: 'jagan-shadow-items-0.4.0-semantic-review',
+    order: Object.freeze(["ANX01","PRF01","SEP01","IMP01","WDR02","ATT01","SUS01","PSV01","HOS01","MAN01","RSK01","CAL01","ANX02","PRF02","SEP02","IMP02","WDR03","ATT02","SUS02","PSV02","HOS03","MAN02","RSK02","CAL02","ANX03","PRF04","SEP03","IMP03","WDR04","ATT03","SUS03","PSV04","HOS04","MAN03","RSK03","CAL03","ANX05","PRF05","SEP04","IMP04","WDR05","ATT05","SUS05","PSV05","HOS05","MAN04","RSK04","CAL04","SEP05","IMP05"]) }),
+});
+const ANSWER_KEY_LEN = 20;
+export function answerShareKey(answers, itemSetVersion) {
+  const v = Object.keys(ANSWER_SHARE_VERSIONS).find((k) => ANSWER_SHARE_VERSIONS[k].itemSet === itemSetVersion);
+  if (!v || !answers || typeof answers !== 'object') return null;
+  let n = 0n;
+  for (const id of ANSWER_SHARE_VERSIONS[v].order) {
+    const a = answers[id];
+    if (!Number.isInteger(a) || a < 1 || a > 5) return null;
+    n = n * 5n + BigInt(a - 1);
+  }
+  let out = '';
+  for (let i = 0; i < ANSWER_KEY_LEN; i++) { out = B62[Number(n % 62n)] + out; n /= 62n; }
+  return out + v;
+}
+// 読めない時は null。{ answers, itemSetVersion }
+export function parseAnswerShareKey(k) {
+  const m = /^([0-9a-zA-Z]{20})([3-9])$/.exec(String(k || ''));
+  const t = m && ANSWER_SHARE_VERSIONS[m[2]];
+  if (!t) return null;
+  let n = 0n;
+  for (const c of m[1]) n = n * 62n + BigInt(B62.indexOf(c));
+  if (n >= 5n ** BigInt(t.order.length)) return null;
+  const answers = {};
+  for (let i = t.order.length - 1; i >= 0; i--) { answers[t.order[i]] = Number(n % 5n) + 1; n /= 5n; }
+  return { answers, itemSetVersion: t.itemSet };
+}
+export function answerShareUrl(origin, answers, itemSetVersion) {
+  const k = answerShareKey(answers, itemSetVersion);
+  return k ? `${origin}${SHARE_PATH}/${k}` : null;
+}
 // 画像の URL（従来の形・キャッシュの鍵に版を含む）
 export function ogQuery(s) {
   const p = new URLSearchParams();
