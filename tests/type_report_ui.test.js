@@ -166,3 +166,31 @@ test('既存の解析レポートには、タイプ別レポートの最下部�
   assert.deepEqual(errors, []);
   assert.equal(f, null);
 });
+
+// タイプ解説ページのレポートの欄：本番ドメインでは、販売中（/api/public-config の typeReportSalesOpen）の時だけ出す
+test('タイプ解説ページ：本番ドメインのレポートの欄は typeReportSalesOpen が true の時だけ', { skip: !chromium }, async () => {
+  const PROD = 'https://element-diagnosis-five.vercel.app';
+  for (const [cfg, want] of [[{ typeReportSalesOpen: true }, true], [{ typeReportSalesOpen: false }, false], [null, false], ['error', false]]) {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const p = await ctx.newPage();
+    const errors = [];
+    p.on('pageerror', (e) => errors.push(String(e)));
+    await p.route(/googletagmanager|google-analytics|fonts\.(googleapis|gstatic)|cdnjs\.cloudflare\.com/, (r) => r.fulfill({ contentType: 'application/javascript', body: '' }));
+    await p.route(`${PROD}/**`, (r) => {
+      const u = new URL(r.request().url());
+      if (u.pathname === '/api/public-config') return cfg === 'error' ? r.fulfill({ status: 503, body: '{}' }) : r.fulfill({ contentType: 'application/json', body: JSON.stringify(cfg) });
+      if (u.pathname.startsWith('/api/')) return r.fulfill({ contentType: 'application/json', body: '{}' });
+      let f = path.join(ROOT, decodeURIComponent(u.pathname));
+      if (!fs.existsSync(f) && fs.existsSync(f + '.html')) f += '.html';
+      if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) return r.fulfill({ status: 404, body: '' });
+      return r.fulfill({ contentType: TYPES[path.extname(f)] || 'application/octet-stream', body: fs.readFileSync(f) });
+    });
+    await p.goto(`${PROD}/type/pysw`);
+    await p.waitForLoadState('networkidle');
+    const shown = await p.evaluate(() => [...document.querySelectorAll('[data-preview-only]')].map((n) => !n.hidden));
+    await ctx.close();
+    assert.deepEqual(errors, [], JSON.stringify(cfg));
+    assert.ok(shown.length >= 2, '欄がある');
+    assert.ok(shown.every((x) => x === want), `${JSON.stringify(cfg)} → ${want}`);
+  }
+});

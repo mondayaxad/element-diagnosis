@@ -98,7 +98,7 @@ def arr(xs):
     return 'array[' + ', '.join(f"'{x}'" for x in xs) + ']'
 
 
-STAGE_NAMES = {1: 'prod_01', 2: 'prod_02', 3: 'prod_03', 4: 'prod_04a', 5: 'prod_04b', 6: 'prod_06'}
+STAGE_NAMES = {1: 'prod_01', 2: 'prod_02', 3: 'prod_03', 4: 'prod_04a', 5: 'prod_04b', 6: 'prod_06', 7: 'prod_07'}
 
 
 def guard(stage, prev_required, phase):
@@ -1083,6 +1083,151 @@ rollback;
 OUT['prod_06_jagan.sql'] = stage6
 OUT['prod_86_postcheck_06_READONLY.sql'] = readonly_postcheck6
 OUT['prod_96_rollback_06_DRAFT_DO_NOT_RUN.sql'] = rollback6
+
+
+# ============================================================
+# 段階 7：元素診断のタイプ別レポート（¥1,000・買い切り）（2026-11-25 追加）
+#   Preview の type_report_01（docs/sql/20261125120000_type_report_01_orders.sql。Preview で適用・決済から閲覧まで検証済み）。
+#   置き換え：Preview 判定と migration 履歴の行を除く・注文は Stripe Live だけ（stripe_mode='live'）。それ以外は Preview と同じ。
+#   既存の表・関数・権限（既存6表・purchase_entitlements・complete_*・jagan_*）には触れない。type_report の表・関数だけを足す。
+# ============================================================
+TYPE_REPORT_SQL = ('20261125120000_type_report_01_orders.sql', 'type_report_01_orders')
+TYPE_REPORT_FUNCTIONS = ['type_report_create_order', 'type_report_mark_checkout_open', 'type_report_apply_payment',
+                         'type_report_close_order', 'type_report_apply_reversal']
+
+
+def stage7():
+    name, mig = TYPE_REPORT_SQL
+    return HEADER.format(
+        title='prod_07：元素診断のタイプ別レポート（¥1,000・買い切り）の注文と、レポート固有リンク',
+        prereq='prod_06 まで適用済み（element_release.migration_ledger に stage 1〜6）。タイプ別レポートの新コードを Production に出す直前に適用する',
+        rollback='docs/sql/production/prod_97_rollback_07_DRAFT_DO_NOT_RUN.sql',
+        notes="""--
+-- 内容（Preview の type_report_01 と同じ。Preview で適用・決済から閲覧まで検証済み）
+--   ・type_report_orders（注文。商品は eti_type_report_v1 ¥1,000。タイプコードと標準の回答の符号・固有リンクの秘密値のハッシュを持つ）
+--   ・関数 type_report_*（注文の作成・決済画面・支払いの反映・注文を閉じる・返金／異議申し立て）。service_role だけが実行できる
+--   ・RLS 有効。ブラウザのロール（anon・authenticated）には権限なし
+-- 本番だけの置き換え
+--   ・Preview 判定と migration 履歴（supabase_migrations）の行は除き、台帳 element_release.migration_ledger に stage 7 を記録
+--   ・注文は Stripe Live だけ（type_report_orders.stripe_mode = 'live' の制約を足す）
+-- 既存の表・関数・権限（既存6表・purchase_entitlements・complete_*・jagan_* など）には触れない
+""") + guard(7, 'array[1, 2, 3, 4, 5, 6]', 'before') + """
+do $pre7$
+begin
+  if exists (select 1 from pg_class where relnamespace = 'public'::regnamespace and relname like 'type\\_report\\_%')
+     or exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname like 'type\\_report\\_%') then
+    raise exception 'type_report objects already exist before prod_07 (partial or foreign state)';
+  end if;
+end
+$pre7$;
+
+""" + jbody(name, name.split('_')[0], mig) + """
+-- 本番だけ：注文は Stripe Live だけ
+alter table public.type_report_orders add constraint type_report_orders_live_only check (stripe_mode = 'live');
+
+do $post7$
+begin
+  if to_regclass('public.type_report_orders') is null then
+    raise exception 'type_report_orders is missing';
+  end if;
+  if (select count(*) from pg_proc where pronamespace = 'public'::regnamespace and proname = any(""" + arr(TYPE_REPORT_FUNCTIONS) + """)) <> """ + str(len(TYPE_REPORT_FUNCTIONS)) + """ then
+    raise exception 'type_report functions are not all present';
+  end if;
+  if not (select relrowsecurity from pg_class where oid = 'public.type_report_orders'::regclass) then
+    raise exception 'row level security is off on type_report_orders';
+  end if;
+  if exists (select 1 from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname like 'type\\_report\\_%'
+              and (has_function_privilege('anon', p.oid, 'EXECUTE') or has_function_privilege('authenticated', p.oid, 'EXECUTE'))) then
+    raise exception 'browser roles can execute a type_report function';
+  end if;
+  if has_table_privilege('anon', 'public.type_report_orders', 'SELECT') or has_table_privilege('anon', 'public.type_report_orders', 'INSERT')
+     or has_table_privilege('anon', 'public.type_report_orders', 'UPDATE') or has_table_privilege('anon', 'public.type_report_orders', 'DELETE')
+     or has_table_privilege('authenticated', 'public.type_report_orders', 'SELECT') or has_table_privilege('authenticated', 'public.type_report_orders', 'INSERT')
+     or has_table_privilege('authenticated', 'public.type_report_orders', 'UPDATE') or has_table_privilege('authenticated', 'public.type_report_orders', 'DELETE') then
+    raise exception 'browser roles can access type_report_orders';
+  end if;
+end
+$post7$;
+
+-- 台帳：段階 7 を記録できるようにする（prod_06 までの台帳の段階の範囲は 1〜6）
+alter table element_release.migration_ledger drop constraint migration_ledger_stage_check;
+alter table element_release.migration_ledger add constraint migration_ledger_stage_check check (stage between 1 and 7);
+comment on schema element_release is '元素診断 本番 migration の台帳（1=prod_01・2=prod_02・3=prod_03・4=prod_04a・5=prod_04b・6=prod_06 邪眼診断・7=prod_07 タイプ別レポート）。アプリ・API からは使わない';
+""" + guard(7, 'array[1, 2, 3, 4, 5, 6]', 'after') + LEDGER_INSERT.format(stage=7, name='prod_07_type_report') + """
+notify pgrst, 'reload schema';
+
+commit;
+"""
+
+
+def rollback7():
+    drops_f = ''.join(f"  for r in select p.oid::regprocedure as f from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname = '{f}' loop execute 'drop function ' || r.f; end loop;\n" for f in TYPE_REPORT_FUNCTIONS)
+    return RB_HEADER.format(title='prod_97：prod_07（タイプ別レポート）の戻し草案',
+                            cond='prod_07 が最新。type_report_orders が空（注文 0 件）。データがある時は戻さず、前へ直す') + guard(7, None, 'after') + rb_ledger(7) + """
+do $nodata7$
+declare
+  n bigint;
+begin
+  select count(*) into n from public.type_report_orders;
+  if n <> 0 then
+    raise exception 'type_report data exists in type_report_orders (% rows): do not roll back; handle it as a forward fix', n;
+  end if;
+end
+$nodata7$;
+
+do $drop7$
+declare
+  r record;
+begin
+""" + drops_f + """end
+$drop7$;
+drop table public.type_report_orders;
+delete from element_release.migration_ledger where stage = 7;
+alter table element_release.migration_ledger drop constraint migration_ledger_stage_check;
+alter table element_release.migration_ledger add constraint migration_ledger_stage_check check (stage between 1 and 6);
+comment on schema element_release is '元素診断 本番 migration の台帳（1=prod_01・2=prod_02・3=prod_03・4=prod_04a・5=prod_04b・6=prod_06 邪眼診断）。アプリ・API からは使わない';
+do $chk7$
+begin
+  if exists (select 1 from pg_class where relnamespace = 'public'::regnamespace and relname like 'type\\_report\\_%')
+     or exists (select 1 from pg_proc where pronamespace = 'public'::regnamespace and proname like 'type\\_report\\_%') then
+    raise exception 'type_report objects remain after rollback';
+  end if;
+end
+$chk7$;
+""" + guard(6, None, 'after') + """
+notify pgrst, 'reload schema';
+
+commit;
+"""
+
+
+def readonly_postcheck7():
+    return """-- ============================================================
+-- prod_87：prod_07（タイプ別レポート）の状態の確認【読み取りのみ】
+-- 本番の SQL Editor で、このファイル全体を実行する（最後は rollback。何も変更しない）。
+-- 生成元：docs/sql/production/build_production_sql.py（手で編集しない）
+-- ============================================================
+begin;
+set transaction read only;
+
+select k, v from (values
+  ('ledger.stages', (select coalesce(string_agg(stage::text || ':' || name, ', ' order by stage), '(なし)') from element_release.migration_ledger)),
+  ('type_report.table', (select coalesce(string_agg(relname || (case when relrowsecurity then '(RLS)' else '(RLS無し)' end), ', ' order by relname), '(なし)') from pg_class where relnamespace = 'public'::regnamespace and relkind = 'r' and relname like 'type\\_report\\_%')),
+  ('type_report.functions', (select count(*)::text from pg_proc where pronamespace = 'public'::regnamespace and proname like 'type\\_report\\_%') || ' (5 であること)'),
+  ('type_report.browser_exec', (select count(*)::text from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname like 'type\\_report\\_%'
+       and (has_function_privilege('anon', p.oid, 'EXECUTE') or has_function_privilege('authenticated', p.oid, 'EXECUTE'))) || ' (0 であること)'),
+  ('type_report.orders_live_only', (select count(*)::text from pg_constraint where conname = 'type_report_orders_live_only') || ' (1 であること)'),
+  ('type_report.rows', case when to_regclass('public.type_report_orders') is null then '(なし)'
+       else (xpath('/row/c/text()', query_to_xml('select count(*) as c from public.type_report_orders', false, true, '')))[1]::text end)
+) v(k, v) order by k;
+
+rollback;
+"""
+
+
+OUT['prod_07_type_report.sql'] = stage7
+OUT['prod_87_postcheck_07_READONLY.sql'] = readonly_postcheck7
+OUT['prod_97_rollback_07_DRAFT_DO_NOT_RUN.sql'] = rollback7
 
 if __name__ == '__main__':
     check = '--check' in sys.argv
