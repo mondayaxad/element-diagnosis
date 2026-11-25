@@ -14,6 +14,13 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 // 元素の代表国家（原神の各国の元素神に対応）。ナドクライは元素に対応する国家ではないため使わない
 export const REPRESENTATIVE_NATION = { 炎: 'ナタ', 水: 'フォンテーヌ', 氷: 'スネージナヤ', 雷: '稲妻', 風: 'モンド', 岩: '璃月', 草: 'スメール' };
+// タイプ名（結果ページ index.html の TYPE_NAME と同じ）
+const INDEX = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+const TYPE_NAME = (() => {
+  const i = INDEX.indexOf('const TYPE_NAME = '); const j = INDEX.indexOf('{', i); let d = 0; let k = j;
+  for (; k < INDEX.length; k++) { if (INDEX[k] === '{') d++; else if (INDEX[k] === '}' && --d === 0) break; }
+  return vm.runInNewContext(`(${INDEX.slice(j, k + 1)})`);
+})();
 const EL_CODE = { 炎: 'PY', 水: 'HY', 氷: 'CR', 雷: 'EL', 風: 'AN', 岩: 'GE', 草: 'DE' };
 const WP_CODE = { 片手剣: 'SW', 両手剣: 'CM', 長柄: 'PL', 法器: 'CT', 弓: 'BW' };
 
@@ -53,7 +60,7 @@ export function buildAll() {
     const back = E.computeResultsV2(E.decodeAnswersV2(encoded, Q), { elementPrototypes: EP, weaponPrototypes: WP, nationPrototypes: NP });
     if (JSON.stringify(back.personality) !== JSON.stringify(R.personality)) throw new Error(`${code}: 符号の往復で結果が変わりました`);
     out[code] = {
-      element: el, weapon: wp, nation, diagnosis_code: encoded,
+      element: el, weapon: wp, nation, name: TYPE_NAME[el][wp], diagnosis_code: encoded,
       personality: R.personality, style: R.style,
       closeness: { element: R.elementRanking[0].closenessScore, weapon: R.weaponRanking[0].closenessScore, nation: R.nationRanking[0].closenessScore },
       top_gap: { element: R.elementTopGap, weapon: R.weaponTopGap, nation: R.nationTopGap },

@@ -79,7 +79,12 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
   //   邪眼の注文でもなければ null（ETI と同じく 'ignored:not_complete'）
   async function jagan(conn, stripe, ev, obj) {
     const JP = await import('../lib/jagan-purchase.mjs');
-    return JP.handleWebhook({ fetchImpl, conn, stripe, type: ev.type, obj, onApplied: (a) => jaganGa4(conn, JP, a) });
+    const r = await JP.handleWebhook({ fetchImpl, conn, stripe, type: ev.type, obj, onApplied: (a) => jaganGa4(conn, JP, a) });
+    if (r !== null) return r;
+    // 元素診断のタイプ別レポートの注文（metadata.app が 'element-diagnosis-type'。lib/type-report-purchase.mjs）。
+    //   ETI・邪眼のどちらの注文でもないイベントだけをここで見る。タイプ別レポートの注文でもなければ null
+    const TP = await import('../lib/type-report-purchase.mjs');
+    return TP.handleWebhook({ fetchImpl, conn, stripe, type: ev.type, obj });
   }
 
   // ---- GA4 の purchase・refund（Measurement Protocol）。支払いの正は Stripe の Webhook（lib/ga4-mp.js）。

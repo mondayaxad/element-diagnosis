@@ -137,6 +137,7 @@ const PRODUCT_PERMISSIONS = {
   core2_upgrade: ['journey_report_access'],
 };
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const TYPE_CODE_RE = /^(PY|HY|CR|EL|AN|GE|DE)(SW|CM|PL|CT|BW)$/;
 
 // トークンの種類（権利の確認方法が違う）
 //   mypage：マイページからの再発行（sid・uid 付き）。その本人の記録の解析権（lib/purchase-state.js と同じ規則）
@@ -151,6 +152,10 @@ function tokenKind(data) {
   // レポート固有リンク・マイページの登録（complete_13）：納品（did）と記録（sid）を持つ。閲覧のたびに納品と注文の状態を確かめる
   if (data.access_mode === 'delivery') {
     return typeof data.did === 'string' && UUID_RE.test(data.did) && typeof data.sid === 'string' && UUID_RE.test(data.sid) ? 'delivery' : null;
+  }
+  // タイプ別レポート（type_report_01）：注文（oid）とタイプコード（t）を持つ。閲覧のたびに注文の状態を確かめる
+  if (data.access_mode === 'type_report') {
+    return typeof data.oid === 'string' && UUID_RE.test(data.oid) && typeof data.t === 'string' && TYPE_CODE_RE.test(data.t) ? 'type' : null;
   }
   if (data.access_mode === 'guest_entitlement_reissue') {
     return typeof data.sid === 'string' && UUID_RE.test(data.sid) ? 'guest' : null;
@@ -216,6 +221,12 @@ function createHandler({ env, fetchImpl }) {
         : st.completeBlocked === 'legacy_purchase_not_eligible' ? 'legacy'
         : st.completeBlocked === 'rights_suspended' ? 'suspended' : null;
       return { core, journey: false, complete };
+    }
+    // タイプ別レポート：支払い済み・固有リンクが有効な注文で、タイプと標準の回答の符号がトークンと一致する時だけ
+    if (kind === 'type') {
+      const rows = await select(conn, `type_report_orders?id=eq.${data.oid}&select=status,link_status,type_code,diagnosis_code`);
+      const o = rows[0];
+      return { core: !!(o && o.status === 'paid' && o.link_status === 'active' && o.type_code === data.t && hashDiagnosisCode(`v2_${o.diagnosis_code}`) === hash), journey: false };
     }
     // guest：未引き継ぎ（user_id が無い）ゲスト記録の、有効な解析権
     if (kind === 'delivery') {
@@ -332,7 +343,9 @@ function createHandler({ env, fetchImpl }) {
     //   レポート末尾の完全解析の案内を出し分けるためだけに使う（権利の判定には使わない。記録 ID・本人は返さない）
     if (perms.core) {
       responseBody.code = diagnosisRef.code;
-      responseBody.viewer = kind === 'guest' ? 'guest' : kind === 'mypage' ? 'mypage' : kind === 'delivery' ? 'delivery' : 'legacy';
+      responseBody.viewer = kind === 'guest' ? 'guest' : kind === 'mypage' ? 'mypage' : kind === 'delivery' ? 'delivery' : kind === 'type' ? 'type' : 'legacy';
+      // タイプ別レポート：report.html が主語・解説の文を切り替える（既存の解析レポートには付けない）
+      if (kind === 'type') { responseBody.report_kind = 'type'; responseBody.type_code = data.t; }
       if (kind === 'mypage') responseBody.complete = perms.complete || null;
     }
 
