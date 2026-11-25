@@ -796,7 +796,15 @@ test('固有リンクの大量作成の防止：同じ秘密値は冪等（連�
   await ctx.db.sql("update public.result_link_rate set bucket = bucket - interval '11 minutes'");
   // 10 分を過ぎれば作れる。24 時間で 100 件まで
   await ctx.link(CODE_A);
-  await ctx.db.sql("update public.result_link_rate set n = 99, bucket = now() - interval '2 hours' where n = 10");
+  // 回数は「分」ごとの行に記録される（試験が分の境目をまたぐと、同じ接続元の回数が複数の行に分かれる）。
+  //   最も回数の多い接続元（198.51.100.7）の行を、2 時間前の1行にまとめて 24 時間の合計を 100 件にする（10 分の窓には入らない）
+  await ctx.db.sql(`do $$
+    declare k text;
+    begin
+      select rate_key into k from public.result_link_rate group by rate_key order by sum(n) desc limit 1;
+      delete from public.result_link_rate where rate_key = k;
+      insert into public.result_link_rate (rate_key, bucket, n) values (k, date_trunc('minute', now() - interval '2 hours'), 100);
+    end $$`);
   assert.equal((await ctx.op('result-link', { code: CODE_A, token: crypto.randomBytes(32).toString('base64url') }, { cookie: '' })).code, 429, '24 時間で 100 件');
   // 24 時間を過ぎた回数の行は消える
   await ctx.db.sql("update public.result_link_rate set bucket = bucket - interval '25 hours'");
