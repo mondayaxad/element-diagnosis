@@ -147,3 +147,23 @@ test('type-v2：グラフの値はページのタイプの設計値（気質＝�
     assert.deepEqual(vals, [...['O', 'C', 'E', 'A', 'N'].map((k) => EP[el][k]), ...['AGY', 'REL', 'ROL', 'REF', 'AUT'].map((k) => WP[wp][k])], `${c} のグラフ`);
   }
 });
+
+// タイプ別レポート用の標準の回答（scripts/type-standard-answers.json）：35タイプ。代表国家は元素ごと。
+//   生成スクリプトの出力と一致し、符号を戻して診断エンジンに通すと、元素・武器種・代表国家がすべて1位になる
+test('標準の回答：35タイプの符号が生成スクリプトと一致し、診断エンジンで元素・武器種・代表国家が1位になる', async () => {
+  const { buildAll, REPRESENTATIVE_NATION } = await import('../scripts/build-type-standard-answers.mjs');
+  const file = JSON.parse(read('scripts/type-standard-answers.json'));
+  assert.deepEqual(file, JSON.parse(JSON.stringify(buildAll())), 'scripts/type-standard-answers.json が生成結果と食い違っています');
+  assert.deepEqual(REPRESENTATIVE_NATION, { 炎: 'ナタ', 水: 'フォンテーヌ', 氷: 'スネージナヤ', 雷: '稲妻', 風: 'モンド', 岩: '璃月', 草: 'スメール' });
+  const ctx = { console, Math };
+  vm.createContext(ctx);
+  for (const f of ['js/ETI_v2_QUESTIONS_100.js', 'js/eti_v2_prototypes.js', 'js/eti_v2_engine.js']) vm.runInContext(read(f), ctx, { filename: f });
+  vm.runInContext('this.__x = { Q: ETI_V2_QUESTIONS, EP: ELEMENT_PROTOTYPES_V2, WP: WEAPON_PROTOTYPES_V2, NP: NATION_PROTOTYPES_V2, E: ETIv2 };', ctx);
+  const { Q, EP, WP, NP, E } = ctx.__x;
+  assert.equal(Object.keys(file.types).length, 35);
+  for (const [code, t] of Object.entries(file.types)) {
+    assert.equal(code, Object.keys(EL_NAME).find((k) => EL_NAME[k] === t.element) + Object.keys(WP_NAME).find((k) => WP_NAME[k] === t.weapon));
+    const R = E.computeResultsV2(E.decodeAnswersV2(t.diagnosis_code, Q), { elementPrototypes: EP, weaponPrototypes: WP, nationPrototypes: NP });
+    assert.deepEqual([R.elementRanking[0].name, R.weaponRanking[0].name, R.nationRanking[0].name], [t.element, t.weapon, REPRESENTATIVE_NATION[t.element]], code);
+  }
+});

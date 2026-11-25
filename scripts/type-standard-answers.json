@@ -1,0 +1,1066 @@
+{
+ "translation_model_version": "ETI-TRANS-2.0.0",
+ "item_set_version": "ETI-ITEM-2.0.0",
+ "scoring_version": "ETI-SCORE-2.0.0",
+ "representative_nation": {
+  "炎": "ナタ",
+  "水": "フォンテーヌ",
+  "氷": "スネージナヤ",
+  "雷": "稲妻",
+  "風": "モンド",
+  "岩": "璃月",
+  "草": "スメール"
+ },
+ "types": {
+  "PYSW": {
+   "element": "炎",
+   "weapon": "片手剣",
+   "nation": "ナタ",
+   "diagnosis_code": "d5418003fqokno9tj0ybcyt6i8yoopprkzfqvf9wfbsu1",
+   "personality": {
+    "O": 50,
+    "C": 91,
+    "E": 91,
+    "A": 69,
+    "N": 50
+   },
+   "style": {
+    "AGY": 50,
+    "REL": 92,
+    "ROL": 58,
+    "REF": 46,
+    "AUT": 29
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 23,
+    "weapon": 18,
+    "nation": 16
+   }
+  },
+  "PYCM": {
+   "element": "炎",
+   "weapon": "両手剣",
+   "nation": "ナタ",
+   "diagnosis_code": "d5418003fqokno9tj1d6l2gzon7o0r6hiyakun6whumf5",
+   "personality": {
+    "O": 50,
+    "C": 91,
+    "E": 91,
+    "A": 69,
+    "N": 50
+   },
+   "style": {
+    "AGY": 92,
+    "REL": 29,
+    "ROL": 58,
+    "REF": 29,
+    "AUT": 92
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 98,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 23,
+    "weapon": 25,
+    "nation": 16
+   }
+  },
+  "PYPL": {
+   "element": "炎",
+   "weapon": "長柄",
+   "nation": "ナタ",
+   "diagnosis_code": "d5418003fqokno9tj149ymjsvsophpsktx15jx0raz449",
+   "personality": {
+    "O": 50,
+    "C": 91,
+    "E": 91,
+    "A": 69,
+    "N": 50
+   },
+   "style": {
+    "AGY": 54,
+    "REL": 71,
+    "ROL": 92,
+    "REF": 46,
+    "AUT": 46
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 23,
+    "weapon": 17,
+    "nation": 16
+   }
+  },
+  "PYCT": {
+   "element": "炎",
+   "weapon": "法器",
+   "nation": "ナタ",
+   "diagnosis_code": "d5418003fqokno9tj0qvt7i193cd39ilibsjr5dxi9cv0",
+   "personality": {
+    "O": 50,
+    "C": 91,
+    "E": 91,
+    "A": 69,
+    "N": 50
+   },
+   "style": {
+    "AGY": 29,
+    "REL": 46,
+    "ROL": 54,
+    "REF": 92,
+    "AUT": 67
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 23,
+    "weapon": 17,
+    "nation": 16
+   }
+  },
+  "PYBW": {
+   "element": "炎",
+   "weapon": "弓",
+   "nation": "ナタ",
+   "diagnosis_code": "d5418003fqokno9tj0scou8xatup2kdma9zkt3siljd2v",
+   "personality": {
+    "O": 50,
+    "C": 91,
+    "E": 91,
+    "A": 69,
+    "N": 50
+   },
+   "style": {
+    "AGY": 46,
+    "REL": 33,
+    "ROL": 54,
+    "REF": 67,
+    "AUT": 92
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 98,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 23,
+    "weapon": 16,
+    "nation": 16
+   }
+  },
+  "HYSW": {
+   "element": "水",
+   "weapon": "片手剣",
+   "nation": "フォンテーヌ",
+   "diagnosis_code": "joxauh4yir8pa2g7379134gen9aiqovr7wm8qq6n9biqu",
+   "personality": {
+    "O": 69,
+    "C": 69,
+    "E": 50,
+    "A": 69,
+    "N": 69
+   },
+   "style": {
+    "AGY": 50,
+    "REL": 92,
+    "ROL": 58,
+    "REF": 46,
+    "AUT": 29
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 99
+   },
+   "top_gap": {
+    "element": 15,
+    "weapon": 18,
+    "nation": 26
+   }
+  },
+  "HYCM": {
+   "element": "水",
+   "weapon": "両手剣",
+   "nation": "フォンテーヌ",
+   "diagnosis_code": "joxauh4yir8pa2g737nwb847tnji2qch5vh2py3nbucby",
+   "personality": {
+    "O": 69,
+    "C": 69,
+    "E": 50,
+    "A": 69,
+    "N": 69
+   },
+   "style": {
+    "AGY": 92,
+    "REL": 29,
+    "ROL": 58,
+    "REF": 29,
+    "AUT": 92
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 98,
+    "nation": 99
+   },
+   "top_gap": {
+    "element": 15,
+    "weapon": 25,
+    "nation": 26
+   }
+  },
+  "HYPL": {
+   "element": "水",
+   "weapon": "長柄",
+   "nation": "フォンテーヌ",
+   "diagnosis_code": "joxauh4yir8pa2g737ezos710t0jjoykgu7nf7xi4yu12",
+   "personality": {
+    "O": 69,
+    "C": 69,
+    "E": 50,
+    "A": 69,
+    "N": 69
+   },
+   "style": {
+    "AGY": 54,
+    "REL": 71,
+    "ROL": 92,
+    "REF": 46,
+    "AUT": 46
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 99
+   },
+   "top_gap": {
+    "element": 15,
+    "weapon": 17,
+    "nation": 26
+   }
+  },
+  "HYCT": {
+   "element": "水",
+   "weapon": "法器",
+   "nation": "フォンテーヌ",
+   "diagnosis_code": "joxauh4yir8pa2g7371ljd59e3o758ol58z1mgaoc92rt",
+   "personality": {
+    "O": 69,
+    "C": 69,
+    "E": 50,
+    "A": 69,
+    "N": 69
+   },
+   "style": {
+    "AGY": 29,
+    "REL": 46,
+    "ROL": 54,
+    "REF": 92,
+    "AUT": 67
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 99
+   },
+   "top_gap": {
+    "element": 15,
+    "weapon": 17,
+    "nation": 26
+   }
+  },
+  "HYBW": {
+   "element": "水",
+   "weapon": "弓",
+   "nation": "フォンテーヌ",
+   "diagnosis_code": "joxauh4yir8pa2g73732ezw5fu6j4jjlx762oep9fj2zo",
+   "personality": {
+    "O": 69,
+    "C": 69,
+    "E": 50,
+    "A": 69,
+    "N": 69
+   },
+   "style": {
+    "AGY": 46,
+    "REL": 33,
+    "ROL": 54,
+    "REF": 67,
+    "AUT": 92
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 98,
+    "nation": 99
+   },
+   "top_gap": {
+    "element": 15,
+    "weapon": 16,
+    "nation": 26
+   }
+  },
+  "CRSW": {
+   "element": "氷",
+   "weapon": "片手剣",
+   "nation": "スネージナヤ",
+   "diagnosis_code": "d540ftu7hw2dh47b40xc2y3srchrdq5dvutz0md31jfnj",
+   "personality": {
+    "O": 50,
+    "C": 69,
+    "E": 9,
+    "A": 31,
+    "N": 91
+   },
+   "style": {
+    "AGY": 50,
+    "REL": 92,
+    "ROL": 58,
+    "REF": 46,
+    "AUT": 29
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 27,
+    "weapon": 18,
+    "nation": 38
+   }
+  },
+  "CRCM": {
+   "element": "氷",
+   "weapon": "両手剣",
+   "nation": "スネージナヤ",
+   "diagnosis_code": "d540ftu7hw2dh47b41c7b1rlxqqqprm3ttoszua34298n",
+   "personality": {
+    "O": 50,
+    "C": 69,
+    "E": 9,
+    "A": 31,
+    "N": 91
+   },
+   "style": {
+    "AGY": 92,
+    "REL": 29,
+    "ROL": 58,
+    "REF": 29,
+    "AUT": 92
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 98,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 27,
+    "weapon": 25,
+    "nation": 38
+   }
+  },
+  "CRPL": {
+   "element": "氷",
+   "weapon": "長柄",
+   "nation": "スネージナヤ",
+   "diagnosis_code": "d540ftu7hw2dh47b413aoluf4w7s6q874sfdp43xx6qxr",
+   "personality": {
+    "O": 50,
+    "C": 69,
+    "E": 9,
+    "A": 31,
+    "N": 91
+   },
+   "style": {
+    "AGY": 54,
+    "REL": 71,
+    "ROL": 92,
+    "REF": 46,
+    "AUT": 46
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 27,
+    "weapon": 17,
+    "nation": 38
+   }
+  },
+  "CRCT": {
+   "element": "氷",
+   "weapon": "法器",
+   "nation": "スネージナヤ",
+   "diagnosis_code": "d540ftu7hw2dh47b40pwj6sni6vfs9y7t76rwch44gzoi",
+   "personality": {
+    "O": 50,
+    "C": 69,
+    "E": 9,
+    "A": 31,
+    "N": 91
+   },
+   "style": {
+    "AGY": 29,
+    "REL": 46,
+    "ROL": 54,
+    "REF": 92,
+    "AUT": 67
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 27,
+    "weapon": 17,
+    "nation": 38
+   }
+  },
+  "CRBW": {
+   "element": "氷",
+   "weapon": "弓",
+   "nation": "スネージナヤ",
+   "diagnosis_code": "d540ftu7hw2dh47b40rdetjjjxdrrkt8l5dsyavp7qzwd",
+   "personality": {
+    "O": 50,
+    "C": 69,
+    "E": 9,
+    "A": 31,
+    "N": 91
+   },
+   "style": {
+    "AGY": 46,
+    "REL": 33,
+    "ROL": 54,
+    "REF": 67,
+    "AUT": 92
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 98,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 27,
+    "weapon": 16,
+    "nation": 38
+   }
+  },
+  "ELSW": {
+   "element": "雷",
+   "weapon": "片手剣",
+   "nation": "稲妻",
+   "diagnosis_code": "joxauh51vv1hntz5ftgwiz172a22dnbcg3aporgv6b388",
+   "personality": {
+    "O": 69,
+    "C": 69,
+    "E": 69,
+    "A": 31,
+    "N": 69
+   },
+   "style": {
+    "AGY": 50,
+    "REL": 92,
+    "ROL": 58,
+    "REF": 46,
+    "AUT": 29
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 18,
+    "weapon": 18,
+    "nation": 11
+   }
+  },
+  "ELCM": {
+   "element": "雷",
+   "weapon": "両手剣",
+   "nation": "稲妻",
+   "diagnosis_code": "joxauh51vv1hntz5ftvrr2p08ob1pos2e25jnzdv8twtc",
+   "personality": {
+    "O": 69,
+    "C": 69,
+    "E": 69,
+    "A": 31,
+    "N": 69
+   },
+   "style": {
+    "AGY": 92,
+    "REL": 29,
+    "ROL": 58,
+    "REF": 29,
+    "AUT": 92
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 98,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 18,
+    "weapon": 25,
+    "nation": 11
+   }
+  },
+  "ELPL": {
+   "element": "雷",
+   "weapon": "長柄",
+   "nation": "稲妻",
+   "diagnosis_code": "joxauh51vv1hntz5ftmv4mrtfts36ne5p0w4d97q1yeig",
+   "personality": {
+    "O": 69,
+    "C": 69,
+    "E": 69,
+    "A": 31,
+    "N": 69
+   },
+   "style": {
+    "AGY": 54,
+    "REL": 71,
+    "ROL": 92,
+    "REF": 46,
+    "AUT": 46
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 18,
+    "weapon": 17,
+    "nation": 11
+   }
+  },
+  "ELCT": {
+   "element": "雷",
+   "weapon": "法器",
+   "nation": "稲妻",
+   "diagnosis_code": "joxauh51vv1hntz5ft9gz7q1t4fqs746dfnikhkw98n97",
+   "personality": {
+    "O": 69,
+    "C": 69,
+    "E": 69,
+    "A": 31,
+    "N": 69
+   },
+   "style": {
+    "AGY": 29,
+    "REL": 46,
+    "ROL": 54,
+    "REF": 92,
+    "AUT": 67
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 18,
+    "weapon": 17,
+    "nation": 11
+   }
+  },
+  "ELBW": {
+   "element": "雷",
+   "weapon": "弓",
+   "nation": "稲妻",
+   "diagnosis_code": "joxauh51vv1hntz5ftaxuugxuuy2rhz75dujmfzhcinh2",
+   "personality": {
+    "O": 69,
+    "C": 69,
+    "E": 69,
+    "A": 31,
+    "N": 69
+   },
+   "style": {
+    "AGY": 46,
+    "REL": 33,
+    "ROL": 54,
+    "REF": 67,
+    "AUT": 92
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 98,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 18,
+    "weapon": 16,
+    "nation": 11
+   }
+  },
+  "ANSW": {
+   "element": "風",
+   "weapon": "片手剣",
+   "nation": "モンド",
+   "diagnosis_code": "q8t2q9ccpv3o1nwpctq2z9kj6t33p9ea3pnxq4bdjjaji",
+   "personality": {
+    "O": 91,
+    "C": 31,
+    "E": 50,
+    "A": 69,
+    "N": 50
+   },
+   "style": {
+    "AGY": 50,
+    "REL": 92,
+    "ROL": 58,
+    "REF": 46,
+    "AUT": 29
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 19,
+    "weapon": 18,
+    "nation": 13
+   }
+  },
+  "ANCM": {
+   "element": "風",
+   "weapon": "両手剣",
+   "nation": "モンド",
+   "diagnosis_code": "q8t2q9ccpv3o1nwpcu4y7d8cd7c31av01oirpc8dm244m",
+   "personality": {
+    "O": 91,
+    "C": 31,
+    "E": 50,
+    "A": 69,
+    "N": 50
+   },
+   "style": {
+    "AGY": 92,
+    "REL": 29,
+    "ROL": 58,
+    "REF": 29,
+    "AUT": 92
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 98,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 19,
+    "weapon": 25,
+    "nation": 13
+   }
+  },
+  "ANPL": {
+   "element": "風",
+   "weapon": "長柄",
+   "nation": "モンド",
+   "diagnosis_code": "q8t2q9ccpv3o1nwpctw1kxb5kct4i9h3cn9cem28f6ltq",
+   "personality": {
+    "O": 91,
+    "C": 31,
+    "E": 50,
+    "A": 69,
+    "N": 50
+   },
+   "style": {
+    "AGY": 54,
+    "REL": 71,
+    "ROL": 92,
+    "REF": 46,
+    "AUT": 46
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 19,
+    "weapon": 17,
+    "nation": 13
+   }
+  },
+  "ANCT": {
+   "element": "風",
+   "weapon": "法器",
+   "nation": "モンド",
+   "diagnosis_code": "q8t2q9ccpv3o1nwpctinfi9dxngs3t74120qlufemgukh",
+   "personality": {
+    "O": 91,
+    "C": 31,
+    "E": 50,
+    "A": 69,
+    "N": 50
+   },
+   "style": {
+    "AGY": 29,
+    "REL": 46,
+    "ROL": 54,
+    "REF": 92,
+    "AUT": 67
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 19,
+    "weapon": 17,
+    "nation": 13
+   }
+  },
+  "ANBW": {
+   "element": "風",
+   "weapon": "弓",
+   "nation": "モンド",
+   "diagnosis_code": "q8t2q9ccpv3o1nwpctk4b509zdz43424t07rnstzpqusc",
+   "personality": {
+    "O": 91,
+    "C": 31,
+    "E": 50,
+    "A": 69,
+    "N": 50
+   },
+   "style": {
+    "AGY": 46,
+    "REL": 33,
+    "ROL": 54,
+    "REF": 67,
+    "AUT": 92
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 98,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 19,
+    "weapon": 16,
+    "nation": 13
+   }
+  },
+  "GESW": {
+   "element": "岩",
+   "weapon": "片手剣",
+   "nation": "璃月",
+   "diagnosis_code": "6laqtcpcevjg90wcccm13ppm663grqjdpd35e44302zdo",
+   "personality": {
+    "O": 31,
+    "C": 91,
+    "E": 50,
+    "A": 91,
+    "N": 31
+   },
+   "style": {
+    "AGY": 50,
+    "REL": 92,
+    "ROL": 58,
+    "REF": 46,
+    "AUT": 29
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 23,
+    "weapon": 18,
+    "nation": 10
+   }
+  },
+  "GECM": {
+   "element": "岩",
+   "weapon": "両手剣",
+   "nation": "璃月",
+   "diagnosis_code": "6laqtcpcevjg90wccd0wbtdfckcg3s03nbxzdc132lsys",
+   "personality": {
+    "O": 31,
+    "C": 91,
+    "E": 50,
+    "A": 91,
+    "N": 31
+   },
+   "style": {
+    "AGY": 92,
+    "REL": 29,
+    "ROL": 58,
+    "REF": 29,
+    "AUT": 92
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 98,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 23,
+    "weapon": 25,
+    "nation": 10
+   }
+  },
+  "GEPL": {
+   "element": "岩",
+   "weapon": "長柄",
+   "nation": "璃月",
+   "diagnosis_code": "6laqtcpcevjg90wcccrzpdg8jpthkqm6yaok2luxvqanw",
+   "personality": {
+    "O": 31,
+    "C": 91,
+    "E": 50,
+    "A": 91,
+    "N": 31
+   },
+   "style": {
+    "AGY": 54,
+    "REL": 71,
+    "ROL": 92,
+    "REF": 46,
+    "AUT": 46
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 23,
+    "weapon": 17,
+    "nation": 10
+   }
+  },
+  "GECT": {
+   "element": "岩",
+   "weapon": "法器",
+   "nation": "璃月",
+   "diagnosis_code": "6laqtcpcevjg90wccceljyegx0h56ac7mpfy9u8430jen",
+   "personality": {
+    "O": 31,
+    "C": 91,
+    "E": 50,
+    "A": 91,
+    "N": 31
+   },
+   "style": {
+    "AGY": 29,
+    "REL": 46,
+    "ROL": 54,
+    "REF": 92,
+    "AUT": 67
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 23,
+    "weapon": 17,
+    "nation": 10
+   }
+  },
+  "GEBW": {
+   "element": "岩",
+   "weapon": "弓",
+   "nation": "璃月",
+   "diagnosis_code": "6laqtcpcevjg90wcccg2fl5cyqzh5l78enmzbsmp6ajmi",
+   "personality": {
+    "O": 31,
+    "C": 91,
+    "E": 50,
+    "A": 91,
+    "N": 31
+   },
+   "style": {
+    "AGY": 46,
+    "REL": 33,
+    "ROL": 54,
+    "REF": 67,
+    "AUT": 92
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 98,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 23,
+    "weapon": 16,
+    "nation": 10
+   }
+  },
+  "DESW": {
+   "element": "草",
+   "weapon": "片手剣",
+   "nation": "スメール",
+   "diagnosis_code": "q8t4al94qkmv8tmr92ngfvd9afe5dmyx1fj99ad7a2l2u",
+   "personality": {
+    "O": 91,
+    "C": 69,
+    "E": 50,
+    "A": 91,
+    "N": 50
+   },
+   "style": {
+    "AGY": 50,
+    "REL": 92,
+    "ROL": 58,
+    "REF": 46,
+    "AUT": 29
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 15,
+    "weapon": 18,
+    "nation": 9
+   }
+  },
+  "DECM": {
+   "element": "草",
+   "weapon": "両手剣",
+   "nation": "スメール",
+   "diagnosis_code": "q8t4al94qkmv8tmr932bnz12gtn4pofmzee38ia7cleny",
+   "personality": {
+    "O": 91,
+    "C": 69,
+    "E": 50,
+    "A": 91,
+    "N": 50
+   },
+   "style": {
+    "AGY": 92,
+    "REL": 29,
+    "ROL": 58,
+    "REF": 29,
+    "AUT": 92
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 98,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 15,
+    "weapon": 25,
+    "nation": 9
+   }
+  },
+  "DEPL": {
+   "element": "草",
+   "weapon": "長柄",
+   "nation": "スメール",
+   "diagnosis_code": "q8t4al94qkmv8tmr92tf1j3vnz466n1qad4nxs425pwd2",
+   "personality": {
+    "O": 91,
+    "C": 69,
+    "E": 50,
+    "A": 91,
+    "N": 50
+   },
+   "style": {
+    "AGY": 54,
+    "REL": 71,
+    "ROL": 92,
+    "REF": 46,
+    "AUT": 46
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 15,
+    "weapon": 17,
+    "nation": 9
+   }
+  },
+  "DECT": {
+   "element": "草",
+   "weapon": "法器",
+   "nation": "スメール",
+   "diagnosis_code": "q8t4al94qkmv8tmr92g0w42419rts6rqyrw250h8d053t",
+   "personality": {
+    "O": 91,
+    "C": 69,
+    "E": 50,
+    "A": 91,
+    "N": 50
+   },
+   "style": {
+    "AGY": 29,
+    "REL": 46,
+    "ROL": 54,
+    "REF": 92,
+    "AUT": 67
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 99,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 15,
+    "weapon": 17,
+    "nation": 9
+   }
+  },
+  "DEBW": {
+   "element": "草",
+   "weapon": "弓",
+   "nation": "スメール",
+   "diagnosis_code": "q8t4al94qkmv8tmr92hhrqt030a5rhmrqq336yvtga5bo",
+   "personality": {
+    "O": 91,
+    "C": 69,
+    "E": 50,
+    "A": 91,
+    "N": 50
+   },
+   "style": {
+    "AGY": 46,
+    "REL": 33,
+    "ROL": 54,
+    "REF": 67,
+    "AUT": 92
+   },
+   "closeness": {
+    "element": 99,
+    "weapon": 98,
+    "nation": 100
+   },
+   "top_gap": {
+    "element": 15,
+    "weapon": 16,
+    "nation": 9
+   }
+  }
+ }
+}
