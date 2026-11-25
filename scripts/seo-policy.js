@@ -13,6 +13,7 @@ const ORIGIN = 'https://element-diagnosis-five.vercel.app';
 const PAGES = {
   'index.html':                 { path: '/',                       policy: 'index' },
   'jagan/index.html':           { path: '/jagan/',                 policy: 'index' },
+  'guide/element-personalities.html': { path: '/guide/element-personalities', policy: 'index' },
   'jagan/about.html':           { path: '/jagan/about',            policy: 'index' },
   // type/*.html（35件）は下の TYPE_CODES から作る（index）
   'privacy.html':               { path: '/privacy',                policy: 'allow' },
