@@ -3,9 +3,12 @@ import { createRequire } from 'node:module';
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
-const ROOT = '/home/user/element-diagnosis/dist';
+// リポジトリの場所はこのファイルの位置から決める（CI など、どこにチェックアウトしても動く）
+const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = path.join(REPO, 'dist');
 const OUT = process.argv[2];
 const MIME = { '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.html': 'text/html; charset=utf-8', '.json': 'application/json' };
 const srv = http.createServer((q, r) => {
@@ -16,9 +19,9 @@ const srv = http.createServer((q, r) => {
 }).listen(0);
 const base = `http://localhost:${srv.address().port}`;
 
-const { computeDiagnosis } = await import('/home/user/element-diagnosis/jagan/engine/runtime.mjs');
-const { BUNDLE } = await import('/home/user/element-diagnosis/jagan/engine/data.mjs');
-const { headlineOf } = await import('/home/user/element-diagnosis/lib/jagan-api.mjs');
+const { computeDiagnosis } = await import(pathToFileURL(path.join(REPO, 'jagan/engine/runtime.mjs')).href);
+const { BUNDLE } = await import(pathToFileURL(path.join(REPO, 'jagan/engine/data.mjs')).href);
+const { headlineOf } = await import(pathToFileURL(path.join(REPO, 'lib/jagan-api.mjs')).href);
 const ids = BUNDLE.items.items.map((i) => i.id);
 let seed = Number(process.env.SEED || 11); const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
 const dates = ['2026-11-07', '2026-11-03', '2026-10-28'];
