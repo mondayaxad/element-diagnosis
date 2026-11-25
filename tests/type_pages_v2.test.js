@@ -102,3 +102,48 @@ test('トップの全35タイプ一覧：7元素（紋章・色・id）、35タ�
   assert.match(h, /initTypeList\(root\);/);
   assert.match(h, /var TYPE_LIST_KEY = 'ed_types_open_v1';/);
 });
+
+// 標準データ（グラフの値）が、そのタイプの基準であること：
+//   気質＝元素の設計値（ELEMENT_PROTOTYPES_V2）・関わり方＝武器種の設計値（WEAPON_PROTOTYPES_V2）を、実際の回答の形にして
+//   診断エンジン（ETIv2.computeResultsV2）に通すと、35タイプすべてがそのタイプ（元素×武器種）と判定される
+test('標準データ：35タイプすべてで、設計値を再現した回答が、そのタイプと判定される（元素・武器とも1位、2位と十分な差）', () => {
+  const ctx = { console, Math };
+  vm.createContext(ctx);
+  for (const f of ['js/ETI_v2_QUESTIONS_100.js', 'js/eti_v2_prototypes.js', 'js/eti_v2_engine.js']) vm.runInContext(read(f), ctx, { filename: f });
+  vm.runInContext('this.__x = { Q: ETI_V2_QUESTIONS, EP: ELEMENT_PROTOTYPES_V2, WP: WEAPON_PROTOTYPES_V2, NP: NATION_PROTOTYPES_V2, E: ETIv2 };', ctx);
+  const { Q, EP, WP, NP, E } = ctx.__x;
+  // 各軸の回答（-2〜+2）の平均が、表示値 ((平均+2)/4)*100 で設計値になるように配る（価値観は 0）
+  function answersFor(p, s) {
+    const A = {}; const byAx = {};
+    for (const q of Q) {
+      if (q.domain === 'PERSONALITY' || q.domain === 'STYLE') (byAx[`${q.domain}:${q.axis}`] = byAx[`${q.domain}:${q.axis}`] || []).push(q);
+      else A[q.id] = 0;
+    }
+    for (const [k, qs] of Object.entries(byAx)) {
+      const [dom, ax] = k.split(':'); const target = (dom === 'PERSONALITY' ? p : s)[ax];
+      let total = Math.round((target / 100 * 4 - 2) * qs.length); const vals = Array(qs.length).fill(0); let i = 0;
+      while (total !== 0) { const sg = Math.sign(total); if (Math.abs(vals[i] + sg) <= 2) { vals[i] += sg; total -= sg; } i = (i + 1) % qs.length; }
+      qs.forEach((q, j) => { A[q.id] = q.direction === -1 ? -vals[j] : vals[j]; });
+    }
+    return A;
+  }
+  let n = 0;
+  for (const el of Object.keys(EP)) for (const w of Object.keys(WP)) {
+    const R = E.computeResultsV2(answersFor(EP[el], WP[w]), { elementPrototypes: EP, weaponPrototypes: WP, nationPrototypes: NP });
+    assert.equal(R.elementRanking[0].name, el, `${el}×${w} の元素`);
+    assert.equal(R.weaponRanking[0].name, w, `${el}×${w} の武器`);
+    assert.ok(R.elementTopGap >= 10 && R.weaponTopGap >= 10, `${el}×${w} は2位と十分に離れている（${R.elementTopGap}・${R.weaponTopGap}）`);
+    n++;
+  }
+  assert.equal(n, 35);
+});
+
+test('type-v2：グラフの値はページのタイプの設計値（気質＝元素、関わり方＝武器種）', () => {
+  const { ELEMENT_PROTOTYPES_V2: EP, WEAPON_PROTOTYPES_V2: WP } = require('../js/eti_v2_prototypes.js');
+  for (const c of V2) {
+    const h = read(`type/${c.toLowerCase()}.html`);
+    const el = EL_NAME[c.slice(0, 2)]; const wp = WP_NAME[c.slice(2)];
+    const vals = [...h.matchAll(/<span class="g-l">[^<]+<\/span><span class="g-v"[^>]*>(\d+)<\/span>/g)].map((m) => +m[1]);
+    assert.deepEqual(vals, [...['O', 'C', 'E', 'A', 'N'].map((k) => EP[el][k]), ...['AGY', 'REL', 'ROL', 'REF', 'AUT'].map((k) => WP[wp][k])], `${c} のグラフ`);
+  }
+});
