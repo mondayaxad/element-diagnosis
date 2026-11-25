@@ -74,21 +74,32 @@ test('type-v2：標準プロフィール・タイプ別レポートは Preview �
   }
 });
 
-function runDetail(hostname) {
+// config：本番ドメインで /api/public-config が返す内容（null は取得失敗）
+async function runDetail(hostname, config = null) {
   const prof = { hidden: true };
   const stored = {};
+  const fetched = [];
   const ctx = {
     window: {}, location: { hostname }, sessionStorage: { setItem: (k, v) => { stored[k] = v; } },
+    fetch: (u) => { fetched.push(u); return config ? Promise.resolve({ ok: true, json: () => Promise.resolve(config) }) : Promise.reject(new Error('x')); },
     document: { readyState: 'complete', body: { getAttribute: () => 'pyro' }, querySelectorAll: () => [prof], getElementById: () => null, querySelector: () => null },
   };
   vm.createContext(ctx);
   vm.runInContext(read('js/type-detail.js'), ctx);
-  return { prof, stored };
+  await new Promise((r) => setImmediate(r));
+  return { prof, stored, fetched };
 }
-test('js/type-detail.js：Preview・ローカルでは欄を開き、本番ドメインでは開かない。読んでいた元素を残す', () => {
-  assert.equal(runDetail('element-diagnosis-five.vercel.app').prof.hidden, true);
-  assert.equal(runDetail('element-diagnosis-git-x-nmkw0322-4497s-projects.vercel.app').prof.hidden, false);
-  assert.deepEqual(runDetail('127.0.0.1').stored, { ed_types_open_v1: 'pyro' });
+test('js/type-detail.js：Preview・ローカルでは欄を開き、本番ドメインでは販売中（typeReportSalesOpen）の時だけ開く。読んでいた元素を残す', async () => {
+  assert.equal((await runDetail('element-diagnosis-five.vercel.app')).prof.hidden, true);
+  assert.equal((await runDetail('element-diagnosis-five.vercel.app', { typeReportSalesOpen: false })).prof.hidden, true);
+  assert.equal((await runDetail('element-diagnosis-five.vercel.app', { typeReportSalesOpen: 'true' })).prof.hidden, true);
+  const open = await runDetail('element-diagnosis-five.vercel.app', { typeReportSalesOpen: true });
+  assert.equal(open.prof.hidden, false);
+  assert.deepEqual(open.fetched, ['/api/public-config']);
+  const pv = await runDetail('element-diagnosis-git-x-nmkw0322-4497s-projects.vercel.app');
+  assert.equal(pv.prof.hidden, false);
+  assert.deepEqual(pv.fetched, [], 'Preview では設定を取りに行かない');
+  assert.deepEqual((await runDetail('127.0.0.1')).stored, { ed_types_open_v1: 'pyro' });
 });
 
 test('トップの全35タイプ一覧：7元素（紋章・色・id）、35タイプへのリンク、一覧の状態を戻す処理', () => {

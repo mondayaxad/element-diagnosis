@@ -1,7 +1,7 @@
 // js/type-detail.js
 // タイプ解説ページ（type-v2 テンプレート）の画面上の動き。計測（GA4）は送らない（type_diagnosis_cta_click は js/type-page.js）。
 //   ・一覧へ戻る：読んでいた元素を sessionStorage に残す（トップの一覧が、戻った時にその元素を開く。リンクの #types-<元素> と同じ）
-//   ・標準プロフィール・タイプ別レポートの欄（data-preview-only）は、デザイン確認用。本番ドメインでは表示しない
+//   ・標準プロフィール・タイプ別レポートの欄（data-preview-only）：Preview では常に表示。本番ドメインでは販売中（typeReportSalesOpen）の時だけ
 //   ・タイプ別レポートの購入：「購入へ進む」で POST /api/type-report?op=buy（送るのはタイプコードと購入操作の ID だけ。
 //     金額・商品はサーバーが決める）→ Stripe の決済画面へ。同じ画面での連打・再送は同じ購入操作の ID（同じ注文・同じ決済画面）
 (function () {
@@ -20,8 +20,14 @@
     var body = document.body;
     remember(body && body.getAttribute('data-element'));
 
-    if (location.hostname !== PRODUCTION_HOST) {
-      Array.prototype.forEach.call(document.querySelectorAll('[data-preview-only]'), function (n) { n.hidden = false; });
+    // レポートの欄：Preview・ローカルは常に出す（デザイン確認）。本番ドメインは、販売中（/api/public-config の typeReportSalesOpen）の時だけ
+    var reveal = function () { Array.prototype.forEach.call(document.querySelectorAll('[data-preview-only]'), function (n) { n.hidden = false; }); };
+    if (location.hostname !== PRODUCTION_HOST) reveal();
+    else {
+      fetch('/api/public-config', { cache: 'no-store' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (c) { if (c && c.typeReportSalesOpen === true) reveal(); })
+        .catch(function () { /* 取得できなければ出さない */ });
     }
 
     var dlg = document.getElementById('reportConfirm');
