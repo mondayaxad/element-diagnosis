@@ -148,12 +148,12 @@ test('type-v2：グラフの値はページのタイプの設計値（気質＝�
   }
 });
 
-// タイプ別レポート用の標準の回答（scripts/type-standard-answers.json）：35タイプ。代表国家は元素ごと。
+// タイプ別レポート用の標準の回答（lib/type-standard-answers.json）：35タイプ。代表国家は元素ごと。
 //   生成スクリプトの出力と一致し、符号を戻して診断エンジンに通すと、元素・武器種・代表国家がすべて1位になる
 test('標準の回答：35タイプの符号が生成スクリプトと一致し、診断エンジンで元素・武器種・代表国家が1位になる', async () => {
   const { buildAll, REPRESENTATIVE_NATION } = await import('../scripts/build-type-standard-answers.mjs');
-  const file = JSON.parse(read('scripts/type-standard-answers.json'));
-  assert.deepEqual(file, JSON.parse(JSON.stringify(buildAll())), 'scripts/type-standard-answers.json が生成結果と食い違っています');
+  const file = JSON.parse(read('lib/type-standard-answers.json'));
+  assert.deepEqual(file, JSON.parse(JSON.stringify(buildAll())), 'lib/type-standard-answers.json が生成結果と食い違っています');
   assert.deepEqual(REPRESENTATIVE_NATION, { 炎: 'ナタ', 水: 'フォンテーヌ', 氷: 'スネージナヤ', 雷: '稲妻', 風: 'モンド', 岩: '璃月', 草: 'スメール' });
   const ctx = { console, Math };
   vm.createContext(ctx);

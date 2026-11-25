@@ -4,7 +4,7 @@
 //   ・価値観＝元素の代表国家の設計値（NATION_PROTOTYPES_V2）。代表国家は REPRESENTATIVE_NATION（元素ごと）
 //   ・各軸の回答（-2〜+2 の整数）の平均が、表示値 ((平均+2)/4)*100 で設計値に最も近くなるように配る
 //   ・作った回答を診断エンジンに通し、元素・武器種・国家がすべて狙いどおり1位になることを確かめてから書き出す（外れたら止まる）
-//   出力：scripts/type-standard-answers.json（タイプコード → 符号・再現した得点・判定）
+//   出力：lib/type-standard-answers.json（サーバーの購入 API が読む）（タイプコード → 符号・再現した得点・判定）
 //   実行: node scripts/build-type-standard-answers.mjs
 import fs from 'node:fs';
 import path from 'node:path';
@@ -64,7 +64,7 @@ export function buildAll() {
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   const data = buildAll();
-  fs.writeFileSync(path.join(ROOT, 'scripts/type-standard-answers.json'), JSON.stringify(data, null, 1) + '\n');
+  fs.writeFileSync(path.join(ROOT, 'lib/type-standard-answers.json'), JSON.stringify(data, null, 1) + '\n');
   const t = Object.values(data.types);
   console.log('types', t.length, 'closeness min', ['element', 'weapon', 'nation'].map((k) => `${k}:${Math.min(...t.map((x) => x.closeness[k]))}`).join(' '),
     'top_gap min', ['element', 'weapon', 'nation'].map((k) => `${k}:${Math.min(...t.map((x) => x.top_gap[k]))}`).join(' '));

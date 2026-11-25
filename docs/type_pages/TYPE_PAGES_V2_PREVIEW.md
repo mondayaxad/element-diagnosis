@@ -55,7 +55,7 @@
 
 ## 5. タイプ別レポートの生成（決定：B 案・代表国家）
 - 方式：35タイプの「標準の回答」を用意し、既存の解析レポートの仕組み（購入 → token → `/api/report-data` が回答の符号を返す → `computeResultsV2` → `renderFullReport`）にそのまま流す。レポート側は変えない。
-- 標準の回答（`scripts/build-type-standard-answers.mjs` → `scripts/type-standard-answers.json`）：
+- 標準の回答（`scripts/build-type-standard-answers.mjs` → `lib/type-standard-answers.json`）：
   - 気質（Big Five）＝元素の設計値、関わり方（行動スタイル）＝武器種の設計値、価値観＝元素の代表国家の設計値
   - 代表国家：炎＝ナタ、水＝フォンテーヌ、氷＝スネージナヤ、雷＝稲妻、風＝モンド、岩＝璃月、草＝スメール（ナドクライは使わない）
   - 各軸の回答（-2〜+2）の平均が設計値に最も近くなるよう配置。価値観は1軸3問のため、細かい値ではなく国家の判定（中心化したコサイン類似度）で確かめる

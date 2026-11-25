@@ -17,7 +17,7 @@ for (const p of ['playwright', '/opt/node22/lib/node_modules/playwright']) {
   try { ({ chromium } = require(p)); break; } catch (e) { /* 次を試す */ }
 }
 const ROOT = path.join(__dirname, '..');
-const STD = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/type-standard-answers.json'), 'utf8')).types;
+const STD = JSON.parse(fs.readFileSync(path.join(ROOT, 'lib/type-standard-answers.json'), 'utf8')).types;
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.json': 'application/json' };
 
 test('js/type-report-texts.js は生成スクリプトの出力と一致する', async () => {
