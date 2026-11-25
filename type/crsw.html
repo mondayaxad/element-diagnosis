@@ -128,12 +128,9 @@
   .confirm dt { color:var(--rx-tertiary); } .confirm dd { color:var(--rx-primary); }
   .confirm .c-sub { font-size:11px; color:var(--rx-gold); letter-spacing:2px; }
   .confirm ul { margin:6px 0 12px 1.2em; font-size:12.5px; color:var(--rx-secondary); line-height:1.85; }
-  .confirm .c-note { font-size:11px; color:var(--rx-tertiary); line-height:1.7; margin-bottom:12px; }
   .confirm .c-err { font-size:12px; color:#f0c8a0; background:#2a1a14; border-radius:8px; padding:8px 10px; line-height:1.7; margin-bottom:12px; }
-  .confirm .c-row { display:flex; gap:8px; }
-  .confirm button { flex:1; min-height:46px; border-radius:8px; font-size:13px; letter-spacing:1.5px; cursor:pointer; }
-  .confirm .c-close { background:transparent; color:var(--rx-primary); border:1px solid var(--card-line); }
-  .confirm .c-go { background:linear-gradient(90deg, #4a80c0, #9060d0); color:#fff; border:0; }
+  .confirm .c-go { display:block; width:100%; min-height:52px; margin-top:4px; border:0; border-radius:8px; background:linear-gradient(90deg, #4a80c0, #9060d0); color:#fff; font-family:inherit; font-size:15px; font-weight:600; letter-spacing:2px; cursor:pointer; }
+  .confirm .c-close { display:block; margin:10px auto 0; min-height:44px; padding:0 16px; border:0; background:transparent; color:var(--rx-tertiary); font-family:inherit; font-size:12.5px; letter-spacing:1px; text-decoration:underline; text-underline-offset:4px; cursor:pointer; }
   .confirm .c-go[disabled] { opacity:.6; cursor:progress; }
   .back { display:block; text-align:center; margin-top:14px; color:var(--rx-secondary); font-size:12.5px; min-height:44px; padding-top:10px; }
   .more { margin-top:22px; }
@@ -277,9 +274,9 @@
       <dl><dt>対象タイプ</dt><dd>氷 × 片手剣「宿縁者」（CRSW）</dd><dt>価格</dt><dd>¥1,000（税込）</dd><dt>種類</dt><dd>宿縁者の方に共通の読み物</dd></dl>
       <div class="c-sub">読める内容</div>
       <ul><li>標準プロフィールの読み方</li><li>強みを活かせる場面</li><li>つまずきやすい場面</li><li>人との関わり方</li></ul>
-      <p class="c-note">お支払いは Stripe の決済画面で行います（クレジットカード・PayPay）。お支払いの後に表示される固有のリンク（URL）から、いつでもお読みいただけます。あなた自身の回答から作る「解析レポート」とは別の商品です。<a href="/tokushoho" style="color:inherit">特定商取引法に基づく表記</a>・<a href="/terms.html" style="color:inherit">利用規約</a></p>
       <p class="c-err" data-report-error role="alert" hidden></p>
-      <div class="c-row"><button type="button" class="c-close" data-report-close>閉じる</button><button type="button" class="c-go" data-report-buy>購入へ進む</button></div>
+      <button type="button" class="c-go" data-report-buy>購入へ進む →</button>
+      <button type="button" class="c-close" data-report-close>閉じる</button>
     </dialog>
   </section>
 
