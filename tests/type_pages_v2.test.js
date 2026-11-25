@@ -27,16 +27,27 @@ test('type-v2：ファイルは生成スクリプトの出力と一致する', (
   for (const c of V2) assert.equal(read(`type/${c.toLowerCase()}.html`), render(c), `${c} が生成結果と食い違っています`);
 });
 
-test('type-v2：SEO の head と本文は元データのまま（文言を書き換えない）', () => {
+// 結果ページ（index.html）の文章資産：タイプ解説はこれと同じ文を使う
+const INDEX = read('index.html');
+function indexConst(name) {
+  const i = INDEX.indexOf(`const ${name} = `); const j = INDEX.indexOf('{', i); let depth = 0; let k = j;
+  for (; k < INDEX.length; k++) { if (INDEX[k] === '{') depth++; else if (INDEX[k] === '}' && --depth === 0) break; }
+  return vm.runInNewContext(`(${INDEX.slice(j, k + 1)})`);
+}
+const EL_NAME = { PY: '炎', HY: '水', CR: '氷', EL: '雷', AN: '風', GE: '岩', DE: '草' };
+const WP_NAME = { SW: '片手剣', CM: '両手剣', PL: '長柄', CT: '法器', BW: '弓' };
+const sentences = (t) => t.split('。').filter((x) => x.trim()).map((x) => x + '。');
+
+test('type-v2：SEO の head は元データのまま。本文は結果ページと同じ文（元素・武器種の解説、タイプ固有の説明を全文）', () => {
+  const TYPE_DESC = indexConst('TYPE_DESC'); const ED = indexConst('ELEMENT_DESC'); const WD = indexConst('WEAPON_DESC');
   for (const c of V2) {
     const h = read(`type/${c.toLowerCase()}.html`); const d = DATA[c];
+    const el = EL_NAME[c.slice(0, 2)]; const wp = WP_NAME[c.slice(2)];
     assert.ok(h.includes(d.head), `${c} の head`);
-    for (const k of ['elementText', 'weaponText']) {
-      const t = d[k]; const i = t.indexOf('。');
-      assert.ok(h.includes(t.slice(0, i + 1)) && h.includes(t.slice(i + 1)), `${c} の ${k}`);
-    }
+    for (const t of [...sentences(ED[el]), ...sentences(WD[wp]), ...sentences(TYPE_DESC[el][wp])]) assert.ok(h.includes(t), `${c} に「${t.slice(0, 20)}…」がない`);
     assert.ok(h.includes(d.combineText) && h.includes(`<div class="axis">${d.axis}</div>`), `${c} の組み合わせ・軸`);
     if (d.lead) assert.ok(h.includes(`<p class="lead">${d.lead}</p>`), `${c} の導入`);
+    assert.doesNotMatch(h, /エニアグラム|援助者・堅実家/, `${c} に旧い表記`);
     assert.equal((h.match(/<script type="application\/ld\+json">/g) || []).length, 1);
   }
 });
@@ -44,7 +55,7 @@ test('type-v2：SEO の head と本文は元データのまま（文言を書き
 test('type-v2：標準プロフィール・タイプ別レポートは Preview 専用（既定は hidden）。購入ボタンは計測の属性なし。「表示用の仮値」と明記', () => {
   for (const c of V2) {
     const h = read(`type/${c.toLowerCase()}.html`);
-    assert.match(h, /<section class="prof" data-preview-only hidden /, `${c} の欄は既定で隠す`);
+    assert.match(h, /<section class="chapter prof" data-preview-only hidden /, `${c} の欄は既定で隠す`);
     assert.match(h, /<button type="button" class="r-btn" data-report-open>今すぐアクセス　¥1,000（税込）<\/button>/);
     assert.ok(h.includes('表示用の仮値'));
     assert.doesNotMatch(h, /buy\.stripe\.com|checkout\.stripe|\/api\/complete-checkout/, `${c} は決済に接続しない`);
