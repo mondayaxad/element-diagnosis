@@ -87,3 +87,82 @@ test('report.html：タイプ別レポートは report_kind:"type" と正しい�
   assert.match(h, /\/\^\(PY\|HY\|CR\|EL\|AN\|GE\|DE\)\(SW\|CM\|PL\|CT\|BW\)\$\//);
   assert.match(h, /<script src="js\/type-report-texts\.js"><\/script>/);
 });
+
+// 購入後の流れ：固有リンク（/type-report#t=…）→ 支払い済みならレポートへ直接移る → レポートの最下部に
+//   保存用の固有リンク（同じタブの sessionStorage から）と、無料診断への導線
+//   固有リンクは https の同じオリジンだけ出すため、https の仮のオリジンで配る
+const ORIGIN = 'https://eti.test';
+async function httpsPage(code, opts = {}) {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const p = await ctx.newPage();
+  const errors = [];
+  p.on('pageerror', (e) => errors.push(String(e)));
+  await p.route(/googletagmanager|google-analytics|fonts\.(googleapis|gstatic)|cdnjs\.cloudflare\.com|supabase-js/, (r) => r.fulfill({ contentType: 'application/javascript', body: '' }));
+  await p.route(`${ORIGIN}/**`, (r) => {
+    const u = new URL(r.request().url());
+    if (u.pathname === '/api/public-config') return r.fulfill({ contentType: 'application/javascript', body: 'window.__ED_PUBLIC_CONFIG__ = null;' });
+    if (u.pathname === '/api/type-report') return r.fulfill({ contentType: 'application/json', body: JSON.stringify(
+      { ok: true, state: 'paid', type: code, typeName: STD[code].name, purchasedOn: '2026-11-25', reportUrl: '/report.html?token=TEST' }) });
+    if (u.pathname === '/api/report-data') return r.fulfill({ contentType: 'application/json', body: JSON.stringify(
+      Object.assign({ code: STD[code].diagnosis_code, diagnosis_version: 'ETI-2.0', entitlements: { core_analysis_access: true }, viewer: null, complete: null },
+        opts.kind === 'analysis' ? {} : { report_kind: 'type', type_code: code })) });
+    if (u.pathname.startsWith('/api/')) return r.fulfill({ contentType: 'application/json', body: '{}' });
+    let f = path.join(ROOT, decodeURIComponent(u.pathname));
+    if (!fs.existsSync(f) && fs.existsSync(f + '.html')) f += '.html';
+    if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) return r.fulfill({ status: 404, body: '' });
+    return r.fulfill({ contentType: TYPES[path.extname(f)] || 'application/octet-stream', body: fs.readFileSync(f) });
+  });
+  if (opts.link !== undefined) await p.addInitScript((v) => { try { sessionStorage.setItem('ed_type_report_link_v1', v); } catch (e) {} }, opts.link);
+  return { ctx, p, errors };
+}
+async function footerOf(p) {
+  await p.waitForFunction(() => /ELEMENT DIAGNOSIS/.test(document.body.innerText), null, { timeout: 15000 });
+  return p.evaluate(() => {
+    const f = document.querySelector('.type-report-foot');
+    if (!f) return null;
+    const a = f.querySelector('a');
+    return { text: f.innerText, cta: a && a.getAttribute('href'), copy: !!f.querySelector('[data-type-report-copy]'), last: f === f.parentNode.lastElementChild, pdfSkip: f.hasAttribute('data-pdf-skip') };
+  });
+}
+const SECRET = 'A'.repeat(21) + '-_' + 'b'.repeat(20);
+
+test('購入後：固有リンクのページからレポートへ直接移り、最下部に保存用リンクと無料診断の導線', { skip: !chromium }, async () => {
+  const { ctx, p, errors } = await httpsPage('PYSW');
+  await p.goto(`${ORIGIN}/type-report#t=${SECRET}`);
+  await p.waitForURL(/\/report\.html\?token=TEST$/, { timeout: 15000 });
+  const f = await footerOf(p);
+  const saved = await p.evaluate(() => sessionStorage.getItem('ed_type_report_link_v1'));
+  await ctx.close();
+  assert.deepEqual(errors, []);
+  assert.equal(saved, `${ORIGIN}/type-report#t=${SECRET}`);
+  assert.ok(f, '最下部の欄');
+  assert.ok(f.last && f.pdfSkip);
+  assert.ok(f.copy, '保存用リンクのコピー');
+  assert.match(f.text, /このレポートを開くリンク/);
+  assert.match(f.text, /殉愛者は、元素診断の35タイプのひとつです/);
+  assert.equal(f.cta, '/');
+  assert.match(f.text, /無料の元素診断で、自分のタイプを確かめる/);
+  assert.doesNotMatch(f.text, /あなた/);
+});
+
+test('最下部の保存用リンクは、正しい形・同じオリジンの固有リンクの時だけ（無料診断の導線は常に）', { skip: !chromium }, async () => {
+  for (const link of [null, 'javascript:alert(1)', `https://evil.test/type-report#t=${SECRET}`, `${ORIGIN}/type-report#t=short`, `${ORIGIN}/report.html?token=TEST`]) {
+    const { ctx, p, errors } = await httpsPage('CRSW', { link: link === null ? undefined : link });
+    await p.goto(`${ORIGIN}/report.html?token=TEST`);
+    const f = await footerOf(p);
+    await ctx.close();
+    assert.deepEqual(errors, [], String(link));
+    assert.ok(f && !f.copy, `${link} で保存用リンクを出さない`);
+    assert.doesNotMatch(f.text, /このレポートを開くリンク/);
+    assert.equal(f.cta, '/');
+  }
+});
+
+test('既存の解析レポートには、タイプ別レポートの最下部の欄を出さない', { skip: !chromium }, async () => {
+  const { ctx, p, errors } = await httpsPage('PYSW', { kind: 'analysis', link: `${ORIGIN}/type-report#t=${SECRET}` });
+  await p.goto(`${ORIGIN}/report.html?token=TEST`);
+  const f = await footerOf(p);
+  await ctx.close();
+  assert.deepEqual(errors, []);
+  assert.equal(f, null);
+});
