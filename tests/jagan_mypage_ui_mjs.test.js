@@ -1,0 +1,3 @@
+// tests/jagan_mypage_ui.test.mjs（ES モジュールの試験）を、npm test・test:full・CI（tests/*.test.js）の対象にする入口。
+'use strict';
+import('./jagan_mypage_ui.test.mjs');

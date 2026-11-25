@@ -65,8 +65,12 @@
       .then(function (r) {
         var b = r.body || {};
         if (r.status === 200 && b.state === 'paid' && typeof b.reportUrl === 'string' && b.reportUrl.indexOf('/report.html?token=') === 0) {
-          show('タイプ別レポート「' + (b.typeName || '') + '」', (b.purchasedOn ? b.purchasedOn + ' にご購入いただいた' : 'ご購入いただいた') + 'レポートをお読みいただけます。');
+          show('タイプ別レポート「' + (b.typeName || '') + '」', (b.purchasedOn ? b.purchasedOn + ' にご購入いただいた' : 'ご購入いただいた') + 'レポートを開いています…');
           var a = $('open'); a.href = b.reportUrl; a.hidden = false; $('save').hidden = false;
+          // レポートへ直接移る。このページの固有リンク（いつでも開き直せる URL）は、レポートの下部に保存用として出す
+          //   （同じタブの sessionStorage だけ。サーバーには送らない）
+          try { sessionStorage.setItem('ed_type_report_link_v1', location.href); } catch (e) { /* 保存できなくても、このページから開ける */ }
+          location.replace(b.reportUrl);
           return;
         }
         if (r.status === 200 && b.state === 'pending') {
