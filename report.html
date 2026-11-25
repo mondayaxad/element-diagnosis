@@ -2243,6 +2243,8 @@ function useTypeReportTexts() {
   Object.keys(t.WEAPON_DESC).forEach(function (k) { WEAPON_DESC[k] = t.WEAPON_DESC[k]; });
 }
 function typeReportWording(root, tr) {
+  // 完全解析の紹介（BEYOND THE REPORT）は、タイプ別レポートでは出さない（標準の回答に完全解析は売らない）
+  Array.prototype.forEach.call(root.querySelectorAll('.ca-r-sec'), function (el) { el.remove(); });
   var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   var n;
   while ((n = walker.nextNode())) {

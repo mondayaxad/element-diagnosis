@@ -68,7 +68,7 @@ test('タイプ別レポート：主語はタイプ名、最新の解説文、�
     assert.ok(r.text.includes(`${name}の土台`), `${code} の「${name}の土台」`);
     assert.ok(r.text.includes(nation), `${code} の代表国家`);
     assert.ok(r.text.includes('支え合いと信頼を重視する傾向'), `${code} の最新の解説文`);
-    assert.doesNotMatch(r.text, /援助者・堅実家|完全解析/, `${code} に旧い文・完全解析の案内`);
+    assert.doesNotMatch(r.text, /援助者・堅実家|完全解析|BEYOND THE REPORT|46ページ/, `${code} に旧い文・完全解析の案内`);
   }
 });
 
@@ -77,7 +77,7 @@ test('既存の解析レポート（report_kind なし）は従来どおり：�
   assert.deepEqual(r.errors, []);
   assert.match(r.text, /あなたの土台/);
   assert.match(r.text, /援助者・堅実家/);
-  assert.match(r.text, /完全解析/);
+  assert.match(r.text, /完全解析|BEYOND THE REPORT/);
   assert.doesNotMatch(r.title, /タイプ別レポート/);
 });
 
