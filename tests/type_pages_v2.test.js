@@ -44,7 +44,8 @@ test('type-v2：SEO の head は元データのまま。本文は結果ページ
     const h = read(`type/${c.toLowerCase()}.html`); const d = DATA[c];
     const el = EL_NAME[c.slice(0, 2)]; const wp = WP_NAME[c.slice(2)];
     assert.ok(h.includes(d.head), `${c} の head`);
-    for (const t of [...sentences(ED[el]), ...sentences(WD[wp]), ...sentences(TYPE_DESC[el][wp])]) assert.ok(h.includes(t), `${c} に「${t.slice(0, 20)}…」がない`);
+    const text = h.replace(/<[^>]+>/g, ''); // 文頭の強調（<strong>）などのタグを除いた本文で比べる
+    for (const t of [...sentences(ED[el]), ...sentences(WD[wp]), ...sentences(TYPE_DESC[el][wp])]) assert.ok(text.includes(t), `${c} に「${t.slice(0, 20)}…」がない`);
     assert.ok(h.includes(d.combineText) && h.includes(`<div class="axis">${d.axis}</div>`), `${c} の組み合わせ・軸`);
     if (d.lead) assert.ok(h.includes(`<p class="lead">${d.lead}</p>`), `${c} の導入`);
     assert.doesNotMatch(h, /エニアグラム|援助者・堅実家/, `${c} に旧い表記`);
@@ -55,8 +56,9 @@ test('type-v2：SEO の head は元データのまま。本文は結果ページ
 test('type-v2：標準プロフィール・タイプ別レポートは Preview 専用（既定は hidden）。購入ボタンは計測の属性なし。「表示用の仮値」と明記', () => {
   for (const c of V2) {
     const h = read(`type/${c.toLowerCase()}.html`);
-    assert.match(h, /<section class="chapter prof" data-preview-only hidden /, `${c} の欄は既定で隠す`);
-    assert.match(h, /<button type="button" class="r-btn" data-report-open>今すぐアクセス　¥1,000（税込）<\/button>/);
+    assert.match(h, /<section class="prof" data-preview-only hidden /, `${c} の欄は既定で隠す`);
+    assert.match(h, /<div class="r-price">¥1,000<small>（税込）<\/small><\/div>/);
+    assert.match(h, /<button type="button" class="r-btn" data-report-open>今すぐアクセス →<\/button>/);
     assert.ok(h.includes('表示用の仮値'));
     assert.doesNotMatch(h, /buy\.stripe\.com|checkout\.stripe|\/api\/complete-checkout/, `${c} は決済に接続しない`);
     const btn = /<button[^>]*data-report-open[^>]*>/.exec(h)[0];

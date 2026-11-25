@@ -40,148 +40,154 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  :root { --el:#c84a20; --el-l:#e8a878; --bg:#0b0b12; --panel:#13121b; --line:#262532; --text:#e8eaf0; --body:#d6dae2; --sub:#a4acb8; --serif:'Noto Serif JP','Hiragino Mincho ProN','Yu Mincho',serif; }
+  /* 文字色・書体・大きさは結果ページ（index.html の --rx-*・similarityGauges・統一CTA）に合わせる */
+  :root { --el:#c84a20; --wp:#9060d0; --el-t:color-mix(in srgb, #c84a20 55%, #ffffff); --wp-t:color-mix(in srgb, #9060d0 55%, #ffffff); --rx-primary:#E8F1F8; --rx-secondary:#A9C2D3; --rx-tertiary:#718A9C; --rx-muted:#526776; --rx-gold:#C9A860; --card:#0c0a14; --card-line:#182838; }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); font-family:'Hiragino Sans','Noto Sans JP',sans-serif; max-width:680px; margin:0 auto; padding:18px 18px 72px; line-height:1.95; -webkit-text-size-adjust:100%; }
+  body { background:#07070f; color:#e0dcf0; font-family:'Noto Serif JP','Hiragino Mincho ProN','Yu Mincho',serif; -webkit-font-smoothing:antialiased; max-width:680px; margin:0 auto; padding:16px 14px 64px; line-height:1.95; -webkit-text-size-adjust:100%;
+    background-image:radial-gradient(ellipse 90% 40% at 50% 0%, color-mix(in srgb, #c84a20 14%, transparent), transparent 70%), radial-gradient(ellipse 80% 50% at 50% 30%, rgba(100,60,180,.08), transparent 70%); background-repeat:no-repeat; }
   a { color:inherit; }
-  .crumb { font-size:12.5px; color:var(--sub); margin-bottom:12px; }
-  .crumb a { color:var(--sub); text-decoration:none; border-bottom:1px solid #3a3a48; }
+  strong { font-weight:700; }
+  .crumb { font-size:11px; color:var(--rx-tertiary); letter-spacing:.5px; margin:0 4px 10px; }
+  .crumb a { color:var(--rx-secondary); text-decoration:none; border-bottom:1px solid rgba(169,194,211,.3); }
   .eyebrow { display:none; }
-  /* ヒーロー：元素 × 武器種 → タイプ名 → タイプコード → 無料診断 */
-  .hero { position:relative; border:1px solid color-mix(in srgb, var(--el) 70%, #000); border-radius:16px; padding:6px; background:radial-gradient(120% 90% at 85% 30%, color-mix(in srgb, var(--el) 18%, transparent), transparent 60%), var(--panel); }
-  .hero-in { position:relative; border:1px solid color-mix(in srgb, var(--el) 35%, transparent); border-radius:11px; padding:18px 16px 16px; }
-  .hero-em { position:absolute; top:12px; right:8px; width:112px; height:112px; object-fit:contain; filter:drop-shadow(0 0 16px color-mix(in srgb, var(--el) 50%, transparent)); pointer-events:none; }
-  .el-w, h1, .code { position:relative; margin-right:110px; }
-  .el-w { font-family:var(--serif); font-weight:700; color:var(--el-l); font-size:17px; letter-spacing:.08em; line-height:1.5; }
-  h1 { font-family:var(--serif); font-weight:700; line-height:1.2; margin:4px 0 6px; }
+  .card { background:var(--card); border:1px solid var(--card-line); border-radius:12px; padding:20px; margin-bottom:14px; }
+  .kicker { font-size:11px; color:var(--rx-gold); letter-spacing:2px; margin-bottom:6px; }
+  .card-h { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .card-h::before { content:''; width:8px; height:8px; border-radius:50%; background:var(--el); flex:none; }
+  .card-h h2 { color:color-mix(in srgb, var(--rx-primary) 85%, var(--el)); font-size:15px; font-weight:700; margin:0; line-height:1.6; }
+  .card p { color:var(--rx-secondary); font-size:12.5px; line-height:1.95; }
+  .card p + p { margin-top:10px; }
+  .card h3 { color:var(--rx-primary); font-size:13px; font-weight:700; margin:16px 0 4px; letter-spacing:.5px; }
+  .rule { height:1px; background:var(--card-line); margin:18px 0; }
+  /* ヒーロー（結果ページの「あなたの土台」と同じ並び：小見出し → コードと名前 → 元素 × 武器種 → 軸） */
+  .hero { position:relative; background:linear-gradient(135deg, color-mix(in srgb, #c84a20 14%, transparent), #0a0e1a 70%); border:1px solid color-mix(in srgb, #c84a20 30%, #1c2c40); border-radius:16px; padding:22px 20px 20px; margin-bottom:14px; }
+  .hero-em { position:absolute; top:14px; right:12px; width:76px; height:76px; object-fit:contain; filter:drop-shadow(0 0 12px #c84a2066); pointer-events:none; }
+  .hero-k { font-size:11px; letter-spacing:3px; color:#90c0e0; margin-right:80px; }
+  .el-w { font-weight:700; font-size:30px; line-height:1.35; margin:6px 80px 2px 0; letter-spacing:1px; }
+  .el-w .e { color:var(--el-t); } .el-w .w { color:var(--wp-t); } .el-w .x { color:var(--rx-tertiary); font-size:18px; margin:0 6px; font-weight:400; }
+  h1 { font-weight:700; line-height:1.3; margin:0 80px 2px 0; }
   h1 .h1-sub { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
-  h1 .h1-n { display:block; font-size:46px; letter-spacing:.05em; color:#f6f1e8; text-shadow:0 0 24px color-mix(in srgb, var(--el) 35%, transparent); }
-  .code { font-family:var(--serif); font-size:13px; color:var(--sub); letter-spacing:.12em; margin-bottom:14px; }
-  /* ボタン：サイトの見出しと同じ明朝・字間（トップの「診断をはじめる」と同じ表情） */
-  .pre-cta, .cta, .r-btn, .confirm button { font-family:var(--serif); font-weight:700; letter-spacing:.1em; }
-  .pre-cta { display:flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:11px 16px; border:1px solid var(--el-l); border-radius:999px; color:#f6f1e8; background:linear-gradient(180deg, color-mix(in srgb, var(--el) 34%, transparent), color-mix(in srgb, var(--el) 14%, transparent)); box-shadow:0 0 18px color-mix(in srgb, var(--el) 22%, transparent), inset 0 1px 0 rgba(255,255,255,.08); font-size:14.5px; line-height:1.55; text-align:center; text-decoration:none; word-break:keep-all; overflow-wrap:anywhere; }
-  .pre-cta .arw { display:inline-block; transition:transform .2s; color:var(--el-l); }
+  h1 .h1-n { display:block; font-size:34px; letter-spacing:3px; color:var(--rx-primary); }
+  .code { font-size:15px; font-weight:700; letter-spacing:4px; color:var(--el-t); margin-bottom:6px; }
+  .hero-ax { color:var(--rx-secondary); font-size:12px; line-height:1.9; padding-bottom:14px; margin-bottom:16px; border-bottom:1px solid #1c2c40; }
+  /* 無料診断のボタン：トップの「診断をはじめる」と同じ表情 */
+  .cta, .pre-cta { display:flex; align-items:center; justify-content:center; gap:6px; min-height:44px; padding:13px 14px; border-radius:6px; text-decoration:none; font-family:inherit; font-size:13.5px; letter-spacing:.12em; line-height:1.6; text-align:center; color:#eef4ff; background:linear-gradient(135deg, #1b4c86 0%, #2556a0 52%, #3c4a9e 100%); border:1px solid rgba(150,180,240,.22); box-shadow:0 0 32px rgba(90,80,200,.2), 0 12px 26px rgba(0,0,0,.35), inset 0 1px 0 rgba(210,225,255,.16); word-break:keep-all; overflow-wrap:anywhere; }
+  .pre-cta .arw { display:inline-block; transition:transform .2s; }
   .pre-cta:hover .arw, .pre-cta:focus-visible .arw { transform:translateX(3px); }
-  /* 冒頭：タイプの核を引用として大きく、その後に導入 */
-  .essence { margin:30px 0 0; padding:4px 0 4px 18px; border-left:4px solid var(--el-l); }
-  .essence p { font-family:var(--serif); font-weight:700; font-size:21px; line-height:1.7; color:#f6f1e8; }
-  .essence cite { display:block; margin-top:10px; font-style:normal; font-size:13.5px; color:var(--sub); letter-spacing:.06em; }
-  .lead { font-size:16px; line-height:2; color:var(--body); margin:24px 0 0; }
-  .intro { font-size:16px; line-height:2; color:var(--body); margin:16px 0 0; }
-  /* 紋章の図（章の区切り） */
-  .figure { position:relative; margin:30px auto 6px; width:220px; height:180px; display:grid; place-items:center; }
-  .figure::before, .figure::after { content:''; position:absolute; border-radius:50%; border:1px solid color-mix(in srgb, var(--el) 45%, transparent); }
-  .figure::before { width:176px; height:176px; }
-  .figure::after { width:136px; height:136px; border-style:dashed; opacity:.6; }
-  .figure img { position:relative; width:128px; height:128px; object-fit:contain; filter:drop-shadow(0 0 22px color-mix(in srgb, var(--el) 55%, transparent)); }
-  /* 章：小見出し（元素の気質など）→ 大見出し（その章の主題）→ 本文と引用 */
-  .chapter { margin-top:40px; }
-  .chapter .kicker { display:flex; align-items:center; gap:10px; font-size:13px; font-weight:700; letter-spacing:.14em; color:var(--el-l); }
-  .chapter .kicker::before { content:''; width:8px; height:8px; transform:rotate(45deg); background:var(--el-l); flex:none; }
-  .chapter .kicker::after { content:''; flex:1; height:1px; background:var(--line); }
-  .chapter h2 { font-family:var(--serif); font-weight:700; font-size:27px; line-height:1.45; color:#f6f1e8; margin:10px 0 12px; letter-spacing:.03em; }
-  .chapter h3 { font-family:var(--serif); font-weight:700; font-size:19px; line-height:1.5; color:var(--el-l); margin:22px 0 6px; }
-  .chapter p { font-size:16px; line-height:2; color:var(--body); }
-  .chapter p + p { margin-top:14px; }
-  .pull { margin:20px 0; padding:16px 18px; border-left:4px solid var(--el-l); background:color-mix(in srgb, var(--el) 13%, #12111a); border-radius:0 10px 10px 0; font-family:var(--serif); font-size:17px; line-height:1.85; color:#f2ede4; }
-  .pull.caution { border-left-color:#c8b48a; background:#17151a; }
-  .axis { font-family:var(--serif); font-weight:600; font-size:16px; color:var(--el-l); margin:22px 0 4px; letter-spacing:.04em; }
-  .tags { margin:10px 0 0; }
-  .tag { display:inline-block; font-size:13px; border:1px solid color-mix(in srgb, var(--el) 50%, var(--line)); border-radius:20px; padding:4px 12px; margin:0 6px 8px 0; color:#dfe2e8; background:#171620; }
+  .cta { margin:26px 0 0; }
+  /* 冒頭：タイプの核（結果ページの「この先にあるもの」と同じ書き方） */
+  .essence { margin:22px 6px 0; }
+  .essence .k { font-size:11px; letter-spacing:3px; color:var(--rx-gold); margin-bottom:8px; }
+  .essence .core { color:var(--rx-primary); font-size:16px; line-height:1.9; letter-spacing:.5px; }
+  .essence cite { display:block; margin-top:6px; font-style:normal; font-size:11px; color:var(--rx-tertiary); letter-spacing:1px; }
+  .lead, .intro { color:var(--rx-secondary); font-size:12.5px; line-height:1.95; margin:14px 0 0; }
+  .figure { position:relative; margin:22px auto 18px; width:180px; height:150px; display:grid; place-items:center; }
+  .figure::before, .figure::after { content:''; position:absolute; border-radius:50%; border:1px solid #c84a2055; }
+  .figure::before { width:146px; height:146px; } .figure::after { width:112px; height:112px; border-style:dashed; opacity:.5; }
+  .figure img { position:relative; width:104px; height:104px; object-fit:contain; filter:drop-shadow(0 0 18px #c84a2088); }
+  .pull { margin:14px 0; padding:12px 14px; border-left:3px solid var(--el); background:#c84a2014; border-radius:0 8px 8px 0; color:var(--rx-primary); font-size:13px; line-height:1.9; }
+  .pull.caution { border-left-color:var(--rx-gold); background:rgba(201,168,96,.07); }
+  .axis { color:var(--el-t); font-size:12.5px; font-weight:600; letter-spacing:1px; margin:16px 0 8px; }
+  .tags { display:flex; flex-wrap:wrap; gap:6px; }
+  .tag { font-size:10.5px; color:var(--el-t); border:1px solid #c84a2066; background:#c84a201f; border-radius:12px; padding:4px 10px; letter-spacing:.3px; }
   [data-preview-only][hidden] { display:none !important; }
-  .pv-note { display:inline-block; font-size:11.5px; color:#1a1410; background:#e8d6a8; border-radius:4px; padding:1px 8px; margin-left:6px; vertical-align:2px; font-family:'Hiragino Sans','Noto Sans JP',sans-serif; letter-spacing:0; font-weight:700; }
-  /* 標準プロフィール：両端に言葉のある軸（Big Five）と、武器種の行動スタイル */
-  .prof-card { border:1px solid var(--line); border-radius:14px; background:var(--panel); padding:18px 16px 12px; margin-top:6px; }
-  .prof-card + .prof-card { margin-top:12px; }
-  .prof-card .pc-h { font-family:var(--serif); font-weight:700; font-size:16px; color:#f2ede4; margin-bottom:8px; }
-  .pole { margin:10px 0 14px; }
-  .pole-h { text-align:center; font-size:15px; color:#f2ede4; font-weight:700; }
-  .pole-h b { color:var(--el-l); font-size:17px; }
-  .pole-h span { color:var(--sub); font-weight:400; font-size:13px; }
-  .pole-t { position:relative; height:12px; margin:8px 4px 6px; border-radius:6px; background:#2a2a36; }
-  .pole-f { position:absolute; left:0; top:0; bottom:0; border-radius:6px; background:linear-gradient(90deg, color-mix(in srgb, var(--el-l) 55%, #2a2a36), var(--el-l)); }
-  .pole-dot { position:absolute; top:50%; width:20px; height:20px; margin:-10px 0 0 -10px; border-radius:50%; background:#fff; border:4px solid var(--el-l); box-shadow:0 0 0 3px #13121b; }
-  .pole-e { display:flex; justify-content:space-between; font-size:13.5px; color:var(--sub); }
-  .pole-e .on { color:#f2ede4; font-weight:700; }
-  .bar { display:grid; grid-template-columns:5em 1fr 2.2em; align-items:center; gap:10px; min-height:36px; font-size:14.5px; color:#dfe2e8; }
-  .bar-t { height:10px; border-radius:5px; background:#2a2a36; overflow:hidden; }
-  .bar-f { display:block; height:100%; border-radius:5px; background:var(--el-l); }
-  .bar-v { text-align:right; color:var(--el-l); font-variant-numeric:tabular-nums; }
-  .pc-note { font-size:13.5px; color:var(--body); line-height:1.85; margin-top:8px; }
-  .src { font-size:12.5px; color:var(--sub); line-height:1.8; margin-top:12px; }
-  /* タイプ別レポート：解放の枠 */
-  .report { margin-top:26px; border:1px solid color-mix(in srgb, var(--el) 80%, #000); border-top:4px solid var(--el-l); border-radius:16px; padding:22px 18px 18px; text-align:center; background:radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--el) 20%, transparent), transparent 60%), #17141e; }
-  .report .r-chip { display:inline-block; font-size:12.5px; font-weight:700; color:var(--el-l); letter-spacing:.1em; padding:3px 14px; border-radius:999px; background:color-mix(in srgb, var(--el) 22%, transparent); }
-  .report h3 { font-family:var(--serif); font-size:25px; line-height:1.5; color:#f6f1e8; margin:12px 0 4px; word-break:keep-all; overflow-wrap:anywhere; }
-  .report .r-em { display:block; width:120px; height:120px; margin:6px auto; object-fit:contain; filter:drop-shadow(0 0 20px color-mix(in srgb, var(--el) 55%, transparent)); }
-  .report .r-desc { font-size:14.5px; color:var(--body); line-height:1.9; text-align:left; }
-  .report .r-btn { display:block; width:100%; margin-top:16px; min-height:52px; border:0; border-radius:999px; background:linear-gradient(180deg, color-mix(in srgb, var(--el-l) 92%, #fff), var(--el-l)); color:#17121a; font-size:16px; cursor:pointer; box-shadow:0 6px 20px color-mix(in srgb, var(--el) 35%, transparent); }
-  .report .r-diff { font-size:12.5px; color:var(--sub); line-height:1.75; margin-top:12px; text-align:left; }
-  dialog.confirm { margin:auto; width:min(92vw, 440px); border:1px solid color-mix(in srgb, var(--el) 70%, #000); border-radius:16px; background:#16141d; color:var(--text); padding:22px 18px 16px; }
-  dialog.confirm::backdrop { background:rgba(4,4,8,.74); }
-  .confirm .c-label { font-size:12.5px; font-weight:700; color:var(--el-l); letter-spacing:.1em; }
-  .confirm h3 { font-family:var(--serif); font-size:21px; line-height:1.5; margin:4px 0 12px; color:#f6f1e8; }
-  .confirm dl { display:grid; grid-template-columns:5.5em 1fr; gap:6px 10px; font-size:14px; margin-bottom:12px; }
-  .confirm dt { color:var(--sub); }
-  .confirm .c-sub { font-family:var(--serif); font-weight:700; font-size:15px; }
-  .confirm ul { margin:4px 0 12px 1.2em; font-size:14px; color:var(--body); line-height:1.85; }
-  .confirm .c-note { font-size:12.5px; color:#e8d6a8; background:#2a2418; border-radius:8px; padding:8px 10px; line-height:1.7; margin-bottom:12px; }
+  .pv-note { display:inline-block; font-size:10px; color:#1a1410; background:#e8d6a8; border-radius:4px; padding:0 7px; margin-left:8px; vertical-align:2px; letter-spacing:0; font-weight:700; }
+  /* ゲージ（結果ページの similarityGauges と同じ） */
+  .gs { display:flex; flex-direction:column; gap:12px; margin:6px 0 2px; }
+  .g-h { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
+  .g-l { font-size:11px; letter-spacing:.5px; color:var(--rx-secondary); }
+  .g-v { font-size:12px; font-weight:700; }
+  .g-t { height:7px; background:#14121f; border-radius:4px; overflow:hidden; box-shadow:inset 0 0 0 1px #ffffff0a; }
+  .g-f { height:100%; border-radius:4px; }
+  .g-s { display:flex; justify-content:space-between; align-items:baseline; margin-top:3px; font-size:10px; color:var(--rx-muted); letter-spacing:.3px; }
+  .g-s i { font-style:normal; color:var(--rx-tertiary); }
+  .g-s .on { color:var(--rx-primary); font-weight:700; }
+  .src { font-size:11px; color:var(--rx-tertiary); line-height:1.7; margin-top:12px; }
+  /* タイプ別レポート（結果ページの統一CTAと同じ構成：小見出し → 見出し → 説明 → ご利用いただける内容 → 価格 → ボタン） */
+  .report { background:linear-gradient(135deg, #c84a201c, #08101a); border:1px solid #c84a2045; border-radius:14px; padding:26px 22px; text-align:center; margin-top:14px; }
+  .report .r-k { font-size:10px; color:#c0a860; letter-spacing:2px; margin-bottom:10px; }
+  .report h3 { color:var(--rx-primary); font-size:17px; margin:0 0 10px; letter-spacing:1px; line-height:1.6; }
+  .report .r-desc { color:var(--rx-secondary); font-size:12px; line-height:1.85; margin:0 0 18px; }
+  .report .r-list { background:var(--card); border:1px solid #c84a2030; border-radius:10px; padding:18px; margin-bottom:20px; text-align:left; }
+  .report .r-lh { font-size:11px; color:var(--rx-gold); letter-spacing:2px; margin-bottom:14px; }
+  .ck { display:flex; gap:10px; margin-bottom:12px; align-items:flex-start; }
+  .ck:last-child { margin-bottom:0; }
+  .ck-m { color:var(--rx-gold); font-size:13px; flex-shrink:0; margin-top:1px; }
+  .ck-t { color:var(--rx-primary); font-size:13px; font-weight:600; margin-bottom:3px; }
+  .ck-s { color:var(--rx-tertiary); font-size:11px; line-height:1.6; }
+  .report .r-price { font-size:28px; font-weight:700; color:#eee0c0; margin-bottom:16px; line-height:1.3; }
+  .report .r-price small { font-size:12px; font-weight:400; margin-left:4px; color:var(--rx-secondary); }
+  .r-btn, .confirm button { font-family:inherit; }
+  .report .r-btn { width:100%; background:linear-gradient(90deg, #c84a20, #9060d0); border:none; color:#fff; border-radius:8px; padding:14px; min-height:48px; font-size:14px; cursor:pointer; letter-spacing:2px; font-weight:600; }
+  .report .r-diff { color:#c0a860; font-size:11px; margin-top:8px; font-weight:600; line-height:1.7; }
+  .report .r-diff2 { color:var(--rx-tertiary); font-size:11px; line-height:1.7; margin-top:4px; }
+  dialog.confirm { margin:auto; width:min(92vw, 420px); border:1px solid #c84a2045; border-radius:14px; background:#0c0a14; color:var(--rx-primary); padding:22px 20px 16px; }
+  dialog.confirm::backdrop { background:rgba(4,4,10,.76); }
+  .confirm .c-label { font-size:10px; font-weight:400; color:#c0a860; letter-spacing:2px; }
+  .confirm h3 { font-size:17px; line-height:1.6; margin:6px 0 12px; letter-spacing:1px; }
+  .confirm dl { display:grid; grid-template-columns:5.5em 1fr; gap:6px 10px; font-size:12.5px; margin-bottom:12px; }
+  .confirm dt { color:var(--rx-tertiary); } .confirm dd { color:var(--rx-primary); }
+  .confirm .c-sub { font-size:11px; color:var(--rx-gold); letter-spacing:2px; }
+  .confirm ul { margin:6px 0 12px 1.2em; font-size:12.5px; color:var(--rx-secondary); line-height:1.85; }
+  .confirm .c-note { font-size:11px; color:#e8d6a8; background:#2a2418; border-radius:8px; padding:8px 10px; line-height:1.7; margin-bottom:12px; }
   .confirm .c-row { display:flex; gap:8px; }
-  .confirm button { flex:1; min-height:48px; border-radius:999px; font-size:14.5px; cursor:pointer; }
-  .confirm .c-close { background:transparent; color:var(--text); border:1px solid var(--line); }
-  .confirm .c-go { background:#3a3846; color:#9a9aa8; border:0; cursor:not-allowed; }
-  .cta { display:block; text-align:center; background:linear-gradient(180deg, color-mix(in srgb, var(--el) 36%, #15131c), color-mix(in srgb, var(--el) 18%, #15131c)); border:1px solid var(--el-l); color:#f6f1e8; text-decoration:none; padding:15px 14px; border-radius:999px; font-size:15px; margin-top:38px; line-height:1.6; word-break:keep-all; overflow-wrap:anywhere; box-shadow:0 0 20px color-mix(in srgb, var(--el) 20%, transparent); }
-  .back { display:block; text-align:center; margin-top:14px; color:var(--sub); font-size:14px; min-height:44px; padding-top:10px; }
-  .more { margin-top:8px; }
-  .more .more-h { display:flex; align-items:center; gap:10px; margin:34px 0 10px; font-size:13px; font-weight:700; letter-spacing:.14em; color:var(--el-l); }
-  .more .more-h::before { content:''; width:8px; height:8px; transform:rotate(45deg); background:var(--el-l); flex:none; }
-  .more .more-h::after { content:''; flex:1; height:1px; background:var(--line); }
-  .more ul { list-style:none; border:1px solid var(--line); border-radius:12px; background:var(--panel); overflow:hidden; }
-  .more li + li { border-top:1px solid var(--line); }
-  .more li a { display:grid; grid-template-columns:4.2em 1fr auto; align-items:center; gap:8px; min-height:50px; padding:8px 14px; text-decoration:none; font-size:15px; }
-  .sib-w { color:var(--sub); font-size:13.5px; }
-  .sib-n { font-family:var(--serif); font-weight:700; color:#f2ede4; }
-  .sib-c { color:var(--el-l); font-size:12.5px; letter-spacing:.06em; }
-  .more .jg { margin-top:18px; font-size:13.5px; color:var(--sub); }
+  .confirm button { flex:1; min-height:46px; border-radius:8px; font-size:13px; letter-spacing:1.5px; cursor:pointer; }
+  .confirm .c-close { background:transparent; color:var(--rx-primary); border:1px solid var(--card-line); }
+  .confirm .c-go { background:#1c1a28; color:var(--rx-muted); border:0; cursor:not-allowed; }
+  .back { display:block; text-align:center; margin-top:14px; color:var(--rx-secondary); font-size:12.5px; min-height:44px; padding-top:10px; }
+  .more { margin-top:22px; }
+  .more .more-h { font-size:11px; color:var(--rx-gold); letter-spacing:2px; margin:0 4px 8px; font-weight:400; }
+  .more ul { list-style:none; background:var(--card); border:1px solid var(--card-line); border-radius:12px; overflow:hidden; }
+  .more li + li { border-top:1px solid var(--card-line); }
+  .more li a { display:grid; grid-template-columns:4.2em 1fr auto; align-items:center; gap:8px; min-height:48px; padding:8px 16px; text-decoration:none; font-size:13px; }
+  .sib-w { color:var(--rx-tertiary); font-size:11.5px; }
+  .sib-n { font-weight:700; color:var(--rx-primary); letter-spacing:1px; }
+  .sib-c { color:var(--el-t); font-size:11px; letter-spacing:2px; }
+  .more .jg { margin:16px 4px 0; font-size:12px; color:var(--rx-tertiary); }
   .more .jg a { color:#d8b0e8; }
-  @media (max-width:360px) { h1 .h1-n { font-size:40px; } .hero-em { width:90px; height:90px; } .el-w, h1, .code { margin-right:90px; } .chapter h2 { font-size:24px; } }
+  @media (max-width:360px) { .el-w { font-size:26px; } h1 .h1-n { font-size:30px; } .hero-em { width:64px; height:64px; } }
 </style>
 </head>
 <body data-type-code="PYSW" data-element="pyro" data-weapon-type="sword">
   <nav class="crumb" aria-label="現在地"><a href="/#types-pyro" data-types-back="pyro">全35タイプ一覧</a> ／ 炎 × 片手剣</nav>
   <div class="eyebrow">元素診断タイプ解説</div>
-  <header class="hero"><div class="hero-in">
-   <img class="hero-em" src="/assets/emblems/2026-autumn/record/pyro.png" width="112" height="112" alt="炎の紋章">
-  <div class="el-w">炎 × 片手剣</div>
+  <header class="hero">
+   <img class="hero-em" src="/assets/emblems/2026-autumn/record/pyro.png" width="76" height="76" alt="炎の紋章">
+   <div class="hero-k">タ イ プ 解 説</div>
+  <div class="el-w"><span class="e">炎</span><span class="x">×</span><span class="w">片手剣</span></div>
   <h1><span class="h1-sub">炎×片手剣タイプ「</span><span class="h1-n">殉愛者</span><span class="h1-sub">」</span></h1>
   <div class="code">タイプコード：PYSW</div>
   <a class="pre-cta" href="https://element-diagnosis-five.vercel.app/" data-type-cta="top" data-destination="eti_top">元素診断（100問・無料）で、あなたのタイプを確かめる<span class="arw" aria-hidden="true">→</span></a>
-  </div></header>
+  </header>
 
-  <blockquote class="essence"><p>大切な相手のために、自分の熱を差し出すことを厭わない人。</p><cite>— 炎 × 片手剣「殉愛者」</cite></blockquote>
-  <p class="lead">自分のためだけに頑張ることに、物足りなさを感じたことはありませんか。一人で完結する強さより、大切な相手のために動いているときの方が、ずっと自分らしいと感じたことは。</p>
-  <p class="intro">殉愛者は、炎の気質（義務の焔）と、片手剣の関わり方（関係依存型）が重なって現れるタイプです。この二つが重なる時、「殉愛者」という人物像が立ち上がります。</p>
+  <section class="essence" aria-label="殉愛者の核">
+    <div class="k">殉 愛 者 と は</div>
+    <p class="core">大切な相手のために、自分の熱を差し出すことを厭わない人。</p>
+    <cite>— 炎 × 片手剣「殉愛者」</cite>
+    <p class="lead">自分のためだけに頑張ることに、物足りなさを感じたことはありませんか。一人で完結する強さより、大切な相手のために動いているときの方が、ずっと自分らしいと感じたことは。</p>
+    <p class="intro"><strong style="color:var(--rx-primary)">殉愛者</strong>は、<strong style="color:var(--el-t)">炎の気質（義務の焔）</strong>と、<strong style="color:var(--wp-t)">片手剣の関わり方（関係依存型）</strong>が重なって現れるタイプです。この二つが重なる時、「殉愛者」という人物像が立ち上がります。</p>
+  </section>
 
-  <div class="figure" aria-hidden="true"><img src="/assets/emblems/2026-autumn/record/pyro.png" width="128" height="128" alt="" loading="lazy"></div>
+  <div class="figure" aria-hidden="true"><img src="/assets/emblems/2026-autumn/record/pyro.png" width="104" height="104" alt="" loading="lazy"></div>
 
-  <section class="chapter" aria-labelledby="ch-el">
+  <section class="card" aria-labelledby="ch-el">
     <div class="kicker">炎の気質</div>
-    <h2 id="ch-el">義務の焔</h2>
-    <p>炎は、義務感と情熱がせめぎ合う元素です。正しさを貫こうとする意志と、力で押し進める推進力が同時に働き、迷いながらも動き続ける性質を映します。</p>
-    <blockquote class="pull">頭で結論を出すより先に、体が動いてしまうことが多く、その分だけ周囲を巻き込む力も強くなります。</blockquote>
-    <p>じっとしていることに、どこか落ち着かなさを感じるタイプです。</p>
+    <div class="card-h"><h2 id="ch-el">義務の焔</h2></div>
+      <p><strong style="color:color-mix(in srgb, #c84a20 55%, #ffffff)">炎</strong>は、義務感と情熱がせめぎ合う元素です。正しさを貫こうとする意志と、力で押し進める推進力が同時に働き、迷いながらも動き続ける性質を映します。</p>
+      <blockquote class="pull">頭で結論を出すより先に、体が動いてしまうことが多く、その分だけ周囲を巻き込む力も強くなります。</blockquote>
+      <p>じっとしていることに、どこか落ち着かなさを感じるタイプです。</p>
   </section>
 
-  <section class="chapter" aria-labelledby="ch-wp">
+  <section class="card" aria-labelledby="ch-wp" style="--el:#9060d0">
     <div class="kicker">片手剣の関わり方</div>
-    <h2 id="ch-wp">関係性の中で状況に応じて流れる</h2>
-    <p>片手剣は、他者との関わりの中で力を発揮する武器です。支え合いと信頼を重視する傾向——人と支え合い、信頼を築こうとする動機が、その扱い方の根にあります。</p>
-    <blockquote class="pull">相手が誰かによって、力の出し方そのものを変える柔軟さがあり、一人で完結するより、誰かのために動く時の方が、本来の力を発揮します。</blockquote>
+    <div class="card-h"><h2 id="ch-wp">関係性の中で状況に応じて流れる</h2></div>
+      <p><strong style="color:color-mix(in srgb, #9060d0 55%, #ffffff)">片手剣</strong>は、他者との関わりの中で力を発揮する武器です。支え合いと信頼を重視する傾向——人と支え合い、信頼を築こうとする動機が、その扱い方の根にあります。</p>
+      <blockquote class="pull">相手が誰かによって、力の出し方そのものを変える柔軟さがあり、一人で完結するより、誰かのために動く時の方が、本来の力を発揮します。</blockquote>
   </section>
 
-  <section class="chapter" aria-labelledby="ch-type">
+  <section class="card" aria-labelledby="ch-type">
     <div class="kicker">殉愛者として現れる特徴</div>
-    <h2 id="ch-type">強みと、つまずきやすいところ</h2>
+    <div class="card-h"><h2 id="ch-type">強みと、つまずきやすいところ</h2></div>
     <h3>力を発揮するとき</h3>
     <p>関係性の中でこそ力を発揮し、誰かのために動くときに最も自分らしくいられます。</p>
     <h3>つまずきやすいところ</h3>
@@ -190,54 +196,80 @@
     <div class="tags"><span class="tag">義務感</span><span class="tag">推進力</span><span class="tag">巻き込む力</span><span class="tag">支え合い</span><span class="tag">相手に応じた柔軟さ</span><span class="tag">関係性の中の力</span></div>
   </section>
 
-  <section class="chapter prof" data-preview-only hidden aria-labelledby="prof-h">
-    <div class="kicker">標準プロフィール</div>
-    <h2 id="prof-h">殉愛者の標準プロフィール<span class="pv-note">表示用の仮値</span></h2>
-    <div class="prof-card">
-      <div class="pc-h">気質（Big Five・0〜100）— 炎</div>
-      <div class="pole">
-        <div class="pole-h"><b>50</b> 開放性<span>（中間）</span></div>
-        <div class="pole-t"><span class="pole-f" style="width:50%"></span><span class="pole-dot" style="left:50%"></span></div>
-        <div class="pole-e"><span>堅実さ</span><span>探究心</span></div>
+  <section class="prof" data-preview-only hidden aria-labelledby="prof-h">
+    <div class="card">
+      <div class="kicker">標準プロフィール</div>
+      <div class="card-h"><h2 id="prof-h">殉愛者の標準プロフィール<span class="pv-note">表示用の仮値</span></h2></div>
+      <h3>気質（Big Five・0〜100）— 炎</h3>
+      <div class="gs">
+        <div class="g">
+          <div class="g-h"><span class="g-l">開放性</span><span class="g-v" style="color:color-mix(in srgb, #c84a20 55%, #ffffff)">50</span></div>
+          <div class="g-t"><div class="g-f" style="width:50%;background:linear-gradient(90deg, color-mix(in srgb, #c84a20 45%, #0c0a14), #c84a20 70%, color-mix(in srgb, #c84a20 60%, #ffffff));box-shadow:0 0 8px #c84a2055"></div></div>
+          <div class="g-s"><span>堅実さ</span><i>中間</i><span>探究心</span></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">誠実性</span><span class="g-v" style="color:color-mix(in srgb, #c84a20 55%, #ffffff)">90</span></div>
+          <div class="g-t"><div class="g-f" style="width:90%;background:linear-gradient(90deg, color-mix(in srgb, #c84a20 45%, #0c0a14), #c84a20 70%, color-mix(in srgb, #c84a20 60%, #ffffff));box-shadow:0 0 8px #c84a2055"></div></div>
+          <div class="g-s"><span>衝動性</span><i>計画性寄り</i><span class="on">計画性</span></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">外向性</span><span class="g-v" style="color:color-mix(in srgb, #c84a20 55%, #ffffff)">90</span></div>
+          <div class="g-t"><div class="g-f" style="width:90%;background:linear-gradient(90deg, color-mix(in srgb, #c84a20 45%, #0c0a14), #c84a20 70%, color-mix(in srgb, #c84a20 60%, #ffffff));box-shadow:0 0 8px #c84a2055"></div></div>
+          <div class="g-s"><span>内省力</span><i>社交性寄り</i><span class="on">社交性</span></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">協調性</span><span class="g-v" style="color:color-mix(in srgb, #c84a20 55%, #ffffff)">70</span></div>
+          <div class="g-t"><div class="g-f" style="width:70%;background:linear-gradient(90deg, color-mix(in srgb, #c84a20 45%, #0c0a14), #c84a20 70%, color-mix(in srgb, #c84a20 60%, #ffffff));box-shadow:0 0 8px #c84a2055"></div></div>
+          <div class="g-s"><span>独立心</span><i>共感力寄り</i><span class="on">共感力</span></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">神経症傾向</span><span class="g-v" style="color:color-mix(in srgb, #c84a20 55%, #ffffff)">50</span></div>
+          <div class="g-t"><div class="g-f" style="width:50%;background:linear-gradient(90deg, color-mix(in srgb, #c84a20 45%, #0c0a14), #c84a20 70%, color-mix(in srgb, #c84a20 60%, #ffffff));box-shadow:0 0 8px #c84a2055"></div></div>
+          <div class="g-s"><span>安定性</span><i>中間</i><span>感受性</span></div>
+        </div>
       </div>
-      <div class="pole">
-        <div class="pole-h"><b>90</b> 誠実性<span>（計画性寄り）</span></div>
-        <div class="pole-t"><span class="pole-f" style="width:90%"></span><span class="pole-dot" style="left:90%"></span></div>
-        <div class="pole-e"><span>衝動性</span><span class="on">計画性</span></div>
+      <div class="rule"></div>
+      <h3>関わり方（行動スタイル・0〜100）— 片手剣</h3>
+      <div class="gs">
+        <div class="g">
+          <div class="g-h"><span class="g-l">主導性</span><span class="g-v" style="color:color-mix(in srgb, #9060d0 55%, #ffffff)">50</span></div>
+          <div class="g-t"><div class="g-f" style="width:50%;background:linear-gradient(90deg, color-mix(in srgb, #9060d0 45%, #0c0a14), #9060d0 70%, color-mix(in srgb, #9060d0 60%, #ffffff));box-shadow:0 0 8px #9060d055"></div></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">関係調整</span><span class="g-v" style="color:color-mix(in srgb, #9060d0 55%, #ffffff)">90</span></div>
+          <div class="g-t"><div class="g-f" style="width:90%;background:linear-gradient(90deg, color-mix(in srgb, #9060d0 45%, #0c0a14), #9060d0 70%, color-mix(in srgb, #9060d0 60%, #ffffff));box-shadow:0 0 8px #9060d055"></div></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">役割持続</span><span class="g-v" style="color:color-mix(in srgb, #9060d0 55%, #ffffff)">60</span></div>
+          <div class="g-t"><div class="g-f" style="width:60%;background:linear-gradient(90deg, color-mix(in srgb, #9060d0 45%, #0c0a14), #9060d0 70%, color-mix(in srgb, #9060d0 60%, #ffffff));box-shadow:0 0 8px #9060d055"></div></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">媒介思考</span><span class="g-v" style="color:color-mix(in srgb, #9060d0 55%, #ffffff)">45</span></div>
+          <div class="g-t"><div class="g-f" style="width:45%;background:linear-gradient(90deg, color-mix(in srgb, #9060d0 45%, #0c0a14), #9060d0 70%, color-mix(in srgb, #9060d0 60%, #ffffff));box-shadow:0 0 8px #9060d055"></div></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">自律距離</span><span class="g-v" style="color:color-mix(in srgb, #9060d0 55%, #ffffff)">30</span></div>
+          <div class="g-t"><div class="g-f" style="width:30%;background:linear-gradient(90deg, color-mix(in srgb, #9060d0 45%, #0c0a14), #9060d0 70%, color-mix(in srgb, #9060d0 60%, #ffffff));box-shadow:0 0 8px #9060d055"></div></div>
+        </div>
       </div>
-      <div class="pole">
-        <div class="pole-h"><b>90</b> 外向性<span>（社交性寄り）</span></div>
-        <div class="pole-t"><span class="pole-f" style="width:90%"></span><span class="pole-dot" style="left:90%"></span></div>
-        <div class="pole-e"><span>内省力</span><span class="on">社交性</span></div>
-      </div>
-      <div class="pole">
-        <div class="pole-h"><b>70</b> 協調性<span>（共感力寄り）</span></div>
-        <div class="pole-t"><span class="pole-f" style="width:70%"></span><span class="pole-dot" style="left:70%"></span></div>
-        <div class="pole-e"><span>独立心</span><span class="on">共感力</span></div>
-      </div>
-      <div class="pole">
-        <div class="pole-h"><b>50</b> 神経症傾向<span>（中間）</span></div>
-        <div class="pole-t"><span class="pole-f" style="width:50%"></span><span class="pole-dot" style="left:50%"></span></div>
-        <div class="pole-e"><span>安定性</span><span>感受性</span></div>
-      </div>
+      <p style="margin-top:12px"><strong style="color:var(--wp-t)">関係調整</strong>が最も高い型です。人と人のあいだに流れる温度を読み、関係がほどけない形へ整えます。</p>
+      <p class="src">いまの数値は、元素診断 v2 の設計で炎元素（気質）と片手剣（関わり方）に置いた代表値を、仮に表示しています。受検者の平均ではありません。</p>
     </div>
-    <div class="prof-card">
-      <div class="pc-h">関わり方（行動スタイル・0〜100）— 片手剣</div>
-        <div class="bar"><span class="bar-l">主導性</span><span class="bar-t"><span class="bar-f" style="width:50%"></span></span><span class="bar-v">50</span></div>
-        <div class="bar"><span class="bar-l">関係調整</span><span class="bar-t"><span class="bar-f" style="width:90%"></span></span><span class="bar-v">90</span></div>
-        <div class="bar"><span class="bar-l">役割持続</span><span class="bar-t"><span class="bar-f" style="width:60%"></span></span><span class="bar-v">60</span></div>
-        <div class="bar"><span class="bar-l">媒介思考</span><span class="bar-t"><span class="bar-f" style="width:45%"></span></span><span class="bar-v">45</span></div>
-        <div class="bar"><span class="bar-l">自律距離</span><span class="bar-t"><span class="bar-f" style="width:30%"></span></span><span class="bar-v">30</span></div>
-      <p class="pc-note">人と人のあいだに流れる温度を読み、関係がほどけない形へ整えます。</p>
-    </div>
-    <p class="src">いまの数値は、元素診断 v2 の設計で炎元素（気質）と片手剣（関わり方）に置いた代表値を、仮に表示しています。受検者の平均ではありません。</p>
     <div class="report">
-      <span class="r-chip">タイプ別レポート</span>
-      <h3>「殉愛者」の全編を解放</h3>
-      <img class="r-em" src="/assets/emblems/2026-autumn/record/pyro.png" width="120" height="120" alt="" loading="lazy">
+      <div class="r-k">TYPE REPORT</div>
+      <h3>タイプ別レポート<br>「殉愛者」の全編を解放</h3>
       <p class="r-desc">標準プロフィールをもとに、殉愛者の強みを活かせる場面、つまずきやすい場面、人との関わり方を読み解きます。</p>
-      <button type="button" class="r-btn" data-report-open>今すぐアクセス　¥1,000（税込）</button>
-      <p class="r-diff">殉愛者の方に共通の読み物です。あなた自身の回答から作る「解析レポート」とは別の商品です。</p>
+      <div class="r-list">
+        <div class="r-lh">ご利用いただける内容</div>
+          <div class="ck"><span class="ck-m">✓</span><div><div class="ck-t">標準プロフィールの読み方</div><div class="ck-s">気質（Big Five）と関わり方（行動スタイル）の数値が、殉愛者の場合に何を意味するか</div></div></div>
+          <div class="ck"><span class="ck-m">✓</span><div><div class="ck-t">強みを活かせる場面</div><div class="ck-s">力が発揮されやすい状況と、その理由</div></div></div>
+          <div class="ck"><span class="ck-m">✓</span><div><div class="ck-t">つまずきやすい場面</div><div class="ck-s">負荷がかかりやすい状況と、立て直し方</div></div></div>
+          <div class="ck"><span class="ck-m">✓</span><div><div class="ck-t">人との関わり方</div><div class="ck-s">近しい相手・集団の中での振る舞いの傾向</div></div></div>
+      </div>
+      <div class="r-price">¥1,000<small>（税込）</small></div>
+      <button type="button" class="r-btn" data-report-open>今すぐアクセス →</button>
+      <p class="r-diff">✓ 殉愛者の方に共通の読み物です。</p>
+      <p class="r-diff2">あなた自身の回答から作る「解析レポート」とは別の商品です。</p>
     </div>
     <dialog class="confirm" id="reportConfirm" aria-labelledby="rc-h">
       <div class="c-label">購入内容の確認</div>
