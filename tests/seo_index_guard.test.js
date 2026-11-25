@@ -33,7 +33,7 @@ test('方針の未定義を検出：dist の HTML はすべて scripts/seo-polic
   assert.deepEqual(missing, [], `インデックス方針が未定義の公開ページ: ${missing.join(', ')}`);
   const gone = Object.keys(P.PAGES).filter((f) => !html.includes(f));
   assert.deepEqual(gone, [], `方針一覧にあるが公開されていないページ: ${gone.join(', ')}`);
-  assert.equal(pages('index').length, 38);
+  assert.equal(pages('index').length, 39);
 });
 
 test('方針の未定義を検出：vercel.json の rewrite・HTML を返す API はすべて方針一覧に載っている', () => {
@@ -54,7 +54,7 @@ test('方針の未定義を検出：vercel.json の rewrite・HTML を返す API
   }
 });
 
-test('index：38件（TOP・邪眼トップ・理論・タイプ35）は、拡張子なし・末尾スラッシュの両方で noindex が当たらず、canonical は正規 URL', () => {
+test('index：39件（TOP・7元素ガイド・邪眼トップ・理論・タイプ35）は、拡張子なし・末尾スラッシュの両方で noindex が当たらず、canonical は正規 URL', () => {
   for (const [file, v] of pages('index')) {
     const html = read(file);
     assert.ok(!hasNoindex(metaRobots(html)), `${v.path} のページ内に noindex があります`);
@@ -69,7 +69,7 @@ test('index：38件（TOP・邪眼トップ・理論・タイプ35）は、拡�
   }
 });
 
-test('sitemap.xml は index の38件と完全に一致する（多くも少なくもない）', () => {
+test('sitemap.xml は index の39件と完全に一致する（多くも少なくもない）', () => {
   assert.deepEqual([...sitemapLocs()].sort(), P.indexUrls().sort());
 });
 

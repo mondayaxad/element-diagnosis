@@ -29,6 +29,7 @@ const OUT_DIR = 'dist';
 // A. 公開必須（明示的な許可リスト）
 const PUBLIC_FILES = [
   'index.html',
+  'guide/element-personalities.html',                       // 7元素の性格比較ガイド
   'mypage.html',
   'report.html',
   'report_sample.html',
