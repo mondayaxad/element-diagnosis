@@ -177,6 +177,8 @@
 <script src="js/eti_mirror_selection_v21.js"></script>
 <script src="js/eti_v2_mirror_resolver.js"></script>
 <script src="js/eti_v2_legacy_adapter.js"></script>
+<!-- タイプ別レポート（標準の回答から作る）で使う最新の解説文とタイプ名。既存の解析レポートでは使わない -->
+<script src="js/type-report-texts.js"></script>
 </head>
 <body>
 <div id="root">
@@ -2225,6 +2227,31 @@ async function savePdf() {
   }
 }
 
+// ===== タイプ別レポート（標準の回答から作る。scripts/build-type-standard-answers.mjs） =====
+//   ・サーバー（レポートの閲覧 API）が report_kind:'type' と type_code（例：PYSW）を返した時だけ使う
+//   ・解説の文は結果ページ・タイプ解説と同じ最新の文（js/type-report-texts.js）。主語は「あなた」ではなくタイプ名
+var TYPE_EL = { PY: '炎', HY: '水', CR: '氷', EL: '雷', AN: '風', GE: '岩', DE: '草' };
+var TYPE_WP = { SW: '片手剣', CM: '両手剣', PL: '長柄', CT: '法器', BW: '弓' };
+function typeReportCode(data) {
+  var c = data && data.report_kind === 'type' && typeof data.type_code === 'string' ? data.type_code : '';
+  if (!/^(PY|HY|CR|EL|AN|GE|DE)(SW|CM|PL|CT|BW)$/.test(c) || !window.ED_TYPE_REPORT_TEXTS) return null;
+  return { code: c, element: TYPE_EL[c.slice(0, 2)], weapon: TYPE_WP[c.slice(2)], name: window.ED_TYPE_REPORT_TEXTS.TYPE_NAME[TYPE_EL[c.slice(0, 2)]][TYPE_WP[c.slice(2)]] };
+}
+function useTypeReportTexts() {
+  var t = window.ED_TYPE_REPORT_TEXTS;
+  Object.keys(t.ELEMENT_DESC).forEach(function (k) { ELEMENT_DESC[k] = t.ELEMENT_DESC[k]; });
+  Object.keys(t.WEAPON_DESC).forEach(function (k) { WEAPON_DESC[k] = t.WEAPON_DESC[k]; });
+}
+function typeReportWording(root, tr) {
+  var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  var n;
+  while ((n = walker.nextNode())) {
+    if (n.nodeValue.indexOf('あなた') >= 0) n.nodeValue = n.nodeValue.replace(/あなた/g, tr.name);
+    if (n.nodeValue.indexOf('解析レポート') >= 0) n.nodeValue = n.nodeValue.replace(/解析レポート/g, 'タイプ別レポート');
+  }
+  document.title = 'タイプ別レポート「' + tr.name + '」｜元素診断';
+}
+
 (async function init() {
   const root = document.getElementById('root');
   const params = new URLSearchParams(window.location.search);
@@ -2334,10 +2361,19 @@ async function savePdf() {
         root.innerHTML = '<div class="err-box"><h2>診断コードの読み取りに失敗しました</h2><p>お手数ですが yaduns0522@gmail.com までご連絡ください。</p></div>';
         return;
       }
+      // タイプ別レポート：サーバーが report_kind:'type' と type_code を返した時だけ（標準の回答の符号から作る）。
+      //   既存の解析レポート（本人の回答）は、この分岐に入らず、従来どおりに表示する。
+      const typeReport = typeReportCode(data);
+      if (typeReport) useTypeReportTexts();
       const resultsV2 = computeResultsV2ForUI(answersV2Obj, code);
       // 旧ナラティブ販売欄は完全解析の案内へ置換済み（申込コードの表示は廃止）。
       // renderFullReport へは、v1/v2どちらも接頭辞を付けない生のcodeのまま渡す（今回の変更対象外）。
       renderFullReport(root, resultsV2, code);
+      if (typeReport) {
+        // 主語をタイプ名に（「あなたの土台」→「殉愛者の土台」）。完全解析の案内・解析レポートの計測は出さない
+        typeReportWording(root, typeReport);
+        return;
+      }
       initReportComplete(code, data.viewer, data.complete || null);
       if (typeof gtag === 'function') gtag('event', 'analysis_report_view', { diagnosis_version: 'ETI-2.0' });
       if (window.EdAnalytics) EdAnalytics.sections(root.querySelectorAll('.sec'), { diagnosis_type: 'eti', product_id: 'eti_analysis_v1' });

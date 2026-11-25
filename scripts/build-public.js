@@ -49,6 +49,7 @@ const PUBLIC_FILES = [
   'js/ga.js',
   'js/type-page.js',                                          // タイプ解説ページの診断への導線の計測（type_diagnosis_cta_click）
   'js/type-detail.js',                                        // タイプ解説ページ（type-v2）：一覧へ戻る時の元素・Preview 専用の欄
+  'js/type-report-texts.js',                                  // タイプ別レポート（report.html）：最新の解説文とタイプ名
   'js/return-to.js',                                          // 邪眼診断から来た人を、マイページ・規約などから邪眼診断へ戻す
   'complete-sample.html',                                     // 完全解析サンプル（結果ページの完全解析の欄からだけリンク・noindex）
   'assets/ogp/ogp-top-20261009.jpg',                          // TOP・完全解析サンプルの OGP（1200×630）

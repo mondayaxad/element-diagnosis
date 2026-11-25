@@ -178,6 +178,8 @@
 <script src="js/eti_mirror_selection_v21.js"></script>
 <script src="js/eti_v2_mirror_resolver.js"></script>
 <script src="js/eti_v2_legacy_adapter.js"></script>
+<!-- タイプ別レポート（標準の回答から作る）で使う最新の解説文とタイプ名。既存の解析レポートでは使わない -->
+<script src="js/type-report-texts.js"></script>
 </head>
 <body>
 <div style="background:linear-gradient(90deg,#5a4490,#8a5fc0);color:#fff;text-align:center;padding:12px 16px;font-size:13px;font-weight:700;letter-spacing:1px">
@@ -2233,6 +2235,31 @@ async function savePdf() {
     btn.textContent = originalText;
     btn.disabled = false;
   }
+}
+
+// ===== タイプ別レポート（標準の回答から作る。scripts/build-type-standard-answers.mjs） =====
+//   ・サーバー（レポートの閲覧 API）が report_kind:'type' と type_code（例：PYSW）を返した時だけ使う
+//   ・解説の文は結果ページ・タイプ解説と同じ最新の文（js/type-report-texts.js）。主語は「あなた」ではなくタイプ名
+var TYPE_EL = { PY: '炎', HY: '水', CR: '氷', EL: '雷', AN: '風', GE: '岩', DE: '草' };
+var TYPE_WP = { SW: '片手剣', CM: '両手剣', PL: '長柄', CT: '法器', BW: '弓' };
+function typeReportCode(data) {
+  var c = data && data.report_kind === 'type' && typeof data.type_code === 'string' ? data.type_code : '';
+  if (!/^(PY|HY|CR|EL|AN|GE|DE)(SW|CM|PL|CT|BW)$/.test(c) || !window.ED_TYPE_REPORT_TEXTS) return null;
+  return { code: c, element: TYPE_EL[c.slice(0, 2)], weapon: TYPE_WP[c.slice(2)], name: window.ED_TYPE_REPORT_TEXTS.TYPE_NAME[TYPE_EL[c.slice(0, 2)]][TYPE_WP[c.slice(2)]] };
+}
+function useTypeReportTexts() {
+  var t = window.ED_TYPE_REPORT_TEXTS;
+  Object.keys(t.ELEMENT_DESC).forEach(function (k) { ELEMENT_DESC[k] = t.ELEMENT_DESC[k]; });
+  Object.keys(t.WEAPON_DESC).forEach(function (k) { WEAPON_DESC[k] = t.WEAPON_DESC[k]; });
+}
+function typeReportWording(root, tr) {
+  var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  var n;
+  while ((n = walker.nextNode())) {
+    if (n.nodeValue.indexOf('あなた') >= 0) n.nodeValue = n.nodeValue.replace(/あなた/g, tr.name);
+    if (n.nodeValue.indexOf('解析レポート') >= 0) n.nodeValue = n.nodeValue.replace(/解析レポート/g, 'タイプ別レポート');
+  }
+  document.title = 'タイプ別レポート「' + tr.name + '」｜元素診断';
 }
 
 (function initSampleReport() {
