@@ -80,8 +80,14 @@ export function renderTypePage(code) {
   const proto = ELEMENT_PROTOTYPES_V2[el.name];
   const style = WEAPON_PROTOTYPES_V2[wp.name];
   const typeDesc = sentences(TYPE_DESC[el.name][wp.name]);
-  const [essence, strength] = typeDesc;
-  const caution = typeDesc.length > 2 ? typeDesc.slice(2).join('') : '';
+  const [essence] = typeDesc;
+  let strength = typeDesc[1] || '';
+  let caution = typeDesc.length > 2 ? typeDesc.slice(2).join('') : '';
+  // 2文だけのタイプ（風×片手剣）は、2文目が「強み…が、つまずき…」の1文。「ますが、」で強みとつまずきに分ける（言葉は変えない）
+  if (!caution) {
+    const i = strength.indexOf('ますが、');
+    if (i > 0) { caution = strength.slice(i + 4); strength = strength.slice(0, i + 2) + '。'; }
+  }
   const E = withQuote(ELEMENT_DESC[el.name]);
   const W = withQuote(WEAPON_DESC[wp.name]);
   const topStyle = Object.keys(style).sort((a, b) => style[b] - style[a])[0];

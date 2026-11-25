@@ -18,9 +18,9 @@ const V2 = Object.keys(DATA).filter((c) => read(`type/${c.toLowerCase()}.html`).
 let render;
 test.before(async () => { ({ renderTypePage: render } = await import('../scripts/build-type-pages.mjs')); });
 
-test('元データは35タイプ。type-v2 のページがある（今回は炎・氷・雷の片手剣）', () => {
+test('元データは35タイプ。35ページすべてが type-v2', () => {
   assert.equal(Object.keys(DATA).length, 35);
-  assert.deepEqual(V2.slice().sort(), ['CRSW', 'ELSW', 'PYSW']);
+  assert.equal(V2.length, 35, '全35タイプが type-v2');
 });
 
 test('type-v2：ファイルは生成スクリプトの出力と一致する', () => {
@@ -45,7 +45,12 @@ test('type-v2：SEO の head は元データのまま。本文は結果ページ
     const el = EL_NAME[c.slice(0, 2)]; const wp = WP_NAME[c.slice(2)];
     assert.ok(h.includes(d.head), `${c} の head`);
     const text = h.replace(/<[^>]+>/g, ''); // 文頭の強調（<strong>）などのタグを除いた本文で比べる
-    for (const t of [...sentences(ED[el]), ...sentences(WD[wp]), ...sentences(TYPE_DESC[el][wp])]) assert.ok(text.includes(t), `${c} に「${t.slice(0, 20)}…」がない`);
+    for (const t of [...sentences(ED[el]), ...sentences(WD[wp]), ...sentences(TYPE_DESC[el][wp])]) {
+      // 「強み…ますが、つまずき…」の1文は、強みとつまずきの2か所に分けて載せる（言葉はそのまま）
+      const i = t.indexOf('ますが、');
+      const ok = text.includes(t) || (i > 0 && text.includes(t.slice(0, i + 2) + '。') && text.includes(t.slice(i + 4)));
+      assert.ok(ok, `${c} に「${t.slice(0, 20)}…」がない`);
+    }
     assert.ok(h.includes(d.combineText) && h.includes(`<div class="axis">${d.axis}</div>`), `${c} の組み合わせ・軸`);
     if (d.lead) assert.ok(h.includes(`<p class="lead">${d.lead}</p>`), `${c} の導入`);
     assert.doesNotMatch(h, /エニアグラム|援助者・堅実家/, `${c} に旧い表記`);
