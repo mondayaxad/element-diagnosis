@@ -3,14 +3,17 @@
 //   ・title・description・canonical・OGP・JSON-LD は元の行をそのまま使う（SEO Phase 2 の内容を維持）
 //   ・診断への導線（data-type-cta="top|bottom|related"）の3つは、文言・遷移先・計測属性を変えない
 //   ・元素の色と紋章（assets/emblems/2026-autumn/record）は、結果ページ・マイページと同じものを使う
-//   ・タイプ別レポートの欄と、そこへ移る上部のボタンは Preview 専用のデザイン確認（本番ドメインでは表示しない。js/type-detail.js）
+//   ・標準プロフィールとタイプ別レポートの欄は、Preview 専用のデザイン確認（本番ドメインでは表示しない。js/type-detail.js）
 //   実行: node scripts/build-type-pages.mjs PYSW CRSW ELSW   （引数なしは全35タイプ）
 import fs from 'node:fs';
 import path from 'node:path';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+const require = createRequire(import.meta.url);
+const { ELEMENT_PROTOTYPES_V2 } = require('../js/eti_v2_prototypes.js');
 const DATA = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/type-pages-data.json'), 'utf8'));
 // 結果ページ（index.html）と同じ文章資産を使う（タイプ解説と結果ページで説明を食い違わせない）
 const INDEX = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
@@ -26,6 +29,10 @@ const ELEMENT_DESC = indexConst('ELEMENT_DESC');
 const WEAPON_DESC = indexConst('WEAPON_DESC');
 const EL_META = indexConst('ELEMENTS');
 const WP_META = indexConst('WEAPONS');
+const TRAIT_WORD = indexConst('TRAIT_WORD');
+const STYLE_LABEL = indexConst('STYLE_LABEL');
+const STYLE_BASE_DESC = indexConst('STYLE_BASE_DESC');
+const { WEAPON_PROTOTYPES_V2 } = require('../js/eti_v2_prototypes.js');
 const ORIGIN = 'https://element-diagnosis-five.vercel.app';
 
 // 元素：結果ページの元素色（ELEMENTS.color）と、トップの一覧の文字色（明るい側）。紋章は結果ページ・マイページと共通
@@ -43,6 +50,7 @@ export const WEAPONS = {
   CT: { name: '法器', slug: 'catalyst' }, BW: { name: '弓', slug: 'bow' },
 };
 const WEAPON_ORDER = ['SW', 'CM', 'PL', 'CT', 'BW'];
+const BIG5 = [['O', '開放性'], ['C', '誠実性'], ['E', '外向性'], ['A', '協調性'], ['N', '神経症傾向']];
 
 const typeName = (code) => /「([^」]+)」/.exec(DATA[code].h1)[1];
 // 文を「。」で区切る（文言は変えない）
@@ -55,6 +63,11 @@ function withQuote(text) {
 
 // 結果ページの強調と同じ：文頭の語（元素名・武器名）を固有色の太字にする（rxLead）
 const lead1 = (text, word, color) => (text.indexOf(word) === 0 ? `<strong style="color:${color}">${word}</strong>${text.slice(word.length)}` : text);
+// 結果ページの類似度ゲージ（similarityGauges）と同じ形：高さ7px、色のグラデーションと発光
+const gauge = (label, v, c, sub) => `        <div class="g">
+          <div class="g-h"><span class="g-l">${label}</span><span class="g-v" style="color:color-mix(in srgb, ${c} 55%, #ffffff)">${v}</span></div>
+          <div class="g-t"><div class="g-f" style="width:${v}%;background:linear-gradient(90deg, color-mix(in srgb, ${c} 45%, #0c0a14), ${c} 70%, color-mix(in srgb, ${c} 60%, #ffffff));box-shadow:0 0 8px ${c}55"></div></div>${sub ? `\n          <div class="g-s">${sub}</div>` : ''}
+        </div>`;
 
 export function renderTypePage(code) {
   const d = DATA[code];
@@ -64,21 +77,31 @@ export function renderTypePage(code) {
   const name = typeName(code);
   const elC = EL_META[el.name].color; const wC = WP_META[wp.name].color;
   const elT = `color-mix(in srgb, ${elC} 55%, #ffffff)`; const wT = `color-mix(in srgb, ${wC} 55%, #ffffff)`;
+  const proto = ELEMENT_PROTOTYPES_V2[el.name];
+  const style = WEAPON_PROTOTYPES_V2[wp.name];
   const typeDesc = sentences(TYPE_DESC[el.name][wp.name]);
   const [essence, strength] = typeDesc;
   const caution = typeDesc.length > 2 ? typeDesc.slice(2).join('') : '';
   const E = withQuote(ELEMENT_DESC[el.name]);
   const W = withQuote(WEAPON_DESC[wp.name]);
+  const topStyle = Object.keys(style).sort((a, b) => style[b] - style[a])[0];
   const emblem = `/assets/emblems/2026-autumn/record/${el.slug}.png`;
   const listHref = `/#types-${el.slug}`;
   const siblings = WEAPON_ORDER.filter((w) => w !== code.slice(2)).map((w) => {
     const c = code.slice(0, 2) + w;
     return `      <li><a href="/type/${c.toLowerCase()}"><span class="sib-w">${WEAPONS[w].name}</span><span class="sib-n">${typeName(c)}</span><span class="sib-c">${c}</span></a></li>`;
   }).join('\n');
+  // Big Five：両端に「低い時・高い時」の言葉（結果ページの TRAIT_WORD）。45〜55 は中間
+  const big5 = BIG5.map(([k, label]) => {
+    const v = proto[k]; const hi = v > 55; const lo = v < 45;
+    const sub = `<span${lo ? ' class="on"' : ''}>${TRAIT_WORD[k].lo}</span><i>${hi || lo ? `${hi ? TRAIT_WORD[k].hi : TRAIT_WORD[k].lo}寄り` : '中間'}</i><span${hi ? ' class="on"' : ''}>${TRAIT_WORD[k].hi}</span>`;
+    return gauge(label, v, elC, sub);
+  }).join('\n');
+  const styleBars = Object.keys(STYLE_LABEL).map((k) => gauge(STYLE_LABEL[k], style[k], wC, '')).join('\n');
   const lead = d.lead ? `\n    <p class="lead">${d.lead}</p>` : '';
   const q = (t) => (t ? `\n      <blockquote class="pull">${t}</blockquote>` : '');
   const p = (t) => (t ? `\n      <p>${t}</p>` : '');
-  const check = [['標準プロフィールの読み方', `気質（Big Five）と関わり方（行動スタイル）が、${name}の場合に何を意味するか`], ['強みを活かせる場面', '力が発揮されやすい状況と、その理由'], ['つまずきやすい場面', '負荷がかかりやすい状況と、立て直し方'], ['人との関わり方', '近しい相手・集団の中での振る舞いの傾向']]
+  const check = [['標準プロフィールの読み方', `気質（Big Five）と関わり方（行動スタイル）の数値が、${name}の場合に何を意味するか`], ['強みを活かせる場面', '力が発揮されやすい状況と、その理由'], ['つまずきやすい場面', '負荷がかかりやすい状況と、立て直し方'], ['人との関わり方', '近しい相手・集団の中での振る舞いの傾向']]
     .map(([t, s]) => `          <div class="ck"><span class="ck-m">✓</span><div><div class="ck-t">${t}</div><div class="ck-s">${s}</div></div></div>`).join('\n');
   return `<!DOCTYPE html>
 <html lang="ja">
@@ -90,7 +113,7 @@ export function renderTypePage(code) {
 <script src="/js/ga.js"></script>
 <!-- 診断への導線のクリック（type_diagnosis_cta_click）を GA4 に送る -->
 <script src="/js/type-page.js" defer></script>
-<!-- 一覧へ戻った時に読んでいた元素を開く・Preview 専用の欄（タイプ別レポートの購入確認デモ） -->
+<!-- 一覧へ戻った時に読んでいた元素を開く・Preview 専用の欄（標準プロフィール・タイプ別レポートの購入確認デモ） -->
 <script src="/js/type-detail.js" defer></script>
 ${d.head}
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -115,6 +138,7 @@ ${d.head}
   .card p { color:var(--rx-secondary); font-size:12.5px; line-height:1.95; }
   .card p + p { margin-top:10px; }
   .card h3 { color:var(--rx-primary); font-size:13px; font-weight:700; margin:16px 0 4px; letter-spacing:.5px; }
+  .rule { height:1px; background:var(--card-line); margin:18px 0; }
   /* ヒーロー（結果ページの「あなたの土台」と同じ並び：小見出し → コードと名前 → 元素 × 武器種 → 軸） */
   .hero { position:relative; background:linear-gradient(135deg, color-mix(in srgb, ${elC} 14%, transparent), #0a0e1a 70%); border:1px solid color-mix(in srgb, ${elC} 30%, #1c2c40); border-radius:16px; padding:22px 20px 20px; margin-bottom:14px; }
   .hero-em { position:absolute; top:14px; right:12px; width:76px; height:76px; object-fit:contain; filter:drop-shadow(0 0 12px ${elC}66); pointer-events:none; }
@@ -148,6 +172,16 @@ ${d.head}
   .tags { display:flex; flex-wrap:wrap; gap:6px; }
   .tag { font-size:10.5px; color:var(--el-t); border:1px solid ${elC}66; background:${elC}1f; border-radius:12px; padding:4px 10px; letter-spacing:.3px; }
   [data-preview-only][hidden] { display:none !important; }
+  /* ゲージ（結果ページの similarityGauges と同じ） */
+  .gs { display:flex; flex-direction:column; gap:12px; margin:6px 0 2px; }
+  .g-h { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
+  .g-l { font-size:11px; letter-spacing:.5px; color:var(--rx-secondary); }
+  .g-v { font-size:12px; font-weight:700; }
+  .g-t { height:7px; background:#14121f; border-radius:4px; overflow:hidden; box-shadow:inset 0 0 0 1px #ffffff0a; }
+  .g-f { height:100%; border-radius:4px; }
+  .g-s { display:flex; justify-content:space-between; align-items:baseline; margin-top:3px; font-size:10px; color:var(--rx-muted); letter-spacing:.3px; }
+  .g-s i { font-style:normal; color:var(--rx-tertiary); }
+  .g-s .on { color:var(--rx-primary); font-weight:700; }
   /* タイプ別レポート（結果ページの統一CTAと同じ構成：小見出し → 見出し → 説明 → ご利用いただける内容 → 価格 → ボタン） */
   .report { background:linear-gradient(135deg, ${elC}1c, #08101a); border:1px solid ${elC}45; border-radius:14px; padding:26px 22px; text-align:center; margin-top:14px; }
   .report .r-k { font-size:10px; color:#c0a860; letter-spacing:2px; margin-bottom:10px; }
@@ -235,7 +269,21 @@ ${d.head}
     <div class="tags">${d.tags.map((t) => `<span class="tag">${t}</span>`).join('')}</div>
   </section>
 
-  <section class="prof" data-preview-only hidden aria-label="タイプ別レポート">
+  <section class="prof" data-preview-only hidden aria-labelledby="prof-h">
+    <div class="card">
+      <div class="kicker">標準プロフィール</div>
+      <div class="card-h"><h2 id="prof-h">${name}の標準プロフィール</h2></div>
+      <h3>気質（Big Five・0〜100）— ${el.name}</h3>
+      <div class="gs">
+${big5}
+      </div>
+      <div class="rule"></div>
+      <h3>関わり方（行動スタイル・0〜100）— ${wp.name}</h3>
+      <div class="gs">
+${styleBars}
+      </div>
+      <p style="margin-top:12px"><strong style="color:var(--wp-t)">${STYLE_LABEL[topStyle]}</strong>が最も高い型です。${STYLE_BASE_DESC[topStyle]}</p>
+    </div>
     <div class="report" id="report">
       <div class="r-k">TYPE REPORT</div>
       <h3>タイプ別レポート<br>「${name}」の全編を解放</h3>

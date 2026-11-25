@@ -8,7 +8,7 @@
 <script src="/js/ga.js"></script>
 <!-- 診断への導線のクリック（type_diagnosis_cta_click）を GA4 に送る -->
 <script src="/js/type-page.js" defer></script>
-<!-- 一覧へ戻った時に読んでいた元素を開く・Preview 専用の欄（タイプ別レポートの購入確認デモ） -->
+<!-- 一覧へ戻った時に読んでいた元素を開く・Preview 専用の欄（標準プロフィール・タイプ別レポートの購入確認デモ） -->
 <script src="/js/type-detail.js" defer></script>
 <title>炎×片手剣「殉愛者」の性格・特徴｜原神 元素診断</title>
 <meta name="description" content="原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。炎×片手剣タイプ「殉愛者」の性格傾向（義務感・推進力・相手に応じた柔軟さ）や強み、人との関わり方を解説します。">
@@ -58,6 +58,7 @@
   .card p { color:var(--rx-secondary); font-size:12.5px; line-height:1.95; }
   .card p + p { margin-top:10px; }
   .card h3 { color:var(--rx-primary); font-size:13px; font-weight:700; margin:16px 0 4px; letter-spacing:.5px; }
+  .rule { height:1px; background:var(--card-line); margin:18px 0; }
   /* ヒーロー（結果ページの「あなたの土台」と同じ並び：小見出し → コードと名前 → 元素 × 武器種 → 軸） */
   .hero { position:relative; background:linear-gradient(135deg, color-mix(in srgb, #c84a20 14%, transparent), #0a0e1a 70%); border:1px solid color-mix(in srgb, #c84a20 30%, #1c2c40); border-radius:16px; padding:22px 20px 20px; margin-bottom:14px; }
   .hero-em { position:absolute; top:14px; right:12px; width:76px; height:76px; object-fit:contain; filter:drop-shadow(0 0 12px #c84a2066); pointer-events:none; }
@@ -91,6 +92,16 @@
   .tags { display:flex; flex-wrap:wrap; gap:6px; }
   .tag { font-size:10.5px; color:var(--el-t); border:1px solid #c84a2066; background:#c84a201f; border-radius:12px; padding:4px 10px; letter-spacing:.3px; }
   [data-preview-only][hidden] { display:none !important; }
+  /* ゲージ（結果ページの similarityGauges と同じ） */
+  .gs { display:flex; flex-direction:column; gap:12px; margin:6px 0 2px; }
+  .g-h { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
+  .g-l { font-size:11px; letter-spacing:.5px; color:var(--rx-secondary); }
+  .g-v { font-size:12px; font-weight:700; }
+  .g-t { height:7px; background:#14121f; border-radius:4px; overflow:hidden; box-shadow:inset 0 0 0 1px #ffffff0a; }
+  .g-f { height:100%; border-radius:4px; }
+  .g-s { display:flex; justify-content:space-between; align-items:baseline; margin-top:3px; font-size:10px; color:var(--rx-muted); letter-spacing:.3px; }
+  .g-s i { font-style:normal; color:var(--rx-tertiary); }
+  .g-s .on { color:var(--rx-primary); font-weight:700; }
   /* タイプ別レポート（結果ページの統一CTAと同じ構成：小見出し → 見出し → 説明 → ご利用いただける内容 → 価格 → ボタン） */
   .report { background:linear-gradient(135deg, #c84a201c, #08101a); border:1px solid #c84a2045; border-radius:14px; padding:26px 22px; text-align:center; margin-top:14px; }
   .report .r-k { font-size:10px; color:#c0a860; letter-spacing:2px; margin-bottom:10px; }
@@ -184,14 +195,71 @@
     <div class="tags"><span class="tag">義務感</span><span class="tag">推進力</span><span class="tag">巻き込む力</span><span class="tag">支え合い</span><span class="tag">相手に応じた柔軟さ</span><span class="tag">関係性の中の力</span></div>
   </section>
 
-  <section class="prof" data-preview-only hidden aria-label="タイプ別レポート">
+  <section class="prof" data-preview-only hidden aria-labelledby="prof-h">
+    <div class="card">
+      <div class="kicker">標準プロフィール</div>
+      <div class="card-h"><h2 id="prof-h">殉愛者の標準プロフィール</h2></div>
+      <h3>気質（Big Five・0〜100）— 炎</h3>
+      <div class="gs">
+        <div class="g">
+          <div class="g-h"><span class="g-l">開放性</span><span class="g-v" style="color:color-mix(in srgb, #c84a20 55%, #ffffff)">50</span></div>
+          <div class="g-t"><div class="g-f" style="width:50%;background:linear-gradient(90deg, color-mix(in srgb, #c84a20 45%, #0c0a14), #c84a20 70%, color-mix(in srgb, #c84a20 60%, #ffffff));box-shadow:0 0 8px #c84a2055"></div></div>
+          <div class="g-s"><span>堅実さ</span><i>中間</i><span>探究心</span></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">誠実性</span><span class="g-v" style="color:color-mix(in srgb, #c84a20 55%, #ffffff)">90</span></div>
+          <div class="g-t"><div class="g-f" style="width:90%;background:linear-gradient(90deg, color-mix(in srgb, #c84a20 45%, #0c0a14), #c84a20 70%, color-mix(in srgb, #c84a20 60%, #ffffff));box-shadow:0 0 8px #c84a2055"></div></div>
+          <div class="g-s"><span>衝動性</span><i>計画性寄り</i><span class="on">計画性</span></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">外向性</span><span class="g-v" style="color:color-mix(in srgb, #c84a20 55%, #ffffff)">90</span></div>
+          <div class="g-t"><div class="g-f" style="width:90%;background:linear-gradient(90deg, color-mix(in srgb, #c84a20 45%, #0c0a14), #c84a20 70%, color-mix(in srgb, #c84a20 60%, #ffffff));box-shadow:0 0 8px #c84a2055"></div></div>
+          <div class="g-s"><span>内省力</span><i>社交性寄り</i><span class="on">社交性</span></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">協調性</span><span class="g-v" style="color:color-mix(in srgb, #c84a20 55%, #ffffff)">70</span></div>
+          <div class="g-t"><div class="g-f" style="width:70%;background:linear-gradient(90deg, color-mix(in srgb, #c84a20 45%, #0c0a14), #c84a20 70%, color-mix(in srgb, #c84a20 60%, #ffffff));box-shadow:0 0 8px #c84a2055"></div></div>
+          <div class="g-s"><span>独立心</span><i>共感力寄り</i><span class="on">共感力</span></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">神経症傾向</span><span class="g-v" style="color:color-mix(in srgb, #c84a20 55%, #ffffff)">50</span></div>
+          <div class="g-t"><div class="g-f" style="width:50%;background:linear-gradient(90deg, color-mix(in srgb, #c84a20 45%, #0c0a14), #c84a20 70%, color-mix(in srgb, #c84a20 60%, #ffffff));box-shadow:0 0 8px #c84a2055"></div></div>
+          <div class="g-s"><span>安定性</span><i>中間</i><span>感受性</span></div>
+        </div>
+      </div>
+      <div class="rule"></div>
+      <h3>関わり方（行動スタイル・0〜100）— 片手剣</h3>
+      <div class="gs">
+        <div class="g">
+          <div class="g-h"><span class="g-l">主導性</span><span class="g-v" style="color:color-mix(in srgb, #9060d0 55%, #ffffff)">50</span></div>
+          <div class="g-t"><div class="g-f" style="width:50%;background:linear-gradient(90deg, color-mix(in srgb, #9060d0 45%, #0c0a14), #9060d0 70%, color-mix(in srgb, #9060d0 60%, #ffffff));box-shadow:0 0 8px #9060d055"></div></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">関係調整</span><span class="g-v" style="color:color-mix(in srgb, #9060d0 55%, #ffffff)">90</span></div>
+          <div class="g-t"><div class="g-f" style="width:90%;background:linear-gradient(90deg, color-mix(in srgb, #9060d0 45%, #0c0a14), #9060d0 70%, color-mix(in srgb, #9060d0 60%, #ffffff));box-shadow:0 0 8px #9060d055"></div></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">役割持続</span><span class="g-v" style="color:color-mix(in srgb, #9060d0 55%, #ffffff)">60</span></div>
+          <div class="g-t"><div class="g-f" style="width:60%;background:linear-gradient(90deg, color-mix(in srgb, #9060d0 45%, #0c0a14), #9060d0 70%, color-mix(in srgb, #9060d0 60%, #ffffff));box-shadow:0 0 8px #9060d055"></div></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">媒介思考</span><span class="g-v" style="color:color-mix(in srgb, #9060d0 55%, #ffffff)">45</span></div>
+          <div class="g-t"><div class="g-f" style="width:45%;background:linear-gradient(90deg, color-mix(in srgb, #9060d0 45%, #0c0a14), #9060d0 70%, color-mix(in srgb, #9060d0 60%, #ffffff));box-shadow:0 0 8px #9060d055"></div></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">自律距離</span><span class="g-v" style="color:color-mix(in srgb, #9060d0 55%, #ffffff)">30</span></div>
+          <div class="g-t"><div class="g-f" style="width:30%;background:linear-gradient(90deg, color-mix(in srgb, #9060d0 45%, #0c0a14), #9060d0 70%, color-mix(in srgb, #9060d0 60%, #ffffff));box-shadow:0 0 8px #9060d055"></div></div>
+        </div>
+      </div>
+      <p style="margin-top:12px"><strong style="color:var(--wp-t)">関係調整</strong>が最も高い型です。人と人のあいだに流れる温度を読み、関係がほどけない形へ整えます。</p>
+    </div>
     <div class="report" id="report">
       <div class="r-k">TYPE REPORT</div>
       <h3>タイプ別レポート<br>「殉愛者」の全編を解放</h3>
       <p class="r-desc">標準プロフィールをもとに、殉愛者の強みを活かせる場面、つまずきやすい場面、人との関わり方を読み解きます。</p>
       <div class="r-list">
         <div class="r-lh">ご利用いただける内容</div>
-          <div class="ck"><span class="ck-m">✓</span><div><div class="ck-t">標準プロフィールの読み方</div><div class="ck-s">気質（Big Five）と関わり方（行動スタイル）が、殉愛者の場合に何を意味するか</div></div></div>
+          <div class="ck"><span class="ck-m">✓</span><div><div class="ck-t">標準プロフィールの読み方</div><div class="ck-s">気質（Big Five）と関わり方（行動スタイル）の数値が、殉愛者の場合に何を意味するか</div></div></div>
           <div class="ck"><span class="ck-m">✓</span><div><div class="ck-t">強みを活かせる場面</div><div class="ck-s">力が発揮されやすい状況と、その理由</div></div></div>
           <div class="ck"><span class="ck-m">✓</span><div><div class="ck-t">つまずきやすい場面</div><div class="ck-s">負荷がかかりやすい状況と、立て直し方</div></div></div>
           <div class="ck"><span class="ck-m">✓</span><div><div class="ck-t">人との関わり方</div><div class="ck-s">近しい相手・集団の中での振る舞いの傾向</div></div></div>
