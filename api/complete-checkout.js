@@ -377,10 +377,11 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, waitUn
   };
 }
 
-module.exports = createHandler({
+const ST = require('../lib/server-timing'); // 【測定用】
+module.exports = ST.withTiming(createHandler({
   env: process.env,
-  fetchImpl: (...args) => fetch(...args),
+  fetchImpl: ST.timedFetch,
   // Stripe SDK はリクエスト時に初めて読み込む（テストでは偽の stripeFactory を渡す）
-  stripeFactory: (key) => require('stripe')(key, { maxNetworkRetries: 1, timeout: 10000 }),
-});
+  stripeFactory: (key) => ST.timedStripe(require('stripe')(key, { maxNetworkRetries: 1, timeout: 10000 })),
+}));
 module.exports.createHandler = createHandler;
