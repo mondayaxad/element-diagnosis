@@ -84,7 +84,8 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
     // 元素診断のタイプ別レポートの注文（metadata.app が 'element-diagnosis-type'。lib/type-report-purchase.mjs）。
     //   ETI・邪眼のどちらの注文でもないイベントだけをここで見る。タイプ別レポートの注文でもなければ null
     const TP = await import('../lib/type-report-purchase.mjs');
-    return TP.handleWebhook({ fetchImpl, conn, stripe, type: ev.type, obj });
+    return TP.handleWebhook({ fetchImpl, conn, stripe, type: ev.type, obj,
+      onPaid: (orderId, gaRef) => typeReportGa4(conn, TP, orderId, gaRef) });
   }
 
   // ---- GA4 の purchase・refund（Measurement Protocol）。支払いの正は Stripe の Webhook（lib/ga4-mp.js）。
@@ -111,6 +112,18 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
     const args = { env, fetchImpl, livemode: CP.livemodeOf(conn), transactionId, value: Number(o.amount), productId: o.product_key, logger };
     if (kind === 'paid' && o.status === 'paid') GA.schedulePurchase(waitUntil, { ...args, paidAtMs: Date.parse(o.paid_at), gaRef });
     if (kind === 'refunded') GA.scheduleRefund(waitUntil, args);
+  }
+
+  async function typeReportGa4(conn, TP, orderId, gaRef) {
+    if (!GA.enabled(env, CP.livemodeOf(conn)) || !CE.isUuid(orderId)) return;
+    const [order] = await CP.selectRows(fetchImpl, conn, `type_report_orders?id=eq.${encodeURIComponent(orderId)}&select=type_code,amount,status,paid_at`);
+    if (!order || order.status !== 'paid' || !TP.TYPE_RE.test(order.type_code) || order.amount !== TP.AMOUNT) return;
+    const paidAtMs = Date.parse(order.paid_at);
+    if (!Number.isFinite(paidAtMs)) return;
+    GA.schedulePurchase(waitUntil, {
+      env, fetchImpl, livemode: true, transactionId: GP.refOf(env, orderId), value: order.amount,
+      productId: TP.PRODUCT_KEY, paidAtMs, gaRef, typeCode: order.type_code, logger,
+    });
   }
 
   async function onCheckoutCompleted(conn, stripe, ev, obj) {

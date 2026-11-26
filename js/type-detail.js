@@ -1,5 +1,5 @@
 // js/type-detail.js
-// タイプ解説ページ（type-v2 テンプレート）の画面上の動き。計測（GA4）は送らない（type_diagnosis_cta_click は js/type-page.js）。
+// タイプ解説ページ（type-v2 テンプレート）の画面上の動きとレポート購入の導線計測（診断の導線計測は js/type-page.js）。
 //   ・一覧へ戻る：読んでいた元素を sessionStorage に残す（トップの一覧が、戻った時にその元素を開く。リンクの #types-<元素> と同じ）
 //   ・標準プロフィール・タイプ別レポートの欄（data-preview-only）：Preview では常に表示。本番ドメインでは販売中（typeReportSalesOpen）の時だけ
 //   ・タイプ別レポートの購入：「購入へ進む」で POST /api/type-report?op=buy（送るのはタイプコードと購入操作の ID だけ。
@@ -34,6 +34,7 @@
     var open = document.querySelector('[data-report-open]');
     if (dlg && open) {
       open.addEventListener('click', function () {
+        trackReport('type_report_cta_click', reportType());
         if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
       });
       Array.prototype.forEach.call(dlg.querySelectorAll('[data-report-close]'), function (b) {
@@ -56,20 +57,41 @@
     (window.crypto || window.msCrypto).getRandomValues(b);
     return btoa(String.fromCharCode.apply(null, b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   }
-  function buy(btn, errBox) {
+  function reportType() {
     var type = document.body && document.body.getAttribute('data-type-code');
-    if (!/^(PY|HY|CR|EL|AN|GE|DE)(SW|CM|PL|CT|BW)$/.test(type || '')) return;
+    return /^(PY|HY|CR|EL|AN|GE|DE)(SW|CM|PL|CT|BW)$/.test(type || '') ? type : null;
+  }
+  function trackReport(event, type, details) {
+    if (!type || typeof window.gtag !== 'function') return;
+    try {
+      window.gtag('event', event, Object.assign({
+        type_code: type, diagnosis_type: 'eti', product_id: 'eti_type_report_v1', source: 'type_page'
+      }, details));
+    } catch (e) { /* 計測の失敗で購入を止めない */ }
+  }
+  function buy(btn, errBox) {
+    var type = reportType();
+    if (!type) return;
     if (!attempt) attempt = newAttempt();
     btn.disabled = true;
     var label = btn.textContent;
     btn.textContent = '決済画面を準備しています…';
     if (errBox) errBox.hidden = true;
+    var body = { type: type, attempt: attempt, source: 'type_page' };
+    try {
+      var ga = window.EdAnalytics && window.EdAnalytics.checkoutRef(body.source);
+      if (ga) body.ga = ga;
+    } catch (e) { /* 計測の失敗で購入を止めない */ }
     fetch('/api/type-report?op=buy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, cache: 'no-store',
-      body: JSON.stringify({ type: type, attempt: attempt, source: 'type_page' }) })
+      body: JSON.stringify(body) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { status: r.status, body: b }; }); })
       .then(function (r) {
         var b = r.body || {};
         if (r.status === 200 && typeof b.checkoutUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(b.checkoutUrl)) {
+          if (b.amount === 1000) trackReport('begin_checkout', type, {
+            value: b.amount, currency: 'JPY',
+            items: [{ item_id: 'eti_type_report_v1', item_name: 'タイプ別レポート', item_variant: type, price: b.amount, quantity: 1 }]
+          });
           location.assign(b.checkoutUrl);
           return;
         }

@@ -97,6 +97,10 @@ export function renderTypePage(code) {
     const c = code.slice(0, 2) + w;
     return `      <li><a href="/type/${c.toLowerCase()}"><span class="sib-w">${WEAPONS[w].name}</span><span class="sib-n">${typeName(c)}</span><span class="sib-c">${c}</span></a></li>`;
   }).join('\n');
+  const sameWeapon = Object.entries(ELEMENTS).filter(([, element]) => element !== el).map(([prefix, element]) => {
+    const c = prefix + code.slice(2);
+    return `      <li><a href="/type/${c.toLowerCase()}"><span class="sib-w">${element.name}×${wp.name}</span><span class="sib-n">${typeName(c)}</span><span class="sib-c">${c}</span></a></li>`;
+  }).join('\n');
   // Big Five：両端に「低い時・高い時」の言葉（結果ページの TRAIT_WORD）。45〜55 は中間
   const big5 = BIG5.map(([k, label]) => {
     const v = proto[k]; const hi = v > 55; const lo = v < 45;
@@ -321,6 +325,12 @@ ${siblings}
     </ul>
     <a class="back" href="${listHref}" data-types-back="${el.slug}">← 全35タイプ一覧に戻る（${el.name}）</a>
     <p class="jg">心の影の側面を知る、もう一つの診断：<a href="${ORIGIN}/jagan/" data-type-cta="related" data-destination="jagan_top">邪眼診断（50問・無料）</a></p>
+  </nav>
+  <nav class="more" aria-labelledby="same-weapon-heading">
+    <h2 class="more-h" id="same-weapon-heading">${wp.name}タイプを元素で比較する</h2>
+    <ul>
+${sameWeapon}
+    </ul>
   </nav>
 </body>
 </html>

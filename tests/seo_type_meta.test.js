@@ -139,3 +139,16 @@ test('35件：body にページの値。関連（邪眼）に計測の属性。j
     }
   }
 });
+
+test('35件：同じ武器種の残り6タイプへ、クロールできるリンクがある', () => {
+  const pages = types();
+  for (const page of pages) {
+    const comparison = page.html.match(/<nav class="more" aria-labelledby="same-weapon-heading">([\s\S]*?)<\/nav>/);
+    assert.ok(comparison, page.code);
+    const links = [...comparison[1].matchAll(/href="(\/type\/[a-z]+)"/g)].map((m) => m[1]).sort();
+    const expected = pages.filter((candidate) => candidate.w === page.w && candidate.code !== page.code)
+      .map((candidate) => `/type/${candidate.code.toLowerCase()}`).sort();
+    assert.equal(expected.length, 6);
+    assert.deepEqual(links, expected, page.code);
+  }
+});
