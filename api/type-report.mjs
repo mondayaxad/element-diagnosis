@@ -4,16 +4,15 @@ import { createRequire } from 'node:module';
 import { createPurchaseHandler } from '../lib/type-report-purchase.mjs';
 
 const require = createRequire(import.meta.url);
-const ST = require('../lib/server-timing.js'); // 【測定用】
 const purchase = createPurchaseHandler({
   env: process.env,
-  fetchImpl: ST.timedFetch,
+  fetchImpl: (...args) => fetch(...args),
   // Stripe SDK は要求の時に初めて読み込む
-  stripeFactory: (key) => ST.timedStripe(require('stripe')(key, { maxNetworkRetries: 1, timeout: 10000 })),
+  stripeFactory: (key) => require('stripe')(key, { maxNetworkRetries: 1, timeout: 10000 }),
 });
 
-export default ST.withTiming(async function handler(req, res) {
+export default async function handler(req, res) {
   let op = null;
   try { op = new URL(req.url || '/', 'http://x').searchParams.get('op'); } catch { op = null; }
   return purchase(req, res, /^[a-z-]{2,32}$/.test(op || '') ? op : '');
-});
+}
