@@ -52,6 +52,25 @@ export const WEAPONS = {
 const WEAPON_ORDER = ['SW', 'CM', 'PL', 'CT', 'BW'];
 const BIG5 = [['O', '開放性'], ['C', '誠実性'], ['E', '外向性'], ['A', '協調性'], ['N', '神経症傾向']];
 
+// 「{元素}×{武器種}のキャラクター」：原神で元素と武器種が共通するプレイアブルキャラ（性格タイプの判定ではない）。
+//   基準は診断用キャラマスター（js/characters118_v2_1.js）の名前・元素・武器種。scripts/type-characters.json の追加分（旅人など）を足す。
+//   並びはマスターの順＋追加分の順で固定（生成のたびに変わらない）。同じページに同じ名前は1回だけ
+const CHAR_EXTRA = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/type-characters.json'), 'utf8'));
+const CHAR_MASTER = (() => {
+  const ctx = {};
+  vm.runInNewContext(`${fs.readFileSync(path.join(ROOT, CHAR_EXTRA.base.file), 'utf8')}\n;this.C = ETI_V2_CHARACTERS_2_1_0;`, ctx);
+  return ctx.C.map((c) => ({ name: c.name, element: c.element, weapon: c.weapon }));
+})();
+export function charactersFor(code) {
+  const el = ELEMENTS[code.slice(0, 2)].name;
+  const wp = WEAPONS[code.slice(2)].name;
+  const out = [];
+  for (const c of CHAR_MASTER) if (c.element === el && c.weapon === wp && !out.includes(c.name)) out.push(c.name);
+  for (const a of CHAR_EXTRA.additions) if (a.elements.includes(el) && a.weapon === wp && !out.includes(a.name)) out.push(a.name);
+  return out;
+}
+const escHtml = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
 const typeName = (code) => /「([^」]+)」/.exec(DATA[code].h1)[1];
 // 文を「。」で区切る（文言は変えない）
 const sentences = (text) => text.split('。').filter((x) => x.trim()).map((x) => x + '。');
@@ -178,6 +197,9 @@ ${d.head}
   .axis { color:var(--el-t); font-size:12.5px; font-weight:600; letter-spacing:1px; margin:16px 0 8px; }
   .tags { display:flex; flex-wrap:wrap; gap:6px; }
   .tag { font-size:10.5px; color:var(--el-t); border:1px solid ${elC}66; background:${elC}1f; border-radius:12px; padding:4px 10px; letter-spacing:.3px; }
+  .chars { list-style:none; display:flex; flex-wrap:wrap; gap:7px; margin:4px 0 0; padding:0; }
+  .chars li { font-size:12.5px; color:var(--el-t); border:1px solid ${elC}66; background:${elC}1f; border-radius:12px; padding:5px 11px; line-height:1.5; overflow-wrap:anywhere; }
+  .chars-note { margin-top:12px; color:var(--rx-tertiary); font-size:11.5px; line-height:1.8; }
   [data-preview-only][hidden] { display:none !important; }
   /* ゲージ（結果ページの similarityGauges と同じ） */
   .gs { display:flex; flex-direction:column; gap:12px; margin:6px 0 2px; }
@@ -273,6 +295,14 @@ ${d.head}
     <blockquote class="pull caution">${caution}</blockquote>` : ''}
     <div class="axis">${d.axis}</div>
     <div class="tags">${d.tags.map((t) => `<span class="tag">${t}</span>`).join('')}</div>
+  </section>
+
+  <section class="card" aria-labelledby="ch-chars">
+    <div class="card-h"><h2 id="ch-chars">${el.name}×${wp.name}のキャラクター</h2></div>
+    <ul class="chars">
+${charactersFor(code).map((n) => `      <li>${escHtml(n)}</li>`).join('\n')}
+    </ul>
+    <p class="chars-note">原神で元素と武器種が共通するキャラクターを掲載しています。</p>
   </section>
 
   <section class="prof" data-preview-only hidden aria-labelledby="prof-h">

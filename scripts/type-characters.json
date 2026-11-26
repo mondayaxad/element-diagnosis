@@ -1,0 +1,27 @@
+{
+  "purpose": "タイプ解説35ページの「{元素}×{武器種}のキャラクター」欄に載せる名前（表示用の補完データ）。診断用キャラマスター（スコア・MIRROR 判定）は変えない",
+  "reference_date": "2026-11-26",
+  "base": {
+    "file": "js/characters118_v2_1.js",
+    "count": 118,
+    "fields": ["name", "element", "weapon"],
+    "note": "依頼に同梱の CSV（02_基準キャラクター一覧_118件.csv・118件）と、名前・元素・武器種が全件一致することを確認（差分0）。掲載順はこのファイルの並び順で固定"
+  },
+  "additions": [
+    {
+      "name": "旅人",
+      "elements": ["風", "岩", "雷", "草", "水", "炎"],
+      "weapon": "片手剣",
+      "reason": "通常プレイで元素を切り替えられるプレイアブルキャラ。診断用マスター（118人）には入っていないため表示用に補完（同じページに1回だけ。空・蛍は1人として扱う）",
+      "basis": "ゲーム内の仕様（風・岩・雷・草・水・炎の6元素。炎は Ver.5.3 で実装）。作業時の知識による",
+      "official_check": "unverified"
+    }
+  ],
+  "corrections": [],
+  "exclusions": [],
+  "official_check": {
+    "status": "not_done",
+    "reason": "作業環境から公式サイト（genshin.hoyoverse.com）・Wiki へ接続できず（DNS の段階で拒否）、公式の日本語キャラクター紹介との照合は未了。マスター118人の元素・武器種と、旅人の元素は未確認として扱う",
+    "planned_sources": ["https://genshin.hoyoverse.com/ja/character/", "ゲーム内の図鑑"]
+  }
+}
