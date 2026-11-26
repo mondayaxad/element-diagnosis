@@ -52,6 +52,19 @@ export const WEAPONS = {
 const WEAPON_ORDER = ['SW', 'CM', 'PL', 'CT', 'BW'];
 const BIG5 = [['O', '開放性'], ['C', '誠実性'], ['E', '外向性'], ['A', '協調性'], ['N', '神経症傾向']];
 
+// 各タイプを理解するための作中の人物例。出典と、元素診断による読み解きを明記する。
+const CHARACTER_EXAMPLES = {
+  PYCM: `
+  <section class="card" aria-labelledby="character-example">
+    <div class="card-h"><h2 id="character-example">ディルックの性格と「猛進者」の共通点</h2></div>
+    <p>ディルックは、冷静に物事を進めながら、モンドを守るために自分から動く人物です。表ではアカツキワイナリーを営み、伝説任務「闇夜の英雄のアリバイ」では、人目を避けて街を守ります。表に立つ場面と陰で動く場面で態度は違っても、守るべきものに対して責任を引き受ける姿勢は一貫しています。</p>
+    <h3>炎×両手剣で読むと</h3>
+    <p>元素診断の「猛進者」には、大切にしていることのために率先して動き、難しい局面で自ら道を開く傾向があります。ディルックと重なるのは、声の大きさや勢いよりも、守るべきものが決まったときに行動を引き受けるところです。任務では旅人にも協力を求めます。自分で動き出すことと、必要なときに人を頼ることは両立します。</p>
+    <p>炎と両手剣はゲームでの属性です。「猛進者」との比較は、作中の行動を手がかりにした元素診断独自の解釈です。</p>
+    <p><a href="https://genshin.hoyoverse.com/ja/character/mondstadt?char=13">原神公式のディルック紹介</a><br>作中の参照場面：夜梟の章 第1幕「闇夜の英雄のアリバイ」</p>
+  </section>`,
+};
+
 const typeName = (code) => /「([^」]+)」/.exec(DATA[code].h1)[1];
 // 文を「。」で区切る（文言は変えない）
 const sentences = (text) => text.split('。').filter((x) => x.trim()).map((x) => x + '。');
@@ -272,7 +285,7 @@ ${d.head}
     <blockquote class="pull caution">${caution}</blockquote>` : ''}
     <div class="axis">${d.axis}</div>
     <div class="tags">${d.tags.map((t) => `<span class="tag">${t}</span>`).join('')}</div>
-  </section>
+  </section>${Object.hasOwn(CHARACTER_EXAMPLES, code) ? `\n${CHARACTER_EXAMPLES[code]}\n` : ''}
 
   <section class="prof" data-preview-only hidden aria-labelledby="prof-h">
     <div class="card">
