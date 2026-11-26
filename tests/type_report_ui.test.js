@@ -194,3 +194,30 @@ test('タイプ解説ページ：本番ドメインのレポートの欄は type
     assert.ok(shown.every((x) => x === want), `${JSON.stringify(cfg)} → ${want}`);
   }
 });
+
+// 購入へ進む：指が触れた時点で決済画面の準備を始め、押した時はその要求を使う（要求は1回・同じ購入操作の ID）
+test('タイプ解説ページ：購入へ進むは、指が触れた時に準備を始め、押すと同じ要求の決済画面へ移る（要求は1回）', { skip: !chromium }, async () => {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  const p = await ctx.newPage();
+  const errors = [];
+  p.on('pageerror', (e) => errors.push(String(e)));
+  const calls = [];
+  await p.route(/googletagmanager|google-analytics|fonts\.(googleapis|gstatic)|cdnjs\.cloudflare\.com/, (r) => r.fulfill({ contentType: 'application/javascript', body: '' }));
+  await p.route(/\/api\/type-report\?op=buy/, async (r) => {
+    calls.push(JSON.parse(r.request().postData() || '{}'));
+    await new Promise((ok) => setTimeout(ok, 300));
+    r.fulfill({ contentType: 'application/json', body: JSON.stringify({ checkoutUrl: 'https://checkout.stripe.com/c/pay/cs_test_x', amount: 1000 }) });
+  });
+  await p.route('https://checkout.stripe.com/**', (r) => r.fulfill({ contentType: 'text/html', body: '<p>stripe</p>' }));
+  await p.goto(`${base}/type/pysw.html`);
+  await p.locator('[data-report-open]').click();
+  const btn = p.locator('[data-report-buy]');
+  await btn.dispatchEvent('pointerdown');
+  await p.waitForTimeout(50);
+  await Promise.all([p.waitForURL(/checkout\.stripe\.com/), btn.click()]);
+  await ctx.close();
+  assert.deepEqual(errors, []);
+  assert.equal(calls.length, 1, '要求は1回');
+  assert.equal(calls[0].type, 'PYSW');
+  assert.match(calls[0].attempt, /^[A-Za-z0-9_-]{32}$/);
+});
