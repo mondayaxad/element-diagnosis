@@ -42,7 +42,12 @@
       dlg.addEventListener('click', function (e) { if (e.target === dlg && typeof dlg.close === 'function') dlg.close(); });
       var buyBtn = dlg.querySelector('[data-report-buy]');
       var errBox = dlg.querySelector('[data-report-error]');
-      if (buyBtn) buyBtn.addEventListener('click', function () { buy(buyBtn, errBox); });
+      if (buyBtn) {
+        // 指が触れた・ポインターが乗った時点で決済画面の準備（POST op=buy）を始め、押した時の待ち時間を短くする。
+        //   同じ購入操作の ID なので、何度呼ばれても注文・決済画面は1つ（サーバーの冪等性）
+        buyBtn.addEventListener('pointerdown', function () { prepare(); }, { passive: true });
+        buyBtn.addEventListener('click', function () { buy(buyBtn, errBox); });
+      }
     }
   }
   var ERRORS = {
@@ -56,28 +61,43 @@
     (window.crypto || window.msCrypto).getRandomValues(b);
     return btoa(String.fromCharCode.apply(null, b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   }
-  function buy(btn, errBox) {
+  var inflight = null; // 準備中の決済画面の要求（指が触れた時に始め、押した時に使う）
+  function typeCode() {
     var type = document.body && document.body.getAttribute('data-type-code');
-    if (!/^(PY|HY|CR|EL|AN|GE|DE)(SW|CM|PL|CT|BW)$/.test(type || '')) return;
+    return /^(PY|HY|CR|EL|AN|GE|DE)(SW|CM|PL|CT|BW)$/.test(type || '') ? type : null;
+  }
+  function prepare() {
+    var type = typeCode();
+    if (!type) return null;
+    if (inflight) return inflight;
     if (!attempt) attempt = newAttempt();
+    inflight = fetch('/api/type-report?op=buy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, cache: 'no-store',
+      body: JSON.stringify({ type: type, attempt: attempt, source: 'type_page' }) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { status: r.status, body: b }; }); });
+    // 失敗した時は、次に押した時に改めて要求する
+    inflight.then(function (r) { if (!(r.status === 200 && r.body && typeof r.body.checkoutUrl === 'string')) inflight = null; }, function () { inflight = null; });
+    return inflight;
+  }
+  function buy(btn, errBox) {
+    var req = prepare();
+    if (!req) return;
     btn.disabled = true;
     var label = btn.textContent;
-    btn.textContent = '決済画面を準備しています…';
+    btn.textContent = '決済画面へ移動しています…';
     if (errBox) errBox.hidden = true;
-    fetch('/api/type-report?op=buy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, cache: 'no-store',
-      body: JSON.stringify({ type: type, attempt: attempt, source: 'type_page' }) })
-      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { status: r.status, body: b }; }); })
-      .then(function (r) {
+    req.then(function (r) {
         var b = r.body || {};
         if (r.status === 200 && typeof b.checkoutUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(b.checkoutUrl)) {
           location.assign(b.checkoutUrl);
           return;
         }
+        inflight = null;
         // 期限切れ・別の注文と衝突：新しい購入操作でやり直せるようにする
         if (b.error === 'attempt_expired' || b.error === 'attempt_conflict') attempt = null;
         throw new Error(b.error || 'request_failed');
       })
       .catch(function (e) {
+        inflight = null;
         btn.disabled = false;
         btn.textContent = label;
         if (errBox) { errBox.textContent = ERRORS[e && e.message] || 'いまは決済画面を開けませんでした。少し時間をおいてお試しください。'; errBox.hidden = false; }
