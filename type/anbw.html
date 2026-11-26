@@ -92,6 +92,9 @@
   .axis { color:var(--el-t); font-size:12.5px; font-weight:600; letter-spacing:1px; margin:16px 0 8px; }
   .tags { display:flex; flex-wrap:wrap; gap:6px; }
   .tag { font-size:10.5px; color:var(--el-t); border:1px solid #3a8a6066; background:#3a8a601f; border-radius:12px; padding:4px 10px; letter-spacing:.3px; }
+  .chars { list-style:none; display:flex; flex-wrap:wrap; gap:7px; margin:4px 0 0; padding:0; }
+  .chars li { font-size:12.5px; color:var(--el-t); border:1px solid #3a8a6066; background:#3a8a601f; border-radius:12px; padding:5px 11px; line-height:1.5; overflow-wrap:anywhere; }
+  .chars-note { margin-top:12px; color:var(--rx-tertiary); font-size:11.5px; line-height:1.8; }
   [data-preview-only][hidden] { display:none !important; }
   /* ゲージ（結果ページの similarityGauges と同じ） */
   .gs { display:flex; flex-direction:column; gap:12px; margin:6px 0 2px; }
@@ -191,6 +194,17 @@
     <blockquote class="pull caution">深く関わることを避けがちな一面もあります。</blockquote>
     <div class="axis">無色の漂泊 × 距離の弓</div>
     <div class="tags"><span class="tag">自由さ</span><span class="tag">軽やかさ</span><span class="tag">身軽な視点</span><span class="tag">自由な選択肢</span><span class="tag">精密な集中力</span><span class="tag">縛られない身軽さ</span></div>
+  </section>
+
+  <section class="card" aria-labelledby="ch-chars">
+    <div class="card-h"><h2 id="ch-chars">風×弓のキャラクター</h2></div>
+    <ul class="chars">
+      <li>ウェンティ</li>
+      <li>チャスカ</li>
+      <li>ファルザン</li>
+      <li>ヤフォダ</li>
+    </ul>
+    <p class="chars-note">原神で元素と武器種が共通するキャラクターを掲載しています。</p>
   </section>
 
   <section class="prof" data-preview-only hidden aria-labelledby="prof-h">
