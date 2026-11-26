@@ -1,8 +1,8 @@
 // js/type-detail.js
-// タイプ解説ページ（type-v2 テンプレート）の画面上の動き。計測（GA4）は送らない（type_diagnosis_cta_click は js/type-page.js）。
+// タイプ解説ページの画面上の動きと、Stripe へ進む時の決済開始計測。
 //   ・一覧へ戻る：読んでいた元素を sessionStorage に残す（トップの一覧が、戻った時にその元素を開く。リンクの #types-<元素> と同じ）
 //   ・標準プロフィール・タイプ別レポートの欄（data-preview-only）：Preview では常に表示。本番ドメインでは販売中（typeReportSalesOpen）の時だけ
-//   ・タイプ別レポートの購入：「購入へ進む」で POST /api/type-report?op=buy（送るのはタイプコードと購入操作の ID だけ。
+//   ・タイプ別レポートの購入：「購入へ進む」で POST /api/type-report?op=buy（タイプコード・購入操作 ID・取得できた GA4 の参照を送る。
 //     金額・商品はサーバーが決める）→ Stripe の決済画面へ。同じ画面での連打・再送は同じ購入操作の ID（同じ注文・同じ決済画面）
 (function () {
   'use strict';
@@ -56,6 +56,8 @@
     purchase_completed: 'このお申し込みはお支払いが済んでいます。お支払いの後に表示されたリンクからお読みください。',
   };
   var attempt = null; // この画面での購入操作の ID（同じ画面での再送は同じ注文・同じ決済画面）
+  var gaRef = null;
+  var productId = 'eti_type_report_v1';
   function newAttempt() {
     var b = new Uint8Array(24);
     (window.crypto || window.msCrypto).getRandomValues(b);
@@ -70,9 +72,14 @@
     var type = typeCode();
     if (!type) return null;
     if (inflight) return inflight;
-    if (!attempt) attempt = newAttempt();
+    if (!attempt) {
+      attempt = newAttempt();
+      try { gaRef = window.EdAnalytics && window.EdAnalytics.checkoutRef('type_page'); } catch (e) { gaRef = null; }
+    }
+    var body = { type: type, attempt: attempt, source: 'type_page' };
+    if (gaRef) body.ga = gaRef;
     inflight = fetch('/api/type-report?op=buy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, cache: 'no-store',
-      body: JSON.stringify({ type: type, attempt: attempt, source: 'type_page' }) })
+      body: JSON.stringify(body) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { status: r.status, body: b }; }); });
     // 失敗した時は、次に押した時に改めて要求する
     inflight.then(function (r) { if (!(r.status === 200 && r.body && typeof r.body.checkoutUrl === 'string')) inflight = null; }, function () { inflight = null; });
@@ -88,6 +95,14 @@
     req.then(function (r) {
         var b = r.body || {};
         if (r.status === 200 && typeof b.checkoutUrl === 'string' && /^https:\/\/checkout\.stripe\.com\//.test(b.checkoutUrl)) {
+          if (Number.isInteger(b.amount) && b.amount > 0 && typeof window.gtag === 'function') {
+            try {
+              window.gtag('event', 'begin_checkout', {
+                product_id: productId, type_code: typeCode(), source: 'type_page', currency: 'JPY', value: b.amount,
+                items: [{ item_id: productId, item_name: 'タイプ別レポート', price: b.amount, quantity: 1 }],
+              });
+            } catch (e) { /* 計測できなくても決済に進む */ }
+          }
           location.assign(b.checkoutUrl);
           return;
         }

@@ -202,6 +202,8 @@ test('タイプ解説ページ：購入へ進むは、指が触れた時に準�
   const errors = [];
   p.on('pageerror', (e) => errors.push(String(e)));
   const calls = [];
+  const events = [];
+  await p.exposeFunction('recordCheckoutEvent', (...args) => events.push(args));
   await p.route(/googletagmanager|google-analytics|fonts\.(googleapis|gstatic)|cdnjs\.cloudflare\.com/, (r) => r.fulfill({ contentType: 'application/javascript', body: '' }));
   await p.route(/\/api\/type-report\?op=buy/, async (r) => {
     calls.push(JSON.parse(r.request().postData() || '{}'));
@@ -210,14 +212,25 @@ test('タイプ解説ページ：購入へ進むは、指が触れた時に準�
   });
   await p.route('https://checkout.stripe.com/**', (r) => r.fulfill({ contentType: 'text/html', body: '<p>stripe</p>' }));
   await p.goto(`${base}/type/pysw.html`);
+  await p.evaluate(() => {
+    document.cookie = '_ga=GA1.1.123.456; path=/';
+    document.cookie = '_ga_FDN7NYZW9D=GS2.1.s789$o1; path=/';
+    window.gtag = (...args) => window.recordCheckoutEvent(...args);
+  });
   await p.locator('[data-report-open]').click();
   const btn = p.locator('[data-report-buy]');
   await btn.dispatchEvent('pointerdown');
   await p.waitForTimeout(50);
+  assert.deepEqual(events, [], '準備だけでは決済開始を計測しない');
   await Promise.all([p.waitForURL(/checkout\.stripe\.com/), btn.click()]);
   await ctx.close();
   assert.deepEqual(errors, []);
   assert.equal(calls.length, 1, '要求は1回');
   assert.equal(calls[0].type, 'PYSW');
   assert.match(calls[0].attempt, /^[A-Za-z0-9_-]{32}$/);
+  assert.equal(calls[0].ga, 'ga1-123-456-789-0-type_page');
+  assert.deepEqual(events, [['event', 'begin_checkout', {
+    product_id: 'eti_type_report_v1', type_code: 'PYSW', source: 'type_page', currency: 'JPY', value: 1000,
+    items: [{ item_id: 'eti_type_report_v1', item_name: 'タイプ別レポート', price: 1000, quantity: 1 }],
+  }]]);
 });
