@@ -58,7 +58,9 @@ test('35件：元素・武器種・タイプ名・タイプコードが既存の
   const ts = types();
   assert.equal(ts.length, 35);
   for (const t of ts) {
-    assert.ok(t.html.includes(`<h1>${t.el}×${t.w}タイプ「${t.name}」</h1>`), `${t.code} の H1`);
+    // H1 は1つだけ。文字の内容（タグを除く）が「炎×片手剣タイプ「殉愛者」」（type-v2 は見た目のため span で分けている）
+    const h1s = [...t.html.matchAll(/<h1>([\s\S]*?)<\/h1>/g)].map((m) => m[1].replace(/<[^>]+>/g, ''));
+    assert.deepEqual(h1s, [`${t.el}×${t.w}タイプ「${t.name}」`], `${t.code} の H1`);
     assert.ok(t.html.includes(`<div class="code">タイプコード：${t.code}</div>`), `${t.code} のタイプコード`);
     assert.ok(t.html.includes(`"name": "${t.el}×${t.w}「${t.name}」（${t.code}型）"`), `${t.code} の JSON-LD の name`);
   }
@@ -112,19 +114,28 @@ test('OGP 画像に描く文字（見出し・タイプ名・元素・武器種�
   }
 });
 
-test('35件：上の導線（タイプコードの直下・1つ）、末尾の既存ボタン、関連（邪眼）に計測の属性。body にページの値。js/type-page.js を1回読み込む', () => {
+test('35件：body にページの値。関連（邪眼）に計測の属性。js/type-page.js を1回読み込む。旧テンプレートは上の導線と末尾のボタン、type-v2 は無料診断のボタンを置かずレポートへの導線', () => {
   for (const t of types()) {
     const h = t.html;
+    const v2 = h.includes('<!-- template: type-v2');
     assert.ok(h.includes(`<body data-type-code="${t.code}" data-element="${EK[t.el]}" data-weapon-type="${WK[t.w]}">`), `${t.code} の body`);
-    const top = `<div class="code">タイプコード：${t.code}</div>\n  <a class="pre-cta" href="${O}/" data-type-cta="top" data-destination="eti_top">元素診断（100問・無料）で、あなたのタイプを確かめる<span class="arw" aria-hidden="true">→</span></a>`;
-    assert.ok(h.includes(top), `${t.code} の上の導線`);
-    assert.equal((h.match(/class="pre-cta"/g) || []).length, 1);
-    assert.ok(h.includes(`<a class="cta" href="${O}/" data-type-cta="bottom" data-destination="eti_top">無料の元素診断で、あなたのタイプを確かめる</a>`), `${t.code} の末尾のボタン`);
     assert.ok(h.includes(`<a href="${O}/jagan/" data-type-cta="related" data-destination="jagan_top">邪眼診断（50問・無料）</a>`), `${t.code} の関連`);
-    assert.equal((h.match(/data-type-cta=/g) || []).length, 3);
     assert.equal((h.match(/<script src="\/js\/type-page\.js" defer><\/script>/g) || []).length, 1);
     assert.equal((h.match(/<script src="\/js\/ga\.js"><\/script>/g) || []).length, 1, `${t.code} の ga.js（page_view）`);
     assert.ok(h.indexOf('/js/ga.js') < h.indexOf('/js/type-page.js'), 'ga.js の後に type-page.js');
-    assert.match(h, /\.pre-cta \{[^}]*min-height:44px/, '押せる範囲は 44px 以上');
+    if (v2) {
+      // type-v2（タイプ別レポートの購入が目的）：無料診断のボタンは置かず、上部はレポートの欄へ移る導線
+      assert.doesNotMatch(h, /class="pre-cta"|class="cta"|data-type-cta="(top|bottom)"/, `${t.code} に無料診断のボタン`);
+      assert.equal((h.match(/data-type-cta=/g) || []).length, 1);
+      assert.match(h, /<a class="hero-buy" href="#report" data-preview-only hidden>/);
+      assert.match(h, /\.hero-buy \{[^}]*min-height:48px/, '押せる範囲は 44px 以上');
+    } else {
+      const top = `<div class="code">タイプコード：${t.code}</div>\n  <a class="pre-cta" href="${O}/" data-type-cta="top" data-destination="eti_top">元素診断（100問・無料）で、あなたのタイプを確かめる<span class="arw" aria-hidden="true">→</span></a>`;
+      assert.ok(h.includes(top), `${t.code} の上の導線`);
+      assert.equal((h.match(/class="pre-cta"/g) || []).length, 1);
+      assert.ok(h.includes(`<a class="cta" href="${O}/" data-type-cta="bottom" data-destination="eti_top">無料の元素診断で、あなたのタイプを確かめる</a>`), `${t.code} の末尾のボタン`);
+      assert.equal((h.match(/data-type-cta=/g) || []).length, 3);
+      assert.match(h, /\.pre-cta \{[^}]*min-height:44px/, '押せる範囲は 44px 以上');
+    }
   }
 });

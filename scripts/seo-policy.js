@@ -22,6 +22,7 @@ const PAGES = {
   'mypage.html':                { path: '/mypage',                 policy: 'noindex' },
   'report.html':                { path: '/report',                 policy: 'noindex' },
   'report-link.html':           { path: '/report-link',            policy: 'noindex' },
+  'type-report.html':           { path: '/type-report',            policy: 'noindex' }, // タイプ別レポートの固有リンクの入口（#t=。noindex・no-referrer）
   'purchase-complete.html':     { path: '/purchase-complete',      policy: 'noindex' },
   'complete-sample.html':       { path: '/complete-sample',        policy: 'noindex' },
   'report_sample.html':         { path: '/report_sample',          policy: 'noindex' },

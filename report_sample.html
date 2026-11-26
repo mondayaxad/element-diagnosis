@@ -178,6 +178,8 @@
 <script src="js/eti_mirror_selection_v21.js"></script>
 <script src="js/eti_v2_mirror_resolver.js"></script>
 <script src="js/eti_v2_legacy_adapter.js"></script>
+<!-- タイプ別レポート（標準の回答から作る）で使う最新の解説文とタイプ名。既存の解析レポートでは使わない -->
+<script src="js/type-report-texts.js"></script>
 </head>
 <body>
 <div style="background:linear-gradient(90deg,#5a4490,#8a5fc0);color:#fff;text-align:center;padding:12px 16px;font-size:13px;font-weight:700;letter-spacing:1px">
@@ -2233,6 +2235,59 @@ async function savePdf() {
     btn.textContent = originalText;
     btn.disabled = false;
   }
+}
+
+// ===== タイプ別レポート（標準の回答から作る。scripts/build-type-standard-answers.mjs） =====
+//   ・サーバー（レポートの閲覧 API）が report_kind:'type' と type_code（例：PYSW）を返した時だけ使う
+//   ・解説の文は結果ページ・タイプ解説と同じ最新の文（js/type-report-texts.js）。主語は「あなた」ではなくタイプ名
+var TYPE_EL = { PY: '炎', HY: '水', CR: '氷', EL: '雷', AN: '風', GE: '岩', DE: '草' };
+var TYPE_WP = { SW: '片手剣', CM: '両手剣', PL: '長柄', CT: '法器', BW: '弓' };
+function typeReportCode(data) {
+  var c = data && data.report_kind === 'type' && typeof data.type_code === 'string' ? data.type_code : '';
+  if (!/^(PY|HY|CR|EL|AN|GE|DE)(SW|CM|PL|CT|BW)$/.test(c) || !window.ED_TYPE_REPORT_TEXTS) return null;
+  return { code: c, element: TYPE_EL[c.slice(0, 2)], weapon: TYPE_WP[c.slice(2)], name: window.ED_TYPE_REPORT_TEXTS.TYPE_NAME[TYPE_EL[c.slice(0, 2)]][TYPE_WP[c.slice(2)]] };
+}
+function useTypeReportTexts() {
+  var t = window.ED_TYPE_REPORT_TEXTS;
+  Object.keys(t.ELEMENT_DESC).forEach(function (k) { ELEMENT_DESC[k] = t.ELEMENT_DESC[k]; });
+  Object.keys(t.WEAPON_DESC).forEach(function (k) { WEAPON_DESC[k] = t.WEAPON_DESC[k]; });
+}
+function typeReportWording(root, tr) {
+  // 完全解析の紹介（BEYOND THE REPORT）は、タイプ別レポートでは出さない（標準の回答に完全解析は売らない）
+  Array.prototype.forEach.call(root.querySelectorAll('.ca-r-sec'), function (el) { el.remove(); });
+  var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  var n;
+  while ((n = walker.nextNode())) {
+    if (n.nodeValue.indexOf('あなた') >= 0) n.nodeValue = n.nodeValue.replace(/あなた/g, tr.name);
+    if (n.nodeValue.indexOf('解析レポート') >= 0) n.nodeValue = n.nodeValue.replace(/解析レポート/g, 'タイプ別レポート');
+  }
+  document.title = 'タイプ別レポート「' + tr.name + '」｜元素診断';
+  root.appendChild(typeReportFooter(tr));
+}
+// レポートの最下部：このレポートを開き直す固有リンク（購入直後のタブだけ）と、自分のタイプを確かめる無料診断への導線
+function typeReportFooter(tr) {
+  var box = document.createElement('section');
+  box.className = 'sec type-report-foot';
+  box.setAttribute('data-pdf-skip', '');
+  box.style.cssText = 'text-align:center;padding:26px 22px';
+  var link = null;
+  try { link = sessionStorage.getItem('ed_type_report_link_v1'); } catch (e) { link = null; }
+  if (!(typeof link === 'string' && /^https:\/\/[^/]+\/type-report#t=[A-Za-z0-9_-]{43}$/.test(link) && link.indexOf(location.origin + '/') === 0)) link = null;
+  var html = '';
+  if (link) {
+    html += '<div style="font-size:11px;color:#C9A860;letter-spacing:2px;margin-bottom:8px">このレポートを開くリンク</div>'
+      + '<p style="font-size:12.5px;color:#A9C2D3;line-height:1.85;margin:0 0 10px">このリンクから、いつでもこのレポートを開けます。ブックマークやメモに保存してください。</p>'
+      + '<button type="button" data-type-report-copy style="width:100%;min-height:44px;border-radius:8px;border:1px solid #2a3a50;background:transparent;color:#E8F1F8;font-family:inherit;font-size:13px;letter-spacing:1px;cursor:pointer">リンクをコピーする</button>'
+      + '<div style="height:1px;background:#182838;margin:22px 0"></div>';
+  }
+  html += '<p style="font-size:13px;color:#E8F1F8;line-height:1.9;margin:0 0 14px">' + tr.name + 'は、元素診断の35タイプのひとつです。<br>ご自身はどのタイプでしょうか。</p>'
+    + '<a href="/" style="display:block;padding:15px 12px;border-radius:6px;text-decoration:none;font-family:inherit;font-size:14px;letter-spacing:.12em;color:#eef4ff;background:linear-gradient(135deg,#1b4c86 0%,#2556a0 52%,#3c4a9e 100%);border:1px solid rgba(150,180,240,.22);box-shadow:0 0 32px rgba(90,80,200,.2)">無料の元素診断で、自分のタイプを確かめる →</a>';
+  box.innerHTML = html;
+  var btn = box.querySelector('[data-type-report-copy]');
+  if (btn) btn.addEventListener('click', function () {
+    try { navigator.clipboard.writeText(link).then(function () { btn.textContent = 'コピーしました'; }); } catch (e) { btn.textContent = 'コピーできませんでした'; }
+  });
+  return box;
 }
 
 (function initSampleReport() {

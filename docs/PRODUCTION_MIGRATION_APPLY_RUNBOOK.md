@@ -173,3 +173,27 @@ SHA-256 は `docs/sql/production/SHA256SUMS`。SQL Editor へ貼る前に、手�
 検証（2026-11-10・ローカル、本番相当 PG17.9・合成データ）：`docs/sql/production/local_check/stage6.sh` が 17 項目合格
 （prod_01〜04b の上に適用・台帳・postcheck・prod_80 の不変項目が適用前と同じ・二度適用は止まる・Test の注文は作れない・¥1,000／¥3,000 の支払いで2つの権利・
 データがあると rollback は止まる・空なら rollback で段階 5 と同じ構造・再適用で同じ構造）。
+
+## 10. 段階 7：タイプ別レポート（prod_07_type_report）【草案・2026-11-25・未適用】
+
+> **本番には未適用。** 適用は、タイプ別レポートのコードを Production に deploy する直前に、運営者の承認を得てから行う。前提は prod_06 まで適用済み（台帳に stage 1〜6）。満たさなければ冒頭で何も変えずに止まる。
+
+| ファイル | 種類 | 内容 |
+|---|---|---|
+| `prod_07_type_report.sql` | 適用 | タイプ別レポート（¥1,000・買い切り）の注文表 `type_report_orders` と関数5つ。Preview の type_report_01 と同じ（Preview 判定と履歴行を除き、注文は Live だけ）。台帳に stage 7 |
+| `prod_87_postcheck_07_READONLY.sql` | 読み取り | 台帳・表（RLS）・関数5・ブラウザの実行権限0・Live だけの制約・件数 |
+| `prod_97_rollback_07_DRAFT_DO_NOT_RUN.sql` | 戻し草案 | 注文が 0 件の時だけ。データがあれば止まる（前へ直す） |
+
+順序：
+1. `prod_80_invariants_READONLY.sql` を実行して結果を控える。
+2. `prod_07_type_report.sql` → 成功。
+3. `prod_87_postcheck_07_READONLY.sql`：`ledger.stages` に `7:prod_07_type_report`、`type_report.functions = 5`、`type_report.browser_exec = 0`、`type_report.orders_live_only = 1`、`type_report.table = type_report_orders(RLS)`、`type_report.rows = 0`。
+4. `prod_80`：手順 1 と完全一致。
+5. コードを Production に deploy（環境変数 `STRIPE_PRICE_TYPE_REPORT` は設定済み）。販売の開始は、Production に `TYPE_REPORT_SALES_OPEN=true` を設定して再 deploy した時（設定するまでは購入できない）。
+   タイプ解説ページのレポートの欄は、本番ドメインでは `/api/public-config` の `typeReportSalesOpen`（＝`TYPE_REPORT_SALES_OPEN=true`）の時だけ表示する（`js/type-detail.js`）。設定するまでは欄も出ない。
+
+既存への影響：既存の表・関数・権限には触れない（追加のみ）。台帳の段階の範囲を 1〜6 から 1〜7 に広げる（`migration_ledger_stage_check`）。
+
+検証（2026-11-25・ローカル、本番相当 PG17.12・合成データ）：`docs/sql/production/local_check/stage7.sh` が 20 項目合格
+（prod_01〜06 の上に適用・台帳・postcheck・prod_80 の不変項目が適用前と同じ・二度適用は止まる・Test の注文は作れない・¥1,000 の支払いを反映・
+anon／authenticated は表を読めない・データがあると rollback は止まる・空なら rollback で段階 6 と同じ構造・再適用で同じ構造・prod_06 の前には当たらない）。

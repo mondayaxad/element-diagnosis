@@ -3,10 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- template: type-v2（scripts/build-type-pages.mjs で生成。手で編集しない） -->
 <!-- GA4：js/ga.js が本番ドメインでだけ読み込む（Preview・ローカルでは送信しない） -->
 <script src="/js/ga.js"></script>
 <!-- 診断への導線のクリック（type_diagnosis_cta_click）を GA4 に送る -->
 <script src="/js/type-page.js" defer></script>
+<!-- 一覧へ戻った時に読んでいた元素を開く・Preview 専用の欄（標準プロフィール・タイプ別レポートの購入確認デモ） -->
+<script src="/js/type-detail.js" defer></script>
 <title>氷×長柄「氷壁者」の性格・特徴｜原神 元素診断</title>
 <meta name="description" content="原神の元素と武器種をモチーフにした性格診断「元素診断」（100問・無料）。氷×長柄タイプ「氷壁者」の性格傾向（観察力・少数精鋭の繋がり・誠実な役目遂行）や強み、人との関わり方を解説します。">
 <link rel="canonical" href="https://element-diagnosis-five.vercel.app/type/crpl">
@@ -33,49 +36,258 @@
   }
 }
 </script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
+  /* 文字色・書体・大きさは結果ページ（index.html の --rx-*・similarityGauges・統一CTA）に合わせる */
+  :root { --el:#4a80c0; --wp:#608040; --el-t:color-mix(in srgb, #4a80c0 55%, #ffffff); --wp-t:color-mix(in srgb, #608040 55%, #ffffff); --rx-primary:#E8F1F8; --rx-secondary:#A9C2D3; --rx-tertiary:#718A9C; --rx-muted:#526776; --rx-gold:#C9A860; --card:#0c0a14; --card-line:#182838; }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:#07060c; color:#e0ecf4; font-family:'Hiragino Sans','Noto Sans JP',sans-serif; max-width:680px; margin:0 auto; padding:32px 20px 60px; line-height:1.9; }
-  .eyebrow { font-size:12px; letter-spacing:3px; color:#c9a860; margin-bottom:10px; }
-  h1 { font-size:26px; margin-bottom:6px; }
-  .code { font-size:14px; color:#8ea0b0; margin-bottom:24px; }
-  .lead { font-size:15px; color:#c8dce8; margin-bottom:20px; }
-  .desc { font-size:15px; margin-bottom:20px; }
-  .tags { margin:20px 0; }
-  .tag { display:inline-block; font-size:12px; background:#1a1628; border:1px solid #2a2440; border-radius:20px; padding:5px 12px; margin:0 6px 6px 0; color:#a8c4d4; }
-  .axis { font-size:14px; color:#8fd8b0; margin:24px 0; padding:14px 16px; border-left:3px solid #3a8a60; background:#0e0c18; }
-  .cta { display:block; text-align:center; background:linear-gradient(90deg,#2a6a45,#3a8a60); color:#fff; text-decoration:none; padding:16px; border-radius:10px; font-weight:700; margin-top:32px; }
-  .back { display:block; text-align:center; margin-top:16px; color:#5a6c7c; font-size:13px; }
-  .more { margin-top:36px; padding-top:18px; border-top:1px solid #1a1628; }
-  .more h2 { font-size:13px; letter-spacing:2px; color:#8ea0b0; font-weight:400; margin-bottom:10px; }
-  .more ul { list-style:none; }
-  .more li a { display:block; color:#a8c4d4; text-decoration:none; font-size:14px; padding:6px 0; }
-  .more .jg { margin-top:14px; font-size:13px; color:#8ea0b0; }
-  .more .jg a { color:#c9a0d8; }
-  .pre-cta { display:block; margin:-12px 0 18px; padding:8px 0; min-height:44px; color:#8fd8b0; font-size:14px; line-height:1.75; word-break:keep-all; overflow-wrap:anywhere; text-decoration:underline; text-decoration-color:rgba(143,216,176,.35); text-decoration-thickness:1px; text-underline-offset:5px; }
-  .pre-cta .arw { display:inline-block; margin-left:4px; text-decoration:none; transition:transform .2s; }
-  .pre-cta:hover .arw, .pre-cta:focus-visible .arw { transform:translateX(3px); }
+  body { background:#07070f; color:#e0dcf0; font-family:'Noto Serif JP','Hiragino Mincho ProN','Yu Mincho',serif; -webkit-font-smoothing:antialiased; max-width:680px; margin:0 auto; padding:16px 14px 64px; line-height:1.95; -webkit-text-size-adjust:100%;
+    background-image:radial-gradient(ellipse 90% 40% at 50% 0%, color-mix(in srgb, #4a80c0 14%, transparent), transparent 70%), radial-gradient(ellipse 80% 50% at 50% 30%, rgba(100,60,180,.08), transparent 70%); background-repeat:no-repeat; }
+  a { color:inherit; }
+  strong { font-weight:700; }
+  .crumb { font-size:11px; color:var(--rx-tertiary); letter-spacing:.5px; margin:0 4px 10px; }
+  .crumb a { color:var(--rx-secondary); text-decoration:none; border-bottom:1px solid rgba(169,194,211,.3); }
+  .eyebrow { display:none; }
+  .card { background:var(--card); border:1px solid var(--card-line); border-radius:12px; padding:20px; margin-bottom:14px; }
+  .kicker { font-size:11px; color:var(--rx-gold); letter-spacing:2px; margin-bottom:6px; }
+  .card-h { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .card-h::before { content:''; width:8px; height:8px; border-radius:50%; background:var(--el); flex:none; }
+  .card-h h2 { color:color-mix(in srgb, var(--rx-primary) 85%, var(--el)); font-size:15px; font-weight:700; margin:0; line-height:1.6; }
+  .card p { color:var(--rx-secondary); font-size:12.5px; line-height:1.95; }
+  .card p + p { margin-top:10px; }
+  .card h3 { color:var(--rx-primary); font-size:13px; font-weight:700; margin:16px 0 4px; letter-spacing:.5px; }
+  .rule { height:1px; background:var(--card-line); margin:18px 0; }
+  /* ヒーロー（結果ページの「あなたの土台」と同じ並び：小見出し → コードと名前 → 元素 × 武器種 → 軸） */
+  .hero { position:relative; background:linear-gradient(135deg, color-mix(in srgb, #4a80c0 14%, transparent), #0a0e1a 70%); border:1px solid color-mix(in srgb, #4a80c0 30%, #1c2c40); border-radius:16px; padding:22px 20px 20px; margin-bottom:14px; }
+  .hero-em { position:absolute; top:14px; right:12px; width:76px; height:76px; object-fit:contain; filter:drop-shadow(0 0 12px #4a80c066); pointer-events:none; }
+  .hero-k { font-size:11px; letter-spacing:3px; color:#90c0e0; margin-right:80px; }
+  .el-w { font-weight:700; font-size:30px; line-height:1.35; margin:6px 80px 2px 0; letter-spacing:1px; }
+  .el-w .e { color:var(--el-t); } .el-w .w { color:var(--wp-t); } .el-w .x { color:var(--rx-tertiary); font-size:18px; margin:0 6px; font-weight:400; }
+  h1 { font-weight:700; line-height:1.3; margin:0 80px 2px 0; }
+  h1 .h1-sub { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  h1 .h1-n { display:block; font-size:34px; letter-spacing:3px; color:var(--rx-primary); }
+  .code { font-size:15px; font-weight:700; letter-spacing:4px; color:var(--el-t); }
+  .hero-ax { color:var(--rx-secondary); font-size:12px; line-height:1.9; padding-bottom:14px; margin-bottom:16px; border-bottom:1px solid #1c2c40; }
+  /* 購入への導線：結果ページの「全てのロックを解除する →」と同じ（元素色→武器色） */
+  .hero-buy { display:flex; align-items:center; justify-content:center; gap:8px; min-height:48px; margin-top:16px; padding:13px 14px; border-radius:8px; text-decoration:none; font-size:14px; font-weight:600; letter-spacing:2px; line-height:1.6; text-align:center; color:#fff; background:linear-gradient(90deg, #4a80c0, #608040); word-break:keep-all; overflow-wrap:anywhere; }
+  .hero-buy .arw { display:inline-block; transition:transform .2s; }
+  .hero-buy:hover .arw, .hero-buy:focus-visible .arw { transform:translateX(3px); }
+  html { scroll-behavior:smooth; }
+  #report { scroll-margin-top:16px; }
+  /* 冒頭：タイプの核（結果ページの「この先にあるもの」と同じ書き方） */
+  .essence { margin:22px 6px 0; }
+  .essence .k { font-size:11px; letter-spacing:3px; color:var(--rx-gold); margin-bottom:8px; }
+  .essence .core { color:var(--rx-primary); font-size:16px; line-height:1.9; letter-spacing:.5px; }
+  .essence cite { display:block; margin-top:6px; font-style:normal; font-size:11px; color:var(--rx-tertiary); letter-spacing:1px; }
+  .lead, .intro { color:var(--rx-secondary); font-size:12.5px; line-height:1.95; margin:14px 0 0; }
+  .figure { position:relative; margin:22px auto 18px; width:180px; height:150px; display:grid; place-items:center; }
+  .figure::before, .figure::after { content:''; position:absolute; border-radius:50%; border:1px solid #4a80c055; }
+  .figure::before { width:146px; height:146px; } .figure::after { width:112px; height:112px; border-style:dashed; opacity:.5; }
+  .figure img { position:relative; width:104px; height:104px; object-fit:contain; filter:drop-shadow(0 0 18px #4a80c088); }
+  .pull { margin:14px 0; padding:12px 14px; border-left:3px solid var(--el); background:#4a80c014; border-radius:0 8px 8px 0; color:var(--rx-primary); font-size:13px; line-height:1.9; }
+  .pull.caution { border-left-color:var(--rx-gold); background:rgba(201,168,96,.07); }
+  .axis { color:var(--el-t); font-size:12.5px; font-weight:600; letter-spacing:1px; margin:16px 0 8px; }
+  .tags { display:flex; flex-wrap:wrap; gap:6px; }
+  .tag { font-size:10.5px; color:var(--el-t); border:1px solid #4a80c066; background:#4a80c01f; border-radius:12px; padding:4px 10px; letter-spacing:.3px; }
+  [data-preview-only][hidden] { display:none !important; }
+  /* ゲージ（結果ページの similarityGauges と同じ） */
+  .gs { display:flex; flex-direction:column; gap:12px; margin:6px 0 2px; }
+  .g-h { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
+  .g-l { font-size:11px; letter-spacing:.5px; color:var(--rx-secondary); }
+  .g-v { font-size:12px; font-weight:700; }
+  .g-t { height:7px; background:#14121f; border-radius:4px; overflow:hidden; box-shadow:inset 0 0 0 1px #ffffff0a; }
+  .g-f { height:100%; border-radius:4px; }
+  .g-s { display:flex; justify-content:space-between; align-items:baseline; margin-top:3px; font-size:10px; color:var(--rx-muted); letter-spacing:.3px; }
+  .g-s i { font-style:normal; color:var(--rx-tertiary); }
+  .g-s .on { color:var(--rx-primary); font-weight:700; }
+  /* タイプ別レポート（結果ページの統一CTAと同じ構成：小見出し → 見出し → 説明 → ご利用いただける内容 → 価格 → ボタン） */
+  .report { background:linear-gradient(135deg, #4a80c01c, #08101a); border:1px solid #4a80c045; border-radius:14px; padding:26px 22px; text-align:center; margin-top:14px; }
+  .report .r-k { font-size:10px; color:#c0a860; letter-spacing:2px; margin-bottom:10px; }
+  .report h3 { color:var(--rx-primary); font-size:17px; margin:0 0 10px; letter-spacing:1px; line-height:1.6; }
+  .report .r-desc { color:var(--rx-secondary); font-size:12px; line-height:1.85; margin:0 0 18px; }
+  .report .r-list { background:var(--card); border:1px solid #4a80c030; border-radius:10px; padding:18px; margin-bottom:20px; text-align:left; }
+  .report .r-lh { font-size:11px; color:var(--rx-gold); letter-spacing:2px; margin-bottom:14px; }
+  .ck { display:flex; gap:10px; margin-bottom:12px; align-items:flex-start; }
+  .ck:last-child { margin-bottom:0; }
+  .ck-m { color:var(--rx-gold); font-size:13px; flex-shrink:0; margin-top:1px; }
+  .ck-t { color:var(--rx-primary); font-size:13px; font-weight:600; margin-bottom:3px; }
+  .ck-s { color:var(--rx-tertiary); font-size:11px; line-height:1.6; }
+  .report .r-price { font-size:28px; font-weight:700; color:#eee0c0; margin-bottom:16px; line-height:1.3; }
+  .report .r-price small { font-size:12px; font-weight:400; margin-left:4px; color:var(--rx-secondary); }
+  .r-btn, .confirm button { font-family:inherit; }
+  .report .r-btn { width:100%; background:linear-gradient(90deg, #4a80c0, #608040); border:none; color:#fff; border-radius:8px; padding:14px; min-height:48px; font-size:14px; cursor:pointer; letter-spacing:2px; font-weight:600; }
+  .report .r-diff { color:#c0a860; font-size:11px; margin-top:8px; font-weight:600; line-height:1.7; }
+  .report .r-diff2 { color:var(--rx-tertiary); font-size:11px; line-height:1.7; margin-top:4px; }
+  dialog.confirm { margin:auto; width:min(92vw, 420px); border:1px solid #4a80c045; border-radius:14px; background:#0c0a14; color:var(--rx-primary); padding:22px 20px 16px; }
+  dialog.confirm::backdrop { background:rgba(4,4,10,.76); }
+  .confirm .c-label { font-size:10px; font-weight:400; color:#c0a860; letter-spacing:2px; }
+  .confirm h3 { font-size:17px; line-height:1.6; margin:6px 0 12px; letter-spacing:1px; }
+  .confirm dl { display:grid; grid-template-columns:5.5em 1fr; gap:6px 10px; font-size:12.5px; margin-bottom:12px; }
+  .confirm dt { color:var(--rx-tertiary); } .confirm dd { color:var(--rx-primary); }
+  .confirm .c-sub { font-size:11px; color:var(--rx-gold); letter-spacing:2px; }
+  .confirm ul { margin:6px 0 12px 1.2em; font-size:12.5px; color:var(--rx-secondary); line-height:1.85; }
+  .confirm .c-err { font-size:12px; color:#f0c8a0; background:#2a1a14; border-radius:8px; padding:8px 10px; line-height:1.7; margin-bottom:12px; }
+  .confirm .c-go { display:block; width:100%; min-height:52px; margin-top:4px; border:0; border-radius:8px; background:linear-gradient(90deg, #4a80c0, #608040); color:#fff; font-family:inherit; font-size:15px; font-weight:600; letter-spacing:2px; cursor:pointer; }
+  .confirm .c-close { display:block; margin:10px auto 0; min-height:44px; padding:0 16px; border:0; background:transparent; color:var(--rx-tertiary); font-family:inherit; font-size:12.5px; letter-spacing:1px; text-decoration:underline; text-underline-offset:4px; cursor:pointer; }
+  .confirm .c-go[disabled] { opacity:.6; cursor:progress; }
+  .back { display:block; text-align:center; margin-top:14px; color:var(--rx-secondary); font-size:12.5px; min-height:44px; padding-top:10px; }
+  .more { margin-top:22px; }
+  .more .more-h { font-size:11px; color:var(--rx-gold); letter-spacing:2px; margin:0 4px 8px; font-weight:400; }
+  .more ul { list-style:none; background:var(--card); border:1px solid var(--card-line); border-radius:12px; overflow:hidden; }
+  .more li + li { border-top:1px solid var(--card-line); }
+  .more li a { display:grid; grid-template-columns:4.2em 1fr auto; align-items:center; gap:8px; min-height:48px; padding:8px 16px; text-decoration:none; font-size:13px; }
+  .sib-w { color:var(--rx-tertiary); font-size:11.5px; }
+  .sib-n { font-weight:700; color:var(--rx-primary); letter-spacing:1px; }
+  .sib-c { color:var(--el-t); font-size:11px; letter-spacing:2px; }
+  .more .jg { margin:16px 4px 0; font-size:12px; color:var(--rx-tertiary); }
+  .more .jg a { color:#d8b0e8; }
+  @media (max-width:360px) { .el-w { font-size:26px; } h1 .h1-n { font-size:30px; } .hero-em { width:64px; height:64px; } }
 </style>
 </head>
 <body data-type-code="CRPL" data-element="cryo" data-weapon-type="polearm">
+  <nav class="crumb" aria-label="現在地"><a href="/#types-cryo" data-types-back="cryo">全35タイプ一覧</a> ／ 氷 × 長柄</nav>
   <div class="eyebrow">元素診断タイプ解説</div>
-  <h1>氷×長柄タイプ「氷壁者」</h1>
+  <header class="hero">
+   <img class="hero-em" src="/assets/emblems/2026-autumn/record/cryo.png" width="76" height="76" alt="氷の紋章">
+   <div class="hero-k">タ イ プ 解 説</div>
+  <div class="el-w"><span class="e">氷</span><span class="x">×</span><span class="w">長柄</span></div>
+  <h1><span class="h1-sub">氷×長柄タイプ「</span><span class="h1-n">氷壁者</span><span class="h1-sub">」</span></h1>
   <div class="code">タイプコード：CRPL</div>
-  <a class="pre-cta" href="https://element-diagnosis-five.vercel.app/" data-type-cta="top" data-destination="eti_top">元素診断（100問・無料）で、あなたのタイプを確かめる<span class="arw" aria-hidden="true">→</span></a>
-  
-  <div class="desc">氷は、外への発信を抑え、内側の解像度を高める元素です。感受性の鋭さゆえに一歩引いて世界を観察し、独自の視点を育てていく性質があります。多くの人と広く関わるより、少数の相手と深く繋がることを好み、その分だけ、選んだ相手への忠誠は揺るぎません。静かでいて、内側は熱いタイプです。<br><br>長柄は、間合いを保ちながら集団を守る武器です。改革者・調停者の性質——誠実に役目を果たし、場の調和を保とうとする動機が、扱い方を支えます。前に出て目立つより、全体が円滑に回ることを優先し、必要な時にはしっかりと境界線を引く、縁の下の力持ちとしての強さがあります。<br><br>この二つが重なる時、「氷壁者」という人物像が立ち上がります。</div>
-  <div class="tags"><span class="tag">観察力</span><span class="tag">少数精鋭の繋がり</span><span class="tag">内なる情熱</span><span class="tag">縁の下の力持ち</span><span class="tag">誠実な役目遂行</span><span class="tag">境界線を引く強さ</span></div>
-  <div class="axis">凍結の宿命 × 直進到達型</div>
-  <a class="cta" href="https://element-diagnosis-five.vercel.app/" data-type-cta="bottom" data-destination="eti_top">無料の元素診断で、あなたのタイプを確かめる</a>
-  <a class="back" href="https://element-diagnosis-five.vercel.app/">← 元素診断トップへ戻る</a>
+  <a class="hero-buy" href="#report" data-preview-only hidden>氷壁者のタイプ別レポートを読む<span class="arw" aria-hidden="true">→</span></a>
+  </header>
+
+  <section class="essence" aria-label="氷壁者の核">
+    <div class="k">氷 壁 者 と は</div>
+    <p class="core">感情を凍らせてでも、壁となって仲間を守る人。</p>
+    <cite>— 氷 × 長柄「氷壁者」</cite>
+    <p class="intro"><strong style="color:var(--rx-primary)">氷壁者</strong>は、<strong style="color:var(--el-t)">氷の気質（凍結の宿命）</strong>と、<strong style="color:var(--wp-t)">長柄の関わり方（役割献身型）</strong>が重なって現れるタイプです。この二つが重なる時、「氷壁者」という人物像が立ち上がります。</p>
+  </section>
+
+  <div class="figure" aria-hidden="true"><img src="/assets/emblems/2026-autumn/record/cryo.png" width="104" height="104" alt="" loading="lazy"></div>
+
+  <section class="card" aria-labelledby="ch-el">
+    <div class="kicker">氷の気質</div>
+    <div class="card-h"><h2 id="ch-el">凍結の宿命</h2></div>
+      <p><strong style="color:color-mix(in srgb, #4a80c0 55%, #ffffff)">氷</strong>は、外への発信を抑え、内側の解像度を高める元素です。感受性の鋭さゆえに一歩引いて世界を観察し、独自の視点を育てていく性質があります。</p>
+      <blockquote class="pull">多くの人と広く関わるより、少数の相手と深く繋がることを好み、その分だけ、選んだ相手への忠誠は揺るぎません。</blockquote>
+      <p>静かでいて、内側は熱いタイプです。</p>
+  </section>
+
+  <section class="card" aria-labelledby="ch-wp" style="--el:#608040">
+    <div class="kicker">長柄の関わり方</div>
+    <div class="card-h"><h2 id="ch-wp">集団の中で真っ直ぐ機能し守り抜く</h2></div>
+      <p><strong style="color:color-mix(in srgb, #608040 55%, #ffffff)">長柄</strong>は、間合いを保ちながら集団を守る武器です。誠実さと調和を重んじる傾向——役目を果たし、場の調和を保とうとする動機が、扱い方を支えます。</p>
+      <blockquote class="pull">前に出て目立つより、全体が円滑に回ることを優先し、必要な時にはしっかりと境界線を引く、縁の下の力持ちとしての強さがあります。</blockquote>
+  </section>
+
+  <section class="card" aria-labelledby="ch-type">
+    <div class="kicker">氷壁者として現れる特徴</div>
+    <div class="card-h"><h2 id="ch-type">強みと、つまずきやすいところ</h2></div>
+    <h3>力を発揮するとき</h3>
+    <p>動じない冷静さで、集団を守り抜く役割を担います。</p>
+    <h3>つまずきやすいところ</h3>
+    <blockquote class="pull caution">その冷たさが、時に距離を感じさせてしまうこともあります。</blockquote>
+    <div class="axis">凍結の宿命 × 直進到達型</div>
+    <div class="tags"><span class="tag">観察力</span><span class="tag">少数精鋭の繋がり</span><span class="tag">内なる情熱</span><span class="tag">縁の下の力持ち</span><span class="tag">誠実な役目遂行</span><span class="tag">境界線を引く強さ</span></div>
+  </section>
+
+  <section class="prof" data-preview-only hidden aria-labelledby="prof-h">
+    <div class="card">
+      <div class="kicker">標準プロフィール</div>
+      <div class="card-h"><h2 id="prof-h">氷壁者の標準プロフィール</h2></div>
+      <h3>気質（Big Five・0〜100）— 氷</h3>
+      <div class="gs">
+        <div class="g">
+          <div class="g-h"><span class="g-l">開放性</span><span class="g-v" style="color:color-mix(in srgb, #4a80c0 55%, #ffffff)">50</span></div>
+          <div class="g-t"><div class="g-f" style="width:50%;background:linear-gradient(90deg, color-mix(in srgb, #4a80c0 45%, #0c0a14), #4a80c0 70%, color-mix(in srgb, #4a80c0 60%, #ffffff));box-shadow:0 0 8px #4a80c055"></div></div>
+          <div class="g-s"><span>堅実さ</span><i>中間</i><span>探究心</span></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">誠実性</span><span class="g-v" style="color:color-mix(in srgb, #4a80c0 55%, #ffffff)">70</span></div>
+          <div class="g-t"><div class="g-f" style="width:70%;background:linear-gradient(90deg, color-mix(in srgb, #4a80c0 45%, #0c0a14), #4a80c0 70%, color-mix(in srgb, #4a80c0 60%, #ffffff));box-shadow:0 0 8px #4a80c055"></div></div>
+          <div class="g-s"><span>衝動性</span><i>計画性寄り</i><span class="on">計画性</span></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">外向性</span><span class="g-v" style="color:color-mix(in srgb, #4a80c0 55%, #ffffff)">10</span></div>
+          <div class="g-t"><div class="g-f" style="width:10%;background:linear-gradient(90deg, color-mix(in srgb, #4a80c0 45%, #0c0a14), #4a80c0 70%, color-mix(in srgb, #4a80c0 60%, #ffffff));box-shadow:0 0 8px #4a80c055"></div></div>
+          <div class="g-s"><span class="on">内省力</span><i>内省力寄り</i><span>社交性</span></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">協調性</span><span class="g-v" style="color:color-mix(in srgb, #4a80c0 55%, #ffffff)">30</span></div>
+          <div class="g-t"><div class="g-f" style="width:30%;background:linear-gradient(90deg, color-mix(in srgb, #4a80c0 45%, #0c0a14), #4a80c0 70%, color-mix(in srgb, #4a80c0 60%, #ffffff));box-shadow:0 0 8px #4a80c055"></div></div>
+          <div class="g-s"><span class="on">独立心</span><i>独立心寄り</i><span>共感力</span></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">神経症傾向</span><span class="g-v" style="color:color-mix(in srgb, #4a80c0 55%, #ffffff)">90</span></div>
+          <div class="g-t"><div class="g-f" style="width:90%;background:linear-gradient(90deg, color-mix(in srgb, #4a80c0 45%, #0c0a14), #4a80c0 70%, color-mix(in srgb, #4a80c0 60%, #ffffff));box-shadow:0 0 8px #4a80c055"></div></div>
+          <div class="g-s"><span>安定性</span><i>感受性寄り</i><span class="on">感受性</span></div>
+        </div>
+      </div>
+      <div class="rule"></div>
+      <h3>関わり方（行動スタイル・0〜100）— 長柄</h3>
+      <div class="gs">
+        <div class="g">
+          <div class="g-h"><span class="g-l">主導性</span><span class="g-v" style="color:color-mix(in srgb, #608040 55%, #ffffff)">55</span></div>
+          <div class="g-t"><div class="g-f" style="width:55%;background:linear-gradient(90deg, color-mix(in srgb, #608040 45%, #0c0a14), #608040 70%, color-mix(in srgb, #608040 60%, #ffffff));box-shadow:0 0 8px #60804055"></div></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">関係調整</span><span class="g-v" style="color:color-mix(in srgb, #608040 55%, #ffffff)">70</span></div>
+          <div class="g-t"><div class="g-f" style="width:70%;background:linear-gradient(90deg, color-mix(in srgb, #608040 45%, #0c0a14), #608040 70%, color-mix(in srgb, #608040 60%, #ffffff));box-shadow:0 0 8px #60804055"></div></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">役割持続</span><span class="g-v" style="color:color-mix(in srgb, #608040 55%, #ffffff)">90</span></div>
+          <div class="g-t"><div class="g-f" style="width:90%;background:linear-gradient(90deg, color-mix(in srgb, #608040 45%, #0c0a14), #608040 70%, color-mix(in srgb, #608040 60%, #ffffff));box-shadow:0 0 8px #60804055"></div></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">媒介思考</span><span class="g-v" style="color:color-mix(in srgb, #608040 55%, #ffffff)">45</span></div>
+          <div class="g-t"><div class="g-f" style="width:45%;background:linear-gradient(90deg, color-mix(in srgb, #608040 45%, #0c0a14), #608040 70%, color-mix(in srgb, #608040 60%, #ffffff));box-shadow:0 0 8px #60804055"></div></div>
+        </div>
+        <div class="g">
+          <div class="g-h"><span class="g-l">自律距離</span><span class="g-v" style="color:color-mix(in srgb, #608040 55%, #ffffff)">45</span></div>
+          <div class="g-t"><div class="g-f" style="width:45%;background:linear-gradient(90deg, color-mix(in srgb, #608040 45%, #0c0a14), #608040 70%, color-mix(in srgb, #608040 60%, #ffffff));box-shadow:0 0 8px #60804055"></div></div>
+        </div>
+      </div>
+      <p style="margin-top:12px"><strong style="color:var(--wp-t)">役割持続</strong>が最も高い型です。一度引き受けた役目を、その意味が尽きるまで手放しません。</p>
+    </div>
+    <div class="report" id="report">
+      <div class="r-k">TYPE REPORT</div>
+      <h3>タイプ別レポート<br>「氷壁者」の全編を解放</h3>
+      <p class="r-desc">標準プロフィールをもとに、氷壁者の強みを活かせる場面、つまずきやすい場面、人との関わり方を読み解きます。</p>
+      <div class="r-list">
+        <div class="r-lh">ご利用いただける内容</div>
+          <div class="ck"><span class="ck-m">✓</span><div><div class="ck-t">標準プロフィールの読み方</div><div class="ck-s">気質（Big Five）と関わり方（行動スタイル）の数値が、氷壁者の場合に何を意味するか</div></div></div>
+          <div class="ck"><span class="ck-m">✓</span><div><div class="ck-t">強みを活かせる場面</div><div class="ck-s">力が発揮されやすい状況と、その理由</div></div></div>
+          <div class="ck"><span class="ck-m">✓</span><div><div class="ck-t">つまずきやすい場面</div><div class="ck-s">負荷がかかりやすい状況と、立て直し方</div></div></div>
+          <div class="ck"><span class="ck-m">✓</span><div><div class="ck-t">人との関わり方</div><div class="ck-s">近しい相手・集団の中での振る舞いの傾向</div></div></div>
+      </div>
+      <div class="r-price">¥1,000<small>（税込）</small></div>
+      <button type="button" class="r-btn" data-report-open>今すぐアクセス →</button>
+      <p class="r-diff">✓ 氷壁者の方に共通の読み物です。</p>
+      <p class="r-diff2">あなた自身の回答から作る「解析レポート」とは別の商品です。</p>
+    </div>
+    <dialog class="confirm" id="reportConfirm" aria-labelledby="rc-h">
+      <div class="c-label">購入内容の確認</div>
+      <h3 id="rc-h">タイプ別レポート「氷壁者」</h3>
+      <dl><dt>対象タイプ</dt><dd>氷 × 長柄「氷壁者」（CRPL）</dd><dt>価格</dt><dd>¥1,000（税込）</dd><dt>種類</dt><dd>氷壁者の方に共通の読み物</dd></dl>
+      <div class="c-sub">読める内容</div>
+      <ul><li>標準プロフィールの読み方</li><li>強みを活かせる場面</li><li>つまずきやすい場面</li><li>人との関わり方</li></ul>
+      <p class="c-err" data-report-error role="alert" hidden></p>
+      <button type="button" class="c-go" data-report-buy>購入へ進む →</button>
+      <button type="button" class="c-close" data-report-close>閉じる</button>
+    </dialog>
+  </section>
+
   <nav class="more" aria-label="同じ元素のほかのタイプ">
-    <h2>同じ元素のほかのタイプ</h2>
+    <h2 class="more-h">同じ元素のほかのタイプ</h2>
     <ul>
-      <li><a href="https://element-diagnosis-five.vercel.app/type/crsw">氷×片手剣タイプ「宿縁者」</a></li>
-      <li><a href="https://element-diagnosis-five.vercel.app/type/crcm">氷×両手剣タイプ「破氷者」</a></li>
-      <li><a href="https://element-diagnosis-five.vercel.app/type/crct">氷×法器タイプ「透徹者」</a></li>
-      <li><a href="https://element-diagnosis-five.vercel.app/type/crbw">氷×弓タイプ「凍眼者」</a></li>
+      <li><a href="/type/crsw"><span class="sib-w">片手剣</span><span class="sib-n">宿縁者</span><span class="sib-c">CRSW</span></a></li>
+      <li><a href="/type/crcm"><span class="sib-w">両手剣</span><span class="sib-n">破氷者</span><span class="sib-c">CRCM</span></a></li>
+      <li><a href="/type/crct"><span class="sib-w">法器</span><span class="sib-n">透徹者</span><span class="sib-c">CRCT</span></a></li>
+      <li><a href="/type/crbw"><span class="sib-w">弓</span><span class="sib-n">凍眼者</span><span class="sib-c">CRBW</span></a></li>
     </ul>
+    <a class="back" href="/#types-cryo" data-types-back="cryo">← 全35タイプ一覧に戻る（氷）</a>
     <p class="jg">心の影の側面を知る、もう一つの診断：<a href="https://element-diagnosis-five.vercel.app/jagan/" data-type-cta="related" data-destination="jagan_top">邪眼診断（50問・無料）</a></p>
   </nav>
 </body>

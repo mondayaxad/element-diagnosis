@@ -17,6 +17,8 @@ Preview 用の migration（`docs/sql/2026*.sql`）は本番では使わない。
 | 3 | `prod_03_reissue_and_constraints.sql` | Preview complete_14（再発行）＋本番制約の総点検 |
 | 4（04a） | `prod_04a_onboarding_required_state.sql` | 新規登録の初期状態を required にするだけ（保存の拒否はしない） |
 | 5（04b） | `prod_04b_onboarding_enforcement.sql` | 登録完了前の保存を DB で拒否（新コードの deploy と同意の記録を確認した後） |
+| 6 | `prod_06_jagan.sql` | 邪眼診断（保存・共有・¥1,000／¥3,000）。確認は `prod_86`、戻し草案は `prod_96` |
+| 7 | `prod_07_type_report.sql` | 元素診断のタイプ別レポート（¥1,000）の注文と固有リンク。確認は `prod_87`、戻し草案は `prod_97`。検証は `local_check/stage7.sh` |
 | 不変 | `prod_80_invariants_READONLY.sql` | S0 の不変項目（適用前と完全一致すること） |
 | 状態 | `prod_81_postcheck_READONLY.sql` | 段階ごとの状態 |
 | 戻し | `prod_91〜95_rollback_*_DRAFT_DO_NOT_RUN.sql` | 草案。本番では実行しない（95＝04b・94＝04a） |

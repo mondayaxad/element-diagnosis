@@ -40,6 +40,7 @@ const PUBLIC_FILES = [
   'ogp.jpeg',
   'purchase-complete.html',                                   // 購入完了ページ（Stripe の戻り先。noindex）
   'report-link.html',                                         // レポート固有リンクの入口（#t=。noindex・no-referrer）
+  'type-report.html',                                         // タイプ別レポートの固有リンクの入口（#t=。noindex・no-referrer）
   'js/report-purchase.js',                                    // 申込・固有リンク・マイページへの登録（全入口で共通）
   'js/lens-constellation.js',                                 // 完全解析の三つの人物像の図（宝石の惑星と星の軌道）
   'js/sample-buy.js',                                         // サンプルページの申込欄
@@ -48,6 +49,8 @@ const PUBLIC_FILES = [
   'js/sample-return.js',                                       // 完全解析サンプルの「申し込みに戻る」
   'js/ga.js',
   'js/type-page.js',                                          // タイプ解説ページの診断への導線の計測（type_diagnosis_cta_click）
+  'js/type-detail.js',                                        // タイプ解説ページ（type-v2）：一覧へ戻る時の元素・Preview 専用の欄
+  'js/type-report-texts.js',                                  // タイプ別レポート（report.html）：最新の解説文とタイプ名
   'js/return-to.js',                                          // 邪眼診断から来た人を、マイページ・規約などから邪眼診断へ戻す
   'complete-sample.html',                                     // 完全解析サンプル（結果ページの完全解析の欄からだけリンク・noindex）
   'assets/ogp/ogp-top-20261009.jpg',                          // TOP・完全解析サンプルの OGP（1200×630）
