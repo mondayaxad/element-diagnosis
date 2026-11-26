@@ -84,7 +84,7 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
     // 元素診断のタイプ別レポートの注文（metadata.app が 'element-diagnosis-type'。lib/type-report-purchase.mjs）。
     //   ETI・邪眼のどちらの注文でもないイベントだけをここで見る。タイプ別レポートの注文でもなければ null
     const TP = await import('../lib/type-report-purchase.mjs');
-    return TP.handleWebhook({ fetchImpl, conn, stripe, type: ev.type, obj });
+    return TP.handleWebhook({ fetchImpl, conn, stripe, type: ev.type, obj, onPaid: (orderId, gaRef) => scheduleTypeReportPurchase(conn, TP, orderId, gaRef) });
   }
 
   // ---- GA4 の purchase・refund（Measurement Protocol）。支払いの正は Stripe の Webhook（lib/ga4-mp.js）。
@@ -111,6 +111,22 @@ function createHandler({ env, fetchImpl, stripeFactory, logger = console, now = 
     const args = { env, fetchImpl, livemode: CP.livemodeOf(conn), transactionId, value: Number(o.amount), productId: o.product_key, logger };
     if (kind === 'paid' && o.status === 'paid') GA.schedulePurchase(waitUntil, { ...args, paidAtMs: Date.parse(o.paid_at), gaRef });
     if (kind === 'refunded') GA.scheduleRefund(waitUntil, args);
+  }
+
+  function scheduleTypeReportPurchase(conn, TP, orderId, gaRef) {
+    const livemode = CP.livemodeOf(conn);
+    if (typeof waitUntil !== 'function' || !GA.enabled(env, livemode)) return;
+    async function send() {
+      const rows = await CP.selectRows(fetchImpl, conn, `type_report_orders?id=eq.${encodeURIComponent(orderId)}&select=status,type_code,amount,paid_at`);
+      const order = rows[0];
+      if (!order || order.status !== 'paid' || !TP.TYPE_RE.test(order.type_code)) return;
+      const paidAtMs = Date.parse(order.paid_at);
+      if (!Number.isFinite(paidAtMs)) return;
+      // 購入リンクの確認が先に反映した場合や Stripe の再送でも、同じ注文には同じ計測 ID を使う。
+      await GA.sendPurchase({ env, fetchImpl, livemode, transactionId: GP.refOf(env, `type-report:${orderId}`),
+        value: Number(order.amount), productId: TP.PRODUCT_KEY, typeCode: order.type_code, paidAtMs, gaRef, logger });
+    }
+    try { waitUntil(send().catch(() => CP.logError(logger, 'ga4-mp', 'type_report_purchase_unavailable', CE.incidentId()))); } catch { /* 計測だけ */ }
   }
 
   async function onCheckoutCompleted(conn, stripe, ev, obj) {

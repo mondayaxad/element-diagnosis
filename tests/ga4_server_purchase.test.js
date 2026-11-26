@@ -81,28 +81,31 @@ const WH = 'whsec_live_fake_secret_for_ga4_tests';
 const VIEW = crypto.randomBytes(32).toString('base64url');
 const LIVE_ENV = { ...PROD_ENV, STRIPE_COMPLETE_WEBHOOK_SECRET: WH, COMPLETE_VIEW_TOKEN_SECRET: VIEW, GA4_API_SECRET: SECRET, JAGAN_PRODUCTION_ENABLED: 'true' };
 
-async function runWebhook({ app, rows, rpcResult, env = LIVE_ENV }) {
+async function runWebhook({ app, rows, rpcResult, env = LIVE_ENV, gaRef, paid = true, eventTypes = ['checkout.session.completed'] }) {
   const stripe = fakeStripe({ livemode: true });
   const orderId = crypto.randomUUID();
   const s = await stripe.client.checkout.sessions.create({ mode: 'payment', line_items: [{ price_data: { currency: 'jpy', unit_amount: rows[0].amount }, quantity: 1 }],
     metadata: { order_id: orderId, app, env: 'production' } });
-  stripe.pay(s.id);
+  if (gaRef) stripe.st.sessions[s.id].client_reference_id = gaRef;
+  if (paid) stripe.pay(s.id);
   const mp = [];
   const fetchImpl = async (url, init = {}) => {
     const u = new URL(url);
     if (u.host === 'www.google-analytics.com') { mp.push(JSON.parse(init.body)); return { ok: true, status: 204, json: async () => ({}) }; }
     const json = (b) => ({ ok: true, status: 200, json: async () => b, text: async () => JSON.stringify(b) });
     if (/\/rest\/v1\/rpc\//.test(u.pathname)) return json(rpcResult);
-    if (/\/rest\/v1\/(complete_orders|jagan_orders)$/.test(u.pathname)) return json(rows.map((r) => ({ ...r, id: orderId })));
+    if (/\/rest\/v1\/(complete_orders|jagan_orders|type_report_orders)$/.test(u.pathname)) return json(rows.map((r) => ({ ...r, id: orderId })));
     return json([]);
   };
   const pending = [];
   const Webhook = require('../api/stripe-webhook.js');
   const wh = Webhook.createHandler({ env, fetchImpl, stripeFactory: stripe.factory, logger: { error() {} }, waitUntil: (p) => pending.push(p) });
-  const { req } = eventRequest({ type: 'checkout.session.completed', objectId: s.id, secret: WH, livemode: true });
-  req.headers.host = PROD_HOST;
   const out = { code: 0, body: null, status(c) { this.code = c; return this; }, json(b) { this.body = b; return this; }, setHeader() {} };
-  await wh(req, out);
+  for (const type of eventTypes) {
+    const { req } = eventRequest({ type, objectId: s.id, secret: WH, livemode: true });
+    req.headers.host = PROD_HOST;
+    await wh(req, out);
+  }
   await Promise.all(pending);
   return { out, mp, orderId };
 }
@@ -144,6 +147,30 @@ test('振る舞い（邪眼）：支払いの反映で purchase を1回、ブラ
   assert.deepEqual([p.diagnosis_type, p.product_id, p.value, p.items[0].item_id], ['jagan', 'jagan_report_v1', 1000, 'jagan_report_v1']);
   // 反映されなかった（ignored）支払いは送らない
   assert.equal((await runWebhook({ app: JP.APP, rows, rpcResult: 'ignored:amount_mismatch' })).mp.length, 0);
+});
+
+test('タイプ別レポートの purchase：支払い済みだけを元のセッションで計測し、同じ注文の通知には同じ取引 ID を使う', async () => {
+  const row = { type_code: 'PYSW', amount: 1000, status: 'paid', paid_at: new Date(Date.now() - 1000).toISOString() };
+  const args = { app: 'element-diagnosis-type', rows: [row], rpcResult: 'noop', gaRef: 'ga1-123-456-789-0-type_page' };
+  const { out, mp, orderId } = await runWebhook({
+    ...args, eventTypes: ['checkout.session.completed', 'checkout.session.async_payment_succeeded'],
+  });
+  assert.equal(out.code, 200);
+  assert.equal(mp.length, 2);
+  assert.deepEqual(mp[0], mp[1], '同じ client_id・transaction_id で GA4 の重複排除が効く');
+  assert.equal(mp[0].client_id, '123.456');
+  const [{ name, params }] = mp[0].events;
+  assert.equal(name, 'purchase');
+  assert.deepEqual([params.session_id, params.source, params.product_id, params.type_code, params.currency, params.value],
+    [789, 'type_page', 'eti_type_report_v1', 'PYSW', 'JPY', 1000]);
+  assert.equal(params.items[0].item_id, 'eti_type_report_v1');
+  assert.equal(params.transaction_id, GP.refOf(LIVE_ENV, `type-report:${orderId}`));
+  assert.ok(!JSON.stringify(mp).includes(orderId));
+  assert.equal((await runWebhook({ ...args, rpcResult: 'applied', gaRef: null })).mp.length, 1);
+  assert.equal((await runWebhook({ ...args, paid: false, rpcResult: 'ignored:payment_not_paid' })).mp.length, 0);
+  assert.equal((await runWebhook({ ...args, rpcResult: 'ignored:amount_mismatch' })).mp.length, 0);
+  assert.equal((await runWebhook({ ...args, rows: [{ ...row, status: 'refunded' }] })).mp.length, 0);
+  assert.equal((await runWebhook({ ...args, env: { ...LIVE_ENV, GA4_API_SECRET: undefined } })).mp.length, 0);
 });
 
 
