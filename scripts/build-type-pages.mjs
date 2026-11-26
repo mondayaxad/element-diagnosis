@@ -122,6 +122,7 @@ export function renderTypePage(code) {
 <!-- 一覧へ戻った時に読んでいた元素を開く・Preview 専用の欄（標準プロフィール・タイプ別レポートの購入確認デモ） -->
 <script src="/js/type-detail.js" defer></script>
 ${d.head}
+<link rel="preconnect" href="https://checkout.stripe.com">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">

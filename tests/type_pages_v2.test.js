@@ -66,7 +66,10 @@ test('type-v2：標準プロフィール・タイプ別レポートは Preview �
     assert.match(h, /<button type="button" class="r-btn" data-report-open>今すぐアクセス →<\/button>/);
     assert.doesNotMatch(h, /表示用の仮値|受検者の平均ではありません/);
     assert.match(h, /<div class="report" id="report">/);
-    assert.doesNotMatch(h, /buy\.stripe\.com|checkout\.stripe|\/api\/complete-checkout/, `${c} は決済に接続しない`);
+    // 決済は購入 API（/api/type-report）経由だけ。Stripe の決済画面への直接のリンクは置かない（事前接続の link だけは許す）
+    assert.match(h, /<link rel="preconnect" href="https:\/\/checkout\.stripe\.com">/, `${c} は Stripe へ事前接続する`);
+    const body = h.replace('<link rel="preconnect" href="https://checkout.stripe.com">', '');
+    assert.doesNotMatch(body, /buy\.stripe\.com|checkout\.stripe|\/api\/complete-checkout/, `${c} は決済画面へ直接つながない`);
     const btn = /<button[^>]*data-report-open[^>]*>/.exec(h)[0];
     assert.doesNotMatch(btn, /data-type-cta/);
     assert.match(h, /<script src="\/js\/type-detail\.js" defer><\/script>/);
