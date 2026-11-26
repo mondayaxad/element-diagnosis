@@ -164,7 +164,7 @@ test('purchase の本文：参照があれば、その利用者・セッショ�
   // 参照が無い・壊れている時は合成の利用者
   assert.equal(GA.purchasePayload({ transactionId: REF, value: 1000, productId: 'jagan_report_v1', gaRef: 'x' }).client_id, GA.serverClientId(REF));
 });
-test('振る舞い：Webhook は Stripe の client_reference_id から参照を読み、その利用者で purchase を送る（元素診断・邪眼）', async () => {
+test('振る舞い：Webhook は Stripe の client_reference_id から参照を読み、その利用者で purchase を送る（元素診断・邪眼・タイプ別レポート）', async () => {
   const orig = CA.applyPaidSession;
   try {
     CA.applyPaidSession = async () => 'applied';
@@ -182,7 +182,7 @@ test('振る舞い：Webhook は Stripe の client_reference_id から参照を�
         if (u.host === 'www.google-analytics.com') { mp.push(JSON.parse(init.body)); return { ok: true, status: 204, json: async () => ({}) }; }
         const json = (b2) => ({ ok: true, status: 200, json: async () => b2, text: async () => JSON.stringify(b2) });
         if (/\/rest\/v1\/rpc\//.test(u.pathname)) return json(rpcResult);
-        if (/\/rest\/v1\/(complete_orders|jagan_orders)$/.test(u.pathname)) return json(rows.map((r) => ({ ...r, id: orderId })));
+        if (/\/rest\/v1\/(complete_orders|jagan_orders|type_report_orders)$/.test(u.pathname)) return json(rows.map((r) => ({ ...r, id: orderId })));
         return json([]);
       };
       const pending = [];
@@ -198,6 +198,20 @@ test('振る舞い：Webhook は Stripe の client_reference_id から参照を�
     const JP = await import('../lib/jagan-purchase.mjs');
     const dti = await run(JP.APP, [{ product_key: 'jagan_complete_v1', amount: 3000, status: 'paid', paid_at: new Date(Date.now() - 1000).toISOString(), idempotency_key: 'idem-x' }], 'applied');
     assert.equal(dti.length, 1); assert.equal(dti[0].client_id, '555.666'); assert.equal(dti[0].events[0].params.source, 'result');
+    const TP = await import('../lib/type-report-purchase.mjs');
+    const paidType = { type_code: 'ELCM', amount: 1000, status: 'paid', paid_at: new Date(Date.now() - 1000).toISOString() };
+    const typeReport = await run(TP.APP, [paidType], 'applied');
+    assert.equal(typeReport.length, 1);
+    assert.equal(typeReport[0].client_id, '555.666');
+    const event = typeReport[0].events[0];
+    assert.equal(event.name, 'purchase');
+    assert.equal(event.params.session_id, 1731700001);
+    assert.equal(event.params.product_id, TP.PRODUCT_KEY);
+    assert.equal(event.params.type_code, 'ELCM');
+    assert.deepEqual(event.params.items, [{ item_id: TP.PRODUCT_KEY, item_name: 'タイプ別レポート', item_category: '元素診断', price: 1000, quantity: 1, item_variant: 'ELCM' }]);
+    assert.deepEqual(await run(TP.APP, [{ ...paidType, status: 'refunded' }], 'noop'), []);
+    assert.deepEqual(await run(TP.APP, [paidType], 'ignored:payment_not_paid'), []);
+
   } finally { CA.applyPaidSession = orig; }
 });
 test('ブラウザ：申込の本文に GA4 の参照を付ける（元素診断・邪眼・マイページ）。決済・ログインの戻りは流入元にしない', () => {

@@ -46,6 +46,7 @@
     analysis: ['eti', 'eti_analysis_v1'], complete: ['eti', 'eti_complete_v1'],
     analysis_1000: ['eti', 'eti_analysis_v1'], direct_complete: ['eti', 'eti_complete_v1'],
     core1: ['eti', 'eti_core1_legacy'],
+    eti_type_report_v1: ['eti', 'eti_type_report_v1'],
     jagan_report: ['jagan', 'jagan_report_v1'], jagan_complete: ['jagan', 'jagan_complete_v1'],
     jagan_report_v1: ['jagan', 'jagan_report_v1'], jagan_complete_v1: ['jagan', 'jagan_complete_v1'],
   };
