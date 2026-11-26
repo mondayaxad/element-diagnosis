@@ -52,6 +52,11 @@ export const WEAPONS = {
 const WEAPON_ORDER = ['SW', 'CM', 'PL', 'CT', 'BW'];
 const BIG5 = [['O', '開放性'], ['C', '誠実性'], ['E', '外向性'], ['A', '協調性'], ['N', '神経症傾向']];
 
+// 参考として載せる、ゲーム内で元素と武器種が共通する主なキャラクター。
+const CHARACTER_EXAMPLES = {
+  PYCM: ['ディルック', 'マーヴィカ', 'ディシア', '嘉明', '辛炎'],
+};
+
 const typeName = (code) => /「([^」]+)」/.exec(DATA[code].h1)[1];
 // 文を「。」で区切る（文言は変えない）
 const sentences = (text) => text.split('。').filter((x) => x.trim()).map((x) => x + '。');
@@ -97,6 +102,15 @@ export function renderTypePage(code) {
     const c = code.slice(0, 2) + w;
     return `      <li><a href="/type/${c.toLowerCase()}"><span class="sib-w">${WEAPONS[w].name}</span><span class="sib-n">${typeName(c)}</span><span class="sib-c">${c}</span></a></li>`;
   }).join('\n');
+  const characters = CHARACTER_EXAMPLES[code] ?? [];
+  const characterSection = characters.length ? `
+  <section class="card" aria-labelledby="character-example">
+    <div class="card-h"><h2 id="character-example">${el.name}×${wp.name}の主なキャラクター</h2></div>
+    <ul class="tags" style="list-style:none">
+${characters.map((character) => `      <li class="tag">${character}</li>`).join('\n')}
+    </ul>
+    <p style="margin-top:10px">原神で元素と武器種が共通するキャラクターを掲載しています。</p>
+  </section>` : '';
   // Big Five：両端に「低い時・高い時」の言葉（結果ページの TRAIT_WORD）。45〜55 は中間
   const big5 = BIG5.map(([k, label]) => {
     const v = proto[k]; const hi = v > 55; const lo = v < 45;
@@ -272,7 +286,7 @@ ${d.head}
     <blockquote class="pull caution">${caution}</blockquote>` : ''}
     <div class="axis">${d.axis}</div>
     <div class="tags">${d.tags.map((t) => `<span class="tag">${t}</span>`).join('')}</div>
-  </section>
+  </section>${characterSection}
 
   <section class="prof" data-preview-only hidden aria-labelledby="prof-h">
     <div class="card">
