@@ -1,5 +1,5 @@
 {
-  "schema_version": "ISA-PROFILE-0.2.0",
+  "schema_version": "ISA-PROFILE-0.3.0",
   "future_horizon_years": 5,
   "summary": {
     "text": "一人で深く考える力と新しい考えに惹かれる知的好奇心を保ちながら、考えを一人でまとめてから、要点を短く言葉にして伝えることができ、静かな存在感と揺るがない信念を備えた人物。",
@@ -297,6 +297,8 @@
       "label": "一人で深く考える力",
       "inference_status": "user_answer",
       "confirmed": true,
+      "basis": "direct_choice",
+      "user_decision": "keep",
       "sources": [
         {
           "kind": "answer",
@@ -304,7 +306,8 @@
           "question": "K1",
           "option": "inner_focus",
           "question_text": "5年後も変わらずに残したい自分らしさはどれですか（2つまで）",
-          "option_label": "一人で深く考える力"
+          "option_label": "一人で深く考える力",
+          "mapping": "direct"
         },
         {
           "kind": "answer",
@@ -312,7 +315,9 @@
           "question": "K2",
           "option": "think",
           "question_text": "「あなたらしい」と言われるのは、どの場面に近いですか",
-          "option_label": "深く考えたうえで意見を出したとき"
+          "option_label": "深く考えたうえで意見を出したとき",
+          "mapping": "interpreted",
+          "mapping_status": "system_inferred"
         },
         {
           "kind": "answer",
@@ -320,7 +325,9 @@
           "question": "K4",
           "option": "no_alone",
           "question_text": "こう変わってしまったら「自分ではない」と感じるのはどれですか",
-          "option_label": "一人で考える時間がなくなる"
+          "option_label": "一人で考える時間がなくなる",
+          "mapping": "interpreted",
+          "mapping_status": "system_inferred"
         },
         {
           "kind": "observed_trait",
@@ -345,6 +352,8 @@
       "label": "新しい考えに惹かれる知的好奇心",
       "inference_status": "user_answer",
       "confirmed": true,
+      "basis": "direct_choice",
+      "user_decision": "keep",
       "sources": [
         {
           "kind": "answer",
@@ -352,7 +361,8 @@
           "question": "K1",
           "option": "curiosity",
           "question_text": "5年後も変わらずに残したい自分らしさはどれですか（2つまで）",
-          "option_label": "新しい考えに惹かれる知的好奇心"
+          "option_label": "新しい考えに惹かれる知的好奇心",
+          "mapping": "direct"
         },
         {
           "kind": "observed_trait",
@@ -371,12 +381,16 @@
         }
       ],
       "notes": []
-    },
+    }
+  ],
+  "protected_trait_candidates": [
     {
       "trait": "empathy",
       "label": "相手の立場をまず理解しようとする姿勢",
       "inference_status": "system_inferred",
       "confirmed": false,
+      "basis": "derived_from_current",
+      "user_decision": "undecided",
       "sources": [
         {
           "kind": "observed_trait",
@@ -401,6 +415,8 @@
       "label": "動く前に状況を整理する慎重さ",
       "inference_status": "system_inferred",
       "confirmed": false,
+      "basis": "derived_from_current",
+      "user_decision": "undecided",
       "sources": [
         {
           "kind": "observed_trait",
@@ -425,6 +441,8 @@
       "label": "目立たなくても役割を支え続ける責任感",
       "inference_status": "system_inferred",
       "confirmed": false,
+      "basis": "derived_from_current",
+      "user_decision": "undecided",
       "sources": [
         {
           "kind": "observed_trait",
@@ -449,6 +467,8 @@
       "label": "最終的には自分で選ぶ主体性",
       "inference_status": "system_inferred",
       "confirmed": false,
+      "basis": "derived_from_current",
+      "user_decision": "undecided",
       "sources": [
         {
           "kind": "observed_trait",
@@ -746,7 +766,9 @@
     },
     "preserve": [
       "inner_focus",
-      "curiosity",
+      "curiosity"
+    ],
+    "preserve_candidates": [
       "empathy",
       "deliberation",
       "supportive_commitment",
@@ -789,10 +811,10 @@
     },
     "quick_question_set_version": null,
     "ideal_question_set_version": "ISA-IDEAL-0.1.0",
-    "rule_version": "ISA-RULE-0.2.0",
+    "rule_version": "ISA-RULE-0.3.0",
     "catalog_version": "ISA-CATALOG-0.1.0",
     "consent_version": "ISA-CONSENT-0.1.0",
-    "profile_schema_version": "ISA-PROFILE-0.2.0",
+    "profile_schema_version": "ISA-PROFILE-0.3.0",
     "followups_asked": []
   },
   "inference_status": {
@@ -805,8 +827,8 @@
     "unknowns": [],
     "unresolved": []
   },
-  "persona_version": "ISA-RULE-0.2.0+draft.1da962c2",
-  "input_hash": "1da962c2",
+  "persona_version": "ISA-RULE-0.3.0+draft.c4681ca5",
+  "input_hash": "c4681ca5",
   "approval_status": "unconfirmed",
   "evaluation": {
     "phase": 2,

@@ -4,11 +4,13 @@ import { initialConsents, setConsent, isGranted, judgeRevocation } from './conse
 import { importEtiResult } from './eti_import.js';
 import { currentFromEti, currentFromQuick, validQuickAnswers } from './current.js';
 import { idealQuestionsFor, computeFollowups } from './adaptive.js';
-import { buildFutureSelfProfile, setApproval } from './profile.js';
+import { buildFutureSelfProfile } from './profile.js';
+import { AXES, validateRatings, lowAxes, REVIEW_REASONS, revisionQuestions, createLock, verifyLock, buildGreeting } from './persona.js';
+import { respond, MAX_USER_TURNS } from './dialogue.js';
 import { QUICK_QUESTIONS, IDEAL_QUESTIONS, BASE_QUESTION_COUNT, MAX_QUESTIONS } from './questions.js';
 import { UNKNOWN } from './catalog.js';
 
-export const STEPS = ['consent', 'current_select', 'eti_import', 'quick', 'current_review', 'ideal', 'draft'];
+export const STEPS = ['consent', 'current_select', 'eti_import', 'quick', 'current_review', 'ideal', 'draft', 'meet', 'evaluate', 'revise', 'home', 'dialogue', 'locked_view'];
 
 export function initialState(subjectId) {
   return {
@@ -20,9 +22,13 @@ export function initialState(subjectId) {
     idealAnswers: {}, idealIndex: 0,
     followups: [], overflow: [],
     profile: null,
+    // Phase 2：人格の版・評価・承認・固定。seq は時刻の代わりの通し番号（同じ操作なら同じ結果になるように）
+    persona: emptyPersona(),
+    dialogue: { persona_version: null, messages: [] },
     log: [],
   };
 }
+const emptyPersona = () => ({ seq: 0, confirmations: {}, versions: [], evaluations: [], approvals: [], locked: null, revision: null });
 
 const withLog = (s, ev) => ({ ...s, log: [...s.log, ev] });
 
@@ -118,15 +124,145 @@ export function idealDone(state) {
 }
 
 export function buildDraft(state) {
-  if (!idealDone(state)) throw new Error('ideal questions not complete');
-  const profile = buildFutureSelfProfile({ current: state.current, answers: state.idealAnswers, followups: state.followups, overflow: state.overflow });
-  return withLog({ ...state, profile, step: 'draft' }, { type: 'draft_built', persona_version: profile.persona_version });
+  return { ...rebuild(state, 'draft'), step: 'draft' };
 }
 
-export function markApproval(state, status) {
-  if (!state.profile) throw new Error('no profile');
-  return { ...state, profile: setApproval(state.profile, status) };
+// 下書きを作り直し、表示する版として記録する（同じ内容なら同じ版）
+function rebuild(state, origin) {
+  if (!idealDone(state)) throw new Error('ideal questions not complete');
+  const persona = state.persona || emptyPersona();
+  const profile = buildFutureSelfProfile({ current: state.current, answers: state.idealAnswers, followups: state.followups, overflow: state.overflow, confirmations: persona.confirmations });
+  const seq = persona.seq + 1;
+  const last = persona.versions[persona.versions.length - 1];
+  const versions = last && last.persona_version === profile.persona_version ? persona.versions
+    : [...persona.versions, { persona_version: profile.persona_version, seq, origin, status: 'unconfirmed' }];
+  return withLog({ ...state, profile, persona: { ...persona, seq, versions } }, { type: 'draft_built', origin, persona_version: profile.persona_version });
 }
+
+// ================================================================ Phase 2
+const needProfile = (s) => { if (!s.profile) throw new Error('no profile'); };
+const versionStatus = (persona, pv, status) => ({ ...persona, versions: persona.versions.map((v) => (v.persona_version === pv ? { ...v, status } : v)) });
+
+// 初対面
+export function meet(state) { needProfile(state); return { ...state, step: 'meet' }; }
+export const greetingOf = (state) => buildGreeting(state.profile);
+
+// 候補を「残したい」「残さない」「まだ決めない」。候補だけに効く。変えたら新しい版になる
+export function decideCandidate(state, trait, decision) {
+  needProfile(state);
+  if (!['keep', 'not_keep', 'undecided'].includes(decision)) throw new Error(`invalid decision ${decision}`);
+  if (!state.profile.protected_trait_candidates.some((c) => c.trait === trait) && !(state.persona.confirmations[trait])) throw new Error(`not a candidate: ${trait}`);
+  const confirmations = { ...state.persona.confirmations };
+  if (decision === 'undecided') delete confirmations[trait]; else confirmations[trait] = decision;
+  return { ...rebuild({ ...state, persona: { ...state.persona, confirmations } }, 'first_meeting_confirmation'), step: 'meet' };
+}
+
+export function toEvaluate(state) { needProfile(state); return { ...state, step: 'evaluate' }; }
+
+// 3軸評価。表示している版にだけ記録できる
+export function submitEvaluation(state, { persona_version, ratings, reasons = [] }) {
+  needProfile(state);
+  if (persona_version !== state.profile.persona_version) throw new Error('evaluation must be for the displayed persona version');
+  if (!validateRatings(ratings)) throw new Error('ratings must be integers 1-5 for all three axes');
+  const low = lowAxes(ratings);
+  for (const r of reasons) {
+    const def = REVIEW_REASONS.find((x) => x.id === r);
+    if (!def) throw new Error(`unknown reason ${r}`);
+  }
+  const seq = state.persona.seq + 1;
+  const ev = { persona_version, ratings: { ...ratings }, low_axes: low, reasons: [...reasons], seq };
+  return withLog({ ...state, persona: { ...state.persona, seq, evaluations: [...state.persona.evaluations, ev] } }, { type: 'evaluated', persona_version, low_axes: low });
+}
+
+export const latestEvaluation = (state, pv) => [...state.persona.evaluations].reverse().find((e) => e.persona_version === pv) || null;
+export function canApprove(state) {
+  if (!state.profile) return false;
+  const ev = latestEvaluation(state, state.profile.persona_version);
+  return !!ev && ev.low_axes.length === 0 && !(state.persona.locked && state.persona.locked.persona_version === state.profile.persona_version);
+}
+
+// 承認：表示している版・その版の評価（違和感の軸が無いもの）に紐づけて固定する
+export function approve(state, persona_version) {
+  needProfile(state);
+  if (persona_version !== state.profile.persona_version) throw new Error('approval must be for the displayed persona version');
+  const ev = latestEvaluation(state, persona_version);
+  if (!ev) throw new Error('evaluate the displayed version before approval');
+  if (ev.low_axes.length) throw new Error('resolve low-rated axes (review) before approval');
+  if (state.persona.locked && state.persona.locked.persona_version === persona_version) throw new Error('already approved');
+  const lock = createLock(state.profile, ev);
+  const seq = state.persona.seq + 1;
+  let persona = { ...state.persona, seq, locked: lock, approvals: [...state.persona.approvals, { persona_version, evaluation_seq: ev.seq, seq, content_hash: lock.content_hash, superseded: state.persona.locked ? state.persona.locked.persona_version : null }] };
+  if (state.persona.locked) persona = versionStatus(persona, state.persona.locked.persona_version, 'superseded');
+  persona = versionStatus(persona, persona_version, 'approved');
+  return withLog({ ...state, profile: { ...state.profile, approval_status: 'approved' }, persona, dialogue: { persona_version, messages: [] }, step: 'home' }, { type: 'approved', persona_version, content_hash: lock.content_hash });
+}
+
+// 違和感の理由を選んで、該当する質問だけを見直す
+export function startRevision(state, reasonIds) {
+  needProfile(state);
+  if (!reasonIds.length) throw new Error('choose at least one reason');
+  const questions = revisionQuestions(reasonIds, IDEAL_QUESTIONS.map((q) => q.id));
+  const pv = state.profile.persona_version;
+  let persona = { ...state.persona, revision: { from_version: pv, reasons: [...reasonIds], questions, index: 0 } };
+  if (!(state.persona.locked && state.persona.locked.persona_version === pv)) persona = versionStatus(persona, pv, 'needs_revision');
+  return withLog({ ...state, profile: { ...state.profile, approval_status: state.profile.approval_status === 'approved' ? 'approved' : 'needs_revision' }, persona, step: 'revise' }, { type: 'revision_started', from: pv, reasons: reasonIds });
+}
+
+// 見直しで出す質問：選んだ理由の質問 → 回答の変化で新たに必要になった（まだ答えていない）追加質問
+export function reviseQueue(state) {
+  const r = state.persona.revision;
+  if (!r) return [];
+  const all = idealQueue(state);
+  const base = r.questions.map((id) => all.find((q) => q.id === id)).filter(Boolean);
+  const extra = state.followups.filter((f) => !state.idealAnswers[f.id]);
+  return [...base, ...extra];
+}
+
+export function answerRevision(state, qid, optionIds) {
+  if (!state.persona.revision) throw new Error('no revision in progress');
+  if (!reviseQueue(state).some((q) => q.id === qid)) throw new Error(`question ${qid} is not part of this revision`);
+  const next = answerIdeal(state, qid, optionIds);
+  const q2 = reviseQueue(next);
+  const idx = q2.findIndex((q) => q.id === qid);
+  return { ...next, step: 'revise', idealIndex: state.idealIndex, persona: { ...next.persona, revision: { ...next.persona.revision, index: idx < 0 ? q2.length : idx + 1 } } };
+}
+
+export function finishRevision(state) {
+  if (!state.persona.revision) throw new Error('no revision in progress');
+  const s = rebuild(state, 'revision');
+  return { ...s, persona: { ...s.persona, revision: null }, step: 'meet' };
+}
+
+export function cancelRevision(state) {
+  return { ...state, persona: { ...state.persona, revision: null }, step: state.profile ? 'evaluate' : 'ideal' };
+}
+
+// 承認後：ホーム・固定した人格の表示・模擬対話
+export const goHome = (state) => { if (!state.persona.locked) throw new Error('no approved persona'); return { ...state, step: 'home' }; };
+export const viewLocked = (state) => ({ ...goHome(state), step: 'locked_view' });
+export const openDialogue = (state) => ({ ...goHome(state), step: 'dialogue' });
+// 承認済みの版から新しい版を作る（固定した版は、新しい版を承認するまで会話に使い続ける）
+export function reviseApproved(state, reasonIds) {
+  if (!state.persona.locked) throw new Error('no approved persona');
+  return startRevision(state, reasonIds);
+}
+
+// 模擬対話：固定した版だけを読み、会話の記録だけを足す（人格・判断原則・アバター・回答・同意には触れない）
+export function sendMessage(state, text) {
+  const lock = state.persona.locked;
+  if (!lock) throw new Error('no approved persona');
+  if (!verifyLock(lock)) throw new Error('approved persona failed integrity check');
+  const d = state.dialogue.persona_version === lock.persona_version ? state.dialogue : { persona_version: lock.persona_version, messages: [] };
+  const turns = d.messages.filter((m) => m.role === 'user').length;
+  if (turns >= MAX_USER_TURNS) throw new Error('dialogue turn limit reached');
+  const msg = String(text || '').trim();
+  if (!msg) throw new Error('empty message');
+  const reply = respond(lock, msg);
+  const messages = [...d.messages, { role: 'user', text: msg.slice(0, 400) }, { role: 'future_self', ...reply }];
+  return { ...state, dialogue: { persona_version: lock.persona_version, messages } };
+}
+export const dialogueTurnsLeft = (state) => MAX_USER_TURNS - state.dialogue.messages.filter((m) => m.role === 'user').length;
+export { AXES };
 
 export function goBack(state) {
   switch (state.step) {
@@ -136,6 +272,14 @@ export function goBack(state) {
     case 'current_review': return { ...state, step: state.current && state.current.source === 'eti_v2' ? 'eti_import' : 'quick', quickIndex: Math.max(0, QUICK_QUESTIONS.length - 1) };
     case 'ideal': return state.idealIndex > 0 ? { ...state, idealIndex: state.idealIndex - 1 } : { ...state, step: 'current_review' };
     case 'draft': return { ...state, step: 'ideal', idealIndex: Math.max(0, idealQueue(state).length - 1) };
+    case 'meet': return { ...state, step: 'draft' };
+    case 'evaluate': return { ...state, step: 'meet' };
+    case 'revise': {
+      const r = state.persona.revision;
+      if (r && r.index > 0) return { ...state, persona: { ...state.persona, revision: { ...r, index: r.index - 1 } } };
+      return cancelRevision(state);
+    }
+    case 'dialogue': case 'locked_view': return { ...state, step: 'home' };
     default: return state;
   }
 }
@@ -148,6 +292,7 @@ export function revoke(state, purpose) {
     if (a.target === 'current' && a.action === 'delete') s = { ...s, current: null };
     if (a.target === 'profile' && a.action === 'delete_and_regenerate') s = { ...s, profile: null, followups: [], overflow: [] };
     if (a.target === 'route' && a.action === 'goto_current_select') s = { ...s, step: 'current_select' };
+    if (a.target === 'persona_lifecycle' && a.action === 'delete') s = { ...s, persona: emptyPersona(), dialogue: { persona_version: null, messages: [] } };
   }
   return withLog(s, { type: 'revoke', purpose, actions: actions.map((a) => `${a.target}:${a.action}`) });
 }

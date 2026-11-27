@@ -1,6 +1,6 @@
 # 質問文と分岐理由（レビュー用・自動生成）
 
-質問セット：簡易 ISA-QUICK-0.1.0／理想 ISA-IDEAL-0.1.0／ルール ISA-RULE-0.2.0。すべて選択式。
+質問セット：簡易 ISA-QUICK-0.1.0／理想 ISA-IDEAL-0.1.0／ルール ISA-RULE-0.3.0。すべて選択式。
 
 > 生成元：`src/questions.js`・`src/adaptive.js`・`src/catalog.js`。手で編集せず `node alpha/ideal-self/scripts/export-questions.js` で作り直す。
 

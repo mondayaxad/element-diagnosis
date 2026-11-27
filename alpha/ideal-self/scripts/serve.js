@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml' };
-const SERVE_DIRS = ['src', 'fixtures'];
+const SERVE_DIRS = ['src', 'fixtures', 'assets'];
 const SERVE_FILES = ['index.html', 'styles.css'];
 
 export function createServer() {

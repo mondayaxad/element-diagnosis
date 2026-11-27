@@ -40,7 +40,9 @@ body {
 .top {
   position: sticky; top: 0; display: flex; align-items: center; gap: 8px;
   padding: calc(env(safe-area-inset-top) + 10px) 16px 10px;
-  background: linear-gradient(var(--bg) 60%, transparent);
+  background: rgba(11, 18, 36, .94);
+  backdrop-filter: blur(8px);
+  z-index: 5;
 }
 .brand { flex: 1; text-align: center; letter-spacing: .08em; color: var(--moon); font-size: 14px; }
 .brand span { color: var(--accent); }
@@ -97,3 +99,46 @@ summary { color: var(--muted); font-size: 13px; cursor: pointer; padding: 6px 0;
 @media (prefers-reduced-motion: no-preference) { .app > * { animation: fade .25s ease; } }
 @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 pre { white-space: pre-wrap; word-break: break-all; max-height: 50vh; overflow: auto; }
+
+/* ---- Phase 2：初対面・評価・ホーム・対話 ---- */
+.avatar { display: block; border-radius: 50%; box-shadow: 0 0 0 1px rgba(216,184,120,.35), 0 10px 40px rgba(120,140,220,.25); }
+.avatar-xl { width: 168px; height: 168px; margin: 8px auto 0; }
+.avatar-lg { width: 128px; height: 128px; margin: 4px auto 0; }
+.avatar-sm { width: 52px; height: 52px; flex: none; }
+.meet-hero, .home-hero { text-align: center; padding-top: 8px; }
+.meet-name { margin: 10px 0 0; color: var(--moon); letter-spacing: .12em; font-size: 15px; }
+.bubble { position: relative; margin: 16px 0 6px; padding: 14px 16px; border-radius: 18px; background: rgba(201,212,245,.08); border: 1px solid rgba(201,212,245,.22); font-size: 15.5px; line-height: 1.85; }
+.bubble p { margin: 2px 0; }
+.bubble::before { content: ""; position: absolute; top: -8px; left: 50%; margin-left: -8px; border: 8px solid transparent; border-top: 0; border-bottom-color: rgba(201,212,245,.22); }
+.eyebrow { margin: 0 0 6px; font-size: 12px; letter-spacing: .14em; color: var(--accent); font-weight: 600; }
+.pills { list-style: none; margin: 0; padding: 0; }
+.pills li { padding: 8px 0; border-top: 1px solid var(--card-line); }
+.pills li:first-child { border-top: 0; }
+.block { display: block; }
+.cand { padding: 10px 0; border-top: 1px solid var(--card-line); }
+.cand p { margin: 0 0 8px; }
+.seg { display: flex; gap: 6px; }
+.segbtn, .scalebtn { flex: 1; min-height: 44px; border-radius: 12px; border: 1px solid var(--card-line); background: rgba(255,255,255,.04); color: var(--text); font-size: 14px; }
+.segbtn[aria-pressed="true"], .scalebtn[aria-pressed="true"] { border-color: var(--accent); background: rgba(216,184,120,.18); color: var(--accent); font-weight: 600; }
+.scale { display: flex; gap: 8px; }
+.scalebtn { font-size: 17px; min-height: 48px; }
+.scale-legend { display: flex; justify-content: space-between; margin: 6px 2px 0; }
+.row-center { display: flex; align-items: center; gap: 12px; }
+.row-center h1 { margin: 0; font-size: 20px; }
+.home-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.home-grid > div { padding-top: 10px; border-top: 1px solid var(--card-line); }
+.home-grid > div:first-child { padding-top: 0; border-top: 0; }
+.home-grid p.small { margin: 2px 0; line-height: 1.5; }
+.chat { display: flex; flex-direction: column; gap: 10px; margin: 12px 0; }
+.msg { max-width: 86%; padding: 10px 14px; border-radius: 16px; font-size: 15px; line-height: 1.7; }
+.msg p { margin: 0; }
+.msg.fs { align-self: flex-start; background: rgba(201,212,245,.09); border: 1px solid rgba(201,212,245,.2); border-top-left-radius: 4px; }
+.msg.me { align-self: flex-end; background: rgba(216,184,120,.16); border: 1px solid rgba(216,184,120,.35); border-top-right-radius: 4px; }
+.msg.rewrite_blocked { border-color: var(--inf); }
+.msg.safety { border-color: var(--danger); }
+.msg .basis { margin-top: 6px; color: var(--muted); font-size: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--card-line); background: rgba(255,255,255,.04); color: var(--text); border-radius: 999px; padding: 8px 12px; font-size: 13px; min-height: 40px; }
+.chat-form { display: flex; gap: 8px; margin-top: 12px; }
+.chat-input { flex: 1; min-width: 0; min-height: 48px; border-radius: 14px; border: 1px solid var(--card-line); background: rgba(255,255,255,.05); color: var(--text); padding: 0 14px; font-size: 16px; }
+.btn.send { width: auto; margin: 0; padding: 0 18px; min-height: 48px; }

@@ -36,13 +36,14 @@ export function keptTraitsFromBase(answers) {
   return [...set];
 }
 
-function inversionQuestion(target, t, stage) {
+function inversionQuestion(target, t, stage, direct = true) {
   const tlabel = TRAITS[t].label;
   const glabel = (CAPABILITIES[target] || ASPIRATIONS[target]).label;
   return {
     id: `F_INV_${target}_${t}`, purpose: 'FOLLOWUP', kind: 'inversion', target, trait: t, stage,
-    text: `「${tlabel}」を残したいと選び、「${glabel}」も望んでいます。近いのはどちらですか`,
-    reason: `保護特性「${tlabel}」と「${glabel}」が逆向きに解釈されるおそれがあるため。本人の確認なしに性格を反転させない`,
+    // K1 で直接選んだ特性と、K2・K4 の回答から読み取った特性で言い方を分ける（読み取りを本人の選択として言わない）
+    text: direct ? `「${tlabel}」を残したいと選び、「${glabel}」も望んでいます。近いのはどちらですか` : `回答から「${tlabel}」を大切にしているように読み取れます。一方で「${glabel}」も望んでいます。近いのはどちらですか`,
+    reason: `${direct ? '保護特性' : '保護特性の候補'}「${tlabel}」と「${glabel}」が逆向きに解釈されるおそれがあるため。本人の確認なしに性格を反転させない`,
     options: [
       { id: 'augment', label: `「${TRAITS[t].short}」は保ったまま、必要な場面で「${glabel}」を使えるようにしたい` },
       { id: 'release', label: `「${TRAITS[t].short}」は手放してもよい。大きく変わりたい` },
@@ -92,10 +93,11 @@ export function computeFollowups(current, answers) {
   // 1. 保護特性と成長・憧れの緊張（単純な反転を防ぐ）。成長目標は「最終的に採用するもの」を対象にする
   const stage1Targets = [...(growth.viaFollowup ? [] : growth.caps), ...asp];
   const stage2Targets = growth.viaFollowup && !growth.pending ? growth.caps : [];
-  for (const target of stage1Targets) for (const t of INVERSION_RISKS[target] || []) if (kept.includes(t)) cands.push(inversionQuestion(target, t, 1));
+  const direct = new Set(pick('K1', answers, 'traits'));
+  for (const target of stage1Targets) for (const t of INVERSION_RISKS[target] || []) if (kept.includes(t)) cands.push(inversionQuestion(target, t, 1, direct.has(t)));
   // 1段目の確認で本人が「手放す」と答えた特性は、2段目で改めて確かめない（2段目の自分の回答は数えない。数えると質問が消えて回答も消える）
   const releasedStage1 = new Set(cands.filter((c) => (answers[c.id] || [])[0] === 'release').map((c) => c.trait));
-  for (const target of stage2Targets) for (const t of INVERSION_RISKS[target] || []) if (kept.includes(t) && !releasedStage1.has(t)) stage2.push(inversionQuestion(target, t, 2));
+  for (const target of stage2Targets) for (const t of INVERSION_RISKS[target] || []) if (kept.includes(t) && !releasedStage1.has(t)) stage2.push(inversionQuestion(target, t, 2, direct.has(t)));
   // 2. 現在像（観測・自己申告）と、残したい特性の食い違い
   for (const t of pick('K1', answers, 'traits')) {
     for (const [a, b] of OPPOSING_TRAITS) {

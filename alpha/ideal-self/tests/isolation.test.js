@@ -19,17 +19,19 @@ function walk(dir) {
     return [p];
   });
 }
-const RUNTIME = walk(ALPHA).filter((f) => /\.(js|html|css)$/.test(f) && !f.includes(`${path.sep}tests${path.sep}`) && !f.includes(`${path.sep}scripts${path.sep}`));
+const RUNTIME = walk(ALPHA).filter((f) => /\.(js|html|css|svg)$/.test(f) && !f.includes(`${path.sep}tests${path.sep}`) && !f.includes(`${path.sep}scripts${path.sep}`));
 
 test('画面で読み込むファイルに外部 URL・通信 API・分析 SDK が無い', () => {
   for (const f of RUNTIME) {
-    const src = fs.readFileSync(f, 'utf8');
     const rel = path.relative(ALPHA, f);
+    // SVG の名前空間の宣言（通信しない識別子）だけは許す
+    const src = fs.readFileSync(f, 'utf8').replace(/xmlns="http:\/\/www\.w3\.org\/2000\/svg"/g, '');
+    if (f.endsWith('.svg')) assert.doesNotMatch(src, /<script|href=|<foreignObject|<image/i, `${rel} に外部参照・スクリプトがあります`);
     assert.doesNotMatch(src, /https?:\/\//, `${rel} に外部 URL があります`);
     assert.doesNotMatch(src, /\/\/[a-z0-9-]+\.[a-z]{2,}/i, `${rel} にプロトコル省略の外部 URL があります`);
     assert.doesNotMatch(src, /\b(fetch|XMLHttpRequest|sendBeacon|WebSocket|EventSource|importScripts)\s*\(/, `${rel} に通信 API の呼び出しがあります`);
     assert.doesNotMatch(src, /gtag|dataLayer|googletagmanager|supabase|stripe|sentry|posthog|mixpanel|openai|anthropic/i, `${rel} に外部サービスの参照があります`);
-    assert.doesNotMatch(src, /@import|url\(/, `${rel} に外部リソースを読み込む CSS があります`);
+    assert.doesNotMatch(src, /@import|url\((?!#)/, `${rel} に外部リソースを読み込む CSS があります`); // url(#id) は文書内の参照
   }
 });
 

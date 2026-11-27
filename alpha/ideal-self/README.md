@@ -1,6 +1,8 @@
-# Ideal Self Agent α — Phase 1
+# Ideal Self Agent α — Phase 1・2
 
-本人1名向け・非公開・合成データ・外部送信なしの初回設定（説明・同意 → 現在像 → 理想像の質問 → 5年後の自分の下書き）。
+本人1名向け・非公開・合成データ・外部送信なし。
+Phase 1：説明・同意 → 現在像 → 理想像の質問 → 5年後の自分の下書き。
+Phase 2：初対面（固定の仮アバター）→ 3軸評価 → 見直しまたは承認（版の固定）→ 短い模擬対話（ルールベース）。
 
 - 本番ビルド（`scripts/build-public.js`）の許可リストに入っていないため、Vercel の dist には含まれない（`tests/isolation.test.js` で確認）。
 - LLM・画像生成・実アカウント接続・チャット・決済は無い。画面の CSP で外部への通信を禁止している。
@@ -33,8 +35,11 @@ node alpha/ideal-self/scripts/export-samples.js # 合成入力からの下書き
 | `src/eti_import.js` | ETI v2 取込の境界（本人確認・同意・所有者・版・欠損） |
 | `src/current.js` | 現在像（ETI 観測／簡易質問の自己申告） |
 | `src/profile.js` | `FutureSelfProfile` のルール生成（決定的） |
-| `src/state.js` | 画面の状態遷移（純粋関数。戻る・再操作・撤回） |
+| `src/state.js` | 画面の状態遷移（純粋関数。戻る・再操作・撤回・Phase 2 の初対面〜対話） |
+| `src/persona.js` | 固定の仮アバター、初対面の台詞、3軸評価と見直しの理由、承認した版の固定と検証 |
+| `src/dialogue.js` | 模擬対話（承認した版だけを読む・書き換えの依頼を断る） |
+| `assets/avatar-placeholder.svg` | 固定の仮アバター（オリジナル） |
 | `src/app.js` `index.html` `styles.css` | スマホ画面 |
 | `src/storage.js` | 「記憶の保存」に同意したときだけ localStorage |
 | `fixtures/synthetic_eti.js` | 合成 ETI 記録（本人・他者・欠損・旧版・未知版） |
-| `docs/PHASE1_REPORT.md` | 提出物（環境照合・差分・テスト結果・未確認事項） |
+| `docs/PHASE1_REPORT.md`・`docs/PHASE2_REPORT.md` | 提出物（環境照合・差分・テスト結果・未確認事項） |

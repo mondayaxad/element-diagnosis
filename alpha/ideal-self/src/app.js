@@ -6,6 +6,8 @@ import { TRAITS, VALUES, AXIS_LABELS, UNKNOWN } from './catalog.js';
 import { INFERENCE_STATUSES } from './profile.js';
 import { SYNTHETIC_RECORDS, SYNTHETIC_SUBJECT_ID } from '../fixtures/synthetic_eti.js';
 import * as store from './storage.js';
+import { REVIEW_REASONS, LOW_RATING_MAX, AVATAR, restoreLock } from './persona.js';
+import { SUGGESTIONS } from './dialogue.js';
 
 const app = document.getElementById('app');
 const backBtn = document.getElementById('back');
@@ -13,13 +15,22 @@ const progress = document.getElementById('progress');
 
 let state = (() => {
   const saved = store.load();
-  return saved && saved.consents && saved.consents.memory && saved.consents.memory.status === 'granted' ? saved : S.initialState(SYNTHETIC_SUBJECT_ID);
+  if (!(saved && saved.consents && saved.consents.memory && saved.consents.memory.status === 'granted')) return S.initialState(SYNTHETIC_SUBJECT_ID);
+  // 端末保存から戻すときは、承認した人格の内容を検証し直す（改変されていたら使わない）
+  const base = S.initialState(SYNTHETIC_SUBJECT_ID);
+  const persona = { ...base.persona, ...(saved.persona || {}) };
+  persona.locked = restoreLock(persona.locked);
+  const st = { ...base, ...saved, persona, dialogue: saved.dialogue || base.dialogue };
+  if (!persona.locked && ['home', 'dialogue', 'locked_view'].includes(st.step)) st.step = st.profile ? 'meet' : 'consent';
+  return st;
 })();
 let ui = { recordKey: null, multi: [], multiQ: null };
 
 function dispatch(fn) {
+  const prevStep = state.step;
   try { state = fn(state); } catch (e) { console.error(e); }
   ui.multi = []; ui.multiQ = null;
+  if (state.step !== prevStep) { ui.reasons = []; ui.forceReview = false; ui.ratings = null; }
   if (S.canPersist(state)) store.save(state); else store.clear();
   render();
   app.focus({ preventScroll: true });
@@ -187,17 +198,216 @@ const screens = {
 
   draft() {
     const p = state.profile;
-    const ev = (sources) => h('details', {}, h('summary', { text: '出所と根拠' }), h('ul', { class: 'ev' }, ...sources.map(srcLine)));
     return [
       h('h1', { text: '5年後の自分（下書き）' }),
       h('p', { class: 'notice', 'data-testid': 'disclaimer', text: p.disclaimer }),
       h('section', { class: 'card', 'data-testid': 'summary' }, h('p', { class: 'summary', text: p.summary.text }), tag('system_inferred', '下書き・システムの推論')),
+      ...profileDetail(p),
+      h('h2', { text: 'この下書きについて' }),
+      h('p', { class: 'small', 'data-testid': 'approval', text: `状態：${APPROVAL_LABEL[p.approval_status]}（版 ${p.persona_version}）` }),
+      btn('5年後の自分に会う', () => dispatch(S.meet), { testid: 'to-meet' }),
+      btn('回答を見直す', () => dispatch(S.goBack), { secondary: true }),
+      consentPanel(),
+    ];
+  },
+
+  meet() {
+    const p = state.profile;
+    const g = S.greetingOf(state);
+    const decide = (trait, d) => dispatch((s) => S.decideCandidate(s, trait, d));
+    const DEC = [['keep', '残したい'], ['not_keep', '残さない'], ['undecided', 'まだ決めない']];
+    return [
+      h('div', { class: 'meet-hero' },
+        avatarImg('avatar avatar-lg'),
+        h('p', { class: 'meet-name', text: '5年後のあなた' }),
+        h('p', { class: 'small', 'data-testid': 'meet-version' }, tag('system_inferred', '下書き'), ` 版 ${p.persona_version}`)),
+      h('section', { class: 'bubble', 'data-testid': 'greeting' }, ...g.lines.map((l) => h('p', { text: l }))),
+      h('p', { class: 'small', text: g.note }),
+      h('section', { class: 'card meet-card', 'data-testid': 'meet-core' }, h('h3', { class: 'eyebrow', text: '残す自分らしさ' }),
+        p.protected_traits.length ? h('ul', { class: 'pills' }, ...p.protected_traits.map((t) => h('li', { 'data-trait': t.trait }, t.label, ' ', tag('user_answer', BASIS_LABEL[t.basis]))))
+          : h('p', { class: 'small', text: 'まだありません。下の候補から「残したい」ものを選べます。' })),
+      p.protected_trait_candidates.length > 0 && h('section', { class: 'card', 'data-testid': 'meet-candidates' },
+        h('h3', { class: 'eyebrow', text: '残したいかどうか、確かめてください' }),
+        h('p', { class: 'small', text: 'あなたの回答や現在像から、アプリが読み取った候補です。「残したい」を選んだものだけが、残す自分らしさになります。' }),
+        ...p.protected_trait_candidates.map((c) => h('div', { class: 'cand', 'data-testid': `cand-${c.trait}`, 'data-decision': c.user_decision },
+          h('p', {}, c.label, ' ', tag('system_inferred', BASIS_LABEL[c.basis] || '推論')),
+          h('div', { class: 'seg' }, ...DEC.map(([d, label]) => h('button', { type: 'button', class: 'segbtn', 'aria-pressed': String(c.user_decision === d), 'data-testid': `cand-${c.trait}-${d}`, onclick: () => decide(c.trait, d) }, label)))))),
+      h('section', { class: 'card meet-card', 'data-testid': 'meet-growth' }, h('h3', { class: 'eyebrow', text: '育てたい力' }),
+        p.growth_targets.length ? h('ul', { class: 'pills' }, ...p.growth_targets.map((x) => h('li', {}, h('strong', { text: x.label }), h('span', { class: 'small block', text: x.behavior.text }))))
+          : h('p', { class: 'small', text: '未確定' })),
+      h('section', { class: 'card meet-card', 'data-testid': 'meet-aspiration' }, h('h3', { class: 'eyebrow', text: '憧れる魅力' }),
+        p.aspirational_traits.length ? h('ul', { class: 'pills' }, ...p.aspirational_traits.map((a) => h('li', {}, h('strong', { text: a.label }), h('span', { class: 'small block', text: a.integration.text }))))
+          : h('p', { class: 'small', text: '未確定' })),
+      btn('この人物を評価する', () => dispatch(S.toEvaluate), { testid: 'to-evaluate' }),
+      btn('下書きの詳細と根拠を見る', () => dispatch((s) => ({ ...s, step: 'draft' })), { secondary: true }),
+    ];
+  },
+
+  evaluate() {
+    const p = state.profile;
+    const ev = S.latestEvaluation(state, p.persona_version);
+    const r = ui.ratings && ui.ratingsFor === p.persona_version ? ui.ratings : (ev ? { ...ev.ratings } : {});
+    const setR = (axis, v) => { ui.ratings = { ...r, [axis]: v }; ui.ratingsFor = p.persona_version; ui.reasons = (ui.reasons || []).filter((id) => lowOf({ ...r, [axis]: v }).includes(reasonAxis(id))); render(); };
+    const complete = S.AXES.every((a) => r[a.id]);
+    const low = complete ? lowOf(r) : [];
+    const reasons = (ui.reasons || []);
+    const toggleReason = (id) => { ui.reasons = reasons.includes(id) ? reasons.filter((x) => x !== id) : [...reasons, id]; ui.ratings = r; ui.ratingsFor = p.persona_version; render(); };
+    const record = (then) => dispatch((s) => then(S.submitEvaluation(s, { persona_version: p.persona_version, ratings: r, reasons })));
+    const L = state.persona.locked;
+    if (L && L.persona_version === p.persona_version) {
+      // 承認済みの版：評価は承認時のまま。見直したい部分を選んで新しい版を作る（固定した版は変えない）
+      return [
+        h('div', { class: 'row-center' }, avatarImg('avatar avatar-sm'), h('div', {}, h('h1', { text: '人格を見直す' }), h('p', { class: 'small', text: `承認済みの版：${p.persona_version}` }))),
+        h('p', { class: 'small', text: '見直した部分から新しい版を作ります。新しい版を評価・承認するまで、会話は承認済みの版のままです。' }),
+        ...REVIEW_REASONS.map((x) => h('button', { type: 'button', class: 'opt', 'aria-pressed': String(reasons.includes(x.id)), 'data-testid': `reason-${x.id}`, onclick: () => toggleReason(x.id) },
+          h('span', { class: 'mark' }), h('span', {}, h('span', { class: 'badge', text: S.AXES.find((a) => a.id === x.axis).label }), x.label))),
+        btn('選んだ部分を見直す', () => dispatch((s) => S.reviseApproved(s, reasons)), { disabled: !reasons.length, testid: 'start-revision' }),
+        btn('ホームへ', () => dispatch(S.goHome), { secondary: true }),
+      ];
+    }
+    return [
+      h('div', { class: 'row-center' }, avatarImg('avatar avatar-sm'), h('div', {}, h('h1', { text: 'この人物を評価する' }), h('p', { class: 'small', 'data-testid': 'eval-version', text: `評価する版：${p.persona_version}` }))),
+      ...S.AXES.map((a) => h('section', { class: 'card', 'data-testid': `axis-${a.id}` },
+        h('h3', { text: a.label }), h('p', { class: 'small', text: a.question }),
+        h('div', { class: 'scale' }, ...[1, 2, 3, 4, 5].map((v) => h('button', { type: 'button', class: 'scalebtn', 'aria-pressed': String(r[a.id] === v), 'data-testid': `rate-${a.id}-${v}`, onclick: () => setR(a.id, v) }, String(v)))),
+        h('p', { class: 'scale-legend small' }, h('span', { text: 'あてはまらない' }), h('span', { text: 'とてもあてはまる' })))),
+      low.length > 0 && h('section', { class: 'card', 'data-testid': 'reasons' },
+        h('h3', { text: '違和感の理由（あてはまるものを選択）' }),
+        h('p', { class: 'small', text: '選んだ部分だけを、選択式の質問で見直します。ほかの回答はそのまま残ります。' }),
+        ...REVIEW_REASONS.filter((x) => low.includes(x.axis)).map((x) => h('button', { type: 'button', class: 'opt', 'aria-pressed': String(reasons.includes(x.id)), 'data-testid': `reason-${x.id}`, onclick: () => toggleReason(x.id) },
+          h('span', { class: 'mark' }), h('span', {}, h('span', { class: 'badge', text: S.AXES.find((a) => a.id === x.axis).label }), x.label)))),
+      low.length > 0
+        ? btn('選んだ部分を見直す', () => record((s) => S.startRevision(s, reasons)), { disabled: !reasons.length, testid: 'start-revision' })
+        : btn('この版を承認する', () => record((s) => S.approve(s, p.persona_version)), { disabled: !complete, testid: 'approve' }),
+      low.length > 0 && h('p', { class: 'small', text: '1・2 の軸があるあいだは承認できません。見直すか、評価を見直してください。' }),
+      !low.length && complete && btn('違和感があるので見直す', () => { ui.reasons = []; ui.ratings = r; ui.forceReview = true; render(); }, { secondary: true, testid: 'want-review' }),
+      ui.forceReview && !low.length && h('section', { class: 'card' }, h('h3', { text: '見直したい部分' }),
+        ...REVIEW_REASONS.map((x) => h('button', { type: 'button', class: 'opt', 'aria-pressed': String(reasons.includes(x.id)), onclick: () => { toggleReason(x.id); ui.forceReview = true; } }, h('span', { class: 'mark' }), h('span', { text: x.label }))),
+        btn('選んだ部分を見直す', () => record((s) => S.startRevision(s, reasons)), { disabled: !reasons.length })),
+    ];
+  },
+
+  revise() {
+    const queue = S.reviseQueue(state);
+    const rv = state.persona.revision;
+    const i = Math.min(rv.index, queue.length);
+    const done = queue.every((q) => (state.idealAnswers[q.id] || []).length) && S.idealDone(state);
+    if (i >= queue.length) {
+      return [h('h1', { text: '見直しはここまでです' }),
+        h('p', { class: 'lead', text: `見直した質問：${queue.map((q) => q.id).join('、')}。ほかの回答は変えていません。` }),
+        btn('見直した人物に会う', () => dispatch(S.finishRevision), { disabled: !done, testid: 'finish-revision' })];
+    }
+    const q = queue[i];
+    return questionScreen(q, `見直し ${i + 1} / ${queue.length}`, (ids) => dispatch((s) => S.answerRevision(s, q.id, ids)));
+  },
+
+  home() {
+    const L = state.persona.locked;
+    const p = L.profile;
+    const draftDiffers = state.profile && state.profile.persona_version !== L.persona_version;
+    return [
+      h('div', { class: 'home-hero', 'data-testid': 'home' },
+        avatarImg('avatar avatar-xl'),
+        h('p', { class: 'meet-name', text: '5年後のあなた' }),
+        h('p', { class: 'small', 'data-testid': 'home-version' }, tag('user_answer', '承認済み・固定'), ` 版 ${L.persona_version}`)),
+      h('section', { class: 'bubble' }, h('p', { text: L.greeting.lines[L.greeting.lines.length - 1] })),
+      h('section', { class: 'card home-grid' },
+        h('div', {}, h('p', { class: 'eyebrow', text: '残す自分らしさ' }), ...p.protected_traits.slice(0, 3).map((t) => h('p', { class: 'small', text: t.label }))),
+        h('div', {}, h('p', { class: 'eyebrow', text: '育てたい力' }), ...p.growth_targets.slice(0, 2).map((g) => h('p', { class: 'small', text: g.label }))),
+        h('div', {}, h('p', { class: 'eyebrow', text: '憧れる魅力' }), ...p.aspirational_traits.map((a) => h('p', { class: 'small', text: a.label })))),
+      h('section', { class: 'card' }, h('p', { class: 'eyebrow', text: '判断原則（固定）' }), h('ul', { class: 'ev' }, ...L.decision_principles.map((d) => h('li', { text: d.text })))),
+      btn('話す', () => dispatch(S.openDialogue), { testid: 'to-dialogue' }),
+      btn('承認した人格を見る', () => dispatch(S.viewLocked), { secondary: true, testid: 'to-locked' }),
+      draftDiffers && h('p', { class: 'small', 'data-testid': 'draft-pending', text: `見直し中の版（${state.profile.persona_version}）があります。承認するまでは、会話は上の承認済みの版で行います。` }),
+      draftDiffers && btn('見直し中の版を確かめる', () => dispatch(S.meet), { secondary: true }),
+      btn('人格を見直す（新しい版を作る）', () => { dispatch(S.toEvaluate); ui.forceReview = true; render(); }, { secondary: true, testid: 'revise-approved' }),
+      consentPanel(),
+    ];
+  },
+
+  locked_view() {
+    const L = state.persona.locked;
+    return [
+      h('h1', { text: '承認した人格（固定）' }),
+      h('p', { class: 'small', 'data-testid': 'locked-meta', text: `版 ${L.persona_version}／内容の確認値 ${L.content_hash}／アバター ${L.avatar.id}` }),
+      h('p', { class: 'small', text: 'この内容は会話から変わりません。変えるときは「人格を見直す」から新しい版を作り、改めて評価・承認します。' }),
+      ...profileDetail(L.profile),
+      h('details', { class: 'card' }, h('summary', { text: '固定した内容（JSON）' }), h('pre', { class: 'small', 'data-testid': 'locked-json', text: JSON.stringify(L, null, 2) })),
+    ];
+  },
+
+  dialogue() {
+    const L = state.persona.locked;
+    const msgs = state.dialogue.persona_version === L.persona_version ? state.dialogue.messages : [];
+    const left = S.dialogueTurnsLeft(state);
+    const input = h('input', { type: 'text', class: 'chat-input', 'data-testid': 'chat-input', maxlength: '200', placeholder: left > 0 ? 'ここに入力（この端末の中だけで処理）' : '今日はここまで', disabled: left <= 0 });
+    const send = (t) => { if (t && t.trim()) dispatch((s) => S.sendMessage(s, t)); };
+    return [
+      h('div', { class: 'row-center chat-head' }, avatarImg('avatar avatar-sm'), h('div', {}, h('p', { class: 'meet-name', text: '5年後のあなた' }), h('p', { class: 'small', 'data-testid': 'chat-version', text: `承認済みの版 ${L.persona_version} で話しています` }))),
+      h('p', { class: 'small', text: '短い模擬対話です（ルールで返答・外部送信なし）。会話から人格や判断原則は変わりません。' }),
+      h('div', { class: 'chat', 'data-testid': 'chat' },
+        h('div', { class: 'msg fs' }, h('p', { text: L.greeting.lines[0] }), h('p', { text: L.greeting.lines[L.greeting.lines.length - 1] })),
+        ...msgs.map((m) => (m.role === 'user'
+          ? h('div', { class: 'msg me' }, h('p', { text: m.text }))
+          : h('div', { class: `msg fs ${m.kind}`, 'data-kind': m.kind }, h('p', { text: m.text }),
+            m.basis.length > 0 && h('p', { class: 'basis small', text: `根拠：${m.basis.map((b) => basisText(b, L.profile)).join('／')}` }))))),
+      left > 0 && h('div', { class: 'chips' }, ...SUGGESTIONS.map((t) => h('button', { type: 'button', class: 'chip', onclick: () => send(t) }, t))),
+      h('form', { class: 'chat-form', onsubmit: (e) => { e.preventDefault(); send(input.value); } }, input, h('button', { type: 'submit', class: 'btn send', disabled: left <= 0, 'data-testid': 'chat-send' }, '送る')),
+      h('p', { class: 'small', 'data-testid': 'turns-left', text: `残り ${left} 回` }),
+      btn('ホームへ', () => dispatch(S.goHome), { secondary: true }),
+    ];
+  },
+};
+
+// ---- Phase 2 の小さな部品
+function avatarImg(cls) { return h('img', { class: cls, src: AVATAR.file, alt: '5年後のあなた（固定の仮アバター）', width: '240', height: '240', 'data-avatar': AVATAR.id }); }
+const lowOf = (r) => S.AXES.filter((a) => r[a.id] && r[a.id] <= LOW_RATING_MAX).map((a) => a.id);
+const reasonAxis = (id) => (REVIEW_REASONS.find((x) => x.id === id) || {}).axis;
+function basisText(b, p) {
+  if (b.element === 'decision_principles') return `判断原則 ${b.id}`;
+  if (b.element === 'growth_targets') return `育てたい力「${(p.growth_targets.find((g) => g.capability === b.id) || {}).label}」`;
+  if (b.element === 'protected_traits') return `残す自分らしさ「${TRAITS[b.id].label}」`;
+  if (b.element === 'core_values') return `価値観「${VALUES[b.id].label}」`;
+  if (b.element === 'lock') return `承認済みの版 ${b.id}`;
+  return `${b.element}:${b.id}`;
+}
+// 選択式の質問1問（理想像の質問と見直しで共通）
+function questionScreen(q, label, onAnswer) {
+  const multi = q.multi || 1;
+  const sel = ui.multiQ === q.id ? ui.multi : (state.idealAnswers[q.id] || []);
+  const choose = (oid) => {
+    if (multi === 1) return onAnswer([oid]);
+    let next = sel.includes(oid) ? sel.filter((x) => x !== oid) : [...sel.filter((x) => x !== UNKNOWN), oid];
+    if (oid === UNKNOWN) next = sel.includes(UNKNOWN) ? [] : [UNKNOWN];
+    if (next.length > multi) next = next.slice(next.length - multi);
+    ui.multi = next; ui.multiQ = q.id; render();
+  };
+  return [
+    h('p', {}, tag('purpose', label), ' ', tag('purpose', PURPOSE_LABELS[q.purpose])),
+    h('h1', { text: q.text }),
+    q.purpose === 'FOLLOWUP' && h('p', { class: 'reason', 'data-testid': 'followup-reason', text: `追加の確認：${q.reason}` }),
+    ...q.options.map((o) => h('button', { type: 'button', class: 'opt', 'aria-pressed': String(sel.includes(o.id)), 'data-testid': `opt-${o.id}`, onclick: () => choose(o.id) },
+      h('span', { class: 'mark' }), h('span', {}, o.badge && h('span', { class: 'badge', text: o.badge }), o.label))),
+    multi > 1 && btn('次へ', () => onAnswer(sel), { disabled: sel.length === 0, testid: 'multi-next' }),
+    q.why && h('details', {}, h('summary', { text: 'この質問の意図' }), h('p', { class: 'small', text: q.why })),
+  ];
+}
+
+const APPROVAL_LABEL = { unconfirmed: '未確認', needs_revision: '修正待ち', approved: '承認済み' };
+const BASIS_LABEL = { direct_choice: 'K1で直接選択', confirmed_at_first_meeting: '初対面で確認', inferred_from_answer: '回答（K2・K4）からの推論', derived_from_current: '現在像からの推論', demoted_by_answer: '本人の回答で要確認' };
+// 下書き（Phase 1）と、承認して固定した人格の表示で共通に使う
+function profileDetail(p) {
+  const ev = (sources) => h('details', {}, h('summary', { text: '出所と根拠' }), h('ul', { class: 'ev' }, ...sources.map(srcLine)));
+  return [
       legend(),
       p.observed_measurements.length > 0 && h('details', { class: 'card', 'data-testid': 'draft-measurements', 'data-status': 'observed' },
         h('summary', {}, tag('observed', 'ETI観測値'), 'ETIが測った値（解釈を含まない）'),
         h('dl', { class: 'kv' }, ...p.observed_measurements.flatMap((m) => [h('dt', { text: `${m.domain}.${m.axis}` }), h('dd', { text: String(m.value) })]))),
-      section('CORE｜残す自分らしさ', 'protected', p.protected_traits.map((t) => h('div', { class: 'card' },
-        h('h3', { text: t.label }), tag(t.inference_status), t.confirmed ? tag('user_answer', '保護する') : tag('system_inferred', '候補（本人未確認）'),
+      section('CORE｜残す自分らしさ', 'protected', p.protected_traits.map((t) => h('div', { class: 'card', 'data-trait': t.trait },
+        h('h3', { text: t.label }), tag(t.inference_status), tag('user_answer', BASIS_LABEL[t.basis] || '保護する'),
+        ...t.notes.map((n) => h('p', { class: 'small', text: n })), ev(t.sources)))),
+      p.protected_trait_candidates.length > 0 && section('CORE の候補（推論・本人の確認待ち）', 'candidates', p.protected_trait_candidates.map((t) => h('div', { class: 'card', 'data-trait': t.trait, 'data-decision': t.user_decision },
+        h('h3', { text: t.label }), tag('system_inferred', BASIS_LABEL[t.basis] || '候補'), t.user_decision === 'not_keep' && tag('user_answer', '残さないと回答'),
         ...t.notes.map((n) => h('p', { class: 'small', text: n })), ev(t.sources)))),
       p.released_traits.length > 0 && section('手放すと本人が選んだ特性', 'released', p.released_traits.map((t) => h('div', { class: 'card' }, h('h3', { text: t.label }), tag(t.inference_status), h('p', { class: 'small', text: t.why }), ev([t.source])))),
       section('GROWTH｜伸ばす力', 'growth', p.growth_targets.map((g) => h('div', { class: 'card' },
@@ -229,22 +439,16 @@ const screens = {
         followups: p.source_provenance.followups_asked.map((f) => f.id).join(', ') || 'なし',
       })),
       h('details', { class: 'card' }, h('summary', { text: '構造化データ（JSON）' }), h('pre', { class: 'small', style: null, 'data-testid': 'profile-json', text: JSON.stringify(p, null, 2) })),
-      h('h2', { text: 'この下書きについて' }),
-      h('p', { class: 'small', 'data-testid': 'approval', text: `状態：${{ unconfirmed: '未確認', needs_revision: '修正待ち', approved: '承認済み' }[p.approval_status]}` }),
-      h('div', { class: 'row' },
-        btn('修正したい', () => dispatch((s) => S.markApproval(s, 'needs_revision')), { secondary: true, testid: 'needs-revision' }),
-        btn('この下書きで進める', () => dispatch((s) => S.markApproval(s, 'approved')), { testid: 'approve' })),
-      btn('回答を見直す', () => dispatch(S.goBack), { secondary: true }),
-      consentPanel(),
-    ];
-  },
-};
+  ].filter(Boolean);
+}
 
 function section(title, id, kids) { return h('section', { 'data-testid': `sec-${id}` }, h('h2', { text: title }), ...(kids.length ? kids : [h('p', { class: 'small' }, tag('unknown'), '未回答・不明')])); }
 function legend() { return h('p', { class: 'small' }, ...Object.keys(INFERENCE_STATUSES).map((k) => tag(k))); }
 function srcLine(s) {
   if (!s) return h('li', { text: '不明' });
+  if (s.kind === 'answer' && s.mapping === 'interpreted') return h('li', { 'data-status': 'system_inferred' }, tag('system_inferred', '回答からの推論'), `${s.question}「${s.question_text}」→「${s.option_label}」から読み取った`);
   if (s.kind === 'answer') return h('li', { 'data-status': 'user_answer' }, tag('user_answer', '本人の選択'), `${s.question}「${s.question_text}」→「${s.option_label}」`);
+  if (s.kind === 'first_meeting_confirmation') return h('li', { 'data-status': 'user_answer' }, tag('user_answer', '初対面で確認'), s.decision === 'keep' ? '「残したい」を選んだ' : '「残さない」を選んだ');
   if (s.kind === 'observed_trait') {
     return s.evidence.kind === 'eti_scale'
       ? h('li', { 'data-status': s.status }, tag(s.status, 'アプリの推論'), `ETIの値から規則 ${s.evidence.rule} で導いた候補（`, tag('observed', 'ETI観測値'), `${s.evidence.axis_label}（${s.evidence.axis}）= ${s.evidence.value}）`)
@@ -278,8 +482,8 @@ function consentPanel() {
 function render() {
   const fn = screens[state.step] || screens.consent;
   app.replaceChildren(...fn().filter(Boolean));
-  backBtn.hidden = state.step === 'consent';
-  progress.textContent = { consent: '説明・同意', current_select: '現在像', eti_import: '現在像', quick: '現在像', current_review: '現在像', ideal: '理想像', draft: '下書き' }[state.step] || '';
+  backBtn.hidden = ['consent', 'home'].includes(state.step);
+  progress.textContent = { consent: '説明・同意', current_select: '現在像', eti_import: '現在像', quick: '現在像', current_review: '現在像', ideal: '理想像', draft: '下書き', meet: '初対面', evaluate: '評価', revise: '見直し', home: 'ホーム', dialogue: '対話', locked_view: '承認済み' }[state.step] || '';
   document.body.dataset.step = state.step;
 }
 backBtn.addEventListener('click', () => dispatch(S.goBack));

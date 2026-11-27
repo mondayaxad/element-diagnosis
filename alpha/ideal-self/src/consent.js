@@ -56,6 +56,12 @@ export function judgeRevocation(purpose, state) {
     } else if (state.profile) {
       actions.push({ target: 'profile', action: 'keep', why: 'ETI 由来の値を含まない（簡易質問経路）ため' });
     }
+    // Phase 2：承認・固定した人格・評価・会話も、ETI 由来の版を含むなら使い続けない
+    const p = state.persona;
+    const etiVersions = p ? [p.locked && p.locked.profile, state.profile].filter(Boolean).some((x) => x.source_provenance.current_source === 'eti_v2') : false;
+    if (p && (etiVersions || (state.current && state.current.source === 'eti_v2')) && (p.locked || p.versions.length)) {
+      actions.push({ target: 'persona_lifecycle', action: 'delete', why: 'ETI 由来の人格の版・評価・承認・固定した人格・会話のため。作り直して改めて評価・承認する' });
+    }
   }
   if (purpose === 'memory') {
     actions.push({ target: 'local_storage', action: 'delete', why: '保存の同意が撤回されたため' });

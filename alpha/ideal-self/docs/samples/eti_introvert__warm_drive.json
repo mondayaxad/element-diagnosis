@@ -1,8 +1,8 @@
 {
-  "schema_version": "ISA-PROFILE-0.2.0",
+  "schema_version": "ISA-PROFILE-0.3.0",
   "future_horizon_years": 5,
   "summary": {
-    "text": "相手の立場をまず理解しようとする姿勢と目立たなくても役割を支え続ける責任感を保ちながら、新しい関心は記録して残し、今の取り組みを区切りまで終えてから移ることができ、包容力と頼れる実行力を備えた人物。",
+    "text": "相手の立場をまず理解しようとする姿勢を保ちながら、新しい関心は記録して残し、今の取り組みを区切りまで終えてから移ることができ、包容力と頼れる実行力を備えた人物。",
     "inference_status": "system_inferred",
     "status": "draft",
     "note": "設計上の仮説。本人の確認前"
@@ -297,6 +297,8 @@
       "label": "相手の立場をまず理解しようとする姿勢",
       "inference_status": "user_answer",
       "confirmed": true,
+      "basis": "direct_choice",
+      "user_decision": "keep",
       "sources": [
         {
           "kind": "answer",
@@ -304,7 +306,8 @@
           "question": "K1",
           "option": "empathy",
           "question_text": "5年後も変わらずに残したい自分らしさはどれですか（2つまで）",
-          "option_label": "相手の立場をまず理解しようとする姿勢"
+          "option_label": "相手の立場をまず理解しようとする姿勢",
+          "mapping": "direct"
         },
         {
           "kind": "answer",
@@ -312,7 +315,9 @@
           "question": "K4",
           "option": "numb",
           "question_text": "こう変わってしまったら「自分ではない」と感じるのはどれですか",
-          "option_label": "人の気持ちに鈍くなる"
+          "option_label": "人の気持ちに鈍くなる",
+          "mapping": "interpreted",
+          "mapping_status": "system_inferred"
         },
         {
           "kind": "observed_trait",
@@ -331,44 +336,16 @@
         }
       ],
       "notes": []
-    },
-    {
-      "trait": "supportive_commitment",
-      "label": "目立たなくても役割を支え続ける責任感",
-      "inference_status": "user_answer",
-      "confirmed": true,
-      "sources": [
-        {
-          "kind": "answer",
-          "status": "user_answer",
-          "question": "K2",
-          "option": "support",
-          "question_text": "「あなたらしい」と言われるのは、どの場面に近いですか",
-          "option_label": "目立たないところで支えたとき"
-        },
-        {
-          "kind": "observed_trait",
-          "status": "system_inferred",
-          "trait": "supportive_commitment",
-          "evidence": {
-            "kind": "eti_scale",
-            "domain": "style",
-            "axis": "ROL",
-            "axis_label": "役割遂行",
-            "value": 70,
-            "value_status": "observed",
-            "rule": "ROL >= 65",
-            "rule_status": "system_inferred"
-          }
-        }
-      ],
-      "notes": []
-    },
+    }
+  ],
+  "protected_trait_candidates": [
     {
       "trait": "inner_focus",
       "label": "一人で深く考える力",
       "inference_status": "system_inferred",
       "confirmed": false,
+      "basis": "derived_from_current",
+      "user_decision": "undecided",
       "sources": [
         {
           "kind": "observed_trait",
@@ -393,6 +370,8 @@
       "label": "新しい考えに惹かれる知的好奇心",
       "inference_status": "system_inferred",
       "confirmed": false,
+      "basis": "derived_from_current",
+      "user_decision": "undecided",
       "sources": [
         {
           "kind": "observed_trait",
@@ -417,6 +396,8 @@
       "label": "動く前に状況を整理する慎重さ",
       "inference_status": "system_inferred",
       "confirmed": false,
+      "basis": "derived_from_current",
+      "user_decision": "undecided",
       "sources": [
         {
           "kind": "observed_trait",
@@ -437,10 +418,48 @@
       "notes": []
     },
     {
+      "trait": "supportive_commitment",
+      "label": "目立たなくても役割を支え続ける責任感",
+      "inference_status": "system_inferred",
+      "confirmed": false,
+      "basis": "inferred_from_answer",
+      "user_decision": "undecided",
+      "sources": [
+        {
+          "kind": "answer",
+          "status": "user_answer",
+          "question": "K2",
+          "option": "support",
+          "question_text": "「あなたらしい」と言われるのは、どの場面に近いですか",
+          "option_label": "目立たないところで支えたとき",
+          "mapping": "interpreted",
+          "mapping_status": "system_inferred"
+        },
+        {
+          "kind": "observed_trait",
+          "status": "system_inferred",
+          "trait": "supportive_commitment",
+          "evidence": {
+            "kind": "eti_scale",
+            "domain": "style",
+            "axis": "ROL",
+            "axis_label": "役割遂行",
+            "value": 70,
+            "value_status": "observed",
+            "rule": "ROL >= 65",
+            "rule_status": "system_inferred"
+          }
+        }
+      ],
+      "notes": []
+    },
+    {
       "trait": "self_direction_style",
       "label": "最終的には自分で選ぶ主体性",
       "inference_status": "system_inferred",
       "confirmed": false,
+      "basis": "derived_from_current",
+      "user_decision": "undecided",
       "sources": [
         {
           "kind": "observed_trait",
@@ -686,15 +705,11 @@
     },
     {
       "id": "DP_CONTINUITY",
-      "text": "成長のために「理解」「支える力」を手放す選択はしない（本人が変更を承認した場合を除く）",
+      "text": "成長のために「理解」を手放す選択はしない（本人が変更を承認した場合を除く）",
       "basis": [
         {
           "element": "protected_traits",
           "id": "empathy"
-        },
-        {
-          "element": "protected_traits",
-          "id": "supportive_commitment"
         }
       ],
       "inference_status": "system_inferred",
@@ -727,11 +742,13 @@
       "inference_status": "user_answer"
     },
     "preserve": [
-      "empathy",
-      "supportive_commitment",
+      "empathy"
+    ],
+    "preserve_candidates": [
       "inner_focus",
       "curiosity",
       "deliberation",
+      "supportive_commitment",
       "self_direction_style"
     ],
     "avoid": {
@@ -771,10 +788,10 @@
     },
     "quick_question_set_version": null,
     "ideal_question_set_version": "ISA-IDEAL-0.1.0",
-    "rule_version": "ISA-RULE-0.2.0",
+    "rule_version": "ISA-RULE-0.3.0",
     "catalog_version": "ISA-CATALOG-0.1.0",
     "consent_version": "ISA-CONSENT-0.1.0",
-    "profile_schema_version": "ISA-PROFILE-0.2.0",
+    "profile_schema_version": "ISA-PROFILE-0.3.0",
     "followups_asked": []
   },
   "inference_status": {
@@ -787,8 +804,8 @@
     "unknowns": [],
     "unresolved": []
   },
-  "persona_version": "ISA-RULE-0.2.0+draft.154b7078",
-  "input_hash": "154b7078",
+  "persona_version": "ISA-RULE-0.3.0+draft.4e4ebba7",
+  "input_hash": "4e4ebba7",
   "approval_status": "unconfirmed",
   "evaluation": {
     "phase": 2,

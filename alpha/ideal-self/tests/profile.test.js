@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { S, F, etiCurrent, quickCurrent, answerAll, QUIET_CHARISMA, WARM_DRIVE, ALL_UNKNOWN } from './helpers.js';
-import { buildFutureSelfProfile } from '../src/profile.js';
+import { buildFutureSelfProfile, setApproval } from '../src/profile.js';
 import { RULE_VERSION } from '../src/catalog.js';
 
 const draft = (s) => S.buildDraft(s).profile;
@@ -62,9 +62,11 @@ test('観測・本人回答・推論・不明が区別され、推論は本人�
   const walk = (x) => { if (Array.isArray(x)) x.forEach(walk); else if (x && typeof x === 'object') { if ('inference_status' in x && typeof x.inference_status === 'string') assert.ok(allowed.includes(x.inference_status), x.inference_status); Object.values(x).forEach(walk); } };
   walk(p);
   // 本人が選んでいない観測特性は「システムの推論（候補）」で、confirmed にならない
-  const cand = p.protected_traits.filter((t) => !t.confirmed);
+  // 本人が選んでいない観測特性は、保護特性ではなく候補（推論）。保護特性には確定したものだけが入る
+  const cand = p.protected_trait_candidates.filter((t) => t.basis === 'derived_from_current');
   assert.ok(cand.length > 0);
-  for (const t of cand) { assert.equal(t.inference_status, 'system_inferred'); assert.ok(t.sources.every((s) => s.kind === 'observed_trait')); }
+  for (const t of cand) { assert.equal(t.inference_status, 'system_inferred'); assert.equal(t.confirmed, false); assert.ok(t.sources.every((s) => s.kind === 'observed_trait')); }
+  for (const t of p.protected_traits) assert.equal(t.confirmed, true);
   // 振る舞い・統合・要約・判断原則は推論
   for (const g of p.growth_targets) assert.equal(g.behavior.inference_status, 'system_inferred');
   for (const a of p.aspirational_traits) assert.equal(a.integration.inference_status, 'system_inferred');
@@ -155,9 +157,9 @@ test('Phase 2 の評価3軸を紐づけられる構造がある（評価UIは未
   assert.ok(p.expression_profile.phase2_constraints.do_not_infer_from_scales.includes('gender'));
 });
 
-test('承認状態は 未確認・修正待ち・承認済み だけ', () => {
-  let s = S.buildDraft(answerAll(etiCurrent(), QUIET_CHARISMA));
-  s = S.markApproval(s, 'needs_revision'); assert.equal(s.profile.approval_status, 'needs_revision');
-  s = S.markApproval(s, 'approved'); assert.equal(s.profile.approval_status, 'approved');
-  assert.throws(() => S.markApproval(s, 'final'));
+test('承認状態の値は 未確認・修正待ち・承認済み だけ（遷移は persona_lifecycle.test.js で確認）', () => {
+  const p = draft(answerAll(etiCurrent(), QUIET_CHARISMA));
+  assert.equal(p.approval_status, 'unconfirmed');
+  assert.throws(() => setApproval(p, 'final'));
+  for (const st of ['unconfirmed', 'needs_revision', 'approved']) assert.equal(setApproval(p, st).approval_status, st);
 });

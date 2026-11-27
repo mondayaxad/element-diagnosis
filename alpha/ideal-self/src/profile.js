@@ -8,7 +8,7 @@ import { IDEAL_QUESTIONS, IDEAL_SET_VERSION, QUICK_SET_VERSION } from './questio
 import { CONSENT_VERSION } from './consent.js';
 import { resolveGrowthCaps } from './adaptive.js';
 
-export const PROFILE_SCHEMA_VERSION = 'ISA-PROFILE-0.2.0'; // 0.2.0：observed_measurements・protection_check を追加
+export const PROFILE_SCHEMA_VERSION = 'ISA-PROFILE-0.3.0'; // 0.3.0：protected_trait_candidates（K2・K4・現在像からの候補）を分離。0.2.0：observed_measurements・protection_check
 export const FUTURE_HORIZON_YEARS = 5;
 export const INFERENCE_STATUSES = {
   observed: '尺度の観測値（ETI）',
@@ -81,8 +81,9 @@ const isUnknownAns = (answers, qid) => { const a = answers[qid]; return !a || a.
  *   answers   : { [questionId]: optionId[] }（基本12問＋追加質問）
  *   followups : 実際に出した追加質問（computeFollowups().followups）
  *   overflow  : 上限で出せなかった追加質問
+ *   confirmations : 初対面画面での候補の確認 { [trait]: 'keep' | 'not_keep' }（候補にだけ効く）
  */
-export function buildFutureSelfProfile({ current, answers, followups = [], overflow = [] }) {
+export function buildFutureSelfProfile({ current, answers, followups = [], overflow = [], confirmations = {} }) {
   const unresolved = [];
   const unknowns = [];
   const fq = Object.fromEntries(followups.map((f) => [f.id, f]));
@@ -100,18 +101,24 @@ export function buildFutureSelfProfile({ current, answers, followups = [], overf
   for (const qid of current.unknowns || []) unknowns.push({ field: 'observed_traits', ref: qid, why: '簡易質問で「わからない」と回答' });
 
   // ---------- protected_traits（CORE）
+  // 保護特性（protected_traits）になるのは、本人が直接選んだもの（K1・F_KEEP）と、初対面画面で本人が「残したい」と確かめた候補だけ。
+  // K2（場面）・K4（失いたくない変化）の回答から読み取った特性や、現在像から導いた特性は「候補」（protected_trait_candidates・推論）。
   const prot = new Map(); // trait -> entry
-  const addProt = (trait, ref, status = 'user_answer') => {
-    if (!prot.has(trait)) prot.set(trait, { trait, label: TRAITS[trait].label, inference_status: status, confirmed: status === 'user_answer', sources: [], notes: [] });
-    const e = prot.get(trait);
-    if (status === 'user_answer' && e.inference_status !== 'user_answer') { e.inference_status = 'user_answer'; e.confirmed = true; }
-    if (ref) e.sources.push(ref);
+  const entry = (trait) => {
+    if (!prot.has(trait)) prot.set(trait, { trait, label: TRAITS[trait].label, inference_status: 'system_inferred', confirmed: false, basis: null, user_decision: 'undecided', sources: [], notes: [] });
+    return prot.get(trait);
   };
-  for (const qid of ['K1', 'K2', 'K4', 'F_KEEP']) {
+  const addDirect = (trait, ref) => { const e = entry(trait); e.inference_status = 'user_answer'; e.confirmed = true; e.basis = 'direct_choice'; e.sources.push(ref); };
+  const addInterpreted = (trait, ref) => { const e = entry(trait); if (!e.basis) e.basis = 'inferred_from_answer'; e.sources.push({ ...ref, mapping: 'interpreted', mapping_status: 'system_inferred' }); };
+  for (const qid of ['K1', 'F_KEEP']) {
     const q = allQ[qid]; if (!q || !answers[qid]) continue;
-    for (const o of selectedOptions(q, answers)) for (const t of o.traits || []) addProt(t, answerRef(q, o.id));
+    for (const o of selectedOptions(q, answers)) for (const t of o.traits || []) addDirect(t, { ...answerRef(q, o.id), mapping: 'direct' });
   }
-  // 本人が選んだ特性が現在像にもあれば、その導出（推論）を別の根拠として並べる（本人の選択とは区別して追える）
+  for (const qid of ['K2', 'K4']) {
+    const q = allQ[qid]; if (!q || !answers[qid]) continue;
+    for (const o of selectedOptions(q, answers)) for (const t of o.traits || []) addInterpreted(t, answerRef(q, o.id));
+  }
+  // 現在像にもある特性は、その導出（推論）を別の根拠として並べる（本人の選択とは区別して追える）
   for (const t of observed_traits) if (prot.has(t.trait)) prot.get(t.trait).sources.push(derivationRef(t));
   const released = [];
   const release = (trait, ref, why) => {
@@ -128,7 +135,8 @@ export function buildFutureSelfProfile({ current, answers, followups = [], overf
     if (f.kind === 'observed_mismatch') {
       const e = prot.get(f.trait);
       if (a === 'observed') {
-        if (e) { e.confirmed = false; e.notes.push(`本人は「ふだんは${TRAITS[f.observed].short}のほうが近い」と回答。現在の特性ではなく憧れの可能性があるため要確認`); }
+        // 直接選んでいても、本人が「ふだんは逆」と答えたら候補に戻し、初対面画面で確かめる
+        if (e) { e.confirmed = false; e.inference_status = 'system_inferred'; e.basis = 'demoted_by_answer'; e.notes.push(`本人は「ふだんは${TRAITS[f.observed].short}のほうが近い」と回答。現在の特性ではなく憧れの可能性があるため要確認`); }
         unresolved.push({ field: 'protected_traits', ref: f.id, why: `「${TRAITS[f.trait].label}」は残す特性か憧れかが未確定` });
       } else if (a === 'chosen' || a === 'both') {
         if (e) e.notes.push(a === 'chosen' ? `現在像（${current.source === 'eti_v2' ? 'ETI' : '簡易質問'}）とは逆向きだが、本人は「こちらが近い」と回答` : '本人は「場面によって両方ある」と回答');
@@ -141,18 +149,38 @@ export function buildFutureSelfProfile({ current, answers, followups = [], overf
       if (isUnknownAns(answers, f.id)) unresolved.push({ field: 'protected_traits', ref: f.id, why: '変えたい部分が未確定。変更せずに保護している' });
     }
   }
-  // 観測（または自己申告）された特性で、本人が選んでおらず、手放してもおらず、本人の保護特性と逆向きでもないものは「候補」
+  // 現在像の特性で、まだ無く、手放してもおらず、本人が直接選んだ特性と逆向きでもないものは「候補」
   const releasedIds = new Set(released.map((r) => r.trait));
+  const directNow = () => new Set([...prot.values()].filter((e) => e.confirmed).map((e) => e.trait));
   for (const t of observed_traits) {
     if (prot.has(t.trait) || releasedIds.has(t.trait)) continue;
-    const opposed = OPPOSING_TRAITS.some(([a, b]) => (a === t.trait && prot.has(b)) || (b === t.trait && prot.has(a)));
-    if (opposed) continue;
-    addProt(t.trait, derivationRef(t), 'system_inferred');
+    const d = directNow();
+    if (OPPOSING_TRAITS.some(([a, b]) => (a === t.trait && d.has(b)) || (b === t.trait && d.has(a)))) continue;
+    const e = entry(t.trait); e.basis = 'derived_from_current'; e.sources.push(derivationRef(t));
   }
-  const protected_traits = [...prot.values()].sort((a, b) => Number(b.confirmed) - Number(a.confirmed) || order(a.trait, b.trait, TRAITS));
-  if (!protected_traits.some((p) => p.confirmed)) unknowns.push({ field: 'protected_traits', why: '本人が選んだ保護特性がない' });
-  const keepIds = protected_traits.filter((p) => p.confirmed).map((p) => p.trait);
-  const keepAll = protected_traits.map((p) => p.trait);
+  // 初対面画面での本人の確認（候補だけに効く）
+  const appliedConfirmations = {};
+  for (const e of prot.values()) {
+    if (e.confirmed) continue;
+    const d = confirmations[e.trait];
+    if (d === 'keep') {
+      e.confirmed = true; e.inference_status = 'user_answer'; e.user_decision = 'keep'; e.basis_before = e.basis; e.basis = 'confirmed_at_first_meeting';
+      e.sources.push({ kind: 'first_meeting_confirmation', status: 'user_answer', trait: e.trait, decision: 'keep' });
+      appliedConfirmations[e.trait] = 'keep';
+    } else if (d === 'not_keep') {
+      e.user_decision = 'not_keep';
+      e.sources.push({ kind: 'first_meeting_confirmation', status: 'user_answer', trait: e.trait, decision: 'not_keep' });
+      appliedConfirmations[e.trait] = 'not_keep';
+    }
+  }
+  for (const e of prot.values()) if (e.confirmed) e.user_decision = 'keep';
+  const sortT = (a, b) => order(a.trait, b.trait, TRAITS);
+  const protected_traits = [...prot.values()].filter((e) => e.confirmed).sort(sortT);
+  const protected_trait_candidates = [...prot.values()].filter((e) => !e.confirmed).sort(sortT);
+  if (!protected_traits.length) unknowns.push({ field: 'protected_traits', why: '本人が選んだ・確かめた保護特性がない' });
+  const keepIds = protected_traits.map((p) => p.trait);
+  // 反転を避ける制約や振る舞いの土台には、本人が「残さない」と答えた候補以外を使う（確かめるまでは慎重に扱う）
+  const keepAll = [...keepIds, ...protected_trait_candidates.filter((c) => c.user_decision !== 'not_keep').map((c) => c.trait)];
 
   // ---------- growth_targets（GROWTH）
   const capRefs = new Map();
@@ -257,7 +285,7 @@ export function buildFutureSelfProfile({ current, answers, followups = [], overf
   core_values.slice(0, 3).forEach((v, i) => {
     let text = VALUE_PRINCIPLES[v.value];
     const basis = [{ element: 'core_values', id: v.value }];
-    if (i === 0 && modTrait) { text += `。${TRAIT_MODIFIERS[modTrait]}`; basis.push({ element: 'protected_traits', id: modTrait }); }
+    if (i === 0 && modTrait) { text += `。${TRAIT_MODIFIERS[modTrait]}`; basis.push({ element: keepIds.includes(modTrait) ? 'protected_traits' : 'protected_trait_candidates', id: modTrait }); }
     decision_principles.push({ id: `DP_VALUE_${v.value}`, text, basis, inference_status: 'system_inferred', status: 'draft' });
   });
   const e4 = (answers.E4 || [])[0];
@@ -279,7 +307,8 @@ export function buildFutureSelfProfile({ current, answers, followups = [], overf
     impression_intent: pick1('E3'),
     under_pressure: pick1('E4'),
     growth_pace: pick1('G3'),
-    preserve: keepAll,
+    preserve: keepIds,
+    preserve_candidates: keepAll.filter((t) => !keepIds.includes(t)),
     avoid: { items: avoid, inference_status: 'system_inferred' },
     phase2_constraints: {
       tone_presets: 'not_used',
@@ -307,7 +336,7 @@ export function buildFutureSelfProfile({ current, answers, followups = [], overf
     followups_asked: followups.map((f) => ({ id: f.id, kind: f.kind, reason: f.reason })),
   };
 
-  const inputForHash = { current: { source: current.source, measurements: current.measurements, traits: current.traits, values: current.values, unknowns: current.unknowns, scales: current.scales, provenance: current.provenance }, answers, followups: followups.map((f) => f.id), overflow: overflow.map((f) => f.id), rule: RULE_VERSION };
+  const inputForHash = { current: { source: current.source, measurements: current.measurements, traits: current.traits, values: current.values, unknowns: current.unknowns, scales: current.scales, provenance: current.provenance }, answers, followups: followups.map((f) => f.id), overflow: overflow.map((f) => f.id), confirmations: appliedConfirmations, rule: RULE_VERSION };
   const input_hash = fnv1a(canonical(inputForHash));
 
   return {
@@ -318,6 +347,7 @@ export function buildFutureSelfProfile({ current, answers, followups = [], overf
     observed_traits,
     observed_scales: current.scales || null,
     protected_traits,
+    protected_trait_candidates,
     released_traits: released,
     growth_targets,
     aspirational_traits,

@@ -59,7 +59,8 @@ test('指摘1：本人が「残したい」と選んだことは、ETI からの
   assert.equal(derived[0].evidence.axis, 'E');
   assert.equal(derived[0].evidence.value_status, 'observed');
   // 本人が選んでいない候補は推論のみ・未確認
-  const cand = p.protected_traits.find((t) => t.trait === 'deliberation');
+  assert.ok(!p.protected_traits.some((t) => t.trait === 'deliberation'));
+  const cand = p.protected_trait_candidates.find((t) => t.trait === 'deliberation');
   assert.equal(cand.confirmed, false);
   assert.deepEqual(cand.sources.map((s) => s.status), ['system_inferred']);
 });

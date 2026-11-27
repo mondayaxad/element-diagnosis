@@ -130,7 +130,7 @@ test('不正な選択（数・存在しない選択肢・未知の質問）は�
 test('同意撤回（ETI）：取り込んだ値・ETI 由来の現在像・下書きを消し、現在像の選び直しへ', () => {
   let s = S.buildDraft(answerAll(etiCurrent(), QUIET_CHARISMA));
   const actions = judgeRevocation('eti_import', s).map((a) => `${a.target}:${a.action}`);
-  assert.deepEqual(actions, ['imported_eti:delete', 'current:delete', 'ideal_answers:keep', 'profile:delete_and_regenerate', 'route:goto_current_select']);
+  assert.deepEqual(actions, ['imported_eti:delete', 'current:delete', 'ideal_answers:keep', 'profile:delete_and_regenerate', 'route:goto_current_select', 'persona_lifecycle:delete']);
   s = S.revoke(s, 'eti_import');
   assert.equal(s.imported, null); assert.equal(s.current, null); assert.equal(s.profile, null);
   assert.equal(s.consents.eti_import.status, 'revoked');
