@@ -1,0 +1,10 @@
+{
+  "name": "ideal-self-alpha",
+  "private": true,
+  "type": "module",
+  "description": "Ideal Self Agent α Phase 1（本人1名・非公開・合成データ・外部送信なし）。本番ビルド（scripts/build-public.js）の配信対象外。",
+  "scripts": {
+    "start": "node scripts/serve.js",
+    "test": "node --test tests/*.test.js"
+  }
+}

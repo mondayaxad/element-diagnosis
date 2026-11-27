@@ -1,0 +1,621 @@
+{
+  "schema_version": "ISA-PROFILE-0.1.0",
+  "future_horizon_years": 5,
+  "summary": {
+    "text": "一人で深く考える力と新しい考えに惹かれる知的好奇心を保ちながら、考えを一人でまとめてから、要点を短く言葉にして伝えることができ、静かな存在感と揺るがない信念を備えた人物。",
+    "inference_status": "system_inferred",
+    "status": "draft",
+    "note": "設計上の仮説。本人の確認前"
+  },
+  "observed_traits": [
+    {
+      "trait": "curiosity",
+      "label": "新しい考えに惹かれる知的好奇心",
+      "inference_status": "observed",
+      "source": "eti_v2",
+      "evidence": {
+        "kind": "eti_scale",
+        "domain": "personality",
+        "axis": "O",
+        "axis_label": "開放性",
+        "value": 78,
+        "rule": "O >= 65"
+      }
+    },
+    {
+      "trait": "inner_focus",
+      "label": "一人で深く考える力",
+      "inference_status": "observed",
+      "source": "eti_v2",
+      "evidence": {
+        "kind": "eti_scale",
+        "domain": "personality",
+        "axis": "E",
+        "axis_label": "外向性",
+        "value": 24,
+        "rule": "E <= 35"
+      }
+    },
+    {
+      "trait": "empathy",
+      "label": "相手の立場をまず理解しようとする姿勢",
+      "inference_status": "observed",
+      "source": "eti_v2",
+      "evidence": {
+        "kind": "eti_scale",
+        "domain": "personality",
+        "axis": "A",
+        "axis_label": "協調性",
+        "value": 68,
+        "rule": "A >= 65"
+      }
+    },
+    {
+      "trait": "supportive_commitment",
+      "label": "目立たなくても役割を支え続ける責任感",
+      "inference_status": "observed",
+      "source": "eti_v2",
+      "evidence": {
+        "kind": "eti_scale",
+        "domain": "style",
+        "axis": "ROL",
+        "axis_label": "役割遂行",
+        "value": 70,
+        "rule": "ROL >= 65"
+      }
+    },
+    {
+      "trait": "deliberation",
+      "label": "動く前に状況を整理する慎重さ",
+      "inference_status": "observed",
+      "source": "eti_v2",
+      "evidence": {
+        "kind": "eti_scale",
+        "domain": "style",
+        "axis": "REF",
+        "axis_label": "熟考",
+        "value": 82,
+        "rule": "REF >= 65"
+      }
+    },
+    {
+      "trait": "self_direction_style",
+      "label": "最終的には自分で選ぶ主体性",
+      "inference_status": "observed",
+      "source": "eti_v2",
+      "evidence": {
+        "kind": "eti_scale",
+        "domain": "style",
+        "axis": "AUT",
+        "axis_label": "自律",
+        "value": 72,
+        "rule": "AUT >= 65"
+      }
+    }
+  ],
+  "observed_scales": {
+    "personality": {
+      "O": 78,
+      "C": 62,
+      "E": 24,
+      "A": 68,
+      "N": 58
+    },
+    "style": {
+      "AGY": 40,
+      "REL": 55,
+      "ROL": 70,
+      "REF": 82,
+      "AUT": 72
+    },
+    "valuesCentered": {
+      "SD": 0.62,
+      "ST": 0.05,
+      "HE": -0.1,
+      "AC": 0.1,
+      "PO": -0.6,
+      "SE": -0.2,
+      "CO": -0.15,
+      "TR": -0.46,
+      "BE": 0.33,
+      "UN": 0.41
+    }
+  },
+  "protected_traits": [
+    {
+      "trait": "inner_focus",
+      "label": "一人で深く考える力",
+      "inference_status": "user_answer",
+      "confirmed": true,
+      "sources": [
+        {
+          "kind": "answer",
+          "question": "K1",
+          "option": "inner_focus",
+          "question_text": "5年後も変わらずに残したい自分らしさはどれですか（2つまで）",
+          "option_label": "一人で深く考える力"
+        },
+        {
+          "kind": "answer",
+          "question": "K2",
+          "option": "think",
+          "question_text": "「あなたらしい」と言われるのは、どの場面に近いですか",
+          "option_label": "深く考えたうえで意見を出したとき"
+        },
+        {
+          "kind": "answer",
+          "question": "K4",
+          "option": "no_alone",
+          "question_text": "こう変わってしまったら「自分ではない」と感じるのはどれですか",
+          "option_label": "一人で考える時間がなくなる"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "trait": "curiosity",
+      "label": "新しい考えに惹かれる知的好奇心",
+      "inference_status": "user_answer",
+      "confirmed": true,
+      "sources": [
+        {
+          "kind": "answer",
+          "question": "K1",
+          "option": "curiosity",
+          "question_text": "5年後も変わらずに残したい自分らしさはどれですか（2つまで）",
+          "option_label": "新しい考えに惹かれる知的好奇心"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "trait": "empathy",
+      "label": "相手の立場をまず理解しようとする姿勢",
+      "inference_status": "system_inferred",
+      "confirmed": false,
+      "sources": [
+        {
+          "kind": "observed_trait",
+          "trait": "empathy",
+          "evidence": {
+            "kind": "eti_scale",
+            "domain": "personality",
+            "axis": "A",
+            "axis_label": "協調性",
+            "value": 68,
+            "rule": "A >= 65"
+          }
+        }
+      ],
+      "notes": []
+    },
+    {
+      "trait": "deliberation",
+      "label": "動く前に状況を整理する慎重さ",
+      "inference_status": "system_inferred",
+      "confirmed": false,
+      "sources": [
+        {
+          "kind": "observed_trait",
+          "trait": "deliberation",
+          "evidence": {
+            "kind": "eti_scale",
+            "domain": "style",
+            "axis": "REF",
+            "axis_label": "熟考",
+            "value": 82,
+            "rule": "REF >= 65"
+          }
+        }
+      ],
+      "notes": []
+    },
+    {
+      "trait": "supportive_commitment",
+      "label": "目立たなくても役割を支え続ける責任感",
+      "inference_status": "system_inferred",
+      "confirmed": false,
+      "sources": [
+        {
+          "kind": "observed_trait",
+          "trait": "supportive_commitment",
+          "evidence": {
+            "kind": "eti_scale",
+            "domain": "style",
+            "axis": "ROL",
+            "axis_label": "役割遂行",
+            "value": 70,
+            "rule": "ROL >= 65"
+          }
+        }
+      ],
+      "notes": []
+    },
+    {
+      "trait": "self_direction_style",
+      "label": "最終的には自分で選ぶ主体性",
+      "inference_status": "system_inferred",
+      "confirmed": false,
+      "sources": [
+        {
+          "kind": "observed_trait",
+          "trait": "self_direction_style",
+          "evidence": {
+            "kind": "eti_scale",
+            "domain": "style",
+            "axis": "AUT",
+            "axis_label": "自律",
+            "value": 72,
+            "rule": "AUT >= 65"
+          }
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "released_traits": [],
+  "growth_targets": [
+    {
+      "capability": "clear_expression",
+      "label": "必要な場面で自分の意思をはっきり伝える力",
+      "inference_status": "user_answer",
+      "sources": [
+        {
+          "kind": "answer",
+          "question": "G1",
+          "option": "clear_expression",
+          "question_text": "5年後までにいちばん伸ばしたい力はどれですか",
+          "option_label": "必要な場面で自分の意思をはっきり伝える力"
+        },
+        {
+          "kind": "answer",
+          "question": "G2",
+          "option": "meeting",
+          "question_text": "いま「もう少しできたら」と感じるのは、どの場面ですか",
+          "option_label": "話し合いで意見を言いそびれる"
+        }
+      ],
+      "mode": "augment",
+      "mode_status": "user_answer",
+      "gap": {
+        "current_scene": "話し合いで意見を言いそびれる",
+        "desired": "必要な場面で自分の意思をはっきり伝える力",
+        "current_scene_status": "user_answer"
+      },
+      "behavior": {
+        "text": "考えを一人でまとめてから、要点を短く言葉にして伝える",
+        "built_on": "inner_focus",
+        "inference_status": "system_inferred"
+      },
+      "constraints": []
+    }
+  ],
+  "aspirational_traits": [
+    {
+      "aspiration": "quiet_presence",
+      "label": "静かな存在感",
+      "inference_status": "user_answer",
+      "sources": [
+        {
+          "kind": "answer",
+          "question": "E1",
+          "option": "quiet_presence",
+          "question_text": "5年後のあなたは、周りからどう感じられていたいですか（2つまで）",
+          "option_label": "静かな存在感"
+        }
+      ],
+      "compatible_with": [
+        "inner_focus",
+        "deliberation"
+      ],
+      "tension": [],
+      "integration": {
+        "text": "「内省・整理」を土台にした静かな存在感",
+        "inference_status": "system_inferred"
+      }
+    },
+    {
+      "aspiration": "unwavering_conviction",
+      "label": "揺るがない信念",
+      "inference_status": "user_answer",
+      "sources": [
+        {
+          "kind": "answer",
+          "question": "E1",
+          "option": "unwavering_conviction",
+          "question_text": "5年後のあなたは、周りからどう感じられていたいですか（2つまで）",
+          "option_label": "揺るがない信念"
+        }
+      ],
+      "compatible_with": [
+        "self_direction_style",
+        "inner_focus"
+      ],
+      "tension": [],
+      "integration": {
+        "text": "「主体性・内省」を土台にした揺るがない信念",
+        "inference_status": "system_inferred"
+      }
+    }
+  ],
+  "core_values": [
+    {
+      "value": "SD",
+      "label": "自分の生き方を自分で選べること",
+      "statuses": [
+        "user_answer",
+        "observed"
+      ],
+      "sources": [
+        {
+          "kind": "answer",
+          "question": "K3",
+          "option": "SD",
+          "question_text": "判断に迷ったとき、最後まで手放したくない価値観はどれですか（2つまで）",
+          "option_label": "自分の生き方を自分で選べること"
+        },
+        {
+          "kind": "eti_values_centered",
+          "evidence": {
+            "kind": "eti_values_centered",
+            "axis": "SD",
+            "centered": 0.62,
+            "rank": 1,
+            "rule": "centered > 0.25・上位3"
+          }
+        }
+      ],
+      "inference_status": "user_answer",
+      "user_selected": true
+    },
+    {
+      "value": "UN",
+      "label": "立場にかかわらず人が公平に扱われること",
+      "statuses": [
+        "user_answer",
+        "observed"
+      ],
+      "sources": [
+        {
+          "kind": "answer",
+          "question": "K3",
+          "option": "UN",
+          "question_text": "判断に迷ったとき、最後まで手放したくない価値観はどれですか（2つまで）",
+          "option_label": "立場にかかわらず人が公平に扱われること"
+        },
+        {
+          "kind": "eti_values_centered",
+          "evidence": {
+            "kind": "eti_values_centered",
+            "axis": "UN",
+            "centered": 0.41,
+            "rank": 2,
+            "rule": "centered > 0.25・上位3"
+          }
+        }
+      ],
+      "inference_status": "user_answer",
+      "user_selected": true
+    },
+    {
+      "value": "BE",
+      "label": "身近な人が幸せに暮らせること",
+      "statuses": [
+        "observed"
+      ],
+      "sources": [
+        {
+          "kind": "eti_values_centered",
+          "evidence": {
+            "kind": "eti_values_centered",
+            "axis": "BE",
+            "centered": 0.33,
+            "rank": 3,
+            "rule": "centered > 0.25・上位3"
+          }
+        }
+      ],
+      "inference_status": "observed",
+      "user_selected": false
+    }
+  ],
+  "decision_principles": [
+    {
+      "id": "DP_VALUE_SD",
+      "text": "最後は自分で選ぶ。選んだ理由を自分の言葉で説明できるようにする。大事な判断は、一人で考える時間を経てから下す",
+      "basis": [
+        {
+          "element": "core_values",
+          "id": "SD"
+        },
+        {
+          "element": "protected_traits",
+          "id": "inner_focus"
+        }
+      ],
+      "inference_status": "system_inferred",
+      "status": "draft"
+    },
+    {
+      "id": "DP_VALUE_UN",
+      "text": "立場にかかわらず、公平に扱われているかを確かめてから決める",
+      "basis": [
+        {
+          "element": "core_values",
+          "id": "UN"
+        }
+      ],
+      "inference_status": "system_inferred",
+      "status": "draft"
+    },
+    {
+      "id": "DP_VALUE_BE",
+      "text": "身近な人の暮らしに与える影響を、判断の前に考える",
+      "basis": [
+        {
+          "element": "core_values",
+          "id": "BE"
+        }
+      ],
+      "inference_status": "system_inferred",
+      "status": "draft"
+    },
+    {
+      "id": "DP_PRESSURE_organize",
+      "text": "困ったときは、落ち着いて状況を整理し、短く方針を示す",
+      "basis": [
+        {
+          "element": "answer",
+          "id": "E4",
+          "option": "organize"
+        }
+      ],
+      "inference_status": "system_inferred",
+      "status": "draft"
+    },
+    {
+      "id": "DP_CONTINUITY",
+      "text": "成長のために「内省」「好奇心」を手放す選択はしない（本人が変更を承認した場合を除く）",
+      "basis": [
+        {
+          "element": "protected_traits",
+          "id": "inner_focus"
+        },
+        {
+          "element": "protected_traits",
+          "id": "curiosity"
+        }
+      ],
+      "inference_status": "system_inferred",
+      "status": "draft"
+    }
+  ],
+  "expression_profile": {
+    "presence": [
+      "quiet_presence",
+      "unwavering_conviction"
+    ],
+    "channel": {
+      "id": "small_group",
+      "label": "少人数の話し合い",
+      "inference_status": "user_answer"
+    },
+    "impression_intent": {
+      "id": "core",
+      "label": "言葉は少なくても芯がある",
+      "inference_status": "user_answer"
+    },
+    "under_pressure": {
+      "id": "organize",
+      "label": "落ち着いて状況を整理し、短く方針を示す",
+      "inference_status": "user_answer"
+    },
+    "growth_pace": {
+      "id": "gradual",
+      "label": "少しずつ確実に積み上げる",
+      "inference_status": "user_answer"
+    },
+    "preserve": [
+      "inner_focus",
+      "curiosity",
+      "empathy",
+      "deliberation",
+      "supportive_commitment",
+      "self_direction_style"
+    ],
+    "avoid": {
+      "items": [
+        "常に場の中心にいることを前提にした振る舞い",
+        "誰とでも積極的に交流することを理想の標準とする話し方",
+        "新しい考えを頭ごなしに退ける態度",
+        "相手の気持ちを置き去りにする断定",
+        "考える間を置かずに即断を迫る押しの強さ",
+        "周囲の期待にそのまま従う受け身の態度"
+      ],
+      "inference_status": "system_inferred"
+    },
+    "phase2_constraints": {
+      "tone_presets": "not_used",
+      "avatar": "original_idealized_character",
+      "do_not_infer_from_scales": [
+        "gender",
+        "face",
+        "ethnicity",
+        "age"
+      ],
+      "identity_lock_after_approval": true
+    }
+  },
+  "source_provenance": {
+    "current_source": "eti_v2",
+    "eti": {
+      "source": "eti_v2",
+      "record_ref": "syn-sess-0001",
+      "diagnosis_version": "ETI-2.0",
+      "item_set_version": "ETI-ITEM-2.0.0",
+      "scoring_version": "ETI-SCORE-2.0.0",
+      "completed_at": "2026-11-01T12:00:00.000Z",
+      "consent_version": "ISA-CONSENT-0.1.0",
+      "synthetic": true
+    },
+    "quick_question_set_version": null,
+    "ideal_question_set_version": "ISA-IDEAL-0.1.0",
+    "rule_version": "ISA-RULE-0.1.0",
+    "catalog_version": "ISA-CATALOG-0.1.0",
+    "consent_version": "ISA-CONSENT-0.1.0",
+    "profile_schema_version": "ISA-PROFILE-0.1.0",
+    "followups_asked": []
+  },
+  "inference_status": {
+    "legend": {
+      "observed": "尺度の観測値（ETI）",
+      "user_answer": "本人の回答・選択",
+      "system_inferred": "システムの推論（下書き・本人未確認）",
+      "unknown": "不明"
+    },
+    "unknowns": [],
+    "unresolved": []
+  },
+  "persona_version": "ISA-RULE-0.1.0+draft.097e5517",
+  "input_hash": "097e5517",
+  "approval_status": "unconfirmed",
+  "evaluation": {
+    "phase": 2,
+    "scale": [
+      1,
+      5
+    ],
+    "ratings": null,
+    "axes": [
+      {
+        "id": "self_continuity",
+        "label": "自分らしさ",
+        "question": "自分と本質的につながっていると感じるか",
+        "elements": [
+          "protected_traits",
+          "core_values"
+        ]
+      },
+      {
+        "id": "aspiration",
+        "label": "憧れ",
+        "question": "この人物のように成長したいと思えるか",
+        "elements": [
+          "aspirational_traits",
+          "growth_targets"
+        ]
+      },
+      {
+        "id": "attainability",
+        "label": "到達可能性",
+        "question": "5年後の自分として想像できるか",
+        "elements": [
+          "growth_targets",
+          "expression_profile"
+        ]
+      }
+    ],
+    "on_low_rating": "adjust_only_linked_elements_via_choice_followups"
+  },
+  "disclaimer": "これは実際の未来の予測でも、検証済みの人格測定でもありません。ETIの結果（または簡易質問）と選択式の回答から、ルールで組み立てた設計上の仮説（下書き）です。"
+}
