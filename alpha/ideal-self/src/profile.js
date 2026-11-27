@@ -6,8 +6,9 @@ import {
 } from './catalog.js';
 import { IDEAL_QUESTIONS, IDEAL_SET_VERSION, QUICK_SET_VERSION } from './questions.js';
 import { CONSENT_VERSION } from './consent.js';
+import { resolveGrowthCaps } from './adaptive.js';
 
-export const PROFILE_SCHEMA_VERSION = 'ISA-PROFILE-0.1.0';
+export const PROFILE_SCHEMA_VERSION = 'ISA-PROFILE-0.2.0'; // 0.2.0：observed_measurements・protection_check を追加
 export const FUTURE_HORIZON_YEARS = 5;
 export const INFERENCE_STATUSES = {
   observed: '尺度の観測値（ETI）',
@@ -66,7 +67,7 @@ export function fnv1a(str) {
 
 function answerRef(q, oid) {
   const opt = q.options.find((o) => o.id === oid);
-  return { kind: 'answer', question: q.id, option: oid, question_text: q.text, option_label: opt ? opt.label : oid };
+  return { kind: 'answer', status: 'user_answer', question: q.id, option: oid, question_text: q.text, option_label: opt ? opt.label : oid };
 }
 function selectedOptions(q, answers) {
   const sel = (answers[q.id] || []).filter((x) => x !== UNKNOWN);
@@ -87,11 +88,15 @@ export function buildFutureSelfProfile({ current, answers, followups = [], overf
   const fq = Object.fromEntries(followups.map((f) => [f.id, f]));
   const allQ = { ...qById, ...fq };
 
-  // ---------- observed_traits（現在像）
+  // ---------- 現在像
+  // observed_measurements：ETI の尺度値そのもの（観測）。observed_traits：現在像の特性候補。
+  // ETI 経路の特性候補は尺度値からアプリが規則で解釈したもの（system_inferred。根拠の尺度値は value_status: observed）。
+  const observed_measurements = current.measurements || [];
   const observed_traits = current.traits.map((t) => ({
-    trait: t.trait, label: TRAITS[t.trait].label, inference_status: t.inference_status,
+    trait: t.trait, label: TRAITS[t.trait].label, inference_status: t.inference_status, derivation: t.derivation || 'quick_answer',
     source: current.source, evidence: t.evidence,
   }));
+  const derivationRef = (t) => ({ kind: 'observed_trait', status: t.inference_status, trait: t.trait, evidence: t.evidence });
   for (const qid of current.unknowns || []) unknowns.push({ field: 'observed_traits', ref: qid, why: '簡易質問で「わからない」と回答' });
 
   // ---------- protected_traits（CORE）
@@ -106,17 +111,16 @@ export function buildFutureSelfProfile({ current, answers, followups = [], overf
     const q = allQ[qid]; if (!q || !answers[qid]) continue;
     for (const o of selectedOptions(q, answers)) for (const t of o.traits || []) addProt(t, answerRef(q, o.id));
   }
+  // 本人が選んだ特性が現在像にもあれば、その導出（推論）を別の根拠として並べる（本人の選択とは区別して追える）
+  for (const t of observed_traits) if (prot.has(t.trait)) prot.get(t.trait).sources.push(derivationRef(t));
   const released = [];
   const release = (trait, ref, why) => {
     if (prot.has(trait)) prot.delete(trait);
     if (!released.some((r) => r.trait === trait)) released.push({ trait, label: TRAITS[trait].label, inference_status: 'user_answer', why, source: ref });
   };
-  const inversionResolution = {}; // `${target}:${trait}` -> augment|release|unknown
   for (const f of followups) {
     const a = (answers[f.id] || [])[0];
     if (f.kind === 'inversion') {
-      const key = `${f.target}:${f.trait}`;
-      inversionResolution[key] = a || UNKNOWN;
       if (a === 'release') release(f.trait, answerRef(f, a), '成長・憧れのために手放すことを本人が選択');
       else if (a === 'augment' && prot.has(f.trait)) prot.get(f.trait).notes.push(`「${(CAPABILITIES[f.target] || ASPIRATIONS[f.target]).label}」は、この特性を保ったまま加える（本人の選択）`);
       else if (!a || a === UNKNOWN) unresolved.push({ field: 'protected_traits', ref: f.id, why: `「${TRAITS[f.trait].label}」と「${(CAPABILITIES[f.target] || ASPIRATIONS[f.target]).label}」の関係が未確定。反転させず、保護したままにしている` });
@@ -143,7 +147,7 @@ export function buildFutureSelfProfile({ current, answers, followups = [], overf
     if (prot.has(t.trait) || releasedIds.has(t.trait)) continue;
     const opposed = OPPOSING_TRAITS.some(([a, b]) => (a === t.trait && prot.has(b)) || (b === t.trait && prot.has(a)));
     if (opposed) continue;
-    addProt(t.trait, { kind: 'observed_trait', trait: t.trait, evidence: t.evidence }, 'system_inferred');
+    addProt(t.trait, derivationRef(t), 'system_inferred');
   }
   const protected_traits = [...prot.values()].sort((a, b) => Number(b.confirmed) - Number(a.confirmed) || order(a.trait, b.trait, TRAITS));
   if (!protected_traits.some((p) => p.confirmed)) unknowns.push({ field: 'protected_traits', why: '本人が選んだ保護特性がない' });
@@ -169,6 +173,27 @@ export function buildFutureSelfProfile({ current, answers, followups = [], overf
   if (fq.F_GROW) for (const o of selectedOptions(fq.F_GROW, answers)) for (const c of o.capabilities || []) addCap(c, answerRef(fq.F_GROW, o.id));
   const g4 = (answers.G4 || [])[0];
   const mode = g4 === 'augment' ? 'augment' : g4 === 'transform' ? 'transform' : UNKNOWN;
+  // 最終的に採用した目標が adaptive.js の判定と一致することを確かめる（追加回答で決まった目標も確認の対象にするため）
+  const resolved = resolveGrowthCaps(answers);
+  if (!resolved.pending) for (const c of resolved.caps) if (!capRefs.has(c)) throw new Error(`growth target mismatch: ${c}`);
+  const asked = new Set(followups.map((f) => f.id));
+  const notAsked = new Map(overflow.map((f) => [f.id, f]));
+  // 保護特性と逆向きになりうる目標・憧れについて、本人の確認の状態をまとめる
+  const protectionCheck = (target, field) => (INVERSION_RISKS[target] || []).filter((t) => keepAll.includes(t) || releasedIds.has(t)).map((t) => {
+    const qid = `F_INV_${target}_${t}`;
+    const a = (answers[qid] || [])[0];
+    let resolution;
+    if (releasedIds.has(t) && !(asked.has(qid) && a)) return { trait: t, question: null, resolution: 'release', status: 'user_answer' }; // 別の質問で手放すと選択済み
+    if (asked.has(qid) && a && a !== UNKNOWN) resolution = a;
+    else if (asked.has(qid)) resolution = UNKNOWN; // 「まだ決められない」は上の inversion 処理で未確定に記録済み
+    else {
+      // 確認の質問が上限で出せなかった、または上限で成長目標の優先度を確かめられず確認自体が作られなかった
+      const limit = notAsked.has(qid) || overflow.length > 0;
+      resolution = limit ? 'not_asked_question_limit' : 'not_asked';
+      unresolved.push({ field, ref: qid, kind: 'protection_check', trait: t, target, why: `「${TRAITS[t].label}」と「${(CAPABILITIES[target] || ASPIRATIONS[target]).label}」の関係を${limit ? '質問の上限（18問）のため' : ''}確認できなかった。反転させず、「${TRAITS[t].short}」は保護したまま未確定にしている` });
+    }
+    return { trait: t, question: qid, resolution, status: resolution.startsWith('not_asked') || resolution === UNKNOWN ? 'unknown' : 'user_answer' };
+  });
   const growth_targets = [...capRefs.keys()].sort((a, b) => order(a, b, CAPABILITIES)).map((c) => {
     const def = CAPABILITIES[c];
     const basisTrait = keepAll.find((t) => def.behaviors[t]);
@@ -180,6 +205,7 @@ export function buildFutureSelfProfile({ current, answers, followups = [], overf
       gap: { current_scene: gapScene ? gapScene.label : null, desired: def.label, current_scene_status: gapScene ? 'user_answer' : 'unknown' },
       behavior: { text: basisTrait ? def.behaviors[basisTrait] : def.behaviors.default, built_on: basisTrait || null, inference_status: 'system_inferred' },
       constraints,
+      protection_check: protectionCheck(c, 'growth_targets'),
     };
   });
   if (!growth_targets.length) unknowns.push({ field: 'growth_targets', why: '伸ばしたい力が未回答・不明' });
@@ -194,8 +220,7 @@ export function buildFutureSelfProfile({ current, answers, followups = [], overf
   const aspirational_traits = [...aspRefs.keys()].sort((a, b) => order(a, b, ASPIRATIONS)).map((a) => {
     const def = ASPIRATIONS[a];
     const compatible_with = def.compatible.filter((t) => keepAll.includes(t));
-    const tension = (INVERSION_RISKS[a] || []).filter((t) => keepAll.includes(t) || releasedIds.has(t))
-      .map((t) => ({ trait: t, resolution: inversionResolution[`${a}:${t}`] || (releasedIds.has(t) ? 'release' : UNKNOWN) }));
+    const tension = protectionCheck(a, 'aspirational_traits');
     let integration;
     const tensionKeep = tension.filter((x) => x.resolution !== 'release');
     if (tensionKeep.length) integration = `「${tensionKeep.map((x) => TRAITS[x.trait].short).join('・')}」を保ったまま、必要な場面で表れる${def.label}`;
@@ -267,7 +292,7 @@ export function buildFutureSelfProfile({ current, answers, followups = [], overf
   // ---------- 下書きの要約（仮説として表示する）
   const summary = composeSummary(protected_traits, growth_targets, aspirational_traits);
 
-  for (const o of overflow) unresolved.push({ field: 'question_limit', ref: o.id, why: `質問の上限（18問）で確認できなかった：${o.reason}` });
+  for (const o of overflow.filter((x) => x.kind !== 'inversion')) unresolved.push({ field: 'question_limit', ref: o.id, why: `質問の上限（18問）で確認できなかった：${o.reason}` });
 
   // ---------- 出所・版
   const source_provenance = {
@@ -282,13 +307,14 @@ export function buildFutureSelfProfile({ current, answers, followups = [], overf
     followups_asked: followups.map((f) => ({ id: f.id, kind: f.kind, reason: f.reason })),
   };
 
-  const inputForHash = { current: { source: current.source, traits: current.traits, values: current.values, unknowns: current.unknowns, scales: current.scales, provenance: current.provenance }, answers, followups: followups.map((f) => f.id), overflow: overflow.map((f) => f.id), rule: RULE_VERSION };
+  const inputForHash = { current: { source: current.source, measurements: current.measurements, traits: current.traits, values: current.values, unknowns: current.unknowns, scales: current.scales, provenance: current.provenance }, answers, followups: followups.map((f) => f.id), overflow: overflow.map((f) => f.id), rule: RULE_VERSION };
   const input_hash = fnv1a(canonical(inputForHash));
 
   return {
     schema_version: PROFILE_SCHEMA_VERSION,
     future_horizon_years: FUTURE_HORIZON_YEARS,
     summary,
+    observed_measurements,
     observed_traits,
     observed_scales: current.scales || null,
     protected_traits,

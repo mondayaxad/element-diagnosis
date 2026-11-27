@@ -1,7 +1,7 @@
 // Ideal Self Agent α — 特性・能力・魅力・価値観の語彙（ルール版 ISA-RULE-0.1.0 と対）
 // ここにある閾値と対応づけは「設計上の仮説」であり、心理測定として検証済みのものではない。
 
-export const RULE_VERSION = 'ISA-RULE-0.1.0';
+export const RULE_VERSION = 'ISA-RULE-0.2.0'; // 0.2.0：ETI 由来の候補を推論として区別・追加回答で確定した成長目標にも保護特性の確認
 export const CATALOG_VERSION = 'ISA-CATALOG-0.1.0';
 
 // CORE：現在の特性候補（中立・肯定的な言い方にし、どちらの極も欠点として扱わない）

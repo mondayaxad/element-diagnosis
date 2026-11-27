@@ -44,13 +44,14 @@ const tid = (page, id) => page.locator(`[data-testid="${id}"]`);
 async function shot(page, name) { fs.mkdirSync(SHOTS, { recursive: true }); await page.screenshot({ path: path.join(SHOTS, `${name}.png`), fullPage: false }); }
 async function shotFull(page, name) { fs.mkdirSync(SHOTS, { recursive: true }); await page.screenshot({ path: path.join(SHOTS, `${name}.png`), fullPage: true }); }
 
-async function answerIdeal(page, plan) {
+async function answerIdeal(page, plan, onScreen = async () => {}) {
   // plan: { K1: ['inner_focus','curiosity'], ... }。追加質問は「わからない」以外の先頭を選ぶ
   for (let guard = 0; guard < 20; guard++) {
     if (await tid(page, 'build-draft').count()) return;
     const title = await page.locator('main h1').innerText();
     const isFollow = await tid(page, 'followup-reason').count();
     const isMulti = (await tid(page, 'multi-next').count()) > 0;
+    await onScreen(page, title);
     // 画面には質問 ID を出さないので、題名から計画を選ぶ
     const entry = Object.entries(plan).find(([, v]) => v.title && title.startsWith(v.title));
     const ids = entry ? entry[1].ids : null;
@@ -100,6 +101,18 @@ test('スマホ幅：合成ETI経路で、拒否の確認 → 取込 → 理想1
     await tid(page, 'record-own_introvert').click();
     await tid(page, 'import').click();
     await page.waitForSelector('[data-testid="current-traits"]');
+    // 指摘1：特性の候補は「ETIからの推論」、尺度の値だけが「ETI観測値」
+    const curItems = page.locator('[data-testid="current-traits"] li');
+    assert.ok((await curItems.count()) >= 6);
+    for (const li of await curItems.all()) {
+      assert.equal(await li.getAttribute('data-status'), 'system_inferred');
+      const text = await li.innerText();
+      assert.match(text, /ETIからの推論/);
+      assert.match(text, /ETI観測値/); // 根拠として観測値を併記
+    }
+    assert.match(await tid(page, 'cur-trait-inner_focus').innerText(), /一人で深く考える力\s*ETIからの推論.*外向性 24／規則 E <= 35/s);
+    assert.equal(await tid(page, 'current-measurements').getAttribute('data-status'), 'observed');
+    assert.equal(await page.locator('[data-testid="current-traits"] [data-status="observed"]').count(), 0);
     await shot(page, '04_current_eti');
     await tid(page, 'to-ideal').click();
     await shot(page, '05_ideal_K1');
@@ -113,13 +126,25 @@ test('スマホ幅：合成ETI経路で、拒否の確認 → 取込 → 理想1
     await shot(page, '06_draft_top');
     // 根拠を開いて確かめられる
     await page.locator('[data-testid="sec-protected"] details summary').first().click();
-    assert.match(await page.locator('[data-testid="sec-protected"] details').first().innerText(), /本人の回答 K1/);
+    // 指摘1：本人の選択（K1）と、ETIの値からの推論（観測値つき）が別の根拠として並ぶ
+    const ev1 = page.locator('[data-testid="sec-protected"] details').first();
+    assert.match(await ev1.innerText(), /本人の選択\s*K1/);
+    assert.match(await ev1.innerText(), /アプリの推論.*ETI観測値.*外向性（E）= 24/s);
+    assert.ok((await ev1.locator('li[data-status="user_answer"]').count()) >= 1); // K1・K2・K4
+
+    assert.equal(await ev1.locator('li[data-status="system_inferred"]').count(), 1);
+    assert.equal(await tid(page, 'draft-measurements').getAttribute('data-status'), 'observed');
     await page.locator('[data-testid="sec-protected"] details').first().scrollIntoViewIfNeeded();
     await shot(page, '07_draft_evidence');
     await shotFull(page, '08_draft_full_eti');
     const json = JSON.parse(await tid(page, 'profile-json').textContent());
     assert.equal(json.source_provenance.eti.diagnosis_version, 'ETI-2.0');
     assert.equal(json.approval_status, 'unconfirmed');
+    const obsPaths = [];
+    const walk = (x, at) => { if (Array.isArray(x)) x.forEach((v, i) => walk(v, `${at}[${i}]`)); else if (x && typeof x === 'object') { if (x.inference_status === 'observed') obsPaths.push(at); for (const [k, v] of Object.entries(x)) if (k !== 'legend') walk(v, `${at}.${k}`); } };
+    walk(json, '$');
+    assert.equal(obsPaths.length, 20);
+    assert.ok(obsPaths.every((p) => p.startsWith('$.observed_measurements[')), obsPaths.join(','));
     await tid(page, 'approve').click();
     assert.match(await tid(page, 'approval').innerText(), /承認済み/);
     // 撤回すると下書きが消え、現在像の選び直しへ
@@ -129,7 +154,7 @@ test('スマホ幅：合成ETI経路で、拒否の確認 → 取込 → 理想1
   });
 });
 
-test('スマホ幅：未受診（同意なし）→ 簡易6問 → 理想12問＋追加質問 → 下書き → 戻って再操作（外部通信なし）', { skip: !chromium && 'Playwright が無い' }, async () => {
+test('スマホ幅：未受診（同意なし）→ 簡易6問 → 理想12問＋追加質問（優先した成長目標への確認を含む）→ 下書き → 戻って再操作（外部通信なし）', { skip: !chromium && 'Playwright が無い' }, async () => {
   await withPage(async (page) => {
     await tid(page, 'consent-next').click(); // 何にも同意しない
     await tid(page, 'route-quick').click();
@@ -139,21 +164,37 @@ test('スマホ幅：未受診（同意なし）→ 簡易6問 → 理想12問�
     await shot(page, '12_current_quick');
     assert.match(await tid(page, 'current-traits').innerText(), /自己申告/);
     await tid(page, 'to-ideal').click();
-    // 憧れに「場を明るくする力」を入れて、保護特性との緊張の確認質問を出す
-    await answerIdeal(page, { ...PLAN, E1: { title: PLAN.E1.title, ids: ['radiance'] } });
-    // ↑ 追加質問は先頭の選択肢（＝保ったまま加える）を選んでいる
+    // 憧れに「場を明るくする力」、G2 に「初対面の場で固くなる」を入れ、追加質問で後者（初対面でも落ち着いて関わる力）を優先する。
+    // 指摘2：追加回答で確定した成長目標にも、保護特性（内省）との確認が出ること
+    let growthCheckShown = false;
+    await answerIdeal(page, {
+      ...PLAN,
+      G2: { title: PLAN.G2.title, ids: ['crowd'] },
+      E1: { title: PLAN.E1.title, ids: ['radiance'] },
+      PRI: { title: 'どちらを先に伸ばしたいですか', ids: ['social_ease'] },
+    }, async (pg, title) => {
+      if (title.includes('初めての相手とも落ち着いて関われる力')) {
+        growthCheckShown = true;
+        assert.match(await tid(pg, 'followup-reason').innerText(), /保護特性「一人で深く考える力」/);
+        await shot(pg, '15_followup_growth_check');
+      }
+    });
+    // ↑ 計画に無い追加質問は先頭の選択肢（＝保ったまま加える）を選んでいる
+    assert.ok(growthCheckShown, '優先した成長目標への確認が表示されませんでした');
     await tid(page, 'build-draft').click();
     await page.waitForSelector('[data-testid="summary"]');
     const json = JSON.parse(await tid(page, 'profile-json').textContent());
     assert.equal(json.source_provenance.current_source, 'quick_questions');
     assert.ok(json.source_provenance.followups_asked.some((f) => f.kind === 'inversion'));
     assert.ok(json.protected_traits.some((t) => t.trait === 'inner_focus' && t.confirmed));
+    assert.deepEqual(json.source_provenance.followups_asked.map((f) => f.id), ['F_INV_radiance_inner_focus', 'F_GROW_PRIORITY', 'F_INV_social_ease_inner_focus']);
+    assert.equal(await tid(page, 'check-social_ease-inner_focus').getAttribute('data-resolution'), 'augment');
     await shotFull(page, '13_draft_full_quick');
     // 戻って追加質問の画面を撮る（下書きから1つ戻ると最後の質問＝追加質問）
     await page.locator('#back').click();
     await page.waitForSelector('[data-testid="followup-reason"]');
     await shot(page, '14_followup_reason');
-    // E1 まで戻って変えると、追加質問が消え、下書きが作り直しになる
+    // E1 まで戻って変えると、憧れへの確認だけが消え、成長目標への確認は残る。下書きは作り直しになる
     for (let i = 0; i < 8; i++) {
       if ((await page.locator('main h1').innerText()).startsWith(PLAN.E1.title)) break;
       await page.locator('#back').click();
@@ -161,10 +202,10 @@ test('スマホ幅：未受診（同意なし）→ 簡易6問 → 理想12問�
     await tid(page, 'opt-radiance').click();
     await tid(page, 'opt-quiet_presence').click();
     await tid(page, 'multi-next').click();
-    for (let i = 0; i < 3; i++) await page.locator('main button.opt[aria-pressed="true"]').first().click();
+    for (let i = 0; i < 8 && !(await tid(page, 'build-draft').count()); i++) await page.locator('main button.opt[aria-pressed="true"]').first().click();
     await tid(page, 'build-draft').click();
     const json2 = JSON.parse(await tid(page, 'profile-json').textContent());
-    assert.deepEqual(json2.source_provenance.followups_asked, []);
+    assert.deepEqual(json2.source_provenance.followups_asked.map((f) => f.id), ['F_GROW_PRIORITY', 'F_INV_social_ease_inner_focus']);
     assert.deepEqual(json2.aspirational_traits.map((a) => a.aspiration), ['quiet_presence']);
   });
 });

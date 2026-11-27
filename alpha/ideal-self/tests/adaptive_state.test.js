@@ -50,13 +50,20 @@ test('矛盾が多くても18問を超えず、出せなかった分は未確定
     G1: ['social_ease'], G2: ['stop'], G3: ['leap'], G4: ['transform'],
     E1: ['radiance', 'quiet_presence'], E2: ['large_group'], E3: ['passion'], E4: ['move'] };
   const ext = etiCurrent({ ...F.OWN_EXTRAVERT, personality: { ...F.OWN_EXTRAVERT.personality, O: 80 } }); // 好奇心も観測され、深化との食い違いが増える
-  const { followups, overflow } = computeFollowups(ext.current, base);
+  // 基本回答だけでは成長目標の優先度が未定。優先度に答えると、確定した目標への確認（2段目）が加わって上限を超える
+  assert.equal(computeFollowups(ext.current, base).followups.length, MAX_FOLLOWUPS);
+  const { followups, overflow } = computeFollowups(ext.current, { ...base, F_GROW_PRIORITY: ['unknown'] });
   assert.equal(followups.length, MAX_FOLLOWUPS);
   assert.ok(overflow.length > 0, '上限を超える候補があるはず');
   const s = answerAll(ext, base);
   assert.equal(S.idealQueue(s).length, MAX_QUESTIONS);
   const p = S.buildDraft(s).profile;
-  assert.ok(p.inference_status.unresolved.some((u) => u.field === 'question_limit'));
+  // 上限で出せなかった確認は、保護特性を維持したまま未確定として記録される
+  const limitEntries = p.inference_status.unresolved.filter((u) => u.field === 'question_limit' || (u.kind === 'protection_check' && /上限/.test(u.why)));
+  assert.ok(limitEntries.length > 0);
+  assert.ok(p.protected_traits.some((t) => t.trait === 'inner_focus' && t.confirmed));
+  const social = p.growth_targets.find((g) => g.capability === 'social_ease');
+  assert.ok(social.protection_check.some((c) => c.trait === 'inner_focus' && c.resolution === 'not_asked_question_limit' && c.status === 'unknown'));
 });
 
 test('現在像と本人選択の食い違い（ETI外向・本人は内省を残す）で確認の質問が出る', () => {

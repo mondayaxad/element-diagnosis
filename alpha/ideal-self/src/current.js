@@ -1,4 +1,7 @@
-// 現在像（observed_traits の元）を作る。ETI 経路は「尺度の観測値」、簡易質問経路は「本人の自己申告」。
+// 現在像（observed_traits の元）を作る。
+// ETI 経路：尺度値そのもの（measurements）だけが「観測」(observed)。そこから規則で導いた特性・価値観の候補は
+//           アプリの解釈なので「システムの推論」(system_inferred) とし、根拠として観測値（value_status: observed）を持たせる。
+// 簡易質問経路：本人の自己申告（user_answer）。
 import { ETI_TRAIT_RULES, VALUE_CENTERED_MIN, VALUE_TOP_N, AXIS_LABELS, UNKNOWN } from './catalog.js';
 import { QUICK_QUESTIONS, QUICK_SET_VERSION } from './questions.js';
 
@@ -12,10 +15,11 @@ export function currentFromEti(imported) {
     if (cmp(r.op, v, r.threshold)) {
       traits.push({
         trait: r.trait,
-        inference_status: 'observed',
+        inference_status: 'system_inferred',
+        derivation: 'eti_rule',
         evidence: {
           kind: 'eti_scale', domain: r.domain, axis: r.axis, axis_label: AXIS_LABELS[r.axis],
-          value: v, rule: `${r.axis} ${r.op} ${r.threshold}`,
+          value: v, value_status: 'observed', rule: `${r.axis} ${r.op} ${r.threshold}`, rule_status: 'system_inferred',
         },
       });
     }
@@ -27,17 +31,18 @@ export function currentFromEti(imported) {
     .filter((x) => x.centered > VALUE_CENTERED_MIN)
     .slice(0, VALUE_TOP_N)
     .map((x, i) => ({
-      value: x.value, inference_status: 'observed',
-      evidence: { kind: 'eti_values_centered', axis: x.value, centered: round3(x.centered), rank: i + 1, rule: `centered > ${VALUE_CENTERED_MIN}・上位${VALUE_TOP_N}` },
+      value: x.value, inference_status: 'system_inferred', derivation: 'eti_rule',
+      evidence: { kind: 'eti_values_centered', axis: x.value, centered: round3(x.centered), value_status: 'observed', rank: i + 1, rule: `centered > ${VALUE_CENTERED_MIN}・上位${VALUE_TOP_N}`, rule_status: 'system_inferred' },
     }));
   return {
     source: 'eti_v2',
+    measurements: measurementsFrom(imported.scales),
     traits,
     values,
     unknowns: [],
     scales: imported.scales,
     provenance: imported.provenance,
-    note: 'ETI v2 の尺度値から規則で導いた特性候補。尺度から人格表現を一意に決められるとは扱わない。',
+    note: '観測値は ETI v2 の尺度値だけです。特性・価値観の候補は、その値からアプリが規則で解釈したもの（推論）で、尺度から人格表現を一意に決められるとは扱いません。',
   };
 }
 
@@ -61,6 +66,7 @@ export function currentFromQuick(answers) {
   }
   return {
     source: 'quick_questions',
+    measurements: [],
     traits,
     values,
     unknowns,
@@ -73,6 +79,14 @@ export function currentFromQuick(answers) {
 export function validQuickAnswers(answers) {
   return QUICK_QUESTIONS.every((q) => Array.isArray(answers[q.id]) && answers[q.id].length === 1
     && q.options.some((o) => o.id === answers[q.id][0]));
+}
+
+// 尺度の観測値（ETI がそのまま保存している値。解釈を含まない）
+function measurementsFrom(sc) {
+  const out = [];
+  for (const d of ['personality', 'style']) for (const [axis, value] of Object.entries(sc[d])) out.push({ domain: d, axis, axis_label: AXIS_LABELS[axis], value, scale: 'display_0_100', inference_status: 'observed' });
+  for (const [axis, value] of Object.entries(sc.valuesCentered)) out.push({ domain: 'values', axis, value: round3(value), scale: 'centered', inference_status: 'observed' });
+  return out;
 }
 
 function round3(x) { return Math.round(x * 1000) / 1000; }

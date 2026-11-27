@@ -1,5 +1,5 @@
 {
-  "schema_version": "ISA-PROFILE-0.1.0",
+  "schema_version": "ISA-PROFILE-0.2.0",
   "future_horizon_years": 5,
   "summary": {
     "text": "一人で深く考える力と新しい考えに惹かれる知的好奇心を保ちながら、考えを一人でまとめてから、要点を短く言葉にして伝えることができ、静かな存在感と揺るがない信念を備えた人物。",
@@ -7,11 +7,164 @@
     "status": "draft",
     "note": "設計上の仮説。本人の確認前"
   },
+  "observed_measurements": [
+    {
+      "domain": "personality",
+      "axis": "O",
+      "axis_label": "開放性",
+      "value": 78,
+      "scale": "display_0_100",
+      "inference_status": "observed"
+    },
+    {
+      "domain": "personality",
+      "axis": "C",
+      "axis_label": "誠実性",
+      "value": 62,
+      "scale": "display_0_100",
+      "inference_status": "observed"
+    },
+    {
+      "domain": "personality",
+      "axis": "E",
+      "axis_label": "外向性",
+      "value": 24,
+      "scale": "display_0_100",
+      "inference_status": "observed"
+    },
+    {
+      "domain": "personality",
+      "axis": "A",
+      "axis_label": "協調性",
+      "value": 68,
+      "scale": "display_0_100",
+      "inference_status": "observed"
+    },
+    {
+      "domain": "personality",
+      "axis": "N",
+      "axis_label": "神経症傾向（情緒の揺れやすさ）",
+      "value": 58,
+      "scale": "display_0_100",
+      "inference_status": "observed"
+    },
+    {
+      "domain": "style",
+      "axis": "AGY",
+      "axis_label": "主導",
+      "value": 40,
+      "scale": "display_0_100",
+      "inference_status": "observed"
+    },
+    {
+      "domain": "style",
+      "axis": "REL",
+      "axis_label": "関係調整",
+      "value": 55,
+      "scale": "display_0_100",
+      "inference_status": "observed"
+    },
+    {
+      "domain": "style",
+      "axis": "ROL",
+      "axis_label": "役割遂行",
+      "value": 70,
+      "scale": "display_0_100",
+      "inference_status": "observed"
+    },
+    {
+      "domain": "style",
+      "axis": "REF",
+      "axis_label": "熟考",
+      "value": 82,
+      "scale": "display_0_100",
+      "inference_status": "observed"
+    },
+    {
+      "domain": "style",
+      "axis": "AUT",
+      "axis_label": "自律",
+      "value": 72,
+      "scale": "display_0_100",
+      "inference_status": "observed"
+    },
+    {
+      "domain": "values",
+      "axis": "SD",
+      "value": 0.62,
+      "scale": "centered",
+      "inference_status": "observed"
+    },
+    {
+      "domain": "values",
+      "axis": "ST",
+      "value": 0.05,
+      "scale": "centered",
+      "inference_status": "observed"
+    },
+    {
+      "domain": "values",
+      "axis": "HE",
+      "value": -0.1,
+      "scale": "centered",
+      "inference_status": "observed"
+    },
+    {
+      "domain": "values",
+      "axis": "AC",
+      "value": 0.1,
+      "scale": "centered",
+      "inference_status": "observed"
+    },
+    {
+      "domain": "values",
+      "axis": "PO",
+      "value": -0.6,
+      "scale": "centered",
+      "inference_status": "observed"
+    },
+    {
+      "domain": "values",
+      "axis": "SE",
+      "value": -0.2,
+      "scale": "centered",
+      "inference_status": "observed"
+    },
+    {
+      "domain": "values",
+      "axis": "CO",
+      "value": -0.15,
+      "scale": "centered",
+      "inference_status": "observed"
+    },
+    {
+      "domain": "values",
+      "axis": "TR",
+      "value": -0.46,
+      "scale": "centered",
+      "inference_status": "observed"
+    },
+    {
+      "domain": "values",
+      "axis": "BE",
+      "value": 0.33,
+      "scale": "centered",
+      "inference_status": "observed"
+    },
+    {
+      "domain": "values",
+      "axis": "UN",
+      "value": 0.41,
+      "scale": "centered",
+      "inference_status": "observed"
+    }
+  ],
   "observed_traits": [
     {
       "trait": "curiosity",
       "label": "新しい考えに惹かれる知的好奇心",
-      "inference_status": "observed",
+      "inference_status": "system_inferred",
+      "derivation": "eti_rule",
       "source": "eti_v2",
       "evidence": {
         "kind": "eti_scale",
@@ -19,13 +172,16 @@
         "axis": "O",
         "axis_label": "開放性",
         "value": 78,
-        "rule": "O >= 65"
+        "value_status": "observed",
+        "rule": "O >= 65",
+        "rule_status": "system_inferred"
       }
     },
     {
       "trait": "inner_focus",
       "label": "一人で深く考える力",
-      "inference_status": "observed",
+      "inference_status": "system_inferred",
+      "derivation": "eti_rule",
       "source": "eti_v2",
       "evidence": {
         "kind": "eti_scale",
@@ -33,13 +189,16 @@
         "axis": "E",
         "axis_label": "外向性",
         "value": 24,
-        "rule": "E <= 35"
+        "value_status": "observed",
+        "rule": "E <= 35",
+        "rule_status": "system_inferred"
       }
     },
     {
       "trait": "empathy",
       "label": "相手の立場をまず理解しようとする姿勢",
-      "inference_status": "observed",
+      "inference_status": "system_inferred",
+      "derivation": "eti_rule",
       "source": "eti_v2",
       "evidence": {
         "kind": "eti_scale",
@@ -47,13 +206,16 @@
         "axis": "A",
         "axis_label": "協調性",
         "value": 68,
-        "rule": "A >= 65"
+        "value_status": "observed",
+        "rule": "A >= 65",
+        "rule_status": "system_inferred"
       }
     },
     {
       "trait": "supportive_commitment",
       "label": "目立たなくても役割を支え続ける責任感",
-      "inference_status": "observed",
+      "inference_status": "system_inferred",
+      "derivation": "eti_rule",
       "source": "eti_v2",
       "evidence": {
         "kind": "eti_scale",
@@ -61,13 +223,16 @@
         "axis": "ROL",
         "axis_label": "役割遂行",
         "value": 70,
-        "rule": "ROL >= 65"
+        "value_status": "observed",
+        "rule": "ROL >= 65",
+        "rule_status": "system_inferred"
       }
     },
     {
       "trait": "deliberation",
       "label": "動く前に状況を整理する慎重さ",
-      "inference_status": "observed",
+      "inference_status": "system_inferred",
+      "derivation": "eti_rule",
       "source": "eti_v2",
       "evidence": {
         "kind": "eti_scale",
@@ -75,13 +240,16 @@
         "axis": "REF",
         "axis_label": "熟考",
         "value": 82,
-        "rule": "REF >= 65"
+        "value_status": "observed",
+        "rule": "REF >= 65",
+        "rule_status": "system_inferred"
       }
     },
     {
       "trait": "self_direction_style",
       "label": "最終的には自分で選ぶ主体性",
-      "inference_status": "observed",
+      "inference_status": "system_inferred",
+      "derivation": "eti_rule",
       "source": "eti_v2",
       "evidence": {
         "kind": "eti_scale",
@@ -89,7 +257,9 @@
         "axis": "AUT",
         "axis_label": "自律",
         "value": 72,
-        "rule": "AUT >= 65"
+        "value_status": "observed",
+        "rule": "AUT >= 65",
+        "rule_status": "system_inferred"
       }
     }
   ],
@@ -130,6 +300,7 @@
       "sources": [
         {
           "kind": "answer",
+          "status": "user_answer",
           "question": "K1",
           "option": "inner_focus",
           "question_text": "5年後も変わらずに残したい自分らしさはどれですか（2つまで）",
@@ -137,6 +308,7 @@
         },
         {
           "kind": "answer",
+          "status": "user_answer",
           "question": "K2",
           "option": "think",
           "question_text": "「あなたらしい」と言われるのは、どの場面に近いですか",
@@ -144,10 +316,26 @@
         },
         {
           "kind": "answer",
+          "status": "user_answer",
           "question": "K4",
           "option": "no_alone",
           "question_text": "こう変わってしまったら「自分ではない」と感じるのはどれですか",
           "option_label": "一人で考える時間がなくなる"
+        },
+        {
+          "kind": "observed_trait",
+          "status": "system_inferred",
+          "trait": "inner_focus",
+          "evidence": {
+            "kind": "eti_scale",
+            "domain": "personality",
+            "axis": "E",
+            "axis_label": "外向性",
+            "value": 24,
+            "value_status": "observed",
+            "rule": "E <= 35",
+            "rule_status": "system_inferred"
+          }
         }
       ],
       "notes": []
@@ -160,10 +348,26 @@
       "sources": [
         {
           "kind": "answer",
+          "status": "user_answer",
           "question": "K1",
           "option": "curiosity",
           "question_text": "5年後も変わらずに残したい自分らしさはどれですか（2つまで）",
           "option_label": "新しい考えに惹かれる知的好奇心"
+        },
+        {
+          "kind": "observed_trait",
+          "status": "system_inferred",
+          "trait": "curiosity",
+          "evidence": {
+            "kind": "eti_scale",
+            "domain": "personality",
+            "axis": "O",
+            "axis_label": "開放性",
+            "value": 78,
+            "value_status": "observed",
+            "rule": "O >= 65",
+            "rule_status": "system_inferred"
+          }
         }
       ],
       "notes": []
@@ -176,6 +380,7 @@
       "sources": [
         {
           "kind": "observed_trait",
+          "status": "system_inferred",
           "trait": "empathy",
           "evidence": {
             "kind": "eti_scale",
@@ -183,7 +388,9 @@
             "axis": "A",
             "axis_label": "協調性",
             "value": 68,
-            "rule": "A >= 65"
+            "value_status": "observed",
+            "rule": "A >= 65",
+            "rule_status": "system_inferred"
           }
         }
       ],
@@ -197,6 +404,7 @@
       "sources": [
         {
           "kind": "observed_trait",
+          "status": "system_inferred",
           "trait": "deliberation",
           "evidence": {
             "kind": "eti_scale",
@@ -204,7 +412,9 @@
             "axis": "REF",
             "axis_label": "熟考",
             "value": 82,
-            "rule": "REF >= 65"
+            "value_status": "observed",
+            "rule": "REF >= 65",
+            "rule_status": "system_inferred"
           }
         }
       ],
@@ -218,6 +428,7 @@
       "sources": [
         {
           "kind": "observed_trait",
+          "status": "system_inferred",
           "trait": "supportive_commitment",
           "evidence": {
             "kind": "eti_scale",
@@ -225,7 +436,9 @@
             "axis": "ROL",
             "axis_label": "役割遂行",
             "value": 70,
-            "rule": "ROL >= 65"
+            "value_status": "observed",
+            "rule": "ROL >= 65",
+            "rule_status": "system_inferred"
           }
         }
       ],
@@ -239,6 +452,7 @@
       "sources": [
         {
           "kind": "observed_trait",
+          "status": "system_inferred",
           "trait": "self_direction_style",
           "evidence": {
             "kind": "eti_scale",
@@ -246,7 +460,9 @@
             "axis": "AUT",
             "axis_label": "自律",
             "value": 72,
-            "rule": "AUT >= 65"
+            "value_status": "observed",
+            "rule": "AUT >= 65",
+            "rule_status": "system_inferred"
           }
         }
       ],
@@ -262,6 +478,7 @@
       "sources": [
         {
           "kind": "answer",
+          "status": "user_answer",
           "question": "G1",
           "option": "clear_expression",
           "question_text": "5年後までにいちばん伸ばしたい力はどれですか",
@@ -269,6 +486,7 @@
         },
         {
           "kind": "answer",
+          "status": "user_answer",
           "question": "G2",
           "option": "meeting",
           "question_text": "いま「もう少しできたら」と感じるのは、どの場面ですか",
@@ -287,7 +505,8 @@
         "built_on": "inner_focus",
         "inference_status": "system_inferred"
       },
-      "constraints": []
+      "constraints": [],
+      "protection_check": []
     }
   ],
   "aspirational_traits": [
@@ -298,6 +517,7 @@
       "sources": [
         {
           "kind": "answer",
+          "status": "user_answer",
           "question": "E1",
           "option": "quiet_presence",
           "question_text": "5年後のあなたは、周りからどう感じられていたいですか（2つまで）",
@@ -321,6 +541,7 @@
       "sources": [
         {
           "kind": "answer",
+          "status": "user_answer",
           "question": "E1",
           "option": "unwavering_conviction",
           "question_text": "5年後のあなたは、周りからどう感じられていたいですか（2つまで）",
@@ -344,11 +565,12 @@
       "label": "自分の生き方を自分で選べること",
       "statuses": [
         "user_answer",
-        "observed"
+        "system_inferred"
       ],
       "sources": [
         {
           "kind": "answer",
+          "status": "user_answer",
           "question": "K3",
           "option": "SD",
           "question_text": "判断に迷ったとき、最後まで手放したくない価値観はどれですか（2つまで）",
@@ -360,8 +582,10 @@
             "kind": "eti_values_centered",
             "axis": "SD",
             "centered": 0.62,
+            "value_status": "observed",
             "rank": 1,
-            "rule": "centered > 0.25・上位3"
+            "rule": "centered > 0.25・上位3",
+            "rule_status": "system_inferred"
           }
         }
       ],
@@ -373,11 +597,12 @@
       "label": "立場にかかわらず人が公平に扱われること",
       "statuses": [
         "user_answer",
-        "observed"
+        "system_inferred"
       ],
       "sources": [
         {
           "kind": "answer",
+          "status": "user_answer",
           "question": "K3",
           "option": "UN",
           "question_text": "判断に迷ったとき、最後まで手放したくない価値観はどれですか（2つまで）",
@@ -389,8 +614,10 @@
             "kind": "eti_values_centered",
             "axis": "UN",
             "centered": 0.41,
+            "value_status": "observed",
             "rank": 2,
-            "rule": "centered > 0.25・上位3"
+            "rule": "centered > 0.25・上位3",
+            "rule_status": "system_inferred"
           }
         }
       ],
@@ -401,7 +628,7 @@
       "value": "BE",
       "label": "身近な人が幸せに暮らせること",
       "statuses": [
-        "observed"
+        "system_inferred"
       ],
       "sources": [
         {
@@ -410,12 +637,14 @@
             "kind": "eti_values_centered",
             "axis": "BE",
             "centered": 0.33,
+            "value_status": "observed",
             "rank": 3,
-            "rule": "centered > 0.25・上位3"
+            "rule": "centered > 0.25・上位3",
+            "rule_status": "system_inferred"
           }
         }
       ],
-      "inference_status": "observed",
+      "inference_status": "system_inferred",
       "user_selected": false
     }
   ],
@@ -560,10 +789,10 @@
     },
     "quick_question_set_version": null,
     "ideal_question_set_version": "ISA-IDEAL-0.1.0",
-    "rule_version": "ISA-RULE-0.1.0",
+    "rule_version": "ISA-RULE-0.2.0",
     "catalog_version": "ISA-CATALOG-0.1.0",
     "consent_version": "ISA-CONSENT-0.1.0",
-    "profile_schema_version": "ISA-PROFILE-0.1.0",
+    "profile_schema_version": "ISA-PROFILE-0.2.0",
     "followups_asked": []
   },
   "inference_status": {
@@ -576,8 +805,8 @@
     "unknowns": [],
     "unresolved": []
   },
-  "persona_version": "ISA-RULE-0.1.0+draft.097e5517",
-  "input_hash": "097e5517",
+  "persona_version": "ISA-RULE-0.2.0+draft.1da962c2",
+  "input_hash": "1da962c2",
   "approval_status": "unconfirmed",
   "evaluation": {
     "phase": 2,

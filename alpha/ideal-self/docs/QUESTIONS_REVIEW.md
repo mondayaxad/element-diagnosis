@@ -1,6 +1,6 @@
 # 質問文と分岐理由（レビュー用・自動生成）
 
-質問セット：簡易 ISA-QUICK-0.1.0／理想 ISA-IDEAL-0.1.0／ルール ISA-RULE-0.1.0。すべて選択式。
+質問セット：簡易 ISA-QUICK-0.1.0／理想 ISA-IDEAL-0.1.0／ルール ISA-RULE-0.2.0。すべて選択式。
 
 > 生成元：`src/questions.js`・`src/adaptive.js`・`src/catalog.js`。手で編集せず `node alpha/ideal-self/scripts/export-questions.js` で作り直す。
 
@@ -214,11 +214,11 @@ VALUES：中心化値 > 0.25 の上位 3 軸まで。35〜65 の中間帯は「�
 
 ## 4. 追加質問（最大 6 問・合計 18 問まで）
 
-基本12問がすべて終わってから判定する。上から優先し、上限を超えた分は下書きで「未確定（質問上限）」として示す。
+基本12問がすべて終わってから判定する。1段目（基本12問の回答だけで決まるもの）を上から優先して並べ、2段目（追加回答で確定した成長目標への inversion）はその後ろに足す。合計6問を超えた分は出さず、下書きで「未確定（質問上限）」として示す。保護特性との確認が上限で出せなかった場合は、その特性を保護したまま未確定にする。
 
 | 優先 | 種類 | 出す条件 | 理由（画面に表示） |
 |---|---|---|---|
-| 1 | inversion | 本人の保護特性（K1・K2・K4）と、伸ばしたい力（G1）・憧れ（E1）が反転のおそれのある組（social_ease↔inner_focus、radiance↔inner_focus/deliberation） | 本人の確認なしに性格を反転させない |
+| 1 | inversion | 本人の保護特性（K1・K2・K4）と、最終的に採用する成長目標・憧れ（E1）が反転のおそれのある組。成長目標は G1・G2 の回答、または追加質問（F_GROW_PRIORITY・F_GROW）の回答で確定したもの。追加回答で確定した目標への確認は「2段目」として、その回答の直後に出す（social_ease↔inner_focus、radiance↔inner_focus/deliberation） | 本人の確認なしに性格を反転させない |
 | 2 | observed_mismatch | K1 で選んだ特性が、現在像の特性と逆向き（inner_focus↔sociability、steadiness↔sensitivity、curiosity↔depth_mastery） | 測定・自己申告と本人選択のどちらも勝手に正しいとしない |
 | 3 | growth_mismatch | G1 と G2 が別の能力を指す | どちらを先に伸ばすかを確かめる |
 | 4 | keep_unclear | K1 が「わからない」で、K1・K2・K4 から保護特性が一つも出ない | 保護特性が未確定 |

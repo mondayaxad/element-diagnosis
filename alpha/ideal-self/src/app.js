@@ -135,15 +135,19 @@ const screens = {
       h('p', { class: 'lead', text: c.note }),
       h('section', { class: 'card', 'data-testid': 'current-traits' },
         h('h3', { text: '特性の候補' }),
-        c.traits.length ? h('ul', { class: 'ev' }, ...c.traits.map((t) => h('li', {}, TRAITS[t.trait].label, ' ', tag(t.inference_status, isEti ? 'ETI観測' : '自己申告'),
-          h('span', { class: 'small', text: isEti ? `（${t.evidence.axis_label} ${t.evidence.value}／規則 ${t.evidence.rule}）` : `（${t.evidence.question}：${t.evidence.option_label}）` }))))
+        c.traits.length ? h('ul', { class: 'ev' }, ...c.traits.map((t) => h('li', { 'data-testid': `cur-trait-${t.trait}`, 'data-status': t.inference_status }, TRAITS[t.trait].label, ' ', tag(t.inference_status, isEti ? 'ETIからの推論' : '自己申告'),
+          isEti ? h('span', { class: 'small' }, '（根拠：', tag('observed', 'ETI観測値'), `${t.evidence.axis_label} ${t.evidence.value}／規則 ${t.evidence.rule}）`)
+            : h('span', { class: 'small', text: `（${t.evidence.question}：${t.evidence.option_label}）` }))))
           : h('p', { class: 'small', text: 'はっきりした傾向は出ませんでした（不明として扱い、推測で補いません）。' }),
         h('h3', { text: '大切にしている価値観の候補' }),
-        c.values.length ? h('ul', { class: 'ev' }, ...c.values.map((v) => h('li', {}, VALUES[v.value].label, ' ', tag(v.inference_status, isEti ? 'ETI観測' : '自己申告'),
-          isEti && h('span', { class: 'small', text: `（中心化値 ${v.evidence.centered}・${v.evidence.rank}位）` }))))
+        c.values.length ? h('ul', { class: 'ev' }, ...c.values.map((v) => h('li', { 'data-testid': `cur-value-${v.value}`, 'data-status': v.inference_status }, VALUES[v.value].label, ' ', tag(v.inference_status, isEti ? 'ETIからの推論' : '自己申告'),
+          isEti && h('span', { class: 'small' }, '（根拠：', tag('observed', 'ETI観測値'), `中心化値 ${v.evidence.centered}・${v.evidence.rank}位／規則 ${v.evidence.rule}）`))))
           : h('p', { class: 'small', text: '不明' }),
         c.unknowns.length > 0 && h('p', { class: 'small', text: `「わからない」と答えた質問：${c.unknowns.join('、')}` })),
-      isEti && h('details', {}, h('summary', { text: '取り込んだ値と版' }), provenanceKv(c.provenance), scalesKv(c.scales)),
+      isEti && h('section', { class: 'card', 'data-testid': 'current-measurements', 'data-status': 'observed' },
+        h('h3', { text: 'ETIが測った値' }), tag('observed', 'ETI観測値'),
+        h('p', { class: 'small', text: '解釈を含まない尺度の値です。上の候補は、この値からアプリが規則で導いた推論です。' }),
+        h('details', {}, h('summary', { text: '値と版を見る' }), provenanceKv(c.provenance), scalesKv(c.scales))),
       btn('理想の自分について答える', () => dispatch(S.startIdeal), { testid: 'to-ideal' }),
     ];
   },
@@ -189,6 +193,9 @@ const screens = {
       h('p', { class: 'notice', 'data-testid': 'disclaimer', text: p.disclaimer }),
       h('section', { class: 'card', 'data-testid': 'summary' }, h('p', { class: 'summary', text: p.summary.text }), tag('system_inferred', '下書き・システムの推論')),
       legend(),
+      p.observed_measurements.length > 0 && h('details', { class: 'card', 'data-testid': 'draft-measurements', 'data-status': 'observed' },
+        h('summary', {}, tag('observed', 'ETI観測値'), 'ETIが測った値（解釈を含まない）'),
+        h('dl', { class: 'kv' }, ...p.observed_measurements.flatMap((m) => [h('dt', { text: `${m.domain}.${m.axis}` }), h('dd', { text: String(m.value) })]))),
       section('CORE｜残す自分らしさ', 'protected', p.protected_traits.map((t) => h('div', { class: 'card' },
         h('h3', { text: t.label }), tag(t.inference_status), t.confirmed ? tag('user_answer', '保護する') : tag('system_inferred', '候補（本人未確認）'),
         ...t.notes.map((n) => h('p', { class: 'small', text: n })), ev(t.sources)))),
@@ -198,7 +205,11 @@ const screens = {
         h('p', {}, h('span', { class: 'small', text: '具体的な振る舞い：' }), g.behavior.text, ' ', tag(g.behavior.inference_status, '推論')),
         g.gap.current_scene && h('p', { class: 'small', text: `いまの場面：${g.gap.current_scene}` }),
         h('p', { class: 'small', text: `性格とのかかわり：${{ augment: '性格はそのまま、使える場面を増やす', transform: '性格そのものを変えたい', unknown: '不明（保つ前提で下書き）' }[g.mode]}` }),
-        ...g.constraints.map((c) => h('p', { class: 'small', text: `制約：${c}` })), ev(g.sources)))),
+        ...g.constraints.map((c) => h('p', { class: 'small', text: `制約：${c}` })),
+        ...g.protection_check.map((c) => h('p', { class: 'small', 'data-testid': `check-${g.capability}-${c.trait}`, 'data-resolution': c.resolution },
+          tag(c.status, c.status === 'unknown' ? '未確定' : '本人の確認'),
+          `「${TRAITS[c.trait].short}」との関係：${{ augment: '保ったまま加える', release: '手放す', unknown: 'まだ決められない（保護したまま）', not_asked: '確認できていない（保護したまま）', not_asked_question_limit: '質問の上限で確認できなかった（保護したまま）' }[c.resolution]}`)),
+        ev(g.sources)))),
       section('ASPIRATION｜憧れる魅力', 'aspiration', p.aspirational_traits.map((a) => h('div', { class: 'card' },
         h('h3', { text: a.label }), tag(a.inference_status, '本人の選択'),
         h('p', {}, a.integration.text, ' ', tag(a.integration.inference_status, '推論')), ev(a.sources)))),
@@ -233,9 +244,13 @@ function section(title, id, kids) { return h('section', { 'data-testid': `sec-${
 function legend() { return h('p', { class: 'small' }, ...Object.keys(INFERENCE_STATUSES).map((k) => tag(k))); }
 function srcLine(s) {
   if (!s) return h('li', { text: '不明' });
-  if (s.kind === 'answer') return h('li', { text: `本人の回答 ${s.question}「${s.question_text}」→「${s.option_label}」` });
-  if (s.kind === 'observed_trait') return h('li', { text: s.evidence.kind === 'eti_scale' ? `ETI観測：${s.evidence.axis_label}（${s.evidence.axis}）= ${s.evidence.value}、規則 ${s.evidence.rule}` : `簡易質問 ${s.evidence.question}：${s.evidence.option_label}（自己申告）` });
-  if (s.kind === 'eti_values_centered') return h('li', { text: `ETI観測：VALUES ${s.evidence.axis} 中心化値 ${s.evidence.centered}（${s.evidence.rank}位、規則 ${s.evidence.rule}）` });
+  if (s.kind === 'answer') return h('li', { 'data-status': 'user_answer' }, tag('user_answer', '本人の選択'), `${s.question}「${s.question_text}」→「${s.option_label}」`);
+  if (s.kind === 'observed_trait') {
+    return s.evidence.kind === 'eti_scale'
+      ? h('li', { 'data-status': s.status }, tag(s.status, 'アプリの推論'), `ETIの値から規則 ${s.evidence.rule} で導いた候補（`, tag('observed', 'ETI観測値'), `${s.evidence.axis_label}（${s.evidence.axis}）= ${s.evidence.value}）`)
+      : h('li', { 'data-status': s.status }, tag(s.status, '自己申告'), `簡易質問 ${s.evidence.question}：${s.evidence.option_label}`);
+  }
+  if (s.kind === 'eti_values_centered') return h('li', { 'data-status': 'system_inferred' }, tag('system_inferred', 'アプリの推論'), `規則 ${s.evidence.rule} で導いた候補（`, tag('observed', 'ETI観測値'), `VALUES ${s.evidence.axis} 中心化値 ${s.evidence.centered}・${s.evidence.rank}位）`);
   if (s.kind === 'quick_question') return h('li', { text: `簡易質問 ${s.evidence.question}：${s.evidence.option_label}（自己申告）` });
   return h('li', { text: JSON.stringify(s) });
 }

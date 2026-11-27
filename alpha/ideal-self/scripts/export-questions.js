@@ -15,9 +15,9 @@ for (const r of ETI_TRAIT_RULES) L.push(`| ${r.domain}.${r.axis} | ${r.op} ${r.t
 L.push('', `VALUES：中心化値 > ${VALUE_CENTERED_MIN} の上位 ${VALUE_TOP_N} 軸まで。35〜65 の中間帯は「目立った傾向なし」として何も出さない（推測で補わない）。`, '');
 L.push('## 3. 理想像の基本12問（KEEP 4／GROW 4／EXPRESS 4）', '');
 for (const q of IDEAL_QUESTIONS) L.push(`### ${q.id}［${q.purpose}］${q.multi ? `（${q.multi}つまで）` : ''}　${q.text}`, `意図：${q.why}`, '', opts(q), '');
-L.push(`## 4. 追加質問（最大 ${MAX_FOLLOWUPS} 問・合計 ${MAX_QUESTIONS} 問まで）`, '', '基本12問がすべて終わってから判定する。上から優先し、上限を超えた分は下書きで「未確定（質問上限）」として示す。', '',
+L.push(`## 4. 追加質問（最大 ${MAX_FOLLOWUPS} 問・合計 ${MAX_QUESTIONS} 問まで）`, '', '基本12問がすべて終わってから判定する。1段目（基本12問の回答だけで決まるもの）を上から優先して並べ、2段目（追加回答で確定した成長目標への inversion）はその後ろに足す。合計6問を超えた分は出さず、下書きで「未確定（質問上限）」として示す。保護特性との確認が上限で出せなかった場合は、その特性を保護したまま未確定にする。', '',
   '| 優先 | 種類 | 出す条件 | 理由（画面に表示） |', '|---|---|---|---|',
-  `| 1 | inversion | 本人の保護特性（K1・K2・K4）と、伸ばしたい力（G1）・憧れ（E1）が反転のおそれのある組（${Object.entries(INVERSION_RISKS).filter(([, v]) => v.length).map(([k, v]) => `${k}↔${v.join('/')}`).join('、')}） | 本人の確認なしに性格を反転させない |`,
+  `| 1 | inversion | 本人の保護特性（K1・K2・K4）と、最終的に採用する成長目標・憧れ（E1）が反転のおそれのある組。成長目標は G1・G2 の回答、または追加質問（F_GROW_PRIORITY・F_GROW）の回答で確定したもの。追加回答で確定した目標への確認は「2段目」として、その回答の直後に出す（${Object.entries(INVERSION_RISKS).filter(([, v]) => v.length).map(([k, v]) => `${k}↔${v.join('/')}`).join('、')}） | 本人の確認なしに性格を反転させない |`,
   `| 2 | observed_mismatch | K1 で選んだ特性が、現在像の特性と逆向き（${OPPOSING_TRAITS.map((p) => p.join('↔')).join('、')}） | 測定・自己申告と本人選択のどちらも勝手に正しいとしない |`,
   '| 3 | growth_mismatch | G1 と G2 が別の能力を指す | どちらを先に伸ばすかを確かめる |',
   '| 4 | keep_unclear | K1 が「わからない」で、K1・K2・K4 から保護特性が一つも出ない | 保護特性が未確定 |',

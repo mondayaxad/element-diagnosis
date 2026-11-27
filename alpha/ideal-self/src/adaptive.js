@@ -36,34 +36,66 @@ export function keptTraitsFromBase(answers) {
   return [...set];
 }
 
+function inversionQuestion(target, t, stage) {
+  const tlabel = TRAITS[t].label;
+  const glabel = (CAPABILITIES[target] || ASPIRATIONS[target]).label;
+  return {
+    id: `F_INV_${target}_${t}`, purpose: 'FOLLOWUP', kind: 'inversion', target, trait: t, stage,
+    text: `「${tlabel}」を残したいと選び、「${glabel}」も望んでいます。近いのはどちらですか`,
+    reason: `保護特性「${tlabel}」と「${glabel}」が逆向きに解釈されるおそれがあるため。本人の確認なしに性格を反転させない`,
+    options: [
+      { id: 'augment', label: `「${TRAITS[t].short}」は保ったまま、必要な場面で「${glabel}」を使えるようにしたい` },
+      { id: 'release', label: `「${TRAITS[t].short}」は手放してもよい。大きく変わりたい` },
+      { id: UNKNOWN, label: 'まだ決められない' },
+    ],
+  };
+}
+
+/**
+ * 最終的に下書きに採用する成長目標（能力）を決める。profile.js と同じ規則を使う。
+ *   G1・G2 が別の能力 → F_GROW_PRIORITY の回答で決まる（未回答なら pending）。「両方」「まだ決められない」は両方。
+ *   G1・G2 のどちらかだけ・同じ → その能力。
+ *   どちらも無し → F_GROW の回答で決まる（未回答なら pending）。
+ * viaFollowup：追加質問の回答で確定したか（そうなら、その目標への確認は2段目で出す）
+ */
+export function resolveGrowthCaps(answers) {
+  const g1 = pick('G1', answers, 'capabilities');
+  const g2 = pick('G2', answers, 'capabilities');
+  if (g1.length && g2.length && g1[0] !== g2[0]) {
+    const a = (answers.F_GROW_PRIORITY || [])[0];
+    if (!a) return { caps: [], pending: true, viaFollowup: true, decidedBy: 'F_GROW_PRIORITY' };
+    const caps = a === g1[0] || a === g2[0] ? [a] : [g1[0], g2[0]];
+    return { caps, pending: false, viaFollowup: true, decidedBy: 'F_GROW_PRIORITY' };
+  }
+  if (g1.length || g2.length) return { caps: [...new Set([...g1, ...g2])], pending: false, viaFollowup: false, decidedBy: null };
+  const a = answers.F_GROW;
+  if (!a) return { caps: [], pending: true, viaFollowup: true, decidedBy: 'F_GROW' };
+  return { caps: a.filter((x) => x !== UNKNOWN && CAPABILITIES[x]), pending: false, viaFollowup: true, decidedBy: 'F_GROW' };
+}
+
 // 追加質問の候補を優先順に並べ、上限で切る。切られたものは overflow として返す（未確定として扱う）
+// 1段目：基本12問の回答だけで決まるもの。2段目：追加質問の回答で確定した成長目標への、保護特性との確認。
 export function computeFollowups(current, answers) {
   const cands = [];
-  const kept = keptTraitsFromBase(answers);
+  const stage2 = [];
+  // F_TRANSFORM（性格を変えたい部分）は1段目の確認が無いときだけ出るので、ここで外しても循環しない
+  const transformed = new Set((answers.F_TRANSFORM || []).filter((t) => TRAITS[t]));
+  const kept = keptTraitsFromBase(answers).filter((t) => !transformed.has(t));
+
   const obs = current.traits.map((t) => t.trait);
   const g1 = pick('G1', answers, 'capabilities');
   const g2 = pick('G2', answers, 'capabilities');
   const asp = pick('E1', answers, 'aspirations');
   const transform = (answers.G4 || []).includes('transform');
+  const growth = resolveGrowthCaps(answers);
 
-  // 1. 保護特性と成長・憧れの緊張（単純な反転を防ぐ）
-  for (const target of [...g1, ...asp]) {
-    for (const t of INVERSION_RISKS[target] || []) {
-      if (!kept.includes(t)) continue;
-      const tlabel = TRAITS[t].label;
-      const glabel = (CAPABILITIES[target] || ASPIRATIONS[target]).label;
-      cands.push({
-        id: `F_INV_${target}_${t}`, purpose: 'FOLLOWUP', kind: 'inversion', target, trait: t,
-        text: `「${tlabel}」を残したいと選び、「${glabel}」も望んでいます。近いのはどちらですか`,
-        reason: `保護特性「${tlabel}」と「${glabel}」が逆向きに解釈されるおそれがあるため。本人の確認なしに性格を反転させない`,
-        options: [
-          { id: 'augment', label: `「${TRAITS[t].short}」は保ったまま、必要な場面で「${glabel}」を使えるようにしたい` },
-          { id: 'release', label: `「${TRAITS[t].short}」は手放してもよい。大きく変わりたい` },
-          { id: UNKNOWN, label: 'まだ決められない' },
-        ],
-      });
-    }
-  }
+  // 1. 保護特性と成長・憧れの緊張（単純な反転を防ぐ）。成長目標は「最終的に採用するもの」を対象にする
+  const stage1Targets = [...(growth.viaFollowup ? [] : growth.caps), ...asp];
+  const stage2Targets = growth.viaFollowup && !growth.pending ? growth.caps : [];
+  for (const target of stage1Targets) for (const t of INVERSION_RISKS[target] || []) if (kept.includes(t)) cands.push(inversionQuestion(target, t, 1));
+  // 1段目の確認で本人が「手放す」と答えた特性は、2段目で改めて確かめない（2段目の自分の回答は数えない。数えると質問が消えて回答も消える）
+  const releasedStage1 = new Set(cands.filter((c) => (answers[c.id] || [])[0] === 'release').map((c) => c.trait));
+  for (const target of stage2Targets) for (const t of INVERSION_RISKS[target] || []) if (kept.includes(t) && !releasedStage1.has(t)) stage2.push(inversionQuestion(target, t, 2));
   // 2. 現在像（観測・自己申告）と、残したい特性の食い違い
   for (const t of pick('K1', answers, 'traits')) {
     for (const [a, b] of OPPOSING_TRAITS) {
@@ -148,8 +180,8 @@ export function computeFollowups(current, answers) {
     }
   }
 
-  // 重複（同じ id）を除く
+  // 重複（同じ id）を除く。1段目を優先順に並べ、2段目はその後ろに足す（回答済みの質問の順番が動かないように）
   const seen = new Set();
-  const uniq = cands.filter((c) => (seen.has(c.id) ? false : (seen.add(c.id), true)));
+  const uniq = [...cands, ...stage2].filter((c) => (seen.has(c.id) ? false : (seen.add(c.id), true)));
   return { followups: uniq.slice(0, MAX_FOLLOWUPS), overflow: uniq.slice(MAX_FOLLOWUPS) };
 }
