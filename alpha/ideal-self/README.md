@@ -11,8 +11,12 @@ Phase 3：模擬約束（上限と期限・引下げのみ）→「止めて」�
 ## 起動（ローカル・外部接続なし）
 
 ```bash
-node alpha/ideal-self/scripts/serve.js        # http://127.0.0.1:4173/ （127.0.0.1 のみで待ち受け）
+node alpha/ideal-self/scripts/serve.js            # http://127.0.0.1:4173/ （127.0.0.1 のみで待ち受け）
+node alpha/ideal-self/scripts/serve.js 4173 --key # 127.0.0.1 のまま、アクセスキー必須（Tailscale の serve から使う）
+node alpha/ideal-self/scripts/serve.js 4173 --lan # 同じ Wi-Fi の端末から（アクセスキー必須・自動生成）
 ```
+
+iPhone での本人テストの手順は `docs/IPHONE_TRIAL.md`。
 
 スマホ実機で見る場合は、同じ PC の Chrome DevTools のデバイス表示（390×844 など）を使う。LAN に公開する設定は入れていない。
 
