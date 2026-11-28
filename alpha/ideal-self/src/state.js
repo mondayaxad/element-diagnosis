@@ -5,7 +5,7 @@ import { importEtiResult } from './eti_import.js';
 import { currentFromEti, currentFromQuick, validQuickAnswers } from './current.js';
 import { idealQuestionsFor, computeFollowups } from './adaptive.js';
 import { buildFutureSelfProfile } from './profile.js';
-import { AXES, validateRatings, lowAxes, REVIEW_REASONS, revisionQuestions, createLock, verifyLock, buildGreeting } from './persona.js';
+import { AXES, validateRatings, lowAxes, REVIEW_REASONS, revisionQuestions, createLock, verifyLock, restoreLock, buildGreeting } from './persona.js';
 import { respond, MAX_USER_TURNS, isCrisis, isStopRequest } from './dialogue.js';
 import * as C from './commitment.js';
 import { buildIntervention } from './intervention.js';
@@ -386,10 +386,10 @@ export function goBack(state) {
       return cancelRevision(state); // 最初の質問から戻る＝見直しをやめて、開始前に戻す
     }
     case 'dialogue': case 'locked_view': case 'stop': return { ...state, step: state.persona.locked ? 'home' : 'records' };
+    case 'records': return { ...state, step: state.persona.locked ? 'home' : (state.current ? 'current_review' : 'current_select') };
     case 'commit_new': return commitDiscard(state);
     case 'commit_check': return { ...state, step: 'commit_new', commitments: { ...slice(state), draft: { ...slice(state).draft, step: 'facts' } } };
     case 'commit_view': case 'reflect': return { ...state, step: 'records' };
-    case 'records': return { ...state, step: state.persona.locked ? 'home' : 'records' };
     default: return state;
   }
 }
@@ -402,11 +402,42 @@ export function revoke(state, purpose) {
     if (a.target === 'current' && a.action === 'delete') s = { ...s, current: null };
     if (a.target === 'profile' && a.action === 'delete_and_regenerate') s = { ...s, profile: null, followups: [], overflow: [] };
     if (a.target === 'route' && a.action === 'goto_current_select') s = { ...s, step: 'current_select' };
-    if (a.target === 'persona_lifecycle' && a.action === 'delete') s = { ...s, persona: emptyPersona(), dialogue: { persona_version: null, messages: [] } };
+    if (a.target === 'persona_lifecycle' && a.action === 'delete') {
+      // 消す版を参照している操作の記録（下書き・評価・承認・見直し）も残さない
+      const gone = new Set([...(s.persona.versions || []).map((v) => v.persona_version), s.persona.locked && s.persona.locked.persona_version].filter(Boolean));
+      const log = s.log.filter((e) => ![...gone].some((pv) => JSON.stringify(e).includes(pv)));
+      s = { ...s, persona: emptyPersona(), dialogue: { persona_version: null, messages: [] }, log };
+    }
   }
+  // 消した人格の版で作った「止めて」の介入も残さない（本人が入力した約束はそのまま残す）
+  s = dropStaleIntervention(s);
   return withLog(s, { type: 'revoke', purpose, actions: actions.map((a) => `${a.target}:${a.action}`) });
 }
 
 export const canPersist = (state) => isGranted(state.consents, 'memory');
+
+// 「止めて」の介入のうち、いまの承認済みの版で作られていないもの（撤回・置き換えで消えた版）を取り除く。
+// アプリとして伝えた介入（persona_version: null）は人格に由来しないので残す
+export function dropStaleIntervention(state) {
+  const iv = state.stopView && state.stopView.intervention;
+  if (!iv || !iv.persona_version) return state;
+  const lock = state.persona && state.persona.locked;
+  if (lock && lock.persona_version === iv.persona_version) return state;
+  return withLog({ ...state, stopView: { halted: false, intervention: null, commitment_id: state.stopView.commitment_id }, step: state.step === 'stop' ? (lock ? 'home' : 'records') : state.step },
+    { type: 'stale_intervention_dropped' }); // 消えた版の識別子は記録に残さない
+}
+
+// 端末保存から戻す。承認した人格は検証し直し（改変されていれば使わない）、古い版の介入は取り除く
+export function restoreSaved(saved, subjectId) {
+  const base = initialState(subjectId);
+  if (!(saved && saved.consents && saved.consents.memory && saved.consents.memory.status === 'granted')) return base;
+  const persona = { ...base.persona, ...(saved.persona || {}) };
+  persona.locked = restoreLock(persona.locked);
+  const st = { ...base, ...saved, persona, dialogue: saved.dialogue || base.dialogue, commitments: saved.commitments || base.commitments };
+  // 承認済みの版と違う版の会話の記録は使わない（介入の文も含む）
+  if (!persona.locked || st.dialogue.persona_version !== persona.locked.persona_version) st.dialogue = { persona_version: null, messages: [] };
+  if (!persona.locked && ['home', 'dialogue', 'locked_view'].includes(st.step)) st.step = st.profile ? 'meet' : 'consent';
+  return dropStaleIntervention(st);
+}
 
 export { BASE_QUESTION_COUNT, MAX_QUESTIONS };

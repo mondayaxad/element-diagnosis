@@ -6,26 +6,18 @@ import { TRAITS, VALUES, AXIS_LABELS, UNKNOWN } from './catalog.js';
 import { INFERENCE_STATUSES } from './profile.js';
 import { SYNTHETIC_RECORDS, SYNTHETIC_SUBJECT_ID } from '../fixtures/synthetic_eti.js';
 import * as store from './storage.js';
-import { REVIEW_REASONS, LOW_RATING_MAX, AVATAR, restoreLock } from './persona.js';
+import { REVIEW_REASONS, LOW_RATING_MAX, AVATAR } from './persona.js';
 import { SUGGESTIONS } from './dialogue.js';
 import * as C from './commitment.js';
+import * as CT from './commitment_text.js';
 const now = () => Date.now();
 
 const app = document.getElementById('app');
 const backBtn = document.getElementById('back');
 const progress = document.getElementById('progress');
 
-let state = (() => {
-  const saved = store.load();
-  if (!(saved && saved.consents && saved.consents.memory && saved.consents.memory.status === 'granted')) return S.initialState(SYNTHETIC_SUBJECT_ID);
-  // 端末保存から戻すときは、承認した人格の内容を検証し直す（改変されていたら使わない）
-  const base = S.initialState(SYNTHETIC_SUBJECT_ID);
-  const persona = { ...base.persona, ...(saved.persona || {}) };
-  persona.locked = restoreLock(persona.locked);
-  const st = { ...base, ...saved, persona, dialogue: saved.dialogue || base.dialogue };
-  if (!persona.locked && ['home', 'dialogue', 'locked_view'].includes(st.step)) st.step = st.profile ? 'meet' : 'consent';
-  return st;
-})();
+// 端末保存から戻す（承認した人格の検証・古い版の介入の除去は state.js の restoreSaved）
+let state = S.restoreSaved(store.load(), SYNTHETIC_SUBJECT_ID);
 let ui = { recordKey: null, multi: [], multiQ: null };
 
 function dispatch(fn) {
@@ -95,6 +87,7 @@ const screens = {
         h('h3', { text: '質問から始める（6問）' }),
         h('p', { class: 'small', text: '未受診の方向け。結果は「あなたの自己申告」として扱い、診断と同じ精度があるとはみなしません。' }),
         btn('質問から始める', () => dispatch((s) => S.chooseRoute(s, 'quick')), { testid: 'route-quick' })),
+      (state.commitments.items.length > 0) && btn('約束の記録を見る', () => dispatch(S.openRecords), { secondary: true, testid: 'to-records-select' }),
       consentPanel(),
     ];
   },
@@ -426,13 +419,14 @@ const screens = {
       h('section', { class: 'card' }, h('h3', { text: `${yen(d.estimate_yen)}を、いま出せますか` }), seg('can_afford', 'afford')),
       h('section', { class: 'card' }, h('h3', { text: 'その金額を出す価値があると思いますか' }), seg('worth_it', 'worth')),
       h('section', { class: 'card' },
-        h('h3', { text: '期限までの上限（円）' }),
+        h('h3', { text: '事前に決める予算（円）' }),
         !both && h('p', { class: 'small', text: '上の2つに答えると決められます。' }),
-        both && h('p', { class: 'small', 'data-testid': 'cap-suggestion', text: sug === 0 ? '「いいえ」「わからない」があるので、上限 0 円をおすすめします（決めるのはあなたです）。' : `見積もった ${yen(sug)} を上限にできます。もっと低くしても構いません。` }),
+        both && h('p', { class: 'small', 'data-testid': 'cap-suggestion', text: sug === 0 ? '「いいえ」「わからない」があるので、予算 0 円（課金しない）をおすすめします（決めるのはあなたです）。' : `見積もった ${yen(sug)} を予算にできます。もっと低くしても構いません。` }),
         capInput,
         h('h3', { text: '期限', class: 'mt' }),
         h('div', { class: 'seg' }, ...C.DEADLINE_DAYS.map((n) => h('button', { type: 'button', class: 'segbtn', 'aria-pressed': String(c.days === n), 'data-testid': `days-${n}`, onclick: () => { c.days = n; render(); } }, `${n}日`))),
-        h('p', { class: 'small', text: '期限までは、上限を超える追い課金をしない約束です。期限までは上限を下げることだけができ、上げる・解除することはできません。' })),
+        h('p', { class: 'small', 'data-testid': 'rule-preview', text: c.cap !== null && Number.isInteger(c.cap) && c.cap >= 0 ? `約束：${CT.ruleText(c.cap)}。` : '約束：事前に決めた予算で足りなくても、期限まで追加で課金しない。' }),
+        h('p', { class: 'small', text: '期限までは予算を下げることだけができ、上げる・解除することはできません。' })),
       btn('この約束で決める', () => dispatch((st) => S.commitConfirm(st, { can_afford: c.can_afford, worth_it: c.worth_it, cap_yen: c.cap, deadline_days: c.days }, now())), { disabled: !ready, testid: 'commit-confirm' }),
       btn('戻って直す', () => dispatch(S.goBack), { secondary: true }),
     ];
@@ -447,16 +441,16 @@ const screens = {
     return [
       h('h1', { text: active ? '有効な約束' : '終わった約束' }),
       commitmentCard(c, t, 'commit-card'),
-      h('section', { class: 'card' }, h('h3', { text: '変更の記録' }), h('ul', { class: 'ev', 'data-testid': 'commit-history' }, ...c.history.map((x) => h('li', { text: x.type === 'created' ? `${fmt(x.at)} 作成（上限 ${yen(x.cap_yen)}）` : `${fmt(x.at)} 上限を ${yen(x.from)} → ${yen(x.to)} に下げた` })))),
+      h('section', { class: 'card' }, h('h3', { text: '変更の記録' }), h('ul', { class: 'ev', 'data-testid': 'commit-history' }, ...c.history.map((x) => h('li', { text: x.type === 'created' ? `${fmt(x.at)} 作成（事前に決めた予算 ${CT.budgetText(x.cap_yen)}）` : `${fmt(x.at)} 予算を ${CT.budgetText(x.from)} → ${CT.budgetText(x.to)} に下げた` })))),
       active && h('section', { class: 'card', 'data-testid': 'commit-lower' },
-        h('h3', { text: '上限を下げる' }),
-        h('p', { class: 'small', text: '期限までは、下げることだけができます。' }),
+        h('h3', { text: '予算を下げる' }),
+        h('p', { class: 'small', text: '期限までは、予算を下げることだけができます（0 円にすると「課金しない」になります）。' }),
         lowerIn,
-        btn('上限を下げる', () => { const v = lowerIn.value.trim() === '' ? NaN : Number(lowerIn.value); dispatch((st) => S.commitLower(st, c.id, v, c.version, now())); }, { testid: 'commit-lower-btn' })),
+        btn('予算を下げる', () => { const v = lowerIn.value.trim() === '' ? NaN : Number(lowerIn.value); dispatch((st) => S.commitLower(st, c.id, v, c.version, now())); }, { testid: 'commit-lower-btn' })),
       active && h('section', { class: 'card' },
-        h('p', { class: 'small', text: '上げる・解除するは、期限まで受け付けません。' }),
+        h('p', { class: 'small', text: '予算を上げる・約束を解除するは、期限まで受け付けません。' }),
         h('div', { class: 'row' },
-          btn('上限を上げたい', () => dispatch((st) => S.commitRaise(st, c.id, c.cap_yen + 1, c.version, now())), { secondary: true, testid: 'commit-raise' }),
+          btn('予算を上げたい', () => dispatch((st) => S.commitRaise(st, c.id, c.cap_yen + 1, c.version, now())), { secondary: true, testid: 'commit-raise' }),
           btn('解除したい', () => dispatch((st) => S.commitCancel(st, c.id, c.version, now())), { secondary: true, testid: 'commit-cancel' }))),
       active && state.persona.locked && btn('止めて', () => dispatch((st) => S.stop(st, now())), { testid: 'stop-from-commit', extraClass: 'stop' }),
       !active && !c.reflection && btn('振り返る', () => dispatch((st) => S.openReflect(st, c.id)), { testid: 'to-reflect' }),
@@ -476,7 +470,7 @@ const screens = {
     if (v.halted) {
       out.push(h('section', { class: 'card safety', 'data-testid': 'safety-halt' }, h('h3', { text: '模擬対話を止めています' }),
         h('p', { class: 'small', text: '身近な信頼できる人や、お住まいの地域の公的な相談窓口につながってください。いますぐ命の危険があるときは、緊急通報をしてください。' })));
-    } else if (v.intervention) {
+    } else if (v.intervention && (!v.intervention.persona_version || (state.persona.locked && state.persona.locked.persona_version === v.intervention.persona_version))) {
       const iv = v.intervention;
       out.push(h('div', { class: 'row-center' }, iv.speaker === 'future_self' ? avatarImg('avatar avatar-sm') : null, h('p', { class: 'small', text: iv.speaker === 'future_self' ? `5年後のあなた（承認済みの版 ${iv.persona_version}）` : 'アプリからの案内（承認済みの5年後の自分がいません）' })));
       out.push(h('section', { class: 'bubble', 'data-testid': 'stop-message' }, h('p', { text: iv.text })));
@@ -500,7 +494,7 @@ const screens = {
     return [
       h('h1', { text: '振り返る' }),
       commitmentCard(c, now(), 'reflect-commitment'),
-      h('section', { class: 'card' }, h('h3', { text: '追い課金せずに済みましたか' }),
+      h('section', { class: 'card' }, h('h3', { 'data-testid': 'reflect-question', text: CT.reflectionQuestion(c.cap_yen) }),
         h('div', { class: 'seg wrap' }, ...Object.entries(C.OUTCOMES).map(([id, label]) => h('button', { type: 'button', class: 'segbtn', 'aria-pressed': String(r.outcome === id), 'data-testid': `outcome-${id}`, onclick: () => { r.outcome = id; render(); } }, label)))),
       h('section', { class: 'card' }, h('h3', { text: '何が助けになりましたか（いくつでも）' }),
         ...C.HELPED.map((x) => h('button', { type: 'button', class: 'opt', 'aria-pressed': String(r.helped.includes(x.id)), 'data-testid': `helped-${x.id}`, onclick: () => toggle(x.id) }, h('span', { class: 'mark' }), h('span', { text: x.label }))),
@@ -527,11 +521,13 @@ const screens = {
           h('dt', { text: '未記録' }), h('dd', { text: String(sum.unrecorded) })),
         h('p', { class: 'small', text: '未記録は「守れなかった」に数えません。記録はこの端末の中だけにあります（記憶の保存に同意したときだけ端末に残ります）。' })),
       ...items.map((c) => h('button', { type: 'button', class: 'opt', 'data-testid': `record-${c.id}`, onclick: () => dispatch((st) => S.viewCommitment(st, c.id)) },
-        h('span', {}, h('span', { class: 'badge', text: C.statusAt(c, t) === 'active' ? '有効' : (c.reflection ? C.OUTCOMES[c.reflection.outcome] : '未記録') }), `${c.target}／上限 ${yen(c.cap_yen)}／${fmt(c.deadline_at)} まで`))),
+        h('span', {}, h('span', { class: 'badge', text: C.statusAt(c, t) === 'active' ? '有効' : (c.reflection ? C.OUTCOMES[c.reflection.outcome] : '未記録') }), `${c.target}／予算 ${CT.budgetText(c.cap_yen)}／${fmt(c.deadline_at)} まで`))),
       !items.length && h('p', { class: 'small', text: '記録はありません。' }),
       !active && btn('約束をつくる', () => dispatch((st) => S.commitStart(st, now())), { testid: 'commit-new' }),
       items.length > 0 && (ui.confirmDelete === '*'
-        ? h('section', { class: 'card safety' }, h('p', { text: 'すべての約束・振り返り・「止めて」の会話の記録を削除します。約束中のものも消えます。元に戻せません。' }),
+        ? h('section', { class: 'card safety', 'data-testid': 'delete-all-explain' }, h('p', { text: 'すべての約束・振り返り・「止めて」の会話の記録を削除します。期限などのデータは残しません。' }),
+          active && h('p', { text: '有効な約束も削除され、その時点で有効ではなくなります。すぐに新しい約束を作れます。' }),
+          h('p', { text: '元に戻せません。' }),
           btn('すべて削除する', () => dispatch(S.commitDeleteAll), { testid: 'delete-all-confirm' }), btn('やめる', () => { ui.confirmDelete = null; render(); }, { secondary: true }))
         : btn('すべて削除…', () => { ui.confirmDelete = '*'; render(); }, { secondary: true, testid: 'delete-all' })),
       state.persona.locked && btn('ホームへ', () => dispatch(S.goHome), { secondary: true }),
@@ -598,14 +594,20 @@ function commitmentCard(c, t, testid) {
     h('p', { class: 'commit-rule', text: c.rule }),
     h('dl', { class: 'kv' },
       h('dt', { text: '狙う対象' }), h('dd', { text: c.target }),
-      h('dt', { text: '上限' }), h('dd', { 'data-testid': `${testid}-cap`, text: yen(c.cap_yen) }),
+      h('dt', { text: '事前に決めた予算' }), h('dd', { 'data-testid': `${testid}-cap`, text: CT.budgetText(c.cap_yen) }),
       h('dt', { text: '期限' }), h('dd', { text: `${fmt(c.deadline_at)}（${active ? remaining(c.deadline_at - t) : '終了'}）` }),
       h('dt', { text: '決めた理由' }), h('dd', { text: c.reason }),
       c.reflection && h('dt', { text: '振り返り' }), c.reflection && h('dd', { text: `${C.OUTCOMES[c.reflection.outcome]}${c.reflection.helped.length ? `／助けになったこと：${c.reflection.helped.map((x) => C.HELPED.find((y) => y.id === x).label).join('、')}` : ''}${c.reflection.note ? `／${c.reflection.note}` : ''}` })));
 }
 function deleteControl(c) {
   if (ui.confirmDelete === c.id) {
-    return h('section', { class: 'card safety' }, h('p', { text: 'この約束と、その振り返り・「止めて」の会話の記録を削除します。約束中でも削除できます（約束の解除ではなく、データの削除です）。元に戻せません。' }),
+    const active = C.statusAt(c, now()) === 'active';
+    return h('section', { class: 'card safety', 'data-testid': 'delete-explain' },
+      h('p', { text: active ? 'この約束は有効ですが、削除できます。' : 'この約束を削除します。' }),
+      h('ul', { class: 'ev' },
+        h('li', { text: '狙う対象・事前に決めた予算・期限・理由・振り返り・この約束の「止めて」の会話の記録を、すべて消します。期限などのデータは残しません。' }),
+        active && h('li', { text: '削除した時点で、この約束は有効ではなくなります。期限まで待たずに、すぐに新しい約束を作れます。' }),
+        h('li', { text: '元に戻せません。' })),
       btn('削除する', () => dispatch((st) => S.commitDelete(st, c.id)), { testid: 'delete-confirm' }), btn('やめる', () => { ui.confirmDelete = null; render(); }, { secondary: true }));
   }
   return btn('この記録を削除…', () => { ui.confirmDelete = c.id; render(); }, { secondary: true, testid: 'delete' });

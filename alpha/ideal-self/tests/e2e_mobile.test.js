@@ -456,18 +456,19 @@ test('スマホ幅：Phase 3 一連 — 約束を作る（確認してから確�
     // ---- 約束を作る
     const finish = await createCommitment(page, { target: '限定キャラ（合成）', have: 8000, need: 28800, yen: 30000, cap: 3000, shots: true });
     assert.match(await tid(page, 'commit-facts').innerText(), /足りない石\s*20,800[\s\S]*30,000 円（あなたの見積もり・模擬）/);
-    assert.match(await tid(page, 'cap-suggestion').innerText(), /上限 0 円をおすすめします/);
+    assert.match(await tid(page, 'cap-suggestion').innerText(), /予算 0 円（課金しない）をおすすめします/);
     assert.equal(await tid(page, 'c-cap').inputValue(), '0');
     await finish();
+    assert.equal(await tid(page, 'rule-preview').innerText(), '約束：事前に決めた予算は 3,000 円。足りなくても、期限まで追加で課金しない。');
     // 二重の確定：同じボタンを続けて2回押す（2回目は古い画面からの操作になる）
     await tid(page, 'commit-confirm').evaluate((b) => { b.click(); b.click(); });
     assert.match(await errorText(page), /二重の確定は受け付けません/);
     assert.equal(await stepIs(page), 'commit_view');
-    assert.match(await tid(page, 'commit-card').innerText(), /期限まで、上限 3,000 円を超える追い課金をしない[\s\S]*貯めたいお金がある/);
+    assert.match(await tid(page, 'commit-card').innerText(), /事前に決めた予算は 3,000 円。足りなくても、期限まで追加で課金しない[\s\S]*貯めたいお金がある/);
     assert.match(await tid(page, 'commit-card').innerText(), /12月5日 12:00（あと 7日 0時間）/);
     // ---- 守る：引上げ・解除は拒否、引下げは受け付ける。二重の引下げは古い版として拒否
     await tid(page, 'commit-raise').click();
-    assert.match(await errorText(page), /期限までは上限を上げられません/);
+    assert.match(await errorText(page), /期限までは予算を上げられません（足りなくても追加で課金しない約束です）/);
     await tid(page, 'commit-cancel').click();
     assert.match(await errorText(page), /期限までは約束を解除できません/);
     await tid(page, 'c-lower').fill('5000');
@@ -486,14 +487,14 @@ test('スマホ幅：Phase 3 一連 — 約束を作る（確認してから確�
     await page.locator('#back').click();
 
     // ---- 「止めて」：最初に有効な約束、次に5年後の自分の言葉と行動一つ
-    assert.match(await tid(page, 'home-commitment').innerText(), /上限 1,000 円/);
+    assert.match(await tid(page, 'home-commitment').innerText(), /事前に決めた予算は 1,000 円。足りなくても、期限まで追加で課金しない/);
     await tid(page, 'stop').click();
     assert.equal(await stepIs(page), 'stop');
     const order = await page.locator('main [data-testid]').evaluateAll((els) => els.map((e) => e.dataset.testid));
     assert.ok(order.indexOf('stop-commitment') < order.indexOf('stop-message'), order.join(','));
     assert.equal(order[0], 'stop-commitment');
     const msg = await tid(page, 'stop-message').innerText();
-    assert.match(msg, /止めに来たよ。限定キャラ（合成）を狙っているんだね。あなたは「貯めたいお金がある」と決めて[\s\S]*上限 1,000 円/);
+    assert.match(msg, /止めに来たよ。限定キャラ（合成）を狙っているんだね。あなたは「貯めたいお金がある」と決めて、事前に予算を 1,000 円と決めて、足りなくても12月5日 12:00まで追加で課金しない、と約束した/);
     assert.match(await tid(page, 'stop-action').innerText(), /購入画面を閉じて、5分だけ一人で考える時間をとろう/);
     assert.match(await tid(page, 'stop-notice').innerText(), /購入を止めることはできません/);
     const all = await page.locator('main').innerText();
@@ -530,6 +531,7 @@ test('スマホ幅：Phase 3 一連 — 約束を作る（確認してから確�
     assert.equal(await tid(page, 'commit-card').getAttribute('data-status'), 'ended');
     for (const id of ['commit-lower', 'commit-raise', 'commit-cancel']) assert.equal(await tid(page, id).count(), 0, id);
     await tid(page, 'to-reflect').click();
+    assert.equal(await tid(page, 'reflect-question').innerText(), '事前に決めた予算（1,000 円）のほかに、期限まで追加で課金せずに済みましたか');
     assert.equal(await tid(page, 'reflect-save').isDisabled(), true);
     await tid(page, 'outcome-partial').click();
     await tid(page, 'helped-closed_screen').click();
@@ -542,14 +544,21 @@ test('スマホ幅：Phase 3 一連 — 約束を作る（確認してから確�
 
     // ---- 約束中の削除：新しい約束を作り、有効なまま削除する
     const fin2 = await createCommitment(page, { target: '武器（合成）', have: 0, need: 16000, yen: 20000, afford: 'yes', worth: 'yes', days: 3 });
-    assert.match(await tid(page, 'cap-suggestion').innerText(), /20,000 円 を上限にできます/);
+    assert.match(await tid(page, 'cap-suggestion').innerText(), /20,000 円 を予算にできます/);
     await fin2();
     await tid(page, 'commit-confirm').click();
     assert.equal(await tid(page, 'commit-card').getAttribute('data-status'), 'active');
     await tid(page, 'delete').click();
+    const explain = await tid(page, 'delete-explain').innerText();
+    assert.match(explain, /この約束は有効ですが、削除できます/);
+    assert.match(explain, /期限などのデータは残しません/);
+    assert.match(explain, /削除した時点で、この約束は有効ではなくなります。期限まで待たずに、すぐに新しい約束を作れます/);
+    assert.doesNotMatch(explain, /解除ではなく/);
+    await tid(page, 'delete-explain').scrollIntoViewIfNeeded();
     await shot(page, '59_delete_active');
     await tid(page, 'delete-confirm').click();
     assert.equal(await stepIs(page), 'records');
+    assert.equal(await tid(page, 'commit-new').count(), 1); // 削除した約束は有効でなくなり、すぐに新しい約束を作れる
     assert.equal(await page.locator('[data-testid^="record-c"]').count(), 1);
     assert.doesNotMatch(await page.locator('main').innerText(), /武器（合成）/);
     // ---- すべて削除
@@ -560,5 +569,61 @@ test('スマホ幅：Phase 3 一連 — 約束を作る（確認してから確�
     await page.getByRole('button', { name: 'ホームへ' }).click();
     await tid(page, 'to-dialogue').click();
     assert.doesNotMatch(await tid(page, 'chat').innerText(), /限定キャラ|貯めたいお金/); // 「止めて」の会話の記録も消えている
+  }, { clockAt: T0 });
+});
+
+
+test('スマホ幅：Phase 3 受入レビュー修正 — 予算 0 円の文言／ETI 撤回で旧人格の「止めて」が状態と端末保存から消え、再読み込み後も約束だけ見られる（外部通信なし）', { skip: !chromium && 'Playwright が無い' }, async () => {
+  await withPage(async (page) => {
+    // 記憶の保存にも同意（端末保存を確かめるため）
+    await tid(page, 'consent-eti_import').check();
+    await tid(page, 'consent-memory').check();
+    await tid(page, 'consent-next').click();
+    await tid(page, 'route-eti').click();
+    await tid(page, 'identity').check();
+    await tid(page, 'record-own_introvert').click();
+    await tid(page, 'import').click();
+    await tid(page, 'to-ideal').click();
+    await answerIdeal(page, PLAN);
+    await tid(page, 'build-draft').click();
+    await tid(page, 'to-meet').click();
+    await tid(page, 'to-evaluate').click();
+    await rate(page, { self_continuity: 4, aspiration: 4, attainability: 4 });
+    await tid(page, 'approve').click();
+    const pv = (await tid(page, 'home-version').innerText()).match(/ISA-\S+/)[0];
+    // 予算 0 円の約束
+    const fin = await createCommitment(page, { target: '限定キャラ（合成）', have: 8000, need: 28800, yen: 30000, afford: 'no', worth: 'no' });
+    await fin();
+    assert.equal(await tid(page, 'rule-preview').innerText(), '約束：事前に決めた予算は 0 円（課金しない）。足りなくても、期限まで追加で課金しない。');
+    await tid(page, 'commit-confirm').click();
+    assert.match(await tid(page, 'commit-card').innerText(), /事前に決めた予算は 0 円（課金しない）。足りなくても、期限まで追加で課金しない[\s\S]*事前に決めた予算\s*0 円（課金しない）/);
+    await page.getByRole('button', { name: '記録の一覧へ' }).click();
+    await page.locator('#back').click();
+    await tid(page, 'stop').click();
+    assert.match(await tid(page, 'stop-message').innerText(), /止めに来たよ。[\s\S]*12月5日 12:00まで、課金はしない（予算 0 円）。足りなくても追加で課金しない、と約束した/);
+    await shot(page, '61_stop_budget_zero');
+    const saved1 = await page.evaluate(() => localStorage.getItem('isa-alpha-phase1'));
+    assert.ok(saved1.includes(pv) && saved1.includes('止めに来たよ'));
+    // ---- ETI 取込同意を撤回
+    await tid(page, 'stop-home').click();
+    await page.locator('[data-testid="consent-panel"] summary').click();
+    await tid(page, 'revoke-eti').click();
+    assert.equal(await stepIs(page), 'current_select');
+    const saved2 = await page.evaluate(() => localStorage.getItem('isa-alpha-phase1'));
+    assert.ok(!saved2.includes(pv), '端末保存に旧人格版が残っています');
+    assert.ok(!saved2.includes('止めに来たよ'), '端末保存に旧人格の介入が残っています');
+    assert.ok(saved2.includes('限定キャラ（合成）'), '本人の約束は残る');
+    // ---- 再読み込み後も、古い介入は出ず、約束は見られる
+    await page.reload();
+    assert.equal(await stepIs(page), 'current_select');
+    await tid(page, 'to-records-select').click();
+    assert.equal(await page.locator('[data-testid^="record-c"]').count(), 1);
+    await tid(page, 'record-c1').click();
+    assert.match(await tid(page, 'commit-card').innerText(), /事前に決めた予算は 0 円（課金しない）/);
+    assert.equal(await tid(page, 'stop-from-commit').count(), 0);
+    assert.doesNotMatch(await page.locator('main').innerText(), /止めに来たよ|5年後のあなた/);
+    await shot(page, '62_after_revoke_commitment');
+    const saved3 = await page.evaluate(() => localStorage.getItem('isa-alpha-phase1'));
+    assert.ok(!saved3.includes(pv) && !saved3.includes('止めに来たよ'));
   }, { clockAt: T0 });
 });

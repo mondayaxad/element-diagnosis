@@ -43,7 +43,7 @@ test('作る：狙う対象・手持ちの石・見積もった金額・理由�
   assert.equal(d.reason, '旅行の資金にしたい');
 });
 
-test('作る：「出せるか」「出す価値があるか」に答えてから上限と期限を確定する', () => {
+test('作る：「出せるか」「出す価値があるか」に答えてから事前の予算と期限を確定する', () => {
   const s = S.commitFacts(S.commitStart(approved(), T0), FACTS, T0);
   assert.equal(code(() => S.commitConfirm(s, { ...CHOICE, can_afford: undefined }, T0)), 'check_required');
   assert.equal(code(() => S.commitConfirm(s, { ...CHOICE, worth_it: 'maybe' }, T0)), 'check_required');
@@ -57,7 +57,7 @@ test('作る：「出せるか」「出す価値があるか」に答えてか�
   assert.equal(c.cap_yen, 0);
   assert.equal(c.deadline_at, T0 + 7 * C.DAY);
   assert.deepEqual(c.check, { can_afford: 'no', worth_it: 'unsure', suggested_cap_yen: 0 });
-  assert.match(c.rule, /期限まで、上限 0 円を超える追い課金をしない/);
+  assert.equal(c.rule, '事前に決めた予算は 0 円（課金しない）。足りなくても、期限まで追加で課金しない');
   assert.equal(c.version, 1);
   // 支払い・自動見積もりの項目は無い
   assert.doesNotMatch(JSON.stringify(c), /payment|card|stripe|price_api|auto_estimate/i);
@@ -65,7 +65,7 @@ test('作る：「出せるか」「出す価値があるか」に答えてか�
   assert.equal(code(() => S.commitConfirm(t, CHOICE, T0)), 'no_draft');
 });
 
-test('作る：有効な約束があるあいだは、新しい約束を作れない（作り直しで上限を上げられない）', () => {
+test('作る：有効な約束があるあいだは、新しい約束を作れない（作り直しで予算を上げられない）', () => {
   const s = committed();
   assert.equal(code(() => S.commitStart(s, T0 + C.DAY)), 'active_exists');
   // 期限後は作れる
@@ -73,7 +73,7 @@ test('作る：有効な約束があるあいだは、新しい約束を作れ�
 });
 
 // ---------------------------------------------------------------- 守る：変更拒否・期限・二重操作
-test('守る：期限まで上限の引下げだけ受け付け、引上げ・解除は拒否する', () => {
+test('守る：期限まで予算の引下げだけ受け付け、引上げ・解除は拒否する', () => {
   let s = committed();
   const c = theOne(s);
   assert.equal(code(() => S.commitRaise(s, c.id, 5000, c.version, T0 + 1)), 'raise_forbidden');
@@ -85,7 +85,7 @@ test('守る：期限まで上限の引下げだけ受け付け、引上げ・�
   assert.equal(theOne(s).cap_yen, 1000);
   assert.equal(theOne(s).version, 2);
   assert.deepEqual(theOne(s).history.map((h) => h.type), ['created', 'lowered']);
-  assert.match(theOne(s).rule, /上限 1,000 円/);
+  assert.equal(theOne(s).rule, '事前に決めた予算は 1,000 円。足りなくても、期限まで追加で課金しない');
   assert.equal(theOne(s).deadline_at, c.deadline_at); // 期限は変わらない
 });
 
@@ -150,7 +150,7 @@ test('止めて：最初に有効な約束を示し、承認済みの5年後の�
   assert.equal(s.stopView.commitment_id, 'c1');
   assert.equal(iv.speaker, 'future_self');
   assert.equal(iv.persona_version, s.persona.locked.persona_version);
-  assert.match(iv.text, /限定キャラ（合成）[\s\S]*「貯めたいお金がある」と決めて[\s\S]*上限 3,000 円/);
+  assert.match(iv.text, /限定キャラ（合成）[\s\S]*「貯めたいお金がある」と決めて、事前に予算を 3,000 円と決めて、足りなくても12月5日 \d\d:00まで追加で課金しない、と約束した/);
   assert.equal(iv.action.id, 'close_and_think'); // E4「状況を整理し…」
   assert.equal((iv.text.match(/いまできることを一つだけ/g) || []).length, 1);
   assert.doesNotMatch(iv.text + iv.notice, CLAIMS);

@@ -2,13 +2,16 @@
 // 時刻は呼び出し側から now（ミリ秒）で渡す（期限・二重操作をテストで再現できるように）。
 //
 // 約束の決まり
-//   ・作る：狙う対象・手持ちの石・追加で必要と見積もった金額・理由を整理 → 「出せるか」「出す価値があるか」を確認 → 上限と期限を確定
-//   ・期限まで：上限の引下げだけ受け付ける。引上げ・解除は不可。有効な約束がある間は、新しい約束も作れない（作り直しで上げられないように）
+//   ・作る：狙う対象・手持ちの石・追加で必要と見積もった金額・理由を整理 → 「出せるか」「出す価値があるか」を確認 → 事前の予算と期限を確定
+//     約束は「事前に決めた予算は X 円。足りなくても、期限まで追加で課金しない」（cap_yen＝事前に決めた予算）
+//   ・期限まで：予算の引下げだけ受け付ける。引上げ・解除は不可。有効な約束がある間は、新しい約束も作れない（作り直しで上げられないように）
 //   ・期限を過ぎると自動で終わる（status: ended）。終わった約束も変更できない（振り返りだけ記録できる）
 //   ・更新は版（version）付き。古い版からの操作（二重送信・別の画面からの操作）は拒否する
 //   ・削除は「データの削除」。約束中でもできる（解除ではなく、記録そのものを消す）
 
-export const COMMITMENT_VERSION = 'ISA-COMMIT-0.1.0';
+import { ruleText } from './commitment_text.js';
+
+export const COMMITMENT_VERSION = 'ISA-COMMIT-0.2.0'; // 0.2.0：「事前に決めた予算」と「期限まで追加で課金しない」を分けた文言
 export const DAY = 24 * 60 * 60 * 1000;
 export const DEADLINE_DAYS = [3, 7, 14, 30];
 export const MAX_YEN = 10_000_000;
@@ -39,13 +42,13 @@ export const MESSAGES = {
   no_draft: '確定する下書きがありません（二重の確定は受け付けません）',
   facts_required: '先に状況を整理してください',
   check_required: '「出せるか」「出す価値があるか」の両方に答えてください',
-  invalid_cap: '上限は0以上の整数（円）で入力してください',
+  invalid_cap: '予算は0以上の整数（円）で入力してください',
   invalid_deadline: '期限を選んでください',
   not_found: '約束が見つかりません',
   stale_version: '画面の内容が古くなっています。もう一度開き直してください（二重の操作は受け付けません）',
   ended: '期限を過ぎた約束は変更できません',
-  not_lower: '期限までは、上限を下げることだけができます',
-  raise_forbidden: '期限までは上限を上げられません',
+  not_lower: '期限までは、予算を下げることだけができます',
+  raise_forbidden: '期限までは予算を上げられません（足りなくても追加で課金しない約束です）',
   cancel_forbidden: '期限までは約束を解除できません（データの削除はできます）',
   not_ended: '振り返りは期限の後に記録できます',
   invalid_outcome: '結果を選んでください',
@@ -97,9 +100,9 @@ export function setFacts(slice, facts, now) {
   };
 }
 
-// ---------------------------------------------------------------- 作る（2）確認 → 上限と期限を確定
+// ---------------------------------------------------------------- 作る（2）確認 → 事前の予算と期限を確定
 // 「その金額を出せるか」「出す価値があるか」の両方に答えるまで確定できない。
-// 「いいえ」「わからない」のときは上限 0 円を勧める（決めるのは本人）。
+// 「いいえ」「わからない」のときは予算 0 円を勧める（決めるのは本人）。
 export function suggestedCap(draft, check) {
   if (!check || check.can_afford !== 'yes' || check.worth_it !== 'yes') return 0;
   return draft.estimate_yen;
@@ -111,7 +114,7 @@ export function confirmDraft(slice, { can_afford, worth_it, cap_yen, deadline_da
   if (d.step !== 'check') fail('facts_required');
   if (activeCommitment(slice, now)) fail('active_exists');
   if (!(can_afford in CHECK_ANSWERS) || !(worth_it in CHECK_ANSWERS)) fail('check_required', '「出せるか」「出す価値があるか」の両方に答えてください');
-  if (!isInt(cap_yen, 0, MAX_YEN)) fail('invalid_cap', '上限は0以上の整数（円）で入力してください');
+  if (!isInt(cap_yen, 0, MAX_YEN)) fail('invalid_cap');
   if (!DEADLINE_DAYS.includes(deadline_days)) fail('invalid_deadline', '期限を選んでください');
   const seq = slice.seq + 1;
   const c = {
@@ -121,7 +124,7 @@ export function confirmDraft(slice, { can_afford, worth_it, cap_yen, deadline_da
     reason_id: d.reason_id, reason: d.reason,
     check: { can_afford, worth_it, suggested_cap_yen: suggestedCap(d, { can_afford, worth_it }) },
     cap_yen, deadline_days, created_at: now, deadline_at: now + deadline_days * DAY,
-    rule: `期限まで、上限 ${cap_yen.toLocaleString('ja-JP')} 円を超える追い課金をしない`,
+    rule: ruleText(cap_yen),
     history: [{ type: 'created', at: now, cap_yen }],
     reflection: null,
   };
@@ -140,14 +143,14 @@ function findFor(slice, id, now, expectedVersion) {
 }
 const replace = (slice, c) => ({ ...slice, items: slice.items.map((x) => (x.id === c.id ? c : x)) });
 
-// 上限の引下げだけ受け付ける
+// 予算の引下げだけ受け付ける
 export function lowerCap(slice, id, newCap, expectedVersion, now) {
   const c = findFor(slice, id, now, expectedVersion);
   if (!isInt(newCap, 0, MAX_YEN)) fail('invalid_cap');
-  if (newCap >= c.cap_yen) fail('not_lower', '期限までは、上限を下げることだけができます');
+  if (newCap >= c.cap_yen) fail('not_lower');
   const next = {
     ...c, version: c.version + 1, cap_yen: newCap,
-    rule: `期限まで、上限 ${newCap.toLocaleString('ja-JP')} 円を超える追い課金をしない`,
+    rule: ruleText(newCap),
     history: [...c.history, { type: 'lowered', at: now, from: c.cap_yen, to: newCap }],
   };
   return replace(slice, next);
@@ -156,7 +159,7 @@ export function lowerCap(slice, id, newCap, expectedVersion, now) {
 // 引上げ・解除は期限まで不可（期限後は約束が終わっているので、やはり変更しない）
 export function raiseCap(slice, id, _newCap, expectedVersion, now) {
   findFor(slice, id, now, expectedVersion);
-  fail('raise_forbidden', '期限までは上限を上げられません');
+  fail('raise_forbidden');
 }
 export function cancelCommitment(slice, id, expectedVersion, now) {
   findFor(slice, id, now, expectedVersion);

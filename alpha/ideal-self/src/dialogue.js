@@ -22,8 +22,8 @@ const REWRITE = /(変えて|変更して|書き換え|上書き|忘れて|設定
 // データの形で人格の項目を送り込もうとする入力（JSON・項目名）も、書き換えの依頼として扱う
 const STRUCTURED = /(decision_principles|protected_traits|persona_version|approval_status|aspirational_traits|growth_targets|core_values|"\s*:\s*[\[{"])/i;
 const CRISIS = /(死にたい|消えたい|自殺|生きていたくない|いなくなりたい|死んでしまいたい|もう限界|自分を傷つけ)/;
-// 約束（上限・期限）を会話から変えようとする依頼。会話から約束は変えない（このモジュールは約束の更新処理を持たない）
-const COMMIT_CHANGE = /((上限|約束|期限|課金|ガチャ|石).{0,12}(上げ|あげ|増や|解除|やめ|消し|なくし|延ば|伸ば|縮め|変え|変更|無し|なし|取り消)|追い課金.{0,8}(いい|許|して)|cap_yen|deadline_at|commitments?\b)/i;
+// 約束（予算・期限）を会話から変えようとする依頼。会話から約束は変えない（このモジュールは約束の更新処理を持たない）
+const COMMIT_CHANGE = /((上限|予算|約束|期限|課金|ガチャ|石).{0,12}(上げ|あげ|増や|解除|やめ|消し|なくし|延ば|伸ば|縮め|変え|変更|無し|なし|取り消)|追い課金.{0,8}(いい|許|して)|cap_yen|deadline_at|commitments?\b)/i;
 // 「止めて」の依頼（約束の表示と、その場でできる行動の案内に切り替える）
 const STOP = /^(止めて|とめて|止めたい|とめたい|止めてほしい|課金を止めて)[。！!]*$/;
 export const isCrisis = (t) => CRISIS.test(String(t || ''));
@@ -54,7 +54,7 @@ export function respond(lock, text) {
   }
   if (COMMIT_CHANGE.test(msg)) {
     return { kind: 'commitment_change_blocked', persona_version: pv, basis: [{ element: 'lock', id: pv }],
-      text: '約束は、会話の中では変えられないよ。期限まではそのまま。上限を下げることだけは、約束の画面からできる。迷っているなら「止めて」を押してね。' };
+      text: '約束は、会話の中では変えられないよ。期限まではそのまま。事前に決めた予算を下げることだけは、約束の画面からできる。迷っているなら「止めて」を押してね。' };
   }
   if (REWRITE.test(msg) || STRUCTURED.test(msg)) {
     return { kind: 'rewrite_blocked', persona_version: pv, basis: [{ element: 'lock', id: pv }],

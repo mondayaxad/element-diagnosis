@@ -2,8 +2,9 @@
 // 最初に有効な約束を示し、承認済みの「5年後の自分」が、本人の決めた理由を踏まえて、その場でできる行動を一つだけ伝える。
 // このアプリは外部の購入を止められない。止めたとは言わず、閉じるのは本人の手であることを伝える。
 import { verifyLock } from './persona.js';
+import { promiseSpoken } from './commitment_text.js';
 
-export const INTERVENTION_VERSION = 'ISA-STOP-0.1.0';
+export const INTERVENTION_VERSION = 'ISA-STOP-0.2.0'; // 0.2.0：予算と追加課金しないことを分けて伝える
 export const NOT_STOPPED_NOTICE = 'このアプリは、ほかのアプリやお店での購入を止めることはできません。画面を閉じるのは、あなたの手です。';
 
 // その場でできる行動（一つだけ選ぶ）。どれも最初に購入画面を閉じる
@@ -25,7 +26,6 @@ export function chooseAction(lock) {
   return ACTIONS.default;
 }
 
-const yen = (n) => `${n.toLocaleString('ja-JP')} 円`;
 const day = (ms) => {
   const d = new Date(ms);
   return `${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -41,7 +41,7 @@ export function buildIntervention(lock, commitment) {
   if (commitment) {
     basis.unshift({ element: 'commitment', id: commitment.id, version: commitment.version }, { element: 'commitment_reason', id: commitment.reason_id });
     const head = persona ? '止めに来たよ。' : '';
-    text = `${head}${commitment.target}を狙っているんだね。あなたは「${commitment.reason}」と決めて、${day(commitment.deadline_at)}まで上限 ${yen(commitment.cap_yen)} と約束した。いまできることを一つだけ。${action.text}。`;
+    text = `${head}${commitment.target}を狙っているんだね。あなたは「${commitment.reason}」と決めて、${promiseSpoken(commitment.cap_yen, day(commitment.deadline_at))}。いまできることを一つだけ。${action.text}。`;
   } else {
     text = `${persona ? '止めに来たよ。' : ''}いま有効な約束はないけれど、迷っているなら、いまできることを一つだけ。${action.text}。`;
   }
