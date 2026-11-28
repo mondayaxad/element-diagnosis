@@ -6,11 +6,13 @@ import { currentFromEti, currentFromQuick, validQuickAnswers } from './current.j
 import { idealQuestionsFor, computeFollowups } from './adaptive.js';
 import { buildFutureSelfProfile } from './profile.js';
 import { AXES, validateRatings, lowAxes, REVIEW_REASONS, revisionQuestions, createLock, verifyLock, buildGreeting } from './persona.js';
-import { respond, MAX_USER_TURNS } from './dialogue.js';
+import { respond, MAX_USER_TURNS, isCrisis, isStopRequest } from './dialogue.js';
+import * as C from './commitment.js';
+import { buildIntervention } from './intervention.js';
 import { QUICK_QUESTIONS, IDEAL_QUESTIONS, BASE_QUESTION_COUNT, MAX_QUESTIONS } from './questions.js';
 import { UNKNOWN } from './catalog.js';
 
-export const STEPS = ['consent', 'current_select', 'eti_import', 'quick', 'current_review', 'ideal', 'draft', 'meet', 'evaluate', 'revise', 'home', 'dialogue', 'locked_view'];
+export const STEPS = ['consent', 'current_select', 'eti_import', 'quick', 'current_review', 'ideal', 'draft', 'meet', 'evaluate', 'revise', 'home', 'dialogue', 'locked_view', 'commit_new', 'commit_check', 'commit_view', 'stop', 'reflect', 'records'];
 
 export function initialState(subjectId) {
   return {
@@ -25,6 +27,8 @@ export function initialState(subjectId) {
     // Phase 2：人格の版・評価・承認・固定。seq は時刻の代わりの通し番号（同じ操作なら同じ結果になるように）
     persona: emptyPersona(),
     dialogue: { persona_version: null, messages: [] },
+    // Phase 3：模擬約束。会話（dialogue）とは別の領域で、更新は下の commit* 関数からだけ行う
+    commitments: C.initialCommitments(),
     log: [],
   };
 }
@@ -294,7 +298,7 @@ export function reviseApproved(state, reasonIds) {
 }
 
 // 模擬対話：固定した版だけを読み、会話の記録だけを足す（人格・判断原則・アバター・回答・同意には触れない）
-export function sendMessage(state, text) {
+export function sendMessage(state, text, opts = {}) {
   const lock = state.persona.locked;
   if (!lock) throw new Error('no approved persona');
   if (!verifyLock(lock)) throw new Error('approved persona failed integrity check');
@@ -304,7 +308,10 @@ export function sendMessage(state, text) {
   if (turns >= MAX_USER_TURNS) throw new Error('dialogue turn limit reached');
   const msg = String(text || '').trim();
   if (!msg) throw new Error('empty message');
-  const reply = respond(lock, msg);
+  // 「止めて」は、約束を読むだけの介入に切り替える（約束は更新しない）。強い苦痛の表現は respond の中断処理を優先
+  const reply = isStopRequest(msg) && !isCrisis(msg)
+    ? buildIntervention(lock, C.activeCommitment(state.commitments || C.initialCommitments(), opts.now ?? Date.now()))
+    : respond(lock, msg);
   const messages = [...d.messages, { role: 'user', text: msg.slice(0, 400) }, { role: 'future_self', ...reply }];
   // 強い苦痛の表現があったら、この会話はここで止める（続けるときは本人が新しく始める）
   return { ...state, dialogue: { persona_version: lock.persona_version, messages, halted: reply.halt ? { reason: 'safety' } : null } };
@@ -314,6 +321,51 @@ export function restartDialogue(state) {
   if (!lock) throw new Error('no approved persona');
   return { ...state, dialogue: { persona_version: lock.persona_version, messages: [], halted: null }, step: 'dialogue' };
 }
+// ================================================================ Phase 3：模擬約束（会話とは別の更新処理）
+const slice = (state) => state.commitments || C.initialCommitments();
+const withC = (state, commitments, ev) => withLog({ ...state, commitments }, ev);
+export const activeCommitment = (state, now) => C.activeCommitment(slice(state), now);
+export function commitStart(state, now) { return { ...withC(state, C.startDraft(slice(state), now), { type: 'commit_draft' }), step: 'commit_new' }; }
+export function commitFacts(state, facts, now) { return { ...withC(state, C.setFacts(slice(state), facts, now), { type: 'commit_facts' }), step: 'commit_check' }; }
+export function commitConfirm(state, choice, now) {
+  const next = C.confirmDraft(slice(state), choice, now);
+  const c = next.items[next.items.length - 1];
+  return { ...withC(state, next, { type: 'commit_confirmed', id: c.id, cap_yen: c.cap_yen, deadline_at: c.deadline_at }), step: 'commit_view', viewCommitment: c.id };
+}
+export function commitDiscard(state) { return { ...withC(state, C.discardDraft(slice(state)), { type: 'commit_draft_discarded' }), step: state.persona.locked ? 'home' : 'records' }; }
+export function commitLower(state, id, cap, version, now) { return withC(state, C.lowerCap(slice(state), id, cap, version, now), { type: 'commit_lowered', id, cap_yen: cap }); }
+export function commitRaise(state, id, cap, version, now) { return withC(state, C.raiseCap(slice(state), id, cap, version, now), { type: 'commit_raised' }); }
+export function commitCancel(state, id, version, now) { return withC(state, C.cancelCommitment(slice(state), id, version, now), { type: 'commit_cancelled' }); }
+export function commitReflect(state, id, record, now) { return { ...withC(state, C.reflect(slice(state), id, record, now), { type: 'commit_reflected', id }), step: 'records' }; }
+export const viewCommitment = (state, id) => { if (!slice(state).items.some((c) => c.id === id)) throw new Error('not found'); return { ...state, step: 'commit_view', viewCommitment: id }; };
+export const openRecords = (state) => ({ ...state, step: 'records' });
+export const openReflect = (state, id) => ({ ...state, step: 'reflect', viewCommitment: id });
+
+// 削除（約束中でも可）。その約束に触れた会話の記録（「止めて」の案内）も一緒に消す
+const purgeDialogue = (state, pred) => ({ ...state.dialogue, messages: (state.dialogue.messages || []).filter((m) => !pred(m)) });
+export function commitDelete(state, id) {
+  const next = C.deleteCommitment(slice(state), id);
+  const log = state.log.filter((e) => !((e.id === id && String(e.type).startsWith('commit_')) || (e.type === 'stop' && e.commitment === id)));
+  const stopView = state.stopView && state.stopView.commitment_id === id ? null : state.stopView;
+  return { ...state, commitments: next, dialogue: purgeDialogue(state, (m) => m.commitment_id === id), log, stopView, step: 'records', viewCommitment: null };
+}
+export function commitDeleteAll(state) {
+  const log = state.log.filter((e) => !(String(e.type).startsWith('commit_') || (e.type === 'stop' && e.commitment)));
+  return { ...state, commitments: C.deleteAll(slice(state)), dialogue: purgeDialogue(state, (m) => !!m.commitment_id), log, stopView: null, step: 'records', viewCommitment: null };
+}
+
+// 「止めて」：最初に有効な約束を示し、承認済みの5年後の自分が、その場でできる行動を一つ伝える。
+// 会話が強い苦痛で中断されているときは、人格の言葉は出さず、Phase 2 の案内を続ける
+export function stop(state, now) {
+  const lock = state.persona.locked && verifyLock(state.persona.locked) ? state.persona.locked : null;
+  const commitment = C.activeCommitment(slice(state), now);
+  const d = lock && state.dialogue.persona_version === lock.persona_version ? state.dialogue : { persona_version: lock ? lock.persona_version : null, messages: [] };
+  if (d.halted) return { ...state, step: 'stop', stopView: { halted: true, commitment_id: commitment ? commitment.id : null } };
+  const iv = buildIntervention(lock, commitment);
+  const dialogue = lock ? { ...d, persona_version: lock.persona_version, messages: [...d.messages, { role: 'future_self', ...iv }] } : state.dialogue;
+  return withLog({ ...state, dialogue, step: 'stop', stopView: { halted: false, intervention: iv, commitment_id: iv.commitment_id } }, { type: 'stop', commitment: iv.commitment_id, action: iv.action.id });
+}
+
 export const dialogueTurnsLeft = (state) => MAX_USER_TURNS - state.dialogue.messages.filter((m) => m.role === 'user').length;
 export { AXES };
 
@@ -333,7 +385,11 @@ export function goBack(state) {
       if (r && i > 0) return { ...state, persona: { ...state.persona, revision: { ...r, index: i - 1 } } };
       return cancelRevision(state); // 最初の質問から戻る＝見直しをやめて、開始前に戻す
     }
-    case 'dialogue': case 'locked_view': return { ...state, step: 'home' };
+    case 'dialogue': case 'locked_view': case 'stop': return { ...state, step: state.persona.locked ? 'home' : 'records' };
+    case 'commit_new': return commitDiscard(state);
+    case 'commit_check': return { ...state, step: 'commit_new', commitments: { ...slice(state), draft: { ...slice(state).draft, step: 'facts' } } };
+    case 'commit_view': case 'reflect': return { ...state, step: 'records' };
+    case 'records': return { ...state, step: state.persona.locked ? 'home' : 'records' };
     default: return state;
   }
 }

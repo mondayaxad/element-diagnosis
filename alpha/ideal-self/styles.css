@@ -143,3 +143,18 @@ pre { white-space: pre-wrap; word-break: break-all; max-height: 50vh; overflow: 
 .chat-input { flex: 1; min-width: 0; min-height: 48px; border-radius: 14px; border: 1px solid var(--card-line); background: rgba(255,255,255,.05); color: var(--text); padding: 0 14px; font-size: 16px; }
 .btn.send { width: auto; margin: 0; padding: 0 18px; min-height: 48px; }
 .card.safety { border-color: var(--danger); }
+
+/* ---- Phase 3：模擬約束・止めて・振り返り ---- */
+.field { display: block; margin: 0 0 12px; }
+.field .small { display: block; margin-bottom: 4px; }
+.text-input { width: 100%; min-height: 48px; border-radius: 12px; border: 1px solid var(--card-line); background: rgba(255,255,255,.05); color: var(--text); padding: 10px 14px; font-size: 16px; font-family: inherit; }
+.text-input:disabled { opacity: .45; }
+textarea.text-input { min-height: 84px; margin-top: 8px; resize: vertical; }
+.mt { margin-top: 16px; }
+.seg.wrap { flex-wrap: wrap; }
+.seg.wrap .segbtn { flex: 1 1 40%; }
+.card.commit.is-active { border-color: rgba(216,184,120,.55); box-shadow: inset 0 0 0 1px rgba(216,184,120,.18); }
+.commit-rule { font-weight: 600; line-height: 1.6; margin: 0 0 10px; }
+.btn.stop { background: #e3a08f; color: #2a0f0a; font-size: 18px; letter-spacing: .2em; min-height: 58px; }
+.card.action { border-color: rgba(216,184,120,.55); }
+.card.action p:last-child { font-size: 17px; font-weight: 600; margin: 0; }

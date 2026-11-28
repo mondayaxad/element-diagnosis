@@ -8,6 +8,8 @@ import { SYNTHETIC_RECORDS, SYNTHETIC_SUBJECT_ID } from '../fixtures/synthetic_e
 import * as store from './storage.js';
 import { REVIEW_REASONS, LOW_RATING_MAX, AVATAR, restoreLock } from './persona.js';
 import { SUGGESTIONS } from './dialogue.js';
+import * as C from './commitment.js';
+const now = () => Date.now();
 
 const app = document.getElementById('app');
 const backBtn = document.getElementById('back');
@@ -28,9 +30,12 @@ let ui = { recordKey: null, multi: [], multiQ: null };
 
 function dispatch(fn) {
   const prevStep = state.step;
-  try { state = fn(state); } catch (e) { console.error(e); }
+  let err = null;
+  // 本人に伝える拒否（約束の変更不可・入力の誤りなど。code 付き）は画面に出す。それ以外は不具合として記録
+  try { state = fn(state); } catch (e) { if (e && e.code) err = e.message; else console.error(e); }
   ui.multi = []; ui.multiQ = null;
-  if (state.step !== prevStep) { ui.reasons = []; ui.forceReview = false; ui.ratings = null; }
+  if (state.step !== prevStep) { ui.reasons = []; ui.forceReview = false; ui.ratings = null; ui.check = null; ui.confirmDelete = null; ui.reflect = null; if (!['commit_new', 'commit_check'].includes(state.step)) { ui.facts = null; ui.reasonId = null; } }
+  ui.error = err;
   if (S.canPersist(state)) store.save(state); else store.clear();
   render();
   app.focus({ preventScroll: true });
@@ -51,7 +56,7 @@ function h(tag, attrs, ...kids) {
   return el;
 }
 const tag = (status, label) => h('span', { class: `tag ${status}`, text: label || INFERENCE_STATUSES[status] || status });
-const btn = (label, onclick, extra = {}) => h('button', { type: 'button', class: `btn ${extra.secondary ? 'secondary' : ''}`, onclick, disabled: extra.disabled, 'data-testid': extra.testid }, label);
+const btn = (label, onclick, extra = {}) => h('button', { type: 'button', class: `btn ${extra.secondary ? 'secondary' : ''} ${extra.extraClass || ''}`, onclick, disabled: extra.disabled, 'data-testid': extra.testid }, label);
 
 // ---------------------------------------------------------------
 const screens = {
@@ -323,6 +328,7 @@ const screens = {
         h('div', {}, h('p', { class: 'eyebrow', text: '育てたい力' }), ...p.growth_targets.slice(0, 2).map((g) => h('p', { class: 'small', text: g.label }))),
         h('div', {}, h('p', { class: 'eyebrow', text: '憧れる魅力' }), ...p.aspirational_traits.map((a) => h('p', { class: 'small', text: a.label })))),
       h('section', { class: 'card' }, h('p', { class: 'eyebrow', text: '判断原則（固定）' }), h('ul', { class: 'ev' }, ...L.decision_principles.map((d) => h('li', { text: d.text })))),
+      ...homeCommitment(),
       btn('話す', () => dispatch(S.openDialogue), { testid: 'to-dialogue' }),
       btn('承認した人格を見る', () => dispatch(S.viewLocked), { secondary: true, testid: 'to-locked' }),
       draftDiffers && h('p', { class: 'small', 'data-testid': 'draft-pending', text: `見直し中の版（${state.profile.persona_version}）があります。承認するまでは、会話は上の承認済みの版で行います。` }),
@@ -349,15 +355,16 @@ const screens = {
     const left = S.dialogueTurnsLeft(state);
     const halted = state.dialogue.persona_version === L.persona_version && state.dialogue.halted;
     const input = h('input', { type: 'text', class: 'chat-input', 'data-testid': 'chat-input', maxlength: '200', placeholder: left > 0 ? 'ここに入力（この端末の中だけで処理）' : '今日はここまで', disabled: left <= 0 });
-    const send = (t) => { if (t && t.trim()) dispatch((s) => S.sendMessage(s, t)); };
+    const send = (t) => { if (t && t.trim()) dispatch((s) => S.sendMessage(s, t, { now: now() })); };
     return [
       h('div', { class: 'row-center chat-head' }, avatarImg('avatar avatar-sm'), h('div', {}, h('p', { class: 'meet-name', text: '5年後のあなた' }), h('p', { class: 'small', 'data-testid': 'chat-version', text: `承認済みの版 ${L.persona_version} で話しています` }))),
-      h('p', { class: 'small', text: '短い模擬対話です（ルールで返答・外部送信なし）。会話から人格や判断原則は変わりません。' }),
+      h('p', { class: 'small', text: '短い模擬対話です（ルールで返答・外部送信なし）。会話から人格や判断原則、約束は変わりません。' }),
+      C.activeCommitment(state.commitments, now()) && btn('止めて', () => dispatch((st) => S.stop(st, now())), { testid: 'stop-from-dialogue', extraClass: 'stop' }),
       h('div', { class: 'chat', 'data-testid': 'chat' },
         h('div', { class: 'msg fs' }, h('p', { text: L.greeting.lines[0] }), h('p', { text: L.greeting.lines[L.greeting.lines.length - 1] })),
         ...msgs.map((m) => (m.role === 'user'
           ? h('div', { class: 'msg me' }, h('p', { text: m.text }))
-          : h('div', { class: `msg fs ${m.kind}`, 'data-kind': m.kind }, h('p', { text: m.text }),
+          : h('div', { class: `msg fs ${m.kind}`, 'data-kind': m.kind }, h('p', { text: m.text }), m.notice && h('p', { class: 'basis small', text: m.notice }),
             m.basis.length > 0 && h('p', { class: 'basis small', text: `根拠：${m.basis.map((b) => basisText(b, L.profile)).join('／')}` }))))),
       halted && h('section', { class: 'card safety', 'data-testid': 'safety-halt' },
         h('h3', { text: '模擬対話を止めています' }),
@@ -367,6 +374,167 @@ const screens = {
       !halted && h('form', { class: 'chat-form', onsubmit: (e) => { e.preventDefault(); send(input.value); } }, input, h('button', { type: 'submit', class: 'btn send', disabled: left <= 0, 'data-testid': 'chat-send' }, '送る')),
       !halted && h('p', { class: 'small', 'data-testid': 'turns-left', text: `残り ${left} 回` }),
       btn('ホームへ', () => dispatch(S.goHome), { secondary: true }),
+    ];
+  },
+  // ---------------------------------------------------------------- Phase 3：模擬約束
+  commit_new() {
+    const d = C.activeCommitment(state.commitments, now()) ? null : (state.commitments.draft || {});
+    // 入力中の値は ui.facts に持つ（理由を選んで描き直しても消えないように）
+    const typed = ui.facts || (ui.facts = {});
+    const f = (id, label, attrs = {}) => h('label', { class: 'field' }, h('span', { class: 'small', text: label }),
+      h('input', { id, 'data-testid': id, class: 'text-input', ...attrs, value: id in typed ? typed[id] : attrs.value, oninput: (e) => { typed[id] = e.target.value; } }));
+    const reasonSel = ui.reasonId || d.reason_id || '';
+    const submit = () => {
+      const v = (id) => document.getElementById(id).value;
+      const num = (id) => (v(id).trim() === '' ? NaN : Number(v(id)));
+      dispatch((st) => S.commitFacts(st, { target: v('c-target'), stones_have: num('c-have'), stones_needed: num('c-need'), estimate_yen: num('c-yen'), reason_id: reasonSel, reason_text: reasonSel === 'own' ? v('c-reason-text') : '' }, now()));
+    };
+    return [
+      h('h1', { text: '約束をつくる（1/2）' }),
+      h('p', { class: 'lead', text: 'いまの状況を整理します。金額は、あなたが自分で見積もった模擬の数字です。このアプリは見積もりも支払いもしません。' }),
+      h('section', { class: 'card' },
+        f('c-target', '狙う対象（例：限定キャラ）', { type: 'text', maxlength: '40', value: d.target || '' }),
+        f('c-have', '手持ちの石', { type: 'number', inputmode: 'numeric', min: '0', step: '1', value: d.stones_have ?? '' }),
+        f('c-need', '狙う対象に必要と思う石', { type: 'number', inputmode: 'numeric', min: '0', step: '1', value: d.stones_needed ?? '' }),
+        f('c-yen', '追加で必要と見積もった金額（円・模擬）', { type: 'number', inputmode: 'numeric', min: '0', step: '1', value: d.estimate_yen ?? '' })),
+      h('section', { class: 'card' }, h('h3', { text: '追い課金しないと決める理由' }),
+        ...C.REASONS.map((r) => h('button', { type: 'button', class: 'opt', 'aria-pressed': String(reasonSel === r.id), 'data-testid': `reason-${r.id}`, onclick: () => { ui.reasonId = r.id; render(); } }, h('span', { class: 'mark' }), h('span', { text: r.label }))),
+        reasonSel === 'own' && h('input', { id: 'c-reason-text', 'data-testid': 'c-reason-text', class: 'text-input', type: 'text', maxlength: '80', placeholder: '理由を短く', value: typed['c-reason-text'] || '', oninput: (e) => { typed['c-reason-text'] = e.target.value; } })),
+      btn('次へ：確かめる', submit, { testid: 'commit-facts-next' }),
+      btn('やめる', () => dispatch(S.commitDiscard), { secondary: true }),
+    ];
+  },
+
+  commit_check() {
+    const d = state.commitments.draft;
+    const c = ui.check || (ui.check = { can_afford: null, worth_it: null, cap: null, days: null });
+    const both = c.can_afford && c.worth_it;
+    const sug = both ? C.suggestedCap(d, c) : null;
+    const seg = (key, testid) => h('div', { class: 'seg' }, ...Object.entries(C.CHECK_ANSWERS).map(([id, label]) => h('button', { type: 'button', class: 'segbtn', 'aria-pressed': String(c[key] === id), 'data-testid': `${testid}-${id}`, onclick: () => { c[key] = id; if (c.can_afford && c.worth_it && !c.capTouched) c.cap = C.suggestedCap(d, c); render(); } }, label)));
+    const capInput = h('input', { id: 'c-cap', 'data-testid': 'c-cap', class: 'text-input', type: 'number', inputmode: 'numeric', min: '0', step: '1', value: c.cap ?? '', disabled: !both, oninput: (e) => { c.cap = e.target.value === '' ? null : Number(e.target.value); c.capTouched = true; } });
+    const ready = both && c.days && c.cap !== null;
+    return [
+      h('h1', { text: '約束をつくる（2/2）' }),
+      h('section', { class: 'card', 'data-testid': 'commit-facts' },
+        h('p', {}, h('strong', { text: d.target })),
+        h('dl', { class: 'kv' },
+          h('dt', { text: '手持ちの石' }), h('dd', { text: d.stones_have.toLocaleString('ja-JP') }),
+          h('dt', { text: '必要と思う石' }), h('dd', { text: d.stones_needed.toLocaleString('ja-JP') }),
+          h('dt', { text: '足りない石' }), h('dd', { text: d.stones_short.toLocaleString('ja-JP') }),
+          h('dt', { text: '見積もった金額' }), h('dd', { text: `${yen(d.estimate_yen)}（あなたの見積もり・模擬）` }),
+          h('dt', { text: '理由' }), h('dd', { text: d.reason }))),
+      h('section', { class: 'card' }, h('h3', { text: `${yen(d.estimate_yen)}を、いま出せますか` }), seg('can_afford', 'afford')),
+      h('section', { class: 'card' }, h('h3', { text: 'その金額を出す価値があると思いますか' }), seg('worth_it', 'worth')),
+      h('section', { class: 'card' },
+        h('h3', { text: '期限までの上限（円）' }),
+        !both && h('p', { class: 'small', text: '上の2つに答えると決められます。' }),
+        both && h('p', { class: 'small', 'data-testid': 'cap-suggestion', text: sug === 0 ? '「いいえ」「わからない」があるので、上限 0 円をおすすめします（決めるのはあなたです）。' : `見積もった ${yen(sug)} を上限にできます。もっと低くしても構いません。` }),
+        capInput,
+        h('h3', { text: '期限', class: 'mt' }),
+        h('div', { class: 'seg' }, ...C.DEADLINE_DAYS.map((n) => h('button', { type: 'button', class: 'segbtn', 'aria-pressed': String(c.days === n), 'data-testid': `days-${n}`, onclick: () => { c.days = n; render(); } }, `${n}日`))),
+        h('p', { class: 'small', text: '期限までは、上限を超える追い課金をしない約束です。期限までは上限を下げることだけができ、上げる・解除することはできません。' })),
+      btn('この約束で決める', () => dispatch((st) => S.commitConfirm(st, { can_afford: c.can_afford, worth_it: c.worth_it, cap_yen: c.cap, deadline_days: c.days }, now())), { disabled: !ready, testid: 'commit-confirm' }),
+      btn('戻って直す', () => dispatch(S.goBack), { secondary: true }),
+    ];
+  },
+
+  commit_view() {
+    const c = state.commitments.items.find((x) => x.id === state.viewCommitment);
+    if (!c) return [h('p', { text: '約束が見つかりません。' }), btn('記録へ', () => dispatch(S.openRecords))];
+    const t = now();
+    const active = C.statusAt(c, t) === 'active';
+    const lowerIn = h('input', { id: 'c-lower', 'data-testid': 'c-lower', class: 'text-input', type: 'number', inputmode: 'numeric', min: '0', step: '1', placeholder: `${c.cap_yen - 1 >= 0 ? c.cap_yen - 1 : 0} 以下` });
+    return [
+      h('h1', { text: active ? '有効な約束' : '終わった約束' }),
+      commitmentCard(c, t, 'commit-card'),
+      h('section', { class: 'card' }, h('h3', { text: '変更の記録' }), h('ul', { class: 'ev', 'data-testid': 'commit-history' }, ...c.history.map((x) => h('li', { text: x.type === 'created' ? `${fmt(x.at)} 作成（上限 ${yen(x.cap_yen)}）` : `${fmt(x.at)} 上限を ${yen(x.from)} → ${yen(x.to)} に下げた` })))),
+      active && h('section', { class: 'card', 'data-testid': 'commit-lower' },
+        h('h3', { text: '上限を下げる' }),
+        h('p', { class: 'small', text: '期限までは、下げることだけができます。' }),
+        lowerIn,
+        btn('上限を下げる', () => { const v = lowerIn.value.trim() === '' ? NaN : Number(lowerIn.value); dispatch((st) => S.commitLower(st, c.id, v, c.version, now())); }, { testid: 'commit-lower-btn' })),
+      active && h('section', { class: 'card' },
+        h('p', { class: 'small', text: '上げる・解除するは、期限まで受け付けません。' }),
+        h('div', { class: 'row' },
+          btn('上限を上げたい', () => dispatch((st) => S.commitRaise(st, c.id, c.cap_yen + 1, c.version, now())), { secondary: true, testid: 'commit-raise' }),
+          btn('解除したい', () => dispatch((st) => S.commitCancel(st, c.id, c.version, now())), { secondary: true, testid: 'commit-cancel' }))),
+      active && state.persona.locked && btn('止めて', () => dispatch((st) => S.stop(st, now())), { testid: 'stop-from-commit', extraClass: 'stop' }),
+      !active && !c.reflection && btn('振り返る', () => dispatch((st) => S.openReflect(st, c.id)), { testid: 'to-reflect' }),
+      deleteControl(c),
+      btn('記録の一覧へ', () => dispatch(S.openRecords), { secondary: true }),
+    ];
+  },
+
+  stop() {
+    const v = state.stopView || {};
+    const c = v.commitment_id ? state.commitments.items.find((x) => x.id === v.commitment_id) : null;
+    const t = now();
+    const out = [
+      h('h1', { text: '止めて' }),
+      c ? commitmentCard(c, t, 'stop-commitment') : h('section', { class: 'card', 'data-testid': 'stop-commitment' }, h('p', { text: 'いま有効な約束はありません。' })),
+    ];
+    if (v.halted) {
+      out.push(h('section', { class: 'card safety', 'data-testid': 'safety-halt' }, h('h3', { text: '模擬対話を止めています' }),
+        h('p', { class: 'small', text: '身近な信頼できる人や、お住まいの地域の公的な相談窓口につながってください。いますぐ命の危険があるときは、緊急通報をしてください。' })));
+    } else if (v.intervention) {
+      const iv = v.intervention;
+      out.push(h('div', { class: 'row-center' }, iv.speaker === 'future_self' ? avatarImg('avatar avatar-sm') : null, h('p', { class: 'small', text: iv.speaker === 'future_self' ? `5年後のあなた（承認済みの版 ${iv.persona_version}）` : 'アプリからの案内（承認済みの5年後の自分がいません）' })));
+      out.push(h('section', { class: 'bubble', 'data-testid': 'stop-message' }, h('p', { text: iv.text })));
+      out.push(h('section', { class: 'card action', 'data-testid': 'stop-action' }, h('p', { class: 'eyebrow', text: 'いまできること（一つだけ）' }), h('p', { text: iv.action.text })));
+      out.push(h('p', { class: 'small', 'data-testid': 'stop-notice', text: iv.notice }));
+    }
+    out.push(btn('ホームへ', () => dispatch(S.goBack), { secondary: true, testid: 'stop-home' }));
+    if (!v.halted && state.persona.locked) out.push(btn('5年後の自分と話す', () => dispatch(S.openDialogue), { secondary: true }));
+    return out;
+  },
+
+  reflect() {
+    const c = state.commitments.items.find((x) => x.id === state.viewCommitment);
+    const r = ui.reflect || (ui.reflect = { outcome: null, helped: [] });
+    const toggle = (id) => {
+      if (id === 'nothing') r.helped = r.helped.includes('nothing') ? [] : ['nothing'];
+      else r.helped = r.helped.includes(id) ? r.helped.filter((x) => x !== id) : [...r.helped.filter((x) => x !== 'nothing'), id];
+      render();
+    };
+    const note = h('textarea', { id: 'r-note', 'data-testid': 'r-note', class: 'text-input', maxlength: '200', rows: '3', placeholder: '（任意）メモ' });
+    return [
+      h('h1', { text: '振り返る' }),
+      commitmentCard(c, now(), 'reflect-commitment'),
+      h('section', { class: 'card' }, h('h3', { text: '追い課金せずに済みましたか' }),
+        h('div', { class: 'seg wrap' }, ...Object.entries(C.OUTCOMES).map(([id, label]) => h('button', { type: 'button', class: 'segbtn', 'aria-pressed': String(r.outcome === id), 'data-testid': `outcome-${id}`, onclick: () => { r.outcome = id; render(); } }, label)))),
+      h('section', { class: 'card' }, h('h3', { text: '何が助けになりましたか（いくつでも）' }),
+        ...C.HELPED.map((x) => h('button', { type: 'button', class: 'opt', 'aria-pressed': String(r.helped.includes(x.id)), 'data-testid': `helped-${x.id}`, onclick: () => toggle(x.id) }, h('span', { class: 'mark' }), h('span', { text: x.label }))),
+        note),
+      btn('記録する', () => dispatch((st) => S.commitReflect(st, c.id, { outcome: r.outcome, helped: r.helped, note: note.value }, now())), { disabled: !r.outcome, testid: 'reflect-save' }),
+      h('p', { class: 'small', text: '記録しなくても、失敗として数えることはありません。' }),
+    ];
+  },
+
+  records() {
+    const t = now();
+    const sum = C.summarize(state.commitments, t);
+    const items = [...state.commitments.items].reverse();
+    const active = C.activeCommitment(state.commitments, t);
+    return [
+      h('h1', { text: '約束の記録' }),
+      h('section', { class: 'card', 'data-testid': 'records-summary' },
+        h('dl', { class: 'kv' },
+          h('dt', { text: '有効' }), h('dd', { text: String(sum.active) }),
+          h('dt', { text: '守れた' }), h('dd', { text: String(sum.kept) }),
+          h('dt', { text: '一部守れた' }), h('dd', { text: String(sum.partial) }),
+          h('dt', { text: '守れなかった' }), h('dd', { text: String(sum.not_kept) }),
+          h('dt', { text: '不明' }), h('dd', { text: String(sum.unknown) }),
+          h('dt', { text: '未記録' }), h('dd', { text: String(sum.unrecorded) })),
+        h('p', { class: 'small', text: '未記録は「守れなかった」に数えません。記録はこの端末の中だけにあります（記憶の保存に同意したときだけ端末に残ります）。' })),
+      ...items.map((c) => h('button', { type: 'button', class: 'opt', 'data-testid': `record-${c.id}`, onclick: () => dispatch((st) => S.viewCommitment(st, c.id)) },
+        h('span', {}, h('span', { class: 'badge', text: C.statusAt(c, t) === 'active' ? '有効' : (c.reflection ? C.OUTCOMES[c.reflection.outcome] : '未記録') }), `${c.target}／上限 ${yen(c.cap_yen)}／${fmt(c.deadline_at)} まで`))),
+      !items.length && h('p', { class: 'small', text: '記録はありません。' }),
+      !active && btn('約束をつくる', () => dispatch((st) => S.commitStart(st, now())), { testid: 'commit-new' }),
+      items.length > 0 && (ui.confirmDelete === '*'
+        ? h('section', { class: 'card safety' }, h('p', { text: 'すべての約束・振り返り・「止めて」の会話の記録を削除します。約束中のものも消えます。元に戻せません。' }),
+          btn('すべて削除する', () => dispatch(S.commitDeleteAll), { testid: 'delete-all-confirm' }), btn('やめる', () => { ui.confirmDelete = null; render(); }, { secondary: true }))
+        : btn('すべて削除…', () => { ui.confirmDelete = '*'; render(); }, { secondary: true, testid: 'delete-all' })),
+      state.persona.locked && btn('ホームへ', () => dispatch(S.goHome), { secondary: true }),
     ];
   },
 };
@@ -381,6 +549,9 @@ function basisText(b, p) {
   if (b.element === 'protected_traits') return `残す自分らしさ「${TRAITS[b.id].label}」`;
   if (b.element === 'core_values') return `価値観「${VALUES[b.id].label}」`;
   if (b.element === 'lock') return `承認済みの版 ${b.id}`;
+  if (b.element === 'commitment') return `有効な約束 ${b.id}`;
+  if (b.element === 'commitment_reason') return '本人が決めた理由';
+  if (b.element === 'action') return 'その場でできる行動';
   return `${b.element}:${b.id}`;
 }
 // 選択式の質問1問（理想像の質問と見直しで共通）
@@ -403,6 +574,41 @@ function questionScreen(q, label, onAnswer) {
     multi > 1 && btn('次へ', () => onAnswer(sel), { disabled: sel.length === 0, testid: 'multi-next' }),
     q.why && h('details', {}, h('summary', { text: 'この質問の意図' }), h('p', { class: 'small', text: q.why })),
   ];
+}
+
+// ---- Phase 3 の部品
+function homeCommitment() {
+  const t = now();
+  const c = C.activeCommitment(state.commitments, t);
+  if (!c) return [btn('約束をつくる', () => dispatch((st) => S.commitStart(st, now())), { testid: 'commit-new' }), state.commitments.items.length > 0 && btn('約束の記録', () => dispatch(S.openRecords), { secondary: true, testid: 'to-records' })].filter(Boolean);
+  return [
+    commitmentCard(c, t, 'home-commitment'),
+    btn('止めて', () => dispatch((st) => S.stop(st, now())), { testid: 'stop', extraClass: 'stop' }),
+    btn('約束を見る', () => dispatch((st) => S.viewCommitment(st, c.id)), { secondary: true, testid: 'to-commitment' }),
+  ];
+}
+const yen = (n) => `${Number(n).toLocaleString('ja-JP')} 円`;
+function fmt(ms) { const d = new Date(ms); return `${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; }
+// 残り時間は時間単位で切り上げて表示する（作った直後に「6日23時間」と見えないように）
+function remaining(ms) { if (ms <= 0) return '期限を過ぎました'; const hours = Math.ceil(ms / 3600000); return `あと ${Math.floor(hours / 24)}日 ${hours % 24}時間`; }
+function commitmentCard(c, t, testid) {
+  const active = C.statusAt(c, t) === 'active';
+  return h('section', { class: `card commit ${active ? 'is-active' : ''}`, 'data-testid': testid, 'data-status': active ? 'active' : 'ended' },
+    h('p', { class: 'eyebrow', text: active ? '有効な約束' : '終わった約束' }),
+    h('p', { class: 'commit-rule', text: c.rule }),
+    h('dl', { class: 'kv' },
+      h('dt', { text: '狙う対象' }), h('dd', { text: c.target }),
+      h('dt', { text: '上限' }), h('dd', { 'data-testid': `${testid}-cap`, text: yen(c.cap_yen) }),
+      h('dt', { text: '期限' }), h('dd', { text: `${fmt(c.deadline_at)}（${active ? remaining(c.deadline_at - t) : '終了'}）` }),
+      h('dt', { text: '決めた理由' }), h('dd', { text: c.reason }),
+      c.reflection && h('dt', { text: '振り返り' }), c.reflection && h('dd', { text: `${C.OUTCOMES[c.reflection.outcome]}${c.reflection.helped.length ? `／助けになったこと：${c.reflection.helped.map((x) => C.HELPED.find((y) => y.id === x).label).join('、')}` : ''}${c.reflection.note ? `／${c.reflection.note}` : ''}` })));
+}
+function deleteControl(c) {
+  if (ui.confirmDelete === c.id) {
+    return h('section', { class: 'card safety' }, h('p', { text: 'この約束と、その振り返り・「止めて」の会話の記録を削除します。約束中でも削除できます（約束の解除ではなく、データの削除です）。元に戻せません。' }),
+      btn('削除する', () => dispatch((st) => S.commitDelete(st, c.id)), { testid: 'delete-confirm' }), btn('やめる', () => { ui.confirmDelete = null; render(); }, { secondary: true }));
+  }
+  return btn('この記録を削除…', () => { ui.confirmDelete = c.id; render(); }, { secondary: true, testid: 'delete' });
 }
 
 const APPROVAL_LABEL = { unconfirmed: '未確認', needs_revision: '修正待ち', approved: '承認済み' };
@@ -493,9 +699,9 @@ function consentPanel() {
 
 function render() {
   const fn = screens[state.step] || screens.consent;
-  app.replaceChildren(...fn().filter(Boolean));
+  app.replaceChildren(...[ui.error && h('p', { class: 'notice', role: 'alert', 'data-testid': 'error', text: ui.error }), ...fn()].filter(Boolean));
   backBtn.hidden = ['consent', 'home'].includes(state.step);
-  progress.textContent = { consent: '説明・同意', current_select: '現在像', eti_import: '現在像', quick: '現在像', current_review: '現在像', ideal: '理想像', draft: '下書き', meet: '初対面', evaluate: '評価', revise: '見直し', home: 'ホーム', dialogue: '対話', locked_view: '承認済み' }[state.step] || '';
+  progress.textContent = { consent: '説明・同意', current_select: '現在像', eti_import: '現在像', quick: '現在像', current_review: '現在像', ideal: '理想像', draft: '下書き', meet: '初対面', evaluate: '評価', revise: '見直し', home: 'ホーム', dialogue: '対話', locked_view: '承認済み', commit_new: '約束', commit_check: '約束', commit_view: '約束', stop: '止めて', reflect: '振り返り', records: '記録' }[state.step] || '';
   document.body.dataset.step = state.step;
 }
 backBtn.addEventListener('click', () => dispatch(S.goBack));

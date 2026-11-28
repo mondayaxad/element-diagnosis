@@ -1,8 +1,9 @@
-# Ideal Self Agent α — Phase 1・2
+# Ideal Self Agent α — Phase 1・2・3
 
 本人1名向け・非公開・合成データ・外部送信なし。
 Phase 1：説明・同意 → 現在像 → 理想像の質問 → 5年後の自分の下書き。
 Phase 2：初対面（固定の仮アバター）→ 3軸評価 → 見直しまたは承認（版の固定）→ 短い模擬対話（ルールベース）。
+Phase 3：模擬約束（上限と期限・引下げのみ）→「止めて」からの介入 → 振り返り・閲覧・削除。金額は模擬入力だけで、支払い・購入の停止は扱わない。
 
 - 本番ビルド（`scripts/build-public.js`）の許可リストに入っていないため、Vercel の dist には含まれない（`tests/isolation.test.js` で確認）。
 - LLM・画像生成・実アカウント接続・チャット・決済は無い。画面の CSP で外部への通信を禁止している。
@@ -38,8 +39,10 @@ node alpha/ideal-self/scripts/export-samples.js # 合成入力からの下書き
 | `src/state.js` | 画面の状態遷移（純粋関数。戻る・再操作・撤回・Phase 2 の初対面〜対話） |
 | `src/persona.js` | 固定の仮アバター、初対面の台詞、3軸評価と見直しの理由、承認した版の固定と検証 |
 | `src/dialogue.js` | 模擬対話（承認した版だけを読む・書き換えの依頼を断る） |
+| `src/commitment.js` | 模擬約束（作る・引下げのみ・期限・版による二重操作の拒否・振り返り・集計・削除） |
+| `src/intervention.js` | 「止めて」：有効な約束と、承認済みの5年後の自分が伝える行動一つ（購入を止めたとは言わない） |
 | `assets/avatar-placeholder.svg` | 固定の仮アバター（オリジナル） |
 | `src/app.js` `index.html` `styles.css` | スマホ画面 |
 | `src/storage.js` | 「記憶の保存」に同意したときだけ localStorage |
 | `fixtures/synthetic_eti.js` | 合成 ETI 記録（本人・他者・欠損・旧版・未知版） |
-| `docs/PHASE1_REPORT.md`・`docs/PHASE2_REPORT.md` | 提出物（環境照合・差分・テスト結果・未確認事項） |
+| `docs/PHASE1_REPORT.md`・`docs/PHASE2_REPORT.md`・`docs/PHASE3_REPORT.md` | 提出物（環境照合・差分・テスト結果・未確認事項） |
