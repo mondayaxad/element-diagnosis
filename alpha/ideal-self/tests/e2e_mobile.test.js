@@ -627,3 +627,74 @@ test('スマホ幅：Phase 3 受入レビュー修正 — 予算 0 円の文言�
     assert.ok(!saved3.includes(pv) && !saved3.includes('止めに来たよ'));
   }, { clockAt: T0 });
 });
+
+test('スマホ幅：Phase 4 練習（1分）— 練習の約束を作る → 止めて → 実際に取った行動を記録 → 1分後に期限 → 振り返り。通常の約束・集計に入らない（外部通信なし）', { skip: !chromium && 'Playwright が無い' }, async () => {
+  await withPage(async (page) => {
+    await toHome(page);
+    await tid(page, 'practice-new').click();
+    assert.match(await tid(page, 'practice-banner').innerText(), /練習です。期限は1分で、通常の約束・7日間の集計には入りません/);
+    assert.match(await page.locator('main h1').innerText(), /練習の約束をつくる（1\/2）/);
+    await tid(page, 'c-target').fill('限定キャラ（架空）');
+    await tid(page, 'c-have').fill('8000');
+    await tid(page, 'c-need').fill('28800');
+    await tid(page, 'c-yen').fill('30000');
+    await tid(page, 'reason-saving').click();
+    await tid(page, 'commit-facts-next').click();
+    await tid(page, 'afford-no').click();
+    await tid(page, 'worth-unsure').click();
+    assert.equal(await tid(page, 'days-7').count(), 0); // 練習は期限を選ばない
+    assert.equal(await tid(page, 'practice-deadline').innerText(), '決めてから1分後（練習）');
+    await shot(page, '71_practice_check');
+    await tid(page, 'commit-confirm').click();
+    assert.equal(await tid(page, 'commit-card-practice').innerText(), '練習');
+    assert.match(await tid(page, 'commit-card').innerText(), /事前に決めた予算は 0 円（課金しない）。足りなくても、期限まで追加で課金しない[\s\S]*あと 60秒/);
+    await page.getByRole('button', { name: '記録の一覧へ' }).click();
+    assert.match(await tid(page, 'records-summary').innerText(), /有効\s*0/); // 練習は集計に入らない
+    await page.locator('#back').click();
+
+    // ---- 模擬の衝動：「あと3,000円で届きそう」→ 止めて
+    assert.equal(await tid(page, 'home-commitment-practice').innerText(), '練習');
+    await tid(page, 'stop').click();
+    assert.match(await tid(page, 'stop-message').innerText(), /^（練習）止めに来たよ。限定キャラ（架空）を狙っているんだね/);
+    assert.match(await tid(page, 'stop-action').innerText(), /購入画面を閉じて/);
+    // 実際に取った行動（任意・提案とは別）
+    assert.match(await tid(page, 'taken-action').innerText(), /実際に取った行動（任意）[\s\S]*記録しなくても構いません/);
+    assert.equal(await tid(page, 'taken-save').isDisabled(), true);
+    await tid(page, 'taken-other').click();
+    await tid(page, 'taken-note').fill('お茶を入れて席を離れた');
+    await tid(page, 'taken-action').scrollIntoViewIfNeeded();
+    await shot(page, '72_practice_stop_taken');
+    await tid(page, 'taken-save').click();
+    assert.equal(await tid(page, 'taken-recorded').innerText(), '記録しました。');
+    await tid(page, 'stop-home').click();
+    await tid(page, 'to-commitment').click();
+    assert.match(await tid(page, 'actions-taken').innerText(), /お茶を入れて席を離れた/);
+
+    // ---- 1分後：期限到達 → 振り返り
+    await page.clock.setSystemTime((await page.evaluate(() => Date.now())) + 61 * 1000); // 作成からの経過に関係なく、いまから61秒後へ
+    await page.getByRole('button', { name: '記録の一覧へ' }).click();
+    assert.match(await tid(page, 'practice-records').innerText(), /練習の記録（集計に入りません）/);
+    assert.match(await tid(page, 'records-summary').innerText(), /有効\s*0[\s\S]*未記録\s*0/);
+    await tid(page, 'record-c1').click();
+    assert.equal(await tid(page, 'commit-card').getAttribute('data-status'), 'ended');
+    await tid(page, 'to-reflect').click();
+    assert.equal(await tid(page, 'reflect-question').innerText(), '期限まで、課金せずに済みましたか（予算 0 円）');
+    // 取った行動は振り返りに自動で入らない（推定しない）
+    assert.equal(await page.locator('[data-testid^="helped-"][aria-pressed="true"]').count(), 0);
+    assert.equal(await page.locator('[data-testid^="outcome-"][aria-pressed="true"]').count(), 0);
+    await tid(page, 'outcome-kept').click();
+    await tid(page, 'helped-future_self').click();
+    await tid(page, 'helped-waited').click();
+    await shot(page, '73_practice_reflect');
+    await tid(page, 'reflect-save').click();
+    // 練習の振り返りは集計に入らない
+    assert.match(await tid(page, 'records-summary').innerText(), /守れた\s*0[\s\S]*未記録\s*0/);
+    assert.match(await tid(page, 'record-c1').innerText(), /練習・守れた/);
+    await shot(page, '74_records_practice');
+
+    // ---- 練習の後でも、通常の約束はいつもどおり（期限を 3/7/14/30 日から選ぶ）
+    await tid(page, 'commit-new').click();
+    assert.equal(await tid(page, 'practice-banner').count(), 0);
+    assert.match(await page.locator('main h1').innerText(), /^約束をつくる（1\/2）/);
+  }, { clockAt: T0 });
+});

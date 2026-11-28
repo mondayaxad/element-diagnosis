@@ -310,7 +310,7 @@ export function sendMessage(state, text, opts = {}) {
   if (!msg) throw new Error('empty message');
   // 「止めて」は、約束を読むだけの介入に切り替える（約束は更新しない）。強い苦痛の表現は respond の中断処理を優先
   const reply = isStopRequest(msg) && !isCrisis(msg)
-    ? buildIntervention(lock, C.activeCommitment(state.commitments || C.initialCommitments(), opts.now ?? Date.now()))
+    ? buildIntervention(lock, (() => { const sl = state.commitments || C.initialCommitments(); const t = opts.now ?? Date.now(); return C.activeCommitment(sl, t) || C.activePractice(sl, t); })())
     : respond(lock, msg);
   const messages = [...d.messages, { role: 'user', text: msg.slice(0, 400) }, { role: 'future_self', ...reply }];
   // 強い苦痛の表現があったら、この会話はここで止める（続けるときは本人が新しく始める）
@@ -325,7 +325,8 @@ export function restartDialogue(state) {
 const slice = (state) => state.commitments || C.initialCommitments();
 const withC = (state, commitments, ev) => withLog({ ...state, commitments }, ev);
 export const activeCommitment = (state, now) => C.activeCommitment(slice(state), now);
-export function commitStart(state, now) { return { ...withC(state, C.startDraft(slice(state), now), { type: 'commit_draft' }), step: 'commit_new' }; }
+export function commitStart(state, now, opts = {}) { return { ...withC(state, C.startDraft(slice(state), now, opts), { type: 'commit_draft', practice: !!opts.practice }), step: 'commit_new' }; }
+export const activePractice = (state, now) => C.activePractice(slice(state), now);
 export function commitFacts(state, facts, now) { return { ...withC(state, C.setFacts(slice(state), facts, now), { type: 'commit_facts' }), step: 'commit_check' }; }
 export function commitConfirm(state, choice, now) {
   const next = C.confirmDraft(slice(state), choice, now);
@@ -358,12 +359,22 @@ export function commitDeleteAll(state) {
 // 会話が強い苦痛で中断されているときは、人格の言葉は出さず、Phase 2 の案内を続ける
 export function stop(state, now) {
   const lock = state.persona.locked && verifyLock(state.persona.locked) ? state.persona.locked : null;
-  const commitment = C.activeCommitment(slice(state), now);
+  // 通常の約束を優先する。通常の約束が無いときだけ、進行中の練習の約束を示す
+  const commitment = C.activeCommitment(slice(state), now) || C.activePractice(slice(state), now);
   const d = lock && state.dialogue.persona_version === lock.persona_version ? state.dialogue : { persona_version: lock ? lock.persona_version : null, messages: [] };
   if (d.halted) return { ...state, step: 'stop', stopView: { halted: true, commitment_id: commitment ? commitment.id : null } };
   const iv = buildIntervention(lock, commitment);
   const dialogue = lock ? { ...d, persona_version: lock.persona_version, messages: [...d.messages, { role: 'future_self', ...iv }] } : state.dialogue;
   return withLog({ ...state, dialogue, step: 'stop', stopView: { halted: false, intervention: iv, commitment_id: iv.commitment_id } }, { type: 'stop', commitment: iv.commitment_id, action: iv.action.id });
+}
+
+// 「止めて」の後に本人が実際に取った行動（任意）。提案された行動は stopView から別の項目として添えるだけ
+export function recordTakenAction(state, { action_id, note = '' }, now) {
+  const v = state.stopView;
+  if (!v || !v.commitment_id) throw new C.CommitmentError('not_found');
+  const suggested = v.intervention && v.intervention.action ? v.intervention.action.id : null;
+  const next = C.recordAction(slice(state), v.commitment_id, { action_id, note, suggested_action_id: suggested }, now);
+  return { ...withC(state, next, { type: 'commit_action_recorded', id: v.commitment_id }), stopView: { ...v, recorded: true } };
 }
 
 export const dialogueTurnsLeft = (state) => MAX_USER_TURNS - state.dialogue.messages.filter((m) => m.role === 'user').length;

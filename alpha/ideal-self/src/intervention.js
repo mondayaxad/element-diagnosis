@@ -39,8 +39,8 @@ export function buildIntervention(lock, commitment) {
   const basis = [{ element: 'action', id: action.id }];
   let text;
   if (commitment) {
-    basis.unshift({ element: 'commitment', id: commitment.id, version: commitment.version }, { element: 'commitment_reason', id: commitment.reason_id });
-    const head = persona ? '止めに来たよ。' : '';
+    basis.unshift({ element: 'commitment', id: commitment.id, version: commitment.version, practice: !!commitment.practice }, { element: 'commitment_reason', id: commitment.reason_id });
+    const head = `${commitment.practice ? '（練習）' : ''}${persona ? '止めに来たよ。' : ''}`;
     text = `${head}${commitment.target}を狙っているんだね。あなたは「${commitment.reason}」と決めて、${promiseSpoken(commitment.cap_yen, day(commitment.deadline_at))}。いまできることを一つだけ。${action.text}。`;
   } else {
     text = `${persona ? '止めに来たよ。' : ''}いま有効な約束はないけれど、迷っているなら、いまできることを一つだけ。${action.text}。`;

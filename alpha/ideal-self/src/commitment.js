@@ -11,9 +11,22 @@
 
 import { ruleText } from './commitment_text.js';
 
-export const COMMITMENT_VERSION = 'ISA-COMMIT-0.2.0'; // 0.2.0：「事前に決めた予算」と「期限まで追加で課金しない」を分けた文言
+export const COMMITMENT_VERSION = 'ISA-COMMIT-0.3.0'; // 0.3.0：練習の約束（1分）・「止めて」の後に取った行動の記録。 // 0.2.0：「事前に決めた予算」と「期限まで追加で課金しない」を分けた文言
 export const DAY = 24 * 60 * 60 * 1000;
 export const DEADLINE_DAYS = [3, 7, 14, 30];
+// 練習の約束：期限は1分固定。通常の約束の「有効な約束は1つ」・集計には入れない（変更のルールは同じ＝引下げのみ）
+export const PRACTICE_MS = 60 * 1000;
+export const isPractice = (c) => c.practice === true;
+// 「止めて」の後に本人が実際に取った行動（任意）。提案された行動・約束の結果（振り返り）とは別に記録する
+export const ACTIONS_TAKEN = [
+  { id: 'closed_screen', label: '購入画面を閉じた' },
+  { id: 'waited', label: '時間を置いた' },
+  { id: 'read_reason', label: '決めた理由を読み返した' },
+  { id: 'breathed', label: '深呼吸した' },
+  { id: 'moved', label: '席を立った・体を動かした' },
+  { id: 'talked', label: '誰かに話した' },
+  { id: 'other', label: 'そのほか（自分の言葉で）' },
+];
 export const MAX_YEN = 10_000_000;
 export const MAX_STONES = 10_000_000;
 
@@ -39,6 +52,8 @@ export const HELPED = [
 // 拒否の理由（画面に出す文）。個別の文を渡さなかったときに使う
 export const MESSAGES = {
   active_exists: '有効な約束があるあいだは、新しい約束を作れません',
+  practice_active: '練習の約束が進行中です。1分たつと終わります',
+  invalid_action: '取った行動を選んでください',
   no_draft: '確定する下書きがありません（二重の確定は受け付けません）',
   facts_required: '先に状況を整理してください',
   check_required: '「出せるか」「出す価値があるか」の両方に答えてください',
@@ -68,17 +83,21 @@ export function initialCommitments() {
 
 // 状態：期限前は active、期限を過ぎたら ended（自動）
 export const statusAt = (c, now) => (now < c.deadline_at ? 'active' : 'ended');
-export const activeCommitment = (slice, now) => slice.items.find((c) => statusAt(c, now) === 'active') || null;
+// 通常の約束（練習を除く）
+export const activeCommitment = (slice, now) => slice.items.find((c) => !isPractice(c) && statusAt(c, now) === 'active') || null;
+export const activePractice = (slice, now) => slice.items.find((c) => isPractice(c) && statusAt(c, now) === 'active') || null;
+const activeOfKind = (slice, now, practice) => (practice ? activePractice(slice, now) : activeCommitment(slice, now));
 
 // ---------------------------------------------------------------- 作る（1）整理
-export function startDraft(slice, now) {
-  if (activeCommitment(slice, now)) fail('active_exists', '有効な約束があるあいだは、新しい約束を作れません');
-  return { ...slice, draft: { step: 'facts' } };
+export function startDraft(slice, now, { practice = false } = {}) {
+  if (activeOfKind(slice, now, practice)) fail(practice ? 'practice_active' : 'active_exists');
+  return { ...slice, draft: { step: 'facts', practice: !!practice } };
 }
 
 export function setFacts(slice, facts, now) {
   if (!slice.draft) fail('no_draft');
-  if (activeCommitment(slice, now)) fail('active_exists');
+  const practice = !!slice.draft.practice;
+  if (activeOfKind(slice, now, practice)) fail(practice ? 'practice_active' : 'active_exists');
   const target = cleanText(facts.target, 40);
   if (!target) fail('invalid_target', '狙う対象を入力してください');
   if (!isInt(facts.stones_have, 0, MAX_STONES)) fail('invalid_stones_have', '手持ちの石は0以上の整数で入力してください');
@@ -91,7 +110,7 @@ export function setFacts(slice, facts, now) {
   return {
     ...slice,
     draft: {
-      step: 'check',
+      step: 'check', practice,
       target, stones_have: facts.stones_have, stones_needed: facts.stones_needed,
       stones_short: Math.max(0, facts.stones_needed - facts.stones_have),
       estimate_yen: facts.estimate_yen, estimate_source: 'self_mock_input',
@@ -112,10 +131,11 @@ export function confirmDraft(slice, { can_afford, worth_it, cap_yen, deadline_da
   const d = slice.draft;
   if (!d) fail('no_draft', '確定する下書きがありません（二重の確定は受け付けません）');
   if (d.step !== 'check') fail('facts_required');
-  if (activeCommitment(slice, now)) fail('active_exists');
+  const practice = !!d.practice;
+  if (activeOfKind(slice, now, practice)) fail(practice ? 'practice_active' : 'active_exists');
   if (!(can_afford in CHECK_ANSWERS) || !(worth_it in CHECK_ANSWERS)) fail('check_required', '「出せるか」「出す価値があるか」の両方に答えてください');
   if (!isInt(cap_yen, 0, MAX_YEN)) fail('invalid_cap');
-  if (!DEADLINE_DAYS.includes(deadline_days)) fail('invalid_deadline', '期限を選んでください');
+  if (!practice && !DEADLINE_DAYS.includes(deadline_days)) fail('invalid_deadline', '期限を選んでください');
   const seq = slice.seq + 1;
   const c = {
     id: `c${seq}`, schema: COMMITMENT_VERSION, version: 1,
@@ -123,10 +143,12 @@ export function confirmDraft(slice, { can_afford, worth_it, cap_yen, deadline_da
     estimate_yen: d.estimate_yen, estimate_source: d.estimate_source,
     reason_id: d.reason_id, reason: d.reason,
     check: { can_afford, worth_it, suggested_cap_yen: suggestedCap(d, { can_afford, worth_it }) },
-    cap_yen, deadline_days, created_at: now, deadline_at: now + deadline_days * DAY,
+    practice, cap_yen, deadline_days: practice ? null : deadline_days, created_at: now,
+    deadline_at: now + (practice ? PRACTICE_MS : deadline_days * DAY),
     rule: ruleText(cap_yen),
     history: [{ type: 'created', at: now, cap_yen }],
     reflection: null,
+    actions_taken: [],
   };
   return { ...slice, seq, draft: null, items: [...slice.items, c] };
 }
@@ -179,10 +201,24 @@ export function reflect(slice, id, { outcome, helped = [], note = '' }, now) {
   return replace(slice, { ...c, reflection: r });
 }
 
+// ---------------------------------------------------------------- 「止めて」の後に取った行動（任意）
+// 提案された行動（suggested_action_id）とは別に、本人が選んだ行動だけを記録する。約束の版・振り返りには触れない。
+// 記録しなかった場合は何も残さない（行動や結果を推定しない）
+export function recordAction(slice, id, { action_id, note = '', suggested_action_id = null }, now) {
+  const c = slice.items.find((x) => x.id === id);
+  if (!c) fail('not_found');
+  if (!ACTIONS_TAKEN.some((a) => a.id === action_id)) fail('invalid_action');
+  const text = cleanText(note, 60);
+  if (action_id === 'other' && !text) fail('invalid_action', '取った行動を短く書いてください');
+  const entry = { action_id, note: action_id === 'other' ? text : '', suggested_action_id: suggested_action_id || null, at: now, self_reported: true };
+  return replace(slice, { ...c, actions_taken: [...(c.actions_taken || []), entry] });
+}
+
 // 集計：未記録は失敗に数えない（守れなかった＝本人が「守れなかった」を選んだものだけ）
 export function summarize(slice, now) {
   const s = { active: 0, ended: 0, kept: 0, partial: 0, not_kept: 0, unknown: 0, unrecorded: 0 };
   for (const c of slice.items) {
+    if (isPractice(c)) continue; // 練習は集計に入れない
     if (statusAt(c, now) === 'active') { s.active += 1; continue; }
     s.ended += 1;
     if (c.reflection) s[c.reflection.outcome] += 1; else s.unrecorded += 1;

@@ -35,13 +35,31 @@ function sameKey(a, b) {
   const x = Buffer.from(String(a || '')); const y = Buffer.from(String(b || ''));
   return x.length === y.length && x.length > 0 && crypto.timingSafeEqual(x, y);
 }
-function cookieKey(req) {
-  const m = String(req.headers.cookie || '').split(/;\s*/).find((c) => c.startsWith(`${COOKIE}=`));
-  return m ? decodeURIComponent(m.slice(COOKIE.length + 1)) : null;
+// Cookie からキーを読む。不正な形式（壊れた %エンコード・長すぎる値など）は「キーなし」として扱い、例外を外へ出さない
+const MAX_COOKIE_VALUE = 256;
+export function cookieKey(req) {
+  const header = req.headers.cookie;
+  const raw = Array.isArray(header) ? header.join('; ') : String(header || '');
+  const m = raw.split(/;\s*/).find((c) => c.startsWith(`${COOKIE}=`));
+  if (!m) return null;
+  const v = m.slice(COOKIE.length + 1);
+  if (!v || v.length > MAX_COOKIE_VALUE) return null;
+  try { return decodeURIComponent(v); } catch { return null; }
 }
+const safeDecode = (p) => { try { return decodeURIComponent(p); } catch { return null; } };
 
 export function createServer({ accessKey = null } = {}) {
   return http.createServer((req, res) => {
+    try { handle(req, res, accessKey); } catch {
+      // どんな入力でもサーバーを止めない。中身は返さず拒否する
+      if (!res.headersSent) res.writeHead(400, { ...BASE_HEADERS, 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('bad request');
+    }
+  });
+}
+
+function handle(req, res, accessKey) {
+  {
     const url = new URL(req.url, 'http://127.0.0.1');
     if (accessKey) {
       const k = url.searchParams.get('k');
@@ -54,7 +72,9 @@ export function createServer({ accessKey = null } = {}) {
       }
       if (!sameKey(cookieKey(req), accessKey)) { res.writeHead(403, { ...BASE_HEADERS, 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('forbidden'); }
     }
-    const rel = decodeURIComponent(url.pathname).replace(/^\/+/, '') || 'index.html';
+    const decoded = safeDecode(url.pathname);
+    if (decoded === null) { res.writeHead(404, BASE_HEADERS); return res.end('not found'); }
+    const rel = decoded.replace(/^\/+/, '') || 'index.html';
     const full = path.resolve(ROOT, rel);
     const allowed = full.startsWith(ROOT + path.sep) && (SERVE_FILES.includes(rel) || SERVE_DIRS.some((d) => rel.startsWith(d + '/')));
     if (req.method !== 'GET' || !allowed || !fs.existsSync(full) || !fs.statSync(full).isFile()) { res.writeHead(404, BASE_HEADERS); return res.end('not found'); }
@@ -63,8 +83,8 @@ export function createServer({ accessKey = null } = {}) {
       'Content-Type': TYPES[path.extname(full)] || 'application/octet-stream',
       'Content-Security-Policy': "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-ancestors 'none'",
     });
-    fs.createReadStream(full).pipe(res);
-  });
+    fs.createReadStream(full).on('error', () => res.destroy()).pipe(res);
+  }
 }
 
 // 起動オプション。--lan は 0.0.0.0 で待ち受け、アクセスキーを必ず有効にする

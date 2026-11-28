@@ -155,7 +155,7 @@ test('止めて：最初に有効な約束を示し、承認済みの5年後の�
   assert.equal((iv.text.match(/いまできることを一つだけ/g) || []).length, 1);
   assert.doesNotMatch(iv.text + iv.notice, CLAIMS);
   assert.equal(iv.notice, NOT_STOPPED_NOTICE);
-  assert.deepEqual(iv.basis.slice(0, 2), [{ element: 'commitment', id: 'c1', version: 1 }, { element: 'commitment_reason', id: 'saving' }]);
+  assert.deepEqual(iv.basis.slice(0, 2), [{ element: 'commitment', id: 'c1', version: 1, practice: false }, { element: 'commitment_reason', id: 'saving' }]);
   // 会話の記録に残るが、約束は変わらない
   assert.equal(s.dialogue.messages.at(-1).kind, 'stop_intervention');
   assert.deepEqual(s.commitments, s0.commitments);

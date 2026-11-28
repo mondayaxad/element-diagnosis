@@ -2,7 +2,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import { createServer, parseArgs, newAccessKey } from '../scripts/serve.js';
+import { createServer, parseArgs, newAccessKey, cookieKey } from '../scripts/serve.js';
+import net from 'node:net';
 
 function get(port, p, headers = {}) {
   return new Promise((resolve, reject) => {
@@ -110,5 +111,52 @@ test('ブラウザ（スマホ幅）：キー付き URL で開くと Cookie が�
       const r = await other.goto(`http://127.0.0.1:${port}/`);
       assert.equal(r.status(), 403);
     } finally { await browser.close(); }
+  });
+});
+
+
+// 生の HTTP を送る（クライアント側の検証を通らない壊れた値も送れるように）
+function raw(port, text) {
+  return new Promise((resolve, reject) => {
+    const sock = net.connect(port, '127.0.0.1', () => sock.write(text));
+    let buf = ''; sock.on('data', (d) => { buf += d; }); sock.on('end', () => resolve(buf)); sock.on('error', reject);
+    sock.setTimeout(3000, () => { sock.destroy(); resolve(buf); });
+  });
+}
+const status = (res) => Number((res.match(/^HTTP\/1\.1 (\d{3})/) || [])[1]);
+
+test('Cookie の読み取り：不正な形式はキーなしとして扱い、例外を出さない', () => {
+  const r = (cookie) => cookieKey({ headers: { cookie } });
+  assert.equal(r('isa_k=%E0%A4%A'), null);      // 壊れた %エンコード
+  assert.equal(r('isa_k=%'), null);
+  assert.equal(r('isa_k='), null);
+  assert.equal(r(`isa_k=${'a'.repeat(300)}`), null); // 長すぎる
+  assert.equal(r(undefined), null);
+  assert.equal(r(['isa_k=%ZZ', 'x=1']), null);    // 配列で来ても
+  assert.equal(r('other=1; isa_k=abc%2Ddef'), 'abc-def');
+});
+
+test('不正な Cookie・パスを受けてもサーバーは止まらず拒否し、その後も正規のアクセスが通る', async () => {
+  const k = newAccessKey();
+  await withServer({ accessKey: k }, async (port) => {
+    const bad = [
+      'isa_k=%E0%A4%A', 'isa_k=%', 'isa_k=', `isa_k=${'%'.repeat(400)}`, 'isa_k=%C0%AF; isa_k=%FF',
+      `isa_k=${encodeURIComponent(k)}%`, '\u0000isa_k=x',
+    ];
+    for (const c of bad) {
+      const res = await raw(port, `GET / HTTP/1.1\r\nHost: 127.0.0.1\r\nCookie: ${c.replace(/\u0000/g, '')}\r\nConnection: close\r\n\r\n`);
+      assert.equal(status(res), 403, c.slice(0, 40));
+    }
+    // 壊れたパス（キーなし→403、キーあり→404）
+    assert.equal(status(await raw(port, 'GET /%E0%A4%A HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n')), 403);
+    const first = await get(port, `/?k=${k}`);
+    const c = first.headers['set-cookie'][0].split(';')[0];
+    assert.equal(status(await raw(port, `GET /src/%E0%A4%A HTTP/1.1\r\nHost: x\r\nCookie: ${c}\r\nConnection: close\r\n\r\n`)), 404);
+    assert.equal(status(await raw(port, `GET /?k=%E0%A4%A HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n`)), 403);
+    // 拒否の後も、正規のアクセスは通る（サーバーは動き続けている）
+    const ok = await get(port, '/', { cookie: c });
+    assert.equal(ok.status, 200);
+    assert.match(ok.body, /Ideal Self/);
+    assert.equal((await get(port, '/src/app.js', { cookie: c })).status, 200);
   });
 });

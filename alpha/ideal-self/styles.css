@@ -158,3 +158,5 @@ textarea.text-input { min-height: 84px; margin-top: 8px; resize: vertical; }
 .btn.stop { background: #e3a08f; color: #2a0f0a; font-size: 18px; letter-spacing: .2em; min-height: 58px; }
 .card.action { border-color: rgba(216,184,120,.55); }
 .card.action p:last-child { font-size: 17px; font-weight: 600; margin: 0; }
+.tag.practice { color: #9fd1b8; margin-right: 8px; }
+.notice.practice { border-left-color: #9fd1b8; background: rgba(159,209,184,.08); }
