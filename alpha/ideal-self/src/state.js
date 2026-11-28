@@ -203,38 +203,84 @@ export function startRevision(state, reasonIds) {
   if (!reasonIds.length) throw new Error('choose at least one reason');
   const questions = revisionQuestions(reasonIds, IDEAL_QUESTIONS.map((q) => q.id));
   const pv = state.profile.persona_version;
-  let persona = { ...state.persona, revision: { from_version: pv, reasons: [...reasonIds], questions, index: 0 } };
+  // キャンセルで戻すための、開始前の状態（回答・表示していた下書き・評価・候補の確認・版の履歴）。
+  // 承認済みの固定内容・承認の記録・会話はここに含めない（見直しの間もキャンセル後も、そのまま使い続ける）
+  const before = {
+    step: state.step,
+    idealAnswers: state.idealAnswers, idealIndex: state.idealIndex, followups: state.followups, overflow: state.overflow,
+    profile: state.profile,
+    persona: { seq: state.persona.seq, confirmations: state.persona.confirmations, versions: state.persona.versions, evaluations: state.persona.evaluations },
+  };
+  let persona = { ...state.persona, revision: { from_version: pv, reasons: [...reasonIds], questions, index: 0, touched: [], before } };
   if (!(state.persona.locked && state.persona.locked.persona_version === pv)) persona = versionStatus(persona, pv, 'needs_revision');
   return withLog({ ...state, profile: { ...state.profile, approval_status: state.profile.approval_status === 'approved' ? 'approved' : 'needs_revision' }, persona, step: 'revise' }, { type: 'revision_started', from: pv, reasons: reasonIds });
 }
 
-// 見直しで出す質問：選んだ理由の質問 → 回答の変化で新たに必要になった（まだ答えていない）追加質問
+// 見直しで出す質問：選んだ理由の質問 → 回答の変化で必要になった追加質問。
+// 追加質問は「まだ答えていないもの」と「この見直しの中で答えたもの」を並べる（答えた途端に並びから消えて、
+// 次の未回答の質問を飛ばさないように）。出なくなった追加質問は自然に外れる。
 export function reviseQueue(state) {
   const r = state.persona.revision;
   if (!r) return [];
   const all = idealQueue(state);
   const base = r.questions.map((id) => all.find((q) => q.id === id)).filter(Boolean);
-  const extra = state.followups.filter((f) => !state.idealAnswers[f.id]);
+  const touched = new Set(r.touched || []);
+  const extra = state.followups.filter((f) => !state.idealAnswers[f.id] || touched.has(f.id));
   return [...base, ...extra];
 }
 
+const answered = (state, q) => Array.isArray(state.idealAnswers[q.id]) && state.idealAnswers[q.id].length > 0;
+
+// 見直しが終わったか：並びの質問がすべて回答済みで、追加質問も含めて理想像の質問がそろっている
+export function revisionComplete(state) {
+  return !!state.persona.revision && reviseQueue(state).every((q) => answered(state, q)) && idealDone(state);
+}
+
+// 表示する質問の位置。範囲外になっていても、未回答が残っていればそこを指す
+export function revisionIndex(state) {
+  const r = state.persona.revision;
+  if (!r) return 0;
+  const q = reviseQueue(state);
+  if (r.index < q.length) return r.index;
+  const firstOpen = q.findIndex((x) => !answered(state, x));
+  return firstOpen >= 0 ? firstOpen : q.length;
+}
+
 export function answerRevision(state, qid, optionIds) {
-  if (!state.persona.revision) throw new Error('no revision in progress');
+  const r = state.persona.revision;
+  if (!r) throw new Error('no revision in progress');
   if (!reviseQueue(state).some((q) => q.id === qid)) throw new Error(`question ${qid} is not part of this revision`);
   const next = answerIdeal(state, qid, optionIds);
-  const q2 = reviseQueue(next);
-  const idx = q2.findIndex((q) => q.id === qid);
-  return { ...next, step: 'revise', idealIndex: state.idealIndex, persona: { ...next.persona, revision: { ...next.persona.revision, index: idx < 0 ? q2.length : idx + 1 } } };
+  const touched = [...new Set([...(r.touched || []), qid])];
+  const withTouched = { ...next, persona: { ...next.persona, revision: { ...next.persona.revision, touched } } };
+  const q2 = reviseQueue(withTouched);
+  const at = q2.findIndex((q) => q.id === qid);
+  // 次は、答えた質問より後ろの最初の未回答。無ければ前に残った未回答。どちらも無ければ終わり
+  let index = q2.findIndex((q, i) => i > at && !answered(withTouched, q));
+  if (index < 0) index = q2.findIndex((q) => !answered(withTouched, q));
+  if (index < 0) index = q2.length;
+  return { ...withTouched, step: 'revise', idealIndex: state.idealIndex, persona: { ...withTouched.persona, revision: { ...withTouched.persona.revision, index } } };
 }
 
 export function finishRevision(state) {
   if (!state.persona.revision) throw new Error('no revision in progress');
+  if (!revisionComplete(state)) throw new Error('revision has unanswered questions');
   const s = rebuild(state, 'revision');
-  return { ...s, persona: { ...s.persona, revision: null }, step: 'meet' };
+  return withLog({ ...s, persona: { ...s.persona, revision: null }, step: 'meet' }, { type: 'revision_finished', persona_version: s.profile.persona_version });
 }
 
+// キャンセル：開始前の回答・表示していた下書き・評価に戻す。承認済みの固定内容・承認の記録・会話には触れない
 export function cancelRevision(state) {
-  return { ...state, persona: { ...state.persona, revision: null }, step: state.profile ? 'evaluate' : 'ideal' };
+  const r = state.persona.revision;
+  if (!r) return state;
+  const b = r.before;
+  return withLog({
+    ...state,
+    idealAnswers: b.idealAnswers, idealIndex: b.idealIndex, followups: b.followups, overflow: b.overflow,
+    profile: b.profile,
+    persona: { ...state.persona, ...b.persona, revision: null },
+    step: b.step === 'revise' ? 'evaluate' : (b.step || 'evaluate'),
+  }, { type: 'revision_cancelled', from: r.from_version });
 }
 
 // 承認後：ホーム・固定した人格の表示・模擬対話
@@ -253,13 +299,20 @@ export function sendMessage(state, text) {
   if (!lock) throw new Error('no approved persona');
   if (!verifyLock(lock)) throw new Error('approved persona failed integrity check');
   const d = state.dialogue.persona_version === lock.persona_version ? state.dialogue : { persona_version: lock.persona_version, messages: [] };
+  if (d.halted) throw new Error('dialogue halted for safety');
   const turns = d.messages.filter((m) => m.role === 'user').length;
   if (turns >= MAX_USER_TURNS) throw new Error('dialogue turn limit reached');
   const msg = String(text || '').trim();
   if (!msg) throw new Error('empty message');
   const reply = respond(lock, msg);
   const messages = [...d.messages, { role: 'user', text: msg.slice(0, 400) }, { role: 'future_self', ...reply }];
-  return { ...state, dialogue: { persona_version: lock.persona_version, messages } };
+  // 強い苦痛の表現があったら、この会話はここで止める（続けるときは本人が新しく始める）
+  return { ...state, dialogue: { persona_version: lock.persona_version, messages, halted: reply.halt ? { reason: 'safety' } : null } };
+}
+export function restartDialogue(state) {
+  const lock = state.persona.locked;
+  if (!lock) throw new Error('no approved persona');
+  return { ...state, dialogue: { persona_version: lock.persona_version, messages: [], halted: null }, step: 'dialogue' };
 }
 export const dialogueTurnsLeft = (state) => MAX_USER_TURNS - state.dialogue.messages.filter((m) => m.role === 'user').length;
 export { AXES };
@@ -276,8 +329,9 @@ export function goBack(state) {
     case 'evaluate': return { ...state, step: 'meet' };
     case 'revise': {
       const r = state.persona.revision;
-      if (r && r.index > 0) return { ...state, persona: { ...state.persona, revision: { ...r, index: r.index - 1 } } };
-      return cancelRevision(state);
+      const i = revisionIndex(state);
+      if (r && i > 0) return { ...state, persona: { ...state.persona, revision: { ...r, index: i - 1 } } };
+      return cancelRevision(state); // 最初の質問から戻る＝見直しをやめて、開始前に戻す
     }
     case 'dialogue': case 'locked_view': return { ...state, step: 'home' };
     default: return state;

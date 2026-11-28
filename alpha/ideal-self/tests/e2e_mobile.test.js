@@ -307,3 +307,103 @@ test('スマホ幅：未受診（同意なし）— 簡易6問 → 理想12問�
     assert.deepEqual(await lockedJson(page), lock);
   });
 });
+
+test('スマホ幅：受入レビューの再現経路 — 承認後の見直しで確認が2問 → 2問目に進む／キャンセルで元の版と会話に戻る／強い苦痛で対話を中断（外部通信なし）', { skip: !chromium && 'Playwright が無い' }, async () => {
+  await withPage(async (page) => {
+    await tid(page, 'consent-eti_import').check();
+    await tid(page, 'consent-next').click();
+    await tid(page, 'route-eti').click();
+    await tid(page, 'identity').check();
+    await tid(page, 'record-own_introvert').click();
+    await tid(page, 'import').click();
+    await tid(page, 'to-ideal').click();
+    // K1 で内省と慎重さを選ぶ（レビューの再現条件）
+    await answerIdeal(page, { ...PLAN, K1: { title: PLAN.K1.title, ids: ['inner_focus', 'deliberation'] } });
+    await tid(page, 'build-draft').click();
+    await tid(page, 'to-meet').click();
+    await tid(page, 'to-evaluate').click();
+    await rate(page, { self_continuity: 4, aspiration: 4, attainability: 4 });
+    await tid(page, 'approve').click();
+    const lock0 = await lockedJson(page);
+    await tid(page, 'to-dialogue').click();
+    await page.getByRole('button', { name: '迷っていることがある' }).click();
+    await page.locator('#back').click();
+
+    // ---- 承認後の見直し（1回目）：E1 を「場を明るくする力」に → 確認が2問。途中でキャンセル
+    const startRevision = async () => {
+      await tid(page, 'revise-approved').click();
+      await tid(page, 'reason-AS_CHARM').click();
+      await tid(page, 'start-revision').click();
+      assert.equal(await stepIs(page), 'revise');
+      assert.match(await tid(page, 'revise-locked-note').innerText(), new RegExp(lock0.persona_version.replace(/[.+]/g, '\\$&')));
+      await tid(page, 'opt-quiet_presence').click();
+      await tid(page, 'opt-unwavering_conviction').click();
+      await tid(page, 'opt-radiance').click();
+      await tid(page, 'multi-next').click();
+    };
+    await startRevision();
+    assert.match(await page.locator('main h1').innerText(), /「一人で深く考える力」を残したいと選び、「場を明るくする力」/);
+    assert.match(await tid(page, 'revise-open').innerText(), /未回答 2 問/);
+    await tid(page, 'opt-augment').click();
+    // 1問目の後も2問目（慎重さ）に進む。「見直しはここまで」にはならない
+    assert.match(await page.locator('main h1').innerText(), /「動く前に状況を整理する慎重さ」を残したいと選び、「場を明るくする力」/);
+    assert.equal(await tid(page, 'finish-revision').count(), 0);
+    assert.match(await tid(page, 'revise-open').innerText(), /未回答 1 問/);
+    await shot(page, '41_revise_second_confirmation');
+    // キャンセル → 開始前（承認済みの版の評価画面）に戻り、承認済みの人格と会話は同じ版
+    await tid(page, 'cancel-revision').click();
+    assert.equal(await stepIs(page), 'evaluate');
+    await page.getByRole('button', { name: 'ホームへ' }).click();
+    assert.match(await tid(page, 'home-version').innerText(), new RegExp(lock0.persona_version.replace(/[.+]/g, '\\$&')));
+    assert.equal(await tid(page, 'draft-pending').count(), 0); // 見直し中の版は残らない
+    assert.deepEqual(await lockedJson(page), lock0);
+    await tid(page, 'to-dialogue').click();
+    assert.match(await tid(page, 'chat-version').innerText(), new RegExp(lock0.persona_version.replace(/[.+]/g, '\\$&')));
+    assert.deepEqual(await page.locator('[data-testid="chat"] [data-kind]').evaluateAll((els) => els.map((e) => e.dataset.kind)), ['decision']);
+    await page.locator('#back').click();
+
+    // ---- 見直し（2回目）：2問とも答えてから「見直した人物に会う」が有効になる
+    await startRevision();
+    await tid(page, 'opt-augment').click();
+    await tid(page, 'opt-augment').click();
+    assert.match(await page.locator('main h1').innerText(), /見直しはここまでです/);
+    assert.equal(await tid(page, 'finish-revision').isEnabled(), true);
+    await shot(page, '42_revise_done');
+    await tid(page, 'finish-revision').click();
+    assert.equal(await stepIs(page), 'meet');
+    assert.match(await tid(page, 'meet-aspiration').innerText(), /場を明るくする力/);
+    // 新しい版は未承認。承認済みの版と会話はそのまま
+    await page.locator('#back').click(); // 下書き
+    const draft = await json(page, 'profile-json');
+    assert.notEqual(draft.persona_version, lock0.persona_version);
+    assert.deepEqual(draft.aspirational_traits[0].tension.map((t) => `${t.trait}:${t.resolution}`), ['inner_focus:augment', 'deliberation:augment']);
+
+    // ---- 強い苦痛の表現 → 通常の模擬対話を中断（番号・受付時間は載せない）
+    // 記憶の保存に同意していないので、読み込み直すと最初から。簡易質問経路で承認まで進めて確かめる
+    await page.goto(page.url());
+    await tid(page, 'consent-next').click();
+    await tid(page, 'route-quick').click();
+    for (const id of ['alone', 'plan', 'explore', 'understand', 'self', 'SD']) await tid(page, `opt-${id}`).click();
+    await tid(page, 'quick-finish').click();
+    await tid(page, 'to-ideal').click();
+    await answerIdeal(page, PLAN);
+    await tid(page, 'build-draft').click();
+    await tid(page, 'to-meet').click();
+    await tid(page, 'to-evaluate').click();
+    await rate(page, { self_continuity: 4, aspiration: 4, attainability: 4 });
+    await tid(page, 'approve').click();
+    await tid(page, 'to-dialogue').click();
+    await tid(page, 'chat-input').fill('もう消えたいと思うことがある');
+    await tid(page, 'chat-send').click();
+    const safety = await page.locator('[data-kind="safety"]').innerText();
+    assert.match(safety, /模擬対話をいったん止めます[\s\S]*身近な信頼できる人[\s\S]*地域の公的な相談窓口/);
+    assert.doesNotMatch(safety.replace(/5年後/g, ''), /\d/);
+    assert.equal(await tid(page, 'safety-halt').count(), 1);
+    assert.equal(await tid(page, 'chat-input').count(), 0);
+    assert.equal(await page.locator('.chips').count(), 0);
+    await shot(page, '43_dialogue_safety_halt');
+    await tid(page, 'restart-dialogue').click();
+    assert.equal(await tid(page, 'chat-input').count(), 1);
+    assert.equal(await page.locator('[data-testid="chat"] [data-kind]').count(), 0);
+  });
+});

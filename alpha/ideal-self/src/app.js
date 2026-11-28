@@ -289,16 +289,23 @@ const screens = {
 
   revise() {
     const queue = S.reviseQueue(state);
-    const rv = state.persona.revision;
-    const i = Math.min(rv.index, queue.length);
-    const done = queue.every((q) => (state.idealAnswers[q.id] || []).length) && S.idealDone(state);
+    const i = S.revisionIndex(state);
+    const cancel = btn('見直しをやめて元に戻す', () => dispatch(S.cancelRevision), { secondary: true, testid: 'cancel-revision' });
+    const note = h('p', { class: 'small', 'data-testid': 'revise-locked-note', text: state.persona.locked ? `会話は承認済みの版（${state.persona.locked.persona_version}）のままです。` : '' });
     if (i >= queue.length) {
+      const done = S.revisionComplete(state);
       return [h('h1', { text: '見直しはここまでです' }),
         h('p', { class: 'lead', text: `見直した質問：${queue.map((q) => q.id).join('、')}。ほかの回答は変えていません。` }),
-        btn('見直した人物に会う', () => dispatch(S.finishRevision), { disabled: !done, testid: 'finish-revision' })];
+        btn('見直した人物に会う', () => dispatch(S.finishRevision), { disabled: !done, testid: 'finish-revision' }),
+        cancel, note];
     }
     const q = queue[i];
-    return questionScreen(q, `見直し ${i + 1} / ${queue.length}`, (ids) => dispatch((s) => S.answerRevision(s, q.id, ids)));
+    const open = queue.filter((x) => !(state.idealAnswers[x.id] || []).length).length;
+    return [
+      ...questionScreen(q, `見直し ${i + 1} / ${queue.length}`, (ids) => dispatch((s) => S.answerRevision(s, q.id, ids))),
+      h('p', { class: 'small', 'data-testid': 'revise-open', text: `未回答 ${open} 問` }),
+      cancel, note,
+    ];
   },
 
   home() {
@@ -340,6 +347,7 @@ const screens = {
     const L = state.persona.locked;
     const msgs = state.dialogue.persona_version === L.persona_version ? state.dialogue.messages : [];
     const left = S.dialogueTurnsLeft(state);
+    const halted = state.dialogue.persona_version === L.persona_version && state.dialogue.halted;
     const input = h('input', { type: 'text', class: 'chat-input', 'data-testid': 'chat-input', maxlength: '200', placeholder: left > 0 ? 'ここに入力（この端末の中だけで処理）' : '今日はここまで', disabled: left <= 0 });
     const send = (t) => { if (t && t.trim()) dispatch((s) => S.sendMessage(s, t)); };
     return [
@@ -351,9 +359,13 @@ const screens = {
           ? h('div', { class: 'msg me' }, h('p', { text: m.text }))
           : h('div', { class: `msg fs ${m.kind}`, 'data-kind': m.kind }, h('p', { text: m.text }),
             m.basis.length > 0 && h('p', { class: 'basis small', text: `根拠：${m.basis.map((b) => basisText(b, L.profile)).join('／')}` }))))),
-      left > 0 && h('div', { class: 'chips' }, ...SUGGESTIONS.map((t) => h('button', { type: 'button', class: 'chip', onclick: () => send(t) }, t))),
-      h('form', { class: 'chat-form', onsubmit: (e) => { e.preventDefault(); send(input.value); } }, input, h('button', { type: 'submit', class: 'btn send', disabled: left <= 0, 'data-testid': 'chat-send' }, '送る')),
-      h('p', { class: 'small', 'data-testid': 'turns-left', text: `残り ${left} 回` }),
+      halted && h('section', { class: 'card safety', 'data-testid': 'safety-halt' },
+        h('h3', { text: '模擬対話を止めています' }),
+        h('p', { class: 'small', text: '身近な信頼できる人や、お住まいの地域の公的な相談窓口につながってください。いますぐ命の危険があるときは、緊急通報をしてください。' }),
+        btn('新しく話し始める', () => dispatch(S.restartDialogue), { secondary: true, testid: 'restart-dialogue' })),
+      !halted && left > 0 && h('div', { class: 'chips' }, ...SUGGESTIONS.map((t) => h('button', { type: 'button', class: 'chip', onclick: () => send(t) }, t))),
+      !halted && h('form', { class: 'chat-form', onsubmit: (e) => { e.preventDefault(); send(input.value); } }, input, h('button', { type: 'submit', class: 'btn send', disabled: left <= 0, 'data-testid': 'chat-send' }, '送る')),
+      !halted && h('p', { class: 'small', 'data-testid': 'turns-left', text: `残り ${left} 回` }),
       btn('ホームへ', () => dispatch(S.goHome), { secondary: true }),
     ];
   },

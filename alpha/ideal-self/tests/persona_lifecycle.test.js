@@ -268,10 +268,11 @@ test('改変された固定内容では会話しない', () => {
   assert.throws(() => S.sendMessage({ ...s, persona: { ...s.persona, locked: raw } }, '迷っていることがある'), /integrity/);
 });
 
-test('強い苦痛の表現には、人格の話ではなく相談先を案内する', () => {
+test('強い苦痛の表現には、人格の話ではなく身近な人・地域の公的な相談窓口を案内する', () => {
   const s = S.sendMessage(S.openDialogue(approved()), '消えたいと思うことがある');
   assert.equal(s.dialogue.messages[1].kind, 'safety');
-  assert.match(s.dialogue.messages[1].text, /0120-279-338/);
+  assert.match(s.dialogue.messages[1].text, /身近な信頼できる人[\s\S]*地域の公的な相談窓口/);
+  assert.doesNotMatch(s.dialogue.messages[1].text, /\d{2,}/); // 未確認の番号・受付時間を載せない
 });
 
 test('ETI の同意を撤回すると、ETI 由来の固定した人格・評価・会話も消える。簡易質問経路の固定は残る', () => {

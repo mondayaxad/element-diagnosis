@@ -3,8 +3,11 @@
 import { TRAITS, VALUES } from './catalog.js';
 import { verifyLock } from './persona.js';
 
-export const DIALOGUE_VERSION = 'ISA-DIALOGUE-0.1.0';
+export const DIALOGUE_VERSION = 'ISA-DIALOGUE-0.2.0'; // 0.2.0：強い苦痛で中断・未確認の番号を外す
 export const MAX_USER_TURNS = 6;
+
+// 強い苦痛の表現があったときの案内（模擬対話を中断する）。番号や受付時間は、確認が取れるまで載せない
+export const SAFETY_TEXT = 'つらい気持ちを話してくれてありがとう。ここで模擬対話をいったん止めます。この画面の「5年後のあなた」は、あなたの回答から作った下書きで、いまのあなたを支えることはできません。家族や友人など、身近な信頼できる人に、いまの気持ちをそのまま伝えてください。お住まいの地域の公的な相談窓口（市区町村や都道府県の相談窓口など）につながることもできます。いますぐ命の危険があるときは、ためらわずに緊急通報をしてください。';
 
 export const SUGGESTIONS = [
   '迷っていることがある',
@@ -18,7 +21,7 @@ const REWRITE = /(変えて|変更して|書き換え|上書き|忘れて|設定
 // 強い苦痛の表現（模擬対話では扱わず、身近な人や相談窓口を案内する）
 // データの形で人格の項目を送り込もうとする入力（JSON・項目名）も、書き換えの依頼として扱う
 const STRUCTURED = /(decision_principles|protected_traits|persona_version|approval_status|aspirational_traits|growth_targets|core_values|"\s*:\s*[\[{"])/i;
-const CRISIS = /(死にたい|消えたい|自殺|生きていたくない|いなくなりたい)/;
+const CRISIS = /(死にたい|消えたい|自殺|生きていたくない|いなくなりたい|死んでしまいたい|もう限界|自分を傷つけ)/;
 const TOPICS = [
   { kind: 'decision', re: /(迷|決め|選|判断|どっち|どちら)/ },
   { kind: 'difficulty', re: /(うまくいかない|失敗|落ち込|不安|つらい|しんどい|怖い|自信)/ },
@@ -40,8 +43,8 @@ export function respond(lock, text) {
   const keep = p.protected_traits;
 
   if (CRISIS.test(msg)) {
-    return { kind: 'safety', persona_version: pv, basis: [],
-      text: 'つらい気持ちを話してくれてありがとう。私はあなたの回答から作った下書きの人格なので、ここで支えきることはできません。いま苦しいときは、信頼できる人や、よりそいホットライン（0120-279-338・24時間）に話してください。' };
+    // 通常の模擬対話を中断し、人格としての返答はしない。電話番号・受付時間などの未確認の情報は載せない
+    return { kind: 'safety', halt: true, persona_version: pv, basis: [], text: SAFETY_TEXT };
   }
   if (REWRITE.test(msg) || STRUCTURED.test(msg)) {
     return { kind: 'rewrite_blocked', persona_version: pv, basis: [{ element: 'lock', id: pv }],
